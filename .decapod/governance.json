@@ -585,6 +585,11 @@
         ".decapod/managed/specs/VALIDATION.md",
         "tests/unit/core/reflection_tests.rs"
       ]
+    },
+    {
+      "id": "reflection-1639-legacy-fixture",
+      "summary": "Repair legacy plan fixture after accepted-source CI test compilation; preserve release drift and unproven corpus status.",
+      "input_digest": "sha256:1d43033fe345216e4ca1c528c36786e3df17dcbf9f1f8ee0a5256c4fb4ea20cb"
     }
   ],
   "intents": {
@@ -629,24 +634,24 @@
       "schema_version": "1.1.0",
       "spec_reviews": [
         {
-          "disposition": "updated",
+          "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Reviewed current task journal preservation, CLI-owned projection regeneration, captured source identity and terminal replay guard after merging accepted target bc0a7197.",
-          "reviewed_code_fingerprint": "644cfd48eb098e2a2cfffc54beadb838b5905cda3ebf5dc8dcf7489c9fc2862b",
+          "reason": "No new mechanism; repairing an existing plan literal preserves the stateless compatibility path.",
+          "reviewed_code_fingerprint": "42bfd852419c0f0ebfb081e6d84a192a30a2e205f840ee086c44c508f14cd111",
           "spec_material_hash": "5e6f43ab12508970d6c2f14ad52d221c217dc4fdb8faaf6f819df400b3bc9f0c"
         },
         {
-          "disposition": "updated",
+          "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Reviewed reflection JSON continuity against merged accepted onboarding source; existing command envelopes and proof authority remain unchanged.",
-          "reviewed_code_fingerprint": "644cfd48eb098e2a2cfffc54beadb838b5905cda3ebf5dc8dcf7489c9fc2862b",
+          "reason": "Optional reflection schema is unchanged; legacy validation fixtures explicitly omit reflection.",
+          "reviewed_code_fingerprint": "42bfd852419c0f0ebfb081e6d84a192a30a2e205f840ee086c44c508f14cd111",
           "spec_material_hash": "fde5f696a955e10db3cca7d8470c2e377db77173be09147432f934144a1e7b30"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Accepted upstream source is retained. Reflection introduces no credential path or human approval assertion; current provider denial remains unproven access pending a supported retry after reset.",
-          "reviewed_code_fingerprint": "644cfd48eb098e2a2cfffc54beadb838b5905cda3ebf5dc8dcf7489c9fc2862b",
+          "reason": "Toolchain approval remains pending; diagnostic results do not satisfy required Buildkite authority or proof.",
+          "reviewed_code_fingerprint": "42bfd852419c0f0ebfb081e6d84a192a30a2e205f840ee086c44c508f14cd111",
           "spec_material_hash": "ecc8e7afebb549a800744002854826201e68cfbacea69a822006093227f6f7a9"
         }
       ],
@@ -660,14 +665,18 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1794483266Z"
+      "updated_at": "1794483766Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:c7e4e9d917f2088db756e424ba047206a143506639a0d12275535b2f597ed3e0",
+      "artifact_hash": "sha256:07899c6c9512ba825450b2c38273974c32ccda9a88980785e4c8285aae4ea95d",
       "checks": [
+        {
+          "name": "format-and-whitespace",
+          "status": "passed"
+        },
         {
           "name": "formatting",
           "status": "passed"
@@ -675,9 +684,13 @@
         {
           "name": "full-validation",
           "status": "unavailable"
+        },
+        {
+          "name": "legacy-plan-fixture-compilation",
+          "status": "failed"
         }
       ],
-      "current_phase": "validation-preparation",
+      "current_phase": "validation-repair",
       "custody": {
         "events": [
           {
@@ -740,10 +753,17 @@
             "intent_id": "intent:change_01M77NNMKGESW1QW4Y2GQ8V6NC",
             "kind": "trajectory_step_recorded",
             "sequence": 10
+          },
+          {
+            "detail": "trajectory:branch_01M77NNMPBCKJFWXSA4SD6RFHS",
+            "event_id": "event:11",
+            "intent_id": "intent:change_01M77NNMKGESW1QW4Y2GQ8V6NC",
+            "kind": "trajectory_step_recorded",
+            "sequence": 11
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 10,
+        "next_sequence": 11,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M77NNMPBCKJFWXSA4SD6RFHS": {
@@ -923,6 +943,34 @@
                 "validation_findings": [
                   "The previous HTTP 403 and unavailable proof remain historical evidence. Clearing the prior attempt blocker prepares a fresh attempt after its reset, and does not establish provider access or readiness."
                 ]
+              },
+              {
+                "action": "validation-repair",
+                "custody_event_id": "event:11",
+                "observations": [
+                  "tests/unit/core/validate_tests.rs",
+                  "docs/architecture/bounded-reflection.md",
+                  ".decapod/managed/specs/VALIDATION.md",
+                  "https://github.com/DecapodLabs/decapod/actions/runs/43210330914/job/131156236192",
+                  "https://github.com/DecapodLabs/decapod/actions/runs/43210330738/job/131155983763"
+                ],
+                "proof_refs": [
+                  "legacy-plan-fixture-compilation",
+                  "format-and-whitespace"
+                ],
+                "scope": [
+                  "\".decapod/managed/specs\"]",
+                  "\"assets/schemas\"",
+                  "\"constitution\"",
+                  "\"docs\"",
+                  "\"src/decapod/plugins/federation.rs\"",
+                  "\"tests\"",
+                  "paths:[\"src/decapod/core\""
+                ],
+                "sequence": 11,
+                "validation_findings": [
+                  "Test compilation requires the repaired legacy fixture; no behavioral pass is claimed. Release 0.139.1 controller update awaits explicit approval; CI release drift remains unresolved."
+                ]
               }
             ]
           }
@@ -940,6 +988,8 @@
         ".decapod/managed/specs/VALIDATION.md",
         "docs/architecture/bounded-reflection.md",
         "https://github.com/DecapodLabs/decapod/actions/runs/43206246190",
+        "https://github.com/DecapodLabs/decapod/actions/runs/43210330738/job/131155983763",
+        "https://github.com/DecapodLabs/decapod/actions/runs/43210330914/job/131156236192",
         "https://github.com/DecapodLabs/decapod/issues/1639",
         "https://github.com/DecapodLabs/decapod/issues/1640"
       ],
@@ -957,10 +1007,12 @@
         "src/decapod/core/state.rs",
         "tests/infer_precision.rs",
         "tests/unit/core/reflection_tests.rs",
-        "tests/unit/core/state_knowledge_tests.rs"
+        "tests/unit/core/state_knowledge_tests.rs",
+        "tests/unit/core/validate_tests.rs"
       ],
       "next_transitions": [
         "Commit exact candidate and run plain decapod validate",
+        "Commit fixture repair and run plain validation after provider reset; retain release gate until approved supported update.",
         "Refine plan and declare falsifiable checks",
         "Run full exact-candidate validation after repaired inventory declaration",
         "Run plain exact-candidate validation after public-reader reset 2026-11-12T11:42:39Z; do not substitute authentication or proof."
@@ -985,6 +1037,7 @@
         "Independent GitHub diagnostics can identify source errors but cannot establish Buildkite publication readiness.",
         "Inventory reconciliation removes the recorded current blocker only; earlier failed proof remains historical and full proof is still required.",
         "Mentor literal matches remain advisory; source identity and narrower declared scope do not prove implementation semantics.",
+        "Test compilation requires the repaired legacy fixture; no behavioral pass is claimed. Release 0.139.1 controller update awaits explicit approval; CI release drift remains unresolved.",
         "The previous HTTP 403 and unavailable proof remain historical evidence. Clearing the prior attempt blocker prepares a fresh attempt after its reset, and does not establish provider access or readiness."
       ]
     }

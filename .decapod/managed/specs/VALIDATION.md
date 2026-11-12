@@ -58,6 +58,16 @@ substitute for Buildkite acceptance. Additional adversarial tests cover
 case-only path paraphrases and shared captured ADR bytes. Their execution and
 full publication readiness remain pending.
 
+After accepted-target reconciliation, diagnostic run `43210330914` reached
+test compilation and reported `E0063` in the existing publication-validation
+fixture. That fixture now initializes `GovernedPlan.reflection` to `None`,
+preserving coverage of the legacy no-session execution path. Standalone run
+`43210330738` compiled the candidate CLI but failed release-projection drift:
+its 0.139.1 evaluator refreshed the 0.139.0 controller's generated surfaces.
+The supported release update requires explicit opt-in; generated pins must not
+be hand-edited or a candidate binary substituted to manufacture a clean result.
+Neither diagnostic establishes behavioral success or publication readiness.
+
 ## Recovery and accepted-target reconciliation (#1628)
 
 The client continues from both original checkpoints, including
@@ -1254,7 +1264,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `644cfd48eb098e2a2cfffc54beadb838b5905cda3ebf5dc8dcf7489c9fc2862b`
+- Repository signal fingerprint: `42bfd852419c0f0ebfb081e6d84a192a30a2e205f840ee086c44c508f14cd111`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (229 files), `tests/` (230 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

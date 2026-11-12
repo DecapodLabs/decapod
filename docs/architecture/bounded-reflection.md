@@ -132,3 +132,10 @@ Validation currently remains incomplete: the configured provider stopped on
 HTTP 403 while reading commit statuses (reset epoch `1794483759`), preserving
 private snapshot evidence. Independent GitHub diagnostics exposed and informed
 repair of CLI module qualification; they are not accepted readiness proof.
+After merging accepted target `bc0a71971bce8ee036a24562b7fc4a9b771f2f40`,
+source CI compiled the candidate CLI. Test compilation exposed a legacy plan
+fixture requiring `reflection: None`; that fixture is repaired. The standalone
+CI gate separately reported generated release projections at 0.139.0 where the
+accepted package is 0.139.1. Updating the installed controller requires explicit
+toolchain opt-in. Neither a successful CLI build nor these diagnostics establish
+that the regression corpus passed or that publication is ready.
