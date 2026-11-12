@@ -14,6 +14,15 @@ All changes still require plain full `decapod validate` on their exact commit.
 Hosted provider login, entitlement/payment execution and attachment to an
 existing directory project ID remain unexecuted or unsupported contract limits.
 
+PR #1635 subsequently merged as `c87e4f49cab8e2ccff5f9bdc5833d8602dfffdb8`
+while provider jobs were queued. Their accepted-target ancestry check correctly
+rejected the older candidate before running those checks. This continuation
+merges the new accepted target and retains the full existing journal/checkpoint
+lineage; the remaining agent UX changes are a follow-up PR. Earlier diagnostics
+on `a0962755` passed 1,674 library tests (eight ignored) and all 33 Supabase
+boundary tests, including the new handoff and stable-operation-ID scenarios.
+That execution does not replace fresh complete proof on the reconciled commit.
+
 ## Recovery and accepted-target reconciliation (#1628)
 
 The client continues from both original checkpoints, including
