@@ -647,6 +647,15 @@
         "src/decapod/core/cloud_client.rs",
         "tests/common/cloud_managed_scenarios.rs"
       ]
+    },
+    {
+      "id": "visible-browser-handoff",
+      "summary": "Keep validated browser sign-in links visible in text output and preserve clean agent JSON",
+      "input_digest": "sha256:1900767b5a27c357bc490c1f335ebec4596d6b1a135c8fec73c32931ba44bdb8",
+      "proof_refs": [
+        "src/decapod/core/error.rs",
+        "tests/common/cloud_managed_scenarios.rs"
+      ]
     }
   ],
   "intents": {
@@ -687,22 +696,22 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Reviewed adopted PR 1635 connector and custody architecture plus the current bounded agent handoff. Polling uses the existing managed flow; explicit cloud login restart retains the old one-time no-replay boundary. No daemon, new transport, local fallback or readiness shortcut was added.",
-          "reviewed_code_fingerprint": "0d44292a5cb001066152bb9d46466827dc0320f7369533c1aea7dbfed4f81495",
+          "reason": "Reviewed the current source after preserving the validated short-lived browser URL in text error rendering as well as structured diagnostics. Managed session, server readiness and no-replay boundaries remain intact; the pending-add scenario also parses clean agent login JSON and checks the intentional browser link in text output without exposing credentials.",
+          "reviewed_code_fingerprint": "f25c995fb8ed74e8bfa0d2cd40276893fa23f40d6da1482cd2407f19de38b122",
           "spec_material_hash": "7d64fcff5272dde8ba4a1dbc3685417a98c4387d0aa98e0c067b1979d4837662"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Reviewed current CLI Login restart argument, optional authorization_url on both v1 diagnostics, stable operation-id propagation and one-init human handoff. Existing init restart remains compatible. Repository-only connector routing does not establish binding to a server directory project ID.",
-          "reviewed_code_fingerprint": "0d44292a5cb001066152bb9d46466827dc0320f7369533c1aea7dbfed4f81495",
+          "reason": "Reviewed the current source after preserving the validated short-lived browser URL in text error rendering as well as structured diagnostics. Managed session, server readiness and no-replay boundaries remain intact; the pending-add scenario also parses clean agent login JSON and checks the intentional browser link in text output without exposing credentials.",
+          "reviewed_code_fingerprint": "f25c995fb8ed74e8bfa0d2cd40276893fa23f40d6da1482cd2407f19de38b122",
           "spec_material_hash": "1dc7b24d3ab01e25ffabc2493b4f15f30956daf1bbda2b93fd43c9bf5d0702ee"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Reviewed current source and synthetic scenarios for validated browser URL disclosure only, private session custody, token/code/PKCE redaction, original task operation identity, explicit uncertain-flow restart and independent server readiness. All existing authorization and no-replay boundaries remain required.",
-          "reviewed_code_fingerprint": "0d44292a5cb001066152bb9d46466827dc0320f7369533c1aea7dbfed4f81495",
+          "reason": "Reviewed the current source after preserving the validated short-lived browser URL in text error rendering as well as structured diagnostics. Managed session, server readiness and no-replay boundaries remain intact; the pending-add scenario also parses clean agent login JSON and checks the intentional browser link in text output without exposing credentials.",
+          "reviewed_code_fingerprint": "f25c995fb8ed74e8bfa0d2cd40276893fa23f40d6da1482cd2407f19de38b122",
           "spec_material_hash": "e8b19b6c03b532e2461c57bed8708055bab51423ba82eb46c08c9823100f3725"
         }
       ],
@@ -714,7 +723,7 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1794472951Z"
+      "updated_at": "1794473871Z"
     },
     "trajectory": {
       "active_boundaries": [
@@ -727,7 +736,7 @@
         "Reviewed managed client and private custody source; configured Buildkite proof remains required and Dactyl registry API availability requires native confirmation",
         "Same-task reviewed corrections and checkpointed source push only; complete Buildkite readiness and separate registry handoff remain unsatisfied"
       ],
-      "artifact_hash": "sha256:319adbdf1f422d889c93ede38e4f7a4dc713b1cdcc843db0c7e17d728029cca1",
+      "artifact_hash": "sha256:870ffb95dbf3935dca90c99457d01324503f36957c0f6747e5eaaff225dc6383",
       "checks": [
         {
           "name": "accepted-consumer",
@@ -851,6 +860,10 @@
         },
         {
           "name": "source-review",
+          "status": "passed"
+        },
+        {
+          "name": "text-handoff-review",
           "status": "passed"
         },
         {
@@ -984,10 +997,17 @@
             "intent_id": "intent:change_01M76ECD1993X600J9GEM0D7FY",
             "kind": "trajectory_step_recorded",
             "sequence": 19
+          },
+          {
+            "detail": "trajectory:branch_01M76ECD20HF9M6Q15W5AKE2WQ",
+            "event_id": "event:20",
+            "intent_id": "intent:change_01M76ECD1993X600J9GEM0D7FY",
+            "kind": "trajectory_step_recorded",
+            "sequence": 20
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 19,
+        "next_sequence": 20,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M76ECD20HF9M6Q15W5AKE2WQ": {
@@ -1278,6 +1298,24 @@
                 ],
                 "sequence": 19,
                 "validation_findings": []
+              },
+              {
+                "action": "validation",
+                "custody_event_id": "event:20",
+                "observations": [
+                  "Source review found that moving the browser URL out of next_action hid it from interactive text errors. Both auth and task-operation Display now render the same validated URL. The existing new pending-add regression also parses clean cloud login JSON and checks that deliberate text handoff. bd0c1baa source diagnostics passed clippy, material specs and all checkpoint history but were still executing consumer tests; required Buildkite proof and public metadata access remain pending. No prior readiness is reused for this source change."
+                ],
+                "proof_refs": [
+                  "text-handoff-review",
+                  "formatting",
+                  "current-tests"
+                ],
+                "scope": [
+                  "decapod-cloud-client",
+                  "root"
+                ],
+                "sequence": 20,
+                "validation_findings": []
               }
             ]
           }
@@ -1308,6 +1346,7 @@
         "Inspected complete required consumer invocation: new managed-session file was absent from its explicit targets. Added cloud_managed_session while preserving every existing target and library suite. Verified all105 source inventory hashes: only assets/tools/source_ci_profile.rs differs from last reviewed build inventory, none removed. Updated the user-editable reviewed digest to c53140addf3e7ed22a94d556f806db545cb3cec5925ab29339e3ab4bd953b57b. Native discovery now proof_pending, no policy reconciliation blocker. Moved Bazel metadata explanation back to authored VALIDATION to retain original51-file scope, not a broader generic guide change.",
         "Published Dactyl 0.12.0 cloud.rs maps dropped response transport to Unavailable. Completion now preserves the saved credential and checking_readiness state for Unavailable, Transport and Timeout; existing lost completion CLI fixture is mandatory execution coverage. This source review is not executed product proof.",
         "Same original task and journal continue from 1289a80a782d651af337125ee447db4b5723cbd7. Native full publisher in run 43117917740 returned SNAPSHOT_NOT_READY for Buildkite docs_sync build 7937. Direct observed job output compiled dactyl-db 0.11.1, then reported 11 E0433/E0425 errors for missing CloudConnector, AuthenticationSecrets, AuthenticationState and UserSession; one unused auth/cloud_backend import warning was also observed. Evidence artifact sha256:71dff4b541fe957f4e8f3b62ba538738d91d25824b608013d0cf4225527dd4f8 records exact log locations. These are historical candidate failures, not results on this correction. Reviewed patches remove unused imports and correct overlay wording; authored VALIDATION states that no governed pre-readiness source-overlay recipe is configured. Only formatting, native projections, checkpoint/history checks and a normal same-branch source push are performed. New CLI/custody tests, full Buildkite readiness and registry release handoff remain unproven; no path/Git dependency fallback or profile weakening occurs. Correction run 43123429502 then stopped after native cargo fmt because the pre-format import-layout hash differed. Its verified encrypted diagnostics archive sha256:d9d5fef54128f7571623cdc85bbe2ce6b75b43db1853fb1e7b4b225371d09485 preserves the actual output: only state moved to the next import line beside state_commit; every other source byte and all approved documentation/spec changes matched. No new checkpoint, commit, push, build or test occurred, and the original journal remained intact. The revised replay patch matches that exact observed formatter output (sha256:a607389e0f43dad013b315df52500a3357252cecf33098a25db812516599531f); exact source hash checks remain enforced, and the latest sealed successor continues the same task. Correction run 43124963685 passed the exact formatted source checks and then stopped after native specs.refresh and trajectory recording because the authored VALIDATION hash included one duplicate blank line. Supported capability-overlay refresh collapses three consecutive newlines to two; approved prose is unchanged, and generated fingerprint changes stay inside existing marker blocks. The revised insertion removes only its final newline and pins the observed authored hash sha256:1a51db2abfc394e552cf520ac9d54bd64d00489d0c07377d8c2bfc344fb7f849. The failed attempt made no checkpoint, commit or push. Its uncommitted native journal is preserved by encrypted diagnostics archive sha256:776d5e4500639f6c3608ff3cab5bf8689fc0aee9886304b152fec4ed97f31967 and reconstructed journal digest sha256:75413445dd842e0ef71e00253e1552e1729a517c7dd8c1e60aab47db31b5dfa8. Archived trajectory branch_01M76ECD20HF9M6Q15W5AKE2WQ event event:5, sequence 5, has step digest sha256:4b6e8108c1a392130940c40b71bb1fc89df6d56fcb2a99767522ed1e277cf87d (UTF-8 sorted-key compact JSON); native trajectory artifact hash sha256:184610a2a7a10452ab83f27794aea0f7e19b6a9ba7f08dc00e61b38499e7d083. This archived step is historical evidence, not restored current authority. The latest sealed task continues on the same committed journal through native CLI recording; no raw projection bytes are restored. Exact source, authored-spec, checkpoint and publication boundaries remain enforced.",
+        "Source review found that moving the browser URL out of next_action hid it from interactive text errors. Both auth and task-operation Display now render the same validated URL. The existing new pending-add regression also parses clean cloud login JSON and checks that deliberate text handoff. bd0c1baa source diagnostics passed clippy, material specs and all checkpoint history but were still executing consumer tests; required Buildkite proof and public metadata access remain pending. No prior readiness is reused for this source change.",
         "User authorized publishing or fixing an open PR. PR 1635 already contains validated foundation ee44e5f8773697b5341107c0d3153de4ebe28bfb; adopted that exact history by fast-forward in a separately provisioned own task workspace. Original persistent-cloud-auth branch 6b0e8add remains intact, not a completion proof. This continuation narrows changes to agent-owned handoff, operation identity and documentation; original hosted acceptance limits remain.",
         "Verified operator handoff and imported original sealed task 01M76J985NNC1F519D2CE4V9Y7. Candidate d85650bafa610dc952fbc91acd91ba5e28b329b7 remains unmodified. Accepted master advanced to d3358e1c after billing PR1631 and release1632; merge reconciliation will remove the new mandatory project roster/pricing client behavior in accordance with issue1628 and the current explicit user boundary, while retaining unrelated accepted changes. Dactyl run43131221323 artifacts verified by ciphertext/plaintext and per-file hashes: both native groups and all14 checks passed on86ed55d; publication/readback failed. Registry still only0.11.1, so client compilation/product execution remain blocked."
       ],

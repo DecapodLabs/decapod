@@ -505,6 +505,11 @@ fn pending_task_creation_keeps_the_browser_link_and_original_operation_id() {
     let action = first["next_action"].as_str().unwrap();
     assert!(action.contains("decapod cloud login"));
     assert!(action.contains(&format!("--operation-id {operation}")));
+    let pending_login = fixture.run(&["cloud", "login", "--format", "json"]);
+    failed(&pending_login, "onboarding_pending");
+    let login: Value = serde_json::from_slice(&pending_login.stdout).unwrap();
+    assert_eq!(login["authorization_url"], first["authorization_url"]);
+    assert!(String::from_utf8_lossy(&pending_login.stderr).contains(url));
     let retry = fixture.run(&[
         "todo",
         "add",

@@ -118,7 +118,11 @@ impl std::fmt::Display for Diagnostic {
             f,
             "Cloud todo operation {}: {:?} ({:?}); {}",
             self.operation_id, self.status, self.failure_kind, self.next_action
-        )
+        )?;
+        if let Some(url) = &self.authorization_url {
+            write!(f, "; sign in: {url}")?;
+        }
+        Ok(())
     }
 }
 

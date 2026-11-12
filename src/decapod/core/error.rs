@@ -157,11 +157,17 @@ impl fmt::Display for DecapodError {
             Self::ContextPackError(s) => write!(f, "Context pack error: {s}"),
             Self::SessionError(s) => write!(f, "Session error: {s}"),
             Self::CloudTodo(diagnostic) => write!(f, "{diagnostic}"),
-            Self::CloudAuth(diagnostic) => write!(
-                f,
-                "Cloud authentication {:?}: {}; next action: {}",
-                diagnostic.status, diagnostic.message, diagnostic.next_action
-            ),
+            Self::CloudAuth(diagnostic) => {
+                write!(
+                    f,
+                    "Cloud authentication {:?}: {}",
+                    diagnostic.status, diagnostic.message
+                )?;
+                if let Some(url) = &diagnostic.authorization_url {
+                    write!(f, "; sign in: {url}")?;
+                }
+                write!(f, "; next action: {}", diagnostic.next_action)
+            }
         }
     }
 }
