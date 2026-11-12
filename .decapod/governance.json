@@ -603,6 +603,14 @@
       "proof_refs": [
         "after1645-source-review"
       ]
+    },
+    {
+      "id": "candidate1401-merge",
+      "summary": "Merge accepted0.140.1 release target1d04f232; retain bounded quota behavior and9-checkpoint native history, review unchanged required graph and105 source hashes.",
+      "input_digest": "sha256:6e8e4ec7cd1ba3f94af10a6b43a9fd3cd7570bc19374665a1ac13c362b2016c3",
+      "proof_refs": [
+        "after1401-review"
+      ]
     }
   ],
   "intents": {
@@ -646,24 +654,24 @@
       "schema_version": "1.1.0",
       "spec_reviews": [
         {
-          "disposition": "updated",
+          "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Retains accepted storage inventory architecture and quota shared in-process Budget; bounded hints cannot authorize proof.",
-          "reviewed_code_fingerprint": "f5a5c188b16b5a9dc367187e37fdea0046587d60e53d93e29a3a0f6584743882",
+          "reason": "Re-reviewed after accepted release0.140.1: same source behavior and storage/quota authored prose; only package version and generated attestations changed.",
+          "reviewed_code_fingerprint": "26523662e1601b6ede0d2806b5b613245757b5ac05a96aa158b3099e6185df78",
           "spec_material_hash": "90b6e8e313f593ad0ec8d7c40bd12e03ba0eeedcab3aeb8f0b6988f849ce6b03"
         },
         {
-          "disposition": "updated",
+          "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Retains accepted storage inventory interfaces and quota reader boundary; CLI flags and provider identity checks unchanged.",
-          "reviewed_code_fingerprint": "f5a5c188b16b5a9dc367187e37fdea0046587d60e53d93e29a3a0f6584743882",
+          "reason": "Re-reviewed after accepted release0.140.1: same source behavior and storage/quota authored prose; only package version and generated attestations changed.",
+          "reviewed_code_fingerprint": "26523662e1601b6ede0d2806b5b613245757b5ac05a96aa158b3099e6185df78",
           "spec_material_hash": "94a84e14ff6ee74d6777ebdd75b9fe2445fce8814e29a15ded1be7bb3d28805a"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Retains accepted storage privacy/security text. Quota tracking only bounded decimal successful-response hints; denial remains terminal and does not select credentials or another reader.",
-          "reviewed_code_fingerprint": "f5a5c188b16b5a9dc367187e37fdea0046587d60e53d93e29a3a0f6584743882",
+          "reason": "Re-reviewed after accepted release0.140.1: same source behavior and storage/quota authored prose; only package version and generated attestations changed.",
+          "reviewed_code_fingerprint": "26523662e1601b6ede0d2806b5b613245757b5ac05a96aa158b3099e6185df78",
           "spec_material_hash": "b8095677dc08420d4a01a49b17f3fa7d14064a8b465f2f596046b22c8aafc311"
         }
       ],
@@ -677,17 +685,21 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1794492908Z"
+      "updated_at": "1794493057Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch",
         "Preserve fresh final registry/source/base checks, required provider proof, public reader identity, immediate denied-request failure and the existing 7200-second maximum budget."
       ],
-      "artifact_hash": "sha256:9016b992a463db43e3d9bd8ed1e0a0475afb33c074b55dca5669469783686254",
+      "artifact_hash": "sha256:2864d395bdc05f8f64a09b5848e326fa1c2497d6e11e96a42f153e0237493a4e",
       "checks": [
         {
           "name": "accepted_target",
+          "status": "passed"
+        },
+        {
+          "name": "after1401-review",
           "status": "passed"
         },
         {
@@ -857,10 +869,17 @@
             "intent_id": "intent:change_01M77EJ4FZFRDV331WWPVRF36S",
             "kind": "trajectory_step_recorded",
             "sequence": 15
+          },
+          {
+            "detail": "trajectory:branch_01M77EJ4KJ409S85KKXV55SAT1",
+            "event_id": "event:16",
+            "intent_id": "intent:change_01M77EJ4FZFRDV331WWPVRF36S",
+            "kind": "trajectory_step_recorded",
+            "sequence": 16
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 15,
+        "next_sequence": 16,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M77EJ4KJ409S85KKXV55SAT1": {
@@ -1134,6 +1153,25 @@
                 ],
                 "sequence": 15,
                 "validation_findings": []
+              },
+              {
+                "action": "verification",
+                "custody_event_id": "event:16",
+                "observations": [
+                  "Target advanced34aec878 to1d04f232 via accepted1646 release0.140.1 before next validation. Guard stopped before push/validation; no validate75 occurred. Normal merge only CHANGELOG and Cargo package version.105 source hashes reverified, only Cargo.toml/Cargo.lock differ, digest be2b53094dcaddbe64037a722a82763ac837d7090dc2b7bf280f7c94452d5a57. Quota source unchanged; fresh full native proof required."
+                ],
+                "proof_refs": [
+                  "after1401-review"
+                ],
+                "scope": [
+                  "\".decapod/managed/specs\"]",
+                  "\"src/decapod/core/validation_runtime/snapshot\"",
+                  "\"src/decapod/core/validation_runtime/snapshot.rs\"",
+                  "\"tests\"",
+                  "paths:[\"src/decapod/core/snapshot_provider\""
+                ],
+                "sequence": 16,
+                "validation_findings": []
               }
             ]
           }
@@ -1161,6 +1199,7 @@
         "Preserved native active journal in Git stash6f4306909bd74ccddb6cf62d494097c9b3b3bb71; restored it into merge, accepted whole-product storage prose plus four authored quota sections; native agent.init/specs.refresh regenerates projections.",
         "Private validate022.stdout: STALE_ACCEPTED_BASE before adapter preparation; remote master advanced fc1e2b94 to34aec878 via merged1645 storage inventory",
         "Source implements bounded successful-header quota hints shared by nested budgets, cold-discovery pacing, fresh final registry/source/base checks, and no retry on denial. Six new fixtures are authored but have not executed. Canonical ARCHITECTURE/INTERFACES/SECURITY spec reviews recorded through native CLI. Container-private Git configuration backed up, official gh configured for authorized Git publication before proof; anonymous API reader remains credential-free.",
+        "Target advanced34aec878 to1d04f232 via accepted1646 release0.140.1 before next validation. Guard stopped before push/validation; no validate75 occurred. Normal merge only CHANGELOG and Cargo package version.105 source hashes reverified, only Cargo.toml/Cargo.lock differ, digest be2b53094dcaddbe64037a722a82763ac837d7090dc2b7bf280f7c94452d5a57. Quota source unchanged; fresh full native proof required.",
         "Verified official v0.139.0 LinuxAArch64 release archive sha256:24b5153ce3a04d6ab0c37d6d4be2428c623066b4b864c86116524371ca542649; isolated newcontroller image not published. Native successor01M77N7N2XK4M9KE1CB1435JBW imported once into empty private tmpfs with notmpcopyup; claim+workspace can_work true. First destination import rejected old host revision1 and replaced no state. Old owned source container stopped after fresh claim.",
         "Verified official0.139.1 archive ce1e96bde351e32b765a5052411bb601908c2e9a0a89fc3731fd7e8587f99607; successor01M77R6KGAGE6598M0GPA0GWM2 imported once, claimed, can_work true. Source139 container stopped. Generated premerge projections saved in stash71b357f07d1fc0dec78defb948285341b5240541; fresh native projections replace stale ones.",
         "Verified registry0.140.0 checksum fa0571ae8052b102097fa98bdb644b17f03608eddf25b0902f346b2a27b83bb0 and official LinuxARM64 release archive76b92ced9e19594b157f51ced7354a7e0ef4237a145f63e7ebc78a8f80b679e8. Observed existing release43220596706; did not start competing release. Fresh native transfer01M77X4C8FTY8BN3RGME8D6YWV imported once; claim/workspacecan_worktrue under independently released0.140.0. Old1391container stopped after fresh claim.",
