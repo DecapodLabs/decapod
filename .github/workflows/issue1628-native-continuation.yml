@@ -1,4 +1,4 @@
-name: Checkpoint issue 1628 client evidence corrections
+name: Resume issue 1628 client formatter checkpoint
 
 on:
   push:
@@ -62,9 +62,9 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          python3 "$GITHUB_WORKSPACE/operations/$OPERATIONS_PATH/custody_relay_client_corrections.py" prepare \
+          python3 "$GITHUB_WORKSPACE/operations/$OPERATIONS_PATH/custody_relay_client_formatter.py" prepare \
             --slug decapod \
-            --report "$GITHUB_WORKSPACE/operations/$OPERATIONS_PATH/decapod-admitted-result.json" \
+            --report "$GITHUB_WORKSPACE/operations/$OPERATIONS_PATH/client-correction-failure-result.json" \
             --directory /root/issue1628-relay
       - name: Publish only the ephemeral receiver certificate
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
@@ -79,9 +79,9 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          python3 "$GITHUB_WORKSPACE/operations/$OPERATIONS_PATH/custody_relay_client_corrections.py" receive \
+          python3 "$GITHUB_WORKSPACE/operations/$OPERATIONS_PATH/custody_relay_client_formatter.py" receive \
             --slug decapod \
-            --report "$GITHUB_WORKSPACE/operations/$OPERATIONS_PATH/decapod-admitted-result.json" \
+            --report "$GITHUB_WORKSPACE/operations/$OPERATIONS_PATH/client-correction-failure-result.json" \
             --directory /root/issue1628-relay
       - name: Correct warnings and evidence on original governed task
         env:

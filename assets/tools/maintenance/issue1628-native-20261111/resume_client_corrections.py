@@ -16,12 +16,12 @@ BASE = "c5de35a89b27e788169612ae71681e45c13bf71a"
 SOURCE = "1289a80a782d651af337125ee447db4b5723cbd7"
 TASK = "code_01m76c1kqhjgr3yr"
 BRANCH = "agent/chatgpt-issue1628-decapod/" + TASK + "-cloud-connector"
-ACTOR = "chatgpt-issue1628-decapod"
-RECEIVER = "chatgpt-issue1628-decapod-next"
+ACTOR = "chatgpt-issue1628-decapod-next"
+RECEIVER = "chatgpt-issue1628-decapod"
 OPS = "ops/issue1628-native-20261111"
-TRANSFER = "01M76EGYPHAVQZC0MXD73AF3X8"
-INCOMING = "sha256:6514cb6f433f347116df2963850d6077c88506abc2e0ab546fb76386bf81a471"
-INCOMING_BRANCH = "issue1628-decapod-continuation-9a61daffa511"
+TRANSFER = "01M76GWVMZWGY8XFXFZ8W5JR6V"
+INCOMING = "sha256:b3cbf82ce49aa91fcf740580d36ab8f2e57e6766207aa8dcddbc3948774756dc"
+INCOMING_BRANCH = "issue1628-decapod-corrections-757cabb0b9e1"
 CONTROLLER = "31bd8e3983dd328a1796da8af827647be691982c91d7ec7a7b11c7fdc2b4d723"
 CERT = "c54fbd6b328ebc89c57a0b158cbdddc434e37f48b8283b0e9af532506600f6dc"
 SPEC = ".decapod/managed/specs/"
@@ -233,20 +233,41 @@ def main():
         if evaluation.get("status") != "allow":
             raise Blocked("native request evaluation did not allow continuation")
         result["evaluation"] = evaluation
+        source_prior = json.loads(input_bytes("source-result.json", manifest["source_report_sha256"]))
+        prior_proof = source_prior["checkpoint_verification"]
+        if not (source_prior.get("repository") == REPO and source_prior.get("task") == TASK
+                and source_prior.get("branch") == BRANCH and source_prior.get("base") == BASE
+                and source_prior.get("head_sha") == SOURCE and source_prior.get("final_head_sha") == SOURCE
+                and source_prior.get("source_dirty") is False and source_prior.get("custody_exported") is True
+                and source_prior.get("publication_ready") is False and prior_proof.get("history_proven") is True
+                and prior_proof.get("inspection_complete") is True and prior_proof.get("findings") == []
+                and prior_proof.get("base_commit") == BASE and prior_proof.get("head_commit") == SOURCE):
+            raise Blocked("original source report does not bind the exact clean checkpoint")
         prior = json.loads(input_bytes("previous-result.json", manifest["previous_report_sha256"]))
-        prior_proof = prior["checkpoint_verification"]
+        recovery = manifest["formatting_recovery"]
         prior_transfer = prior["transfer"]
         if not (prior.get("repository") == REPO and prior.get("task") == TASK and prior.get("branch") == BRANCH
                 and prior.get("base") == BASE and prior.get("head_sha") == SOURCE and prior.get("final_head_sha") == SOURCE
-                and prior.get("source_dirty") is False and prior.get("custody_exported") is True
-                and prior.get("publication_ready") is False and prior_proof.get("history_proven") is True
-                and prior_proof.get("inspection_complete") is True and prior_proof.get("findings") == []
-                and prior_proof.get("base_commit") == BASE and prior_proof.get("head_commit") == SOURCE
+                and prior.get("source") == SOURCE and prior.get("source_dirty") is True
+                and prior.get("custody_exported") is True and prior.get("publication_ready") is False
+                and prior.get("full_boundary_passed") is False and prior.get("checkpoints") is False
+                and prior.get("original_journal_preserved") is True
+                and prior.get("original_journal_blob") == recovery["original_journal_blob"]
+                and prior.get("original_checkpoint_verification") == prior_proof
+                and prior.get("source_push") is None and prior.get("pushed") is False
+                and prior.get("observed_remote_head_sha") == SOURCE and prior.get("status") == "blocked"
+                and prior.get("build_tests") == "not_run" and prior.get("full_publisher") == "not_run"
+                and recovery.get("run_id") == 43123429502 and prior.get("blocker") == recovery["blocker"]
+                and prior.get("diagnostics", {}).get("plaintext_sha256") == recovery["diagnostics_archive_sha256"]
                 and prior_transfer.get("transfer_id") == TRANSFER and prior_transfer.get("receiver") == ACTOR
                 and prior_transfer.get("plaintext_sha256") == INCOMING and prior_transfer.get("source_sealed") is True
                 and prior_transfer.get("candidate_sha") == SOURCE and prior_transfer.get("candidate_branch") == BRANCH
                 and prior_transfer.get("native_source_commit") == BASE and prior_transfer.get("native_source_branch") == INCOMING_BRANCH):
-            raise Blocked("prior report does not bind the exact clean checkpoint and sealed successor")
+            raise Blocked("formatting recovery does not bind the exact preserved failure and sealed successor")
+        input_bytes("formatting-failure-pending.patch", recovery["pending_patch_sha256"])
+        input_bytes("formatting-failure-prepared-hashes.json", recovery["prepared_hashes_sha256"])
+        input_bytes("unused-imports-preformat.patch", recovery["original_patch_sha256"])
+        result["formatting_recovery"] = recovery
         observed = json.loads(input_bytes("buildkite-7937-observed-errors.json", manifest["buildkite_evidence_sha256"]))
         if (observed.get("candidate") != SOURCE or observed.get("accepted_base") != BASE
                 or observed.get("build") != 7937 or observed.get("compiler_result", {}).get("errors") != 11

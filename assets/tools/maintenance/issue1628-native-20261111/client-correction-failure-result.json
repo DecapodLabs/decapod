@@ -1,0 +1,113 @@
+{
+  "schema": "decapod.issue1628-client-corrections.v1",
+  "repository": "DecapodLabs/decapod",
+  "base": "c5de35a89b27e788169612ae71681e45c13bf71a",
+  "source": "1289a80a782d651af337125ee447db4b5723cbd7",
+  "task": "code_01m76c1kqhjgr3yr",
+  "branch": "agent/chatgpt-issue1628-decapod/code_01m76c1kqhjgr3yr-cloud-connector",
+  "operations_sha": "ab9fc8d23c1d68c4ad4475d33695db34d7c038d5",
+  "status": "blocked",
+  "imported": true,
+  "admitted": true,
+  "container_observed": true,
+  "original_journal_preserved": true,
+  "checkpoints": false,
+  "publication_ready": false,
+  "full_boundary_passed": false,
+  "custody_exported": true,
+  "head_sha": "1289a80a782d651af337125ee447db4b5723cbd7",
+  "pr_url": null,
+  "pushed": false,
+  "build_tests": "not_run",
+  "full_publisher": "not_run",
+  "publication_boundary": "Checkpointed source push only; complete Buildkite readiness and registry release handoff remain required",
+  "controller": {
+    "release": "v0.138.2",
+    "binary_sha256": "31bd8e3983dd328a1796da8af827647be691982c91d7ec7a7b11c7fdc2b4d723"
+  },
+  "evaluation": {
+    "schema_version": "1.0.0",
+    "status": "allow",
+    "prompt_sha256": "2f434d94103b069bc4b703f0b4a3fdbb3064ff7207d5406ad5410d93047a7c83",
+    "prompt_bytes": 702,
+    "findings": [],
+    "action": "Proceed with the prompt under the normal Decapod contract."
+  },
+  "historical_buildkite_evidence": {
+    "artifact_sha256": "sha256:71dff4b541fe957f4e8f3b62ba538738d91d25824b608013d0cf4225527dd4f8",
+    "source": "1289a80a782d651af337125ee447db4b5723cbd7",
+    "build": 7937,
+    "url": "https://buildkite.com/decapodlabs/decapod/builds/7937",
+    "scope": "Observed prior candidate failure only; not a corrected-candidate test result"
+  },
+  "admission_seed": {
+    "oid": "87825ac902187b9e60a662448e9cf1ce96b127ff",
+    "paths": [
+      ".decapod/governance.json",
+      ".decapod/managed/Dockerfile.decapod",
+      ".decapod/managed/specs/.manifest.json",
+      ".decapod/managed/specs/ARCHITECTURE.md",
+      ".decapod/managed/specs/INTENT.md",
+      ".decapod/managed/specs/INTERFACES.md",
+      ".decapod/managed/specs/OPERATIONS.md",
+      ".decapod/managed/specs/README.md",
+      ".decapod/managed/specs/SECURITY.md",
+      ".decapod/managed/specs/SEMANTICS.md",
+      ".decapod/managed/specs/VALIDATION.md",
+      "AGENTS.md",
+      "CLAUDE.md",
+      "CODEX.md",
+      "GEMINI.md"
+    ],
+    "artifact": "admission-seed.der",
+    "plaintext_sha256": "sha256:6ee02c25dffdf0e78c280142e974e2c171478c8b80e3b3cc69ed4f2c98eb9932",
+    "ciphertext_sha256": "sha256:060e3eb88dd0e795e9411a79da46dc9fbf421f9059b7be560c5df6aabec51111"
+  },
+  "original_journal_blob": "1b79f21875be80efa3245186fc937f3e0a5f25b6",
+  "original_checkpoint_verification": {
+    "schema": "decapod.checkpoint-history.v1",
+    "scope": "checkpoint_history",
+    "disposition": "proven",
+    "base_commit": "c5de35a89b27e788169612ae71681e45c13bf71a",
+    "head_commit": "1289a80a782d651af337125ee447db4b5723cbd7",
+    "history_proven": true,
+    "inspection_complete": true,
+    "publication_ready": false,
+    "verified_commits": [
+      "1289a80a782d651af337125ee447db4b5723cbd7"
+    ],
+    "findings": []
+  },
+  "blocker": {
+    "stage": "format reviewed client correction",
+    "kind": "Blocked",
+    "reason": "formatted correction: exact reviewed source changed: src/decapod/lib.rs"
+  },
+  "observed_remote_head_sha": "1289a80a782d651af337125ee447db4b5723cbd7",
+  "candidate_matches_observed_remote": true,
+  "transfer": {
+    "task_id": "code_01m76c1kqhjgr3yr",
+    "transfer_id": "01M76GWVMZWGY8XFXFZ8W5JR6V",
+    "receiver": "chatgpt-issue1628-decapod-next",
+    "source_sealed": true,
+    "native_source_commit": "c5de35a89b27e788169612ae71681e45c13bf71a",
+    "native_source_branch": "issue1628-decapod-corrections-757cabb0b9e1",
+    "candidate_branch": "agent/chatgpt-issue1628-decapod/code_01m76c1kqhjgr3yr-cloud-connector",
+    "candidate_sha": "1289a80a782d651af337125ee447db4b5723cbd7",
+    "artifact": "native-custody.der",
+    "plaintext_sha256": "sha256:b3cbf82ce49aa91fcf740580d36ab8f2e57e6766207aa8dcddbc3948774756dc",
+    "ciphertext_sha256": "sha256:369c76568a2dec405059af51bb05621f5a0b5f5da2656681081df10a2c842820"
+  },
+  "final_head_sha": "1289a80a782d651af337125ee447db4b5723cbd7",
+  "source_dirty": true,
+  "candidate_bundle": {
+    "artifact": "candidate.der",
+    "plaintext_sha256": "sha256:32364558aa6eb076ee07bc208ae81f5ca913240573abdd52cd395465763b90b1",
+    "ciphertext_sha256": "sha256:ccba7acb41ae8fb52e9dd6dcd9296dfab73daafe2494b3468aea0e93fe8373b7"
+  },
+  "diagnostics": {
+    "artifact": "native-diagnostics.der",
+    "plaintext_sha256": "sha256:d9d5fef54128f7571623cdc85bbe2ce6b75b43db1853fb1e7b4b225371d09485",
+    "ciphertext_sha256": "sha256:20702a82933a3742b20ce271aa9feeaadc84d05945c87a5fb11c6ed08843fabf"
+  }
+}

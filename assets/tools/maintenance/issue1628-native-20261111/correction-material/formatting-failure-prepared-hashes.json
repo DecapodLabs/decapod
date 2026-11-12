@@ -1,0 +1,9 @@
+{
+  ".decapod/config.toml": "sha256:153ad66ad36f19d6fd71eb8163ae8c344624ccebb15801dd2d37f8038fb9199e",
+  "Cargo.toml": "sha256:fb697173e3505a25660cacbcf274855b769d0d0e20a1b783414f3cc0adf59ded",
+  "Cargo.lock": "sha256:ee80472cdbae893ecdaf86e98d8d287eabe338d2e2eb876a9012d49c78eb1ff7",
+  "tests/release_dependency_policy.rs": "sha256:96d3936d2e2ac255ec7f7b73173652109bd3213a45800a9e39ff6fb4fe1f49b9",
+  "src/decapod/lib.rs": "sha256:f8c9632776d171cd148494a8e81ff49dabd79ae8b5c84663a37e8bca6caa249f",
+  "docs/book/src/reference/supabase-validation.md": "sha256:4634ea59841f3210ddf40afdfe859a3a3b0c2d614a029e9d2292c7438e3bb941",
+  "docs/book/src/reference/propodus.md": "sha256:917d38815cb31ba97402ad3f8e500256da2dd1de497eeacfcc7f900d306b8a2a"
+}
