@@ -3,6 +3,13 @@
 #[path = "common/cloud_managed.rs"]
 mod managed;
 
+// The accepted source-CI executor names this existing target explicitly.
+// Keep the managed scenarios in its required execution, as well as their
+// independently runnable integration target.
+#[cfg(feature = "supabase-cloud")]
+#[path = "cloud_managed_session.rs"]
+mod managed_session;
+
 use std::path::Path;
 use std::process::{Command, Output};
 use tempfile::TempDir;

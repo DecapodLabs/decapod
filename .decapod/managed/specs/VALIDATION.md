@@ -100,11 +100,21 @@ path rejection, exact binding, phase invariants and serialized custody.
 These tests must run on the exact checkpointed candidate. Static review and
 source formatting do not establish compilation or execution. The managed API
 is consumed from the published Dactyl 0.12.0 registry dependency.
-The required `supabase-consumer` recipe explicitly includes the new
-`cloud_managed_session` integration target alongside every existing target and
-the complete library suite. Merely adding its source file would leave all
-twelve CLI scenarios outside that recipe; source review caught and corrected
-this omission before readiness. No existing command, feature or check is removed.
+The accepted source-CI executor retains its own required recipe. Its diagnostic
+record on `ee288c86` showed that a candidate helper edit did not add a new target
+to that recipe. The existing required `cloud_supabase_boundary` target now
+includes `cloud_managed_session` as a Rust test module, so all twelve scenarios
+execute under the accepted recipe without changing executor authority. The
+private seed helper derives its nested harness name and preserves independent
+standalone execution. Every existing required command/target remains intact.
+
+That diagnostic run passed 1,674 library tests (eight ignored) and nineteen of
+twenty existing boundary tests. Its remaining failure showed that unsupported
+`todo done --validated` reached discovery before rejecting unavailable proof
+capture. A shared guard now rejects it before connector construction, while
+retaining the direct-store guard and the existing no-network/no-mutation test.
+The full native validation of that superseded candidate was interrupted; it
+does not supply a final readiness verdict. Fresh complete proof is required.
 `tests/release_dependency_policy.rs`, Cargo manifests and source-CI configuration
 remain intact; an unpublished source overlay cannot establish release-policy or
 publication readiness. No local fixture claims hosted managed Auth, production
@@ -1170,7 +1180,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `954f906200fb956f178545d4670c1e6d4555f002ddb46f82012065a4a66afe06`
+- Repository signal fingerprint: `a3e09115adaaad6056fdcc2341eebdc9cdffb3089658f170baf45be9ce33a849`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (227 files), `tests/` (226 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

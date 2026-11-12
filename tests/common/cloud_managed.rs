@@ -17,13 +17,15 @@ pub fn seed_ready(
     repository: &str,
     session: Session,
 ) {
+    // The fixture can be included under a required boundary target. Rust's
+    // test harness omits the crate prefix but retains nested module names.
+    let module = module_path!()
+        .split_once("::")
+        .expect("private seed fixture is a test module")
+        .1;
+    let seed_test = format!("{module}::seed_private_session_fixture");
     let output = Command::new(std::env::current_exe().unwrap())
-        .args([
-            "--exact",
-            "managed::seed_private_session_fixture",
-            "--nocapture",
-            "--test-threads=1",
-        ])
+        .args(["--exact", &seed_test, "--nocapture", "--test-threads=1"])
         .current_dir(project)
         .env("HOME", machine)
         .env("XDG_DATA_HOME", machine.join("data"))
