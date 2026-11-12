@@ -5,7 +5,11 @@ use std::process::{Command, Output};
 use tempfile::tempdir;
 
 fn run_cmd(repo_root: &Path, args: &[&str]) -> Output {
-    let exe = env!("CARGO_BIN_EXE_decapod");
+    // Resolve before changing the child cwd; Bazel supplies a runfiles-relative
+    // binary while Cargo supplies an absolute executable.
+    let exe = Path::new(env!("CARGO_BIN_EXE_decapod"))
+        .canonicalize()
+        .expect("decapod test binary");
     let output = Command::new(exe)
         .current_dir(repo_root)
         .args(args)
@@ -141,6 +145,12 @@ fn test_orientation_and_mentor_share_the_reflection_continuation() {
     );
     assert!(!unbound.status.success());
     assert!(String::from_utf8_lossy(&unbound.stderr).contains("REFLECTION_TASK_REQUIRED"));
+    let start = std::time::Instant::now();
+    let baseline = run_cmd(root, &["infer", "orientation", "--task-id", &task]);
+    let baseline_us = start.elapsed().as_micros();
+    assert!(baseline.status.success());
+    assert!(extract_json(&baseline).get("reflection").is_none());
+    let start = std::time::Instant::now();
     let orientation = run_cmd(
         root,
         &[
@@ -152,6 +162,7 @@ fn test_orientation_and_mentor_share_the_reflection_continuation() {
             &first.to_string(),
         ],
     );
+    let reflection_us = start.elapsed().as_micros();
     assert!(orientation.status.success());
     let first = extract_json(&orientation)["reflection"].clone();
     assert_eq!(first["disposition"], "reflect");
@@ -182,6 +193,15 @@ fn test_orientation_and_mentor_share_the_reflection_continuation() {
     assert_eq!(rpc["result"]["reflection"]["completion_proven"], false);
     assert_eq!(rpc["result"]["reflection"]["round"], 2);
     assert!(rpc["blocked_by"].as_array().unwrap().is_empty());
+    use std::io::Write;
+    writeln!(
+        std::io::stderr().lock(),
+        "reflection_eval {}",
+        serde_json::json!({"case":"cli_orientation", "baseline_latency_us":baseline_us,
+            "reflection_latency_us":reflection_us, "baseline_payload_bytes":baseline.stdout.len(),
+            "reflection_payload_bytes":orientation.stdout.len()})
+    )
+    .unwrap();
 }
 
 #[test]

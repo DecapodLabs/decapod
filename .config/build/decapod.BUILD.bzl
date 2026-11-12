@@ -251,6 +251,7 @@ def decapod_targets():
             ] else [],
             srcs = [path] + [
                 "tests/consumer_readiness.rs",
+                "tests/common/consumer_readiness_fixture.rs",
                 "tests/init_ci_scaffolding.rs",
                 "tests/init_config_behavior.rs",
                 "tests/support/cli_workunit_recovery.rs",
@@ -258,7 +259,15 @@ def decapod_targets():
                 "tests/fixtures/justfile_consumer/src/lib.rs",
                 "tests/fixtures/justfile_consumer/src/distance.rs",
                 "tests/fixtures/justfile_consumer/src/temperature.rs",
-            ] if path == "tests/cli_contracts.rs" else [path] + [
+            ] if path == "tests/cli_contracts.rs" else [
+                path,
+                "tests/common/consumer_readiness_fixture.rs",
+                "tests/support/fresh_docs_readiness.rs",
+                "tests/infer_precision.rs",
+            ] if path == "tests/entrypoint_correctness.rs" else [
+                path,
+                "tests/common/consumer_readiness_fixture.rs",
+            ] if path == "tests/consumer_readiness.rs" else [path] + [
                 "assets/tools/release_metadata.rs",
                 "src/decapod/core/release_metadata.rs",
                 "assets/tools/source_ci_profile.rs",

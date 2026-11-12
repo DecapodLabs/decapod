@@ -9,6 +9,26 @@ fn lifecycle_precedes_tags_and_inferences_remain_proposals_with_provenance() {
         root: temp.path().join(".decapod/data"),
     };
     federation::initialize_federation_db(&store.root).unwrap();
+    // Canonical federation mutations require verified writers. These isolated
+    // fixture identities do not authenticate human approval; confidence remains
+    // a separate provenance label tested below.
+    crate::core::broker::DbBroker::new(&store.root)
+        .with_conn(
+            &federation::federation_db_path(&store.root),
+            "decapod",
+            None,
+            "policy.init",
+            |conn| {
+                for actor in ["owner", "agent", "importer"] {
+                    conn.execute(
+                        "INSERT INTO agents(agent_id, trust_level, updated_at) VALUES(?1, 'verified', '1Z')",
+                        [actor],
+                    )?;
+                }
+                Ok(())
+            },
+        )
+        .unwrap();
     let old = federation::add_node(
         &store,
         "Cache reads",

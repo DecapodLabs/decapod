@@ -97,6 +97,13 @@ fn bytes(root: &Path) -> Vec<u8> {
     fs::read(root.join(governance_document::GOVERNANCE_PATH)).unwrap()
 }
 
+fn measurement(value: Value) {
+    use std::io::Write;
+    // Keep bounded measurements visible for passing cases under the configured
+    // Cargo harness; no workflow/profile change or uncaptured source text.
+    writeln!(std::io::stderr().lock(), "reflection_eval {value}").unwrap();
+}
+
 #[test]
 fn obvious_safe_action_has_no_artificial_interview_or_completion_claim() {
     let (temp, request) = fixture(vec![]);
@@ -125,19 +132,19 @@ fn obvious_safe_action_has_no_artificial_interview_or_completion_claim() {
         )
         .is_ok()
     );
-    println!(
-        "reflection safe: latency_us={} outcome_bytes={} governance_growth_bytes={}",
-        elapsed.as_micros(),
-        serde_json::to_vec(&outcome).unwrap().len(),
-        bytes(temp.path()).len() - before
-    );
+    measurement(json!({"case":"safe", "latency_us":elapsed.as_micros(),
+        "outcome_bytes":serde_json::to_vec(&outcome).unwrap().len(),
+        "governance_growth_bytes":bytes(temp.path()).len() - before,
+        "datastore_growth_bytes":fs::metadata(db).unwrap().len() - db_bytes_before}));
 }
 
 #[test]
 fn architectural_conflict_is_caught_and_evidence_bound_scope_revision_proceeds() {
     let (temp, request) = fixture(vec!["src/mutations.rs".into()]);
     let before = bytes(temp.path()).len();
+    let start = Instant::now();
     let outcome = submit(temp.path(), &request).unwrap();
+    let initial_us = start.elapsed().as_micros();
     assert_eq!(outcome.disposition, Disposition::Reflect);
     let challenge = outcome.challenge.as_ref().unwrap();
     assert!(challenge.enforceable);
@@ -148,7 +155,9 @@ fn architectural_conflict_is_caught_and_evidence_bound_scope_revision_proceeds()
     let mut revised = next(&request, &outcome, "revised");
     revised.touched_paths = vec!["src/read_adapter.rs".into()];
     revised.rationale = "Keep the concurrent mutation source untouched; investigate a fresh-read adapter and retain visibility regression proof.".into();
+    let start = Instant::now();
     let revised = submit(temp.path(), &revised).unwrap();
+    let revised_us = start.elapsed().as_micros();
     assert_eq!(revised.disposition, Disposition::Proceed);
     let plan = plan_governance::load_plan(temp.path()).unwrap().unwrap();
     assert_eq!(plan.state, PlanState::Approved);
@@ -161,12 +170,12 @@ fn architectural_conflict_is_caught_and_evidence_bound_scope_revision_proceeds()
     );
     assert!(!revised.completion_proven);
     assert!(check_execute(temp.path(), &temp.path().join(".decapod/data"), &plan, None).is_ok());
-    println!(
-        "reflection corrected: rounds={} outcome_bytes={} governance_growth_bytes={}",
-        revised.round,
-        serde_json::to_vec(&revised).unwrap().len(),
-        bytes(temp.path()).len() - before
-    );
+    measurement(json!({"case":"corrected", "rounds":revised.round,
+        "initial_latency_us":initial_us,"revised_latency_us":revised_us,
+        "initial_outcome_bytes":serde_json::to_vec(&outcome).unwrap().len(),
+        "outcome_bytes":serde_json::to_vec(&revised).unwrap().len(),
+        "journal_bytes":serde_json::to_vec(plan.reflection.as_ref().unwrap()).unwrap().len(),
+        "governance_growth_bytes":bytes(temp.path()).len() - before}));
 }
 
 #[test]

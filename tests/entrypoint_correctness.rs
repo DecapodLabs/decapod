@@ -10,6 +10,11 @@ use std::path::PathBuf;
 use std::process::{Command, Output};
 use tempfile::TempDir;
 
+// Orientation is an agent entrypoint. Keep its reflection/legacy continuation
+// cases in the existing required CLI suite as well as its standalone target.
+#[path = "infer_precision.rs"]
+mod infer_precision;
+
 fn resolve_decapod_bin() -> PathBuf {
     let cargo_bin = env!("CARGO_BIN_EXE_decapod");
     if let Ok(path) = std::path::Path::new(cargo_bin).canonicalize() {
@@ -1388,4 +1393,19 @@ fn test_feature_branch_allows_canonical_rewrite_from_prior_release() {
         !output.contains("ENTRYPOINT_COMMIT_DISCIPLINE"),
         "canonical prior-release rewrite must not trip discipline gate: {output}"
     );
+}
+
+// This required target has a separate unchanged aggregate budget from CLI
+// contracts; retain the genuine governed flow without duplicating API cases.
+#[cfg(any(target_os = "linux", target_os = "macos"))]
+#[path = "common/consumer_readiness_fixture.rs"]
+mod consumer_readiness_fixture;
+#[cfg(any(target_os = "linux", target_os = "macos"))]
+#[path = "support/fresh_docs_readiness.rs"]
+mod fresh_docs_readiness;
+
+#[test]
+#[cfg(any(target_os = "linux", target_os = "macos"))]
+fn fresh_docs_cli_admission_then_complete_runtime_proves_current_source() {
+    fresh_docs_readiness::fresh_governed_docs_cli_admission_then_runtime_executes_first_proof();
 }

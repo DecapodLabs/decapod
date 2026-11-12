@@ -600,6 +600,11 @@
       "id": "reflection-1639-release-gate",
       "summary": "Preserve failed full Buildkite validation, passed candidate clippy, pending corpus proof and explicit release-update authority boundary.",
       "input_digest": "sha256:069118dc7c84b3ddb96ff9df44d78a415409709a0ce81a63b77d50c337df1ca6"
+    },
+    {
+      "id": "reflection-1639-validation-recovery",
+      "summary": "Merge accepted validation recovery, authorize lifecycle fixture writers, include reflection CLI in the required suite and expose bounded measurements.",
+      "input_digest": "sha256:9e3b7211d190f4a47c484489b3ab73702f14443b0ed48e0a16f5bfe1987d82ad"
     }
   ],
   "intents": {
@@ -646,22 +651,22 @@
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "The existing orientation and mentor continuation remains the sole mechanism; the CLI context check closes an authority edge case.",
-          "reviewed_code_fingerprint": "05cff6b42542328d6e0930da49d1b0d5f1137e5eac78c2167af174566a634abe",
-          "spec_material_hash": "5e6f43ab12508970d6c2f14ad52d221c217dc4fdb8faaf6f819df400b3bc9f0c"
+          "reason": "Reflection still composes existing plan, custody and mentor primitives. Accepted validation recovery is retained; only fixture authorization and existing-suite coverage were repaired.",
+          "reviewed_code_fingerprint": "0af3f5ca9825d73ce0dc84271da3efecad9986154a667acf54f533285c7ad742",
+          "spec_material_hash": "c96ff0f6eb3075ec7a387369b10e73a16fcd77f169f327166a2ef95ac1544bcf"
         },
         {
-          "disposition": "updated",
+          "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "CLI reflection requires an explicit matching outer task ID before any continuation is recorded.",
-          "reviewed_code_fingerprint": "05cff6b42542328d6e0930da49d1b0d5f1137e5eac78c2167af174566a634abe",
-          "spec_material_hash": "db9d8060aa30413f96dc380d595ee1f649944fad0298c390a44920c68831650b"
+          "reason": "Merged accepted target retains interface contracts; the existing required entrypoint suite now executes CLI reflection compatibility and continuation cases.",
+          "reviewed_code_fingerprint": "0af3f5ca9825d73ce0dc84271da3efecad9986154a667acf54f533285c7ad742",
+          "spec_material_hash": "b21d876799a996edfb1df92b4486125ae7b5c4fa1fb98a9b8282d5c2a4ceeeae"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Missing outer task binding cannot override an orientation human gate; source-CI diagnostics and style repairs do not establish proof.",
-          "reviewed_code_fingerprint": "05cff6b42542328d6e0930da49d1b0d5f1137e5eac78c2167af174566a634abe",
+          "reason": "The temporary lifecycle fixture registers verified writers and keeps production trust gates unchanged. The installed supported controller reports 0.139.1; no approval or proof was inferred from labels.",
+          "reviewed_code_fingerprint": "0af3f5ca9825d73ce0dc84271da3efecad9986154a667acf54f533285c7ad742",
           "spec_material_hash": "ecc8e7afebb549a800744002854826201e68cfbacea69a822006093227f6f7a9"
         }
       ],
@@ -675,16 +680,13 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1794484317Z"
+      "updated_at": "1794487181Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:bfadde57dae072d94f8fef46e56de7ad1c48eb4357f923f6ef438d14a8e86278",
-      "blockers": [
-        "Required standalone validation rejects 0.139.0 generated projections for accepted package 0.139.1. Explicit approval for the supported session-acquire controller update is pending."
-      ],
+      "artifact_hash": "sha256:90afad655699f6df78b159671dbb3eb371b19390f16db4e8a751abd5eb147525",
       "checks": [
         {
           "name": "buildkite-clippy",
@@ -697,6 +699,10 @@
         {
           "name": "cli-reflection-task-binding",
           "status": "partial"
+        },
+        {
+          "name": "controller-release-1391",
+          "status": "passed"
         },
         {
           "name": "format-and-whitespace",
@@ -719,11 +725,23 @@
           "status": "failed"
         },
         {
+          "name": "lifecycle-fixture-32fdc534",
+          "status": "failed"
+        },
+        {
+          "name": "reflection-15-cases-32fdc534",
+          "status": "passed"
+        },
+        {
           "name": "reflection-behavioral-corpus",
           "status": "unavailable"
+        },
+        {
+          "name": "reviewed-profile-inventory",
+          "status": "passed"
         }
       ],
-      "current_phase": "awaiting-release-authorization",
+      "current_phase": "validation-preparation",
       "custody": {
         "events": [
           {
@@ -807,10 +825,17 @@
             "intent_id": "intent:change_01M77NNMKGESW1QW4Y2GQ8V6NC",
             "kind": "trajectory_step_recorded",
             "sequence": 13
+          },
+          {
+            "detail": "trajectory:branch_01M77NNMPBCKJFWXSA4SD6RFHS",
+            "event_id": "event:14",
+            "intent_id": "intent:change_01M77NNMKGESW1QW4Y2GQ8V6NC",
+            "kind": "trajectory_step_recorded",
+            "sequence": 14
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 13,
+        "next_sequence": 14,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M77NNMPBCKJFWXSA4SD6RFHS": {
@@ -1077,6 +1102,42 @@
                 "validation_findings": [
                   "Full validation ended SNAPSHOT_NOT_READY after 638132 ms provider wait; no local process was interrupted. Exact private snapshot remains decapod-snapshot-iZThaW. Complete runtime corpus and cost deltas are unproven."
                 ]
+              },
+              {
+                "action": "validation-preparation",
+                "custody_event_id": "event:14",
+                "observations": [
+                  "tests/unit/core/state_knowledge_tests.rs",
+                  "tests/unit/core/reflection_tests.rs",
+                  "tests/infer_precision.rs",
+                  "tests/entrypoint_correctness.rs",
+                  ".config/build/decapod.BUILD.bzl",
+                  "docs/architecture/bounded-reflection.md",
+                  ".decapod/managed/specs/VALIDATION.md",
+                  "https://github.com/DecapodLabs/decapod/actions/runs/43215838324/job/131175931908"
+                ],
+                "proof_refs": [
+                  "reflection-15-cases-32fdc534",
+                  "lifecycle-fixture-32fdc534",
+                  "controller-release-1391",
+                  "reviewed-profile-inventory",
+                  "format-and-whitespace"
+                ],
+                "scope": [
+                  "\".decapod/managed/specs\"]",
+                  "\"assets/schemas\"",
+                  "\"constitution\"",
+                  "\"docs\"",
+                  "\"src/decapod/plugins/federation.rs\"",
+                  "\"tests\"",
+                  "paths:[\"src/decapod/core\""
+                ],
+                "sequence": 14,
+                "validation_findings": [
+                  "User continuation authorizes the previously requested 0.139.1 update. Session acquire required no install: the installed binary already reports 0.139.1. Temporary update opt-in was removed and binary/config backed up privately.",
+                  "Accepted f1a6c7a0 merged; current task journal retained and generated conflicts refreshed by supported interfaces. The reviewed build delta adds infer_precision.rs to the existing required entrypoint suite without changing the required graph.",
+                  "All 15 protocol regressions passed on earlier code. Repaired lifecycle setup, CLI suite inclusion and numeric measurements require new exact-candidate execution."
+                ]
               }
             ]
           }
@@ -1100,6 +1161,7 @@
         "https://github.com/DecapodLabs/decapod/actions/runs/43206246190",
         "https://github.com/DecapodLabs/decapod/actions/runs/43210330738/job/131155983763",
         "https://github.com/DecapodLabs/decapod/actions/runs/43210330914/job/131156236192",
+        "https://github.com/DecapodLabs/decapod/actions/runs/43215838324/job/131175931908",
         "https://github.com/DecapodLabs/decapod/issues/1639",
         "https://github.com/DecapodLabs/decapod/issues/1640"
       ],
@@ -1110,6 +1172,7 @@
       ],
       "intent_id": "intent:change_01M77NNMKGESW1QW4Y2GQ8V6NC",
       "modified_files": [
+        ".config/build/decapod.BUILD.bzl",
         ".decapod/config.toml",
         ".decapod/managed/specs/INTERFACES.md",
         ".decapod/managed/specs/VALIDATION.md",
@@ -1118,6 +1181,7 @@
         "src/decapod/core/mentor/reflection.rs",
         "src/decapod/core/state.rs",
         "src/decapod/lib.rs",
+        "tests/entrypoint_correctness.rs",
         "tests/infer_precision.rs",
         "tests/unit/core/reflection_tests.rs",
         "tests/unit/core/state_knowledge_tests.rs",
@@ -1127,6 +1191,7 @@
         "After explicit release approval, back up binary/config, use session acquire update, regenerate supported projections, checkpoint and revalidate the new exact candidate against the current accepted target.",
         "Commit exact candidate and run plain decapod validate",
         "Commit fixture repair and run plain validation after provider reset; retain release gate until approved supported update.",
+        "Commit the merged implementation candidate and run plain decapod validate against accepted f1a6c7a0; keep all previous failed attempts historical.",
         "Refine plan and declare falsifiable checks",
         "Revalidate the new exact candidate after prior validation ends; release update still requires pending explicit approval.",
         "Run full exact-candidate validation after repaired inventory declaration",
@@ -1147,7 +1212,9 @@
       "task_id": "feat_01m77nmmjwd12v30",
       "tool_calls": [],
       "unresolved_assumptions": [
+        "Accepted f1a6c7a0 merged; current task journal retained and generated conflicts refreshed by supported interfaces. The reviewed build delta adds infer_precision.rs to the existing required entrypoint suite without changing the required graph.",
         "Accepted target bc0a7197 merged; the committed current-task governance record was retained while accepted work remains in Git history. Generated conflicts were refreshed by specs.refresh; no proof or authority was invented.",
+        "All 15 protocol regressions passed on earlier code. Repaired lifecycle setup, CLI suite inclusion and numeric measurements require new exact-candidate execution.",
         "Behavioral, latency and growth measurements await configured validation; authored tests are not proof.",
         "Full validation ended SNAPSHOT_NOT_READY after 638132 ms provider wait; no local process was interrupted. Exact private snapshot remains decapod-snapshot-iZThaW. Complete runtime corpus and cost deltas are unproven.",
         "Independent GitHub diagnostics can identify source errors but cannot establish Buildkite publication readiness.",
@@ -1155,7 +1222,8 @@
         "Mentor literal matches remain advisory; source identity and narrower declared scope do not prove implementation semantics.",
         "Source review found missing outer CLI task binding could evaluate different intent. The new regression rejects it before round 1; behavioral execution remains pending. Buildkite clippy assertion-style failure is repaired without lint suppression.",
         "Test compilation requires the repaired legacy fixture; no behavioral pass is claimed. Release 0.139.1 controller update awaits explicit approval; CI release drift remains unresolved.",
-        "The previous HTTP 403 and unavailable proof remain historical evidence. Clearing the prior attempt blocker prepares a fresh attempt after its reset, and does not establish provider access or readiness."
+        "The previous HTTP 403 and unavailable proof remain historical evidence. Clearing the prior attempt blocker prepares a fresh attempt after its reset, and does not establish provider access or readiness.",
+        "User continuation authorizes the previously requested 0.139.1 update. Session acquire required no install: the installed binary already reports 0.139.1. Temporary update opt-in was removed and binary/config backed up privately."
       ]
     }
   },

@@ -2,88 +2,57 @@
 
 ## Reflection adversarial proof contract
 
-The same work branch integrates accepted target
-`bc0a71971bce8ee036a24562b7fc4a9b771f2f40`, including the accepted onboarding
-repair and package version 0.139.1. The installed evaluating controller remains
-0.139.0; no upgrade or substitution was performed. Git retained the current
-task journal from its committed canonical version, and Decapod refreshed the
-conflicting generated spec attestations and manifest. Authored specifications
-retain both changes. The reviewed-source inventory is
-`sha256:c9d2697f798bf2409fcfa1ea763efaf676e3bf4d6123b389ec106247a90ef8b0`;
-only the accepted Cargo package-version bytes changed in that inventory.
-Full validation must bind the merged candidate and this accepted target.
+The current work branch incorporates accepted target
+`f1a6c7a0f8c54bfbb1153e2385c72aafaa8c7ad2` and its validation-recovery
+contracts. The installed controller reports 0.139.1 through
+`capabilities --format json`. The supported session update path was exercised
+after explicit authorization; it required no further installation. Temporary
+automatic-update opt-in was removed. Binary/config backups remain private.
+The current task journal was retained from its canonical committed version;
+accepted upstream journals remain in Git history. Generated release surfaces
+and spec attestations must match the installed evaluator.
 
-`tests/unit/core/reflection_tests.rs` covers routine fast-path behavior,
-protected mutation-path conflict, source-bound scope correction, persuasive
-nonsense, changed governing sources, untrusted instructions, human authority,
-bounded stagnation/exhaustion, replay, competing submissions and custody loss.
-`tests/infer_precision.rs` exercises the CLI-to-RPC continuation and legacy
-response compatibility. `state_knowledge_tests.rs` uses canonical federation
-operations to test supersession, withdrawal, dispute, inferred/imported labels,
-scope and source preservation. Tests emit latency, response bytes and governance
-growth, and check no datastore file growth. A receipt's completion-proven flag
-must remain false and original plan acceptance/proof hooks must remain intact.
-These are deterministic protocol checks, not model-agent intelligence measures.
-Authorship alone is not passing evidence; configured `decapod validate` owns
-candidate builds/tests and exact-target publication readiness.
+`tests/unit/core/reflection_tests.rs` exercises ordinary scope, protected-path
+conflict, source-bound correction, persuasive nonsense, stale context,
+untrusted instructions, human authority, stagnation/exhaustion, replay,
+competing submissions and custody loss. All 15 cases passed on
+`32fdc5348b4caefe423c4da634881c751e06edea` in diagnostic job
+`131175931908`, run `43215838324`. This includes a forbidden mutation path
+blocked before execution and an adapter-only revision proceeding in round 2
+while preserving plan acceptance, proof hooks and false completion proof.
+These are deterministic structural/evidentiary checks, not model evaluations.
 
-The first full validation of `f9e333366f0a7ede0b5ae08da1ad360c2dfa5d30`
-stopped before build with `PROOF_PROFILE_RECONCILIATION_REQUIRED`.
-Read-only `agent.init` reported `STALE_SOURCE_INVENTORY`, no adapter mismatch,
-and inventory `sha256:c8786efce425085ccb62996e1d586dd8dabd491adea74af4829e638ec26d6174`.
-Review from the last declaration commit `2f01156c` through accepted base
-`19acd21f` found only the package-version change `0.138.3 -> 0.139.0` in
-`Cargo.toml` and `Cargo.lock` among inventoried sources. The declaration
-is reconciled to these reviewed release bytes. The profile, Buildkite policy,
-workflow mapping and all required checks are unchanged. This repair is not
-passing build/test evidence; full validation must run again.
+That run's complete library suite reported 1696 passed, 1 failed, 8 ignored.
+The lifecycle test failed at fixture setup because its writers had basic trust.
+The temporary fixture now registers verified writers through the broker before
+using canonical federation mutations. Production trust/approval gates remain
+unchanged, and provenance confidence remains separate from writer trust.
+Lifecycle behavior requires fresh verification after this repair.
 
-Retry `1ee8b502` stopped at the deliberately preserved trajectory blocker
-before build. After the inventory repair was committed, that current blocker
-was cleared through `govern trajectory record --clear-blockers`; the failed
-check and earlier receipt remain historical. No test or readiness status was
-changed to passed. The next committed candidate requires fresh full validation.
+The existing required entrypoint suite now includes `infer_precision.rs`.
+It must exercise the actual CLI-to-RPC continuation, legacy omission, explicit
+outer task binding and preservation of orientation decision gates. A rejected
+missing task binding must leave the subsequent valid proposal at round 1.
+The sole added build input relative to the accepted target is that test file;
+reviewed inventory
+`sha256:4424959148a4659623027d78c9a88a3c5f8b14735038d0a67d8f8cd04d90001d`
+retains the same profile, accepted executor, workflow graph and required checks.
 
-Full validation of `e5690971d68ecb4b1ba1722b4a9a362946fb4f5c` pushed
-the exact managed branch, then ended `SNAPSHOT_NOT_READY`: the configured
-public provider's `GithubCommitChecks` GET returned HTTP 403 with reset epoch
-`1794483759`. Private evidence remains under the reported
-`decapod-snapshot-KQNZVO` directory. No automatic retry or alternate
-authentication route was used to establish readiness.
+Existing safe/corrected fixtures emit bounded numeric measurements directly to
+stderr so passing Cargo cases retain protocol latency, outcome bytes, compact
+journal size, governance growth and datastore file growth in CI logs. The CLI
+fixture records paired legacy/reflection timings and payload sizes. Timings
+include the stated path only and must not become a hardware-independent
+performance guarantee. No latency threshold is asserted.
 
-Separately available GitHub diagnostic run `43206246190` identified two
-`E0433` module-qualification errors in orientation's new CLI path. These are
-repaired using `crate::core::mentor::reflection`. This diagnostic does not
-substitute for Buildkite acceptance. Additional adversarial tests cover
-case-only path paraphrases and shared captured ADR bytes. Their execution and
-full publication readiness remain pending.
-
-After accepted-target reconciliation, diagnostic run `43210330914` reached
-test compilation and reported `E0063` in the existing publication-validation
-fixture. That fixture now initializes `GovernedPlan.reflection` to `None`,
-preserving coverage of the legacy no-session execution path. Standalone run
-`43210330738` compiled the candidate CLI but failed release-projection drift:
-its 0.139.1 evaluator refreshed the 0.139.0 controller's generated surfaces.
-The supported release update requires explicit opt-in; generated pins must not
-be hand-edited or a candidate binary substituted to manufacture a clean result.
-Neither diagnostic establishes behavioral success or publication readiness.
-
-The CLI continuation fixture first submits reflection without an outer task ID
-and with a legacy architectural intent. It must fail with
-`REFLECTION_TASK_REQUIRED`; the subsequent explicitly bound proposal must still
-be round 1. This protects the shared task-intent boundary and demonstrates that
-rejecting an incomplete binding writes no successful continuation.
-
-The post-quota plain validation of `42571aaff2d77a7803bc12b0434c8a1831b5fafd`
-waited 638132 ms and returned `SNAPSHOT_NOT_READY` for required Buildkite build
-8517. Its standalone gate compiled the CLI but rejected release-projection
-drift; private snapshot `decapod-snapshot-iZThaW` preserves that attempt.
-The later `ac9bd7302ec490e374e50fc55232098faf021fde` diagnostic has a passed
-Buildkite clippy job in build 8536, including the repaired assertion. Complete
-behavioral proof and measured reflection costs remain pending. Its constitution
-job in build 8537 separately failed provider API quota before execution.
-The installed-release update is awaiting explicit human authorization; the
-current task must remain open and no PR may be published on this evidence.
+Earlier complete validation attempts remain failed historical evidence:
+`e5690971` stopped on provider HTTP 403; `42571aaf` waited 638132 ms and
+failed required Buildkite build 8517 on 0.139.0/0.139.1 projection drift.
+Private snapshot identifiers are retained in the governed trajectory.
+Buildkite clippy passed on `ac9bd730` in build 8536. None of these establishes
+current publication readiness. Plain `decapod validate` must execute the
+complete required profile against the new exact candidate and current accepted
+target. No separate manual build, fabricated proof or weakened gate is allowed.
 
 ## Recovery and accepted-target reconciliation (#1628)
 
@@ -1281,8 +1250,8 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `05cff6b42542328d6e0930da49d1b0d5f1137e5eac78c2167af174566a634abe`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (229 files), `tests/` (230 files)
+- Repository signal fingerprint: `0af3f5ca9825d73ce0dc84271da3efecad9986154a667acf54f533285c7ad742`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (229 files), `tests/` (232 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 
@@ -1665,3 +1634,23 @@ from the preceding accepted cloud mergec87e4f49. Renewing the inventory digest
 retains the same source adapter, accepted executor, required graph and verdict
 policy. A matching inventory is preparation, and full exact-candidate validation
 remains mandatory after every source or target change.
+
+## Validation proof lifecycle
+
+Issue #1629 separates proof admission from proof consumption. A fresh governed docs task must reach its first reviewed source command through full `decapod validate`, without supplying an earlier receipt or an undeclared workunit. Terminal publication rules consume the live runtime's verified complete suite before readiness receipts or historical completion are written. Full candidate/accepted-target/material/governance bindings remain required. Explicit workunit contracts retain journal, proof-artifact, source, current epoch, living-spec and capsule lineage checks; an absent projection cannot erase a durable declaration. Regression coverage must observe real command execution, reject failed commands without readiness/receipts, and retain unknown, forged, stale and mismatched evidence failures. Component fixtures may substitute only accepted-target transport, not source checks or execution observations.
+
+Review regressions cover expiry during terminal evaluation and native receipt staging, a distinct mandatory project workunit obligation without a declaration, and a declared current workunit reaching the actual rule evaluator with a generated capsule, bound living spec, current execution journal and retained proof bytes. Explicit epoch mismatches, corrupted capsule/source and deleted manifests remain failures.
+
+The fresh governed docs regression has its actual `#[test]` entrypoint in the already required `tests/entrypoint_correctness.rs` target, calling `tests/support/fresh_docs_readiness.rs` with helper-only `tests/common/consumer_readiness_fixture.rs`. Real CLI commands create and claim the docs task, ensure its managed workspace, approve its plan, refresh/review specs, checkpoint and commit. The public runtime's prerequisite callback runs the real CLI with explicit `ci_local` scope and requires observed success, nonempty passed checks, zero failures, no publication readiness and an unchanged clean candidate. The same runtime invocation then executes the complete real source suite and terminal rules; only accepted-target transport is substituted with a fresh read of the actual local bare Git upstream. This is CLI-admission plus complete-runtime coverage, not an end-to-end CLI HTTPS transport test. The unchanged selective-CLI recipe executes the same entrypoint, CLI-contract and contract-enforcement targets. All 16 preexisting consumer API cases remain in `consumer_readiness.rs` under CLI contracts; helper support contains no test cases. The genuine fresh docs case runs once in the entrypoint target, preventing the measured 65-second case from overloading CLI contracts. A green `not_applicable` selection is not execution evidence.
+
+The fixture starts without a prior prerequisite receipt or ignored policy cache and verifies clean committed candidates throughout. The fresh docs fixture covers the positive first proof once. The existing real-source failure/committed-repair regression separately requires an actual failed assertion, distinct candidate and evidence identities, no failed-attempt readiness, ready-completion verdict or history artifacts, and fresh complete proof after repair. This avoids a duplicate governed preparation and admission cycle within the unchanged CLI target budget. Canonical scaffold regressions ensure an absent runtime cache causes no source healing or manifest rewrite, while a missing tracked living spec still triggers repair. Existing policy validation continues rejecting malformed or unsupported policy contracts. CLI fixture calls have finite 30-second limits, additionally capped by the runtime's original remaining budget during admission; the accepted aggregate CI budget remains unchanged.
+
+The actual accepted 0.139.0 release at `19acd21f` changes only the Decapod package versions in inventoried `Cargo.toml` and `Cargo.lock` relative to its cloud-client parent. Its 105-file source inventory is reviewed as `sha256:c8786efce425085ccb62996e1d586dd8dabd491adea74af4829e638ec26d6174`; the pre-extraction candidate inherits those source definitions exactly. Updating the declaration records that measured accepted release delta; it grants no execution or publication evidence and changes no controller, executor, workflow, helper or source-selection contract.
+
+Shared fixture extraction adds only declared Rust source inputs for the existing Bazel consumer and entrypoint targets. At placement commit `cff3a3c3`, the reviewed 105-file inventory hashes to `sha256:50c5532ad4dca740a8216688204d2c0446459da2782a66de9377aacb30d360c8`; `.config/build/decapod.BUILD.bzl` is the sole changed definition relative to then-accepted `19acd21f`. The accepted executor, three selected target names, commands, serial test threads, finite budgets, selectors, workflows and compiled carriers remain unchanged. Before/after named-case inventories preserve every existing case and the single fresh docs case; actual configured CI must establish execution after this placement change.
+
+The accepted target subsequently advanced through onboarding PR #1636 and the actual 0.139.1 release, ending at `bc0a71971bce8ee036a24562b7fc4a9b771f2f40`. Reconciliation retains incoming onboarding source, tests and whole-product specifications, the existing validation lifecycle work and every prior native checkpoint. All 140 carried baseline obligations are unchanged; the incoming current journal declares no additional claim or unresolved decision. Source inventory changes since the placement commit are exactly the accepted `Cargo.toml`/`Cargo.lock` package-version bytes. The actual 105-file candidate inventory is reviewed as `sha256:31fa30d0bbc53f76f4f09cbca80101965b71dc1c00c337b54c53607ab3df4a40`; its only definition difference from the accepted target is the already reviewed additive Rust-input wiring. In that reconciliation, independent controller, compiled carrier, required graph, selectors and finite budgets remained unchanged.
+
+Standalone source validation compares the repository after native `validate --refresh-specs` and rejects release-bound drift. The actual 0.139.1 evaluator exposed 0.139.0 entrypoint, managed-image and manifest pins after the accepted release advanced; those projections must be regenerated by an independently released 0.139.1 controller. Registry installation through the supported native session-update path is environment bootstrap, never candidate proof. The project auto-update preference is restored after scoped bootstrap, and projection-only preparation remains nonpublication evidence. The source inventory remains the same reviewed 105-file `sha256:31fa30d0bbc53f76f4f09cbca80101965b71dc1c00c337b54c53607ab3df4a40` set.
+
+Actual pre-refresh candidate `c626fa46` confirmed the unchanged selected target bounds: CLI contracts passed in 281.6 seconds and contract enforcement in 274.2 seconds; the entrypoint target completed in 207.4 seconds with only the prior-release template mismatch failing. Its genuine fresh docs proof passed in 75.2473 seconds. These source-CI diagnostics confirm placement and retain the failure honestly; the regenerated candidate still requires its own complete configured execution and independent full native validation.

@@ -84,67 +84,57 @@ entity accumulation and personal-assistant architecture are excluded.
 
 ## Verification and costs
 
-The adversarial corpus, complete exchange, measured costs and validation status
-are recorded below when observed. Authored tests are not passing evidence until
-the configured validation executes them. No baseline or timing is invented.
+The 15 protocol cases passed on `32fdc534` in diagnostic run
+`43215838324`, job `131175931908`. The library suite's only failure
+was lifecycle-fixture setup: canonical federation policy rejected unregistered
+basic-trust writers. The isolated fixture now registers verified writers; its
+corrected lifecycle assertions still need execution. These diagnostics are
+source-repair evidence, not complete Buildkite publication acceptance.
 
-Baseline observation with installed 0.139.0 on this worktree:
-`infer orientation --task-id feat_01m77nmmjwd12v30 --format json` returned an
-1820-byte ASCII JSON object (excluding trailing newline) in 2.50 seconds wall
-time, 1.52 seconds user and 0.83 seconds system. This is one invocation including
-normal CLI startup/session work, not a controlled latency benchmark.
-Its response has no reflection field or continuation.
-
-| Decision | Baseline orientation | New deterministic contract (test assertions, execution pending) |
+| Decision | Baseline contract (source audit) | Observed deterministic protocol assertions |
 | --- | --- | --- |
-| Ordinary sufficiently scoped task | No reflective session | One optional round, no question; legacy call remains unchanged |
-| Protected mutation path proposed for caching | Constraint not compared with a proposal | One binding question before execution |
-| Adapter-only revision citing the contract | No continuation or resolution link | Round 2 clears the removed path conflict and records its source |
-| Persuasive paraphrase retaining the conflict | No stagnation protocol | Terminal blocked in round 2 |
-| Incomplete but narrowing proposals | No round budget | Terminal blocked by round 3 |
-| Superseded decision with accepted tag | Can project as accepted | Canonical lifecycle wins; inferred/imported labels remain proposals |
+| Routine sufficiently scoped action | Orientation has no proposed-action comparison | Round 1 proceeds without a question; 0/1 false-positive challenges |
+| Caching proposal touches protected mutation path | Constraint not compared with a proposal | Binding question; existing execution boundary rejects it before action |
+| Adapter-only revision citing the contract | No continuation or resolution link | Round 2 proceeds and links the resolved gap; completion remains unproven |
+| Persuasive paraphrase retains conflict | No bounded feedback exchange | Terminal blocked in round 2 |
+| Incomplete but narrower proposals | No reflection round budget | Terminal blocked by round 3 |
+| Superseded/inferred decision tagged accepted | Lifecycle can be lost in projection | New lifecycle assertions pending repaired fixture execution |
 
-New reflection persistence is confined to the existing plan. There are no new
-database rows, indexes, duplicate source bodies or conversation transcripts.
-The journal has at most three receipts plus a terminal stop, capped at 64 KiB
-compact JSON; excess relevant gaps or size fail rather than dropping authority.
-Normal governance serialization adds formatting overhead and Git retains
-authored historical versions. Each successful round rewrites the existing
-governance document; retries and rejected stale submissions do not. This is a
-bounded per-workstream cost, not an estimate of total repository datastore size.
-Existing CLI/session infrastructure has its own costs. The tests print actual
-outcome sizes, plan-file growth and protocol latency, and assert unchanged
-datastore file size. Until those tests run, no resulting latency/storage delta
-or detection-rate claim is established.
+This establishes one declared-scope flaw caught before execution, not a semantic
+proof that caching is safe or that an agent has become more intelligent.
+The baseline column describes actual source contracts, not a controlled model
+comparison. `infer_precision.rs` now joins the existing required entrypoint
+suite so the CLI/RPC exchange is exercised by configured validation.
 
-The first full validation stopped on a stale reviewed-source inventory before
-executing candidate builds/tests. The reviewed-source change since
-`2f01156c` is solely the accepted package version bump in Cargo manifest/lock;
-the scoped declaration repair retains the complete existing proof contract.
+A historical installed-release orientation call returned 1820 ASCII JSON bytes
+excluding newline in 2.50 seconds wall (1.52 user, 0.83 system), including CLI
+startup/session work. This was a single host observation. Current safe and
+corrected fixtures emit numeric protocol timings and sizes to stderr; the CLI
+fixture records paired baseline/reflection payloads and timings on one fixture.
+These new measurements await the next configured execution and are not
+comparable to the earlier host sample without accounting for environment and
+scope. The safe protocol fixture's datastore-size equality assertion passed;
+that establishes zero main-database-file growth for that fixture.
 
-Limits: the first slice recognizes explicit plan constraints and the existing
-literal ADR heuristic. It cannot infer arbitrary semantic architecture conflicts
-from code or prose. Proposed paths are declarations, not an OS write sandbox;
-existing scope/validation gates check actual changes. Local actor labels and
-declared approvals retain their existing cooperative trust boundary. Repeated
-invocations exercise replay/interruption recovery through the existing atomic
-writer; this corpus does not simulate power loss or evaluate a model agent.
+Persistence uses the existing plan only: no new database table, row stream,
+index, duplicate source body or transcript. The journal has at most three
+receipts plus a terminal stop, capped at 64 KiB compact JSON. Normal governance
+formatting adds overhead and Git retains historical versions. Each accepted
+round rewrites the existing governance document; rejected stale requests and
+exact retries do not. This is bounded per-workstream storage, not a total
+repository-size estimate. Measured governance/journal byte counts will be
+reported from configured execution rather than inferred from this ceiling.
 
-Validation currently remains incomplete: the configured provider stopped on
-HTTP 403 while reading commit statuses (reset epoch `1794483759`), preserving
-private snapshot evidence. Independent GitHub diagnostics exposed and informed
-repair of CLI module qualification; they are not accepted readiness proof.
-After merging accepted target `bc0a71971bce8ee036a24562b7fc4a9b771f2f40`,
-source CI compiled the candidate CLI. Test compilation exposed a legacy plan
-fixture requiring `reflection: None`; that fixture is repaired. The standalone
-CI gate separately reported generated release projections at 0.139.0 where the
-accepted package is 0.139.1. Updating the installed controller requires explicit
-toolchain opt-in. Neither a successful CLI build nor these diagnostics establish
-that the regression corpus passed or that publication is ready.
+The work branch now incorporates accepted target
+`f1a6c7a0f8c54bfbb1153e2385c72aafaa8c7ad2`. The installed supported
+controller reports 0.139.1 and release projections were reconciled through
+supported interfaces/accepted source. Earlier projection/quota failures and
+private snapshot identifiers remain in the governed trajectory. Fresh plain
+validation must establish exact-candidate readiness before any PR is opened.
 
-The supported retry after quota reset reached Buildkite and failed the required
-standalone gate in build 8517 on the same release-projection mismatch. Build
-8536 subsequently passed clippy for `ac9bd730`; this is bounded diagnostic
-evidence, not complete publication proof. Explicit approval to update the
-installed controller is still required. The branch and task remain open;
-behavioral execution and measured cost deltas are not yet established.
+Limits: explicit plan constraints and literal ADR matches cannot infer arbitrary
+semantic conflicts from code. Proposed paths are declarations, not an OS write
+sandbox; existing scope and validation gates inspect actual changes. Local
+actor labels retain the cooperative trust boundary. Replay/interruption cases
+use the existing atomic writer; no power-loss simulation or model-agent
+evaluation is claimed.
