@@ -1,5 +1,16 @@
 # Architecture
 
+## Registry dependency closure (#1638)
+
+`Cargo.toml` pins Dactyl 0.14.0 while retaining `sqlite` and `neon`, and the
+existing default `supabase-cloud` feature still forwards `dactyl-db/supabase`.
+Cargo resolves the registry checksum and patched Quinn protocol floor; pinned
+Bazel regenerates its crate-universe metadata from those same committed Cargo
+inputs. Nix consumes `Cargo.lock` directly and needs no Git output hash or
+separate package pin. The SDK requires Rust 1.85, below the existing Decapod
+1.96.1 toolchain. HTTP/3 stays disabled. No cloud/session/authorization code
+is changed by this dependency alignment.
+
 ## Managed cloud connector and crash-safe custody (#1628)
 
 `core::cloud_client::connect` composes the public Dactyl `CloudConnector` with
@@ -852,7 +863,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `9ae185b8dd258ffeb83bd427d83cfe38cb7c3529e4c9ca7ad5db936b4ca018d0`
+- Repository signal fingerprint: `2340ca34f685d73684cc15445ca4d14d6185a7210005999a818f320b7662ba4b`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (229 files), `tests/` (231 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

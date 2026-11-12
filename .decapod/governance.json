@@ -539,7 +539,7 @@
     }
   },
   "change": {
-    "id": "change_01M77WDJMFEY5D8MKB0Y6995KV",
+    "id": "change_01M77Z1SYXPN3WC9CBT6P3AS7M",
     "base_commit": "fc1e2b94f6909633bf6dd7044fd7a54a05e85a4b",
     "target_base": "origin/master"
   },
@@ -552,36 +552,65 @@
         "docs/storage-inventory.md",
         "tests/support/storage_inventory.rs"
       ]
+    },
+    "sdk014-registry-floor": {
+      "statement": "The published Dactyl0.14.0 registry dependency retains SQLite/Neon/defaultSupabase features and every resolved quinn-proto entry is at least0.11.19; transport/session/role boundaries and required full-proof graph remain unchanged.",
+      "falsifier": "A Git/path override, mismatchedregistrychecksum, missing/unpatchedQuinnprotoentry, featureloss, transport/session/authorization change or relaxed required proof can pass the release policy and complete current-source checks.",
+      "status": "open",
+      "proof_refs": [
+        "Cargo.lock",
+        "Cargo.toml",
+        "tests/release_dependency_policy.rs"
+      ]
     }
   },
   "checkpoints": [
     {
-      "id": "inventory-140-candidate",
-      "summary": "Preserve accepted v0.140.0/fc1e2b94 first-proof, onboarding and cloud changes; deliver frozen bounded inventory through released Dactyl0.13.0; qualify exclusive finite900s CLI aggregation from measured293.7s run; refresh release projections, authored specs, source audit and canonical reviews",
-      "input_digest": "sha256:42179547822f54ff489de50bbfd0652f7250b6f731f171e7019d9ad202219539",
+      "id": "sdk014-registry-adoption-v1",
+      "summary": "Adopt exact published Dactyl0.14.0 and checksum; resolve patched Quinnfloor; regenerate supported Cargo/Bazel metadata; preserve features, runtime boundaries and full required source graph; record freshconsumer metadata and materialspec review.",
+      "input_digest": "sha256:6b6deaf869c9ba6edc2d060aa3830be3a436223e6da62f4b30c6a82979a855b0",
       "proof_refs": [
-        "/private/tmp/issue-1630-cli-exclusive-passed.log",
-        "/private/tmp/issue-1630-source-review-140.json",
-        "docs/storage-inventory.md"
+        "Cargo.lock",
+        "MODULE.bazel.lock",
+        "tests/release_dependency_policy.rs"
+      ]
+    },
+    {
+      "id": "sdk014-accepted-inventory-v2",
+      "summary": "Merge actualaccepted1d04 inventory/release0.140.1 with original54ed checkpoint; preserve acceptedinventoryAPI/tests/buildpolicy and143baselineobligations, native-replay inventoryclaim, regenerate exactSDK0.14 closure/floor/registrychecks and authentic0.140.1 projections; complete nativeproof remains pending.",
+      "input_digest": "sha256:9845a1759bcbffb635ade30e059c02f7ce1d1e07a0bbdd9150782a417a62ce34",
+      "proof_refs": [
+        "Cargo.lock",
+        "MODULE.bazel.lock",
+        "docs/storage-inventory.md",
+        "tests/release_dependency_policy.rs"
       ]
     }
   ],
   "intents": {
-    "intent:change_01M77WDJMFEY5D8MKB0Y6995KV": {
+    "intent:change_01M77Z1SYXPN3WC9CBT6P3AS7M": {
       "acceptance_criteria": [],
       "assumptions": [],
       "boundaries": [
         "Current claimed task and isolated work branch"
       ],
       "constraints": [
-        "root"
+        "Cargo.toml",
+        "Cargo.lock",
+        "MODULE.bazel",
+        "MODULE.bazel.lock",
+        "flake.nix",
+        "flake.lock",
+        "tests",
+        "docs",
+        ".decapod/managed/specs"
       ],
       "created_sequence": 1,
-      "id": "intent:change_01M77WDJMFEY5D8MKB0Y6995KV",
+      "id": "intent:change_01M77Z1SYXPN3WC9CBT6P3AS7M",
       "out_of_scope": [],
       "proof_requirements": [],
-      "raw_intent": "Resolve issue 1630: inventory, bound and compact durable data losslessly across decapod, dactyl and propodus",
-      "refined_intent": "Resolve issue 1630: inventory, bound and compact durable data losslessly across decapod, dactyl and propodus",
+      "raw_intent": "code: Adopt published Dactyl SDK 0.14.0 and patched Quinn floor\n\nDecapod issue1638: consume exact registry dactyl-db0.14.0, regenerate supported Cargo/Bazel/Nix metadata, preserve feature/API/transport/role/session contracts, verify resolved and fresh-consumer Quinn floor, full current-source native Buildkite proof.",
+      "refined_intent": "code: Adopt published Dactyl SDK 0.14.0 and patched Quinn floor\n\nDecapod issue1638: consume exact registry dactyl-db0.14.0, regenerate supported Cargo/Bazel/Nix metadata, preserve feature/API/transport/role/session contracts, verify resolved and fresh-consumer Quinn floor, full current-source native Buildkite proof.",
       "status": "refined",
       "updated_sequence": 3
     }
@@ -594,7 +623,7 @@
       },
       "deferred_questions": [],
       "human_questions": [],
-      "intent": "Publish bounded redacted native CLI/RPC inventory through Dactyl0.13.0 on accepted v0.140.0 at fc1e2b94; preserve managed-cloud, terminal onboarding and first-proof admission repairs. Run the complete expanded CLI contract target exclusively with the existing finite900s aggregate class, justified by its measured293.7s isolated runtime against the former300s ceiling. Keep all assertions and individual operation deadlines. Obtain complete exact-candidate Buildkite proof before PR creation. Leave compact representation, field limits, migration, retention and numerical design budgets in the parent issues.",
+      "intent": "Adopt the normally published registry dactyl-db 0.14.0 for issue1638. Keep sqlite/neon and default Supabase features, local/cloud selection, session custody, authorization and fail-closed transport unchanged. Regenerate Cargo and Bazel metadata through supported tooling; Nix follows committed Cargo.lock. Verify quinn-proto>=0.11.19 in resolved and fresh-consumer locks without overrides or advisory ignores. Preserve the complete configured source-CI contract and require independent released0.140 exact-candidate native proof; source diagnostics and draft review publication remain explicitly non-authorizing.",
       "phases": [],
       "proof_hooks": [
         "decapod validate"
@@ -604,162 +633,280 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Reviewed final inventory on accepted v0.140.0/fc1e2b94, preserving first-proof admission, managed-cloud and onboarding. Native Dactyl owns bounded read-only snapshots; inventory owns semantic metrics, sampling and redaction before startup. The expanded CLI test target is exclusive and uses the existing finite900s aggregate class based on measured293.7s runtime.",
-          "reviewed_code_fingerprint": "9ae185b8dd258ffeb83bd427d83cfe38cb7c3529e4c9ca7ad5db936b4ca018d0",
-          "spec_material_hash": "6cc1a95015feecb9086a83d22b0de953b625e0d90823228b913d4f0c52c293d3"
+          "reason": "Reviewed finalmerged currentcontent: accepted1d04 inventory API/CLI/RPC/read-only/privacy semantics preserved, exact SDK0.14 and patchedfloor facts updated without transport/session/authorization change. Completecurrentnativeproof pending; metadata/preparation are nonpublication.",
+          "reviewed_code_fingerprint": "2340ca34f685d73684cc15445ca4d14d6185a7210005999a818f320b7662ba4b",
+          "spec_material_hash": "692c0c5af54e13e11952238d7df3415aadef4e6f38a2ad8f4bea2bac19861def"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Reviewed final discoverable CLI/RPC inventory contract: strict options, bounded framing, schema digest, explicit sampling/unavailable/partial results and separate checkpoint strata. Accepted interfaces are preserved. Test scheduling and its aggregate budget change no application API or individual operation deadlines.",
-          "reviewed_code_fingerprint": "9ae185b8dd258ffeb83bd427d83cfe38cb7c3529e4c9ca7ad5db936b4ca018d0",
-          "spec_material_hash": "d5667c4f1c8ecdbe811b6d5f0d4a56165d8a8307d0c56c11d8ddf52f4fe9803e"
+          "reason": "Reviewed finalmerged currentcontent: accepted1d04 inventory API/CLI/RPC/read-only/privacy semantics preserved, exact SDK0.14 and patchedfloor facts updated without transport/session/authorization change. Completecurrentnativeproof pending; metadata/preparation are nonpublication.",
+          "reviewed_code_fingerprint": "2340ca34f685d73684cc15445ca4d14d6185a7210005999a818f320b7662ba4b",
+          "spec_material_hash": "27d92a04e2055509758e030b5d902354662d9602008d5576de958248c7d32333"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Reviewed authored inventory privacy and authority obligations against fc1e2b94: existing lifecycle ownership and caller filesystem authority, read-only native snapshots, aggregate-only content observations, typed limitations, no hosted authority grant, and no deletion or integrity claim from codec header recognition.",
-          "reviewed_code_fingerprint": "9ae185b8dd258ffeb83bd427d83cfe38cb7c3529e4c9ca7ad5db936b4ca018d0",
-          "spec_material_hash": "b8095677dc08420d4a01a49b17f3fa7d14064a8b465f2f596046b22c8aafc311"
+          "reason": "Reviewed finalmerged currentcontent: accepted1d04 inventory API/CLI/RPC/read-only/privacy semantics preserved, exact SDK0.14 and patchedfloor facts updated without transport/session/authorization change. Completecurrentnativeproof pending; metadata/preparation are nonpublication.",
+          "reviewed_code_fingerprint": "2340ca34f685d73684cc15445ca4d14d6185a7210005999a818f320b7662ba4b",
+          "spec_material_hash": "d19fb5ab8a937310fab585de295899572101fbd2e2b6bf9ba7d44daa35066221"
         }
       ],
       "state": "APPROVED",
-      "stop_conditions": [],
-      "title": "Publish native inventory prerequisite for issue 1630",
+      "stop_conditions": [
+        "Stop on unavailable published SDK, unsupported executor/controller contract, actual credential/authorization denial or a service API compatibility gap requiring new authority; preserve exact evidence."
+      ],
+      "title": "code: Adopt published Dactyl SDK 0.14.0 and patched Quinn floor",
       "todo_ids": [
-        "bugs_01m76maqpx49skwj"
+        "cicd_01m77z0sy13cbkx4"
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1794487882Z"
+      "updated_at": "1794493877Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch",
-        "Preserve accepted f1a6c7a0 first-proof admission, managed-cloud and onboarding; no live database mutation or compact representation selection"
+        "No HTTP3 activation, server/RPC broadening, feature changes, sourceoverrides, advisoryignores, guard weakening, manual sourcebuild/test or candidate-builtauthorizer."
       ],
-      "artifact_hash": "sha256:22d31e23815ced2fa9f3f9180f86356aba2fb6adedd23058afab9609b86f2f19",
-      "checks": [],
-      "current_phase": "final-140-release-alignment",
+      "artifact_hash": "sha256:ee80ab28947975be94aef360e79f0724f9a25aa8baaaa187e0109e44f87789e3",
+      "checks": [
+        {
+          "name": "accepted_inventory_source_and_obligations_preserved",
+          "status": "passed"
+        },
+        {
+          "name": "current_complete_native_proof",
+          "status": "unavailable"
+        },
+        {
+          "name": "full_current_candidate_execution",
+          "status": "unavailable"
+        },
+        {
+          "name": "generated_Bazel_json_value_equality",
+          "status": "passed"
+        },
+        {
+          "name": "native_preparation_only",
+          "status": "failed"
+        },
+        {
+          "name": "new_release_native_inventory_matches_reviewed_closure",
+          "status": "passed"
+        },
+        {
+          "name": "oldhead_push_source_context",
+          "status": "failed"
+        },
+        {
+          "name": "read_only_source_and_metadata_review",
+          "status": "passed"
+        },
+        {
+          "name": "registry_checksum_and_repo_fresh_Quinn_floor",
+          "status": "passed"
+        },
+        {
+          "name": "staged_merge_gatekeeper_scan",
+          "status": "failed"
+        }
+      ],
+      "current_phase": "Accepted1d04 source reconciled; current proof pending",
       "custody": {
         "events": [
           {
             "event_id": "event:2",
-            "intent_id": "intent:change_01M77WDJMFEY5D8MKB0Y6995KV",
+            "intent_id": "intent:change_01M77Z1SYXPN3WC9CBT6P3AS7M",
             "kind": "created",
             "sequence": 2
           },
           {
             "event_id": "event:3",
-            "intent_id": "intent:change_01M77WDJMFEY5D8MKB0Y6995KV",
+            "intent_id": "intent:change_01M77Z1SYXPN3WC9CBT6P3AS7M",
             "kind": "refined",
             "sequence": 3
           },
           {
-            "detail": "trajectory:branch_01M77WDJQQCBATEGNA1WC2MC92",
+            "detail": "trajectory:branch_01M77Z1T1Y39N8QBFV62DX1Z3B",
             "event_id": "event:4",
-            "intent_id": "intent:change_01M77WDJMFEY5D8MKB0Y6995KV",
+            "intent_id": "intent:change_01M77Z1SYXPN3WC9CBT6P3AS7M",
             "kind": "trajectory_step_recorded",
             "sequence": 4
           },
           {
-            "detail": "trajectory:branch_01M77WDJQQCBATEGNA1WC2MC92",
+            "detail": "trajectory:branch_01M77Z1T1Y39N8QBFV62DX1Z3B",
             "event_id": "event:5",
-            "intent_id": "intent:change_01M77WDJMFEY5D8MKB0Y6995KV",
+            "intent_id": "intent:change_01M77Z1SYXPN3WC9CBT6P3AS7M",
             "kind": "trajectory_step_recorded",
             "sequence": 5
+          },
+          {
+            "detail": "trajectory:branch_01M77Z1T1Y39N8QBFV62DX1Z3B",
+            "event_id": "event:6",
+            "intent_id": "intent:change_01M77Z1SYXPN3WC9CBT6P3AS7M",
+            "kind": "trajectory_step_recorded",
+            "sequence": 6
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 5,
+        "next_sequence": 6,
         "schema_version": "1.0.0",
         "trajectories": {
-          "branch_01M77WDJQQCBATEGNA1WC2MC92": {
+          "branch_01M77Z1T1Y39N8QBFV62DX1Z3B": {
             "evidence_only": true,
-            "id": "branch_01M77WDJQQCBATEGNA1WC2MC92",
-            "intent_id": "intent:change_01M77WDJMFEY5D8MKB0Y6995KV",
+            "id": "branch_01M77Z1T1Y39N8QBFV62DX1Z3B",
+            "intent_id": "intent:change_01M77Z1SYXPN3WC9CBT6P3AS7M",
             "steps": [
               {
-                "action": "accepted-base-reconciliation",
+                "action": "source prepared; configured execution pending",
+                "command": "cargo update -p dactyl-db --precise 0.14.0",
                 "custody_event_id": "event:4",
                 "observations": [
-                  "src/decapod/core/validation_rules.rs",
-                  "tests/common/consumer_readiness_fixture.rs",
-                  ".config/build/decapod.BUILD.bzl",
+                  "Cargo.toml",
+                  "flake.nix",
+                  ".config/build/decapod.MODULE.bazel",
+                  "src/decapod/core/dactyl_todo.rs",
                   "Cargo.toml",
                   "Cargo.lock",
                   "MODULE.bazel.lock",
-                  ".decapod/config.toml",
-                  "src/decapod/core/storage_inventory.rs",
-                  "/private/tmp/issue-1630-live-inventory",
-                  "/private/tmp/issue-1630-source-review-f1.json"
+                  "tests/release_dependency_policy.rs",
+                  "Cargo.lock and fresh registry resolution select quinn-proto0.11.19; downloadedDactylcrate checksumd10824bf8882a26b92479f07edb26c1f6fde8da3019f4001befaf28699d7a990; metadataonly, no builds/tests.",
+                  "Complete105file inventory reviewed; onlyCargo.toml/Cargo.lock/MODULE.bazel.lock inputs changed; requiredcarrier/workflows/helpers/sourcegraph unchanged. Bazellock1036484bytes after valuepreservingserialization."
                 ],
-                "proof_refs": [],
+                "proof_refs": [
+                  "registry_checksum_and_repo_fresh_Quinn_floor",
+                  "generated_Bazel_json_value_equality",
+                  "read_only_source_and_metadata_review",
+                  "full_current_candidate_execution"
+                ],
                 "scope": [
-                  "root"
+                  ".decapod/managed/specs",
+                  "Cargo.lock",
+                  "Cargo.toml",
+                  "MODULE.bazel",
+                  "MODULE.bazel.lock",
+                  "docs",
+                  "flake.lock",
+                  "flake.nix",
+                  "tests"
                 ],
                 "sequence": 4,
-                "validation_findings": [
-                  "Master advanced again during queued Buildkite execution, merging1633 atf1a6c7a0. Prior6c398f2a remains preserved and unpublished. Clean17-file three-way reapplication retains accepted shared consumer/fresh-docs fixtures and first-proof kernel changes. Inventory implementation and seven cases are unchanged; CLI scheduling remains exclusive with the same300s ceiling. Audit exactly reproduces accepted31fa30d0 declaration; current fe34db71 closure changes only BUILD, Cargo manifest/lock and compact Bazel lock. No workflow, helper, executor or required recipe is changed. Controller1391 independently published; current base package and canonical projections are1391. Raw three-store captures remain original SHA-bound historical evidence, not current readiness. Operator asked to hold merges and cancel obsolete queues; Buildkite CLI has no stored decapodlabs credentials. Full current proof remains required."
-                ]
+                "validation_findings": []
               },
               {
-                "action": "final-140-release-alignment",
+                "action": "Accepted1d04 source reconciled; current proof pending",
+                "command": "git merge --no-commit 1d04f232c46864eecfadb9c8b9b23069ca0e906e",
                 "custody_event_id": "event:5",
                 "observations": [
-                  "/private/tmp/issue-1630-source-review-140.json",
-                  "/private/tmp/issue-1630-cli-exclusive-passed.log"
+                  "src/decapod/core/storage_inventory.rs",
+                  "src/decapod/core/dactyl.rs",
+                  "tests/support/storage_inventory.rs",
+                  ".config/build/decapod.BUILD.bzl",
+                  "Actual target advanced via acceptedPR1645 and release1646. Original54ed authoredcommit/checkpoint retained, actualincomingsecondparent1d04. Native CLI replay preserves incomingopeninventoryclaim alongsideSDKclaim;143baselineunresolved entries exactlyequalincoming. Allincomingproductcode/tests/acceptedbuildsettings preserved.",
+                  "Historical54ed GitHubPRsourcechecks allpassed; BuildkiteCLI failed immutablecontext beforetests aftertargetadvance. Neither is currentmergeproof. Independentregistry0.140.1 nativeinventory confirms50f5571b5bb5475c5b6cfe684ebb1ea65ed63fa7bf4142019e25d14a83872fb6 over105actualinputs."
                 ],
-                "proof_refs": [],
+                "proof_refs": [
+                  "accepted_inventory_source_and_obligations_preserved",
+                  "new_release_native_inventory_matches_reviewed_closure",
+                  "oldhead_push_source_context",
+                  "current_complete_native_proof"
+                ],
                 "scope": [
-                  "root"
+                  ".decapod/managed/specs",
+                  "Cargo.lock",
+                  "Cargo.toml",
+                  "MODULE.bazel",
+                  "MODULE.bazel.lock",
+                  "docs",
+                  "flake.lock",
+                  "flake.nix",
+                  "tests"
                 ],
                 "sequence": 5,
-                "validation_findings": [
-                  "Workspace creation captured actual latest fc1e2b94 after1642 merged, including v0.140.0 and accepted f1a6c7a0. Upgrade140 acquired independently from the published registry through session acquire; config restored exactly and prior1391 binary/backups private. Agent corpus source unchanged. Historical Github43216611398 is entirely green, including complete isolated CLI suite293.7s. That result justifies existing finite900s aggregate class for expanded fixtures; keep exclusive scheduling and every assertion. Re-review aada494f source closure: same four changed build/dependency files; includes accepted shared consumer/fresh-docs fixture inventory, no workflow/recipe/check removal. New source/head/base/controller require new full proof; no old success promoted. Parent scope remains inventory prerequisite."
-                ]
+                "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:6",
+                "observations": [
+                  "Prerequisite-only preparation generated authentic0.140.1 projections;203staticpasses5failures retained, no readiness. Hostcontainerpolicy/foreigndoneTODO untouched; realmerge notyetcommitted. Gatekeeper findings explicitlyreviewed: acceptedCanvasRenderingContext2d identifier, acceptedBearerCLIhelptext, generatedlockpatternbudgetlimits and acceptedboundSQL/worker/testboundaries. No credential added, no scannerdisable or sourceguard change.",
+                  "Sameactorlease renewedgeneration3 beforefinalproof; nexttrajectorycallrejectedstaleauthoringbinding, genuineworkspaceensure thenrefreshedbinding(can_worktrue/blockersnone), currentcustodyconfirmed. No actor/category/history rewrite."
+                ],
+                "proof_refs": [
+                  "native_preparation_only",
+                  "staged_merge_gatekeeper_scan"
+                ],
+                "scope": [
+                  ".decapod/managed/specs",
+                  "Cargo.lock",
+                  "Cargo.toml",
+                  "MODULE.bazel",
+                  "MODULE.bazel.lock",
+                  "docs",
+                  "flake.lock",
+                  "flake.nix",
+                  "tests"
+                ],
+                "sequence": 6,
+                "validation_findings": []
               }
             ]
           }
         }
       },
-      "declared_commands": [],
+      "declared_commands": [
+        "bazelisk9.3.0 mod deps --lockfile_mode=update",
+        "cargo generate-lockfile: fresh exact registrySDKconsumer metadata only",
+        "cargo update -p dactyl-db --precise 0.14.0",
+        "git merge --no-commit 1d04f232c46864eecfadb9c8b9b23069ca0e906e"
+      ],
       "destination": "pull request",
       "evidence": [
-        "/private/tmp/issue-1630-cli-exclusive-passed.log",
-        "/private/tmp/issue-1630-live-inventory",
-        "/private/tmp/issue-1630-source-review-140.json",
-        "/private/tmp/issue-1630-source-review-f1.json"
+        "Actual target advanced via acceptedPR1645 and release1646. Original54ed authoredcommit/checkpoint retained, actualincomingsecondparent1d04. Native CLI replay preserves incomingopeninventoryclaim alongsideSDKclaim;143baselineunresolved entries exactlyequalincoming. Allincomingproductcode/tests/acceptedbuildsettings preserved.",
+        "Cargo.lock and fresh registry resolution select quinn-proto0.11.19; downloadedDactylcrate checksumd10824bf8882a26b92479f07edb26c1f6fde8da3019f4001befaf28699d7a990; metadataonly, no builds/tests.",
+        "Complete105file inventory reviewed; onlyCargo.toml/Cargo.lock/MODULE.bazel.lock inputs changed; requiredcarrier/workflows/helpers/sourcegraph unchanged. Bazellock1036484bytes after valuepreservingserialization.",
+        "Historical54ed GitHubPRsourcechecks allpassed; BuildkiteCLI failed immutablecontext beforetests aftertargetadvance. Neither is currentmergeproof. Independentregistry0.140.1 nativeinventory confirms50f5571b5bb5475c5b6cfe684ebb1ea65ed63fa7bf4142019e25d14a83872fb6 over105actualinputs.",
+        "Prerequisite-only preparation generated authentic0.140.1 projections;203staticpasses5failures retained, no readiness. Hostcontainerpolicy/foreigndoneTODO untouched; realmerge notyetcommitted. Gatekeeper findings explicitlyreviewed: acceptedCanvasRenderingContext2d identifier, acceptedBearerCLIhelptext, generatedlockpatternbudgetlimits and acceptedboundSQL/worker/testboundaries. No credential added, no scannerdisable or sourceguard change.",
+        "Sameactorlease renewedgeneration3 beforefinalproof; nexttrajectorycallrejectedstaleauthoringbinding, genuineworkspaceensure thenrefreshedbinding(can_worktrue/blockersnone), currentcustodyconfirmed. No actor/category/history rewrite."
       ],
       "inspected_files": [
-        "src/decapod/core/validation_rules.rs",
-        "tests/common/consumer_readiness_fixture.rs"
-      ],
-      "intent_id": "intent:change_01M77WDJMFEY5D8MKB0Y6995KV",
-      "modified_files": [
         ".config/build/decapod.BUILD.bzl",
-        ".decapod/config.toml",
+        ".config/build/decapod.MODULE.bazel",
+        "Cargo.toml",
+        "flake.nix",
+        "src/decapod/core/dactyl.rs",
+        "src/decapod/core/dactyl_todo.rs",
+        "src/decapod/core/storage_inventory.rs",
+        "tests/support/storage_inventory.rs"
+      ],
+      "intent_id": "intent:change_01M77Z1SYXPN3WC9CBT6P3AS7M",
+      "modified_files": [
         "Cargo.lock",
         "Cargo.toml",
         "MODULE.bazel.lock",
-        "src/decapod/core/storage_inventory.rs"
+        "tests/release_dependency_policy.rs"
       ],
       "next_transitions": [
-        "Refine plan and declare falsifiable checks",
-        "full-validation-and-pr-publication"
+        "Refine plan and declare falsifiable checks"
       ],
       "repo_scope": [
-        "root"
+        ".decapod/managed/specs",
+        "Cargo.lock",
+        "Cargo.toml",
+        "MODULE.bazel",
+        "MODULE.bazel.lock",
+        "docs",
+        "flake.lock",
+        "flake.nix",
+        "tests"
       ],
-      "run_id": "branch_01M77WDJQQCBATEGNA1WC2MC92",
+      "run_id": "branch_01M77Z1T1Y39N8QBFV62DX1Z3B",
       "schema_version": "1.1.0",
       "shortcut_risk_signals": [],
-      "task_id": "bugs_01m76maqpx49skwj",
+      "task_id": "cicd_01m77z0sy13cbkx4",
       "tool_calls": [],
-      "unresolved_assumptions": [
-        "Master advanced again during queued Buildkite execution, merging1633 atf1a6c7a0. Prior6c398f2a remains preserved and unpublished. Clean17-file three-way reapplication retains accepted shared consumer/fresh-docs fixtures and first-proof kernel changes. Inventory implementation and seven cases are unchanged; CLI scheduling remains exclusive with the same300s ceiling. Audit exactly reproduces accepted31fa30d0 declaration; current fe34db71 closure changes only BUILD, Cargo manifest/lock and compact Bazel lock. No workflow, helper, executor or required recipe is changed. Controller1391 independently published; current base package and canonical projections are1391. Raw three-store captures remain original SHA-bound historical evidence, not current readiness. Operator asked to hold merges and cancel obsolete queues; Buildkite CLI has no stored decapodlabs credentials. Full current proof remains required.",
-        "Workspace creation captured actual latest fc1e2b94 after1642 merged, including v0.140.0 and accepted f1a6c7a0. Upgrade140 acquired independently from the published registry through session acquire; config restored exactly and prior1391 binary/backups private. Agent corpus source unchanged. Historical Github43216611398 is entirely green, including complete isolated CLI suite293.7s. That result justifies existing finite900s aggregate class for expanded fixtures; keep exclusive scheduling and every assertion. Re-review aada494f source closure: same four changed build/dependency files; includes accepted shared consumer/fresh-docs fixture inventory, no workflow/recipe/check removal. New source/head/base/controller require new full proof; no old success promoted. Parent scope remains inventory prerequisite."
-      ]
+      "unresolved_assumptions": []
     }
   },
   "legacy_digests": {
