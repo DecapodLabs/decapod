@@ -18,6 +18,13 @@ The registry still exposes only `dactyl-db 0.11.1`; the client needs a separatel
 released version containing the new connector/authentication/session APIs.
 Client unit/CLI tests and current-target Buildkite readiness remain unproven.
 
+The first current-target validation stopped before Buildkite because the
+immutable candidate still carried v0.138.2 entrypoint headers while the installed
+released controller was v0.138.3. Supported initialization regenerates the four
+entrypoints and managed image pin; spec refresh updates their projections.
+The original journal, reviewed project configuration and required proof coverage
+are preserved. This projection repair supplies no compilation or test evidence.
+
 ## Managed connector execution prerequisites (#1628)
 
 The managed connector requires a published Dactyl dependency containing its
@@ -1111,7 +1118,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `6a29706349fc2b19d32beb42ab421b3dde77fe07e03f185f53ee3c42b6739dc7`
+- Repository signal fingerprint: `3527a87aebf46a51e05099cf4332e8466ebb4ce04365b8777fb3927098e79546`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (227 files), `tests/` (226 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
