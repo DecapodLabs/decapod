@@ -863,8 +863,8 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `16bf55eb5aa48a44d7adad2782b682b9e48962a2e0d04f735eda9724a92b1978`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (230 files), `tests/` (231 files)
+- Repository signal fingerprint: `89a002333aea932b82eea33bdc56a6bede707358d67b2ed36f529f144a7a01e9`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (230 files), `tests/` (230 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 
@@ -1094,7 +1094,10 @@ their existing owners. The terminal does not implement billing, duplicate accoun
 policy, or grant authority from local settings. Errors leave setup non-successful;
 the ready receipt follows successful service-confirmed access only. Real PTY
 coverage verifies that reviewing/canceling cloud setup does not contact even the
-loopback fixture service before consent.
+loopback fixture service before consent. The six Unix PTY cases live in the
+private `terminal_onboarding` module of `tests/cli_contracts.rs`, which the
+finite source-CI CLI selector schedules. Declaring a standalone integration
+target alone does not establish required execution.
 
 ## Validation proof lifecycle
 
