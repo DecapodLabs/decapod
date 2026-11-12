@@ -558,6 +558,16 @@
         "34 init_prompt_tests and 2 layout tests passed on byte-identical product source",
         "git:f2612990"
       ]
+    },
+    {
+      "id": "onboarding-final-verification",
+      "summary": "Verify the portable PTY harness, final terminal presentation and all focused regression checks",
+      "input_digest": "sha256:40c4c20ff13e46194b5fe1c52630074b17730055b802595f1b647c1992a3a9e3",
+      "proof_refs": [
+        "84 focused tests passed; one pre-existing ignored test",
+        "cargo clippy --lib --test init_cli -- -D warnings",
+        "cargo fmt --all --check"
+      ]
     }
   ],
   "intents": {
@@ -605,22 +615,22 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Reviewed current source and authored setup contract: interactive confirmation precedes mutation, unattended bootstrap ordering is retained, unknown product context stays explicit, config backups remain private and cloud authorization is unchanged. The PTY/config/Git suites passed 48 checks with one existing skip; final presentation unit and lint reruns are pending. Historical checkpoint gaps are preserved as observations in this fresh workstream.",
-          "reviewed_code_fingerprint": "0f263f736fa6d9bb4512faa8b691103a7621185f330968e4811e5da606ba3a02",
+          "reason": "Final source review matches the authored setup contract and private backup/authorization boundary. All 84 focused tests passed with one existing skip, targeted Clippy and formatting passed, and manual terminal review passed. Full required provider validation remains separate and unproven until its exact-candidate run succeeds.",
+          "reviewed_code_fingerprint": "bdad189a74ed24898d335d9589cc321b3360c4cf446a7d5a198208bd2bde13c7",
           "spec_material_hash": "cda5f45aa3ab30757edb396ff0f0cc496117b4a1faaedd6a2780db7400608746"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Reviewed current source and authored setup contract: interactive confirmation precedes mutation, unattended bootstrap ordering is retained, unknown product context stays explicit, config backups remain private and cloud authorization is unchanged. The PTY/config/Git suites passed 48 checks with one existing skip; final presentation unit and lint reruns are pending. Historical checkpoint gaps are preserved as observations in this fresh workstream.",
-          "reviewed_code_fingerprint": "0f263f736fa6d9bb4512faa8b691103a7621185f330968e4811e5da606ba3a02",
+          "reason": "Final source review matches the authored setup contract and private backup/authorization boundary. All 84 focused tests passed with one existing skip, targeted Clippy and formatting passed, and manual terminal review passed. Full required provider validation remains separate and unproven until its exact-candidate run succeeds.",
+          "reviewed_code_fingerprint": "bdad189a74ed24898d335d9589cc321b3360c4cf446a7d5a198208bd2bde13c7",
           "spec_material_hash": "9b8e06852ad88e25b52c1693d1616e48c93d74ca22b358570d80613325d34618"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Reviewed current source and authored setup contract: interactive confirmation precedes mutation, unattended bootstrap ordering is retained, unknown product context stays explicit, config backups remain private and cloud authorization is unchanged. The PTY/config/Git suites passed 48 checks with one existing skip; final presentation unit and lint reruns are pending. Historical checkpoint gaps are preserved as observations in this fresh workstream.",
-          "reviewed_code_fingerprint": "0f263f736fa6d9bb4512faa8b691103a7621185f330968e4811e5da606ba3a02",
+          "reason": "Final source review matches the authored setup contract and private backup/authorization boundary. All 84 focused tests passed with one existing skip, targeted Clippy and formatting passed, and manual terminal review passed. Full required provider validation remains separate and unproven until its exact-candidate run succeeds.",
+          "reviewed_code_fingerprint": "bdad189a74ed24898d335d9589cc321b3360c4cf446a7d5a198208bd2bde13c7",
           "spec_material_hash": "ad2e4b9264d7b5a4b280944b771b1b1729c3deee646215dab25928a929cd7365"
         }
       ],
@@ -632,20 +642,28 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1794462969Z"
+      "updated_at": "1794468321Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:4c50c5f75f7d5ec9d0b3f30740a76b35e1008731307b902287bfe3e9ef1aabc5",
+      "artifact_hash": "sha256:91629d7fc2e7005eb2680d2d822865bc01caaddc7d0d2e012e8c865915fabd49",
       "checks": [
+        {
+          "name": "current-cli-regressions",
+          "status": "passed"
+        },
         {
           "name": "current-init-unit-tests",
           "status": "passed"
         },
         {
           "name": "current-layout-tests",
+          "status": "passed"
+        },
+        {
+          "name": "formatting",
           "status": "passed"
         },
         {
@@ -658,6 +676,10 @@
         },
         {
           "name": "preserved-source-unit-tests",
+          "status": "passed"
+        },
+        {
+          "name": "targeted-clippy",
           "status": "passed"
         }
       ],
@@ -689,10 +711,17 @@
             "intent_id": "intent:change_01M7742C8M9Y4385TJS1NEG96V",
             "kind": "trajectory_step_recorded",
             "sequence": 5
+          },
+          {
+            "detail": "trajectory:branch_01M7742CC2WSBGWSRWRSWJEBMW",
+            "event_id": "event:6",
+            "intent_id": "intent:change_01M7742C8M9Y4385TJS1NEG96V",
+            "kind": "trajectory_step_recorded",
+            "sequence": 6
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 5,
+        "next_sequence": 6,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M7742CC2WSBGWSRWRSWJEBMW": {
@@ -754,6 +783,31 @@
                 ],
                 "sequence": 5,
                 "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:6",
+                "observations": [
+                  "Final focused verification passed: 34 setup unit tests, 2 layout tests, 5 real PTY tests, 5 Git bootstrap tests and 38 config tests, with 1 pre-existing ignored config test. The final PTY test was rerun after using a portable raw pointer for Linux/macOS; cargo clippy --lib --test init_cli -- -D warnings passed. Product/test bytes matched this fresh workstream and the test cache checkout. Manual visual inspection confirmed concise unknown context, optional purpose, review, cancellation and restored terminal state. Checkpoint history for f2612990 and 6e2ad2e6 is proven. Full validation still lacks admission: its most recent attempt returned public GitHub HTTP 403 rate limiting, with no alternate authentication or bypass. A final exact-candidate retry follows this evidence checkpoint."
+                ],
+                "proof_refs": [
+                  "current-cli-regressions",
+                  "targeted-clippy",
+                  "formatting",
+                  "full-validation"
+                ],
+                "scope": [
+                  "\".decapod/config.toml\"",
+                  "\".decapod/managed/specs\"]",
+                  "\"docs/book/src/quickstart.md\"",
+                  "\"src/decapod/core/scaffold.rs\"",
+                  "\"src/decapod/onboarding.rs\"",
+                  "\"tests/init_cli.rs\"",
+                  "\"tests/unit/lib_init_prompt_tests.rs\"",
+                  "paths:[\"src/decapod/lib.rs\""
+                ],
+                "sequence": 6,
+                "validation_findings": []
               }
             ]
           }
@@ -763,6 +817,7 @@
       "destination": "pull request",
       "evidence": [
         "Current presentation source passed all 34 init_prompt_tests plus 2 onboarding layout tests. The separate final config/Git/PTY and targeted Clippy run continues. Fresh candidate f2612990 archives the observed source-history gap and reauthored product changes; the original 402c588a source history remains unproven and preserved. No full-validation success is claimed.",
+        "Final focused verification passed: 34 setup unit tests, 2 layout tests, 5 real PTY tests, 5 Git bootstrap tests and 38 config tests, with 1 pre-existing ignored config test. The final PTY test was rerun after using a portable raw pointer for Linux/macOS; cargo clippy --lib --test init_cli -- -D warnings passed. Product/test bytes matched this fresh workstream and the test cache checkout. Manual visual inspection confirmed concise unknown context, optional purpose, review, cancellation and restored terminal state. Checkpoint history for f2612990 and 6e2ad2e6 is proven. Full validation still lacks admission: its most recent attempt returned public GitHub HTTP 403 rate limiting, with no alternate authentication or bypass. A final exact-candidate retry follows this evidence checkpoint.",
         "Recovery preserves immutable source 402c588af141811a98a40136b77f01ed171f75f0 and its checkpoint gap. Reauthored product files and only authored semantic spec sections in this fresh admitted workstream. Earlier focused evidence: 33 setup unit tests, 2 layout tests, 5 PTY tests and 5 Git tests passed; config suite had 37 pass, 1 fail, 1 pre-existing ignored test. Its failure exposed a changed unattended Git bootstrap order; the shared mutation helper now restores that contract while interactive setup still confirms first. Current regression rerun is pending. Product/test bytes are verified identical between this workstream and the existing cache checkout used for focused tests; same accepted base d3358e1c. Full readiness remains unproven; GitHub provider rate limit resets at epoch 1794463204. The source inventory review found only the accepted release version bump in Cargo.toml/Cargo.lock since c7609e42; refreshed the reviewed digest without changing providers or required checks."
       ],
       "inspected_files": [
