@@ -41,6 +41,11 @@ changed. Pinned Bazel accepts the result with `lockfile_mode=error`. Source and
 runtime discovery limits remain unchanged. This is metadata consistency proof,
 not an executed client test or full-readiness result.
 
+The current registry version and checksum are established by Cargo and
+`tests/release_dependency_policy.rs`. Existing versioned SQLite recovery
+documentation describes the unchanged recovery primitive; those historical
+capability references do not establish the managed connector's release or proof.
+
 The first current-target validation stopped before Buildkite because the
 immutable candidate still carried v0.138.2 entrypoint headers while the installed
 released controller was v0.138.3. Supported initialization regenerates the four
