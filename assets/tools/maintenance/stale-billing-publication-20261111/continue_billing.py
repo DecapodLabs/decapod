@@ -12,16 +12,17 @@ import signal
 import subprocess
 import sys
 import tempfile
-from container_billing import verify_runtime, OCI_CONTROLLER_IDENTITY, HOST_CONTROLLER_IDENTITY
+from container_billing import verify_runtime, verify_github_cli, OCI_CONTROLLER_IDENTITY, HOST_CONTROLLER_IDENTITY, GITHUB_CLI_IDENTITY
 
 REPO = "DecapodLabs/decapod"
 BASE = "c5de35a89b27e788169612ae71681e45c13bf71a"
 SOURCE = "26a499d9f0789a5ed00605d23cfc57f5392ae8fc"
 OPS = "ops/stale-billing-publication-20261111"
-ACTOR = "chatgpt-stale-billing-next"
-RECEIVER = "chatgpt-stale-billing"
+ACTOR = "chatgpt-stale-billing"
+RECEIVER = "chatgpt-stale-billing-next"
 CONTROLLER = "dd30b7516c331ac0a6c3128f7a9c433833935bc9f380d311b188502037f857e0"
-MATERIAL_BASE = REMOTE_HEAD = "c7609e42bbbcff9c72af6be7a86333d4b0408922"
+MATERIAL_BASE = "c7609e42bbbcff9c72af6be7a86333d4b0408922"
+REMOTE_HEAD = "b984a386fec57ff302f09013a143e63740639ced"
 CURRENT = "b984a386fec57ff302f09013a143e63740639ced"
 CURRENT_TREE = "cbb32bf666025718e35ba733ab9dbc02272b55d6"
 PREPARATION_HEAD = "04ddbedf90cd107ab9e7e3a46b4cb00e9c69bf6b"
@@ -68,25 +69,25 @@ def main():
     prepared = resume["preparation_result"]
     task_id = "code_01m76aq15fea61e8"
     preserved_branch = "agent/chatgpt-stale-billing/" + task_id + "-cloud-approval"
-    native_digest = "sha256:97767986b520b0d4d558375f57d8b1d43eaa745604ecd4ab7e48b8e8b01d2b0a"
+    native_digest = "sha256:6ea1b7749d0c4cc2c39b2b66e949a0752dde2cdca6923d8a85931686306937a5"
     approved_inventory = "sha256:83c629aa22fba433bbd69e480aa0ecbd0abfdda74dc7dfec2a88758932920577"
     if (manifest.get("repository") != REPO or manifest.get("base_sha") != BASE
             or manifest.get("source_sha") != SOURCE or manifest.get("slug") != "billing"
             or resume.get("task_id") != task_id or resume.get("branch") != preserved_branch
-            or resume.get("receiver") != ACTOR or resume.get("prior_run_id") != "43126315508"
+            or resume.get("receiver") != ACTOR or resume.get("prior_run_id") != "43127804573"
             or resume.get("return_receiver") != RECEIVER or resume.get("remote_head_sha") != REMOTE_HEAD
-            or resume.get("prior_operations_sha") != "8ba1d2be1eb40421deb9516bce604e834ee47b46"
-            or resume.get("prior_report_sha256") != "sha256:d11f37f51d50ce36518eba6614bab9a7edc48ad9c023367cbbbcde000fefcd9d"
+            or resume.get("prior_operations_sha") != "7f7fe95cd93ab914da4b01652167319d85932eae"
+            or resume.get("prior_report_sha256") != "sha256:23bcdee0df2137cf713ac5c79a2f741af827784033eb51fcac7b5189a33daceb"
             or digest((json.dumps(prior, indent=2) + "\n").encode()) != resume.get("prior_report_sha256")
             or resume.get("preparation_run_id") != "43123122460"
             or resume.get("preparation_report_sha256") != "sha256:412a64caf4324bca7fa03c812f7a58c565748dfd8c7829fb0c588becdc720873"
             or digest((json.dumps(prepared, indent=2) + "\n").encode()) != resume.get("preparation_report_sha256")
             or resume.get("candidate_sha") != CURRENT or resume.get("candidate_tree") != CURRENT_TREE
             or resume.get("native_transfer", {}).get("plaintext_sha256") != native_digest
-            or resume.get("native_transfer", {}).get("transfer_id") != "01M76J2T925DCN9Z1W3JDPDEYP"
+            or resume.get("native_transfer", {}).get("transfer_id") != "01M76KEP9XVG3M9X5ETME3T9TC"
             or prior.get("task") != task_id or prior.get("branch") != preserved_branch
             or prior.get("status") != "blocked" or prior.get("head_sha") != CURRENT
-            or prior.get("pushed") is not False or prior.get("checkpoints") is not True
+            or prior.get("pushed") is not True or prior.get("checkpoints") is not True
             or prior.get("observed_remote_head_sha") != REMOTE_HEAD
             or prior.get("checkpoint_verification", {}).get("history_proven") is not True
             or prior.get("checkpoint_verification", {}).get("head_commit") != CURRENT
@@ -348,6 +349,9 @@ def main():
             raise Blocked("original billing custody requires the exact native container source context")
         try:
             result["container_execution"] = verify_runtime(runtime_state)
+            if manifest.get("github_cli") != GITHUB_CLI_IDENTITY:
+                raise RuntimeError("GitHub CLI manifest differs from the exact approved official release")
+            result["github_cli"] = verify_github_cli(runtime_state, env)
         except RuntimeError as error:
             raise Blocked(str(error)) from None
         if runtime_state["engine"] == "podman" and env.get("CONTAINER_ID") != result["container_execution"]["container_id"]:
@@ -402,7 +406,7 @@ def main():
         run("import exact native checkpoint Git objects", "git", "fetch", "--no-tags", "--no-write-fetch-head", str(bundle), "HEAD")
         if (run("verify preserved native checkpoint tree", "git", "rev-parse", CURRENT + "^{tree}").strip() != CURRENT_TREE
                 or run("verify preserved native checkpoint parent", "git", "rev-parse", CURRENT + "^").strip() != PREPARATION_HEAD
-                or run("verify preparation checkpoint parent", "git", "rev-parse", PREPARATION_HEAD + "^").strip() != REMOTE_HEAD):
+                or run("verify preparation checkpoint parent", "git", "rev-parse", PREPARATION_HEAD + "^").strip() != MATERIAL_BASE):
             raise Blocked("captured source checkpoint or direct parent differs")
         run("verify historical archive source is available", "git", "cat-file", "-e", SOURCE + "^{commit}")
         native_file = incoming / "native-transfer.json"
@@ -412,7 +416,7 @@ def main():
         native = json.loads(native_file.read_bytes())
         if (native["receiver"] != ACTOR or native["transfer_id"] != resume["native_transfer"]["transfer_id"]
                 or native["projection"]["task"]["id"] != task_id or native["source_commit"] != BASE
-                or native["source_branch"] != "billing-publication-control-d44c9d89872b"):
+                or native["source_branch"] != "billing-publication-control-8d4202963760"):
             raise Blocked("private native transfer does not match authenticated original task")
         observed_paths = {entry.split("\t", 2)[2] for entry in run("inspect approved repair patch paths", "git", "apply", "--numstat", "-z", data=patch).split("\0") if entry}
         release_paths = {entry.split("\t", 2)[2] for entry in run("inspect observed release drift paths", "git", "apply", "--numstat", "-z", data=release_patch).split("\0") if entry}
@@ -577,6 +581,11 @@ def main():
         if sorted(run("recheck stable remote tag history", "git", "ls-remote", "--tags", "origin", cwd=work).splitlines()) != remote_tags:
             raise Blocked("remote release history changed before native validation")
         result["tag_history_verified"] = True
+        try:
+            if verify_github_cli(runtime_state, env) != result["github_cli"]:
+                raise RuntimeError("Verified GitHub CLI changed before native publication")
+        except RuntimeError as error:
+            raise Blocked(str(error)) from None
         body = manifest["body"].replace("{{HEAD_SHA}}", head).replace("{{BASE_SHA}}", BASE)
         code, stdout, stderr, timeout = execute("native full workspace publisher", ["decapod", "workspace", "publish", "--title", manifest["title"], "--description", body], cwd=work, timeout=args.publish_timeout)
         result["publisher"] = dict(exit_code=code, timeout=timeout, codes=sorted(set(re.findall(CODES, stdout + stderr))), ci_identity_preserved=True)

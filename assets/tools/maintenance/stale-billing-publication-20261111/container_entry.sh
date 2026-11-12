@@ -16,11 +16,12 @@ case "$billing_engine" in
 esac
 test "$(id -u)" -eq 0
 case "$billing_uid:$billing_gid" in *[!0-9:]*|0:*) exit 71;; esac
-if ! command -v python3 >/dev/null 2>&1 || ! command -v openssl >/dev/null 2>&1 || ! command -v gh >/dev/null 2>&1 || ! command -v setpriv >/dev/null 2>&1 || ! command -v findmnt >/dev/null 2>&1; then
+if ! command -v python3 >/dev/null 2>&1 || ! command -v openssl >/dev/null 2>&1 || ! command -v setpriv >/dev/null 2>&1 || ! command -v findmnt >/dev/null 2>&1; then
     command -v apt-get >/dev/null 2>&1
     apt-get update
-    DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends python3 openssl gh util-linux
+    DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends python3 openssl util-linux
 fi
+test -x /usr/local/bin/gh
 billing_store="$billing_root/.decapod/data"
 test "$(findmnt -n -o FSTYPE --mountpoint "$billing_store")" = tmpfs
 test -d "$billing_store"

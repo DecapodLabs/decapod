@@ -11,6 +11,9 @@ import shutil
 import signal
 import subprocess
 import sys
+import tarfile
+import tempfile
+import urllib.request
 
 BASE = "c5de35a89b27e788169612ae71681e45c13bf71a"
 REPO = "DecapodLabs/decapod"
@@ -35,6 +38,12 @@ OCI_CONTROLLER_IDENTITY = dict(release="v0.138.2", distribution="oci", binary_sh
     image_repository=OCI_REPOSITORY, image_index_digest=OCI_INDEX, platform_manifest_digest=OCI_MANIFEST,
     image_config_digest=OCI_CONFIG, platform=dict(os="linux", architecture="amd64"), release_tag_commit=BASE,
     source_workflow_run_id=43106957801, source_workflow_job_id=130812709187)
+GITHUB_CLI_IDENTITY = dict(repository="cli/cli", release="v2.103.3", release_id=424663522,
+    release_source_commit="63837fb778d6a39f02be0ce76ff89f2bc8d74bdc", asset_id=679195621,
+    archive_name="gh_2.103.3_linux_amd64.tar.gz", archive_bytes=15031972,
+    archive_sha256="4c806978ffce1cec70853302a56d70ac6da4f19bae7adca4e1a8ab00633dd91d",
+    binary_sha256="b768184570b12536be4ac1528893f6340d1c6a7b40b56ad45bca9cd0e87ad34d", binary_bytes=41070752,
+    checksums_asset_id=679195516, checksums_sha256="f756e7859d90dbb5e85aae5194206c37da220bec9bac23d3d659078a8e766fdc")
 CERT = "c54fbd6b328ebc89c57a0b158cbdddc434e37f48b8283b0e9af532506600f6dc"
 COORDINATOR = "chatgpt-billing-container-preparation"
 ASSETS = ("container_billing.py", "container_entry.sh", "continue_billing.py", "billing-continuation.json", "gate-repair.patch", "release-generated.patch", "custody-recipient.pem")
@@ -62,6 +71,23 @@ def safe_path(value):
 def provider(env):
     require(env.get("GITHUB_ACTIONS") == "true" and env.get("BUILDKITE") != "true", "Actual GitHub execution identity is required")
     require(env.get("GITHUB_REPOSITORY") == REPO and env.get("GITHUB_REF") == "refs/heads/" + OPS, "Wrong authorized operations context")
+
+
+def verify_github_cli(state, env):
+    require(state.get("github_cli") == GITHUB_CLI_IDENTITY, "GitHub CLI provenance differs from the reviewed official release")
+    path = Path("/usr/local/bin/gh")
+    located = shutil.which("gh", path=env.get("PATH"))
+    require(located is not None and Path(located).resolve() == path and not path.is_symlink()
+            and path.is_file() and os.access(path, os.X_OK)
+            and path.stat().st_size == GITHUB_CLI_IDENTITY["binary_bytes"]
+            and hashlib.sha256(path.read_bytes()).hexdigest() == GITHUB_CLI_IDENTITY["binary_sha256"],
+            "Actual GitHub CLI does not match the pinned official binary")
+    version = subprocess.run([str(path), "--version"], env=env, text=True, capture_output=True, timeout=30)
+    help_result = subprocess.run([str(path), "api", "--help"], env=env, text=True, capture_output=True, timeout=30)
+    require(version.returncode == 0 and version.stdout.startswith("gh version 2.103.3 ")
+            and help_result.returncode == 0 and "--slurp" in help_result.stdout,
+            "Official GitHub CLI version or required native pagination support is unavailable")
+    return dict(GITHUB_CLI_IDENTITY, observed_version=version.stdout.splitlines()[0], slurp_supported=True)
 
 
 def mapped_id(number, entries):
@@ -159,6 +185,7 @@ def host(args):
     report = dict(schema="decapod.billing-native-container.v1", status="blocked", original_task_imported_on_host=False,
                   original_task_exported_on_host=False, operations_sha=env["GITHUB_SHA"], uid=os.geteuid(), gid=os.getegid())
     label, cert_verified = "preconditions", False
+    github_cli_directory = None
     env["DECAPOD_AGENT_ID"] = COORDINATOR
     env["DECAPOD_SESSION_PASSWORD"] = secrets.token_hex(32)
     env["DECAPOD_CLAIM_AUTORUN"] = "false"
@@ -204,6 +231,29 @@ def host(args):
         observed = text("verify bootstrap encryption recipient", "openssl", "x509", "-in", str(certificate), "-noout", "-fingerprint", "-sha256").split("=", 1)[-1].strip().replace(":", "").lower()
         require(observed == CERT, "Operator custody certificate differs")
         cert_verified = True
+        label = "fetch exact official compatible GitHub CLI"
+        github_cli_directory = Path(tempfile.mkdtemp(prefix="decapod-billing-gh-", dir=runtime.parent))
+        archive_path = github_cli_directory / GITHUB_CLI_IDENTITY["archive_name"]
+        url = "https://github.com/cli/cli/releases/download/" + GITHUB_CLI_IDENTITY["release"] + "/" + GITHUB_CLI_IDENTITY["archive_name"]
+        with urllib.request.urlopen(url, timeout=60) as response:
+            archive_bytes = response.read(GITHUB_CLI_IDENTITY["archive_bytes"] + 1)
+        require(len(archive_bytes) == GITHUB_CLI_IDENTITY["archive_bytes"]
+                and hashlib.sha256(archive_bytes).hexdigest() == GITHUB_CLI_IDENTITY["archive_sha256"],
+                "Official GitHub CLI archive size or digest differs")
+        archive_path.write_bytes(archive_bytes)
+        member_name = "gh_2.103.3_linux_amd64/bin/gh"
+        with tarfile.open(archive_path, mode="r:gz") as archive:
+            members = [member for member in archive.getmembers() if member.name == member_name]
+            require(len(members) == 1 and members[0].isfile() and members[0].size == GITHUB_CLI_IDENTITY["binary_bytes"],
+                    "Official GitHub CLI archive does not contain the exact regular binary")
+            binary_bytes = archive.extractfile(members[0]).read(GITHUB_CLI_IDENTITY["binary_bytes"] + 1)
+        require(len(binary_bytes) == GITHUB_CLI_IDENTITY["binary_bytes"]
+                and hashlib.sha256(binary_bytes).hexdigest() == GITHUB_CLI_IDENTITY["binary_sha256"],
+                "Official GitHub CLI binary identity differs")
+        github_cli_path = github_cli_directory / "gh"
+        github_cli_path.write_bytes(binary_bytes)
+        github_cli_path.chmod(0o755)
+        report["official_github_cli"] = GITHUB_CLI_IDENTITY
         require(text("verify accepted source", "git", "rev-parse", "HEAD").strip() == BASE, "Accepted source changed")
         require(not text("verify clean source before preparation", "git", "status", "--porcelain").strip(), "Source checkout is not clean")
         native("ingest native coordination instructions", "docs", "ingest")
@@ -281,6 +331,7 @@ def host(args):
         cidfile = private / "native-container.cid"
         handoff = dict(root=str(root), assets=str(assets), incoming=str(incoming), runtime=str(runtime), controller="/usr/local/bin/decapod",
                        child_controller=OCI_CONTROLLER_IDENTITY, host_controller=HOST_CONTROLLER_IDENTITY,
+                       github_cli=GITHUB_CLI_IDENTITY,
                        engine=engine, rootless_host=rootless, host_id_mappings=id_mappings, cidfile=str(cidfile),
                        uid=os.geteuid(), gid=os.getegid(), publish_timeout=args.publish_timeout,
                        asset_digests={name: sha((assets / name).read_bytes()) for name in ASSETS}, event_sha256=sha(event.read_bytes()),
@@ -288,6 +339,7 @@ def host(args):
         context = private / "container-context.json"
         context.write_text(json.dumps(handoff))
         mounts = "".join(" --mount " + quote("type=bind,src=" + str(path) + ",dst=" + str(path) + (",readonly" if readonly else "")) for path, readonly in ((assets, True), (incoming, True), (runtime, False), (event, True)))
+        mounts += " --mount " + quote("type=bind,src=" + str(github_cli_path) + ",dst=/usr/local/bin/gh,readonly")
         entry = "bash " + quote(assets / "container_entry.sh") + " " + " ".join(quote(value) for value in (context, os.geteuid(), os.getegid(), root, assets, engine))
         cid_option = " --cidfile " + quote(cidfile) if engine == "podman" else ""
         automated = hint.replace(quote(engine) + " run --rm -it ", quote(engine) + " run --rm -i" + cid_option + mounts + " ", 1)
@@ -323,6 +375,8 @@ def host(args):
         if original_blocker is not None:
             report["blocker"] = original_blocker
         (public / "billing-container.json").write_text(json.dumps(report, indent=2) + "\n")
+        if github_cli_directory is not None:
+            shutil.rmtree(github_cli_directory, ignore_errors=True)
         print(json.dumps({k:report[k] for k in ("status", "original_task_imported_on_host", "original_task_exported_on_host")}))
 
 
