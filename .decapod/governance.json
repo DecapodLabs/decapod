@@ -580,6 +580,11 @@
       "id": "issue1573-controller139-assets",
       "summary": "Refresh generated release assets through verified official0.139.0 after CI exposed stale0.138.3 entrypoints; preserve original three checkpoints, native transfer custody and failed proof evidence.",
       "input_digest": "sha256:a59465b5cfa61d1d2fac1ce2aa2499d0ba3d061c71e07f384b4d856cafc253a7"
+    },
+    {
+      "id": "issue1573-accepted1391-merge",
+      "summary": "Reconcile accepted onboarding and0.139.1 release; retain existing quota implementation/four checkpoints and regenerate native release surfaces, specs and reviewed inventory without weakening proof. Prior88 full proof invalidated by accepted-target advancement.",
+      "input_digest": "sha256:ddde5192cbafbd18382d019ff0c9b3d2b4ba60e746cc2cd0b8096c04b4a224a7"
     }
   ],
   "intents": {
@@ -625,22 +630,22 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Reviewed against released0.139.0 regenerated assets. Quota metadata stays advisory; fresh final identity and complete Buildkite evidence remain required. Six quota fixtures passed in CI838b (1680 library,8 ignored), but exact refreshed candidate full native readiness remains unproven. Security transport and denial behavior unchanged.",
-          "reviewed_code_fingerprint": "34f3091e9c1fd37ac7629ea6769d55a536c6b7f3cd62809b4f111ecafb997a06",
-          "spec_material_hash": "9f65acf195cfa65ca0b090726277ffc2fc32433018a12cd48307a5ecac8baf38"
+          "reason": "Reviewed accepted onboarding/release merge and native1391 projections. Quota source is unchanged; six fixtures passed on88b93161, which does not prove this candidate. Hints preserve fresh final identity, all Buildkite evidence, deadlines/cancellation and denial behavior. Fresh full proof is required.",
+          "reviewed_code_fingerprint": "8c3b0a190509a3015cc13573ec316e7a6c2eb66d4e9d47701e60026a6a10c8db",
+          "spec_material_hash": "153d0509c976a6c22b20cba927376f0b56cb5b54e69d7c3b3381bb50c3993645"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Reviewed against released0.139.0 regenerated assets. Quota metadata stays advisory; fresh final identity and complete Buildkite evidence remain required. Six quota fixtures passed in CI838b (1680 library,8 ignored), but exact refreshed candidate full native readiness remains unproven. Security transport and denial behavior unchanged.",
-          "reviewed_code_fingerprint": "34f3091e9c1fd37ac7629ea6769d55a536c6b7f3cd62809b4f111ecafb997a06",
-          "spec_material_hash": "b2091dbfe675a1b707896c0a801c85d951dfff011de623fac7c68c71e6465058"
+          "reason": "Reviewed accepted onboarding/release merge and native1391 projections. Quota source is unchanged; six fixtures passed on88b93161, which does not prove this candidate. Hints preserve fresh final identity, all Buildkite evidence, deadlines/cancellation and denial behavior. Fresh full proof is required.",
+          "reviewed_code_fingerprint": "8c3b0a190509a3015cc13573ec316e7a6c2eb66d4e9d47701e60026a6a10c8db",
+          "spec_material_hash": "bbb2a6b8d8eab6b36cd3c19958fb0fd0912bfac66c5203854df65cf296ba3ec7"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Reviewed against released0.139.0 regenerated assets. Quota metadata stays advisory; fresh final identity and complete Buildkite evidence remain required. Six quota fixtures passed in CI838b (1680 library,8 ignored), but exact refreshed candidate full native readiness remains unproven. Security transport and denial behavior unchanged.",
-          "reviewed_code_fingerprint": "34f3091e9c1fd37ac7629ea6769d55a536c6b7f3cd62809b4f111ecafb997a06",
+          "reason": "Reviewed accepted onboarding/release merge and native1391 projections. Quota source is unchanged; six fixtures passed on88b93161, which does not prove this candidate. Hints preserve fresh final identity, all Buildkite evidence, deadlines/cancellation and denial behavior. Fresh full proof is required.",
+          "reviewed_code_fingerprint": "8c3b0a190509a3015cc13573ec316e7a6c2eb66d4e9d47701e60026a6a10c8db",
           "spec_material_hash": "ecc8e7afebb549a800744002854826201e68cfbacea69a822006093227f6f7a9"
         }
       ],
@@ -654,18 +659,22 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1794480233Z"
+      "updated_at": "1794483161Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch",
         "Preserve fresh final registry/source/base checks, required provider proof, public reader identity, immediate denied-request failure and the existing 7200-second maximum budget."
       ],
-      "artifact_hash": "sha256:133db0aef9a25544db5745533a6e729601ecfd09ed4083ce18a6b73d0dc0acd0",
+      "artifact_hash": "sha256:d82226d867445dae109a7c376e1d72cc7b97a949b9ced882a231c63f2fa6788f",
       "checks": [
         {
           "name": "accepted_target",
           "status": "passed"
+        },
+        {
+          "name": "candidate-after1391-full",
+          "status": "unavailable"
         },
         {
           "name": "candidate838-consumer",
@@ -677,6 +686,14 @@
         },
         {
           "name": "candidate838-standalone-validation",
+          "status": "failed"
+        },
+        {
+          "name": "candidate88-github-ci",
+          "status": "passed"
+        },
+        {
+          "name": "candidate88-native-full",
           "status": "failed"
         },
         {
@@ -752,10 +769,24 @@
             "intent_id": "intent:change_01M77EJ4FZFRDV331WWPVRF36S",
             "kind": "trajectory_step_recorded",
             "sequence": 9
+          },
+          {
+            "detail": "trajectory:branch_01M77EJ4KJ409S85KKXV55SAT1",
+            "event_id": "event:10",
+            "intent_id": "intent:change_01M77EJ4FZFRDV331WWPVRF36S",
+            "kind": "trajectory_step_recorded",
+            "sequence": 10
+          },
+          {
+            "detail": "trajectory:branch_01M77EJ4KJ409S85KKXV55SAT1",
+            "event_id": "event:11",
+            "intent_id": "intent:change_01M77EJ4FZFRDV331WWPVRF36S",
+            "kind": "trajectory_step_recorded",
+            "sequence": 11
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 9,
+        "next_sequence": 11,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M77EJ4KJ409S85KKXV55SAT1": {
@@ -902,6 +933,46 @@
                 ],
                 "sequence": 9,
                 "validation_findings": []
+              },
+              {
+                "action": "validation",
+                "custody_event_id": "event:10",
+                "observations": [
+                  "CI43203014899 passed on88b93161:1680 library,8 ignored,6 quota fixtures,32 boundary. Actual Buildkite8437 contracts/health failed Git merge-base verification after master advanced through1636/release1641 tobc0a7197. Corrected prior progress misclassification. Full readiness false. Owned stale read-only collector interrupted; native final CI operation cancelled at/tmp/decapod-snapshot-VJ25px, privately preserved. No PR created.",
+                  "Verified official0.139.1 archive ce1e96bde351e32b765a5052411bb601908c2e9a0a89fc3731fd7e8587f99607; successor01M77R6KGAGE6598M0GPA0GWM2 imported once, claimed, can_work true. Source139 container stopped. Generated premerge projections saved in stash71b357f07d1fc0dec78defb948285341b5240541; fresh native projections replace stale ones.",
+                  "Normal mergebc0a7197 preserves accepted onboarding/release and active native journal. Accepted product specs retain four authored quota sections. All105 source hashes independently checked, including symlink bytes; only Cargo.toml/Cargo.lock changed. Reviewed digest sha256:c9d2697f798bf2409fcfa1ea763efaf676e3bf4d6123b389ec106247a90ef8b0. Required graph/carriers/coverage unchanged."
+                ],
+                "proof_refs": [
+                  "candidate88-github-ci",
+                  "candidate88-native-full",
+                  "candidate-after1391-full"
+                ],
+                "scope": [
+                  "\".decapod/managed/specs\"]",
+                  "\"src/decapod/core/validation_runtime/snapshot\"",
+                  "\"src/decapod/core/validation_runtime/snapshot.rs\"",
+                  "\"tests\"",
+                  "paths:[\"src/decapod/core/snapshot_provider\""
+                ],
+                "sequence": 10,
+                "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:11",
+                "observations": [
+                  "Existing-workspace ensure does not rerender release surfaces. Restored four entrypoints and Dockerfile as exact unedited1391 native-generated bytes from preserved stash. entrypoint_integrity::render_entrypoint depends on evaluating binary/template rather than repository source; current config uses same capabilities. specs.refresh regenerates current merged-code attestations and manifest. No old manifest reapplied."
+                ],
+                "proof_refs": [],
+                "scope": [
+                  "\".decapod/managed/specs\"]",
+                  "\"src/decapod/core/validation_runtime/snapshot\"",
+                  "\"src/decapod/core/validation_runtime/snapshot.rs\"",
+                  "\"tests\"",
+                  "paths:[\"src/decapod/core/snapshot_provider\""
+                ],
+                "sequence": 11,
+                "validation_findings": []
               }
             ]
           }
@@ -914,12 +985,16 @@
       ],
       "destination": "pull request",
       "evidence": [
+        "CI43203014899 passed on88b93161:1680 library,8 ignored,6 quota fixtures,32 boundary. Actual Buildkite8437 contracts/health failed Git merge-base verification after master advanced through1636/release1641 tobc0a7197. Corrected prior progress misclassification. Full readiness false. Owned stale read-only collector interrupted; native final CI operation cancelled at/tmp/decapod-snapshot-VJ25px, privately preserved. No PR created.",
+        "Existing-workspace ensure does not rerender release surfaces. Restored four entrypoints and Dockerfile as exact unedited1391 native-generated bytes from preserved stash. entrypoint_integrity::render_entrypoint depends on evaluating binary/template rather than repository source; current config uses same capabilities. specs.refresh regenerates current merged-code attestations and manifest. No old manifest reapplied.",
         "Fetched accepted master advanced from d3358e1ce2cdb137dc57445c64592cb6d327a6ff to c87e4f49cab8e2ccff5f9bdc5833d8602dfffdb8 by merge of PR1635. Preserve current authored source with native checkpoint before reconciling accepted history; no validation claim on this unmerged candidate.",
         "Initial governed quota checkpoint committed as b55ee3f8. Normal merge of accepted c87e4f49 produced ten conflicts limited to the active journal and specs. Git resolution preserves exact current native journal from b55ee3f8 and accepted specs/manifest from c87e4f49, with only the four authored quota sections reapplied. Accepted historical governance remains in the incoming parent; projections and canonical spec reviews refreshed through CLI. No source conflict or cloud behavior edit was needed.",
         "Merged accepted release19acd21f7ff50656323d037915273f03cdedc04e after preserving native checkpoint87bdf449. Native agent.init reported STALE_SOURCE_INVENTORY; independently checked all105 current hashes and previous validated c87 inventory digest8f21b5e. Only Cargo.toml/Cargo.lock own-package version fields changed; configured actual digestc8786efce425085ccb62996e1d586dd8dabd491adea74af4829e638ec26d6174 after backing up config. No source graph/carrier/check change. Source review also preserves numeric reset diagnostics when quota waits reach the original deadline.",
         "Native Podman admission reports can_work=true and in_container=true with the actual runtime container ID a746884071f9cd15441394a7b6634ca20a8ab454d874dcd5b04202c82a6e2b83; accepted base d3358e1ce2cdb137dc57445c64592cb6d327a6ff. No product tests have run yet.",
+        "Normal mergebc0a7197 preserves accepted onboarding/release and active native journal. Accepted product specs retain four authored quota sections. All105 source hashes independently checked, including symlink bytes; only Cargo.toml/Cargo.lock changed. Reviewed digest sha256:c9d2697f798bf2409fcfa1ea763efaf676e3bf4d6123b389ec106247a90ef8b0. Required graph/carriers/coverage unchanged.",
         "Source implements bounded successful-header quota hints shared by nested budgets, cold-discovery pacing, fresh final registry/source/base checks, and no retry on denial. Six new fixtures are authored but have not executed. Canonical ARCHITECTURE/INTERFACES/SECURITY spec reviews recorded through native CLI. Container-private Git configuration backed up, official gh configured for authorized Git publication before proof; anonymous API reader remains credential-free.",
         "Verified official v0.139.0 LinuxAArch64 release archive sha256:24b5153ce3a04d6ab0c37d6d4be2428c623066b4b864c86116524371ca542649; isolated newcontroller image not published. Native successor01M77N7N2XK4M9KE1CB1435JBW imported once into empty private tmpfs with notmpcopyup; claim+workspace can_work true. First destination import rejected old host revision1 and replaced no state. Old owned source container stopped after fresh claim.",
+        "Verified official0.139.1 archive ce1e96bde351e32b765a5052411bb601908c2e9a0a89fc3731fd7e8587f99607; successor01M77R6KGAGE6598M0GPA0GWM2 imported once, claimed, can_work true. Source139 container stopped. Generated premerge projections saved in stash71b357f07d1fc0dec78defb948285341b5240541; fresh native projections replace stale ones.",
         "https://github.com/DecapodLabs/decapod/actions/runs/43195371875/job/131105695413: 1680 library passed,8 ignored; six quota fixtures passed;32 boundary passed. Source unchanged after838b.",
         "https://github.com/DecapodLabs/decapod/actions/runs/43195371875/job/131105696067:31 entrypoint tests passed,1 stale-release fixture failed,4 ignored. Standalone43195371851:190 passed then generated release drift rejected."
       ],
@@ -940,6 +1015,7 @@
       ],
       "next_transitions": [
         "Checkpoint exact candidate and run plain decapod validate through required Buildkite profile",
+        "Checkpoint reconciled1391 candidate, push, complete full native Buildkite readiness and publish only when ready.",
         "Checkpoint regenerated0.139.0 assets, commit, verify immutable history, push exact candidate, complete full native Buildkite proof and publish only when ready.",
         "Checkpoint source, merge current accepted target without replacing active governance journal, refresh projections and revalidate exact reconciled candidate.",
         "Checkpoint/commit accepted-target merge, verify immutable history, run plain decapod validate outside CI.",

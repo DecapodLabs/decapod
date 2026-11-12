@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.139.1](https://github.com/DecapodLabs/decapod/compare/v0.139.0...v0.139.1) - 2026-11-12
+
+### Added
+
+- refine terminal onboarding and setup review
+
+### Fixed
+
+- reconcile terminal setup with managed cloud onboarding
+
+### Other
+
+- reconcile reviewed build inventory with accepted release
+- verify portable terminal onboarding interactions
+- preserve onboarding recovery evidence
+
 ## [0.139.0](https://github.com/DecapodLabs/decapod/compare/v0.138.3...v0.139.0) - 2026-11-12
 
 ### Fixed
