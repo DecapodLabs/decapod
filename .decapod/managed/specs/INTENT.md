@@ -1,5 +1,13 @@
 # Intent
 
+## Published SDK adoption (#1638)
+
+The client pins the normally published registry `dactyl-db =0.14.0` release
+without changing local/cloud composition, session custody, role authority or
+transport selection. Its patched `quinn-proto >=0.11.19` requirement must hold
+for every resolved lock entry, including inactive dependencies. This adoption
+does not enable HTTP/3 or establish hosted service acceptance.
+
 ## Governed cloud client and private custody (#1628)
 
 Decapod's local-first governance kernel remains the system interface for agent
@@ -307,7 +315,7 @@ These declarations select authoring and proof obligations; they do not attest im
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `1ada811f01a7d6882f14b4b0525018ee0f327becdb06fca3bb126f1656713e08`
+- Repository signal fingerprint: `46e0adf38f1e99250d4fe8c36473e9cabc06a0a4997f1659268c98b236ce696e`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (228 files), `tests/` (230 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
