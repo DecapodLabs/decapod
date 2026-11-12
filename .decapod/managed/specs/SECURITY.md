@@ -585,7 +585,7 @@ execution evidence remains required before publication readiness.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `d6a7be658f4bd64e82a6fe579e7c4bc6ca5474a34813df52c8f1902cea791ae1`
+- Repository signal fingerprint: `7369eb1f92d9442f443ce2c3dfdcb040c4f02cba0023be526d128037df666277`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (228 files), `tests/` (227 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
@@ -885,3 +885,5 @@ extensions survive refresh but cannot enable evaluation or grant authority.
 ## Explicit managed project routing
 
 The private project record is a routing cache, never authorization. Every selected route checks current server account/project status before a native operation, and the native operation independently authorizes membership/grant/assignment and current session. Forged metadata, account switches and denied references cannot silently select a different project or SQLite. The auxiliary file uses private no-follow regular-file checks, exact custody binding, bounded decoding and atomic durable replacement under the credential lock. A rejected data bearer is compared under the original Git checkout custody scope, even when the data route uses a managed project reference.
+
+The resolved native project also supplies the repository field of newly created tasks. Before the first possible write dispatch, the existing machine-private todo operation journal atomically binds the operation to a digest of its resolved service/project route. Preflight login and initial project selection retain the same operation ID; subsequent selection changes cannot replay an uncertain or successful write into another project. Older unknown records remain bound to their original canonical repository semantics. The real PostgreSQL consumer exposed the former Git-label write mismatch; that failed candidate supplies no successful native proof.

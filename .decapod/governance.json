@@ -551,6 +551,14 @@
       "proof_refs": [
         "/private/tmp/decapod-managed-project-validation-01.json"
       ]
+    },
+    {
+      "id": "resolved-project-write-binding",
+      "summary": "Repair task repo_id found by real native consumer; bind the first possible write route atomically, reject cross-project/legacy-unknown/stale-writer replays, and repair Clippy. Previous candidate failed proof.",
+      "input_digest": "sha256:440c1b28709d630ca05e2f320002e48e40da25b726146e265d9d9fc2efd57fe8",
+      "proof_refs": [
+        "/private/tmp/decapod-managed-project-validation-02.json"
+      ]
     }
   ],
   "intents": {
@@ -593,23 +601,23 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Existing credential schema is unchanged; auxiliary project routing uses its stable machine-private session lock and current server account/project checks before constructing a native connection.",
-          "reviewed_code_fingerprint": "d6a7be658f4bd64e82a6fe579e7c4bc6ca5474a34813df52c8f1902cea791ae1",
-          "spec_material_hash": "b62cade66246869936d649caae458354a68951c3d9b9ec3553b4d21ce3eb9c36"
+          "reason": "The native fixture exposed Git-label task creation after project routing. Factory now carries resolved repository to task construction, with atomic bind-once operation-route custody before first possible dispatch.",
+          "reviewed_code_fingerprint": "7369eb1f92d9442f443ce2c3dfdcb040c4f02cba0023be526d128037df666277",
+          "spec_material_hash": "ef0cd81e815b3953efdafcfa42a27810fe1c24297cc3a176c378bc6a9db38060"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Version-one account status/register powers explicit project commands and immutable creation retries. Separate two-phase local native consumer profile requires independent PostgreSQL provisioning and revocation; HTTP models and hosted/release proof stay distinct.",
-          "reviewed_code_fingerprint": "d6a7be658f4bd64e82a6fe579e7c4bc6ca5474a34813df52c8f1902cea791ae1",
-          "spec_material_hash": "099fd6259ff3f7f7996eed13dbffceca2512eafbab13dde766024301410388ab"
+          "reason": "Project selection supplies both native context and task repo_id. Optional digest-only journal routing preserves preflight operation IDs; prior unknown records retain original canonical repository semantics.",
+          "reviewed_code_fingerprint": "7369eb1f92d9442f443ce2c3dfdcb040c4f02cba0023be526d128037df666277",
+          "spec_material_hash": "2618485bfc161584c225e289625ffe899425574ae194206c33d2524d0f17cae3"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Project reference never authorizes; current account association, entitlement and data boundary remain required. Creation cannot select an unconfirmed association; identity changes, forged routing and revoked access fail without local fallback.",
-          "reviewed_code_fingerprint": "d6a7be658f4bd64e82a6fe579e7c4bc6ca5474a34813df52c8f1902cea791ae1",
-          "spec_material_hash": "453df2f763da55cd5e63a98beb86e5297970cb40c22c58c95f623742b7fa2186"
+          "reason": "Uncertain writes cannot replay into another selected project, concurrent route binding has one winner, stale receipt writers are rejected and legacy unknown records cannot be reinterpreted.",
+          "reviewed_code_fingerprint": "7369eb1f92d9442f443ce2c3dfdcb040c4f02cba0023be526d128037df666277",
+          "spec_material_hash": "01025606e9b26996aac1242b6ff748d540c573a71859c4ef9035d585548b894f"
         }
       ],
       "state": "APPROVED",
@@ -622,13 +630,13 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1794481165Z"
+      "updated_at": "1794485619Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:6dda41e7bd4ae33091a307b4514e77815e83dcaec99a08bda1608b33a238dbc1",
+      "artifact_hash": "sha256:4817d52357a4ed48a9df54976c2543e6770e28df36cc0f51274a339b38f34144",
       "checks": [
         {
           "name": "implementation",
@@ -640,7 +648,7 @@
         },
         {
           "name": "native_project_profile",
-          "status": "unavailable"
+          "status": "failed"
         },
         {
           "name": "release_projection_preparation",
@@ -652,6 +660,10 @@
         },
         {
           "name": "validation_01",
+          "status": "failed"
+        },
+        {
+          "name": "validation_02",
           "status": "failed"
         }
       ],
@@ -690,10 +702,17 @@
             "intent_id": "intent:change_01M77JY4SYPX9QSTR9AAYAF6S3",
             "kind": "trajectory_step_recorded",
             "sequence": 6
+          },
+          {
+            "detail": "trajectory:branch_01M77JY4X7Q7EW3YNCPBEC72WV",
+            "event_id": "event:7",
+            "intent_id": "intent:change_01M77JY4SYPX9QSTR9AAYAF6S3",
+            "kind": "trajectory_step_recorded",
+            "sequence": 7
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 6,
+        "next_sequence": 7,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M77JY4X7Q7EW3YNCPBEC72WV": {
@@ -769,6 +788,25 @@
                 ],
                 "sequence": 6,
                 "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:7",
+                "observations": [
+                  "Exact 12d95951 Buildkite CI/docs failed Git merge-base admission as accepted master advanced through1636/1641; native GitHub Clippy independently found collapsible_if. No publication readiness.",
+                  "Independent required Propodus PostgreSQL run on9375325 executed12d95951 and exposed blocked-before-submit add because Task.repo_id retained Git label after native project selection. New repair carries resolved repository and fences operation retries to a bind-once route. Peer session owner confirms Journal serialization outside their scope."
+                ],
+                "proof_refs": [
+                  "validation_02",
+                  "native_project_profile"
+                ],
+                "scope": [
+                  "src/decapod/core/cloud_client",
+                  "src/decapod/core/cloud_project",
+                  "tests"
+                ],
+                "sequence": 7,
+                "validation_findings": []
               }
             ]
           }
@@ -780,8 +818,10 @@
         "/private/tmp/decapod-project-orientation-20261112.json",
         "Added separate native project consumer profile; independent real PostgreSQL fixture proof remains pending.",
         "Adjacent session/onboarding owners confirmed no project-binding overlap; plan uncertainty resolved.",
+        "Exact 12d95951 Buildkite CI/docs failed Git merge-base admission as accepted master advanced through1636/1641; native GitHub Clippy independently found collapsible_if. No publication readiness.",
         "Fixed controller is official registry decapod 0.139.0 from supported session update; SHA256 1e0d9f8704a62f10e51169e6efb659fd7b069f8e1e91f2922a0560d3b2e1bfde.",
         "Full validation 01 failed before tests on candidate 8022cae release entrypoints: /private/tmp/decapod-managed-project-validation-01.json",
+        "Independent required Propodus PostgreSQL run on9375325 executed12d95951 and exposed blocked-before-submit add because Task.repo_id retained Git label after native project selection. New repair carries resolved repository and fences operation retries to a bind-once route. Peer session owner confirms Journal serialization outside their scope.",
         "Supported project-check repaired generated release projections; its host prerequisite findings do not establish full readiness."
       ],
       "inspected_files": [

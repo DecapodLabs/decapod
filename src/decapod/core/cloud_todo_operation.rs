@@ -52,6 +52,8 @@ impl FailureKind {
 pub struct OperationRecord {
     pub operation_id: String,
     pub request_fingerprint: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub routing_fingerprint: Option<String>,
     pub task_id: String,
     pub status: Outcome,
     pub failure_kind: Option<FailureKind>,
@@ -173,6 +175,7 @@ impl OperationRecord {
         Ok(Self {
             operation_id,
             request_fingerprint: fingerprint,
+            routing_fingerprint: None,
             task_id,
             status: Outcome::Prepared,
             failure_kind: None,
@@ -327,6 +330,39 @@ impl Journal {
         })
     }
 
+    /// Bind the first possible dispatch to its resolved project. A preflight
+    /// operation can survive sign-in and initial selection without changing its
+    /// ID, but it cannot be replayed against a different project afterward.
+    pub fn bind_route(
+        &self,
+        record: &OperationRecord,
+        routing: &str,
+        legacy_routing: &str,
+    ) -> Result<OperationRecord, DecapodError> {
+        if !hash_valid(routing) || !hash_valid(legacy_routing) {
+            return Err(invalid_token());
+        }
+        self.with_records(|records| {
+            let existing = records.iter_mut().find(|r| r.operation_id == record.operation_id)
+                .ok_or_else(invalid_token)?;
+            if existing.request_fingerprint != record.request_fingerprint || existing.task_id != record.task_id {
+                return Err(invalid_token());
+            }
+            let conflict = match &existing.routing_fingerprint {
+                Some(bound) => bound != routing,
+                // Before explicit selection existed, writes were necessarily
+                // scoped to the canonical Git repository. Never reinterpret
+                // an older unknown/successful write as a newly selected one.
+                None => matches!(existing.status, Outcome::OutcomeUnknown | Outcome::Succeeded) && routing != legacy_routing,
+            };
+            if conflict {
+                return Err(DecapodError::ValidationError("Cloud todo operation is bound to another resolved project. Select its original project and repeat the original arguments and operation token; no mutation was dispatched.".into()));
+            }
+            existing.routing_fingerprint = Some(routing.into());
+            Ok(existing.clone())
+        })
+    }
+
     pub fn finish(
         &self,
         record: &OperationRecord,
@@ -336,6 +372,9 @@ impl Journal {
         self.with_records(|records| {
             let existing = records.iter_mut().find(|existing| existing.operation_id == record.operation_id)
                 .ok_or_else(|| DecapodError::ValidationError("Cloud todo operation metadata is missing; retain the original operation token for reconciliation.".into()))?;
+            if existing.request_fingerprint != record.request_fingerprint || existing.task_id != record.task_id || existing.routing_fingerprint != record.routing_fingerprint {
+                return Err(invalid_token());
+            }
             if existing.status != Outcome::Succeeded {
                 if existing.status != Outcome::OutcomeUnknown || status == Outcome::Succeeded {
                     existing.status = status;
@@ -368,12 +407,25 @@ fn read_records(path: &Path) -> Result<Vec<OperationRecord>, DecapodError> {
         ));
     }
     let records: Vec<OperationRecord> = serde_json::from_slice(&bytes).map_err(|_| DecapodError::ValidationError("Invalid cloud todo operation metadata; preserve it for review rather than starting duplicate work.".into()))?;
-    if records.len() > MAX_RECORDS {
+    if records.len() > MAX_RECORDS
+        || records.iter().any(|r| {
+            r.routing_fingerprint
+                .as_deref()
+                .is_some_and(|v| !hash_valid(v))
+        })
+    {
         return Err(DecapodError::ValidationError(
             "Cloud todo metadata exceeds its bounded record count".into(),
         ));
     }
     Ok(records)
+}
+
+fn hash_valid(value: &str) -> bool {
+    value.len() == 64
+        && value
+            .bytes()
+            .all(|b| b.is_ascii_digit() || (b'a'..=b'f').contains(&b))
 }
 
 #[cfg(test)]

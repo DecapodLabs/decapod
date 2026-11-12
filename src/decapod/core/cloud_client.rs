@@ -577,14 +577,14 @@ fn account_result<T>(
     guard: &mut SessionGuard,
     result: Result<T, DecapodError>,
 ) -> Result<T, DecapodError> {
-    if let Err(DecapodError::CloudAuth(diagnostic)) = &result {
-        if matches!(
+    if let Err(DecapodError::CloudAuth(diagnostic)) = &result
+        && matches!(
             diagnostic.status,
             CloudAuthStatus::AuthRequired | CloudAuthStatus::Revoked
-        ) {
-            let state = guard.state().clone();
-            persist_restart(guard, state)?;
-        }
+        )
+    {
+        let state = guard.state().clone();
+        persist_restart(guard, state)?;
     }
     result
 }

@@ -7295,6 +7295,13 @@ fn cloud_adapter_error(error: dactyl_db::DactylError) -> error::DecapodError {
 }
 
 pub trait CloudTodoStoreFactory {
+    fn resolved_repository(
+        &self,
+        identity: &RepositoryIdentity,
+    ) -> Result<String, error::DecapodError> {
+        Ok(identity.canonical_name.clone())
+    }
+
     /// Persist a known credential rejection after the original operation ends.
     /// Test stores and explicit adapter consumers have no managed custody.
     fn report_failure(&self, _error: &error::DecapodError) -> Result<(), error::DecapodError> {
@@ -7314,6 +7321,20 @@ struct DactylCloudTodoStoreFactory {
 }
 
 impl CloudTodoStoreFactory for DactylCloudTodoStoreFactory {
+    fn resolved_repository(
+        &self,
+        _identity: &RepositoryIdentity,
+    ) -> Result<String, error::DecapodError> {
+        self.authenticated_context
+            .borrow()
+            .as_ref()
+            .and_then(|context| context.route().repository_identity())
+            .map(|identity| identity.canonical_name.clone())
+            .ok_or_else(|| {
+                error::DecapodError::Config("Missing resolved cloud project context".into())
+            })
+    }
+
     fn report_failure(&self, error: &error::DecapodError) -> Result<(), error::DecapodError> {
         if cloud_todo_operation::failure_kind(error)
             == cloud_todo_operation::FailureKind::Authentication
@@ -7466,8 +7487,12 @@ fn run_cloud_todo_command_with_factory<F: CloudTodoStoreFactory>(
     if let (Some(operation), Some(journal)) = (&mut operation, journal) {
         *operation = journal.prepare(operation)?;
     }
-    let store = match factory.build(config, identity) {
-        Ok(store) => store,
+    let (store, repository) = match factory.build(config, identity).and_then(|store| {
+        factory
+            .resolved_repository(identity)
+            .map(|repository| (store, repository))
+    }) {
+        Ok(connection) => connection,
         Err(error) => {
             if let (Some(operation), Some(journal)) = (&operation, journal) {
                 let kind = cloud_todo_operation::failure_kind(&error);
@@ -7488,6 +7513,19 @@ fn run_cloud_todo_command_with_factory<F: CloudTodoStoreFactory>(
     // Persist uncertainty before dispatch, so interruption cannot masquerade as
     // a known rollback. No local receipt is used to authorize or skip a retry.
     if let (Some(operation), Some(journal)) = (&mut operation, journal) {
+        *operation = journal.bind_route(
+            operation,
+            &cloud_todo_operation::fingerprint(
+                &config.api_url,
+                &repository,
+                &serde_json::json!({"kind":"resolved-project-v1"}),
+            ),
+            &cloud_todo_operation::fingerprint(
+                &config.api_url,
+                &identity.canonical_name,
+                &serde_json::json!({"kind":"resolved-project-v1"}),
+            ),
+        )?;
         journal.finish(operation, Outcome::OutcomeUnknown, None)?;
         // The journal records possible dispatch before entering the adapter.
         // Keep that uncertainty even if this attempt later fails a read: a
@@ -7500,7 +7538,7 @@ fn run_cloud_todo_command_with_factory<F: CloudTodoStoreFactory>(
         root,
         command,
         store.as_ref(),
-        &identity.canonical_name,
+        &repository,
         operation.as_ref(),
     ));
     if let (Some(operation), Some(journal)) = (&operation, journal) {

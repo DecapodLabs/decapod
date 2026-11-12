@@ -40,6 +40,83 @@ fn fresh_identical_adds_are_distinct_but_explicit_retries_bind_every_input() {
 }
 
 #[test]
+fn dispatch_binding_survives_preflight_and_fences_project_changes() {
+    let temp = tempfile::tempdir().unwrap();
+    let journal = Journal::at(temp.path().join("operations"));
+    let record = journal.prepare(&record()).unwrap();
+    journal
+        .finish(
+            &record,
+            Outcome::BlockedBeforeSubmit,
+            Some(FailureKind::Authentication),
+        )
+        .unwrap();
+    let selected = digest(b"selected-project");
+    let legacy = digest(b"git-repository");
+    let bound = journal.bind_route(&record, &selected, &legacy).unwrap();
+    assert_eq!(bound.operation_id, record.operation_id);
+    journal
+        .finish(
+            &bound,
+            Outcome::OutcomeUnknown,
+            Some(FailureKind::Transport),
+        )
+        .unwrap();
+    let recovered = Journal::at(temp.path().join("operations"));
+    assert!(
+        recovered
+            .bind_route(&bound, &digest(b"another-project"), &legacy)
+            .is_err()
+    );
+    let unchanged = recovered.bind_route(&bound, &selected, &legacy).unwrap();
+    assert_eq!(unchanged.status, Outcome::OutcomeUnknown);
+    journal
+        .finish(&unchanged, Outcome::Succeeded, None)
+        .unwrap();
+    assert!(recovered.bind_route(&unchanged, &legacy, &legacy).is_err());
+}
+
+#[test]
+fn older_unknown_records_cannot_be_reinterpreted_as_selected_project_writes() {
+    let temp = tempfile::tempdir().unwrap();
+    let journal = Journal::at(temp.path().join("operations"));
+    let old = journal.prepare(&record()).unwrap();
+    journal.finish(&old, Outcome::OutcomeUnknown, None).unwrap();
+    let legacy = digest(b"git-repository");
+    assert!(
+        journal
+            .bind_route(&old, &digest(b"selected-project"), &legacy)
+            .is_err()
+    );
+    assert!(journal.bind_route(&old, &legacy, &legacy).is_ok());
+}
+
+#[test]
+fn concurrent_first_dispatches_cannot_bind_one_operation_to_two_projects() {
+    let temp = tempfile::tempdir().unwrap();
+    let path = temp.path().join("operations");
+    let record = Journal::at(&path).prepare(&record()).unwrap();
+    let workers: Vec<_> = [digest(b"one"), digest(b"two")]
+        .into_iter()
+        .map(|route| {
+            let path = path.clone();
+            let record = record.clone();
+            std::thread::spawn(move || {
+                Journal::at(path).bind_route(&record, &route, &digest(b"legacy"))
+            })
+        })
+        .collect();
+    assert_eq!(
+        workers
+            .into_iter()
+            .map(|w| w.join().unwrap().is_ok())
+            .filter(|passed| *passed)
+            .count(),
+        1
+    );
+}
+
+#[test]
 fn diagnostic_is_non_secret_and_separates_unknown_outcome_from_preflight() {
     let operation = record();
     let diagnostic = Diagnostic::new(&operation, Outcome::OutcomeUnknown, FailureKind::Transport);
