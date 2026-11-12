@@ -2388,9 +2388,15 @@ pub(crate) fn publish_workspace_with_readiness(
 }
 
 pub fn extract_task_ids_from_branch(branch: &str) -> Vec<String> {
+    // Managed branches are agent/<actor>/<topic>. Task-shaped actor names
+    // identify the owner, not an additional task. Keep legacy unscoped refs.
+    let topic = match branch.strip_prefix("agent/") {
+        Some(scoped) => scoped.split_once('/').map_or(scoped, |(_, topic)| topic),
+        None => branch,
+    };
     let re = Regex::new(r"(?i)(?<![a-z0-9])(?:aiml|apis|appl|arch|bend|bugs|cicd|code|data|desn|devx|docs|feat|fend|infr|lang|perf|plat|proj|r|refa|reft|root|secu|spec|test|todo|tool)[_-][a-z0-9]{6,}").expect("static regex");
     let mut out: Vec<String> = re
-        .find_iter(branch)
+        .find_iter(topic)
         .filter_map(|m| m.ok())
         .map(|m| m.as_str().replace('-', "_").to_lowercase())
         .collect();

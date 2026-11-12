@@ -1389,3 +1389,18 @@ fn test_feature_branch_allows_canonical_rewrite_from_prior_release() {
         "canonical prior-release rewrite must not trip discipline gate: {output}"
     );
 }
+
+// This required target has a separate unchanged aggregate budget from CLI
+// contracts; retain the genuine governed flow without duplicating API cases.
+#[cfg(any(target_os = "linux", target_os = "macos"))]
+#[path = "common/consumer_readiness_fixture.rs"]
+mod consumer_readiness_fixture;
+#[cfg(any(target_os = "linux", target_os = "macos"))]
+#[path = "support/fresh_docs_readiness.rs"]
+mod fresh_docs_readiness;
+
+#[test]
+#[cfg(any(target_os = "linux", target_os = "macos"))]
+fn fresh_docs_cli_admission_then_complete_runtime_proves_current_source() {
+    fresh_docs_readiness::fresh_governed_docs_cli_admission_then_runtime_executes_first_proof();
+}
