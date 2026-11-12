@@ -585,8 +585,8 @@ execution evidence remains required before publication readiness.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `b2207ae732c88361ef75864be60e3e356f3ca1ad7b9de9caf71c2ff459ebcf3c`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (227 files), `tests/` (227 files)
+- Repository signal fingerprint: `8aab94c00c06b026c2ac0d21a71e7cce9edc6f4037f90be65d749b30c13b181a`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (228 files), `tests/` (227 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 
@@ -881,3 +881,7 @@ instructions and leave the record untouched. Native format, canonical path,
 ownership, single-link, byte-size and digest checks remain enforced. Model setup
 uses bounded credential-free public asset transport. Opaque user configuration
 extensions survive refresh but cannot enable evaluation or grant authority.
+
+## Explicit managed project routing
+
+The private project record is a routing cache, never authorization. Every selected route checks current server account/project status before a native operation, and the native operation independently authorizes membership/grant/assignment and current session. Forged metadata, account switches and denied references cannot silently select a different project or SQLite. The auxiliary file uses private no-follow regular-file checks, exact custody binding, bounded decoding and atomic durable replacement under the credential lock. A rejected data bearer is compared under the original Git checkout custody scope, even when the data route uses a managed project reference.

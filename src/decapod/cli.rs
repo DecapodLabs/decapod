@@ -907,6 +907,21 @@ pub(crate) enum CloudCommand {
     Login,
     /// Inspect private managed-session state without network I/O or a live readiness claim.
     Status,
+    /// List managed projects by name, with numbered choices saved privately.
+    Projects,
+    /// Explicitly select or create the managed project used by this checkout.
+    Project {
+        #[clap(subcommand)]
+        command: CloudProjectCommand,
+    },
+}
+
+#[derive(Subcommand, Debug)]
+pub(crate) enum CloudProjectCommand {
+    /// Select an exact project name or a number from `cloud projects`.
+    Use { choice: String },
+    /// Idempotently create and select a project; this does not purchase access.
+    Create { name: String },
 }
 
 #[derive(Subcommand, Debug)]

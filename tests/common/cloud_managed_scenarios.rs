@@ -27,6 +27,10 @@ const EXCHANGE: &str = "/functions/v1/propodus-onboarding/exchange";
 const COMPLETE: &str = "/functions/v1/propodus-onboarding/complete";
 const TOKEN: &str = "/auth/v1/token?grant_type=pkce";
 const REFRESH: &str = "/auth/v1/token?grant_type=refresh_token";
+const ACCOUNT_STATUS: &str = "/functions/v1/propodus-onboarding/account-status";
+const ACCOUNT_REGISTER: &str = "/functions/v1/propodus-onboarding/account-register";
+const ACCOUNT: &str = "00000000-0000-0000-0000-000000000404";
+const PROJECT: &str = "workspace-reference/project-reference";
 const QUERY: &str = "/rest/v1/rpc/dactyl_query_v1";
 const FLOW: &str = "c09528a3-2921-4a90-ae55-398a215974a8";
 const CODE: &str = "synthetic-one-time-auth-code-secret";
@@ -97,6 +101,11 @@ struct Service {
     complete_error: Option<&'static str>,
     read_error: Option<&'static str>,
     slow_refresh: bool,
+    account: String,
+    projects: Vec<(String, String)>,
+    project_allowed: bool,
+    registrations: BTreeMap<String, String>,
+    lose_registration_once: bool,
 }
 
 impl Service {
@@ -116,7 +125,10 @@ impl Service {
             request.headers.get("apikey").map(String::as_str),
             Some("sb_publishable_fixture")
         );
-        if !matches!(request.path.as_str(), COMPLETE | QUERY) {
+        if !matches!(
+            request.path.as_str(),
+            COMPLETE | QUERY | ACCOUNT_STATUS | ACCOUNT_REGISTER
+        ) {
             assert!(!request.headers.contains_key("authorization"));
         }
         if self.lose_response == Some(request.path.as_str()) {
@@ -156,6 +168,35 @@ impl Service {
                     ));
                 }
                 json!({"status":"complete","repository":self.repository})
+            }
+            ACCOUNT_STATUS => {
+                assert!(request.headers.contains_key("authorization"));
+                if let Some(project) = request.body["project_id"].as_str() {
+                    let exists = self.projects.iter().any(|(id, _)| id == project);
+                    let allowed = exists && self.project_allowed;
+                    json!({"version":1,"account_id":self.account,"project_id":project,"status":if allowed{"active"}else if exists{"entitlement_required"}else{"admin_approval_required"},"backend_authorized":allowed})
+                } else {
+                    json!({"version":1,"account_id":self.account,"status":"registered","backend_authorized":false,
+                      "projects":self.projects.iter().map(|(id,name)|json!({"project_id":id,"name":name})).collect::<Vec<_>>()})
+                }
+            }
+            ACCOUNT_REGISTER => {
+                assert!(request.headers.contains_key("authorization"));
+                let operation = request.body["request_id"].as_str().unwrap().to_owned();
+                let name = request.body["project_name"].as_str().unwrap().to_owned();
+                let id = self
+                    .registrations
+                    .entry(operation)
+                    .or_insert_with(|| PROJECT.into())
+                    .clone();
+                if !self.projects.iter().any(|(p, _)| p == &id) {
+                    self.projects.push((id.clone(), name));
+                }
+                if self.lose_registration_once {
+                    self.lose_registration_once = false;
+                    return None;
+                }
+                json!({"version":1,"account_id":self.account,"project_id":id,"status":if self.project_allowed{"active"}else{"entitlement_required"},"backend_authorized":self.project_allowed})
             }
             QUERY => {
                 assert_eq!(
@@ -215,6 +256,11 @@ impl Fixture {
             complete_error: None,
             read_error: None,
             slow_refresh: false,
+            account: ACCOUNT.into(),
+            projects: Vec::new(),
+            project_allowed: true,
+            registrations: BTreeMap::new(),
+            lose_registration_once: false,
         }));
         let stop = Arc::new(AtomicBool::new(false));
         let request_log = requests.clone();
@@ -868,4 +914,235 @@ fn unsupported_cloud_startup_cannot_create_a_local_database_and_activate_is_file
     }
     assert_no_databases(fixture.project.path());
     assert!(fixture.requests.lock().unwrap().is_empty());
+}
+
+#[test]
+fn managed_project_selection_routes_the_next_native_data_request() {
+    let f = Fixture::new("example/project-selection");
+    f.proof();
+    f.seed(false);
+    f.service.lock().unwrap().projects = vec![(PROJECT.into(), "Team repository".into())];
+    let listed = f.run(&["cloud", "projects"]);
+    assert!(listed.status.success());
+    let text = String::from_utf8_lossy(&listed.stdout);
+    assert!(text.contains("Team repository"));
+    assert!(!text.contains(PROJECT));
+    let selected = f.run(&["cloud", "project", "use", "1"]);
+    assert!(
+        selected.status.success(),
+        "{}",
+        String::from_utf8_lossy(&selected.stderr)
+    );
+    let read = f.run(&["todo", "list", "--format", "json"]);
+    assert!(
+        read.status.success(),
+        "{}",
+        String::from_utf8_lossy(&read.stderr)
+    );
+    assert_eq!(f.count(QUERY), 1);
+    let requests = f.requests.lock().unwrap();
+    let data = requests.iter().find(|r| r.path == QUERY).unwrap();
+    // Inspect the actual native request, not only the saved routing file.
+    assert_eq!(
+        data.body["request"]["context"]["payload"]["route"]["Cloud"]["repository"]["canonical_name"],
+        PROJECT
+    );
+    f.assert_no_fallback();
+}
+
+#[test]
+fn managed_project_creation_recovers_one_request_and_retains_its_receipt() {
+    let f = Fixture::new("example/project-create");
+    f.proof();
+    f.seed(false);
+    f.service.lock().unwrap().lose_registration_once = true;
+    assert!(
+        !f.run(&["cloud", "project", "create", "Team repository"])
+            .status
+            .success()
+    );
+    assert_eq!(f.count(ACCOUNT_REGISTER), 1);
+    assert!(
+        !f.run(&["cloud", "project", "create", "Changed name"])
+            .status
+            .success()
+    );
+    assert_eq!(f.count(ACCOUNT_REGISTER), 1);
+    assert!(
+        !f.run(&["todo", "list", "--format", "json"])
+            .status
+            .success()
+    );
+    assert_eq!(f.count(QUERY), 0);
+    let recovered = f.run(&["cloud", "project", "create", "Team repository"]);
+    assert!(
+        recovered.status.success(),
+        "{}",
+        String::from_utf8_lossy(&recovered.stderr)
+    );
+    let repeated = f.run(&["cloud", "project", "create", "Team repository"]);
+    assert!(repeated.status.success());
+    assert_eq!(f.count(ACCOUNT_REGISTER), 2);
+    let requests = f.requests.lock().unwrap();
+    let creates: Vec<_> = requests
+        .iter()
+        .filter(|r| r.path == ACCOUNT_REGISTER)
+        .collect();
+    assert_eq!(creates[0].body, creates[1].body);
+    assert_eq!(f.service.lock().unwrap().registrations.len(), 1);
+    f.assert_no_fallback();
+}
+
+#[test]
+fn managed_project_selection_does_not_grant_pending_access() {
+    let f = Fixture::new("example/project-pending");
+    f.proof();
+    f.seed(false);
+    {
+        let mut s = f.service.lock().unwrap();
+        s.projects = vec![(PROJECT.into(), "Team repository".into())];
+        s.project_allowed = false;
+    }
+    let selected = f.run(&["cloud", "project", "use", "Team repository"]);
+    assert!(selected.status.success());
+    failed(
+        &f.run(&["todo", "list", "--format", "json"]),
+        "action_required",
+    );
+    assert_eq!(f.count(QUERY), 0);
+    f.service.lock().unwrap().project_allowed = true;
+    assert!(
+        f.run(&["todo", "list", "--format", "json"])
+            .status
+            .success()
+    );
+    assert_eq!(f.count(QUERY), 1);
+    f.assert_no_fallback();
+}
+
+#[test]
+fn managed_project_list_numbers_keep_the_saved_reference_when_directory_changes() {
+    let f = Fixture::new("example/project-directory");
+    f.proof();
+    f.seed(false);
+    f.service.lock().unwrap().projects = vec![
+        (PROJECT.into(), "Beta".into()),
+        ("workspace-reference/other-project".into(), "Gamma".into()),
+    ];
+    assert!(f.run(&["cloud", "projects"]).status.success());
+    f.service.lock().unwrap().projects.insert(
+        0,
+        ("workspace-reference/new-project".into(), "Alpha".into()),
+    );
+    assert!(f.run(&["cloud", "project", "use", "1"]).status.success());
+    let requests = f.requests.lock().unwrap();
+    let checked = requests
+        .iter()
+        .rev()
+        .find(|r| r.path == ACCOUNT_STATUS && r.body["project_id"].is_string())
+        .unwrap();
+    assert_eq!(checked.body["project_id"], PROJECT);
+    f.assert_no_fallback();
+}
+
+#[test]
+fn managed_project_is_rechecked_and_refresh_reopens_its_next_data_connection() {
+    let f = Fixture::new("example/project-refresh");
+    f.proof();
+    f.seed(false);
+    f.service.lock().unwrap().projects = vec![(PROJECT.into(), "Team repository".into())];
+    assert!(
+        f.run(&["cloud", "project", "use", "Team repository"])
+            .status
+            .success()
+    );
+    f.seed(true);
+    assert!(
+        f.run(&["todo", "list", "--format", "json"])
+            .status
+            .success()
+    );
+    assert_eq!(f.count(REFRESH), 1);
+    {
+        let requests = f.requests.lock().unwrap();
+        let query = requests.iter().find(|r| r.path == QUERY).unwrap();
+        assert_eq!(
+            query.headers.get("authorization").map(String::as_str),
+            Some(format!("Bearer {ROTATED_ACCESS}").as_str())
+        );
+    }
+    f.service.lock().unwrap().account = "00000000-0000-0000-0000-000000000505".into();
+    failed(
+        &f.run(&["todo", "list", "--format", "json"]),
+        "action_required",
+    );
+    assert_eq!(f.count(QUERY), 1);
+    f.assert_no_fallback();
+}
+
+#[test]
+fn forged_private_project_reference_cannot_grant_access_or_fall_back() {
+    let f = Fixture::new("example/project-forged");
+    f.proof();
+    f.seed(false);
+    f.service.lock().unwrap().projects = vec![(PROJECT.into(), "Team repository".into())];
+    assert!(
+        f.run(&["cloud", "project", "use", "Team repository"])
+            .status
+            .success()
+    );
+    let scopes = f.machine.path().join("data/decapod/cloud-sessions");
+    let record = std::fs::read_dir(scopes)
+        .unwrap()
+        .map(|p| p.unwrap().path().join("project.json"))
+        .find(|p| p.exists())
+        .unwrap();
+    #[cfg(unix)]
+    {
+        use std::os::unix::fs::MetadataExt;
+        let metadata = std::fs::metadata(&record).unwrap();
+        assert_eq!(metadata.mode() & 0o777, 0o600);
+    }
+    let mut value: Value = serde_json::from_slice(&std::fs::read(&record).unwrap()).unwrap();
+    value["value"]["selection"]["project"]["project_id"] = json!("foreign-tenant/private-project");
+    std::fs::write(&record, serde_json::to_vec(&value).unwrap()).unwrap();
+    failed(
+        &f.run(&["todo", "list", "--format", "json"]),
+        "action_required",
+    );
+    assert_eq!(f.count(QUERY), 0);
+    f.assert_no_fallback();
+}
+
+#[test]
+fn concurrent_project_creation_reuses_one_saved_operation() {
+    let f = Fixture::new("example/project-concurrent");
+    f.proof();
+    f.seed(false);
+    let args = ["cloud", "project", "create", "Team repository"];
+    let first = f
+        .command(&args)
+        .stdout(Stdio::piped())
+        .stderr(Stdio::piped())
+        .spawn()
+        .unwrap();
+    let second = f
+        .command(&args)
+        .stdout(Stdio::piped())
+        .stderr(Stdio::piped())
+        .spawn()
+        .unwrap();
+    for result in [
+        first.wait_with_output().unwrap(),
+        second.wait_with_output().unwrap(),
+    ] {
+        assert!(
+            result.status.success(),
+            "{}",
+            String::from_utf8_lossy(&result.stderr)
+        );
+    }
+    assert_eq!(f.count(ACCOUNT_REGISTER), 1);
+    assert_eq!(f.service.lock().unwrap().registrations.len(), 1);
+    f.assert_no_fallback();
 }

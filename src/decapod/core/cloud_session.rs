@@ -260,6 +260,15 @@ impl SessionStore {
     }
 }
 
+#[cfg(feature = "supabase-cloud")]
+#[derive(Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+struct ProjectRecord {
+    version: u16,
+    binding: Binding,
+    value: serde_json::Value,
+}
+
 pub struct SessionGuard {
     file: File,
     store: SessionStore,
@@ -281,6 +290,58 @@ impl Drop for SessionGuard {
 }
 
 impl SessionGuard {
+    /// Auxiliary routing metadata shares the credential lock and exact custody
+    /// scope. It never changes the credential record or authorizes a request.
+    #[cfg(feature = "supabase-cloud")]
+    pub(crate) fn project_record(&self) -> Result<Option<serde_json::Value>, DecapodError> {
+        let path = self.store.directory.join("project.json");
+        let file = match open_secret_file(&path, OpenOptions::new().read(true)) {
+            Ok(file) => file,
+            Err(DecapodError::IoError(error)) if error.kind() == std::io::ErrorKind::NotFound => {
+                return Ok(None);
+            }
+            Err(error) => return Err(error),
+        };
+        let mut bytes = Vec::new();
+        file.take(MAX_RECORD_BYTES + 1).read_to_end(&mut bytes)?;
+        if bytes.len() as u64 > MAX_RECORD_BYTES {
+            return Err(invalid("cloud project record exceeds its size bound"));
+        }
+        let record: ProjectRecord = serde_json::from_slice(&bytes)
+            .map_err(|_| invalid("cloud project record is invalid; preserve it for review"))?;
+        if record.version != 1 || record.binding != self.store.binding {
+            return Err(invalid(
+                "cloud project record scope does not match this checkout",
+            ));
+        }
+        Ok(Some(record.value))
+    }
+
+    #[cfg(feature = "supabase-cloud")]
+    pub(crate) fn replace_project_record(
+        &mut self,
+        value: serde_json::Value,
+    ) -> Result<(), DecapodError> {
+        let path = self.store.directory.join("project.json");
+        match open_secret_file(&path, OpenOptions::new().read(true)) {
+            Ok(_) => (),
+            Err(DecapodError::IoError(error)) if error.kind() == std::io::ErrorKind::NotFound => (),
+            Err(error) => return Err(error),
+        }
+        let record = ProjectRecord {
+            version: 1,
+            binding: self.store.binding.clone(),
+            value,
+        };
+        let bytes = serde_json::to_vec(&record)
+            .map_err(|_| invalid("cloud project record could not be encoded"))?;
+        if bytes.len() as u64 > MAX_RECORD_BYTES {
+            return Err(invalid("cloud project record exceeds its size bound"));
+        }
+        crate::core::atomic::write_atomic(&path, &bytes)?;
+        Ok(())
+    }
+
     pub fn state(&self) -> &SessionState {
         &self.state
     }

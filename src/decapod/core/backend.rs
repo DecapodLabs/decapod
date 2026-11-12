@@ -16,8 +16,9 @@ pub const LOCAL_DATASTORE_RELATIVE_PATH: &str = ".decapod/data/decapod.db";
 
 /// The logical backend selection plus the repository scope it is allowed to
 /// address.  Local selection deliberately does not require a GitHub remote;
-/// cloud selection does, because the remote is the source of repository
-/// tenancy rather than project configuration.
+/// cloud selection does, because it scopes checkout custody. An explicitly
+/// selected managed project may supply the later data-routing reference;
+/// neither Git metadata nor that private routing cache authorizes access.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct BackendSelection {
     backend: BackendType,

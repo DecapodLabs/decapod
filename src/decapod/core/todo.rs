@@ -7331,11 +7331,18 @@ impl CloudTodoStoreFactory for DactylCloudTodoStoreFactory {
     ) -> Result<Box<dyn TodoStore>, error::DecapodError> {
         let context =
             crate::core::cloud_client::connect(&self.project_root, identity, false, false)?;
+        let repository = context
+            .route()
+            .repository_identity()
+            .ok_or_else(|| {
+                error::DecapodError::Config(
+                    "Cloud data requires a selected repository context".into(),
+                )
+            })?
+            .canonical_name
+            .clone();
         *self.authenticated_context.borrow_mut() = Some(context.clone());
-        Ok(Box::new(DactylTodoStore::new(
-            context,
-            identity.canonical_name.clone(),
-        )))
+        Ok(Box::new(DactylTodoStore::new(context, repository)))
     }
 }
 
