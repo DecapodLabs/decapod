@@ -569,6 +569,23 @@
         "https://www.sqlite.org/schematab.html",
         "tests/support/storage_inventory.rs"
       ]
+    },
+    {
+      "id": "checkpoint-stratum",
+      "summary": "Use real-store measurement feedback: exact checkpoint/other counts and payload totals plus a separate bounded checkpoint sample prevent prefix IDs from hiding repeated task components; preserve redaction and shared budgets",
+      "input_digest": "sha256:98503389027cffdf5af17bab6eeb4d290228cfada9b90874b99e1cb1f8af8fe0",
+      "proof_refs": [
+        "/private/tmp/issue-1630-live-inventory",
+        "tests/support/storage_inventory.rs"
+      ]
+    },
+    {
+      "id": "stratum-metadata",
+      "summary": "Keep prefix and checkpoint envelope metadata in separate labeled samples with explicit overlap; regression verifies checkpoint metadata observations and retained content redaction",
+      "input_digest": "sha256:bce531f7c8f45470be47aed27548798115c9b6f422633d6d40024639e55c4a71",
+      "proof_refs": [
+        "tests/support/storage_inventory.rs"
+      ]
     }
   ],
   "intents": {
@@ -610,22 +627,22 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Read-only physical snapshot and complete schema-object fingerprint preserve data and lifecycle custody",
-          "reviewed_code_fingerprint": "f93becabb6420da769f420a085693ec48563b4e1ec53c0f67e1c0b1d0a2a9323",
+          "reason": "Inventory remains one bounded driver snapshot; targeted checkpoint sampling shares existing resource budgets",
+          "reviewed_code_fingerprint": "3b7cc64cbb9a19a222164dc1d8e43b105ae6192045c8a25641f31c3dec61b76e",
           "spec_material_hash": "a0d85e01c7946075c745e34b108465148fc807cc9b6871289449b414adbe7551"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Effective schema digest covers triggers/views and virtual tables are explicitly unavailable; no DDL exposed",
-          "reviewed_code_fingerprint": "f93becabb6420da769f420a085693ec48563b4e1ec53c0f67e1c0b1d0a2a9323",
-          "spec_material_hash": "fdab3ceb0492bc231bf49d4dae60358c97c49e01c480bbfcd47652753276b8a4"
+          "reason": "Exact fixed-class event totals and separate checkpoint-prefix coverage address measured sampling blindness without exposing stored event-type strings",
+          "reviewed_code_fingerprint": "3b7cc64cbb9a19a222164dc1d8e43b105ae6192045c8a25641f31c3dec61b76e",
+          "spec_material_hash": "01d83900583f8638e84adb076d44e7a820d16f574b7a4ebd9358c2febb898b7e"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Catalog metadata classification avoids executing virtual-table modules; regression protects DDL privacy and unchanged rows",
-          "reviewed_code_fingerprint": "f93becabb6420da769f420a085693ec48563b4e1ec53c0f67e1c0b1d0a2a9323",
+          "reason": "No retained data mutation or raw content output; new class labels are fixed literals, all scans share the existing snapshot and quotas",
+          "reviewed_code_fingerprint": "3b7cc64cbb9a19a222164dc1d8e43b105ae6192045c8a25641f31c3dec61b76e",
           "spec_material_hash": "7b152b9a23f64145ca028d8dc59ada15c8f01fa808a0bd538cb166df7f41e214"
         }
       ],
@@ -641,7 +658,7 @@
         "Actual live-store distributions and numeric reduction/latency/CPU budgets remain pending inventory; no savings or schema parity claim"
       ],
       "unresolved_contradictions": [],
-      "updated_at": "1794469738Z"
+      "updated_at": "1794470963Z"
     },
     "trajectory": {
       "active_boundaries": [
@@ -649,7 +666,7 @@
         "No live SQL/Python inventory; all physical reads through native Dactyl capability",
         "No reduction, schema parity or migration claim; agree budgets after actual baseline"
       ],
-      "artifact_hash": "sha256:5a198105342dfe8e0e1676b42e36e21cce40b47f40c87461213f03552e642cf9",
+      "artifact_hash": "sha256:bcf090cf2c665a7ac9066fa1e41637d6f7040cc2331d68d8258835b7c7f54ecf",
       "checks": [
         {
           "name": "full-readiness",
@@ -660,11 +677,15 @@
           "status": "failed"
         },
         {
+          "name": "native-three-store-inventory",
+          "status": "partial"
+        },
+        {
           "name": "source-inventory-review",
           "status": "partial"
         }
       ],
-      "current_phase": "implementation-review",
+      "current_phase": "measurement-feedback",
       "custody": {
         "events": [
           {
@@ -720,10 +741,24 @@
             "intent_id": "intent:change_01M7707E0D3H82PM5PG17N4YKR",
             "kind": "trajectory_step_recorded",
             "sequence": 9
+          },
+          {
+            "detail": "trajectory:branch_01M7707E39SWP4NBA39837Y2ZG",
+            "event_id": "event:10",
+            "intent_id": "intent:change_01M7707E0D3H82PM5PG17N4YKR",
+            "kind": "trajectory_step_recorded",
+            "sequence": 10
+          },
+          {
+            "detail": "trajectory:branch_01M7707E39SWP4NBA39837Y2ZG",
+            "event_id": "event:11",
+            "intent_id": "intent:change_01M7707E0D3H82PM5PG17N4YKR",
+            "kind": "trajectory_step_recorded",
+            "sequence": 11
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 9,
+        "next_sequence": 11,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M7707E39SWP4NBA39837Y2ZG": {
@@ -859,6 +894,46 @@
                 "validation_findings": [
                   "Effective schema digest includes all four schema object classes. Virtual-table classification now uses documented zero/NULL rootpage catalog metadata instead of interpreting DDL. DBSTAT physical_cells is not advertised as portable logical index row count."
                 ]
+              },
+              {
+                "action": "measurement-feedback",
+                "custody_event_id": "event:10",
+                "observations": [
+                  "/private/tmp/issue-1630-live-inventory",
+                  "https://github.com/DecapodLabs/decapod/actions/runs/43165277659"
+                ],
+                "proof_refs": [
+                  "native-three-store-inventory"
+                ],
+                "scope": [
+                  "root",
+                  "src/decapod/core/storage_inventory.rs",
+                  "src/decapod/lib.rs",
+                  "tests/support/storage_inventory.rs"
+                ],
+                "sequence": 10,
+                "validation_findings": [
+                  "Native CI artifact d0b03024, verified2daee1c, performed authorized three-store scans with repository/database mounts RO and only existing lifecycle locks RW. All returned ok sampled. Exact main lengths116248576/10579968/29057024 bytes. Preliminary prototype lacks full-catalog correction and prefix samples can miss checkpoint IDs; retain captures privately, do not call them final full-schema evidence or choose compaction design. Add exact fixed-class totals and bounded checkpoint stratum, then recapture with final source."
+                ]
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:11",
+                "observations": [
+                  "src/decapod/core/storage_inventory.rs",
+                  "tests/support/storage_inventory.rs"
+                ],
+                "proof_refs": [],
+                "scope": [
+                  "root",
+                  "src/decapod/core/storage_inventory.rs",
+                  "src/decapod/lib.rs",
+                  "tests/support/storage_inventory.rs"
+                ],
+                "sequence": 11,
+                "validation_findings": [
+                  "Report checkpoint envelope metadata separately from prefix envelope metadata so overlap remains explicit and targeted checkpoint components are not duplicated"
+                ]
               }
             ]
           }
@@ -871,6 +946,7 @@
       "destination": "pull request",
       "evidence": [
         "/private/tmp/issue-1630-decapod-validation.json",
+        "/private/tmp/issue-1630-live-inventory",
         "Native Bazel mod deps --lockfile_mode=error accepted semantically identical compact JSON; generated dependency lock reduced1052790 to998377bytes below unchanged1MiB source budget. Bazel source/dependency graph and required checks unchanged.",
         "Source audit reproduces c7609e42 accepted declaration83c629 exactly; accepted release d3358 changes only root versions in Cargo.toml/lock. Candidate changes only Dactyl dependency graph, generated Bazel dependency lock and inclusion of inventory regressions in required CLI suite. Full source-CI graph/provider/checks unchanged.",
         "https://github.com/DecapodLabs/dactyl/pull/104",
@@ -915,7 +991,9 @@
         "Dactyl104 merged49a1fbb and0.13.0published; replace temporaryGitpin with registryrelease and exactpublishedchecksum. Earlier sourceCI compiled and newCLI suite passed; Supabaseguard rejected GitURLsource, so no fullpassclaimed. PublicAPIrate resetelapsed; safelyretryfullcontroller onnewexactcandidate.",
         "Effective schema digest includes all four schema object classes. Virtual-table classification now uses documented zero/NULL rootpage catalog metadata instead of interpreting DDL. DBSTAT physical_cells is not advertised as portable logical index row count.",
         "Final source review found schema digest omitted triggers/views. Stop only own verified validation process30608, retain unchanged provider graph and prior evidence, add catalog coverage and DDL-redaction regression, rerun new exact candidate. No publication readiness from interrupted attempt.",
+        "Native CI artifact d0b03024, verified2daee1c, performed authorized three-store scans with repository/database mounts RO and only existing lifecycle locks RW. All returned ok sampled. Exact main lengths116248576/10579968/29057024 bytes. Preliminary prototype lacks full-catalog correction and prefix samples can miss checkpoint IDs; retain captures privately, do not call them final full-schema evidence or choose compaction design. Add exact fixed-class totals and bounded checkpoint stratum, then recapture with final source.",
         "No source build/test has run or passed; first full validation stopped at source discovery. Compact lock serialization preserves every parsed JSON value.",
+        "Report checkpoint envelope metadata separately from prefix envelope metadata so overlap remains explicit and targeted checkpoint components are not duplicated",
         "Source review pin reflects four inspected source changes; dependency preparation is not build/test or publication evidence"
       ]
     }

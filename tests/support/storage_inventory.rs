@@ -94,6 +94,10 @@ fn inventory_measures_utf8_and_component_reuse_without_exposing_content() {
     );
     assert!(report["measured_savings_bytes"].is_null());
     assert_eq!(
+        report["component_classes"]["checkpoint_event_metadata"]["non_null"],
+        2
+    );
+    assert_eq!(
         report["sampled_format_observations"]["checkpoint_versions"]["1"],
         2
     );
@@ -235,6 +239,61 @@ fn effective_schema_digest_covers_triggers_and_views_without_exposing_ddl() {
     assert!(!encoded.contains("PRIVATE_TRIGGER_TEXT"));
     assert!(!encoded.contains("PRIVATE_VIEW_TEXT"));
     assert_eq!(task_report(&view)["rows"], 0);
+}
+
+#[test]
+fn checkpoints_are_sampled_even_when_the_event_prefix_contains_only_other_events() {
+    let temp = tempfile::tempdir().unwrap();
+    let bridge = fixture(temp.path());
+    for id in ["a", "b", "c"] {
+        bridge
+            .write(
+                "INSERT INTO events VALUES($1,'{}','task.comment')",
+                &[id.into()],
+            )
+            .unwrap();
+    }
+    let private = "PRIVATE_UNCHANGED_DESCRIPTION".repeat(32);
+    let mut checkpoint_bytes = 0;
+    for (id, ordinal) in [("z-a", 1), ("z-b", 2)] {
+        let payload = json!({"payload":{"schema_version":1,"ordinal":ordinal,
+            "projection":{"task":{"description":private}}}})
+        .to_string();
+        checkpoint_bytes += payload.len();
+        bridge
+            .write(
+                "INSERT INTO events VALUES($1,$2,'task.journal.checkpoint')",
+                &[id.into(), payload.into()],
+            )
+            .unwrap();
+    }
+    let report = inspect(
+        &temp.path().join(".decapod/data"),
+        "fixture",
+        &InventoryOptions {
+            rows_per_table: 2,
+            ..InventoryOptions::default()
+        },
+    )
+    .unwrap();
+    assert_eq!(report["status"], "ok");
+    assert_eq!(report["coverage"], "sampled");
+    assert_eq!(report["checkpoint_sampling"]["coverage"], "complete");
+    assert_eq!(report["checkpoint_sampling"]["sample_rows"], 2);
+    assert_eq!(
+        report["event_payload_classes"]["task_checkpoint"]["rows"],
+        2
+    );
+    assert_eq!(report["event_payload_classes"]["other_event"]["rows"], 3);
+    assert_eq!(
+        report["event_payload_classes"]["task_checkpoint"]["payload_cast_blob_bytes"],
+        checkpoint_bytes
+    );
+    assert_eq!(
+        report["component_classes"]["checkpoint_description"]["potential_repeated_bytes"],
+        private.len()
+    );
+    assert!(!report.to_string().contains(&private));
 }
 
 #[test]

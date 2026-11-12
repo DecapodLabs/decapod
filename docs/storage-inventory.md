@@ -51,12 +51,23 @@ fingerprints per field are retained; overflow is an explicit lower bound.
 Potential repeated bytes exclude reference, index and codec overhead and are
 not measured savings.
 
-Sampled task checkpoint events additionally report logical component lengths
-and repeated bytes. Structured components use sorted canonical JSON; text uses
-decoded UTF-8. Embedded envelope metadata is a sorted projection. Those classes
+Task checkpoints have a separate primary-key-prefix sample with the same row
+ceiling and shared scan/time/VM budgets. This prevents older ordinary event IDs
+from hiding the checkpoint stratum. Exact checkpoint/other event counts and
+`length(CAST(payload AS BLOB))` totals cover the entire events table in the same
+snapshot. Those byte totals follow the engine encoding and exclude cell/index
+overhead; they partition events and must not be added to table totals. Stored
+event-type strings are reduced to two fixed public labels.
+
+The checkpoint sample additionally reports logical component lengths and
+repeated bytes. Structured components use sorted canonical JSON; text uses
+decoded UTF-8. Embedded envelope metadata is a sorted projection reported
+separately for the event prefix and checkpoint samples. Those classes
 overlap stored payload bytes and each other. They must not be added to table
 totals. JSON interpretation is limited to 1 MiB per payload with serde's normal
-depth bound. Oversized or invalid JSON is counted as unavailable. Checkpoint
+depth bound. Oversized or invalid JSON is counted as unavailable sample
+observations. Prefix metadata and targeted checkpoint observations may overlap,
+so their unavailable counts are not unique-row counts. Checkpoint
 version fields and LCM v1 BLOB framing are observations only: inventory does not
 verify task chains, compressed bodies, checksums or migration eligibility. LCM
 declared decoded sizes remain explicitly unverified. Only the whitelisted numeric

@@ -12,6 +12,12 @@ is capped at 32 MiB before decoding. The report contains schema names and size
 statistics, never retained field contents, task IDs or comparison hashes.
 See `docs/storage-inventory.md` for bounds and interpretation.
 
+Checkpoint component statistics use a separate bounded checkpoint sample,
+with shared scan/time/VM budgets. Exact checkpoint/other event counts and
+engine-cast payload bytes cover the full events table without exposing stored
+event-type strings. Prefix samples and component classes retain separate
+coverage and overlap rules; neither implies measured compaction savings.
+
 ## Agent delegation and cloud authorization interface
 
 Decapod is invoked by each contributor's coding agent in the repository.
@@ -1076,7 +1082,7 @@ field. Nothing in this operation authorizes a mutation, approval or completion.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `f93becabb6420da769f420a085693ec48563b4e1ec53c0f67e1c0b1d0a2a9323`
+- Repository signal fingerprint: `39dbb1149ad1c3f6f6eb6ff7c7cb3e58e3b605205cc236775b9744b9175d2cb7`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (226 files), `tests/` (224 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

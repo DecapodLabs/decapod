@@ -241,6 +241,8 @@ impl Field {
 
 #[derive(Default, Serialize)]
 struct Formats {
+    checkpoint_sample_observations: u64,
+    checkpoint_json_unavailable_observations: u64,
     checkpoint_versions: BTreeMap<u64, u64>,
     checkpoint_unknown_version_rows: u64,
     checkpoint_version_overflow_rows: u64,
@@ -285,10 +287,12 @@ fn component_classes(
 ) {
     if payload.len() > MAX_JSON_BYTES {
         *skipped += 1;
+        formats.checkpoint_json_unavailable_observations += u64::from(checkpoint_event);
         return;
     }
     let Ok(value) = serde_json::from_str::<Value>(payload) else {
         *skipped += 1;
+        formats.checkpoint_json_unavailable_observations += u64::from(checkpoint_event);
         return;
     };
     let checkpoint = if checkpoint_event {
@@ -353,12 +357,59 @@ fn component_classes(
         .filter_map(|key| object.get(key).map(|v| (key.into(), v.clone())))
         .collect();
         if !metadata.is_empty() {
+            let class = if checkpoint_event {
+                "checkpoint_event_metadata"
+            } else {
+                "embedded_event_metadata"
+            };
             classes
-                .entry("embedded_event_metadata".into())
+                .entry(class.into())
                 .or_default()
                 .observe(&Value::String(Value::Object(metadata).to_string()));
         }
     }
+}
+
+fn checkpoint_sample(
+    reader: &mut dyn SnapshotReader,
+    ordering: &str,
+    rows: u32,
+    classes: &mut BTreeMap<String, Field>,
+    skipped: &mut u64,
+    formats: &mut Formats,
+    output: &mut Value,
+) -> Result<(), DactylError> {
+    // CASE returns only these two public labels, never stored event-type text.
+    let totals = reader.read("SELECT CASE WHEN event_type='task.journal.checkpoint' THEN 'task_checkpoint' ELSE 'other_event' END AS class,count(*) AS rows,count(*)-count(payload) AS null_payload_rows,coalesce(sum(length(CAST(payload AS BLOB))),0) AS payload_cast_blob_bytes FROM events GROUP BY class ORDER BY class", &[])?;
+    *output = json!({
+        "task_checkpoint":{"rows":0,"null_payload_rows":0,"payload_cast_blob_bytes":0},
+        "other_event":{"rows":0,"null_payload_rows":0,"payload_cast_blob_bytes":0}
+    });
+    for row in totals.as_slice() {
+        let name = row.get_str_ref("class")?;
+        if !["task_checkpoint", "other_event"].contains(&name) {
+            return Err(DactylError::Conversion("inventory_event_class".into()));
+        }
+        output[name] = json!({"rows":row.get_int("rows")?,
+            "null_payload_rows":row.get_int("null_payload_rows")?,
+            "payload_cast_blob_bytes":row.get_int("payload_cast_blob_bytes")?});
+    }
+    let mut payload = Field::default();
+    reader.visit(&format!("SELECT payload FROM events WHERE event_type='task.journal.checkpoint' ORDER BY {ordering} LIMIT {rows}"), &[], &mut |row| {
+        formats.checkpoint_sample_observations += 1;
+        if let Some(value) = row.values.first() {
+            payload.observe(value);
+            if let Value::String(value) = value {
+                component_classes(value, true, classes, skipped, formats);
+            } else {
+                *skipped += 1;
+                formats.checkpoint_json_unavailable_observations += 1;
+            }
+        }
+        Ok(true)
+    })?;
+    output["task_checkpoint"]["payload_sample"] = payload.report();
+    Ok(())
 }
 
 /// Inspect one repository-local store. `scope` is an agent-supplied, non-secret
@@ -386,6 +437,7 @@ pub fn inspect(
     "options":options, "status":"unavailable", "coverage":"unavailable",
     "consistency":"one Dactyl deferred read transaction; filesystem stats observed separately before/after",
     "files_before":files(&path), "tables":[], "component_classes":{}, "physical":null,
+    "event_payload_classes":null,
     "measured_savings_bytes":null,
     "interpretation":[
         "B-tree allocated, payload and unused bytes are nested quantities; do not add them together",
@@ -472,12 +524,11 @@ pub fn inspect(
             let total = scalar(reader, &format!("SELECT count(*) FROM {}", quoted(table)))?;
             let mut fields: Vec<Field> = names.iter().map(|_| Field::default()).collect();
             let payload_column = names.iter().position(|name| name == "payload");
-            let event_type_column = names.iter().position(|name| name == "event_type");
+            let checkpoint_columns = payload_column.is_some() && names.iter().any(|name| name == "event_type");
             let scan = reader.visit(&format!("SELECT * FROM {} ORDER BY {ordering} LIMIT {}", quoted(table), options.rows_per_table), &[], &mut |row| {
                 for (field, value) in fields.iter_mut().zip(&row.values) { field.observe(value); }
                 if table == "events" && let Some(Value::String(payload)) = payload_column.and_then(|index| row.values.get(index)) {
-                    let checkpoint = event_type_column.and_then(|index| row.values.get(index)).and_then(Value::as_str) == Some("task.journal.checkpoint");
-                    component_classes(payload, checkpoint, &mut classes, &mut skipped_json, &mut formats);
+                    component_classes(payload, false, &mut classes, &mut skipped_json, &mut formats);
                 }
                 if table == "summaries" {
                     for (name, value) in names.iter().zip(&row.values) {
@@ -491,6 +542,9 @@ pub fn inspect(
             let field_report: BTreeMap<String, Value> = names.into_iter().zip(fields.into_iter().map(Field::report)).collect();
             report["tables"].as_array_mut().unwrap().push(json!({"table":table, "rows":total,
                 "sample_rows":scan.rows, "coverage":if total.as_u64() == Some(scan.rows) {"complete"} else {"sampled"}, "fields":field_report}));
+            if table == "events" && checkpoint_columns {
+                checkpoint_sample(reader, &ordering, options.rows_per_table, &mut classes, &mut skipped_json, &mut formats, &mut report["event_payload_classes"])?;
+            }
         }
         Ok(())
     });
@@ -500,7 +554,16 @@ pub fn inspect(
             .map(|(name, field)| (name, field.report()))
             .collect::<BTreeMap<_, _>>()
     );
-    report["component_json_unavailable_rows"] = json!(skipped_json);
+    report["component_json_unavailable_observations"] = json!(skipped_json);
+    let checkpoints = report["event_payload_classes"]["task_checkpoint"]["rows"].as_u64();
+    report["checkpoint_sampling"] = json!({
+        "method":"separate task.journal.checkpoint primary-key prefix; same per-table row ceiling and shared snapshot budgets",
+        "rows":checkpoints,"sample_rows":formats.checkpoint_sample_observations,
+        "coverage":if checkpoints.is_none() {"unavailable"} else if result.is_err() {"incomplete"} else if formats.checkpoint_json_unavailable_observations > 0 {"limited"} else if checkpoints == Some(formats.checkpoint_sample_observations) {"complete"} else {"sampled"}
+    });
+    report["event_payload_byte_method"] = json!(
+        "Exact SQLite length(CAST(payload AS BLOB)) grouped into checkpoint/other classes in engine encoding; excludes cell/index overhead; classes partition events and must not be added to table totals"
+    );
     report["sampled_format_observations"] = json!(formats);
     report["format_observation_scope"] = json!(
         "Sampled event_type task.journal.checkpoint JSON version fields and summaries text/BLOB headers only; no chain, digest, body or migration validation"
@@ -539,7 +602,8 @@ pub fn inspect(
                         "inventory_catalog_budget",
                         "inventory_table_budget",
                         "inventory_schema_encoding",
-                        "inventory_btree_encoding"
+                        "inventory_btree_encoding",
+                        "inventory_event_class"
                     ]
                     .contains(&code.as_str()) =>
                     code,
