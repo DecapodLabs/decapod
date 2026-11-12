@@ -459,6 +459,8 @@ fn ensure_with(
 }
 
 #[cfg(test)]
+// Dedicated fixture threads intentionally use bounded synchronous sockets.
+#[allow(clippy::disallowed_types)]
 mod tests {
     use super::*;
     use serde_json::{Value, json};

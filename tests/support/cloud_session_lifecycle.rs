@@ -1,6 +1,8 @@
 //! Production CLI session lifecycle with synthetic loopback Auth/RPC responses.
 //! This proves agent handoff and private custody, not hosted OAuth or SQL policy.
 #![cfg(feature = "supabase-cloud")]
+// Dedicated fixture threads intentionally use bounded synchronous sockets.
+#![allow(clippy::disallowed_types)]
 
 use serde_json::{Value, json};
 use sha2::{Digest, Sha256};
