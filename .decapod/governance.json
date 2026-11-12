@@ -605,6 +605,16 @@
       "proof_refs": [
         "/run/decapod-billing-fix-private/entrypoint-repair.scope-check.json"
       ]
+    },
+    {
+      "id": "billing-audit-current-master-6",
+      "summary": "Retain acceptedfc1e implementation and current product specs, preserve the intact native journal through reconciliation, authenticate official140 controller, and generate canonical140 projections. Publish only the requested historical proof/cleanup audit; no deletion or current readiness claimed at this checkpoint.",
+      "input_digest": "sha256:f0fd2adbabd552f42a1d827ef54c6e805726ab80c6cfffea872167715029ea29",
+      "proof_refs": [
+        "/run/decapod-billing-fix-private/audit.scope-check140.json",
+        "docs/maintenance/stale-branch-audit-20261112.md",
+        "git:fc1e2b94f6909633bf6dd7044fd7a54a05e85a4b"
+      ]
     }
   ],
   "intents": {
@@ -655,22 +665,22 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "The current architecture separates a static public audit from executable controllers, native state and private custody, and follows the accepted Dactyl implementation instead of restoring the superseded purchase flow.",
-          "reviewed_code_fingerprint": "bdd00aa7dd26de9b23483000ad9aebb5a00383a006d17f5b938a565c9c039dd0",
-          "spec_material_hash": "4c7878f1fc967694e80916caaa143fea417597fd407a5e4164a4bbb34de55dd7"
+          "reason": "Accepted global architecture, including onboarding and validation lifecycle, is preserved. The added audit section separates public evidence from executable authority and private custody; no runtime delta is proposed.",
+          "reviewed_code_fingerprint": "841d552cd5b5e885d212e00cd6cf25edeb0fb9c66b82405eb4142fbee8fdabc8",
+          "spec_material_hash": "cba1f8f6c798a720c75934712e319bdb82c9535a2cde102359aabf3d3c7aa504"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "The current authored interface describes dated public evidence and its approval limits. It distinguishes absent refs, accepted integration and full readiness; no runtime CLI or credential interface is changed from accepted19a.",
-          "reviewed_code_fingerprint": "bdd00aa7dd26de9b23483000ad9aebb5a00383a006d17f5b938a565c9c039dd0",
-          "spec_material_hash": "76dbbcc2204061654726750e7293a67c84871c07517b3006094dde871b44bf48"
+          "reason": "Accepted interfaces are preserved. The audit adds dated identities, digests and explicit incomplete retirement boundaries, without changing runtime contracts or claiming historical proof as current readiness.",
+          "reviewed_code_fingerprint": "841d552cd5b5e885d212e00cd6cf25edeb0fb9c66b82405eb4142fbee8fdabc8",
+          "spec_material_hash": "2cb766d29d289a106761b62278cf11b8c6fe76735f36220a973b1180f02e4e0c"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Runtime, tests and credential transports match accepted19a byte for byte. The new audit contains public commit/run identities and digests only; private keys, sessions, plaintext custody, datastore backups and raw machine logs are excluded from Git.",
-          "reviewed_code_fingerprint": "bdd00aa7dd26de9b23483000ad9aebb5a00383a006d17f5b938a565c9c039dd0",
+          "reason": "Security prose and implementation match acceptedfc1e; public evidence excludes keys, credentials, sessions, plaintext custody, datastore backups and raw machine logs. Native proof and deletion gates remain required.",
+          "reviewed_code_fingerprint": "841d552cd5b5e885d212e00cd6cf25edeb0fb9c66b82405eb4142fbee8fdabc8",
           "spec_material_hash": "ecc8e7afebb549a800744002854826201e68cfbacea69a822006093227f6f7a9"
         }
       ],
@@ -684,16 +694,17 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1794480277Z"
+      "updated_at": "1794489503Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch",
+        "Documentation audit and authentic release projections only. Runtime, tests, workflows, helpers and build definitions match acceptedfc1e. Original billing custody and pending stale refs remain untouched.",
         "Historical test and publication evidence is not current readiness. No legacy purchase flow is restored, no source/test change is proposed, and stale-ref retirement remains separately blocked on authenticating private recovery.",
         "No pricing, CI carrier, release, original task custody or unrelated branch changes.",
         "This is documentation and authentic generated governance only. No current readiness, retirement completion, legacy API removal, new commercial behavior or original-custody import is claimed."
       ],
-      "artifact_hash": "sha256:20eca7caf3856145a702f94ddd4b9be0d4e40e27d1f0798294c7c03659bfb16d",
+      "artifact_hash": "sha256:5ecd1a55c92cc488229ce5697c3dd34be26edcd2d09afd77c360961296f22e84",
       "checks": [
         {
           "name": "accepted_inventory_19a",
@@ -708,7 +719,15 @@
           "status": "passed"
         },
         {
+          "name": "accepted_source_inventory_fc1e",
+          "status": "passed"
+        },
+        {
           "name": "canonical_entrypoint_repair",
+          "status": "passed"
+        },
+        {
+          "name": "canonical_release_projection140",
           "status": "passed"
         },
         {
@@ -721,6 +740,14 @@
         },
         {
           "name": "historical_artifact_hashes",
+          "status": "passed"
+        },
+        {
+          "name": "historical_audit_bindings",
+          "status": "passed"
+        },
+        {
+          "name": "native_journal_restoration",
           "status": "passed"
         },
         {
@@ -740,7 +767,7 @@
           "status": "passed"
         }
       ],
-      "current_phase": "repair",
+      "current_phase": "reconciliation",
       "custody": {
         "events": [
           {
@@ -796,10 +823,17 @@
             "intent_id": "intent:change_01M771D5QJ4C4ZERK1MEPYNQRS",
             "kind": "trajectory_step_recorded",
             "sequence": 9
+          },
+          {
+            "detail": "trajectory:branch_01M771D5V85D3H40VVCZ3QCJMH",
+            "event_id": "event:10",
+            "intent_id": "intent:change_01M771D5QJ4C4ZERK1MEPYNQRS",
+            "kind": "trajectory_step_recorded",
+            "sequence": 10
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 9,
+        "next_sequence": 10,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M771D5V85D3H40VVCZ3QCJMH": {
@@ -970,17 +1004,48 @@
                 ],
                 "sequence": 9,
                 "validation_findings": []
+              },
+              {
+                "action": "reconciliation",
+                "command": "Saved the uncommitted automatic merge after its trajectory-hash error, aborted it, and reapplied accepted source while retaining the exact native journal blob91a33f6d7855b03c2698243ef9fc27f4fc94ffae. Native140 artifact status and agent.init then succeeded. No journal hash was hand-edited.",
+                "custody_event_id": "event:10",
+                "observations": [
+                  "git:fc1e2b94f6909633bf6dd7044fd7a54a05e85a4b",
+                  "git:1c0f9f6c:.decapod/governance.json",
+                  "/run/decapod-billing-fix-private/audit.scope-check140.json",
+                  "/run/decapod-billing-fix-private/inventory.accepted-fc1e-comparison.json",
+                  "/run/decapod-billing-fix-private/controller140-gnu-authentication.json"
+                ],
+                "proof_refs": [
+                  "accepted_source_inventory_fc1e",
+                  "canonical_release_projection140",
+                  "historical_audit_bindings",
+                  "native_journal_restoration"
+                ],
+                "scope": [
+                  "\".decapod/managed/specs\"]",
+                  "\"src/decapod/lib.rs\"",
+                  "\"tests/unit/core/propodus_tests.rs\"",
+                  "\"tests/unit/lib_init_prompt_tests.rs\"",
+                  ".decapod/managed/specs",
+                  "docs/maintenance/stale-branch-audit-20261112.md",
+                  "paths:[\"src/decapod/core/propodus.rs\""
+                ],
+                "sequence": 10,
+                "validation_findings": []
               }
             ]
           }
         }
       },
       "declared_commands": [
+        "Authenticated official v0.140.0 GNU controller from accepted release a3bbac97, used the actual rootless Ubuntu24.04 runtime, compared all105 sources to acceptedfc1e, regenerated canonical projections through native init, and restored reviewed user configuration exactly.",
         "Compare the four downloaded artifact/report hashes to expected values; inspect terminal-native success, six-ref report, accepted Git ancestry and exact absence of runtime/test/workflow/helper deltas. Compare all105 inventory entries to accepted c87 bytes, including the real toolchain symlink.",
         "Compare the four downloaded artifact/report hashes to expected values; inspect terminal-native success, six-ref report, accepted Git ancestry and exact absence of runtime/test/workflow/helper deltas. Compare all105 inventory entries to accepted19a bytes, including the real toolchain symlink.",
         "Full native validation observed failed source Buildkite 8170 for exact af132112; corresponding GitHub job logs identify E0277 in two new expect_err calls.",
         "Merge accepted c87e4f49 without committing, preserve the current native journal, and restore all four superseded Rust/test files to exact accepted bytes.",
         "Native validation attempt5 stopped before push with ENTRYPOINT_COMMIT_DISCIPLINE. Reviewed native init dry run and regenerated the four canonical entrypoints with official139. Restored user-editable config exactly from its reviewed backup, retaining all required proof and CI settings. Only release/fingerprint metadata changed in the entrypoint payloads.",
+        "Saved the uncommitted automatic merge after its trajectory-hash error, aborted it, and reapplied accepted source while retaining the exact native journal blob91a33f6d7855b03c2698243ef9fc27f4fc94ffae. Native140 artifact status and agent.init then succeeded. No journal hash was hand-edited.",
         "Stopped owned native publisher by SIGINT after current master advanced to c87e4f49; native report returned SNAPSHOT_NOT_READY, CI operation cancelled, exit1. Backed up the actual state and retained raw report/handoff. No PR was created.",
         "cargo fmt --all (host formatting, exit 0)",
         "git diff --check (exit 0)"
@@ -989,14 +1054,19 @@
       "evidence": [
         "/run/decapod-billing-fix-private/audit.document-consistency-139.json",
         "/run/decapod-billing-fix-private/audit.document-consistency.json",
+        "/run/decapod-billing-fix-private/audit.scope-check140.json",
         "/run/decapod-billing-fix-private/candidate-af132-ci/diagnostic-excerpts.json",
+        "/run/decapod-billing-fix-private/controller140-gnu-authentication.json",
         "/run/decapod-billing-fix-private/entrypoint-repair.scope-check.json",
         "/run/decapod-billing-fix-private/inventory.accepted-19a-comparison.json",
         "/run/decapod-billing-fix-private/inventory.accepted-c87-comparison.json",
         "/run/decapod-billing-fix-private/inventory.accepted-comparison.json",
+        "/run/decapod-billing-fix-private/inventory.accepted-fc1e-comparison.json",
         "/run/decapod-billing-fix-private/validate.attempt5.stderr.txt",
+        "git:1c0f9f6c:.decapod/governance.json",
         "git:c87e4f49cab8e2ccff5f9bdc5833d8602dfffdb8",
         "git:d3358e1ce2cdb137dc57445c64592cb6d327a6ff",
+        "git:fc1e2b94f6909633bf6dd7044fd7a54a05e85a4b",
         "https://buildkite.com/decapodlabs/decapod/builds/8170",
         "https://buildkite.com/decapodlabs/decapod/builds/8258",
         "https://github.com/DecapodLabs/decapod/actions/runs/43111223693",

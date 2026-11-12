@@ -1100,8 +1100,8 @@ field. Nothing in this operation authorizes a mutation, approval or completion.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `bdd00aa7dd26de9b23483000ad9aebb5a00383a006d17f5b938a565c9c039dd0`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (227 files), `tests/` (227 files)
+- Repository signal fingerprint: `841d552cd5b5e885d212e00cd6cf25edeb0fb9c66b82405eb4142fbee8fdabc8`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (228 files), `tests/` (230 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 
@@ -1377,6 +1377,31 @@ operation, task revision, event sequence, transaction semantics, or cloud
 schema change. An unexpected historical index or missing unique enforcement
 raises `RELATIONAL_INDEX_COMPACTION_UNSAFE` and rolls back all index removal.
 Freed SQLite pages are reusable but are not auto-vacuumed.
+
+## Human setup and cloud handoff presentation
+
+Interactive `decapod init` presents Project, Preferences and Review with
+Recommended/Customize and Apply/Edit/Cancel choices. Arrow keys, typed choices,
+Enter and Escape work in supported terminals; redirected output and `--proof`
+retain unattended behavior. Preview writes nothing; cancellation before apply
+does not create a new directory or initiate cloud authentication. Reinitialization
+preserves existing backend, isolation and structured proof settings.
+
+The cloud review describes account sign-in and service-confirmed repository
+access. It accepts no seat roster, provider credential or local price declaration.
+After apply, the accepted managed-session flow may return `onboarding_pending`,
+`action_required` or a denial; these remain non-success and cannot produce the
+terminal ready receipt. Existing headless continuation, private custody, explicit
+restart and server-readiness contracts are preserved. No managed-project selector
+or protected hosted-payment assurance is added here.
+
+## Validation proof lifecycle
+
+Validation evidence rules execute at the terminal publication boundary. `validation_proof` identifies the actual current invocation's complete-suite proof, not the legacy prerequisite receipt in `governance.json#/sections/validation`. That legacy receipt keeps its direct `receipt_hash` shape and integrity check. Workunit completion applies only to a current task with an explicit durable workunit declaration; journal lookup failures and missing, invalid or stale declared projections block instead of becoming an absent contract.
+
+Only the kernel optional workunit-completion rule can become inapplicable when the authoritative journal reports no declaration. A separate mandatory project or task rule still evaluates and fails when required workunit evidence is absent. Optional manifest epoch fields constrain evidence when provided; the supported current execution binding positively binds the actual epoch when those legacy fields are unset.
+
+Task binding on a managed `agent/<actor>/<topic>` branch reads task identifiers from the topic. A task-shaped actor name does not declare another task. Legacy unnamespaced and `agent/<task>` branches and multiple task identifiers in a topic retain their existing matching and mismatch checks.
 
 ## Maintenance evidence interfaces
 

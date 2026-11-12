@@ -11,6 +11,11 @@ advanced accepted source to `19acd21f7ff50656323d037915273f03cdedc04e`
 (v0.139.0), changing only the changelog and root package/lock metadata. The
 c87e4f49 reference below remains the managed sign-in behavior boundary.
 
+Accepted onboarding #1636, validation lifecycle #1633 and their releases later
+advanced source to `fc1e2b94f6909633bf6dd7044fd7a54a05e85a4b` (v0.140.0).
+Their accepted implementation is retained. The c87e4f49 reference still identifies
+where the original billing findings changed; it is not a later readiness claim.
+
 ## Merged billing recovery
 
 [#1631](https://github.com/DecapodLabs/decapod/pull/1631) was merged by

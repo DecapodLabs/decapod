@@ -10,6 +10,7 @@ pub(crate) mod cli;
 pub use cli::CloudRuntimeConfig;
 pub mod constitution;
 pub mod core;
+mod onboarding;
 pub(crate) mod plan_governance;
 pub mod plugins;
 pub(crate) mod subsystems;
@@ -164,8 +165,10 @@ fn write_project_config(
     })?;
     let mut merged = desired.clone();
     let exists = config_path.exists();
+    let mut prior_bytes = None;
     if exists {
         let raw = fs::read_to_string(&config_path).map_err(error::DecapodError::IoError)?;
+        prior_bytes = Some(raw.as_bytes().to_vec());
         let authored: toml::Value = toml::from_str(&raw).map_err(|error| {
             error::DecapodError::ValidationError(format!("INVALID_CONFIG_SCHEMA: {error}"))
         })?;
@@ -200,6 +203,13 @@ fn write_project_config(
     let serialized = toml::to_string_pretty(&merged).map_err(|error| {
         error::DecapodError::ValidationError(format!("CONFIG_SERIALIZE_FAILED: {error}"))
     })?;
+    if let Some(bytes) = prior_bytes {
+        let digest = format!("{:x}", Sha256::digest(&bytes));
+        let backup = target_dir
+            .join(".decapod/data/config-backups")
+            .join(format!("{digest}.toml"));
+        core::atomic::write_atomic(&backup, &bytes).map_err(error::DecapodError::IoError)?;
+    }
     core::atomic::write_atomic(&config_path, serialized.as_bytes())
         .map_err(error::DecapodError::IoError)?;
     Ok(())
@@ -291,12 +301,16 @@ fn run_cloud_command(cloud_cli: CloudCli) -> Result<(), error::DecapodError> {
     }
 }
 
-fn seed_init_generated_state(target_dir: &Path, dry_run: bool) -> Result<(), error::DecapodError> {
+fn seed_init_generated_state(
+    target_dir: &Path,
+    dry_run: bool,
+    interactive: bool,
+) -> Result<(), error::DecapodError> {
     if dry_run {
         return Ok(());
     }
 
-    if core::research_claims::ensure_template(target_dir, false)? {
+    if core::research_claims::ensure_template(target_dir, false)? && !interactive {
         println!(
             "Governance: created {} (replace the template claim through issue-scoped review)",
             core::research_claims::CLAIMS_PATH
@@ -417,7 +431,7 @@ fn infer_repo_context(target_dir: &Path) -> Result<RepoContext, error::DecapodEr
     if ctx.product_summary.is_none() {
         // Repository shape cannot establish a product's users or purpose.
         // Keep the existing explicit placeholder recognized by spec validation.
-        ctx.product_summary = Some("Define the user-visible outcome in one paragraph.".to_string());
+        ctx.product_summary = Some(INIT_PURPOSE_PLACEHOLDER.to_string());
     }
     if ctx.architecture_direction.is_none() {
         let has_frontend = ctx.detected_surfaces.iter().any(|s| s == "frontend");
@@ -733,9 +747,14 @@ fn prompt_line(prompt: &str) -> Result<String, error::DecapodError> {
     print!("{prompt}");
     io::stdout().flush().map_err(error::DecapodError::IoError)?;
     let mut buf = String::new();
-    io::stdin()
+    let read = io::stdin()
         .read_line(&mut buf)
         .map_err(error::DecapodError::IoError)?;
+    if read == 0 {
+        return Err(error::DecapodError::ValidationError(
+            "Setup cancelled: input closed before confirmation.".to_string(),
+        ));
+    }
     Ok(strip_ansi_escape_sequences(buf.trim()).trim().to_string())
 }
 
@@ -757,6 +776,42 @@ fn strip_ansi_escape_sequences(input: &str) -> String {
         }
     }
     out
+}
+
+const INIT_PURPOSE_PLACEHOLDER: &str = "Define the user-visible outcome in one paragraph.";
+const DEFER_ARCHITECTURE: &str = "Decide with my agent";
+
+fn setup_purpose_default(summary: Option<&str>) -> &str {
+    summary
+        .filter(|value| *value != INIT_PURPOSE_PLACEHOLDER)
+        .unwrap_or("")
+}
+
+fn is_architecture_guidance(value: &str) -> bool {
+    [
+        "Architecture is not established by repository shape;",
+        "Frontend and backend surfaces detected;",
+        "Frontend surface detected;",
+        "Backend surface detected;",
+    ]
+    .iter()
+    .any(|prefix| value.starts_with(prefix))
+}
+
+fn setup_architecture_label(direction: Option<&str>) -> String {
+    match direction {
+        Some(value) if value.starts_with("Frontend and backend surfaces detected;") => {
+            "Frontend + backend · refine with your agent".into()
+        }
+        Some(value) if value.starts_with("Frontend surface detected;") => {
+            "Frontend · refine with your agent".into()
+        }
+        Some(value) if value.starts_with("Backend surface detected;") => {
+            "Backend · refine with your agent".into()
+        }
+        Some(value) if !is_architecture_guidance(value) => value.to_string(),
+        _ => "Discover with your agent".into(),
+    }
 }
 
 const LANGUAGES: &[&str] = &[
@@ -835,7 +890,7 @@ const DIAGRAM_NOTATION_DESCRIPTIONS: &[&str] = &[
     "ASCII/text blocks readable in terminals and plain Markdown",
     "Mermaid diagrams rendered by GitHub Markdown from readable text source",
 ];
-const SELECTOR_VISIBLE_OPTIONS: usize = 10;
+const SELECTOR_VISIBLE_OPTIONS: usize = 6;
 
 fn normalize_language(input: &str) -> String {
     match input.trim().to_lowercase().as_str() {
@@ -891,62 +946,13 @@ fn apply_architecture_language_recommendation(ctx: &mut RepoContext) {
     }
 }
 
-struct TerminalModeGuard {
-    saved_mode: String,
-    tty: fs::File,
-}
-
-impl Drop for TerminalModeGuard {
-    fn drop(&mut self) {
-        if let Ok(tty) = self.tty.try_clone() {
-            let _ = std::process::Command::new("stty")
-                .arg(&self.saved_mode)
-                .stdin(Stdio::from(tty))
-                .status();
-        }
-        print!("\x1b[?25h");
-        println!();
-    }
-}
-
-fn enter_raw_terminal_mode() -> Option<(TerminalModeGuard, fs::File)> {
-    let tty = fs::OpenOptions::new()
-        .read(true)
-        .write(true)
-        .open("/dev/tty")
-        .ok()?;
-    let output = std::process::Command::new("stty")
-        .arg("-g")
-        .stdin(Stdio::from(tty.try_clone().ok()?))
-        .output()
-        .ok()?;
-    if !output.status.success() {
-        return None;
-    }
-    let saved_mode = String::from_utf8(output.stdout).ok()?.trim().to_string();
-    let status = std::process::Command::new("stty")
-        .args(["raw", "-echo"])
-        .stdin(Stdio::from(tty.try_clone().ok()?))
-        .status()
-        .ok()?;
-    if !status.success() {
-        return None;
-    }
-    let input = tty.try_clone().ok()?;
-    Some((TerminalModeGuard { saved_mode, tty }, input))
-}
-
-fn terminal_selector_available(_default: &[String]) -> bool {
-    io::stdin().is_terminal()
-}
-
 fn find_selector_match(options: &[&str], typed: &str) -> Option<usize> {
     let typed = typed.trim();
     if typed.is_empty() {
         return None;
     }
     if let Ok(index) = typed.parse::<usize>() {
-        return options.get(index.saturating_sub(1)).map(|_| index - 1);
+        return index.checked_sub(1).filter(|index| *index < options.len());
     }
     let typed = typed.to_lowercase();
     options
@@ -975,11 +981,21 @@ fn selector_default_index(options: &[&str], default: &[String]) -> Option<usize>
         .and_then(|d| options.iter().position(|o| d.eq_ignore_ascii_case(o)))
 }
 
+fn selector_visible_options() -> usize {
+    let width_limit = if onboarding::width() < 44 {
+        3
+    } else {
+        SELECTOR_VISIBLE_OPTIONS
+    };
+    width_limit.min(onboarding::height().saturating_sub(9).max(2))
+}
+
 fn selector_window_start(options_len: usize, selected: usize) -> usize {
-    if options_len <= SELECTOR_VISIBLE_OPTIONS {
+    let visible = selector_visible_options();
+    if options_len <= visible {
         0
     } else {
-        selected.min(options_len - SELECTOR_VISIBLE_OPTIONS)
+        selected.min(options_len - visible)
     }
 }
 
@@ -997,9 +1013,27 @@ fn selector_render_lines(
     } else {
         typed.to_string()
     };
-    let mut lines = vec![format!("{prompt}{input}")];
+    let columns = onboarding::width().saturating_sub(4);
+    let query = onboarding::clean(&format!("{prompt}{input}"));
+    let query = query.trim_start();
+    let query = if query.chars().count() > columns {
+        format!(
+            "…{}",
+            query
+                .chars()
+                .rev()
+                .take(columns.saturating_sub(1))
+                .collect::<Vec<_>>()
+                .into_iter()
+                .rev()
+                .collect::<String>()
+        )
+    } else {
+        query.to_string()
+    };
+    let mut lines = vec![format!("    {query}")];
     let window_start = selector_window_start(options.len(), selected);
-    let window_end = (window_start + SELECTOR_VISIBLE_OPTIONS).min(options.len());
+    let window_end = (window_start + selector_visible_options()).min(options.len());
     if window_start > 0 {
         lines.push("    ↑ more".to_string());
     }
@@ -1011,23 +1045,40 @@ fn selector_render_lines(
     {
         let cursor = if i == selected { ">" } else { " " };
         let marker = if default_idx == Some(i) { "✓" } else { " " };
-        let suffix = descriptions
-            .and_then(|items| items.get(i))
-            .map(|description| format!(" -> {description}"))
-            .unwrap_or_default();
-        lines.push(format!(
-            "    {cursor} {marker} {:>2}. {option}{suffix}",
-            i + 1
-        ));
+        let prefix = format!("    {cursor} {marker} {:>2}. ", i + 1);
+        for (index, part) in onboarding::wrap(
+            option,
+            onboarding::width().saturating_sub(prefix.chars().count()),
+        )
+        .iter()
+        .enumerate()
+        {
+            lines.push(format!(
+                "{}{part}",
+                if index == 0 {
+                    prefix.clone()
+                } else {
+                    " ".repeat(prefix.chars().count())
+                }
+            ));
+        }
+        if i == selected
+            && let Some(description) = descriptions.and_then(|items| items.get(i))
+        {
+            for part in onboarding::wrap(description, onboarding::width().saturating_sub(8)) {
+                lines.push(format!("        {part}"));
+            }
+        }
     }
     if window_end < options.len() {
         lines.push("    ↓ more".to_string());
-    } else if options.len() > SELECTOR_VISIBLE_OPTIONS {
+    } else if options.len() > selector_visible_options() {
         lines.push("    ↓ wraps to 1".to_string());
     }
     lines
 }
 
+#[cfg(test)]
 fn update_selector_from_byte(options: &[&str], selected: &mut usize, typed: &mut String, byte: u8) {
     match byte {
         8 | 127 => {
@@ -1098,17 +1149,13 @@ fn prompt_terminal_selector(
     if options.is_empty() {
         return Ok(None);
     }
-    if !io::stdin().is_terminal() {
-        return prompt_select_fallback(options, default, prompt);
-    }
-    let mut selected = selector_default_index(options, default).unwrap_or(0);
-    let default_idx = selector_default_index(options, default);
-    let Some((_guard, mut input)) = enter_raw_terminal_mode() else {
+    let Some(mut terminal) = onboarding::Terminal::open() else {
         return prompt_select_fallback(options, default, prompt);
     };
+    let mut selected = selector_default_index(options, default).unwrap_or(0);
+    let default_idx = selector_default_index(options, default);
     let mut typed = String::new();
     let mut rendered_lines = 0;
-    print!("\x1b[?25l");
     loop {
         if rendered_lines > 0 {
             print!("\x1b[{rendered_lines}F");
@@ -1116,56 +1163,91 @@ fn prompt_terminal_selector(
         let lines =
             selector_render_lines(options, descriptions, selected, default_idx, &typed, prompt);
         for line in &lines {
-            print!("\r\x1b[K{line}\n");
+            let line = if line.starts_with("    >") {
+                onboarding::accent(line)
+            } else {
+                line.to_string()
+            };
+            print!("\r\x1b[K{line}\r\n");
+        }
+        // Clear remnants when a shorter option replaces a longer description.
+        for _ in lines.len()..rendered_lines {
+            print!("\r\x1b[K\r\n");
+        }
+        if rendered_lines > lines.len() {
+            print!("\x1b[{}F", rendered_lines - lines.len());
         }
         rendered_lines = lines.len();
         io::stdout().flush().map_err(error::DecapodError::IoError)?;
-
-        let mut byte = [0_u8; 1];
-        input
-            .read_exact(&mut byte)
-            .map_err(error::DecapodError::IoError)?;
-        match byte[0] {
-            b'\r' | b'\n' => {
+        match terminal.key().map_err(error::DecapodError::IoError)? {
+            onboarding::Key::Enter => {
                 let shown = selector_shown(options, selected, &typed);
                 print!("\x1b[{rendered_lines}F");
-                print!("\r\x1b[K{prompt}{shown}\n");
-                for _ in 1..rendered_lines {
-                    print!("\r\x1b[K\n");
+                for _ in 0..rendered_lines {
+                    print!("\r\x1b[K\r\n");
                 }
+                print!("\x1b[{rendered_lines}F");
                 print!(
-                    "\x1b[{lines_up}F",
-                    lines_up = rendered_lines.saturating_sub(1)
+                    "\r{} {}\r\n",
+                    onboarding::accent("  ✓"),
+                    onboarding::clean(&shown)
                 );
                 io::stdout().flush().map_err(error::DecapodError::IoError)?;
                 return Ok(Some(shown));
             }
-            3 => {
+            onboarding::Key::Cancel => {
                 return Err(error::DecapodError::ValidationError(
-                    "init prompt interrupted".to_string(),
+                    "Setup cancelled before confirmation.".to_string(),
                 ));
             }
-            8 | 127 => {
-                update_selector_from_byte(options, &mut selected, &mut typed, byte[0]);
+            onboarding::Key::Up => {
+                typed.clear();
+                selected = selected.checked_sub(1).unwrap_or(options.len() - 1);
             }
-            27 => {
-                let mut seq = [0_u8; 2];
-                if input.read_exact(&mut seq).is_ok() && seq[0] == b'[' {
-                    match seq[1] {
-                        b'A' => {
-                            typed.clear();
-                            selected = selected.checked_sub(1).unwrap_or_else(|| options.len() - 1);
-                        }
-                        b'B' => {
-                            typed.clear();
-                            selected = (selected + 1) % options.len();
-                        }
-                        _ => {}
-                    }
+            onboarding::Key::Down => {
+                typed.clear();
+                selected = (selected + 1) % options.len();
+            }
+            onboarding::Key::Backspace => {
+                typed.pop();
+                if let Some(index) = find_selector_match(options, &typed) {
+                    selected = index;
                 }
             }
-            byte => update_selector_from_byte(options, &mut selected, &mut typed, byte),
+            onboarding::Key::Text(text) => {
+                typed.push_str(&text);
+                if let Some(index) = find_selector_match(options, &typed) {
+                    selected = index;
+                }
+            }
+            onboarding::Key::Ignore => {}
         }
+    }
+}
+
+/// Closed menus cannot accept arbitrary typed values as an approval.
+fn prompt_setup_choice(
+    label: &str,
+    options: &[&str],
+    descriptions: &[&str],
+    default: &str,
+) -> Result<String, error::DecapodError> {
+    onboarding::field(label, onboarding::navigation_hint(), "");
+    loop {
+        let choice = prompt_terminal_selector(
+            options,
+            Some(descriptions),
+            &[default.to_string()],
+            "    › ",
+        )?
+        .unwrap_or_else(|| default.to_string());
+        if let Some(index) = options
+            .iter()
+            .position(|option| option.eq_ignore_ascii_case(&choice))
+        {
+            return Ok(options[index].to_string());
+        }
+        onboarding::note("Choose one of the listed options.");
     }
 }
 
@@ -1173,63 +1255,26 @@ fn prompt_language_choice(
     current: &[String],
     recommendation: &[String],
 ) -> Result<Vec<String>, error::DecapodError> {
-    use crate::core::ansi::AnsiExt;
-    if current.is_empty() && recommendation.is_empty() {
-        return prompt_csv_default("Primary language(s)", "");
-    }
-    let current_is_selector_safe = current.len() <= 1
-        && current.first().is_none_or(|language| {
-            LANGUAGES
-                .iter()
-                .any(|option| option.eq_ignore_ascii_case(language))
-        });
-    if !current.is_empty() && !current_is_selector_safe {
-        return prompt_csv_default("Primary language(s)", &current.join(","));
-    }
-    let inferred = if current.is_empty() {
-        "None".to_string()
-    } else {
-        current.join(", ")
-    };
     let default = language_choice_seed(current, recommendation);
-    let default_label = if default.is_empty() {
-        "None".to_string()
-    } else {
-        default.join(", ")
-    };
-    let recommendation_label = if recommendation.is_empty() {
-        "None".to_string()
-    } else {
-        recommendation
+    if default.len() != 1
+        || !LANGUAGES
             .iter()
-            .map(|s| normalize_language(s))
-            .collect::<Vec<_>>()
-            .join(", ")
-    };
-    let supports_arrows = terminal_selector_available(&default);
-
-    println!();
-    println!("{}", "  Primary language(s)".bright_white().bold());
-    println!("    inferred from files: {inferred}");
-    println!("    recommended for architecture: {recommendation_label}");
-    println!("    current selection/default: {default_label}");
-    if supports_arrows {
-        println!("    options: up/down, type name or number, comma-separated for multiple");
+            .any(|option| option.eq_ignore_ascii_case(&default[0]))
+    {
+        return prompt_csv_default("Primary languages", &default.join(","));
+    }
+    onboarding::field(
+        "Primary languages",
+        "↑/↓ to move · type a language, or separate several with commas.",
+        "",
+    );
+    let choice = prompt_terminal_selector(LANGUAGES, None, &default, "    › ")?
+        .unwrap_or_else(|| default.join(","));
+    Ok(if choice.is_empty() {
+        default
     } else {
-        println!("    options: type name or number, comma-separated for multiple");
-    }
-    println!("    press Enter to use the current selection/default");
-
-    let choice = match prompt_terminal_selector(LANGUAGES, None, &default, "    choice: ")? {
-        Some(choice) => choice,
-        None => prompt_line("    choice: ")?,
-    };
-
-    if choice.is_empty() {
-        return Ok(default);
-    }
-
-    Ok(parse_language_choice(&choice))
+        parse_language_choice(&choice)
+    })
 }
 
 fn parse_language_choice(choice: &str) -> Vec<String> {
@@ -1240,7 +1285,8 @@ fn parse_language_choice(choice: &str) -> Vec<String> {
             trimmed
                 .parse::<usize>()
                 .ok()
-                .and_then(|n| LANGUAGES.get(n.saturating_sub(1)))
+                .and_then(|n| n.checked_sub(1))
+                .and_then(|n| LANGUAGES.get(n))
                 .map(|lang| (*lang).to_string())
                 .unwrap_or_else(|| normalize_language(trimmed))
         })
@@ -1297,76 +1343,37 @@ fn infer_language_from_architecture(arch: &str) -> Vec<String> {
 fn prompt_architecture_choice(
     current: Option<&str>,
 ) -> Result<Option<String>, error::DecapodError> {
-    use crate::core::ansi::AnsiExt;
-    if let Some(current) = current {
-        let current_matches_common = ARCH_DIRECTIONS
+    let current = current.filter(|value| !is_architecture_guidance(value));
+    if let Some(current) = current
+        && !ARCH_DIRECTIONS
             .iter()
-            .any(|(arch, _)| current.eq_ignore_ascii_case(arch));
-        if !current_matches_common {
-            let choice = prompt_line_default("Architecture direction", current)?;
-            return Ok(Some(choice));
-        }
-    }
-    let inferred = current.unwrap_or("None");
-    let current_matches_common = current.is_some_and(|c| {
-        ARCH_DIRECTIONS
-            .iter()
-            .any(|(arch, _)| c.eq_ignore_ascii_case(arch))
-    });
-    let default = if current_matches_common {
-        current.map(|s| vec![s.to_string()]).unwrap_or_default()
-    } else {
-        Vec::new()
-    };
-    let supports_arrows = terminal_selector_available(&default);
-
-    println!();
-    println!("{}", "  Architecture".bright_white().bold());
-    println!("    inferred: {inferred}");
-    println!("    current selection/default: {inferred}");
-    println!("    common approaches:");
-    if supports_arrows {
-        println!("    options: up/down, type name or number, or type your architecture");
-    } else {
-        println!("    options: type name or number, or type your architecture");
-    }
-
-    let arch_options = ARCH_DIRECTIONS
-        .iter()
-        .map(|(arch, _)| *arch)
-        .collect::<Vec<_>>();
-    let arch_descriptions = ARCH_DIRECTIONS
-        .iter()
-        .map(|(_, description)| *description)
-        .collect::<Vec<_>>();
-    let choice = match prompt_terminal_selector(
-        &arch_options,
-        Some(&arch_descriptions),
-        &default,
-        "    choice: ",
-    )? {
-        Some(choice) => choice,
-        None => prompt_line("    choice: ")?,
-    };
-
-    if choice.is_empty() {
-        return Ok(current.map(|s| s.to_string()));
-    }
-
-    if let Ok(index) = choice.parse::<usize>()
-        && let Some((arch, _)) = ARCH_DIRECTIONS.get(index.saturating_sub(1))
+            .any(|(arch, _)| current.eq_ignore_ascii_case(arch))
     {
-        return Ok(Some((*arch).to_string()));
+        return prompt_line_default("Architecture", current).map(Some);
     }
-
-    Ok(Some(choice.trim().to_string()))
+    onboarding::field(
+        "Architecture",
+        "Choose an approach, keep it open, or type your own.",
+        "",
+    );
+    let options = std::iter::once(DEFER_ARCHITECTURE)
+        .chain(ARCH_DIRECTIONS.iter().map(|(arch, _)| *arch))
+        .collect::<Vec<_>>();
+    let descriptions =
+        std::iter::once("Let your agent inspect the project before choosing an architecture.")
+            .chain(ARCH_DIRECTIONS.iter().map(|(_, description)| *description))
+            .collect::<Vec<_>>();
+    let default = vec![current.unwrap_or(DEFER_ARCHITECTURE).to_string()];
+    Ok(
+        prompt_terminal_selector(&options, Some(&descriptions), &default, "    › ")?
+            .filter(|choice| choice != DEFER_ARCHITECTURE),
+    )
 }
 
 fn print_init_block(title: &str, subtitle: &str) {
-    use crate::core::ansi::AnsiExt;
     println!();
-    println!("{}", format!("◢ {title}").bright_cyan().bold());
-    println!("{}", format!("  {subtitle}").bright_black());
+    println!("  {}", onboarding::accent(title));
+    onboarding::note(subtitle);
 }
 
 fn prompt_text_field(
@@ -1374,15 +1381,8 @@ fn prompt_text_field(
     helper: &str,
     default_value: &str,
 ) -> Result<String, error::DecapodError> {
-    use crate::core::ansi::AnsiExt;
-    println!();
-    println!("{}", format!("  {label}").bright_white().bold());
-    println!("{}", format!("    {helper}").bright_black());
-    println!(
-        "{}",
-        format!("    inferred: {default_value}").bright_black()
-    );
-    let line = prompt_line(&format!("{}", "    input: ".bright_cyan().bold()))?;
+    onboarding::field(label, helper, default_value);
+    let line = prompt_line(&format!("{} ", onboarding::accent("  ›")))?;
     if line.trim().is_empty() {
         Ok(default_value.to_string())
     } else {
@@ -1391,11 +1391,7 @@ fn prompt_text_field(
 }
 
 fn prompt_line_default(prompt: &str, default_value: &str) -> Result<String, error::DecapodError> {
-    prompt_text_field(
-        prompt,
-        "Press Enter to keep inferred context.",
-        default_value,
-    )
+    prompt_text_field(prompt, "Press Enter to keep this value.", default_value)
 }
 
 fn prompt_csv_default(
@@ -1415,21 +1411,28 @@ fn prompt_csv_default(
         .collect())
 }
 
-fn prompt_yes_no(prompt: &str, default_yes: bool) -> Result<bool, error::DecapodError> {
-    use crate::core::ansi::AnsiExt;
-    let suffix = if default_yes { "[Y/n]" } else { "[y/N]" };
-    println!();
-    println!("{}", format!("  {prompt}").bright_white().bold());
-    let line = prompt_line(&format!(
-        "{} {} ",
-        "    choice:".bright_cyan().bold(),
-        suffix.bright_black()
-    ))?;
-    if line.is_empty() {
-        return Ok(default_yes);
+fn parse_setup_confirmation(input: &str, default_yes: bool) -> Option<bool> {
+    match input.trim().to_ascii_lowercase().as_str() {
+        "" => Some(default_yes),
+        "y" | "yes" => Some(true),
+        "n" | "no" => Some(false),
+        _ => None,
     }
-    let normalized = line.to_ascii_lowercase();
-    Ok(matches!(normalized.as_str(), "y" | "yes"))
+}
+
+fn prompt_yes_no(prompt: &str, default_yes: bool) -> Result<bool, error::DecapodError> {
+    onboarding::field(prompt, "", "");
+    loop {
+        let line = prompt_line(&format!(
+            "  {} {} ",
+            onboarding::accent("›"),
+            if default_yes { "[Y/n]" } else { "[y/N]" }
+        ))?;
+        if let Some(answer) = parse_setup_confirmation(&line, default_yes) {
+            return Ok(answer);
+        }
+        onboarding::note("Please enter yes or no.");
+    }
 }
 
 fn resolve_existing_init_dir(raw: &Path) -> Result<PathBuf, error::DecapodError> {
@@ -1463,25 +1466,23 @@ fn resolve_or_create_project_dir(
 }
 
 fn prompt_init_target_dir(current_dir: &Path) -> Result<PathBuf, error::DecapodError> {
-    // In non-interactive environments (no TTY), default to current directory to avoid hanging
-    if !io::stdin().is_terminal() {
+    let current = current_dir.display().to_string();
+    onboarding::card("Workspace", &[("Directory", current)]);
+    let choice = prompt_setup_choice(
+        "Where would you like to begin?",
+        &["Use this directory", "Create a project"],
+        &["Set up the project you're in.", "Start in a new directory."],
+        "Use this directory",
+    )?;
+    if choice == "Use this directory" {
         return resolve_existing_init_dir(current_dir);
     }
-    if prompt_yes_no("Initialize the existing current directory?", true)? {
-        return resolve_existing_init_dir(current_dir);
-    }
-    let project_name = prompt_text_field(
-        "Project directory name",
-        "Decapod will create this directory and initialize inside it.",
+    let name = prompt_text_field(
+        "Project directory",
+        "A name or path. Created after you review setup.",
         "my-project",
     )?;
-    let project_name = project_name.trim();
-    if project_name.is_empty() {
-        return Err(error::DecapodError::ValidationError(
-            "Project directory name cannot be empty".to_string(),
-        ));
-    }
-    resolve_or_create_project_dir(current_dir, Path::new(project_name), false)
+    resolve_or_create_project_dir(current_dir, Path::new(&name), true)
 }
 
 fn diagram_style_choice(style: InitDiagramStyle) -> &'static str {
@@ -1520,24 +1521,12 @@ fn parse_diagram_style_choice(
 fn prompt_diagram_style(
     default_style: InitDiagramStyle,
 ) -> Result<InitDiagramStyle, error::DecapodError> {
-    print_init_block(
-        "Diagram Notation",
-        "Choose the README-visible diagram notation Decapod should generate.",
-    );
-    println!(
-        "    current selection/default: {}",
-        diagram_style_label(default_style).bright_white()
-    );
-    println!("    options: up/down, type name or number");
-    let default = vec![diagram_style_choice(default_style).to_string()];
-    let choice = prompt_terminal_selector(
+    let choice = prompt_setup_choice(
+        "Diagram notation",
         DIAGRAM_NOTATION_OPTIONS,
-        Some(DIAGRAM_NOTATION_DESCRIPTIONS),
-        &default,
-        "    choice: ",
-    )?
-    .unwrap_or_else(|| String::from(diagram_style_choice(default_style)));
-
+        DIAGRAM_NOTATION_DESCRIPTIONS,
+        diagram_style_choice(default_style),
+    )?;
     parse_diagram_style_choice(&choice, default_style)
 }
 
@@ -1882,6 +1871,28 @@ fn verify_git_status(target_dir: &Path) -> Result<(), error::DecapodError> {
     Ok(())
 }
 
+fn prepare_init_directory_and_git(
+    target: &Path,
+    init: &InitWithCli,
+) -> Result<(), error::DecapodError> {
+    if !init.dry_run {
+        fs::create_dir_all(target).map_err(error::DecapodError::IoError)?;
+    }
+    if !is_git_repository(target) {
+        if !init.no_git {
+            if !init.dry_run {
+                run_git_init(target)?;
+                verify_git_status(target)?;
+            }
+        } else {
+            println!(
+                "warning: Git repository was not initialized. Decapod workspace/worktree workflows will not function until a Git repository is created."
+            );
+        }
+    }
+    Ok(())
+}
+
 fn apply_init_proof_command_input(init: &mut InitWithCli, input: &str) {
     // An unchanged default must not split literal commas inside existing commands.
     if input != init.proof_commands.join(",") {
@@ -1894,146 +1905,360 @@ fn apply_init_proof_command_input(init: &mut InitWithCli, input: &str) {
     }
 }
 
+fn setup_review_rows(repo: &RepoContext, init: &InitWithCli) -> Vec<(&'static str, String)> {
+    let mut rows = vec![
+        (
+            "Project",
+            repo.product_name
+                .clone()
+                .unwrap_or_else(|| "Your project".into()),
+        ),
+        (
+            "Directory",
+            init.dir
+                .as_deref()
+                .unwrap_or(Path::new("."))
+                .display()
+                .to_string(),
+        ),
+        (
+            "Purpose",
+            Some(setup_purpose_default(repo.product_summary.as_deref()).to_string())
+                .filter(|s| !s.is_empty())
+                .unwrap_or_else(|| "Refine with your coding agent".into()),
+        ),
+        (
+            "Architecture",
+            setup_architecture_label(repo.architecture_direction.as_deref()),
+        ),
+        (
+            "Languages",
+            if repo.primary_languages.is_empty() {
+                "Discover with your agent".into()
+            } else {
+                repo.primary_languages.join(", ")
+            },
+        ),
+        (
+            "Workspace",
+            match init.isolation_mode {
+                Some(IsolationMode::Container) => "Isolated containers".into(),
+                Some(IsolationMode::Worktree) => "Isolated Git worktrees".into(),
+                _ if repo.container_workspaces => "Isolated containers".into(),
+                _ => "Isolated Git worktrees".into(),
+            },
+        ),
+        (
+            "Storage",
+            if init.backend.is_cloud() {
+                "Decapod Cloud · experimental · account required".into()
+            } else {
+                "Local · no account needed".into()
+            },
+        ),
+    ];
+    if init.backend.is_cloud() {
+        rows.push((
+            "Cloud setup",
+            "Sign in if needed; the service confirms repository access".into(),
+        ));
+    }
+    let selected = config_from_init_with(init, repo.clone());
+    rows.push(("Agent files", selected.init.entrypoints.join(", ")));
+    rows.push((
+        "Living specs",
+        if init.specs { "Enabled" } else { "Disabled" }.into(),
+    ));
+    rows.push((
+        "CI scaffold",
+        if init.ci {
+            "GitHub validation workflow"
+        } else {
+            "Disabled"
+        }
+        .into(),
+    ));
+    rows.push(("Diagrams", diagram_style_label(init.diagram_style).into()));
+    rows.push((
+        "Proof",
+        format!(
+            "{}; {} custom command(s)",
+            if init.validation_buildkite_preflights.unwrap_or(false) {
+                "Buildkite"
+            } else {
+                "Native validation"
+            },
+            init.proof_commands.len()
+        ),
+    ));
+    if let Some(path) = init.dir.as_deref()
+        && !is_git_repository(path)
+    {
+        rows.push((
+            "Git",
+            if init.no_git {
+                "Not initialized; workspace workflows unavailable"
+            } else {
+                "Initialize a local repository"
+            }
+            .into(),
+        ));
+    }
+    rows
+}
+
+fn customize_setup(
+    repo: &mut RepoContext,
+    init: &mut InitWithCli,
+) -> Result<(), error::DecapodError> {
+    let mut default = "Project";
+    loop {
+        let section = prompt_setup_choice(
+            "Make it yours",
+            &["Project", "Workspace", "Connections", "Advanced", "Done"],
+            &[
+                "Name, purpose, architecture, languages, and done criteria.",
+                "Choose how agent changes are isolated.",
+                "Local or cloud storage, and your task tracker.",
+                "Proof, permissions, context, diagrams, and CI.",
+                "Return to the setup review.",
+            ],
+            default,
+        )?;
+        match section.as_str() {
+            "Project" => {
+                repo.product_name = Some(prompt_line_default(
+                    "Project name",
+                    repo.product_name.as_deref().unwrap_or("my-project"),
+                )?);
+                repo.product_summary = Some(prompt_line_default(
+                    "What are you building?",
+                    repo.product_summary.as_deref().unwrap_or(""),
+                )?);
+                repo.architecture_direction =
+                    prompt_architecture_choice(repo.architecture_direction.as_deref())?;
+                let recommendation = repo
+                    .architecture_direction
+                    .as_deref()
+                    .map(infer_language_from_architecture)
+                    .unwrap_or_default();
+                repo.primary_languages =
+                    prompt_language_choice(&repo.primary_languages, &recommendation)?;
+                repo.done_criteria = Some(prompt_line_default(
+                    "What does done look like?",
+                    repo.done_criteria
+                        .as_deref()
+                        .unwrap_or("Required checks pass and the requested outcome is verified."),
+                )?);
+            }
+            "Workspace" => {
+                let container = init.isolation_mode == Some(IsolationMode::Container)
+                    || (init.isolation_mode.is_none() && repo.container_workspaces);
+                let choice = prompt_setup_choice(
+                    "Where should agent work run?",
+                    &["Git worktrees", "Containers"],
+                    &[
+                        "Separate working copies on this machine.",
+                        "Container isolation for concurrent agent workflows. Requires Docker or Podman.",
+                    ],
+                    if container {
+                        "Containers"
+                    } else {
+                        "Git worktrees"
+                    },
+                )?;
+                repo.container_workspaces = choice == "Containers";
+                init.container_workspaces = repo.container_workspaces;
+                init.isolation_mode = Some(if repo.container_workspaces {
+                    IsolationMode::Container
+                } else {
+                    IsolationMode::Worktree
+                });
+            }
+            "Connections" => {
+                let storage = prompt_setup_choice(
+                    "Where should work state live?",
+                    &["Local", "Decapod Cloud"],
+                    &[
+                        "On this machine. No account needed.",
+                        "Repository tasks in the cloud. Account and authorized access required.",
+                    ],
+                    if init.backend.is_cloud() {
+                        "Decapod Cloud"
+                    } else {
+                        "Local"
+                    },
+                )?;
+                init.backend = if storage == "Decapod Cloud" {
+                    onboarding::note(
+                        "After you apply, follow the trusted sign-in link if needed. The service confirms repository access.",
+                    );
+                    BackendType::Cloud
+                } else {
+                    BackendType::Local
+                };
+                repo.set_backend(init.backend);
+                repo.external_tracker =
+                    prompt_yes_no("Connect an external task tracker?", repo.external_tracker)?;
+                if repo.external_tracker {
+                    init.tracker_provider = Some(prompt_line_default(
+                        "Tracker provider",
+                        init.tracker_provider.as_deref().unwrap_or("external"),
+                    )?);
+                    let project = prompt_line_default(
+                        "Tracker project (optional)",
+                        init.tracker_project.as_deref().unwrap_or(""),
+                    )?;
+                    init.tracker_project = (!project.is_empty()).then_some(project);
+                    let url = prompt_line_default(
+                        "Tracker URL (optional)",
+                        init.tracker_url.as_deref().unwrap_or(""),
+                    )?;
+                    init.tracker_url = (!url.is_empty()).then_some(url);
+                } else {
+                    init.tracker_provider = None;
+                    init.tracker_project = None;
+                    init.tracker_url = None;
+                }
+            }
+            "Advanced" => {
+                init.protected_paths = canonical_repo_relative_paths(&prompt_csv_default(
+                    "Protected paths",
+                    &init.protected_paths.join(","),
+                )?)
+                .map_err(error::DecapodError::ValidationError)?;
+                let approval_default = if init.approval_categories.is_empty() {
+                    "destructive_operations".into()
+                } else {
+                    init.approval_categories.join(",")
+                };
+                init.approval_categories =
+                    prompt_csv_default("Actions that need approval", &approval_default)?;
+                let proof = prompt_text_field(
+                    "Proof commands",
+                    "Comma-separated name=command values. Enter keeps existing command details.",
+                    &init.proof_commands.join(","),
+                )?;
+                apply_init_proof_command_input(init, &proof);
+                onboarding::note(
+                    "Laya requires a separately installed runtime and pinned model data.",
+                );
+                init.laya_decisions = Some(prompt_yes_no(
+                    "Require optional Laya readiness decisions?",
+                    init.laya_decisions.unwrap_or(false),
+                )?);
+                onboarding::note("No runs the full proof suite on this machine.");
+                init.validation_buildkite_preflights = Some(prompt_yes_no(
+                    "Run the full proof suite on Buildkite?",
+                    init.validation_buildkite_preflights.unwrap_or(false),
+                )?);
+                let context = if init.declared_context_sources.is_empty() {
+                    "AGENTS.md".into()
+                } else {
+                    init.declared_context_sources.join(",")
+                };
+                init.declared_context_sources = canonical_repo_relative_paths(&prompt_csv_default(
+                    "Context sources",
+                    &context,
+                )?)
+                .map_err(error::DecapodError::ValidationError)?;
+                init.specs = prompt_yes_no("Generate living project specs?", init.specs)?;
+                init.ci = prompt_yes_no("Scaffold a GitHub validation workflow?", init.ci)?;
+                init.diagram_style = prompt_diagram_style(init.diagram_style)?;
+            }
+            _ => return Ok(()),
+        }
+        default = "Done";
+    }
+}
+
 fn enrich_repo_context_interactive(
     repo: &mut RepoContext,
     init: &mut InitWithCli,
 ) -> Result<(), error::DecapodError> {
-    print_init_block(
-        "Repository Context",
-        "Review inferred intent before generating .decapod/managed/specs/.",
+    onboarding::step(
+        0,
+        "A little context goes a long way.",
+        "We detected what we could. You can refine every choice.",
     );
-
-    let current_summary = repo.product_summary.clone().unwrap_or_else(|| {
-        "Deliver the repository outcome against explicit user intent with proof-backed completion."
-            .to_string()
-    });
-    repo.product_summary = Some(prompt_line_default("Intent outcome", &current_summary)?);
-
-    repo.architecture_direction =
-        prompt_architecture_choice(repo.architecture_direction.as_deref())?;
-
-    let recommended_languages = repo
-        .architecture_direction
-        .as_deref()
-        .map(infer_language_from_architecture)
-        .unwrap_or_default();
-    repo.primary_languages =
-        prompt_language_choice(&repo.primary_languages, &recommended_languages)?;
-
-    let refine_now = prompt_yes_no(
-        "Refine done criteria now? (You can evolve .decapod/config.toml and .decapod/managed/specs/*.md later.)",
-        false,
-    )?;
-    if refine_now {
-        let current_done = repo.done_criteria.clone().unwrap_or_else(|| {
-            "Decapod validate passes, required tests pass, and promotion-relevant artifacts are present."
-                .to_string()
-        });
-        repo.done_criteria = Some(prompt_line_default("Done criteria", &current_done)?);
-    }
-
-    let use_external_tracker = prompt_yes_no(
-        "Use an external task tracker (e.g. Beads) instead of Decapod todos?",
-        repo.external_tracker,
-    )?;
-    repo.external_tracker = use_external_tracker;
-
-    let enable_container_workspaces = prompt_yes_no(
-        "Enable container workspaces? (Required for multi-agent concurrent runs. Disable only for single-agent workflows.)",
-        repo.container_workspaces,
-    )?;
-    repo.container_workspaces = enable_container_workspaces;
-
-    let protected_default = init.protected_paths.join(",");
-    init.protected_paths =
-        canonical_repo_relative_paths(&prompt_csv_default("Protected paths", &protected_default)?)
-            .map_err(error::DecapodError::ValidationError)?;
-
-    let approval_default = if init.approval_categories.is_empty() {
-        "destructive_operations".to_string()
-    } else {
-        init.approval_categories.join(",")
-    };
-    init.approval_categories = prompt_csv_default("Approval categories", &approval_default)?;
-
-    let proof_default = init.proof_commands.join(",");
-    let proof_input = prompt_text_field(
-        "Proof commands",
-        "Enter comma-separated name=command values, or press Enter to keep all existing proof details.",
-        &proof_default,
-    )?;
-    apply_init_proof_command_input(init, &proof_input);
-    init.laya_decisions = Some(prompt_yes_no(
-        "Require optional Laya readiness decisions after validation? (Each maintainer installs the runtime and pinned model data separately.)",
-        init.laya_decisions.unwrap_or(false),
-    )?);
-    init.validation_buildkite_preflights = Some(prompt_yes_no(
-        "Use Buildkite on the current workspace branch for the full required proof suite? (No runs the full suite natively in Decapod.)",
-        init.validation_buildkite_preflights.unwrap_or(false),
-    )?);
-
-    if repo.external_tracker {
-        let provider = init
-            .tracker_provider
-            .clone()
-            .unwrap_or_else(|| "external".to_string());
-        init.tracker_provider = Some(prompt_line_default("External tracker provider", &provider)?);
-        let project = init.tracker_project.clone().unwrap_or_default();
-        let project = prompt_line_default("External tracker project (optional)", &project)?;
-        init.tracker_project = (!project.trim().is_empty()).then_some(project);
-        let url = init.tracker_url.clone().unwrap_or_default();
-        let url = prompt_line_default("External tracker URL (optional)", &url)?;
-        init.tracker_url = (!url.trim().is_empty()).then_some(url);
-    } else {
-        init.tracker_provider = None;
-        init.tracker_project = None;
-        init.tracker_url = None;
-    }
-
-    let context_default = if init.declared_context_sources.is_empty() {
-        "AGENTS.md".to_string()
-    } else {
-        init.declared_context_sources.join(",")
-    };
-    init.declared_context_sources = canonical_repo_relative_paths(&prompt_csv_default(
-        "Declared context sources",
-        &context_default,
-    )?)
-    .map_err(error::DecapodError::ValidationError)?;
-    init.isolation_mode = Some(if repo.container_workspaces {
-        IsolationMode::Container
-    } else {
-        IsolationMode::Worktree
-    });
-
-    println!();
-    println!("Enable Decapod Cloud? [experimental, account required]");
-    println!("  No  - local-first repo governance only");
-    println!("  Yes - sign in to Decapod Labs to sync governed work state");
-    let backend_choice = prompt_yes_no(
-        "Enable Decapod Cloud? [experimental, account required]",
-        matches!(init.backend, crate::cli::BackendType::Cloud),
-    )?;
-    init.backend = if backend_choice {
-        println!();
-        println!("Decapod Cloud is experimental.");
-        println!("It syncs governed operational state for this repo.");
-        println!("Local state remains canonical unless cloud sync is enabled.");
-        println!();
-        if prompt_yes_no("Continue?", false)? {
-            crate::cli::BackendType::Cloud
+    let rows = setup_review_rows(repo, init);
+    onboarding::card("Your project", &rows[..6]);
+    let purpose = setup_purpose_default(repo.product_summary.as_deref());
+    let summary = prompt_text_field(
+        "What are you building?",
+        if purpose.is_empty() {
+            "One sentence helps your agent. Enter to decide together later."
         } else {
-            crate::cli::BackendType::Local
-        }
-    } else {
-        crate::cli::BackendType::Local
-    };
-    repo.set_backend(init.backend);
-
-    let enable_ci = prompt_yes_no("Scaffold GitHub Action for decapod validate?", init.ci)?;
-    init.ci = enable_ci;
-
+            "A useful starting point for your agent."
+        },
+        purpose,
+    )?;
+    repo.product_summary = (!summary.is_empty()).then_some(summary);
+    onboarding::step(
+        1,
+        "Start with a good foundation.",
+        "Use detected and existing settings, or adjust just what you need.",
+    );
+    let choice = prompt_setup_choice(
+        "How would you like to set up?",
+        &["Recommended", "Customize"],
+        &[
+            "Keep the settings shown in your review. Local by default, no account needed.",
+            "Adjust project details, workspace isolation, connections, or advanced settings.",
+        ],
+        "Recommended",
+    )?;
+    if choice == "Customize" {
+        customize_setup(repo, init)?;
+    }
     Ok(())
+}
+
+fn review_setup(
+    repo: &mut RepoContext,
+    init: &mut InitWithCli,
+) -> Result<bool, error::DecapodError> {
+    loop {
+        onboarding::step(
+            2,
+            "Everything in its right place.",
+            "Review the plan before we touch your project.",
+        );
+        onboarding::card(
+            if init.dry_run {
+                "Setup preview"
+            } else {
+                "Setup plan"
+            },
+            &setup_review_rows(repo, init),
+        );
+        onboarding::note(
+            "Setup adds agent instructions and project governance. Existing instructions are backed up; authored settings are preserved.",
+        );
+        let apply = if init.dry_run {
+            "Preview setup"
+        } else {
+            "Apply setup"
+        };
+        let choice = prompt_setup_choice(
+            "Ready when you are",
+            &[apply, "Edit choices", "Cancel"],
+            &[
+                "Continue with the plan above.",
+                "Revisit any part of setup.",
+                "Leave without applying setup.",
+            ],
+            apply,
+        )?;
+        if choice == apply {
+            return Ok(true);
+        }
+        if choice == "Cancel" {
+            onboarding::note("Setup cancelled. No setup changes were applied.");
+            return Ok(false);
+        }
+        customize_setup(repo, init)?;
+    }
 }
 
 fn print_init_reconciliation(report: &core::init_reconciliation::ReconciliationReport) {
@@ -2065,6 +2290,7 @@ fn run_init_apply(
     init_with: &InitWithCli,
     current_dir: &Path,
     repo_ctx: &RepoContext,
+    interactive: bool,
 ) -> Result<PathBuf, error::DecapodError> {
     let target_dir = match &init_with.dir {
         Some(d) => d.clone(),
@@ -2205,55 +2431,95 @@ fn run_init_apply(
         .display()
         .to_string();
     use crate::core::ansi::AnsiExt;
-    print_init_block(
-        "Decapod Init Summary",
-        "Scaffold completed with the following changes.",
-    );
-    println!("  Target: {}", target_display.bright_white());
-    println!(
-        "  Mode: {}",
-        if init_with.dry_run {
-            "Dry Run".bright_yellow()
-        } else {
-            "Apply".bright_green()
-        }
-    );
-    println!(
-        "  Entrypoints: created={}, unchanged={}, preserved={}",
-        scaffold_summary
-            .entrypoints_created
-            .to_string()
-            .bright_green(),
-        scaffold_summary
-            .entrypoints_unchanged
-            .to_string()
-            .bright_yellow(),
-        scaffold_summary
-            .entrypoints_preserved
-            .to_string()
-            .bright_white()
-    );
-    println!(
-        "  Config scaffold (README/OVERRIDE): created={}, unchanged={}, preserved={}",
-        scaffold_summary.config_created.to_string().bright_green(),
-        scaffold_summary
-            .config_unchanged
-            .to_string()
-            .bright_yellow(),
-        scaffold_summary.config_preserved.to_string().bright_white()
-    );
-    println!(
-        "  Specs: created={}, unchanged={}, preserved={}",
-        scaffold_summary.specs_created.to_string().bright_green(),
-        scaffold_summary.specs_unchanged.to_string().bright_yellow(),
-        scaffold_summary.specs_preserved.to_string().bright_white()
-    );
-    println!(
-        "  CI: created={}, unchanged={}, preserved={}",
-        scaffold_summary.ci_created.to_string().bright_green(),
-        scaffold_summary.ci_unchanged.to_string().bright_yellow(),
-        scaffold_summary.ci_preserved.to_string().bright_white()
-    );
+    if interactive {
+        onboarding::card(
+            if init_with.dry_run {
+                "Would prepare"
+            } else {
+                "Prepared"
+            },
+            &[
+                (
+                    "Agent files",
+                    format!(
+                        "{} created · {} current · {} preserved",
+                        scaffold_summary.entrypoints_created,
+                        scaffold_summary.entrypoints_unchanged,
+                        scaffold_summary.entrypoints_preserved
+                    ),
+                ),
+                (
+                    "Living specs",
+                    format!(
+                        "{} created · {} current · {} preserved",
+                        scaffold_summary.specs_created,
+                        scaffold_summary.specs_unchanged,
+                        scaffold_summary.specs_preserved
+                    ),
+                ),
+                (
+                    "CI",
+                    format!(
+                        "{} created · {} current · {} preserved",
+                        scaffold_summary.ci_created,
+                        scaffold_summary.ci_unchanged,
+                        scaffold_summary.ci_preserved
+                    ),
+                ),
+                ("Backups", backup_count.to_string()),
+            ],
+        );
+    } else {
+        print_init_block(
+            "Decapod Init Summary",
+            "Scaffold completed with the following changes.",
+        );
+        println!("  Target: {}", target_display.bright_white());
+        println!(
+            "  Mode: {}",
+            if init_with.dry_run {
+                "Dry Run".bright_yellow()
+            } else {
+                "Apply".bright_green()
+            }
+        );
+        println!(
+            "  Entrypoints: created={}, unchanged={}, preserved={}",
+            scaffold_summary
+                .entrypoints_created
+                .to_string()
+                .bright_green(),
+            scaffold_summary
+                .entrypoints_unchanged
+                .to_string()
+                .bright_yellow(),
+            scaffold_summary
+                .entrypoints_preserved
+                .to_string()
+                .bright_white()
+        );
+        println!(
+            "  Config scaffold (README/OVERRIDE): created={}, unchanged={}, preserved={}",
+            scaffold_summary.config_created.to_string().bright_green(),
+            scaffold_summary
+                .config_unchanged
+                .to_string()
+                .bright_yellow(),
+            scaffold_summary.config_preserved.to_string().bright_white()
+        );
+        println!(
+            "  Specs: created={}, unchanged={}, preserved={}",
+            scaffold_summary.specs_created.to_string().bright_green(),
+            scaffold_summary.specs_unchanged.to_string().bright_yellow(),
+            scaffold_summary.specs_preserved.to_string().bright_white()
+        );
+        println!(
+            "  CI: created={}, unchanged={}, preserved={}",
+            scaffold_summary.ci_created.to_string().bright_green(),
+            scaffold_summary.ci_unchanged.to_string().bright_yellow(),
+            scaffold_summary.ci_preserved.to_string().bright_white()
+        );
+    }
     if !scaffold_summary.tracked_runtime_paths.is_empty() {
         println!(
             "\n{}",
@@ -2272,11 +2538,13 @@ fn run_init_apply(
             "      Use `git rm --cached -- <path>` for each path; keep the local runtime files if Decapod needs them.".bright_yellow()
         );
     }
-    println!("  Backups: {}", backup_count.to_string().bright_magenta());
-    println!(
-        "  Diagram Notation: {}",
-        diagram_style_label(init_with.diagram_style).bright_white()
-    );
+    if !interactive {
+        println!("  Backups: {}", backup_count.to_string().bright_magenta());
+        println!(
+            "  Diagram Notation: {}",
+            diagram_style_label(init_with.diagram_style).bright_white()
+        );
+    }
 
     if backup_count > 0 {
         println!("\n{}", "TASK: Legacy entrypoints were backed up (.bak). Blend their project-specific rules into the appropriate sections of `.decapod/OVERRIDE.md`.".bright_yellow());
@@ -2286,14 +2554,15 @@ fn run_init_apply(
             "      Delete the .bak files when done.".bright_yellow()
         );
     }
-    println!(
-        "{} {}",
-        "✓".bright_green().bold(),
-        "Initialized; required proof has not run"
-            .bright_white()
-            .bold()
-    );
-
+    if !interactive {
+        println!(
+            "{} {}",
+            "✓".bright_green().bold(),
+            "Initialized; required proof has not run"
+                .bright_white()
+                .bold()
+        );
+    }
     Ok(target_dir)
 }
 
@@ -2389,6 +2658,10 @@ pub fn run() -> Result<(), error::DecapodError> {
     match cli.command {
         Command::Init(init_group) => {
             let base_init_invocation = init_group.command.is_none();
+            let terminal_setup = onboarding::interactive(base_init_invocation, init_group.proof);
+            if terminal_setup {
+                onboarding::welcome(init_group.refresh);
+            }
             let init_with = match init_group.command {
                 Some(InitCommand::Clean { dir }) => {
                     clean_project(dir)?;
@@ -2405,13 +2678,13 @@ pub fn run() -> Result<(), error::DecapodError> {
                         resolve_or_create_project_dir(
                             &current_dir,
                             project_dir,
-                            init_group.dry_run,
+                            init_group.dry_run || terminal_setup,
                         )?
                     } else if let Some(dir) = init_group.dir.as_ref() {
                         resolve_existing_init_dir(dir)?
                     } else if init_group.proof {
                         resolve_existing_init_dir(&current_dir)?
-                    } else if io::stdin().is_terminal() {
+                    } else if terminal_setup {
                         prompt_init_target_dir(&current_dir)?
                     } else {
                         resolve_existing_init_dir(&current_dir)?
@@ -2424,14 +2697,7 @@ pub fn run() -> Result<(), error::DecapodError> {
                         ));
                     }
                     {
-                        let diagram_style = if maybe_cfg.is_none()
-                            && io::stdin().is_terminal()
-                            && !init_group.proof
-                        {
-                            prompt_diagram_style(init_group.diagram_style)?
-                        } else {
-                            init_group.diagram_style
-                        };
+                        let diagram_style = init_group.diagram_style;
                         InitWithCli {
                             dir: Some(target),
                             project_dir: None,
@@ -2492,7 +2758,11 @@ pub fn run() -> Result<(), error::DecapodError> {
             let init_target = if let Some(project_dir) = init_with.project_dir.as_ref() {
                 resolve_or_create_project_dir(&current_dir, project_dir, init_with.dry_run)?
             } else if let Some(dir) = init_with.dir.as_ref() {
-                resolve_existing_init_dir(dir)?
+                if terminal_setup && !dir.exists() {
+                    resolve_or_create_project_dir(&current_dir, dir, true)?
+                } else {
+                    resolve_existing_init_dir(dir)?
+                }
             } else {
                 resolve_existing_init_dir(&current_dir)?
             };
@@ -2524,55 +2794,23 @@ pub fn run() -> Result<(), error::DecapodError> {
                 apply_architecture_language_recommendation(&mut repo_ctx);
             }
 
-            let is_git = is_git_repository(&init_target);
             let is_refresh = init_target.join(".decapod").exists();
-            let is_interactive = base_init_invocation
-                && io::stdin().is_terminal()
-                && !is_refresh
-                && !init_with.proof;
-
-            if !is_git {
-                let opt_in = if init_with.no_git {
-                    false
-                } else if init_with.git {
-                    true
-                } else if is_interactive {
-                    print_init_block(
-                        "Git Repository",
-                        "Decapod worktree workflows require a Git repository to isolate agent changes.",
-                    );
-                    prompt_yes_no("Initialize Git repository for this project?", true)?
-                } else {
-                    // Non-interactive init follows the same safe default as the prompt:
-                    // initialize Git unless the caller explicitly opted out with --no-git.
-                    true
-                };
-
-                if opt_in {
-                    if !init_with.dry_run {
-                        run_git_init(&init_target)?;
-                        verify_git_status(&init_target)?;
-                    }
-                } else {
-                    use crate::core::ansi::AnsiExt;
-                    println!(
-                        "{} Git repository was not initialized. Decapod workspace/worktree workflows will not function until a Git repository is created.",
-                        "warning:".bright_yellow()
-                    );
-                }
+            let is_interactive = terminal_setup && (init_with.refresh || !is_refresh);
+            // Preserve unattended Git bootstrap. Interactive setup waits for
+            // review before creating the directory, Git, config or sign-in state.
+            if !is_interactive {
+                prepare_init_directory_and_git(&init_target, &init_with)?;
             }
-
-            // Existing projects normally refresh non-interactively. Explicit
-            // `init --refresh` reopens the questionnaire with current values
-            // as defaults while keeping the non-destructive refresh path.
-            if base_init_invocation
-                && io::stdin().is_terminal()
-                && (init_with.refresh || !is_refresh)
-                && !init_with.proof
-            {
+            if is_interactive {
                 enrich_repo_context_interactive(&mut repo_ctx, &mut init_with)?;
             }
-            let target_dir = run_init_apply(&init_with, &current_dir, &repo_ctx)?;
+            if is_interactive && !review_setup(&mut repo_ctx, &mut init_with)? {
+                return Ok(());
+            }
+            if is_interactive {
+                prepare_init_directory_and_git(&init_target, &init_with)?;
+            }
+            let target_dir = run_init_apply(&init_with, &current_dir, &repo_ctx, is_interactive)?;
             let mut config = config_from_init_with(&init_with, repo_ctx);
             if let Some(existing) = existing_config.as_ref() {
                 config.laya = existing.laya.clone();
@@ -2603,13 +2841,15 @@ pub fn run() -> Result<(), error::DecapodError> {
                     &config.repo.capabilities,
                 )?;
             }
-            seed_init_generated_state(&target_dir, init_with.dry_run)?;
+            seed_init_generated_state(&target_dir, init_with.dry_run, is_interactive)?;
             let reconciliation = core::init_reconciliation::inspect(
                 &target_dir,
                 &config.proof,
                 config.repo.product_name.as_deref(),
             );
-            print_init_reconciliation(&reconciliation);
+            if !is_interactive {
+                print_init_reconciliation(&reconciliation);
+            }
             if !init_with.dry_run && config.repo.effective_backend().is_cloud() {
                 if init_with.proof {
                     // Explicit fixture/scaffolding mode prepares configuration
@@ -2625,6 +2865,13 @@ pub fn run() -> Result<(), error::DecapodError> {
                     }
                     return Err(error);
                 }
+            }
+            if is_interactive {
+                onboarding::ready(
+                    &target_dir,
+                    init_with.dry_run,
+                    reconciliation.repair_tasks.len(),
+                );
             }
         }
         Command::Govern(GovernCli {
@@ -5728,7 +5975,6 @@ fn should_scaffold_validation_surfaces(project_root: &Path) -> bool {
         ".decapod/managed/specs/INTERFACES.md",
         ".decapod/managed/specs/VALIDATION.md",
         ".decapod/managed/specs/.manifest.json",
-        ".decapod/managed/policy/context_capsule_policy.json",
     ];
     required.iter().any(|rel| !project_root.join(rel).exists())
 }

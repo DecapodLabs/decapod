@@ -852,8 +852,8 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `bdd00aa7dd26de9b23483000ad9aebb5a00383a006d17f5b938a565c9c039dd0`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (227 files), `tests/` (227 files)
+- Repository signal fingerprint: `841d552cd5b5e885d212e00cd6cf25edeb0fb9c66b82405eb4142fbee8fdabc8`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (228 files), `tests/` (230 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 
@@ -1058,6 +1058,31 @@ constraints; task-owner/dependency keys have matching composite UNIQUE
 indexes; preferences use `UNIQUE(category,key)`. Runtime initializers stop
 recreating redundant trees. Reverse-key indexes remain. No data or proof
 encodings change; cloud PostgreSQL migration ownership stays with Propodus.
+
+## Terminal setup over the managed cloud boundary
+
+`src/decapod/onboarding.rs` owns terminal sizing, presentation, keyboard input and
+terminal restoration. `lib.rs::{enrich_repo_context_interactive,customize_setup,
+review_setup}` collects a configuration draft; `prepare_init_directory_and_git`
+and `run_init_apply` execute only after interactive approval. Changed configuration
+is backed up privately before replacement. Preview and cancellation do not create
+project state. Unattended initialization retains its direct execution path.
+
+Cloud initialization then calls the accepted `bootstrap_cloud_session` and
+`core::cloud_client::connect` path. Session custody and Dactyl transport retain
+their existing owners. The terminal does not implement billing, duplicate account
+policy, or grant authority from local settings. Errors leave setup non-successful;
+the ready receipt follows successful service-confirmed access only. Real PTY
+coverage verifies that reviewing/canceling cloud setup does not contact even the
+loopback fixture service before consent.
+
+## Validation proof lifecycle
+
+Full validation has separate admission and terminal evidence boundaries. `core/validation_rules.rs` checks source/governance inputs before execution; rules requiring proof outputs run in `validation_runtime::run` only after the complete required suite has passed. The runtime passes its owned `CompletedReadinessEvidence`, bound to exact candidate, accepted target, source, configuration, plan, governance and trajectory. No prior prerequisite receipt or string marker can manufacture that completion. Terminal failures precede external readiness receipts and canonical completion history.
+
+The terminal boundary shares the original invocation deadline. It checks the remaining budget around evidence reads and before issuing proof; native success files remain private until an atomic bundle publication that rechecks that deadline. Remote ready verdicts likewise stage privately before publication. A deadline expiry cannot turn completed checks into late publication authority.
+
+A fresh worktree may lack the ignored context-capsule policy cache. The policy loader materializes and validates that cache when needed; its absence is not a missing source scaffold and must not trigger a rewrite of the committed specs manifest before proof. Missing tracked scaffold surfaces retain their repair path.
 
 ## Repository-native maintenance evidence
 
