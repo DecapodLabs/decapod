@@ -544,6 +544,14 @@
         "docs/storage-inventory.md",
         "tests/support/storage_inventory.rs"
       ]
+    },
+    {
+      "id": "bounded-source-lock",
+      "summary": "Keep the unchanged source-inventory budget by removing JSON lockfile whitespace without changing parsed dependency metadata; report precise typed inventory limitations and retain the RPC envelope for invalid options",
+      "input_digest": "sha256:fd922acfe289cc736d7bc91c47ca30a09d0ea5ca1dd63974cf37ed97e8af8189",
+      "proof_refs": [
+        "/private/tmp/issue-1630-decapod-validation.json"
+      ]
     }
   ],
   "intents": {
@@ -585,22 +593,22 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Inventory semantics stay in Decapod; physical bounded read transaction stays in Dactyl. Early dispatch bypasses mutating startup and preserves lifecycle custody.",
-          "reviewed_code_fingerprint": "7e3b97aea2cbb50e68f26988781127f33658944228b35725c19de5840dce2753",
+          "reason": "Bounded semantic inventory delegates physical reads and retains read-only startup and lifecycle custody",
+          "reviewed_code_fingerprint": "f1fac371cb4ef584f6b2834f4175f92aee1f385f5179221323f0bfdf81d1355a",
           "spec_material_hash": "a0d85e01c7946075c745e34b108465148fc807cc9b6871289449b414adbe7551"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "CLI and RPC share versioned redacted inventory, explicit coverage, resource limits and nonzero incomplete status; RPC framing bounded before decode.",
-          "reviewed_code_fingerprint": "7e3b97aea2cbb50e68f26988781127f33658944228b35725c19de5840dce2753",
+          "reason": "Explicit versioned size/coverage semantics and typed CLI/RPC errors before mutation",
+          "reviewed_code_fingerprint": "f1fac371cb4ef584f6b2834f4175f92aee1f385f5179221323f0bfdf81d1355a",
           "spec_material_hash": "fdab3ceb0492bc231bf49d4dae60358c97c49e01c480bbfcd47652753276b8a4"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Read-only OS-authorized measurement cannot grant remote authority; raw retained contents and hashes stay private, unknown formats and incomplete metrics remain explicit.",
-          "reviewed_code_fingerprint": "7e3b97aea2cbb50e68f26988781127f33658944228b35725c19de5840dce2753",
+          "reason": "No retained content output, integrity/codec validation or authority expansion; budgets stay enforced",
+          "reviewed_code_fingerprint": "f1fac371cb4ef584f6b2834f4175f92aee1f385f5179221323f0bfdf81d1355a",
           "spec_material_hash": "7b152b9a23f64145ca028d8dc59ada15c8f01fa808a0bd538cb166df7f41e214"
         }
       ],
@@ -616,7 +624,7 @@
         "Actual live-store distributions and numeric reduction/latency/CPU budgets remain pending inventory; no savings or schema parity claim"
       ],
       "unresolved_contradictions": [],
-      "updated_at": "1794462910Z"
+      "updated_at": "1794463207Z"
     },
     "trajectory": {
       "active_boundaries": [
@@ -624,14 +632,18 @@
         "No live SQL/Python inventory; all physical reads through native Dactyl capability",
         "No reduction, schema parity or migration claim; agree budgets after actual baseline"
       ],
-      "artifact_hash": "sha256:b93dddfdb9febe33d201405d00d06bbd2f2f18c4e04b35f8919c66f5b46f8dbb",
+      "artifact_hash": "sha256:e3a13e246cf122078f88a541fefbd09865dd21743cee6764da7e9290d611a116",
       "checks": [
+        {
+          "name": "full-readiness",
+          "status": "failed"
+        },
         {
           "name": "source-inventory-review",
           "status": "partial"
         }
       ],
-      "current_phase": "implementation",
+      "current_phase": "validation-repair",
       "custody": {
         "events": [
           {
@@ -659,10 +671,17 @@
             "intent_id": "intent:change_01M7707E0D3H82PM5PG17N4YKR",
             "kind": "trajectory_step_recorded",
             "sequence": 5
+          },
+          {
+            "detail": "trajectory:branch_01M7707E39SWP4NBA39837Y2ZG",
+            "event_id": "event:6",
+            "intent_id": "intent:change_01M7707E0D3H82PM5PG17N4YKR",
+            "kind": "trajectory_step_recorded",
+            "sequence": 6
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 5,
+        "next_sequence": 6,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M7707E39SWP4NBA39837Y2ZG": {
@@ -714,6 +733,27 @@
                 "validation_findings": [
                   "Source review pin reflects four inspected source changes; dependency preparation is not build/test or publication evidence"
                 ]
+              },
+              {
+                "action": "validation-repair",
+                "custody_event_id": "event:6",
+                "observations": [
+                  "/private/tmp/issue-1630-decapod-validation.json",
+                  "Native Bazel mod deps --lockfile_mode=error accepted semantically identical compact JSON; generated dependency lock reduced1052790 to998377bytes below unchanged1MiB source budget. Bazel source/dependency graph and required checks unchanged."
+                ],
+                "proof_refs": [
+                  "full-readiness"
+                ],
+                "scope": [
+                  "root",
+                  "src/decapod/core/storage_inventory.rs",
+                  "src/decapod/lib.rs",
+                  "tests/support/storage_inventory.rs"
+                ],
+                "sequence": 6,
+                "validation_findings": [
+                  "No source build/test has run or passed; first full validation stopped at source discovery. Compact lock serialization preserves every parsed JSON value."
+                ]
               }
             ]
           }
@@ -725,6 +765,8 @@
       ],
       "destination": "pull request",
       "evidence": [
+        "/private/tmp/issue-1630-decapod-validation.json",
+        "Native Bazel mod deps --lockfile_mode=error accepted semantically identical compact JSON; generated dependency lock reduced1052790 to998377bytes below unchanged1MiB source budget. Bazel source/dependency graph and required checks unchanged.",
         "Source audit reproduces c7609e42 accepted declaration83c629 exactly; accepted release d3358 changes only root versions in Cargo.toml/lock. Candidate changes only Dactyl dependency graph, generated Bazel dependency lock and inclusion of inventory regressions in required CLI suite. Full source-CI graph/provider/checks unchanged.",
         "https://github.com/DecapodLabs/dactyl/pull/104"
       ],
@@ -758,6 +800,7 @@
       "tool_calls": [],
       "unresolved_assumptions": [
         "Candidate uses exact portable Dactyl PR104 source until released API is available; source pin must not silently change",
+        "No source build/test has run or passed; first full validation stopped at source discovery. Compact lock serialization preserves every parsed JSON value.",
         "Source review pin reflects four inspected source changes; dependency preparation is not build/test or publication evidence"
       ]
     }

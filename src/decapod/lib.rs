@@ -9274,17 +9274,58 @@ fn run_storage_inventory_rpc(
     project_root: &Path,
     request: &core::rpc::RpcRequest,
 ) -> Result<(), error::DecapodError> {
-    let params: core::rpc::StorageInventoryParams = serde_json::from_value(request.params.clone())
-        .map_err(|_| {
-            error::DecapodError::ValidationError(
-                "INVENTORY_PARAMETERS: expected scope and optional options".into(),
-            )
-        })?;
-    let report = core::storage_inventory::inspect(
-        &inventory_data_root(project_root),
-        &params.scope,
-        &params.options,
-    )?;
+    let report = (|| {
+        let params: core::rpc::StorageInventoryParams = if request.params.is_null() {
+            core::rpc::StorageInventoryParams::default()
+        } else {
+            serde_json::from_value(request.params.clone()).map_err(|_| {
+                error::DecapodError::ValidationError(
+                    "INVENTORY_PARAMETERS: expected scope and optional options".into(),
+                )
+            })?
+        };
+        core::storage_inventory::inspect(
+            &inventory_data_root(project_root),
+            &params.scope,
+            &params.options,
+        )
+    })();
+    let report = match report {
+        Ok(report) => report,
+        Err(error) => {
+            let code = match &error {
+                error::DecapodError::ValidationError(message) => message
+                    .split(':')
+                    .next()
+                    .filter(|code| {
+                        [
+                            "INVENTORY_PARAMETERS",
+                            "INVENTORY_BUDGET",
+                            "INVENTORY_SCOPE",
+                        ]
+                        .contains(code)
+                    })
+                    .unwrap_or("INVENTORY_UNAVAILABLE"),
+                _ => "INVENTORY_UNAVAILABLE",
+            };
+            let response = core::rpc::error_response(
+                request.id.clone(),
+                request.op.clone(),
+                request.params.clone(),
+                code.into(),
+                "Inventory options or scope are invalid".into(),
+                None,
+                vec![],
+            );
+            println!(
+                "{}",
+                serde_json::to_string_pretty(&response).map_err(|_| {
+                    error::DecapodError::ValidationError("INVENTORY_ENCODING".into())
+                })?
+            );
+            return Err(error);
+        }
+    };
     let complete = report["status"] == "ok";
     let mut response = core::rpc::success_response(
         request.id.clone(),

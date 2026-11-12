@@ -242,6 +242,7 @@ impl Field {
 #[derive(Default, Serialize)]
 struct Formats {
     checkpoint_versions: BTreeMap<u64, u64>,
+    checkpoint_unknown_version_rows: u64,
     checkpoint_version_overflow_rows: u64,
     lcm_plain_text_cells: u64,
     lcm_v1_header_cells: u64,
@@ -308,6 +309,8 @@ fn component_classes(
             } else {
                 formats.checkpoint_version_overflow_rows += 1;
             }
+        } else {
+            formats.checkpoint_unknown_version_rows += 1;
         }
         for (class, pointer) in [
             ("checkpoint_task", "/projection/task"),
@@ -400,6 +403,12 @@ pub fn inspect(
     }
     let bridge = match DactylBridge::open_canonical(data_root, dactyl_db::AccessMode::ReadOnly) {
         Ok(bridge) => bridge,
+        Err(DecapodError::ValidationError(message))
+            if message.starts_with("STORAGE_OWNER_MAINTENANCE_BLOCKED:") =>
+        {
+            report["limitation"] = json!("foreground_storage_owner_active");
+            return Ok(report);
+        }
         Err(_) => {
             report["limitation"] = json!("safe_read_only_open_unavailable");
             return Ok(report);
@@ -523,6 +532,15 @@ pub fn inspect(
             report["status"] = json!("partial");
             report["coverage"] = json!("incomplete");
             report["limitation"] = json!(match error {
+                DecapodError::DactylError(DactylError::Conversion(code))
+                    if [
+                        "inventory_catalog_budget",
+                        "inventory_table_budget",
+                        "inventory_schema_encoding",
+                        "inventory_btree_encoding"
+                    ]
+                    .contains(&code.as_str()) =>
+                    code,
                 DecapodError::DactylError(error) => error
                     .adapter_code()
                     .unwrap_or("inspection_unavailable")
