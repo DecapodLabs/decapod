@@ -25,7 +25,7 @@ claim readiness. The legacy `cloud login` alias uses the same managed flow.
 No new project provider, deployment, credential, price, or roster field exists.
 The fixture-only origin requires explicit test mode and literal loopback HTTP.
 
-The client consumes the published `dactyl-db 0.12.0` registry API. Pending
+The client consumes the exact published `dactyl-db 0.14.0` registry API. Pending
 secrets round-trip through its public Serde contract; authentication status and
 code exchange return strings, and completion confirms the session handoff.
 The caller retains its exact origin/repository/checkout binding and saved flow
@@ -1100,7 +1100,7 @@ field. Nothing in this operation authorizes a mutation, approval or completion.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `26523662e1601b6ede0d2806b5b613245757b5ac05a96aa158b3099e6185df78`
+- Repository signal fingerprint: `16bf55eb5aa48a44d7adad2782b682b9e48962a2e0d04f735eda9724a92b1978`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (230 files), `tests/` (231 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

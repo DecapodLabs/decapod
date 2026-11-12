@@ -1,5 +1,24 @@
 # Validation
 
+## Current SDK 0.14 adoption (#1638)
+
+The current registry dependency is exactly Dactyl 0.14.0, checksum
+`d10824bf8882a26b92479f07edb26c1f6fde8da3019f4001befaf28699d7a990`.
+Historical 0.12 observations below describe earlier candidates. The existing
+release-policy test retains registry-only and feature checks, and now rejects
+any locked `quinn-proto` below 0.11.19, even when that dependency is inactive.
+Supported Cargo metadata resolution verifies both the repository lock and a
+new lock-free registry consumer; it is not compilation or Rust 1.85 execution
+evidence. The SDK's own minimum-toolchain proof remains upstream.
+
+Pinned Bazel 9.3.0 `mod deps --lockfile_mode=update` regenerates the actual
+crate-universe graph. Its complete JSON is serialized with one-space indentation
+only after parsed value equality, preserving the existing bounded discovery
+and strict normal `lockfile_mode=error` policy. Nix directly uses Cargo.lock.
+The full configured source-CI matrix and independent released-controller
+exact-candidate validation remain mandatory; no manual build, fixture result
+or metadata operation establishes publication or protected hosted readiness.
+
 ## Recovery and accepted-target reconciliation (#1628)
 
 The client continues from both original checkpoints, including
@@ -1196,7 +1215,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `26523662e1601b6ede0d2806b5b613245757b5ac05a96aa158b3099e6185df78`
+- Repository signal fingerprint: `16bf55eb5aa48a44d7adad2782b682b9e48962a2e0d04f735eda9724a92b1978`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (230 files), `tests/` (231 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
@@ -1208,7 +1227,7 @@ redaction; sampled/budget-limited coverage; ordinary DDL and generated columns;
 trigger/view binding without DDL disclosure; checkpoints outside the ordinary
 event prefix; missing-store CLI/direct/stdin RPC without initialization; and
 bounded framing before startup. The registry dependency/version/checksum guard
-remains enabled for Dactyl v0.13.0. Read-only live captures use a CI-produced
+remains enabled and is advanced here to exact registry Dactyl v0.14.0. Read-only live captures use a CI-produced
 binary with database trees mounted read-only and only existing locks writable.
 Those captures bind their actual historical source/binary identity; they cannot
 establish publication readiness for the current candidate.

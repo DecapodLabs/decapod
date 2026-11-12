@@ -585,7 +585,7 @@ execution evidence remains required before publication readiness.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `26523662e1601b6ede0d2806b5b613245757b5ac05a96aa158b3099e6185df78`
+- Repository signal fingerprint: `16bf55eb5aa48a44d7adad2782b682b9e48962a2e0d04f735eda9724a92b1978`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (230 files), `tests/` (231 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
@@ -602,18 +602,17 @@ chains or safe deletion. Accepted managed-cloud authority remains server-owned.
 
 ## Quinn transitive dependency remediation
 
-The earlier locked graph used quinn-proto 0.11.19. The published Dactyl 0.12.0
-MSRV bounds instead resolve quinn-proto 0.11.9 in the inactive HTTP/3 graph.
-That downgrade is an unresolved dependency-review concern, not inherited audit
-evidence. The configured dependency audit must evaluate the exact candidate
-without ignored advisories; a failure keeps the registry handoff and PR blocked.
-The generated Bazel lock must agree with the Cargo graph and release-bound
-projections must match the evaluating Decapod release.
-No HTTP/3 feature is enabled: Cargo feature-tree inspection across default,
-no-default and all Decapod features finds no active Quinn path. That limits the
-identified runtime exposure but does not excuse vulnerable lockfile entries.
-No transport policy, CI trigger, provider permissions or accepted-executor helper
-is changed to admit this dependency update.
+The exact published Dactyl 0.14.0 registry dependency removes the older SDK
+constraint that retained quinn-proto 0.11.9 in the inactive HTTP/3 lock graph.
+Repository and fresh registry-consumer metadata now resolve quinn-proto 0.11.19;
+the release-policy regression rejects any older locked entry, including inactive
+ones. The configured dependency audit must still evaluate the exact candidate
+without ignored advisories. Metadata resolution and an upstream release do not
+establish current-source or hosted security proof. The generated Bazel lock must
+agree with Cargo, and release-bound projections must match the evaluating release.
+HTTP/3 remains disabled under the existing SDK feature configuration. Inactive
+entries retain the same dependency audit requirement. This adoption changes no
+transport policy, CI trigger, provider permissions or accepted-executor helper.
 
 The reviewed provider importer identity is buildkite-gha 0.102.7. The validator
 accepts exactly its independently reviewed official compiler and platform-specific
