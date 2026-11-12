@@ -710,6 +710,19 @@
         "https://github.com/DecapodLabs/decapod/issues/1629",
         "tests/consumer_readiness.rs"
       ]
+    },
+    {
+      "id": "validation-bootstrap-entrypoint-placement-v18",
+      "summary": "Place genuine docs CLI admission and complete runtime regression in existing entrypoint target; preserve every API case and unchanged required CI graph, declaring only shared Rust input metadata and actual CLI report slot",
+      "input_digest": "sha256:d1bfde69667e77d208181590b2f0274eb1eaeeb548be010e18039eeaa88bd14a",
+      "proof_refs": [
+        ".config/build/decapod.BUILD.bzl",
+        "https://github.com/DecapodLabs/decapod/actions/runs/43199720211/job/131120183548",
+        "https://github.com/DecapodLabs/decapod/issues/1629",
+        "tests/common/consumer_readiness_fixture.rs",
+        "tests/entrypoint_correctness.rs",
+        "tests/support/fresh_docs_readiness.rs"
+      ]
     }
   ],
   "intents": {
@@ -755,22 +768,22 @@
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Equivalent test-only Clippy boolean simplification preserves actual CLI admission, full source execution, terminal receipt and transport/security contracts; reviewed accepted-release inventory and product specs remain unchanged",
-          "reviewed_code_fingerprint": "2ebe601304523ad6313d502c4ceab00f44188231cd9377468e41bbe3e748c93f",
+          "reason": "Final shared test-only observer handoff preserves all genuine CLI/source/terminal assertions and product architecture/API/security; fixture-only placement uses same required targets, budgets and accepted executor with additive declared Rust inputs",
+          "reviewed_code_fingerprint": "2080f91a36ac7aa2bb1c8eb1efd2c79ef8157018d2e1464875e828175837bb31",
           "spec_material_hash": "9de697bbc5132ebd94a55fde84ed3cd8f2ce530ccce688e6f14bd18a19bd2dbf"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Equivalent test-only Clippy boolean simplification preserves actual CLI admission, full source execution, terminal receipt and transport/security contracts; reviewed accepted-release inventory and product specs remain unchanged",
-          "reviewed_code_fingerprint": "2ebe601304523ad6313d502c4ceab00f44188231cd9377468e41bbe3e748c93f",
+          "reason": "Final shared test-only observer handoff preserves all genuine CLI/source/terminal assertions and product architecture/API/security; fixture-only placement uses same required targets, budgets and accepted executor with additive declared Rust inputs",
+          "reviewed_code_fingerprint": "2080f91a36ac7aa2bb1c8eb1efd2c79ef8157018d2e1464875e828175837bb31",
           "spec_material_hash": "35177dfb04e0c07501c6ea3c70be0d2d75c3d2a173a2fc2a9bad64d8ae3374af"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Equivalent test-only Clippy boolean simplification preserves actual CLI admission, full source execution, terminal receipt and transport/security contracts; reviewed accepted-release inventory and product specs remain unchanged",
-          "reviewed_code_fingerprint": "2ebe601304523ad6313d502c4ceab00f44188231cd9377468e41bbe3e748c93f",
+          "reason": "Final shared test-only observer handoff preserves all genuine CLI/source/terminal assertions and product architecture/API/security; fixture-only placement uses same required targets, budgets and accepted executor with additive declared Rust inputs",
+          "reviewed_code_fingerprint": "2080f91a36ac7aa2bb1c8eb1efd2c79ef8157018d2e1464875e828175837bb31",
           "spec_material_hash": "ecc8e7afebb549a800744002854826201e68cfbacea69a822006093227f6f7a9"
         }
       ],
@@ -784,7 +797,7 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1794478873Z"
+      "updated_at": "1794481577Z"
     },
     "trajectory": {
       "active_boundaries": [
@@ -797,7 +810,7 @@
         "Preserve real Git ELF and HTTPS/no-rewrite guards; CI-local admission never authorizes publication; real sealed current-suite execution and terminal evidence remain mandatory; carrier/aggregatebudget unchanged",
         "Scope actor exclusion only to complete canonical agent/<actor>/<topic>; retain legacy agent/<task> and bare task parsing, multi-task topics and actual task mismatch rejection"
       ],
-      "artifact_hash": "sha256:41b1bcb7f6643488b4ae43bb9db8c04b6e42fd03efc58d8536421887098e2561",
+      "artifact_hash": "sha256:17ab6078e5619c6ea10c2091802eb7e61aead350200c6734895cc82247d413b3",
       "checks": [
         {
           "name": "17_configured_source_execution",
@@ -808,8 +821,36 @@
           "status": "passed"
         },
         {
+          "name": "18_configured_execution",
+          "status": "unavailable"
+        },
+        {
+          "name": "18_named_case_preservation_metadata",
+          "status": "passed"
+        },
+        {
+          "name": "18_observer_source_audit",
+          "status": "passed"
+        },
+        {
+          "name": "18_reviewed_source_inventory_metadata",
+          "status": "passed"
+        },
+        {
           "name": "41e_actual_source_clippy",
           "status": "failed"
+        },
+        {
+          "name": "91_actual_cli_aggregate",
+          "status": "failed"
+        },
+        {
+          "name": "91_actual_fresh_docs_proof",
+          "status": "passed"
+        },
+        {
+          "name": "91_actual_source_library",
+          "status": "passed"
         },
         {
           "name": "accepted19ac_source_preservation_review",
@@ -988,7 +1029,7 @@
           "status": "passed"
         }
       ],
-      "completion_claim": "New source remains pending actual configured tests and complete independent native proof; prior41e failures preserved",
+      "completion_claim": "Current source remains pending configured CI and independent fullnative; source review/metadata do not establish readiness",
       "current_phase": "repair",
       "custody": {
         "events": [
@@ -1143,10 +1184,24 @@
             "intent_id": "intent:change_01M76X3H8DA76YN2BA6BG35R6K",
             "kind": "trajectory_step_recorded",
             "sequence": 23
+          },
+          {
+            "detail": "trajectory:branch_01M76X3HBY5Z48MNEKR4XDQVMW",
+            "event_id": "event:24",
+            "intent_id": "intent:change_01M76X3H8DA76YN2BA6BG35R6K",
+            "kind": "trajectory_step_recorded",
+            "sequence": 24
+          },
+          {
+            "detail": "trajectory:branch_01M76X3HBY5Z48MNEKR4XDQVMW",
+            "event_id": "event:25",
+            "intent_id": "intent:change_01M76X3H8DA76YN2BA6BG35R6K",
+            "kind": "trajectory_step_recorded",
+            "sequence": 25
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 23,
+        "next_sequence": 25,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M76X3HBY5Z48MNEKR4XDQVMW": {
@@ -1648,6 +1703,64 @@
                 ],
                 "sequence": 23,
                 "validation_findings": []
+              },
+              {
+                "action": "repair",
+                "custody_event_id": "event:24",
+                "observations": [
+                  ".config/build/decapod.BUILD.bzl",
+                  "tests/consumer_readiness.rs",
+                  "tests/entrypoint_correctness.rs",
+                  ".config/build/decapod.BUILD.bzl",
+                  "tests/common/consumer_readiness_fixture.rs",
+                  "tests/support/fresh_docs_readiness.rs",
+                  "tests/cli_contracts.rs",
+                  "tests/consumer_readiness.rs",
+                  "tests/entrypoint_correctness.rs",
+                  ".decapod/config.toml",
+                  ".decapod/managed/specs/VALIDATION.md",
+                  "Actual91cc GH pushCLI job131120183548 aggregate TIMEOUT300.0 after freshdocs genuineCLIadmission/complete-runtime proof passed65.018992583s and real_source_failure/repair passed. Timeout later in init_config_behavior, no positiveproof assertion failure. Current91 library1685passed0failed8ignored and Clippy passed are historical source diagnostics, not newcandidate/fullnativeproof.",
+                  "Move only single freshdocs test entrypoint to existing required entrypoint_correctness target. Extract helper-onlycommon support; all16 existing consumer case bodies and positivefixture body byte-identical,58combined top-level namedcases preserved, no testcases in support. Existing fixed3-target selectiveCLI command, serialthreads, target names/tags/budgets, selectors/workflows/helpers unchanged.",
+                  "Read-only acceptedexecutor audit confirms .config/build/decapod.BUILD.bzl additiveRustsrcs is ordinary material-bound candidatebuildmetadata, notcompiledcarrier. Same105file inventory has ONLY that definitiondelta, reviewed actualdigest50c5532ad4dca740a8216688204d2c0446459da2782a66de9377aacb30d360c8. Independentregistry0.139 andaccepted19ac unchanged. No directGovtestsetup, manualbuild/tests or lowerAPI coverage weakening."
+                ],
+                "proof_refs": [
+                  "91_actual_cli_aggregate",
+                  "91_actual_fresh_docs_proof",
+                  "91_actual_source_library",
+                  "18_named_case_preservation_metadata",
+                  "18_reviewed_source_inventory_metadata",
+                  "18_configured_execution"
+                ],
+                "scope": [
+                  "doctrine",
+                  "specs",
+                  "src/core/validate.rs",
+                  "src/core/validation_rules.rs",
+                  "tests"
+                ],
+                "sequence": 24,
+                "validation_findings": []
+              },
+              {
+                "action": "repair",
+                "custody_event_id": "event:25",
+                "observations": [
+                  "Followup extraction review identified Rust1.96 write-only restricted-field lint reachability in API-only consumers. Finalsharedtestplumbing pairs configured genuineCLIstorage with an explicit RcRefCell report slot; common callback reads slot to publish actual success-checked CLIJSON and freshfixture borrows for assertions only after runtime returns. No lintallow, dummyread, overlapping borrow, fake receipt or production change.",
+                  "Supersedes earlier byte-identical-positive-body observation only for this explicit report-slot handoff; positive assertions and execution/governance flow unchanged. All16 consumer case bodies remain byte-identical;58named top-levelcase inventory unchanged; sourceinventory50c and requiredtargets/budgets unchanged."
+                ],
+                "proof_refs": [
+                  "18_observer_source_audit"
+                ],
+                "scope": [
+                  "Validation lifecycle plus necessary exact source-CI regression placement and additive existing-target Rust input metadata",
+                  "doctrine",
+                  "specs",
+                  "src/core/validate.rs",
+                  "src/core/validation_rules.rs",
+                  "tests"
+                ],
+                "sequence": 25,
+                "validation_findings": []
               }
             ]
           }
@@ -1675,6 +1788,7 @@
         "Accepted cli_contracts.rs already includes consumer_readiness module, but Selection::Cli matches the entrypoint file, not changed consumer module. Added genuine #[test] entrypoint in already-selected CLI file calling exported shared fixture; removed duplicate standalone #[test]. Helper/carrier/workflow/selection graph unchanged.",
         "Actual accepted master advanced d3358e1ce2cdb137dc57445c64592cb6d327a6ff ->19acd21f7ff50656323d037915273f03cdedc04e. fab7 push early CI merge-base-context failures precede execution. Genuine merge retains original fork metadata and14 committed checkpoint history; incoming baseline unresolved obligations unchanged and incoming claim:decapod-cloud-client carried natively with exact statement/falsifier/status and acceptedcommit proofref.",
         "Actual authenticated bf98 CLI diagnostic /private/tmp/validation-bootstrap-bf98-cli-diagnostic.log:66pass3fail1ignored; two adapter fixtures invalid unversioned governance, fresh publicCLI fixture partial config missing schema_version. No full native success claimed.",
+        "Actual91cc GH pushCLI job131120183548 aggregate TIMEOUT300.0 after freshdocs genuineCLIadmission/complete-runtime proof passed65.018992583s and real_source_failure/repair passed. Timeout later in init_config_behavior, no positiveproof assertion failure. Current91 library1685passed0failed8ignored and Clippy passed are historical source diagnostics, not newcandidate/fullnativeproof.",
         "Actualfab7 PR job131088359791 explicitly passed fresh_docs_cli_admission_then_complete_runtime_proves_current_source and existing real_source_failure; aggregate target then timedout300.1s at final workunit recovery test. New source removes duplicate governed negative preparation/admission and strengthens existing real negative receipt/history/verdict assertions; no budget/test/selector change.",
         "Apply Clippy equivalent is_none_or(count==0) to optional integer pass count. Missing and zero remain rejected; positive nonzero remains admitted only alongside all existing actualscope/failurecount/readiness/clean-source checks. rustfmt only, no manual build/tests, guards or required budgets changed.",
         "Authenticated GH selective-cli exactaa88 execution receipt is source-ci.selection.v2 status=not_applicable. Earlier green CLI/plugin status alone was not executed proof; no completed native readiness exists.",
@@ -1684,12 +1798,15 @@
         "Compared accepted current inventory with c7609e42 pin origin: only Cargo.toml/Cargo.lock Decapod version changed0.138.2 to0.138.3; all workflows/helpers/carrier/build definitions identical; explicitly reconcile reviewed digest5fd571a9",
         "Fix evidence map type; terminal applicability now consumes verified suite changed paths and explicit workunit declaration applies across task routing categories; unknown filesystem projections remain blockers",
         "Fixture repair uses supported canonical governance_document::migrate; ignores data runtime and exact managed governance-document.lock before Git accepted-source commit. Genuine CLI fixture removes only its initial adapter proof-only config before real init creates full schema, then retains actual command/source review. Production schemas, gates, actor and docs task kind unchanged.",
+        "Followup extraction review identified Rust1.96 write-only restricted-field lint reachability in API-only consumers. Finalsharedtestplumbing pairs configured genuineCLIstorage with an explicit RcRefCell report slot; common callback reads slot to publish actual success-checked CLIJSON and freshfixture borrows for assertions only after runtime returns. No lintallow, dummyread, overlapping borrow, fake receipt or production change.",
         "Full v1 report /private/tmp/validation-bootstrap-full-v1.json: reviewed source inventory stale before execution",
         "GH Clippy and actual required Buildkite8060 clippy measured E0308 at validation_rules.rs2182: resolve_capsule_policy requested_limit is usize, not Option; exact source log /private/tmp/validation-bootstrap-build8060-clippy.log",
+        "Move only single freshdocs test entrypoint to existing required entrypoint_correctness target. Extract helper-onlycommon support; all16 existing consumer case bodies and positivefixture body byte-identical,58combined top-level namedcases preserved, no testcases in support. Existing fixed3-target selectiveCLI command, serialthreads, target names/tags/budgets, selectors/workflows/helpers unchanged.",
         "Official sourceCI GH job131114983611/run43198189246 on exact41e86d3f accepted19ac failed cargo clippy --all-targets --all-features -- -D warnings: nonminimal_bool at consumer_readiness.rs343. Corresponding Buildkite8399 Clippy push check131116039493 also reports failure; raw native provider proof not yet collected.",
         "Own v5 local controller cancelled and fully reaped before source repair; report /private/tmp/validation-bootstrap-full-v5.json says CI operation cancelled, publication_ready=false. Actual failed compiler subcheck remains distinct from interrupted aggregate proof. No remote jobs cancelled.",
         "Post-heal current filesystem inventory reread all105source files, same c8786efce425085ccb62996e1d586dd8dabd491adea74af4829e638ec26d6174 digest as actual accepted19ac. Four generated entrypoints and managed Dockerfile are outside source definition inventory; no helper/workflow/carrier change. Private raw diagnostic and provenance retained outside Git.",
         "Public GitHub quota403 with explicit reset1794455981 preserved in /private/tmp/validation-bootstrap-full-v3.json; no auth fallback or pre-reset API retry",
+        "Read-only acceptedexecutor audit confirms .config/build/decapod.BUILD.bzl additiveRustsrcs is ordinary material-bound candidatebuildmetadata, notcompiledcarrier. Same105file inventory has ONLY that definitiondelta, reviewed actualdigest50c5532ad4dca740a8216688204d2c0446459da2782a66de9377aacb30d360c8. Independentregistry0.139 andaccepted19ac unchanged. No directGovtestsetup, manualbuild/tests or lowerAPI coverage weakening.",
         "Read-only exact105-file Git inventory matches production source roots and serialized BTreeMap digest. Cloud parentc87e inventory8f21 matches prior declaration. Actual accepted19ac release changes ONLY Cargo.toml and Cargo.lock package version0.138.3 to0.139.0; accepted release and candidate both hashc8786efce425085ccb62996e1d586dd8dabd491adea74af4829e638ec26d6174; accepted-to-candidate inventory delta empty.",
         "Read-only peer review confirmed incoming cloud source and trusted helper/workflow/config/MODULElock accepted bytes preserved; own lib delta is validation cache predicate only. Independent registry controller remains0.138.3; native environment notice reports no new migration, ignored applied/catalog inspected through sequence1100.",
         "Review repairs: original budget checked around terminal reads, before proof and atomic receipt/ready-verdict publication; optional exemption exact kernel id+authority; regression evaluates actual current declared workunit rule with generated capsule, living spec, current journal and retained artifact; separate mandatory project obligation remains required.",
@@ -1697,11 +1814,13 @@
         "Same exact independent native controller v6 blocked by public GitHub403 with explicit reset1794459593; source change gets new checkpoint/branch push; next full native only after reset+grace.",
         "Source review: workunit checkpoint ExecutionStateBinding positively binds current validation_epoch_digest; optional legacy manifest epochs need only reject explicit mismatches. Positive actual journal contract regression added; artifact mutation/deletion remain strict.",
         "Source trace: prerequisite demands own receipt and unconditionally demands workunit outputs",
+        "Supersedes earlier byte-identical-positive-body observation only for this explicit report-slot handoff; positive assertions and execution/governance flow unchanged. All16 consumer case bodies remain byte-identical;58named top-levelcase inventory unchanged; sourceinventory50c and requiredtargets/budgets unchanged.",
         "Supported govern project-check prerequisites-only native healing regenerated release0.139.0 entrypoint fingerprints and managed image/version pins. Report scope project_prerequisites,205passed4failed,publication_ready=false,readiness=null. No source/provider execution: host-container prerequisite and unrelated doneTODO bugs_01m73xpkqns9286n proof hook remain diagnostics, not waived; oldHEAD entrypoint/currency failures addressable by committing authentic generated projections.",
         "Verified capsule_policy.rs207 signature; fixture corrected Some(1) to1, rustfmt/diff hygiene only; full source execution remains pending independent next proof",
         "v4 own local controller cancelled and reaped after reviewed defects; final diagnostic SNAPSHOT_NOT_READY public read cancelled, last provider_terminal_wait579867ms, report /private/tmp/validation-bootstrap-full-v4.json. No remote/unrelated jobs cancelled; no pass/source-test failure claimed."
       ],
       "inspected_files": [
+        ".config/build/decapod.BUILD.bzl",
         ".decapod/managed/specs/VALIDATION.md",
         "Cargo.lock",
         "Cargo.toml",
@@ -1718,10 +1837,12 @@
         "src/decapod/core/workspace.rs",
         "src/decapod/core/workunit.rs",
         "src/decapod/lib.rs",
-        "tests/consumer_readiness.rs"
+        "tests/consumer_readiness.rs",
+        "tests/entrypoint_correctness.rs"
       ],
       "intent_id": "intent:change_01M76X3H8DA76YN2BA6BG35R6K",
       "modified_files": [
+        ".config/build/decapod.BUILD.bzl",
         ".decapod/config.toml",
         ".decapod/managed/Dockerfile.decapod",
         ".decapod/managed/specs/ARCHITECTURE.md",
@@ -1740,7 +1861,10 @@
         "src/decapod/core/workunit.rs",
         "src/decapod/lib.rs",
         "tests/cli_contracts.rs",
+        "tests/common/consumer_readiness_fixture.rs",
         "tests/consumer_readiness.rs",
+        "tests/entrypoint_correctness.rs",
+        "tests/support/fresh_docs_readiness.rs",
         "tests/unit/core/validate_tests.rs",
         "tests/unit/core/workspace_tests.rs",
         "tests/unit/core/workunit_journal_tests.rs",
@@ -1750,10 +1874,12 @@
         "Checkpoint actual accepted-target reconciliation and measured fixture-cost consolidation, then execute unchanged required CI and independent full native validation",
         "Checkpoint exact Clippy correction then wait current source CI and required provider execution before independent full native proof",
         "Checkpoint reviewed actual accepted-release source inventory, then wait current-source CI before independent full native proof",
+        "Finish source review, final living-spec refresh/reviews and checkpoint18, then execute unchanged selected CI suite and independent full native proof",
         "Refine plan and declare falsifiable checks",
         "checkpoint"
       ],
       "repo_scope": [
+        "Validation lifecycle plus necessary exact source-CI regression placement and additive existing-target Rust input metadata",
         "doctrine",
         "specs",
         "src/core/validate.rs",
