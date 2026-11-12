@@ -332,7 +332,7 @@ mod enabled {
                         assert!(headers.contains("authorization: bearer synthetic-rotated-access"));
                         assert!(headers.contains("content-profile: dactyl_api"));
                         assert_eq!(body["request"]["version"],1);
-                        json!({"columns":[],"rows":[],"affected_rows":0})
+                        json!({"columns":[],"rows":[],"affected_rows":0,"generated_keys":[]})
                     }
                 }.to_string();
                 write!(stream,"HTTP/1.1 200 Fixture\r\nContent-Type: application/json\r\nContent-Length: {}\r\nConnection: close\r\n\r\n{response}",response.len()).unwrap();
@@ -519,7 +519,8 @@ mod enabled {
     }
 
     #[test]
-    fn actual_cloud_init_requires_backend_authorization_and_uses_its_project_reference() {
+    fn proof_init_defers_then_session_acquire_requires_backend_authorization() {
+        use sha2::{Digest, Sha256};
         const PROJECT: &str =
             "account:00000000-0000-4000-8000-000000000001/00000000-0000-4000-8000-000000000002";
         for authorized in [false, true] {
@@ -529,44 +530,53 @@ mod enabled {
                 move |_| json!({"version":1,"account_id":"00000000-0000-4000-8000-000000000001","status":if authorized { "active" } else { "entitlement_required" },"backend_authorized":authorized,"project_id":PROJECT,"setup_url":null}),
             );
             let project = project();
-            let output = Command::new(env!("CARGO_BIN_EXE_decapod"))
-                .args(["init", "--backend", "cloud", "--proof", "--force"])
-                .current_dir(project.path())
-                .env("HOME", project.path())
-                .env("XDG_CONFIG_HOME", project.path().join("config"))
-                .env("XDG_DATA_HOME", project.path().join("data"))
-                .env("DECAPOD_HEADLESS", "1")
-                .env("DECAPOD_CLOUD_DATASTORE", "supabase")
-                .env("DACTYL_CLOUD_ORIGIN", origin)
-                .env(
-                    "DACTYL_CLOUD_PUBLISHABLE_KEY",
-                    "sb_publishable_test_fixture",
-                )
-                .env("DECAPOD_ACCESS_TOKEN", "synthetic-bearer-secret")
-                .env_remove("DECAPOD_CLOUD_AUTH_MODE")
-                .output()
-                .unwrap();
-            assert!(
-                output.status.success(),
-                "scaffolding: {}",
-                String::from_utf8_lossy(&output.stderr)
-            );
-            let stdout = String::from_utf8_lossy(&output.stdout);
-            assert_eq!(stdout.contains("Cloud setup ready"), authorized, "{stdout}");
-            if authorized {
-                assert!(stdout.contains(PROJECT));
-            } else {
-                assert!(stdout.contains("entitlement_required"));
-                assert!(stdout.contains("session is retained"));
+            let invoke = |args: &[&str]| {
+                Command::new(env!("CARGO_BIN_EXE_decapod"))
+                    .args(args)
+                    .current_dir(project.path())
+                    .env("HOME", project.path())
+                    .env("XDG_CONFIG_HOME", project.path().join("config"))
+                    .env("XDG_DATA_HOME", project.path().join("data"))
+                    .env("DECAPOD_HEADLESS", "1")
+                    .env("DECAPOD_AGENT_ID", "supabase-init-session-proof")
+                    .env("DECAPOD_CLOUD_DATASTORE", "supabase")
+                    .env("DACTYL_CLOUD_ORIGIN", &origin)
+                    .env("DACTYL_CLOUD_PUBLISHABLE_KEY", "sb_publishable_test_fixture")
+                    .env("DECAPOD_ACCESS_TOKEN", "synthetic-bearer-secret")
+                    .env_remove("DECAPOD_CLOUD_AUTH_MODE")
+                    .output()
+                    .unwrap()
+            };
+            let initialized = invoke(&["init", "--backend", "cloud", "--proof", "--force"]);
+            assert!(initialized.status.success(), "scaffolding failed");
+            let init_text = String::from_utf8_lossy(&initialized.stdout);
+            assert!(init_text.contains("Cloud setup deferred"));
+            assert!(!init_text.contains("Cloud setup ready"));
+            // The supported headless continuation contacts managed account
+            // authority; a successful local scaffold is never data access.
+            let resumed = invoke(&["session", "acquire"]);
+            assert_eq!(resumed.status.success(), authorized);
+            if !authorized {
+                let diagnostic = String::from_utf8_lossy(&resumed.stderr);
+                assert!(diagnostic.contains("entitlement_required"), "{diagnostic}");
+                assert!(diagnostic.contains("session is retained"));
             }
             let request = server.join().unwrap();
             assert_eq!(request["version"], 1);
             assert_eq!(request["request_id"].as_str().unwrap().len(), 36);
-            assert!(!stdout.contains("synthetic-bearer-secret"));
-            let config =
-                std::fs::read_to_string(project.path().join(".decapod/config.toml")).unwrap();
+            let binding = project.path().join("data/decapod/services")
+                .join(format!("{:x}", Sha256::digest(origin.as_bytes())))
+                .join(format!("project-{:x}.json", Sha256::digest(b"example/supabase-proof")));
+            let binding: Value = serde_json::from_slice(&std::fs::read(binding).unwrap()).unwrap();
+            assert_eq!(binding["project_id"], PROJECT);
+            for output in [&initialized, &resumed] {
+                assert!(!String::from_utf8_lossy(&output.stdout).contains("synthetic-bearer-secret"));
+                assert!(!String::from_utf8_lossy(&output.stderr).contains("synthetic-bearer-secret"));
+            }
+            let config = std::fs::read_to_string(project.path().join(".decapod/config.toml")).unwrap();
             assert!(!config.contains(PROJECT));
             assert!(!config.contains("synthetic-bearer-secret"));
+            assert_no_fallback(project.path());
         }
     }
 
@@ -682,7 +692,7 @@ mod enabled {
             .current_dir(root.path())
             .env(
                 CHILD,
-                if text.contains("bearer configured") {
+                if text.contains("Cloud sign-in session configured") {
                     "configured"
                 } else {
                     "unavailable"
@@ -724,9 +734,9 @@ mod enabled {
             r#"{"token":"synthetic-supabase-status-token"}"#,
         )
         .unwrap();
-        assert!(status(None, endpoint).contains("bearer configured"));
+        assert!(status(None, endpoint).contains("Cloud sign-in session configured"));
         assert!(status(None, "https://other.example.test").contains("unavailable"));
-        assert!(status(Some("neon"), endpoint).contains("bearer configured"));
+        assert!(status(Some("neon"), endpoint).contains("Cloud sign-in session configured"));
         assert_no_fallback(root.path());
     }
 
@@ -1240,7 +1250,10 @@ mod enabled {
             "request was not bounded"
         );
         let diagnostic = String::from_utf8_lossy(&output.stderr);
-        assert!(diagnostic.contains("transport failed"), "{diagnostic}");
+        assert!(
+            diagnostic.contains("Offline") && diagnostic.contains("timed out"),
+            "{diagnostic}"
+        );
         assert!(!diagnostic.contains("synthetic-bearer-secret"));
         assert_no_fallback(root.path());
         server.join().unwrap();

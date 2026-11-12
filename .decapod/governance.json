@@ -575,6 +575,11 @@
       "id": "native-config-precedence",
       "summary": "Preserve typed connector configuration denial before custody and align discovery feature assertion",
       "input_digest": "sha256:37084e517ecab52ce217bd72caa9a48fb6375cdbac59a2e35d3e8d18a35e1141"
+    },
+    {
+      "id": "native-complete-fixture-contracts",
+      "summary": "Enforce pre-I/O capability denial and align actual managed-session CLI fixtures with strict native contracts",
+      "input_digest": "sha256:636c92f8e9f09bc972bb765d20011e5fdcbce207ab1822e324aacb398cfcdb89"
     }
   ],
   "intents": {
@@ -619,22 +624,22 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Reviewed source correction from actual Buildkite superseded expectations: discovery resolves public project config; malformed connector origin fails before credential custody.",
-          "reviewed_code_fingerprint": "8d11a6f620c5b6bf91a7bc17b4e25683e9c4ec60c1c477f7f01f5f202cccbd66",
+          "reason": "Reviewed actual source-CI failures: proof init defers to headless session acquire; unsupported validated cloud completion now fails before network preparation.",
+          "reviewed_code_fingerprint": "0e0f46656e0f8b341f921ba0c455ff352f339044149c5e83776834898c41c09c",
           "spec_material_hash": "00a2b10104a300c1701e8d97a4fffb3f08e05616702d5c385fec10c5a5c6e2ad"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Reviewed typed connector Configuration mapping and explicit optional-feature origin validation; managed authorization and storage routes unchanged.",
-          "reviewed_code_fingerprint": "8d11a6f620c5b6bf91a7bc17b4e25683e9c4ec60c1c477f7f01f5f202cccbd66",
+          "reason": "Reviewed exact mandatory RPC generated_keys envelope, current sign-in status wording, typed Offline timeout and explicit session-resume assertions.",
+          "reviewed_code_fingerprint": "0e0f46656e0f8b341f921ba0c455ff352f339044149c5e83776834898c41c09c",
           "spec_material_hash": "fb6c440a4098ba2482458369fded1ebd8870f505b95480c3619708bbca3255f2"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Reviewed configuration failure precedence and redaction before credentials; no source-CI proof obligation removed.",
-          "reviewed_code_fingerprint": "8d11a6f620c5b6bf91a7bc17b4e25683e9c4ec60c1c477f7f01f5f202cccbd66",
+          "reason": "Reviewed no-network unsupported capability denial, no fallback, token redaction and unpaid managed-session denial; all source-CI checks retained.",
+          "reviewed_code_fingerprint": "0e0f46656e0f8b341f921ba0c455ff352f339044149c5e83776834898c41c09c",
           "spec_material_hash": "41e595bfa1120d80081a4c979c3532b984f8494286e1c09facaf5f5dc2ca801a"
         }
       ],
@@ -646,7 +651,7 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1794463360Z"
+      "updated_at": "1794468482Z"
     },
     "trajectory": {
       "active_boundaries": [
