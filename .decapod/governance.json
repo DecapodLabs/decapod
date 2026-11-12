@@ -575,6 +575,14 @@
       "proof_refs": [
         "/private/tmp/decapod-project-merge-trajectory-02.json"
       ]
+    },
+    {
+      "id": "managed-project-accepted-140-release",
+      "summary": "Merge actual acceptedfc1e2b940.140 release; retain feature code, both parents and active custody; regenerate release-bound projections via supported registry140 and reconcile same105-source graph. Full current source and native proofs must renew.",
+      "input_digest": "sha256:0e62008ca057a813f69b974ad4be600ae944aa056305d804a34fdee489996de4",
+      "proof_refs": [
+        "/private/tmp/decapod-managed-project-validation-04.json"
+      ]
     }
   ],
   "intents": {
@@ -617,22 +625,22 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Real accepted1633 merge preserves terminal proof lifecycle and accepted onboarding alongside selected project routing and durable per-operation resolved route.",
-          "reviewed_code_fingerprint": "77a8c41302f68583886cc10190ee817cd10069dd8308077519e45821c3c3d0ec",
+          "reason": "Accepted140 release changes version metadata only; existing onboarding, terminal proof lifecycle, account project selection, resolved native writes and bind-once routing are preserved.",
+          "reviewed_code_fingerprint": "70fd286cc01b94ca39cd551d1375f65f53c0e60e238f4fb892fea535061cf410",
           "spec_material_hash": "15fec422daad88270a6f612c713dc3dcdcdb7baad4419e63eca8872d3a80d8d3"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Accepted validation/source-input definitions remain; new project commands, resolved task repo_id and digest-only route custody reuse existing account/data transports.",
-          "reviewed_code_fingerprint": "77a8c41302f68583886cc10190ee817cd10069dd8308077519e45821c3c3d0ec",
+          "reason": "Existing version-one account/data transports and generic project commands retained; native consumer phases are independent of default HTTP fixtures and require exact current source proof.",
+          "reviewed_code_fingerprint": "70fd286cc01b94ca39cd551d1375f65f53c0e60e238f4fb892fea535061cf410",
           "spec_material_hash": "506a265b3672402976d682344a36ad1a6dfd57347d0df64b0d109e9fb528922e"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Accepted terminal publication gates and setup consent remain, selected project is never authority, and unknown-write route/stale writer fences precede mutation dispatch.",
-          "reviewed_code_fingerprint": "77a8c41302f68583886cc10190ee817cd10069dd8308077519e45821c3c3d0ec",
+          "reason": "Current server identity, membership, assignment/grant and data authority remain required; no project record or agent label grants authority and no uncertain write can move to another route.",
+          "reviewed_code_fingerprint": "70fd286cc01b94ca39cd551d1375f65f53c0e60e238f4fb892fea535061cf410",
           "spec_material_hash": "01025606e9b26996aac1242b6ff748d540c573a71859c4ef9035d585548b894f"
         }
       ],
@@ -646,13 +654,13 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1794486912Z"
+      "updated_at": "1794488240Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:a8f5d53807c1997edd5b77b4256257550b78579394777cd33eb32969c7671705",
+      "artifact_hash": "sha256:dc5b05c518f063f2f4040b635956b82085802608c9f1a7471fadd101e55c1c24",
       "checks": [
         {
           "name": "accepted_target_merge",
@@ -661,6 +669,10 @@
         {
           "name": "implementation",
           "status": "partial"
+        },
+        {
+          "name": "independent_native_15f5237f",
+          "status": "passed"
         },
         {
           "name": "interface-audit",
@@ -688,6 +700,10 @@
         },
         {
           "name": "validation_03",
+          "status": "failed"
+        },
+        {
+          "name": "validation_04",
           "status": "failed"
         }
       ],
@@ -747,10 +763,17 @@
             "intent_id": "intent:change_01M77JY4SYPX9QSTR9AAYAF6S3",
             "kind": "trajectory_step_recorded",
             "sequence": 9
+          },
+          {
+            "detail": "trajectory:branch_01M77JY4X7Q7EW3YNCPBEC72WV",
+            "event_id": "event:10",
+            "intent_id": "intent:change_01M77JY4SYPX9QSTR9AAYAF6S3",
+            "kind": "trajectory_step_recorded",
+            "sequence": 10
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 9,
+        "next_sequence": 10,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M77JY4X7Q7EW3YNCPBEC72WV": {
@@ -880,6 +903,25 @@
                 ],
                 "sequence": 9,
                 "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:10",
+                "observations": [
+                  "15f5237f full collection failed public GithubObjects403 with explicit reset1794487263; source checks later failed current-target admission after accepted releasefc1e2b94. No proof or readiness substituted. Independent local service profile subsequently passed exact15f5237f sharing/revocation phases with real native database; modeled login/Edge envelope remain distinct.",
+                  "Supported1391 session updater with temporary backed-up explicit opt-in and private CARGO_INSTALL_ROOT installed registry0.140.0; original config restored. Fixed controllerSHA2560f84af347d2a5c51a4a649606baa40a2db8d093b71a98a5cf0a54d7d984a03f5; docs unchanged and migrations notice none. Reviewed same105-source graph for accepted version-only Cargo bytes; all required checks retained."
+                ],
+                "proof_refs": [
+                  "validation_04",
+                  "independent_native_15f5237f"
+                ],
+                "scope": [
+                  "src/decapod/core/cloud_client",
+                  "src/decapod/core/cloud_project",
+                  "tests"
+                ],
+                "sequence": 10,
+                "validation_findings": []
               }
             ]
           }
@@ -889,6 +931,7 @@
       "destination": "pull request",
       "evidence": [
         "/private/tmp/decapod-project-orientation-20261112.json",
+        "15f5237f full collection failed public GithubObjects403 with explicit reset1794487263; source checks later failed current-target admission after accepted releasefc1e2b94. No proof or readiness substituted. Independent local service profile subsequently passed exact15f5237f sharing/revocation phases with real native database; modeled login/Edge envelope remain distinct.",
         "557d5ae4 stopped before proof: accepted master advanced again to f1a6c7a0 via1633. Incorporate actual second parent and its accepted validation lifecycle/input wiring; preserve active PR custody and regenerate supported projections. No passing readiness is carried forward.",
         "Added separate native project consumer profile; independent real PostgreSQL fixture proof remains pending.",
         "Adjacent session/onboarding owners confirmed no project-binding overlap; plan uncertainty resolved.",
@@ -898,6 +941,7 @@
         "Independent required Propodus PostgreSQL run on9375325 executed12d95951 and exposed blocked-before-submit add because Task.repo_id retained Git label after native project selection. New repair carries resolved repository and fences operation retries to a bind-once route. Peer session owner confirms Journal serialization outside their scope.",
         "Real merge in progress frombc0a71971bce8ee036a24562b7fc4a9b771f2f40. Git restores existing a8d2b65e generated governance/spec baseline rather than inventing JSON; accepted onboarding semantic additions preserved alongside project routing, generated projections refreshed by native CLI. Checkpoints from this active PR remain cumulative, accepted branch custody remains in the real second parent.",
         "Supported project-check repaired generated release projections; its host prerequisite findings do not establish full readiness.",
+        "Supported1391 session updater with temporary backed-up explicit opt-in and private CARGO_INSTALL_ROOT installed registry0.140.0; original config restored. Fixed controllerSHA2560f84af347d2a5c51a4a649606baa40a2db8d093b71a98a5cf0a54d7d984a03f5; docs unchanged and migrations notice none. Reviewed same105-source graph for accepted version-only Cargo bytes; all required checks retained.",
         "Use existing official registry0.139.1 controller from supported peer session update; SHA256 fb461bb5b06ea2f2df3e691caef9c1ebdee9bc144a9c6ab7d25b720268cba72c; docs unchanged, applied migration notice none. Reconciled unchanged required graph inventory for accepted version-only Cargo inputs; no check removed."
       ],
       "inspected_files": [
