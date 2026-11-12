@@ -600,6 +600,15 @@
         "/private/tmp/decapod-managed-project-validation-05.json",
         "/private/tmp/decapod-project-init-1401.json"
       ]
+    },
+    {
+      "id": "managed-project-1402-registry-merge",
+      "summary": "Merge accepted registry Dactyl14 dependency and1402 release; retain all managed project code, full required graph and prior checkpoints; regenerate release projections via supported controller.",
+      "input_digest": "sha256:f7333b819a74187246c3fd0ef880680d761772341f0f0b8ceb9f410b864c372a",
+      "proof_refs": [
+        "/private/tmp/decapod-managed-project-validation-06.json",
+        "/private/tmp/decapod-project-init-1402.json"
+      ]
     }
   ],
   "intents": {
@@ -642,23 +651,23 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Preserve accepted storage inventory and validation lifecycle; project selection remains auxiliary machine-private routing, while v2 receipts prevent older writers dropping resolved route binding.",
-          "reviewed_code_fingerprint": "61ea31d0b34563a92a0a27c0adf71d6050f6593683e64a79c2ed5d17c0d583ce",
-          "spec_material_hash": "be89820f5ea62d2c18d322d6c2a17b1c38e44531498769c57fcab4e097731a30"
+          "reason": "Preserve accepted SDK14, local storage inventory and validation architecture; project routing and versioned operation receipts retain the existing authority and transport boundaries.",
+          "reviewed_code_fingerprint": "e162fe9c980cebda3a0e90a78733c3a311b8eec6a3216785b1b9bb996388b613",
+          "spec_material_hash": "4a9c17c162305aa90c34cadd0f55d45eb48b8f149599d580a7251819b171572f"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Review project list/use/create, versioned cache migration and local-native-projects-v1 consumer profile together with accepted bounded storage inspection; no server authorization or credential schema change.",
-          "reviewed_code_fingerprint": "61ea31d0b34563a92a0a27c0adf71d6050f6593683e64a79c2ed5d17c0d583ce",
-          "spec_material_hash": "8887810c9db620555274f23ad133605e7eac9cff88608e0a731d83f8113103bc"
+          "reason": "Review accepted registry14 interface together with explicit project commands and v2 receipt migration; server protocol and credential schema remain unchanged.",
+          "reviewed_code_fingerprint": "e162fe9c980cebda3a0e90a78733c3a311b8eec6a3216785b1b9bb996388b613",
+          "spec_material_hash": "c72996be790235828ffc3847fb33dcc44f11eab4b8f5b3b64b9ae51276ca9b66"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Preserve accepted read-only inventory privacy; selected route and cache are never authority, current account/project readiness precedes each connection, older cache writers fail closed, unknown writes retain reconciliation identity.",
-          "reviewed_code_fingerprint": "61ea31d0b34563a92a0a27c0adf71d6050f6593683e64a79c2ed5d17c0d583ce",
-          "spec_material_hash": "eb711ea23ca1a300f364802f19b0a439525770022ee54e22de70a7762130d4ea"
+          "reason": "Preserve accepted patched Quinn floor, forced current account and assignment checks, stable private locks and scoped project receipts; no local or SCM label grants authority.",
+          "reviewed_code_fingerprint": "e162fe9c980cebda3a0e90a78733c3a311b8eec6a3216785b1b9bb996388b613",
+          "spec_material_hash": "523c8535f6cb3621d0aa51325f9324a66fb7892a27ebf3d018ed1ace972383dd"
         }
       ],
       "state": "APPROVED",
@@ -671,14 +680,15 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1794493697Z"
+      "updated_at": "1794501409Z"
     },
     "trajectory": {
       "active_boundaries": [
+        "Current accepted registry14 SDK and1402 projections; complete required source graph unchanged; no earlier receipt proves this candidate.",
         "Current claimed task and isolated work branch",
         "Preserve all required checks and accepted storage inventory; no manual build or tests; no hosted or payment readiness claim."
       ],
-      "artifact_hash": "sha256:3766c4a24fea9c7b4a7fdc8841e902a512c08b118a33c7154293b8fb47fa8de3",
+      "artifact_hash": "sha256:95c615eee1ea8d12b285fb1b5a6f802baccba297fe81352b75b2738d109e01e6",
       "checks": [
         {
           "name": "accepted_target_merge",
@@ -686,6 +696,10 @@
         },
         {
           "name": "full-validation-05",
+          "status": "failed"
+        },
+        {
+          "name": "full-validation-06",
           "status": "failed"
         },
         {
@@ -737,7 +751,7 @@
           "status": "failed"
         }
       ],
-      "current_phase": "merge-reconciliation",
+      "current_phase": "registry-reconciliation",
       "custody": {
         "events": [
           {
@@ -814,10 +828,17 @@
             "intent_id": "intent:change_01M77JY4SYPX9QSTR9AAYAF6S3",
             "kind": "trajectory_step_recorded",
             "sequence": 12
+          },
+          {
+            "detail": "trajectory:branch_01M77JY4X7Q7EW3YNCPBEC72WV",
+            "event_id": "event:13",
+            "intent_id": "intent:change_01M77JY4SYPX9QSTR9AAYAF6S3",
+            "kind": "trajectory_step_recorded",
+            "sequence": 13
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 12,
+        "next_sequence": 13,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M77JY4X7Q7EW3YNCPBEC72WV": {
@@ -1010,6 +1031,28 @@
                 "validation_findings": [
                   "Current v2 mutation receipts and Dactyl 0.13.0 native consumer require fresh full proof; prior source proof is historical."
                 ]
+              },
+              {
+                "action": "registry-reconciliation",
+                "custody_event_id": "event:13",
+                "observations": [
+                  "Cargo.toml",
+                  "Cargo.lock",
+                  "MODULE.bazel.lock",
+                  "tests/release_dependency_policy.rs",
+                  "/private/tmp/decapod-managed-project-validation-06.json",
+                  "/private/tmp/decapod-project-supported-update-1402.stderr"
+                ],
+                "proof_refs": [
+                  "full-validation-06"
+                ],
+                "scope": [
+                  "src/decapod/core/cloud_client",
+                  "src/decapod/core/cloud_project",
+                  "tests"
+                ],
+                "sequence": 13,
+                "validation_findings": []
               }
             ]
           }
@@ -1021,8 +1064,10 @@
       "destination": "pull request",
       "evidence": [
         "/private/tmp/decapod-managed-project-validation-05.json",
+        "/private/tmp/decapod-managed-project-validation-06.json",
         "/private/tmp/decapod-project-orientation-20261112.json",
         "/private/tmp/decapod-project-supported-update-1401.stderr",
+        "/private/tmp/decapod-project-supported-update-1402.stderr",
         "15f5237f full collection failed public GithubObjects403 with explicit reset1794487263; source checks later failed current-target admission after accepted releasefc1e2b94. No proof or readiness substituted. Independent local service profile subsequently passed exact15f5237f sharing/revocation phases with real native database; modeled login/Edge envelope remain distinct.",
         "557d5ae4 stopped before proof: accepted master advanced again to f1a6c7a0 via1633. Incorporate actual second parent and its accepted validation lifecycle/input wiring; preserve active PR custody and regenerate supported projections. No passing readiness is carried forward.",
         "Added separate native project consumer profile; independent real PostgreSQL fixture proof remains pending.",
@@ -1041,12 +1086,14 @@
       "inspected_files": [
         ".config/build/decapod.BUILD.bzl",
         "Cargo.lock",
+        "Cargo.toml",
         "MODULE.bazel.lock",
         "src/decapod/core/cloud_client.rs",
         "src/decapod/core/cloud_project.rs",
         "src/decapod/core/cloud_session.rs",
         "src/decapod/core/cloud_todo_operation.rs",
         "src/decapod/core/todo.rs",
+        "tests/release_dependency_policy.rs",
         "tests/supabase_service.rs"
       ],
       "intent_id": "intent:change_01M77JY4SYPX9QSTR9AAYAF6S3",

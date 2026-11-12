@@ -1,5 +1,24 @@
 # Validation
 
+## Current SDK 0.14 adoption (#1638)
+
+The current registry dependency is exactly Dactyl 0.14.0, checksum
+`d10824bf8882a26b92479f07edb26c1f6fde8da3019f4001befaf28699d7a990`.
+Historical 0.12 observations below describe earlier candidates. The existing
+release-policy test retains registry-only and feature checks, and now rejects
+any locked `quinn-proto` below 0.11.19, even when that dependency is inactive.
+Supported Cargo metadata resolution verifies both the repository lock and a
+new lock-free registry consumer; it is not compilation or Rust 1.85 execution
+evidence. The SDK's own minimum-toolchain proof remains upstream.
+
+Pinned Bazel 9.3.0 `mod deps --lockfile_mode=update` regenerates the actual
+crate-universe graph. Its complete JSON is serialized with one-space indentation
+only after parsed value equality, preserving the existing bounded discovery
+and strict normal `lockfile_mode=error` policy. Nix directly uses Cargo.lock.
+The full configured source-CI matrix and independent released-controller
+exact-candidate validation remain mandatory; no manual build, fixture result
+or metadata operation establishes publication or protected hosted readiness.
+
 ## Recovery and accepted-target reconciliation (#1628)
 
 The client continues from both original checkpoints, including
@@ -1196,7 +1215,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `61ea31d0b34563a92a0a27c0adf71d6050f6593683e64a79c2ed5d17c0d583ce`
+- Repository signal fingerprint: `e162fe9c980cebda3a0e90a78733c3a311b8eec6a3216785b1b9bb996388b613`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (230 files), `tests/` (231 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
@@ -1208,7 +1227,7 @@ redaction; sampled/budget-limited coverage; ordinary DDL and generated columns;
 trigger/view binding without DDL disclosure; checkpoints outside the ordinary
 event prefix; missing-store CLI/direct/stdin RPC without initialization; and
 bounded framing before startup. The registry dependency/version/checksum guard
-remains enabled for Dactyl v0.13.0. Read-only live captures use a CI-produced
+remains enabled and is advanced here to exact registry Dactyl v0.14.0. Read-only live captures use a CI-produced
 binary with database trees mounted read-only and only existing locks writable.
 Those captures bind their actual historical source/binary identity; they cannot
 establish publication readiness for the current candidate.
@@ -1646,3 +1665,9 @@ Mixed-release cache regressions require legacy rows and unknown outcomes to surv
 The accepted target `1d04f232c46864eecfadb9c8b9b23069ca0e906e` adds bounded local storage inventory and releases Decapod 0.140.1. Its declared registry dependency is Dactyl 0.13.0, checksum `ba334815ca49f203b6a933d559b84b5aca5559686237be9791f48d71b3cb6292`; the later registry releases are not this consumer artifact. The actual 105-source inventory is reviewed as `sha256:be2b53094dcaddbe64037a722a82763ac837d7090dc2b7bf280f7c94452d5a57`. The accepted Bazel delta adds storage-inventory fixture inputs and preserves its finite CLI aggregate deadline and exclusive scheduling. The generated module lock changes the registry Dactyl references consistently. No required check, executor, workflow or selector is removed. The public managed-project branch preserves those accepted definitions.
 
 The earlier full 0.140.0 attempt returned `SNAPSHOT_NOT_READY` after the accepted target advanced; it is not current readiness. The 0.140.1 registry controller is installed through supported `session acquire` with a temporary scoped auto-update opt-in, then restores that preference. Release projections are generated through the controller. Both the version-two receipt tests and native project consumer require fresh execution for the resulting exact source, accepted target and registry artifact. Prior source-specific native evidence remains historical and cannot authorize publication of this new candidate.
+
+## Accepted patched registry reconciliation
+
+Accepted target `df15c9b8dcaeff2e4cba7ddd4918a1e2e954d455` merges the published Dactyl 0.14.0 adoption and releases Decapod 0.140.2. The exact registry checksum is `d10824bf8882a26b92479f07edb26c1f6fde8da3019f4001befaf28699d7a990`; the Quinn protocol lock floor is 0.11.19. This supersedes the earlier 0.13.0 consumer state, while retaining its history. The reviewed 105-source inventory is `sha256:f9a15ead2fa48e1c4beb6341959b06e7cce9e05658cd66ce3685c8eea7e4386a`: accepted changes are registry package/lock definitions, generated module dependency mappings and the release dependency policy. Required workflows, source executors, checks, selectors and budgets remain intact.
+
+A fresh supported session updater installed registry controller 0.140.2 into an isolated install root, restored its temporary auto-update preference and confirmed no pending Decapod migration. Its embedded documentation matches 0.140.1. All earlier readiness attempts and local service reports remain bound to their historical candidates; the newly reconciled source and registry artifact require fresh full validation and independent native consumer execution.

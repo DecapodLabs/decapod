@@ -10,9 +10,11 @@ flow, headless continuation, private custody, and explicit recovery.
 ## Package and implementation prerequisites
 
 The client consumes the public connector/session API in the published
-`dactyl-db 0.12.0`, from [Dactyl #102](https://github.com/DecapodLabs/dactyl/pull/102)
-and its registry release. The release-policy test pins that version and its
-verified registry checksum. Required dependency, compilation and product checks
+`dactyl-db 0.14.0` registry release. The release-policy test pins that exact
+version and its verified registry checksum and audits every locked
+`quinn-proto` entry against the patched 0.11.19 floor, including inactive
+entries. SDK Rust 1.85 is below Decapod's unchanged Rust 1.96.1 requirement;
+HTTP/3 is not enabled. Required dependency, compilation and product checks
 still have to pass on the exact candidate. No governed source-overlay recipe
 is configured for integration diagnostics before those checks pass; no such
 diagnostic result is claimed. The release handoff is tracked by
