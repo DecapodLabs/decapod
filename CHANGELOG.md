@@ -7,6 +7,34 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.140.0](https://github.com/DecapodLabs/decapod/compare/v0.139.1...v0.140.0) - 2026-11-12
+
+### Fixed
+
+- *(tests)* simplify fail-closed admission count check
+- *(validation)* reconcile accepted target and bound fixture work
+- *(validation)* preserve source when runtime policy cache is absent
+- *(workspace)* retain legacy agent task references
+- *(workspace)* extract managed task bindings from branch topic
+- *(validation)* preserve terminal budget and explicit proof obligations
+- *(validation)* consume current workunit journal epoch authority
+- *(validation)* bind typed terminal evidence to verified source facts
+- *(validation)* defer proof consumption until terminal readiness
+
+### Other
+
+- *(validation)* refresh native release projections
+- *(validation)* reconcile accepted onboarding release
+- *(validation)* place fresh docs proof in entrypoint suite
+- *(validation)* review accepted release source inventory
+- *(validation)* bind real CLI admission to complete runtime proof
+- *(validation)* bound governed fixture lifecycle and diagnostics
+- *(validation)* refresh docs only inside managed task worktree
+- *(validation)* initialize canonical governed consumer fixtures
+- *(validation)* execute governed docs proof in CLI contract target
+- *(validation)* use supported capsule count argument
+- *(governance)* reconcile accepted release proof inventory
+
 ## [0.139.1](https://github.com/DecapodLabs/decapod/compare/v0.139.0...v0.139.1) - 2026-11-12
 
 ### Added
