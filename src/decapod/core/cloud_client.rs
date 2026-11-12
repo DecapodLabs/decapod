@@ -477,6 +477,7 @@ pub fn connect(
                         Some(
                             dactyl_db::AdapterErrorKind::Transport
                                 | dactyl_db::AdapterErrorKind::Timeout
+                                | dactyl_db::AdapterErrorKind::Unavailable
                         )
                     )
                 {

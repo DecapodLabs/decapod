@@ -32,6 +32,11 @@ and actual status spelling. Existing negative, no-fallback, bounded timeout
 and redaction assertions remain required. This diagnostic run is not Buildkite
 readiness; the twelve managed sign-in scenarios and current-target full proof
 still require successful execution on the corrected exact candidate.
+The released connector classifies a dropped non-timeout authentication response
+as `Unavailable`. Completion recovery must retain the saved session and return
+`onboarding_pending` for this kind as well as transport/timeout failures; the
+existing lost-completion fixture verifies the repeated idempotent confirmation
+and the absence of repeated one-time exchanges.
 The 0.12.0 lockfile also downgrades inactive HTTP/3 dependencies under Dactyl
 MSRV bounds; the required dependency audit must pass without exemptions.
 
@@ -1156,7 +1161,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `715e2bc9a3a0c92022bea35be42adb7fb00fd3ac70d3e76ecbdbf2457fdf19a0`
+- Repository signal fingerprint: `f8d408db819bd4641ba023101c1ba4f905aa8c9a46665f4e2773b9664d4bad2e`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (227 files), `tests/` (226 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
