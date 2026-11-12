@@ -2,61 +2,59 @@
 
 ## Reflection adversarial proof contract
 
-The current work branch incorporates accepted target
+The work branch incorporates accepted target
 `fc1e2b94f6909633bf6dd7044fd7a54a05e85a4b` and its validation-recovery
-contracts. The installed controller reports 0.140.0 through
-`capabilities --format json`. The supported session update path was exercised
-after explicit authorization and installed the published release. Temporary
-automatic-update opt-in was removed. Binary/config backups remain private.
-The current task journal was retained from its canonical committed version;
-accepted upstream journals remain in Git history. Generated release surfaces
-and spec attestations must match the installed evaluator.
+contracts. The installed controller is the published 0.140.0 release, installed
+through the authorized session path with private backups. Temporary automatic
+update opt-in was removed. Generated surfaces must match the evaluator.
 
-`tests/unit/core/reflection_tests.rs` exercises ordinary scope, protected-path
-conflict, source-bound correction, persuasive nonsense, stale context,
-untrusted instructions, human authority, stagnation/exhaustion, replay,
-competing submissions and custody loss. All 15 cases passed on
-`32fdc5348b4caefe423c4da634881c751e06edea` in diagnostic job
-`131175931908`, run `43215838324`. This includes a forbidden mutation path
-blocked before execution and an adapter-only revision proceeding in round 2
-while preserving plan acceptance, proof hooks and false completion proof.
-These are deterministic structural/evidentiary checks, not model evaluations.
-A further regression checks six ordinary phase transitions without consuming
-extra reflection rounds, then changes a governing definition and requires
-fresh context and approval. The contract projection reuses the plan's existing
-acceptance/progress reset on a clone; execution/proof gates remain separate.
+Required Buildkite library execution on `dc7bf2fa198abeebba072c5394709af0dfca9d86`
+passed 1709 tests (8 ignored), including all 16 reflection cases and the canonical
+lifecycle case. Evidence is build 8602, job
+`01a1cfd6-5d0d-4abb-853c-b4ed9164f022`. The selected scope flaw was detected
+before action, an evidence-bound narrower proposal proceeded in round 2, and
+the original approval/proof requirements and false completion proof were retained.
+Stagnation terminates in round 2 and unresolved progress in round 3. Six ordinary
+phase transitions preserve convergence; an actual governing edit invalidates it.
+Source/custody changes, replay, competing submissions, untrusted instructions
+and invented human approval are covered. These are deterministic protocol
+assertions, not a language-model evaluation or proof of a future cache design.
 
-That run's complete library suite reported 1696 passed, 1 failed, 8 ignored.
-The lifecycle test failed at fixture setup because its writers had basic trust.
-The temporary fixture now registers verified writers through the broker before
-using canonical federation mutations. Production trust/approval gates remain
-unchanged, and provenance confidence remains separate from writer trust.
-Lifecycle behavior requires fresh verification after this repair.
+The canonical lifecycle fixture registers verified writers in its isolated
+store, then exercises actual federation mutations. Supersession, withdrawal,
+dispute, inferred/imported classification, repository-path scope and source
+provenance passed. Production writer trust and approval policy remain unchanged;
+confidence is source classification, not authenticated human authority.
 
-The existing required entrypoint suite now includes `infer_precision.rs`.
-It must exercise the actual CLI-to-RPC continuation, legacy omission, explicit
-outer task binding and preservation of orientation decision gates. A rejected
-missing task binding must leave the subsequent valid proposal at round 1.
-The sole added build input relative to the accepted target is that test file;
-reviewed inventory
+The existing required entrypoint suite includes `infer_precision.rs`. Its first
+execution reached the actual CLI-to-RPC round-2 continuation, then failed a test
+expectation that successful `blocked_by` was always an array. The unchanged
+envelope omits empty blockers. The fixture accepts omission or an empty array,
+and rejects malformed/nonempty blockers. Missing outer task binding must still
+fail before recording round 1. Current-candidate CLI proof must be rerun.
+
+Numeric measurements are emitted by existing fixtures: safe protocol call
+75.213 ms / 575 outcome bytes / 1490 governance bytes growth; conflict and
+revision 58.845 and 43.966 ms, with 1213 and 575 outcome bytes. The two-round
+compact journal was 2843 bytes and total governance growth 4017 bytes. The safe
+fixture observed zero main-database-file growth. Timings exclude CLI startup,
+are samples under concurrent CI load, and carry no portable performance promise.
+
+The only added build input relative to accepted target is the existing
+`infer_precision.rs` file in the required entrypoint suite. Reviewed inventory
 `sha256:2aae6b81cd1826ad84735e3d24c4aa716c726725a3f7e8b04cdf309f13fdf5c1`
-retains the same profile, accepted executor, workflow graph and required checks.
+preserves the profile, accepted executor, required graph and final verdict.
+The current task journal was retained canonically; accepted journals remain in
+Git history.
 
-Existing safe/corrected fixtures emit bounded numeric measurements directly to
-stderr so passing Cargo cases retain protocol latency, outcome bytes, compact
-journal size, governance growth and datastore file growth in CI logs. The CLI
-fixture records paired legacy/reflection timings and payload sizes. Timings
-include the stated path only and must not become a hardware-independent
-performance guarantee. No latency threshold is asserted.
-
-Earlier complete validation attempts remain failed historical evidence:
-`e5690971` stopped on provider HTTP 403; `42571aaf` waited 638132 ms and
-failed required Buildkite build 8517 on 0.139.0/0.139.1 projection drift.
-Private snapshot identifiers are retained in the governed trajectory.
-Buildkite clippy passed on `ac9bd730` in build 8536. None of these establishes
-current publication readiness. Plain `decapod validate` must execute the
-complete required profile against the new exact candidate and current accepted
-target. No separate manual build, fabricated proof or weakened gate is allowed.
+Failed or incomplete earlier attempts do not establish readiness: provider quota,
+accepted-base/tag movement and release-projection drift remain in trajectory
+evidence. Full validation on `dc7bf2fa` returned `SNAPSHOT_NOT_READY` for the
+CLI fixture failure in build 8602 after 3427640 ms provider wait; private snapshot
+`decapod-snapshot-YH2wgS` preserves that attempt. Passing individual jobs and
+checkpoint-history verification never replace the complete exact-candidate gate.
+Plain `decapod validate` owns the configured build/tests; no separate manual
+build, fabricated proof or weakened check is allowed.
 
 ## Recovery and accepted-target reconciliation (#1628)
 
@@ -1254,7 +1252,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `5702dbf18594ba1dd936ebff0a27fc817a680cec13b606bbff3b2e0e6f6af266`
+- Repository signal fingerprint: `c6fc3ef723c9c57903641918272909b72f3a3583b008bf7275224ebf7de7a029`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (229 files), `tests/` (232 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

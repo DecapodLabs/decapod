@@ -88,57 +88,68 @@ entity accumulation and personal-assistant architecture are excluded.
 
 ## Verification and costs
 
-The 15 protocol cases passed on `32fdc534` in diagnostic run
-`43215838324`, job `131175931908`. The library suite's only failure
-was lifecycle-fixture setup: canonical federation policy rejected unregistered
-basic-trust writers. The isolated fixture now registers verified writers; its
-corrected lifecycle assertions still need execution. These diagnostics are
-source-repair evidence, not complete Buildkite publication acceptance.
+Required Buildkite [library execution on `dc7bf2fa`](https://buildkite.com/decapodlabs/decapod/builds/8602#01a1cfd6-5d0d-4abb-853c-b4ed9164f022)
+passed 1709 library tests (8 ignored), including all 16 reflection cases and the
+canonical knowledge-lifecycle case. These are deterministic protocol tests, not
+an evaluation of a language-model agent.
 
-| Decision | Baseline contract (source audit) | Observed deterministic protocol assertions |
+| Decision | Baseline contract (source audit) | Executed deterministic assertions |
 | --- | --- | --- |
-| Routine sufficiently scoped action | Orientation has no proposed-action comparison | Round 1 proceeds without a question; 0/1 false-positive challenges |
-| Caching proposal touches protected mutation path | Constraint not compared with a proposal | Binding question; existing execution boundary rejects it before action |
-| Adapter-only revision citing the contract | No continuation or resolution link | Round 2 proceeds and links the resolved gap; completion remains unproven |
+| Routine sufficiently scoped action | No proposed-action comparison | Round 1 proceeds without a question; 0/1 false-positive challenges |
+| Caching proposal touches protected mutation path | Constraint not compared with a proposal | Binding question; execution check rejects it before action |
+| Adapter-only revision citing the contract | No continuation or resolution link | Round 2 proceeds, links the resolved gap and leaves completion unproven |
 | Persuasive paraphrase retains conflict | No bounded feedback exchange | Terminal blocked in round 2 |
 | Incomplete but narrower proposals | No reflection round budget | Terminal blocked by round 3 |
-| Superseded/inferred decision tagged accepted | Lifecycle can be lost in projection | New lifecycle assertions pending repaired fixture execution |
+| Superseded/inferred decision tagged accepted | Lifecycle can be lost in projection | Supersession/withdrawal/dispute and inferred/imported classifications preserved |
+| Six ordinary phase transitions | No reflection continuity | Convergence stays at round 1; a governing definition edit invalidates it |
 
-This establishes one declared-scope flaw caught before execution, not a semantic
-proof that caching is safe or that an agent has become more intelligent.
-The baseline column describes actual source contracts, not a controlled model
-comparison. `infer_precision.rs` now joins the existing required entrypoint
-suite so the CLI/RPC exchange is exercised by configured validation.
+This establishes one declared-scope flaw caught before execution (1/1), not
+semantic proof that caching is safe or a claim of improved model intelligence.
+The baseline column describes source contracts, not a controlled model
+comparison. The existing required entrypoint suite includes `infer_precision.rs`
+for the real CLI/RPC continuation and legacy response compatibility.
 
-A historical installed-release orientation call returned 1820 ASCII JSON bytes
-excluding newline in 2.50 seconds wall (1.52 user, 0.83 system), including CLI
-startup/session work. This was a single host observation. Current safe and
-corrected fixtures emit numeric protocol timings and sizes to stderr; the CLI
-fixture records paired baseline/reflection payloads and timings on one fixture.
-These new measurements await the next configured execution and are not
-comparable to the earlier host sample without accounting for environment and
-scope. The safe protocol fixture's datastore-size equality assertion passed;
-that establishes zero main-database-file growth for that fixture.
+Observed protocol-call samples under the concurrent CI library suite:
+
+| Fixture | Call time | Compact outcome bytes | Governance JSON growth |
+| --- | ---: | ---: | ---: |
+| Safe | 75.213 ms | 575 | 1490 bytes |
+| Initial conflict | 58.845 ms | 1213 | — |
+| Corrected response | 43.966 ms | 575 | 4017 bytes total across two rounds |
+
+The two-round compact journal measured 2843 bytes. The safe fixture observed
+zero main-database-file growth. These samples exclude fixture initialization and
+CLI startup; they are not portable latency guarantees. A historical installed
+orientation call returned 1820 ASCII JSON bytes excluding newline in 2.50
+seconds wall (1.52 user, 0.83 system), including CLI startup/session work. That
+single host observation is a different environment/scope and must not be used
+to claim a speedup. The CLI fixture also records paired legacy/reflection
+timings and payloads in its test log.
 
 Persistence uses the existing plan only: no new database table, row stream,
 index, duplicate source body or transcript. The journal has at most three
-receipts plus a terminal stop, capped at 64 KiB compact JSON. Normal governance
-formatting adds overhead and Git retains historical versions. Each accepted
-round rewrites the existing governance document; rejected stale requests and
-exact retries do not. This is bounded per-workstream storage, not a total
-repository-size estimate. Measured governance/journal byte counts will be
-reported from configured execution rather than inferred from this ceiling.
+receipts plus a terminal stop, capped at 64 KiB compact JSON. Formatting adds
+overhead, Git retains historical versions, and each accepted round rewrites the
+existing governance document. Rejected stale requests and exact retries do not
+write it. This is bounded per-workstream storage, not total datastore size or a
+measurement of all session/WAL/cache activity.
 
-The work branch now incorporates accepted target
-`fc1e2b94f6909633bf6dd7044fd7a54a05e85a4b`. The installed supported
-controller reports 0.140.0 and release projections were reconciled through
-supported interfaces/accepted source. Earlier projection/quota failures and
-private snapshot identifiers remain in the governed trajectory. Fresh plain
-validation must establish exact-candidate readiness before any PR is opened.
+The initial required CLI run reached round-2 `proceed`, then exposed a fixture
+assertion expecting an empty `blocked_by` array. The standard successful RPC
+envelope omits empty blockers; the fixture now accepts that omission or an empty
+array, while rejecting nonempty or malformed blockers. This changes no runtime
+permission. Earlier failed full validations remain historical evidence.
+Current readiness always requires a fresh complete `decapod validate` receipt
+for the exact candidate and accepted target, rather than this document.
+
+The work incorporates accepted target
+`fc1e2b94f6909633bf6dd7044fd7a54a05e85a4b`; the installed supported
+controller reports 0.140.0. Release projections were refreshed through supported
+interfaces. No PR may be opened before the full exact-candidate gate succeeds.
 
 Limits: explicit plan constraints and literal ADR matches cannot infer arbitrary
 semantic conflicts from code. Proposed paths are declarations, not an OS write
 sandbox; existing scope and validation gates inspect actual changes. Local
 actor labels retain the cooperative trust boundary. Replay/interruption cases
-use the existing atomic writer; no power-loss simulation or model-agent
-evaluation is claimed.
+use the existing atomic writer; no power-loss simulation or model evaluation is
+claimed.

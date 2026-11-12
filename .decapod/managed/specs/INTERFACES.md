@@ -1125,7 +1125,7 @@ field. Nothing in this operation authorizes a mutation, approval or completion.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `5702dbf18594ba1dd936ebff0a27fc817a680cec13b606bbff3b2e0e6f6af266`
+- Repository signal fingerprint: `c6fc3ef723c9c57903641918272909b72f3a3583b008bf7275224ebf7de7a029`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (229 files), `tests/` (232 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

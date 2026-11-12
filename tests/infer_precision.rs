@@ -193,7 +193,10 @@ fn test_orientation_and_mentor_share_the_reflection_continuation() {
     assert_eq!(rpc["result"]["reflection"]["disposition"], "proceed");
     assert_eq!(rpc["result"]["reflection"]["completion_proven"], false);
     assert_eq!(rpc["result"]["reflection"]["round"], 2);
-    assert!(rpc["blocked_by"].as_array().unwrap().is_empty());
+    assert!(
+        rpc.get("blocked_by")
+            .is_none_or(|blockers| blockers.as_array().is_some_and(Vec::is_empty))
+    );
     writeln!(
         std::io::stderr().lock(),
         "reflection_eval {}",

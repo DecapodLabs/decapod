@@ -151,6 +151,10 @@ The persistent, shared understanding of the project.
 
 ### Bounded reflection continuity
 
+Successful RPC envelopes may omit `blocked_by` when it is empty; consumers must
+accept omission or an empty array. Reflection still does not grant global
+execution or completion permission.
+
 Optional reflection uses `sections.plan.reflection` in the existing governance
 document: one current task/custody binding, at most three receipts, and a bounded
 terminal stop if a successful third round is later revisited. It creates no
