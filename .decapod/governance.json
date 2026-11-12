@@ -597,6 +597,14 @@
         "https://github.com/DecapodLabs/decapod/actions/runs/43111223693",
         "https://github.com/DecapodLabs/decapod/actions/runs/43133190463"
       ]
+    },
+    {
+      "id": "billing-audit-entrypoints-5",
+      "summary": "Repair the measured final-entrypoint preflight failure using official139 native generation. Preserve reviewed configuration, CI carrier and authored specs; keep the failed5078 result historical and require fresh full proof.",
+      "input_digest": "sha256:42a3da34941edfdc1fb2de8a8ee559ec80d79e2aae5b12dc943688ccb21e6a89",
+      "proof_refs": [
+        "/run/decapod-billing-fix-private/entrypoint-repair.scope-check.json"
+      ]
     }
   ],
   "intents": {
@@ -685,7 +693,7 @@
         "No pricing, CI carrier, release, original task custody or unrelated branch changes.",
         "This is documentation and authentic generated governance only. No current readiness, retirement completion, legacy API removal, new commercial behavior or original-custody import is claimed."
       ],
-      "artifact_hash": "sha256:808eb5769ce90b81f86cc828740e9694cf630d9e20d9a404239ed579dbfbb38d",
+      "artifact_hash": "sha256:20eca7caf3856145a702f94ddd4b9be0d4e40e27d1f0798294c7c03659bfb16d",
       "checks": [
         {
           "name": "accepted_inventory_19a",
@@ -697,6 +705,10 @@
         },
         {
           "name": "accepted_source_inventory",
+          "status": "passed"
+        },
+        {
+          "name": "canonical_entrypoint_repair",
           "status": "passed"
         },
         {
@@ -716,6 +728,10 @@
           "status": "partial"
         },
         {
+          "name": "native_validation_5078",
+          "status": "failed"
+        },
+        {
           "name": "required_source_ci_af132112",
           "status": "failed"
         },
@@ -724,7 +740,7 @@
           "status": "passed"
         }
       ],
-      "current_phase": "implementation",
+      "current_phase": "repair",
       "custody": {
         "events": [
           {
@@ -773,10 +789,17 @@
             "intent_id": "intent:change_01M771D5QJ4C4ZERK1MEPYNQRS",
             "kind": "trajectory_step_recorded",
             "sequence": 8
+          },
+          {
+            "detail": "trajectory:branch_01M771D5V85D3H40VVCZ3QCJMH",
+            "event_id": "event:9",
+            "intent_id": "intent:change_01M771D5QJ4C4ZERK1MEPYNQRS",
+            "kind": "trajectory_step_recorded",
+            "sequence": 9
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 8,
+        "next_sequence": 9,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M771D5V85D3H40VVCZ3QCJMH": {
@@ -923,6 +946,30 @@
                 ],
                 "sequence": 8,
                 "validation_findings": []
+              },
+              {
+                "action": "repair",
+                "command": "Native validation attempt5 stopped before push with ENTRYPOINT_COMMIT_DISCIPLINE. Reviewed native init dry run and regenerated the four canonical entrypoints with official139. Restored user-editable config exactly from its reviewed backup, retaining all required proof and CI settings. Only release/fingerprint metadata changed in the entrypoint payloads.",
+                "custody_event_id": "event:9",
+                "observations": [
+                  "/run/decapod-billing-fix-private/validate.attempt5.stderr.txt",
+                  "/run/decapod-billing-fix-private/entrypoint-repair.scope-check.json"
+                ],
+                "proof_refs": [
+                  "native_validation_5078",
+                  "canonical_entrypoint_repair"
+                ],
+                "scope": [
+                  "\".decapod/managed/specs\"]",
+                  "\"src/decapod/lib.rs\"",
+                  "\"tests/unit/core/propodus_tests.rs\"",
+                  "\"tests/unit/lib_init_prompt_tests.rs\"",
+                  ".decapod/managed/specs",
+                  "docs/maintenance/stale-branch-audit-20261112.md",
+                  "paths:[\"src/decapod/core/propodus.rs\""
+                ],
+                "sequence": 9,
+                "validation_findings": []
               }
             ]
           }
@@ -933,6 +980,7 @@
         "Compare the four downloaded artifact/report hashes to expected values; inspect terminal-native success, six-ref report, accepted Git ancestry and exact absence of runtime/test/workflow/helper deltas. Compare all105 inventory entries to accepted19a bytes, including the real toolchain symlink.",
         "Full native validation observed failed source Buildkite 8170 for exact af132112; corresponding GitHub job logs identify E0277 in two new expect_err calls.",
         "Merge accepted c87e4f49 without committing, preserve the current native journal, and restore all four superseded Rust/test files to exact accepted bytes.",
+        "Native validation attempt5 stopped before push with ENTRYPOINT_COMMIT_DISCIPLINE. Reviewed native init dry run and regenerated the four canonical entrypoints with official139. Restored user-editable config exactly from its reviewed backup, retaining all required proof and CI settings. Only release/fingerprint metadata changed in the entrypoint payloads.",
         "Stopped owned native publisher by SIGINT after current master advanced to c87e4f49; native report returned SNAPSHOT_NOT_READY, CI operation cancelled, exit1. Backed up the actual state and retained raw report/handoff. No PR was created.",
         "cargo fmt --all (host formatting, exit 0)",
         "git diff --check (exit 0)"
@@ -942,9 +990,11 @@
         "/run/decapod-billing-fix-private/audit.document-consistency-139.json",
         "/run/decapod-billing-fix-private/audit.document-consistency.json",
         "/run/decapod-billing-fix-private/candidate-af132-ci/diagnostic-excerpts.json",
+        "/run/decapod-billing-fix-private/entrypoint-repair.scope-check.json",
         "/run/decapod-billing-fix-private/inventory.accepted-19a-comparison.json",
         "/run/decapod-billing-fix-private/inventory.accepted-c87-comparison.json",
         "/run/decapod-billing-fix-private/inventory.accepted-comparison.json",
+        "/run/decapod-billing-fix-private/validate.attempt5.stderr.txt",
         "git:c87e4f49cab8e2ccff5f9bdc5833d8602dfffdb8",
         "git:d3358e1ce2cdb137dc57445c64592cb6d327a6ff",
         "https://buildkite.com/decapodlabs/decapod/builds/8170",
