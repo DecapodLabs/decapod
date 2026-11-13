@@ -565,6 +565,14 @@
       "proof_refs": [
         "https://github.com/DecapodLabs/decapod/issues/1568"
       ]
+    },
+    {
+      "id": "issue-1568-file-4",
+      "summary": "build(tests): include required maintenance module in CLI source closure; file-by-file checkpoint, verification pending.",
+      "input_digest": "sha256:ab8c455b34d1a50b4d13b9835914df354234991ed02ccff76f57a599310e24de",
+      "proof_refs": [
+        "https://github.com/DecapodLabs/decapod/issues/1568"
+      ]
     }
   ],
   "intents": {
@@ -615,7 +623,7 @@
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:5d54b5d9877753f550391cc5df81ec5b749dcedeb04866da218f3ec6a21f756d",
+      "artifact_hash": "sha256:301f6ba5543b68de1d31c4f844f440ee0300b3361e4ad4279af1aec33adfea1d",
       "checks": [],
       "current_phase": "implementation",
       "custody": {
@@ -652,10 +660,17 @@
             "intent_id": "intent:change_01M7BCJGVSZZ72B0C1Y6FVMPP4",
             "kind": "trajectory_step_recorded",
             "sequence": 6
+          },
+          {
+            "detail": "trajectory:branch_01M7BCJGZ6T52EA2CECBZAPK5W",
+            "event_id": "event:7",
+            "intent_id": "intent:change_01M7BCJGVSZZ72B0C1Y6FVMPP4",
+            "kind": "trajectory_step_recorded",
+            "sequence": 7
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 6,
+        "next_sequence": 7,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M7BCJGZ6T52EA2CECBZAPK5W": {
@@ -710,6 +725,22 @@
                 "validation_findings": [
                   "Hosted verification and exact-candidate publication readiness remain pending; no local tests run."
                 ]
+              },
+              {
+                "action": "implementation",
+                "custody_event_id": "event:7",
+                "observations": [
+                  ".config/build/decapod.BUILD.bzl",
+                  "https://github.com/DecapodLabs/decapod/issues/1568"
+                ],
+                "proof_refs": [],
+                "scope": [
+                  "issue-1568"
+                ],
+                "sequence": 7,
+                "validation_findings": [
+                  "Hosted verification and exact-candidate publication readiness remain pending; no local tests run."
+                ]
               }
             ]
           }
@@ -723,6 +754,7 @@
       "inspected_files": [],
       "intent_id": "intent:change_01M7BCJGVSZZ72B0C1Y6FVMPP4",
       "modified_files": [
+        ".config/build/decapod.BUILD.bzl",
         ".decapod/managed/specs/INTENT.md",
         "tests/cli_contracts.rs",
         "tests/sqlite_maintenance.rs"
