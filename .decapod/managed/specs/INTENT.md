@@ -1,5 +1,24 @@
 # Intent
 
+## Concurrent isolated authoring and shared-resource custody (#1469)
+
+Decapod keeps parallel coding agents accountable to individual tasks and
+verified isolated Git checkouts without serializing unrelated source edits
+behind repository-root or directory-claim locks. Logical file, directory, and
+category overlaps remain advisory integration signals reconciled on the
+combined candidate, while physical checkout custody (`core/authoring.rs`,
+`core/workspace.rs`) is strictly 1-to-1 between live registered Git worktrees
+and active task leases.
+
+Task lifecycle transitions (`renew`, `yield`, `release`, `reclaim`, `handoff`,
+`done`, `archive`, and `workspace prune`) keep checkout bindings synchronized
+with lease authority inside the canonical datastore (`decapod.db`) without a
+second control plane. Explicit `resource:<name>` claims reserve named shared
+mutable surfaces (`release lineage-sync`, `workspace publish`) without claiming
+repository source paths or blocking isolated authoring. Passing branch-local
+validation never substitutes for exact combined-candidate validation against
+the current accepted target.
+
 ## Evidence-grounded reflection before consequential action
 
 Decapod helps agents reconsider a proposed action through optional bounded
@@ -341,7 +360,7 @@ These declarations select authoring and proof obligations; they do not attest im
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `0a0498aa94eb3f7551fe07c380ef13b469d188ab33218c72f80fc2e081fc3951`
+- Repository signal fingerprint: `d38d3f6da33c50f03492b7cfc8b8937af37534586d1ea4ff56261275738a0754`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (231 files), `tests/` (232 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

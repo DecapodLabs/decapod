@@ -657,6 +657,11 @@
       "id": "tests-consumer-readiness-combined-candidate",
       "summary": "Add two-worktree combined-candidate validation and target-freshness integration test",
       "input_digest": "sha256:3cda63481c250a607d5370e2d673f87b9bbc735658274fa1c496d6699b5bb1ad"
+    },
+    {
+      "id": "specs-intent-issue-1469",
+      "summary": "Update INTENT.md with concurrent isolated authoring and explicit resource reservation goals",
+      "input_digest": "sha256:7aecf94e33b67a1fd8fc16e5c90e7ba6d07db0cd06c81d29314f3ff5ebceed4c"
     }
   ],
   "intents": {
