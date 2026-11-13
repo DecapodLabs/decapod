@@ -696,6 +696,11 @@
       "id": "c29-refresh-interfaces",
       "summary": "docs(specs): synchronize INTERFACES.md overlay digest after #1568 update",
       "input_digest": "sha256:e90a58c0f9d6ab8569964062503dbf8eb887cca2752449a079272c4ccde09f69"
+    },
+    {
+      "id": "c30-refresh-operations",
+      "summary": "docs(specs): synchronize OPERATIONS.md overlay digest after #1568 update",
+      "input_digest": "sha256:1c76c8793e8c128a7172812d76387a35f2f63aba0a9541dc9be47c1436fc2406"
     }
   ],
   "intents": {
