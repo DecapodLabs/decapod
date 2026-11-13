@@ -583,6 +583,14 @@
       "proof_refs": [
         "/private/tmp/decapod-pr1666-bk9331-validation.txt"
       ]
+    },
+    {
+      "id": "pr1666-contract-runtime-bound-fix-5",
+      "summary": "Repair observed300s CLI contract aggregate timeout while bounding shared child commands at60s and preserving all22 cases, assertions and required checks. No local tests run.",
+      "input_digest": "sha256:e680ea229c360a785c7658fcf29d097fd6db2455570095e94a3b8138b66593c2",
+      "proof_refs": [
+        "/private/tmp/decapod-pr1666-contract-131829523580.log"
+      ]
     }
   ],
   "intents": {
@@ -621,24 +629,24 @@
       "schema_version": "1.1.0",
       "spec_reviews": [
         {
-          "disposition": "updated",
+          "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Reviewed official0.144.0 release-bound projection regeneration after hosted drift failure; quota behavior, accepted scope and required provider checks are unchanged.",
-          "reviewed_code_fingerprint": "dc9c7d0fdecc9062c60432638a1a8148970a356cf68bab47be2d8eaab6bd3750",
+          "reason": "Production quota, authority and evidence interfaces are unchanged. The existing22-case CLI contract suite gains a finite900s aggregate class and shared60s subprocess bound; no assertion or required check is removed. VALIDATION documents the observed hosted failure and repair.",
+          "reviewed_code_fingerprint": "9dd1adce7cccd5b451d3e5190d70ef6a631f185f21d1e1222d4328c1864166d1",
           "spec_material_hash": "fd49b4c6a425a4961c7c8f20e9a1bb62962c2726e815e91f8e2120a5d2984be7"
         },
         {
-          "disposition": "updated",
+          "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Official0.144.0 entrypoints and Docker pins repair observed hosted projection drift while preserving quota semantics, required checks and accepted authority. No local tests run.",
-          "reviewed_code_fingerprint": "dc9c7d0fdecc9062c60432638a1a8148970a356cf68bab47be2d8eaab6bd3750",
+          "reason": "Production quota, authority and evidence interfaces are unchanged. The existing22-case CLI contract suite gains a finite900s aggregate class and shared60s subprocess bound; no assertion or required check is removed. VALIDATION documents the observed hosted failure and repair.",
+          "reviewed_code_fingerprint": "9dd1adce7cccd5b451d3e5190d70ef6a631f185f21d1e1222d4328c1864166d1",
           "spec_material_hash": "3c826cd20c1f20607be288a67abb7c4e0f8c0ba039a4f123f6da9b78f37cba0f"
         },
         {
-          "disposition": "updated",
+          "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Official0.144.0 entrypoints and Docker pins repair observed hosted projection drift while preserving quota semantics, required checks and accepted authority. No local tests run.",
-          "reviewed_code_fingerprint": "dc9c7d0fdecc9062c60432638a1a8148970a356cf68bab47be2d8eaab6bd3750",
+          "reason": "Production quota, authority and evidence interfaces are unchanged. The existing22-case CLI contract suite gains a finite900s aggregate class and shared60s subprocess bound; no assertion or required check is removed. VALIDATION documents the observed hosted failure and repair.",
+          "reviewed_code_fingerprint": "9dd1adce7cccd5b451d3e5190d70ef6a631f185f21d1e1222d4328c1864166d1",
           "spec_material_hash": "5bfc55956c17aac5ec1642038211d1ab14340dde37af15695d7fb0a09730db76"
         }
       ],
@@ -650,7 +658,7 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1794565346Z"
+      "updated_at": "1794566548Z"
     },
     "trajectory": {
       "active_boundaries": [
@@ -658,11 +666,15 @@
         "Preserve actual original PR parent history, no force-push, no local tests and no merge authorization.",
         "Preserve original PR history; ordinary merges only, no force-push or automatic merge."
       ],
-      "artifact_hash": "sha256:bb5c7512655ccf68480f551e17374d7dad2562d0e72b1620bb28e28d47d96aa3",
+      "artifact_hash": "sha256:635b552c0908317532f8cf97d330251e0b4feada6121ac8dadb770a322a13f1d",
       "checks": [
         {
           "name": "fresh-docs-baseline-initialized",
           "status": "passed"
+        },
+        {
+          "name": "hosted-contract-aggregate-timeout",
+          "status": "failed"
         },
         {
           "name": "hosted-release-projection-drift",
@@ -711,10 +723,17 @@
             "intent_id": "intent:change_01M79W0QF1GA7DKV736SKKE9A3",
             "kind": "trajectory_step_recorded",
             "sequence": 7
+          },
+          {
+            "detail": "trajectory:branch_01M79W0QKPSAKS1YRWC4A3YT4H",
+            "event_id": "event:8",
+            "intent_id": "intent:change_01M79W0QF1GA7DKV736SKKE9A3",
+            "kind": "trajectory_step_recorded",
+            "sequence": 8
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 7,
+        "next_sequence": 8,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M79W0QKPSAKS1YRWC4A3YT4H": {
@@ -791,12 +810,31 @@
                 "validation_findings": [
                   "Coordination-only0.144.0 includes the previously scoped inert legacy-placeholder repair, sha256:4e96e246023ea1b28bcd55f68abe9973601f6024cae3234173e92e1b332103d7; it is not an independent publication verifier."
                 ]
+              },
+              {
+                "action": "ci-repair",
+                "command": "Bound shared CLI child execution at60s; preserve all22 contract cases under finite900s aggregate class; refresh reviewed build-input binding.",
+                "custody_event_id": "event:8",
+                "observations": [
+                  "/private/tmp/decapod-pr1666-contract-131829523580.log"
+                ],
+                "proof_refs": [
+                  "hosted-contract-aggregate-timeout"
+                ],
+                "scope": [
+                  "pr-1666-master-1432"
+                ],
+                "sequence": 8,
+                "validation_findings": [
+                  "Fresh hosted execution must establish completion; no local tests or independent full-readiness claim."
+                ]
               }
             ]
           }
         }
       },
       "declared_commands": [
+        "Bound shared CLI child execution at60s; preserve all22 contract cases under finite900s aggregate class; refresh reviewed build-input binding.",
         "Official0.144.0 init refreshed release-bound projections; exact reviewed configuration restored; source-bound specs refreshed through supported RPC.",
         "Preserve original remote PR parent, review accepted Cargo0.144.0 inventory, refresh binding without changing assurance requirements",
         "git merge accepted origin/master; official decapod init --refresh --proof --force; supported specs.refresh and content-bound reviews",
@@ -807,6 +845,7 @@
         "/private/tmp/decapod-pr1661-1432-fresh-docs-initialized.log",
         "/private/tmp/decapod-pr1666-agent-init-144-source.json",
         "/private/tmp/decapod-pr1666-bk9331-validation.txt",
+        "/private/tmp/decapod-pr1666-contract-131829523580.log",
         "git:7418add4e1c72ad4cae54f0f7ad5679648316397",
         "git:9b90025444dcc9b223f77388b1bcd151d88bf62b"
       ],
@@ -830,6 +869,7 @@
       "unresolved_assumptions": [
         "Coordination-only0.144.0 includes the previously scoped inert legacy-placeholder repair, sha256:4e96e246023ea1b28bcd55f68abe9973601f6024cae3234173e92e1b332103d7; it is not an independent publication verifier.",
         "Focused regression evidence does not establish independent full readiness or erase historical draft blockers.",
+        "Fresh hosted execution must establish completion; no local tests or independent full-readiness claim.",
         "Full current hosted CI remains unproven until the new pushed candidate executes.",
         "Official0.144.0 release assets were unavailable at setup; release-bound tooling refresh may remain necessary."
       ]
