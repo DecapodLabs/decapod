@@ -686,6 +686,11 @@
       "id": "c27-refresh-architecture",
       "summary": "docs(specs): synchronize ARCHITECTURE.md overlay digest after #1568 update",
       "input_digest": "sha256:afe19db05bb87e7fff6586f813b0d23da7505721c20c5d72fbf4c14ed9495188"
+    },
+    {
+      "id": "c28-refresh-intent",
+      "summary": "docs(specs): synchronize INTENT.md overlay digest after #1568 update",
+      "input_digest": "sha256:e1412ea11c425aa676c58db2788dc76680a855510f10c57f3d87f1a264675a2c"
     }
   ],
   "intents": {
