@@ -382,3 +382,72 @@ fn stdin_request_framing_is_bounded_before_store_initialization() {
     assert!(String::from_utf8_lossy(&output.stderr).contains("RPC_REQUEST_BUDGET"));
     assert!(!root.path().join(".decapod/data").exists());
 }
+
+#[test]
+fn inventory_reports_v2_storage_format_compact_envelopes_and_component_store_without_leaking_secrets()
+ {
+    use decapod::core::todo;
+
+    let temp = tempfile::tempdir().unwrap();
+    let data = temp.path().join(".decapod/data");
+    todo::initialize_todo_db(&data).unwrap();
+
+    let secret_prose = "SECRET_V2_COMPONENT_PAYLOAD_".repeat(40);
+    todo::add_task(
+        &data,
+        &todo::TodoCommand::Add {
+            title: "Inventory v2 attribution".into(),
+            description: secret_prose.clone(),
+            priority: "high".into(),
+            tags: "inventory,v2".into(),
+            owner: String::new(),
+            due: None,
+            r#ref: String::new(),
+            scope: format!(
+                "paths:{}",
+                serde_json::to_string(&vec![
+                    "src/decapod/core/storage_inventory.rs",
+                    "src/decapod/core/storage_compaction.rs",
+                    "src/decapod/core/task_journal.rs",
+                    "src/decapod/core/events.rs",
+                    "docs/storage-inventory.md",
+                ])
+                .unwrap()
+            ),
+            dir: Some(temp.path().to_string_lossy().into_owned()),
+            depends_on: String::new(),
+            blocks: String::new(),
+            parent: None,
+            one_shot: 0,
+        },
+    )
+    .unwrap();
+
+    let report = inspect(&data, "v2-fixture", &InventoryOptions::default()).unwrap();
+    assert_eq!(report["status"], "ok", "{report}");
+    assert_eq!(
+        report["observed_application_schema"]["todo"]["version"],
+        decapod::core::schemas::TODO_SCHEMA_VERSION
+    );
+    assert_eq!(
+        report["observed_application_schema"]["storage"]["format_version"],
+        2
+    );
+    assert_eq!(
+        report["observed_application_schema"]["storage"]["status"],
+        "observed"
+    );
+    let sampled = &report["sampled_format_observations"];
+    assert!(sampled["compact_envelope_v1_rows"].as_u64().unwrap() >= 1);
+    assert!(
+        sampled["checkpoint_v2_component_ref_rows"]
+            .as_u64()
+            .unwrap()
+            >= 1
+    );
+    assert!(sampled["storage_component_zlib_rows"].as_u64().unwrap() >= 1);
+
+    let encoded = report.to_string();
+    assert!(!encoded.contains("SECRET_V2_COMPONENT_PAYLOAD_"));
+    assert!(!encoded.contains(&secret_prose));
+}

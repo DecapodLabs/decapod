@@ -714,6 +714,11 @@
       "id": "test-relational-compaction",
       "summary": "test(storage): verify migration 1200 SHA-256 parity, downgrade guard, GC, and vacuum (#1630)",
       "input_digest": "sha256:1143dcf7118ad34ba8d7c46c28ffff1ff25cf18bcacf39204ab966e09ec456dc"
+    },
+    {
+      "id": "test-support-storage-inventory",
+      "summary": "test(storage): update storage inventory test fixtures for JSON path scopes (#1630)",
+      "input_digest": "sha256:04dd95109e1afda46d19ce543974e74d54ff2900fb01ef8f799c3a095be84001"
     }
   ],
   "intents": {
