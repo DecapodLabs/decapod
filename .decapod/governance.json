@@ -586,6 +586,11 @@
       "id": "c08-lib-dispatch",
       "summary": "feat(runtime): wire pre-startup governed database CLI/RPC dispatch and config preservation",
       "input_digest": "sha256:4b4e300f7b48cb2159357b1cc9761051819a061e73f52a57c018af6299641280"
+    },
+    {
+      "id": "c09-docs-generator",
+      "summary": "docs(generator): document governed database maintenance contracts and config schema",
+      "input_digest": "sha256:90f306319a5ff1e43b217e84cdda7f493352adcf039941c8bf787ff9870ef425"
     }
   ],
   "intents": {
