@@ -1,7 +1,7 @@
 {
   "schema_version": "1.0.0",
   "baseline": {
-    "accepted_commit": "19acd21f7ff50656323d037915273f03cdedc04e",
+    "accepted_commit": "3b6b31f83edfb2b77f07aa4df3b8d958074134d9",
     "policy": {
       "change_control": {
         "requires_human_review": true,
@@ -240,6 +240,14 @@
         "statement": "Independent task source overlap does not reserve a repository; task and observed checkout custody remain exclusive with fenced handoff and typed evaluation recovery.",
         "status": "open"
       },
+      "claim:managed-project-native-routing": {
+        "falsifier": "A selected project is ignored, a forged or foreign account reference authorizes data, a lost creation creates another project, refresh leaves the next native request using an old bearer, or cloud denial creates local storage.",
+        "proof_refs": [
+          "tests/common/cloud_managed_scenarios.rs"
+        ],
+        "statement": "An explicitly selected managed project controls the next native data reference while current server eligibility and checkout-scoped credential custody remain intact.",
+        "status": "open"
+      },
       "claim:measured-latency-reduction": {
         "falsifier": "Completed comparable successful runs do not show material reduction, or queue and overlapping timings are misrepresented",
         "statement": "The revised collector and grouped runtime lane materially reduce comparable successful preflight costs; no five-minute claim without measurement",
@@ -446,6 +454,7 @@
       "trajectory:01e30f48c2e7df81": "Native worker decoder fixtures have moved to portable worker tests but have not executed; root CI cannot substitute for these or native acceptance.",
       "trajectory:0369d7ba53eadf4c": "Candidate-assisted normal admission is not independent publication proof",
       "trajectory:06645c9215349379": "custody isolation is container, but this host has no Docker; the work uses a git worktree workspace",
+      "trajectory:083d2ad8e4cb2b22": "Current v2 mutation receipts and Dactyl 0.13.0 native consumer require fresh full proof; prior source proof is historical.",
       "trajectory:13217192dadb3ee3": "No local prerequisite suite run; remote full validation remains required",
       "trajectory:150b60dea853e3ba": "Real native measurements and separate holdout risk/coverage are required; current source CI success is insufficient. Evaluation criteria recorded before model outputs; no readiness fitting or holdout evaluation executed.",
       "trajectory:17669a7d73b8ecb7": "RPC download403 is runner-specific; same pinned URL succeeded on another fresh runner. Policy fixture exit126 OS detail is unknown because stderr was discarded.",
@@ -467,6 +476,7 @@
       "trajectory:50af5d188a338fdf": "First rollout cannot retroactively teach the existing released controller this new protocol; use independently built supported controller custody without claiming automatic replacement.",
       "trajectory:54138daaebe9eade": "A declared human decision reference is provenance, not authenticated publication authority; candidate-only exception records cannot waive proof.",
       "trajectory:576cf7a5bf4d1081": "Accepted master a56fd2d3 is user merge of release1402; only Cargo package version and changelog changed from d891d81d",
+      "trajectory:5df598ceaca5724c": "Native account projects have service-owned references distinct from Git labels. Reuse accepted session custody and preserve credential record format; account IDs and metadata are routing facts, never authorization.",
       "trajectory:5fe8315a1e8b30f0": "Native acceptance remains unmet mandatory publication evidence in blocked claim, plan proof hooks, deferred evidence, and publication stop condition; not an unresolved architecture decision.",
       "trajectory:62203fa208725296": "Four-platform release packaging is outside current source readiness; genuine artifact proof and resource limits must remain explicit",
       "trajectory:6279504af9ea3fac": "Substantive evidence/spec reconciliation only; implementation/model/recipe/criteria unchanged. 719 sourceCI passes but BuildkiteCI helper failed before workflow parsing, latest full validation has public403. Public logs are diagnostics, not substituted proof. 23-lineage agent-proxy holdout has related cases and four positives without P2P; all byte bounds do not imply token bounds. Native719 repairs and model holdout remain unexecuted; no PR readiness claim.",
@@ -496,6 +506,7 @@
       "trajectory:9cae7985f5372144": "50dfe init/cli_contracts target passed217.4s, but sibling enforcement timed out300s at real validate; same enforcement succeeded standalone247.6s. Isolate enforcement from sibling Bazel tests without changing commands/coverage/budgets; reviewed inventory781faa8360d5ca7701b61a3941ae6994681c7e98b229289a90bcb740e3236f97. New shared model pin/local runtime registration, native format/hash checks, bounded private records, frozen custody before proof and stale binding/model/runtime rejection before acceptance are authored not executed. Explicit registration does not run worker or certify provenance. Current worker still Metal-only; CPU/CUDA/fallback and genuine native/reference/holdout evidence remain mandatory gaps.",
       "trajectory:9ccc878a4150c313": "Native snapshot now succeeds, but dependency compilation failed before any worker tests or model/probe/reference/evaluation. Repair is compatible upstream runtime pin update on same feature branch; all new actual execution still pending.",
       "trajectory:9ec958ffca8a0a63": "Independent scalar reference repair only; own block19 floor-bucket accumulation and analytic anchors do not call candidate pooling. New tests and nonempty chunk comparisons unexecuted until next fullvalidate. Model/runtime/calibration/holdout/tolerances fixed; partial model-judgment failures and long-reference/productionfallback/independentlabel gaps still block publication.",
+      "trajectory:a20c20e43c7307b1": "Neighboring session/onboarding owners confirmed project binding is outside their scopes. Full source validation owns build/tests; no separate manual test was run. Real native service evidence remains separate from modeled HTTP.",
       "trajectory:ac23859f7db4e13e": "Preserve explicit cancellation and all remote sourcepass evidence. Late final report failure must dominate earlier readiness; this repair changes no scientific threshold or model result. Sourcepass is not nativeverification. Continue official validate exactnewcandidate on originalbranch; no new ownership, manual tests, forcepush, PR while acceptance fails, merge or release.",
       "trajectory:ad78b8b133b57577": "Only released119 snapshot blocker retired: merged fix is officially published1191. Native/parity/calibration acceptance remains unverified and required recipe remains nonaccepting until actual evidence; authored inputs and frozen criteria unchanged.",
       "trajectory:afd7f835abf45cbd": "Native full graph still requires actual platform capabilities; current Mac does not by itself establish Linux or four-archive release execution",
@@ -524,116 +535,56 @@
     }
   },
   "change": {
-    "id": "change_01M77JY4SYPX9QSTR9AAYAF6S3",
-    "base_commit": "19acd21f7ff50656323d037915273f03cdedc04e",
+    "id": "change_01M79KP72JCBRMB1MHBKZVMQGT",
+    "base_commit": "3b6b31f83edfb2b77f07aa4df3b8d958074134d9",
     "target_base": "origin/master"
   },
   "claims": {
-    "managed-project-native-routing": {
-      "statement": "An explicitly selected managed project controls the next native data reference while current server eligibility and checkout-scoped credential custody remain intact.",
-      "falsifier": "A selected project is ignored, a forged or foreign account reference authorizes data, a lost creation creates another project, refresh leaves the next native request using an old bearer, or cloud denial creates local storage.",
-      "status": "open",
+    "claim-negative-completion-gates": {
+      "statement": "Fresh docs tasks reject premature proof-backed todo completion before first proof and block readiness when an explicit unverified workunit is declared",
+      "falsifier": "todo done --validated succeeds before first proof or runtime validation issues readiness receipts with an unverified workunit",
+      "status": "supported",
       "proof_refs": [
-        "tests/common/cloud_managed_scenarios.rs"
+        "src/decapod/core/validation_rules.rs",
+        "tests/support/fresh_docs_readiness.rs"
+      ]
+    },
+    "claim-terminal-rule-context": {
+      "statement": "Terminal publication and pre-execution validation populate canonical task_type and refs/heads/<branch> git_ref context without sidecar DB creation",
+      "falsifier": "Publication rules scoped to task_types or ref_patterns fail to match canonical docs/bugfix/feature/refactor/test tasks or agent branches",
+      "status": "supported",
+      "proof_refs": [
+        "src/decapod/core/validate.rs",
+        "src/decapod/core/validation_rules.rs"
       ]
     }
   },
   "checkpoints": [
     {
-      "id": "managed-project-routing-20261112-01",
-      "summary": "Implement explicit managed project selection, idempotent creation receipt and private route binding on accepted session custody, with actual CLI routing/recovery proofs.",
-      "input_digest": "sha256:df0ddf040e5a7e9952c90fdceae3f9819f05c93184e358d48f341ba306592e5d"
-    },
-    {
-      "id": "managed-project-release-and-native-profile",
-      "summary": "Refresh supported 0.139 release projections, require current project association on creation, and declare independently provisioned two-client native PostgreSQL/revocation proof; no full passing evidence yet.",
-      "input_digest": "sha256:352e9c4a14791f5051821efd44e526603e04344a70be09f9b1f4205fc99e488d",
-      "proof_refs": [
-        "/private/tmp/decapod-managed-project-validation-01.json"
-      ]
-    },
-    {
-      "id": "resolved-project-write-binding",
-      "summary": "Repair task repo_id found by real native consumer; bind the first possible write route atomically, reject cross-project/legacy-unknown/stale-writer replays, and repair Clippy. Previous candidate failed proof.",
-      "input_digest": "sha256:440c1b28709d630ca05e2f320002e48e40da25b726146e265d9d9fc2efd57fe8",
-      "proof_refs": [
-        "/private/tmp/decapod-managed-project-validation-02.json"
-      ]
-    },
-    {
-      "id": "managed-project-accepted-1391-merge",
-      "summary": "Real merge of accepted bc0a719139.1 onboarding release, preserving both parents and active cumulative custody; regenerate matching projections, reconcile reviewed inventory and retain resolved project/write retry repairs.",
-      "input_digest": "sha256:6aba83af43573a0329ea871e7cc7b8fbf7992d888cc7ed206e002a127663f8ee",
-      "proof_refs": [
-        "/private/tmp/decapod-project-merge-trajectory.json"
-      ]
-    },
-    {
-      "id": "managed-project-accepted-proof-lifecycle",
-      "summary": "Merge actual accepted f1a6c7a0 validation lifecycle and additive build inputs with both parents, active custody, reviewed specs and unchanged required profile. Renew full candidate proof.",
-      "input_digest": "sha256:54b45b8f01cc4798208e4cbd7a58ac5f01110648ea7893c46b024e0313f7b7ae",
-      "proof_refs": [
-        "/private/tmp/decapod-project-merge-trajectory-02.json"
-      ]
-    },
-    {
-      "id": "managed-project-accepted-140-release",
-      "summary": "Merge actual acceptedfc1e2b940.140 release; retain feature code, both parents and active custody; regenerate release-bound projections via supported registry140 and reconcile same105-source graph. Full current source and native proofs must renew.",
-      "input_digest": "sha256:0e62008ca057a813f69b974ad4be600ae944aa056305d804a34fdee489996de4",
-      "proof_refs": [
-        "/private/tmp/decapod-managed-project-validation-04.json"
-      ]
-    },
-    {
-      "id": "mixed-release-operation-cache-v2",
-      "summary": "Version private mutation receipts so older array-only clients refuse instead of erasing route bindings; preserve legacy/future evidence and enforce encoded bytes before replacement. New full-profile regressions not yet executed; prior420 validation failed target freshness.",
-      "input_digest": "sha256:ab10a0d09c459b03e0aeb8c2122b497d691456416ede10d8081f2f5551bb857d",
-      "proof_refs": [
-        "/private/tmp/decapod-managed-project-validation-05.json"
-      ]
-    },
-    {
-      "id": "managed-project-1401-inventory-merge",
-      "summary": "Reconcile accepted storage inventory and 0.140.1 release, preserve managed-project routing and v2 mutation receipts; regenerate release projections through supported registry controller and retain full proof obligations.",
-      "input_digest": "sha256:90f179523f1bd9e088eb036b95730b81919a9fd49899bf580b3faebd8e09bc99",
-      "proof_refs": [
-        "/private/tmp/decapod-managed-project-validation-05.json",
-        "/private/tmp/decapod-project-init-1401.json"
-      ]
-    },
-    {
-      "id": "managed-project-1402-registry-merge",
-      "summary": "Merge accepted registry Dactyl14 dependency and1402 release; retain all managed project code, full required graph and prior checkpoints; regenerate release projections via supported controller.",
-      "input_digest": "sha256:f7333b819a74187246c3fd0ef880680d761772341f0f0b8ceb9f410b864c372a",
-      "proof_refs": [
-        "/private/tmp/decapod-managed-project-validation-06.json",
-        "/private/tmp/decapod-project-init-1402.json"
-      ]
-    },
-    {
-      "id": "managed-project-1420-master-merge",
-      "summary": "Merge origin/master d3542c30 (v0.142.0, PR #1647, PR #1649) into PR #1651; regenerate 0.142.0 entrypoints, Dockerfile, specs manifest, reviewed_sources_digest, and spec reviews inside the merge commit.",
-      "input_digest": "sha256:1ef74823f568b7105ec2c5139c851d51e6899bb1fe3cbb9821e360237d6269b7"
+      "id": "refresh-agents-0-143-0",
+      "summary": "chore(entrypoints): refresh AGENTS.md for v0.143.0",
+      "input_digest": "sha256:93b7c47c40cca876780788756d42d0340e4a2684de53ec4360742b1c18033d50"
     }
   ],
   "intents": {
-    "intent:change_01M77JY4SYPX9QSTR9AAYAF6S3": {
+    "intent:change_01M79KP72JCBRMB1MHBKZVMQGT": {
       "acceptance_criteria": [],
       "assumptions": [],
       "boundaries": [
         "Current claimed task and isolated work branch"
       ],
       "constraints": [
-        "src/decapod/core/cloud_project",
-        "src/decapod/core/cloud_client",
-        "tests"
+        "paths:[\"src/decapod/core/validation_rules.rs\"",
+        "\"src/decapod/core/validate.rs\"",
+        "\"tests/support/fresh_docs_readiness.rs\"",
+        "\".decapod/managed/specs\"]"
       ],
       "created_sequence": 1,
-      "id": "intent:change_01M77JY4SYPX9QSTR9AAYAF6S3",
+      "id": "intent:change_01M79KP72JCBRMB1MHBKZVMQGT",
       "out_of_scope": [],
       "proof_requirements": [],
-      "raw_intent": "Bind managed cloud commands to an explicitly selected server project\n\nFollow accepted native session integration with generic account/project routing. Reuse the existing CloudConnector and SessionStore; resolve or idempotently register service-issued project references, bind them privately to the exact checkout/service and managed account, and explicitly select an existing team project without guessing from names or SCM labels. Recheck current server account/project readiness before data access, reopen consumers with the refreshed bearer, preserve unknown mutation outcomes and local independence. Coordinate onboarding UI and existing session work. Full source-owned validation and real native service proof remain distinct from offline fixtures and protected hosted acceptance; no commercial policy, privileged credentials or client authorization shortcuts.",
-      "refined_intent": "Bind managed cloud commands to an explicitly selected server project\n\nFollow accepted native session integration with generic account/project routing. Reuse the existing CloudConnector and SessionStore; resolve or idempotently register service-issued project references, bind them privately to the exact checkout/service and managed account, and explicitly select an existing team project without guessing from names or SCM labels. Recheck current server account/project readiness before data access, reopen consumers with the refreshed bearer, preserve unknown mutation outcomes and local independence. Coordinate onboarding UI and existing session work. Full source-owned validation and real native service proof remain distinct from offline fixtures and protected hosted acceptance; no commercial policy, privileged credentials or client authorization shortcuts.",
+      "raw_intent": "Fix #1629 terminal rule task_type/git_ref context and negative proof-backed completion CLI regression",
+      "refined_intent": "Fix #1629 terminal rule task_type/git_ref context and negative proof-backed completion CLI regression",
       "status": "refined",
       "updated_sequence": 3
     }
@@ -641,472 +592,88 @@
   "sections": {
     "plan": {
       "constraints": {
-        "file_touch_budget": null,
+        "file_touch_budget": 30,
         "forbidden_paths": []
       },
       "deferred_questions": [],
       "human_questions": [],
-      "intent": "Reuse accepted managed session custody and the existing account connector to route current native operations to explicitly chosen server project references. Add account/project selection and idempotent creation through an agent-friendly cloud command, preserving current server authorization, exact account/checkout binding, uncertainty recovery, legacy native routes and independent local operation.",
+      "intent": "Fix #1629 terminal rule task_type/git_ref context and negative proof-backed completion CLI regression",
       "phases": [],
       "proof_hooks": [
-        "Full exact-candidate source proof and independent native service consumer; additionally prove legacy receipt migration, rejection by older array-only readers, future-version refusal and encoded-byte bounds before atomic cache replacement."
+        "decapod validate"
       ],
       "schema_version": "1.1.0",
-      "spec_reviews": [
-        {
-          "disposition": "updated",
-          "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Reconcile origin/master v0.142.0 (PR #1647 cloud login/authorization_url, PR #1649 reflection) with PR #1651 explicit project routing and v2 receipt envelope.",
-          "reviewed_code_fingerprint": "0a0498aa94eb3f7551fe07c380ef13b469d188ab33218c72f80fc2e081fc3951",
-          "spec_material_hash": "cc25d39ef9b794dfc87746deec8b4cd3d0db79315c0c7d44f31fea82b045ecf1"
-        },
-        {
-          "disposition": "updated",
-          "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Preserve CloudCommand::Login { restart }, reflection extensions, and cloud projects / cloud project use|create CLI/receipt interfaces.",
-          "reviewed_code_fingerprint": "0a0498aa94eb3f7551fe07c380ef13b469d188ab33218c72f80fc2e081fc3951",
-          "spec_material_hash": "bdd0ceb5cd3b9c68d05ceb15fc4c5981aecb18fb53823d649298222f5c2142fe"
-        },
-        {
-          "disposition": "updated",
-          "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Preserve server-side project authorization, v2 receipt integrity, and authorization_url redaction boundary.",
-          "reviewed_code_fingerprint": "0a0498aa94eb3f7551fe07c380ef13b469d188ab33218c72f80fc2e081fc3951",
-          "spec_material_hash": "f53c434dee47e75657147067f1357017b936cecab069bd94ee46775027b2aac1"
-        }
-      ],
       "state": "APPROVED",
-      "stop_conditions": [
-        "Missing provider fact or authority, unsupported controller, or unresolved ownership conflict: preserve exact evidence and continue independent work."
-      ],
-      "title": "Managed project routing and explicit account selection",
+      "stop_conditions": [],
+      "title": "Fix #1629 terminal rule task_type/git_ref context and negative proof-backed completion CLI regression",
       "todo_ids": [
-        "cicd_01m77jnnap2xt5qt"
+        "bugs_01m79knt8h670tjh"
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1794538470Z"
+      "updated_at": "1794546453Z"
     },
     "trajectory": {
       "active_boundaries": [
-        "Current accepted registry14 SDK and1402 projections; complete required source graph unchanged; no earlier receipt proves this candidate.",
-        "Current claimed task and isolated work branch",
-        "Preserve all required checks and accepted storage inventory; no manual build or tests; no hosted or payment readiness claim."
+        "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:03468b18edaef48c45bc0dd370b54065cb7a4cb4e126c0873e862c06ec5588c6",
-      "checks": [
-        {
-          "name": "accepted_target_merge",
-          "status": "passed"
-        },
-        {
-          "name": "cloud_managed_session",
-          "status": "passed"
-        },
-        {
-          "name": "cloud_supabase_boundary",
-          "status": "passed"
-        },
-        {
-          "name": "cloud_todo_operation_tests",
-          "status": "passed"
-        },
-        {
-          "name": "full-validation-05",
-          "status": "failed"
-        },
-        {
-          "name": "full-validation-06",
-          "status": "failed"
-        },
-        {
-          "name": "implementation",
-          "status": "partial"
-        },
-        {
-          "name": "independent_native_15f5237f",
-          "status": "passed"
-        },
-        {
-          "name": "interface-audit",
-          "status": "passed"
-        },
-        {
-          "name": "mixed_release_receipts",
-          "status": "partial"
-        },
-        {
-          "name": "native_project_profile",
-          "status": "failed"
-        },
-        {
-          "name": "release_dependency_policy",
-          "status": "passed"
-        },
-        {
-          "name": "release_projection_preparation",
-          "status": "partial"
-        },
-        {
-          "name": "scope_coordination",
-          "status": "passed"
-        },
-        {
-          "name": "validation_01",
-          "status": "failed"
-        },
-        {
-          "name": "validation_02",
-          "status": "failed"
-        },
-        {
-          "name": "validation_03",
-          "status": "failed"
-        },
-        {
-          "name": "validation_04",
-          "status": "failed"
-        },
-        {
-          "name": "validation_05",
-          "status": "failed"
-        }
-      ],
-      "current_phase": "registry-reconciliation",
+      "artifact_hash": "sha256:5e09defdad18fbb9580746d6c45c3bf1dee4ac378f085626a6a50d17ade69788",
+      "checks": [],
+      "current_phase": "intent",
       "custody": {
         "events": [
           {
             "event_id": "event:2",
-            "intent_id": "intent:change_01M77JY4SYPX9QSTR9AAYAF6S3",
+            "intent_id": "intent:change_01M79KP72JCBRMB1MHBKZVMQGT",
             "kind": "created",
             "sequence": 2
           },
           {
             "event_id": "event:3",
-            "intent_id": "intent:change_01M77JY4SYPX9QSTR9AAYAF6S3",
+            "intent_id": "intent:change_01M79KP72JCBRMB1MHBKZVMQGT",
             "kind": "refined",
             "sequence": 3
           },
           {
-            "detail": "trajectory:branch_01M77JY4X7Q7EW3YNCPBEC72WV",
+            "detail": "trajectory:branch_01M79KP77APYGNDQE2WK8SKS7M",
             "event_id": "event:4",
-            "intent_id": "intent:change_01M77JY4SYPX9QSTR9AAYAF6S3",
+            "intent_id": "intent:change_01M79KP72JCBRMB1MHBKZVMQGT",
             "kind": "trajectory_step_recorded",
             "sequence": 4
-          },
-          {
-            "detail": "trajectory:branch_01M77JY4X7Q7EW3YNCPBEC72WV",
-            "event_id": "event:5",
-            "intent_id": "intent:change_01M77JY4SYPX9QSTR9AAYAF6S3",
-            "kind": "trajectory_step_recorded",
-            "sequence": 5
-          },
-          {
-            "detail": "trajectory:branch_01M77JY4X7Q7EW3YNCPBEC72WV",
-            "event_id": "event:6",
-            "intent_id": "intent:change_01M77JY4SYPX9QSTR9AAYAF6S3",
-            "kind": "trajectory_step_recorded",
-            "sequence": 6
-          },
-          {
-            "detail": "trajectory:branch_01M77JY4X7Q7EW3YNCPBEC72WV",
-            "event_id": "event:7",
-            "intent_id": "intent:change_01M77JY4SYPX9QSTR9AAYAF6S3",
-            "kind": "trajectory_step_recorded",
-            "sequence": 7
-          },
-          {
-            "detail": "trajectory:branch_01M77JY4X7Q7EW3YNCPBEC72WV",
-            "event_id": "event:8",
-            "intent_id": "intent:change_01M77JY4SYPX9QSTR9AAYAF6S3",
-            "kind": "trajectory_step_recorded",
-            "sequence": 8
-          },
-          {
-            "detail": "trajectory:branch_01M77JY4X7Q7EW3YNCPBEC72WV",
-            "event_id": "event:9",
-            "intent_id": "intent:change_01M77JY4SYPX9QSTR9AAYAF6S3",
-            "kind": "trajectory_step_recorded",
-            "sequence": 9
-          },
-          {
-            "detail": "trajectory:branch_01M77JY4X7Q7EW3YNCPBEC72WV",
-            "event_id": "event:10",
-            "intent_id": "intent:change_01M77JY4SYPX9QSTR9AAYAF6S3",
-            "kind": "trajectory_step_recorded",
-            "sequence": 10
-          },
-          {
-            "detail": "trajectory:branch_01M77JY4X7Q7EW3YNCPBEC72WV",
-            "event_id": "event:11",
-            "intent_id": "intent:change_01M77JY4SYPX9QSTR9AAYAF6S3",
-            "kind": "trajectory_step_recorded",
-            "sequence": 11
-          },
-          {
-            "detail": "trajectory:branch_01M77JY4X7Q7EW3YNCPBEC72WV",
-            "event_id": "event:12",
-            "intent_id": "intent:change_01M77JY4SYPX9QSTR9AAYAF6S3",
-            "kind": "trajectory_step_recorded",
-            "sequence": 12
-          },
-          {
-            "detail": "trajectory:branch_01M77JY4X7Q7EW3YNCPBEC72WV",
-            "event_id": "event:13",
-            "intent_id": "intent:change_01M77JY4SYPX9QSTR9AAYAF6S3",
-            "kind": "trajectory_step_recorded",
-            "sequence": 13
-          },
-          {
-            "detail": "trajectory:branch_01M77JY4X7Q7EW3YNCPBEC72WV",
-            "event_id": "event:14",
-            "intent_id": "intent:change_01M77JY4SYPX9QSTR9AAYAF6S3",
-            "kind": "trajectory_step_recorded",
-            "sequence": 14
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 14,
+        "next_sequence": 4,
         "schema_version": "1.0.0",
         "trajectories": {
-          "branch_01M77JY4X7Q7EW3YNCPBEC72WV": {
+          "branch_01M79KP77APYGNDQE2WK8SKS7M": {
             "evidence_only": true,
-            "id": "branch_01M77JY4X7Q7EW3YNCPBEC72WV",
-            "intent_id": "intent:change_01M77JY4SYPX9QSTR9AAYAF6S3",
+            "id": "branch_01M79KP77APYGNDQE2WK8SKS7M",
+            "intent_id": "intent:change_01M79KP72JCBRMB1MHBKZVMQGT",
             "steps": [
               {
                 "action": "trajectory.record",
+                "command": "rustfmt --edition 2024",
                 "custody_event_id": "event:4",
                 "observations": [
-                  "src/decapod/core/cloud_client.rs",
-                  "src/decapod/core/cloud_session.rs",
-                  "src/decapod/core/todo.rs",
-                  "/private/tmp/decapod-project-orientation-20261112.json"
+                  "src/decapod/core/validation_rules.rs",
+                  "src/decapod/core/validate.rs",
+                  "tests/support/fresh_docs_readiness.rs",
+                  "src/decapod/core/validation_rules.rs",
+                  "src/decapod/core/validate.rs",
+                  "tests/support/fresh_docs_readiness.rs",
+                  ".decapod/managed/specs/ARCHITECTURE.md",
+                  ".decapod/managed/specs/VALIDATION.md",
+                  ".decapod/managed/specs/SECURITY.md"
                 ],
-                "proof_refs": [
-                  "interface-audit"
-                ],
+                "proof_refs": [],
                 "scope": [
-                  "src/decapod/core/cloud_client",
-                  "src/decapod/core/cloud_project",
-                  "tests"
+                  "\".decapod/managed/specs\"]",
+                  "\"src/decapod/core/validate.rs\"",
+                  "\"tests/support/fresh_docs_readiness.rs\"",
+                  "paths:[\"src/decapod/core/validation_rules.rs\""
                 ],
                 "sequence": 4,
-                "validation_findings": [
-                  "Native account projects have service-owned references distinct from Git labels. Reuse accepted session custody and preserve credential record format; account IDs and metadata are routing facts, never authorization."
-                ]
-              },
-              {
-                "action": "trajectory.record",
-                "custody_event_id": "event:5",
-                "observations": [
-                  "src/decapod/core/cloud_project.rs",
-                  "src/decapod/core/cloud_client.rs",
-                  "tests/common/cloud_managed_scenarios.rs"
-                ],
-                "proof_refs": [
-                  "implementation"
-                ],
-                "scope": [
-                  "src/decapod/core/cloud_client",
-                  "src/decapod/core/cloud_project",
-                  "tests"
-                ],
-                "sequence": 5,
-                "validation_findings": [
-                  "Neighboring session/onboarding owners confirmed project binding is outside their scopes. Full source validation owns build/tests; no separate manual test was run. Real native service evidence remains separate from modeled HTTP."
-                ]
-              },
-              {
-                "action": "trajectory.record",
-                "custody_event_id": "event:6",
-                "observations": [
-                  "src/decapod/core/cloud_project.rs",
-                  "tests/supabase_service.rs",
-                  "Adjacent session/onboarding owners confirmed no project-binding overlap; plan uncertainty resolved.",
-                  "Full validation 01 failed before tests on candidate 8022cae release entrypoints: /private/tmp/decapod-managed-project-validation-01.json",
-                  "Fixed controller is official registry decapod 0.139.0 from supported session update; SHA256 1e0d9f8704a62f10e51169e6efb659fd7b069f8e1e91f2922a0560d3b2e1bfde.",
-                  "Supported project-check repaired generated release projections; its host prerequisite findings do not establish full readiness.",
-                  "Added separate native project consumer profile; independent real PostgreSQL fixture proof remains pending."
-                ],
-                "proof_refs": [
-                  "scope_coordination",
-                  "validation_01",
-                  "release_projection_preparation",
-                  "native_project_profile"
-                ],
-                "scope": [
-                  "src/decapod/core/cloud_client",
-                  "src/decapod/core/cloud_project",
-                  "tests"
-                ],
-                "sequence": 6,
-                "validation_findings": []
-              },
-              {
-                "action": "trajectory.record",
-                "custody_event_id": "event:7",
-                "observations": [
-                  "Exact 12d95951 Buildkite CI/docs failed Git merge-base admission as accepted master advanced through1636/1641; native GitHub Clippy independently found collapsible_if. No publication readiness.",
-                  "Independent required Propodus PostgreSQL run on9375325 executed12d95951 and exposed blocked-before-submit add because Task.repo_id retained Git label after native project selection. New repair carries resolved repository and fences operation retries to a bind-once route. Peer session owner confirms Journal serialization outside their scope."
-                ],
-                "proof_refs": [
-                  "validation_02",
-                  "native_project_profile"
-                ],
-                "scope": [
-                  "src/decapod/core/cloud_client",
-                  "src/decapod/core/cloud_project",
-                  "tests"
-                ],
-                "sequence": 7,
-                "validation_findings": []
-              },
-              {
-                "action": "trajectory.record",
-                "custody_event_id": "event:8",
-                "observations": [
-                  "Real merge in progress frombc0a71971bce8ee036a24562b7fc4a9b771f2f40. Git restores existing a8d2b65e generated governance/spec baseline rather than inventing JSON; accepted onboarding semantic additions preserved alongside project routing, generated projections refreshed by native CLI. Checkpoints from this active PR remain cumulative, accepted branch custody remains in the real second parent.",
-                  "Use existing official registry0.139.1 controller from supported peer session update; SHA256 fb461bb5b06ea2f2df3e691caef9c1ebdee9bc144a9c6ab7d25b720268cba72c; docs unchanged, applied migration notice none. Reconciled unchanged required graph inventory for accepted version-only Cargo inputs; no check removed."
-                ],
-                "proof_refs": [
-                  "accepted_target_merge"
-                ],
-                "scope": [
-                  "src/decapod/core/cloud_client",
-                  "src/decapod/core/cloud_project",
-                  "tests"
-                ],
-                "sequence": 8,
-                "validation_findings": []
-              },
-              {
-                "action": "trajectory.record",
-                "custody_event_id": "event:9",
-                "observations": [
-                  "557d5ae4 stopped before proof: accepted master advanced again to f1a6c7a0 via1633. Incorporate actual second parent and its accepted validation lifecycle/input wiring; preserve active PR custody and regenerate supported projections. No passing readiness is carried forward."
-                ],
-                "proof_refs": [
-                  "validation_03"
-                ],
-                "scope": [
-                  "src/decapod/core/cloud_client",
-                  "src/decapod/core/cloud_project",
-                  "tests"
-                ],
-                "sequence": 9,
-                "validation_findings": []
-              },
-              {
-                "action": "trajectory.record",
-                "custody_event_id": "event:10",
-                "observations": [
-                  "15f5237f full collection failed public GithubObjects403 with explicit reset1794487263; source checks later failed current-target admission after accepted releasefc1e2b94. No proof or readiness substituted. Independent local service profile subsequently passed exact15f5237f sharing/revocation phases with real native database; modeled login/Edge envelope remain distinct.",
-                  "Supported1391 session updater with temporary backed-up explicit opt-in and private CARGO_INSTALL_ROOT installed registry0.140.0; original config restored. Fixed controllerSHA2560f84af347d2a5c51a4a649606baa40a2db8d093b71a98a5cf0a54d7d984a03f5; docs unchanged and migrations notice none. Reviewed same105-source graph for accepted version-only Cargo bytes; all required checks retained."
-                ],
-                "proof_refs": [
-                  "validation_04",
-                  "independent_native_15f5237f"
-                ],
-                "scope": [
-                  "src/decapod/core/cloud_client",
-                  "src/decapod/core/cloud_project",
-                  "tests"
-                ],
-                "sequence": 10,
-                "validation_findings": []
-              },
-              {
-                "action": "trajectory.record",
-                "custody_event_id": "event:11",
-                "observations": [
-                  "Exact420 full140 validation stopped with accepted base or transport ref changed; accepted master moved through1645 storage inventory and1646 release1401. Preserve /private/tmp/decapod-managed-project-validation-05.json; no readiness claimed.",
-                  "Source review of released array-only receipt reader found it would discard an optional routing field on rewrite. New v2 envelope makes old writers reject before dispatch; controlled legacy/future/bounded-byte regressions added. Native credential format and server protocol unchanged; tests remain unexecuted until full validation."
-                ],
-                "proof_refs": [
-                  "validation_05",
-                  "mixed_release_receipts"
-                ],
-                "scope": [
-                  "src/decapod/core/cloud_client",
-                  "src/decapod/core/cloud_project",
-                  "tests"
-                ],
-                "sequence": 11,
-                "validation_findings": []
-              },
-              {
-                "action": "merge-reconciliation",
-                "command": "supported session updater installed registry controller 0.140.1; temporary opt-in restored",
-                "custody_event_id": "event:12",
-                "observations": [
-                  "Cargo.lock",
-                  ".config/build/decapod.BUILD.bzl",
-                  "MODULE.bazel.lock",
-                  "src/decapod/core/cloud_todo_operation.rs",
-                  "/private/tmp/decapod-managed-project-validation-05.json",
-                  "/private/tmp/decapod-project-supported-update-1401.stderr"
-                ],
-                "proof_refs": [
-                  "full-validation-05"
-                ],
-                "scope": [
-                  "src/decapod/core/cloud_client",
-                  "src/decapod/core/cloud_project",
-                  "tests"
-                ],
-                "sequence": 12,
-                "validation_findings": [
-                  "Current v2 mutation receipts and Dactyl 0.13.0 native consumer require fresh full proof; prior source proof is historical."
-                ]
-              },
-              {
-                "action": "registry-reconciliation",
-                "custody_event_id": "event:13",
-                "observations": [
-                  "Cargo.toml",
-                  "Cargo.lock",
-                  "MODULE.bazel.lock",
-                  "tests/release_dependency_policy.rs",
-                  "/private/tmp/decapod-managed-project-validation-06.json",
-                  "/private/tmp/decapod-project-supported-update-1402.stderr"
-                ],
-                "proof_refs": [
-                  "full-validation-06"
-                ],
-                "scope": [
-                  "src/decapod/core/cloud_client",
-                  "src/decapod/core/cloud_project",
-                  "tests"
-                ],
-                "sequence": 13,
-                "validation_findings": []
-              },
-              {
-                "action": "trajectory.record",
-                "custody_event_id": "event:14",
-                "observations": [
-                  "src/decapod/cli.rs",
-                  "src/decapod/lib.rs",
-                  "src/decapod/core/cloud_client.rs",
-                  "src/decapod/core/cloud_todo_operation.rs",
-                  "src/decapod/core/todo.rs",
-                  "tests/common/cloud_managed_scenarios.rs",
-                  "Reconciled origin/master d3542c30 (v0.142.0, PR #1647, PR #1649) with PR #1651 using 0.142.0 controller (sha256:b4a2e0d9c512dfed650924ab57d386d127d2d3f48423ff22e7b2970ecfa82c8b); local tests passed (22 cloud_managed_session, 41 cloud_supabase_boundary, 13 cloud_todo_operation, 3 release_dependency_policy, 3 supabase_service); full decapod validate pending."
-                ],
-                "proof_refs": [
-                  "accepted_target_merge",
-                  "cloud_managed_session",
-                  "cloud_supabase_boundary",
-                  "cloud_todo_operation_tests",
-                  "release_dependency_policy"
-                ],
-                "scope": [
-                  "src/decapod/core/cloud_client",
-                  "src/decapod/core/cloud_project",
-                  "tests"
-                ],
-                "sequence": 14,
                 "validation_findings": []
               }
             ]
@@ -1114,71 +681,40 @@
         }
       },
       "declared_commands": [
-        "supported session updater installed registry controller 0.140.1; temporary opt-in restored"
+        "decapod rpc --op specs.refresh",
+        "rustfmt --edition 2024"
       ],
       "destination": "pull request",
-      "evidence": [
-        "/private/tmp/decapod-managed-project-validation-05.json",
-        "/private/tmp/decapod-managed-project-validation-06.json",
-        "/private/tmp/decapod-project-orientation-20261112.json",
-        "/private/tmp/decapod-project-supported-update-1401.stderr",
-        "/private/tmp/decapod-project-supported-update-1402.stderr",
-        "15f5237f full collection failed public GithubObjects403 with explicit reset1794487263; source checks later failed current-target admission after accepted releasefc1e2b94. No proof or readiness substituted. Independent local service profile subsequently passed exact15f5237f sharing/revocation phases with real native database; modeled login/Edge envelope remain distinct.",
-        "557d5ae4 stopped before proof: accepted master advanced again to f1a6c7a0 via1633. Incorporate actual second parent and its accepted validation lifecycle/input wiring; preserve active PR custody and regenerate supported projections. No passing readiness is carried forward.",
-        "Added separate native project consumer profile; independent real PostgreSQL fixture proof remains pending.",
-        "Adjacent session/onboarding owners confirmed no project-binding overlap; plan uncertainty resolved.",
-        "Exact 12d95951 Buildkite CI/docs failed Git merge-base admission as accepted master advanced through1636/1641; native GitHub Clippy independently found collapsible_if. No publication readiness.",
-        "Exact420 full140 validation stopped with accepted base or transport ref changed; accepted master moved through1645 storage inventory and1646 release1401. Preserve /private/tmp/decapod-managed-project-validation-05.json; no readiness claimed.",
-        "Fixed controller is official registry decapod 0.139.0 from supported session update; SHA256 1e0d9f8704a62f10e51169e6efb659fd7b069f8e1e91f2922a0560d3b2e1bfde.",
-        "Full validation 01 failed before tests on candidate 8022cae release entrypoints: /private/tmp/decapod-managed-project-validation-01.json",
-        "Independent required Propodus PostgreSQL run on9375325 executed12d95951 and exposed blocked-before-submit add because Task.repo_id retained Git label after native project selection. New repair carries resolved repository and fences operation retries to a bind-once route. Peer session owner confirms Journal serialization outside their scope.",
-        "Real merge in progress frombc0a71971bce8ee036a24562b7fc4a9b771f2f40. Git restores existing a8d2b65e generated governance/spec baseline rather than inventing JSON; accepted onboarding semantic additions preserved alongside project routing, generated projections refreshed by native CLI. Checkpoints from this active PR remain cumulative, accepted branch custody remains in the real second parent.",
-        "Reconciled origin/master d3542c30 (v0.142.0, PR #1647, PR #1649) with PR #1651 using 0.142.0 controller (sha256:b4a2e0d9c512dfed650924ab57d386d127d2d3f48423ff22e7b2970ecfa82c8b); local tests passed (22 cloud_managed_session, 41 cloud_supabase_boundary, 13 cloud_todo_operation, 3 release_dependency_policy, 3 supabase_service); full decapod validate pending.",
-        "Source review of released array-only receipt reader found it would discard an optional routing field on rewrite. New v2 envelope makes old writers reject before dispatch; controlled legacy/future/bounded-byte regressions added. Native credential format and server protocol unchanged; tests remain unexecuted until full validation.",
-        "Supported project-check repaired generated release projections; its host prerequisite findings do not establish full readiness.",
-        "Supported1391 session updater with temporary backed-up explicit opt-in and private CARGO_INSTALL_ROOT installed registry0.140.0; original config restored. Fixed controllerSHA2560f84af347d2a5c51a4a649606baa40a2db8d093b71a98a5cf0a54d7d984a03f5; docs unchanged and migrations notice none. Reviewed same105-source graph for accepted version-only Cargo bytes; all required checks retained.",
-        "Use existing official registry0.139.1 controller from supported peer session update; SHA256 fb461bb5b06ea2f2df3e691caef9c1ebdee9bc144a9c6ab7d25b720268cba72c; docs unchanged, applied migration notice none. Reconciled unchanged required graph inventory for accepted version-only Cargo inputs; no check removed."
-      ],
+      "evidence": [],
       "inspected_files": [
-        ".config/build/decapod.BUILD.bzl",
-        "Cargo.lock",
-        "Cargo.toml",
-        "MODULE.bazel.lock",
-        "src/decapod/cli.rs",
-        "src/decapod/core/cloud_client.rs",
-        "src/decapod/core/cloud_project.rs",
-        "src/decapod/core/cloud_session.rs",
-        "src/decapod/core/cloud_todo_operation.rs",
-        "src/decapod/core/todo.rs",
-        "src/decapod/lib.rs",
-        "tests/common/cloud_managed_scenarios.rs",
-        "tests/release_dependency_policy.rs",
-        "tests/supabase_service.rs"
+        "src/decapod/core/validate.rs",
+        "src/decapod/core/validation_rules.rs",
+        "tests/support/fresh_docs_readiness.rs"
       ],
-      "intent_id": "intent:change_01M77JY4SYPX9QSTR9AAYAF6S3",
+      "intent_id": "intent:change_01M79KP72JCBRMB1MHBKZVMQGT",
       "modified_files": [
-        "src/decapod/core/cloud_client.rs",
-        "src/decapod/core/cloud_project.rs",
-        "tests/common/cloud_managed_scenarios.rs"
+        ".decapod/managed/specs/ARCHITECTURE.md",
+        ".decapod/managed/specs/SECURITY.md",
+        ".decapod/managed/specs/VALIDATION.md",
+        "src/decapod/core/validate.rs",
+        "src/decapod/core/validation_rules.rs",
+        "tests/support/fresh_docs_readiness.rs"
       ],
       "next_transitions": [
         "Refine plan and declare falsifiable checks"
       ],
       "repo_scope": [
-        "src/decapod/core/cloud_client",
-        "src/decapod/core/cloud_project",
-        "tests"
+        "\".decapod/managed/specs\"]",
+        "\"src/decapod/core/validate.rs\"",
+        "\"tests/support/fresh_docs_readiness.rs\"",
+        "paths:[\"src/decapod/core/validation_rules.rs\""
       ],
-      "run_id": "branch_01M77JY4X7Q7EW3YNCPBEC72WV",
+      "run_id": "branch_01M79KP77APYGNDQE2WK8SKS7M",
       "schema_version": "1.1.0",
       "shortcut_risk_signals": [],
-      "task_id": "cicd_01m77jnnap2xt5qt",
+      "task_id": "bugs_01m79knt8h670tjh",
       "tool_calls": [],
-      "unresolved_assumptions": [
-        "Current v2 mutation receipts and Dactyl 0.13.0 native consumer require fresh full proof; prior source proof is historical.",
-        "Native account projects have service-owned references distinct from Git labels. Reuse accepted session custody and preserve credential record format; account IDs and metadata are routing facts, never authorization.",
-        "Neighboring session/onboarding owners confirmed project binding is outside their scopes. Full source validation owns build/tests; no separate manual test was run. Real native service evidence remains separate from modeled HTTP."
-      ]
+      "unresolved_assumptions": []
     }
   },
   "legacy_digests": {
