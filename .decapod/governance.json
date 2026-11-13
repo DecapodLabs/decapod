@@ -669,6 +669,14 @@
       "proof_refs": [
         "https://github.com/DecapodLabs/decapod/issues/1667"
       ]
+    },
+    {
+      "id": "issue-1667-file-17",
+      "summary": "docs(specs): declare exact published SDK compatibility evidence; file-by-file checkpoint, verification pending.",
+      "input_digest": "sha256:e38719d5294e0eb5708d7d13386454f0899a8d1cf7c5e2acf70927cb0a37f1f9",
+      "proof_refs": [
+        "https://github.com/DecapodLabs/decapod/issues/1667"
+      ]
     }
   ],
   "intents": {
@@ -705,6 +713,29 @@
         "decapod validate"
       ],
       "schema_version": "1.1.0",
+      "spec_reviews": [
+        {
+          "disposition": "updated",
+          "path": ".decapod/managed/specs/ARCHITECTURE.md",
+          "reason": "Review published Dactyl 0.16.1 checksum, resource budgets, unchanged feature/authority contracts and lockfile generation. Oversized reader controls remain actual corruption fixtures, not removed assertions. Hosted compatibility and full native publication proof pending; no local tests.",
+          "reviewed_code_fingerprint": "abcef30d7183362a0ee48960d05c6a5c6b5eb95e7faa96ce992e3cc4472b3413",
+          "spec_material_hash": "3d374960746fa09b7742ed4c1037737846f3384dc249f12cdd3304a51dfc9418"
+        },
+        {
+          "disposition": "updated",
+          "path": ".decapod/managed/specs/INTERFACES.md",
+          "reason": "Review published Dactyl 0.16.1 checksum, resource budgets, unchanged feature/authority contracts and lockfile generation. Oversized reader controls remain actual corruption fixtures, not removed assertions. Hosted compatibility and full native publication proof pending; no local tests.",
+          "reviewed_code_fingerprint": "abcef30d7183362a0ee48960d05c6a5c6b5eb95e7faa96ce992e3cc4472b3413",
+          "spec_material_hash": "3a61c1bdb97a731b3ff3a1af34b91194c3371580c372371eea8c49b9ea8ead4d"
+        },
+        {
+          "disposition": "updated",
+          "path": ".decapod/managed/specs/SECURITY.md",
+          "reason": "Review published Dactyl 0.16.1 checksum, resource budgets, unchanged feature/authority contracts and lockfile generation. Oversized reader controls remain actual corruption fixtures, not removed assertions. Hosted compatibility and full native publication proof pending; no local tests.",
+          "reviewed_code_fingerprint": "abcef30d7183362a0ee48960d05c6a5c6b5eb95e7faa96ce992e3cc4472b3413",
+          "spec_material_hash": "7bbeb9496ca39c59f7d01134362a2e78b9a972cca832c1d4ee72593c08f13024"
+        }
+      ],
       "state": "APPROVED",
       "stop_conditions": [],
       "title": "code: resolve #1667 Upgrade the published Dactyl SDK from 0.14.0 to 0.16.0",
@@ -713,13 +744,13 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1794609454Z"
+      "updated_at": "1794610071Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:f82eacdbac531e95883d83ecee8d3954c778c945377807cf6d53c5d8234ed892",
+      "artifact_hash": "sha256:29de39bf4fea69972a39b3fdac1d5f063210197da019afd6a49bd8151430c4b7",
       "checks": [],
       "current_phase": "implementation",
       "custody": {
@@ -847,10 +878,17 @@
             "intent_id": "intent:change_01M7BCN0CS3Z8AJ7TZ491WJ7CJ",
             "kind": "trajectory_step_recorded",
             "sequence": 19
+          },
+          {
+            "detail": "trajectory:branch_01M7BCN0FD8AE623HXNGA0C8F9",
+            "event_id": "event:20",
+            "intent_id": "intent:change_01M7BCN0CS3Z8AJ7TZ491WJ7CJ",
+            "kind": "trajectory_step_recorded",
+            "sequence": 20
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 19,
+        "next_sequence": 20,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M7BCN0FD8AE623HXNGA0C8F9": {
@@ -1113,6 +1151,22 @@
                 "validation_findings": [
                   "Hosted verification and exact-candidate publication readiness remain pending; no local tests run."
                 ]
+              },
+              {
+                "action": "implementation",
+                "custody_event_id": "event:20",
+                "observations": [
+                  ".decapod/managed/specs/VALIDATION.md",
+                  "https://github.com/DecapodLabs/decapod/issues/1667"
+                ],
+                "proof_refs": [],
+                "scope": [
+                  "issue-1667"
+                ],
+                "sequence": 20,
+                "validation_findings": [
+                  "Hosted verification and exact-candidate publication readiness remain pending; no local tests run."
+                ]
               }
             ]
           }
@@ -1131,6 +1185,7 @@
         ".decapod/managed/specs/INTENT.md",
         ".decapod/managed/specs/INTERFACES.md",
         ".decapod/managed/specs/SECURITY.md",
+        ".decapod/managed/specs/VALIDATION.md",
         "Cargo.lock",
         "Cargo.toml",
         "MODULE.bazel.lock",

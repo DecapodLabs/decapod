@@ -126,9 +126,9 @@ checkpoint-history verification never replace the complete exact-candidate gate.
 Plain `decapod validate` owns the configured build/tests; no separate manual
 build, fabricated proof or weakened check is allowed.
 
-## Current SDK 0.14 adoption (#1638)
+## Historical SDK 0.14 adoption (#1638)
 
-The current registry dependency is exactly Dactyl 0.14.0, checksum
+The previous accepted registry dependency was Dactyl 0.14.0, checksum
 `d10824bf8882a26b92479f07edb26c1f6fde8da3019f4001befaf28699d7a990`.
 Historical 0.12 observations below describe earlier candidates. The existing
 release-policy test retains registry-only and feature checks, and now rejects
@@ -1341,7 +1341,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `4d29b2ddd81902f7faec1d56bf9251726253493115b750bd9d3e77a7392fef55`
+- Repository signal fingerprint: `abcef30d7183362a0ee48960d05c6a5c6b5eb95e7faa96ce992e3cc4472b3413`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (234 files), `tests/` (232 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
@@ -1904,3 +1904,28 @@ Exercise actual `sqlite_maintenance` CLI/RPC worktree cases and storage-lock reg
 ## PR1662 current-master preparation
 
 This checkpoint preserves original source and tests before integration with current master. Preserve failure history and all assertions; use hosted CI for verification, without local tests or running the maintenance candidate against the live machine datastore. Prior test observations do not prove the new integration.
+
+## Current published SDK 0.16.1 adoption (#1667)
+
+The current exact registry pin/checksum is `dactyl-db =0.16.1` /
+`1b41dde2e8be3fc986f7f5a7eb4e5bfb9af49d4c39dabe98fd74a0ccb4ad7ac6`.
+Official sparse-index discovery and downloaded crate bytes agree. The Rust
+library sources match 0.16.0 byte for byte; its additive 0.15 resource accounting
+and 0.16 logical connectors retain the existing application facade. Rust 1.85
+remains below Decapod's unchanged 1.96.1 requirement. Cargo resolution updated
+only this requested SDK; Bazel crate-universe regeneration changed twelve lock
+lines after preserving the accepted one-space JSON representation. Nix derives
+its package graph from Cargo.lock and needs no separate SDK input update.
+
+`tests/release_dependency_policy.rs` pins the registry source, exact release and
+checksum while retaining storage-feature and patched Quinn-floor checks. The
+journal and transfer tests construct malformed historical payloads in disposable
+SQLite so SDK parameter budgets do not prevent exercising the original bounded
+reader rejection. No admission limit, proof assertion or existing check is
+removed. The required source suite still includes offline Supabase/Neon/local
+consumer behavior; this update cannot establish real hosted backend parity.
+
+No local compilation or tests were run. Dependency resolution and Bazel module
+regeneration are input-authoring operations, not proof. Hosted execution and the
+full exact-candidate official Decapod0.144.3 publication gate remain pending;
+provider requirements and accepted execution contracts are unchanged.
