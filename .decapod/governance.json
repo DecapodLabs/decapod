@@ -663,6 +663,11 @@
       "id": "add-compact-storage-schemas",
       "summary": "feat(storage): add storage_components, storage_component_refs, and migration manifest DDL",
       "input_digest": "sha256:3c425e3b523f92438f9c194206789033b8a0910420d376e2e37e432ff1d0b7ad"
+    },
+    {
+      "id": "compact-event-envelope-codec",
+      "summary": "feat(events): add lossless _ce_v1 compact event envelope storage and write-admission bounds",
+      "input_digest": "sha256:83dbdd05111b0eb45d89b1b3171dc18871a3fb8dd51386b47baf9e2b928f44f9"
     }
   ],
   "intents": {
