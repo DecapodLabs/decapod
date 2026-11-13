@@ -666,6 +666,11 @@
       "id": "c24-spec-interfaces-1568",
       "summary": "docs(specs): document capability-scoped database maintenance CLI and RPC (#1568)",
       "input_digest": "sha256:c2adeb8da261666ae3e2a2d348af2b89727815a08db82a82085b7e39299941c5"
+    },
+    {
+      "id": "c25-spec-security-1568",
+      "summary": "docs(specs): document local database maintenance security and custody boundaries (#1568)",
+      "input_digest": "sha256:c234969f14ccde7f52956d8ee00583297673c6db5ac75fc1ea3f120bf75f37e2"
     }
   ],
   "intents": {

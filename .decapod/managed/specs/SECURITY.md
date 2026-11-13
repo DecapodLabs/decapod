@@ -598,7 +598,7 @@ execution evidence remains required before publication readiness.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `0a0498aa94eb3f7551fe07c380ef13b469d188ab33218c72f80fc2e081fc3951`
+- Repository signal fingerprint: `97f60f7a1060e9989264ddbf5b97ac333fcbf0a63c78a0d5afe38d3cd2d94b3e`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (231 files), `tests/` (232 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
@@ -913,3 +913,29 @@ The resolved native project also supplies the repository field of newly created 
 ## Versioned cloud mutation receipts
 
 Operation-route binding must survive clients of different releases. Versioned receipt envelopes reject older array-only writers before dispatch, while the stable lock serializes migration with older in-flight writes. Both record count and actual encoded bytes are bounded before atomic replacement; an upgrade that would exceed the byte cap preserves the original evidence instead of truncating it.
+
+## Capability-scoped local database maintenance boundary (#1568)
+
+`[governance.db_maintenance]` defaults to `enabled = false` and denies every
+agent maintenance capability until opted in on the accepted repository base.
+`db_maintenance::load_canonical_policy` resolves the main repository root from
+any linked worktree, rejects symlinked or oversized configs, and compares the
+canonical `.decapod/config.toml` against the accepted Git base blob so a
+worktree or unmerged branch cannot self-elevate (`DB_MAINTENANCE_POLICY_UNACCEPTED`).
+Unknown capability strings fail closed (`DB_MAINTENANCE_UNKNOWN_CAPABILITY`),
+and `db.recover` is rejected in `allowed_capabilities` and `agent_overrides`
+(`DB_MAINTENANCE_RECOVER_FORBIDDEN_FOR_AGENTS`).
+
+Governed operations require a verified active local session
+(`AGENT_IDENTITY_UNAUTHENTICATED` / `AGENT_IDENTITY_FORGED`) without
+auto-acquiring credentials on invalid passwords, and require execution from an
+isolated `.decapod/workspaces/*` worktree (`WORKTREE_CUSTODY_REQUIRED`). Backup
+paths are confined to `.decapod/backups/` with parent traversal, symlink and
+overwrite refusal. `lock release-own` never sends OS signals (`kill`), never
+deletes `.lock` files, refuses active kernel locks held by foreign processes,
+and relinquishes only idle owned current-process leases. Diagnostics and
+`.decapod/data/db_maintenance_audit.jsonl` redact repository roots and tokens
+rather than storing raw secrets or host-identifying paths. Within single-user
+local mode, `DECAPOD_AGENT_ID` remains a cooperative label rather than
+cryptographic OS principal isolation; cloud/hosted PostgreSQL maintenance fails
+closed even when `[governance.db_maintenance]` is enabled.
