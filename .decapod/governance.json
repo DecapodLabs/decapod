@@ -599,6 +599,11 @@
       "id": "validate-canonical-task-type",
       "summary": "fix(validation): normalize workspace task_type for pre-execution rules (#1629)",
       "input_digest": "sha256:1fc07435c1c6ca75ebb1e2185bec5101bed17ab025528faa309be96fb08a1616"
+    },
+    {
+      "id": "fresh-docs-negative-completion-regression",
+      "summary": "test(validation): verify negative proof-backed completion gates on fresh docs task (#1629)",
+      "input_digest": "sha256:d120ba700e209f017ea77ff910c4317b24dd4e347b05aef377d0f51303bce145"
     }
   ],
   "intents": {
