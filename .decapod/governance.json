@@ -649,6 +649,11 @@
       "id": "spec-manifest-refresh-0-143-0",
       "summary": "docs(specs): refresh .manifest.json and record publication spec reviews",
       "input_digest": "sha256:0dd55290f8a92cf7f572e7f3a3dc47134c500ebc9b7de21d9cadc29992b5bd7d"
+    },
+    {
+      "id": "reconcile-master-1655",
+      "summary": "chore(merge): reconcile accepted master (#1655) into #1629",
+      "input_digest": "sha256:b2815f81dc03781d88bbc28499432e7195249a31c4dc8fc8b6c6cb3b7c1ff0a3"
     }
   ],
   "intents": {
@@ -692,23 +697,23 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Document canonical task_type and git_ref normalization across pre-execution and terminal validation rules",
-          "reviewed_code_fingerprint": "6083549392b8149286d1b5e4e2d33cffe84916de1fe2e7a919b9b3ce8197ae3d",
-          "spec_material_hash": "3aca112d314a857e2b7e0f111f6dcce2d912030e5aab5b4e556900a60dce5e3b"
+          "reason": "Preserve #1655 owned scratch cleanup and #1629 canonical terminal rule task_type/git_ref normalization",
+          "reviewed_code_fingerprint": "05f69cf01548a4df7447f432f373a07c595346c26c8bc32f1b06748f923b0aa7",
+          "spec_material_hash": "11ce1ecc3ba50564b2ec464e88d3c899f039ce3a31c2f6fc08ec189e743b91bd"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Public CLI and RPC command schemas remain unchanged; internal validation rule context normalization and negative CLI regressions preserve existing interfaces",
-          "reviewed_code_fingerprint": "6083549392b8149286d1b5e4e2d33cffe84916de1fe2e7a919b9b3ce8197ae3d",
+          "reason": "Public CLI and RPC command schemas remain unchanged across #1655 merge and #1629 validation rule context updates",
+          "reviewed_code_fingerprint": "05f69cf01548a4df7447f432f373a07c595346c26c8bc32f1b06748f923b0aa7",
           "spec_material_hash": "bdd0ceb5cd3b9c68d05ceb15fc4c5981aecb18fb53823d649298222f5c2142fe"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Document fail-closed terminal rule context resolution and proof-backed completion custody boundaries",
-          "reviewed_code_fingerprint": "6083549392b8149286d1b5e4e2d33cffe84916de1fe2e7a919b9b3ce8197ae3d",
-          "spec_material_hash": "2e0ccd4018835cd767ce2256291ec4b66822c36cde3d797049c46fe8523e14de"
+          "reason": "Preserve #1655 scratch recovery boundary alongside #1629 terminal rule context and proof-backed completion custody",
+          "reviewed_code_fingerprint": "05f69cf01548a4df7447f432f373a07c595346c26c8bc32f1b06748f923b0aa7",
+          "spec_material_hash": "5bbc2655c6e433d388c4ac1a54bd7905a3b0b7934fa11c3d257f58f062a8ba14"
         }
       ],
       "state": "APPROVED",
@@ -719,7 +724,7 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1794546506Z"
+      "updated_at": "1794546741Z"
     },
     "trajectory": {
       "active_boundaries": [
