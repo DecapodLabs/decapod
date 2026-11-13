@@ -591,6 +591,11 @@
       "id": "pr1661-final-config-manifest",
       "summary": "Refresh final config/spec manifest through official0.143.1 after reviewed proof-source pin; fix observed standalone CI drift and preserve blocked public-provider rate-limit evidence.",
       "input_digest": "sha256:2031e4926ea3f9c5e45b94c7a84c11e738787e57b856b9f8d249ec15a79dd5c6"
+    },
+    {
+      "id": "fix-nongit-init-workspace-status",
+      "summary": "Require registered Git worktree only inside Git repos or managed workspaces",
+      "input_digest": "sha256:caababf20342cb54cab9e63f6cc3e59aacf7572ebc47db2e6ff2c32ca472f1ab"
     }
   ],
   "intents": {
