@@ -905,7 +905,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `a4e7f3ad5ed5f94a303dd4bd008ea9d584d7f081dd49b483c2a364368a9d1666`
+- Repository signal fingerprint: `c8edcfc9631096f2d1092dd8d5c7390a630a6ba83c679ab4bd07ab03a7faf22e`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (231 files), `tests/` (232 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
@@ -1150,6 +1150,8 @@ Both pre-execution (`core/validate.rs::get_current_task_type`) and terminal publ
 The terminal boundary shares the original invocation deadline. It checks the remaining budget around evidence reads and before issuing proof; native success files remain private until an atomic bundle publication that rechecks that deadline. Remote ready verdicts likewise stage privately before publication. A deadline expiry cannot turn completed checks into late publication authority.
 
 A fresh worktree may lack the ignored context-capsule policy cache. The policy loader materializes and validates that cache when needed; its absence is not a missing source scaffold and must not trigger a rewrite of the committed specs manifest before proof. Missing tracked scaffold surfaces retain their repair path.
+
+When `decapod govern workunit` mutates or queries workunit journal state from a linked Git worktree (`<worktree>/.git` file), `core/workunit.rs::runtime_data_dir` resolves the repository's initialized control-plane datastore (`agents`, `risk_zones`, and `events` tables in `<main_repo>/.decapod/data/decapod.db`) while keeping ignored manifest projections under `<worktree>/.decapod/data/workunits/`. Uninitialized parent or standalone directories still fail closed with `WORKUNIT_RUNTIME_UNINITIALIZED` without creating partial events-only databases.
 
 ## Explicit managed project routing
 

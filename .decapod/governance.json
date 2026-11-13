@@ -649,6 +649,11 @@
       "id": "test-workunit-linked-worktree",
       "summary": "Add linked Git worktree runtime resolution regression test",
       "input_digest": "sha256:1045b3ca9942de855ec073490cdb6665be0bfb4251c95312505eee68bfa0afa1"
+    },
+    {
+      "id": "docs-specs-architecture-workunit",
+      "summary": "Document linked-worktree workunit runtime datastore resolution",
+      "input_digest": "sha256:035d376a1a8685f0e929cf685e699aa64209852c817ddd6729c87a5f8c1ed0c0"
     }
   ],
   "intents": {
