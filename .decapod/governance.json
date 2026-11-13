@@ -704,6 +704,11 @@
       "id": "test-datastore-contract",
       "summary": "test(storage): verify write-admission bounds, lossless oversized patch, and convergence (#1630)",
       "input_digest": "sha256:e948fcb736ed5197dda4036e20856aa1d2917ded44a04145a388f9226d0c334a"
+    },
+    {
+      "id": "test-datastore-efficiency",
+      "summary": "test(storage): verify >=30% lossless v2 compaction savings and benchmark harness (#1630)",
+      "input_digest": "sha256:a6e4dd7f6076d3da692058bf7e1e3c68232535d75ea2b4a356853f88eeed28a9"
     }
   ],
   "intents": {
