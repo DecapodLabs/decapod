@@ -632,6 +632,11 @@
       "proof_refs": [
         "pr1649-preserved-history-and-merge-review"
       ]
+    },
+    {
+      "id": "pr1649-ci-budget-spec-refresh",
+      "summary": "Reconcile living spec manifest hashes and extend entrypoint correctness Bazel timeout for CI",
+      "input_digest": "sha256:3c3e7c3ec4b86dd4cae2948c8cfdfcd6d0d1214da459b75685fa748db709a860"
     }
   ],
   "intents": {
