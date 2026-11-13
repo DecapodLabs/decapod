@@ -1511,3 +1511,12 @@ the accepted checks, or first establish a separately accepted policy transition
 on the target. Additional required checks are allowed. Initial local adoption and
 unchanged accepted contracts continue through the existing runtime and receipt
 interfaces; no new command or bypass is exposed.
+
+### Source-definition changes
+
+`ACCEPTED_REPOSITORY_CONTRACT_CHANGED` also identifies replacement of the accepted
+local source-definition digest. Recomputing a candidate digest cannot authorize
+changed inventoried check scripts, build/dependency definitions or provider
+inputs. Retain the accepted inventory or establish the reviewed revision on the
+target before revalidation. Additive commands under that inventory and first
+local adoption remain supported; no override or second policy store is added.
