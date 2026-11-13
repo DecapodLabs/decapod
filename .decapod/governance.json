@@ -592,6 +592,11 @@
       "id": "refresh-dockerfile-v0143",
       "summary": "Refresh Dockerfile.decapod pin to v0.143.0-debian",
       "input_digest": "sha256:854a51fc505b0f9ad02b4ad5327b0e3f6c27ff4b2614bd5686b61883e3546323"
+    },
+    {
+      "id": "policy-workspace-authoring-zone",
+      "summary": "Map workspace.authoring.* actions to workspace.authoring risk zone",
+      "input_digest": "sha256:a15e6b1154982af054b64f54709e140fb2b3b423fba12f630edfe0e4280a3e03"
     }
   ],
   "intents": {
