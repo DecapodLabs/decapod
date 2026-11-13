@@ -2493,3 +2493,572 @@ fn named_resource_custody_excludes_even_the_same_agent() {
         "ok"
     );
 }
+
+fn init_git_repo_with_store(repo: &Path) -> PathBuf {
+    for args in [
+        &["init", "-q", "-b", "master"][..],
+        &["config", "user.email", "test@example.invalid"],
+        &["config", "user.name", "Test"],
+    ] {
+        assert!(
+            Command::new("git")
+                .args(args)
+                .current_dir(repo)
+                .status()
+                .unwrap()
+                .success()
+        );
+    }
+    std::fs::write(
+        repo.join(".gitignore"),
+        ".decapod/data/\n.decapod/managed/\n.decapod/workspaces/\n",
+    )
+    .unwrap();
+    std::fs::create_dir_all(repo.join(".decapod")).unwrap();
+    write_basic_shared_config(repo, false);
+    std::fs::write(repo.join("README.md"), "# fixture\n").unwrap();
+    for args in [
+        &["add", ".gitignore", ".decapod/config.toml", "README.md"][..],
+        &["-c", "commit.gpgsign=false", "commit", "-qm", "base"],
+    ] {
+        assert!(
+            Command::new("git")
+                .args(args)
+                .current_dir(repo)
+                .status()
+                .unwrap()
+                .success()
+        );
+    }
+    let store = repo.join(".decapod/data");
+    std::fs::create_dir_all(&store).unwrap();
+    initialize_todo_db(&store).unwrap();
+    store
+}
+
+fn add_canonical_worktree(repo: &Path, name: &str, branch: &str) -> PathBuf {
+    let wt = repo.join(".decapod/workspaces").join(name);
+    std::fs::create_dir_all(wt.parent().unwrap()).unwrap();
+    let out = Command::new("git")
+        .args([
+            "worktree",
+            "add",
+            "-q",
+            "-b",
+            branch,
+            wt.to_str().unwrap(),
+            "master",
+        ])
+        .current_dir(repo)
+        .output()
+        .unwrap();
+    assert!(
+        out.status.success(),
+        "git worktree add failed: {}",
+        String::from_utf8_lossy(&out.stderr)
+    );
+    wt
+}
+
+#[test]
+fn authoring_bind_forced_event_failure_rolls_back_with_zero_orphan_rows() {
+    let tmp = tempdir().unwrap();
+    let repo = tmp.path();
+    let store = init_git_repo_with_store(repo);
+    let task_id = add_scoped_task(
+        &store,
+        "Transactional bind rollback",
+        "root",
+        repo.to_str().unwrap(),
+    );
+    assert_eq!(
+        claim_task(&store, &task_id, "alpha", ClaimMode::Exclusive).unwrap()["status"],
+        "ok"
+    );
+    let wt = add_canonical_worktree(
+        repo,
+        "alpha-wt-rollback",
+        &format!("agent/alpha/{task_id}-rb"),
+    );
+
+    let db = Connection::open(store.join(schemas::LOCAL_DB_NAME)).unwrap();
+    let zone_trust: String = db
+        .query_row(
+            "SELECT required_trust_level FROM risk_zones WHERE zone_name='workspace.authoring'",
+            [],
+            |r| r.get(0),
+        )
+        .unwrap();
+    assert_eq!(zone_trust, "basic");
+    db.execute(
+        "CREATE TRIGGER reject_authoring_bind_audit BEFORE INSERT ON events WHEN NEW.event_type='authoring.bind' BEGIN SELECT RAISE(ABORT, 'forced_authoring_bind_event_failure'); END;",
+        [],
+    )
+    .unwrap();
+    drop(db);
+
+    let err = decapod::core::todo::admit_authoring(&store, &wt, "alpha")
+        .unwrap_err()
+        .to_string();
+    assert!(err.contains("forced_authoring_bind_event_failure"), "{err}");
+
+    let db = Connection::open(store.join(schemas::LOCAL_DB_NAME)).unwrap();
+    let orphan_rows: i64 = db
+        .query_row("SELECT count(*) FROM authoring_bindings", [], |r| r.get(0))
+        .unwrap();
+    assert_eq!(
+        orphan_rows, 0,
+        "failed event append must roll back authoring_bindings"
+    );
+    let bind_events: i64 = db
+        .query_row(
+            "SELECT count(*) FROM events WHERE event_type='authoring.bind'",
+            [],
+            |r| r.get(0),
+        )
+        .unwrap();
+    assert_eq!(bind_events, 0);
+    let broker_ops: i64 = db
+        .query_row(
+            "SELECT count(*) FROM events WHERE stream='broker' AND payload LIKE '%workspace.authoring.bind%'",
+            [],
+            |r| r.get(0),
+        )
+        .unwrap();
+    assert!(
+        broker_ops >= 1,
+        "admit_authoring must use dedicated workspace.authoring.bind op"
+    );
+
+    db.execute("DROP TRIGGER reject_authoring_bind_audit", [])
+        .unwrap();
+    drop(db);
+
+    decapod::core::todo::admit_authoring(&store, &wt, "alpha").unwrap();
+    decapod::core::todo::check_authoring(&store, &wt, "alpha", false).unwrap();
+    let db = Connection::open(store.join(schemas::LOCAL_DB_NAME)).unwrap();
+    let committed_rows: i64 = db
+        .query_row("SELECT count(*) FROM authoring_bindings", [], |r| r.get(0))
+        .unwrap();
+    assert_eq!(committed_rows, 1);
+}
+
+#[test]
+fn authoring_binding_one_to_one_uniqueness_renew_and_full_lifecycle_retirement() {
+    let tmp = tempdir().unwrap();
+    let repo = tmp.path();
+    let store = init_git_repo_with_store(repo);
+    let task_id = add_scoped_task(&store, "Lifecycle custody", "root", repo.to_str().unwrap());
+    assert_eq!(
+        claim_task(&store, &task_id, "alpha", ClaimMode::Exclusive).unwrap()["status"],
+        "ok"
+    );
+
+    let wt1 = add_canonical_worktree(repo, "alpha-wt-1", &format!("agent/alpha/{task_id}-one"));
+    let wt2 = add_canonical_worktree(repo, "alpha-wt-2", &format!("agent/alpha/{task_id}-two"));
+
+    // Unbound checkout fails closed in check_authoring.
+    assert!(
+        decapod::core::todo::check_authoring(&store, &wt1, "alpha", false)
+            .unwrap_err()
+            .to_string()
+            .contains("AUTHORING_BINDING_REQUIRED")
+    );
+    assert!(
+        decapod::core::todo::check_authoring(&store, &wt1, "unknown", false)
+            .unwrap_err()
+            .to_string()
+            .contains("AUTHORING_ACTOR_REQUIRED")
+    );
+
+    // Bind wt1 -> second live worktree wt2 for the same task must be rejected.
+    decapod::core::todo::admit_authoring(&store, &wt1, "alpha").unwrap();
+    let dup_err = decapod::core::todo::admit_authoring(&store, &wt2, "alpha")
+        .unwrap_err()
+        .to_string();
+    assert!(
+        dup_err.contains("AUTHORING_TASK_ALREADY_BOUND"),
+        "{dup_err}"
+    );
+
+    // Same-owner todo renew advances the already-admitted binding atomically,
+    // preserving wt1 admissibility while still rejecting dual live worktree wt2.
+    let renewed = renew_claim_lease(&store, &task_id, "alpha", Some(1800)).unwrap();
+    assert_eq!(renewed["status"], "ok");
+    decapod::core::todo::check_authoring(&store, &wt1, "alpha", false)
+        .expect("renewed lease must advance admitted authoring binding");
+    assert!(
+        decapod::core::todo::admit_authoring(&store, &wt2, "alpha")
+            .unwrap_err()
+            .to_string()
+            .contains("AUTHORING_TASK_ALREADY_BOUND")
+    );
+
+    // Removed/deleted worktree recovery: removing wt1 allows wt2 to replace the dead binding.
+    assert!(
+        Command::new("git")
+            .args(["worktree", "remove", "--force", wt1.to_str().unwrap()])
+            .current_dir(repo)
+            .status()
+            .unwrap()
+            .success()
+    );
+    decapod::core::todo::admit_authoring(&store, &wt2, "alpha")
+        .expect("removed worktree binding must be replaced cleanly");
+    decapod::core::todo::check_authoring(&store, &wt2, "alpha", false).unwrap();
+
+    let count_bindings = |store: &Path| -> i64 {
+        let db = Connection::open(store.join(schemas::LOCAL_DB_NAME)).unwrap();
+        db.query_row("SELECT count(*) FROM authoring_bindings", [], |r| r.get(0))
+            .unwrap()
+    };
+    assert_eq!(count_bindings(&store), 1);
+
+    // 1. yield retires binding.
+    assert_eq!(
+        yield_claim_lease(&store, &task_id, "alpha", "pause").unwrap()["status"],
+        "ok"
+    );
+    assert_eq!(count_bindings(&store), 0);
+    assert!(decapod::core::todo::check_authoring(&store, &wt2, "alpha", false).is_err());
+
+    // 2. re-claim + bind, then release_task_as_actor retires binding.
+    claim_task(&store, &task_id, "alpha", ClaimMode::Exclusive).unwrap();
+    decapod::core::todo::admit_authoring(&store, &wt2, "alpha").unwrap();
+    assert_eq!(count_bindings(&store), 1);
+    assert_eq!(
+        decapod::core::todo::release_task_as_actor(&store, &task_id, "alpha").unwrap()["status"],
+        "ok"
+    );
+    assert_eq!(count_bindings(&store), 0);
+
+    // 3. re-claim with 3s lease + bind, then expired reclaim by beta retires alpha's binding and requires fresh bind.
+    assert_eq!(
+        claim_task_with_lease(
+            &store,
+            &task_id,
+            "alpha",
+            ClaimMode::Exclusive,
+            Some(3),
+            None
+        )
+        .unwrap()["status"],
+        "ok"
+    );
+    decapod::core::todo::admit_authoring(&store, &wt2, "alpha").unwrap();
+    std::thread::sleep(Duration::from_millis(3200));
+    let reclaimed = claim_task(&store, &task_id, "beta", ClaimMode::Exclusive).unwrap();
+    assert_eq!(reclaimed["status"], "ok");
+    assert_eq!(count_bindings(&store), 0);
+    assert!(decapod::core::todo::check_authoring(&store, &wt2, "beta", false).is_err());
+    decapod::core::todo::admit_authoring(&store, &wt2, "beta").unwrap();
+    assert_eq!(count_bindings(&store), 1);
+
+    // 4. handoff from beta to gamma retires beta's binding and requires fresh bind for gamma.
+    {
+        let db = Connection::open(store.join(schemas::LOCAL_DB_NAME)).unwrap();
+        set_agent_trust(&db, "beta", "verified", "1793750000Z");
+        set_agent_trust(&db, "gamma", "verified", "1793750000Z");
+    }
+    let repo_store = Store {
+        kind: StoreKind::Repo,
+        root: store.clone(),
+    };
+    policy::approve_action(&repo_store, "todo.handoff", None, "operator", "global").unwrap();
+    let handed = handoff_task_as(
+        &repo_store,
+        &task_id,
+        "gamma",
+        Some("beta"),
+        "transfer",
+        Some(1800),
+        "beta",
+    )
+    .unwrap();
+    assert_eq!(handed["status"], "ok");
+    assert_eq!(count_bindings(&store), 0);
+    assert!(decapod::core::todo::check_authoring(&store, &wt2, "gamma", false).is_err());
+    decapod::core::todo::admit_authoring(&store, &wt2, "gamma").unwrap();
+    assert_eq!(count_bindings(&store), 1);
+
+    // 5. archive (and done) retires binding via update_status.
+    assert_eq!(
+        decapod::core::todo::release_task_as_actor(&store, &task_id, "gamma").unwrap()["status"],
+        "ok"
+    );
+
+    let archive_task = add_scoped_task(&store, "Archive lifecycle", "root", repo.to_str().unwrap());
+    claim_task(&store, &archive_task, "alpha", ClaimMode::Exclusive).unwrap();
+    let wt_arch = add_canonical_worktree(
+        repo,
+        "alpha-wt-arch",
+        &format!("agent/alpha/{archive_task}-arch"),
+    );
+    decapod::core::todo::admit_authoring(&store, &wt_arch, "alpha").unwrap();
+    assert_eq!(count_bindings(&store), 1);
+    policy::approve_action(&repo_store, "task.archive", None, "operator", "global").unwrap();
+    let arch_snapshot = get_task(&store, &archive_task).unwrap().unwrap();
+    update_status(
+        &repo_store,
+        &archive_task,
+        arch_snapshot.revision,
+        &arch_snapshot.status,
+        "archived",
+        "task.archive",
+        serde_json::json!({}),
+    )
+    .unwrap();
+    assert_eq!(count_bindings(&store), 0);
+
+    // Also verify `done` transition retires binding via update_status.
+    let done_task = add_scoped_task(&store, "Done lifecycle", "root", repo.to_str().unwrap());
+    claim_task(&store, &done_task, "alpha", ClaimMode::Exclusive).unwrap();
+    let wt_done = add_canonical_worktree(
+        repo,
+        "alpha-wt-done",
+        &format!("agent/alpha/{done_task}-done"),
+    );
+    decapod::core::todo::admit_authoring(&store, &wt_done, "alpha").unwrap();
+    assert_eq!(count_bindings(&store), 1);
+    decapod::core::todo::release_task_as_actor(&store, &done_task, "alpha").unwrap();
+    // Seed a residual pre-done binding row so update_status("done") exercises retirement directly.
+    let wt_done_obs = decapod::core::workspace::observe_checkout(&wt_done);
+    {
+        let db = Connection::open(store.join(schemas::LOCAL_DB_NAME)).unwrap();
+        db.execute(
+            "INSERT INTO authoring_bindings(worktree_id,task_id,agent_id,lease_generation,branch,repository_id,updated_at) VALUES(?1,?2,'alpha',1,?3,?4,'200Z')",
+            decapod::core::db::params![
+                wt_done_obs.worktree_id,
+                done_task,
+                wt_done_obs.branch,
+                wt_done_obs.repository_id
+            ],
+        )
+        .unwrap();
+    }
+    assert_eq!(count_bindings(&store), 1);
+    let done_snapshot = get_task(&store, &done_task).unwrap().unwrap();
+    update_status(
+        &repo_store,
+        &done_task,
+        done_snapshot.revision,
+        &done_snapshot.status,
+        "done",
+        "task.done",
+        serde_json::json!({}),
+    )
+    .unwrap();
+    assert_eq!(count_bindings(&store), 0);
+
+    // 6. workspace prune retires any residual binding on a pruned Decapod-owned worktree.
+    let prune_tmp = tempdir().unwrap();
+    let prune_repo = prune_tmp.path();
+    let prune_store = init_git_repo_with_store(prune_repo);
+    let prune_repo_store = Store {
+        kind: StoreKind::Repo,
+        root: prune_store.clone(),
+    };
+    let prune_task = add_scoped_task(
+        &prune_store,
+        "Prune lifecycle",
+        "root",
+        prune_repo.to_str().unwrap(),
+    );
+    claim_task(&prune_store, &prune_task, "alpha", ClaimMode::Exclusive).unwrap();
+    let ensured_prune = decapod::core::workspace::ensure_workspace(
+        prune_repo,
+        Some(decapod::core::workspace::WorkspaceConfig {
+            branch: Some(format!("agent/alpha/{prune_task}-prune")),
+            use_container: false,
+            base_image: None,
+            base_branch: Some("master".to_string()),
+        }),
+        "alpha",
+    )
+    .unwrap();
+    let wt_prune = PathBuf::from(ensured_prune.git.worktree_path.unwrap());
+    decapod::core::todo::release_task_as_actor(&prune_store, &prune_task, "alpha").unwrap();
+    let prune_snap = get_task(&prune_store, &prune_task).unwrap().unwrap();
+    update_status(
+        &prune_repo_store,
+        &prune_task,
+        prune_snap.revision,
+        &prune_snap.status,
+        "done",
+        "task.done",
+        serde_json::json!({}),
+    )
+    .unwrap();
+    assert_eq!(count_bindings(&prune_store), 0);
+    let wt_prune_obs = decapod::core::workspace::observe_checkout(&wt_prune);
+    {
+        let db = Connection::open(prune_store.join(schemas::LOCAL_DB_NAME)).unwrap();
+        db.execute(
+            "INSERT INTO authoring_bindings(worktree_id,task_id,agent_id,lease_generation,branch,repository_id,updated_at) VALUES(?1,?2,'alpha',1,?3,?4,'200Z')",
+            decapod::core::db::params![
+                wt_prune_obs.worktree_id,
+                prune_task,
+                wt_prune_obs.branch,
+                wt_prune_obs.repository_id
+            ],
+        )
+        .unwrap();
+    }
+    assert_eq!(count_bindings(&prune_store), 1);
+    let prune_report = decapod::core::workspace::prune_workspaces_report(prune_repo, true).unwrap();
+    assert!(
+        !prune_report.pruned.is_empty(),
+        "expected wt_prune to be pruned, got {prune_report:?}"
+    );
+    assert_eq!(count_bindings(&prune_store), 0);
+
+    // 7. Missing datastore fails closed in get_workspace_status.
+    let missing_repo = tempdir().unwrap();
+    let missing_store = init_git_repo_with_store(missing_repo.path());
+    let missing_wt = add_canonical_worktree(
+        missing_repo.path(),
+        "alpha-wt-missing-db",
+        "agent/alpha/bugs_0123456789abcdef-missing",
+    );
+    std::fs::remove_dir_all(&missing_store).unwrap();
+    let ws_status = decapod::core::workspace::get_workspace_status(&missing_wt).unwrap();
+    assert!(!ws_status.can_work, "{ws_status:?}");
+    assert!(!ws_status.blockers.is_empty());
+}
+
+#[test]
+fn shared_resource_reservations_gate_release_and_publish_without_blocking_source_authoring() {
+    let tmp = tempdir().unwrap();
+    let repo = tmp.path();
+    let store = init_git_repo_with_store(repo);
+
+    let rel_task = add_scoped_task(
+        &store,
+        "Release shepherd",
+        "resource:release",
+        repo.to_str().unwrap(),
+    );
+    let pub_task = add_scoped_task(
+        &store,
+        "Integration shepherd",
+        "resource:integration:master",
+        repo.to_str().unwrap(),
+    );
+    let src_task = add_scoped_task(
+        &store,
+        "Isolated feature work",
+        "root",
+        repo.to_str().unwrap(),
+    );
+
+    assert_eq!(
+        claim_task(&store, &rel_task, "shepherd", ClaimMode::Exclusive).unwrap()["status"],
+        "ok"
+    );
+    assert_eq!(
+        claim_task(&store, &pub_task, "shepherd", ClaimMode::Exclusive).unwrap()["status"],
+        "ok"
+    );
+
+    // Source task claim in the same repo succeeds without bogus path_overlap against resource tasks.
+    let src_claimed = claim_task(&store, &src_task, "author", ClaimMode::Exclusive).unwrap();
+    assert_eq!(src_claimed["status"], "ok");
+    assert!(
+        src_claimed["result"].get("advisory_overlaps").is_none(),
+        "resource reservations must not create advisory dir_path overlaps: {src_claimed}"
+    );
+    assert_eq!(
+        src_claimed["result"]["authoring_permission"],
+        "permitted_after_isolated_workspace_bind"
+    );
+
+    // Isolated authoring admission for `author` succeeds while `shepherd` holds release/integration.
+    let author_wt = add_canonical_worktree(
+        repo,
+        "author-wt",
+        &format!("agent/author/{src_task}-feature"),
+    );
+    decapod::core::todo::admit_authoring(&store, &author_wt, "author").unwrap();
+    decapod::core::todo::check_authoring(&store, &author_wt, "author", false).unwrap();
+
+    // Shared mutation boundaries reject `author` with SHARED_RESOURCE_OCCUPIED while allowing `shepherd`.
+    let rel_err = decapod::core::todo::enforce_shared_resource_available(
+        &store,
+        "author",
+        &["resource:release"],
+        "release.lineage_sync",
+    )
+    .unwrap_err()
+    .to_string();
+    assert!(rel_err.contains("SHARED_RESOURCE_OCCUPIED"), "{rel_err}");
+    assert!(rel_err.contains("resource:release"), "{rel_err}");
+    assert!(rel_err.contains(&rel_task), "{rel_err}");
+    assert!(rel_err.contains("shepherd"), "{rel_err}");
+
+    let pub_err = decapod::core::todo::enforce_shared_resource_available(
+        &store,
+        "author",
+        &["resource:integration", "resource:integration:master"],
+        "workspace.publish",
+    )
+    .unwrap_err()
+    .to_string();
+    assert!(pub_err.contains("SHARED_RESOURCE_OCCUPIED"), "{pub_err}");
+    assert!(pub_err.contains("resource:integration:master"), "{pub_err}");
+
+    // CLI boundary check: `decapod release lineage-sync` rejects `author` and admits `shepherd`.
+    let bin = resolve_decapod_bin();
+    let denied_cli = Command::new(&bin)
+        .current_dir(&author_wt)
+        .env("DECAPOD_AGENT_ID", "author")
+        .env("DECAPOD_CLAIM_AUTORUN", "0")
+        .args(["release", "lineage-sync"])
+        .output()
+        .unwrap();
+    assert!(
+        !denied_cli.status.success(),
+        "non-owner release lineage-sync must fail"
+    );
+    let combined_denied = format!(
+        "{}{}",
+        String::from_utf8_lossy(&denied_cli.stdout),
+        String::from_utf8_lossy(&denied_cli.stderr)
+    );
+    assert!(
+        combined_denied.contains("SHARED_RESOURCE_OCCUPIED"),
+        "{combined_denied}"
+    );
+
+    decapod::core::todo::enforce_shared_resource_available(
+        &store,
+        "shepherd",
+        &["resource:release"],
+        "release.lineage_sync",
+    )
+    .expect("resource reservation owner may execute shared mutation");
+    decapod::core::todo::enforce_shared_resource_available(
+        &store,
+        "shepherd",
+        &["resource:integration", "resource:integration:master"],
+        "workspace.publish",
+    )
+    .expect("integration reservation owner may publish");
+
+    // Releasing the reservations unblocks `author`.
+    yield_claim_lease(&store, &rel_task, "shepherd", "done").unwrap();
+    yield_claim_lease(&store, &pub_task, "shepherd", "done").unwrap();
+    decapod::core::todo::enforce_shared_resource_available(
+        &store,
+        "author",
+        &["resource:release"],
+        "release.lineage_sync",
+    )
+    .unwrap();
+    decapod::core::todo::enforce_shared_resource_available(
+        &store,
+        "author",
+        &["resource:integration", "resource:integration:master"],
+        "workspace.publish",
+    )
+    .unwrap();
+}

@@ -642,6 +642,11 @@
       "id": "tests-unit-fleet-coord",
       "summary": "Add unit tests isolating resource:<name> reservations from path overlaps",
       "input_digest": "sha256:0eb836baec390270e7fc4f5a629ab3b415b1e0e23775264c420b5db04744ac29"
+    },
+    {
+      "id": "tests-plugins-todo-authoring-and-resources",
+      "summary": "Add integration tests for transactional rollback, 1-to-1 uniqueness, lifecycle retirement, and resource gates",
+      "input_digest": "sha256:8d2c61802a5c4012c0f654157aa73f7ffcc471bdc443c52fd90ec79a337666bc"
     }
   ],
   "intents": {
