@@ -564,6 +564,11 @@
       "id": "refresh-agents-0-143-0",
       "summary": "chore(entrypoints): refresh AGENTS.md for v0.143.0",
       "input_digest": "sha256:93b7c47c40cca876780788756d42d0340e4a2684de53ec4360742b1c18033d50"
+    },
+    {
+      "id": "refresh-claude-0-143-0",
+      "summary": "chore(entrypoints): refresh CLAUDE.md for v0.143.0",
+      "input_digest": "sha256:e9231d4be37d2d5781619b178665206b1fdd07b6e01f20ab46f2abf479b0a468"
     }
   ],
   "intents": {
