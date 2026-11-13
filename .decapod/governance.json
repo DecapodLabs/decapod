@@ -634,6 +634,11 @@
       "id": "spec-security-terminal-custody",
       "summary": "docs(specs): document terminal rule context and proof-backed completion custody",
       "input_digest": "sha256:43a0ac3fe49ae07f89862a0c827b3a50b1f41392084c10cdae1a417d35514058"
+    },
+    {
+      "id": "spec-semantics-refresh-0-143-0",
+      "summary": "docs(specs): refresh SEMANTICS.md attestation for v0.143.0",
+      "input_digest": "sha256:d6885267381edfeff08900d9658b11564655f36bc36bbb878f18d58d11503b88"
     }
   ],
   "intents": {
