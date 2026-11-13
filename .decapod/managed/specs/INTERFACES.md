@@ -1500,3 +1500,14 @@ Existing `data database` maintenance/capability/lock/audit CLI and RPC operation
 ## PR1662 current-master preparation
 
 Preserve symmetric data.database CLI/RPC capability discovery, diagnostics, bounded maintenance and audit interfaces. Policy admission must happen before startup migrations for maintenance commands; raw SQL, destructive replacement and arbitrary destinations remain outside the delegated contract.
+
+## Accepted repository-local contract changes (#1658)
+
+The existing validation runtime returns the actionable
+`ACCEPTED_REPOSITORY_CONTRACT_CHANGED` blocker when a candidate removes or replaces
+accepted local obligations, even with internally consistent new review digests.
+The check precedes execution-provider selection. Remove the weakening and retain
+the accepted checks, or first establish a separately accepted policy transition
+on the target. Additional required checks are allowed. Initial local adoption and
+unchanged accepted contracts continue through the existing runtime and receipt
+interfaces; no new command or bypass is exposed.
