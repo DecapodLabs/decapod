@@ -347,7 +347,7 @@ impl std::ops::BitOr for OpenFlags {
 }
 
 enum Driver {
-    Local(dactyl_db::Connection),
+    Local(Box<dactyl_db::Connection>),
     #[cfg(unix)]
     Owner(crate::core::storage_owner::Proxy),
 }
@@ -473,7 +473,7 @@ impl Connection {
             crate::core::storage_owner::emit_open_hook();
         }
         Ok(Self {
-            driver: Rc::new(Driver::Local(driver)),
+            driver: Rc::new(Driver::Local(Box::new(driver))),
             transaction_state: Rc::new(Cell::new(false)),
             _storage_lock: storage_lock,
         })

@@ -709,6 +709,14 @@
       "proof_refs": [
         "https://github.com/DecapodLabs/decapod/issues/1667"
       ]
+    },
+    {
+      "id": "issue-1667-file-22",
+      "summary": "fix(storage): box the expanded local SDK connection variant; file-by-file checkpoint, verification pending.",
+      "input_digest": "sha256:620a52208a1de9b0603694f414f0ba4eb5d4380a39ff0f8df07db10d08db48e3",
+      "proof_refs": [
+        "https://github.com/DecapodLabs/decapod/issues/1667"
+      ]
     }
   ],
   "intents": {
@@ -782,7 +790,7 @@
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:b639c6c90a96e5ad92b7abeb660e3df31695a4c4c5ec383162143558c344b0d0",
+      "artifact_hash": "sha256:197a1a92b426ca0f38d69409b1b4b2a7825c97343bc74616d410dd60f7d6ec42",
       "checks": [],
       "current_phase": "implementation",
       "custody": {
@@ -945,10 +953,17 @@
             "intent_id": "intent:change_01M7BCN0CS3Z8AJ7TZ491WJ7CJ",
             "kind": "trajectory_step_recorded",
             "sequence": 24
+          },
+          {
+            "detail": "trajectory:branch_01M7BCN0FD8AE623HXNGA0C8F9",
+            "event_id": "event:25",
+            "intent_id": "intent:change_01M7BCN0CS3Z8AJ7TZ491WJ7CJ",
+            "kind": "trajectory_step_recorded",
+            "sequence": 25
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 24,
+        "next_sequence": 25,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M7BCN0FD8AE623HXNGA0C8F9": {
@@ -1290,6 +1305,22 @@
                 "validation_findings": [
                   "Hosted verification and exact-candidate publication readiness remain pending; no local tests run."
                 ]
+              },
+              {
+                "action": "implementation",
+                "custody_event_id": "event:25",
+                "observations": [
+                  "src/decapod/core/dactyl_db.rs",
+                  "https://github.com/DecapodLabs/decapod/issues/1667"
+                ],
+                "proof_refs": [],
+                "scope": [
+                  "issue-1667"
+                ],
+                "sequence": 25,
+                "validation_findings": [
+                  "Hosted verification and exact-candidate publication readiness remain pending; no local tests run."
+                ]
               }
             ]
           }
@@ -1316,6 +1347,7 @@
         "docs/book/src/reference/propodus.md",
         "docs/book/src/reference/supabase-validation.md",
         "docs/cloud-repository-billing.md",
+        "src/decapod/core/dactyl_db.rs",
         "tests/release_dependency_policy.rs",
         "tests/unit/core/task_journal_tests.rs",
         "tests/unit/core/task_transfer_tests.rs"
