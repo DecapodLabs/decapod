@@ -1868,3 +1868,7 @@ Run the current `github_quota` tests and the real automatic discovery pacing reg
 ## PR1666 current-master integration
 
 Current accepted source is master 9b900254; the source package version is 0.144.0. The release was compiling and assets were unavailable at setup. Use actual hosted CI results for this update, push each addressed root cause and do not run tests locally. Refresh official release-bound projections through supported tooling when that release becomes available; no cached earlier green result is treated as current proof.
+
+### Reviewed 0.144.0 build-input binding
+
+The accepted release changes the Decapod package version in Cargo.toml and Cargo.lock. Review the actual source inventory and bind its current digest without changing required checks, providers or toolchain requirements. Git symlink targets retain their accepted identity; no toolchain change is claimed from comparing a symlink blob with dereferenced contents. The original PR parent remains in the merge graph. No local tests are executed.

@@ -566,6 +566,15 @@
       "proof_refs": [
         "git:9b90025444dcc9b223f77388b1bcd151d88bf62b"
       ]
+    },
+    {
+      "id": "pr1666-preserve-parent-current-master-3",
+      "summary": "Resolve original-parent conflicts on accepted master9b900254, bind reviewed0.144.0 build inputs and preserve strict provider checks. No local tests executed.",
+      "input_digest": "sha256:9053d02da6ad47f22e52dffee696bbd7d57efb70f77efe0a2393f994770fb9d3",
+      "proof_refs": [
+        "git:7418add4e1c72ad4cae54f0f7ad5679648316397",
+        "git:9b90025444dcc9b223f77388b1bcd151d88bf62b"
+      ]
     }
   ],
   "intents": {
@@ -606,21 +615,21 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Reviewed quota-pacing source against accepted master custody, path and runtime-owner changes. No production source conflicts or verification weakening; hosted CI remains required and no local tests run.",
+          "reason": "Reviewed final quota-pacing source and original parent preservation on accepted0.144.0 source. Updated inventory binding reflects accepted Cargo package-version changes; required checks, toolchain and provider policy remain intact. No local tests run.",
           "reviewed_code_fingerprint": "dc9c7d0fdecc9062c60432638a1a8148970a356cf68bab47be2d8eaab6bd3750",
           "spec_material_hash": "fd49b4c6a425a4961c7c8f20e9a1bb62962c2726e815e91f8e2120a5d2984be7"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Reviewed quota-pacing source against accepted master custody, path and runtime-owner changes. No production source conflicts or verification weakening; hosted CI remains required and no local tests run.",
+          "reason": "Reviewed final quota-pacing source and original parent preservation on accepted0.144.0 source. Updated inventory binding reflects accepted Cargo package-version changes; required checks, toolchain and provider policy remain intact. No local tests run.",
           "reviewed_code_fingerprint": "dc9c7d0fdecc9062c60432638a1a8148970a356cf68bab47be2d8eaab6bd3750",
           "spec_material_hash": "3c826cd20c1f20607be288a67abb7c4e0f8c0ba039a4f123f6da9b78f37cba0f"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Reviewed quota-pacing source against accepted master custody, path and runtime-owner changes. No production source conflicts or verification weakening; hosted CI remains required and no local tests run.",
+          "reason": "Reviewed final quota-pacing source and original parent preservation on accepted0.144.0 source. Updated inventory binding reflects accepted Cargo package-version changes; required checks, toolchain and provider policy remain intact. No local tests run.",
           "reviewed_code_fingerprint": "dc9c7d0fdecc9062c60432638a1a8148970a356cf68bab47be2d8eaab6bd3750",
           "spec_material_hash": "5bfc55956c17aac5ec1642038211d1ab14340dde37af15695d7fb0a09730db76"
         }
@@ -633,7 +642,7 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1794564594Z"
+      "updated_at": "1794564818Z"
     },
     "trajectory": {
       "active_boundaries": [
@@ -641,14 +650,14 @@
         "Preserve actual original PR parent history, no force-push, no local tests and no merge authorization.",
         "Preserve original PR history; ordinary merges only, no force-push or automatic merge."
       ],
-      "artifact_hash": "sha256:9ed0ede74016456b08958995aec979e3a232da745adcf7f2b6d0a406d55dbd5e",
+      "artifact_hash": "sha256:d2fd4c5b299e5b293926f3554ad2508ffe5bd4b697788fd38cff0043c19a085d",
       "checks": [
         {
           "name": "fresh-docs-baseline-initialized",
           "status": "passed"
         }
       ],
-      "current_phase": "integration",
+      "current_phase": "ci-repair",
       "custody": {
         "events": [
           {
@@ -676,10 +685,17 @@
             "intent_id": "intent:change_01M79W0QF1GA7DKV736SKKE9A3",
             "kind": "trajectory_step_recorded",
             "sequence": 5
+          },
+          {
+            "detail": "trajectory:branch_01M79W0QKPSAKS1YRWC4A3YT4H",
+            "event_id": "event:6",
+            "intent_id": "intent:change_01M79W0QF1GA7DKV736SKKE9A3",
+            "kind": "trajectory_step_recorded",
+            "sequence": 6
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 5,
+        "next_sequence": 6,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M79W0QKPSAKS1YRWC4A3YT4H": {
@@ -721,18 +737,38 @@
                 "validation_findings": [
                   "Official0.144.0 release assets were unavailable at setup; release-bound tooling refresh may remain necessary."
                 ]
+              },
+              {
+                "action": "ci-repair",
+                "command": "Preserve original remote PR parent, review accepted Cargo0.144.0 inventory, refresh binding without changing assurance requirements",
+                "custody_event_id": "event:6",
+                "observations": [
+                  "/private/tmp/decapod-pr1666-agent-init-144-source.json",
+                  "git:7418add4e1c72ad4cae54f0f7ad5679648316397"
+                ],
+                "proof_refs": [],
+                "scope": [
+                  "pr-1666-master-1432"
+                ],
+                "sequence": 6,
+                "validation_findings": [
+                  "Full current hosted CI remains unproven until the new pushed candidate executes."
+                ]
               }
             ]
           }
         }
       },
       "declared_commands": [
+        "Preserve original remote PR parent, review accepted Cargo0.144.0 inventory, refresh binding without changing assurance requirements",
         "git merge accepted origin/master; official decapod init --refresh --proof --force; supported specs.refresh and content-bound reviews",
         "git merge origin/master; resolve canonical governance from committed current work; merge authored prose and refresh supported fingerprints"
       ],
       "destination": "pull request",
       "evidence": [
         "/private/tmp/decapod-pr1661-1432-fresh-docs-initialized.log",
+        "/private/tmp/decapod-pr1666-agent-init-144-source.json",
+        "git:7418add4e1c72ad4cae54f0f7ad5679648316397",
         "git:9b90025444dcc9b223f77388b1bcd151d88bf62b"
       ],
       "inspected_files": [],
@@ -754,6 +790,7 @@
       "tool_calls": [],
       "unresolved_assumptions": [
         "Focused regression evidence does not establish independent full readiness or erase historical draft blockers.",
+        "Full current hosted CI remains unproven until the new pushed candidate executes.",
         "Official0.144.0 release assets were unavailable at setup; release-bound tooling refresh may remain necessary."
       ]
     }
