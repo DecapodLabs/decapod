@@ -652,6 +652,11 @@
       "id": "tests-kernel-bootstrap-contention-recovery",
       "summary": "Add subprocess checkout contention and interrupted workspace ensure recovery tests",
       "input_digest": "sha256:66af54eae0f6c7e39d412aa1c5c246585405c6db62684e40a699e1a4eaa41aae"
+    },
+    {
+      "id": "tests-consumer-readiness-combined-candidate",
+      "summary": "Add two-worktree combined-candidate validation and target-freshness integration test",
+      "input_digest": "sha256:3cda63481c250a607d5370e2d673f87b9bbc735658274fa1c496d6699b5bb1ad"
     }
   ],
   "intents": {
