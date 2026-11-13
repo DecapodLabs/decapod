@@ -579,6 +579,11 @@
       "id": "hf-dockerfile",
       "summary": "chore(container): refresh managed Dockerfile pin to v0.143.2",
       "input_digest": "sha256:a26b27069287fded35eb02c51a08187782219e4761a2b704df1b7c47d3d8f48a"
+    },
+    {
+      "id": "hf-spec-security",
+      "summary": "docs(specs): document protected_paths rule scope in SECURITY.md",
+      "input_digest": "sha256:66f0009208b3f973b048311d1a8b3f62639a1719e8ab16da663b73d0de25f99c"
     }
   ],
   "intents": {
