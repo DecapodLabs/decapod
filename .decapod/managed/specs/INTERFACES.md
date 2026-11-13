@@ -1154,7 +1154,7 @@ field. Nothing in this operation authorizes a mutation, approval or completion.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `fbccc9cfb5bf2b38e6ef970f60ff59a1d618c570d9b96d317b9f5bd0c40da905`
+- Repository signal fingerprint: `b96bc08c4088f5c296dcb9c3c55e9b4b8800be9fb1ca71807dad991d821ec936`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (234 files), `tests/` (232 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
@@ -1500,3 +1500,23 @@ Existing `data database` maintenance/capability/lock/audit CLI and RPC operation
 ## PR1662 current-master preparation
 
 Preserve symmetric data.database CLI/RPC capability discovery, diagnostics, bounded maintenance and audit interfaces. Policy admission must happen before startup migrations for maintenance commands; raw SQL, destructive replacement and arbitrary destinations remain outside the delegated contract.
+
+## Accepted repository-local contract changes (#1658)
+
+The existing validation runtime returns the actionable
+`ACCEPTED_REPOSITORY_CONTRACT_CHANGED` blocker when a candidate removes or replaces
+accepted local obligations, even with internally consistent new review digests.
+The check precedes execution-provider selection. Remove the weakening and retain
+the accepted checks, or first establish a separately accepted policy transition
+on the target. Additional required checks are allowed. Initial local adoption and
+unchanged accepted contracts continue through the existing runtime and receipt
+interfaces; no new command or bypass is exposed.
+
+### Source-definition changes
+
+`ACCEPTED_REPOSITORY_CONTRACT_CHANGED` also identifies replacement of the accepted
+local source-definition digest. Recomputing a candidate digest cannot authorize
+changed inventoried check scripts, build/dependency definitions or provider
+inputs. Retain the accepted inventory or establish the reviewed revision on the
+target before revalidation. Additive commands under that inventory and first
+local adoption remain supported; no override or second policy store is added.

@@ -920,7 +920,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `fbccc9cfb5bf2b38e6ef970f60ff59a1d618c570d9b96d317b9f5bd0c40da905`
+- Repository signal fingerprint: `b96bc08c4088f5c296dcb9c3c55e9b4b8800be9fb1ca71807dad991d821ec936`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (234 files), `tests/` (232 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
@@ -1195,3 +1195,24 @@ The integrated `todo` module exports both accepted authoring/resource custody fu
 ## PR1662 current-master preparation
 
 The db_maintenance module resolves accepted canonical-repository policy and uses existing Dactyl and StorageLock primitives. It does not replace the datastore or migration authority. Retain current-master storage format guards, task custody, provider verification and runtime ownership while integrating this operation boundary.
+
+## Preserve accepted local verification policy (#1658)
+
+`validation_runtime::load_project` reads the target's committed proof configuration
+and calls `repository_profile::preserve_accepted` before provider selection when
+that target uses repository-local proof. The existing contract owner compares
+required commands, arguments, execution declarations and workflow coverage.
+Additive required checks remain possible; replacement and profile substitution
+fail with `ACCEPTED_REPOSITORY_CONTRACT_CHANGED`. Candidate review digests still
+establish internal consistency, while the accepted Git target supplies policy
+authority. No new policy interpreter, receipt store or service is introduced.
+
+### Accepted source-definition binding
+
+The local-profile branch also requires the candidate source-definition review
+digest to equal the accepted target's digest. Discovery still independently
+checks the actual bytes. This closes check-script replacement with an unchanged
+command. The existing discovered validation inventory is the boundary; it is not
+a claim to infer the semantic or transitive completeness of arbitrary commands.
+Ordinary subject changes still require fresh source-bound execution. Changes to
+inventoried validation definitions require a separately accepted policy revision.

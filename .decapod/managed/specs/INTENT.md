@@ -352,7 +352,7 @@ These declarations select authoring and proof obligations; they do not attest im
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `fbccc9cfb5bf2b38e6ef970f60ff59a1d618c570d9b96d317b9f5bd0c40da905`
+- Repository signal fingerprint: `b96bc08c4088f5c296dcb9c3c55e9b4b8800be9fb1ca71807dad991d821ec936`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (234 files), `tests/` (232 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
@@ -557,3 +557,20 @@ Expose only project-opted local database maintenance capabilities to the agent. 
 ## PR1662 current-master preparation
 
 Preserve prepared PR1662 capability-scoped database maintenance before integrating accepted master3afa9df9 and the0.144.2 source release. Default-deny accepted policy, owner-only repair, bounded safe operations and non-destructive lock custody remain obligations. Hosted CI must establish the exact integrated candidate; no local tests are run.
+
+## Accepted local verification requirements (#1658)
+
+Decapod must preserve the repository-local verification contract already accepted
+on the target. A candidate may add required checks, but replacing a command,
+arguments, measured toolchain, environment, timeout or coverage declaration must
+not become authoritative merely because the candidate recomputes a review digest.
+`repository_profile` owns this preservation check; `validation_runtime` must apply
+it before selecting an execution provider. A previously accepted strict profile
+continues to require its existing external assurance.
+
+The dedicated change restores the preserved repair against v0.144.3 and adds
+real-process consumer regressions for repinning, additive checks and stale source.
+Initial adoption remains supported. Requirement replacement needs a separately
+accepted target-policy transition; this work introduces no candidate-side override
+or new authority store. Hosted tests and exact-candidate validation remain pending
+until their actual observations are collected; no local test result is claimed.
