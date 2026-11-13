@@ -576,6 +576,11 @@
       "id": "pr1661-1431-custody-repair",
       "summary": "Prepare current-master PR1661 custody work with actual red-check repairs, partial non-Git diagnostics, v0.143.1 projections and version-only proof-source reconciliation; retain independent full validation requirement.",
       "input_digest": "sha256:1669085fcc786e78e59ef058f3873a429e6cb8528051ac0f160c1db435786f04"
+    },
+    {
+      "id": "pr1661-original-history-merge",
+      "summary": "Merge original published PR1661 history into current-master governed repair. Resolve projections to supported0.143.1 and preserve imported original checkpoint lineage; source remains exactly tested repair.",
+      "input_digest": "sha256:abdf742c22f538a3508ef4ef89025ff5dde5cac95cb1e9c8d5182be17e09cc83"
     }
   ],
   "intents": {
@@ -649,7 +654,7 @@
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:cc4de654f0408470b85f73f401105b9976c6ad27912a3b9b8e9ab0effeb34dc3",
+      "artifact_hash": "sha256:62e4932bc0ea2c28f45398da88cb760e762c3ec56260c7c6a1d398f528c1b030",
       "checks": [
         {
           "name": "binding-rollback-and-lifecycle",
@@ -688,7 +693,7 @@
           "status": "passed"
         }
       ],
-      "current_phase": "verification",
+      "current_phase": "integration",
       "custody": {
         "events": [
           {
@@ -709,10 +714,17 @@
             "intent_id": "intent:change_01M79NVT2SXTG0QCCYXQADTVWT",
             "kind": "trajectory_step_recorded",
             "sequence": 4
+          },
+          {
+            "detail": "trajectory:branch_01M79NVT5SX7NJTXX34J543M80",
+            "event_id": "event:5",
+            "intent_id": "intent:change_01M79NVT2SXTG0QCCYXQADTVWT",
+            "kind": "trajectory_step_recorded",
+            "sequence": 5
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 4,
+        "next_sequence": 5,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M79NVT5SX7NJTXX34J543M80": {
@@ -751,12 +763,28 @@
                   "Reviewed source inventory changed only accepted Cargo package 0.143.0 to 0.143.1 after pin112287a9. No candidate proof-source delta or requirement change. Current digest50af27077a026878a187611c381226be611ae10f45bfec77fc205282258d3ccf.",
                   "User requested rebase but earlier no-force rule remains; prepare history-preserving integration pending optional rewrite preference. PR1661 only; other PRs untouched."
                 ]
+              },
+              {
+                "action": "integration",
+                "command": "Normal merge original PR1661 f1cf3332 into current-master repair629202b1; retain both parents and original independent checkpoint history.",
+                "custody_event_id": "event:5",
+                "observations": [],
+                "proof_refs": [],
+                "scope": [
+                  "pr-1661-repair"
+                ],
+                "sequence": 5,
+                "validation_findings": [
+                  "Conflict resolution selects committed current-master repair material for governance, version1431 projections, semantic specs and already-fixed source/test conflicts; no feature source omitted. No force push or merge to master."
+                ]
               }
             ]
           }
         }
       },
-      "declared_commands": [],
+      "declared_commands": [
+        "Normal merge original PR1661 f1cf3332 into current-master repair629202b1; retain both parents and original independent checkpoint history."
+      ],
       "destination": "pull request",
       "evidence": [],
       "inspected_files": [
@@ -782,6 +810,7 @@
       "task_id": "bugs_01m79nswnarykvww",
       "tool_calls": [],
       "unresolved_assumptions": [
+        "Conflict resolution selects committed current-master repair material for governance, version1431 projections, semantic specs and already-fixed source/test conflicts; no feature source omitted. No force push or merge to master.",
         "Official 0.143.1 still blocks normal datastore startup on inert legacy TODO file. Coordination-only 0.143.1 built from published source plus previously tested inert-file migration repair; installed official binary remains independent full validator. No database edited.",
         "Reviewed source inventory changed only accepted Cargo package 0.143.0 to 0.143.1 after pin112287a9. No candidate proof-source delta or requirement change. Current digest50af27077a026878a187611c381226be611ae10f45bfec77fc205282258d3ccf.",
         "User requested rebase but earlier no-force rule remains; prepare history-preserving integration pending optional rewrite preference. PR1661 only; other PRs untouched."
