@@ -904,6 +904,11 @@
       "id": "cp-1630-map-ops-envelope",
       "summary": "fix(map): reconstruct compact event envelopes via events::query",
       "input_digest": "sha256:a0914534b027f45b379f341246efb5de6f15c90566ce1a30a8b3a7f2f506c73b"
+    },
+    {
+      "id": "cp-1630-knowledge-envelope",
+      "summary": "fix(knowledge): reconstruct compact promotion event envelopes",
+      "input_digest": "sha256:991d071a59b5ef290131cd6edd6017a6d51f6665f1a255650f99f78d56a0f187"
     }
   ],
   "intents": {

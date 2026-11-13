@@ -598,18 +598,42 @@ fn lookup_promotion_event(
         return Ok(None);
     }
     let broker = DbBroker::new(&store.root);
-    let payload = broker.with_conn(&db_path, "decapod", None, "knowledge.get", |conn| {
-        conn.query_row(
-            "SELECT payload FROM events WHERE stream = 'knowledge' AND event_id = ?1",
-            [event_id],
-            |row| row.get::<_, String>(0),
-        )
-        .optional()
-        .map_err(error::DecapodError::StorageError)
+    let stored = broker.with_conn(&db_path, "decapod", None, "knowledge.get", |conn| {
+        let row = conn
+            .query_row(
+                "SELECT ts, event_type, actor, subject_kind, subject_id, payload
+                 FROM events WHERE stream = 'knowledge' AND event_id = ?1",
+                [event_id],
+                |row| {
+                    Ok((
+                        row.get::<_, String>(0)?,
+                        row.get::<_, String>(1)?,
+                        row.get::<_, String>(2)?,
+                        row.get::<_, Option<String>>(3)?,
+                        row.get::<_, Option<String>>(4)?,
+                        row.get::<_, String>(5)?,
+                    ))
+                },
+            )
+            .optional()
+            .map_err(error::DecapodError::StorageError)?;
+        row.map(|(ts, event_type, actor, subject_kind, subject_id, raw)| {
+            events::reconstruct_stored_payload(
+                events::KNOWLEDGE,
+                event_id,
+                &ts,
+                &event_type,
+                &actor,
+                subject_kind.as_deref(),
+                subject_id.as_deref(),
+                &raw,
+            )
+        })
+        .transpose()
     })?;
-    payload
-        .map(|raw| {
-            serde_json::from_str(&raw).map_err(|e| {
+    stored
+        .map(|value| {
+            serde_json::from_value(value).map_err(|e| {
                 error::DecapodError::ValidationError(format!(
                     "invalid knowledge promotion event in decapod.db:events (stream=knowledge): {e}"
                 ))
