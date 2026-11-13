@@ -1872,3 +1872,7 @@ Current accepted source is master 9b900254; the source package version is 0.144.
 ### Reviewed 0.144.0 build-input binding
 
 The accepted release changes the Decapod package version in Cargo.toml and Cargo.lock. Review the actual source inventory and bind its current digest without changing required checks, providers or toolchain requirements. Git symlink targets retain their accepted identity; no toolchain change is claimed from comparing a symlink blob with dereferenced contents. The original PR parent remains in the merge graph. No local tests are executed.
+
+### Official 0.144.0 projection drift repair
+
+The hosted standalone validator passed project prerequisites but rejected uncommitted release-bound regeneration: entrypoints and the managed Docker image/version still referenced0.143.2. The official installed0.144.0 kernel now regenerates those projections and their manifest through supported init/spec interfaces. Preserve the exact reviewed configuration and the drift gate; no local test execution or passing full-readiness receipt is claimed.
