@@ -110,10 +110,21 @@ checkpoint-history verification never replace the complete exact-candidate gate.
 Plain `decapod validate` owns the configured build/tests; no separate manual
 build, fabricated proof or weakened check is allowed.
 
-## Current SDK 0.14 adoption (#1638)
+## Current SDK 0.16 adoption (#1667)
 
-The current registry dependency is exactly Dactyl 0.14.0, checksum
-`d10824bf8882a26b92479f07edb26c1f6fde8da3019f4001befaf28699d7a990`.
+The current registry dependency is exactly Dactyl 0.16.0, checksum
+`af724e4a561da93c4cf9bf8ca63f25c6d227bee6a49318fdbd5dbf7bc93083ca`.
+The 0.16 consumer executes the existing managed-session, cloud-boundary,
+TODO-resume and SQLite maintenance suites. The Linux-only shared-recovery target
+has zero runnable tests on macOS; its invocation is not successful recovery proof.
+The published SDK's own Rust 1.85 proof remains upstream; Decapod uses 1.96.1.
+Generated Bazel metadata is verified with normal `--lockfile_mode=error` after
+repinning. Earlier 0.14 candidate observations remain historical. Complete current
+source-PR readiness still requires the accepted external verification contract.
+The journal/transfer oversized-record fixtures generate malformed legacy data
+inside disposable SQLite stores. Passing oversized parameters would hit the new
+SDK cell limit first and fail to exercise the kernel's independent replay bound.
+Neither SDK limits nor production reader limits are widened for these tests.
 Historical 0.12 observations below describe earlier candidates. The existing
 release-policy test retains registry-only and feature checks, and now rejects
 any locked `quinn-proto` below 0.11.19, even when that dependency is inactive.
@@ -229,7 +240,7 @@ path rejection, exact binding, phase invariants and serialized custody.
 
 These tests must run on the exact checkpointed candidate. Static review and
 source formatting do not establish compilation or execution. The managed API
-is consumed from the published Dactyl 0.14.0 registry dependency.
+is consumed from the published Dactyl 0.16.0 registry dependency.
 The accepted source-CI executor retains its own required recipe. Its diagnostic
 record on `ee288c86` showed that a candidate helper edit did not add a new target
 to that recipe. The existing required `cloud_supabase_boundary` target now
@@ -1325,7 +1336,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `0f5182b61bd9df72c7689c6b907417c45695f0cbec319899f912c2d9c1398f2b`
+- Repository signal fingerprint: `d58528215da02cddedf87520fbcd4ea590a43df63bc594c6355ede920bd0fedf`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (231 files), `tests/` (232 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

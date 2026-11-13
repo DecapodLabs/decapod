@@ -23,9 +23,9 @@ captured bytes, followed by current-source revalidation before the atomic write.
 Case-folded proposed paths and challenge identities prevent spelling-only
 aliases from being counted as progress on case-insensitive workspaces.
 
-## Registry dependency closure (#1638)
+## Registry dependency closure (#1667, continuing #1638)
 
-`Cargo.toml` pins Dactyl 0.14.0 while retaining `sqlite` and `neon`, and the
+`Cargo.toml` pins Dactyl 0.16.0 while retaining `sqlite` and `neon`, and the
 existing default `supabase-cloud` feature still forwards `dactyl-db/supabase`.
 Cargo resolves the registry checksum and patched Quinn protocol floor; pinned
 Bazel regenerates its crate-universe metadata from those same committed Cargo
@@ -33,6 +33,13 @@ inputs. Nix consumes `Cargo.lock` directly and needs no Git output hash or
 separate package pin. The SDK requires Rust 1.85, below the existing Decapod
 1.96.1 toolchain. HTTP/3 stays disabled. No cloud/session/authorization code
 is changed by this dependency alignment.
+
+The 0.16 adoption (#1667) also consumes 0.15's default `ResourceBudget::v1`
+inside existing Dactyl opens: bounded SQL, parameters, cells, results, rows,
+wire bytes and deadlines. Oversized operations can now return typed SDK budget
+errors; Decapod does not widen those ceilings or turn partial scans into complete
+results. Additive row/catalog and logical-connector APIs do not require a second
+storage policy or changes to Decapod's current managed connector composition.
 
 ## Managed cloud connector and crash-safe custody (#1628)
 
@@ -905,7 +912,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `0f5182b61bd9df72c7689c6b907417c45695f0cbec319899f912c2d9c1398f2b`
+- Repository signal fingerprint: `d58528215da02cddedf87520fbcd4ea590a43df63bc594c6355ede920bd0fedf`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (231 files), `tests/` (232 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

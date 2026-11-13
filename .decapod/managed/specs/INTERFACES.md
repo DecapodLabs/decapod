@@ -66,8 +66,11 @@ this checkout to that server ID needs a supported upstream attachment contract;
 this client does not invent one or claim that SCM ownership or paid-project
 attachment has been verified. Browser directory registration remains distinct.
 
-The client consumes the exact published `dactyl-db 0.14.0` registry API;
-current-candidate fixture execution remains required for the complete composition. Pending
+The client consumes the exact published `dactyl-db 0.16.0` registry API;
+existing Connection/OpenOptions, CloudConnector and public Serde contracts remain
+the consumed interfaces. SDK resource-budget failures remain explicit errors;
+no automatic replay of uncertain one-time mutations or new CLI selector is added.
+Fixture execution on the current candidate remains required for the complete composition. Pending
 secrets round-trip through its public Serde contract; authentication status and
 code exchange return strings, and completion confirms the session handoff.
 The caller retains its exact origin/repository/checkout binding and saved flow
@@ -1142,7 +1145,7 @@ field. Nothing in this operation authorizes a mutation, approval or completion.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `0f5182b61bd9df72c7689c6b907417c45695f0cbec319899f912c2d9c1398f2b`
+- Repository signal fingerprint: `d58528215da02cddedf87520fbcd4ea590a43df63bc594c6355ede920bd0fedf`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (231 files), `tests/` (232 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

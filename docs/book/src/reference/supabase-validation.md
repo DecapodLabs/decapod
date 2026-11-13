@@ -10,7 +10,7 @@ flow, headless continuation, private custody, and explicit recovery.
 ## Package and implementation prerequisites
 
 The client consumes the public connector/session API in the published
-`dactyl-db 0.14.0` registry release. The release-policy test pins that exact
+`dactyl-db 0.16.0` registry release. The release-policy test pins that exact
 version and its verified registry checksum and audits every locked
 `quinn-proto` entry against the patched 0.11.19 floor, including inactive
 entries. SDK Rust 1.85 is below Decapod's unchanged Rust 1.96.1 requirement;
@@ -21,6 +21,13 @@ diagnostic result is claimed. The release handoff is tracked by
 [#1380](https://github.com/DecapodLabs/decapod/issues/1380).
 Do not replace a missing registry artifact with a committed Git/path override
 or remove the release dependency checks.
+
+The 0.16 adoption is tracked in [#1667](https://github.com/DecapodLabs/decapod/issues/1667).
+It includes the SDK's enforced resource budgets introduced in 0.15. Oversized SQL,
+parameter/result cells, row sets or wire responses return bounded errors rather
+than granting unbounded execution. Decapod retains the SDK defaults and its
+existing managed connector/session interfaces; this dependency update does not
+activate new hosted authority or permit uncertain mutations to be replayed.
 
 Standard builds enable `supabase-cloud`; a build without that capability
 fails closed when the managed cloud backend is selected. Local SQLite remains

@@ -29,7 +29,7 @@ requires server-confirmed completion followed by an authorized repository read
 before reporting readiness. A service or credential failure never initializes or
 falls back to SQLite. Local selection works without cloud credentials.
 
-The client consumes the exact published Dactyl 0.14.0 registry
+The client consumes the exact published Dactyl 0.16.0 registry
 connector/authentication/session API, retaining SQLite, Neon and default
 Supabase capabilities. Adoption and the patched Quinn protocol lock floor
 are tracked in Decapod #1638; HTTP/3 activation is outside this change. Offline fixtures do not prove real PostgreSQL, hosted authentication,

@@ -11,9 +11,9 @@ semantic correctness, executed proof or completion. The kernel remains local,
 daemonless and deterministic, with no model or new memory service.
 See `core/mentor/reflection.rs` and `docs/architecture/bounded-reflection.md`.
 
-## Published SDK adoption (#1638)
+## Published SDK adoption (#1667, continuing #1638)
 
-The client pins the normally published registry `dactyl-db =0.14.0` release
+The client pins the normally published registry `dactyl-db =0.16.0` release
 without changing local/cloud composition, session custody, role authority or
 transport selection. Its patched `quinn-proto >=0.11.19` requirement must hold
 for every resolved lock entry, including inactive dependencies. This adoption
@@ -341,7 +341,7 @@ These declarations select authoring and proof obligations; they do not attest im
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `0f5182b61bd9df72c7689c6b907417c45695f0cbec319899f912c2d9c1398f2b`
+- Repository signal fingerprint: `d58528215da02cddedf87520fbcd4ea590a43df63bc594c6355ede920bd0fedf`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (231 files), `tests/` (232 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

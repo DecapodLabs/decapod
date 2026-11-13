@@ -1,5 +1,14 @@
 # Security
 
+## Published Dactyl 0.16 boundary (#1667)
+
+Cargo pins the published registry artifact and checksum; generated Bazel inputs
+resolve the same SDK. Existing SQLite/Neon and default Supabase feature forwarding
+and the patched Quinn floor remain required. SDK 0.15/0.16 resource budgets bound
+execution without granting local custody, cloud access or retry authority.
+Client HTTP fixtures establish routing and recovery behavior, not hosted RLS,
+PostgreSQL isolation, entitlement enforcement or independent remote acceptance.
+
 ## Agent-owned browser handoff
 
 `authorization_url` exposes only Dactyl's validated, short-lived browser handoff.
@@ -610,7 +619,7 @@ execution evidence remains required before publication readiness.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `0f5182b61bd9df72c7689c6b907417c45695f0cbec319899f912c2d9c1398f2b`
+- Repository signal fingerprint: `d58528215da02cddedf87520fbcd4ea590a43df63bc594c6355ede920bd0fedf`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (231 files), `tests/` (232 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
