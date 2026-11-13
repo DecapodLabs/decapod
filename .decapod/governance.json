@@ -668,6 +668,11 @@
       "id": "compact-event-envelope-codec",
       "summary": "feat(events): add lossless _ce_v1 compact event envelope storage and write-admission bounds",
       "input_digest": "sha256:83dbdd05111b0eb45d89b1b3171dc18871a3fb8dd51386b47baf9e2b928f44f9"
+    },
+    {
+      "id": "fix-events-stored-seq",
+      "summary": "fix(events): populate seq on reconstructed StoredEvent records in query and query_all_on_conn",
+      "input_digest": "sha256:14a4a04bc5f1d8ff4b563e348d2b883857f49090170b88a53a15a7ec742e777c"
     }
   ],
   "intents": {
