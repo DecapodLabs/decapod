@@ -618,6 +618,11 @@
       "id": "pin-spec-arch-01410",
       "summary": "chore(specs): refresh ARCHITECTURE.md release header to 0.141.0",
       "input_digest": "sha256:3e20be0d898aedee39614aee171bf92b908d9940fd1cc81fd8bd2a06c43b0702"
+    },
+    {
+      "id": "pin-spec-interfaces-01410",
+      "summary": "chore(specs): refresh INTERFACES.md release header to 0.141.0",
+      "input_digest": "sha256:2253baa918dba72edd17ef2cfe1a62641d4048cec093ecb0c81aca6bdaf2c6dd"
     }
   ],
   "intents": {
