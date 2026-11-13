@@ -574,6 +574,11 @@
       "id": "refresh-codex-0-143-0",
       "summary": "chore(entrypoints): refresh CODEX.md for v0.143.0",
       "input_digest": "sha256:dbf1bf94a2141493458e970ec1a6d5176bbaec831d287f8ca7e6f7bf86fd6d91"
+    },
+    {
+      "id": "refresh-gemini-0-143-0",
+      "summary": "chore(entrypoints): refresh GEMINI.md for v0.143.0",
+      "input_digest": "sha256:0e961655d618e82773abf2a5955ef74bc52863709c4e6ab4307444181ecf7908"
     }
   ],
   "intents": {
