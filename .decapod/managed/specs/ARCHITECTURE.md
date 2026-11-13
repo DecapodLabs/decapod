@@ -1195,3 +1195,14 @@ The integrated `todo` module exports both accepted authoring/resource custody fu
 ## PR1662 current-master preparation
 
 The db_maintenance module resolves accepted canonical-repository policy and uses existing Dactyl and StorageLock primitives. It does not replace the datastore or migration authority. Retain current-master storage format guards, task custody, provider verification and runtime ownership while integrating this operation boundary.
+
+## Preserve accepted local verification policy (#1658)
+
+`validation_runtime::load_project` reads the target's committed proof configuration
+and calls `repository_profile::preserve_accepted` before provider selection when
+that target uses repository-local proof. The existing contract owner compares
+required commands, arguments, execution declarations and workflow coverage.
+Additive required checks remain possible; replacement and profile substitution
+fail with `ACCEPTED_REPOSITORY_CONTRACT_CHANGED`. Candidate review digests still
+establish internal consistency, while the accepted Git target supplies policy
+authority. No new policy interpreter, receipt store or service is introduced.
