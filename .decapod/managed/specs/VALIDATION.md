@@ -1325,8 +1325,8 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `7693d5010b19979e4cb8189dcb7d189c3ada65fb2953147b491cc708cd5ae8ec`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (231 files), `tests/` (232 files)
+- Repository signal fingerprint: `765977d9bdd6b9a88e48e73a6ed6fab691831c884d1721f3591f1781c9960dc5`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (232 files), `tests/` (232 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 
@@ -1840,3 +1840,15 @@ from the `0.143.1` controller and updates `reviewed_sources_digest` to
 `sha256:50af27077a026878a187611c381226be611ae10f45bfec77fc205282258d3ccf`;
 full CI and `decapod validate` execution on the exact merged commit remain
 required before publication readiness.
+
+## PR 1663: accepted v0.143.2 source integration
+
+Run current datastore-contract and relational-compaction tests, journal/transfer checks and relevant inventory regressions. Synthetic reduction figures retain their original source/workload identity. Cross-backend real-engine, interruption, old-reader and production-store evidence remain distinct obligations; full current accepted-target validation is still required.
+
+### v0.143.2 fresh-docs workunit fixture initialization
+
+`tests/support/fresh_docs_readiness.rs` initializes the workspace-local workunit runtime using the real `init --refresh --proof` CLI before declaring unverified completion. Root datastore initialization does not initialize this journal. The scenario still requires a clean unchanged candidate, rejects unverified completion and withholds readiness receipts; the production `WORKUNIT_RUNTIME_UNINITIALIZED` guard remains intact. The repair passed on the baseline Dactyl dependency before SDK-specific verification.
+
+## PR1663 current-master preparation
+
+Preserve original regression sources and historical benchmark records as historical observations. The current request requires hosted CI repair until green and prohibits local tests. First checkpoint the prepared source, then integrate accepted master and original PR parents, refresh exact source/release bindings and push. Source correctness, new format compatibility and required provider execution remain unproven until the new hosted candidate runs.

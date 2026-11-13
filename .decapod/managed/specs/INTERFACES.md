@@ -1142,8 +1142,8 @@ field. Nothing in this operation authorizes a mutation, approval or completion.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `7693d5010b19979e4cb8189dcb7d189c3ada65fb2953147b491cc708cd5ae8ec`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (231 files), `tests/` (232 files)
+- Repository signal fingerprint: `765977d9bdd6b9a88e48e73a6ed6fab691831c884d1721f3591f1781c9960dc5`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (232 files), `tests/` (232 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 
@@ -1468,3 +1468,11 @@ The resolved native project also supplies the repository field of newly created 
 ## Versioned cloud mutation receipts
 
 Cloud todo receipt cache v2 is an object with version=2 and records. The reader accepts legacy flat record arrays, preserves their uncertainty and original repository semantics, and rewrites them as v2 under the stable lock. Unsupported future versions fail without replacement. Server request/result contracts and the cloud-session credential record remain unchanged.
+
+## PR 1663: accepted v0.143.2 source integration
+
+Readers distinguish supported legacy/current formats from `STORAGE_FORMAT_INCOMPATIBLE`. Snapshot-bound paged verification reports drift rather than completing a mixed history. Component transfer remains self-contained; inventory reports aggregate format/reuse attribution without exposing source records.
+
+## PR1663 current-master preparation
+
+Preserve existing storage inventory, journal verification and transfer interfaces, explicit-only page reclamation and versioned format guards. Merge accepted custody and runtime-owner behavior without dropping storage validation or replay protections. Current public-source CI is the verification provider for this update; no local test results are claimed.

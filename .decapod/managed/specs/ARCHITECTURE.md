@@ -905,8 +905,8 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `7693d5010b19979e4cb8189dcb7d189c3ada65fb2953147b491cc708cd5ae8ec`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (231 files), `tests/` (232 files)
+- Repository signal fingerprint: `765977d9bdd6b9a88e48e73a6ed6fab691831c884d1721f3591f1781c9960dc5`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (232 files), `tests/` (232 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 
@@ -1160,3 +1160,11 @@ The resolved native project also supplies the repository field of newly created 
 ## Versioned cloud mutation receipts
 
 The machine-private cloud todo receipt file uses a version-two envelope around its bounded records. Legacy flat arrays migrate under the existing stable file lock; array-only older clients cannot parse and rewrite the new envelope, so they cannot silently remove resolved-project bindings. This changes neither credential custody nor the server data protocol.
+
+## PR 1663: accepted v0.143.2 source integration
+
+`storage_contracts` enforces write bounds; task journal v2 references immutable components while preserving canonical logical projections. Event envelopes use a lossless versioned codec. `storage_compaction` owns compatibility metadata, migration manifests, reference-aware collection and explicitly requested page reclamation in the existing database.
+
+## PR1663 current-master preparation
+
+`storage_contracts` bounds new admitted writes while preserving historical reads. `task_journal` and `task_transfer` bind component-backed projections and self-contained transfers; event envelopes reconstruct original event fields. The forward storage migration and compatibility guards remain separate from coordination tooling. Do not run the candidate migration against the machine coordination store.

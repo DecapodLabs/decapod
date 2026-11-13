@@ -1640,3 +1640,228 @@ fn historical_gap_repair_without_suffix_is_rejected() {
         "no uncheckpointed domain-event suffix",
     );
 }
+
+#[test]
+fn v2_checkpoint_externalizes_and_deduplicates_large_components_with_exact_tamper_checked_reconstruction()
+ {
+    let (_temp, conn) = fixture();
+    seed_complete_projection(&conn);
+
+    let large_desc = "Governed v2 externalized description line.\n".repeat(24);
+    let large_scope =
+        "paths:src/decapod/core/task_journal.rs,src/decapod/core/events.rs,".repeat(8);
+    let large_plan = serde_json::to_string(&vec!["validate_passes"; 16]).unwrap();
+    let large_artifacts = serde_json::json!({
+        "task_id": TASK,
+        "task_revision": 7,
+        "proof_plan_results": (0..12).map(|i| serde_json::json!({"proof_gate": format!("gate_{i}"), "output_hash": format!("sha256:{i:064x}")})).collect::<Vec<_>>()
+    })
+    .to_string();
+    let large_notes = "Reviewer custody note preserved verbatim.\n".repeat(16);
+
+    conn.execute(
+        "UPDATE tasks SET description=?1, scope=?2 WHERE id=?3",
+        params![large_desc, large_scope, TASK],
+    )
+    .unwrap();
+    conn.execute(
+        "UPDATE task_verification SET proof_plan=?1, verification_artifacts=?2, last_verified_notes=?3 WHERE todo_id=?4",
+        params![large_plan, large_artifacts, large_notes, TASK],
+    )
+    .unwrap();
+
+    let expected_initial = capture_selected(&conn, &[TASK.to_owned()]).unwrap()[TASK].clone();
+    baseline(&conn);
+    // Append 5 title-only transitions; all 5 large fields remain unchanged across all 6 checkpoints!
+    for i in 1..=5 {
+        edit_title(&conn, &format!("Compact title transition {i}"));
+    }
+
+    // Only 5 unique component blobs exist for TASK across all 6 checkpoints, while 30 refs bind them.
+    let unique_blobs: i64 = conn
+        .query_row("SELECT COUNT(*) FROM storage_components", [], |r| r.get(0))
+        .unwrap();
+    assert_eq!(unique_blobs, 5);
+    let total_refs: i64 = conn
+        .query_row(
+            "SELECT COUNT(*) FROM storage_component_refs WHERE ref_scope=?1",
+            [COMPONENT_REF_SCOPE_CHECKPOINT],
+            |r| r.get(0),
+        )
+        .unwrap();
+    assert_eq!(total_refs, 6 * 5);
+
+    // Raw event payload carries schema_version=2 + component_refs and omits inline large prose.
+    let latest_raw: String = conn
+        .query_row(
+            "SELECT payload FROM events WHERE stream='todo' AND subject_id=?1 AND event_type=?2 ORDER BY seq DESC LIMIT 1",
+            params![TASK, EVENT_TYPE],
+            |r| r.get(0),
+        )
+        .unwrap();
+    assert!(latest_raw.contains("\"schema_version\":2"), "{latest_raw}");
+    assert!(latest_raw.contains("\"component_refs\""), "{latest_raw}");
+    assert!(!latest_raw.contains("Governed v2 externalized description line."));
+
+    // Reconstructed journal head matches live projection and digest byte-for-byte.
+    let journal = read_journal(&conn, Some(&[TASK.to_owned()])).unwrap();
+    let head = &journal.heads[TASK];
+    assert_eq!(head.ordinal, 6);
+    assert_eq!(
+        head.projection.task.description.as_deref(),
+        Some(large_desc.as_str())
+    );
+    assert_eq!(head.projection.task.scope, large_scope);
+    let ver = head.projection.verification.as_ref().unwrap();
+    assert_eq!(ver.proof_plan, large_plan);
+    assert_eq!(
+        ver.verification_artifacts.as_deref(),
+        Some(large_artifacts.as_str())
+    );
+    assert_eq!(
+        ver.last_verified_notes.as_deref(),
+        Some(large_notes.as_str())
+    );
+    assert_eq!(head.projection_digest, digest(&head.projection).unwrap());
+    assert_eq!(verify(&conn).unwrap()["status"], "ok");
+    let _ = expected_initial;
+
+    // Corrupting any externalized component blob in storage_components must fail closed!
+    conn.execute(
+        "UPDATE storage_components SET stored_bytes = X'00010203' WHERE component_kind='task.description'",
+        [],
+    )
+    .unwrap();
+    assert!(verify(&conn).is_err());
+}
+
+#[test]
+fn paged_verify_with_budget_scales_beyond_10k_tasks_supports_cursor_resumption_and_detects_snapshot_drift()
+ {
+    // Part A: Multi-page cursor resumption + mid-cursor mutation detection.
+    {
+        let (_temp, conn) = fixture();
+        for i in 0..20 {
+            seed_task(&conn, &format!("paged-task-{i:03}"));
+        }
+        baseline(&conn);
+        let unpaged = verify(&conn).unwrap();
+        assert_eq!(unpaged["status"], "ok");
+        assert_eq!(unpaged["complete"], true);
+
+        let budget = VerifyBudget {
+            page_size: 4,
+            max_checkpoint_rows: Some(7),
+            max_task_rows: Some(5),
+        };
+        let mut cursor: Option<VerifyCursor> = None;
+        let mut partial_steps = 0usize;
+        let final_report = loop {
+            let step = verify_with_budget(&conn, &budget, cursor.as_ref()).unwrap();
+            if step["status"] == "partial" {
+                partial_steps += 1;
+                assert_eq!(step["complete"], false);
+                assert_eq!(step["limitation"], "caller_budget_reached");
+                let next_cursor: VerifyCursor =
+                    serde_json::from_value(step["continuation_cursor"].clone()).unwrap();
+                if partial_steps == 2 {
+                    // Mutating live state mid-cursor must fail closed with TASK_JOURNAL_SNAPSHOT_CHANGED.
+                    conn.execute(
+                        "UPDATE tasks SET revision = revision + 1 WHERE id = 'paged-task-019'",
+                        [],
+                    )
+                    .unwrap();
+                    let drift_err =
+                        verify_with_budget(&conn, &budget, Some(&next_cursor)).unwrap_err();
+                    assert!(
+                        drift_err
+                            .to_string()
+                            .contains("TASK_JOURNAL_SNAPSHOT_CHANGED"),
+                        "{drift_err}"
+                    );
+                    conn.execute(
+                        "UPDATE tasks SET revision = revision - 1 WHERE id = 'paged-task-019'",
+                        [],
+                    )
+                    .unwrap();
+                }
+                cursor = Some(next_cursor);
+            } else {
+                break step;
+            }
+        };
+        assert!(partial_steps >= 4);
+        assert_eq!(final_report["status"], "ok");
+        assert_eq!(final_report["complete"], true);
+        assert_eq!(final_report["current_digest"], unpaged["current_digest"]);
+        assert_eq!(final_report["checkpointed_tasks"], 20);
+    }
+
+    // Part B: Scale beyond MAX_TASKS (10,000) without hitting the legacy unpaged ceiling.
+    {
+        let (_temp, conn) = fixture();
+        let total = MAX_TASKS + 50; // 10,050 tasks
+        transaction(&conn, || {
+            let mut journal = Journal::default();
+            for i in 0..total {
+                let id = format!("scale-task-{i:06}");
+                seed_task(&conn, &id);
+                let proj = TaskProjection {
+                    task: TaskRow {
+                        id: id.clone(),
+                        hash: format!("hash:{id}"),
+                        title: "Journal subject".into(),
+                        description: Some("Exact description\nsecond line".into()),
+                        tags: Some("zeta,alpha".into()),
+                        owner: Some("legacy-owner".into()),
+                        due: Some("2026-12-31".into()),
+                        r#ref: Some("issue:852".into()),
+                        status: "open".into(),
+                        created_at: CREATED.into(),
+                        updated_at: UPDATED.into(),
+                        completed_at: None,
+                        closed_at: None,
+                        dir_path: "/work/journal".into(),
+                        scope: "repo".into(),
+                        parent_task_id: None,
+                        priority: Some("high".into()),
+                        depends_on: Some(String::new()),
+                        blocks: Some(String::new()),
+                        category: Some("code".into()),
+                        component: Some("kernel".into()),
+                        assigned_to: Some("agent-a".into()),
+                        assigned_at: Some(CREATED.into()),
+                        one_shot: Some(1),
+                        lease_expires_at: Some("9999999999Z".into()),
+                        lease_generation: Some(2),
+                        lease_lifecycle: Some("claimed".into()),
+                        intent_anchor: Some("intent:journal".into()),
+                        revision: 7,
+                    },
+                    owners: vec![],
+                    dependencies: vec![],
+                    tags: vec![],
+                    verification: None,
+                };
+                append_checkpoint(
+                    &conn,
+                    &mut journal,
+                    &proj,
+                    0,
+                    "explicit_current_state_baseline",
+                    "observer",
+                )?;
+            }
+            Ok(())
+        })
+        .unwrap();
+
+        // Legacy unsegmented capture() hits MAX_TASKS, while keyset-paged verify() succeeds cleanly!
+        assert!(capture(&conn).is_err());
+        let scaled = verify(&conn).unwrap();
+        assert_eq!(scaled["status"], "ok", "{scaled}");
+        assert_eq!(scaled["complete"], true);
+        assert_eq!(scaled["checkpointed_tasks"], total);
+        assert_eq!(scaled["records"], total);
+    }
+}

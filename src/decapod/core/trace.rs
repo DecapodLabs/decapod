@@ -136,15 +136,45 @@ pub fn get_last_traces(project_root: &Path, n: usize) -> Result<Vec<String>, Dec
         return Ok(vec![]);
     }
     let conn = crate::core::db::db_connect_for_validate(&path.to_string_lossy())?;
+    if !conn.has_table("events")? {
+        return Ok(vec![]);
+    }
     let mut stmt = conn
-        .prepare("SELECT payload FROM events WHERE stream = 'traces' ORDER BY seq DESC LIMIT ?1")
+        .prepare(
+            "SELECT event_id, ts, event_type, actor, subject_kind, subject_id, payload \
+             FROM events WHERE stream = 'traces' ORDER BY seq DESC LIMIT ?1",
+        )
         .map_err(DecapodError::StorageError)?;
     let rows = stmt
-        .query_map([n as i64], |row| row.get::<_, String>(0))
+        .query_map([n as i64], |row| {
+            Ok((
+                row.get::<_, String>(0)?,
+                row.get::<_, String>(1)?,
+                row.get::<_, String>(2)?,
+                row.get::<_, String>(3)?,
+                row.get::<_, Option<String>>(4)?,
+                row.get::<_, Option<String>>(5)?,
+                row.get::<_, String>(6)?,
+            ))
+        })
         .map_err(DecapodError::StorageError)?;
     let mut lines = Vec::new();
     for row in rows {
-        lines.push(row.map_err(DecapodError::StorageError)?);
+        let (event_id, ts, event_type, actor, subject_kind, subject_id, raw_payload) =
+            row.map_err(DecapodError::StorageError)?;
+        let reconstructed = events::reconstruct_stored_payload(
+            events::TRACES,
+            &event_id,
+            &ts,
+            &event_type,
+            &actor,
+            subject_kind.as_deref(),
+            subject_id.as_deref(),
+            &raw_payload,
+        )?;
+        let serialized = serde_json::to_string(&reconstructed)
+            .map_err(|e| DecapodError::ValidationError(e.to_string()))?;
+        lines.push(serialized);
     }
     lines.reverse();
     Ok(lines)

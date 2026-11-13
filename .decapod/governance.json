@@ -1,7 +1,7 @@
 {
   "schema_version": "1.0.0",
   "baseline": {
-    "accepted_commit": "3b6b31f83edfb2b77f07aa4df3b8d958074134d9",
+    "accepted_commit": "6f1d2a39ad0b5b2f7e70fe12f75f0d8b360d9453",
     "policy": {
       "change_control": {
         "requires_human_review": true,
@@ -535,281 +535,113 @@
     }
   },
   "change": {
-    "id": "change_01M79KP72JCBRMB1MHBKZVMQGT",
-    "base_commit": "3b6b31f83edfb2b77f07aa4df3b8d958074134d9",
+    "id": "change_01M79W3PBHXH8GNF8YWMNPHZCD",
+    "base_commit": "6f1d2a39ad0b5b2f7e70fe12f75f0d8b360d9453",
     "target_base": "origin/master"
-  },
-  "claims": {
-    "claim-negative-completion-gates": {
-      "statement": "Fresh docs tasks reject premature proof-backed todo completion before first proof and block readiness when an explicit unverified workunit is declared",
-      "falsifier": "todo done --validated succeeds before first proof or runtime validation issues readiness receipts with an unverified workunit",
-      "status": "supported",
-      "proof_refs": [
-        "src/decapod/core/validation_rules.rs",
-        "tests/support/fresh_docs_readiness.rs"
-      ]
-    },
-    "claim-terminal-rule-context": {
-      "statement": "Terminal publication and pre-execution validation populate canonical task_type and refs/heads/<branch> git_ref context without sidecar DB creation",
-      "falsifier": "Publication rules scoped to task_types or ref_patterns fail to match canonical docs/bugfix/feature/refactor/test tasks or agent branches",
-      "status": "supported",
-      "proof_refs": [
-        "src/decapod/core/validate.rs",
-        "src/decapod/core/validation_rules.rs"
-      ]
-    }
   },
   "checkpoints": [
     {
-      "id": "refresh-agents-0-143-0",
-      "summary": "chore(entrypoints): refresh AGENTS.md for v0.143.0",
-      "input_digest": "sha256:93b7c47c40cca876780788756d42d0340e4a2684de53ec4360742b1c18033d50"
-    },
-    {
-      "id": "refresh-claude-0-143-0",
-      "summary": "chore(entrypoints): refresh CLAUDE.md for v0.143.0",
-      "input_digest": "sha256:e9231d4be37d2d5781619b178665206b1fdd07b6e01f20ab46f2abf479b0a468"
-    },
-    {
-      "id": "refresh-codex-0-143-0",
-      "summary": "chore(entrypoints): refresh CODEX.md for v0.143.0",
-      "input_digest": "sha256:dbf1bf94a2141493458e970ec1a6d5176bbaec831d287f8ca7e6f7bf86fd6d91"
-    },
-    {
-      "id": "refresh-gemini-0-143-0",
-      "summary": "chore(entrypoints): refresh GEMINI.md for v0.143.0",
-      "input_digest": "sha256:0e961655d618e82773abf2a5955ef74bc52863709c4e6ab4307444181ecf7908"
-    },
-    {
-      "id": "refresh-dockerfile-0-143-0",
-      "summary": "chore(container): refresh Dockerfile.decapod pin for v0.143.0",
-      "input_digest": "sha256:bbd4cc2d8080c244b47e0aa17a9001ca7c31b5399c55a3330330cbb54beb6a4e"
-    },
-    {
-      "id": "refresh-reviewed-sources-digest",
-      "summary": "chore(config): update reviewed_sources_digest for v0.143.0 source inventory",
-      "input_digest": "sha256:6a9584fd0bb835ee1946df87ec1d376ce36d8a4a476efb8b8fc5354fd108706f"
-    },
-    {
-      "id": "terminal-rule-task-and-ref-context",
-      "summary": "fix(validation): populate canonical task_type and git_ref in terminal rules (#1629)",
-      "input_digest": "sha256:451fc8c427cd1d7b86c5fb145d13918f87f43799b64d98e33422cf3241bcc06e"
-    },
-    {
-      "id": "validate-canonical-task-type",
-      "summary": "fix(validation): normalize workspace task_type for pre-execution rules (#1629)",
-      "input_digest": "sha256:1fc07435c1c6ca75ebb1e2185bec5101bed17ab025528faa309be96fb08a1616"
-    },
-    {
-      "id": "fresh-docs-negative-completion-regression",
-      "summary": "test(validation): verify negative proof-backed completion gates on fresh docs task (#1629)",
-      "input_digest": "sha256:d120ba700e209f017ea77ff910c4317b24dd4e347b05aef377d0f51303bce145"
-    },
-    {
-      "id": "spec-architecture-terminal-context",
-      "summary": "docs(specs): document canonical terminal rule task_type and git_ref lifecycle",
-      "input_digest": "sha256:6543f8985a9eded0c0bc945ec068d097fef95b5ea3ca05a5d4d88953e5cfcc87"
-    },
-    {
-      "id": "spec-intent-refresh-0-143-0",
-      "summary": "docs(specs): refresh INTENT.md attestation for v0.143.0",
-      "input_digest": "sha256:b45be3a4a54ca618069d7a15a564e551ff0cafc4eac834e1e7c8638062d44d48"
-    },
-    {
-      "id": "spec-interfaces-refresh-0-143-0",
-      "summary": "docs(specs): refresh INTERFACES.md attestation for v0.143.0",
-      "input_digest": "sha256:c2e364b0b31199a7a877f4cd2fc4112d9d2768fdb20693355d8ebe74ff963253"
-    },
-    {
-      "id": "spec-operations-refresh-0-143-0",
-      "summary": "docs(specs): refresh OPERATIONS.md attestation for v0.143.0",
-      "input_digest": "sha256:24ac00501afc9004277b7c36fe604c8075f42ab1c86d739bf77d39aca10f9d82"
-    },
-    {
-      "id": "spec-readme-refresh-0-143-0",
-      "summary": "docs(specs): refresh specs README.md attestation for v0.143.0",
-      "input_digest": "sha256:b2eaf19f95042ee9799dd37f313086ee76c024c6c04f148f5bac0d920f0fbe4b"
-    },
-    {
-      "id": "spec-security-terminal-custody",
-      "summary": "docs(specs): document terminal rule context and proof-backed completion custody",
-      "input_digest": "sha256:43a0ac3fe49ae07f89862a0c827b3a50b1f41392084c10cdae1a417d35514058"
-    },
-    {
-      "id": "spec-semantics-refresh-0-143-0",
-      "summary": "docs(specs): refresh SEMANTICS.md attestation for v0.143.0",
-      "input_digest": "sha256:d6885267381edfeff08900d9658b11564655f36bc36bbb878f18d58d11503b88"
-    },
-    {
-      "id": "spec-validation-negative-completion",
-      "summary": "docs(specs): document negative proof-backed completion CLI and unit regressions",
-      "input_digest": "sha256:e958ec7266f5f57e465ad30575ab4fe81e6213ff457468b794ec4352701d108a"
-    },
-    {
-      "id": "spec-manifest-refresh-0-143-0",
-      "summary": "docs(specs): refresh .manifest.json and record publication spec reviews",
-      "input_digest": "sha256:0dd55290f8a92cf7f572e7f3a3dc47134c500ebc9b7de21d9cadc29992b5bd7d"
-    },
-    {
-      "id": "reconcile-master-1655",
-      "summary": "chore(merge): reconcile accepted master (#1655) into #1629",
-      "input_digest": "sha256:b2815f81dc03781d88bbc28499432e7195249a31c4dc8fc8b6c6cb3b7c1ff0a3"
-    },
-    {
-      "id": "reconcile-master-v01431",
-      "summary": "Reconcile accepted master v0.143.1 (64c4ff2e) and refresh 0.143.1 projections",
-      "input_digest": "sha256:d8cae0897ca01ac74196a0eb7fb088f98fecbbd3a5fc2ef72a84260d7bce7cbd"
-    },
-    {
-      "id": "bind-v01431-epoch",
-      "summary": "Bind v0.143.1 validation epoch receipt after master reconciliation",
-      "input_digest": "sha256:3a5ba4a262fdcba6e8117a270c2c4177519bd1cc98e77402b86423fa7cf47071"
+      "id": "pr1663-prepared-source-preservation-1",
+      "summary": "Checkpoint prepared original storage implementation and current task custody before accepted-master integration; no local tests or live candidate migrations.",
+      "input_digest": "sha256:e934f13495757ac78d5ddac0926c381fc7af0de51d9bd3975183d3a927cae438",
+      "proof_refs": [
+        "git:1c60df45c5db1731fb348069cf1e8f8f5dc410cc"
+      ]
     }
   ],
   "intents": {
-    "intent:branch_01M79PZRECONCILE1665": {
+    "intent:change_01M79W3PBHXH8GNF8YWMNPHZCD": {
       "acceptance_criteria": [],
       "assumptions": [],
       "boundaries": [
-        "src/decapod/core/validation_rules.rs, src/decapod/core/validate.rs, tests/support/fresh_docs_readiness.rs, .decapod/managed/specs/*"
+        "Current claimed task and isolated work branch"
       ],
       "constraints": [
-        ".decapod/governance.json"
+        "pr-1663-master-1432"
       ],
       "created_sequence": 1,
-      "id": "intent:branch_01M79PZRECONCILE1665",
+      "id": "intent:change_01M79W3PBHXH8GNF8YWMNPHZCD",
       "out_of_scope": [],
       "proof_requirements": [],
-      "raw_intent": "Fix #1629 circular first-validation evidence prerequisites in fresh governed workspaces",
-      "refined_intent": "Reconcile #1629 terminal-rule context fix onto accepted master v0.143.1 (64c4ff2e) and refresh 0.143.1 projections",
+      "raw_intent": "bugs: update PR 1663 onto accepted Decapod 0.143.2 master\n\nUser requests all open PR branches updated. Preserve PR1663 implementation and historical proof, resolve current accepted-master conflicts, refresh official0.143.2 projections and exact-source evidence, checkpoint commits and push existing PR without force or merge. Retain any known native acceptance/controller blockers and draft status.",
+      "refined_intent": "bugs: update PR 1663 onto accepted Decapod 0.143.2 master\n\nUser requests all open PR branches updated. Preserve PR1663 implementation and historical proof, resolve current accepted-master conflicts, refresh official0.143.2 projections and exact-source evidence, checkpoint commits and push existing PR without force or merge. Retain any known native acceptance/controller blockers and draft status.",
       "status": "refined",
       "updated_sequence": 3
-    }
-  },
-  "epochs": {
-    "ve_fefb216368f301b9": {
-      "constitution_hash": "sha256:27c3a78e5546640f5ef8da0460decda605aca8f82b9019482bb27a8f0b6d8a5d",
-      "constitution_version": "embedded-docs@0.143.1",
-      "epoch_id": "ve_fefb216368f301b9",
-      "evaluator_identity": "decapod-validate@0.143.1",
-      "evaluator_set_hash": "sha256:063f19d26df476cb2ecc57aeab8d3d8ea6a88f4301443e6259e249f9568809e3",
-      "generated_specs_fingerprint": "7693d5010b19979e4cb8189dcb7d189c3ada65fb2953147b491cc708cd5ae8ec",
-      "generated_specs_manifest_hash": "sha256:ef26c3da7d406a0f850c19fcdb4bdb52ff5d8e92372ff619ae91b7385829d7fb",
-      "material_hashes": {
-        "constitution:core/DECAPOD": "sha256:27c3a78e5546640f5ef8da0460decda605aca8f82b9019482bb27a8f0b6d8a5d",
-        "generated_spec:.decapod/managed/specs/ARCHITECTURE.md": "sha256:c4274196cc7e80a682096312266ac5393e11cb93c59ab692423c94481ebac8ad",
-        "generated_spec:.decapod/managed/specs/INTENT.md": "sha256:5efcc8ab7b0e24bc0949959eccf0b63863d35702d38a5b165d4875c5f86ad4c5",
-        "generated_spec:.decapod/managed/specs/INTERFACES.md": "sha256:23169b89e5d3d7d478b89614e7dbd8213cb5d147f1820b15f6d505cb3503b65a",
-        "generated_spec:.decapod/managed/specs/OPERATIONS.md": "sha256:d03cd0adcb27f6ee2ebaca36f46d24f90c4742db4fd6ab1b87c5a15952f3b648",
-        "generated_spec:.decapod/managed/specs/README.md": "sha256:2ef5149234df3d0cfc28d899dd5ddb27faa3752dd08c3c7e30c8d3d7323a0b69",
-        "generated_spec:.decapod/managed/specs/SECURITY.md": "sha256:00e17d295a91bfe0d0ff28d9cdd8b20326b517cd6950ff1bb9db1fe29c3ac43e",
-        "generated_spec:.decapod/managed/specs/SEMANTICS.md": "sha256:1d1f9e5e5a204394c7e1a1ebc0f54110561cf6785cf317f7c6b49836a1478257",
-        "generated_spec:.decapod/managed/specs/VALIDATION.md": "sha256:c1dc6832e43271ff87d97f79e624be698428b90f8b6c1bac3f20b359e40863b2",
-        "generated_specs_fingerprint": "7693d5010b19979e4cb8189dcb7d189c3ada65fb2953147b491cc708cd5ae8ec",
-        "generated_specs_manifest": "sha256:ef26c3da7d406a0f850c19fcdb4bdb52ff5d8e92372ff619ae91b7385829d7fb",
-        "governance_context": "sha256:7416269a660dbbae77617bb4ce869385546229134985fbf63b46f0195519a285",
-        "governance_material:.decapod/managed/Dockerfile.decapod": "sha256:ef1b29e6ce1f8b37f62c5e9975fdaafd3629df5b86a2d64b9128ebbc5b78d16f",
-        "governance_material:AGENTS.md": "sha256:d25db6c735b235f03cbb944623ba05f334ea1fc8dee9c27f7eed9052fec0101e",
-        "governance_material:CLAUDE.md": "sha256:a0f9affc9924a9e599e76a205a340175d3cf5c01a72544903b6c810d7ad44540",
-        "governance_material:CODEX.md": "sha256:8098d84e5b69e7f433d21878c373061ab4a468052f07f31e6fd999a09c689905",
-        "governance_material:GEMINI.md": "sha256:f17ea8b7a6b541e034fa190c4cdf39cff622e1197a58bf7f7b9f314fcc3e786a",
-        "governance_section:claims": "sha256:3a195b53e6f01fff31b3e5de31bd2f7620a2fe775534b259a8b0180a61f82b2c",
-        "governance_section:plan": "sha256:a17f5c8765ec217fc6a66669fa7260ff9a902c33ff6a3557106ee68afccae2c8",
-        "living_spec_material:.decapod/managed/specs/ARCHITECTURE.md": "sha256:11ce1ecc3ba50564b2ec464e88d3c899f039ce3a31c2f6fc08ec189e743b91bd",
-        "living_spec_material:.decapod/managed/specs/INTENT.md": "sha256:e070aaf6ddf2395427a9cdbb084fa3fab6a637810c2b79d1f99a3b0178b033c5",
-        "living_spec_material:.decapod/managed/specs/INTERFACES.md": "sha256:bdd0ceb5cd3b9c68d05ceb15fc4c5981aecb18fb53823d649298222f5c2142fe",
-        "living_spec_material:.decapod/managed/specs/OPERATIONS.md": "sha256:1d3e29277d53611989f0ecc92d40beebbee3283a59eb8bafa1369d3b4dce5a98",
-        "living_spec_material:.decapod/managed/specs/README.md": "sha256:b438399f5c0f241858ccea303abbd1076a8728d2560509e7a15e012dd698765c",
-        "living_spec_material:.decapod/managed/specs/SECURITY.md": "sha256:5bbc2655c6e433d388c4ac1a54bd7905a3b0b7934fa11c3d257f58f062a8ba14",
-        "living_spec_material:.decapod/managed/specs/SEMANTICS.md": "sha256:88af02a5fa5b60a15f67f62702d5fdcda58a70052940081e9cfd9fe1aa21017c",
-        "living_spec_material:.decapod/managed/specs/VALIDATION.md": "sha256:d894fa8aafc0c3db5f13c8c31d2cef00e59b81f32bd9f5a1daeacb9cc34bd074",
-        "proof_rubric": "sha256:99e8ef25629da391e9b479db9fff52b82f340224f7a69d8a88d2992ae8e90466",
-        "validation_profile": "sha256:37a8eec1ce19687d132fe29051dca629d164e2c4958ba141d5f4133a33f0688f"
-      },
-      "proof_rubric": "decapod-validate/current-proof-v1",
-      "proof_rubric_hash": "sha256:99e8ef25629da391e9b479db9fff52b82f340224f7a69d8a88d2992ae8e90466",
-      "schema_version": "1.0.0",
-      "validation_profile": "default",
-      "validation_profile_hash": "sha256:37a8eec1ce19687d132fe29051dca629d164e2c4958ba141d5f4133a33f0688f"
     }
   },
   "sections": {
     "plan": {
       "constraints": {
-        "file_touch_budget": 40,
+        "file_touch_budget": 100,
         "forbidden_paths": []
       },
       "deferred_questions": [],
       "human_questions": [],
-      "intent": "Fix #1629 terminal rule task_type/git_ref context and negative proof-backed completion CLI regression",
+      "intent": "Update existing PR1663 against accepted master5e23ad68 and0.144.1 release. Preserve lossless compaction, write-admission guards, versioned event/journal formats, component integrity and original commit history. Resolve conflicts with accepted custody/quota/runtime changes, push each repair and drive hosted CI until green. Do not run local tests, execute candidate migrations against the live datastore, force-push or merge the PR. Historical benchmarks are not current-candidate proof.",
       "phases": [],
       "proof_hooks": [
-        "decapod validate"
+        "Source/material parity against original PR; focused affected regression checks; checkpoint-history inspection; official exact-current-target validation where the accepted controller supports the contract."
       ],
       "schema_version": "1.1.0",
       "spec_reviews": [
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Reconciled ARCHITECTURE.md with accepted master v0.143.1 and #1629 canonical terminal rule context.",
-          "reviewed_code_fingerprint": "7693d5010b19979e4cb8189dcb7d189c3ada65fb2953147b491cc708cd5ae8ec",
-          "spec_material_hash": "11ce1ecc3ba50564b2ec464e88d3c899f039ce3a31c2f6fc08ec189e743b91bd"
+          "reason": "Prepared original storage source is preserved for integration, with explicit lossless reconstruction, admission, component and format obligations. Historical measurements remain historical; no local tests or live candidate datastore migration are performed. Hosted CI must independently establish the current result.",
+          "reviewed_code_fingerprint": "765977d9bdd6b9a88e48e73a6ed6fab691831c884d1721f3591f1781c9960dc5",
+          "spec_material_hash": "0b608f2d0f5b5db6e8d06cd8f1434a72e0e0f69a97e4b5867495b2316b8e26b4"
         },
         {
-          "disposition": "unchanged_with_reason",
+          "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Reconciled INTERFACES.md with accepted master v0.143.1; public CLI/RPC surfaces remain unchanged.",
-          "reviewed_code_fingerprint": "7693d5010b19979e4cb8189dcb7d189c3ada65fb2953147b491cc708cd5ae8ec",
-          "spec_material_hash": "bdd0ceb5cd3b9c68d05ceb15fc4c5981aecb18fb53823d649298222f5c2142fe"
+          "reason": "Prepared original storage source is preserved for integration, with explicit lossless reconstruction, admission, component and format obligations. Historical measurements remain historical; no local tests or live candidate datastore migration are performed. Hosted CI must independently establish the current result.",
+          "reviewed_code_fingerprint": "765977d9bdd6b9a88e48e73a6ed6fab691831c884d1721f3591f1781c9960dc5",
+          "spec_material_hash": "e03e68b61ecf38f0355d80eb5252cb75b5c9df38437e960926f8c499652920cf"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Reconciled SECURITY.md with accepted master v0.143.1 and #1629 fail-closed completion custody.",
-          "reviewed_code_fingerprint": "7693d5010b19979e4cb8189dcb7d189c3ada65fb2953147b491cc708cd5ae8ec",
-          "spec_material_hash": "5bbc2655c6e433d388c4ac1a54bd7905a3b0b7934fa11c3d257f58f062a8ba14"
+          "reason": "Prepared original storage source is preserved for integration, with explicit lossless reconstruction, admission, component and format obligations. Historical measurements remain historical; no local tests or live candidate datastore migration are performed. Hosted CI must independently establish the current result.",
+          "reviewed_code_fingerprint": "765977d9bdd6b9a88e48e73a6ed6fab691831c884d1721f3591f1781c9960dc5",
+          "spec_material_hash": "a75e291c74f5dcd8fa90674b6f81bb564f7d5e8a97dbe1c23f45b971f11f62bb"
         }
       ],
       "state": "APPROVED",
       "stop_conditions": [],
-      "title": "Fix #1629 terminal rule task_type/git_ref context and negative proof-backed completion CLI regression",
+      "title": "Integrate PR1663 on accepted0.143.2 master",
       "todo_ids": [
-        "bugs_01m79knt8h670tjh"
+        "bugs_01m79w2ky7pvy503"
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1794549057Z"
+      "updated_at": "1794597420Z"
     },
     "trajectory": {
       "active_boundaries": [
-        "src/decapod/core/validation_rules.rs, src/decapod/core/validate.rs, tests/support/fresh_docs_readiness.rs, .decapod/managed/specs/*"
+        "Current claimed task and isolated work branch",
+        "Preserve original source and parents; no force-push, local tests, live candidate migrations or automatic merge."
       ],
-      "artifact_hash": "sha256:66350e73a102549ced7d2098bc05d861dd09845549cb23a841f15bb84a159f60",
-      "checks": [
-        {
-          "name": "decapod validate",
-          "status": "passed"
-        }
-      ],
-      "current_phase": "validation",
+      "artifact_hash": "sha256:0416d43f2e953dad24ae14d43901316d53c07b2ed1f3cfff2ac85be8cefbb86c",
+      "checks": [],
+      "current_phase": "integration",
       "custody": {
         "events": [
           {
             "event_id": "event:2",
-            "intent_id": "intent:branch_01M79PZRECONCILE1665",
+            "intent_id": "intent:change_01M79W3PBHXH8GNF8YWMNPHZCD",
             "kind": "created",
             "sequence": 2
           },
           {
             "event_id": "event:3",
-            "intent_id": "intent:branch_01M79PZRECONCILE1665",
+            "intent_id": "intent:change_01M79W3PBHXH8GNF8YWMNPHZCD",
             "kind": "refined",
             "sequence": 3
           },
           {
-            "detail": "trajectory:branch_01M79PZRECONCILE1665",
+            "detail": "trajectory:branch_01M79W3PFCRQMK8QZJN5TWCK5K",
             "event_id": "event:4",
-            "intent_id": "intent:branch_01M79PZRECONCILE1665",
+            "intent_id": "intent:change_01M79W3PBHXH8GNF8YWMNPHZCD",
             "kind": "trajectory_step_recorded",
             "sequence": 4
           }
@@ -818,315 +650,51 @@
         "next_sequence": 4,
         "schema_version": "1.0.0",
         "trajectories": {
-          "branch_01M79PZRECONCILE1665": {
+          "branch_01M79W3PFCRQMK8QZJN5TWCK5K": {
             "evidence_only": true,
-            "id": "branch_01M79PZRECONCILE1665",
-            "intent_id": "intent:branch_01M79PZRECONCILE1665",
+            "id": "branch_01M79W3PFCRQMK8QZJN5TWCK5K",
+            "intent_id": "intent:change_01M79W3PBHXH8GNF8YWMNPHZCD",
             "steps": [
               {
-                "action": "validation",
-                "command": "decapod validate",
+                "action": "integration",
                 "custody_event_id": "event:4",
                 "observations": [
-                  ".decapod/governance.json",
-                  ".decapod/governance.json",
-                  "validation epoch ve_fefb216368f301b9 completed with zero failures"
+                  "git:1c60df45c5db1731fb348069cf1e8f8f5dc410cc"
                 ],
-                "proof_refs": [
-                  "decapod validate"
-                ],
+                "proof_refs": [],
                 "scope": [
-                  ".decapod/governance.json"
+                  "pr-1663-master-1432"
                 ],
                 "sequence": 4,
-                "validation_findings": []
+                "validation_findings": [
+                  "Historical source tests and benchmarks do not prove the new accepted-target integration."
+                ]
               }
             ]
           }
         }
       },
-      "declared_commands": [
-        "decapod validate"
-      ],
+      "declared_commands": [],
+      "destination": "pull request",
       "evidence": [
-        "validation epoch ve_fefb216368f301b9 completed with zero failures"
+        "git:1c60df45c5db1731fb348069cf1e8f8f5dc410cc"
       ],
       "inspected_files": [],
-      "intent_id": "intent:branch_01M79PZRECONCILE1665",
-      "modified_files": [
-        ".decapod/governance.json"
-      ],
+      "intent_id": "intent:change_01M79W3PBHXH8GNF8YWMNPHZCD",
+      "modified_files": [],
       "next_transitions": [
-        "publish"
+        "Refine plan and declare falsifiable checks"
       ],
       "repo_scope": [
-        ".decapod/governance.json"
+        "pr-1663-master-1432"
       ],
-      "run_id": "branch_01M79PZRECONCILE1665",
+      "run_id": "branch_01M79W3PFCRQMK8QZJN5TWCK5K",
       "schema_version": "1.1.0",
       "shortcut_risk_signals": [],
-      "task_id": "bugs_01m79knt8h670tjh",
+      "task_id": "bugs_01m79w2ky7pvy503",
       "tool_calls": [],
-      "unresolved_assumptions": []
-    },
-    "validation": {
-      "ci_prediction": {
-        "confidence": "medium",
-        "recommendations": [
-          "Review the reported validation warnings before relying on the CI result.",
-          "Use `decapod validate -v --format json` to inspect the affected gate output."
-        ],
-        "result": "review"
-      },
-      "decapod_release": "0.143.1",
-      "drift_findings": [],
-      "elapsed_ms": 4017,
-      "epoch_ref": "ve_fefb216368f301b9",
-      "fail_count": 0,
-      "failures": [],
-      "gate_timings": [
-        {
-          "elapsed_ms": 973,
-          "name": "validate_machine_contract"
-        },
-        {
-          "elapsed_ms": 632,
-          "name": "validate_validation_rules"
-        },
-        {
-          "elapsed_ms": 500,
-          "name": "validate_project_specs_docs"
-        },
-        {
-          "elapsed_ms": 325,
-          "name": "validate_markdown_primitives_roundtrip_gate"
-        },
-        {
-          "elapsed_ms": 96,
-          "name": "validate_obligations"
-        },
-        {
-          "elapsed_ms": 63,
-          "name": "validate_legacy_jsonl_retired"
-        },
-        {
-          "elapsed_ms": 49,
-          "name": "validate_no_legacy_namespaces"
-        },
-        {
-          "elapsed_ms": 45,
-          "name": "validate_repomap_determinism"
-        },
-        {
-          "elapsed_ms": 44,
-          "name": "validate_archive_integrity"
-        },
-        {
-          "elapsed_ms": 32,
-          "name": "validate_generated_artifact_whitelist"
-        },
-        {
-          "elapsed_ms": 32,
-          "name": "validate_control_plane_contract"
-        },
-        {
-          "elapsed_ms": 29,
-          "name": "validate_federation_gates"
-        },
-        {
-          "elapsed_ms": 26,
-          "name": "validate_schema_determinism"
-        },
-        {
-          "elapsed_ms": 25,
-          "name": "validate_gatekeeper_gate"
-        },
-        {
-          "elapsed_ms": 24,
-          "name": "validate_embedded_self_contained"
-        },
-        {
-          "elapsed_ms": 17,
-          "name": "validate_interface_contract_bootstrap"
-        },
-        {
-          "elapsed_ms": 17,
-          "name": "validate_policy_integrity"
-        },
-        {
-          "elapsed_ms": 16,
-          "name": "validate_lineage_hard_gate"
-        },
-        {
-          "elapsed_ms": 14,
-          "name": "validate_knowledge_promotions_if_present"
-        },
-        {
-          "elapsed_ms": 13,
-          "name": "validate_watcher_audit"
-        },
-        {
-          "elapsed_ms": 13,
-          "name": "validate_health_purity"
-        },
-        {
-          "elapsed_ms": 13,
-          "name": "validate_lcm_immutability"
-        },
-        {
-          "elapsed_ms": 13,
-          "name": "validate_health_cache_integrity"
-        },
-        {
-          "elapsed_ms": 12,
-          "name": "validate_lcm_rebuild_gate"
-        },
-        {
-          "elapsed_ms": 12,
-          "name": "validate_watcher_purity"
-        },
-        {
-          "elapsed_ms": 12,
-          "name": "validate_database_schema_versions"
-        },
-        {
-          "elapsed_ms": 12,
-          "name": "validate_override_authority"
-        },
-        {
-          "elapsed_ms": 12,
-          "name": "validate_knowledge_integrity"
-        },
-        {
-          "elapsed_ms": 12,
-          "name": "validate_canon_mutation"
-        },
-        {
-          "elapsed_ms": 11,
-          "name": "validate_workunit_manifests_if_present"
-        },
-        {
-          "elapsed_ms": 11,
-          "name": "validate_spec_drift"
-        },
-        {
-          "elapsed_ms": 11,
-          "name": "validate_project_scoped_state"
-        },
-        {
-          "elapsed_ms": 11,
-          "name": "validate_validation_receipt_if_present"
-        },
-        {
-          "elapsed_ms": 11,
-          "name": "validate_trajectory_artifacts_if_present"
-        },
-        {
-          "elapsed_ms": 11,
-          "name": "validate_recursive_improvement_passes_if_present"
-        },
-        {
-          "elapsed_ms": 11,
-          "name": "validate_project_config_toml"
-        },
-        {
-          "elapsed_ms": 11,
-          "name": "validate_repo_map"
-        },
-        {
-          "elapsed_ms": 11,
-          "name": "validate_entrypoint_invariants"
-        },
-        {
-          "elapsed_ms": 11,
-          "name": "validate_heartbeat_invocation_gate"
-        },
-        {
-          "elapsed_ms": 10,
-          "name": "validate_internalization_artifacts_if_present"
-        },
-        {
-          "elapsed_ms": 10,
-          "name": "validate_context_capsules_if_present"
-        },
-        {
-          "elapsed_ms": 10,
-          "name": "validate_state_commit_gate"
-        },
-        {
-          "elapsed_ms": 10,
-          "name": "validate_risk_map"
-        },
-        {
-          "elapsed_ms": 10,
-          "name": "validate_coplayer_policy_tightening"
-        },
-        {
-          "elapsed_ms": 10,
-          "name": "validate_context_capsule_policy_contract"
-        },
-        {
-          "elapsed_ms": 10,
-          "name": "validate_research_claims_if_present"
-        },
-        {
-          "elapsed_ms": 10,
-          "name": "validate_risk_map_violations"
-        },
-        {
-          "elapsed_ms": 9,
-          "name": "validate_eval_gate_if_required"
-        },
-        {
-          "elapsed_ms": 9,
-          "name": "validate_git_workspace_context"
-        },
-        {
-          "elapsed_ms": 9,
-          "name": "validate_git_push_pr_gate"
-        },
-        {
-          "elapsed_ms": 9,
-          "name": "validate_stale_workspaces"
-        },
-        {
-          "elapsed_ms": 9,
-          "name": "validate_docs_templates_bucket"
-        },
-        {
-          "elapsed_ms": 9,
-          "name": "validate_plan_governed_execution_gate"
-        },
-        {
-          "elapsed_ms": 8,
-          "name": "validate_root_dockerfile_seed_detection"
-        },
-        {
-          "elapsed_ms": 8,
-          "name": "validate_git_protected_branch"
-        },
-        {
-          "elapsed_ms": 8,
-          "name": "validate_tooling_gate"
-        }
-      ],
-      "git_revision": "92394cadfe602d3a916f7f3754a85f0bb4bb8699",
-      "kind": "validation_receipt",
-      "parallelism": 1,
-      "pass_count": 192,
-      "prediction_uses_warnings": true,
-      "receipt_hash": "sha256:72bde7dfa7279533926030b2ffceac107c10de8aaa4ef83122f6adcba2707546",
-      "repo_signal_fingerprint": "7693d5010b19979e4cb8189dcb7d189c3ada65fb2953147b491cc708cd5ae8ec",
-      "schema_version": "1.0.0",
-      "status": "ok",
-      "temporary_artifacts_cleaned": 0,
-      "trajectory_artifact_hash": "sha256:66350e73a102549ced7d2098bc05d861dd09845549cb23a841f15bb84a159f60",
-      "trajectory_run_id": "branch_01M79PZRECONCILE1665",
-      "warn_count": 3,
-      "warnings": [
-        "Risk map missing (run `decapod riskmap init`)",
-        "STALE_SPECS_TEMPLATE: Project specs use template version 'scaffold-v4' while current scaffolding is 'scaffold-v5'; living spec content remains authoritative.",
-        "Watcher audit trail missing (run `decapod govern watcher run`)"
+      "unresolved_assumptions": [
+        "Historical source tests and benchmarks do not prove the new accepted-target integration."
       ]
     }
   },

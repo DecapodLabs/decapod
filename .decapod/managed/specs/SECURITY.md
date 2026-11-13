@@ -610,8 +610,8 @@ execution evidence remains required before publication readiness.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `7693d5010b19979e4cb8189dcb7d189c3ada65fb2953147b491cc708cd5ae8ec`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (231 files), `tests/` (232 files)
+- Repository signal fingerprint: `765977d9bdd6b9a88e48e73a6ed6fab691831c884d1721f3591f1781c9960dc5`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (232 files), `tests/` (232 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 
@@ -929,3 +929,11 @@ Operation-route binding must survive clients of different releases. Versioned re
 ## Canonical terminal rule context and proof-backed completion custody
 
 Terminal rule evaluation (`core/validation_rules.rs::evaluate_terminal_rules`) derives `task_type` and `git_ref` from verified trajectory/branch task identities and canonical `refs/heads/<branch>` names without creating or mutating `.decapod/data` SQLite state. Plural store categories (`features`, `bugs`, `tests`) normalize to the built-in rule vocabulary (`feature`, `bugfix`, `test`) so pre-execution and publication scope/custody/evidence rules cannot be bypassed by category naming differences, while unmapped administrative categories fall back to `None` so `task_types`-scoped constitutional rules remain enforced. Undeclared workunits never block ordinary first-validation bootstrap, whereas any durably declared workunit remains fail-closed (`TERMINAL_WORKUNIT_UNPROVEN` or `UNVERIFIED_COMPLETION`) until its checkpointed execution binding and required proof-plan gates pass.
+
+## PR 1663: accepted v0.143.2 source integration
+
+Compaction and collection cannot remove reachable history or convert a partial scan into completed proof. Candidate code is tested only against disposable fixture stores during this update; the machine canonical datastore is not upgraded by the candidate. Local physical storage results do not establish cloud identity, tenant isolation or server acceptance.
+
+## PR1663 current-master preparation
+
+Invalid component references, digest disagreement, incompatible format versions, unauthorized custody and invalid writes must remain fail-closed. Use the published kernel, with only the already-scoped inert-placeholder coordination repair, for machine governance. The proposed storage schema must execute only in hosted disposable test fixtures during this update; coordination receipts are not independent acceptance proof.

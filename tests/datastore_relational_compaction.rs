@@ -379,3 +379,338 @@ fn default_agent_prompts_do_not_accumulate_on_each_initialization() {
         .unwrap();
     assert_eq!(after, before);
 }
+
+#[test]
+fn v2_compaction_migration_1200_is_lossless_idempotent_deduplicates_prompts_and_records_manifest() {
+    use decapod::core::{events, storage_compaction, todo};
+    use serde_json::{Value, json};
+
+    let temp = tempfile::tempdir().unwrap();
+    let data = temp.path().join("data");
+    todo::initialize_todo_db(&data).unwrap();
+    decapod::plugins::aptitude::initialize_aptitude_db(&data).unwrap();
+    decapod::plugins::federation::initialize_federation_db(&data).unwrap();
+
+    let conn = Connection::open(data.join(schemas::LOCAL_DB_NAME)).unwrap();
+    // Simulate pre-v2 verbose JSON envelopes stored in events across streams,
+    // including an extra top-level field that triggers `_ce_raw` lossless escape,
+    // and a federation row that must remain untouched.
+    let verbose_todo = json!({
+        "event_id": "legacy-verbose-todo-1",
+        "ts": "2026-11-10T01:02:03Z",
+        "event_type": "task.comment",
+        "actor": "legacy-agent",
+        "subject_kind": "task",
+        "subject_id": "task-legacy-1",
+        "payload": {"comment": "Verbose historical comment preserved byte-for-byte"}
+    })
+    .to_string();
+    let verbose_custom_key = json!({
+        "event_id": "legacy-custom-top-1",
+        "ts": "2026-11-10T01:02:04Z",
+        "event_type": "broker.audit",
+        "actor": "legacy-broker",
+        "custom_top_level_key": ["must", "survive", 42],
+        "payload": {"op": "todo.claim"}
+    })
+    .to_string();
+    let federation_signed = json!({
+        "event_id": "fed-signed-1",
+        "ts": "2026-11-10T01:02:05Z",
+        "event_type": "node.add",
+        "actor": "fed-peer",
+        "payload": {"node_id": "n1"}
+    })
+    .to_string();
+
+    conn.execute(
+        "INSERT INTO events(event_id,ts,seq,stream,subject_kind,subject_id,event_type,payload,actor)
+         VALUES('legacy-verbose-todo-1','2026-11-10T01:02:03Z',100,'todo','task','task-legacy-1','task.comment',?1,'legacy-agent')",
+        decapod::params![verbose_todo],
+    )
+    .unwrap();
+    conn.execute(
+        "INSERT INTO events(event_id,ts,seq,stream,subject_kind,subject_id,event_type,payload,actor)
+         VALUES('legacy-custom-top-1','2026-11-10T01:02:04Z',100,'broker',NULL,NULL,'broker.audit',?1,'legacy-broker')",
+        decapod::params![verbose_custom_key],
+    )
+    .unwrap();
+    conn.execute(
+        "INSERT INTO events(event_id,ts,seq,stream,subject_kind,subject_id,event_type,payload,actor)
+         VALUES('fed-signed-1','2026-11-10T01:02:05Z',1,'federation',NULL,NULL,'node.add',?1,'fed-peer')",
+        decapod::params![federation_signed],
+    )
+    .unwrap();
+    events::append_on_conn(
+        &conn,
+        "broker",
+        &json!({
+            "event_id": "escaped-literal-sentinel-1",
+            "ts": "2026-11-10T01:02:06Z",
+            "event_type": "broker.audit",
+            "actor": "legacy-broker",
+            "_ce_v1": "caller-literal-key-collision",
+            "payload": {"op": "todo.list"}
+        }),
+    )
+    .unwrap();
+
+    // Insert historical duplicate agent_prompts rows with non-zero usage counts.
+    conn.execute(
+        "INSERT INTO agent_prompts(id,context,prompt_text,priority,active,usage_count,last_shown_at,created_at,updated_at)
+         VALUES('dup-a','custom_ctx','Exact repeated guidance',80,1,3,'2026-11-01T00:00:00Z','2026-11-01T00:00:00Z','2026-11-01T00:00:00Z')",
+        [],
+    )
+    .unwrap();
+    conn.execute(
+        "INSERT INTO agent_prompts(id,context,prompt_text,priority,active,usage_count,last_shown_at,created_at,updated_at)
+         VALUES('dup-b','custom_ctx','Exact repeated guidance',80,1,5,'2026-11-05T00:00:00Z','2026-11-02T00:00:00Z','2026-11-05T00:00:00Z')",
+        [],
+    )
+    .unwrap();
+
+    let logical_before = |conn: &Connection| -> Vec<(String, Value)> {
+        let mut stmt = conn
+            .prepare("SELECT stream,event_id,ts,event_type,actor,subject_kind,subject_id,payload FROM events ORDER BY stream,seq")
+            .unwrap();
+        stmt.query_map([], |r| {
+            let stream: String = r.get(0)?;
+            let event_id: String = r.get(1)?;
+            let ts: String = r.get(2)?;
+            let event_type: String = r.get(3)?;
+            let actor: String = r.get(4)?;
+            let sk: Option<String> = r.get(5)?;
+            let sid: Option<String> = r.get(6)?;
+            let raw: String = r.get(7)?;
+            let val = events::reconstruct_stored_payload(
+                &stream,
+                &event_id,
+                &ts,
+                &event_type,
+                &actor,
+                sk.as_deref(),
+                sid.as_deref(),
+                &raw,
+            )
+            .unwrap();
+            Ok((event_id, val))
+        })
+        .unwrap()
+        .collect::<Result<Vec<_>, _>>()
+        .unwrap()
+    };
+    let expected_logical = logical_before(&conn);
+
+    let run_v2 = |root: &Path| -> Result<(), DecapodError> {
+        (migration::all_migrations()
+            .into_iter()
+            .find(|m| m.id == storage_compaction::V2_COMPACTION_MIGRATION_ID)
+            .expect("migration 1200 registered")
+            .up)(root)
+    };
+
+    run_v2(temp.path()).unwrap();
+    // Second invocation proves idempotency with zero drift.
+    run_v2(temp.path()).unwrap();
+
+    assert_eq!(logical_before(&conn), expected_logical);
+
+    // Physical representation checks:
+    let raw_todo: String = conn
+        .query_row(
+            "SELECT payload FROM events WHERE event_id='legacy-verbose-todo-1'",
+            [],
+            |r| r.get(0),
+        )
+        .unwrap();
+    assert!(raw_todo.contains("\"_ce_v1\""), "{raw_todo}");
+    assert!(raw_todo.len() < verbose_todo.len());
+
+    let raw_custom: String = conn
+        .query_row(
+            "SELECT payload FROM events WHERE event_id='legacy-custom-top-1'",
+            [],
+            |r| r.get(0),
+        )
+        .unwrap();
+    assert!(raw_custom.contains("\"_ce_v1\""), "{raw_custom}");
+    assert!(
+        raw_custom.contains("\"custom_top_level_key\""),
+        "{raw_custom}"
+    );
+
+    let raw_escaped: String = conn
+        .query_row(
+            "SELECT payload FROM events WHERE event_id='escaped-literal-sentinel-1'",
+            [],
+            |r| r.get(0),
+        )
+        .unwrap();
+    assert!(raw_escaped.contains("\"_ce_raw\""), "{raw_escaped}");
+
+    let raw_fed: String = conn
+        .query_row(
+            "SELECT payload FROM events WHERE event_id='fed-signed-1'",
+            [],
+            |r| r.get(0),
+        )
+        .unwrap();
+    assert_eq!(raw_fed, federation_signed);
+
+    // Duplicate agent_prompts collapsed while summing usage_count (3 + 5 = 8) and keeping earliest created_at.
+    let (cnt, usage_sum, created): (i64, i64, String) = conn
+        .query_row(
+            "SELECT COUNT(*), COALESCE(SUM(usage_count),0), MIN(created_at) FROM agent_prompts WHERE context='custom_ctx'",
+            [],
+            |r| Ok((r.get(0)?, r.get(1)?, r.get(2)?)),
+        )
+        .unwrap();
+    assert_eq!(cnt, 1);
+    assert_eq!(usage_sum, 8);
+    assert_eq!(created, "2026-11-01T00:00:00Z");
+
+    // Manifest & compatibility stamps recorded:
+    let (pre_d, post_d): (String, String) = conn
+        .query_row(
+            "SELECT pre_digest, post_digest FROM storage_migration_manifests WHERE migration_id=?1",
+            [storage_compaction::V2_COMPACTION_MIGRATION_ID],
+            |r| Ok((r.get(0)?, r.get(1)?)),
+        )
+        .unwrap();
+    assert_eq!(pre_d, post_d);
+    let fmt_ver: String = conn
+        .query_row(
+            "SELECT value FROM meta WHERE namespace='storage' AND key='format_version'",
+            [],
+            |r| r.get(0),
+        )
+        .unwrap();
+    assert_eq!(fmt_ver, "2");
+}
+
+#[test]
+fn storage_format_compatibility_guard_refuses_future_format_or_writer_downgrade() {
+    use decapod::core::{storage_compaction, todo};
+
+    let temp = tempfile::tempdir().unwrap();
+    let data = temp.path().join("data");
+    todo::initialize_todo_db(&data).unwrap();
+    let conn = Connection::open(data.join(schemas::LOCAL_DB_NAME)).unwrap();
+
+    // Higher min_writer_version allows read-only compatibility while refusing write initialization.
+    conn.execute(
+        "UPDATE meta SET value='99.0.0' WHERE namespace='storage' AND key='min_writer_version'",
+        [],
+    )
+    .unwrap();
+    storage_compaction::check_read_compatibility(&conn).unwrap();
+    let write_err = storage_compaction::check_storage_format_compatibility(&conn).unwrap_err();
+    assert!(
+        write_err
+            .to_string()
+            .contains("STORAGE_FORMAT_INCOMPATIBLE")
+    );
+    let init_err = todo::initialize_todo_db(&data).unwrap_err();
+    assert!(init_err.to_string().contains("STORAGE_FORMAT_INCOMPATIBLE"));
+
+    // Future format_version refuses both readers and writers with clear remediation.
+    conn.execute(
+        "UPDATE meta SET value='99' WHERE namespace='storage' AND key='format_version'",
+        [],
+    )
+    .unwrap();
+    let read_err = storage_compaction::check_read_compatibility(&conn).unwrap_err();
+    assert!(read_err.to_string().contains("STORAGE_FORMAT_INCOMPATIBLE"));
+}
+
+#[test]
+fn reference_aware_component_gc_and_explicit_vacuum_preserve_live_and_historical_refs() {
+    use decapod::core::{storage_compaction, todo};
+
+    let temp = tempfile::tempdir().unwrap();
+    let data = temp.path().join("data");
+    todo::initialize_todo_db(&data).unwrap();
+
+    let desc_v1 = "Alpha historical component prose.\n".repeat(48);
+    let desc_v2 = "Beta live component prose.\n".repeat(48);
+    let added = todo::add_task(
+        &data,
+        &todo::TodoCommand::Add {
+            title: "Component GC task".into(),
+            description: desc_v1,
+            priority: "high".into(),
+            tags: "gc,v2".into(),
+            owner: String::new(),
+            due: None,
+            r#ref: String::new(),
+            scope: format!(
+                "paths:{}",
+                serde_json::to_string(&vec![
+                    "src/decapod/core/storage_compaction.rs",
+                    "src/decapod/core/task_journal.rs",
+                    "src/decapod/core/events.rs",
+                    "src/decapod/core/schemas.rs",
+                    "src/decapod/core/migration.rs",
+                ])
+                .unwrap()
+            ),
+            dir: Some(temp.path().to_string_lossy().into_owned()),
+            depends_on: String::new(),
+            blocks: String::new(),
+            parent: None,
+            one_shot: 0,
+        },
+    )
+    .unwrap();
+    let task_id = added["id"].as_str().unwrap().to_owned();
+    todo::edit_task(&data, &task_id, None, Some(&desc_v2), None, None).unwrap();
+
+    let conn = Connection::open(data.join(schemas::LOCAL_DB_NAME)).unwrap();
+    // Insert a large unreferenced orphan blob (64 KiB) to create measurable free pages upon GC.
+    let orphan_bytes = vec![b'Z'; 65_536];
+    let orphan_sha = format!("{:x}", Sha256::digest(&orphan_bytes));
+    conn.execute(
+        "INSERT INTO storage_components(component_kind,codec_version,byte_len,content_sha256,stored_bytes,created_at)
+         VALUES('task.description',0,?1,?2,?3,'2026-11-12T00:00:00Z')",
+        decapod::params![orphan_bytes.len() as i64, orphan_sha, orphan_bytes],
+    )
+    .unwrap();
+
+    let dry = storage_compaction::gc_unreferenced_components(&conn, true).unwrap();
+    assert!(dry.dry_run);
+    assert_eq!(dry.unreferenced_components, 1);
+    assert_eq!(dry.deleted_components, 0);
+    assert!(dry.referenced_components >= 3);
+
+    let live = storage_compaction::gc_unreferenced_components(&conn, false).unwrap();
+    assert!(!live.dry_run);
+    assert_eq!(live.deleted_components, 1);
+
+    // Journal verification must remain 100% intact across both historical and live checkpoints!
+    let verified = todo::task_journal_verify(&data).unwrap();
+    assert_eq!(verified["status"], "ok");
+
+    // GC must NOT run an implicit VACUUM: freed pages remain on SQLite's freelist until explicit call.
+    let freelist_before: u64 = conn
+        .query_row(
+            "SELECT freelist_count FROM pragma_freelist_count",
+            [],
+            |r| r.get(0),
+        )
+        .unwrap();
+    assert!(freelist_before > 0);
+
+    // Explicit VACUUM inside an open transaction must fail closed.
+    conn.execute_batch("BEGIN IMMEDIATE").unwrap();
+    let tx_vac_err = storage_compaction::reclaim_pages_explicit(&conn).unwrap_err();
+    assert!(
+        tx_vac_err
+            .to_string()
+            .contains("EXPLICIT_VACUUM_REQUIRES_AUTOCOMMIT")
+    );
+    conn.execute_batch("ROLLBACK").unwrap();
+
+    let vac = storage_compaction::reclaim_pages_explicit(&conn).unwrap();
+    assert_eq!(vac.freelist_after, 0);
+    assert!(vac.pages_after < vac.pages_before);
+}
