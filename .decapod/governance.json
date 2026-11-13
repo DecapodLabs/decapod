@@ -607,6 +607,11 @@
       "id": "authoring-1to1-lifecycle-and-resources",
       "summary": "Enforce transactional 1-to-1 authoring bindings, lifecycle retirement, and shared-resource gates",
       "input_digest": "sha256:0e665649269db9e561894f59e5295b0d091ad2ac5c62a8acb3691f2c96158e8c"
+    },
+    {
+      "id": "workspace-status-prune-and-publish-gates",
+      "summary": "Fail closed on workspace status, retire bindings on prune, and gate publish on resource:integration",
+      "input_digest": "sha256:d5342f6f98e3da33e7a9fd63872adf50503bf1c1be9b258893914524f2dc7cd6"
     }
   ],
   "intents": {
