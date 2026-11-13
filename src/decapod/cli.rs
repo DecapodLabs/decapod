@@ -903,8 +903,12 @@ pub(crate) struct CloudCli {
 
 #[derive(Subcommand, Debug)]
 pub(crate) enum CloudCommand {
-    /// Deprecated compatibility alias; use `decapod init --backend cloud` for human setup.
-    Login,
+    /// Agent-owned sign-in: resume the repository's saved browser flow.
+    Login {
+        /// Start a fresh sign-in after an expired, revoked or uncertain exchange.
+        #[clap(long)]
+        restart: bool,
+    },
     /// Inspect private managed-session state without network I/O or a live readiness claim.
     Status,
     /// List managed projects by name, with numbered choices saved privately.
@@ -2198,6 +2202,9 @@ pub(crate) struct InferOrientationCli {
     /// Optional specific task ID
     #[clap(long)]
     pub task_id: Option<String>,
+    /// Optional bounded reflection request JSON (task, submission, operation, paths).
+    #[clap(long)]
+    pub reflection: Option<String>,
     /// Format output: json | text
     #[clap(long, default_value = "json")]
     pub format: String,

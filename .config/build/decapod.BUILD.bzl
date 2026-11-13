@@ -242,7 +242,9 @@ def decapod_targets():
             # suite and four threads while allowing Bazel's finite 900s budget.
             # The expanded CLI contract suite took 294s even in isolation.
             # Use the finite 900s aggregate class for its real CLI fixtures.
-            timeout = "long" if path in ["tests/gatling.rs", "tests/group_broker.rs", "tests/interop_conformance.rs", "tests/cli_contracts.rs"] else "moderate",
+            # The entrypoint suite includes genuine docs CLI admission and
+            # infer_precision; give it the finite 900s budget and exclusive isolation.
+            timeout = "long" if path in ["tests/gatling.rs", "tests/group_broker.rs", "tests/interop_conformance.rs", "tests/cli_contracts.rs", "tests/entrypoint_correctness.rs"] else "moderate",
             # These suites depend on finite process/request deadlines. Rust's
             # test-threads flag alone does not isolate concurrent Bazel targets.
             # Keep all broker clients concurrent within its exclusive target.
@@ -253,6 +255,7 @@ def decapod_targets():
                 # This aggregate launches real CLI fixtures sequentially. Its
                 # 300s deadline also needs isolation from the entrypoint suite.
                 "tests/cli_contracts.rs",
+                "tests/entrypoint_correctness.rs",
             ] else [],
             srcs = [path] + [
                 "tests/consumer_readiness.rs",
@@ -269,6 +272,7 @@ def decapod_targets():
                 path,
                 "tests/common/consumer_readiness_fixture.rs",
                 "tests/support/fresh_docs_readiness.rs",
+                "tests/infer_precision.rs",
             ] if path == "tests/entrypoint_correctness.rs" else [
                 path,
                 "tests/common/consumer_readiness_fixture.rs",

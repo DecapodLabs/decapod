@@ -333,6 +333,7 @@ fn test_branch_contains_todo_ticket_id() {
 #[test]
 fn dockerfile_orientation_separates_workspace_and_application_containers() {
     let mut packet = crate::core::rpc::OrientationPacket {
+        reflection: None,
         user_goal: "Dockerfile packaging".to_string(),
         task_id: None,
         governed_plan: crate::core::rpc::GovernedPlanContext {

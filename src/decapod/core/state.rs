@@ -103,6 +103,19 @@ pub struct Decision {
     pub supersedes: Option<String>,
     pub created_at: String,
     pub updated_at: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub knowledge: Option<DecisionKnowledge>,
+}
+
+/// Source labels are provenance, never authenticated approval or executable policy.
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+pub struct DecisionKnowledge {
+    pub lifecycle: String,
+    pub confidence: String,
+    pub actor: String,
+    pub sources: Vec<String>,
+    pub effective_from: Option<String>,
+    pub effective_to: Option<String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
@@ -1049,6 +1062,7 @@ fn resolve_decisions(
                     supersedes: None,
                     created_at: chrono::Utc::now().to_rfc3339(), // Placeholder
                     updated_at: chrono::Utc::now().to_rfc3339(),
+                    knowledge: None,
                 });
             }
         }
@@ -1096,6 +1110,7 @@ fn resolve_decisions(
                         .map(|s| s.to_string()),
                     created_at: chrono::Utc::now().to_rfc3339(),
                     updated_at: chrono::Utc::now().to_rfc3339(),
+                    knowledge: None,
                 });
             }
         }
@@ -1111,29 +1126,57 @@ fn resolve_decisions(
     ) {
         for node in nodes {
             if !decisions.iter().any(|d| d.id == node.id) {
-                decisions.push(Decision {
-                    id: node.id,
-                    proposition: node.title,
-                    status: match node.tags.as_str() {
-                        "accepted" => DecisionStatus::Accepted,
-                        "rejected" => DecisionStatus::Rejected,
-                        "superseded" => DecisionStatus::Superseded,
-                        _ => DecisionStatus::Proposed,
-                    },
-                    authority: "federation".to_string(),
-                    rationale_or_evidence: Some(node.body),
-                    state_or_revision: None,
-                    scope: Vec::new(),
-                    supersedes: None,
-                    created_at: node.created_at,
-                    updated_at: node.updated_at,
-                });
+                decisions.push(project_federation_decision(node));
             }
         }
     }
 
     Ok(decisions)
 }
+
+fn project_federation_decision(node: crate::plugins::federation::FederationNode) -> Decision {
+    // Lifecycle precedes informal tags. Confidence remains source classification,
+    // not authentication of the author or authority to execute.
+    let status = match node.status.as_str() {
+        "superseded" | "deprecated" => DecisionStatus::Superseded,
+        "disputed" => DecisionStatus::RequiresHuman,
+        "active" if node.effective_to.is_some() => DecisionStatus::Superseded,
+        "active" if node.confidence == "human_confirmed" => match node.tags.as_str() {
+            "accepted" => DecisionStatus::Accepted,
+            "rejected" => DecisionStatus::Rejected,
+            _ => DecisionStatus::Proposed,
+        },
+        _ => DecisionStatus::Proposed,
+    };
+    Decision {
+        id: node.id,
+        proposition: node.title,
+        status,
+        authority: "federation".into(),
+        rationale_or_evidence: Some(node.body),
+        state_or_revision: None,
+        scope: if node.scope.is_empty() {
+            vec![]
+        } else {
+            vec![node.scope]
+        },
+        supersedes: None,
+        created_at: node.created_at,
+        updated_at: node.updated_at,
+        knowledge: Some(DecisionKnowledge {
+            lifecycle: node.status,
+            confidence: node.confidence,
+            actor: node.actor,
+            sources: node.sources.unwrap_or_default(),
+            effective_from: node.effective_from,
+            effective_to: node.effective_to,
+        }),
+    }
+}
+
+#[cfg(test)]
+#[path = "../../../tests/unit/core/state_knowledge_tests.rs"]
+mod knowledge_tests;
 
 // ============================================================================
 // Failed Paths Resolution

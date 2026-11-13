@@ -17,6 +17,26 @@ output when a caller must distinguish failure kinds.
 
 ## Common Error Patterns
 
+### Agent-owned cloud connection
+
+The human runs `decapod init` once per repository. Own subsequent Decapod
+operations, including sign-in continuation and recovery. On `onboarding_pending`
+with `authorization_url`, share the validated browser link, then run
+`decapod cloud login` every two seconds for up to five minutes. Resume work as
+soon as it succeeds; do not wait for another user message saying sign-in is
+done. Preserve an incomplete flow for later continuation. Never copy private
+session, PKCE, polling, or refresh material into chat or Git.
+
+An interrupted one-time exchange remains uncertain. Follow `restart_required`
+using `decapod cloud login --restart`, share the fresh browser link, and resume
+normally. Preserve the task and its operation ID. Account confirmation can be
+retried with the saved session; `repository_denied` and `action_required` need
+the stated account action rather than repeated browser sign-in.
+
+For a cloud `todo add` handoff, retain the returned `operation_id`. After login,
+repeat the original arguments with that same `--operation-id`; a fresh add is
+not a retry. Login continuation never proves the task was created.
+
 ### Interrupted runtime checkpoint or projection write
 
 Inspect `todo journal verify` or `govern workunit journal-status --task-id <id>`

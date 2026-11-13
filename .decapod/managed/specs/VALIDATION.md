@@ -1,5 +1,115 @@
 # Validation
 
+The required `tests/consumer_readiness.rs` regression carries a recorded
+Decapod intent through a real source-check failure, a committed source repair,
+native validation and an inspectable receipt. It verifies that failure issues
+no readiness receipt, fresh proof identifies the repaired commit, and receipt
+digests bind the preserved intent trajectory and governance. This exercises
+the public runtime and native executor with an independently read local Git
+target. It establishes repository-local readiness only; it is not hosted
+cloud, billing, provider OAuth or publication acceptance.
+
+The accepted `tests/entrypoint_correctness.rs` test
+`fresh_docs_cli_admission_then_complete_runtime_proves_current_source` also
+exercises real CLI initialization, claimed workspace admission and first-proof
+execution through `tests/support/fresh_docs_readiness.rs`. The cloud handoff
+must preserve that Decapod lifecycle and its terminal evidence checks.
+
+In the accepted 0.141.0 runtime, terminal rules consume completed source
+execution evidence and recheck current governance and trajectory digests before
+publishing the readiness bundle. The cloud handoff cannot substitute a partial
+project-check receipt for that result. Release reconciliation changes the root
+package version and generated release surfaces while retaining this proof path.
+
+## Init-once agent continuation
+
+This continuation adopts PR #1635's exact `ee44e5f8773697b5341107c0d3153de4ebe28bfb`
+history in an independently admitted workspace. Earlier proof belongs to that
+candidate; it does not establish readiness for the new changes. Required
+managed scenarios now resume the first init through agent-owned `cloud login`,
+then use the saved session for ordinary task access. A new pending-add scenario
+checks the structured browser URL, preserved operation identity, reuse of the
+same flow and absence of data dispatch. Existing lost-response scenarios now
+exercise `cloud login --restart` while retaining the one-time no-replay checks.
+All changes still require plain full `decapod validate` on their exact commit.
+Hosted provider login, entitlement/payment execution and attachment to an
+existing directory project ID remain unexecuted or unsupported contract limits.
+
+PR #1635 subsequently merged as `c87e4f49cab8e2ccff5f9bdc5833d8602dfffdb8`
+while provider jobs were queued. Their accepted-target ancestry check correctly
+rejected the older candidate before running those checks. This continuation
+merges the new accepted target and retains the full existing journal/checkpoint
+lineage; the remaining agent UX changes are a follow-up PR. Earlier diagnostics
+on `a0962755` passed 1,674 library tests (eight ignored) and all 33 Supabase
+boundary tests, including the new handoff and stable-operation-ID scenarios.
+That execution does not replace fresh complete proof on the reconciled commit.
+The subsequent accepted release commit
+`19acd21f7ff50656323d037915273f03cdedc04e` changes package versions and the
+changelog and is incorporated as well; the current proof must use that target.
+The 0.139.0 source-CI evaluator then correctly reported release-bound drift on
+`0b3d3f2a`. A private installation of the published 0.139.0 controller, obtained
+through the supported session-update flow, regenerates the entrypoints, managed
+Dockerfile and spec manifest. The temporary workspace update opt-in is removed.
+This projection preparation is not full readiness; the exact refreshed candidate
+still needs every required provider check and independent controller collection.
+
+## Reflection adversarial proof contract
+
+The work branch incorporates accepted target
+`d31112a1d66899e93dad48a10cc3a6363da2c7db`, including SDK 0.14.0 and the
+required terminal-onboarding fixtures. The installed controller is published
+0.140.3. This conflict-repair update is pushed without tests or full validation
+at the user's explicit request. Earlier measurements below remain historical;
+current-candidate readiness is pending. Generated surfaces match the evaluator.
+
+Required Buildkite library execution on `dc7bf2fa198abeebba072c5394709af0dfca9d86`
+passed 1709 tests (8 ignored), including all 16 reflection cases and the canonical
+lifecycle case. Evidence is build 8602, job
+`01a1cfd6-5d0d-4abb-853c-b4ed9164f022`. The selected scope flaw was detected
+before action, an evidence-bound narrower proposal proceeded in round 2, and
+the original approval/proof requirements and false completion proof were retained.
+Stagnation terminates in round 2 and unresolved progress in round 3. Six ordinary
+phase transitions preserve convergence; an actual governing edit invalidates it.
+Source/custody changes, replay, competing submissions, untrusted instructions
+and invented human approval are covered. These are deterministic protocol
+assertions, not a language-model evaluation or proof of a future cache design.
+
+The canonical lifecycle fixture registers verified writers in its isolated
+store, then exercises actual federation mutations. Supersession, withdrawal,
+dispute, inferred/imported classification, repository-path scope and source
+provenance passed. Production writer trust and approval policy remain unchanged;
+confidence is source classification, not authenticated human authority.
+
+The existing required entrypoint suite includes `infer_precision.rs`. Its first
+execution reached the actual CLI-to-RPC round-2 continuation, then failed a test
+expectation that successful `blocked_by` was always an array. The unchanged
+envelope omits empty blockers. The fixture accepts omission or an empty array,
+and rejects malformed/nonempty blockers. Missing outer task binding must still
+fail before recording round 1. Current-candidate CLI proof must be rerun.
+
+Numeric measurements are emitted by existing fixtures: safe protocol call
+75.213 ms / 575 outcome bytes / 1490 governance bytes growth; conflict and
+revision 58.845 and 43.966 ms, with 1213 and 575 outcome bytes. The two-round
+compact journal was 2843 bytes and total governance growth 4017 bytes. The safe
+fixture observed zero main-database-file growth. Timings exclude CLI startup,
+are samples under concurrent CI load, and carry no portable performance promise.
+
+The only added build input relative to accepted target is the existing
+`infer_precision.rs` file in the required entrypoint suite. Reviewed inventory
+`sha256:d8781827659ed6d9c4702265a3d159509daf789e067ac13e961434a36d5b6d37`
+preserves the profile, accepted executor, required graph and final verdict.
+The current task journal was retained canonically; accepted journals remain in
+Git history.
+
+Failed or incomplete earlier attempts do not establish readiness: provider quota,
+accepted-base/tag movement and release-projection drift remain in trajectory
+evidence. Full validation on `dc7bf2fa` returned `SNAPSHOT_NOT_READY` for the
+CLI fixture failure in build 8602 after 3427640 ms provider wait; private snapshot
+`decapod-snapshot-YH2wgS` preserves that attempt. Passing individual jobs and
+checkpoint-history verification never replace the complete exact-candidate gate.
+Plain `decapod validate` owns the configured build/tests; no separate manual
+build, fabricated proof or weakened check is allowed.
+
 ## Current SDK 0.14 adoption (#1638)
 
 The current registry dependency is exactly Dactyl 0.14.0, checksum
@@ -119,12 +229,12 @@ path rejection, exact binding, phase invariants and serialized custody.
 
 These tests must run on the exact checkpointed candidate. Static review and
 source formatting do not establish compilation or execution. The managed API
-is consumed from the published Dactyl 0.12.0 registry dependency.
+is consumed from the published Dactyl 0.14.0 registry dependency.
 The accepted source-CI executor retains its own required recipe. Its diagnostic
 record on `ee288c86` showed that a candidate helper edit did not add a new target
 to that recipe. The existing required `cloud_supabase_boundary` target now
 includes the shared `common/cloud_managed_scenarios.rs` test module, so all
-twelve scenarios execute under the accepted recipe without changing executor
+thirteen scenarios execute under the accepted recipe without changing executor
 authority. The standalone `cloud_managed_session` entry uses the same scenarios.
 Both entries include the private seed helper once at their crate root; this
 avoids the `clippy::duplicate_mod` failure observed on `2f01156c` without a lint
@@ -1215,8 +1325,8 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `e162fe9c980cebda3a0e90a78733c3a311b8eec6a3216785b1b9bb996388b613`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (230 files), `tests/` (231 files)
+- Repository signal fingerprint: `0a0498aa94eb3f7551fe07c380ef13b469d188ab33218c72f80fc2e081fc3951`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (231 files), `tests/` (232 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 
@@ -1232,10 +1342,11 @@ binary with database trees mounted read-only and only existing locks writable.
 Those captures bind their actual historical source/binary identity; they cannot
 establish publication readiness for the current candidate.
 
-The candidate preserves accepted managed-cloud, terminal onboarding and
-first-proof admission changes through v0.140.0 at fc1e2b94. Its release-bound
-entrypoints and managed image pin require regeneration through the independently
-published matching controller. Canonical spec reviews follow the final source
+The candidate preserves accepted managed-cloud, terminal onboarding,
+first-proof admission, native inventory, Dactyl 0.14.0 and bounded reflection
+changes through v0.141.0 at 3718f70e, with the four release-bound entrypoints,
+managed image pin, and specification manifest regenerated by the installed
+published 0.141.0 controller. Canonical spec reviews follow the final source
 and authored-spec edits. Complete exact-candidate Buildkite proof and current
 accepted-target verification remain required before publication; earlier passing
 stages, GitHub diagnostics and checkpoint-history checks cannot replace them.
@@ -1618,9 +1729,15 @@ real-executable regressions against the captured accepted target.
 
 ## Onboarding integration proof boundaries
 
-The refined setup is verified as part of the complete source PR profile. Real
-PTY cases cover recommended setup, edit/cancel, terminal restoration, preview,
-redirected output and cloud review cancellation without a service connection.
+The required `selective-cli` profile executes `//:cli_contracts`. Its Unix-only
+`terminal_onboarding` module contains the six PTY cases previously declared in
+standalone `tests/init_cli.rs`, which the finite profile did not select. Cases
+cover recommended setup, edit/cancel, terminal restoration, preview, redirected
+output and cloud review cancellation without a service connection. The fixture
+converts `TIOCSCTTY` to the platform ioctl request type, preserving its value
+across the macOS constant/parameter type difference. Scenario assertions and
+existing inventory/consumer cases remain unchanged. Required workflows, source
+selectors, test targets and budgets remain unchanged.
 Managed-session CLI cases separately cover authoritative access and recovery;
 neither fixture suite establishes a hosted purchase or paid customer journey.
 
@@ -1671,3 +1788,15 @@ The earlier full 0.140.0 attempt returned `SNAPSHOT_NOT_READY` after the accepte
 Accepted target `df15c9b8dcaeff2e4cba7ddd4918a1e2e954d455` merges the published Dactyl 0.14.0 adoption and releases Decapod 0.140.2. The exact registry checksum is `d10824bf8882a26b92479f07edb26c1f6fde8da3019f4001befaf28699d7a990`; the Quinn protocol lock floor is 0.11.19. This supersedes the earlier 0.13.0 consumer state, while retaining its history. The reviewed 105-source inventory is `sha256:f9a15ead2fa48e1c4beb6341959b06e7cce9e05658cd66ce3685c8eea7e4386a`: accepted changes are registry package/lock definitions, generated module dependency mappings and the release dependency policy. Required workflows, source executors, checks, selectors and budgets remain intact.
 
 A fresh supported session updater installed registry controller 0.140.2 into an isolated install root, restored its temporary auto-update preference and confirmed no pending Decapod migration. Its embedded documentation matches 0.140.1. All earlier readiness attempts and local service reports remain bound to their historical candidates; the newly reconciled source and registry artifact require fresh full validation and independent native consumer execution.
+
+The PR1648 rebase uses the independently installed registry 0.140.2 controller.
+All 105 inventoried build inputs match accepted `df15c9b8`, including its Dactyl
+0.14.0 adoption and native inventory wiring. Only package-version bytes differ
+from the reviewed SDK-adoption parent. Native commands regenerate release
+projections and refresh the reviewed digest; this preparation is not execution
+proof. The archived original PR tip retains its historical checkpoints, while
+the rebased source requires its own current checkpoint and complete validation.
+
+## Accepted v0.142.0 master reconciliation
+
+Reconciling `origin/master` (`d3542c30`, `v0.142.0`, incorporating PR #1647 cloud sign-in/diagnostic updates, PR #1649 bounded reflection, and `release-plz` v0.142.0) preserves PR #1651's `cloud projects` / `cloud project use|create` routing and v2 operation cache alongside `CloudCommand::Login { restart }` and `authorization_url` recovery diagnostics. The 105-file reviewed source inventory hashes to `sha256:6d13f890e76d0c0b69e338bb571d2858166afbf30adeeb1e58313a6b12042c87` (adding `Cargo.toml`/`Cargo.lock` `0.142.0` package versions and `.config/build/decapod.BUILD.bzl` entrypoint target inputs without dropping any required check, workflow, selector, or budget). All prior historical validation receipts remain bound to earlier commits; the merged candidate carries `0.142.0` controller projections, `specs.refresh`, checkpointing, and requires complete `decapod validate` proof.

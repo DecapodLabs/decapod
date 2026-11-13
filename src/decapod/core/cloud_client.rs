@@ -15,7 +15,7 @@ use std::time::Duration;
 const LOCK_TIMEOUT: Duration = Duration::from_secs(3);
 #[cfg(feature = "supabase-cloud")]
 const REFRESH_LEAD_SECONDS: i64 = 60;
-const RESTART: &str = "Run `decapod init --backend cloud --restart-cloud-signin` to start a new sign-in without replaying the interrupted exchange.";
+const RESTART: &str = "Agent: preserve the interrupted task and operation ID, then run `decapod cloud login --restart` to start a fresh sign-in without replaying the interrupted exchange. Share its browser link with the user, resume the saved flow, and retry the original task. The user does not need another CLI command.";
 
 fn diagnostic(
     status: CloudAuthStatus,
@@ -227,16 +227,16 @@ fn handoff_expiry(value: &str) -> Result<i64, DecapodError> {
 fn pending(bootstrap: &Bootstrap) -> DecapodError {
     // The validated one-time browser handoff is intentionally shown to the
     // human. Access tokens, refresh tokens, verifier and polling secret are not.
-    let action = match bootstrap.browser_url.as_deref() {
-        Some(url) => format!(
-            "Open {url} in a browser, complete sign-in, then rerun `decapod init --backend cloud`. Headless callers use the same URL on a browser-capable device."
-        ),
-        None => RESTART.to_owned(),
+    let Some(url) = bootstrap.browser_url.as_deref() else {
+        return restart_required();
     };
-    diagnostic(
-        CloudAuthStatus::OnboardingPending,
-        "Cloud sign-in is pending; repository readiness has not been confirmed.",
-        action,
+    DecapodError::CloudAuth(
+        CloudAuthDiagnostic::new(
+            CloudAuthStatus::OnboardingPending,
+            "Sign in once to connect this repository. Your agent will take it from here.",
+            "Agent: share authorization_url with the user, then run `decapod cloud login --format json` every 2 seconds for up to 5 minutes. Continue the original task as soon as sign-in completes, without waiting for another user message. Preserve the saved connection if still pending. The user does not need another CLI command.",
+        )
+        .with_authorization_url(url),
     )
 }
 
@@ -486,7 +486,7 @@ fn acquire(
                     return Err(diagnostic(
                         CloudAuthStatus::OnboardingPending,
                         "Account confirmation has an uncertain outcome; the issued session remains saved and readiness is unconfirmed.",
-                        "Rerun `decapod init --backend cloud` to recheck account completion with the saved session.",
+                        "Agent: retry `decapod cloud login --format json` every 2 seconds for up to 5 minutes to recheck account completion with the saved session, then resume the original task. Preserve the session if still pending. The user does not need to repeat sign-in or run a CLI command.",
                     ));
                 }
                 if terminal_session_error(&error) {

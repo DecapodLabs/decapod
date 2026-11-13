@@ -1,5 +1,16 @@
 # Intent
 
+## Evidence-grounded reflection before consequential action
+
+Decapod helps agents reconsider a proposed action through optional bounded
+reflection in orientation and mentor. It challenges a conflict with the current
+plan or a literal ADR match, then recognizes an inspectable scope correction or
+separately resolved governing gap. The ordinary orientation path remains simple.
+Reflection is a reasoning aid: it establishes neither human authorization nor
+semantic correctness, executed proof or completion. The kernel remains local,
+daemonless and deterministic, with no model or new memory service.
+See `core/mentor/reflection.rs` and `docs/architecture/bounded-reflection.md`.
+
 ## Published SDK adoption (#1638)
 
 The client pins the normally published registry `dactyl-db =0.14.0` release
@@ -9,6 +20,21 @@ for every resolved lock entry, including inactive dependencies. This adoption
 does not enable HTTP/3 or establish hosted service acceptance.
 
 ## Governed cloud client and private custody (#1628)
+
+The human runs `decapod init` once per repository and then talks to the coding
+agent normally. The agent owns every subsequent Decapod invocation, including
+sharing a browser sign-in link, bounded continuation, private session reuse,
+refresh and explicit safe recovery. The user completes provider/account actions
+without operating the CLI again. Pending sign-in is an honest incomplete
+connection, not a reason to lose the user's task or create a duplicate task.
+
+The agent carries the engineering request through Decapod's intent, task,
+workspace, execution-history, validation and publication interfaces. It owns
+sequencing and supported recovery, and returns an inspectable proof reference
+bound to the checked source. The user supplies the outcome and required human
+decisions, without manually orchestrating the command lifecycle. Decapod's
+governance and configured validation remain the authority for admissibility
+and readiness; an agent's completion message is not evidence.
 
 Decapod's local-first governance kernel remains the system interface for agent
 work. Optional cloud selection changes the operational task backend without
@@ -315,8 +341,8 @@ These declarations select authoring and proof obligations; they do not attest im
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `e162fe9c980cebda3a0e90a78733c3a311b8eec6a3216785b1b9bb996388b613`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (230 files), `tests/` (231 files)
+- Repository signal fingerprint: `0a0498aa94eb3f7551fe07c380ef13b469d188ab33218c72f80fc2e081fc3951`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (231 files), `tests/` (232 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 

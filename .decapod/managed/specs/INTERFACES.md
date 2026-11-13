@@ -1,6 +1,41 @@
 # Interfaces
 
+## Optional reflection on existing interfaces
+
+`infer orientation --task-id <id> --reflection '<JSON>'` and
+`mentor.obligations`' optional `reflection` parameter accept the same typed
+request: task/submission ID, operation (`change|modify|update`), literal proposed
+paths, optional expected token, explanation and evidence references. Existing
+calls omit the extension and preserve their response contract. Responses add
+`reflection` with `decapod.reflection.v1`, disposition
+(`proceed|reflect|human_decision|blocked`), reason, one optional challenge,
+token, context digest, round/remaining budget, terminal/execution-blocked flags,
+next action and always-false completion proof. Challenges expose a stable ID,
+bounded question, trigger, source references, investigation and binding flag.
+`state.resolve` decision records add optional `knowledge` provenance.
+The default round limit is three; one plan supports one current local task
+continuation. Source/path/input limits fail explicitly. No new RPC operation,
+authority hierarchy or persistence format is introduced.
+The CLI requires an explicit matching outer `--task-id` for reflection. This
+keeps its legacy orientation gates and the continuation on the same governing
+task intent. An omitted or conflicting binding fails before recording a round;
+the RPC continues to use the task ID in its typed reflection request.
+The plan source hash identifies its contract projection: reflection receipts,
+timestamps, approval state and measured phase/gate progress are normalized out.
+Governing definitions remain bound, and execution checks still require current
+approval and proof independently of a reflection disposition.
+
 ## Cloud initialization, continuation, and readiness (#1628)
+
+The human's sole setup command is init; subsequent use belongs to the agent.
+`decapod cloud login` starts/resumes managed sign-in and checks current access;
+`--restart` explicitly replaces an expired, revoked or uncertain flow. The
+existing init restart flag remains compatible. `CloudAuthDiagnostic` and cloud
+TODO operation diagnostics add optional `authorization_url` (omitted when
+absent) without changing their v1 schema identifiers. Agents share the link,
+poll for up to five minutes and continue without waiting for a second chat
+message. A pending `todo add` retains its exact original operation identifier
+and arguments across login; authentication never certifies task creation.
 
 `decapod init --backend cloud`, `decapod session acquire`, and ordinary cloud
 TODO operations share `core::cloud_client::connect`. Missing custody starts a
@@ -21,11 +56,18 @@ retry, mutation replay, or local fallback.
 `decapod cloud status` reports only private local phase, credential presence,
 and expiry; its `server_readiness` remains `not_checked`. `--proof` on cloud
 initialization prepares configuration only and does not synthesize sign-in or
-claim readiness. The legacy `cloud login` alias uses the same managed flow.
+claim readiness. The agent-owned `cloud login` command uses the same managed flow.
 No new project provider, deployment, credential, price, or roster field exists.
 The fixture-only origin requires explicit test mode and literal loopback HTTP.
 
-The client consumes the exact published `dactyl-db 0.14.0` registry API. Pending
+The connector currently accepts a canonical repository routing assertion, not
+an existing paid project ID. Selecting an account-directory project and binding
+this checkout to that server ID needs a supported upstream attachment contract;
+this client does not invent one or claim that SCM ownership or paid-project
+attachment has been verified. Browser directory registration remains distinct.
+
+The client consumes the exact published `dactyl-db 0.14.0` registry API;
+current-candidate fixture execution remains required for the complete composition. Pending
 secrets round-trip through its public Serde contract; authentication status and
 code exchange return strings, and completion confirms the session handoff.
 The caller retains its exact origin/repository/checkout binding and saved flow
@@ -1100,8 +1142,8 @@ field. Nothing in this operation authorizes a mutation, approval or completion.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `e162fe9c980cebda3a0e90a78733c3a311b8eec6a3216785b1b9bb996388b613`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (230 files), `tests/` (231 files)
+- Repository signal fingerprint: `0a0498aa94eb3f7551fe07c380ef13b469d188ab33218c72f80fc2e081fc3951`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (231 files), `tests/` (232 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 

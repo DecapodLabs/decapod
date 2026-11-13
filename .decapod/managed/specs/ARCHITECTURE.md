@@ -1,5 +1,28 @@
 # Architecture
 
+## Composed reflection continuation
+
+`core/mentor/reflection.rs` composes the existing mentor ADR detector, canonical
+plan constraints, execution-custody capture and governance-document lock/atomic
+writer. Orientation and `mentor.obligations` share this implementation. One
+optional journal in `GovernedPlan` preserves at most three compact receipts and
+a terminal stop; it adds no database table, index, event stream or transcript.
+Current plan/accepted-base, policy, ADR and supplied source identities invalidate
+dependent conclusions. The existing plan execution, trajectory checkpoint/resume
+and validation boundaries reject binding unresolved or stale reflection.
+The unchanged approval and exact-candidate publication gates remain necessary.
+The reflection contract hash reuses the plan's existing acceptance/progress
+reset on a clone. Approval and measured phase/gate progress do not consume
+reflection rounds; changes to the actual phase/gate definitions still invalidate
+convergence. The original execution and proof gates remain authoritative.
+Mentor text matches stay advisory. `state::project_federation_decision` now
+honors lifecycle before labels and preserves confidence, scope and provenance;
+an inferred/imported accepted tag cannot become a human-confirmed decision.
+ADR context identity and potential-conflict detection consume the same bounded
+captured bytes, followed by current-source revalidation before the atomic write.
+Case-folded proposed paths and challenge identities prevent spelling-only
+aliases from being counted as progress on case-insensitive workspaces.
+
 ## Registry dependency closure (#1638)
 
 `Cargo.toml` pins Dactyl 0.14.0 while retaining `sqlite` and `neon`, and the
@@ -12,6 +35,14 @@ separate package pin. The SDK requires Rust 1.85, below the existing Decapod
 is changed by this dependency alignment.
 
 ## Managed cloud connector and crash-safe custody (#1628)
+
+The agent-facing handoff carries a validated `authorization_url` separately from
+recovery text. `core::cloud_client::pending` directs the caller to poll
+`decapod cloud login` at two-second intervals for at most five minutes and then
+resume its original task. Individual invocations stay bounded and daemonless.
+`cloud login --restart` is the explicit agent recovery entrypoint for uncertain
+one-time state; it never repeats the interrupted exchange. `core::todo` retains
+the original add operation ID and browser URL when connection preflight fails.
 
 `core::cloud_client::connect` composes the public Dactyl `CloudConnector` with
 the private `core::cloud_session::SessionStore`. Dactyl resolves discovery and
@@ -863,8 +894,8 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `e162fe9c980cebda3a0e90a78733c3a311b8eec6a3216785b1b9bb996388b613`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (230 files), `tests/` (231 files)
+- Repository signal fingerprint: `0a0498aa94eb3f7551fe07c380ef13b469d188ab33218c72f80fc2e081fc3951`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (231 files), `tests/` (232 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 
@@ -1094,7 +1125,10 @@ their existing owners. The terminal does not implement billing, duplicate accoun
 policy, or grant authority from local settings. Errors leave setup non-successful;
 the ready receipt follows successful service-confirmed access only. Real PTY
 coverage verifies that reviewing/canceling cloud setup does not contact even the
-loopback fixture service before consent.
+loopback fixture service before consent. The six Unix PTY cases live in the
+private `terminal_onboarding` module of `tests/cli_contracts.rs`, which the
+finite source-CI CLI selector schedules. Declaring a standalone integration
+target alone does not establish required execution.
 
 ## Validation proof lifecycle
 

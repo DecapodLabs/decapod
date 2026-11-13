@@ -6490,6 +6490,10 @@ fn validate_plan_governed_execution_gate(
             Ok(()) => pass("Plan phase progress matches its current contract", ctx),
             Err(error) => fail(&error.to_string(), ctx),
         }
+        match crate::core::mentor::reflection::check_execute(main_root, &store.root, &plan, None) {
+            Ok(()) => {}
+            Err(error) => fail(&error.to_string(), ctx),
+        }
         match plan_governance::enforce_scope_constraints(main_root, &plan.constraints) {
             Ok(()) => pass("Complete candidate scope satisfies the governed plan", ctx),
             Err(error) => fail(&error.to_string(), ctx),

@@ -85,6 +85,8 @@ pub struct Diagnostic {
     pub failure_kind: FailureKind,
     pub retryable: bool,
     pub next_action: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub authorization_url: Option<String>,
 }
 
 impl Diagnostic {
@@ -119,6 +121,7 @@ impl Diagnostic {
             attempt_status: status,
             failure_kind: kind,
             retryable: kind.retryable(),
+            authorization_url: None,
             next_action: format!(
                 "{recovery}repeat the original `decapod todo add` arguments with `--operation-id {}`. Do not issue a fresh add to retry this operation.",
                 record.operation_id
@@ -133,7 +136,11 @@ impl std::fmt::Display for Diagnostic {
             f,
             "Cloud todo operation {}: {:?} ({:?}); {}",
             self.operation_id, self.status, self.failure_kind, self.next_action
-        )
+        )?;
+        if let Some(url) = &self.authorization_url {
+            write!(f, "; sign in: {url}")?;
+        }
+        Ok(())
     }
 }
 
