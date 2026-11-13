@@ -565,6 +565,14 @@
       "proof_refs": [
         "https://github.com/DecapodLabs/decapod/issues/1667"
       ]
+    },
+    {
+      "id": "issue-1667-file-4",
+      "summary": "chore(bazel): regenerate registry SDK module inputs; file-by-file checkpoint, verification pending.",
+      "input_digest": "sha256:86c22a90b389cffa8f7ec939ba3e4c2712bd2d452ddc590d14a8a889a700ce43",
+      "proof_refs": [
+        "https://github.com/DecapodLabs/decapod/issues/1667"
+      ]
     }
   ],
   "intents": {
@@ -615,7 +623,7 @@
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:d8cac3ba0a5f01b4e00fa5a805d44630fb7666289cd68b78d6022b788f532618",
+      "artifact_hash": "sha256:cac8fa778c621c469dc1c01667931f4ca23717403752a0d95072ddf896395ad4",
       "checks": [],
       "current_phase": "implementation",
       "custody": {
@@ -652,10 +660,17 @@
             "intent_id": "intent:change_01M7BCN0CS3Z8AJ7TZ491WJ7CJ",
             "kind": "trajectory_step_recorded",
             "sequence": 6
+          },
+          {
+            "detail": "trajectory:branch_01M7BCN0FD8AE623HXNGA0C8F9",
+            "event_id": "event:7",
+            "intent_id": "intent:change_01M7BCN0CS3Z8AJ7TZ491WJ7CJ",
+            "kind": "trajectory_step_recorded",
+            "sequence": 7
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 6,
+        "next_sequence": 7,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M7BCN0FD8AE623HXNGA0C8F9": {
@@ -710,6 +725,22 @@
                 "validation_findings": [
                   "Hosted verification and exact-candidate publication readiness remain pending; no local tests run."
                 ]
+              },
+              {
+                "action": "implementation",
+                "custody_event_id": "event:7",
+                "observations": [
+                  "MODULE.bazel.lock",
+                  "https://github.com/DecapodLabs/decapod/issues/1667"
+                ],
+                "proof_refs": [],
+                "scope": [
+                  "issue-1667"
+                ],
+                "sequence": 7,
+                "validation_findings": [
+                  "Hosted verification and exact-candidate publication readiness remain pending; no local tests run."
+                ]
               }
             ]
           }
@@ -725,7 +756,8 @@
       "modified_files": [
         ".decapod/managed/specs/INTENT.md",
         "Cargo.lock",
-        "Cargo.toml"
+        "Cargo.toml",
+        "MODULE.bazel.lock"
       ],
       "next_transitions": [
         "Refine plan and declare falsifiable checks"
