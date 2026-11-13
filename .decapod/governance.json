@@ -639,6 +639,11 @@
       "id": "validate-compact-event-reads",
       "summary": "feat(validate): reconstruct compact knowledge event envelopes (#1630)",
       "input_digest": "sha256:f61ac5d293867a6b03cc7b3ed933c6923dba8d84f5e8b1008bdd912916ed72ec"
+    },
+    {
+      "id": "task-journal-v2-and-paged-verify",
+      "summary": "feat(journal): add v2 component deduplication and snapshot-consistent keyset verify (#1630)",
+      "input_digest": "sha256:b3aaa4ee0f083cdcd5cf94c832224ebac27c78eadc9cbaad3ff76516801d36bc"
     }
   ],
   "intents": {
