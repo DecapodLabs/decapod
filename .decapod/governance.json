@@ -555,6 +555,14 @@
       "proof_refs": [
         "git:3afa9df97d9d15504b5f76021867182b78ba596d"
       ]
+    },
+    {
+      "id": "pr1662-preserve-original-parent-3",
+      "summary": "Preserve all original PR1662 commits as actual ancestry while retaining resolved current-master maintenance integration and official0.144.2 projections. No local tests or candidate live-store operations.",
+      "input_digest": "sha256:8e54a579e7b7364ebe4d0b8ac11f597d19c672590d1eb327057b6927cf0b76d1",
+      "proof_refs": [
+        "git:3afa9df97d9d15504b5f76021867182b78ba596d"
+      ]
     }
   ],
   "intents": {
@@ -629,7 +637,7 @@
         "Current claimed task and isolated work branch",
         "Preserve original source and parents; no force-push, local tests, live candidate migrations or automatic merge."
       ],
-      "artifact_hash": "sha256:7887a9244b6a75a3f2db618c42c2fce62b8ef293330aac16477eabb6002735f2",
+      "artifact_hash": "sha256:b792b7339ac60c0d4410186a22db6fef95d63a5c4693c6d11b1cab5b4ae4376a",
       "checks": [],
       "current_phase": "integration",
       "custody": {
@@ -659,10 +667,17 @@
             "intent_id": "intent:change_01M79W28WN1PPYPJZSQ1SBX1GX",
             "kind": "trajectory_step_recorded",
             "sequence": 5
+          },
+          {
+            "detail": "trajectory:branch_01M79W290WKBD0ZJ6QJAZ9SNB8",
+            "event_id": "event:6",
+            "intent_id": "intent:change_01M79W28WN1PPYPJZSQ1SBX1GX",
+            "kind": "trajectory_step_recorded",
+            "sequence": 6
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 5,
+        "next_sequence": 6,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M79W290WKBD0ZJ6QJAZ9SNB8": {
@@ -699,6 +714,24 @@
                   "pr-1662-master-1432"
                 ],
                 "sequence": 5,
+                "validation_findings": [
+                  "Current hosted CI and production datastore compatibility remain unproven."
+                ]
+              },
+              {
+                "action": "integration",
+                "command": "Merge accepted master; retain accepted storage/custody and maintenance dispatch; preserve accepted product specs and document maintenance obligations; refresh reviewed source and release bindings.",
+                "custody_event_id": "event:6",
+                "observations": [
+                  "src/decapod/core/db_maintenance.rs",
+                  "git:3afa9df97d9d15504b5f76021867182b78ba596d",
+                  "/private/tmp/decapod-pr1662-master1442-inventory.json"
+                ],
+                "proof_refs": [],
+                "scope": [
+                  "pr-1662-master-1432"
+                ],
+                "sequence": 6,
                 "validation_findings": [
                   "Current hosted CI and production datastore compatibility remain unproven."
                 ]
