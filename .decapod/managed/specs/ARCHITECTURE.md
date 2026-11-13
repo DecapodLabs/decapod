@@ -1195,3 +1195,12 @@ The integrated `todo` module exports both accepted authoring/resource custody fu
 ## PR1662 current-master preparation
 
 The db_maintenance module resolves accepted canonical-repository policy and uses existing Dactyl and StorageLock primitives. It does not replace the datastore or migration authority. Retain current-master storage format guards, task custody, provider verification and runtime ownership while integrating this operation boundary.
+
+## Required maintenance execution (#1568)
+
+The existing `db_maintenance` owner still decides backend, canonical policy,
+capability and task/worktree custody before the Dactyl operation. This follow-up
+adds no policy engine. `tests/cli_contracts.rs` includes the standalone maintenance
+module, and `.config/build/decapod.BUILD.bzl` supplies its source to the existing
+required Bazel target. Consequently source-CI selects and executes those actual
+boundaries instead of inferring coverage from unrelated green jobs.
