@@ -1341,7 +1341,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `2b121bcac52e002c3be06f937132e585746dec4c07dfecd42f836fa54e5e2ae0`
+- Repository signal fingerprint: `de413bb8b9557fdd650ef2e4e52a44a5c94e550ec405aaa016a937ee1f3d3393`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (231 files), `tests/` (232 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
@@ -1773,7 +1773,7 @@ Review regressions cover expiry during terminal evaluation and native receipt st
 
 The fresh governed docs regression has its actual `#[test]` entrypoint in the already required `tests/entrypoint_correctness.rs` target, calling `tests/support/fresh_docs_readiness.rs` with helper-only `tests/common/consumer_readiness_fixture.rs`. Real CLI commands create and claim the docs task, ensure its managed workspace, approve its plan, refresh/review specs, checkpoint and commit. The public runtime's prerequisite callback runs the real CLI with explicit `ci_local` scope and requires observed success, nonempty passed checks, zero failures, no publication readiness and an unchanged clean candidate. The same runtime invocation then executes the complete real source suite and terminal rules; only accepted-target transport is substituted with a fresh read of the actual local bare Git upstream. This is CLI-admission plus complete-runtime coverage, not an end-to-end CLI HTTPS transport test. The unchanged selective-CLI recipe executes the same entrypoint, CLI-contract and contract-enforcement targets. All 16 preexisting consumer API cases remain in `consumer_readiness.rs` under CLI contracts; helper support contains no test cases. The genuine fresh docs case runs once in the entrypoint target, preventing the measured 65-second case from overloading CLI contracts. A green `not_applicable` selection is not execution evidence.
 
-The fixture starts without a prior prerequisite receipt or ignored policy cache and verifies clean committed candidates throughout. The fresh docs fixture covers the positive first proof once. The existing real-source failure/committed-repair regression separately requires an actual failed assertion, distinct candidate and evidence identities, no failed-attempt readiness, ready-completion verdict or history artifacts, and fresh complete proof after repair. This avoids a duplicate governed preparation and admission cycle within the unchanged CLI target budget. Canonical scaffold regressions ensure an absent runtime cache causes no source healing or manifest rewrite, while a missing tracked living spec still triggers repair. Existing policy validation continues rejecting malformed or unsupported policy contracts. CLI fixture calls have finite 30-second limits, additionally capped by the runtime's original remaining budget during admission; the accepted aggregate CI budget remains unchanged.
+The fixture starts without a prior prerequisite receipt or ignored policy cache and verifies clean committed candidates throughout. Before the first proof executes, `tests/support/fresh_docs_readiness.rs` exercises the public CLI `decapod todo done --validated --commit` path to confirm premature proof-backed completion is rejected without mutating task completion state or candidate cleanliness. After the positive first `docs_...` proof passes under canonical `task_type = Some("docs")` and `git_ref = Some("refs/heads/...")` without a workunit, the same fixture initializes and checkpoints an unverified `govern workunit` proof plan via the public CLI, verifies `govern workunit transition --to verified` fails without passing gates, and confirms subsequent runtime validation blocks readiness and withholds both `completion/native-readiness-receipt.json` and `historical-proof.json`. Unit regressions in `src/decapod/core/validation_rules.rs` separately cover `normalize_rule_task_type`, `canonical_git_ref`, `EvaluationPhase::Publication` `task_types`/`ref_patterns` filtering, and checkpointed unverified workunits failing `decapod.evidence.proof_backed_completion` (`UNVERIFIED_COMPLETION`). Canonical scaffold regressions ensure an absent runtime cache causes no source healing or manifest rewrite, while a missing tracked living spec still triggers repair. Existing policy validation continues rejecting malformed or unsupported policy contracts. CLI fixture calls have finite 30-second limits, additionally capped by the runtime's original remaining budget during admission; the accepted aggregate CI budget remains unchanged.
 
 The actual accepted 0.139.0 release at `19acd21f` changes only the Decapod package versions in inventoried `Cargo.toml` and `Cargo.lock` relative to its cloud-client parent. Its 105-file source inventory is reviewed as `sha256:c8786efce425085ccb62996e1d586dd8dabd491adea74af4829e638ec26d6174`; the pre-extraction candidate inherits those source definitions exactly. Updating the declaration records that measured accepted release delta; it grants no execution or publication evidence and changes no controller, executor, workflow, helper or source-selection contract.
 
@@ -1848,3 +1848,15 @@ the combined `v0.143.0`, `#1651`, `assets/tools/build_lifecycle.rs`, and
 Source review and local projection refresh do not prove execution; full
 configured `decapod validate` on the exact candidate commit against accepted
 `master` remains mandatory before merge.
+
+Reconciling `#1629` with accepted `master` (`64c4ff2e`, `v0.143.1` including
+`#1655` and `#1664`) regenerates `0.143.1` release-bound entrypoints,
+`.decapod/managed/Dockerfile.decapod`, and `.decapod/managed/specs/.manifest.json`
+from the `0.143.1` controller and updates `reviewed_sources_digest` to
+`sha256:50af27077a026878a187611c381226be611ae10f45bfec77fc205282258d3ccf`;
+full CI and `decapod validate` execution on the exact merged commit remain
+required before publication readiness.
+
+### v0.143.2 fresh-docs workunit fixture initialization
+
+`tests/support/fresh_docs_readiness.rs` initializes the workspace-local workunit runtime using the real `init --refresh --proof` CLI before declaring unverified completion. Root datastore initialization does not initialize this journal. The scenario still requires a clean unchanged candidate, rejects unverified completion and withholds readiness receipts; the production `WORKUNIT_RUNTIME_UNINITIALIZED` guard remains intact. The repair passed on the baseline Dactyl dependency before SDK-specific verification.

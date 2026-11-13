@@ -220,6 +220,28 @@ pub fn fresh_governed_docs_cli_admission_then_runtime_executes_first_proof() {
         "prepared candidate must be clean: {prepared_status}"
     );
     let head = git(&workspace, &["rev-parse", "HEAD"]);
+    let premature_done = governed_command(
+        &workspace,
+        &storage,
+        &["todo", "done", "--id", id, "--validated", "--commit", &head],
+    )
+    .bounded_output(Duration::from_secs(30))
+    .unwrap();
+    assert!(
+        !premature_done.status.success(),
+        "proof-backed todo completion must fail before first validation proof executes: stdout={} stderr={}",
+        String::from_utf8_lossy(&premature_done.stdout),
+        String::from_utf8_lossy(&premature_done.stderr)
+    );
+    let pre_proof_task = governed_ok(
+        &workspace,
+        &storage,
+        &["todo", "get", "--id", id, "--format", "json"],
+    );
+    assert_ne!(pre_proof_task["item"]["status"], "done");
+    assert!(pre_proof_task["item"]["completed_at"].is_null());
+    assert_eq!(git(&workspace, &["rev-parse", "HEAD"]), head);
+    assert!(git(&workspace, &["status", "--porcelain"]).is_empty());
     let mut host = fixture.host();
     let admission_observation = std::rc::Rc::new(std::cell::RefCell::new(None));
     host.governed_admission = Some(GovernedAdmission {
@@ -296,6 +318,104 @@ pub fn fresh_governed_docs_cli_admission_then_runtime_executes_first_proof() {
             .iter()
             .any(|rule| rule["rule_id"] == "decapod.evidence.proof_backed_completion")
     );
+    let intent_id = governance_document::read_section(&workspace, "trajectory")
+        .unwrap()
+        .and_then(|value| {
+            value
+                .get("intent_id")
+                .and_then(|v| v.as_str())
+                .map(str::to_owned)
+        })
+        .expect("governed orientation must populate trajectory intent_id");
+    // Workunit journals are workspace-local. Initialize their runtime through
+    // the public CLI before introducing the negative completion declaration;
+    // the root repository's initialized datastore does not initialize this one.
+    governed_ok(&workspace, &storage, &["init", "--refresh", "--proof"]);
+    governed_ok(
+        &workspace,
+        &storage,
+        &[
+            "govern",
+            "workunit",
+            "init",
+            "--task-id",
+            id,
+            "--intent-ref",
+            &intent_id,
+        ],
+    );
+    governed_ok(
+        &workspace,
+        &storage,
+        &[
+            "govern",
+            "workunit",
+            "set-proof-plan",
+            "--task-id",
+            id,
+            "--gate",
+            "docs-proof",
+        ],
+    );
+    let premature_verified = governed_command(
+        &workspace,
+        &storage,
+        &[
+            "govern",
+            "workunit",
+            "transition",
+            "--task-id",
+            id,
+            "--to",
+            "verified",
+        ],
+    )
+    .bounded_output(Duration::from_secs(30))
+    .unwrap();
+    assert!(
+        !premature_verified.status.success(),
+        "workunit transition to verified must fail without passing proof-plan gates"
+    );
+    governed_ok(
+        &workspace,
+        &storage,
+        &[
+            "govern",
+            "workunit",
+            "checkpoint",
+            "--task-id",
+            id,
+            "--operation-id",
+            "docs-unverified-completion",
+        ],
+    );
+    assert_eq!(git(&workspace, &["rev-parse", "HEAD"]), head);
+    assert!(
+        git(&workspace, &["status", "--porcelain"]).is_empty(),
+        "runtime workunit state under .decapod/data must keep candidate clean"
+    );
+    let mut unverified_host = fixture.host();
+    let unverified = fixture.validate(&mut unverified_host);
+    assert!(
+        !unverified.ready,
+        "declared unverified workunit must prevent readiness: {unverified:?}"
+    );
+    assert_ne!(unverified.exit_code(), 0);
+    assert!(
+        unverified.blockers.iter().any(|blocker| {
+            blocker.detail.contains("TERMINAL_WORKUNIT_UNPROVEN")
+                || blocker.detail.contains("TERMINAL_VALIDATION_RULES_FAILED")
+        }),
+        "terminal workunit check must reject unproven/unverified declaration: {unverified:?}"
+    );
+    if let Some(unverified_evidence) = &unverified.evidence_path {
+        assert!(
+            !unverified_evidence
+                .join("completion/native-readiness-receipt.json")
+                .exists()
+        );
+        assert!(!unverified_evidence.join("historical-proof.json").exists());
+    }
     let _ = io::Write::write_all(
         &mut io::stderr(),
         format!(

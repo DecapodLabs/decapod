@@ -558,6 +558,14 @@
     "target_base": "origin/master"
   },
   "claims": {
+    "accepted-1432-integration": {
+      "statement": "PR1661 preserves its reviewed feature while incorporating accepted master 6f1d2a39 and official v0.143.2 projections, with the real CLI fresh-docs negative fixture initialized explicitly.",
+      "falsifier": "A missing accepted ancestor, lost original material, weakened proof requirement, fabricated historical checkpoint or failed affected regression refutes the integration claim.",
+      "status": "open",
+      "proof_refs": [
+        "git:6f1d2a39ad0b5b2f7e70fe12f75f0d8b360d9453"
+      ]
+    },
     "pr1661-custody-repair": {
       "statement": "Non-Git prerequisite diagnostics remain usable without admitting authoring or publication; existing single-worktree custody, lifecycle retirement, resource exclusion and recovery tests pass on accepted master and 0.143.1.",
       "falsifier": "Project-check grants publication readiness, workspace status admits an unregistered non-Git checkout, full validation accepts it, Clippy fails, or a focused custody regression fails.",
@@ -606,6 +614,15 @@
       "id": "restore-strict-non-git-admission",
       "summary": "Retain concurrent2c659521 history, reverse only unsafe can_work relaxation demonstrated by real CLI failure; preserve partial diagnostics, bind final reviews/specs and actual passing regression, preserve unavailable superseded artifact evidence.",
       "input_digest": "sha256:5488933cb6ba0c8845f61b84ab3f4f7e5c29130b89c36134ce97789366feee47"
+    },
+    {
+      "id": "pr1661-accepted-1432-integration-1",
+      "summary": "Integrate accepted v0.143.2 for PR1661, preserving feature scope and repairing public-CLI negative proof fixture setup.",
+      "input_digest": "sha256:7697e0e219d5b4c2201ef7b8a5785c3512c532d49f8ac01c7904397ba88fde8b",
+      "proof_refs": [
+        "/private/tmp/decapod-pr1661-1432-fresh-docs-initialized.log",
+        "git:6f1d2a39ad0b5b2f7e70fe12f75f0d8b360d9453"
+      ]
     }
   ],
   "intents": {
@@ -646,23 +663,23 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Final code restores strict checkout admission after concurrent relaxation produced real CLI can_work=true regression. Non-Git diagnostics remain restricted to partial project-check/CI scope.",
-          "reviewed_code_fingerprint": "2b121bcac52e002c3be06f937132e585746dec4c07dfecd42f836fa54e5e2ae0",
-          "spec_material_hash": "64d2650f577b02cfe61d723b109c11fbd207e93bcd485330bca382df773ee76d"
+          "reason": "Reviewed current PR1661 source on accepted v0.143.2, original feature boundaries and public-CLI workunit fixture initialization. No proof requirements, authority or publication checks weakened; independent readiness remains unproven until exact-candidate validation.",
+          "reviewed_code_fingerprint": "de413bb8b9557fdd650ef2e4e52a44a5c94e550ec405aaa016a937ee1f3d3393",
+          "spec_material_hash": "e64ed373bf3584fd6e6949a9fa6b72c4158a3e3a73d7c6ac65e177d684e0cd66"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Reviewed current strict get_workspace_status and explicitly partial diagnostic frontend. Same non-Git directory must report no authoring custody and reject full validation; positive rerun underway.",
-          "reviewed_code_fingerprint": "2b121bcac52e002c3be06f937132e585746dec4c07dfecd42f836fa54e5e2ae0",
+          "reason": "Reviewed current PR1661 source on accepted v0.143.2, original feature boundaries and public-CLI workunit fixture initialization. No proof requirements, authority or publication checks weakened; independent readiness remains unproven until exact-candidate validation.",
+          "reviewed_code_fingerprint": "de413bb8b9557fdd650ef2e4e52a44a5c94e550ec405aaa016a937ee1f3d3393",
           "spec_material_hash": "c03675582c56d958bf2797cb400db15e7865703e0186531fd907402067c1efa7"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Absence of .git outside a managed path is not admissible checkout custody. Current code preserves fail-closed authoring/publication, compatibility only through partial diagnostics, no OS isolation claim.",
-          "reviewed_code_fingerprint": "2b121bcac52e002c3be06f937132e585746dec4c07dfecd42f836fa54e5e2ae0",
-          "spec_material_hash": "a390e2ed19c6ed0a9008315020033c950f77ae8187cabca2fa646dfcee4ce947"
+          "reason": "Reviewed current PR1661 source on accepted v0.143.2, original feature boundaries and public-CLI workunit fixture initialization. No proof requirements, authority or publication checks weakened; independent readiness remains unproven until exact-candidate validation.",
+          "reviewed_code_fingerprint": "de413bb8b9557fdd650ef2e4e52a44a5c94e550ec405aaa016a937ee1f3d3393",
+          "spec_material_hash": "b821eefd978c46e7b656a5c5221364f7429390f5f51fd0c5240ac46569c7194f"
         }
       ],
       "state": "APPROVED",
@@ -673,13 +690,14 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1794552613Z"
+      "updated_at": "1794559985Z"
     },
     "trajectory": {
       "active_boundaries": [
-        "Current claimed task and isolated work branch"
+        "Current claimed task and isolated work branch",
+        "Preserve original PR history; ordinary merges only, no force-push or automatic merge."
       ],
-      "artifact_hash": "sha256:ee33f30e34c91d141056931092024575f93fc8c58325f8db0b868ad1d2962bea",
+      "artifact_hash": "sha256:60f3d9d0241e42eb9bce62090b07ce8fda65496ddb76d8834535e9860a0a0ace",
       "checks": [
         {
           "name": "binding-rollback-and-lifecycle",
@@ -707,6 +725,10 @@
         },
         {
           "name": "fleet-coordination-15-cases",
+          "status": "passed"
+        },
+        {
+          "name": "fresh-docs-baseline-initialized",
           "status": "passed"
         },
         {
@@ -791,10 +813,17 @@
             "intent_id": "intent:change_01M79NVT2SXTG0QCCYXQADTVWT",
             "kind": "trajectory_step_recorded",
             "sequence": 8
+          },
+          {
+            "detail": "trajectory:branch_01M79NVT5SX7NJTXX34J543M80",
+            "event_id": "event:9",
+            "intent_id": "intent:change_01M79NVT2SXTG0QCCYXQADTVWT",
+            "kind": "trajectory_step_recorded",
+            "sequence": 9
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 8,
+        "next_sequence": 9,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M79NVT5SX7NJTXX34J543M80": {
@@ -897,6 +926,25 @@
                   "Original concurrentf18c9d06 and2c659521 remain in history. Reverse only unsafe workspace admission change; preserve current canonical governance checkpoint journal through conflict resolution. No force push.",
                   "Earlier b191 integration job failed downloading missing bootstrap artifact before any tests. It is unavailable execution, not a source test result; fresh final-candidate full proof remains mandatory."
                 ]
+              },
+              {
+                "action": "integration",
+                "command": "git merge accepted origin/master; official decapod init --refresh --proof --force; supported specs.refresh and content-bound reviews",
+                "custody_event_id": "event:9",
+                "observations": [
+                  "tests/support/fresh_docs_readiness.rs",
+                  "/private/tmp/decapod-pr1661-1432-fresh-docs-initialized.log"
+                ],
+                "proof_refs": [
+                  "fresh-docs-baseline-initialized"
+                ],
+                "scope": [
+                  "pr-1661-repair"
+                ],
+                "sequence": 9,
+                "validation_findings": [
+                  "Focused regression evidence does not establish independent full readiness or erase historical draft blockers."
+                ]
               }
             ]
           }
@@ -905,10 +953,13 @@
       "declared_commands": [
         "Fast-forwarded concurrent2c659521, reproduced actual CLI assertion can_work=true on non-Git directory; restored strict workspace status, preserved partial diagnostic frontend; actual CLI regression passes14.62s.",
         "Normal merge original PR1661 f1cf3332 into current-master repair629202b1; retain both parents and original independent checkpoint history.",
-        "Observed concurrent PR1661 head advance f1cf3332 to240bc35a. Fetched and merged actual update normally; it contains same Clippy fix and accepted1431 master. Preserve all remote ancestry and current authored diagnostic repair."
+        "Observed concurrent PR1661 head advance f1cf3332 to240bc35a. Fetched and merged actual update normally; it contains same Clippy fix and accepted1431 master. Preserve all remote ancestry and current authored diagnostic repair.",
+        "git merge accepted origin/master; official decapod init --refresh --proof --force; supported specs.refresh and content-bound reviews"
       ],
       "destination": "pull request",
-      "evidence": [],
+      "evidence": [
+        "/private/tmp/decapod-pr1661-1432-fresh-docs-initialized.log"
+      ],
       "inspected_files": [
         "src/decapod/core/authoring.rs",
         "src/decapod/core/workspace.rs"
@@ -918,9 +969,11 @@
         "src/decapod/lib.rs",
         "tests/entrypoint_correctness.rs",
         "tests/init_config_behavior.rs",
-        "tests/plugins/todo.rs"
+        "tests/plugins/todo.rs",
+        "tests/support/fresh_docs_readiness.rs"
       ],
       "next_transitions": [
+        "Preserve original remote PR parent, inspect checkpoint graph, push existing PR branch and observe required providers.",
         "Refine plan and declare falsifiable checks"
       ],
       "repo_scope": [
@@ -934,6 +987,7 @@
       "unresolved_assumptions": [
         "Conflict resolution selects committed current-master repair material for governance, version1431 projections, semantic specs and already-fixed source/test conflicts; no feature source omitted. No force push or merge to master.",
         "Earlier b191 integration job failed downloading missing bootstrap artifact before any tests. It is unavailable execution, not a source test result; fresh final-candidate full proof remains mandatory.",
+        "Focused regression evidence does not establish independent full readiness or erase historical draft blockers.",
         "Official 0.143.1 still blocks normal datastore startup on inert legacy TODO file. Coordination-only 0.143.1 built from published source plus previously tested inert-file migration repair; installed official binary remains independent full validator. No database edited.",
         "Official full validation7f696510 blocked on public GitHub provider HTTP403 rate limit, reset2026-11-13T06:49:13Z; no alternate proof/authentication route used. Standalone CI found stale config_input_hash after reviewed source pin; official specs.refresh now regenerates final config/spec hashes, fresh CI still required.",
         "Original concurrentf18c9d06 and2c659521 remain in history. Reverse only unsafe workspace admission change; preserve current canonical governance checkpoint journal through conflict resolution. No force push.",

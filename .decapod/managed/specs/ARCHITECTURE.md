@@ -920,7 +920,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `2b121bcac52e002c3be06f937132e585746dec4c07dfecd42f836fa54e5e2ae0`
+- Repository signal fingerprint: `de413bb8b9557fdd650ef2e4e52a44a5c94e550ec405aaa016a937ee1f3d3393`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (231 files), `tests/` (232 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
@@ -1159,6 +1159,8 @@ target alone does not establish required execution.
 ## Validation proof lifecycle
 
 Full validation has separate admission and terminal evidence boundaries. `core/validation_rules.rs` checks source/governance inputs before execution; rules requiring proof outputs run in `validation_runtime::run` only after the complete required suite has passed. The runtime passes its owned `CompletedReadinessEvidence`, bound to exact candidate, accepted target, source, configuration, plan, governance and trajectory. No prior prerequisite receipt or string marker can manufacture that completion. Terminal failures precede external readiness receipts and canonical completion history.
+
+Both pre-execution (`core/validate.rs::get_current_task_type`) and terminal publication (`core/validation_rules.rs::evaluate_terminal_rules`) normalize task categories and task ID prefixes through `validation_rules::normalize_rule_task_type` (`feature`, `bugfix`, `refactor`, `docs`, `test`) and populate canonical Git references through `validation_rules::canonical_git_ref` (`refs/heads/<branch>`). Store lookups inspect only an existing `decapod.db` without creating sidecar databases or tripping unmigrated `todo.db` stubs, falling back to branch task-ID prefixes when local store rows are absent. Administrative categories (`code`, `cicd`, `secu`, `task`) map to `None` so built-in `task_types` rules remain applicable rather than exempted, while task-scoped and ref-scoped `EvaluationPhase::Publication` overrides filter against actual branch and task identity.
 
 The terminal boundary shares the original invocation deadline. It checks the remaining budget around evidence reads and before issuing proof; native success files remain private until an atomic bundle publication that rechecks that deadline. Remote ready verdicts likewise stage privately before publication. A deadline expiry cannot turn completed checks into late publication authority.
 
