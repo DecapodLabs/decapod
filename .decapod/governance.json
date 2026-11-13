@@ -598,6 +598,11 @@
       "id": "pin-gemini-01410",
       "summary": "chore(entrypoints): refresh GEMINI.md release-bound pin to 0.141.0",
       "input_digest": "sha256:99bcc49c6c9f6f744207121af9b282e8049c700826644851a96e28f8f8f11a22"
+    },
+    {
+      "id": "pin-dockerfile-01410",
+      "summary": "chore(container): refresh managed Dockerfile.decapod pin to v0.141.0",
+      "input_digest": "sha256:f3146863eec5ed530efcdc87b14b69400ed63e8247e0d5a8151ca7b49f09e280"
     }
   ],
   "intents": {
