@@ -7,6 +7,84 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.144.0](https://github.com/DecapodLabs/decapod/compare/v0.143.2...v0.144.0) - 2026-11-13
+
+### Fixed
+
+- *(ci)* refresh PR1669 accepted-base event binding
+- integrate PR1669 with accepted custody changes
+- integrate PR1661 with accepted Decapod v0.143.2
+- *(workunit)* resolve main runtime datastore in linked worktrees
+- *(validate)* scope protected_paths rule to path and diff checks
+- *(custody)* retain strict admission with partial non-git diagnostics
+- *(workspace)* preserve non-git init validation outside managed workspaces
+- *(specs)* bind PR1661 manifest to final validation config
+- *(custody)* restore scoped diagnostics on accepted 0.143.1 master
+- *(tests)* remove redundant PathBuf::from in plugins_todo_tests
+- *(release)* gate lineage-sync on resource:release reservation availability
+- *(todo)* enforce unique task binding index and retire bindings across lease transitions
+- *(workspace)* enforce fail-closed status, prune release, and publish resource gate
+- *(authoring)* enforce 1-to-1 checkout bindings, lifecycle retirement, and resource gates
+- *(fleet-coord)* isolate resource:<name> reservations from path overlaps
+- *(policy)* map workspace.authoring actions to dedicated risk zone
+
+### Other
+
+- resolve PR1669 conflicts with current master
+- *(governance)* bind validation receipt for PR #1669 CI fixes
+- *(specs)* refresh VALIDATION.md codebase attestation
+- *(specs)* refresh SEMANTICS.md codebase attestation
+- *(specs)* refresh SECURITY.md codebase attestation
+- *(specs)* refresh README.md codebase attestation
+- *(specs)* refresh OPERATIONS.md codebase attestation
+- *(specs)* refresh INTERFACES.md codebase attestation
+- *(specs)* refresh INTENT.md codebase attestation
+- *(specs)* refresh specs manifest for workunit fix
+- *(specs)* document linked-worktree workunit runtime resolution
+- *(workunit)* verify linked worktree runtime resolution
+- *(validate)* align protected_paths test with InitPlanInput
+- *(governance)* bind todo custody on plan and validation receipt
+- *(governance)* bind v0.143.2 validation receipt
+- *(specs)* refresh v0.143.2 specs manifest
+- *(specs)* refresh SEMANTICS.md codebase attestation
+- *(specs)* refresh specs README.md codebase attestation
+- *(specs)* refresh OPERATIONS.md codebase attestation
+- *(specs)* refresh INTERFACES.md codebase attestation
+- *(specs)* refresh INTENT.md codebase attestation
+- *(specs)* refresh ARCHITECTURE.md codebase attestation
+- *(specs)* document protected_paths regression in VALIDATION.md
+- *(specs)* document protected_paths rule scope in SECURITY.md
+- *(container)* refresh managed Dockerfile pin to v0.143.2
+- *(entrypoints)* refresh GEMINI.md for Decapod v0.143.2
+- *(entrypoints)* refresh CODEX.md for Decapod v0.143.2
+- *(entrypoints)* refresh CLAUDE.md for Decapod v0.143.2
+- *(entrypoints)* refresh AGENTS.md for Decapod v0.143.2
+- *(specs)* refresh spec attestations and manifest for #1469
+- *(merge)* retain concurrent PR1661 update
+- *(merge)* preserve PR1661 history on accepted master
+- *(merge)* reconcile accepted master v0.143.1 into #1469
+- *(specs)* refresh .manifest.json and record spec reviews ([#1469](https://github.com/DecapodLabs/decapod/pull/1469))
+- *(specs)* refresh SEMANTICS.md attestation for v0.143.0
+- *(specs)* refresh specs README.md attestation for v0.143.0
+- *(specs)* refresh OPERATIONS.md attestation for v0.143.0
+- *(specs)* update VALIDATION.md for #1469 concurrency and combined-candidate proofs
+- *(specs)* update SECURITY.md for fail-closed authoring and resource boundaries ([#1469](https://github.com/DecapodLabs/decapod/pull/1469))
+- *(specs)* update INTERFACES.md for authoring bindings and resource:<name> gates ([#1469](https://github.com/DecapodLabs/decapod/pull/1469))
+- *(specs)* update ARCHITECTURE.md for 1-to-1 bindings and resource gates ([#1469](https://github.com/DecapodLabs/decapod/pull/1469))
+- *(specs)* update INTENT.md for concurrent worktree custody ([#1469](https://github.com/DecapodLabs/decapod/pull/1469))
+- *(readiness)* verify combined-candidate validation across concurrent worktrees
+- *(bootstrap)* verify cross-process checkout contention and interrupted ensure recovery
+- *(todo)* verify authoring rollback, 1-to-1 uniqueness, retirement, and resource gates
+- *(fleet-coord)* verify resource:<name> overlap predicates and path isolation
+- *(architecture)* document 1-to-1 worktree custody and resource gates
+- *(contracts)* regenerate command-contracts.md for issue #1469
+- *(cli)* document 1-to-1 worktree bindings and resource:<name> reservation gates
+- *(container)* refresh Dockerfile.decapod pin to v0.143.0
+- *(entrypoints)* refresh GEMINI.md for Decapod v0.143.0
+- *(entrypoints)* refresh CODEX.md for Decapod v0.143.0
+- *(entrypoints)* refresh CLAUDE.md for Decapod v0.143.0
+- *(entrypoints)* refresh AGENTS.md for Decapod v0.143.0
+
 ## [0.143.2](https://github.com/DecapodLabs/decapod/compare/v0.143.1...v0.143.2) - 2026-11-13
 
 ### Fixed
