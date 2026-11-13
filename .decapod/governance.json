@@ -549,6 +549,14 @@
       "proof_refs": [
         "https://github.com/DecapodLabs/decapod/issues/1660"
       ]
+    },
+    {
+      "id": "issue-1660-integrate-f779e391",
+      "summary": "Integrate accepted master f779e39111ec8b3c8c41569f68a3a7604df167e7 and merged1675 accepted-policy hardening with issue1660. Preserve current task journal/checkpoints and authored specs from both branches; regenerate projections through the kernel. Previous candidate readiness does not apply; no local tests.",
+      "input_digest": "sha256:0144d2e7fdf468184f599b59d4e554418f4e9d38daede1a1c64ce0221c510138",
+      "proof_refs": [
+        "https://github.com/DecapodLabs/decapod/pull/1675"
+      ]
     }
   ],
   "intents": {
@@ -585,6 +593,29 @@
         "decapod validate"
       ],
       "schema_version": "1.1.0",
+      "spec_reviews": [
+        {
+          "disposition": "updated",
+          "path": ".decapod/managed/specs/ARCHITECTURE.md",
+          "reason": "Integrate accepted master f779e39111ec8b3c8c41569f68a3a7604df167e7 and merged1675 accepted-policy hardening with issue1660. Preserve current task journal/checkpoints and authored specs from both branches; regenerate projections through the kernel. Previous candidate readiness does not apply; no local tests.",
+          "reviewed_code_fingerprint": "ba894b60287b8a2e77aefdc63e9c2500db01e809bd43d40de19cb32596270211",
+          "spec_material_hash": "6cada0b2ccd5556dd0f6251728fa0ee9b887aa06487a23b63b5f04c11874f6a4"
+        },
+        {
+          "disposition": "updated",
+          "path": ".decapod/managed/specs/INTERFACES.md",
+          "reason": "Integrate accepted master f779e39111ec8b3c8c41569f68a3a7604df167e7 and merged1675 accepted-policy hardening with issue1660. Preserve current task journal/checkpoints and authored specs from both branches; regenerate projections through the kernel. Previous candidate readiness does not apply; no local tests.",
+          "reviewed_code_fingerprint": "ba894b60287b8a2e77aefdc63e9c2500db01e809bd43d40de19cb32596270211",
+          "spec_material_hash": "81d9a5b3b8da4779f9f697a3272c967996f7f0f7db6aac740881b36798a66638"
+        },
+        {
+          "disposition": "updated",
+          "path": ".decapod/managed/specs/SECURITY.md",
+          "reason": "Integrate accepted master f779e39111ec8b3c8c41569f68a3a7604df167e7 and merged1675 accepted-policy hardening with issue1660. Preserve current task journal/checkpoints and authored specs from both branches; regenerate projections through the kernel. Previous candidate readiness does not apply; no local tests.",
+          "reviewed_code_fingerprint": "ba894b60287b8a2e77aefdc63e9c2500db01e809bd43d40de19cb32596270211",
+          "spec_material_hash": "fa85ff736ae9bd16044a48bb34a30dd8fdbb8d7209b3dbf7642d1d94f38a9c96"
+        }
+      ],
       "state": "APPROVED",
       "stop_conditions": [],
       "title": "code: resolve #1660 Require observed kernel proof for VERIFIED workunit transitions",
@@ -593,13 +624,13 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1794609713Z"
+      "updated_at": "1794611753Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:adf66f5b8f2accf1f8c678c956d82f858d6f49edfd77260d4d060a437e682f78",
+      "artifact_hash": "sha256:d6cba9442220af0d139f8585123eda3d0b5595ea260051a3528c4daa3b3329e4",
       "checks": [],
       "current_phase": "implementation",
       "custody": {
@@ -622,10 +653,17 @@
             "intent_id": "intent:change_01M7BCFASGT4DQG4ZADT2BP5G0",
             "kind": "trajectory_step_recorded",
             "sequence": 4
+          },
+          {
+            "detail": "trajectory:branch_01M7BCFAWAYM3TXSVTHC1N7YZE",
+            "event_id": "event:5",
+            "intent_id": "intent:change_01M7BCFASGT4DQG4ZADT2BP5G0",
+            "kind": "trajectory_step_recorded",
+            "sequence": 5
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 4,
+        "next_sequence": 5,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M7BCFAWAYM3TXSVTHC1N7YZE": {
@@ -648,6 +686,21 @@
                 "validation_findings": [
                   "Hosted verification and exact-candidate publication readiness remain pending; no local tests run."
                 ]
+              },
+              {
+                "action": "implementation",
+                "custody_event_id": "event:5",
+                "observations": [
+                  "https://github.com/DecapodLabs/decapod/pull/1675"
+                ],
+                "proof_refs": [],
+                "scope": [
+                  "issue-1660"
+                ],
+                "sequence": 5,
+                "validation_findings": [
+                  "Integrate accepted master f779e39111ec8b3c8c41569f68a3a7604df167e7 and merged1675 accepted-policy hardening with issue1660. Preserve current task journal/checkpoints and authored specs from both branches; regenerate projections through the kernel. Previous candidate readiness does not apply; no local tests."
+                ]
               }
             ]
           }
@@ -656,7 +709,8 @@
       "declared_commands": [],
       "destination": "pull request",
       "evidence": [
-        "https://github.com/DecapodLabs/decapod/issues/1660"
+        "https://github.com/DecapodLabs/decapod/issues/1660",
+        "https://github.com/DecapodLabs/decapod/pull/1675"
       ],
       "inspected_files": [],
       "intent_id": "intent:change_01M7BCFASGT4DQG4ZADT2BP5G0",
@@ -675,7 +729,8 @@
       "task_id": "test_01m7bceqjgxkppn9",
       "tool_calls": [],
       "unresolved_assumptions": [
-        "Hosted verification and exact-candidate publication readiness remain pending; no local tests run."
+        "Hosted verification and exact-candidate publication readiness remain pending; no local tests run.",
+        "Integrate accepted master f779e39111ec8b3c8c41569f68a3a7604df167e7 and merged1675 accepted-policy hardening with issue1660. Preserve current task journal/checkpoints and authored specs from both branches; regenerate projections through the kernel. Previous candidate readiness does not apply; no local tests."
       ]
     }
   },

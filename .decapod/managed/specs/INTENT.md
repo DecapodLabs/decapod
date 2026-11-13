@@ -352,7 +352,7 @@ These declarations select authoring and proof obligations; they do not attest im
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `4d29b2ddd81902f7faec1d56bf9251726253493115b750bd9d3e77a7392fef55`
+- Repository signal fingerprint: `ba894b60287b8a2e77aefdc63e9c2500db01e809bd43d40de19cb32596270211`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (234 files), `tests/` (232 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
@@ -576,3 +576,20 @@ opaque additional gates remain unproven. Legacy declarations retain history and
 require fresh observed proof, with explicit safe downgrade/recovery. No new
 cryptographic trust root or OS-isolation claim is inferred from shared UID access.
 No local tests run; supported real CLI/runtime and hosted proof remain required.
+
+## Accepted local verification requirements (#1658)
+
+Decapod must preserve the repository-local verification contract already accepted
+on the target. A candidate may add required checks, but replacing a command,
+arguments, measured toolchain, environment, timeout or coverage declaration must
+not become authoritative merely because the candidate recomputes a review digest.
+`repository_profile` owns this preservation check; `validation_runtime` must apply
+it before selecting an execution provider. A previously accepted strict profile
+continues to require its existing external assurance.
+
+The dedicated change restores the preserved repair against v0.144.3 and adds
+real-process consumer regressions for repinning, additive checks and stale source.
+Initial adoption remains supported. Requirement replacement needs a separately
+accepted target-policy transition; this work introduces no candidate-side override
+or new authority store. Hosted tests and exact-candidate validation remain pending
+until their actual observations are collected; no local test result is claimed.
