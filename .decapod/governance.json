@@ -629,6 +629,14 @@
       "proof_refs": [
         "https://github.com/DecapodLabs/decapod/pull/1675"
       ]
+    },
+    {
+      "id": "issue-1568-file-12",
+      "summary": "chore(governance): refresh official Decapod 0.144.4 release surfaces; file-by-file checkpoint, verification pending.",
+      "input_digest": "sha256:dee0c15a6e5774820bee5ad8f027d6a397e9eeee81b732aeec2711667f3b4a76",
+      "proof_refs": [
+        "https://github.com/DecapodLabs/decapod/issues/1568"
+      ]
     }
   ],
   "intents": {
@@ -669,21 +677,21 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Integrate accepted master f779e39111ec8b3c8c41569f68a3a7604df167e7 and merged1675 accepted-policy hardening with issue1568. Preserve current task journal/checkpoints and authored specs from both branches; regenerate projections through the kernel. Previous candidate readiness does not apply; no local tests.",
+          "reason": "Hosted CI reported release-bound drift after the master0.144.4 release. Regenerate projections with independently installed registry0.144.4, retain authored semantics and required checks, and collect fresh hosted proof. No local tests.",
           "reviewed_code_fingerprint": "23f2cbdcd21015235d088cdf117f6291a23e2cecd392cb7696333336e22b3d9f",
           "spec_material_hash": "0bc38acf41a2aeb5f82f86b2237f03c756979daa53ab64de603368cb719b8ae5"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Integrate accepted master f779e39111ec8b3c8c41569f68a3a7604df167e7 and merged1675 accepted-policy hardening with issue1568. Preserve current task journal/checkpoints and authored specs from both branches; regenerate projections through the kernel. Previous candidate readiness does not apply; no local tests.",
+          "reason": "Hosted CI reported release-bound drift after the master0.144.4 release. Regenerate projections with independently installed registry0.144.4, retain authored semantics and required checks, and collect fresh hosted proof. No local tests.",
           "reviewed_code_fingerprint": "23f2cbdcd21015235d088cdf117f6291a23e2cecd392cb7696333336e22b3d9f",
           "spec_material_hash": "0bd2bba11d788c73dd7a653432ffbcc402059821300c4e6b6002046c3d1f0c21"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Integrate accepted master f779e39111ec8b3c8c41569f68a3a7604df167e7 and merged1675 accepted-policy hardening with issue1568. Preserve current task journal/checkpoints and authored specs from both branches; regenerate projections through the kernel. Previous candidate readiness does not apply; no local tests.",
+          "reason": "Hosted CI reported release-bound drift after the master0.144.4 release. Regenerate projections with independently installed registry0.144.4, retain authored semantics and required checks, and collect fresh hosted proof. No local tests.",
           "reviewed_code_fingerprint": "23f2cbdcd21015235d088cdf117f6291a23e2cecd392cb7696333336e22b3d9f",
           "spec_material_hash": "c288daf7a1c8282872088f5e6f37fc4d95b6f6bc83716c3ffeb11ef641f8fc97"
         }
@@ -696,13 +704,13 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1794611095Z"
+      "updated_at": "1794611850Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:32165dedd84b1a968c3320d389bae4d88d9f4cc0e5047b9c17a59da17fa8f259",
+      "artifact_hash": "sha256:e79de336edd37274b64ec59d0100f4a5a15c0f106cdfd468258b9f47d5c2fdb8",
       "checks": [],
       "current_phase": "implementation",
       "custody": {
@@ -795,10 +803,17 @@
             "intent_id": "intent:change_01M7BCJGVSZZ72B0C1Y6FVMPP4",
             "kind": "trajectory_step_recorded",
             "sequence": 14
+          },
+          {
+            "detail": "trajectory:branch_01M7BCJGZ6T52EA2CECBZAPK5W",
+            "event_id": "event:15",
+            "intent_id": "intent:change_01M7BCJGVSZZ72B0C1Y6FVMPP4",
+            "kind": "trajectory_step_recorded",
+            "sequence": 15
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 14,
+        "next_sequence": 15,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M7BCJGZ6T52EA2CECBZAPK5W": {
@@ -978,6 +993,22 @@
                 "sequence": 14,
                 "validation_findings": [
                   "Integrate accepted master f779e39111ec8b3c8c41569f68a3a7604df167e7 and merged1675 accepted-policy hardening with issue1568. Preserve current task journal/checkpoints and authored specs from both branches; regenerate projections through the kernel. Previous candidate readiness does not apply; no local tests."
+                ]
+              },
+              {
+                "action": "implementation",
+                "custody_event_id": "event:15",
+                "observations": [
+                  ".decapod/managed/specs/VALIDATION.md",
+                  "https://github.com/DecapodLabs/decapod/issues/1568"
+                ],
+                "proof_refs": [],
+                "scope": [
+                  "issue-1568"
+                ],
+                "sequence": 15,
+                "validation_findings": [
+                  "Hosted verification and exact-candidate publication readiness remain pending; no local tests run."
                 ]
               }
             ]
