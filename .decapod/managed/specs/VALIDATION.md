@@ -1325,7 +1325,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `7693d5010b19979e4cb8189dcb7d189c3ada65fb2953147b491cc708cd5ae8ec`
+- Repository signal fingerprint: `a4e7f3ad5ed5f94a303dd4bd008ea9d584d7f081dd49b483c2a364368a9d1666`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (231 files), `tests/` (232 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
@@ -1840,3 +1840,11 @@ from the `0.143.1` controller and updates `reviewed_sources_digest` to
 `sha256:50af27077a026878a187611c381226be611ae10f45bfec77fc205282258d3ccf`;
 full CI and `decapod validate` execution on the exact merged commit remain
 required before publication readiness.
+
+`core::validation_rules::tests::protected_paths_rule_ignores_preexisting_file_patterns_and_blocks_protected_or_blocked_paths`
+verifies that `decapod.scope.protected_paths` (`evaluate_gatekeeper_paths_and_diff`)
+passes when a modified file contains pre-existing content heuristics or
+`include_str!` references to an unmodified protected file, and returns
+`RuleVerdict::Fail` whenever `changed_paths` modifies a configured
+`governance.protected_paths` entry, a `block_paths` entry, a governed-plan
+`constraints.forbidden_paths` pattern, or exceeds `max_diff_bytes`.

@@ -584,6 +584,11 @@
       "id": "hf-spec-security",
       "summary": "docs(specs): document protected_paths rule scope in SECURITY.md",
       "input_digest": "sha256:66f0009208b3f973b048311d1a8b3f62639a1719e8ab16da663b73d0de25f99c"
+    },
+    {
+      "id": "hf-spec-validation",
+      "summary": "docs(specs): document protected_paths regression in VALIDATION.md",
+      "input_digest": "sha256:d93539cfdbb5bbf257c7697b0870fd93bcb92a37063e42a893ceb449e9b8ab91"
     }
   ],
   "intents": {
