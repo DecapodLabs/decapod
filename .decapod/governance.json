@@ -615,6 +615,14 @@
       "proof_refs": [
         "GEMINI.md"
       ]
+    },
+    {
+      "id": "refresh-dockerfile-pin-01410",
+      "summary": "Refresh managed Dockerfile.decapod base image pin to v0.141.0-debian",
+      "input_digest": "sha256:d21d25c51aaf7e80461a12efdf6dffb7172ef62a2736bfce975bad618dc284be",
+      "proof_refs": [
+        ".decapod/managed/Dockerfile.decapod"
+      ]
     }
   ],
   "intents": {
@@ -670,7 +678,7 @@
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:8fc192786681d683306b7edc434cb41fa4c12c4f7ef7593d031d81d9efaa3628",
+      "artifact_hash": "sha256:5f67fb955832345daab0a823ac47f66c9113161329c83836e6a94cebad2bf571",
       "checks": [],
       "current_phase": "execution",
       "custody": {
@@ -742,10 +750,17 @@
             "intent_id": "intent:change_01M79A0G0YSR12S2RHJE84QPHR",
             "kind": "trajectory_step_recorded",
             "sequence": 11
+          },
+          {
+            "detail": "trajectory:branch_01M79A0G5E35FVE2EYNYQVQ3XY",
+            "event_id": "event:12",
+            "intent_id": "intent:change_01M79A0G0YSR12S2RHJE84QPHR",
+            "kind": "trajectory_step_recorded",
+            "sequence": 12
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 11,
+        "next_sequence": 12,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M79A0G5E35FVE2EYNYQVQ3XY": {
@@ -880,6 +895,22 @@
                 ],
                 "sequence": 11,
                 "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:12",
+                "observations": [
+                  ".decapod/managed/Dockerfile.decapod"
+                ],
+                "proof_refs": [],
+                "scope": [
+                  "\".decapod/config.toml\"",
+                  "\".decapod/managed/specs\"]",
+                  "\"assets/tools/build_lifecycle_tests.rs\"",
+                  "paths:[\"assets/tools/build_lifecycle.rs\""
+                ],
+                "sequence": 12,
+                "validation_findings": []
               }
             ]
           }
@@ -916,6 +947,7 @@
       ],
       "modified_files": [
         ".decapod/config.toml",
+        ".decapod/managed/Dockerfile.decapod",
         "AGENTS.md",
         "CLAUDE.md",
         "CODEX.md",
