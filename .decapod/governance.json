@@ -4404,6 +4404,11 @@
       "id": "storage-lock-diagnose-and-release-own",
       "summary": "Add non-destructive StorageLock::diagnose and idle current-process release_owned_if_idle (#1568)",
       "input_digest": "sha256:56aa36f6ce956a57b9a610ff1b00856aa95816d794b98080c74918b9d2b295fd"
+    },
+    {
+      "id": "storage-lock-diagnosis-unit-tests",
+      "summary": "Add unit tests for StorageLock::diagnose and release_owned_if_idle (#1568)",
+      "input_digest": "sha256:a446fe16967f6fda74252d21c13cfac4110445c679924b4102afd68859db052d"
     }
   ],
   "intents": {
