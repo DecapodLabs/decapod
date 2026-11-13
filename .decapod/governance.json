@@ -774,6 +774,11 @@
       "id": "specs-semantics-1630",
       "summary": "docs(specs): update SEMANTICS.md for lossless historical reads and authority convergence (#1630)",
       "input_digest": "sha256:15aa076b274dc142fe2d14c661e142653aa87ded72abdc46b2d6e14b82d1c011"
+    },
+    {
+      "id": "specs-readme-v0-143-0",
+      "summary": "chore(specs): refresh specs README.md attestation for v0.143.0",
+      "input_digest": "sha256:97e562e5165fca5961a64a8cba29fb5037babc77279cbc819941203cf1c1bf54"
     }
   ],
   "intents": {
