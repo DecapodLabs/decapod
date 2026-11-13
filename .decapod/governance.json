@@ -649,6 +649,11 @@
       "id": "spec-architecture-1573",
       "summary": "docs(specs): document advisory anonymous GitHub reader pacing in ARCHITECTURE.md",
       "input_digest": "sha256:868c2f9e8628697e220acef8ec943097f9aabdc4079b57b0dbcc79a6745b7054"
+    },
+    {
+      "id": "spec-operations-1573",
+      "summary": "docs(specs): document public GitHub quota pacing for Buildkite waits in OPERATIONS.md",
+      "input_digest": "sha256:3ef0d89f3ab7a61cd4175726d5efd27061e6ee1c7c07b5ae9b06267d675887af"
     }
   ],
   "intents": {

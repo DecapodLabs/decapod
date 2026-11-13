@@ -374,8 +374,8 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `0f5182b61bd9df72c7689c6b907417c45695f0cbec319899f912c2d9c1398f2b`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (231 files), `tests/` (232 files)
+- Repository signal fingerprint: `c7d83e4fa9bf8fd016119da5a6b23f3802ebc90a1d8354fceb321065859c642c`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (232 files), `tests/` (232 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 
@@ -412,3 +412,18 @@ and commit the present observation. Resolve its returned `history-recovery:<sha>
 obligation with the archived observation and relevant current evidence references;
 checkpoint/commit that resolution and run complete independent validation.
 This recovers current work. It leaves old history unproven and enables no waiver.
+
+## Public GitHub quota pacing for imported Buildkite waits (#1573)
+
+When the independent publication collector uses `PublicGithubReads` without
+ambient GitHub credentials, `core/snapshot_provider/github_quota.rs` paces
+anonymous GitHub discovery polls against `((remaining / 2) / requests).max(1)`
+intervals until `X-RateLimit-Reset`, preserving headroom for final locator
+rechecks, remote object binding verification, and artifact custody reads. Once
+all required imported Buildkite workflows are bound in `automatic::poll`,
+subsequent polls hit Buildkite build envelopes directly without consuming public
+GitHub quota or incurring rate-limit delays. If an HTTP 200 response reports
+`X-RateLimit-Remaining: 0`, the next anonymous GitHub read waits until
+`reset_unix` within the caller's existing `Budget` deadline and reports
+`rate_limit_reset_unix=<epoch>; no request was made during the wait` on timeout
+or cancellation.
