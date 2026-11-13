@@ -576,6 +576,11 @@
       "id": "c06-rpc-types",
       "summary": "feat(rpc): add typed request structs for governed data.database.* operations",
       "input_digest": "sha256:5b79c8323f046ee776f4e184cad6b68740b37b194c51feae00f273246a757859"
+    },
+    {
+      "id": "c07-interop-manifest",
+      "summary": "feat(interop): register governed data.database.* operations in RPC manifest",
+      "input_digest": "sha256:6f92dc77cd2cbf5087555725dd7ea6ead05ed5789265f56ab4963c427ce581e1"
     }
   ],
   "intents": {
