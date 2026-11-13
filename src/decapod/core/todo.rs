@@ -7203,7 +7203,7 @@ fn claim_followup_once(
         None,
         "todo.claim.container.reserve",
         |conn| {
-            let existing: Option<(
+            type LifecycleEventRow = (
                 String,
                 String,
                 String,
@@ -7211,7 +7211,8 @@ fn claim_followup_once(
                 Option<String>,
                 Option<String>,
                 String,
-            )> = conn
+            );
+            let existing: Option<LifecycleEventRow> = conn
                 .query_row(
                     "SELECT event_id, ts, event_type, actor, subject_kind, subject_id, payload
              FROM events

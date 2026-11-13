@@ -809,6 +809,11 @@
       "id": "fix-clippy-task-journal",
       "summary": "fix(journal): factor ExternalizedProjection alias for clippy::type_complexity (#1630)",
       "input_digest": "sha256:9198c5e0a6885b9d0753dbb88864d9805cf9889df3ada017e2ab3357691837f9"
+    },
+    {
+      "id": "fix-clippy-todo-lifecycle-row",
+      "summary": "fix(todo): factor LifecycleEventRow alias for clippy::type_complexity (#1630)",
+      "input_digest": "sha256:56d80d1f73f603570713a73ea49c614c954fd1fc6aad5a94671beb6148ebd514"
     }
   ],
   "intents": {
