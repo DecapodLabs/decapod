@@ -1,5 +1,27 @@
 # Validation
 
+## Lossless compact storage and paged verification proof (#1630)
+
+Unit and integration suites (`core::storage_contracts`, `core::events`,
+`core::todo::task_journal`, `tests/datastore_contract.rs`,
+`tests/datastore_relational_compaction.rs`, `tests/support/storage_inventory.rs`,
+and `tests/datastore_efficiency.rs`) verify:
+1. Boundary acceptance/rejection for UTF-8 multi-byte strings, embedded NUL
+   bytes, JSON depth/size limits, collection cardinalities, lossless reads of
+   historical oversized rows, and `tasks.tags` / `task_dependencies` convergence.
+2. Exact `TaskProjection` and `projection_digest` parity across inline (<128 B)
+   and externalized (>=128 B) v2 checkpoints, tamper rejection on corrupted
+   `storage_components`, and self-contained `task_transfer` bundle round-trips.
+3. Snapshot-consistent keyset-paged `verify_with_budget` scaling past >10,000
+   tasks and >100,000 checkpoint records, truthful `"status": "partial"` cursor
+   continuation, and `TASK_JOURNAL_SNAPSHOT_CHANGED` detection across concurrent
+   writes.
+4. Forward migration `1200` pre/post logical event SHA-256 equivalence,
+   interruption rollback safety, `STORAGE_FORMAT_INCOMPATIBLE` downgrade refusal,
+   reference-aware component GC, explicit-only `VACUUM`, and reproducible
+   synthetic before/after storage growth benchmarks in
+   `docs/datastore-v2/compaction-benchmarks-v0.141.0.md`.
+
 The required `tests/consumer_readiness.rs` regression carries a recorded
 Decapod intent through a real source-check failure, a committed source repair,
 native validation and an inspectable receipt. It verifies that failure issues
@@ -1325,8 +1347,8 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `0a0498aa94eb3f7551fe07c380ef13b469d188ab33218c72f80fc2e081fc3951`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (231 files), `tests/` (232 files)
+- Repository signal fingerprint: `b84ca1bad99d65494836397a0df5421c6c961d64f3278bf14a3474754a944739`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (232 files), `tests/` (232 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 

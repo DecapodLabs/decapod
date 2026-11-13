@@ -759,6 +759,11 @@
       "id": "specs-security-1630",
       "summary": "docs(specs): update SECURITY.md for fail-closed UTF-8/NUL/JSON admission and tamper checks (#1630)",
       "input_digest": "sha256:c245f24a259e11bb7dc4d1539eaaf46de81b4b0e89982bc820f7caef4586decb"
+    },
+    {
+      "id": "specs-validation-1630",
+      "summary": "docs(specs): update VALIDATION.md for #1630 compaction proofs and measured growth (#1630)",
+      "input_digest": "sha256:4f2b35ce7827019d4a496adbe7cf597e813db9ba481e758edb5ec81c623e7f68"
     }
   ],
   "intents": {
