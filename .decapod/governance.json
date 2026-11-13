@@ -597,6 +597,11 @@
       "id": "policy-workspace-authoring-zone",
       "summary": "Map workspace.authoring.* actions to workspace.authoring risk zone",
       "input_digest": "sha256:a15e6b1154982af054b64f54709e140fb2b3b423fba12f630edfe0e4280a3e03"
+    },
+    {
+      "id": "fleet-coord-resource-predicates",
+      "summary": "Separate resource:<name> reservation scopes from source path overlaps",
+      "input_digest": "sha256:642767e7ba7e5f53c5b4bb836ed2225dee3790eb6f35a3e96b435614c0c85011"
     }
   ],
   "intents": {
