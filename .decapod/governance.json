@@ -549,6 +549,14 @@
       "proof_refs": [
         "https://github.com/DecapodLabs/decapod/issues/1573"
       ]
+    },
+    {
+      "id": "issue-1573-file-2",
+      "summary": "docs(proof): record bounded public collection and observed complete execution; file-by-file checkpoint, verification pending.",
+      "input_digest": "sha256:52ebd6052a01b3afe463fc6876be7994fbccf99d211d616f4780c191f2d5fef3",
+      "proof_refs": [
+        "https://github.com/DecapodLabs/decapod/issues/1573"
+      ]
     }
   ],
   "intents": {
@@ -599,7 +607,7 @@
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:c3e4eec0777a3511e1f4de0da3b79e3ba3a3165d775276f2e91ce516afa1262a",
+      "artifact_hash": "sha256:6163c14df366ee1d4e52312913d5c8a40ed062400df0fed8b6ba5f31d0f1b6eb",
       "checks": [],
       "current_phase": "implementation",
       "custody": {
@@ -622,10 +630,17 @@
             "intent_id": "intent:change_01M7BCGX392JKZBS50NX3PPP8A",
             "kind": "trajectory_step_recorded",
             "sequence": 4
+          },
+          {
+            "detail": "trajectory:branch_01M7BCGX5QABS0MJP84D9PV95G",
+            "event_id": "event:5",
+            "intent_id": "intent:change_01M7BCGX392JKZBS50NX3PPP8A",
+            "kind": "trajectory_step_recorded",
+            "sequence": 5
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 4,
+        "next_sequence": 5,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M7BCGX5QABS0MJP84D9PV95G": {
@@ -648,6 +663,22 @@
                 "validation_findings": [
                   "Hosted verification and exact-candidate publication readiness remain pending; no local tests run."
                 ]
+              },
+              {
+                "action": "implementation",
+                "custody_event_id": "event:5",
+                "observations": [
+                  "docs/architecture/public-proof-collection.md",
+                  "https://github.com/DecapodLabs/decapod/issues/1573"
+                ],
+                "proof_refs": [],
+                "scope": [
+                  "issue-1573"
+                ],
+                "sequence": 5,
+                "validation_findings": [
+                  "Hosted verification and exact-candidate publication readiness remain pending; no local tests run."
+                ]
               }
             ]
           }
@@ -661,7 +692,8 @@
       "inspected_files": [],
       "intent_id": "intent:change_01M7BCGX392JKZBS50NX3PPP8A",
       "modified_files": [
-        ".decapod/managed/specs/INTENT.md"
+        ".decapod/managed/specs/INTENT.md",
+        "docs/architecture/public-proof-collection.md"
       ],
       "next_transitions": [
         "Refine plan and declare falsifiable checks"
