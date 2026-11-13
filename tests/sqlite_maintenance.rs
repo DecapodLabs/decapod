@@ -11,6 +11,28 @@ use std::path::{Path, PathBuf};
 use std::process::Command;
 use tempfile::{TempDir, tempdir};
 
+// Resolve the runfiles/Cargo binary before changing into a disposable repo.
+fn resolve_decapod_bin() -> PathBuf {
+    let binary = Path::new(env!("CARGO_BIN_EXE_decapod"));
+    if let Ok(binary) = binary.canonicalize() {
+        return binary;
+    }
+    if let Some(root) = std::env::var_os("RUNFILES_DIR") {
+        let binary = Path::new(&root).join("_main/decapod");
+        if let Ok(binary) = binary.canonicalize() {
+            return binary;
+        }
+    }
+    if let Some(parent) = std::env::current_exe()
+        .ok()
+        .and_then(|path| path.parent().map(Path::to_path_buf))
+        && let Ok(binary) = parent.join("decapod").canonicalize()
+    {
+        return binary;
+    }
+    panic!("actual Decapod test binary is unavailable");
+}
+
 // Private fixtures cover default storage. Shared recovery is exercised separately;
 // production recovery never chmods an existing installation to proceed.
 fn private_recovery_directory() -> TempDir {
@@ -294,8 +316,8 @@ fn sidecar(path: &Path, suffix: &str) -> PathBuf {
 fn operator_cli_exposes_verify_backup_and_recovery_without_automatic_repair() {
     let tmp = TempDir::new().expect("temporary project");
     let project = tmp.path();
-    let executable = env!("CARGO_BIN_EXE_decapod");
-    let init = Command::new(executable)
+    let executable = resolve_decapod_bin();
+    let init = Command::new(&executable)
         .args(["init", "--force", "--no-ci"])
         .current_dir(project)
         .env("DECAPOD_VALIDATE_SKIP_GIT_GATES", "1")
@@ -307,7 +329,7 @@ fn operator_cli_exposes_verify_backup_and_recovery_without_automatic_repair() {
         String::from_utf8_lossy(&init.stderr)
     );
 
-    let session = Command::new(executable)
+    let session = Command::new(&executable)
         .args(["session", "acquire"])
         .current_dir(project)
         .env("DECAPOD_AGENT_ID", "maintenance-test")
@@ -340,7 +362,7 @@ fn operator_cli_exposes_verify_backup_and_recovery_without_automatic_repair() {
     drop(db);
 
     let run = |args: &[&str]| {
-        Command::new(executable)
+        Command::new(&executable)
             .args(args)
             .current_dir(project)
             .env("DECAPOD_AGENT_ID", "maintenance-test")
@@ -433,8 +455,8 @@ fn operator_cli_exposes_verify_backup_and_recovery_without_automatic_repair() {
 fn operator_cli_reports_malformed_database_without_repairing_it() {
     let tmp = TempDir::new().expect("temporary project");
     let project = tmp.path();
-    let executable = env!("CARGO_BIN_EXE_decapod");
-    let init = Command::new(executable)
+    let executable = resolve_decapod_bin();
+    let init = Command::new(&executable)
         .args(["init", "--force", "--no-ci"])
         .current_dir(project)
         .env("DECAPOD_VALIDATE_SKIP_GIT_GATES", "1")
@@ -446,7 +468,7 @@ fn operator_cli_reports_malformed_database_without_repairing_it() {
         String::from_utf8_lossy(&init.stderr)
     );
 
-    let session = Command::new(executable)
+    let session = Command::new(&executable)
         .args(["session", "acquire"])
         .current_dir(project)
         .env("DECAPOD_AGENT_ID", "maintenance-corruption-test")
@@ -468,7 +490,7 @@ fn operator_cli_reports_malformed_database_without_repairing_it() {
     let malformed = b"not a SQLite database";
     fs::write(&source_path, malformed).expect("malformed database");
 
-    let verify = Command::new(executable)
+    let verify = Command::new(&executable)
         .args(["data", "db", "verify"])
         .current_dir(project)
         .env("DECAPOD_AGENT_ID", "maintenance-corruption-test")
@@ -488,7 +510,7 @@ fn operator_cli_reports_malformed_database_without_repairing_it() {
         malformed
     );
 
-    let validation = Command::new(executable)
+    let validation = Command::new(&executable)
         .args(["validate", "--format", "json"])
         .current_dir(project)
         .env("DECAPOD_AGENT_ID", "maintenance-corruption-test")
@@ -594,7 +616,7 @@ impl GovernedRepoFixture {
     // These children own disposable repositories. Provider context describes
     // the outer source job and must never impersonate a child checkout.
     fn isolated_command() -> Command {
-        let mut command = Command::new(env!("CARGO_BIN_EXE_decapod"));
+        let mut command = Command::new(resolve_decapod_bin());
         for key in [
             "GITHUB_ACTIONS",
             "BUILDKITE",
