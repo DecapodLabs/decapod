@@ -609,6 +609,11 @@
       "id": "spec-architecture-terminal-context",
       "summary": "docs(specs): document canonical terminal rule task_type and git_ref lifecycle",
       "input_digest": "sha256:6543f8985a9eded0c0bc945ec068d097fef95b5ea3ca05a5d4d88953e5cfcc87"
+    },
+    {
+      "id": "spec-intent-refresh-0-143-0",
+      "summary": "docs(specs): refresh INTENT.md attestation for v0.143.0",
+      "input_digest": "sha256:b45be3a4a54ca618069d7a15a564e551ff0cafc4eac834e1e7c8638062d44d48"
     }
   ],
   "intents": {
