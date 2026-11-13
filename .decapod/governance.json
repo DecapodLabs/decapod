@@ -824,6 +824,11 @@
       "id": "fix-clippy-datastore-efficiency",
       "summary": "test(storage): factor EventRowToExpand alias for clippy::type_complexity (#1630)",
       "input_digest": "sha256:2a062e3184f859b72b2172f5e5d3e424c1b606aa4f9560dfd2f40031e811fa90"
+    },
+    {
+      "id": "refresh-agents-md-v0-143-1",
+      "summary": "chore(release): refresh AGENTS.md for Decapod v0.143.1",
+      "input_digest": "sha256:ffb2f4469175a16ad96f8a17f4c772921e318eabd0c7f17e5b4aac3e8b09d13c"
     }
   ],
   "intents": {
