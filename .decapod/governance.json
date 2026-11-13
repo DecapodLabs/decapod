@@ -663,6 +663,14 @@
       "proof_refs": [
         ".decapod/managed/specs/SEMANTICS.md"
       ]
+    },
+    {
+      "id": "document-mode000-security-bounds",
+      "summary": "Document bounded owned mode-000 scratch permission recovery and escape rejection in SECURITY.md",
+      "input_digest": "sha256:2aa7b5ac595af0ad5d098332755fd3dbb3df9851ab506ca5074d3d0257c62644",
+      "proof_refs": [
+        ".decapod/managed/specs/SECURITY.md"
+      ]
     }
   ],
   "intents": {
@@ -718,7 +726,7 @@
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:db55442262592cb5a897613339a41e6e1ba0cdddb28c42bd3886e4997b2f401e",
+      "artifact_hash": "sha256:b78513b48cb1c21c4b8ba9bbd70e071ef4c90191df37c11f6ffc9edf3d5e3a74",
       "checks": [],
       "current_phase": "execution",
       "custody": {
@@ -832,10 +840,17 @@
             "intent_id": "intent:change_01M79A0G0YSR12S2RHJE84QPHR",
             "kind": "trajectory_step_recorded",
             "sequence": 17
+          },
+          {
+            "detail": "trajectory:branch_01M79A0G5E35FVE2EYNYQVQ3XY",
+            "event_id": "event:18",
+            "intent_id": "intent:change_01M79A0G0YSR12S2RHJE84QPHR",
+            "kind": "trajectory_step_recorded",
+            "sequence": 18
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 17,
+        "next_sequence": 18,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M79A0G5E35FVE2EYNYQVQ3XY": {
@@ -1066,6 +1081,22 @@
                 ],
                 "sequence": 17,
                 "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:18",
+                "observations": [
+                  ".decapod/managed/specs/SECURITY.md"
+                ],
+                "proof_refs": [],
+                "scope": [
+                  "\".decapod/config.toml\"",
+                  "\".decapod/managed/specs\"]",
+                  "\"assets/tools/build_lifecycle_tests.rs\"",
+                  "paths:[\"assets/tools/build_lifecycle.rs\""
+                ],
+                "sequence": 18,
+                "validation_findings": []
               }
             ]
           }
@@ -1107,6 +1138,7 @@
         ".decapod/managed/specs/INTERFACES.md",
         ".decapod/managed/specs/OPERATIONS.md",
         ".decapod/managed/specs/README.md",
+        ".decapod/managed/specs/SECURITY.md",
         ".decapod/managed/specs/SEMANTICS.md",
         "AGENTS.md",
         "CLAUDE.md",

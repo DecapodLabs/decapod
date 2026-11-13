@@ -420,11 +420,23 @@ races after inspection are outside this bounded guarantee. Retention does not
 copy files into Git or proof. Review retained work before explicit prune; these
 automatic-clone checks do not broaden the separate explicit-prune contract.
 
-Build/test cleanup is restricted to invocation-owned scratch with its original
-filesystem identity. Replaced roots, unconfirmed live process groups, shared
-caches and proof artifacts are outside deletion authority. Process supervision
-bounds ordinary owned descendants; it is not a sandbox against deliberate
-process-group escape. Unsupported containment requirements fail explicitly.
+Build/test cleanup in `assets/tools/build_lifecycle.rs` is restricted to
+invocation-owned scratch with its original filesystem identity (`Scratch::verify_root`).
+When Unix `fs::remove_dir_all` fails with `PermissionDenied`—such as rootless
+Podman overlay `work/work` mode-`0o000` or read-only layer directories created
+under a test's disposable `HOME`—`Scratch::clean` runs bounded permission
+recovery (`Scratch::recover_owned_permissions_with_bounds`) before a single
+re-verified removal retry. Recovery locks the verified scratch root to `0o700`,
+inspects entries via `fs::symlink_metadata` without following symlinks, rejects
+replaced directories, inode drift, foreign owners (`uid != identity.uid()`),
+cross-device mounts (`dev != identity.dev()`), and trees exceeding 128 levels
+(`MAX_PERMISSION_RECOVERY_DEPTH`) or 65,536 entries (`MAX_PERMISSION_RECOVERY_ENTRIES`),
+and restores `0o700` only on verified owned directories. `cleanup_diagnostics`
+remains strictly read-only. Replaced roots, unconfirmed live process groups,
+shared caches, symlink targets and proof artifacts remain outside chmod and
+deletion authority. Process supervision bounds ordinary owned descendants; it is
+not a sandbox against deliberate process-group escape. Unsupported containment
+requirements fail explicitly.
 
 ## Evidence and publication
 
@@ -585,7 +597,7 @@ execution evidence remains required before publication readiness.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `ef0b809779d89f44a5898a162dc5f2c358e9bd025aa03cb27e7b0b01c56c2078`
+- Repository signal fingerprint: `2e78d5222e4634cae73a931b81187b35194b569d14c6049c19bd245d0d6a280b`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (230 files), `tests/` (232 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
