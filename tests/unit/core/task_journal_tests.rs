@@ -835,9 +835,11 @@ fn bounded_task_selection_and_oversized_journal_fail_before_replay() {
     baseline(&conn);
     // This intentionally malformed record exceeds the byte budget; size rejection
     // must happen before JSON parsing or materializing a replay projection.
+    // Generate legacy corruption in SQLite rather than passing an oversized
+    // parameter through Dactyl's separate, smaller SDK cell budget.
     conn.execute(
-        "UPDATE events SET payload=?1 WHERE event_type=?2",
-        params!["x".repeat(MAX_RECORD_BYTES + 1), EVENT_TYPE],
+        "UPDATE events SET payload=replace(hex(zeroblob(?1)), '00', 'x') WHERE event_type=?2",
+        params![(MAX_RECORD_BYTES + 1) as i64, EVENT_TYPE],
     )
     .unwrap();
     assert_conflict(verify(&conn).unwrap_err(), "bounded");
