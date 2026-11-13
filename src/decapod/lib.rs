@@ -6540,6 +6540,9 @@ fn run_validate_command(
     project_store: &Store,
     scope: ValidationScope,
 ) -> Result<(), error::DecapodError> {
+    if scope.requires_publication_proof() && !validate_cli.bypass_validation {
+        core::validation_runtime::require_full_readiness_environment()?;
+    }
     if validate_cli.bypass_validation {
         // A scoped, audited local exception. The publisher, worker, replay
         // verifier and CI still require genuine proof; no passing validation
@@ -7098,6 +7101,7 @@ fn run_current_workbranch_readiness_with(
     let mut report_scope = runtime::READINESS_SCOPE;
     let result = (|| -> Result<runtime::ValidationReport, error::DecapodError> {
         invocation.validate()?;
+        runtime::require_full_readiness_environment()?;
         let config = crate::cli::DecapodProjectConfig::load(workspace_root)?;
         if config
             .proof
@@ -12204,6 +12208,9 @@ mod rpc_handlers {
 
     pub(crate) fn handle_validate_run(ctx: &RpcCtx) -> Result<RpcResponse, error::DecapodError> {
         let scope = super::ValidationScope::public_validate();
+        if scope.requires_publication_proof() {
+            crate::core::validation_runtime::require_full_readiness_environment()?;
+        }
         let enabled = crate::cli::DecapodProjectConfig::load(ctx.project_root)?
             .proof
             .validation_buildkite_preflights;

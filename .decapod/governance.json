@@ -557,6 +557,14 @@
       "proof_refs": [
         "https://github.com/DecapodLabs/decapod/issues/1659"
       ]
+    },
+    {
+      "id": "issue-1659-file-3",
+      "summary": "fix(readiness): enforce override boundary in CLI RPC and publication controller; file-by-file checkpoint, verification pending.",
+      "input_digest": "sha256:36543c1a1ef4ff817b61dd9ecdd972c27df8f92b82e020cfe305780130af591a",
+      "proof_refs": [
+        "https://github.com/DecapodLabs/decapod/issues/1659"
+      ]
     }
   ],
   "intents": {
@@ -607,7 +615,7 @@
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:2fa405f4c002868189bd506041008b0deb26093b3fc376c6ec0e22750f4bd54a",
+      "artifact_hash": "sha256:fdd3b4e94f7ae6f3a08653241121dd7d1896fe771cc3997a9a54e5a91b01111f",
       "checks": [],
       "current_phase": "implementation",
       "custody": {
@@ -637,10 +645,17 @@
             "intent_id": "intent:change_01M7BCEHXJQR8HVADJF91PJKGD",
             "kind": "trajectory_step_recorded",
             "sequence": 5
+          },
+          {
+            "detail": "trajectory:branch_01M7BCEJ05EP527M18XXSF6GK6",
+            "event_id": "event:6",
+            "intent_id": "intent:change_01M7BCEHXJQR8HVADJF91PJKGD",
+            "kind": "trajectory_step_recorded",
+            "sequence": 6
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 5,
+        "next_sequence": 6,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M7BCEJ05EP527M18XXSF6GK6": {
@@ -679,6 +694,22 @@
                 "validation_findings": [
                   "Hosted verification and exact-candidate publication readiness remain pending; no local tests run."
                 ]
+              },
+              {
+                "action": "implementation",
+                "custody_event_id": "event:6",
+                "observations": [
+                  "src/decapod/lib.rs",
+                  "https://github.com/DecapodLabs/decapod/issues/1659"
+                ],
+                "proof_refs": [],
+                "scope": [
+                  "issue-1659"
+                ],
+                "sequence": 6,
+                "validation_findings": [
+                  "Hosted verification and exact-candidate publication readiness remain pending; no local tests run."
+                ]
               }
             ]
           }
@@ -693,7 +724,8 @@
       "intent_id": "intent:change_01M7BCEHXJQR8HVADJF91PJKGD",
       "modified_files": [
         ".decapod/managed/specs/INTENT.md",
-        "src/decapod/core/validation_runtime.rs"
+        "src/decapod/core/validation_runtime.rs",
+        "src/decapod/lib.rs"
       ],
       "next_transitions": [
         "Refine plan and declare falsifiable checks"
