@@ -581,6 +581,11 @@
       "id": "c07-interop-manifest",
       "summary": "feat(interop): register governed data.database.* operations in RPC manifest",
       "input_digest": "sha256:6f92dc77cd2cbf5087555725dd7ea6ead05ed5789265f56ab4963c427ce581e1"
+    },
+    {
+      "id": "c08-lib-dispatch",
+      "summary": "feat(runtime): wire pre-startup governed database CLI/RPC dispatch and config preservation",
+      "input_digest": "sha256:4b4e300f7b48cb2159357b1cc9761051819a061e73f52a57c018af6299641280"
     }
   ],
   "intents": {
