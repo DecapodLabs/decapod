@@ -7,6 +7,37 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.144.4](https://github.com/DecapodLabs/decapod/compare/v0.144.3...v0.144.4) - 2026-11-13
+
+### Fixed
+
+- *(validation)* reject candidate repinning of accepted check sources
+- *(validation)* enforce accepted local policy before execution
+- *(validation)* retain accepted local check definitions
+
+### Other
+
+- *(specs)* preserve hosted false-green evidence and repair requirements
+- *(readiness)* explain accepted verification-source updates
+- *(specs)* record reproduced source-check false green
+- *(specs)* specify source-definition policy transition
+- *(specs)* preserve accepted validation source definitions
+- *(cli)* register accepted check-script repinning at required boundary
+- *(readiness)* expose shared source-repinning control for required CLI
+- *(specs)* declare hosted accepted-policy adversarial controls
+- *(validation)* expose check-source repinning and accepted evolution
+- *(readiness)* keep fresh CLI adoption distinct from accepted policy
+- *(proof)* bind accepted-policy repair source inventory
+- *(tests)* format repinning regression setup
+- *(validation)* cover accepted program and directory substitution
+- *(governance)* distinguish review digests from policy authority
+- *(specs)* bind local proof authority to accepted target
+- *(specs)* specify accepted contract change recovery
+- *(specs)* describe accepted local proof admission
+- *(readiness)* explain accepted local policy evolution
+- *(validation)* reject repinned accepted proof requirements
+- *(specs)* define accepted local proof preservation
+
 ## [0.144.3](https://github.com/DecapodLabs/decapod/compare/v0.144.2...v0.144.3) - 2026-11-13
 
 ### Added
