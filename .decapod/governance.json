@@ -914,6 +914,11 @@
       "id": "cp-1630-core-broker-query",
       "summary": "test(broker): read broker audit events via query_all_on_conn",
       "input_digest": "sha256:d695276b389ecdd2801aa05a83178c8f660e33a8f038d8223022158e8ef5ea3f"
+    },
+    {
+      "id": "cp-1630-map-ops-test",
+      "summary": "test(map): assert compact map event envelope metadata round-trip",
+      "input_digest": "sha256:d3b4e3663048581422c525b0afc343d07ebc4979b09e9d05fc6c8146cec18bd6"
     }
   ],
   "intents": {
