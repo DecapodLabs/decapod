@@ -1,5 +1,23 @@
 # Security
 
+## Fail-closed storage bounds, NUL rejection, and component digest custody (#1630)
+
+`storage_contracts` enforces bounded UTF-8 byte lengths, JSON nesting depth
+(`MAX_JSON_DEPTH = 24`), collection cardinalities, and unconditional `0x00` NUL
+rejection across task, comment, verification, event, and aptitude write paths so
+unbounded payloads and C-string truncation hazards fail closed before reaching
+SQLite.
+
+Externalized checkpoint and transfer components in `storage_components` are
+domain-separated and content-addressed by `(component_kind, codec_version,
+byte_len, content_sha256)` over decoded UTF-8 bytes, with `storage_codec` v1
+magic/length/SHA-256 framing verified on every hydration and transfer import.
+Tampering with `stored_bytes`, `byte_len`, `content_sha256`, `events` envelope
+columns (`actor`, `ts`, `subject_id`, `subject_kind`), or omitting a referenced
+component from a transfer bundle fails closed during journal or bundle
+verification. `storage_inventory::inspect` continues to emit zero raw task/event
+text, IDs, or content SHA-256 digests.
+
 ## Agent-owned browser handoff
 
 `authorization_url` exposes only Dactyl's validated, short-lived browser handoff.
@@ -598,8 +616,8 @@ execution evidence remains required before publication readiness.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `0a0498aa94eb3f7551fe07c380ef13b469d188ab33218c72f80fc2e081fc3951`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (231 files), `tests/` (232 files)
+- Repository signal fingerprint: `b84ca1bad99d65494836397a0df5421c6c961d64f3278bf14a3474754a944739`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (232 files), `tests/` (232 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 

@@ -754,6 +754,11 @@
       "id": "specs-interfaces-1630",
       "summary": "docs(specs): update INTERFACES.md for write contracts, paged verify, and format v2 (#1630)",
       "input_digest": "sha256:aad57b564d91e0f814633f8430e7539bf5e57a0b8d05c112a35905a4dde85de2"
+    },
+    {
+      "id": "specs-security-1630",
+      "summary": "docs(specs): update SECURITY.md for fail-closed UTF-8/NUL/JSON admission and tamper checks (#1630)",
+      "input_digest": "sha256:c245f24a259e11bb7dc4d1539eaaf46de81b4b0e89982bc820f7caef4586decb"
     }
   ],
   "intents": {
