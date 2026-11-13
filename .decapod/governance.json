@@ -1,7 +1,7 @@
 {
   "schema_version": "1.0.0",
   "baseline": {
-    "accepted_commit": "3718f70ecbcf124e6deb8c21c52d36c97233fbac",
+    "accepted_commit": "3b6b31f83edfb2b77f07aa4df3b8d958074134d9",
     "policy": {
       "change_control": {
         "requires_human_review": true,
@@ -240,6 +240,14 @@
         "statement": "Independent task source overlap does not reserve a repository; task and observed checkout custody remain exclusive with fenced handoff and typed evaluation recovery.",
         "status": "open"
       },
+      "claim:managed-project-native-routing": {
+        "falsifier": "A selected project is ignored, a forged or foreign account reference authorizes data, a lost creation creates another project, refresh leaves the next native request using an old bearer, or cloud denial creates local storage.",
+        "proof_refs": [
+          "tests/common/cloud_managed_scenarios.rs"
+        ],
+        "statement": "An explicitly selected managed project controls the next native data reference while current server eligibility and checkout-scoped credential custody remain intact.",
+        "status": "open"
+      },
       "claim:measured-latency-reduction": {
         "falsifier": "Completed comparable successful runs do not show material reduction, or queue and overlapping timings are misrepresented",
         "statement": "The revised collector and grouped runtime lane materially reduce comparable successful preflight costs; no five-minute claim without measurement",
@@ -446,9 +454,8 @@
       "trajectory:01e30f48c2e7df81": "Native worker decoder fixtures have moved to portable worker tests but have not executed; root CI cannot substitute for these or native acceptance.",
       "trajectory:0369d7ba53eadf4c": "Candidate-assisted normal admission is not independent publication proof",
       "trajectory:06645c9215349379": "custody isolation is container, but this host has no Docker; the work uses a git worktree workspace",
-      "trajectory:0fa17bb254cbf39b": "Full validation ended SNAPSHOT_NOT_READY after 3427640 ms provider wait. The only failed Buildkite job was a CLI fixture assertion assuming blocked_by is always an array; actual round-2 proceed and false completion proof had already passed. The fixed assertion preserves the existing omission contract.",
+      "trajectory:083d2ad8e4cb2b22": "Current v2 mutation receipts and Dactyl 0.13.0 native consumer require fresh full proof; prior source proof is historical.",
       "trajectory:13217192dadb3ee3": "No local prerequisite suite run; remote full validation remains required",
-      "trajectory:147aac9f7f821159": "Merge accepted 1d04f232c46864eecfadb9c8b9b23069ca0e906e including storage inventory, Dactyl 0.13.0 and release 0.140.1. No unrelated task or scanner policy changed.",
       "trajectory:150b60dea853e3ba": "Real native measurements and separate holdout risk/coverage are required; current source CI success is insufficient. Evaluation criteria recorded before model outputs; no readiness fitting or holdout evaluation executed.",
       "trajectory:17669a7d73b8ecb7": "RPC download403 is runner-specific; same pinned URL succeeded on another fresh runner. Policy fixture exit126 OS detail is unknown because stderr was discarded.",
       "trajectory:19c255ade3d72661": "25unit tests and actualMetal8elementprobe passed; one138tokenCPU inference matches independent scalar subset, memory chunks inactive, same-author/shared-infrastructure limits remain. Metal model reset failed; holdout not executed. New owned-model discard, reuse assertion, real alternate-API fallback diagnostics, nonempty-chunk fixture and independent four-phase collector are authored repairs awaiting fresh validation. No 5percent production calibration claim.",
@@ -458,23 +465,18 @@
       "trajectory:306f3433d7e5e778": "Final candidate and provider proof remain required; local macOS failures are not waived.",
       "trajectory:30ef4cc2d51da604": "The new already-authorized retry wording still needs generation by its exact updated binary; the existing controller can now admit the source catalog and own remote verification.",
       "trajectory:331b4335c37f48d2": "New source and its tests require first execution through prescribed validate. No candidate output is an independent label, no old private proof is imported, and collection-only command success is not scientific acceptance. F64 resource cap4096 is not measured full-context equivalence. Corpus23lineages/proxy labels/observed false-ready keep calibration unsatisfied. CUDA hardware and full production loader-companion routing are not verified by M1 component fallback.",
-      "trajectory:34919c064a5c4d5f": "Source review found missing outer CLI task binding could evaluate different intent. The new regression rejects it before round 1; behavioral execution remains pending. Buildkite clippy assertion-style failure is repaired without lint suppression.",
       "trajectory:3a8cce72f404c6a2": "Explicit latest user decision replaces only research qualification prerequisite, retains all deterministic and functional required active-model gates. Original task/custody/branch preserved; current remoteHEADfef84896/master7371ad25, clean. Prior12modelrequests all actual singletonreject; constructed baseline discloses nonexecution and unassessed trajectory so not a meaningful ready positive. Need faithful production-shaped known-outcome cases, shared code, unchanged model/calibration/tolerances, preserve failures and no cherry-picking.",
-      "trajectory:3cc9817702005845": "Supported session update installed 0.140.1, private backups preserved, temporary session_auto_update preference removed. Project-check refreshed release projections but remained partial with 201 passed and five host/staging/unrelated-task failures; it is not full proof.",
       "trajectory:3ce44b0c351b9137": "Existing exact-source branch create, fast-forward and reuse already need no operator receipt; this change adds explicit authorized retry guidance, not a policy bypass.",
       "trajectory:3e14f62d9baafc47": "New user response do what you know is best delegated safe-abstention interpretation; prompt gateALLOW69e5f7124ee6af1940ffdf80b881644b9126467b4b0aa77ec95b368fa3ce4542. Preserve all12frozen labels/97b4667e and original59ea22of24 mismatch; do not claim all-positive or old research passed. Verification qualification requires actual approval on each backend and every adverse/protocol case; safe abstention only on ready controls, with mismatch and non-ready verdict retained. Main model input, model/calibration/threshold/math/tolerance and runtime predicate unchanged. Two additional native tests authored, require full exact-candidate official validation. Public signed-push replay recovered39source steps but produced duplicate auxiliary builds; released controller rejected them, no deletion or guard waiver. This genuine qualification/documentation checkpoint uses original branch/task/custody and fresh required CI; no new infrastructure/prerequisite/branch/merge/release.",
       "trajectory:42a30b6dcb8fd580": "Provider scheduling and ARM execution currently exceed the five-minute full target; only completed comparable runs can establish gain",
-      "trajectory:430e0ca84a9c921a": "Full validation ended SNAPSHOT_NOT_READY after 638132 ms provider wait; no local process was interrupted. Exact private snapshot remains decapod-snapshot-iZThaW. Complete runtime corpus and cost deltas are unproven.",
       "trajectory:448419562500c551": "Actual40 native tests and real Metal primitive checks pass, but download failures and incomplete CPU holdout with false-ready outcomes are not model parity or production calibration. Preserve later diagnostics on early strict aggregate error without making collection success readiness. Pin/error reporting preserves denial kinds and all setup safety. New source must run through official1191 validation; no manual builds or source-proof reuse as current scientific acceptance.",
       "trajectory:44ab164f90c301d9": "The existing traversal regression expected compact human output to contain every failure; use the complete structured failure list and preserve the exact traversal rejection assertion.",
-      "trajectory:473c758a8e77117a": "Test compilation requires the repaired legacy fixture; no behavioral pass is claimed. Release 0.139.1 controller update awaits explicit approval; CI release drift remains unresolved.",
       "trajectory:4d4fa5c9f32018c3": "Focused tests and live GET are diagnostic; full released-controller validation remains required.",
       "trajectory:4daee12c8c51710b": "Fullvalidate5635stoppedbefore native because public docs workflow2290failed generatedconfigschema. Followed actualreport source-built docs build via reviewed existing docs-repairscript; no candidatecontrollergovernance. GitHubClippydiagnostic found single needlessborrow newly extracted sharedfunction. Fixwithoutlint suppression, preservefailedreport, rerunexactcandidate. No previousnativepassisclaimedforthisnewcode.",
       "trajectory:50af5d188a338fdf": "First rollout cannot retroactively teach the existing released controller this new protocol; use independently built supported controller custody without claiming automatic replacement.",
-      "trajectory:539eb5722ee74156": "Source review found routine phase progress unnecessarily invalidated reflection. Reusing existing progress normalization fixes the coupling while independent approval/proof gates remain required; the new regression awaits configured execution.",
       "trajectory:54138daaebe9eade": "A declared human decision reference is provenance, not authenticated publication authority; candidate-only exception records cannot waive proof.",
-      "trajectory:5678afde598ff336": "The previous HTTP 403 and unavailable proof remain historical evidence. Clearing the prior attempt blocker prepares a fresh attempt after its reset, and does not establish provider access or readiness.",
       "trajectory:576cf7a5bf4d1081": "Accepted master a56fd2d3 is user merge of release1402; only Cargo package version and changelog changed from d891d81d",
+      "trajectory:5df598ceaca5724c": "Native account projects have service-owned references distinct from Git labels. Reuse accepted session custody and preserve credential record format; account IDs and metadata are routing facts, never authorization.",
       "trajectory:5fe8315a1e8b30f0": "Native acceptance remains unmet mandatory publication evidence in blocked claim, plan proof hooks, deferred evidence, and publication stop condition; not an unresolved architecture decision.",
       "trajectory:62203fa208725296": "Four-platform release packaging is outside current source readiness; genuine artifact proof and resource limits must remain explicit",
       "trajectory:6279504af9ea3fac": "Substantive evidence/spec reconciliation only; implementation/model/recipe/criteria unchanged. 719 sourceCI passes but BuildkiteCI helper failed before workflow parsing, latest full validation has public403. Public logs are diagnostics, not substituted proof. 23-lineage agent-proxy holdout has related cases and four positives without P2P; all byte bounds do not imply token bounds. Native719 repairs and model holdout remain unexecuted; no PR readiness claim.",
@@ -488,8 +490,6 @@
       "trajectory:760c8a45e61249ac": "E0603 is a separate-worker interface error, not a failed model comparison or permission issue. Local nonce syntax validation replaces the inaccessible helper without changing model-installation API visibility, required acceptance or filesystem invariants. Preserve all reports and rerun official controller against exact repaired source; no manual build/test or candidate-controller authority.",
       "trajectory:77ee70aff183fb2e": "ConcretefixtureIncompletePlan failurepreserved. Sourceandcandidate-build requiredkinds unchanged; actualnativeexecutable suppliesbuildartifact hash, notafakeartifact orverifierwaiver. Newregressionmustreject removal. Functionalcasebytes/labels frozenbeforefirstinference unchanged; nofit/tuning ormodel/calibration/tolerance change. Newtestsauthorednotpassed; normalvalidateownsallverification. Originaltask/branch/custody unchanged.",
       "trajectory:790a50c1b5645599": "No code test failed in the inspected source-CI logs; reported blockers were stale target/base custody.",
-      "trajectory:7928c30c3d424a45": "Required library execution passed 1709 tests with 8 ignored, including all 16 reflection cases and canonical lifecycle. Protocol samples and storage growth are now documented with immutable source references; this narrow evidence supports the recorded claim, not complete current readiness.",
-      "trajectory:7b2661970ed8194d": "Accepted target bc0a7197 merged; the committed current-task governance record was retained while accepted work remains in Git history. Generated conflicts were refreshed by specs.refresh; no proof or authority was invented.",
       "trajectory:7d1680219f61cd41": "Separate native-validation prerequisite feat_01m55h3p8vy7d94x is inspected, draft and yielded; root-scope overlap rejected. Original feature task reclaimed only after supported yield/category registration, original identity/provenance retained.",
       "trajectory:7d90d3eaf34454b7": "Five-minute end-to-end target remains subject to measured queue and unavoidable execution costs.",
       "trajectory:7ef3c7e2168ec922": "Source-inspected shared-memory hazard is repaired narrowly in separate pinned subpackage; no claim of executed repair or functional causality before prescribed validation. New independent scalar primitive oracle uses no candidate math. Cargo targeted resolver normalized existing Windows-only edges without version changes; Windows unverified. External model/calibration/corpus and numerical/risk criteria unchanged; long-context, full productionfallback and independentlabel gaps remain.",
@@ -502,12 +502,11 @@
       "trajectory:8a2fbdef1f3ce7d9": "All project tests and verification remain owned by plain decapod validate with Buildkite enabled",
       "trajectory:8a7663240329d9ea": "Before any numerical observations: independent reference supports only dense single text prompts up to512tokens, rawblocks13/19 without finalnorm. Provisional component tolerance0.005+0.001abs(reference) and normalizedRMS<=0.002 for raw samples and real pooled features; existing conditional-engine/calibration tolerances unchanged. Report all errors and unsupported long/chunked/multimodal cases; no threshold adjustment after outputs without recorded rationale/revalidation.",
       "trajectory:8a97ab0f9510847b": "Author shared projection seam and regression coverage; preserve all scientific failures and production authority. User requires complete functional integration, rejects prior inactive-stage proposal. Public related execution/release issues are consumed boundaries, not automatically closure scope.",
-      "trajectory:8c9b8bf2845272bb": "All 15 protocol regressions passed on earlier code. Repaired lifecycle setup, CLI suite inclusion and numeric measurements require new exact-candidate execution.",
       "trajectory:92d20e7a29fe6436": "CompilerreportedoneResulttypeerrorinnewproductioncollector; use?andOk tocoerceIOerrorintoBoxerror. Source39and1463librarytests didpass304; no nativeunit/modeltest ran because separate worker compilationfailed. Preserve allfailedreports, no manualCargo workerbuild/test, noauthfallback, nosciencecriterionwaiver. Same originalclaimedtask/branch; checkpointthenrerunfullvalidate. No newprerequisite or PR.",
-      "trajectory:99e5dbbb4f3de7c7": "Projection bootstrap applied supported release repairs but is partial, with host container/candidate gates unmet. It is not readiness or an alternate proof path; full Buildkite validation owns all configured prerequisites.",
       "trajectory:9cae7985f5372144": "50dfe init/cli_contracts target passed217.4s, but sibling enforcement timed out300s at real validate; same enforcement succeeded standalone247.6s. Isolate enforcement from sibling Bazel tests without changing commands/coverage/budgets; reviewed inventory781faa8360d5ca7701b61a3941ae6994681c7e98b229289a90bcb740e3236f97. New shared model pin/local runtime registration, native format/hash checks, bounded private records, frozen custody before proof and stale binding/model/runtime rejection before acceptance are authored not executed. Explicit registration does not run worker or certify provenance. Current worker still Metal-only; CPU/CUDA/fallback and genuine native/reference/holdout evidence remain mandatory gaps.",
       "trajectory:9ccc878a4150c313": "Native snapshot now succeeds, but dependency compilation failed before any worker tests or model/probe/reference/evaluation. Repair is compatible upstream runtime pin update on same feature branch; all new actual execution still pending.",
       "trajectory:9ec958ffca8a0a63": "Independent scalar reference repair only; own block19 floor-bucket accumulation and analytic anchors do not call candidate pooling. New tests and nonempty chunk comparisons unexecuted until next fullvalidate. Model/runtime/calibration/holdout/tolerances fixed; partial model-judgment failures and long-reference/productionfallback/independentlabel gaps still block publication.",
+      "trajectory:a20c20e43c7307b1": "Neighboring session/onboarding owners confirmed project binding is outside their scopes. Full source validation owns build/tests; no separate manual test was run. Real native service evidence remains separate from modeled HTTP.",
       "trajectory:ac23859f7db4e13e": "Preserve explicit cancellation and all remote sourcepass evidence. Late final report failure must dominate earlier readiness; this repair changes no scientific threshold or model result. Sourcepass is not nativeverification. Continue official validate exactnewcandidate on originalbranch; no new ownership, manual tests, forcepush, PR while acceptance fails, merge or release.",
       "trajectory:ad78b8b133b57577": "Only released119 snapshot blocker retired: merged fix is officially published1191. Native/parity/calibration acceptance remains unverified and required recipe remains nonaccepting until actual evidence; authored inputs and frozen criteria unchanged.",
       "trajectory:afd7f835abf45cbd": "Native full graph still requires actual platform capabilities; current Mac does not by itself establish Linux or four-archive release execution",
@@ -516,17 +515,12 @@
       "trajectory:ba2463fc9d91ddb4": "User clarification concerns product flow and instructions, not a waiver of scientific acceptance. Preserve all checks and original ownership. After quota reset run plain validate on genuinely changed candidate; no empty retry commit, authentication substitution for denied public read, manual build or shadow preflight. OAuth timed out with no credentials; public diagnostics remain readable without login.",
       "trajectory:bcd92ac4414c0831": "Pinned transformersv5.3.0 aad13b87ed59f2afcfaebc985f403301887a35fc modeling_qwen3_5.py SHA0e7410f5251e5c324a5628c5340ee3551f7a6a505ce398569fcc3b5f3ac07f7a read as mathematical specification only, never executed. Source config b90b86f35c8e6925ef74ee04d0e758f0a845c83a42089ad82bbaa948de9b4204, weight SHA04b1c301231dd422b8860db31311ab2721511346a32cb1e079c4c4e5f1fe4696 independently pinned. Metadata range only read, not installed or used as inference proof.",
       "trajectory:be3ba7edc9e65ad8": "Normalpostresetvalidateef3clearedremoteproof/custodyandnativefullsnapshotpreparation, thennativecompilationfailedE0599atnewexportwrite_all becauseWrite trait wasnotinscope. Addsamefunctionlocaltraitimportusedbyexistingexporter, no manualbuild/test. Staticreviewalsofoundrelated-repository syntheticfixture stillusedoriginalreviewURLafterrepochange; correctbothfixtureURLs toretainstrictidentitycheckandaddwrong-URLassertion. Allsixnewnative testsremainunexecuted, notpassingclaims; main1461/source39passed. No model/calibration/corpus/math/tolerance/8runrecipe/deadline/authoritychange. Preserveef3failureandallolderhistory; exactnewcandidate mustrerunofficialvalidate.",
-      "trajectory:becc41df3c98779c": "Inventory reconciliation removes the recorded current blocker only; earlier failed proof remains historical and full proof is still required.",
-      "trajectory:cd2db709c2e179f7": "Prior candidate proof became stale after accepted master advanced; SNAPSHOT_NOT_READY after 516740 ms is preserved, never readiness.",
-      "trajectory:cfbad650411edd9e": "Behavioral, latency and growth measurements await configured validation; authored tests are not proof.",
       "trajectory:d2ed52f5ef441b6a": "Source fixtures are synthetic and generated at runtime; no real credential hidden or scanner exemption added. Existing scanner/redaction regressions must execute again. Native model/reference/holdout proof remains unexecuted.",
       "trajectory:d347ed41a83079c8": "Historical README report is scoped to873ab797 and f2073bd4 and is not current candidate proof",
-      "trajectory:d701d5b639190ea7": "User continuation authorizes the previously requested 0.139.1 update. Session acquire required no install: the installed binary already reports 0.139.1. Temporary update opt-in was removed and binary/config backed up privately.",
       "trajectory:d7af311d2cbb71e4": "Hosted Buildkite source validation cannot be completed without network access; CI results must be independently verified",
       "trajectory:d9ace8c29a759626": "All six frozen v2 holdout shards completed: each backend executed102 cases with36 unsupported lengths,52 abstentions,29 acceptances and23 false-ready proxy outcomes. Preserve this failure and original corpus/criteria. Actual source1459 tests, native43 tests and138/314/4096-token fixed numerical comparisons passed. Public review corpus remains prospective and unverified; no fitting or heldout inference has used it. Inspection confirmed projection includes plan.intent only, omitting proof_hooks/deferred questions/stop conditions and phase gates. Add bounded obligation facts without whole-plan metadata, model changes, relaxed gates or fabricated rationale. Final source/material/governance identity checks remain authoritative.",
       "trajectory:da69bbaf7f07e535": "Legacy event history is incomplete and cannot prove full reconstruction; establish explicit current-state migration baseline without synthesizing historical custody.",
       "trajectory:e0f0a51392feb190": "Actual benchmark model evaluation has not executed. A last-stage bounded evaluation must report partial/error/abstention separately and keep final acceptance unsatisfied when risk or label authority is inadequate.",
-      "trajectory:e51b3168fe87b531": "Mentor literal matches remain advisory; source identity and narrower declared scope do not prove implementation semantics.",
       "trajectory:e59eda56341d71a3": "New tests/MetalCPUproductiondiagnostics authored and require prescribed validate; no new pass claims. User rejects inactive stage; fitting source only inspected, no Python executed. Current official upstream has old base+two generic adapters and incompatible universal port/stats engine, none demonstrated readiness-qualified. Reviewed24source candidates still zero admissible complete final units. Preserve old study/failures and every required original criterion. Final admission stays missing rather than repeating exposed final data. No branch/custody/controller changes.",
       "trajectory:e6b0bb96ddfbd405": "Preserve040d sourceCI lock failure and separate officialvalidator publicGithubCommitChecks403/reset1792449991. Actual anonymous publicBuildkite setup log confirms MODULE.bazel.lock stale because Cargo.toml packagingexclusion changed; prescribed repair is bazel mod deps --lockfile_mode=update. Installed officialHomebrewBazelisk1.29 afterreading officialformula/installerdocs, restored Homebrew developer modeoff. Run batch metadata regeneration only underrepositorypinnedBazel9.3, notmanualbuild/test orshadowpreflight; preserve dependencies, scientificgates and failedholdout. No native execution on040d is claimed. Newfullvalidation mustwaitreportedpublicAPIreset and bindcorrectedexactcandidate.",
       "trajectory:e75f5b9f6163b9ce": "the maintainers create the decapod Cachix cache and the CACHIX_AUTH_TOKEN secret; until then the publish step is skipped",
@@ -536,215 +530,218 @@
       "trajectory:ec49216a39e5bf93": "The config decision is cooperative; its author and agent labels are not authenticated.",
       "trajectory:ecfec9650d4ed288": "Independent standalone validation exposed four stale generated release-bound entrypoints; supported init refresh changed headers only, required graph preserved.",
       "trajectory:f000bb05667cb46e": "No actual four-target release artifact build is scheduled by ordinary source preflight;1049 latency improvement remains unmeasured",
-      "trajectory:f40d13a9b17b5167": "Independent GitHub diagnostics can identify source errors but cannot establish Buildkite publication readiness.",
-      "trajectory:f6822b8e5b9aee46": "Plain validation be4cfbb6 stopped because accepted base moved to released 0.140.0. The session-acquire path installed that published release after private backups; update opt-in was restored to its original absence.",
       "trajectory:f9fb9362db79deb2": "Userauthorizesboundedcontractdiagnosis and evidence-backed productdecision, no repeatedfailedfullrun before causalcorrection. No sourcecode/math/weights/calibration/tolerance/gate/recipe changes justified bycontractreview. Authoranexposed-study audit andsourceadmissionledger, maintainlivingvalidation/intent interpretations, andprepareexplicitunappliedscopeproposal. Actualproductionprojection differsfromoldfullpatchharness andcannotbeclaimedtestedbythose29outcomes.",
-      "trajectory:fa421ac6b37186ed": "Automatic trusted remote controller bootstrap is absent; a two-revision independent provider harness requires separate scope decision. Diagnostics do not claim to close that gap.",
-      "trajectory:fc13a70ef7557ace": "Accepted f1a6c7a0 merged; current task journal retained and generated conflicts refreshed by supported interfaces. The reviewed build delta adds infer_precision.rs to the existing required entrypoint suite without changing the required graph."
+      "trajectory:fa421ac6b37186ed": "Automatic trusted remote controller bootstrap is absent; a two-revision independent provider harness requires separate scope decision. Diagnostics do not claim to close that gap."
     }
   },
   "change": {
-    "id": "change_01M79A0G0YSR12S2RHJE84QPHR",
-    "base_commit": "3718f70ecbcf124e6deb8c21c52d36c97233fbac",
+    "id": "change_01M79KP72JCBRMB1MHBKZVMQGT",
+    "base_commit": "3b6b31f83edfb2b77f07aa4df3b8d958074134d9",
     "target_base": "origin/master"
   },
   "claims": {
-    "claim:owned-scratch-mode000-cleanup": {
-      "statement": "When remove_dir_all fails with PermissionDenied on an invocation-owned scratch tree after child process-group exit, Scratch::clean recovers 0o700 permissions only on real directories matching the scratch root UID and filesystem device within a bounded traversal, rejects symlink/UID/device/replacement escapes, keeps cleanup_diagnostics read-only, and completes bounded scratch removal.",
-      "falsifier": "Owned mode-000 nested directories still fail Scratch::clean, or permission recovery follows a symlink, alters foreign-UID or cross-device directories, mutates paths during read-only diagnostics, or traverses unboundedly.",
-      "status": "open",
+    "claim-negative-completion-gates": {
+      "statement": "Fresh docs tasks reject premature proof-backed todo completion before first proof and block readiness when an explicit unverified workunit is declared",
+      "falsifier": "todo done --validated succeeds before first proof or runtime validation issues readiness receipts with an unverified workunit",
+      "status": "supported",
       "proof_refs": [
-        "assets/tools/build_lifecycle.rs",
-        "assets/tools/build_lifecycle_tests.rs"
+        "src/decapod/core/validation_rules.rs",
+        "tests/support/fresh_docs_readiness.rs"
+      ]
+    },
+    "claim-terminal-rule-context": {
+      "statement": "Terminal publication and pre-execution validation populate canonical task_type and refs/heads/<branch> git_ref context without sidecar DB creation",
+      "falsifier": "Publication rules scoped to task_types or ref_patterns fail to match canonical docs/bugfix/feature/refactor/test tasks or agent branches",
+      "status": "supported",
+      "proof_refs": [
+        "src/decapod/core/validate.rs",
+        "src/decapod/core/validation_rules.rs"
       ]
     }
   },
   "checkpoints": [
     {
-      "id": "recover-owned-mode000-scratch",
-      "summary": "Recover owned mode-000 scratch directory permissions on Unix PermissionDenied cleanup",
-      "input_digest": "sha256:a0339a8b1b52772cc40ca7321d7f5a1fed2969fb400bacdd62312fbfc21599e8",
-      "proof_refs": [
-        "assets/tools/build_lifecycle.rs"
-      ]
+      "id": "refresh-agents-0-143-0",
+      "summary": "chore(entrypoints): refresh AGENTS.md for v0.143.0",
+      "input_digest": "sha256:93b7c47c40cca876780788756d42d0340e4a2684de53ec4360742b1c18033d50"
     },
     {
-      "id": "add-podman-mode000-regressions",
-      "summary": "Add Podman mode-000 overlay cleanup and symlink/UID/device/bound escape regressions",
-      "input_digest": "sha256:60ae45b205775b70d225c406e2d03d9b78bb212bbca207ea120bff5b0258f300",
-      "proof_refs": [
-        "assets/tools/build_lifecycle_tests.rs"
-      ]
+      "id": "refresh-claude-0-143-0",
+      "summary": "chore(entrypoints): refresh CLAUDE.md for v0.143.0",
+      "input_digest": "sha256:e9231d4be37d2d5781619b178665206b1fdd07b6e01f20ab46f2abf479b0a468"
     },
     {
-      "id": "review-build-lifecycle-sources-digest",
-      "summary": "Update reviewed_sources_digest for build_lifecycle and build_lifecycle_tests",
-      "input_digest": "sha256:8ac5651da6b216e081ae2bba0ee3e71898b873eed3a88e49c2a34c5a6de00d1e",
-      "proof_refs": [
-        ".decapod/config.toml"
-      ]
+      "id": "refresh-codex-0-143-0",
+      "summary": "chore(entrypoints): refresh CODEX.md for v0.143.0",
+      "input_digest": "sha256:dbf1bf94a2141493458e970ec1a6d5176bbaec831d287f8ca7e6f7bf86fd6d91"
     },
     {
-      "id": "refresh-agents-entrypoint-01410",
-      "summary": "Refresh AGENTS.md release-bound entrypoint pin to Decapod 0.141.0",
-      "input_digest": "sha256:226e9e7e41de73395fa213a138f3ca9f3d6ea4bb0b0195248900a57b3984da2a",
-      "proof_refs": [
-        "AGENTS.md"
-      ]
+      "id": "refresh-gemini-0-143-0",
+      "summary": "chore(entrypoints): refresh GEMINI.md for v0.143.0",
+      "input_digest": "sha256:0e961655d618e82773abf2a5955ef74bc52863709c4e6ab4307444181ecf7908"
     },
     {
-      "id": "refresh-claude-entrypoint-01410",
-      "summary": "Refresh CLAUDE.md release-bound entrypoint pin to Decapod 0.141.0",
-      "input_digest": "sha256:c4ad4bdff77eda204a6a6a523bac98ec7186293eaac230a99c30751177af15e0",
-      "proof_refs": [
-        "CLAUDE.md"
-      ]
+      "id": "refresh-dockerfile-0-143-0",
+      "summary": "chore(container): refresh Dockerfile.decapod pin for v0.143.0",
+      "input_digest": "sha256:bbd4cc2d8080c244b47e0aa17a9001ca7c31b5399c55a3330330cbb54beb6a4e"
     },
     {
-      "id": "refresh-codex-entrypoint-01410",
-      "summary": "Refresh CODEX.md release-bound entrypoint pin to Decapod 0.141.0",
-      "input_digest": "sha256:e4a0e97ea00ab9bf5cc58b4e204d7dcaa592c589423e0b71f4d20472800ae384",
-      "proof_refs": [
-        "CODEX.md"
-      ]
+      "id": "refresh-reviewed-sources-digest",
+      "summary": "chore(config): update reviewed_sources_digest for v0.143.0 source inventory",
+      "input_digest": "sha256:6a9584fd0bb835ee1946df87ec1d376ce36d8a4a476efb8b8fc5354fd108706f"
     },
     {
-      "id": "refresh-gemini-entrypoint-01410",
-      "summary": "Refresh GEMINI.md release-bound entrypoint pin to Decapod 0.141.0",
-      "input_digest": "sha256:a63f7230be09e14dc286158dac591a8886139ff9d4dfb39d28582e13491ea26a",
-      "proof_refs": [
-        "GEMINI.md"
-      ]
+      "id": "terminal-rule-task-and-ref-context",
+      "summary": "fix(validation): populate canonical task_type and git_ref in terminal rules (#1629)",
+      "input_digest": "sha256:451fc8c427cd1d7b86c5fb145d13918f87f43799b64d98e33422cf3241bcc06e"
     },
     {
-      "id": "refresh-dockerfile-pin-01410",
-      "summary": "Refresh managed Dockerfile.decapod base image pin to v0.141.0-debian",
-      "input_digest": "sha256:d21d25c51aaf7e80461a12efdf6dffb7172ef62a2736bfce975bad618dc284be",
-      "proof_refs": [
-        ".decapod/managed/Dockerfile.decapod"
-      ]
+      "id": "validate-canonical-task-type",
+      "summary": "fix(validation): normalize workspace task_type for pre-execution rules (#1629)",
+      "input_digest": "sha256:1fc07435c1c6ca75ebb1e2185bec5101bed17ab025528faa309be96fb08a1616"
     },
     {
-      "id": "refresh-intent-spec-attestation-01410",
-      "summary": "Refresh INTENT.md codebase attestation for 0.141.0 build_lifecycle slice",
-      "input_digest": "sha256:2bfb07023d920b6f1d374bd56d06b70611260f29af6e9c213dc1de9a6a8d6932",
-      "proof_refs": [
-        ".decapod/managed/specs/INTENT.md"
-      ]
+      "id": "fresh-docs-negative-completion-regression",
+      "summary": "test(validation): verify negative proof-backed completion gates on fresh docs task (#1629)",
+      "input_digest": "sha256:d120ba700e209f017ea77ff910c4317b24dd4e347b05aef377d0f51303bce145"
     },
     {
-      "id": "refresh-interfaces-spec-attestation-01410",
-      "summary": "Refresh INTERFACES.md codebase attestation for 0.141.0 build_lifecycle slice",
-      "input_digest": "sha256:b4ae6ad686b6c362a01610ca014d293380a9032ac6ac9a499ad1268a9b3571fe",
-      "proof_refs": [
-        ".decapod/managed/specs/INTERFACES.md"
-      ]
+      "id": "spec-architecture-terminal-context",
+      "summary": "docs(specs): document canonical terminal rule task_type and git_ref lifecycle",
+      "input_digest": "sha256:6543f8985a9eded0c0bc945ec068d097fef95b5ea3ca05a5d4d88953e5cfcc87"
     },
     {
-      "id": "refresh-operations-spec-attestation-01410",
-      "summary": "Refresh OPERATIONS.md codebase attestation for 0.141.0 build_lifecycle slice",
-      "input_digest": "sha256:5267f6d790d005b5c090383674836812557f456a9d19e142644ba9dd3053a6ac",
-      "proof_refs": [
-        ".decapod/managed/specs/OPERATIONS.md"
-      ]
+      "id": "spec-intent-refresh-0-143-0",
+      "summary": "docs(specs): refresh INTENT.md attestation for v0.143.0",
+      "input_digest": "sha256:b45be3a4a54ca618069d7a15a564e551ff0cafc4eac834e1e7c8638062d44d48"
     },
     {
-      "id": "refresh-readme-spec-attestation-01410",
-      "summary": "Refresh specs README.md codebase attestation for 0.141.0 build_lifecycle slice",
-      "input_digest": "sha256:8b096c67d2508d1c7f1ca2e1839e8f877c6de73e429a5ef27026a4273e29759e",
-      "proof_refs": [
-        ".decapod/managed/specs/README.md"
-      ]
+      "id": "spec-interfaces-refresh-0-143-0",
+      "summary": "docs(specs): refresh INTERFACES.md attestation for v0.143.0",
+      "input_digest": "sha256:c2e364b0b31199a7a877f4cd2fc4112d9d2768fdb20693355d8ebe74ff963253"
     },
     {
-      "id": "refresh-semantics-spec-attestation-01410",
-      "summary": "Refresh SEMANTICS.md codebase attestation for 0.141.0 build_lifecycle slice",
-      "input_digest": "sha256:dcfa9c0d396ff2eabc31514a9b3d87b9599bafcee748cc4ed2ff37a5c7b6e337",
-      "proof_refs": [
-        ".decapod/managed/specs/SEMANTICS.md"
-      ]
+      "id": "spec-operations-refresh-0-143-0",
+      "summary": "docs(specs): refresh OPERATIONS.md attestation for v0.143.0",
+      "input_digest": "sha256:24ac00501afc9004277b7c36fe604c8075f42ab1c86d739bf77d39aca10f9d82"
     },
     {
-      "id": "document-mode000-security-bounds",
-      "summary": "Document bounded owned mode-000 scratch permission recovery and escape rejection in SECURITY.md",
-      "input_digest": "sha256:2aa7b5ac595af0ad5d098332755fd3dbb3df9851ab506ca5074d3d0257c62644",
-      "proof_refs": [
-        ".decapod/managed/specs/SECURITY.md"
-      ]
+      "id": "spec-readme-refresh-0-143-0",
+      "summary": "docs(specs): refresh specs README.md attestation for v0.143.0",
+      "input_digest": "sha256:b2eaf19f95042ee9799dd37f313086ee76c024c6c04f148f5bac0d920f0fbe4b"
     },
     {
-      "id": "document-build-lifecycle-architecture",
-      "summary": "Document build_lifecycle owned scratch supervision and Unix cleanup recovery in ARCHITECTURE.md",
-      "input_digest": "sha256:806fda825d0df0637f96bc0adb577b6fef4eb33a0fb0f5a3bf1b868aa80b668b",
-      "proof_refs": [
-        ".decapod/managed/specs/ARCHITECTURE.md"
-      ]
+      "id": "spec-security-terminal-custody",
+      "summary": "docs(specs): document terminal rule context and proof-backed completion custody",
+      "input_digest": "sha256:43a0ac3fe49ae07f89862a0c827b3a50b1f41392084c10cdae1a417d35514058"
     },
     {
-      "id": "document-mode000-validation-regressions",
-      "summary": "Document #1643 supervisor mode-000 regressions and 0.141.0 source inventory digest in VALIDATION.md",
-      "input_digest": "sha256:54ea8d127b6e107b680ded3a77835f6e4fde5767547be4ff0ad0ee5d3096b483",
-      "proof_refs": [
-        ".decapod/managed/specs/VALIDATION.md"
-      ]
+      "id": "spec-semantics-refresh-0-143-0",
+      "summary": "docs(specs): refresh SEMANTICS.md attestation for v0.143.0",
+      "input_digest": "sha256:d6885267381edfeff08900d9658b11564655f36bc36bbb878f18d58d11503b88"
     },
     {
-      "id": "refresh-specs-manifest-and-reviews",
-      "summary": "Refresh 0.141.0 specs manifest and record publication spec reviews for #1643",
-      "input_digest": "sha256:a531ccff7c529f2d4569c90691aad7ff367ded65192d6018dfbe108dbed8390f",
-      "proof_refs": [
-        ".decapod/managed/specs/.manifest.json",
-        ".decapod/managed/specs/ARCHITECTURE.md",
-        ".decapod/managed/specs/SECURITY.md",
-        ".decapod/managed/specs/VALIDATION.md"
-      ]
+      "id": "spec-validation-negative-completion",
+      "summary": "docs(specs): document negative proof-backed completion CLI and unit regressions",
+      "input_digest": "sha256:e958ec7266f5f57e465ad30575ab4fe81e6213ff457468b794ec4352701d108a"
     },
     {
-      "id": "reconcile-accepted-master-v0-142-0",
-      "summary": "Reconcile accepted master d3542c30 (v0.142.0) and refresh 0.142.0 release-bound entrypoints, Dockerfile pin, specs manifest, and source digest",
-      "input_digest": "sha256:baaec0068d13c87e33333232098e26c00ac94b528ad62f883a5880f0cc46cfd5",
-      "proof_refs": [
-        ".decapod/managed/specs/VALIDATION.md"
-      ]
+      "id": "spec-manifest-refresh-0-143-0",
+      "summary": "docs(specs): refresh .manifest.json and record publication spec reviews",
+      "input_digest": "sha256:0dd55290f8a92cf7f572e7f3a3dc47134c500ebc9b7de21d9cadc29992b5bd7d"
     },
     {
-      "id": "reconcile-v0-143-0",
-      "summary": "Reconcile accepted master v0.143.0 into #1643",
-      "input_digest": "sha256:f6c52752b631d68ccb5a668236e28714a9d4322e17dc74809a17f6007f6ae715"
+      "id": "reconcile-master-1655",
+      "summary": "chore(merge): reconcile accepted master (#1655) into #1629",
+      "input_digest": "sha256:b2815f81dc03781d88bbc28499432e7195249a31c4dc8fc8b6c6cb3b7c1ff0a3"
+    },
+    {
+      "id": "reconcile-master-v01431",
+      "summary": "Reconcile accepted master v0.143.1 (64c4ff2e) and refresh 0.143.1 projections",
+      "input_digest": "sha256:d8cae0897ca01ac74196a0eb7fb088f98fecbbd3a5fc2ef72a84260d7bce7cbd"
+    },
+    {
+      "id": "bind-v01431-epoch",
+      "summary": "Bind v0.143.1 validation epoch receipt after master reconciliation",
+      "input_digest": "sha256:3a5ba4a262fdcba6e8117a270c2c4177519bd1cc98e77402b86423fa7cf47071"
     }
   ],
   "intents": {
-    "intent:change_01M79A0G0YSR12S2RHJE84QPHR": {
+    "intent:branch_01M79PZRECONCILE1665": {
       "acceptance_criteria": [],
       "assumptions": [],
       "boundaries": [
-        "Current claimed task and isolated work branch"
+        "src/decapod/core/validation_rules.rs, src/decapod/core/validate.rs, tests/support/fresh_docs_readiness.rs, .decapod/managed/specs/*"
       ],
       "constraints": [
-        "paths:[\"assets/tools/build_lifecycle.rs\"",
-        "\"assets/tools/build_lifecycle_tests.rs\"",
-        "\".decapod/config.toml\"",
-        "\".decapod/managed/specs\"]"
+        ".decapod/governance.json"
       ],
       "created_sequence": 1,
-      "id": "intent:change_01M79A0G0YSR12S2RHJE84QPHR",
+      "id": "intent:branch_01M79PZRECONCILE1665",
       "out_of_scope": [],
       "proof_requirements": [],
-      "raw_intent": "Fix #1643 build supervisor mode-000 owned scratch directory cleanup",
-      "refined_intent": "Fix #1643 build supervisor mode-000 owned scratch directory cleanup",
+      "raw_intent": "Fix #1629 circular first-validation evidence prerequisites in fresh governed workspaces",
+      "refined_intent": "Reconcile #1629 terminal-rule context fix onto accepted master v0.143.1 (64c4ff2e) and refresh 0.143.1 projections",
       "status": "refined",
       "updated_sequence": 3
+    }
+  },
+  "epochs": {
+    "ve_fefb216368f301b9": {
+      "constitution_hash": "sha256:27c3a78e5546640f5ef8da0460decda605aca8f82b9019482bb27a8f0b6d8a5d",
+      "constitution_version": "embedded-docs@0.143.1",
+      "epoch_id": "ve_fefb216368f301b9",
+      "evaluator_identity": "decapod-validate@0.143.1",
+      "evaluator_set_hash": "sha256:063f19d26df476cb2ecc57aeab8d3d8ea6a88f4301443e6259e249f9568809e3",
+      "generated_specs_fingerprint": "7693d5010b19979e4cb8189dcb7d189c3ada65fb2953147b491cc708cd5ae8ec",
+      "generated_specs_manifest_hash": "sha256:ef26c3da7d406a0f850c19fcdb4bdb52ff5d8e92372ff619ae91b7385829d7fb",
+      "material_hashes": {
+        "constitution:core/DECAPOD": "sha256:27c3a78e5546640f5ef8da0460decda605aca8f82b9019482bb27a8f0b6d8a5d",
+        "generated_spec:.decapod/managed/specs/ARCHITECTURE.md": "sha256:c4274196cc7e80a682096312266ac5393e11cb93c59ab692423c94481ebac8ad",
+        "generated_spec:.decapod/managed/specs/INTENT.md": "sha256:5efcc8ab7b0e24bc0949959eccf0b63863d35702d38a5b165d4875c5f86ad4c5",
+        "generated_spec:.decapod/managed/specs/INTERFACES.md": "sha256:23169b89e5d3d7d478b89614e7dbd8213cb5d147f1820b15f6d505cb3503b65a",
+        "generated_spec:.decapod/managed/specs/OPERATIONS.md": "sha256:d03cd0adcb27f6ee2ebaca36f46d24f90c4742db4fd6ab1b87c5a15952f3b648",
+        "generated_spec:.decapod/managed/specs/README.md": "sha256:2ef5149234df3d0cfc28d899dd5ddb27faa3752dd08c3c7e30c8d3d7323a0b69",
+        "generated_spec:.decapod/managed/specs/SECURITY.md": "sha256:00e17d295a91bfe0d0ff28d9cdd8b20326b517cd6950ff1bb9db1fe29c3ac43e",
+        "generated_spec:.decapod/managed/specs/SEMANTICS.md": "sha256:1d1f9e5e5a204394c7e1a1ebc0f54110561cf6785cf317f7c6b49836a1478257",
+        "generated_spec:.decapod/managed/specs/VALIDATION.md": "sha256:c1dc6832e43271ff87d97f79e624be698428b90f8b6c1bac3f20b359e40863b2",
+        "generated_specs_fingerprint": "7693d5010b19979e4cb8189dcb7d189c3ada65fb2953147b491cc708cd5ae8ec",
+        "generated_specs_manifest": "sha256:ef26c3da7d406a0f850c19fcdb4bdb52ff5d8e92372ff619ae91b7385829d7fb",
+        "governance_context": "sha256:7416269a660dbbae77617bb4ce869385546229134985fbf63b46f0195519a285",
+        "governance_material:.decapod/managed/Dockerfile.decapod": "sha256:ef1b29e6ce1f8b37f62c5e9975fdaafd3629df5b86a2d64b9128ebbc5b78d16f",
+        "governance_material:AGENTS.md": "sha256:d25db6c735b235f03cbb944623ba05f334ea1fc8dee9c27f7eed9052fec0101e",
+        "governance_material:CLAUDE.md": "sha256:a0f9affc9924a9e599e76a205a340175d3cf5c01a72544903b6c810d7ad44540",
+        "governance_material:CODEX.md": "sha256:8098d84e5b69e7f433d21878c373061ab4a468052f07f31e6fd999a09c689905",
+        "governance_material:GEMINI.md": "sha256:f17ea8b7a6b541e034fa190c4cdf39cff622e1197a58bf7f7b9f314fcc3e786a",
+        "governance_section:claims": "sha256:3a195b53e6f01fff31b3e5de31bd2f7620a2fe775534b259a8b0180a61f82b2c",
+        "governance_section:plan": "sha256:a17f5c8765ec217fc6a66669fa7260ff9a902c33ff6a3557106ee68afccae2c8",
+        "living_spec_material:.decapod/managed/specs/ARCHITECTURE.md": "sha256:11ce1ecc3ba50564b2ec464e88d3c899f039ce3a31c2f6fc08ec189e743b91bd",
+        "living_spec_material:.decapod/managed/specs/INTENT.md": "sha256:e070aaf6ddf2395427a9cdbb084fa3fab6a637810c2b79d1f99a3b0178b033c5",
+        "living_spec_material:.decapod/managed/specs/INTERFACES.md": "sha256:bdd0ceb5cd3b9c68d05ceb15fc4c5981aecb18fb53823d649298222f5c2142fe",
+        "living_spec_material:.decapod/managed/specs/OPERATIONS.md": "sha256:1d3e29277d53611989f0ecc92d40beebbee3283a59eb8bafa1369d3b4dce5a98",
+        "living_spec_material:.decapod/managed/specs/README.md": "sha256:b438399f5c0f241858ccea303abbd1076a8728d2560509e7a15e012dd698765c",
+        "living_spec_material:.decapod/managed/specs/SECURITY.md": "sha256:5bbc2655c6e433d388c4ac1a54bd7905a3b0b7934fa11c3d257f58f062a8ba14",
+        "living_spec_material:.decapod/managed/specs/SEMANTICS.md": "sha256:88af02a5fa5b60a15f67f62702d5fdcda58a70052940081e9cfd9fe1aa21017c",
+        "living_spec_material:.decapod/managed/specs/VALIDATION.md": "sha256:d894fa8aafc0c3db5f13c8c31d2cef00e59b81f32bd9f5a1daeacb9cc34bd074",
+        "proof_rubric": "sha256:99e8ef25629da391e9b479db9fff52b82f340224f7a69d8a88d2992ae8e90466",
+        "validation_profile": "sha256:37a8eec1ce19687d132fe29051dca629d164e2c4958ba141d5f4133a33f0688f"
+      },
+      "proof_rubric": "decapod-validate/current-proof-v1",
+      "proof_rubric_hash": "sha256:99e8ef25629da391e9b479db9fff52b82f340224f7a69d8a88d2992ae8e90466",
+      "schema_version": "1.0.0",
+      "validation_profile": "default",
+      "validation_profile_hash": "sha256:37a8eec1ce19687d132fe29051dca629d164e2c4958ba141d5f4133a33f0688f"
     }
   },
   "sections": {
     "plan": {
       "constraints": {
-        "file_touch_budget": 30,
+        "file_touch_budget": 40,
         "forbidden_paths": []
       },
       "deferred_questions": [],
       "human_questions": [],
-      "intent": "Recover u+rwx permissions within invocation-owned Unix scratch directories when remove_dir_all hits PermissionDenied (e.g., Podman rootless overlay work/work mode 000), while rejecting symlink, foreign-UID, cross-device, and root/parent replacement escapes and keeping cleanup_diagnostics strictly read-only.",
+      "intent": "Fix #1629 terminal rule task_type/git_ref context and negative proof-backed completion CLI regression",
       "phases": [],
       "proof_hooks": [
         "decapod validate"
@@ -754,586 +751,383 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Reconciled #1643 Podman mode-000 scratch cleanup prose with accepted master v0.143.0 (#1651 and #1656).",
-          "reviewed_code_fingerprint": "0f5182b61bd9df72c7689c6b907417c45695f0cbec319899f912c2d9c1398f2b",
-          "spec_material_hash": "0080ad1bc8a6387061be0f938f3f79dbc30b0c5707be96b6dfabbd22caad0f58"
+          "reason": "Reconciled ARCHITECTURE.md with accepted master v0.143.1 and #1629 canonical terminal rule context.",
+          "reviewed_code_fingerprint": "7693d5010b19979e4cb8189dcb7d189c3ada65fb2953147b491cc708cd5ae8ec",
+          "spec_material_hash": "11ce1ecc3ba50564b2ec464e88d3c899f039ce3a31c2f6fc08ec189e743b91bd"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Preserved accepted master v0.143.0 (#1651) interface and security contracts; #1643 changes internal scratch cleanup only.",
-          "reviewed_code_fingerprint": "0f5182b61bd9df72c7689c6b907417c45695f0cbec319899f912c2d9c1398f2b",
+          "reason": "Reconciled INTERFACES.md with accepted master v0.143.1; public CLI/RPC surfaces remain unchanged.",
+          "reviewed_code_fingerprint": "7693d5010b19979e4cb8189dcb7d189c3ada65fb2953147b491cc708cd5ae8ec",
           "spec_material_hash": "bdd0ceb5cd3b9c68d05ceb15fc4c5981aecb18fb53823d649298222f5c2142fe"
         },
         {
-          "disposition": "unchanged_with_reason",
+          "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Preserved accepted master v0.143.0 (#1651) interface and security contracts; #1643 changes internal scratch cleanup only.",
-          "reviewed_code_fingerprint": "0f5182b61bd9df72c7689c6b907417c45695f0cbec319899f912c2d9c1398f2b",
-          "spec_material_hash": "97c2544f70a436eeca3ea07b70088d349f5401279598b073fcc1376d3ad32024"
+          "reason": "Reconciled SECURITY.md with accepted master v0.143.1 and #1629 fail-closed completion custody.",
+          "reviewed_code_fingerprint": "7693d5010b19979e4cb8189dcb7d189c3ada65fb2953147b491cc708cd5ae8ec",
+          "spec_material_hash": "5bbc2655c6e433d388c4ac1a54bd7905a3b0b7934fa11c3d257f58f062a8ba14"
         }
       ],
       "state": "APPROVED",
-      "stop_conditions": [
-        "Stop if scratch cleanup would traverse symlinks, cross filesystem devices, or alter foreign-UID paths outside the authenticated scratch root."
-      ],
-      "title": "Fix #1643 build supervisor mode-000 owned scratch directory cleanup",
+      "stop_conditions": [],
+      "title": "Fix #1629 terminal rule task_type/git_ref context and negative proof-backed completion CLI regression",
       "todo_ids": [
-        "bugs_01m799kyygy9rq6d"
+        "bugs_01m79knt8h670tjh"
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1794545108Z"
+      "updated_at": "1794549057Z"
     },
     "trajectory": {
       "active_boundaries": [
-        "Current claimed task and isolated work branch"
+        "src/decapod/core/validation_rules.rs, src/decapod/core/validate.rs, tests/support/fresh_docs_readiness.rs, .decapod/managed/specs/*"
       ],
-      "artifact_hash": "sha256:d77d9b2ac3ee19141485a343720c4ea17db2ecddf7a8f3e94a1daf4732871fc1",
+      "artifact_hash": "sha256:66350e73a102549ced7d2098bc05d861dd09845549cb23a841f15bb84a159f60",
       "checks": [
         {
-          "name": "merge_d3542c30_v0_142_0",
-          "status": "passed"
-        },
-        {
-          "name": "spec_reviews",
+          "name": "decapod validate",
           "status": "passed"
         }
       ],
-      "current_phase": "execution",
+      "current_phase": "validation",
       "custody": {
         "events": [
           {
             "event_id": "event:2",
-            "intent_id": "intent:change_01M79A0G0YSR12S2RHJE84QPHR",
+            "intent_id": "intent:branch_01M79PZRECONCILE1665",
             "kind": "created",
             "sequence": 2
           },
           {
             "event_id": "event:3",
-            "intent_id": "intent:change_01M79A0G0YSR12S2RHJE84QPHR",
+            "intent_id": "intent:branch_01M79PZRECONCILE1665",
             "kind": "refined",
             "sequence": 3
           },
           {
-            "detail": "trajectory:branch_01M79A0G5E35FVE2EYNYQVQ3XY",
+            "detail": "trajectory:branch_01M79PZRECONCILE1665",
             "event_id": "event:4",
-            "intent_id": "intent:change_01M79A0G0YSR12S2RHJE84QPHR",
+            "intent_id": "intent:branch_01M79PZRECONCILE1665",
             "kind": "trajectory_step_recorded",
             "sequence": 4
-          },
-          {
-            "detail": "trajectory:branch_01M79A0G5E35FVE2EYNYQVQ3XY",
-            "event_id": "event:5",
-            "intent_id": "intent:change_01M79A0G0YSR12S2RHJE84QPHR",
-            "kind": "trajectory_step_recorded",
-            "sequence": 5
-          },
-          {
-            "detail": "trajectory:branch_01M79A0G5E35FVE2EYNYQVQ3XY",
-            "event_id": "event:6",
-            "intent_id": "intent:change_01M79A0G0YSR12S2RHJE84QPHR",
-            "kind": "trajectory_step_recorded",
-            "sequence": 6
-          },
-          {
-            "detail": "trajectory:branch_01M79A0G5E35FVE2EYNYQVQ3XY",
-            "event_id": "event:7",
-            "intent_id": "intent:change_01M79A0G0YSR12S2RHJE84QPHR",
-            "kind": "trajectory_step_recorded",
-            "sequence": 7
-          },
-          {
-            "detail": "trajectory:branch_01M79A0G5E35FVE2EYNYQVQ3XY",
-            "event_id": "event:8",
-            "intent_id": "intent:change_01M79A0G0YSR12S2RHJE84QPHR",
-            "kind": "trajectory_step_recorded",
-            "sequence": 8
-          },
-          {
-            "detail": "trajectory:branch_01M79A0G5E35FVE2EYNYQVQ3XY",
-            "event_id": "event:9",
-            "intent_id": "intent:change_01M79A0G0YSR12S2RHJE84QPHR",
-            "kind": "trajectory_step_recorded",
-            "sequence": 9
-          },
-          {
-            "detail": "trajectory:branch_01M79A0G5E35FVE2EYNYQVQ3XY",
-            "event_id": "event:10",
-            "intent_id": "intent:change_01M79A0G0YSR12S2RHJE84QPHR",
-            "kind": "trajectory_step_recorded",
-            "sequence": 10
-          },
-          {
-            "detail": "trajectory:branch_01M79A0G5E35FVE2EYNYQVQ3XY",
-            "event_id": "event:11",
-            "intent_id": "intent:change_01M79A0G0YSR12S2RHJE84QPHR",
-            "kind": "trajectory_step_recorded",
-            "sequence": 11
-          },
-          {
-            "detail": "trajectory:branch_01M79A0G5E35FVE2EYNYQVQ3XY",
-            "event_id": "event:12",
-            "intent_id": "intent:change_01M79A0G0YSR12S2RHJE84QPHR",
-            "kind": "trajectory_step_recorded",
-            "sequence": 12
-          },
-          {
-            "detail": "trajectory:branch_01M79A0G5E35FVE2EYNYQVQ3XY",
-            "event_id": "event:13",
-            "intent_id": "intent:change_01M79A0G0YSR12S2RHJE84QPHR",
-            "kind": "trajectory_step_recorded",
-            "sequence": 13
-          },
-          {
-            "detail": "trajectory:branch_01M79A0G5E35FVE2EYNYQVQ3XY",
-            "event_id": "event:14",
-            "intent_id": "intent:change_01M79A0G0YSR12S2RHJE84QPHR",
-            "kind": "trajectory_step_recorded",
-            "sequence": 14
-          },
-          {
-            "detail": "trajectory:branch_01M79A0G5E35FVE2EYNYQVQ3XY",
-            "event_id": "event:15",
-            "intent_id": "intent:change_01M79A0G0YSR12S2RHJE84QPHR",
-            "kind": "trajectory_step_recorded",
-            "sequence": 15
-          },
-          {
-            "detail": "trajectory:branch_01M79A0G5E35FVE2EYNYQVQ3XY",
-            "event_id": "event:16",
-            "intent_id": "intent:change_01M79A0G0YSR12S2RHJE84QPHR",
-            "kind": "trajectory_step_recorded",
-            "sequence": 16
-          },
-          {
-            "detail": "trajectory:branch_01M79A0G5E35FVE2EYNYQVQ3XY",
-            "event_id": "event:17",
-            "intent_id": "intent:change_01M79A0G0YSR12S2RHJE84QPHR",
-            "kind": "trajectory_step_recorded",
-            "sequence": 17
-          },
-          {
-            "detail": "trajectory:branch_01M79A0G5E35FVE2EYNYQVQ3XY",
-            "event_id": "event:18",
-            "intent_id": "intent:change_01M79A0G0YSR12S2RHJE84QPHR",
-            "kind": "trajectory_step_recorded",
-            "sequence": 18
-          },
-          {
-            "detail": "trajectory:branch_01M79A0G5E35FVE2EYNYQVQ3XY",
-            "event_id": "event:19",
-            "intent_id": "intent:change_01M79A0G0YSR12S2RHJE84QPHR",
-            "kind": "trajectory_step_recorded",
-            "sequence": 19
-          },
-          {
-            "detail": "trajectory:branch_01M79A0G5E35FVE2EYNYQVQ3XY",
-            "event_id": "event:20",
-            "intent_id": "intent:change_01M79A0G0YSR12S2RHJE84QPHR",
-            "kind": "trajectory_step_recorded",
-            "sequence": 20
-          },
-          {
-            "detail": "trajectory:branch_01M79A0G5E35FVE2EYNYQVQ3XY",
-            "event_id": "event:21",
-            "intent_id": "intent:change_01M79A0G0YSR12S2RHJE84QPHR",
-            "kind": "trajectory_step_recorded",
-            "sequence": 21
-          },
-          {
-            "detail": "trajectory:branch_01M79A0G5E35FVE2EYNYQVQ3XY",
-            "event_id": "event:22",
-            "intent_id": "intent:change_01M79A0G0YSR12S2RHJE84QPHR",
-            "kind": "trajectory_step_recorded",
-            "sequence": 22
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 22,
+        "next_sequence": 4,
         "schema_version": "1.0.0",
         "trajectories": {
-          "branch_01M79A0G5E35FVE2EYNYQVQ3XY": {
+          "branch_01M79PZRECONCILE1665": {
             "evidence_only": true,
-            "id": "branch_01M79A0G5E35FVE2EYNYQVQ3XY",
-            "intent_id": "intent:change_01M79A0G0YSR12S2RHJE84QPHR",
+            "id": "branch_01M79PZRECONCILE1665",
+            "intent_id": "intent:branch_01M79PZRECONCILE1665",
             "steps": [
               {
-                "action": "loop:design_mode000_cleanup:1",
+                "action": "validation",
+                "command": "decapod validate",
                 "custody_event_id": "event:4",
-                "observations": [],
+                "observations": [
+                  ".decapod/governance.json",
+                  ".decapod/governance.json",
+                  "validation epoch ve_fefb216368f301b9 completed with zero failures"
+                ],
                 "proof_refs": [
-                  "assets/tools/build_lifecycle.rs"
+                  "decapod validate"
                 ],
                 "scope": [
-                  "\".decapod/config.toml\"",
-                  "\".decapod/managed/specs\"]",
-                  "\"assets/tools/build_lifecycle_tests.rs\"",
-                  "paths:[\"assets/tools/build_lifecycle.rs\""
+                  ".decapod/governance.json"
                 ],
                 "sequence": 4,
-                "validation_findings": []
-              },
-              {
-                "action": "trajectory.record",
-                "custody_event_id": "event:5",
-                "observations": [
-                  "assets/tools/build_lifecycle.rs"
-                ],
-                "proof_refs": [],
-                "scope": [
-                  "\".decapod/config.toml\"",
-                  "\".decapod/managed/specs\"]",
-                  "\"assets/tools/build_lifecycle_tests.rs\"",
-                  "paths:[\"assets/tools/build_lifecycle.rs\""
-                ],
-                "sequence": 5,
-                "validation_findings": []
-              },
-              {
-                "action": "trajectory.record",
-                "custody_event_id": "event:6",
-                "observations": [
-                  "assets/tools/build_lifecycle_tests.rs"
-                ],
-                "proof_refs": [],
-                "scope": [
-                  "\".decapod/config.toml\"",
-                  "\".decapod/managed/specs\"]",
-                  "\"assets/tools/build_lifecycle_tests.rs\"",
-                  "paths:[\"assets/tools/build_lifecycle.rs\""
-                ],
-                "sequence": 6,
-                "validation_findings": []
-              },
-              {
-                "action": "trajectory.record",
-                "custody_event_id": "event:7",
-                "observations": [
-                  ".decapod/config.toml"
-                ],
-                "proof_refs": [],
-                "scope": [
-                  "\".decapod/config.toml\"",
-                  "\".decapod/managed/specs\"]",
-                  "\"assets/tools/build_lifecycle_tests.rs\"",
-                  "paths:[\"assets/tools/build_lifecycle.rs\""
-                ],
-                "sequence": 7,
-                "validation_findings": []
-              },
-              {
-                "action": "trajectory.record",
-                "custody_event_id": "event:8",
-                "observations": [
-                  "AGENTS.md"
-                ],
-                "proof_refs": [],
-                "scope": [
-                  "\".decapod/config.toml\"",
-                  "\".decapod/managed/specs\"]",
-                  "\"assets/tools/build_lifecycle_tests.rs\"",
-                  "paths:[\"assets/tools/build_lifecycle.rs\""
-                ],
-                "sequence": 8,
-                "validation_findings": []
-              },
-              {
-                "action": "trajectory.record",
-                "custody_event_id": "event:9",
-                "observations": [
-                  "CLAUDE.md"
-                ],
-                "proof_refs": [],
-                "scope": [
-                  "\".decapod/config.toml\"",
-                  "\".decapod/managed/specs\"]",
-                  "\"assets/tools/build_lifecycle_tests.rs\"",
-                  "paths:[\"assets/tools/build_lifecycle.rs\""
-                ],
-                "sequence": 9,
-                "validation_findings": []
-              },
-              {
-                "action": "trajectory.record",
-                "custody_event_id": "event:10",
-                "observations": [
-                  "CODEX.md"
-                ],
-                "proof_refs": [],
-                "scope": [
-                  "\".decapod/config.toml\"",
-                  "\".decapod/managed/specs\"]",
-                  "\"assets/tools/build_lifecycle_tests.rs\"",
-                  "paths:[\"assets/tools/build_lifecycle.rs\""
-                ],
-                "sequence": 10,
-                "validation_findings": []
-              },
-              {
-                "action": "trajectory.record",
-                "custody_event_id": "event:11",
-                "observations": [
-                  "GEMINI.md"
-                ],
-                "proof_refs": [],
-                "scope": [
-                  "\".decapod/config.toml\"",
-                  "\".decapod/managed/specs\"]",
-                  "\"assets/tools/build_lifecycle_tests.rs\"",
-                  "paths:[\"assets/tools/build_lifecycle.rs\""
-                ],
-                "sequence": 11,
-                "validation_findings": []
-              },
-              {
-                "action": "trajectory.record",
-                "custody_event_id": "event:12",
-                "observations": [
-                  ".decapod/managed/Dockerfile.decapod"
-                ],
-                "proof_refs": [],
-                "scope": [
-                  "\".decapod/config.toml\"",
-                  "\".decapod/managed/specs\"]",
-                  "\"assets/tools/build_lifecycle_tests.rs\"",
-                  "paths:[\"assets/tools/build_lifecycle.rs\""
-                ],
-                "sequence": 12,
-                "validation_findings": []
-              },
-              {
-                "action": "trajectory.record",
-                "custody_event_id": "event:13",
-                "observations": [
-                  ".decapod/managed/specs/INTENT.md"
-                ],
-                "proof_refs": [],
-                "scope": [
-                  "\".decapod/config.toml\"",
-                  "\".decapod/managed/specs\"]",
-                  "\"assets/tools/build_lifecycle_tests.rs\"",
-                  "paths:[\"assets/tools/build_lifecycle.rs\""
-                ],
-                "sequence": 13,
-                "validation_findings": []
-              },
-              {
-                "action": "trajectory.record",
-                "custody_event_id": "event:14",
-                "observations": [
-                  ".decapod/managed/specs/INTERFACES.md"
-                ],
-                "proof_refs": [],
-                "scope": [
-                  "\".decapod/config.toml\"",
-                  "\".decapod/managed/specs\"]",
-                  "\"assets/tools/build_lifecycle_tests.rs\"",
-                  "paths:[\"assets/tools/build_lifecycle.rs\""
-                ],
-                "sequence": 14,
-                "validation_findings": []
-              },
-              {
-                "action": "trajectory.record",
-                "custody_event_id": "event:15",
-                "observations": [
-                  ".decapod/managed/specs/OPERATIONS.md"
-                ],
-                "proof_refs": [],
-                "scope": [
-                  "\".decapod/config.toml\"",
-                  "\".decapod/managed/specs\"]",
-                  "\"assets/tools/build_lifecycle_tests.rs\"",
-                  "paths:[\"assets/tools/build_lifecycle.rs\""
-                ],
-                "sequence": 15,
-                "validation_findings": []
-              },
-              {
-                "action": "trajectory.record",
-                "custody_event_id": "event:16",
-                "observations": [
-                  ".decapod/managed/specs/README.md"
-                ],
-                "proof_refs": [],
-                "scope": [
-                  "\".decapod/config.toml\"",
-                  "\".decapod/managed/specs\"]",
-                  "\"assets/tools/build_lifecycle_tests.rs\"",
-                  "paths:[\"assets/tools/build_lifecycle.rs\""
-                ],
-                "sequence": 16,
-                "validation_findings": []
-              },
-              {
-                "action": "trajectory.record",
-                "custody_event_id": "event:17",
-                "observations": [
-                  ".decapod/managed/specs/SEMANTICS.md"
-                ],
-                "proof_refs": [],
-                "scope": [
-                  "\".decapod/config.toml\"",
-                  "\".decapod/managed/specs\"]",
-                  "\"assets/tools/build_lifecycle_tests.rs\"",
-                  "paths:[\"assets/tools/build_lifecycle.rs\""
-                ],
-                "sequence": 17,
-                "validation_findings": []
-              },
-              {
-                "action": "trajectory.record",
-                "custody_event_id": "event:18",
-                "observations": [
-                  ".decapod/managed/specs/SECURITY.md"
-                ],
-                "proof_refs": [],
-                "scope": [
-                  "\".decapod/config.toml\"",
-                  "\".decapod/managed/specs\"]",
-                  "\"assets/tools/build_lifecycle_tests.rs\"",
-                  "paths:[\"assets/tools/build_lifecycle.rs\""
-                ],
-                "sequence": 18,
-                "validation_findings": []
-              },
-              {
-                "action": "trajectory.record",
-                "custody_event_id": "event:19",
-                "observations": [
-                  ".decapod/managed/specs/ARCHITECTURE.md"
-                ],
-                "proof_refs": [],
-                "scope": [
-                  "\".decapod/config.toml\"",
-                  "\".decapod/managed/specs\"]",
-                  "\"assets/tools/build_lifecycle_tests.rs\"",
-                  "paths:[\"assets/tools/build_lifecycle.rs\""
-                ],
-                "sequence": 19,
-                "validation_findings": []
-              },
-              {
-                "action": "trajectory.record",
-                "custody_event_id": "event:20",
-                "observations": [
-                  ".decapod/managed/specs/VALIDATION.md"
-                ],
-                "proof_refs": [],
-                "scope": [
-                  "\".decapod/config.toml\"",
-                  "\".decapod/managed/specs\"]",
-                  "\"assets/tools/build_lifecycle_tests.rs\"",
-                  "paths:[\"assets/tools/build_lifecycle.rs\""
-                ],
-                "sequence": 20,
-                "validation_findings": []
-              },
-              {
-                "action": "trajectory.record",
-                "custody_event_id": "event:21",
-                "observations": [
-                  ".decapod/managed/specs/.manifest.json"
-                ],
-                "proof_refs": [
-                  "spec_reviews"
-                ],
-                "scope": [
-                  "\".decapod/config.toml\"",
-                  "\".decapod/managed/specs\"]",
-                  "\"assets/tools/build_lifecycle_tests.rs\"",
-                  "paths:[\"assets/tools/build_lifecycle.rs\""
-                ],
-                "sequence": 21,
-                "validation_findings": []
-              },
-              {
-                "action": "trajectory.record",
-                "custody_event_id": "event:22",
-                "observations": [
-                  "Cargo.toml"
-                ],
-                "proof_refs": [
-                  "merge_d3542c30_v0_142_0"
-                ],
-                "scope": [
-                  "\".decapod/config.toml\"",
-                  "\".decapod/managed/specs\"]",
-                  "\"assets/tools/build_lifecycle_tests.rs\"",
-                  "paths:[\"assets/tools/build_lifecycle.rs\""
-                ],
-                "sequence": 22,
                 "validation_findings": []
               }
             ]
           }
         }
       },
-      "declared_commands": [],
-      "destination": "pull request",
+      "declared_commands": [
+        "decapod validate"
+      ],
       "evidence": [
-        "Inspected #1643 and build_lifecycle.rs: Podman overlay work/work leaves same-UID mode-000 directory under supervised HOME=scratch.path; build_lifecycle is a std-only rust_binary compiled across darwin, linux-gnu, and x86_64/aarch64 linux-musl."
+        "validation epoch ve_fefb216368f301b9 completed with zero failures"
       ],
-      "inspected_files": [
-        ".config/build/decapod.BUILD.bzl",
-        ".decapod/config.toml",
-        "Cargo.toml",
-        "assets/tools/build_lifecycle.rs",
-        "assets/tools/build_lifecycle_tests.rs"
-      ],
-      "intent_id": "intent:change_01M79A0G0YSR12S2RHJE84QPHR",
-      "loops": [
-        {
-          "attempt": 1,
-          "custody_event_id": "event:4",
-          "grader_result": "pass",
-          "intent_id": "intent:change_01M79A0G0YSR12S2RHJE84QPHR",
-          "loop_id": "design_mode000_cleanup",
-          "loop_type": "agent",
-          "mutation_proposal": "none",
-          "proof_refs": [
-            "assets/tools/build_lifecycle.rs"
-          ],
-          "status": "passed",
-          "trajectory_id": "branch_01M79A0G5E35FVE2EYNYQVQ3XY",
-          "trigger": "human"
-        }
-      ],
+      "inspected_files": [],
+      "intent_id": "intent:branch_01M79PZRECONCILE1665",
       "modified_files": [
-        ".decapod/config.toml",
-        ".decapod/managed/Dockerfile.decapod",
-        ".decapod/managed/specs/.manifest.json",
-        ".decapod/managed/specs/ARCHITECTURE.md",
-        ".decapod/managed/specs/INTENT.md",
-        ".decapod/managed/specs/INTERFACES.md",
-        ".decapod/managed/specs/OPERATIONS.md",
-        ".decapod/managed/specs/README.md",
-        ".decapod/managed/specs/SECURITY.md",
-        ".decapod/managed/specs/SEMANTICS.md",
-        ".decapod/managed/specs/VALIDATION.md",
-        "AGENTS.md",
-        "CLAUDE.md",
-        "CODEX.md",
-        "GEMINI.md",
-        "assets/tools/build_lifecycle.rs",
-        "assets/tools/build_lifecycle_tests.rs"
+        ".decapod/governance.json"
       ],
       "next_transitions": [
-        "Refine plan and declare falsifiable checks"
+        "publish"
       ],
       "repo_scope": [
-        "\".decapod/config.toml\"",
-        "\".decapod/managed/specs\"]",
-        "\"assets/tools/build_lifecycle_tests.rs\"",
-        "paths:[\"assets/tools/build_lifecycle.rs\""
+        ".decapod/governance.json"
       ],
-      "run_id": "branch_01M79A0G5E35FVE2EYNYQVQ3XY",
+      "run_id": "branch_01M79PZRECONCILE1665",
       "schema_version": "1.1.0",
       "shortcut_risk_signals": [],
-      "task_id": "bugs_01m799kyygy9rq6d",
+      "task_id": "bugs_01m79knt8h670tjh",
       "tool_calls": [],
       "unresolved_assumptions": []
+    },
+    "validation": {
+      "ci_prediction": {
+        "confidence": "medium",
+        "recommendations": [
+          "Review the reported validation warnings before relying on the CI result.",
+          "Use `decapod validate -v --format json` to inspect the affected gate output."
+        ],
+        "result": "review"
+      },
+      "decapod_release": "0.143.1",
+      "drift_findings": [],
+      "elapsed_ms": 4017,
+      "epoch_ref": "ve_fefb216368f301b9",
+      "fail_count": 0,
+      "failures": [],
+      "gate_timings": [
+        {
+          "elapsed_ms": 973,
+          "name": "validate_machine_contract"
+        },
+        {
+          "elapsed_ms": 632,
+          "name": "validate_validation_rules"
+        },
+        {
+          "elapsed_ms": 500,
+          "name": "validate_project_specs_docs"
+        },
+        {
+          "elapsed_ms": 325,
+          "name": "validate_markdown_primitives_roundtrip_gate"
+        },
+        {
+          "elapsed_ms": 96,
+          "name": "validate_obligations"
+        },
+        {
+          "elapsed_ms": 63,
+          "name": "validate_legacy_jsonl_retired"
+        },
+        {
+          "elapsed_ms": 49,
+          "name": "validate_no_legacy_namespaces"
+        },
+        {
+          "elapsed_ms": 45,
+          "name": "validate_repomap_determinism"
+        },
+        {
+          "elapsed_ms": 44,
+          "name": "validate_archive_integrity"
+        },
+        {
+          "elapsed_ms": 32,
+          "name": "validate_generated_artifact_whitelist"
+        },
+        {
+          "elapsed_ms": 32,
+          "name": "validate_control_plane_contract"
+        },
+        {
+          "elapsed_ms": 29,
+          "name": "validate_federation_gates"
+        },
+        {
+          "elapsed_ms": 26,
+          "name": "validate_schema_determinism"
+        },
+        {
+          "elapsed_ms": 25,
+          "name": "validate_gatekeeper_gate"
+        },
+        {
+          "elapsed_ms": 24,
+          "name": "validate_embedded_self_contained"
+        },
+        {
+          "elapsed_ms": 17,
+          "name": "validate_interface_contract_bootstrap"
+        },
+        {
+          "elapsed_ms": 17,
+          "name": "validate_policy_integrity"
+        },
+        {
+          "elapsed_ms": 16,
+          "name": "validate_lineage_hard_gate"
+        },
+        {
+          "elapsed_ms": 14,
+          "name": "validate_knowledge_promotions_if_present"
+        },
+        {
+          "elapsed_ms": 13,
+          "name": "validate_watcher_audit"
+        },
+        {
+          "elapsed_ms": 13,
+          "name": "validate_health_purity"
+        },
+        {
+          "elapsed_ms": 13,
+          "name": "validate_lcm_immutability"
+        },
+        {
+          "elapsed_ms": 13,
+          "name": "validate_health_cache_integrity"
+        },
+        {
+          "elapsed_ms": 12,
+          "name": "validate_lcm_rebuild_gate"
+        },
+        {
+          "elapsed_ms": 12,
+          "name": "validate_watcher_purity"
+        },
+        {
+          "elapsed_ms": 12,
+          "name": "validate_database_schema_versions"
+        },
+        {
+          "elapsed_ms": 12,
+          "name": "validate_override_authority"
+        },
+        {
+          "elapsed_ms": 12,
+          "name": "validate_knowledge_integrity"
+        },
+        {
+          "elapsed_ms": 12,
+          "name": "validate_canon_mutation"
+        },
+        {
+          "elapsed_ms": 11,
+          "name": "validate_workunit_manifests_if_present"
+        },
+        {
+          "elapsed_ms": 11,
+          "name": "validate_spec_drift"
+        },
+        {
+          "elapsed_ms": 11,
+          "name": "validate_project_scoped_state"
+        },
+        {
+          "elapsed_ms": 11,
+          "name": "validate_validation_receipt_if_present"
+        },
+        {
+          "elapsed_ms": 11,
+          "name": "validate_trajectory_artifacts_if_present"
+        },
+        {
+          "elapsed_ms": 11,
+          "name": "validate_recursive_improvement_passes_if_present"
+        },
+        {
+          "elapsed_ms": 11,
+          "name": "validate_project_config_toml"
+        },
+        {
+          "elapsed_ms": 11,
+          "name": "validate_repo_map"
+        },
+        {
+          "elapsed_ms": 11,
+          "name": "validate_entrypoint_invariants"
+        },
+        {
+          "elapsed_ms": 11,
+          "name": "validate_heartbeat_invocation_gate"
+        },
+        {
+          "elapsed_ms": 10,
+          "name": "validate_internalization_artifacts_if_present"
+        },
+        {
+          "elapsed_ms": 10,
+          "name": "validate_context_capsules_if_present"
+        },
+        {
+          "elapsed_ms": 10,
+          "name": "validate_state_commit_gate"
+        },
+        {
+          "elapsed_ms": 10,
+          "name": "validate_risk_map"
+        },
+        {
+          "elapsed_ms": 10,
+          "name": "validate_coplayer_policy_tightening"
+        },
+        {
+          "elapsed_ms": 10,
+          "name": "validate_context_capsule_policy_contract"
+        },
+        {
+          "elapsed_ms": 10,
+          "name": "validate_research_claims_if_present"
+        },
+        {
+          "elapsed_ms": 10,
+          "name": "validate_risk_map_violations"
+        },
+        {
+          "elapsed_ms": 9,
+          "name": "validate_eval_gate_if_required"
+        },
+        {
+          "elapsed_ms": 9,
+          "name": "validate_git_workspace_context"
+        },
+        {
+          "elapsed_ms": 9,
+          "name": "validate_git_push_pr_gate"
+        },
+        {
+          "elapsed_ms": 9,
+          "name": "validate_stale_workspaces"
+        },
+        {
+          "elapsed_ms": 9,
+          "name": "validate_docs_templates_bucket"
+        },
+        {
+          "elapsed_ms": 9,
+          "name": "validate_plan_governed_execution_gate"
+        },
+        {
+          "elapsed_ms": 8,
+          "name": "validate_root_dockerfile_seed_detection"
+        },
+        {
+          "elapsed_ms": 8,
+          "name": "validate_git_protected_branch"
+        },
+        {
+          "elapsed_ms": 8,
+          "name": "validate_tooling_gate"
+        }
+      ],
+      "git_revision": "92394cadfe602d3a916f7f3754a85f0bb4bb8699",
+      "kind": "validation_receipt",
+      "parallelism": 1,
+      "pass_count": 192,
+      "prediction_uses_warnings": true,
+      "receipt_hash": "sha256:72bde7dfa7279533926030b2ffceac107c10de8aaa4ef83122f6adcba2707546",
+      "repo_signal_fingerprint": "7693d5010b19979e4cb8189dcb7d189c3ada65fb2953147b491cc708cd5ae8ec",
+      "schema_version": "1.0.0",
+      "status": "ok",
+      "temporary_artifacts_cleaned": 0,
+      "trajectory_artifact_hash": "sha256:66350e73a102549ced7d2098bc05d861dd09845549cb23a841f15bb84a159f60",
+      "trajectory_run_id": "branch_01M79PZRECONCILE1665",
+      "warn_count": 3,
+      "warnings": [
+        "Risk map missing (run `decapod riskmap init`)",
+        "STALE_SPECS_TEMPLATE: Project specs use template version 'scaffold-v4' while current scaffolding is 'scaffold-v5'; living spec content remains authoritative.",
+        "Watcher audit trail missing (run `decapod govern watcher run`)"
+      ]
     }
   },
   "legacy_digests": {

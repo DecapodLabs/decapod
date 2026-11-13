@@ -1877,6 +1877,44 @@ fn load_terminal_workunit_with_budget(
     Ok(Some(manifest))
 }
 
+/// Normalize a task category or task ID prefix to the canonical validation rule
+/// `task_type` vocabulary (`"feature"`, `"bugfix"`, `"refactor"`, `"docs"`, `"test"`).
+///
+/// Unrecognized or administrative categories (such as `"code"`, `"cicd"`, `"secu"`,
+/// or `"task"`) return `None` so rules restricting `task_types` remain applicable
+/// rather than silently exempted.
+pub(crate) fn normalize_rule_task_type(
+    category: Option<&str>,
+    task_id: Option<&str>,
+) -> Option<String> {
+    let map_token = |raw: &str| match raw.trim().to_ascii_lowercase().as_str() {
+        "feature" | "features" | "feat" => Some("feature".to_string()),
+        "bugfix" | "bug" | "bugs" => Some("bugfix".to_string()),
+        "refactor" | "refa" => Some("refactor".to_string()),
+        "docs" | "doc" | "documentation" => Some("docs".to_string()),
+        "test" | "tests" | "testing" => Some("test".to_string()),
+        _ => None,
+    };
+    category.and_then(map_token).or_else(|| {
+        task_id
+            .and_then(|id| id.trim().split_once('_').map(|(prefix, _)| prefix))
+            .and_then(map_token)
+    })
+}
+
+/// Normalize a branch or full git reference into a canonical `refs/...` string
+/// matching `RuleApplicability::ref_patterns` and `git symbolic-ref HEAD`.
+pub(crate) fn canonical_git_ref(work_branch: &str) -> Option<String> {
+    let trimmed = work_branch.trim();
+    if trimmed.is_empty() || trimmed == "HEAD" {
+        None
+    } else if trimmed.starts_with("refs/") {
+        Some(trimmed.to_string())
+    } else {
+        Some(format!("refs/heads/{trimmed}"))
+    }
+}
+
 /// The terminal production boundary runs before any readiness receipt/history
 /// is issued. It receives the runtime-owned result rather than importing a pass
 /// from a path, a legacy prerequisite receipt, or caller-authored digest strings.
@@ -1919,10 +1957,25 @@ pub(crate) fn evaluate_terminal_rules(
     proof.verify_current(material, &current_governance, &current_trajectory)?;
     check_budget()?;
     let governance = crate::core::governance_document::read_section(root, "trajectory")?;
+    let branch_task_ids =
+        crate::core::workspace::extract_task_ids_from_branch(&material.work_branch);
     let task_id = governance
         .as_ref()
         .and_then(|value| value.get("task_id"))
-        .and_then(|value| value.as_str());
+        .and_then(|value| value.as_str())
+        .or_else(|| branch_task_ids.first().map(String::as_str));
+    let task_category = task_id.and_then(|id| {
+        let main_root = crate::core::workspace::get_main_repo_root(root).ok()?;
+        let store_root = main_root.join(".decapod").join("data");
+        if store_root.join("decapod.db").is_file() && !store_root.join("todo.db").exists() {
+            crate::core::todo::get_task(&store_root, id)
+                .ok()
+                .flatten()
+                .map(|task| task.category)
+        } else {
+            None
+        }
+    });
     let workunit = task_id
         .map(|id| load_terminal_workunit_with_budget(root, id, &check_budget))
         .transpose()?
@@ -1956,8 +2009,8 @@ pub(crate) fn evaluate_terminal_rules(
     check_budget()?;
     let context = RuleEvaluationContext {
         changed_paths: proof.changed_paths().clone(),
-        task_type: None,
-        git_ref: None,
+        task_type: normalize_rule_task_type(task_category.as_deref(), task_id),
+        git_ref: canonical_git_ref(&material.work_branch),
         is_ci: std::env::var("GITHUB_ACTIONS").is_ok() || std::env::var("BUILDKITE").is_ok(),
         evidence_artifacts: artifacts,
         validation_epoch: crate::core::validation_epoch::active_validation_epoch_bounded(root)?,
@@ -2636,5 +2689,131 @@ mod tests {
         assert_eq!(remediation.error_code, "TEST_ERROR");
         assert!(remediation.autonomous_remediation_permitted);
         assert!(!remediation.human_authorization_required);
+    }
+
+    #[test]
+    fn test_normalize_rule_task_type_and_canonical_git_ref() {
+        assert_eq!(
+            normalize_rule_task_type(Some("features"), None).as_deref(),
+            Some("feature")
+        );
+        assert_eq!(
+            normalize_rule_task_type(None, Some("feat_01m79knt8h670tjh")).as_deref(),
+            Some("feature")
+        );
+        assert_eq!(
+            normalize_rule_task_type(Some("bugs"), None).as_deref(),
+            Some("bugfix")
+        );
+        assert_eq!(
+            normalize_rule_task_type(Some("code"), Some("bugs_01m79knt8h670tjh")).as_deref(),
+            Some("bugfix")
+        );
+        assert_eq!(
+            normalize_rule_task_type(None, Some("refa_01m79knt8h670tjh")).as_deref(),
+            Some("refactor")
+        );
+        assert_eq!(
+            normalize_rule_task_type(Some("docs"), Some("task_01m79knt8h670tjh")).as_deref(),
+            Some("docs")
+        );
+        assert_eq!(
+            normalize_rule_task_type(Some("tests"), None).as_deref(),
+            Some("test")
+        );
+        assert_eq!(
+            normalize_rule_task_type(Some("cicd"), Some("cicd_01")),
+            None
+        );
+        assert_eq!(normalize_rule_task_type(None, Some("task_01")), None);
+
+        assert_eq!(canonical_git_ref(""), None);
+        assert_eq!(canonical_git_ref("HEAD"), None);
+        assert_eq!(
+            canonical_git_ref("agent/tester/docs_01-guide").as_deref(),
+            Some("refs/heads/agent/tester/docs_01-guide")
+        );
+        assert_eq!(
+            canonical_git_ref("refs/heads/master").as_deref(),
+            Some("refs/heads/master")
+        );
+        assert_eq!(
+            canonical_git_ref("refs/tags/v0.143.0").as_deref(),
+            Some("refs/tags/v0.143.0")
+        );
+    }
+
+    #[test]
+    fn terminal_publication_applicability_filters_task_type_and_git_ref() {
+        let mut registry = RuleRegistry::new();
+        let base_rule = registry
+            .get_rule(&RuleId::new("decapod.evidence.required_and_fresh"))
+            .unwrap()
+            .rule;
+
+        let mut docs_agent = base_rule.clone();
+        docs_agent.id = RuleId::new("decapod.project.docs_agent_branch");
+        docs_agent.authority = RuleAuthority::ProjectOverride;
+        docs_agent.applicability.task_types = vec!["docs".to_string()];
+        docs_agent.applicability.ref_patterns = vec!["refs/heads/agent/*".to_string()];
+
+        let mut feature_only = docs_agent.clone();
+        feature_only.id = RuleId::new("decapod.project.feature_only");
+        feature_only.applicability.task_types = vec!["feature".to_string()];
+
+        let mut release_only = docs_agent.clone();
+        release_only.id = RuleId::new("decapod.project.release_branch_only");
+        release_only.applicability.ref_patterns = vec!["refs/heads/release/*".to_string()];
+
+        for rule in [docs_agent, feature_only, release_only] {
+            registry.project_rules.insert(rule.id.clone(), rule);
+        }
+        registry.resolved_cache = None;
+
+        let mut context = terminal_test_context(None, None);
+        context.changed_paths = BTreeSet::from(["README.md".to_string()]);
+        context.task_type = normalize_rule_task_type(None, Some("docs_01m79knt8h670tjh"));
+        context.git_ref = canonical_git_ref("agent/tester/docs_01m79knt8h670tjh-guide");
+
+        let applicable_ids: BTreeSet<String> = registry
+            .get_applicable_rules(&context)
+            .into_iter()
+            .filter(|r| r.rule.evaluation_phase == EvaluationPhase::Publication)
+            .map(|r| r.rule.id.as_str().to_string())
+            .collect();
+
+        assert!(applicable_ids.contains("decapod.evidence.required_and_fresh"));
+        assert!(applicable_ids.contains("decapod.project.docs_agent_branch"));
+        assert!(!applicable_ids.contains("decapod.project.feature_only"));
+        assert!(!applicable_ids.contains("decapod.project.release_branch_only"));
+    }
+
+    #[test]
+    fn declared_unverified_workunit_blocks_terminal_proof_backed_completion() {
+        use crate::core::workunit;
+        let root = workunit::journal_tests::accepted_execution_fixture();
+        let root = root.path();
+        let task = "task_test";
+        workunit::set_proof_plan(root, task, &["docs-proof".into()]).unwrap();
+        workunit::checkpoint_workunit(root, task, "terminal-unverified", None).unwrap();
+
+        let manifest = load_terminal_workunit(root, task).unwrap().unwrap();
+        assert_eq!(manifest.status, workunit::WorkUnitStatus::Draft);
+        let context = terminal_test_context(Some(root), Some(manifest));
+        let mut registry = RuleRegistry::new();
+        let applicable = registry.get_applicable_rules(&context);
+        let completion_rule = applicable
+            .iter()
+            .find(|r| r.rule.id.as_str() == "decapod.evidence.proof_backed_completion")
+            .expect("declared workunit must enable proof_backed_completion at terminal phase");
+        let evaluation = evaluate_rule(completion_rule, &context);
+        assert_eq!(evaluation.verdict, RuleVerdict::Unverifiable);
+        assert_eq!(
+            evaluation
+                .remediation
+                .as_ref()
+                .map(|r| r.error_code.as_str()),
+            Some("UNVERIFIED_COMPLETION")
+        );
     }
 }

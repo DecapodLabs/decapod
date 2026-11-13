@@ -3863,12 +3863,24 @@ fn get_current_task_type(working_root: &Path) -> Result<Option<String>, error::D
         && let Some(task_id) =
             crate::core::workspace::extract_task_ids_from_branch(&status.git.current_branch).first()
     {
-        // Try to get task details from store
-        let main_root = crate::core::workspace::get_main_repo_root(working_root)?;
-        let store_root = main_root.join(".decapod").join("data");
-        if let Ok(Some(task)) = crate::core::todo::get_task(&store_root, task_id) {
-            return Ok(Some(task.category));
-        }
+        // Try to get task details from store without creating or mutating DB state
+        let category = crate::core::workspace::get_main_repo_root(working_root)
+            .ok()
+            .and_then(|main_root| {
+                let store_root = main_root.join(".decapod").join("data");
+                if store_root.join("decapod.db").is_file() && !store_root.join("todo.db").exists() {
+                    crate::core::todo::get_task(&store_root, task_id)
+                        .ok()
+                        .flatten()
+                        .map(|task| task.category)
+                } else {
+                    None
+                }
+            });
+        return Ok(crate::core::validation_rules::normalize_rule_task_type(
+            category.as_deref(),
+            Some(task_id),
+        ));
     }
     Ok(None)
 }
