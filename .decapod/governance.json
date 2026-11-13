@@ -557,6 +557,14 @@
       "proof_refs": [
         "https://github.com/DecapodLabs/decapod/issues/1667"
       ]
+    },
+    {
+      "id": "issue-1667-file-3",
+      "summary": "chore(deps): lock the published Dactyl 0.16.1 artifact; file-by-file checkpoint, verification pending.",
+      "input_digest": "sha256:186515598b764df8d5d801576d21a2eb3703d2ee66e2ce5ab663db89188f7770",
+      "proof_refs": [
+        "https://github.com/DecapodLabs/decapod/issues/1667"
+      ]
     }
   ],
   "intents": {
@@ -607,7 +615,7 @@
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:bfc92292b4d1433af70d9f0a7e96439077c32586307651058e47e69a8f7155ea",
+      "artifact_hash": "sha256:d8cac3ba0a5f01b4e00fa5a805d44630fb7666289cd68b78d6022b788f532618",
       "checks": [],
       "current_phase": "implementation",
       "custody": {
@@ -637,10 +645,17 @@
             "intent_id": "intent:change_01M7BCN0CS3Z8AJ7TZ491WJ7CJ",
             "kind": "trajectory_step_recorded",
             "sequence": 5
+          },
+          {
+            "detail": "trajectory:branch_01M7BCN0FD8AE623HXNGA0C8F9",
+            "event_id": "event:6",
+            "intent_id": "intent:change_01M7BCN0CS3Z8AJ7TZ491WJ7CJ",
+            "kind": "trajectory_step_recorded",
+            "sequence": 6
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 5,
+        "next_sequence": 6,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M7BCN0FD8AE623HXNGA0C8F9": {
@@ -679,6 +694,22 @@
                 "validation_findings": [
                   "Hosted verification and exact-candidate publication readiness remain pending; no local tests run."
                 ]
+              },
+              {
+                "action": "implementation",
+                "custody_event_id": "event:6",
+                "observations": [
+                  "Cargo.lock",
+                  "https://github.com/DecapodLabs/decapod/issues/1667"
+                ],
+                "proof_refs": [],
+                "scope": [
+                  "issue-1667"
+                ],
+                "sequence": 6,
+                "validation_findings": [
+                  "Hosted verification and exact-candidate publication readiness remain pending; no local tests run."
+                ]
               }
             ]
           }
@@ -693,6 +724,7 @@
       "intent_id": "intent:change_01M7BCN0CS3Z8AJ7TZ491WJ7CJ",
       "modified_files": [
         ".decapod/managed/specs/INTENT.md",
+        "Cargo.lock",
         "Cargo.toml"
       ],
       "next_transitions": [
