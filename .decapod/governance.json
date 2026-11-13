@@ -716,6 +716,11 @@
       "id": "c33-refresh-semantics",
       "summary": "docs(specs): synchronize SEMANTICS.md overlay digest after #1568 update",
       "input_digest": "sha256:4dc69d50ceac0271283953a516ab7a7d5358d3ee4fb47a57b0afcafc5a79ac4a"
+    },
+    {
+      "id": "c34-refresh-validation",
+      "summary": "docs(specs): synchronize VALIDATION.md overlay digest after #1568 update",
+      "input_digest": "sha256:619644dfbe018f3438ea2051af4925e4abb7cbe81af2b35aafffb4d99f9e8e2c"
     }
   ],
   "intents": {
