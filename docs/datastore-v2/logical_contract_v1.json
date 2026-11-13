@@ -1,7 +1,7 @@
 {
   "schema": "decapod.logical-storage-inventory.v1",
   "status": "provisional_source_inventory_requires_effective_runtime_and_postgres_catalog_proof",
-  "release": "0.143.0",
+  "release": "0.143.1",
   "pinned_source_sha": "d3542c30ac0088f3c07e83b775471b8677875e7e",
   "inventory_blob_sha": "f409aa80ea5cfa17aa82365b2dab7c69ace15160",
   "field_policy": "explicit_utf8_byte_json_and_collection_bounds_enforced_fail_closed_on_writes_historical_reads_lossless",

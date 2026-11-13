@@ -794,6 +794,11 @@
       "id": "merge-origin-master-v0-143-1",
       "summary": "chore(merge): reconcile accepted master (#1655, v0.143.1) into #1630",
       "input_digest": "sha256:6b95216d3d975df6191f15d0250113b07539a94836f8138d4f2a728ccbe794fa"
+    },
+    {
+      "id": "align-logical-contract-v0-143-1",
+      "summary": "docs(storage): align logical_contract_v1.json release with v0.143.1 (#1630)",
+      "input_digest": "sha256:82447e6a8cabcaf902f93bee6f97800a5515e7f281343ae2b4e3f33a9b6e3d1a"
     }
   ],
   "intents": {
