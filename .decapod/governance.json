@@ -746,6 +746,11 @@
       "id": "reconcile-1662-v01431-master",
       "summary": "Reconcile accepted master v0.143.1 (#1655/#1664) into #1568 and refresh 0.143.1 projections",
       "input_digest": "sha256:77b9c7d2e1570cf623a3ef8832da8983209e03025e5d5b9c15eedf74d19deb9f"
+    },
+    {
+      "id": "start-v01431-trajectory-run",
+      "summary": "Initialize reconciled v0.143.1 trajectory run for #1568",
+      "input_digest": "sha256:422f3abee8466bfff8c6f3b2030bd426944cb9684eb4006cb25c0f749864b92f"
     }
   ],
   "intents": {
@@ -762,8 +767,8 @@
       "id": "intent:change_01M79M71J29ESH9WFBJVEHK91K",
       "out_of_scope": [],
       "proof_requirements": [],
-      "raw_intent": "Project-opted capability-scoped agent database maintenance (#1568)",
-      "refined_intent": "Project-opted capability-scoped agent database maintenance (#1568)",
+      "raw_intent": "Deliver capability-scoped governed SQLite maintenance, contention diagnostics, backup, and audit (#1568)",
+      "refined_intent": "Resolve clippy lints across db_maintenance and sqlite_maintenance tests and reconcile #1568 onto accepted master v0.143.1",
       "status": "refined",
       "updated_sequence": 3
     }
@@ -866,18 +871,18 @@
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:040f562757f7a2f4cd0f19250e90fd92c70514158f980070d9dc8e11d420e1b7",
+      "artifact_hash": "sha256:6039bd5f92641b4c5145491b04e6ebc2505492801506810445f5494a356cb6c5",
       "checks": [
+        {
+          "name": "clippy_all_targets_d_warnings",
+          "status": "passed"
+        },
         {
           "name": "contract_conformance",
           "status": "passed"
         },
         {
           "name": "db_maintenance_unit",
-          "status": "passed"
-        },
-        {
-          "name": "decapod validate",
           "status": "passed"
         },
         {
@@ -893,7 +898,7 @@
           "status": "passed"
         }
       ],
-      "current_phase": "validation",
+      "current_phase": "implementation",
       "custody": {
         "events": [
           {
@@ -909,96 +914,68 @@
             "sequence": 3
           },
           {
-            "detail": "trajectory:branch_01M79M71PR2GQNMTS813ACTPMM",
+            "detail": "trajectory:branch_01M79NP5RECONCILE1662",
             "event_id": "event:4",
             "intent_id": "intent:change_01M79M71J29ESH9WFBJVEHK91K",
             "kind": "trajectory_step_recorded",
             "sequence": 4
-          },
-          {
-            "detail": "trajectory:branch_01M79M71PR2GQNMTS813ACTPMM",
-            "event_id": "event:5",
-            "intent_id": "intent:change_01M79M71J29ESH9WFBJVEHK91K",
-            "kind": "trajectory_step_recorded",
-            "sequence": 5
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 5,
+        "next_sequence": 4,
         "schema_version": "1.0.0",
         "trajectories": {
-          "branch_01M79M71PR2GQNMTS813ACTPMM": {
+          "branch_01M79NP5RECONCILE1662": {
             "evidence_only": true,
-            "id": "branch_01M79M71PR2GQNMTS813ACTPMM",
+            "id": "branch_01M79NP5RECONCILE1662",
             "intent_id": "intent:change_01M79M71J29ESH9WFBJVEHK91K",
             "steps": [
               {
                 "action": "trajectory.record",
                 "custody_event_id": "event:4",
                 "observations": [
-                  "src/decapod/core/storage_lock.rs",
                   "src/decapod/core/db_maintenance.rs",
-                  "tests/sqlite_maintenance.rs"
+                  "tests/sqlite_maintenance.rs",
+                  "src/decapod/core/db_maintenance.rs",
+                  "tests/sqlite_maintenance.rs",
+                  "CLIPPY_CONF_DIR=.config cargo clippy --all-targets --all-features -- -D warnings passed with 0 warnings/errors after reconciling v0.143.1 master."
                 ],
                 "proof_refs": [
-                  "storage_lock_unit",
+                  "contract_conformance",
                   "db_maintenance_unit",
                   "interop_unit",
                   "sqlite_maintenance_integration",
-                  "contract_conformance"
+                  "storage_lock_unit",
+                  "clippy_all_targets_d_warnings"
                 ],
                 "scope": [
                   "root"
                 ],
                 "sequence": 4,
                 "validation_findings": []
-              },
-              {
-                "action": "validation",
-                "command": "decapod validate",
-                "custody_event_id": "event:5",
-                "observations": [
-                  ".decapod/governance.json",
-                  ".decapod/governance.json",
-                  "validation epoch ve_f4f2391369a8d234 completed with zero failures"
-                ],
-                "proof_refs": [
-                  "decapod validate"
-                ],
-                "scope": [
-                  "root"
-                ],
-                "sequence": 5,
-                "validation_findings": []
               }
             ]
           }
         }
       },
-      "declared_commands": [
-        "decapod validate"
-      ],
+      "declared_commands": [],
       "destination": "pull request",
       "evidence": [
-        "validation epoch ve_f4f2391369a8d234 completed with zero failures"
+        "CLIPPY_CONF_DIR=.config cargo clippy --all-targets --all-features -- -D warnings passed with 0 warnings/errors after reconciling v0.143.1 master."
       ],
       "inspected_files": [
         "src/decapod/core/db_maintenance.rs",
-        "src/decapod/core/storage_lock.rs",
         "tests/sqlite_maintenance.rs"
       ],
       "intent_id": "intent:change_01M79M71J29ESH9WFBJVEHK91K",
       "modified_files": [
-        ".decapod/governance.json"
-      ],
-      "next_transitions": [
-        "Refine plan and declare falsifiable checks",
-        "publish"
+        "src/decapod/core/db_maintenance.rs",
+        "tests/sqlite_maintenance.rs"
       ],
       "repo_scope": [
         "root"
       ],
-      "run_id": "branch_01M79M71PR2GQNMTS813ACTPMM",
+      "run_id": "branch_01M79NP5RECONCILE1662",
       "schema_version": "1.1.0",
       "shortcut_risk_signals": [],
       "task_id": "bend_01m79krs0rq4ysg3",
