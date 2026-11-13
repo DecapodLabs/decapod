@@ -711,6 +711,11 @@
       "id": "c32-refresh-security",
       "summary": "docs(specs): synchronize SECURITY.md overlay digest after #1568 update",
       "input_digest": "sha256:58719e27f39043a93e9e4b800770f8bb3f35a95b1131b549a8d36609644402f5"
+    },
+    {
+      "id": "c33-refresh-semantics",
+      "summary": "docs(specs): synchronize SEMANTICS.md overlay digest after #1568 update",
+      "input_digest": "sha256:4dc69d50ceac0271283953a516ab7a7d5358d3ee4fb47a57b0afcafc5a79ac4a"
     }
   ],
   "intents": {
