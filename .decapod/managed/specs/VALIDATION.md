@@ -1325,7 +1325,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `0a0498aa94eb3f7551fe07c380ef13b469d188ab33218c72f80fc2e081fc3951`
+- Repository signal fingerprint: `97f60f7a1060e9989264ddbf5b97ac333fcbf0a63c78a0d5afe38d3cd2d94b3e`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (231 files), `tests/` (232 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
@@ -1800,3 +1800,21 @@ the rebased source requires its own current checkpoint and complete validation.
 ## Accepted v0.142.0 master reconciliation
 
 Reconciling `origin/master` (`d3542c30`, `v0.142.0`, incorporating PR #1647 cloud sign-in/diagnostic updates, PR #1649 bounded reflection, and `release-plz` v0.142.0) preserves PR #1651's `cloud projects` / `cloud project use|create` routing and v2 operation cache alongside `CloudCommand::Login { restart }` and `authorization_url` recovery diagnostics. The 105-file reviewed source inventory hashes to `sha256:6d13f890e76d0c0b69e338bb571d2858166afbf30adeeb1e58313a6b12042c87` (adding `Cargo.toml`/`Cargo.lock` `0.142.0` package versions and `.config/build/decapod.BUILD.bzl` entrypoint target inputs without dropping any required check, workflow, selector, or budget). All prior historical validation receipts remain bound to earlier commits; the merged candidate carries `0.142.0` controller projections, `specs.refresh`, checkpointing, and requires complete `decapod validate` proof.
+
+## Capability-scoped SQLite maintenance regressions (#1568)
+
+Unit coverage in `tests/unit/core/storage_lock_tests.rs` and
+`src/decapod/core/db_maintenance.rs` exercises advisory lock metadata round-trips,
+live foreign-holder preservation, stale marker cleanup under `LOCK_EX | LOCK_NB`,
+accepted-base policy anti-self-elevation, unknown capability fail-closed parsing,
+`db.recover` agent allowlist rejection, backup directory confinement and audit
+redaction. Integration regressions in `tests/sqlite_maintenance.rs` exercise the
+compiled `decapod` CLI and `decapod rpc` envelopes across default-deny rejection,
+accepted-base opt-in (`maintain-inspect`, `verify`, `backup`, `audit`), worktree
+anti-self-elevation, structured owner escalation on `recover`, cloud backend
+refusal, and two concurrent agents diagnosing and resolving lock contention
+without cross-session custody violation or `.lock` inode deletion.
+
+Local targeted Cargo test execution verifies these module and binary behaviors in
+isolated temporary repositories; full publication readiness still requires the
+configured GitHub Actions and source-CI validation suite on the exact PR head.

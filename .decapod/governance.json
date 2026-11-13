@@ -671,6 +671,11 @@
       "id": "c25-spec-security-1568",
       "summary": "docs(specs): document local database maintenance security and custody boundaries (#1568)",
       "input_digest": "sha256:c234969f14ccde7f52956d8ee00583297673c6db5ac75fc1ea3f120bf75f37e2"
+    },
+    {
+      "id": "c26-spec-validation-1568",
+      "summary": "docs(specs): document SQLite maintenance unit and integration regression coverage (#1568)",
+      "input_digest": "sha256:acfeb6bbaad05d3cead7c3bb43d96c740bbcddc1b0580b578e9fcc2fb1970ff0"
     }
   ],
   "intents": {
