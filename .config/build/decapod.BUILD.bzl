@@ -430,6 +430,11 @@ def decapod_targets():
     [
         rust_test(
             name = "plugins_" + path[14:-3] + "_tests",  # e.g., plugins_todo_tests
+            # Forty sequential custody/storage cases exhausted the moderate
+            # aggregate in hosted CI. Keep the complete suite finite and
+            # isolated; its internal concurrent workers still run together.
+            timeout = "long" if path == "tests/plugins/todo.rs" else "moderate",
+            tags = ["exclusive"] if path == "tests/plugins/todo.rs" else [],
             srcs = [path],
             edition = "2024",
             crate_features = ["supabase-cloud"],

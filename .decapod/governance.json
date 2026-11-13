@@ -572,6 +572,14 @@
       "proof_refs": [
         "/private/tmp/decapod-pr1663-gatling0-132118203905.log"
       ]
+    },
+    {
+      "id": "pr1663-plugin-runtime-budget-fix-5",
+      "summary": "Repair observed todo-plugin aggregate timeout with complete40-case scheduling, finite900s aggregate/120s CLI child bounds and test-only broker idle tuning; retain all assertions and internal workers. No local tests.",
+      "input_digest": "sha256:75fe4f0eca5e77c86e340c25be61f10ca41d751e545d928042130fdaa497d832",
+      "proof_refs": [
+        "/private/tmp/decapod-pr1663-plugins-132122885776.log"
+      ]
     }
   ],
   "intents": {
@@ -612,22 +620,22 @@
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Production storage contract and custody behavior are unchanged. The existing real-CLI blank-title regression now checks typed rejection and unchanged task identities/titles instead of the legacy unsafe acceptance expectation; VALIDATION documents this observed hosted failure. No local tests run.",
-          "reviewed_code_fingerprint": "963e3d670bf1700f0c26e66fd1590519638f528ec8c25d814049a17e44ce4b4a",
+          "reason": "Production storage/custody semantics and required tests remain unchanged. The complete40-case todo plugin suite gets finite aggregate and child deadlines plus test-only scheduling/idle tuning. Internal concurrency, optional container behavior and all assertions remain; VALIDATION documents the observed hosted timeout.",
+          "reviewed_code_fingerprint": "a87a7c93f1c30d85611e9c7520700ad2980c41199162cf7b3035954db79152c8",
           "spec_material_hash": "66e671df924ac36cdfef5d07a591497c64e2dec29cabfbb215970595a74d137c"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Production storage contract and custody behavior are unchanged. The existing real-CLI blank-title regression now checks typed rejection and unchanged task identities/titles instead of the legacy unsafe acceptance expectation; VALIDATION documents this observed hosted failure. No local tests run.",
-          "reviewed_code_fingerprint": "963e3d670bf1700f0c26e66fd1590519638f528ec8c25d814049a17e44ce4b4a",
+          "reason": "Production storage/custody semantics and required tests remain unchanged. The complete40-case todo plugin suite gets finite aggregate and child deadlines plus test-only scheduling/idle tuning. Internal concurrency, optional container behavior and all assertions remain; VALIDATION documents the observed hosted timeout.",
+          "reviewed_code_fingerprint": "a87a7c93f1c30d85611e9c7520700ad2980c41199162cf7b3035954db79152c8",
           "spec_material_hash": "c2909739996e7a385f361bf721602e56d51c3ce2db0face804b571ebc36d19a4"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Production storage contract and custody behavior are unchanged. The existing real-CLI blank-title regression now checks typed rejection and unchanged task identities/titles instead of the legacy unsafe acceptance expectation; VALIDATION documents this observed hosted failure. No local tests run.",
-          "reviewed_code_fingerprint": "963e3d670bf1700f0c26e66fd1590519638f528ec8c25d814049a17e44ce4b4a",
+          "reason": "Production storage/custody semantics and required tests remain unchanged. The complete40-case todo plugin suite gets finite aggregate and child deadlines plus test-only scheduling/idle tuning. Internal concurrency, optional container behavior and all assertions remain; VALIDATION documents the observed hosted timeout.",
+          "reviewed_code_fingerprint": "a87a7c93f1c30d85611e9c7520700ad2980c41199162cf7b3035954db79152c8",
           "spec_material_hash": "30a6061554c0714340a021db4033946b2028ecfa01cfb47cdcec51f41fad8e9e"
         }
       ],
@@ -639,17 +647,21 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1794598663Z"
+      "updated_at": "1794599754Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch",
         "Preserve original source and parents; no force-push, local tests, live candidate migrations or automatic merge."
       ],
-      "artifact_hash": "sha256:52a3bb666bb3a97dedcfaa25d855b6444b780134ab66e52b1ded12ace5846b0a",
+      "artifact_hash": "sha256:ee3c7f1fa1a1eeeab353b43a4ea4a582ad876b79dd0ed58fc7877e8219957375",
       "checks": [
         {
           "name": "gatling-blank-title-expectation",
+          "status": "failed"
+        },
+        {
+          "name": "plugins-todo-aggregate-timeout",
           "status": "failed"
         }
       ],
@@ -688,10 +700,17 @@
             "intent_id": "intent:change_01M79W3PBHXH8GNF8YWMNPHZCD",
             "kind": "trajectory_step_recorded",
             "sequence": 6
+          },
+          {
+            "detail": "trajectory:branch_01M79W3PFCRQMK8QZJN5TWCK5K",
+            "event_id": "event:7",
+            "intent_id": "intent:change_01M79W3PBHXH8GNF8YWMNPHZCD",
+            "kind": "trajectory_step_recorded",
+            "sequence": 7
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 6,
+        "next_sequence": 7,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M79W3PFCRQMK8QZJN5TWCK5K": {
@@ -750,6 +769,24 @@
                 "validation_findings": [
                   "New hosted execution remains required; no local tests or live candidate migrations."
                 ]
+              },
+              {
+                "action": "ci-repair",
+                "command": "Preserve40 plugin cases and internal concurrency under finite900s target/120s child bounds; retain broker routing with1s serial fixture idle; review changed build input.",
+                "custody_event_id": "event:7",
+                "observations": [
+                  "/private/tmp/decapod-pr1663-plugins-132122885776.log"
+                ],
+                "proof_refs": [
+                  "plugins-todo-aggregate-timeout"
+                ],
+                "scope": [
+                  "pr-1663-master-1432"
+                ],
+                "sequence": 7,
+                "validation_findings": [
+                  "Fresh hosted execution is required; no local tests or live candidate migrations."
+                ]
               }
             ]
           }
@@ -757,12 +794,14 @@
       },
       "declared_commands": [
         "Align existing real-CLI regression with empty/whitespace title rejection and verify unchanged task identities; preserve production admission.",
-        "Merge accepted master; retain authoring/resource and journal exports; retain accepted product specs and document storage obligations; refresh reviewed source and release bindings."
+        "Merge accepted master; retain authoring/resource and journal exports; retain accepted product specs and document storage obligations; refresh reviewed source and release bindings.",
+        "Preserve40 plugin cases and internal concurrency under finite900s target/120s child bounds; retain broker routing with1s serial fixture idle; review changed build input."
       ],
       "destination": "pull request",
       "evidence": [
         "/private/tmp/decapod-pr1663-gatling0-132118203905.log",
         "/private/tmp/decapod-pr1663-master1441-inventory.json",
+        "/private/tmp/decapod-pr1663-plugins-132122885776.log",
         "git:1c60df45c5db1731fb348069cf1e8f8f5dc410cc",
         "git:5e23ad68142e0de5decbd6fc8e655593ef5fe83b"
       ],
@@ -785,6 +824,7 @@
       "tool_calls": [],
       "unresolved_assumptions": [
         "Current hosted CI and production datastore compatibility remain unproven.",
+        "Fresh hosted execution is required; no local tests or live candidate migrations.",
         "Historical source tests and benchmarks do not prove the new accepted-target integration.",
         "New hosted execution remains required; no local tests or live candidate migrations."
       ]

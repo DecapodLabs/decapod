@@ -1,3 +1,4 @@
+use decapod::core::bounded_process::BoundedCommand;
 use decapod::core::broker::DbBroker;
 use decapod::core::db::Connection;
 use decapod::core::events;
@@ -632,13 +633,18 @@ fn run_raw_as(repo_root: &Path, args: &[&str], actor: &str) -> std::process::Out
         .args(args)
         .env("DECAPOD_AGENT_ID", actor)
         .stdin(std::process::Stdio::null())
+        // Fixture commands are serial; retain broker execution without its
+        // production batching delay after every CLI call.
+        .env("DECAPOD_GROUP_BROKER_IDLE_SECS", "1")
         .env("DECAPOD_VALIDATE_SKIP_GIT_GATES", "1")
         .env("GIT_AUTHOR_NAME", "Decapod Test")
         .env("GIT_AUTHOR_EMAIL", "decapod-test@example.com")
         .env("GIT_COMMITTER_NAME", "Decapod Test")
         .env("GIT_COMMITTER_EMAIL", "decapod-test@example.com")
-        .output()
-        .expect("run decapod")
+        .bounded_output(Duration::from_secs(120))
+        .unwrap_or_else(|error| {
+            panic!("decapod {args:?} did not finish within the plugin command budget: {error}")
+        })
 }
 
 fn bootstrap_repo(repo: &Path) {
