@@ -5407,6 +5407,19 @@ fn run_release_inventory(project_root: &Path) -> Result<(), error::DecapodError>
 }
 
 fn run_release_lineage_sync(project_root: &Path) -> Result<(), error::DecapodError> {
+    let main_repo = core::workspace::get_main_repo_root(project_root)
+        .unwrap_or_else(|_| project_root.to_path_buf());
+    let shared_store = if main_repo.join(".decapod/data").exists() {
+        main_repo.join(".decapod/data")
+    } else {
+        project_root.join(".decapod/data")
+    };
+    core::todo::enforce_shared_resource_available(
+        &shared_store,
+        &current_agent_id(),
+        &["resource:release"],
+        "release.lineage_sync",
+    )?;
     let artifact_manifest =
         project_root.join(".decapod/managed/artifacts/provenance/artifact_manifest.json");
     let proof_manifest =
