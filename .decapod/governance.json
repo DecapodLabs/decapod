@@ -629,6 +629,11 @@
       "id": "workspace-compact-event-reads",
       "summary": "feat(workspace): reconstruct compact event envelopes in ownership lookup (#1630)",
       "input_digest": "sha256:0d7fe2aedc2cbc496565b47545e3e290c6b8fdcc6726fa65cc872e5d182e7655"
+    },
+    {
+      "id": "trace-compact-event-reads",
+      "summary": "feat(trace): reconstruct compact event envelopes in get_last_traces (#1630)",
+      "input_digest": "sha256:d27c0189f1728e7564cc552ba04e2998515db6c99d128bbd03c74b869cbc5db4"
     }
   ],
   "intents": {
