@@ -965,3 +965,13 @@ Do not delete lock sidecars, signal foreign processes, steal claims, replay ambi
 ## PR1662 current-master preparation
 
 Worktree policy edits cannot self-grant capabilities. db.recover remains owner-only and cloud authority fails closed when it cannot be authenticated. Retain non-destructive lock diagnosis, current-process-only release and confined backups. Coordination receipts are not independent acceptance proof.
+
+## Required native dependencies cannot silently pass (#1568)
+
+The required maintenance test helper now fails when native SQLite is missing;
+it cannot return without running a purported integrity/backup/recovery check.
+Governed fixture children remove inherited provider identity and diagnostic skip
+flags and disable optional container claim startup. They retain real session,
+task, workspace and custody admission. The parent job/provider context is never
+mutated. Cloud principal environment spoofing remains a denial case, not a grant;
+merged Propodus authority groundwork does not prove Decapod hosted consumption.
