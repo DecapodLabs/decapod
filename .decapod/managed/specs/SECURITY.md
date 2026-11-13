@@ -610,8 +610,8 @@ execution evidence remains required before publication readiness.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `0f5182b61bd9df72c7689c6b907417c45695f0cbec319899f912c2d9c1398f2b`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (231 files), `tests/` (232 files)
+- Repository signal fingerprint: `c7d83e4fa9bf8fd016119da5a6b23f3802ebc90a1d8354fceb321065859c642c`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (232 files), `tests/` (232 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 
@@ -925,3 +925,7 @@ The resolved native project also supplies the repository field of newly created 
 ## Versioned cloud mutation receipts
 
 Operation-route binding must survive clients of different releases. Versioned receipt envelopes reject older array-only writers before dispatch, while the stable lock serializes migration with older in-flight writes. Both record count and actual encoded bytes are bounded before atomic replacement; an upgrade that would exceed the byte cap preserves the original evidence instead of truncating it.
+
+## Bounded anonymous GitHub rate-limit hints (#1573)
+
+`core/snapshot_provider/github_quota.rs` treats anonymous GitHub rate-limit headers strictly as untrusted, bounded pacing advice and never as cached provider state or readiness authority. `decimal_header` inspects at most `64 KiB` prior to `\r\n\r\n` on verified HTTP 200 responses and accepts only a single non-empty 1..=20-byte ASCII-digit `X-RateLimit-Remaining` or `X-RateLimit-Reset` header; missing, duplicate, signed, fractional, non-numeric, or `u64`-overflowing headers resolve to `None` without retaining raw header bytes, cookies, or bodies. When `remaining == Some(0)` has no unambiguous `reset_unix`, `request_delay` fails closed (`no further request was attempted`) before authorization or process spawn. Untrusted `reset_unix` values are clamped via `delay.min(self.remaining())` so they cannot overflow `Instant` or extend the caller's `Budget` deadline, while HTTP 403/429 denials continue to abort immediately with zero retry or alternate credential fallback.

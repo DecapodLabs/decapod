@@ -654,6 +654,11 @@
       "id": "spec-operations-1573",
       "summary": "docs(specs): document public GitHub quota pacing for Buildkite waits in OPERATIONS.md",
       "input_digest": "sha256:3ef0d89f3ab7a61cd4175726d5efd27061e6ee1c7c07b5ae9b06267d675887af"
+    },
+    {
+      "id": "spec-security-1573",
+      "summary": "docs(specs): document bounded rate-limit hint parsing invariants in SECURITY.md",
+      "input_digest": "sha256:bcc8cadc741cf30677ac0734cd613a6ac813eedbf272c155f0eea7713b6afd17"
     }
   ],
   "intents": {
