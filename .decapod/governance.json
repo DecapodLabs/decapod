@@ -679,6 +679,14 @@
       "proof_refs": [
         ".decapod/managed/specs/ARCHITECTURE.md"
       ]
+    },
+    {
+      "id": "document-mode000-validation-regressions",
+      "summary": "Document #1643 supervisor mode-000 regressions and 0.141.0 source inventory digest in VALIDATION.md",
+      "input_digest": "sha256:54ea8d127b6e107b680ded3a77835f6e4fde5767547be4ff0ad0ee5d3096b483",
+      "proof_refs": [
+        ".decapod/managed/specs/VALIDATION.md"
+      ]
     }
   ],
   "intents": {
@@ -734,7 +742,7 @@
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:00d6e0028442c609bcd4c34ffd0cd55dd375391f6350d05ed1c6c2424c011001",
+      "artifact_hash": "sha256:67ea202b9925d6593c14206fada83cf608fc03e19c25038cc3c11e9de6b7ac15",
       "checks": [],
       "current_phase": "execution",
       "custody": {
@@ -862,10 +870,17 @@
             "intent_id": "intent:change_01M79A0G0YSR12S2RHJE84QPHR",
             "kind": "trajectory_step_recorded",
             "sequence": 19
+          },
+          {
+            "detail": "trajectory:branch_01M79A0G5E35FVE2EYNYQVQ3XY",
+            "event_id": "event:20",
+            "intent_id": "intent:change_01M79A0G0YSR12S2RHJE84QPHR",
+            "kind": "trajectory_step_recorded",
+            "sequence": 20
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 19,
+        "next_sequence": 20,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M79A0G5E35FVE2EYNYQVQ3XY": {
@@ -1128,6 +1143,22 @@
                 ],
                 "sequence": 19,
                 "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:20",
+                "observations": [
+                  ".decapod/managed/specs/VALIDATION.md"
+                ],
+                "proof_refs": [],
+                "scope": [
+                  "\".decapod/config.toml\"",
+                  "\".decapod/managed/specs\"]",
+                  "\"assets/tools/build_lifecycle_tests.rs\"",
+                  "paths:[\"assets/tools/build_lifecycle.rs\""
+                ],
+                "sequence": 20,
+                "validation_findings": []
               }
             ]
           }
@@ -1172,6 +1203,7 @@
         ".decapod/managed/specs/README.md",
         ".decapod/managed/specs/SECURITY.md",
         ".decapod/managed/specs/SEMANTICS.md",
+        ".decapod/managed/specs/VALIDATION.md",
         "AGENTS.md",
         "CLAUDE.md",
         "CODEX.md",

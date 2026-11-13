@@ -1272,7 +1272,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `ef0b809779d89f44a5898a162dc5f2c358e9bd025aa03cb27e7b0b01c56c2078`
+- Repository signal fingerprint: `2e78d5222e4634cae73a931b81187b35194b569d14c6049c19bd245d0d6a280b`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (230 files), `tests/` (232 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
@@ -1722,3 +1722,33 @@ from the reviewed SDK-adoption parent. Native commands regenerate release
 projections and refresh the reviewed digest; this preparation is not execution
 proof. The archived original PR tip retains its historical checkpoints, while
 the rebased source requires its own current checkpoint and complete validation.
+
+## Owned scratch mode-000 cleanup (#1643)
+
+`assets/tools/build_lifecycle_tests.rs` covers rootless container overlay
+permission recovery through `//:build_lifecycle_tests` and the Cargo binary test
+suite. `supervisor_recovers_owned_mode_000_podman_overlay_scratch_without_touching_shared_caches`
+spawns the real supervisor binary with a child that populates
+`$HOME/.local/share/containers/storage/overlay/opaque-layer/work/work` (`0o000`
+under `0o500`), a read-only `0o555` layer directory, and a symlink to an
+external `0o555` shared cache alongside an unrelated `0o000` sibling directory,
+requiring clean exit, zero `build cleanup:` stderr diagnostics, complete scratch
+removal, and untouched external permissions and files.
+`owned_permission_recovery_rejects_symlink_uid_device_and_bound_escapes`
+directly exercises `Scratch::recover_owned_permissions` and
+`Scratch::recover_owned_permissions_with_bounds` across nested `0o000`
+directories (independent of host effective UID), symlink non-traversal,
+foreign-UID and cross-device rejection before chmod/descent, and closed failure
+on depth and entry bounds, while `cleanup_diagnostics` retains its read-only
+contract.
+
+At accepted `v0.141.0` (`3718f70e`), the installed `0.141.0` controller
+regenerates the release-bound `AGENTS.md`, `CLAUDE.md`, `CODEX.md`, `GEMINI.md`,
+`.decapod/managed/Dockerfile.decapod` and `.decapod/managed/specs/.manifest.json`
+projections, and `.decapod/config.toml` updates `proof.required_profile.reviewed_sources_digest`
+to `sha256:125e956b4239c088a145fc43599dcb3b814d96c261236af908334a1554f27adf`
+for the modified `assets/tools/build_lifecycle.rs` and
+`assets/tools/build_lifecycle_tests.rs` inputs in the 105-file source inventory.
+Source review and local projection refresh do not prove execution; full
+configured `decapod validate` on the exact candidate commit against accepted
+`master` remains mandatory before PR creation.
