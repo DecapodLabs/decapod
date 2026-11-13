@@ -462,3 +462,69 @@ fn file_scope_restrictions_do_not_change_legacy_paths() {
     )];
     assert!(detect_overlaps("b", "bob", "root", "", "/repo/name.rs", &active, "200Z").is_empty());
 }
+
+#[test]
+fn resource_reservations_do_not_claim_repo_paths_and_report_exact_predicates() {
+    assert_eq!(
+        declared_resources("resource:Release, resource:integration:master"),
+        vec![
+            "resource:integration:master".to_string(),
+            "resource:release".to_string()
+        ]
+    );
+    assert!(is_resource_scope("resource:release"));
+    assert!(is_resource_scope(
+        "resource:release, resource:integration:master"
+    ));
+    assert!(!is_resource_scope("resource:"));
+    assert!(!is_resource_scope("root"));
+    assert!(claim_paths("resource:release", "/repo").is_empty());
+    assert_eq!(claim_paths("resource:", "/repo"), vec!["/repo"]);
+
+    let active = vec![claim(
+        "rel-1",
+        "shepherd",
+        "resource:release",
+        "",
+        "/repo",
+        Some("300Z"),
+    )];
+    // Unrelated source tasks in the same repo must not get a false dir_path overlap.
+    assert!(
+        detect_overlaps("src-1", "author", "root", "", "/repo", &active, "200Z").is_empty(),
+        "resource:release must not claim repository source paths"
+    );
+
+    // Competing reservation on the same resource is enforced and carries exact metadata.
+    let conflicts = detect_overlaps(
+        "rel-2",
+        "other",
+        "resource:release",
+        "",
+        "/repo",
+        &active,
+        "200Z",
+    );
+    assert_eq!(conflicts.len(), 1);
+    assert!(conflicts[0].enforced);
+    assert_eq!(
+        conflicts[0].predicate.as_deref(),
+        Some("resource_reservation")
+    );
+    assert_eq!(conflicts[0].resource.as_deref(), Some("resource:release"));
+    assert_eq!(
+        conflicts[0].affected_operation.as_deref(),
+        Some("shared_resource_mutation")
+    );
+
+    // Global integration reservation conflicts with branch-scoped integration, while
+    // distinct branch reservations do not block one another.
+    assert_eq!(
+        matching_resource_reservation("resource:integration", "resource:integration:master"),
+        Some("resource:integration:master".to_string())
+    );
+    assert_eq!(
+        matching_resource_reservation("resource:integration:main", "resource:integration:release"),
+        None
+    );
+}

@@ -1,5 +1,21 @@
 # Security
 
+Absence of `.git` does not establish checkout admission, including outside
+`.decapod/workspaces`. `init --no-git` enables prerequisite diagnostics only.
+The partial project-check route handles that compatibility explicitly; workspace
+status and full validation retain their independent fail-closed boundaries.
+
+## Diagnostic success grants no checkout authority (#1661)
+
+Non-Git prerequisite diagnostics may inspect project configuration without a
+task-bound Git workspace. They do not change `can_work=false`, mint a full
+readiness judgment, or admit authoring/publication. Full validation continues to
+reject that directory. CLI regression coverage exercises all three observations
+using the real binary without Git-gate overrides. The custody transaction also
+rejects second live bindings and rolls back binding persistence if event evidence
+cannot be committed. Local actor labels and Git filesystem identities remain
+host-local cooperative authority, not authenticated cloud or OS isolation.
+
 ## Agent-owned browser handoff
 
 `authorization_url` exposes only Dactyl's validated, short-lived browser handoff.
@@ -610,7 +626,7 @@ execution evidence remains required before publication readiness.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `133901b56eda5adefb86df9611cef096fed9a452d39761053ef41335a3c234e3`
+- Repository signal fingerprint: `dc9c7d0fdecc9062c60432638a1a8148970a356cf68bab47be2d8eaab6bd3750`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (232 files), `tests/` (232 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
@@ -933,3 +949,7 @@ Terminal rule evaluation (`core/validation_rules.rs::evaluate_terminal_rules`) d
 ## PR 1666: accepted v0.143.2 source integration
 
 Header parsing is bounded and accepts only unambiguous numeric quota hints from verified HTTP200 transport responses. A quota hint authenticates no evidence and authorizes no fallback identity. Exact repository/candidate/target and provenance checks remain necessary.
+
+## PR1666 current-master integration
+
+Preserve exact source/base checks, public-reader denial, final remote binding verification and accepted path/custody gates. GitHub PR metadata must identify the actual master tip before a fresh event is emitted. A successful process or historical test does not establish current independent readiness.

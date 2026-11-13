@@ -1,5 +1,17 @@
 # Interfaces
 
+## Custody and prerequisite diagnostics (#1661)
+
+`workspace status` reports `can_work=false` when checkout custody is unproven.
+`govern project-check --format json` remains usable after `init --no-git` and
+reports `scope=project_prerequisites`, `publication_ready=false`, and no readiness
+result. Full `validate` rejects that same non-Git directory with
+`gate=workspace_protection` / `AUTHORING_CHECKOUT_UNVERIFIED`.
+Task renewal and lifecycle operations update or retire their checkout binding
+atomically; a second live binding is `AUTHORING_TASK_ALREADY_BOUND`.
+`resource:<name>` overlap diagnostics identify the affected shared operation,
+and occupied release/integration reservations yield `SHARED_RESOURCE_OCCUPIED`.
+
 ## Optional reflection on existing interfaces
 
 `infer orientation --task-id <id> --reflection '<JSON>'` and
@@ -1142,7 +1154,7 @@ field. Nothing in this operation authorizes a mutation, approval or completion.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `133901b56eda5adefb86df9611cef096fed9a452d39761053ef41335a3c234e3`
+- Repository signal fingerprint: `dc9c7d0fdecc9062c60432638a1a8148970a356cf68bab47be2d8eaab6bd3750`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (232 files), `tests/` (232 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
@@ -1472,3 +1484,7 @@ Cloud todo receipt cache v2 is an object with version=2 and records. The reader 
 ## PR 1666: accepted v0.143.2 source integration
 
 The existing public provider and Budget interfaces retain HTTP403/429 failures and cancellation/deadline semantics. Missing or malformed quota reset information cannot authorize another request or a ready judgment. No alternate credential, provider, receipt or daemon is introduced.
+
+## PR1666 current-master integration
+
+Existing snapshot-provider calls and typed failures remain unchanged. HTTP403/429 denial remains immediate and no authentication fallback is added. Integration preserves the current source-CI event contract and its exact base/head binding.

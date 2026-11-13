@@ -659,6 +659,9 @@ fn risk_zone_for_operation(op_name: &str) -> &'static str {
     if op_name.starts_with("aptitude.") {
         return "aptitude.mutate";
     }
+    if op_name.starts_with("workspace.authoring.") {
+        return "workspace.authoring";
+    }
     "control.mutate"
 }
 

@@ -1,5 +1,20 @@
 # Architecture
 
+## Checkout custody and non-Git diagnostics (#1661)
+
+`core::authoring` enforces one live checkout per task lease transactionally with
+the existing task journal and workspace lifecycle events. Renew advances the
+binding generation; yield, release, reclaim, handoff, terminal status and prune
+retire it. `core::fleet_coord` treats `resource:<name>` as a resource reservation,
+not a repository path. Release and publication consume the corresponding gate.
+
+`workspace::get_workspace_status` remains fail closed for non-worktrees and
+unavailable custody evidence. `lib::run_validate_command_local` permits non-Git
+projects to execute only explicitly partial diagnostic scopes without workspace
+admission. A successful project check has no publication judgment. Full validation
+still requires a registered, governed candidate. Host custody remains cooperative
+and is not an OS sandbox against direct filesystem or Git access.
+
 ## Composed reflection continuation
 
 `core/mentor/reflection.rs` composes the existing mentor ADR detector, canonical
@@ -905,7 +920,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `133901b56eda5adefb86df9611cef096fed9a452d39761053ef41335a3c234e3`
+- Repository signal fingerprint: `dc9c7d0fdecc9062c60432638a1a8148970a356cf68bab47be2d8eaab6bd3750`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (232 files), `tests/` (232 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
@@ -1164,3 +1179,7 @@ The machine-private cloud todo receipt file uses a version-two envelope around i
 ## PR 1666: accepted v0.143.2 source integration
 
 `snapshot_provider::github_quota::GithubQuota` is shared by the existing Budget. Validated successful HTTP response hints pace cold GitHub locator discovery; known Buildkite envelopes retain their normal polling interval. The final binding and fresh-registry recheck remain authoritative after removal of a redundant earlier binding read.
+
+## PR1666 current-master integration
+
+The shared GithubQuota/Budget mechanism continues to pace only anonymous discovery, preserve final verification capacity, and honor bounded deadlines. Accepted custody and workunit runtime ownership changes remain in place; this integration adds no competing verifier or provider policy.

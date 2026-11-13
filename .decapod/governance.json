@@ -558,6 +558,14 @@
         "/private/tmp/decapod-pr1661-1432-fresh-docs-initialized.log",
         "git:6f1d2a39ad0b5b2f7e70fe12f75f0d8b360d9453"
       ]
+    },
+    {
+      "id": "pr1666-current-master-1440-2",
+      "summary": "Incorporate accepted master9b900254 and preserve quota-pacing behavior while resolving governance/spec conflicts; local tests not executed.",
+      "input_digest": "sha256:e9183291e5c6e2b9f56f9482710c322f9d44b25f03cdbfb3f65f3c235fc082be",
+      "proof_refs": [
+        "git:9b90025444dcc9b223f77388b1bcd151d88bf62b"
+      ]
     }
   ],
   "intents": {
@@ -588,7 +596,7 @@
       },
       "deferred_questions": [],
       "human_questions": [],
-      "intent": "Reconcile existing PR1666 material and custody with latest accepted master. Preserve original feature scope, reviewable historical proof and actual parent history; resolve conflicts, update official0.143.2 projections and required-source coverage, checkpoint commits and push same existing PR. Do not force-push, auto-merge, weaken required checks or claim native acceptance from source-only results.",
+      "intent": "Integrate existing PR1666 with current accepted master 9b900254 and preserve original quota pacing, denial behavior, request binding and source history. Resolve conflicts and push each repair, using actual hosted CI failures until CI is green. Do not run local tests, weaken proof checks, force-push or merge the PR. Official 0.144.0 release assets were not yet published at setup; retain supported installed tooling until the release is available.",
       "phases": [],
       "proof_hooks": [
         "Source/material parity against original PR; focused affected regression checks; checkpoint-history inspection; official exact-current-target validation where the accepted controller supports the contract."
@@ -598,23 +606,23 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Reviewed current PR1666 source on accepted v0.143.2, original feature boundaries and public-CLI workunit fixture initialization. No proof requirements, authority or publication checks weakened; independent readiness remains unproven until exact-candidate validation.",
-          "reviewed_code_fingerprint": "133901b56eda5adefb86df9611cef096fed9a452d39761053ef41335a3c234e3",
-          "spec_material_hash": "1091a84f37d8f1027bdb7072d099dbe69c099c4df5041349808e56601a7dbdba"
+          "reason": "Reviewed quota-pacing source against accepted master custody, path and runtime-owner changes. No production source conflicts or verification weakening; hosted CI remains required and no local tests run.",
+          "reviewed_code_fingerprint": "dc9c7d0fdecc9062c60432638a1a8148970a356cf68bab47be2d8eaab6bd3750",
+          "spec_material_hash": "fd49b4c6a425a4961c7c8f20e9a1bb62962c2726e815e91f8e2120a5d2984be7"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Reviewed current PR1666 source on accepted v0.143.2, original feature boundaries and public-CLI workunit fixture initialization. No proof requirements, authority or publication checks weakened; independent readiness remains unproven until exact-candidate validation.",
-          "reviewed_code_fingerprint": "133901b56eda5adefb86df9611cef096fed9a452d39761053ef41335a3c234e3",
-          "spec_material_hash": "64a89e4bb0761368540367725082b26a02674adc4232d1e32cb2a5f5eaea5c23"
+          "reason": "Reviewed quota-pacing source against accepted master custody, path and runtime-owner changes. No production source conflicts or verification weakening; hosted CI remains required and no local tests run.",
+          "reviewed_code_fingerprint": "dc9c7d0fdecc9062c60432638a1a8148970a356cf68bab47be2d8eaab6bd3750",
+          "spec_material_hash": "3c826cd20c1f20607be288a67abb7c4e0f8c0ba039a4f123f6da9b78f37cba0f"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Reviewed current PR1666 source on accepted v0.143.2, original feature boundaries and public-CLI workunit fixture initialization. No proof requirements, authority or publication checks weakened; independent readiness remains unproven until exact-candidate validation.",
-          "reviewed_code_fingerprint": "133901b56eda5adefb86df9611cef096fed9a452d39761053ef41335a3c234e3",
-          "spec_material_hash": "27c763a68161b05bf24fea9cd8f3028972c277c993bf417d0f472cb7bee3a998"
+          "reason": "Reviewed quota-pacing source against accepted master custody, path and runtime-owner changes. No production source conflicts or verification weakening; hosted CI remains required and no local tests run.",
+          "reviewed_code_fingerprint": "dc9c7d0fdecc9062c60432638a1a8148970a356cf68bab47be2d8eaab6bd3750",
+          "spec_material_hash": "5bfc55956c17aac5ec1642038211d1ab14340dde37af15695d7fb0a09730db76"
         }
       ],
       "state": "APPROVED",
@@ -625,14 +633,15 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1794560052Z"
+      "updated_at": "1794564594Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch",
+        "Preserve actual original PR parent history, no force-push, no local tests and no merge authorization.",
         "Preserve original PR history; ordinary merges only, no force-push or automatic merge."
       ],
-      "artifact_hash": "sha256:399a2331d9a76d5bc8a29708eeaab0c0529f0a5de53d0e67cc110e597ee6d6be",
+      "artifact_hash": "sha256:9ed0ede74016456b08958995aec979e3a232da745adcf7f2b6d0a406d55dbd5e",
       "checks": [
         {
           "name": "fresh-docs-baseline-initialized",
@@ -660,10 +669,17 @@
             "intent_id": "intent:change_01M79W0QF1GA7DKV736SKKE9A3",
             "kind": "trajectory_step_recorded",
             "sequence": 4
+          },
+          {
+            "detail": "trajectory:branch_01M79W0QKPSAKS1YRWC4A3YT4H",
+            "event_id": "event:5",
+            "intent_id": "intent:change_01M79W0QF1GA7DKV736SKKE9A3",
+            "kind": "trajectory_step_recorded",
+            "sequence": 5
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 4,
+        "next_sequence": 5,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M79W0QKPSAKS1YRWC4A3YT4H": {
@@ -689,17 +705,35 @@
                 "validation_findings": [
                   "Focused regression evidence does not establish independent full readiness or erase historical draft blockers."
                 ]
+              },
+              {
+                "action": "integration",
+                "command": "git merge origin/master; resolve canonical governance from committed current work; merge authored prose and refresh supported fingerprints",
+                "custody_event_id": "event:5",
+                "observations": [
+                  "git:9b90025444dcc9b223f77388b1bcd151d88bf62b"
+                ],
+                "proof_refs": [],
+                "scope": [
+                  "pr-1666-master-1432"
+                ],
+                "sequence": 5,
+                "validation_findings": [
+                  "Official0.144.0 release assets were unavailable at setup; release-bound tooling refresh may remain necessary."
+                ]
               }
             ]
           }
         }
       },
       "declared_commands": [
-        "git merge accepted origin/master; official decapod init --refresh --proof --force; supported specs.refresh and content-bound reviews"
+        "git merge accepted origin/master; official decapod init --refresh --proof --force; supported specs.refresh and content-bound reviews",
+        "git merge origin/master; resolve canonical governance from committed current work; merge authored prose and refresh supported fingerprints"
       ],
       "destination": "pull request",
       "evidence": [
-        "/private/tmp/decapod-pr1661-1432-fresh-docs-initialized.log"
+        "/private/tmp/decapod-pr1661-1432-fresh-docs-initialized.log",
+        "git:9b90025444dcc9b223f77388b1bcd151d88bf62b"
       ],
       "inspected_files": [],
       "intent_id": "intent:change_01M79W0QF1GA7DKV736SKKE9A3",
@@ -719,7 +753,8 @@
       "task_id": "bugs_01m79vzq51kt730b",
       "tool_calls": [],
       "unresolved_assumptions": [
-        "Focused regression evidence does not establish independent full readiness or erase historical draft blockers."
+        "Focused regression evidence does not establish independent full readiness or erase historical draft blockers.",
+        "Official0.144.0 release assets were unavailable at setup; release-bound tooling refresh may remain necessary."
       ]
     }
   },

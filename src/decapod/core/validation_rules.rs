@@ -1561,7 +1561,12 @@ fn evaluate_scope_rule(rule: &ResolvedRule, context: &RuleEvaluationContext) -> 
     }
 }
 
-/// Evaluate gatekeeper rule using actual gatekeeper.
+/// Evaluate gatekeeper rule using path, diff-ceiling, and governed-plan protected-path checks.
+///
+/// Full-file secret and dangerous-pattern scanning runs on staged files in
+/// `validate_gatekeeper_gate`; `decapod.scope.protected_paths` specifically
+/// enforces protected/blocked/forbidden path boundaries and diff size over the
+/// branch's `changed_paths` without failing on pre-existing patterns in touched files.
 fn evaluate_gatekeeper_rule(_rule: &ResolvedRule, context: &RuleEvaluationContext) -> RuleVerdict {
     // Check if we have the required evidence for gatekeeper
     if !context.evidence_artifacts.contains_key("config.toml") {
@@ -1586,19 +1591,58 @@ fn evaluate_gatekeeper_rule(_rule: &ResolvedRule, context: &RuleEvaluationContex
         Err(_) => return RuleVerdict::Unverifiable,
     }
 
-    let paths: Vec<std::path::PathBuf> = context
-        .changed_paths
-        .iter()
-        .map(std::path::PathBuf::from)
-        .collect();
-
     // Calculate diff size using git diff
     let diff_bytes = calculate_diff_size(repo_root).unwrap_or(0);
+    evaluate_gatekeeper_paths_and_diff(repo_root, &context.changed_paths, diff_bytes)
+}
 
-    let config = crate::core::gatekeeper::GatekeeperConfig::from_repo_config(repo_root);
+fn evaluate_gatekeeper_paths_and_diff(
+    repo_root: &std::path::Path,
+    changed_paths: &BTreeSet<String>,
+    diff_bytes: u64,
+) -> RuleVerdict {
+    match crate::plan_governance::load_plan(repo_root) {
+        Ok(Some(plan)) if !plan.constraints.forbidden_paths.is_empty() => {
+            let constraints = crate::plan_governance::ScopeConstraints {
+                forbidden_paths: plan.constraints.forbidden_paths,
+                file_touch_budget: None,
+            };
+            if crate::plan_governance::enforce_scope_paths(&constraints, changed_paths).is_err() {
+                return RuleVerdict::Fail;
+            }
+        }
+        Ok(_) => {}
+        Err(_) => return RuleVerdict::Unverifiable,
+    }
+
+    let paths: Vec<std::path::PathBuf> =
+        changed_paths.iter().map(std::path::PathBuf::from).collect();
+
+    let mut config = crate::core::gatekeeper::GatekeeperConfig::from_repo_config(repo_root);
+    config.scan_secrets = false;
+    config.scan_dangerous_patterns = false;
+
     match crate::core::gatekeeper::run_gatekeeper(repo_root, &paths, diff_bytes, &config) {
-        Ok(result) if result.passed => RuleVerdict::Pass,
-        Ok(_) => RuleVerdict::Fail,
+        Ok(result) => {
+            let has_path_or_diff_violation =
+                result
+                    .violations
+                    .iter()
+                    .any(|violation| match violation.kind {
+                        crate::core::gatekeeper::ViolationKind::DiffTooLarge => true,
+                        crate::core::gatekeeper::ViolationKind::ProtectedPath
+                        | crate::core::gatekeeper::ViolationKind::PathBlocked => {
+                            changed_paths.contains(violation.path.to_string_lossy().as_ref())
+                        }
+                        crate::core::gatekeeper::ViolationKind::SecretDetected
+                        | crate::core::gatekeeper::ViolationKind::DangerousPattern => false,
+                    });
+            if has_path_or_diff_violation {
+                RuleVerdict::Fail
+            } else {
+                RuleVerdict::Pass
+            }
+        }
         Err(_) => RuleVerdict::Unverifiable,
     }
 }
@@ -2814,6 +2858,124 @@ mod tests {
                 .as_ref()
                 .map(|r| r.error_code.as_str()),
             Some("UNVERIFIED_COMPLETION")
+        );
+    }
+
+    #[test]
+    fn protected_paths_rule_ignores_preexisting_file_patterns_and_blocks_protected_or_blocked_paths()
+     {
+        let dir = tempfile::tempdir().unwrap();
+        let root = dir.path();
+        std::fs::create_dir_all(root.join(".decapod")).unwrap();
+        std::fs::create_dir_all(root.join("src")).unwrap();
+        std::fs::create_dir_all(root.join("config")).unwrap();
+        std::fs::create_dir_all(root.join("migrations")).unwrap();
+
+        std::fs::write(
+            root.join(".decapod/config.toml"),
+            "schema_version = \"1.0.0\"\n\n[init]\nspecs = true\nci = true\ndiagram_style = \"mermaid\"\nentrypoints = [\"AGENTS.md\"]\n\n[repo]\nproduct_name = \"test\"\nproduct_summary = \"test\"\narchitecture_direction = \"cli\"\nproduct_type = \"service_or_library\"\ndone_criteria = \"tests pass\"\nprimary_languages = [\"rust\"]\ndetected_surfaces = [\"cargo\"]\n\n[governance]\nprotected_paths = [\"config/production.toml\"]\n",
+        )
+        .unwrap();
+        crate::cli::DecapodProjectConfig::load(root).unwrap();
+        std::fs::write(root.join("config/production.toml"), "mode = \"prod\"\n").unwrap();
+        std::fs::write(root.join(".env.production"), "APP_MODE=prod\n").unwrap();
+        std::fs::write(root.join("migrations/001.sql"), "SELECT 1;\n").unwrap();
+
+        // Construct pre-existing patterns dynamically so this source file stays free of literals.
+        let preexisting_shell = format!("// shell fixture {}{{EXPANSION}}\n", '$');
+        let preexisting_header = format!("// header {} {}\n", "Bea", "rer example_token_value");
+        std::fs::write(
+            root.join("src/legacy.rs"),
+            format!("{preexisting_shell}{preexisting_header}pub fn ok() -> usize {{ 1 }}\n"),
+        )
+        .unwrap();
+        std::fs::write(
+            root.join("src/loader.rs"),
+            "pub const PROD_CFG: &str = include_str!(\"../config/production.toml\");\n",
+        )
+        .unwrap();
+
+        let full_scan = crate::core::gatekeeper::run_gatekeeper(
+            root,
+            &[std::path::PathBuf::from("src/legacy.rs")],
+            0,
+            &crate::core::gatekeeper::GatekeeperConfig::from_repo_config(root),
+        )
+        .unwrap();
+        assert!(
+            !full_scan.passed,
+            "fixture must trigger full-file gatekeeper secret/dangerous-pattern checks"
+        );
+
+        assert_eq!(
+            evaluate_gatekeeper_paths_and_diff(
+                root,
+                &BTreeSet::from(["src/legacy.rs".to_string()]),
+                128
+            ),
+            RuleVerdict::Pass
+        );
+        assert_eq!(
+            evaluate_gatekeeper_paths_and_diff(
+                root,
+                &BTreeSet::from(["src/loader.rs".to_string()]),
+                64
+            ),
+            RuleVerdict::Pass,
+            "unmodified include_str dependency matching protected_paths must not false-fail"
+        );
+        assert_eq!(
+            evaluate_gatekeeper_paths_and_diff(
+                root,
+                &BTreeSet::from(["config/production.toml".to_string()]),
+                64
+            ),
+            RuleVerdict::Fail
+        );
+        assert_eq!(
+            evaluate_gatekeeper_paths_and_diff(
+                root,
+                &BTreeSet::from([".env.production".to_string()]),
+                64
+            ),
+            RuleVerdict::Fail
+        );
+        assert_eq!(
+            evaluate_gatekeeper_paths_and_diff(
+                root,
+                &BTreeSet::from(["src/legacy.rs".to_string()]),
+                20 * 1024 * 1024
+            ),
+            RuleVerdict::Fail
+        );
+
+        let mut plan = crate::plan_governance::init_plan(
+            root,
+            crate::plan_governance::InitPlanInput {
+                title: "Protected path scope test".to_string(),
+                intent: "Verify plan forbidden_paths enforcement".to_string(),
+                todo_ids: Vec::new(),
+                proof_hooks: Vec::new(),
+                unknowns: Vec::new(),
+                human_questions: Vec::new(),
+                stop_conditions: Vec::new(),
+                unresolved_contradictions: Vec::new(),
+                deferred_questions: Vec::new(),
+                constraints: Default::default(),
+                phases: Vec::new(),
+            },
+        )
+        .unwrap();
+        plan.constraints.forbidden_paths = vec!["migrations".to_string()];
+        crate::plan_governance::save_plan(root, &plan).unwrap();
+
+        assert_eq!(
+            evaluate_gatekeeper_paths_and_diff(
+                root,
+                &BTreeSet::from(["migrations/001.sql".to_string()]),
+                32
+            ),
+            RuleVerdict::Fail
         );
     }
 }

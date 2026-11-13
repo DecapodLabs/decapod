@@ -1,5 +1,16 @@
 # Intent
 
+## Concurrent custody and diagnostic scope (#1469, #1661)
+
+Independent tasks can author concurrently in distinct admitted worktrees. A task
+lease has one live checkout binding; transfer, retirement and renewal preserve
+fencing. Explicit shared-resource reservations govern integration and release
+operations rather than excluding unrelated source work. Non-Git projects can
+run bounded prerequisite diagnostics without being admitted for authoring or
+claiming publication readiness. This repair retains the accepted master policy
+and Decapod 0.143.1 release contract; it does not complete the broader ten-worker
+or autonomous-runtime acceptance mandate.
+
 ## Evidence-grounded reflection before consequential action
 
 Decapod helps agents reconsider a proposed action through optional bounded
@@ -341,7 +352,7 @@ These declarations select authoring and proof obligations; they do not attest im
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `133901b56eda5adefb86df9611cef096fed9a452d39761053ef41335a3c234e3`
+- Repository signal fingerprint: `dc9c7d0fdecc9062c60432638a1a8148970a356cf68bab47be2d8eaab6bd3750`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (232 files), `tests/` (232 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
@@ -530,3 +541,7 @@ The resolved native project also supplies the repository field of newly created 
 ## PR 1666: accepted v0.143.2 source integration
 
 Reduce anonymous GitHub discovery consumption while preserving exact-source proof, immediate denial behavior and the original invocation deadline. Quota hints govern waiting, not acceptance; this proposal does not establish current provider execution.
+
+## PR1666 current-master integration
+
+Incorporate accepted master 9b900254, including custody, protected-path/workunit fixes and the 0.144.0 source release. Preserve the quota-pacing feature and its original PR history, then repair hosted CI failures one at a time. No local test execution or independent full readiness is claimed.
