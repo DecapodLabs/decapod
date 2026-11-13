@@ -899,6 +899,11 @@
       "id": "record-v0-143-1-project-check",
       "summary": "chore(governance): record v0.143.1 trajectory and project-check receipt (#1630)",
       "input_digest": "sha256:81f59f0141bc3b7f26c73c44bbe93fc20f696251492d0ddc176fd7e68fb69332"
+    },
+    {
+      "id": "cp-1630-map-ops-envelope",
+      "summary": "fix(map): reconstruct compact event envelopes via events::query",
+      "input_digest": "sha256:a0914534b027f45b379f341246efb5de6f15c90566ce1a30a8b3a7f2f506c73b"
     }
   ],
   "intents": {
