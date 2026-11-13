@@ -679,6 +679,11 @@
       "id": "spec-readme-attestation",
       "summary": "docs(specs): refresh specs README.md codebase attestation",
       "input_digest": "sha256:85781f325748e9dae53c00f04e2c2309584c686cb9fddb28caaa787277851dc3"
+    },
+    {
+      "id": "spec-semantics-attestation",
+      "summary": "docs(specs): refresh SEMANTICS.md codebase attestation",
+      "input_digest": "sha256:369faeb2632210113e50ea19876c66239631c41cb60cb34f543a7a2e46cb1eea"
     }
   ],
   "intents": {
