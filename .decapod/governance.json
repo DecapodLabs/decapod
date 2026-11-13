@@ -669,6 +669,11 @@
       "id": "storage-inventory-v2-attribution",
       "summary": "feat(storage): report format version and deduplicated component store metrics in inventory (#1630)",
       "input_digest": "sha256:2d19a5349b6a1994bfed60f7db08c3504814045d56b7ebe7a039928317922ffc"
+    },
+    {
+      "id": "aptitude-write-contracts",
+      "summary": "feat(aptitude): enforce UTF-8 byte, NUL, and tag bounds on aptitude writes (#1630)",
+      "input_digest": "sha256:e95556ee090c068b3e31e51e25fe41d19c3d304269c3ce61e4a1b3ac13566f85"
     }
   ],
   "intents": {
