@@ -579,6 +579,11 @@
       "id": "published-dactyl016-adoption",
       "summary": "Adopt published SDK0.16 with exact checksum and matching Cargo/Bazel metadata, retain features/Quinn floor, repair legacy-corruption fixtures for new SDK parameter budgets, record35 consumer/policy and70 journal passes, refresh1431 specs and reviewed proof-source inventory; full proof pending.",
       "input_digest": "sha256:1c2e4fcc1f6eedaad2f74f971989cbbda297e8e60abacd6a304d80eccb167ac5"
+    },
+    {
+      "id": "dactyl016-final-code-reviews",
+      "summary": "Rebind current-content architecture/interface/security reviews after oversized legacy fixture changes; source/tests and strict policy unchanged from passing70-case suite. Preserve prior stale-review rejection, full independent validation still required.",
+      "input_digest": "sha256:643bf6569749d3d2e04cab5e85adf874ac5bbb679fe2a146a407c46be4e3d266"
     }
   ],
   "intents": {
@@ -619,22 +624,22 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Reviewed published SDK0.15/0.16 sources, resource budget defaults, existing API compatibility and exact Cargo/Bazel lock parity; no composition or authority engine change.",
-          "reviewed_code_fingerprint": "df70899abd9b8fdf93d3f4d798ba46057afe1b674fb7e2120e25bda9237d36b1",
+          "reason": "Final source review includes the two legacy oversized-record fixtures repaired after SDK budget rejection; actual70 journal cases and35 consumer/policy cases pass, no production bounds widened.",
+          "reviewed_code_fingerprint": "d58528215da02cddedf87520fbcd4ea590a43df63bc594c6355ede920bd0fedf",
           "spec_material_hash": "16a8e82ed19c7b575de1ec5b08c17d34969b8f726c8d738b74d46616e3ac6de0"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Existing Connection/OpenOptions and CloudConnector interfaces compile with registry0.16; managed-session22, cloud-routing1, TODO-resume3 and SQLite-maintenance6 cases passed, release policy3 passed. No real hosted service proof claimed.",
-          "reviewed_code_fingerprint": "df70899abd9b8fdf93d3f4d798ba46057afe1b674fb7e2120e25bda9237d36b1",
+          "reason": "Final interfaces and test bytes reviewed after fixture repair. Public SDK contracts compile; current consumer compatibility and actual replay reader rejection pass; no CLI or managed connector authority change.",
+          "reviewed_code_fingerprint": "d58528215da02cddedf87520fbcd4ea590a43df63bc594c6355ede920bd0fedf",
           "spec_material_hash": "e39fe6ca786bb5cd931df2edbb87e4e434577bfae4fce1ab8d1aa9615c45e6fa"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Pinned actual published checksum and retained patched Quinn floor, features and auth/custody separation. SDK budget errors do not grant retries or hosted authority; Linux-only recovery has no host execution claim.",
-          "reviewed_code_fingerprint": "df70899abd9b8fdf93d3f4d798ba46057afe1b674fb7e2120e25bda9237d36b1",
+          "reason": "Final code preserves SDK parameter/result limits and kernel replay bounds. Malformed oversized legacy data generated only in disposable test SQLite; actual70-case suite passes, hosted proof remains unproven.",
+          "reviewed_code_fingerprint": "d58528215da02cddedf87520fbcd4ea590a43df63bc594c6355ede920bd0fedf",
           "spec_material_hash": "9757fc7002b9c6d002db41b7762a2bfa1a19dccbd5927d0017ecf15edbb83289"
         }
       ],
@@ -646,7 +651,7 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1794551459Z"
+      "updated_at": "1794552099Z"
     },
     "trajectory": {
       "active_boundaries": [
