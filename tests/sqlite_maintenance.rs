@@ -549,3 +549,685 @@ fn unsupported_platform_recovery_is_typed_and_preserves_the_original() {
     assert_eq!(fs::read(&source).unwrap(), before);
     assert!(!archive.exists());
 }
+
+struct GovernedRepoFixture {
+    _temp: TempDir,
+    repo_root: PathBuf,
+    xdg_config: PathBuf,
+    home_dir: PathBuf,
+}
+
+struct ClaimedAgentWorktree {
+    agent_id: String,
+    password: String,
+    worktree_dir: PathBuf,
+}
+
+impl GovernedRepoFixture {
+    fn new() -> Self {
+        let temp = tempdir().expect("governed repo fixture");
+        let repo_root = temp.path().join("repo");
+        let xdg_config = temp.path().join("xdg");
+        let home_dir = temp.path().join("home");
+        fs::create_dir_all(&repo_root).unwrap();
+        fs::create_dir_all(&xdg_config).unwrap();
+        fs::create_dir_all(&home_dir).unwrap();
+
+        let git = |args: &[&str]| {
+            let out = Command::new("git")
+                .args(args)
+                .current_dir(&repo_root)
+                .output()
+                .expect("git command");
+            assert!(
+                out.status.success(),
+                "git {:?} failed: {}",
+                args,
+                String::from_utf8_lossy(&out.stderr)
+            );
+        };
+        git(&["init", "-b", "master"]);
+        git(&["config", "user.email", "test@decapod.local"]);
+        git(&["config", "user.name", "Decapod Test"]);
+
+        let exe = env!("CARGO_BIN_EXE_decapod");
+        let init = Command::new(exe)
+            .args(["init", "--force", "--dir"])
+            .arg(&repo_root)
+            .env("XDG_CONFIG_HOME", &xdg_config)
+            .env("HOME", &home_dir)
+            .output()
+            .expect("decapod init");
+        assert!(
+            init.status.success(),
+            "decapod init failed: {}",
+            String::from_utf8_lossy(&init.stderr)
+        );
+
+        git(&["add", "-A"]);
+        git(&["commit", "-m", "chore: initial decapod bootstrap"]);
+
+        Self {
+            _temp: temp,
+            repo_root,
+            xdg_config,
+            home_dir,
+        }
+    }
+
+    fn decapod_cmd(&self, cwd: &Path, agent_id: &str, password: Option<&str>) -> Command {
+        let mut cmd = Command::new(env!("CARGO_BIN_EXE_decapod"));
+        cmd.current_dir(cwd)
+            .env("XDG_CONFIG_HOME", &self.xdg_config)
+            .env("HOME", &self.home_dir)
+            .env_remove("DECAPOD_VALIDATE_SKIP_GIT_GATES")
+            .env_remove("DECAPOD_SESSION_PASSWORD")
+            .env_remove("DECAPOD_USER_ID")
+            .env_remove("DECAPOD_ROLE");
+        if !agent_id.is_empty() {
+            cmd.env("DECAPOD_AGENT_ID", agent_id);
+        } else {
+            cmd.env_remove("DECAPOD_AGENT_ID");
+        }
+        if let Some(pw) = password {
+            cmd.env("DECAPOD_SESSION_PASSWORD", pw);
+        }
+        cmd
+    }
+
+    fn spawn_claimed_agent(&self, agent_id: &str, topic: &str) -> ClaimedAgentWorktree {
+        let session = self
+            .decapod_cmd(&self.repo_root, agent_id, None)
+            .args(["session", "acquire"])
+            .output()
+            .expect("session acquire");
+        assert!(
+            session.status.success(),
+            "session acquire failed: {}",
+            String::from_utf8_lossy(&session.stderr)
+        );
+        let password = String::from_utf8_lossy(&session.stdout)
+            .lines()
+            .find_map(|l| l.strip_prefix("Password: ").map(|s| s.trim().to_string()))
+            .expect("session password");
+
+        let add = self
+            .decapod_cmd(&self.repo_root, agent_id, Some(&password))
+            .args(["todo", "add", &format!("Task for {agent_id}")])
+            .output()
+            .expect("todo add");
+        assert!(
+            add.status.success(),
+            "todo add failed: {}",
+            String::from_utf8_lossy(&add.stderr)
+        );
+        let add_json: serde_json::Value =
+            serde_json::from_slice(&add.stdout).expect("todo add json");
+        let task_id = add_json["id"].as_str().expect("task id").to_string();
+
+        let claim = self
+            .decapod_cmd(&self.repo_root, agent_id, Some(&password))
+            .args(["todo", "claim", "--id", &task_id])
+            .output()
+            .expect("todo claim");
+        assert!(
+            claim.status.success(),
+            "todo claim failed: {}",
+            String::from_utf8_lossy(&claim.stderr)
+        );
+
+        let branch = format!("agent/{agent_id}/{task_id}-{topic}");
+        let ensure = self
+            .decapod_cmd(&self.repo_root, agent_id, Some(&password))
+            .args(["workspace", "ensure", "--branch", &branch])
+            .output()
+            .expect("workspace ensure");
+        assert!(
+            ensure.status.success(),
+            "workspace ensure failed: {}{}",
+            String::from_utf8_lossy(&ensure.stdout),
+            String::from_utf8_lossy(&ensure.stderr)
+        );
+        let ensure_json: serde_json::Value =
+            serde_json::from_slice(&ensure.stdout).expect("workspace ensure json");
+        let worktree_dir = PathBuf::from(
+            ensure_json["worktree_path"]
+                .as_str()
+                .or_else(|| ensure_json["path"].as_str())
+                .expect("worktree path"),
+        );
+
+        // Also acquire session scoped to the isolated worktree so worktree invocations verify cleanly.
+        let wt_session = self
+            .decapod_cmd(&worktree_dir, agent_id, None)
+            .args(["session", "acquire"])
+            .output()
+            .expect("worktree session acquire");
+        assert!(wt_session.status.success());
+        let wt_password = String::from_utf8_lossy(&wt_session.stdout)
+            .lines()
+            .find_map(|l| l.strip_prefix("Password: ").map(|s| s.trim().to_string()))
+            .expect("worktree session password");
+
+        ClaimedAgentWorktree {
+            agent_id: agent_id.to_string(),
+            password: wt_password,
+            worktree_dir,
+        }
+    }
+
+    fn set_canonical_db_maintenance(&self, section: Option<&str>) {
+        let cfg_path = self.repo_root.join(".decapod/config.toml");
+        let current = fs::read_to_string(&cfg_path).expect("read canonical config");
+        let base = current
+            .split("\n[governance.db_maintenance]")
+            .next()
+            .unwrap()
+            .to_string();
+        let updated = match section {
+            Some(sec) => format!(
+                "{}\n\n[governance.db_maintenance]\n{}\n",
+                base.trim_end(),
+                sec.trim()
+            ),
+            None => format!("{}\n", base.trim_end()),
+        };
+        fs::write(&cfg_path, updated).expect("write canonical config");
+    }
+}
+
+#[test]
+fn governed_db_maintenance_enforces_default_deny_opt_in_anti_self_elevation_and_owner_boundary() {
+    let fixture = GovernedRepoFixture::new();
+    let alpha = fixture.spawn_claimed_agent("agent-alpha", "db-maint");
+
+    // 1. Default-deny in isolated git worktree on both CLI and RPC, while legacy read-only
+    //    `data database inspect` continues working without opt-in.
+    let legacy_inspect = fixture
+        .decapod_cmd(&alpha.worktree_dir, &alpha.agent_id, Some(&alpha.password))
+        .args(["data", "database", "inspect", "--format", "json"])
+        .output()
+        .expect("legacy inspect");
+    assert!(legacy_inspect.status.success());
+
+    let denied_verify = fixture
+        .decapod_cmd(&alpha.worktree_dir, &alpha.agent_id, Some(&alpha.password))
+        .args(["data", "db", "maintain", "verify"])
+        .output()
+        .expect("denied verify");
+    assert!(!denied_verify.status.success());
+    let stderr = String::from_utf8_lossy(&denied_verify.stderr);
+    assert!(
+        stderr.contains("POLICY_OPT_IN_DISABLED"),
+        "expected POLICY_OPT_IN_DISABLED, got: {stderr}"
+    );
+
+    let denied_rpc = fixture
+        .decapod_cmd(&alpha.worktree_dir, &alpha.agent_id, Some(&alpha.password))
+        .args(["rpc", "--op", "data.database.verify"])
+        .output()
+        .expect("denied rpc verify");
+    assert!(!denied_rpc.status.success());
+    let rpc_json: serde_json::Value =
+        serde_json::from_slice(&denied_rpc.stdout).expect("rpc error json");
+    assert_eq!(rpc_json["success"], false);
+    assert_eq!(rpc_json["error"]["code"], "POLICY_OPT_IN_DISABLED");
+
+    // 2. Anti-self-elevation: agent edits `.decapod/config.toml` inside its own worktree to
+    //    `enabled = true` — canonical main-repo policy MUST still deny!
+    let wt_cfg_path = alpha.worktree_dir.join(".decapod/config.toml");
+    let wt_cfg_orig = fs::read_to_string(&wt_cfg_path).unwrap();
+    fs::write(
+        &wt_cfg_path,
+        format!("{wt_cfg_orig}\n[governance.db_maintenance]\nenabled = true\n"),
+    )
+    .unwrap();
+    let self_elevate = fixture
+        .decapod_cmd(&alpha.worktree_dir, &alpha.agent_id, Some(&alpha.password))
+        .args(["data", "db", "maintain", "verify"])
+        .output()
+        .expect("worktree self-elevation attempt");
+    assert!(!self_elevate.status.success());
+    assert!(
+        String::from_utf8_lossy(&self_elevate.stderr).contains("POLICY_OPT_IN_DISABLED"),
+        "worktree config edit must never self-elevate"
+    );
+    fs::write(&wt_cfg_path, &wt_cfg_orig).unwrap();
+
+    // 3. Unmerged branch on main_root cannot self-elevate either (`UNMERGED_BRANCH_POLICY_UNTRUSTED`).
+    let checkout_unmerged = Command::new("git")
+        .args(["checkout", "-b", "unreviewed-policy-branch"])
+        .current_dir(&fixture.repo_root)
+        .output()
+        .unwrap();
+    assert!(checkout_unmerged.status.success());
+    fixture.set_canonical_db_maintenance(Some("enabled = true"));
+    let unmerged_attempt = fixture
+        .decapod_cmd(&alpha.worktree_dir, &alpha.agent_id, Some(&alpha.password))
+        .args(["data", "db", "maintain", "verify"])
+        .output()
+        .unwrap();
+    assert!(!unmerged_attempt.status.success());
+    assert!(
+        String::from_utf8_lossy(&unmerged_attempt.stderr)
+            .contains("UNMERGED_BRANCH_POLICY_UNTRUSTED"),
+        "unmerged branch on main repo must not grant maintenance authority"
+    );
+    fixture.set_canonical_db_maintenance(None);
+    assert!(
+        Command::new("git")
+            .args(["checkout", "master"])
+            .current_dir(&fixture.repo_root)
+            .output()
+            .unwrap()
+            .status
+            .success()
+    );
+
+    // 4. Enable canonical `[governance.db_maintenance] enabled = true` on `master`.
+    fixture.set_canonical_db_maintenance(Some("enabled = true"));
+
+    let caps_out = fixture
+        .decapod_cmd(&alpha.worktree_dir, &alpha.agent_id, Some(&alpha.password))
+        .args([
+            "data",
+            "db",
+            "capabilities",
+            "--probe",
+            "db.sql",
+            "--probe",
+            "db.vacuum",
+        ])
+        .output()
+        .expect("capabilities");
+    assert!(
+        caps_out.status.success(),
+        "capabilities failed: {}",
+        String::from_utf8_lossy(&caps_out.stderr)
+    );
+    let caps_json: serde_json::Value = serde_json::from_slice(&caps_out.stdout).unwrap();
+    let policy_sha = caps_json["policy"]["canonical_policy_sha256"]
+        .as_str()
+        .expect("policy sha256")
+        .to_string();
+    assert_eq!(caps_json["implies_validation_ready"], false);
+    let cap_entries = caps_json["capabilities"].as_array().unwrap();
+    let find_cap = |name: &str| {
+        cap_entries
+            .iter()
+            .find(|c| c["capability"] == name)
+            .cloned()
+            .expect(name)
+    };
+    assert_eq!(find_cap("db.verify")["decision"], "allowed");
+    assert_eq!(find_cap("db.backup")["decision"], "allowed");
+    assert_eq!(find_cap("db.recover")["decision"], "denied");
+    assert_eq!(
+        find_cap("db.recover")["reason_code"],
+        "OWNER_REPAIR_AUTHORITY_REQUIRED"
+    );
+    assert_eq!(find_cap("db.sql")["decision"], "unsupported");
+    assert_eq!(find_cap("db.sql")["reason_code"], "CAPABILITY_UNSUPPORTED");
+
+    // 5. Authorized `db.verify` (CLI + RPC parity) and `db.backup` inside `.decapod/backups/`.
+    let ok_verify = fixture
+        .decapod_cmd(&alpha.worktree_dir, &alpha.agent_id, Some(&alpha.password))
+        .args([
+            "data",
+            "db",
+            "maintain",
+            "verify",
+            "--expected-policy-sha256",
+            &policy_sha,
+        ])
+        .output()
+        .unwrap();
+    assert!(
+        ok_verify.status.success(),
+        "verify failed: {}",
+        String::from_utf8_lossy(&ok_verify.stderr)
+    );
+    let verify_json: serde_json::Value = serde_json::from_slice(&ok_verify.stdout).unwrap();
+    assert_eq!(verify_json["status"], "ok");
+    assert_eq!(verify_json["canonical_policy_sha256"], policy_sha);
+    assert_eq!(verify_json["implies_validation_ready"], false);
+
+    let rpc_verify = fixture
+        .decapod_cmd(&alpha.worktree_dir, &alpha.agent_id, Some(&alpha.password))
+        .args([
+            "rpc",
+            "--op",
+            "data.database.verify",
+            "--params",
+            &serde_json::json!({ "expected_policy_sha256": policy_sha }).to_string(),
+        ])
+        .output()
+        .unwrap();
+    assert!(rpc_verify.status.success());
+    let rpc_verify_json: serde_json::Value = serde_json::from_slice(&rpc_verify.stdout).unwrap();
+    assert_eq!(rpc_verify_json["success"], true);
+    assert_eq!(rpc_verify_json["result"]["status"], "ok");
+
+    // `db.backup` rejects paths outside `.decapod/backups/`, succeeds inside `.decapod/backups/`,
+    // rejects `operation_id` replay, and does NOT unlock `db.recover`.
+    let outside_backup = fixture
+        .decapod_cmd(&alpha.worktree_dir, &alpha.agent_id, Some(&alpha.password))
+        .args([
+            "data",
+            "db",
+            "maintain",
+            "backup",
+            "--destination",
+            "../outside.db",
+        ])
+        .output()
+        .unwrap();
+    assert!(!outside_backup.status.success());
+    assert!(
+        String::from_utf8_lossy(&outside_backup.stderr)
+            .contains("BACKUP_DESTINATION_OUTSIDE_BOUNDARY")
+    );
+
+    let valid_backup_rel = ".decapod/backups/snap-01.db";
+    let ok_backup = fixture
+        .decapod_cmd(&alpha.worktree_dir, &alpha.agent_id, Some(&alpha.password))
+        .args([
+            "data",
+            "db",
+            "maintain",
+            "backup",
+            "--destination",
+            valid_backup_rel,
+            "--operation-id",
+            "backup-op-001",
+        ])
+        .output()
+        .unwrap();
+    assert!(
+        ok_backup.status.success(),
+        "backup failed: {}",
+        String::from_utf8_lossy(&ok_backup.stderr)
+    );
+    let backup_json: serde_json::Value = serde_json::from_slice(&ok_backup.stdout).unwrap();
+    assert_eq!(backup_json["grants_recovery_approval"], false);
+    assert!(alpha.worktree_dir.join(valid_backup_rel).is_file());
+
+    let replay_backup = fixture
+        .decapod_cmd(&alpha.worktree_dir, &alpha.agent_id, Some(&alpha.password))
+        .args([
+            "data",
+            "db",
+            "maintain",
+            "backup",
+            "--destination",
+            ".decapod/backups/snap-02.db",
+            "--operation-id",
+            "backup-op-001",
+        ])
+        .output()
+        .unwrap();
+    assert!(!replay_backup.status.success());
+    assert!(String::from_utf8_lossy(&replay_backup.stderr).contains("OPERATION_REPLAY_REJECTED"));
+
+    // Even if `allowed = ["db.recover", "db.verify"]` is written to canonical config, `db.recover`
+    // remains denied (`OWNER_REPAIR_AUTHORITY_REQUIRED`).
+    fixture.set_canonical_db_maintenance(Some(
+        "enabled = true\nallowed = [\"db.verify\", \"db.recover\"]",
+    ));
+    let denied_recover = fixture
+        .decapod_cmd(&alpha.worktree_dir, &alpha.agent_id, Some(&alpha.password))
+        .args([
+            "data",
+            "db",
+            "maintain",
+            "recover",
+            "--preserve-original-at",
+            ".decapod/backups/orig.db",
+        ])
+        .output()
+        .unwrap();
+    assert!(!denied_recover.status.success());
+    assert!(
+        String::from_utf8_lossy(&denied_recover.stderr).contains("OWNER_REPAIR_AUTHORITY_REQUIRED")
+    );
+
+    // Stale expected_policy_sha256 is rejected (`POLICY_SNAPSHOT_STALE`).
+    let stale_sha = fixture
+        .decapod_cmd(&alpha.worktree_dir, &alpha.agent_id, Some(&alpha.password))
+        .args([
+            "data",
+            "db",
+            "maintain",
+            "verify",
+            "--expected-policy-sha256",
+            &policy_sha,
+        ])
+        .output()
+        .unwrap();
+    assert!(!stale_sha.status.success());
+    assert!(String::from_utf8_lossy(&stale_sha.stderr).contains("POLICY_SNAPSHOT_STALE"));
+
+    // Forged actor / wrong password / secret redaction in audit log.
+    let forged_actor = fixture
+        .decapod_cmd(&alpha.worktree_dir, &alpha.agent_id, Some(&alpha.password))
+        .args([
+            "data",
+            "db",
+            "maintain",
+            "verify",
+            "--actor",
+            "forged-owner-Bearer-supersecret123456",
+        ])
+        .output()
+        .unwrap();
+    assert!(!forged_actor.status.success());
+    assert!(String::from_utf8_lossy(&forged_actor.stderr).contains("AGENT_IDENTITY_FORGED"));
+
+    let wrong_pw = fixture
+        .decapod_cmd(
+            &alpha.worktree_dir,
+            &alpha.agent_id,
+            Some("wrong-password-value"),
+        )
+        .args(["data", "db", "maintain", "verify"])
+        .output()
+        .unwrap();
+    assert!(!wrong_pw.status.success());
+    assert!(String::from_utf8_lossy(&wrong_pw.stderr).contains("AGENT_IDENTITY_FORGED"));
+
+    // Reverting canonical config to `enabled = false` immediately revokes access.
+    fixture.set_canonical_db_maintenance(Some("enabled = false"));
+    let revoked = fixture
+        .decapod_cmd(&alpha.worktree_dir, &alpha.agent_id, Some(&alpha.password))
+        .args(["data", "db", "maintain", "verify"])
+        .output()
+        .unwrap();
+    assert!(!revoked.status.success());
+    assert!(String::from_utf8_lossy(&revoked.stderr).contains("POLICY_OPT_IN_DISABLED"));
+
+    // Audit records remain readable, redacted, and never imply validation readiness.
+    let audit = fixture
+        .decapod_cmd(&alpha.worktree_dir, &alpha.agent_id, Some(&alpha.password))
+        .args(["data", "db", "audit", "--limit", "50"])
+        .output()
+        .unwrap();
+    assert!(audit.status.success());
+    let audit_str = String::from_utf8_lossy(&audit.stdout);
+    assert!(!audit_str.contains(&alpha.password));
+    assert!(
+        !audit_str.contains(fixture.repo_root.to_string_lossy().as_ref()),
+        "audit log must redact absolute host repo paths"
+    );
+    let audit_json: serde_json::Value = serde_json::from_slice(&audit.stdout).unwrap();
+    assert!(audit_json["count"].as_u64().unwrap() >= 5);
+    assert_eq!(audit_json["implies_validation_ready"], false);
+
+    // Cloud backend fails closed even with `enabled = true` and spoofed env vars.
+    let main_cfg_path = fixture.repo_root.join(".decapod/config.toml");
+    let cloud_cfg = fs::read_to_string(&main_cfg_path)
+        .unwrap()
+        .replace("backend = \"local\"", "backend = \"cloud\"");
+    fs::write(&main_cfg_path, &cloud_cfg).unwrap();
+    fs::write(
+        &wt_cfg_path,
+        fs::read_to_string(&wt_cfg_path)
+            .unwrap()
+            .replace("backend = \"local\"", "backend = \"cloud\""),
+    )
+    .unwrap();
+    fixture.set_canonical_db_maintenance(Some("enabled = true"));
+
+    let cloud_denied = fixture
+        .decapod_cmd(&alpha.worktree_dir, &alpha.agent_id, Some(&alpha.password))
+        .env("DECAPOD_USER_ID", "owner-user-123")
+        .env("DECAPOD_ROLE", "owner")
+        .args(["data", "db", "maintain", "verify"])
+        .output()
+        .unwrap();
+    assert!(!cloud_denied.status.success());
+    assert!(
+        String::from_utf8_lossy(&cloud_denied.stderr).contains("CLOUD_PRINCIPAL_UNVERIFIED"),
+        "cloud backend must fail closed until Propodus #88 principal delegation"
+    );
+}
+
+#[test]
+fn two_concurrent_agents_diagnose_and_resolve_lock_contention_with_custody_isolation() {
+    let fixture = GovernedRepoFixture::new();
+    let alpha = fixture.spawn_claimed_agent("agent-alpha", "lock-alpha");
+    let beta = fixture.spawn_claimed_agent("agent-beta", "lock-beta");
+    fixture.set_canonical_db_maintenance(Some("enabled = true"));
+
+    // Custody isolation: agent-alpha cannot invoke governed maintenance from agent-beta's worktree!
+    let cross_worktree = fixture
+        .decapod_cmd(&beta.worktree_dir, &alpha.agent_id, Some(&alpha.password))
+        .args(["data", "db", "lock", "diagnose"])
+        .output()
+        .unwrap();
+    assert!(!cross_worktree.status.success());
+    let cross_err = String::from_utf8_lossy(&cross_worktree.stderr);
+    assert!(
+        cross_err.contains("WORKTREE_CUSTODY_MISMATCH")
+            || cross_err.contains("AGENT_IDENTITY_UNAUTHENTICATED")
+            || cross_err.contains("AGENT_IDENTITY_FORGED"),
+        "unexpected cross-worktree error: {cross_err}"
+    );
+
+    let lock_path = fixture.repo_root.join(".decapod/data/decapod.db.lock");
+    let lock_file = OpenOptions::new()
+        .create(true)
+        .truncate(false)
+        .read(true)
+        .write(true)
+        .open(&lock_path)
+        .unwrap();
+
+    // Hold an external exclusive advisory lock simulating transient contention from another process.
+    lock_file.lock_exclusive().unwrap();
+
+    // Agent alpha non-destructively diagnoses exclusive contention (`owner = unknown`) without deleting `.lock`.
+    let diag_out = fixture
+        .decapod_cmd(&alpha.worktree_dir, &alpha.agent_id, Some(&alpha.password))
+        .args(["data", "db", "lock", "diagnose", "--timeout-ms", "40"])
+        .output()
+        .unwrap();
+    assert!(
+        diag_out.status.success(),
+        "lock diagnose failed: {}",
+        String::from_utf8_lossy(&diag_out.stderr)
+    );
+    let diag_json: serde_json::Value = serde_json::from_slice(&diag_out.stdout).unwrap();
+    assert_eq!(
+        diag_json["diagnosis"]["lock_state"],
+        "exclusive_maintenance_active"
+    );
+    assert_eq!(diag_json["diagnosis"]["owner"], "unknown");
+    assert_eq!(diag_json["diagnosis"]["timed_out"], true);
+    assert!(lock_path.exists(), "diagnose must never delete .lock");
+
+    // Bounded retry fails closed (`RETRY_DEADLINE_EXCEEDED`) when contention outlasts deadline.
+    let timeout_retry = fixture
+        .decapod_cmd(&beta.worktree_dir, &beta.agent_id, Some(&beta.password))
+        .args([
+            "rpc",
+            "--op",
+            "data.database.lock.retry",
+            "--params",
+            r#"{"target":"verify","max_attempts":2,"initial_backoff_ms":20,"deadline_ms":60}"#,
+        ])
+        .output()
+        .unwrap();
+    assert!(!timeout_retry.status.success());
+    let timeout_json: serde_json::Value = serde_json::from_slice(&timeout_retry.stdout).unwrap();
+    assert_eq!(timeout_json["success"], false);
+    assert_eq!(timeout_json["error"]["code"], "RETRY_DEADLINE_EXCEEDED");
+
+    // Release the transient exclusive lock after 120ms on a background thread while BOTH
+    // agent-alpha and agent-beta run bounded `db.lock.retry` from their own isolated worktrees!
+    let releaser = std::thread::spawn(move || {
+        std::thread::sleep(std::time::Duration::from_millis(120));
+        let _ = FileExt::unlock(&lock_file);
+    });
+
+    let alpha_child = fixture
+        .decapod_cmd(&alpha.worktree_dir, &alpha.agent_id, Some(&alpha.password))
+        .args([
+            "data",
+            "db",
+            "lock",
+            "retry",
+            "--target",
+            "verify",
+            "--max-attempts",
+            "8",
+            "--initial-backoff-ms",
+            "40",
+            "--deadline-ms",
+            "3000",
+        ])
+        .stdout(std::process::Stdio::piped())
+        .stderr(std::process::Stdio::piped())
+        .spawn()
+        .unwrap();
+
+    let beta_child = fixture
+        .decapod_cmd(&beta.worktree_dir, &beta.agent_id, Some(&beta.password))
+        .args([
+            "rpc",
+            "--op",
+            "data.database.lock.retry",
+            "--params",
+            r#"{"target":"verify","max_attempts":8,"initial_backoff_ms":40,"deadline_ms":3000}"#,
+        ])
+        .stdout(std::process::Stdio::piped())
+        .stderr(std::process::Stdio::piped())
+        .spawn()
+        .unwrap();
+
+    let alpha_res = alpha_child.wait_with_output().unwrap();
+    let beta_res = beta_child.wait_with_output().unwrap();
+    releaser.join().unwrap();
+
+    assert!(
+        alpha_res.status.success(),
+        "alpha retry failed: {}",
+        String::from_utf8_lossy(&alpha_res.stderr)
+    );
+    assert!(
+        beta_res.status.success(),
+        "beta retry failed: {}{}",
+        String::from_utf8_lossy(&beta_res.stdout),
+        String::from_utf8_lossy(&beta_res.stderr)
+    );
+
+    let alpha_json: serde_json::Value = serde_json::from_slice(&alpha_res.stdout).unwrap();
+    assert_eq!(alpha_json["status"], "ok");
+    assert_eq!(alpha_json["target_result"]["integrity_check"], "ok");
+
+    let beta_json: serde_json::Value = serde_json::from_slice(&beta_res.stdout).unwrap();
+    assert_eq!(beta_json["success"], true);
+    assert_eq!(
+        beta_json["result"]["target_result"]["integrity_check"],
+        "ok"
+    );
+}

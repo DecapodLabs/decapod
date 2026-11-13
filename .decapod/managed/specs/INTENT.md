@@ -341,8 +341,8 @@ These declarations select authoring and proof obligations; they do not attest im
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `7693d5010b19979e4cb8189dcb7d189c3ada65fb2953147b491cc708cd5ae8ec`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (231 files), `tests/` (232 files)
+- Repository signal fingerprint: `a6e059f4f377dff525c0c4d75cf6bf53027bbe21837532452d334229f3a93914`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (232 files), `tests/` (232 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 
@@ -526,3 +526,11 @@ remain separate work and are not claimed by this presentation change.
 Managed cloud commands must distinguish the local Git checkout from a service-issued project reference. `cloud projects` lists authenticated project names; `cloud project use` selects an exact name or a previously shown entry; `cloud project create` explicitly materializes a project through the existing idempotent account contract. Selection does not grant access. Existing session custody and local operation remain independent of this account-routing cache.
 
 The resolved native project also supplies the repository field of newly created tasks. Before the first possible write dispatch, the existing machine-private todo operation journal atomically binds the operation to a digest of its resolved service/project route. Preflight login and initial project selection retain the same operation ID; subsequent selection changes cannot replay an uncertain or successful write into another project. Older unknown records remain bound to their original canonical repository semantics. The real PostgreSQL consumer exposed the former Git-label write mismatch; that failed candidate supplies no successful native proof.
+
+## PR 1662: accepted v0.143.2 source integration
+
+Expose only project-opted local database maintenance capabilities to the agent. Repository policy and exact operation authority govern diagnostics and safe maintenance; a project flag does not confer recovery, raw SQL, cloud privilege or task/checkout ownership.
+
+## PR1662 current-master preparation
+
+Preserve prepared PR1662 capability-scoped database maintenance before integrating accepted master3afa9df9 and the0.144.2 source release. Default-deny accepted policy, owner-only repair, bounded safe operations and non-destructive lock custody remain obligations. Hosted CI must establish the exact integrated candidate; no local tests are run.

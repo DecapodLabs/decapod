@@ -1142,8 +1142,8 @@ field. Nothing in this operation authorizes a mutation, approval or completion.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `7693d5010b19979e4cb8189dcb7d189c3ada65fb2953147b491cc708cd5ae8ec`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (231 files), `tests/` (232 files)
+- Repository signal fingerprint: `a6e059f4f377dff525c0c4d75cf6bf53027bbe21837532452d334229f3a93914`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (232 files), `tests/` (232 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 
@@ -1468,3 +1468,11 @@ The resolved native project also supplies the repository field of newly created 
 ## Versioned cloud mutation receipts
 
 Cloud todo receipt cache v2 is an object with version=2 and records. The reader accepts legacy flat record arrays, preserves their uncertainty and original repository semantics, and rewrites them as v2 under the stable lock. Unsupported future versions fail without replacement. Server request/result contracts and the cloud-session credential record remain unchanged.
+
+## PR 1662: accepted v0.143.2 source integration
+
+Existing `data database` maintenance/capability/lock/audit CLI and RPC operations report allowed, denied or unsupported capability decisions. Candidate-only opt-in remains `DB_MAINTENANCE_POLICY_UNACCEPTED`; owner repair is separate. Configured local authority cannot imply authenticated cloud access.
+
+## PR1662 current-master preparation
+
+Preserve symmetric data.database CLI/RPC capability discovery, diagnostics, bounded maintenance and audit interfaces. Policy admission must happen before startup migrations for maintenance commands; raw SQL, destructive replacement and arbitrary destinations remain outside the delegated contract.

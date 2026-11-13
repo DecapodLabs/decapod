@@ -1325,8 +1325,8 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `7693d5010b19979e4cb8189dcb7d189c3ada65fb2953147b491cc708cd5ae8ec`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (231 files), `tests/` (232 files)
+- Repository signal fingerprint: `a6e059f4f377dff525c0c4d75cf6bf53027bbe21837532452d334229f3a93914`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (232 files), `tests/` (232 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 
@@ -1840,3 +1840,15 @@ from the `0.143.1` controller and updates `reviewed_sources_digest` to
 `sha256:50af27077a026878a187611c381226be611ae10f45bfec77fc205282258d3ccf`;
 full CI and `decapod validate` execution on the exact merged commit remain
 required before publication readiness.
+
+## PR 1662: accepted v0.143.2 source integration
+
+Exercise actual `sqlite_maintenance` CLI/RPC worktree cases and storage-lock regressions on the updated source. Policy substitution, unsupported cloud maintenance and owner-only recovery must remain rejected. Historical project checks do not establish full current-candidate publication readiness.
+
+### v0.143.2 fresh-docs workunit fixture initialization
+
+`tests/support/fresh_docs_readiness.rs` initializes the workspace-local workunit runtime using the real `init --refresh --proof` CLI before declaring unverified completion. Root datastore initialization does not initialize this journal. The scenario still requires a clean unchanged candidate, rejects unverified completion and withholds readiness receipts; the production `WORKUNIT_RUNTIME_UNINITIALIZED` guard remains intact. The repair passed on the baseline Dactyl dependency before SDK-specific verification.
+
+## PR1662 current-master preparation
+
+This checkpoint preserves original source and tests before integration with current master. Preserve failure history and all assertions; use hosted CI for verification, without local tests or running the maintenance candidate against the live machine datastore. Prior test observations do not prove the new integration.
