@@ -598,7 +598,7 @@ execution evidence remains required before publication readiness.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `0a0498aa94eb3f7551fe07c380ef13b469d188ab33218c72f80fc2e081fc3951`
+- Repository signal fingerprint: `6083549392b8149286d1b5e4e2d33cffe84916de1fe2e7a919b9b3ce8197ae3d`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (231 files), `tests/` (232 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
@@ -913,3 +913,7 @@ The resolved native project also supplies the repository field of newly created 
 ## Versioned cloud mutation receipts
 
 Operation-route binding must survive clients of different releases. Versioned receipt envelopes reject older array-only writers before dispatch, while the stable lock serializes migration with older in-flight writes. Both record count and actual encoded bytes are bounded before atomic replacement; an upgrade that would exceed the byte cap preserves the original evidence instead of truncating it.
+
+## Canonical terminal rule context and proof-backed completion custody
+
+Terminal rule evaluation (`core/validation_rules.rs::evaluate_terminal_rules`) derives `task_type` and `git_ref` from verified trajectory/branch task identities and canonical `refs/heads/<branch>` names without creating or mutating `.decapod/data` SQLite state. Plural store categories (`features`, `bugs`, `tests`) normalize to the built-in rule vocabulary (`feature`, `bugfix`, `test`) so pre-execution and publication scope/custody/evidence rules cannot be bypassed by category naming differences, while unmapped administrative categories fall back to `None` so `task_types`-scoped constitutional rules remain enforced. Undeclared workunits never block ordinary first-validation bootstrap, whereas any durably declared workunit remains fail-closed (`TERMINAL_WORKUNIT_UNPROVEN` or `UNVERIFIED_COMPLETION`) until its checkpointed execution binding and required proof-plan gates pass.

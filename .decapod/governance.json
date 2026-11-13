@@ -629,6 +629,11 @@
       "id": "spec-readme-refresh-0-143-0",
       "summary": "docs(specs): refresh specs README.md attestation for v0.143.0",
       "input_digest": "sha256:b2eaf19f95042ee9799dd37f313086ee76c024c6c04f148f5bac0d920f0fbe4b"
+    },
+    {
+      "id": "spec-security-terminal-custody",
+      "summary": "docs(specs): document terminal rule context and proof-backed completion custody",
+      "input_digest": "sha256:43a0ac3fe49ae07f89862a0c827b3a50b1f41392084c10cdae1a417d35514058"
     }
   ],
   "intents": {
