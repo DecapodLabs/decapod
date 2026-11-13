@@ -645,6 +645,14 @@
       "proof_refs": [
         "https://github.com/DecapodLabs/decapod/issues/1568"
       ]
+    },
+    {
+      "id": "issue-1568-file-14",
+      "summary": "fix(governance): regenerate actual 0.144.4 entrypoint templates; file-by-file checkpoint, verification pending.",
+      "input_digest": "sha256:fd511f2bd565ab701e24faeb7e3412b71effef2f77b7f063f836f9b0c0105bab",
+      "proof_refs": [
+        "https://github.com/DecapodLabs/decapod/issues/1568"
+      ]
     }
   ],
   "intents": {
@@ -685,21 +693,21 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "The required Bazel target supplies a relative runfiles binary; canonicalize it before entering disposable repositories, matching existing CLI test resolution. Keep real supported CLI execution and fail if unavailable. No local tests.",
+          "reason": "Hosted CI proved actual entrypoint files remained on0.144.3 after agent.init metadata refresh. Regenerate through supported init refresh/proof on official0.144.4, preserve exact authored config/verification requirements, and collect fresh hosted proof. No local tests.",
           "reviewed_code_fingerprint": "b994fb683e12680d556101686a1de51449339a34cb3d81f2183bb408b85f3fc9",
           "spec_material_hash": "0bc38acf41a2aeb5f82f86b2237f03c756979daa53ab64de603368cb719b8ae5"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "The required Bazel target supplies a relative runfiles binary; canonicalize it before entering disposable repositories, matching existing CLI test resolution. Keep real supported CLI execution and fail if unavailable. No local tests.",
+          "reason": "Hosted CI proved actual entrypoint files remained on0.144.3 after agent.init metadata refresh. Regenerate through supported init refresh/proof on official0.144.4, preserve exact authored config/verification requirements, and collect fresh hosted proof. No local tests.",
           "reviewed_code_fingerprint": "b994fb683e12680d556101686a1de51449339a34cb3d81f2183bb408b85f3fc9",
           "spec_material_hash": "0bd2bba11d788c73dd7a653432ffbcc402059821300c4e6b6002046c3d1f0c21"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "The required Bazel target supplies a relative runfiles binary; canonicalize it before entering disposable repositories, matching existing CLI test resolution. Keep real supported CLI execution and fail if unavailable. No local tests.",
+          "reason": "Hosted CI proved actual entrypoint files remained on0.144.3 after agent.init metadata refresh. Regenerate through supported init refresh/proof on official0.144.4, preserve exact authored config/verification requirements, and collect fresh hosted proof. No local tests.",
           "reviewed_code_fingerprint": "b994fb683e12680d556101686a1de51449339a34cb3d81f2183bb408b85f3fc9",
           "spec_material_hash": "c288daf7a1c8282872088f5e6f37fc4d95b6f6bc83716c3ffeb11ef641f8fc97"
         }
@@ -712,13 +720,13 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1794612017Z"
+      "updated_at": "1794612770Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:7130e58b60f782e839cccdca398b07a7877f2802d793d7a5158fedf4775c3e2b",
+      "artifact_hash": "sha256:c624b7287a7006d66360ff4fb597e50c4d74c2b2a3f633a8ec8fe0daef526130",
       "checks": [],
       "current_phase": "implementation",
       "custody": {
@@ -825,10 +833,17 @@
             "intent_id": "intent:change_01M7BCJGVSZZ72B0C1Y6FVMPP4",
             "kind": "trajectory_step_recorded",
             "sequence": 16
+          },
+          {
+            "detail": "trajectory:branch_01M7BCJGZ6T52EA2CECBZAPK5W",
+            "event_id": "event:17",
+            "intent_id": "intent:change_01M7BCJGVSZZ72B0C1Y6FVMPP4",
+            "kind": "trajectory_step_recorded",
+            "sequence": 17
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 16,
+        "next_sequence": 17,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M7BCJGZ6T52EA2CECBZAPK5W": {
@@ -1038,6 +1053,22 @@
                   "issue-1568"
                 ],
                 "sequence": 16,
+                "validation_findings": [
+                  "Hosted verification and exact-candidate publication readiness remain pending; no local tests run."
+                ]
+              },
+              {
+                "action": "implementation",
+                "custody_event_id": "event:17",
+                "observations": [
+                  ".decapod/managed/specs/VALIDATION.md",
+                  "https://github.com/DecapodLabs/decapod/issues/1568"
+                ],
+                "proof_refs": [],
+                "scope": [
+                  "issue-1568"
+                ],
+                "sequence": 17,
                 "validation_findings": [
                   "Hosted verification and exact-candidate publication readiness remain pending; no local tests run."
                 ]
