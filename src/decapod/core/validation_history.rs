@@ -13,6 +13,7 @@ use super::{
     events,
     external_action::{self, ExternalCapability},
     laya_readiness,
+    native_proof::{self, IdentityInputs, SuiteLimits, ToolchainInputs},
     readiness_evidence::{self as evidence, ExpectedPlan, MaterialIdentity, SuiteEvidence},
     store::Store,
     todo::{self, HistoricalTaskBinding},
@@ -24,6 +25,7 @@ use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use sha2::{Digest, Sha256};
 use std::{
+    collections::BTreeMap,
     ffi::OsStr,
     io::Read,
     path::{Path, PathBuf},
@@ -152,6 +154,113 @@ fn repository_identity(
     workspace::resolve_readiness_repository(root)
 }
 
+/// Bounded references needed to remeasure a workunit observation. No command,
+/// source snapshot, output blob, credential or new evidence store is introduced.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub(super) struct CurrentEvidenceInputs {
+    schema: String,
+    inputs: IdentityInputs,
+    native_bindings: Vec<(evidence::CheckKey, String)>,
+    toolchains: BTreeMap<String, ToolchainInputs>,
+    remote_bindings: Option<Vec<(evidence::CheckKey, String)>>,
+}
+impl CurrentEvidenceInputs {
+    pub(super) fn capture(
+        inputs: &IdentityInputs,
+        selection: &validation_runtime::ExecutionSelection,
+    ) -> Result<Self, DecapodError> {
+        let mut toolchains = BTreeMap::new();
+        let mut native_bindings = Vec::new();
+        for (key, invocation) in &selection.native_invocations {
+            let tools = ToolchainInputs::from(invocation);
+            let reference = digest(&tools)?;
+            toolchains.entry(reference.clone()).or_insert(tools);
+            native_bindings.push((key.clone(), reference));
+        }
+        Ok(Self {
+            schema: "decapod.current-evidence-inputs.v1".into(),
+            inputs: inputs.clone(),
+            native_bindings,
+            toolchains,
+            remote_bindings: selection.policy.buildkite_preflights.then(|| {
+                selection
+                    .bindings
+                    .iter()
+                    .filter(|(_, binding)| binding.executor != evidence::Provider::Native)
+                    .map(|(key, binding)| (key.clone(), binding.toolchain_digest.clone()))
+                    .collect()
+            }),
+        })
+    }
+    fn verify_current(&self, root: &Path, expected: &MaterialIdentity) -> Result<(), DecapodError> {
+        if self.schema != "decapod.current-evidence-inputs.v1"
+            || self.inputs.root != root.canonicalize()?
+            || self.inputs.git_program != crate::readiness_installed_tool(root, "git")?
+            || self.inputs.repository != expected.repository
+            || self.inputs.base_branch != expected.base_branch
+            || self.native_bindings.len() > 1024
+            || self.toolchains.len() > 1024
+            || self
+                .remote_bindings
+                .as_ref()
+                .is_some_and(|bindings| bindings.len() > 1024)
+        {
+            return Err(invalid(
+                "current proof input identity or bounds are invalid",
+            ));
+        }
+        for (reference, tools) in &self.toolchains {
+            if digest(tools)? != *reference {
+                return Err(invalid("canonical tool references changed"));
+            }
+        }
+        let tools = self
+            .native_bindings
+            .iter()
+            .map(|(key, reference)| {
+                let tools = self
+                    .toolchains
+                    .get(reference)
+                    .ok_or_else(|| invalid("canonical tool references are incomplete"))?;
+                Ok((key.clone(), tools.clone()))
+            })
+            .collect::<Result<Vec<_>, DecapodError>>()?;
+        let mut current = native_proof::capture_readonly_identity(
+            &self.inputs,
+            &tools,
+            SuiteLimits {
+                timeout: Duration::from_secs(30),
+                max_checks: 1024,
+                max_hashed_bytes: 2 * 1024 * 1024 * 1024,
+                max_output_bytes: 1024 * 1024,
+                git_output_limit: 1024 * 1024,
+            },
+            &Cancellation::default(),
+        )?;
+        if let Some(remote) = &self.remote_bindings {
+            // Preserve the original declared/attested remote assurance scope;
+            // rehashing local references never claims to measure remote tools.
+            current.toolchain_digest = digest(&(&current.toolchain_digest, remote))?;
+        }
+        if &current != expected {
+            return Err(invalid(
+                "WORKUNIT_PROOF_STALE: source, candidate, accepted target, policy, history or measured tool identity changed; obtain fresh full validation",
+            ));
+        }
+        Ok(())
+    }
+}
+
+pub(crate) fn ensure_full_validation_plan(gates: &[String]) -> Result<(), DecapodError> {
+    if gates.len() != 1 || !matches!(gates[0].as_str(), "validate_passes" | "validated_commit") {
+        return Err(DecapodError::ValidationError(
+            "VALIDATION_HISTORY_TASK_PROOF_UNSUPPORTED: recorded full validation cannot discharge additional or missing task proof obligations".into(),
+        ));
+    }
+    Ok(())
+}
+
 /// Captured before any validation execution, not reconstructed from its result.
 #[derive(Debug, Clone)]
 pub(crate) struct ValidationBinding {
@@ -162,11 +271,19 @@ pub(crate) struct ValidationBinding {
     trajectory_run_id: String,
     task: HistoricalTaskBinding,
     epoch: ValidationEpochMetadata,
+    workunit_subject: Option<super::workunit::WorkUnitValidationSubject>,
 }
 
 pub(crate) fn capture_task_binding(
     store: &Store,
     root: &Path,
+) -> Result<Option<ValidationBinding>, DecapodError> {
+    capture_task_binding_inner(store, root, true)
+}
+fn capture_task_binding_inner(
+    store: &Store,
+    root: &Path,
+    include_workunit: bool,
 ) -> Result<Option<ValidationBinding>, DecapodError> {
     // Cloud readiness retains its existing authority. The local history
     // feature makes no unsupported claim about cloud journal durability.
@@ -190,6 +307,11 @@ pub(crate) fn capture_task_binding(
         .to_owned();
     let task = todo::capture_validation_binding(&store.root, task_id)?;
     let epoch = validation_epoch::active_validation_epoch_bounded(root)?;
+    let workunit_subject = if include_workunit {
+        super::workunit::capture_validation_subject(root, task_id)?
+    } else {
+        None
+    };
     Ok(Some(ValidationBinding {
         repository,
         candidate_sha,
@@ -198,6 +320,7 @@ pub(crate) fn capture_task_binding(
         trajectory_run_id,
         task,
         epoch,
+        workunit_subject,
     }))
 }
 
@@ -217,6 +340,8 @@ pub(crate) struct CompletedReadinessEvidence {
     expected_plan: ExpectedPlan,
     suite: SuiteEvidence,
     laya: laya_readiness::Receipt,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    current_inputs: Option<CurrentEvidenceInputs>,
 }
 
 impl CompletedReadinessEvidence {
@@ -230,6 +355,7 @@ impl CompletedReadinessEvidence {
         expected_plan: &ExpectedPlan,
         suite: &SuiteEvidence,
         laya: &laya_readiness::Receipt,
+        current_inputs: Option<CurrentEvidenceInputs>,
     ) -> Result<Self, DecapodError> {
         let value = Self {
             schema: SCHEMA.into(),
@@ -242,6 +368,7 @@ impl CompletedReadinessEvidence {
             expected_plan: expected_plan.clone(),
             suite: suite.clone(),
             laya: laya.clone(),
+            current_inputs,
         };
         value.verify()?;
         Ok(value)
@@ -398,6 +525,8 @@ struct CompletionRecord {
     task_binding: HistoricalTaskBinding,
     validation_epoch: ValidationEpochMetadata,
     proof: CompletedReadinessEvidence,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    workunit_subject: Option<super::workunit::WorkUnitValidationSubject>,
     record_digest: String,
 }
 impl CompletionRecord {
@@ -510,6 +639,23 @@ pub(crate) fn finish_archive(
             "candidate, governance, repository, or epoch changed during validation",
         ));
     }
+    if binding.workunit_subject
+        != super::workunit::capture_validation_subject(root, &binding.task.task_id)?
+    {
+        return Err(invalid("workunit changed during full validation"));
+    }
+    let mut archived = proof.clone();
+    if binding.workunit_subject.is_some() {
+        archived
+            .current_inputs
+            .as_ref()
+            .ok_or_else(|| invalid("workunit lacks observed current-proof inputs"))?
+            .verify_current(root, &archived.material)?;
+    } else {
+        // Non-workunit history retains its existing bounded representation.
+        // A later workunit cannot borrow that observation without fresh proof.
+        archived.current_inputs = None;
+    }
     let mut record = CompletionRecord {
         schema: SCHEMA.into(),
         result: "success".into(),
@@ -520,7 +666,8 @@ pub(crate) fn finish_archive(
         candidate_sha: binding.candidate_sha.clone(),
         task_binding: binding.task.clone(),
         validation_epoch: binding.epoch.clone(),
-        proof: proof.clone(),
+        proof: archived,
+        workunit_subject: binding.workunit_subject.clone(),
         record_digest: String::new(),
     };
     record.record_digest = record.calculated_digest()?;
@@ -687,6 +834,79 @@ pub(crate) fn lookup_record(
     record_id: &str,
 ) -> Result<HistoricalValidationProof, DecapodError> {
     lookup_inner(root, store, sha, Some(record_id))
+}
+
+/// Current workunit applicability comes only from the canonical full producer.
+/// A reference selects a record; the caller cannot supply proof bytes or success.
+pub(crate) fn current_workunit_proof(
+    root: &Path,
+    manifest: &super::workunit::WorkUnitManifest,
+    reference: Option<(&str, &str)>,
+) -> Result<HistoricalValidationProof, DecapodError> {
+    ensure_full_validation_plan(&manifest.proof_plan)?;
+    let store = Store {
+        kind: super::store::StoreKind::Repo,
+        root: super::store::find_governance_root(root).join(".decapod/data"),
+    };
+    let binding = capture_task_binding_inner(&store, root, false)?.ok_or_else(|| {
+        invalid("WORKUNIT_PROOF_UNVERIFIABLE: no supported canonical local proof authority")
+    })?;
+    if binding.task.task_id != manifest.task_id
+        || binding.task.assignee != crate::current_agent_id()
+    {
+        return Err(invalid(
+            "WORKUNIT_PROOF_UNVERIFIABLE: current task or caller custody differs",
+        ));
+    }
+    let proof = if let Some((candidate, record)) = reference {
+        if candidate != binding.candidate_sha {
+            return Err(invalid(
+                "WORKUNIT_PROOF_STALE: reference belongs to another candidate",
+            ));
+        }
+        lookup_record(root, &store, candidate, record)?
+    } else {
+        lookup(root, &store, &binding.candidate_sha)?
+    };
+    let record = &proof.record;
+    if record.task_binding != binding.task
+        || record.validation_epoch != binding.epoch
+        || record.proof.governance_digest != binding.governance_digest
+        || record.proof.trajectory_digest != binding.trajectory_digest
+        || record.proof.material.repository != binding.repository
+    {
+        return Err(invalid(
+            "WORKUNIT_PROOF_STALE: task, custody, epoch, repository or accepted governance changed",
+        ));
+    }
+    let subject = record.workunit_subject.as_ref().ok_or_else(|| {
+        invalid("WORKUNIT_PROOF_UNVERIFIABLE: historical declaration or prior validation did not observe this workunit; obtain fresh full validation")
+    })?;
+    if subject.contract_digest != super::workunit::validation_contract_digest(manifest)? {
+        return Err(invalid(
+            "WORKUNIT_PROOF_STALE: workunit intent, scope, requirements or references changed",
+        ));
+    }
+    let execution = super::trajectory::capture_execution_binding(root, &manifest.task_id)?;
+    if execution.intent_id != manifest.intent_ref
+        || execution.head_revision != record.candidate_sha
+        || execution.material_digest != record.proof.material.tree_digest
+    {
+        return Err(invalid(
+            "WORKUNIT_PROOF_STALE: current execution binding differs from observed proof",
+        ));
+    }
+    record
+        .proof
+        .current_inputs
+        .as_ref()
+        .ok_or_else(|| {
+            invalid(
+                "WORKUNIT_PROOF_UNVERIFIABLE: legacy record has no current tool/input provenance",
+            )
+        })?
+        .verify_current(root, &record.proof.material)?;
+    Ok(proof)
 }
 
 /// The accepted integration is distinct from the source candidate that ran the
@@ -1200,6 +1420,7 @@ pub(crate) mod test_fixture {
             &plan,
             &suite,
             &laya,
+            None,
         )
         .unwrap();
         let epoch = ValidationEpochMetadata {
@@ -1236,6 +1457,7 @@ pub(crate) mod test_fixture {
             },
             validation_epoch: epoch,
             proof,
+            workunit_subject: None,
             record_digest: String::new(),
         };
         record.record_digest = record.calculated_digest().unwrap();
