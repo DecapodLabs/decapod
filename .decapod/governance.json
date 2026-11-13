@@ -909,6 +909,11 @@
       "id": "cp-1630-knowledge-envelope",
       "summary": "fix(knowledge): reconstruct compact promotion event envelopes",
       "input_digest": "sha256:991d071a59b5ef290131cd6edd6017a6d51f6665f1a255650f99f78d56a0f187"
+    },
+    {
+      "id": "cp-1630-core-broker-query",
+      "summary": "test(broker): read broker audit events via query_all_on_conn",
+      "input_digest": "sha256:d695276b389ecdd2801aa05a83178c8f660e33a8f038d8223022158e8ef5ea3f"
     }
   ],
   "intents": {
