@@ -609,6 +609,11 @@
       "id": "hf-spec-ops",
       "summary": "docs(specs): refresh OPERATIONS.md codebase attestation",
       "input_digest": "sha256:ac35b5333a35b3e0c4bf9c48d541638d4355d50add5770500ae15bd6862fe88d"
+    },
+    {
+      "id": "hf-spec-readme",
+      "summary": "docs(specs): refresh specs README.md codebase attestation",
+      "input_digest": "sha256:a7e42bd40cb21631d850de20766c79ff3e6626124cde1cbdc5d6a8a374bbc5e7"
     }
   ],
   "intents": {
