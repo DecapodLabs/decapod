@@ -542,6 +542,12 @@ pub struct GovernanceConfig {
     /// Human-authored, fail-closed role grants for exceptional operations.
     #[serde(default, skip_serializing_if = "GovernanceRbac::is_default")]
     pub rbac: GovernanceRbac,
+    /// Project-opted, capability-scoped local agent database maintenance (#1568).
+    #[serde(
+        default,
+        skip_serializing_if = "crate::core::db_maintenance::DbMaintenanceConfig::is_default"
+    )]
+    pub db_maintenance: crate::core::db_maintenance::DbMaintenanceConfig,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
@@ -1619,19 +1625,180 @@ pub(crate) enum DatabaseCommand {
         #[clap(flatten)]
         options: crate::core::storage_inventory::InventoryOptions,
     },
+    /// Discover project-opted agent database maintenance capabilities and reason codes.
+    Capabilities {
+        /// Additional capability names to evaluate (for example, unmodeled operations).
+        #[clap(long = "probe")]
+        probes: Vec<String>,
+        /// Optional asserted actor label (must match authenticated DECAPOD_AGENT_ID).
+        #[clap(long)]
+        actor: Option<String>,
+    },
+    /// Governed lock contention diagnostics, bounded retry, and owned-lease release.
+    Lock(DatabaseLockCli),
+    /// Governed agent database maintenance operations bound to canonical project policy.
+    Maintain(DatabaseMaintainCli),
+    /// Read recent redacted append-only database maintenance audit records.
+    Audit {
+        /// Maximum number of recent audit records to return (1..=500).
+        #[clap(long, default_value_t = 50)]
+        limit: usize,
+    },
     /// Run Dactyl's read-only SQLite integrity check without modifying storage.
-    Verify,
-    /// Create a Dactyl online-backup snapshot at an operator-selected path.
+    Verify {
+        /// Force governed agent policy admission even outside Git worktrees.
+        #[clap(long)]
+        governed: bool,
+        /// Optional idempotency/audit correlation identifier.
+        #[clap(long)]
+        operation_id: Option<String>,
+        /// Optional expected canonical `.decapod/config.toml` SHA-256 digest.
+        #[clap(long)]
+        expected_policy_sha256: Option<String>,
+        /// Optional asserted actor label (must match authenticated DECAPOD_AGENT_ID).
+        #[clap(long)]
+        actor: Option<String>,
+    },
+    /// Create a Dactyl online-backup snapshot at an operator- or policy-scoped path.
     Backup {
         /// Destination database path. It must not already exist.
         #[clap(long)]
         destination: PathBuf,
+        /// Force governed agent policy admission even outside Git worktrees.
+        #[clap(long)]
+        governed: bool,
+        /// Optional idempotency/replay-guard identifier for mutating backups.
+        #[clap(long)]
+        operation_id: Option<String>,
+        /// Optional expected canonical `.decapod/config.toml` SHA-256 digest.
+        #[clap(long)]
+        expected_policy_sha256: Option<String>,
+        /// Optional asserted actor label (must match authenticated DECAPOD_AGENT_ID).
+        #[clap(long)]
+        actor: Option<String>,
     },
     /// Explicitly recover via Dactyl's verified logical dump/reload workflow.
     Recover {
         /// Archive path for the original database and any WAL/SHM sidecars.
         #[clap(long = "preserve-original-at")]
         preserve_original_at: PathBuf,
+        /// Force governed agent policy admission even outside Git worktrees.
+        #[clap(long)]
+        governed: bool,
+        /// Optional idempotency/audit correlation identifier.
+        #[clap(long)]
+        operation_id: Option<String>,
+        /// Optional expected canonical `.decapod/config.toml` SHA-256 digest.
+        #[clap(long)]
+        expected_policy_sha256: Option<String>,
+        /// Optional asserted actor label (must match authenticated DECAPOD_AGENT_ID).
+        #[clap(long)]
+        actor: Option<String>,
+    },
+}
+
+#[derive(clap::Args, Debug)]
+pub(crate) struct DatabaseLockCli {
+    #[clap(subcommand)]
+    pub command: DatabaseLockCommand,
+}
+
+#[derive(Subcommand, Debug)]
+pub(crate) enum DatabaseLockCommand {
+    /// Non-destructively diagnose datastore lock contention, owner scope, and sidecars.
+    Diagnose {
+        /// Bounded lock probe timeout in milliseconds (0..=5000).
+        #[clap(long, default_value_t = 0)]
+        timeout_ms: u64,
+        #[clap(long)]
+        operation_id: Option<String>,
+        #[clap(long)]
+        expected_policy_sha256: Option<String>,
+        #[clap(long)]
+        actor: Option<String>,
+    },
+    /// Retry an authorized safe maintenance operation with bounded backoff and deadline.
+    Retry {
+        /// Authorized safe operation to retry (`inspect`, `verify`, or `backup`).
+        #[clap(long, value_enum)]
+        target: crate::core::db_maintenance::RetryTargetCapability,
+        /// Required when `--target backup`; must reside under `.decapod/backups/`.
+        #[clap(long)]
+        destination: Option<PathBuf>,
+        /// Maximum attempts (1..=10).
+        #[clap(long, default_value_t = 4)]
+        max_attempts: u32,
+        /// Initial backoff in milliseconds (1..=1000).
+        #[clap(long, default_value_t = 50)]
+        initial_backoff_ms: u64,
+        /// Total retry deadline in milliseconds (1..=10000).
+        #[clap(long, default_value_t = 2_000)]
+        deadline_ms: u64,
+        #[clap(long)]
+        operation_id: Option<String>,
+        #[clap(long)]
+        expected_policy_sha256: Option<String>,
+        #[clap(long)]
+        actor: Option<String>,
+    },
+    /// Safely relinquish only an explicitly registered idle current-process lease.
+    ReleaseOwn {
+        #[clap(long)]
+        operation_id: Option<String>,
+        #[clap(long)]
+        expected_policy_sha256: Option<String>,
+        #[clap(long)]
+        actor: Option<String>,
+    },
+}
+
+#[derive(clap::Args, Debug)]
+pub(crate) struct DatabaseMaintainCli {
+    #[clap(subcommand)]
+    pub command: DatabaseMaintainCommand,
+}
+
+#[derive(Subcommand, Debug)]
+pub(crate) enum DatabaseMaintainCommand {
+    /// Governed `db.inspect` (Dactyl inventory + non-destructive lock snapshot).
+    Inspect {
+        #[clap(long)]
+        operation_id: Option<String>,
+        #[clap(long)]
+        expected_policy_sha256: Option<String>,
+        #[clap(long)]
+        actor: Option<String>,
+    },
+    /// Governed `db.verify` (read-only Dactyl SQLite integrity probe).
+    Verify {
+        #[clap(long)]
+        operation_id: Option<String>,
+        #[clap(long)]
+        expected_policy_sha256: Option<String>,
+        #[clap(long)]
+        actor: Option<String>,
+    },
+    /// Governed `db.backup` (bounded Dactyl online backup under `.decapod/backups/`).
+    Backup {
+        #[clap(long)]
+        destination: PathBuf,
+        #[clap(long)]
+        operation_id: Option<String>,
+        #[clap(long)]
+        expected_policy_sha256: Option<String>,
+        #[clap(long)]
+        actor: Option<String>,
+    },
+    /// Governed `db.recover` (denied without repository owner repair authority, #1590).
+    Recover {
+        #[clap(long = "preserve-original-at")]
+        preserve_original_at: PathBuf,
+        #[clap(long)]
+        operation_id: Option<String>,
+        #[clap(long)]
+        expected_policy_sha256: Option<String>,
+        #[clap(long)]
+        actor: Option<String>,
     },
 }
 
