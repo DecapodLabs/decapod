@@ -677,6 +677,14 @@
       "proof_refs": [
         "https://github.com/DecapodLabs/decapod/issues/1659"
       ]
+    },
+    {
+      "id": "issue-1659-file-18",
+      "summary": "docs(specs): declare real override and broker acceptance controls; file-by-file checkpoint, verification pending.",
+      "input_digest": "sha256:bb07083c5521a55898edddd8d3d7d285e0d69476aa3891e9d8ad7e0e76e834c0",
+      "proof_refs": [
+        "https://github.com/DecapodLabs/decapod/issues/1659"
+      ]
     }
   ],
   "intents": {
@@ -713,6 +721,29 @@
         "decapod validate"
       ],
       "schema_version": "1.1.0",
+      "spec_reviews": [
+        {
+          "disposition": "updated",
+          "path": ".decapod/managed/specs/ARCHITECTURE.md",
+          "reason": "Review the shared full-readiness environment guard, originating CLI and RPC admission, workspace publication, current/historical validated completion and request-scoped broker diagnostics. Real child-process and admitted CLI controls are authored; no local tests or hosted success are claimed. Partial diagnostics and historical observations retain their scopes.",
+          "reviewed_code_fingerprint": "cc545ae0184ed66b6ea36a5e9694a2f06d9616bd9fc6ce9ad3a3800afd60d587",
+          "spec_material_hash": "947ff1d67ee628e6c055728cd90113c4d377be40deebba0babf15359e1cee6b1"
+        },
+        {
+          "disposition": "updated",
+          "path": ".decapod/managed/specs/INTERFACES.md",
+          "reason": "Review the shared full-readiness environment guard, originating CLI and RPC admission, workspace publication, current/historical validated completion and request-scoped broker diagnostics. Real child-process and admitted CLI controls are authored; no local tests or hosted success are claimed. Partial diagnostics and historical observations retain their scopes.",
+          "reviewed_code_fingerprint": "cc545ae0184ed66b6ea36a5e9694a2f06d9616bd9fc6ce9ad3a3800afd60d587",
+          "spec_material_hash": "fb2cc0c696d7c054d3500dd9531494b74d9cff8e776affa8b27d28fb9ca7fb2b"
+        },
+        {
+          "disposition": "updated",
+          "path": ".decapod/managed/specs/SECURITY.md",
+          "reason": "Review the shared full-readiness environment guard, originating CLI and RPC admission, workspace publication, current/historical validated completion and request-scoped broker diagnostics. Real child-process and admitted CLI controls are authored; no local tests or hosted success are claimed. Partial diagnostics and historical observations retain their scopes.",
+          "reviewed_code_fingerprint": "cc545ae0184ed66b6ea36a5e9694a2f06d9616bd9fc6ce9ad3a3800afd60d587",
+          "spec_material_hash": "673e627ff59f9eb89b9b617a568c62100ba1b44ea30983a0330453aa0561dea6"
+        }
+      ],
       "state": "APPROVED",
       "stop_conditions": [],
       "title": "code: resolve #1659 Prevent test gate-skip overrides from establishing full readiness",
@@ -721,13 +752,13 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1794605763Z"
+      "updated_at": "1794608543Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:28b663302a41284b6db281b4eb09018ae95a21bc7a636504761cf0ffd789559d",
+      "artifact_hash": "sha256:65cc88835d5fe205c57316dc473e92d368a80b8ae506d5ddc467ca579df674cd",
       "checks": [],
       "current_phase": "implementation",
       "custody": {
@@ -862,10 +893,17 @@
             "intent_id": "intent:change_01M7BCEHXJQR8HVADJF91PJKGD",
             "kind": "trajectory_step_recorded",
             "sequence": 20
+          },
+          {
+            "detail": "trajectory:branch_01M7BCEJ05EP527M18XXSF6GK6",
+            "event_id": "event:21",
+            "intent_id": "intent:change_01M7BCEHXJQR8HVADJF91PJKGD",
+            "kind": "trajectory_step_recorded",
+            "sequence": 21
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 20,
+        "next_sequence": 21,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M7BCEJ05EP527M18XXSF6GK6": {
@@ -1144,6 +1182,22 @@
                 "validation_findings": [
                   "Hosted verification and exact-candidate publication readiness remain pending; no local tests run."
                 ]
+              },
+              {
+                "action": "implementation",
+                "custody_event_id": "event:21",
+                "observations": [
+                  ".decapod/managed/specs/VALIDATION.md",
+                  "https://github.com/DecapodLabs/decapod/issues/1659"
+                ],
+                "proof_refs": [],
+                "scope": [
+                  "issue-1659"
+                ],
+                "sequence": 21,
+                "validation_findings": [
+                  "Hosted verification and exact-candidate publication readiness remain pending; no local tests run."
+                ]
               }
             ]
           }
@@ -1162,6 +1216,7 @@
         ".decapod/managed/specs/INTENT.md",
         ".decapod/managed/specs/INTERFACES.md",
         ".decapod/managed/specs/SECURITY.md",
+        ".decapod/managed/specs/VALIDATION.md",
         "docs/agent/repository-readiness.md",
         "src/decapod/core/group_broker.rs",
         "src/decapod/core/validation_runtime.rs",

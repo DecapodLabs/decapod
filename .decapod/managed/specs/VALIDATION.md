@@ -1341,7 +1341,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `4d29b2ddd81902f7faec1d56bf9251726253493115b750bd9d3e77a7392fef55`
+- Repository signal fingerprint: `cc545ae0184ed66b6ea36a5e9694a2f06d9616bd9fc6ce9ad3a3800afd60d587`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (234 files), `tests/` (232 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
@@ -1904,3 +1904,25 @@ Exercise actual `sqlite_maintenance` CLI/RPC worktree cases and storage-lock reg
 ## PR1662 current-master preparation
 
 This checkpoint preserves original source and tests before integration with current master. Preserve failure history and all assertions; use hosted CI for verification, without local tests or running the maintenance candidate against the live machine datastore. Prior test observations do not prove the new integration.
+
+## Diagnostic override acceptance regressions (#1659)
+
+`tests/consumer_readiness.rs` runs the actual full runtime in isolated child
+processes for empty/zero Git skips, false tooling skips, truthy fingerprint skips
+and a false fingerprint control. Denied claims must select/execute nothing and
+produce no evidence directory; the false fingerprint control must execute real
+native proof. No parent test process mutates its environment.
+
+The existing genuine claimed-worktree scenario in
+`tests/support/fresh_docs_readiness.rs` invokes full CLI validation, RPC validation,
+workspace publication and historical validated completion under overrides. It
+requires actual kernel rejection, no successful judgment or full receipt, and
+unchanged source, then retains the normal positive proof flow. Broker unit tests
+use real capture/apply subprocesses over different inherited worker values and
+invoke the real environment gate, proving both retained denial and cleared scope.
+
+The existing partial CLI admission checks `scope=ci_local` and
+`publication_ready=false`; it remains a prerequisite observation rather than
+complete proof. Current hosted execution and full remote readiness are pending.
+No local tests, disabled required checks, fabricated receipts or workunit-forgery
+completion claims are included in this checkpoint.
