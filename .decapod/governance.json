@@ -692,6 +692,11 @@
       "id": "specs-readme-refresh-v0143",
       "summary": "Refresh specs README.md codebase attestation for Decapod v0.143.0",
       "input_digest": "sha256:0557168bd8301118cbfe1334875aa616f843ee3879cbe144cb2a0e75fbd3a059"
+    },
+    {
+      "id": "specs-semantics-refresh-v0143",
+      "summary": "Refresh SEMANTICS.md codebase attestation for Decapod v0.143.0",
+      "input_digest": "sha256:1f5ea1a3d14d1e5b9d83d60bd94be46752256ac7458abab0dd18540c26f76c2d"
     }
   ],
   "intents": {
