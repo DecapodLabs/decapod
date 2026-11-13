@@ -37,7 +37,19 @@ pub struct WorkUnitManifest {
     pub proof_results: Vec<WorkUnitProofResult>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub validation_epoch: Option<ValidationEpochMetadata>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub validation_record: Option<WorkUnitValidationReference>,
     pub status: WorkUnitStatus,
+}
+
+/// A selector and integrity binding into the existing canonical history.
+/// These public fields are references, never producer authentication by themselves.
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(deny_unknown_fields)]
+pub struct WorkUnitValidationReference {
+    pub candidate_sha: String,
+    pub record_id: String,
+    pub record_digest: String,
 }
 
 /// Original observed subject: immutable history, not a new proof authority.
@@ -104,20 +116,16 @@ pub(crate) fn capture_validation_subject(
     }))
 }
 
-const CANONICAL_VALIDATION_REFERENCE: &str = "decapod-validation://";
-fn validation_reference(value: &str) -> Result<Option<(&str, &str)>, error::DecapodError> {
-    let Some(reference) = value.strip_prefix(CANONICAL_VALIDATION_REFERENCE) else {
+fn manifest_validation_reference(
+    manifest: &WorkUnitManifest,
+) -> Result<Option<(&str, &str)>, error::DecapodError> {
+    let Some(reference) = &manifest.validation_record else {
         return Ok(None);
     };
-    let (candidate, record) = reference.split_once('/').ok_or_else(|| {
-        journal_error(
-            "WORKUNIT_PROOF_UNVERIFIABLE",
-            "malformed canonical validation reference",
-        )
-    })?;
-    if reference.len() > 192
-        || record.is_empty()
-        || !record
+    if reference.record_id.is_empty()
+        || reference.record_id.len() > 128
+        || !reference
+            .record_id
             .bytes()
             .all(|b| b.is_ascii_alphanumeric() || b == b'_' || b == b'-')
     {
@@ -126,23 +134,7 @@ fn validation_reference(value: &str) -> Result<Option<(&str, &str)>, error::Deca
             "malformed canonical validation reference",
         ));
     }
-    Ok(Some((candidate, record)))
-}
-fn manifest_validation_reference(
-    manifest: &WorkUnitManifest,
-) -> Result<Option<(&str, &str)>, error::DecapodError> {
-    let Some(gate) = manifest.proof_plan.first() else {
-        return Ok(None);
-    };
-    match manifest
-        .proof_results
-        .iter()
-        .find(|proof| &proof.gate == gate)
-        .and_then(|proof| proof.artifact_ref.as_deref())
-    {
-        Some(reference) => validation_reference(reference),
-        None => Ok(None),
-    }
+    Ok(Some((&reference.candidate_sha, &reference.record_id)))
 }
 
 impl WorkUnitManifest {
@@ -686,43 +678,42 @@ fn proof_artifact_hashes_with_limits(
     };
     let mut references = std::collections::BTreeSet::new();
     let mut hashes = std::collections::BTreeMap::new();
+    let canonical = if let Some((candidate, record)) = manifest_validation_reference(manifest)? {
+        let store = crate::core::store::Store {
+            kind: crate::core::store::StoreKind::Repo,
+            root: crate::core::store::find_governance_root(root).join(".decapod/data"),
+        };
+        let observed =
+            crate::core::validation_history::lookup_record(root, &store, candidate, record)?;
+        if observed.task_binding().task_id != manifest.task_id
+            || manifest
+                .validation_record
+                .as_ref()
+                .is_none_or(|reference| reference.record_digest != observed.record_digest())
+        {
+            return Err(journal_error(
+                "WORKUNIT_PROOF_UNVERIFIABLE",
+                "canonical reference belongs to another task or changed record",
+            ));
+        }
+        true
+    } else {
+        false
+    };
     for proof in &manifest.proof_results {
         check_deadline()?;
         if proof.status != "pass" {
             continue;
         }
         let Some(reference) = proof.artifact_ref.as_deref() else {
+            if canonical && manifest.proof_plan.contains(&proof.gate) {
+                continue;
+            }
             return Err(journal_error(
                 "WORKUNIT_PROOF_UNVERIFIABLE",
                 format!("gate {} has no immutable artifact reference", proof.gate),
             ));
         };
-        if let Some((candidate, record)) = validation_reference(reference)? {
-            if !hashes.contains_key(reference) {
-                let store = crate::core::store::Store {
-                    kind: crate::core::store::StoreKind::Repo,
-                    root: crate::core::store::find_governance_root(root).join(".decapod/data"),
-                };
-                let observed = crate::core::validation_history::lookup_record(
-                    root, &store, candidate, record,
-                )?;
-                if observed.task_binding().task_id != manifest.task_id {
-                    return Err(journal_error(
-                        "WORKUNIT_PROOF_UNVERIFIABLE",
-                        "canonical proof belongs to another task",
-                    ));
-                }
-                hashes.insert(reference.to_owned(), observed.record_digest().to_owned());
-            }
-            if hashes.len() + references.len() > max_unique_artifacts {
-                return Err(journal_error(
-                    "WORKUNIT_PROOF_LIMIT",
-                    "too many unique proof artifacts",
-                ));
-            }
-            check_deadline()?;
-            continue;
-        }
         let relative = Path::new(reference);
         if relative.as_os_str().is_empty()
             || relative.is_absolute()
@@ -990,12 +981,19 @@ fn verify_retained_proof_hashes(
         if Some(proof.gate.as_str()) == updated_gate {
             continue;
         }
-        let reference = proof.artifact_ref.as_ref().ok_or_else(|| {
-            journal_error(
+        let Some(reference) = proof.artifact_ref.as_ref() else {
+            if current.validation_record.is_some()
+                && current.validation_record == previous.validation_record
+                && current.proof_plan.contains(&proof.gate)
+                && previous.proof_results.contains(proof)
+            {
+                continue;
+            }
+            return Err(journal_error(
                 "WORKUNIT_PROOF_UNVERIFIABLE",
-                "passing proof has no artifact",
-            )
-        })?;
+                "passing declaration has no artifact or retained canonical observation",
+            ));
+        };
         if !previous.proof_results.contains(proof)
             || !old_hashes.contains_key(reference)
             || old_hashes.get(reference) != new_hashes.get(reference)
@@ -1325,6 +1323,7 @@ pub fn write_workunit_checked(
             || manifest.proof_plan != previous.manifest.proof_plan
             || manifest.proof_results != previous.manifest.proof_results
             || manifest.validation_epoch != previous.manifest.validation_epoch
+            || manifest.validation_record != previous.manifest.validation_record
         {
             return Err(journal_error(
                 "WORKUNIT_DOMAIN_TRANSITION_REQUIRED",
@@ -1394,6 +1393,7 @@ pub fn init_workunit(
             proof_plan: vec![],
             proof_results: vec![],
             validation_epoch: None,
+            validation_record: None,
             status: WorkUnitStatus::Draft,
         };
         let record = append_snapshot(
@@ -1508,6 +1508,7 @@ pub fn set_proof_plan(
             manifest.proof_plan = canonical;
             manifest.proof_results.clear();
             manifest.validation_epoch = None;
+            manifest.validation_record = None;
             if manifest.status == WorkUnitStatus::Verified {
                 manifest.status = WorkUnitStatus::Claimed;
             }
@@ -1532,6 +1533,13 @@ pub fn record_proof_result(
             manifest.status = WorkUnitStatus::Claimed;
         }
         // All caller-supplied outcomes remain declarations, including pass.
+        // Remove current derived rows when reopening a canonical observation;
+        // their original successful observation remains in history and journal.
+        if manifest.validation_record.take().is_some() {
+            manifest
+                .proof_results
+                .retain(|proof| !manifest.proof_plan.contains(&proof.gate));
+        }
         manifest.validation_epoch = None;
         manifest.proof_results.retain(|result| result.gate != gate);
         manifest.proof_results.push(WorkUnitProofResult {
@@ -1582,21 +1590,23 @@ pub fn transition_status(
             manifest.proof_results.push(WorkUnitProofResult {
                 gate,
                 status: "pass".into(),
-                artifact_ref: Some(format!(
-                    "{CANONICAL_VALIDATION_REFERENCE}{}/{}",
-                    observed.candidate_sha(),
-                    observed.record_id()
-                )),
+                artifact_ref: None,
                 evaluator_epoch: Some(epoch.epoch_id.clone()),
                 validation_epoch: Some(epoch.clone()),
             });
             manifest.validation_epoch = Some(epoch);
+            manifest.validation_record = Some(WorkUnitValidationReference {
+                candidate_sha: observed.candidate_sha().into(),
+                record_id: observed.record_id().into(),
+                record_digest: observed.record_digest().into(),
+            });
             ensure_living_specs_bound_for_proof(root, manifest)?;
         } else if to == WorkUnitStatus::Claimed && manifest.status == WorkUnitStatus::Verified {
             // Explicit safe downgrade: historical observations remain in the
             // journal; the current claim must obtain fresh observed proof.
             manifest.proof_results.clear();
             manifest.validation_epoch = None;
+            manifest.validation_record = None;
         }
         manifest.status = to;
         Ok(())
@@ -1619,7 +1629,12 @@ pub fn validate_verified_manifest(
         manifest,
         manifest_validation_reference(manifest)?,
     )?;
-    if manifest.validation_epoch.as_ref() != Some(observed.validation_epoch()) {
+    if manifest.validation_epoch.as_ref() != Some(observed.validation_epoch())
+        || manifest
+            .validation_record
+            .as_ref()
+            .is_none_or(|reference| reference.record_digest != observed.record_digest())
+    {
         return Err(journal_error(
             "WORKUNIT_PROOF_UNVERIFIABLE",
             "workunit epoch does not match canonical observed proof",
@@ -1706,13 +1721,7 @@ fn ensure_verified_ready(manifest: &WorkUnitManifest) -> Result<(), error::Decap
         let proof = proofs[0];
         if proof.validation_epoch.as_ref() != Some(epoch)
             || proof.evaluator_epoch.as_deref() != Some(epoch.epoch_id.as_str())
-            || proof
-                .artifact_ref
-                .as_deref()
-                .map(validation_reference)
-                .transpose()?
-                .flatten()
-                .is_none()
+            || manifest.validation_record.is_none()
         {
             return Err(journal_error(
                 "WORKUNIT_PROOF_UNVERIFIABLE",
