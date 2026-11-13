@@ -10,6 +10,11 @@ use std::path::PathBuf;
 use std::process::{Command, Output};
 use tempfile::TempDir;
 
+// Orientation is an agent entrypoint. Keep its reflection/legacy continuation
+// cases in the existing required CLI suite as well as its standalone target.
+#[path = "infer_precision.rs"]
+mod infer_precision;
+
 fn resolve_decapod_bin() -> PathBuf {
     let cargo_bin = env!("CARGO_BIN_EXE_decapod");
     if let Ok(path) = std::path::Path::new(cargo_bin).canonicalize() {

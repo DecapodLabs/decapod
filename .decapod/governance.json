@@ -4570,6 +4570,14 @@
       "id": "reconcile-1401-storage-target",
       "summary": "Integrate accepted storage inventory, published Dactyl0.13 and matching0.140.1 projections while preserving all active and accepted governance histories. Update current SDK documentation; fresh exact-target proof required after quota-blocked publication.",
       "input_digest": "sha256:bc1cb9d75aa6a5db05e74ec46a5bfe5066714767d945b6435c89f920c12b29cf"
+    },
+    {
+      "id": "reconcile-01410-master-merge",
+      "summary": "Merge accepted v0.141.0, bounded reflection, terminal onboarding, and published Dactyl 0.14.0 into PR #1647 while preserving all prior checkpoints, first-proof admission, and agent-owned cloud login handoff; full exact-candidate Buildkite proof pending.",
+      "input_digest": "sha256:9a197d8413b9458d290018d813996f8f4b678fc06f02ef476f194179b7baf9e6",
+      "proof_refs": [
+        ".decapod/managed/specs/VALIDATION.md"
+      ]
     }
   ],
   "intents": {
@@ -4610,23 +4618,23 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Reviewed the merged0.140.1 native inventory, published Dactyl0.13 dependency and current cloud handoff. Published cloud API source is byte-identical to0.12; client lifecycle assertions remain mandatory. Current docs reflect0.13 while retaining historical release evidence. Accepted CLI aggregate uses finite900-second exclusive scheduling; no required test is removed. Private controller update opt-in is removed and generated boundaries are intact. Earlier99ff/fc1 readiness is historical after target movement, and fresh current-target proof is required.",
-          "reviewed_code_fingerprint": "327bb02ec2aeabd8b21d254a5756070345bde853cef3a95377a81d9f3e7bb9f3",
-          "spec_material_hash": "1989128ca4626945058b34869aad018523e1903476f5ecc6579f815213242394"
+          "reason": "Reconciled PR #1647 agent-owned cloud sign-in architecture with accepted v0.141.0 bounded reflection, native storage inventory, terminal onboarding, and published dactyl-db 0.14.0 dependency; exact-candidate Buildkite proof required.",
+          "reviewed_code_fingerprint": "6a3addd1b9727eaa3c371ddafc239c5ed36e2705b96d18996de05e9e72f1f7f0",
+          "spec_material_hash": "3f7a43155b3fa003bf6c1407ac7b829560b8ca1aa6fd97cda6d57f7188f98528"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Reviewed the merged0.140.1 native inventory, published Dactyl0.13 dependency and current cloud handoff. Published cloud API source is byte-identical to0.12; client lifecycle assertions remain mandatory. Current docs reflect0.13 while retaining historical release evidence. Accepted CLI aggregate uses finite900-second exclusive scheduling; no required test is removed. Private controller update opt-in is removed and generated boundaries are intact. Earlier99ff/fc1 readiness is historical after target movement, and fresh current-target proof is required.",
-          "reviewed_code_fingerprint": "327bb02ec2aeabd8b21d254a5756070345bde853cef3a95377a81d9f3e7bb9f3",
-          "spec_material_hash": "73598a87ac2708adcf6abf5631745bcac2efb3af01c6fcb6c0ec1678de999f21"
+          "reason": "Updated PR #1647 agent-owned cloud login and structured authorization_url handoff contracts for v0.141.0 and published dactyl-db 0.14.0; preserved bounded reflection RPC envelope semantics and repository-bound cloud routing.",
+          "reviewed_code_fingerprint": "6a3addd1b9727eaa3c371ddafc239c5ed36e2705b96d18996de05e9e72f1f7f0",
+          "spec_material_hash": "5b676233b993a193c0e409d9f423343c00ee1b70e3c3ac747d029f18da92558d"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Reviewed the merged0.140.1 native inventory, published Dactyl0.13 dependency and current cloud handoff. Published cloud API source is byte-identical to0.12; client lifecycle assertions remain mandatory. Current docs reflect0.13 while retaining historical release evidence. Accepted CLI aggregate uses finite900-second exclusive scheduling; no required test is removed. Private controller update opt-in is removed and generated boundaries are intact. Earlier99ff/fc1 readiness is historical after target movement, and fresh current-target proof is required.",
-          "reviewed_code_fingerprint": "327bb02ec2aeabd8b21d254a5756070345bde853cef3a95377a81d9f3e7bb9f3",
-          "spec_material_hash": "41d206f19cf8ed2d300edb96c8850e2e38140494d07e087dc88b146c26ab2520"
+          "reason": "Verified PR #1647 private session custody, public authorization_url boundary, redaction of private adapter messages on task receipts, and v0.141.0 / dactyl-db 0.14.0 quinn-proto >= 0.11.19 security invariants.",
+          "reviewed_code_fingerprint": "6a3addd1b9727eaa3c371ddafc239c5ed36e2705b96d18996de05e9e72f1f7f0",
+          "spec_material_hash": "d1494f6203bc568de785e5d8055e9a6ceed0ca288b9ad340c181ae93dd8f6359"
         }
       ],
       "state": "APPROVED",
@@ -4637,7 +4645,7 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1794493562Z"
+      "updated_at": "1794534872Z"
     },
     "trajectory": {
       "active_boundaries": [
@@ -4650,7 +4658,7 @@
         "Reviewed managed client and private custody source; configured Buildkite proof remains required and Dactyl registry API availability requires native confirmation",
         "Same-task reviewed corrections and checkpointed source push only; complete Buildkite readiness and separate registry handoff remain unsatisfied"
       ],
-      "artifact_hash": "sha256:81a1409a507c9966b1a0b8e9f74c43bdbed3de07c9da328b78eac8f357672720",
+      "artifact_hash": "sha256:7fd812db0a8007b9eee86e67bb0981ac4ce03a6fff4b4a8c1d0703e8de896743",
       "checks": [
         {
           "name": "accepted-consumer",
@@ -4715,6 +4723,10 @@
         {
           "name": "correction-source-review",
           "status": "passed"
+        },
+        {
+          "name": "current-0.141.0-buildkite-proof",
+          "status": "unavailable"
         },
         {
           "name": "current-accepted-merge",
@@ -4847,6 +4859,10 @@
         {
           "name": "uncheckpointed-doc-commit",
           "status": "failed"
+        },
+        {
+          "name": "v0.141.0-merge-reconciliation",
+          "status": "passed"
         }
       ],
       "current_phase": "validation",
@@ -5038,10 +5054,17 @@
             "intent_id": "intent:change_01M76ECD1993X600J9GEM0D7FY",
             "kind": "trajectory_step_recorded",
             "sequence": 28
+          },
+          {
+            "detail": "trajectory:branch_01M76ECD20HF9M6Q15W5AKE2WQ",
+            "event_id": "event:29",
+            "intent_id": "intent:change_01M76ECD1993X600J9GEM0D7FY",
+            "kind": "trajectory_step_recorded",
+            "sequence": 29
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 28,
+        "next_sequence": 29,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M76ECD20HF9M6Q15W5AKE2WQ": {
@@ -5501,6 +5524,31 @@
                 ],
                 "sequence": 28,
                 "validation_findings": []
+              },
+              {
+                "action": "validation",
+                "custody_event_id": "event:29",
+                "observations": [
+                  ".decapod/config.toml",
+                  "docs/agent/state-model.md",
+                  "docs/book/src/reference/propodus.md",
+                  ".decapod/config.toml",
+                  ".decapod/managed/specs/INTERFACES.md",
+                  ".decapod/managed/specs/VALIDATION.md",
+                  "docs/agent/state-model.md",
+                  "docs/book/src/reference/propodus.md",
+                  ".decapod/managed/specs/VALIDATION.md"
+                ],
+                "proof_refs": [
+                  "v0.141.0-merge-reconciliation",
+                  "current-0.141.0-buildkite-proof"
+                ],
+                "scope": [
+                  "decapod-cloud-client",
+                  "root"
+                ],
+                "sequence": 29,
+                "validation_findings": []
               }
             ]
           }
@@ -5517,6 +5565,7 @@
       ],
       "destination": "pull request",
       "evidence": [
+        ".decapod/managed/specs/VALIDATION.md",
         "Accepted #1642 fc1e2b94 changes only root package version139.1 to140.0 and CHANGELOG. Merged after checkpointed #1633 reconciliation. Supported session updater installed published0.140.0 under an isolated Cargo root; restored temporary update opt-in, ingested matching docs, natively regenerated release surfaces. Independent inventory1a14a4a9 reflects only the accepted package version change; required checks, scope and budgets unchanged. Host project-check remains partial preparation, full actual Buildkite proof is required for this new candidate.",
         "Accepted target advanced to f1a6c7a (#1633) while e1331f79 had all GitHub workflows passing and34 Buildkite steps successful with3 suites queued. No prior proof promoted. Merged its terminal runtime evidence rules, canonical shared consumer fixture and genuine CLI first-proof admission regression. Preserved19 active checkpoints plus exact21-checkpoint accepted governance as historical context under the existing approved metadata-merge exception. Corrected a merge-resolution script that dropped generated suffix boundaries by restoring the backed-up conflict lines and selecting only line-bounded generated content; native refresh subsequently owns projections.",
         "Actual pinned Bazel regenerated the module lock from the registry0.12 Cargo graph. Generated indentation exceeded the1MiB source bound by4454bytes; one-space JSON encoding preserves all parsed values and reduces the complete file to1029040bytes. Pinned Bazel mod deps --lockfile_mode=error accepts it. Every discovered source hash was verified; only MODULE.bazel.lock changed relative to the previous reviewed build-source inventory. Neither required checks nor limits nor default stale-lock rejection were changed. Current Buildkite candidate0bff2528 failed in CI build8025; diagnostics identified the stale Bazel metadata. Fresh exact-candidate execution remains required.",
@@ -5548,13 +5597,19 @@
         "Verified operator handoff and imported original sealed task 01M76J985NNC1F519D2CE4V9Y7. Candidate d85650bafa610dc952fbc91acd91ba5e28b329b7 remains unmodified. Accepted master advanced to d3358e1c after billing PR1631 and release1632; merge reconciliation will remove the new mandatory project roster/pricing client behavior in accordance with issue1628 and the current explicit user boundary, while retaining unrelated accepted changes. Dactyl run43131221323 artifacts verified by ciphertext/plaintext and per-file hashes: both native groups and all14 checks passed on86ed55d; publication/readback failed. Registry still only0.11.1, so client compilation/product execution remain blocked."
       ],
       "inspected_files": [
+        ".decapod/config.toml",
+        "docs/agent/state-model.md",
+        "docs/book/src/reference/propodus.md",
         "tests/consumer_readiness.rs"
       ],
       "intent_id": "intent:change_01M76ECD1993X600J9GEM0D7FY",
       "modified_files": [
+        ".decapod/config.toml",
+        ".decapod/managed/specs/INTERFACES.md",
         ".decapod/managed/specs/VALIDATION.md",
         "README.md",
         "docs/agent/state-model.md",
+        "docs/book/src/reference/propodus.md",
         "src/decapod/cli.rs",
         "src/decapod/core/cloud_client.rs",
         "src/decapod/core/error.rs",
@@ -5564,7 +5619,8 @@
         "tests/consumer_readiness.rs"
       ],
       "next_transitions": [
-        "Refine plan and declare falsifiable checks"
+        "Refine plan and declare falsifiable checks",
+        "Run verifier review and full decapod validate against exact v0.141.0 merged candidate"
       ],
       "repo_scope": [
         "decapod-cloud-client",

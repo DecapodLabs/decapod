@@ -1,5 +1,32 @@
 # Semantics
 
+## Reflection, progress and authority
+
+Distinct recorded human questions and spec-review decisions retain distinct
+challenge identities. Resolving one through the existing plan surface does not
+erase another pending human decision or imply authority to execute.
+After a terminal disposition, even an exact replay of an earlier successful
+submission returns the terminal guard. Historical idempotence cannot revive
+permission or reset the lifetime round budget.
+
+A source citation establishes current identity, not verified understanding or
+passing tests. Source-bound removal of a challenge or strict scope narrowing is
+observable structural progress. Different prose or arbitrary citations are not.
+Plan constraints and existing human decision gates retain their binding meaning;
+mentor ADR heuristics cannot create policy. `proceed` clears only reflection.
+Exact retries do not write or consume rounds; stale tokens, conflicting reuse,
+changed custody and stale evidence preserve state. Relevant source changes
+invalidate conclusions without renewing the budget.
+Routine plan approval and measured phase/gate progress preserve the reflective
+contract projection; they remain separately enforced execution/proof state.
+Changing governing definitions still invalidates convergence.
+Stagnation terminates in round two; unresolved progress exhausts round three.
+Reinitializing or editing
+the plan cannot erase that journal. A terminal stop requires a new governed
+workstream. Superseded/deprecated federation records remain historical;
+disputed records require judgment; inferred/imported records remain proposals,
+regardless of an informal accepted tag.
+
 ## Semantics Overview
 
 Decapod gives intent, coordination, execution, evidence, and publication distinct
@@ -294,7 +321,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `327bb02ec2aeabd8b21d254a5756070345bde853cef3a95377a81d9f3e7bb9f3`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (229 files), `tests/` (231 files)
+- Repository signal fingerprint: `6a3addd1b9727eaa3c371ddafc239c5ed36e2705b96d18996de05e9e72f1f7f0`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (230 files), `tests/` (232 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

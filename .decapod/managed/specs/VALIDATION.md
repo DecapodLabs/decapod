@@ -15,7 +15,7 @@ exercises real CLI initialization, claimed workspace admission and first-proof
 execution through `tests/support/fresh_docs_readiness.rs`. The cloud handoff
 must preserve that Decapod lifecycle and its terminal evidence checks.
 
-In the accepted 0.140.1 runtime, terminal rules consume completed source
+In the accepted 0.141.0 runtime, terminal rules consume completed source
 execution evidence and recheck current governance and trajectory digests before
 publishing the readiness bundle. The cloud handoff cannot substitute a partial
 project-check receipt for that result. Release reconciliation changes the root
@@ -52,6 +52,82 @@ through the supported session-update flow, regenerates the entrypoints, managed
 Dockerfile and spec manifest. The temporary workspace update opt-in is removed.
 This projection preparation is not full readiness; the exact refreshed candidate
 still needs every required provider check and independent controller collection.
+
+## Reflection adversarial proof contract
+
+The work branch incorporates accepted target
+`d31112a1d66899e93dad48a10cc3a6363da2c7db`, including SDK 0.14.0 and the
+required terminal-onboarding fixtures. The installed controller is published
+0.140.3. This conflict-repair update is pushed without tests or full validation
+at the user's explicit request. Earlier measurements below remain historical;
+current-candidate readiness is pending. Generated surfaces match the evaluator.
+
+Required Buildkite library execution on `dc7bf2fa198abeebba072c5394709af0dfca9d86`
+passed 1709 tests (8 ignored), including all 16 reflection cases and the canonical
+lifecycle case. Evidence is build 8602, job
+`01a1cfd6-5d0d-4abb-853c-b4ed9164f022`. The selected scope flaw was detected
+before action, an evidence-bound narrower proposal proceeded in round 2, and
+the original approval/proof requirements and false completion proof were retained.
+Stagnation terminates in round 2 and unresolved progress in round 3. Six ordinary
+phase transitions preserve convergence; an actual governing edit invalidates it.
+Source/custody changes, replay, competing submissions, untrusted instructions
+and invented human approval are covered. These are deterministic protocol
+assertions, not a language-model evaluation or proof of a future cache design.
+
+The canonical lifecycle fixture registers verified writers in its isolated
+store, then exercises actual federation mutations. Supersession, withdrawal,
+dispute, inferred/imported classification, repository-path scope and source
+provenance passed. Production writer trust and approval policy remain unchanged;
+confidence is source classification, not authenticated human authority.
+
+The existing required entrypoint suite includes `infer_precision.rs`. Its first
+execution reached the actual CLI-to-RPC round-2 continuation, then failed a test
+expectation that successful `blocked_by` was always an array. The unchanged
+envelope omits empty blockers. The fixture accepts omission or an empty array,
+and rejects malformed/nonempty blockers. Missing outer task binding must still
+fail before recording round 1. Current-candidate CLI proof must be rerun.
+
+Numeric measurements are emitted by existing fixtures: safe protocol call
+75.213 ms / 575 outcome bytes / 1490 governance bytes growth; conflict and
+revision 58.845 and 43.966 ms, with 1213 and 575 outcome bytes. The two-round
+compact journal was 2843 bytes and total governance growth 4017 bytes. The safe
+fixture observed zero main-database-file growth. Timings exclude CLI startup,
+are samples under concurrent CI load, and carry no portable performance promise.
+
+The only added build input relative to accepted target is the existing
+`infer_precision.rs` file in the required entrypoint suite. Reviewed inventory
+`sha256:d8781827659ed6d9c4702265a3d159509daf789e067ac13e961434a36d5b6d37`
+preserves the profile, accepted executor, required graph and final verdict.
+The current task journal was retained canonically; accepted journals remain in
+Git history.
+
+Failed or incomplete earlier attempts do not establish readiness: provider quota,
+accepted-base/tag movement and release-projection drift remain in trajectory
+evidence. Full validation on `dc7bf2fa` returned `SNAPSHOT_NOT_READY` for the
+CLI fixture failure in build 8602 after 3427640 ms provider wait; private snapshot
+`decapod-snapshot-YH2wgS` preserves that attempt. Passing individual jobs and
+checkpoint-history verification never replace the complete exact-candidate gate.
+Plain `decapod validate` owns the configured build/tests; no separate manual
+build, fabricated proof or weakened check is allowed.
+
+## Current SDK 0.14 adoption (#1638)
+
+The current registry dependency is exactly Dactyl 0.14.0, checksum
+`d10824bf8882a26b92479f07edb26c1f6fde8da3019f4001befaf28699d7a990`.
+Historical 0.12 observations below describe earlier candidates. The existing
+release-policy test retains registry-only and feature checks, and now rejects
+any locked `quinn-proto` below 0.11.19, even when that dependency is inactive.
+Supported Cargo metadata resolution verifies both the repository lock and a
+new lock-free registry consumer; it is not compilation or Rust 1.85 execution
+evidence. The SDK's own minimum-toolchain proof remains upstream.
+
+Pinned Bazel 9.3.0 `mod deps --lockfile_mode=update` regenerates the actual
+crate-universe graph. Its complete JSON is serialized with one-space indentation
+only after parsed value equality, preserving the existing bounded discovery
+and strict normal `lockfile_mode=error` policy. Nix directly uses Cargo.lock.
+The full configured source-CI matrix and independent released-controller
+exact-candidate validation remain mandatory; no manual build, fixture result
+or metadata operation establishes publication or protected hosted readiness.
 
 ## Recovery and accepted-target reconciliation (#1628)
 
@@ -153,7 +229,7 @@ path rejection, exact binding, phase invariants and serialized custody.
 
 These tests must run on the exact checkpointed candidate. Static review and
 source formatting do not establish compilation or execution. The managed API
-is consumed from the published Dactyl 0.13.0 registry dependency.
+is consumed from the published Dactyl 0.14.0 registry dependency.
 The accepted source-CI executor retains its own required recipe. Its diagnostic
 record on `ee288c86` showed that a candidate helper edit did not add a new target
 to that recipe. The existing required `cloud_supabase_boundary` target now
@@ -1249,8 +1325,8 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `327bb02ec2aeabd8b21d254a5756070345bde853cef3a95377a81d9f3e7bb9f3`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (229 files), `tests/` (231 files)
+- Repository signal fingerprint: `6a3addd1b9727eaa3c371ddafc239c5ed36e2705b96d18996de05e9e72f1f7f0`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (230 files), `tests/` (232 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 
@@ -1261,13 +1337,14 @@ redaction; sampled/budget-limited coverage; ordinary DDL and generated columns;
 trigger/view binding without DDL disclosure; checkpoints outside the ordinary
 event prefix; missing-store CLI/direct/stdin RPC without initialization; and
 bounded framing before startup. The registry dependency/version/checksum guard
-remains enabled for Dactyl v0.13.0. Read-only live captures use a CI-produced
+remains enabled and is advanced here to exact registry Dactyl v0.14.0. Read-only live captures use a CI-produced
 binary with database trees mounted read-only and only existing locks writable.
 Those captures bind their actual historical source/binary identity; they cannot
 establish publication readiness for the current candidate.
 
-The candidate preserves accepted managed-cloud, terminal onboarding and
-first-proof admission and native inventory changes through v0.140.1 at 1d04f232. Its release-bound
+The candidate preserves accepted managed-cloud, terminal onboarding,
+first-proof admission, native inventory, Dactyl 0.14.0 and bounded reflection
+changes through v0.141.0 at 3718f70e. Its release-bound
 entrypoints and managed image pin require regeneration through the independently
 published matching controller. Canonical spec reviews follow the final source
 and authored-spec edits. Complete exact-candidate Buildkite proof and current
@@ -1652,9 +1729,15 @@ real-executable regressions against the captured accepted target.
 
 ## Onboarding integration proof boundaries
 
-The refined setup is verified as part of the complete source PR profile. Real
-PTY cases cover recommended setup, edit/cancel, terminal restoration, preview,
-redirected output and cloud review cancellation without a service connection.
+The required `selective-cli` profile executes `//:cli_contracts`. Its Unix-only
+`terminal_onboarding` module contains the six PTY cases previously declared in
+standalone `tests/init_cli.rs`, which the finite profile did not select. Cases
+cover recommended setup, edit/cancel, terminal restoration, preview, redirected
+output and cloud review cancellation without a service connection. The fixture
+converts `TIOCSCTTY` to the platform ioctl request type, preserving its value
+across the macOS constant/parameter type difference. Scenario assertions and
+existing inventory/consumer cases remain unchanged. Required workflows, source
+selectors, test targets and budgets remain unchanged.
 Managed-session CLI cases separately cover authoritative access and recovery;
 neither fixture suite establishes a hosted purchase or paid customer journey.
 
@@ -1685,3 +1768,11 @@ The accepted target subsequently advanced through onboarding PR #1636 and the ac
 Standalone source validation compares the repository after native `validate --refresh-specs` and rejects release-bound drift. The actual 0.139.1 evaluator exposed 0.139.0 entrypoint, managed-image and manifest pins after the accepted release advanced; those projections must be regenerated by an independently released 0.139.1 controller. Registry installation through the supported native session-update path is environment bootstrap, never candidate proof. The project auto-update preference is restored after scoped bootstrap, and projection-only preparation remains nonpublication evidence. The source inventory remains the same reviewed 105-file `sha256:31fa30d0bbc53f76f4f09cbca80101965b71dc1c00c337b54c53607ab3df4a40` set.
 
 Actual pre-refresh candidate `c626fa46` confirmed the unchanged selected target bounds: CLI contracts passed in 281.6 seconds and contract enforcement in 274.2 seconds; the entrypoint target completed in 207.4 seconds with only the prior-release template mismatch failing. Its genuine fresh docs proof passed in 75.2473 seconds. These source-CI diagnostics confirm placement and retain the failure honestly; the regenerated candidate still requires its own complete configured execution and independent full native validation.
+
+The PR1648 rebase uses the independently installed registry 0.140.2 controller.
+All 105 inventoried build inputs match accepted `df15c9b8`, including its Dactyl
+0.14.0 adoption and native inventory wiring. Only package-version bytes differ
+from the reviewed SDK-adoption parent. Native commands regenerate release
+projections and refresh the reviewed digest; this preparation is not execution
+proof. The archived original PR tip retains its historical checkpoints, while
+the rebased source requires its own current checkpoint and complete validation.

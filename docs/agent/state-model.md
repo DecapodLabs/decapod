@@ -176,6 +176,53 @@ Receipts identify their scope and governing source. Repository-local proof
 does not establish hosted cloud, billing or deployment acceptance; CI-local
 checks do not establish publication readiness.
 
+### Bounded reflection continuity
+
+Successful RPC envelopes may omit `blocked_by` when it is empty; consumers must
+accept omission or an empty array. Reflection still does not grant global
+execution or completion permission.
+
+Optional reflection uses `sections.plan.reflection` in the existing governance
+document: one current task/custody binding, at most three receipts, and a bounded
+terminal stop if a successful third round is later revisited. It creates no
+datastore table, index, event stream or transcript. Each receipt retains input,
+context and progress hashes, proposed paths, pending/resolved challenge IDs,
+source references and the disposition. Agent explanations are hashed and discarded.
+
+CLI reflection requires a matching outer `--task-id`; omitting it fails before
+recording a round so orientation and reflection evaluate the same task intent.
+The first proposal consumes round 1. A continuation uses a new submission ID and
+the last outcome's token as `expected_token`. Exact retries are idempotent and
+do not write; changed reuse or stale tokens fail without consuming a round.
+Replaying an old nonterminal conclusion after relevant source changes fails.
+Plan/policy/ADR/evidence changes invalidate conclusions without resetting the
+lifetime budget. Plan reinitialization and ordinary edits preserve the journal.
+The plan source/context hash binds governing definitions; approval and measured
+phase/gate progress reuse the existing plan contract/progress distinction and
+do not consume extra rounds. Existing execution/proof gates still check them.
+Terminal state dominates historical replays, including an earlier `proceed`.
+A new accepted workstream is the explicit recovery boundary for a terminal stop.
+This initial contract supports one task continuation per plan, local exclusive
+custody, up to 32 literal paths and 32 bounded ADR files; it fails explicitly
+outside those limits. It does not automatically retrieve the whole knowledge graph.
+The compact journal is capped at 64 KiB and applicable gap IDs at 64.
+
+| Disposition | Meaning and continuation |
+| --- | --- |
+| `proceed` | No current reflective gap. Satisfy existing approval/execution/proof gates. |
+| `reflect` | Investigate the single challenge; submit an observably narrower scope or a separately resolved governing gap, with its source reference. |
+| `human_decision` | Existing orientation/plan/spec authority requires human judgment; an agent assertion cannot resolve it. The third unresolved round is terminal. |
+| `blocked` | No progress or exhausted budget terminates; custody, source and invalid-input errors preserve state and require supported recovery. |
+
+Binding plan constraints stay binding at plan execution, execution checkpoint/
+resume and existing validation gates. Mentor's literal ADR matches are advisory;
+they cannot manufacture policy. Source references identify current bytes, not
+verified understanding or successful tests. Removal of a conflict or strict
+scope narrowing establishes structural progress. New prose, arbitrary evidence
+citations and an operation synonym do not. Source references accompanying a
+resolution must name the focused challenge's source. An omitted hash asks the
+kernel to capture current identity; a supplied stale hash is rejected.
+
 - **Intent and Plans:** The human supplies intent; the agent records and updates its governed interpretation through Decapod. Plans are execution state, not proof by themselves.
 - **Claims:** Falsifiable repository-owned statements linked to a baseline, failure mode, measurement, and proof gate. They change as research evidence changes.
 - **Trajectories:** Agent-recorded custody evidence for intent, boundaries, inspected and modified files, assumptions, tool calls, checks, and proof references across a run.

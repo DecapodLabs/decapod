@@ -11801,10 +11801,38 @@ mod rpc_handlers {
             .map_err(|e| error::DecapodError::ValidationError(format!("Invalid params: {e}")))?;
 
         let engine = MentorEngine::new(ctx.project_root);
+        if let Some(request) = &params.reflection
+            && (params.op.as_ref().is_some_and(|op| op != &request.op)
+                || params
+                    .touched_paths
+                    .as_ref()
+                    .is_some_and(|paths| paths != &request.touched_paths))
+        {
+            return Err(error::DecapodError::ValidationError(
+                "REFLECTION_CONTEXT_MISMATCH: outer mentor context must match the proposed action"
+                    .into(),
+            ));
+        }
+        let reflection = params
+            .reflection
+            .as_ref()
+            .map(|request| mentor::reflection::submit(ctx.project_root, request))
+            .transpose()?;
         let obligations_ctx = ObligationsContext {
-            op: params.op.unwrap_or_else(|| "unknown".to_string()),
+            op: params.op.unwrap_or_else(|| {
+                params
+                    .reflection
+                    .as_ref()
+                    .map_or_else(|| "unknown".into(), |r| r.op.clone())
+            }),
             params: params.params.unwrap_or_else(|| serde_json::json!({})),
-            touched_paths: params.touched_paths.unwrap_or_default(),
+            touched_paths: params.touched_paths.unwrap_or_else(|| {
+                params
+                    .reflection
+                    .as_ref()
+                    .map(|r| r.touched_paths.clone())
+                    .unwrap_or_default()
+            }),
             diff_summary: params.diff_summary,
             project_profile_id: params.project_profile_id,
             session_id: params.session_id,
@@ -11829,6 +11857,7 @@ mod rpc_handlers {
             Some(
                 serde_json::to_value(MentorObligationsResult {
                     obligations: obligations.clone(),
+                    reflection: reflection.clone(),
                 })
                 .unwrap(),
             ),
@@ -11844,6 +11873,26 @@ mod rpc_handlers {
 
         if !obligations.contradictions.is_empty() {
             response.blocked_by = mentor::contradictions_to_blockers(&obligations.contradictions);
+        }
+        if let Some(outcome) = reflection {
+            // Keep the optional contract consistent with its authority labels.
+            response.blocked_by.clear();
+            if outcome.execution_blocked {
+                response.blocked_by.push(Blocker {
+                    kind: if outcome.disposition == mentor::reflection::Disposition::HumanDecision {
+                        BlockerKind::MissingAnswer
+                    } else {
+                        BlockerKind::Conflict
+                    },
+                    message: format!("REFLECTION_{}", outcome.reason),
+                    resolve_hint: outcome.next_action.clone(),
+                });
+            }
+            response.allowed_next_ops = vec![AllowedOp {
+                op: "mentor.obligations".into(),
+                reason: outcome.next_action.clone(),
+                required_params: vec!["reflection".into()],
+            }];
         }
 
         Ok(response)
@@ -13147,6 +13196,7 @@ fn run_infer_orientation(
         known_unknowns: vec![],
         decision_gates: vec![],
         next_action: "Perform research to map relevant files and symbols.".to_string(),
+        reflection: None,
     };
 
     if let Some(ref id) = cli.task_id {
@@ -13212,10 +13262,7 @@ fn run_infer_orientation(
             .push("Do not introduce regressions".to_string());
     }
 
-    if intent_lower.contains("refactor")
-        || intent_lower.contains("architecture")
-        || intent_lower.contains("interface")
-    {
+    if crate::core::rpc::architectural_alignment_required(&packet.user_goal) {
         packet.decision_gates.push(DecisionGate {
             decision: "Architectural alignment".to_string(),
             rationale: "Changes to core structures or interfaces require human alignment on long-term maintainability.".to_string(),
@@ -13249,6 +13296,26 @@ fn run_infer_orientation(
         }
     }
 
+    if let Some(input) = &cli.reflection {
+        let request: crate::core::mentor::reflection::Request = serde_json::from_str(input)
+            .map_err(|e| {
+                error::DecapodError::ValidationError(format!("Invalid reflection: {e}"))
+            })?;
+        if cli.task_id.is_none() {
+            return Err(error::DecapodError::ValidationError(
+                "REFLECTION_TASK_REQUIRED: orientation reflection requires --task-id so both paths use the same governing intent".into(),
+            ));
+        }
+        if cli.task_id.as_ref() != Some(&request.task_id) {
+            return Err(error::DecapodError::ValidationError(
+                "REFLECTION_TASK_MISMATCH".into(),
+            ));
+        }
+        let outcome = crate::core::mentor::reflection::submit(project_root, &request)?;
+        packet.next_action = outcome.next_action.clone();
+        packet.reflection = Some(outcome);
+    }
+
     if cli.format == "json" {
         println!("{}", serde_json::to_string_pretty(&packet).unwrap());
     } else {
@@ -13263,6 +13330,19 @@ fn run_infer_orientation(
             packet.allowed_scope, packet.forbidden_scope
         );
         println!("Proof:   {:?}", packet.proof_required);
+        if let Some(ref outcome) = packet.reflection {
+            println!(
+                "Reflection: {:?}; {} rounds remain",
+                outcome.disposition, outcome.remaining_rounds
+            );
+            if let Some(ref challenge) = outcome.challenge {
+                println!("Challenge {}: {}", challenge.id, challenge.question);
+                println!(
+                    "Binding: {}; sources: {:?}",
+                    challenge.enforceable, challenge.sources
+                );
+            }
+        }
 
         if !packet.decision_gates.is_empty() {
             println!("\n⚠ DECISION GATES REQUIRED:");
