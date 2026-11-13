@@ -658,6 +658,11 @@
       "id": "export-storage-contracts-mod",
       "summary": "feat(storage): export storage_contracts module in core",
       "input_digest": "sha256:453fd94f94d70ff9c9124ae4bc1e700d5fe73d2102febc26806365044dda502e"
+    },
+    {
+      "id": "add-compact-storage-schemas",
+      "summary": "feat(storage): add storage_components, storage_component_refs, and migration manifest DDL",
+      "input_digest": "sha256:3c425e3b523f92438f9c194206789033b8a0910420d376e2e37e432ff1d0b7ad"
     }
   ],
   "intents": {

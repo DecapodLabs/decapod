@@ -750,3 +750,55 @@ pub const LCM_DB_INDEX_SUMMARIES_SCOPE: &str =
 // --- 6. Map Operators ---
 /// Historical basename for migration discovery only — not a runtime write target.
 pub const MAP_EVENTS_NAME: &str = "map.events.jsonl";
+
+// --- 7. Lossless Compact Storage & Migration Manifests (#1630) ---
+
+/// Shared `meta` namespace for physical storage format compatibility markers.
+pub const STORAGE_FORMAT_META_NAMESPACE: &str = "storage";
+/// Current physical compact storage format revision.
+pub const STORAGE_FORMAT_VERSION: u32 = 2;
+/// Minimum binary release able to read stores written in compact format v2.
+pub const STORAGE_MIN_READER_VERSION: &str = "0.141.0";
+/// Minimum binary release able to write stores migrated to compact format v2.
+pub const STORAGE_MIN_WRITER_VERSION: &str = "0.141.0";
+
+/// Domain-separated, codec-versioned, length-and-SHA256-keyed lossless component store.
+/// Keyed by `(component_kind, codec_version, byte_len, content_sha256)` so distinct
+/// domains, codecs, or lengths can never collide.
+pub const STORAGE_COMPONENTS_SCHEMA: &str = "CREATE TABLE IF NOT EXISTS storage_components (
+    component_kind TEXT NOT NULL,
+    codec_version INTEGER NOT NULL,
+    byte_len INTEGER NOT NULL CHECK(byte_len >= 0),
+    content_sha256 TEXT NOT NULL,
+    stored_bytes BLOB NOT NULL,
+    created_at TEXT NOT NULL,
+    PRIMARY KEY(component_kind, codec_version, byte_len, content_sha256)
+) WITHOUT ROWID;";
+
+/// Reachability reference index from durable owners (`task_checkpoint`, `task_transfer`, etc.)
+/// to `storage_components`, supporting O(1) reference-aware garbage collection and SQLite FK safety.
+pub const STORAGE_COMPONENT_REFS_SCHEMA: &str = "CREATE TABLE IF NOT EXISTS storage_component_refs (
+    ref_scope TEXT NOT NULL,
+    ref_id TEXT NOT NULL,
+    component_kind TEXT NOT NULL,
+    codec_version INTEGER NOT NULL,
+    byte_len INTEGER NOT NULL,
+    content_sha256 TEXT NOT NULL,
+    PRIMARY KEY(ref_scope, ref_id, component_kind, codec_version, byte_len, content_sha256),
+    FOREIGN KEY(component_kind, codec_version, byte_len, content_sha256)
+        REFERENCES storage_components(component_kind, codec_version, byte_len, content_sha256)
+        ON DELETE RESTRICT
+) WITHOUT ROWID;
+CREATE INDEX IF NOT EXISTS idx_storage_component_refs_target
+    ON storage_component_refs(component_kind, codec_version, byte_len, content_sha256);";
+
+/// Redacted, source-bound pre/post checksum manifests for forward storage compaction migrations.
+pub const STORAGE_MIGRATION_MANIFESTS_SCHEMA: &str = "CREATE TABLE IF NOT EXISTS storage_migration_manifests (
+    migration_id TEXT PRIMARY KEY,
+    schema_version TEXT NOT NULL,
+    applied_at TEXT NOT NULL,
+    binary_version TEXT NOT NULL,
+    pre_digest TEXT NOT NULL,
+    post_digest TEXT NOT NULL,
+    manifest_json TEXT NOT NULL
+) WITHOUT ROWID;";
