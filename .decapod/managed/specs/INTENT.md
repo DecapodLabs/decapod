@@ -352,7 +352,7 @@ These declarations select authoring and proof obligations; they do not attest im
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `fbccc9cfb5bf2b38e6ef970f60ff59a1d618c570d9b96d317b9f5bd0c40da905`
+- Repository signal fingerprint: `4d29b2ddd81902f7faec1d56bf9251726253493115b750bd9d3e77a7392fef55`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (234 files), `tests/` (232 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
@@ -557,3 +557,18 @@ Expose only project-opted local database maintenance capabilities to the agent. 
 ## PR1662 current-master preparation
 
 Preserve prepared PR1662 capability-scoped database maintenance before integrating accepted master3afa9df9 and the0.144.2 source release. Default-deny accepted policy, owner-only repair, bounded safe operations and non-destructive lock custody remain obligations. Hosted CI must establish the exact integrated candidate; no local tests are run.
+
+## Diagnostic overrides cannot authorize readiness (#1659)
+
+Git, tooling and fingerprint gate-skip variables support diagnostic fixtures;
+their presence must never authorize full readiness, publication or verified
+completion. The shared runtime must reject a full claim before prerequisites or
+provider selection, and CLI/RPC/publication paths must preserve that boundary.
+Existing CI-local and project-prerequisite diagnostics retain their explicit
+partial scope and `publication_ready=false` behavior.
+
+Use the existing judgment, validation-history and receipt owners. Keep historical
+observations intact and require a fresh applicable validation after removing an
+override. Real child-process regressions isolate environment changes and must
+verify both rejected full claims and truthful diagnostics. No local test result,
+current hosted success or completed repair is claimed by this plan.
