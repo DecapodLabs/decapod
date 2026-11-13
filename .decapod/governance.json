@@ -589,6 +589,11 @@
       "id": "refresh-codex-v0-143-0",
       "summary": "chore(entrypoints): refresh CODEX.md for Decapod v0.143.0",
       "input_digest": "sha256:ffb727a6c4bb8aabec12753c6ec408f2bd57d4c6f6f843b9ee65fb6ffcd2d749"
+    },
+    {
+      "id": "refresh-gemini-v0-143-0",
+      "summary": "chore(entrypoints): refresh GEMINI.md for Decapod v0.143.0",
+      "input_digest": "sha256:cd5144d0e18b54062b604d9042d34ad6ad1814df15c3694c3147a286415f725a"
     }
   ],
   "intents": {
