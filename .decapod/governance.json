@@ -829,6 +829,11 @@
       "id": "refresh-agents-md-v0-143-1",
       "summary": "chore(release): refresh AGENTS.md for Decapod v0.143.1",
       "input_digest": "sha256:ffb2f4469175a16ad96f8a17f4c772921e318eabd0c7f17e5b4aac3e8b09d13c"
+    },
+    {
+      "id": "refresh-claude-md-v0-143-1",
+      "summary": "chore(release): refresh CLAUDE.md for Decapod v0.143.1",
+      "input_digest": "sha256:0fce2d5d1fe7cee2d50df3f10bb28fbb846a6ca43562b7ea0c2dd60225064ae4"
     }
   ],
   "intents": {
