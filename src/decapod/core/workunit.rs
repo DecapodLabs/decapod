@@ -823,7 +823,7 @@ fn verify_resume_record(
         ));
     }
     if record.manifest.status == WorkUnitStatus::Verified {
-        validate_verified_manifest(root, &record.manifest)?;
+        validate_observed_workunit_proof(root, &record.manifest)?;
         ensure_living_specs_bound_for_proof(root, &record.manifest)?;
         if record.legacy_baseline && record.kind == "legacy_baseline" {
             return Err(journal_error(
@@ -1055,7 +1055,7 @@ fn mutate_workunit_with_proof_gate(
                     "VERIFIED requires a current execution checkpoint",
                 ));
             }
-            validate_verified_manifest(root, &manifest)?;
+            validate_observed_workunit_proof(root, &manifest)?;
             ensure_living_specs_bound_for_proof(root, &manifest)?;
         }
         if manifest.status == WorkUnitStatus::Verified
@@ -1338,7 +1338,7 @@ pub fn write_workunit_checked(
         }
         if manifest.status == WorkUnitStatus::Verified {
             verify_resume_record(root, &previous)?;
-            validate_verified_manifest(root, manifest)?;
+            validate_observed_workunit_proof(root, manifest)?;
             ensure_living_specs_bound_for_proof(root, manifest)?;
         }
         if !projection_matches(root, &previous)? {
@@ -1613,7 +1613,37 @@ pub fn transition_status(
     })
 }
 
+/// Validate the current durable journal, execution custody and canonical proof.
+/// A structurally valid legacy projection cannot stand in for observed execution.
 pub fn validate_verified_manifest(
+    root: &Path,
+    manifest: &WorkUnitManifest,
+) -> Result<(), error::DecapodError> {
+    let records = journal_records(root, &manifest.task_id)?;
+    let current = records.last().ok_or_else(|| {
+        journal_error(
+            "WORKUNIT_CHECKPOINT_REQUIRED",
+            "no durable execution checkpoint for this workunit",
+        )
+    })?;
+    if current.manifest != manifest.canonicalized() || !projection_matches(root, current)? {
+        return Err(journal_error(
+            "WORKUNIT_RECOVERY_REQUIRED",
+            "manifest differs from the current durable checkpoint",
+        ));
+    }
+    if manifest.status != WorkUnitStatus::Verified {
+        return Err(journal_error(
+            "WORKUNIT_PROOF_UNVERIFIABLE",
+            "current status is not VERIFIED",
+        ));
+    }
+    verify_resume_record(root, current)
+}
+
+// Used before atomically appending a new transition. Public consumers also
+// require the resulting durable snapshot through validate_verified_manifest.
+fn validate_observed_workunit_proof(
     root: &Path,
     manifest: &WorkUnitManifest,
 ) -> Result<(), error::DecapodError> {
