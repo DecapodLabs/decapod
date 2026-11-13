@@ -591,6 +591,11 @@
       "id": "c09-docs-generator",
       "summary": "docs(generator): document governed database maintenance contracts and config schema",
       "input_digest": "sha256:90f306319a5ff1e43b217e84cdda7f493352adcf039941c8bf787ff9870ef425"
+    },
+    {
+      "id": "c10-command-contracts-doc",
+      "summary": "docs(agent): regenerate command-contracts.md with governed database maintenance surface",
+      "input_digest": "sha256:6905eeea7c472aba973e8dd02383ed9f293c1fbc981de0f27eaa4d50123ee184"
     }
   ],
   "intents": {
