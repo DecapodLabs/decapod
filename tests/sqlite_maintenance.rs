@@ -1055,7 +1055,7 @@ fn governed_db_maintenance_enforces_default_deny_opt_in_anti_self_elevation_and_
     let audit_str = String::from_utf8_lossy(&audit.stdout);
     assert!(!audit_str.contains(&alpha.password));
     assert!(
-        !audit_str.contains(&fixture.repo_root.to_string_lossy().as_ref()),
+        !audit_str.contains(fixture.repo_root.to_string_lossy().as_ref()),
         "audit log must redact absolute host repo paths"
     );
     let audit_json: serde_json::Value = serde_json::from_slice(&audit.stdout).unwrap();
@@ -1116,6 +1116,7 @@ fn two_concurrent_agents_diagnose_and_resolve_lock_contention_with_custody_isola
     let lock_path = fixture.repo_root.join(".decapod/data/decapod.db.lock");
     let lock_file = OpenOptions::new()
         .create(true)
+        .truncate(false)
         .read(true)
         .write(true)
         .open(&lock_path)
