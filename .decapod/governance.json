@@ -605,6 +605,14 @@
       "proof_refs": [
         "https://github.com/DecapodLabs/decapod/issues/1568"
       ]
+    },
+    {
+      "id": "issue-1568-file-9",
+      "summary": "docs(specs): require hosted maintenance acceptance outcomes; file-by-file checkpoint, verification pending.",
+      "input_digest": "sha256:d1cf8f72da6782071676de75e1b7d5b5b47acfceb70e661da0e728dd4c6b7aff",
+      "proof_refs": [
+        "https://github.com/DecapodLabs/decapod/issues/1568"
+      ]
     }
   ],
   "intents": {
@@ -641,6 +649,29 @@
         "decapod validate"
       ],
       "schema_version": "1.1.0",
+      "spec_reviews": [
+        {
+          "disposition": "updated",
+          "path": ".decapod/managed/specs/ARCHITECTURE.md",
+          "reason": "Review actual required CLI/Dactyl maintenance coverage, canonical opt-in/default denial/custody, missing SQLite failure and child provider-context isolation. Preserve hosted cloud denial, bounded operation semantics and independent full publication proof. No local tests.",
+          "reviewed_code_fingerprint": "2390465dfedd195b12c2fbc8af6a5769b39c1412cbef00d5ac791a4919936efb",
+          "spec_material_hash": "121346d70cf3b799f50287b929359098839d8a6450bd41193fb2b896ef102ec1"
+        },
+        {
+          "disposition": "updated",
+          "path": ".decapod/managed/specs/INTERFACES.md",
+          "reason": "Review actual required CLI/Dactyl maintenance coverage, canonical opt-in/default denial/custody, missing SQLite failure and child provider-context isolation. Preserve hosted cloud denial, bounded operation semantics and independent full publication proof. No local tests.",
+          "reviewed_code_fingerprint": "2390465dfedd195b12c2fbc8af6a5769b39c1412cbef00d5ac791a4919936efb",
+          "spec_material_hash": "589d97309ea0ef6a4d5d2cd140fb0fe795bfa75c9352cec542b75d070a493e01"
+        },
+        {
+          "disposition": "updated",
+          "path": ".decapod/managed/specs/SECURITY.md",
+          "reason": "Review actual required CLI/Dactyl maintenance coverage, canonical opt-in/default denial/custody, missing SQLite failure and child provider-context isolation. Preserve hosted cloud denial, bounded operation semantics and independent full publication proof. No local tests.",
+          "reviewed_code_fingerprint": "2390465dfedd195b12c2fbc8af6a5769b39c1412cbef00d5ac791a4919936efb",
+          "spec_material_hash": "4d3483f9146313106df15f703ed00c3616904df9b2c4eebc0977c5c1cb9773b3"
+        }
+      ],
       "state": "APPROVED",
       "stop_conditions": [],
       "title": "code: resolve #1568 feat(governance): project-opted, capability-scoped agent database maintenance (local-first RBAC)",
@@ -649,13 +680,13 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1794610289Z"
+      "updated_at": "1794610623Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:61e6c5effaefc72f1dff6834f2372ce15804905d74bedec4a33c1a7b3d947eb1",
+      "artifact_hash": "sha256:23c65dea976d5102c9ca0374559bdccb34c213ffa689343048adb9571b417073",
       "checks": [],
       "current_phase": "implementation",
       "custody": {
@@ -727,10 +758,17 @@
             "intent_id": "intent:change_01M7BCJGVSZZ72B0C1Y6FVMPP4",
             "kind": "trajectory_step_recorded",
             "sequence": 11
+          },
+          {
+            "detail": "trajectory:branch_01M7BCJGZ6T52EA2CECBZAPK5W",
+            "event_id": "event:12",
+            "intent_id": "intent:change_01M7BCJGVSZZ72B0C1Y6FVMPP4",
+            "kind": "trajectory_step_recorded",
+            "sequence": 12
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 11,
+        "next_sequence": 12,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M7BCJGZ6T52EA2CECBZAPK5W": {
@@ -865,6 +903,22 @@
                 "validation_findings": [
                   "Hosted verification and exact-candidate publication readiness remain pending; no local tests run."
                 ]
+              },
+              {
+                "action": "implementation",
+                "custody_event_id": "event:12",
+                "observations": [
+                  ".decapod/managed/specs/VALIDATION.md",
+                  "https://github.com/DecapodLabs/decapod/issues/1568"
+                ],
+                "proof_refs": [],
+                "scope": [
+                  "issue-1568"
+                ],
+                "sequence": 12,
+                "validation_findings": [
+                  "Hosted verification and exact-candidate publication readiness remain pending; no local tests run."
+                ]
               }
             ]
           }
@@ -884,6 +938,7 @@
         ".decapod/managed/specs/INTENT.md",
         ".decapod/managed/specs/INTERFACES.md",
         ".decapod/managed/specs/SECURITY.md",
+        ".decapod/managed/specs/VALIDATION.md",
         "tests/cli_contracts.rs",
         "tests/sqlite_maintenance.rs"
       ],

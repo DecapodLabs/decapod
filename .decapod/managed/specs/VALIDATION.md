@@ -1341,7 +1341,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `4d29b2ddd81902f7faec1d56bf9251726253493115b750bd9d3e77a7392fef55`
+- Repository signal fingerprint: `2390465dfedd195b12c2fbc8af6a5769b39c1412cbef00d5ac791a4919936efb`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (234 files), `tests/` (232 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
@@ -1904,3 +1904,22 @@ Exercise actual `sqlite_maintenance` CLI/RPC worktree cases and storage-lock reg
 ## PR1662 current-master preparation
 
 This checkpoint preserves original source and tests before integration with current master. Preserve failure history and all assertions; use hosted CI for verification, without local tests or running the maintenance candidate against the live machine datastore. Prior test observations do not prove the new integration.
+
+## Required local maintenance acceptance (#1568)
+
+The required `cli_contracts` target now includes `tests/sqlite_maintenance.rs`;
+Bazel supplies its module source explicitly. The tests traverse real Dactyl
+SQLite integrity/backup/recovery/lock behavior, the actual binary's operator
+surface, governed CLI/RPC opt-in and anti-self-elevation, and two real claimed
+worktrees with concurrent bounded retry and cross-custody rejection. No fake
+adapter/error replaces the maintenance acceptance path. Missing native SQLite
+fails the required cases instead of silently returning.
+
+The genuine governed fixtures clear inherited outer-provider context and all
+three diagnostic overrides only in their own children, retaining admission and
+leaving the parent source-job identity intact. Older operator bootstrap cases
+remain diagnostic; they are not claimed as full readiness or authenticated cloud
+proof. Existing exclusive operation locks, timeouts, backup path restrictions and
+cloud-denial assertions remain. The source suite's accepted provider graph,
+profile and original cases are preserved. No local tests ran; current hosted
+execution, case outcomes and full exact-candidate publication proof are pending.
