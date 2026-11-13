@@ -706,6 +706,11 @@
       "id": "c31-refresh-readme",
       "summary": "docs(specs): synchronize specs README.md overlay digest after #1568 update",
       "input_digest": "sha256:e4c000ee83b5d61ffacb1ea65116d63b1d6e8848fc038a8d238d41b676cf7f2d"
+    },
+    {
+      "id": "c32-refresh-security",
+      "summary": "docs(specs): synchronize SECURITY.md overlay digest after #1568 update",
+      "input_digest": "sha256:58719e27f39043a93e9e4b800770f8bb3f35a95b1131b549a8d36609644402f5"
     }
   ],
   "intents": {
