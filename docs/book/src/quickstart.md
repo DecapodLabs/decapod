@@ -53,8 +53,10 @@ and repository authorization remain service-owned; setup does not collect a
 credential or maintain an access roster in TOML.
 
 Cloud initialization may return `onboarding_pending` with a one-time browser
-URL. Open it on a browser-capable device and rerun the same command, including
-from a headless terminal. Setup is ready only when the service confirms account
+URL. Continue with your coding agent: it shares the link, resumes the saved
+connection with `decapod cloud login`, and continues your task after sign-in.
+The human runs init once per repository; later Decapod operations belong to the
+agent. Setup is ready only when the service confirms account
 completion and an authenticated repository read succeeds. The `--proof` flag
 prepares cloud configuration only; it does not authenticate or establish
 readiness. See [Cloud sign-in and task access](reference/propodus.md) for

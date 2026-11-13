@@ -698,6 +698,14 @@
         ".decapod/managed/specs/SECURITY.md",
         ".decapod/managed/specs/VALIDATION.md"
       ]
+    },
+    {
+      "id": "reconcile-accepted-master-v0-142-0",
+      "summary": "Reconcile accepted master d3542c30 (v0.142.0) and refresh 0.142.0 release-bound entrypoints, Dockerfile pin, specs manifest, and source digest",
+      "input_digest": "sha256:baaec0068d13c87e33333232098e26c00ac94b528ad62f883a5880f0cc46cfd5",
+      "proof_refs": [
+        ".decapod/managed/specs/VALIDATION.md"
+      ]
     }
   ],
   "intents": {
@@ -741,23 +749,23 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Documented build_lifecycle.rs per-invocation scratch supervision and bounded Unix PermissionDenied cleanup recovery.",
-          "reviewed_code_fingerprint": "2e78d5222e4634cae73a931b81187b35194b569d14c6049c19bd245d0d6a280b",
-          "spec_material_hash": "5072c4fedf9a62c455473389866fe152c3559e01a7cc5dfbb197dd1a8d13d06b"
+          "reason": "Documented Scratch::recover_owned_permissions lifecycle ordering in build_lifecycle.rs.",
+          "reviewed_code_fingerprint": "9a5c0379b4635eb874f91906c4ba6aa5319c98edc304a58e23fe7e5cb4eb3895",
+          "spec_material_hash": "074144f815e73143e9d4b2f88b83f2801145734feeabfbccccddd91c307a3e18"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "CLI, RPC, and public interface schemas are unchanged; owned mode-000 scratch recovery is internal to the build_lifecycle supervisor.",
-          "reviewed_code_fingerprint": "2e78d5222e4634cae73a931b81187b35194b569d14c6049c19bd245d0d6a280b",
-          "spec_material_hash": "5c82da80912928b3ff94be3ddfebd1d97d7fbfb10e495821d4c1a034794878eb"
+          "reason": "Internal build-supervisor scratch cleanup change introduces no public CLI, RPC, or wire schema changes beyond accepted master d3542c30.",
+          "reviewed_code_fingerprint": "9a5c0379b4635eb874f91906c4ba6aa5319c98edc304a58e23fe7e5cb4eb3895",
+          "spec_material_hash": "5b676233b993a193c0e409d9f423343c00ee1b70e3c3ac747d029f18da92558d"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Documented bounded same-UID/same-device mode-000 scratch permission recovery, symlink/UID/device/depth/entry escape rejection, and read-only cleanup_diagnostics in build_lifecycle.rs.",
-          "reviewed_code_fingerprint": "2e78d5222e4634cae73a931b81187b35194b569d14c6049c19bd245d0d6a280b",
-          "spec_material_hash": "5c321818a57ee8d569cd78ddba4c33b7cd44211591fc205e64f67fac38b5c526"
+          "reason": "Documented owned-scratch verification and bounded mode-000 permission recovery security invariants.",
+          "reviewed_code_fingerprint": "9a5c0379b4635eb874f91906c4ba6aa5319c98edc304a58e23fe7e5cb4eb3895",
+          "spec_material_hash": "30ff7c26407e22e0d04dd0f4919eb5c70ee1e3ed13021388e9da3b9eed87178e"
         }
       ],
       "state": "APPROVED",
@@ -770,14 +778,18 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1794536738Z"
+      "updated_at": "1794538447Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:3e3b8e6a00f0a232359f76fc0f7d39b9836d9f4a8d08b5e77f870dbffbe7a751",
+      "artifact_hash": "sha256:d77d9b2ac3ee19141485a343720c4ea17db2ecddf7a8f3e94a1daf4732871fc1",
       "checks": [
+        {
+          "name": "merge_d3542c30_v0_142_0",
+          "status": "passed"
+        },
         {
           "name": "spec_reviews",
           "status": "passed"
@@ -923,10 +935,17 @@
             "intent_id": "intent:change_01M79A0G0YSR12S2RHJE84QPHR",
             "kind": "trajectory_step_recorded",
             "sequence": 21
+          },
+          {
+            "detail": "trajectory:branch_01M79A0G5E35FVE2EYNYQVQ3XY",
+            "event_id": "event:22",
+            "intent_id": "intent:change_01M79A0G0YSR12S2RHJE84QPHR",
+            "kind": "trajectory_step_recorded",
+            "sequence": 22
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 21,
+        "next_sequence": 22,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M79A0G5E35FVE2EYNYQVQ3XY": {
@@ -1223,6 +1242,24 @@
                 ],
                 "sequence": 21,
                 "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:22",
+                "observations": [
+                  "Cargo.toml"
+                ],
+                "proof_refs": [
+                  "merge_d3542c30_v0_142_0"
+                ],
+                "scope": [
+                  "\".decapod/config.toml\"",
+                  "\".decapod/managed/specs\"]",
+                  "\"assets/tools/build_lifecycle_tests.rs\"",
+                  "paths:[\"assets/tools/build_lifecycle.rs\""
+                ],
+                "sequence": 22,
+                "validation_findings": []
               }
             ]
           }
@@ -1236,6 +1273,7 @@
       "inspected_files": [
         ".config/build/decapod.BUILD.bzl",
         ".decapod/config.toml",
+        "Cargo.toml",
         "assets/tools/build_lifecycle.rs",
         "assets/tools/build_lifecycle_tests.rs"
       ],

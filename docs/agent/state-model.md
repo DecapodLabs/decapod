@@ -13,6 +13,19 @@ establishes meaning; an isolated workspace supplies the filesystem for execution
 todos supply coordination and durable custody. None replaces the others. Missing
 workspace-local coordination state is not evidence that the request was lost.
 
+## Cloud connection custody
+
+Managed cloud sessions and pending browser flows live outside the repository
+under `$XDG_DATA_HOME/decapod/cloud-sessions`, defaulting to
+`~/.local/share/decapod/cloud-sessions`. The scope binds the service origin,
+repository and canonical main checkout; linked worktrees share custody.
+Separate clones have independent records. A bounded lock serializes refresh
+and atomic writes preserve session progress between agent invocations.
+Browser completion alone does not establish access: the service must confirm
+the account handoff and an authorized repository read. Private local phase
+inspection does not establish live readiness. These cloud credentials are
+distinct from the cooperative local agent session and workspace lease.
+
 ## 1. Tasks (Todos)
 The primary coordination unit of work, not the sole authority for request meaning.
 - **States:** `open` -> `claimed` -> `done` | `archived`.
@@ -94,7 +107,7 @@ Authentication and identity verification tokens.
 
 - **Dual-Token Architecture:**
   - **Local Agent Sessions:** Ephemeral, short-lived tokens generated on-the-fly via `session acquire`. Stored machine-locally under `~/.config/decapod/sessions/<project-hash>/<agent-id>.json` when available, with secure workspace-local fallback under `.decapod/managed/sessions/<agent-id>.json` when machine-local storage is unusable. Gates local coordination, TODO subsystem access, and database locking in the workspace (verified using the process-local or environment-provided `DECAPOD_SESSION_PASSWORD`).
-  - **Cloud Session Token:** Long-lived global OAuth identity token stored as JSON (`{"token": "..."}`) under `~/.local/share/decapod/session_token.json`. Used to authenticate the user's client with the Propodus cloud backend when cloud storage modes are enabled.
+  - **Managed Cloud Sessions:** Expiring access tokens, rotating refresh tokens, and resumable browser-flow state stay in private global storage scoped by service origin, repository and canonical main checkout. The agent reuses and renews them through Dactyl. The legacy global token file is not adopted by the managed path; see Cloud connection custody above.
 - **Lifecycle:** Local sessions are acquired via `session acquire` and released via `session release`.
 - **Restriction:** Most repository mutation commands (e.g., `todo add`, `workspace ensure`) require an active local session.
 
@@ -148,6 +161,20 @@ The persistent, shared understanding of the project.
 - **Persistence:** Surmounts individual sessions and agents.
 
 ## 7. Governance and Proof Artifacts
+
+After human initialization, the agent operates the engineering lifecycle
+through Decapod. Record the request and scope in the governed plan and
+trajectory, claim the task and enter its workspace, then keep execution and
+recovery attached to that intent. Use `decapod validate` to run the configured
+checks and collect source-bound evidence. Inspect the returned evidence path
+and receipt before reporting completion, and provide the proof reference to
+the user. Preserve failed checks and retry with fresh proof after repairs.
+The user should not have to sequence these commands. Human decisions and
+browser/account actions remain explicit when Decapod requires them.
+
+Receipts identify their scope and governing source. Repository-local proof
+does not establish hosted cloud, billing or deployment acceptance; CI-local
+checks do not establish publication readiness.
 
 ### Bounded reflection continuity
 

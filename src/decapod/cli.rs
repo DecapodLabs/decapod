@@ -903,8 +903,12 @@ pub(crate) struct CloudCli {
 
 #[derive(Subcommand, Debug)]
 pub(crate) enum CloudCommand {
-    /// Deprecated compatibility alias; use `decapod init --backend cloud` for human setup.
-    Login,
+    /// Agent-owned sign-in: resume the repository's saved browser flow.
+    Login {
+        /// Start a fresh sign-in after an expired, revoked or uncertain exchange.
+        #[clap(long)]
+        restart: bool,
+    },
     /// Inspect private managed-session state without network I/O or a live readiness claim.
     Status,
 }

@@ -21,6 +21,21 @@ does not enable HTTP/3 or establish hosted service acceptance.
 
 ## Governed cloud client and private custody (#1628)
 
+The human runs `decapod init` once per repository and then talks to the coding
+agent normally. The agent owns every subsequent Decapod invocation, including
+sharing a browser sign-in link, bounded continuation, private session reuse,
+refresh and explicit safe recovery. The user completes provider/account actions
+without operating the CLI again. Pending sign-in is an honest incomplete
+connection, not a reason to lose the user's task or create a duplicate task.
+
+The agent carries the engineering request through Decapod's intent, task,
+workspace, execution-history, validation and publication interfaces. It owns
+sequencing and supported recovery, and returns an inspectable proof reference
+bound to the checked source. The user supplies the outcome and required human
+decisions, without manually orchestrating the command lifecycle. Decapod's
+governance and configured validation remain the authority for admissibility
+and readiness; an agent's completion message is not evidence.
+
 Decapod's local-first governance kernel remains the system interface for agent
 work. Optional cloud selection changes the operational task backend without
 moving authorization policy into the agent or turning credentials into Git
@@ -326,7 +341,7 @@ These declarations select authoring and proof obligations; they do not attest im
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `2e78d5222e4634cae73a931b81187b35194b569d14c6049c19bd245d0d6a280b`
+- Repository signal fingerprint: `9a5c0379b4635eb874f91906c4ba6aa5319c98edc304a58e23fe7e5cb4eb3895`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (230 files), `tests/` (232 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

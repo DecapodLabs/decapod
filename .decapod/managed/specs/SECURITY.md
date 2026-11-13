@@ -1,5 +1,18 @@
 # Security
 
+## Agent-owned browser handoff
+
+`authorization_url` exposes only Dactyl's validated, short-lived browser handoff.
+It never includes the polling secret, verifier, exchanged code, access token or
+refresh token. A task-add diagnostic preserves that handoff and its non-secret
+operation ID without exposing task text or credentials. Recovery instructions
+are fixed; raw authentication messages and recovery
+text do not cross into task-operation diagnostics. Only the explicit validated
+browser handoff field is carried for an onboarding-pending result. The agent performs an
+explicit `cloud login --restart` after uncertain one-time outcomes; polling and
+idempotent account confirmation do not authorize replaying those mutations.
+The service remains authoritative for account requirements and repository access.
+
 ## Managed credential custody and server authority (#1628)
 
 `core::cloud_session::SessionStore` is the only durable custody owner in the
@@ -597,7 +610,7 @@ execution evidence remains required before publication readiness.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `2e78d5222e4634cae73a931b81187b35194b569d14c6049c19bd245d0d6a280b`
+- Repository signal fingerprint: `9a5c0379b4635eb874f91906c4ba6aa5319c98edc304a58e23fe7e5cb4eb3895`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (230 files), `tests/` (232 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

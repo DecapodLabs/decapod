@@ -31,10 +31,12 @@ repository-bound session. An existing unexpired session is reused; a session
 near expiry is refreshed while holding its private lock.
 
 If sign-in is needed, Decapod prints a validated, one-time browser handoff and
-returns a non-success `onboarding_pending` result. Open that URL, complete the
-human sign-in, and rerun `decapod init --backend cloud`. Headless callers can
-open the same URL on a browser-capable device. Each invocation polls at most
-once and does not wait indefinitely for human action.
+returns a non-success `onboarding_pending` result with `authorization_url`.
+The agent shares that link and runs `decapod cloud login` every two seconds for
+up to five minutes. It resumes the task as soon as sign-in completes, without
+waiting for another user message. If still pending, it preserves the saved flow.
+The human runs init once per repository and completes browser actions; later
+CLI operations belong to the agent. Each invocation polls at most once.
 
 The URL and a successful browser redirect are not initialization success.
 Decapod accepts the issued session, asks the service to complete the account
@@ -53,8 +55,8 @@ completion with that same session without consuming another sign-in code.
 `decapod cloud status` inspects private local state without network requests
 or printing a token. Its phase is a custody state; `server_readiness` is
 `not_checked`, even when the saved phase is `ready`. Use initialization or a
-normal cloud command to obtain a current server decision. The deprecated
-`decapod cloud login` alias resumes the same setup flow.
+normal cloud command or agent-owned `decapod cloud login` to obtain a current
+server decision.
 
 `decapod init --backend cloud --proof` prepares configuration only. It does
 not authenticate, create a synthetic credential, or claim server readiness.
@@ -81,10 +83,10 @@ stopped before saving it, the outcome is explicitly uncertain. Decapod does
 not replay that request or treat an old refresh token as reusable.
 
 For an uncertain exchange, expired handoff, or rejected managed credential,
-follow the reported recovery instruction:
+the agent follows the reported recovery instruction:
 
 ```text
-decapod init --backend cloud --restart-cloud-signin
+decapod cloud login --restart
 ```
 
 This explicitly clears the selected private flow and starts a new sign-in.
