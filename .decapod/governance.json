@@ -543,7 +543,12 @@
     "claim-1568-local-db-maintenance": {
       "statement": "Agent database maintenance capabilities are default-deny, bound to accepted canonical .decapod/config.toml, audited with secret redaction, confined under .decapod/backups/, and reject candidate self-elevation, cross-worktree spoofing, cloud backends, and unapproved db.recover.",
       "falsifier": "An unmerged worktree config grants capabilities, an unauthenticated or foreign-worktree caller mutates or clears locks, backup escapes .decapod/backups/, cloud mode executes local maintenance, or db.recover executes without owner repair authority.",
-      "status": "open"
+      "status": "supported",
+      "proof_refs": [
+        "src/decapod/core/db_maintenance.rs",
+        "tests/sqlite_maintenance.rs",
+        "tests/unit/core/storage_lock_tests.rs"
+      ]
     }
   },
   "checkpoints": [
@@ -676,6 +681,11 @@
       "id": "c26-spec-validation-1568",
       "summary": "docs(specs): document SQLite maintenance unit and integration regression coverage (#1568)",
       "input_digest": "sha256:acfeb6bbaad05d3cead7c3bb43d96c740bbcddc1b0580b578e9fcc2fb1970ff0"
+    },
+    {
+      "id": "c27-refresh-architecture",
+      "summary": "docs(specs): synchronize ARCHITECTURE.md overlay digest after #1568 update",
+      "input_digest": "sha256:afe19db05bb87e7fff6586f813b0d23da7505721c20c5d72fbf4c14ed9495188"
     }
   ],
   "intents": {
@@ -712,6 +722,29 @@
         "cargo test --lib storage_lock && cargo test --lib db_maintenance && cargo test --test sqlite_maintenance"
       ],
       "schema_version": "1.1.0",
+      "spec_reviews": [
+        {
+          "disposition": "updated",
+          "path": ".decapod/managed/specs/ARCHITECTURE.md",
+          "reason": "Updated ARCHITECTURE.md with #1568 project-opted capability-scoped database maintenance architecture, CLI/RPC surfaces, and security boundaries.",
+          "reviewed_code_fingerprint": "b7dcb4f7556a255f0a7c8f5092dc8187b228d500c2406e1d428c3f5168fc77f7",
+          "spec_material_hash": "7d009130f9ade26e83963bcbe5ef069f328b0af4b24e4e8303bff0bedd781db7"
+        },
+        {
+          "disposition": "updated",
+          "path": ".decapod/managed/specs/INTERFACES.md",
+          "reason": "Updated INTERFACES.md with #1568 project-opted capability-scoped database maintenance architecture, CLI/RPC surfaces, and security boundaries.",
+          "reviewed_code_fingerprint": "b7dcb4f7556a255f0a7c8f5092dc8187b228d500c2406e1d428c3f5168fc77f7",
+          "spec_material_hash": "6b97c1d56420032c34a6db944ca0fe6c7f85dd72b0c608bf846e3dd67e248536"
+        },
+        {
+          "disposition": "updated",
+          "path": ".decapod/managed/specs/SECURITY.md",
+          "reason": "Updated SECURITY.md with #1568 project-opted capability-scoped database maintenance architecture, CLI/RPC surfaces, and security boundaries.",
+          "reviewed_code_fingerprint": "b7dcb4f7556a255f0a7c8f5092dc8187b228d500c2406e1d428c3f5168fc77f7",
+          "spec_material_hash": "7dc813418311edad2389878831a6dc6d84788bdc49600295dbb6b7afe7b0a94d"
+        }
+      ],
       "state": "APPROVED",
       "stop_conditions": [],
       "title": "Project-opted capability-scoped agent database maintenance (#1568)",
@@ -720,14 +753,35 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1794546026Z"
+      "updated_at": "1794546191Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:9b9fa2edcced0d562e044d2b0768e2a58bd691594274eab35181476f34e493a3",
-      "checks": [],
+      "artifact_hash": "sha256:b9f1a275449ec393a1a2e66f05e5d2b9d82c5c89c74173d044c2d63a911acf6e",
+      "checks": [
+        {
+          "name": "contract_conformance",
+          "status": "passed"
+        },
+        {
+          "name": "db_maintenance_unit",
+          "status": "passed"
+        },
+        {
+          "name": "interop_unit",
+          "status": "passed"
+        },
+        {
+          "name": "sqlite_maintenance_integration",
+          "status": "passed"
+        },
+        {
+          "name": "storage_lock_unit",
+          "status": "passed"
+        }
+      ],
       "current_phase": "intent",
       "custody": {
         "events": [
@@ -742,17 +796,57 @@
             "intent_id": "intent:change_01M79M71J29ESH9WFBJVEHK91K",
             "kind": "refined",
             "sequence": 3
+          },
+          {
+            "detail": "trajectory:branch_01M79M71PR2GQNMTS813ACTPMM",
+            "event_id": "event:4",
+            "intent_id": "intent:change_01M79M71J29ESH9WFBJVEHK91K",
+            "kind": "trajectory_step_recorded",
+            "sequence": 4
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 3,
+        "next_sequence": 4,
         "schema_version": "1.0.0",
-        "trajectories": {}
+        "trajectories": {
+          "branch_01M79M71PR2GQNMTS813ACTPMM": {
+            "evidence_only": true,
+            "id": "branch_01M79M71PR2GQNMTS813ACTPMM",
+            "intent_id": "intent:change_01M79M71J29ESH9WFBJVEHK91K",
+            "steps": [
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:4",
+                "observations": [
+                  "src/decapod/core/storage_lock.rs",
+                  "src/decapod/core/db_maintenance.rs",
+                  "tests/sqlite_maintenance.rs"
+                ],
+                "proof_refs": [
+                  "storage_lock_unit",
+                  "db_maintenance_unit",
+                  "interop_unit",
+                  "sqlite_maintenance_integration",
+                  "contract_conformance"
+                ],
+                "scope": [
+                  "root"
+                ],
+                "sequence": 4,
+                "validation_findings": []
+              }
+            ]
+          }
+        }
       },
       "declared_commands": [],
       "destination": "pull request",
       "evidence": [],
-      "inspected_files": [],
+      "inspected_files": [
+        "src/decapod/core/db_maintenance.rs",
+        "src/decapod/core/storage_lock.rs",
+        "tests/sqlite_maintenance.rs"
+      ],
       "intent_id": "intent:change_01M79M71J29ESH9WFBJVEHK91K",
       "modified_files": [],
       "next_transitions": [
