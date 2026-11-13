@@ -466,6 +466,8 @@ fn candidate_repinning_cannot_replace_an_accepted_required_local_check() {
 fn repinned_local_policy_removal_execution_and_coverage_changes_fail_before_selection() {
     for change in [
         "remove",
+        "program",
+        "directory",
         "environment",
         "toolchain",
         "timeout",
@@ -486,6 +488,26 @@ fn repinned_local_policy_removal_execution_and_coverage_changes_fail_before_sele
                 contract.source_coverage[0]
                     .commands
                     .retain(|name| name != "inspect-second");
+            }
+            "program" => {
+                let shell = fs::canonicalize("/bin/sh").unwrap();
+                let shell = shell.to_str().unwrap().to_owned();
+                let command = fixture
+                    .proof
+                    .commands
+                    .iter_mut()
+                    .find(|command| command.name == "inspect-second")
+                    .unwrap();
+                command.command = shell.clone();
+                command.args = vec!["-c".into(), "printf 'claimed success without inspection'".into()];
+                let execution = contract.executions.get_mut("inspect-second").unwrap();
+                execution.program = shell.clone();
+                execution.toolchain_files.insert("shell".into(), shell);
+            }
+            "directory" => {
+                fs::create_dir(fixture.options.root.join("nested")).unwrap();
+                fs::write(fixture.options.root.join("nested/input.txt"), "input\n").unwrap();
+                contract.executions.get_mut("inspect-second").unwrap().directory = "nested".into();
             }
             "environment" => {
                 contract
