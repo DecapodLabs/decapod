@@ -543,7 +543,7 @@
     "claim:compact-lossless-journal-and-event-envelopes": {
       "statement": "Task journal v2 externalizes large UTF-8 fields (>= 128 B) into content-addressed storage_components with ON DELETE RESTRICT reference tracking and _ce_v1/_ce_raw event envelopes, cutting SQLite file bytes by >= 30% on 1K-100K checkpoint stores with bit-exact replay and bundle transfer parity.",
       "falsifier": "Compacted replay diverges in TaskProjection or projection_digest, component deletion corrupts journal reconstruction, bundle transfer loses externalized components, or measured SQLite file savings fall below 30%.",
-      "status": "open",
+      "status": "supported",
       "proof_refs": [
         "docs/datastore-v2/compaction-benchmarks-v0.141.0.md",
         "src/decapod/core/events.rs",
@@ -555,7 +555,7 @@
     "claim:paged-verify-checksummed-migration-and-gc": {
       "statement": "Migration 1200 upgrades v1 stores idempotently with pre/post logical event SHA-256 parity and downgrade protection, verify_with_budget scales past 10,000 tasks via snapshot-consistent O(E) keyset paging, and GC/VACUUM reclaim only unreferenced components and pages explicitly.",
       "falsifier": "Migration 1200 alters logical event digests or fails on rerun, older clients mutate format v2 without STORAGE_FORMAT_INCOMPATIBLE, verify_with_budget misses concurrent snapshot drift or fails above 10,000 tasks, or GC deletes a referenced component.",
-      "status": "open",
+      "status": "supported",
       "proof_refs": [
         "src/decapod/core/migration.rs",
         "src/decapod/core/storage_compaction.rs",
@@ -566,7 +566,7 @@
     "claim:storage-field-collection-authority-bounds": {
       "statement": "Write admission enforces explicit UTF-8 byte bounds, NUL-byte rejection, JSON depth <= 32, and collection cardinality ceilings while preserving lossless untruncated historical reads and task authority convergence.",
       "falsifier": "Any NUL-bearing, oversized, over-deep JSON, or over-cardinality task/event/aptitude write succeeds, an unrelated patch truncates a historical oversized task field, or task authority convergence misclassifies drift.",
-      "status": "open",
+      "status": "supported",
       "proof_refs": [
         "docs/datastore-v2/logical_contract_v1.json",
         "src/decapod/core/storage_contracts.rs",
@@ -779,6 +779,11 @@
       "id": "specs-readme-v0-143-0",
       "summary": "chore(specs): refresh specs README.md attestation for v0.143.0",
       "input_digest": "sha256:97e562e5165fca5961a64a8cba29fb5037babc77279cbc819941203cf1c1bf54"
+    },
+    {
+      "id": "specs-manifest-and-reviews-1630",
+      "summary": "chore(specs): refresh .manifest.json and record #1630 spec reviews and supported claims",
+      "input_digest": "sha256:18c1ea2d46f9bec72e984af63e2a091d123223bab387054bedb7b0d89cf181cb"
     }
   ],
   "intents": {
@@ -818,6 +823,29 @@
         "cargo test --test datastore_contract --test datastore_efficiency --test datastore_relational_compaction"
       ],
       "schema_version": "1.1.0",
+      "spec_reviews": [
+        {
+          "disposition": "updated",
+          "path": ".decapod/managed/specs/ARCHITECTURE.md",
+          "reason": "Updated Living Spec prose and source citations for #1630 bounded, lossless compact storage v2.",
+          "reviewed_code_fingerprint": "b84ca1bad99d65494836397a0df5421c6c961d64f3278bf14a3474754a944739",
+          "spec_material_hash": "3968d101efd70b74483225a3c213a3ed9e2dd360e224bb2d99a12a65b7c90308"
+        },
+        {
+          "disposition": "updated",
+          "path": ".decapod/managed/specs/INTERFACES.md",
+          "reason": "Updated Living Spec prose and source citations for #1630 bounded, lossless compact storage v2.",
+          "reviewed_code_fingerprint": "b84ca1bad99d65494836397a0df5421c6c961d64f3278bf14a3474754a944739",
+          "spec_material_hash": "a15254c6f3429d6375a1117d432376f3e94bfbadc88f902250b5ad9b97b2d67d"
+        },
+        {
+          "disposition": "updated",
+          "path": ".decapod/managed/specs/SECURITY.md",
+          "reason": "Updated Living Spec prose and source citations for #1630 bounded, lossless compact storage v2.",
+          "reviewed_code_fingerprint": "b84ca1bad99d65494836397a0df5421c6c961d64f3278bf14a3474754a944739",
+          "spec_material_hash": "750c36008e14b4949e0a2c0c44432072f8e112cfbfb8b928d55c7540eaeb19fd"
+        }
+      ],
       "state": "APPROVED",
       "stop_conditions": [],
       "title": "Bound and compact decapod data with lossless history and measured growth (#1630)",
@@ -826,15 +854,45 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1794546077Z"
+      "updated_at": "1794546399Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:17e9b1b2bcc43bf2ad7458f205fb94da45cdfd0b0e4dd2aa32fb33d099f1069d",
-      "checks": [],
-      "current_phase": "intent",
+      "artifact_hash": "sha256:e2ddb785176103cffd01557a1c6e3c3a6ba2ecbb9708a664033b5ef9eeaf0b3e",
+      "checks": [
+        {
+          "name": "cli_contracts_storage_inventory",
+          "status": "passed"
+        },
+        {
+          "name": "datastore_contract",
+          "status": "passed"
+        },
+        {
+          "name": "datastore_efficiency",
+          "status": "passed"
+        },
+        {
+          "name": "datastore_relational_compaction",
+          "status": "passed"
+        },
+        {
+          "name": "datastore_v2_compaction_benchmarks",
+          "status": "passed"
+        },
+        {
+          "name": "plugins_todo_tests",
+          "status": "passed"
+        },
+        {
+          "name": "task_journal_and_transfer_unit",
+          "status": "passed"
+        }
+      ],
+      "completion_claim": "Bounded write contracts, v2 component-deduplicated task journal, compact event envelopes, snapshot-consistent O(E) keyset verification, migration 1200, reference-aware GC, and benchmarks verified.",
+      "current_phase": "verification",
       "custody": {
         "events": [
           {
@@ -848,19 +906,92 @@
             "intent_id": "intent:change_01M79MCGEW9KRRRW548YJTQJAJ",
             "kind": "refined",
             "sequence": 3
+          },
+          {
+            "detail": "trajectory:branch_01M79MCGK1QG9RXCVXVQQWNCT4",
+            "event_id": "event:4",
+            "intent_id": "intent:change_01M79MCGEW9KRRRW548YJTQJAJ",
+            "kind": "trajectory_step_recorded",
+            "sequence": 4
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 3,
+        "next_sequence": 4,
         "schema_version": "1.0.0",
-        "trajectories": {}
+        "trajectories": {
+          "branch_01M79MCGK1QG9RXCVXVQQWNCT4": {
+            "evidence_only": true,
+            "id": "branch_01M79MCGK1QG9RXCVXVQQWNCT4",
+            "intent_id": "intent:change_01M79MCGEW9KRRRW548YJTQJAJ",
+            "steps": [
+              {
+                "action": "verification",
+                "command": "cargo test --test datastore_contract",
+                "custody_event_id": "event:4",
+                "observations": [
+                  "src/decapod/core/schemas.rs",
+                  "src/decapod/core/events.rs",
+                  "src/decapod/core/task_journal.rs",
+                  "src/decapod/core/todo.rs",
+                  "src/decapod/core/migration.rs",
+                  "src/decapod/core/storage_contracts.rs",
+                  "src/decapod/core/storage_compaction.rs",
+                  "src/decapod/core/task_journal.rs",
+                  "src/decapod/core/task_transfer.rs",
+                  "src/decapod/core/events.rs",
+                  "src/decapod/core/storage_inventory.rs",
+                  "docs/datastore-v2/compaction-benchmarks-v0.141.0.md",
+                  "SQLite file savings measured at 30.76% (1K checkpoints), 33.89% (10K checkpoints), and 34.14% / 74,596,352 bytes saved (100K checkpoints) with bit-exact replay and SHA-256 logical parity."
+                ],
+                "proof_refs": [
+                  "datastore_contract",
+                  "datastore_efficiency",
+                  "datastore_relational_compaction",
+                  "cli_contracts_storage_inventory",
+                  "plugins_todo_tests",
+                  "task_journal_and_transfer_unit",
+                  "datastore_v2_compaction_benchmarks"
+                ],
+                "scope": [
+                  "root"
+                ],
+                "sequence": 4,
+                "validation_findings": []
+              }
+            ]
+          }
+        }
       },
-      "declared_commands": [],
+      "declared_commands": [
+        "cargo test --lib core::todo::task_journal",
+        "cargo test --test cli_contracts storage_inventory",
+        "cargo test --test datastore_contract",
+        "cargo test --test datastore_efficiency",
+        "cargo test --test datastore_efficiency datastore_v2_compaction_benchmarks -- --ignored --nocapture",
+        "cargo test --test datastore_relational_compaction",
+        "cargo test --test plugins_todo_tests"
+      ],
       "destination": "pull request",
-      "evidence": [],
-      "inspected_files": [],
+      "evidence": [
+        "SQLite file savings measured at 30.76% (1K checkpoints), 33.89% (10K checkpoints), and 34.14% / 74,596,352 bytes saved (100K checkpoints) with bit-exact replay and SHA-256 logical parity."
+      ],
+      "inspected_files": [
+        "src/decapod/core/events.rs",
+        "src/decapod/core/migration.rs",
+        "src/decapod/core/schemas.rs",
+        "src/decapod/core/task_journal.rs",
+        "src/decapod/core/todo.rs"
+      ],
       "intent_id": "intent:change_01M79MCGEW9KRRRW548YJTQJAJ",
-      "modified_files": [],
+      "modified_files": [
+        "docs/datastore-v2/compaction-benchmarks-v0.141.0.md",
+        "src/decapod/core/events.rs",
+        "src/decapod/core/storage_compaction.rs",
+        "src/decapod/core/storage_contracts.rs",
+        "src/decapod/core/storage_inventory.rs",
+        "src/decapod/core/task_journal.rs",
+        "src/decapod/core/task_transfer.rs"
+      ],
       "next_transitions": [
         "Refine plan and declare falsifiable checks"
       ],
