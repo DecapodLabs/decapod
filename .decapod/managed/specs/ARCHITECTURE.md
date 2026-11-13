@@ -1,5 +1,39 @@
 # Architecture
 
+## One-to-one checkout authoring bindings and shared-resource gates (#1469)
+
+`src/decapod/core/authoring.rs` and `src/decapod/core/todo.rs::ensure_schema`
+maintain `authoring_bindings` in canonical `decapod.db` with `worktree_id` as
+primary key and `idx_authoring_bindings_task_id` enforcing unique active
+`task_id` bindings. Admission (`todo::admit_authoring`) runs under a dedicated
+`workspace.authoring.bind` `DbBroker::with_transaction` operation mapped to the
+seeded `workspace.authoring` risk zone (`src/decapod/plugins/policy.rs`), so
+binding row writes and `authoring.bind` events on `events::WORKSPACE_LIFECYCLE`
+commit or roll back together with zero orphan rows.
+
+Live worktree presence is verified through `workspace::is_registered_worktree_id`:
+a second live registered worktree for an already-bound task fails with
+`AUTHORING_TASK_ALREADY_BOUND`, while a deleted or unregistered checkout is
+atomically retired (`missing_worktree_replaced`) and recorded as
+`replaced_missing_worktree`. Same-owner `todo::renew_task` advances an
+already-admitted binding's `lease_generation` in-transaction
+(`renew_task_binding_on_conn` / `authoring.renew`), whereas `yield_claim_lease`,
+`release_task`, `force_release_assignment`, `handoff_task_as`,
+`update_status_with_verification` (`done`/`archived`), and
+`workspace::prune_workspaces_report_with_process_dir` (`release_authoring_binding`
+under `workspace.authoring.release`) retire bindings and emit `authoring.release`.
+`workspace::get_workspace_status` fails closed (`can_work=false`) whenever
+checkout, actor, lease, or datastore evidence is unavailable or stale.
+
+`src/decapod/core/fleet_coord.rs` separates `declared_resources` (`resource:<name>`)
+from `claim_paths` so resource reservations emit zero repository `dir_path`
+overlaps against source tasks, while `todo::enforce_shared_resource_available`
+gates `run_release_lineage_sync` (`resource:release`) in `src/decapod/lib.rs`
+and `publish_workspace_with_readiness` (`resource:integration`,
+`resource:integration:<base_branch>`) in `src/decapod/core/workspace.rs` with
+`SHARED_RESOURCE_OCCUPIED`. Cloud task profiles continue to reject host-local
+checkout binding (`AUTHORING_PROFILE_UNSUPPORTED`) without local shadow state.
+
 ## Composed reflection continuation
 
 `core/mentor/reflection.rs` composes the existing mentor ADR detector, canonical
@@ -894,7 +928,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `0a0498aa94eb3f7551fe07c380ef13b469d188ab33218c72f80fc2e081fc3951`
+- Repository signal fingerprint: `d38d3f6da33c50f03492b7cfc8b8937af37534586d1ea4ff56261275738a0754`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (231 files), `tests/` (232 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

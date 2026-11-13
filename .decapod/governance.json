@@ -662,6 +662,11 @@
       "id": "specs-intent-issue-1469",
       "summary": "Update INTENT.md with concurrent isolated authoring and explicit resource reservation goals",
       "input_digest": "sha256:7aecf94e33b67a1fd8fc16e5c90e7ba6d07db0cd06c81d29314f3ff5ebceed4c"
+    },
+    {
+      "id": "specs-architecture-issue-1469",
+      "summary": "Update ARCHITECTURE.md with 1-to-1 authoring_bindings invariant, lifecycle retirement, and resource gates",
+      "input_digest": "sha256:c907db6f85ea26cf20619648474993fcf71bd421b77e0347cd80fa6511e8263b"
     }
   ],
   "intents": {
