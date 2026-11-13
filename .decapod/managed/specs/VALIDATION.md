@@ -1,5 +1,18 @@
 # Validation
 
+## PR1661 repair evidence contract
+
+The non-Git entrypoint regression must demonstrate successful prerequisite-only
+diagnostics, unavailable authoring custody, and rejected full publication
+validation for the same initialized project. Guided-path traversal is checked
+through `govern project-check`, which must return the actual configuration
+failure rather than an earlier workspace diagnostic. Existing transactional
+binding, full lease-lifecycle, shared-resource, cross-process recovery and
+combined-candidate tests remain required. Clippy must accept the real PathBuf
+returned by workspace ensure without a redundant conversion. Exact final source
+and current accepted master require a new full validation result; earlier PR
+statuses, source fixtures and project checks cannot establish that readiness.
+
 The required `tests/consumer_readiness.rs` regression carries a recorded
 Decapod intent through a real source-check failure, a committed source repair,
 native validation and an inspectable receipt. It verifies that failure issues
@@ -1325,7 +1338,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `0f5182b61bd9df72c7689c6b907417c45695f0cbec319899f912c2d9c1398f2b`
+- Repository signal fingerprint: `2b121bcac52e002c3be06f937132e585746dec4c07dfecd42f836fa54e5e2ae0`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (231 files), `tests/` (232 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

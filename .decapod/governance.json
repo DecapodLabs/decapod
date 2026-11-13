@@ -1,7 +1,7 @@
 {
   "schema_version": "1.0.0",
   "baseline": {
-    "accepted_commit": "3718f70ecbcf124e6deb8c21c52d36c97233fbac",
+    "accepted_commit": "64c4ff2e546729e62dc77830f221fa4c1e58ae4c",
     "policy": {
       "change_control": {
         "requires_human_review": true,
@@ -94,6 +94,15 @@
           ".decapod/managed/specs/VALIDATION.md"
         ],
         "statement": "Implement issue1628 client slice: logical project backend, all managed discovery/auth/account/data transport through Dactyl, repository/project/origin-bound private custody with serialized refresh and crash recovery, honest server-confirmed readiness, explicit account denial/action requirements, headless continuation and no cloud-to-SQLite fallback. Preserve local independence and existing governed publication/release dependency gates.",
+        "status": "open"
+      },
+      "claim:claim:owned-scratch-mode000-cleanup": {
+        "falsifier": "Owned mode-000 nested directories still fail Scratch::clean, or permission recovery follows a symlink, alters foreign-UID or cross-device directories, mutates paths during read-only diagnostics, or traverses unboundedly.",
+        "proof_refs": [
+          "assets/tools/build_lifecycle.rs",
+          "assets/tools/build_lifecycle_tests.rs"
+        ],
+        "statement": "When remove_dir_all fails with PermissionDenied on an invocation-owned scratch tree after child process-group exit, Scratch::clean recovers 0o700 permissions only on real directories matching the scratch root UID and filesystem device within a bounded traversal, rejects symlink/UID/device/replacement escapes, keeps cleanup_diagnostics read-only, and completes bounded scratch removal.",
         "status": "open"
       },
       "claim:claim:recovery-aptitude": {
@@ -544,194 +553,47 @@
     }
   },
   "change": {
-    "id": "change_01M79A0G0YSR12S2RHJE84QPHR",
-    "base_commit": "3718f70ecbcf124e6deb8c21c52d36c97233fbac",
+    "id": "change_01M79NVT2SXTG0QCCYXQADTVWT",
+    "base_commit": "64c4ff2e546729e62dc77830f221fa4c1e58ae4c",
     "target_base": "origin/master"
   },
   "claims": {
-    "claim:owned-scratch-mode000-cleanup": {
-      "statement": "When remove_dir_all fails with PermissionDenied on an invocation-owned scratch tree after child process-group exit, Scratch::clean recovers 0o700 permissions only on real directories matching the scratch root UID and filesystem device within a bounded traversal, rejects symlink/UID/device/replacement escapes, keeps cleanup_diagnostics read-only, and completes bounded scratch removal.",
-      "falsifier": "Owned mode-000 nested directories still fail Scratch::clean, or permission recovery follows a symlink, alters foreign-UID or cross-device directories, mutates paths during read-only diagnostics, or traverses unboundedly.",
-      "status": "open",
+    "pr1661-custody-repair": {
+      "statement": "Non-Git prerequisite diagnostics remain usable without admitting authoring or publication; existing single-worktree custody, lifecycle retirement, resource exclusion and recovery tests pass on accepted master and 0.143.1.",
+      "falsifier": "Project-check grants publication readiness, workspace status admits an unregistered non-Git checkout, full validation accepts it, Clippy fails, or a focused custody regression fails.",
+      "status": "supported",
       "proof_refs": [
-        "assets/tools/build_lifecycle.rs",
-        "assets/tools/build_lifecycle_tests.rs"
+        "tests/consumer_readiness.rs",
+        "tests/entrypoint_correctness.rs",
+        "tests/init_config_behavior.rs",
+        "tests/kernel_bootstrap.rs",
+        "tests/plugins/todo.rs"
       ]
     }
   },
   "checkpoints": [
     {
-      "id": "recover-owned-mode000-scratch",
-      "summary": "Recover owned mode-000 scratch directory permissions on Unix PermissionDenied cleanup",
-      "input_digest": "sha256:a0339a8b1b52772cc40ca7321d7f5a1fed2969fb400bacdd62312fbfc21599e8",
-      "proof_refs": [
-        "assets/tools/build_lifecycle.rs"
-      ]
-    },
-    {
-      "id": "add-podman-mode000-regressions",
-      "summary": "Add Podman mode-000 overlay cleanup and symlink/UID/device/bound escape regressions",
-      "input_digest": "sha256:60ae45b205775b70d225c406e2d03d9b78bb212bbca207ea120bff5b0258f300",
-      "proof_refs": [
-        "assets/tools/build_lifecycle_tests.rs"
-      ]
-    },
-    {
-      "id": "review-build-lifecycle-sources-digest",
-      "summary": "Update reviewed_sources_digest for build_lifecycle and build_lifecycle_tests",
-      "input_digest": "sha256:8ac5651da6b216e081ae2bba0ee3e71898b873eed3a88e49c2a34c5a6de00d1e",
-      "proof_refs": [
-        ".decapod/config.toml"
-      ]
-    },
-    {
-      "id": "refresh-agents-entrypoint-01410",
-      "summary": "Refresh AGENTS.md release-bound entrypoint pin to Decapod 0.141.0",
-      "input_digest": "sha256:226e9e7e41de73395fa213a138f3ca9f3d6ea4bb0b0195248900a57b3984da2a",
-      "proof_refs": [
-        "AGENTS.md"
-      ]
-    },
-    {
-      "id": "refresh-claude-entrypoint-01410",
-      "summary": "Refresh CLAUDE.md release-bound entrypoint pin to Decapod 0.141.0",
-      "input_digest": "sha256:c4ad4bdff77eda204a6a6a523bac98ec7186293eaac230a99c30751177af15e0",
-      "proof_refs": [
-        "CLAUDE.md"
-      ]
-    },
-    {
-      "id": "refresh-codex-entrypoint-01410",
-      "summary": "Refresh CODEX.md release-bound entrypoint pin to Decapod 0.141.0",
-      "input_digest": "sha256:e4a0e97ea00ab9bf5cc58b4e204d7dcaa592c589423e0b71f4d20472800ae384",
-      "proof_refs": [
-        "CODEX.md"
-      ]
-    },
-    {
-      "id": "refresh-gemini-entrypoint-01410",
-      "summary": "Refresh GEMINI.md release-bound entrypoint pin to Decapod 0.141.0",
-      "input_digest": "sha256:a63f7230be09e14dc286158dac591a8886139ff9d4dfb39d28582e13491ea26a",
-      "proof_refs": [
-        "GEMINI.md"
-      ]
-    },
-    {
-      "id": "refresh-dockerfile-pin-01410",
-      "summary": "Refresh managed Dockerfile.decapod base image pin to v0.141.0-debian",
-      "input_digest": "sha256:d21d25c51aaf7e80461a12efdf6dffb7172ef62a2736bfce975bad618dc284be",
-      "proof_refs": [
-        ".decapod/managed/Dockerfile.decapod"
-      ]
-    },
-    {
-      "id": "refresh-intent-spec-attestation-01410",
-      "summary": "Refresh INTENT.md codebase attestation for 0.141.0 build_lifecycle slice",
-      "input_digest": "sha256:2bfb07023d920b6f1d374bd56d06b70611260f29af6e9c213dc1de9a6a8d6932",
-      "proof_refs": [
-        ".decapod/managed/specs/INTENT.md"
-      ]
-    },
-    {
-      "id": "refresh-interfaces-spec-attestation-01410",
-      "summary": "Refresh INTERFACES.md codebase attestation for 0.141.0 build_lifecycle slice",
-      "input_digest": "sha256:b4ae6ad686b6c362a01610ca014d293380a9032ac6ac9a499ad1268a9b3571fe",
-      "proof_refs": [
-        ".decapod/managed/specs/INTERFACES.md"
-      ]
-    },
-    {
-      "id": "refresh-operations-spec-attestation-01410",
-      "summary": "Refresh OPERATIONS.md codebase attestation for 0.141.0 build_lifecycle slice",
-      "input_digest": "sha256:5267f6d790d005b5c090383674836812557f456a9d19e142644ba9dd3053a6ac",
-      "proof_refs": [
-        ".decapod/managed/specs/OPERATIONS.md"
-      ]
-    },
-    {
-      "id": "refresh-readme-spec-attestation-01410",
-      "summary": "Refresh specs README.md codebase attestation for 0.141.0 build_lifecycle slice",
-      "input_digest": "sha256:8b096c67d2508d1c7f1ca2e1839e8f877c6de73e429a5ef27026a4273e29759e",
-      "proof_refs": [
-        ".decapod/managed/specs/README.md"
-      ]
-    },
-    {
-      "id": "refresh-semantics-spec-attestation-01410",
-      "summary": "Refresh SEMANTICS.md codebase attestation for 0.141.0 build_lifecycle slice",
-      "input_digest": "sha256:dcfa9c0d396ff2eabc31514a9b3d87b9599bafcee748cc4ed2ff37a5c7b6e337",
-      "proof_refs": [
-        ".decapod/managed/specs/SEMANTICS.md"
-      ]
-    },
-    {
-      "id": "document-mode000-security-bounds",
-      "summary": "Document bounded owned mode-000 scratch permission recovery and escape rejection in SECURITY.md",
-      "input_digest": "sha256:2aa7b5ac595af0ad5d098332755fd3dbb3df9851ab506ca5074d3d0257c62644",
-      "proof_refs": [
-        ".decapod/managed/specs/SECURITY.md"
-      ]
-    },
-    {
-      "id": "document-build-lifecycle-architecture",
-      "summary": "Document build_lifecycle owned scratch supervision and Unix cleanup recovery in ARCHITECTURE.md",
-      "input_digest": "sha256:806fda825d0df0637f96bc0adb577b6fef4eb33a0fb0f5a3bf1b868aa80b668b",
-      "proof_refs": [
-        ".decapod/managed/specs/ARCHITECTURE.md"
-      ]
-    },
-    {
-      "id": "document-mode000-validation-regressions",
-      "summary": "Document #1643 supervisor mode-000 regressions and 0.141.0 source inventory digest in VALIDATION.md",
-      "input_digest": "sha256:54ea8d127b6e107b680ded3a77835f6e4fde5767547be4ff0ad0ee5d3096b483",
-      "proof_refs": [
-        ".decapod/managed/specs/VALIDATION.md"
-      ]
-    },
-    {
-      "id": "refresh-specs-manifest-and-reviews",
-      "summary": "Refresh 0.141.0 specs manifest and record publication spec reviews for #1643",
-      "input_digest": "sha256:a531ccff7c529f2d4569c90691aad7ff367ded65192d6018dfbe108dbed8390f",
-      "proof_refs": [
-        ".decapod/managed/specs/.manifest.json",
-        ".decapod/managed/specs/ARCHITECTURE.md",
-        ".decapod/managed/specs/SECURITY.md",
-        ".decapod/managed/specs/VALIDATION.md"
-      ]
-    },
-    {
-      "id": "reconcile-accepted-master-v0-142-0",
-      "summary": "Reconcile accepted master d3542c30 (v0.142.0) and refresh 0.142.0 release-bound entrypoints, Dockerfile pin, specs manifest, and source digest",
-      "input_digest": "sha256:baaec0068d13c87e33333232098e26c00ac94b528ad62f883a5880f0cc46cfd5",
-      "proof_refs": [
-        ".decapod/managed/specs/VALIDATION.md"
-      ]
-    },
-    {
-      "id": "reconcile-v0-143-0",
-      "summary": "Reconcile accepted master v0.143.0 into #1643",
-      "input_digest": "sha256:f6c52752b631d68ccb5a668236e28714a9d4322e17dc74809a17f6007f6ae715"
+      "id": "pr1661-1431-custody-repair",
+      "summary": "Prepare current-master PR1661 custody work with actual red-check repairs, partial non-Git diagnostics, v0.143.1 projections and version-only proof-source reconciliation; retain independent full validation requirement.",
+      "input_digest": "sha256:1669085fcc786e78e59ef058f3873a429e6cb8528051ac0f160c1db435786f04"
     }
   ],
   "intents": {
-    "intent:change_01M79A0G0YSR12S2RHJE84QPHR": {
+    "intent:change_01M79NVT2SXTG0QCCYXQADTVWT": {
       "acceptance_criteria": [],
       "assumptions": [],
       "boundaries": [
         "Current claimed task and isolated work branch"
       ],
       "constraints": [
-        "paths:[\"assets/tools/build_lifecycle.rs\"",
-        "\"assets/tools/build_lifecycle_tests.rs\"",
-        "\".decapod/config.toml\"",
-        "\".decapod/managed/specs\"]"
+        "pr-1661-repair"
       ],
       "created_sequence": 1,
-      "id": "intent:change_01M79A0G0YSR12S2RHJE84QPHR",
+      "id": "intent:change_01M79NVT2SXTG0QCCYXQADTVWT",
       "out_of_scope": [],
       "proof_requirements": [],
-      "raw_intent": "Fix #1643 build supervisor mode-000 owned scratch directory cleanup",
-      "refined_intent": "Fix #1643 build supervisor mode-000 owned scratch directory cleanup",
+      "raw_intent": "bugfix: restore PR 1661 custody checks on accepted master and Decapod 0.143.1\n\nUser selected highest-criticality open PR repair. Review PR 1661 custody boundary, update onto latest origin/master, preserve independent validation and published history unless safe rewrite explicitly authorized, repair real red checks, push only this existing PR and verify exact final source. Other PRs and continuous-governance branches preserved.",
+      "refined_intent": "bugfix: restore PR 1661 custody checks on accepted master and Decapod 0.143.1\n\nUser selected highest-criticality open PR repair. Review PR 1661 custody boundary, update onto latest origin/master, preserve independent validation and published history unless safe rewrite explicitly authorized, repair real red checks, push only this existing PR and verify exact final source. Other PRs and continuous-governance branches preserved.",
       "status": "refined",
       "updated_sequence": 3
     }
@@ -739,532 +601,156 @@
   "sections": {
     "plan": {
       "constraints": {
-        "file_touch_budget": 30,
+        "file_touch_budget": 35,
         "forbidden_paths": []
       },
       "deferred_questions": [],
       "human_questions": [],
-      "intent": "Recover u+rwx permissions within invocation-owned Unix scratch directories when remove_dir_all hits PermissionDenied (e.g., Podman rootless overlay work/work mode 000), while rejecting symlink, foreign-UID, cross-device, and root/parent replacement escapes and keeping cleanup_diagnostics strictly read-only.",
+      "intent": "Keep PR1661 custody semantics fail closed, restore non-Git prerequisite diagnostics, resolve current master and 1431 release conflicts, repair Clippy and actual failing CI; only this existing PR receives pushed changes.",
       "phases": [],
       "proof_hooks": [
-        "decapod validate"
+        "Run failing non-Git CLI regressions plus custody concurrency tests; official exact-candidate full validation and actual Actions status."
       ],
       "schema_version": "1.1.0",
       "spec_reviews": [
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Reconciled #1643 Podman mode-000 scratch cleanup prose with accepted master v0.143.0 (#1651 and #1656).",
-          "reviewed_code_fingerprint": "0f5182b61bd9df72c7689c6b907417c45695f0cbec319899f912c2d9c1398f2b",
-          "spec_material_hash": "0080ad1bc8a6387061be0f938f3f79dbc30b0c5707be96b6dfabbd22caad0f58"
+          "reason": "Reviewed real custody transactions and non-Git diagnostic routing; project-check never admits authoring or publication.",
+          "reviewed_code_fingerprint": "2b121bcac52e002c3be06f937132e585746dec4c07dfecd42f836fa54e5e2ae0",
+          "spec_material_hash": "64d2650f577b02cfe61d723b109c11fbd207e93bcd485330bca382df773ee76d"
         },
         {
-          "disposition": "unchanged_with_reason",
+          "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Preserved accepted master v0.143.0 (#1651) interface and security contracts; #1643 changes internal scratch cleanup only.",
-          "reviewed_code_fingerprint": "0f5182b61bd9df72c7689c6b907417c45695f0cbec319899f912c2d9c1398f2b",
-          "spec_material_hash": "bdd0ceb5cd3b9c68d05ceb15fc4c5981aecb18fb53823d649298222f5c2142fe"
+          "reason": "Public CLI regression verifies partial scope, false publication_ready, blocked workspace status and rejected full validation for the same non-Git project.",
+          "reviewed_code_fingerprint": "2b121bcac52e002c3be06f937132e585746dec4c07dfecd42f836fa54e5e2ae0",
+          "spec_material_hash": "c03675582c56d958bf2797cb400db15e7865703e0186531fd907402067c1efa7"
         },
         {
-          "disposition": "unchanged_with_reason",
+          "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Preserved accepted master v0.143.0 (#1651) interface and security contracts; #1643 changes internal scratch cleanup only.",
-          "reviewed_code_fingerprint": "0f5182b61bd9df72c7689c6b907417c45695f0cbec319899f912c2d9c1398f2b",
-          "spec_material_hash": "97c2544f70a436eeca3ea07b70088d349f5401279598b073fcc1376d3ad32024"
+          "reason": "Real rollback, lease lifecycle, resource exclusion, interruption recovery and combined-candidate tests passed; local custody is cooperative and full independent proof remains required.",
+          "reviewed_code_fingerprint": "2b121bcac52e002c3be06f937132e585746dec4c07dfecd42f836fa54e5e2ae0",
+          "spec_material_hash": "b22a787f02a258ae554291105ce68cbb1dfd49fb929bb854cb874a660dc35a4a"
         }
       ],
       "state": "APPROVED",
-      "stop_conditions": [
-        "Stop if scratch cleanup would traverse symlinks, cross filesystem devices, or alter foreign-UID paths outside the authenticated scratch root."
-      ],
-      "title": "Fix #1643 build supervisor mode-000 owned scratch directory cleanup",
+      "stop_conditions": [],
+      "title": "Repair PR 1661 custody boundary on accepted master",
       "todo_ids": [
-        "bugs_01m799kyygy9rq6d"
+        "bugs_01m79nswnarykvww"
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1794545108Z"
+      "updated_at": "1794550291Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:d77d9b2ac3ee19141485a343720c4ea17db2ecddf7a8f3e94a1daf4732871fc1",
+      "artifact_hash": "sha256:cc4de654f0408470b85f73f401105b9976c6ad27912a3b9b8e9ab0effeb34dc3",
       "checks": [
         {
-          "name": "merge_d3542c30_v0_142_0",
+          "name": "binding-rollback-and-lifecycle",
           "status": "passed"
         },
         {
-          "name": "spec_reviews",
+          "name": "clippy-all-targets-all-features",
+          "status": "passed"
+        },
+        {
+          "name": "combined-candidate-freshness",
+          "status": "passed"
+        },
+        {
+          "name": "cross-process-custody-recovery",
+          "status": "passed"
+        },
+        {
+          "name": "fleet-coordination-15-cases",
+          "status": "passed"
+        },
+        {
+          "name": "independent-full-readiness",
+          "status": "unavailable"
+        },
+        {
+          "name": "init-config-31-cases",
+          "status": "passed"
+        },
+        {
+          "name": "non-git-partial-and-publication-boundary",
+          "status": "passed"
+        },
+        {
+          "name": "shared-resource-exclusion",
           "status": "passed"
         }
       ],
-      "current_phase": "execution",
+      "current_phase": "verification",
       "custody": {
         "events": [
           {
             "event_id": "event:2",
-            "intent_id": "intent:change_01M79A0G0YSR12S2RHJE84QPHR",
+            "intent_id": "intent:change_01M79NVT2SXTG0QCCYXQADTVWT",
             "kind": "created",
             "sequence": 2
           },
           {
             "event_id": "event:3",
-            "intent_id": "intent:change_01M79A0G0YSR12S2RHJE84QPHR",
+            "intent_id": "intent:change_01M79NVT2SXTG0QCCYXQADTVWT",
             "kind": "refined",
             "sequence": 3
           },
           {
-            "detail": "trajectory:branch_01M79A0G5E35FVE2EYNYQVQ3XY",
+            "detail": "trajectory:branch_01M79NVT5SX7NJTXX34J543M80",
             "event_id": "event:4",
-            "intent_id": "intent:change_01M79A0G0YSR12S2RHJE84QPHR",
+            "intent_id": "intent:change_01M79NVT2SXTG0QCCYXQADTVWT",
             "kind": "trajectory_step_recorded",
             "sequence": 4
-          },
-          {
-            "detail": "trajectory:branch_01M79A0G5E35FVE2EYNYQVQ3XY",
-            "event_id": "event:5",
-            "intent_id": "intent:change_01M79A0G0YSR12S2RHJE84QPHR",
-            "kind": "trajectory_step_recorded",
-            "sequence": 5
-          },
-          {
-            "detail": "trajectory:branch_01M79A0G5E35FVE2EYNYQVQ3XY",
-            "event_id": "event:6",
-            "intent_id": "intent:change_01M79A0G0YSR12S2RHJE84QPHR",
-            "kind": "trajectory_step_recorded",
-            "sequence": 6
-          },
-          {
-            "detail": "trajectory:branch_01M79A0G5E35FVE2EYNYQVQ3XY",
-            "event_id": "event:7",
-            "intent_id": "intent:change_01M79A0G0YSR12S2RHJE84QPHR",
-            "kind": "trajectory_step_recorded",
-            "sequence": 7
-          },
-          {
-            "detail": "trajectory:branch_01M79A0G5E35FVE2EYNYQVQ3XY",
-            "event_id": "event:8",
-            "intent_id": "intent:change_01M79A0G0YSR12S2RHJE84QPHR",
-            "kind": "trajectory_step_recorded",
-            "sequence": 8
-          },
-          {
-            "detail": "trajectory:branch_01M79A0G5E35FVE2EYNYQVQ3XY",
-            "event_id": "event:9",
-            "intent_id": "intent:change_01M79A0G0YSR12S2RHJE84QPHR",
-            "kind": "trajectory_step_recorded",
-            "sequence": 9
-          },
-          {
-            "detail": "trajectory:branch_01M79A0G5E35FVE2EYNYQVQ3XY",
-            "event_id": "event:10",
-            "intent_id": "intent:change_01M79A0G0YSR12S2RHJE84QPHR",
-            "kind": "trajectory_step_recorded",
-            "sequence": 10
-          },
-          {
-            "detail": "trajectory:branch_01M79A0G5E35FVE2EYNYQVQ3XY",
-            "event_id": "event:11",
-            "intent_id": "intent:change_01M79A0G0YSR12S2RHJE84QPHR",
-            "kind": "trajectory_step_recorded",
-            "sequence": 11
-          },
-          {
-            "detail": "trajectory:branch_01M79A0G5E35FVE2EYNYQVQ3XY",
-            "event_id": "event:12",
-            "intent_id": "intent:change_01M79A0G0YSR12S2RHJE84QPHR",
-            "kind": "trajectory_step_recorded",
-            "sequence": 12
-          },
-          {
-            "detail": "trajectory:branch_01M79A0G5E35FVE2EYNYQVQ3XY",
-            "event_id": "event:13",
-            "intent_id": "intent:change_01M79A0G0YSR12S2RHJE84QPHR",
-            "kind": "trajectory_step_recorded",
-            "sequence": 13
-          },
-          {
-            "detail": "trajectory:branch_01M79A0G5E35FVE2EYNYQVQ3XY",
-            "event_id": "event:14",
-            "intent_id": "intent:change_01M79A0G0YSR12S2RHJE84QPHR",
-            "kind": "trajectory_step_recorded",
-            "sequence": 14
-          },
-          {
-            "detail": "trajectory:branch_01M79A0G5E35FVE2EYNYQVQ3XY",
-            "event_id": "event:15",
-            "intent_id": "intent:change_01M79A0G0YSR12S2RHJE84QPHR",
-            "kind": "trajectory_step_recorded",
-            "sequence": 15
-          },
-          {
-            "detail": "trajectory:branch_01M79A0G5E35FVE2EYNYQVQ3XY",
-            "event_id": "event:16",
-            "intent_id": "intent:change_01M79A0G0YSR12S2RHJE84QPHR",
-            "kind": "trajectory_step_recorded",
-            "sequence": 16
-          },
-          {
-            "detail": "trajectory:branch_01M79A0G5E35FVE2EYNYQVQ3XY",
-            "event_id": "event:17",
-            "intent_id": "intent:change_01M79A0G0YSR12S2RHJE84QPHR",
-            "kind": "trajectory_step_recorded",
-            "sequence": 17
-          },
-          {
-            "detail": "trajectory:branch_01M79A0G5E35FVE2EYNYQVQ3XY",
-            "event_id": "event:18",
-            "intent_id": "intent:change_01M79A0G0YSR12S2RHJE84QPHR",
-            "kind": "trajectory_step_recorded",
-            "sequence": 18
-          },
-          {
-            "detail": "trajectory:branch_01M79A0G5E35FVE2EYNYQVQ3XY",
-            "event_id": "event:19",
-            "intent_id": "intent:change_01M79A0G0YSR12S2RHJE84QPHR",
-            "kind": "trajectory_step_recorded",
-            "sequence": 19
-          },
-          {
-            "detail": "trajectory:branch_01M79A0G5E35FVE2EYNYQVQ3XY",
-            "event_id": "event:20",
-            "intent_id": "intent:change_01M79A0G0YSR12S2RHJE84QPHR",
-            "kind": "trajectory_step_recorded",
-            "sequence": 20
-          },
-          {
-            "detail": "trajectory:branch_01M79A0G5E35FVE2EYNYQVQ3XY",
-            "event_id": "event:21",
-            "intent_id": "intent:change_01M79A0G0YSR12S2RHJE84QPHR",
-            "kind": "trajectory_step_recorded",
-            "sequence": 21
-          },
-          {
-            "detail": "trajectory:branch_01M79A0G5E35FVE2EYNYQVQ3XY",
-            "event_id": "event:22",
-            "intent_id": "intent:change_01M79A0G0YSR12S2RHJE84QPHR",
-            "kind": "trajectory_step_recorded",
-            "sequence": 22
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 22,
+        "next_sequence": 4,
         "schema_version": "1.0.0",
         "trajectories": {
-          "branch_01M79A0G5E35FVE2EYNYQVQ3XY": {
+          "branch_01M79NVT5SX7NJTXX34J543M80": {
             "evidence_only": true,
-            "id": "branch_01M79A0G5E35FVE2EYNYQVQ3XY",
-            "intent_id": "intent:change_01M79A0G0YSR12S2RHJE84QPHR",
+            "id": "branch_01M79NVT5SX7NJTXX34J543M80",
+            "intent_id": "intent:change_01M79NVT2SXTG0QCCYXQADTVWT",
             "steps": [
               {
-                "action": "loop:design_mode000_cleanup:1",
+                "action": "verification",
                 "custody_event_id": "event:4",
-                "observations": [],
+                "observations": [
+                  "src/decapod/core/authoring.rs",
+                  "src/decapod/core/workspace.rs",
+                  "src/decapod/lib.rs",
+                  "tests/entrypoint_correctness.rs",
+                  "tests/init_config_behavior.rs",
+                  "tests/plugins/todo.rs"
+                ],
                 "proof_refs": [
-                  "assets/tools/build_lifecycle.rs"
+                  "non-git-partial-and-publication-boundary",
+                  "init-config-31-cases",
+                  "clippy-all-targets-all-features",
+                  "binding-rollback-and-lifecycle",
+                  "cross-process-custody-recovery",
+                  "combined-candidate-freshness",
+                  "fleet-coordination-15-cases",
+                  "shared-resource-exclusion",
+                  "independent-full-readiness"
                 ],
                 "scope": [
-                  "\".decapod/config.toml\"",
-                  "\".decapod/managed/specs\"]",
-                  "\"assets/tools/build_lifecycle_tests.rs\"",
-                  "paths:[\"assets/tools/build_lifecycle.rs\""
+                  "pr-1661-repair"
                 ],
                 "sequence": 4,
-                "validation_findings": []
-              },
-              {
-                "action": "trajectory.record",
-                "custody_event_id": "event:5",
-                "observations": [
-                  "assets/tools/build_lifecycle.rs"
-                ],
-                "proof_refs": [],
-                "scope": [
-                  "\".decapod/config.toml\"",
-                  "\".decapod/managed/specs\"]",
-                  "\"assets/tools/build_lifecycle_tests.rs\"",
-                  "paths:[\"assets/tools/build_lifecycle.rs\""
-                ],
-                "sequence": 5,
-                "validation_findings": []
-              },
-              {
-                "action": "trajectory.record",
-                "custody_event_id": "event:6",
-                "observations": [
-                  "assets/tools/build_lifecycle_tests.rs"
-                ],
-                "proof_refs": [],
-                "scope": [
-                  "\".decapod/config.toml\"",
-                  "\".decapod/managed/specs\"]",
-                  "\"assets/tools/build_lifecycle_tests.rs\"",
-                  "paths:[\"assets/tools/build_lifecycle.rs\""
-                ],
-                "sequence": 6,
-                "validation_findings": []
-              },
-              {
-                "action": "trajectory.record",
-                "custody_event_id": "event:7",
-                "observations": [
-                  ".decapod/config.toml"
-                ],
-                "proof_refs": [],
-                "scope": [
-                  "\".decapod/config.toml\"",
-                  "\".decapod/managed/specs\"]",
-                  "\"assets/tools/build_lifecycle_tests.rs\"",
-                  "paths:[\"assets/tools/build_lifecycle.rs\""
-                ],
-                "sequence": 7,
-                "validation_findings": []
-              },
-              {
-                "action": "trajectory.record",
-                "custody_event_id": "event:8",
-                "observations": [
-                  "AGENTS.md"
-                ],
-                "proof_refs": [],
-                "scope": [
-                  "\".decapod/config.toml\"",
-                  "\".decapod/managed/specs\"]",
-                  "\"assets/tools/build_lifecycle_tests.rs\"",
-                  "paths:[\"assets/tools/build_lifecycle.rs\""
-                ],
-                "sequence": 8,
-                "validation_findings": []
-              },
-              {
-                "action": "trajectory.record",
-                "custody_event_id": "event:9",
-                "observations": [
-                  "CLAUDE.md"
-                ],
-                "proof_refs": [],
-                "scope": [
-                  "\".decapod/config.toml\"",
-                  "\".decapod/managed/specs\"]",
-                  "\"assets/tools/build_lifecycle_tests.rs\"",
-                  "paths:[\"assets/tools/build_lifecycle.rs\""
-                ],
-                "sequence": 9,
-                "validation_findings": []
-              },
-              {
-                "action": "trajectory.record",
-                "custody_event_id": "event:10",
-                "observations": [
-                  "CODEX.md"
-                ],
-                "proof_refs": [],
-                "scope": [
-                  "\".decapod/config.toml\"",
-                  "\".decapod/managed/specs\"]",
-                  "\"assets/tools/build_lifecycle_tests.rs\"",
-                  "paths:[\"assets/tools/build_lifecycle.rs\""
-                ],
-                "sequence": 10,
-                "validation_findings": []
-              },
-              {
-                "action": "trajectory.record",
-                "custody_event_id": "event:11",
-                "observations": [
-                  "GEMINI.md"
-                ],
-                "proof_refs": [],
-                "scope": [
-                  "\".decapod/config.toml\"",
-                  "\".decapod/managed/specs\"]",
-                  "\"assets/tools/build_lifecycle_tests.rs\"",
-                  "paths:[\"assets/tools/build_lifecycle.rs\""
-                ],
-                "sequence": 11,
-                "validation_findings": []
-              },
-              {
-                "action": "trajectory.record",
-                "custody_event_id": "event:12",
-                "observations": [
-                  ".decapod/managed/Dockerfile.decapod"
-                ],
-                "proof_refs": [],
-                "scope": [
-                  "\".decapod/config.toml\"",
-                  "\".decapod/managed/specs\"]",
-                  "\"assets/tools/build_lifecycle_tests.rs\"",
-                  "paths:[\"assets/tools/build_lifecycle.rs\""
-                ],
-                "sequence": 12,
-                "validation_findings": []
-              },
-              {
-                "action": "trajectory.record",
-                "custody_event_id": "event:13",
-                "observations": [
-                  ".decapod/managed/specs/INTENT.md"
-                ],
-                "proof_refs": [],
-                "scope": [
-                  "\".decapod/config.toml\"",
-                  "\".decapod/managed/specs\"]",
-                  "\"assets/tools/build_lifecycle_tests.rs\"",
-                  "paths:[\"assets/tools/build_lifecycle.rs\""
-                ],
-                "sequence": 13,
-                "validation_findings": []
-              },
-              {
-                "action": "trajectory.record",
-                "custody_event_id": "event:14",
-                "observations": [
-                  ".decapod/managed/specs/INTERFACES.md"
-                ],
-                "proof_refs": [],
-                "scope": [
-                  "\".decapod/config.toml\"",
-                  "\".decapod/managed/specs\"]",
-                  "\"assets/tools/build_lifecycle_tests.rs\"",
-                  "paths:[\"assets/tools/build_lifecycle.rs\""
-                ],
-                "sequence": 14,
-                "validation_findings": []
-              },
-              {
-                "action": "trajectory.record",
-                "custody_event_id": "event:15",
-                "observations": [
-                  ".decapod/managed/specs/OPERATIONS.md"
-                ],
-                "proof_refs": [],
-                "scope": [
-                  "\".decapod/config.toml\"",
-                  "\".decapod/managed/specs\"]",
-                  "\"assets/tools/build_lifecycle_tests.rs\"",
-                  "paths:[\"assets/tools/build_lifecycle.rs\""
-                ],
-                "sequence": 15,
-                "validation_findings": []
-              },
-              {
-                "action": "trajectory.record",
-                "custody_event_id": "event:16",
-                "observations": [
-                  ".decapod/managed/specs/README.md"
-                ],
-                "proof_refs": [],
-                "scope": [
-                  "\".decapod/config.toml\"",
-                  "\".decapod/managed/specs\"]",
-                  "\"assets/tools/build_lifecycle_tests.rs\"",
-                  "paths:[\"assets/tools/build_lifecycle.rs\""
-                ],
-                "sequence": 16,
-                "validation_findings": []
-              },
-              {
-                "action": "trajectory.record",
-                "custody_event_id": "event:17",
-                "observations": [
-                  ".decapod/managed/specs/SEMANTICS.md"
-                ],
-                "proof_refs": [],
-                "scope": [
-                  "\".decapod/config.toml\"",
-                  "\".decapod/managed/specs\"]",
-                  "\"assets/tools/build_lifecycle_tests.rs\"",
-                  "paths:[\"assets/tools/build_lifecycle.rs\""
-                ],
-                "sequence": 17,
-                "validation_findings": []
-              },
-              {
-                "action": "trajectory.record",
-                "custody_event_id": "event:18",
-                "observations": [
-                  ".decapod/managed/specs/SECURITY.md"
-                ],
-                "proof_refs": [],
-                "scope": [
-                  "\".decapod/config.toml\"",
-                  "\".decapod/managed/specs\"]",
-                  "\"assets/tools/build_lifecycle_tests.rs\"",
-                  "paths:[\"assets/tools/build_lifecycle.rs\""
-                ],
-                "sequence": 18,
-                "validation_findings": []
-              },
-              {
-                "action": "trajectory.record",
-                "custody_event_id": "event:19",
-                "observations": [
-                  ".decapod/managed/specs/ARCHITECTURE.md"
-                ],
-                "proof_refs": [],
-                "scope": [
-                  "\".decapod/config.toml\"",
-                  "\".decapod/managed/specs\"]",
-                  "\"assets/tools/build_lifecycle_tests.rs\"",
-                  "paths:[\"assets/tools/build_lifecycle.rs\""
-                ],
-                "sequence": 19,
-                "validation_findings": []
-              },
-              {
-                "action": "trajectory.record",
-                "custody_event_id": "event:20",
-                "observations": [
-                  ".decapod/managed/specs/VALIDATION.md"
-                ],
-                "proof_refs": [],
-                "scope": [
-                  "\".decapod/config.toml\"",
-                  "\".decapod/managed/specs\"]",
-                  "\"assets/tools/build_lifecycle_tests.rs\"",
-                  "paths:[\"assets/tools/build_lifecycle.rs\""
-                ],
-                "sequence": 20,
-                "validation_findings": []
-              },
-              {
-                "action": "trajectory.record",
-                "custody_event_id": "event:21",
-                "observations": [
-                  ".decapod/managed/specs/.manifest.json"
-                ],
-                "proof_refs": [
-                  "spec_reviews"
-                ],
-                "scope": [
-                  "\".decapod/config.toml\"",
-                  "\".decapod/managed/specs\"]",
-                  "\"assets/tools/build_lifecycle_tests.rs\"",
-                  "paths:[\"assets/tools/build_lifecycle.rs\""
-                ],
-                "sequence": 21,
-                "validation_findings": []
-              },
-              {
-                "action": "trajectory.record",
-                "custody_event_id": "event:22",
-                "observations": [
-                  "Cargo.toml"
-                ],
-                "proof_refs": [
-                  "merge_d3542c30_v0_142_0"
-                ],
-                "scope": [
-                  "\".decapod/config.toml\"",
-                  "\".decapod/managed/specs\"]",
-                  "\"assets/tools/build_lifecycle_tests.rs\"",
-                  "paths:[\"assets/tools/build_lifecycle.rs\""
-                ],
-                "sequence": 22,
-                "validation_findings": []
+                "validation_findings": [
+                  "Official 0.143.1 still blocks normal datastore startup on inert legacy TODO file. Coordination-only 0.143.1 built from published source plus previously tested inert-file migration repair; installed official binary remains independent full validator. No database edited.",
+                  "Reviewed source inventory changed only accepted Cargo package 0.143.0 to 0.143.1 after pin112287a9. No candidate proof-source delta or requirement change. Current digest50af27077a026878a187611c381226be611ae10f45bfec77fc205282258d3ccf.",
+                  "User requested rebase but earlier no-force rule remains; prepare history-preserving integration pending optional rewrite preference. PR1661 only; other PRs untouched."
+                ]
               }
             ]
           }
@@ -1272,68 +758,34 @@
       },
       "declared_commands": [],
       "destination": "pull request",
-      "evidence": [
-        "Inspected #1643 and build_lifecycle.rs: Podman overlay work/work leaves same-UID mode-000 directory under supervised HOME=scratch.path; build_lifecycle is a std-only rust_binary compiled across darwin, linux-gnu, and x86_64/aarch64 linux-musl."
-      ],
+      "evidence": [],
       "inspected_files": [
-        ".config/build/decapod.BUILD.bzl",
-        ".decapod/config.toml",
-        "Cargo.toml",
-        "assets/tools/build_lifecycle.rs",
-        "assets/tools/build_lifecycle_tests.rs"
+        "src/decapod/core/authoring.rs",
+        "src/decapod/core/workspace.rs"
       ],
-      "intent_id": "intent:change_01M79A0G0YSR12S2RHJE84QPHR",
-      "loops": [
-        {
-          "attempt": 1,
-          "custody_event_id": "event:4",
-          "grader_result": "pass",
-          "intent_id": "intent:change_01M79A0G0YSR12S2RHJE84QPHR",
-          "loop_id": "design_mode000_cleanup",
-          "loop_type": "agent",
-          "mutation_proposal": "none",
-          "proof_refs": [
-            "assets/tools/build_lifecycle.rs"
-          ],
-          "status": "passed",
-          "trajectory_id": "branch_01M79A0G5E35FVE2EYNYQVQ3XY",
-          "trigger": "human"
-        }
-      ],
+      "intent_id": "intent:change_01M79NVT2SXTG0QCCYXQADTVWT",
       "modified_files": [
-        ".decapod/config.toml",
-        ".decapod/managed/Dockerfile.decapod",
-        ".decapod/managed/specs/.manifest.json",
-        ".decapod/managed/specs/ARCHITECTURE.md",
-        ".decapod/managed/specs/INTENT.md",
-        ".decapod/managed/specs/INTERFACES.md",
-        ".decapod/managed/specs/OPERATIONS.md",
-        ".decapod/managed/specs/README.md",
-        ".decapod/managed/specs/SECURITY.md",
-        ".decapod/managed/specs/SEMANTICS.md",
-        ".decapod/managed/specs/VALIDATION.md",
-        "AGENTS.md",
-        "CLAUDE.md",
-        "CODEX.md",
-        "GEMINI.md",
-        "assets/tools/build_lifecycle.rs",
-        "assets/tools/build_lifecycle_tests.rs"
+        "src/decapod/lib.rs",
+        "tests/entrypoint_correctness.rs",
+        "tests/init_config_behavior.rs",
+        "tests/plugins/todo.rs"
       ],
       "next_transitions": [
         "Refine plan and declare falsifiable checks"
       ],
       "repo_scope": [
-        "\".decapod/config.toml\"",
-        "\".decapod/managed/specs\"]",
-        "\"assets/tools/build_lifecycle_tests.rs\"",
-        "paths:[\"assets/tools/build_lifecycle.rs\""
+        "pr-1661-repair"
       ],
-      "run_id": "branch_01M79A0G5E35FVE2EYNYQVQ3XY",
+      "run_id": "branch_01M79NVT5SX7NJTXX34J543M80",
       "schema_version": "1.1.0",
       "shortcut_risk_signals": [],
-      "task_id": "bugs_01m799kyygy9rq6d",
+      "task_id": "bugs_01m79nswnarykvww",
       "tool_calls": [],
-      "unresolved_assumptions": []
+      "unresolved_assumptions": [
+        "Official 0.143.1 still blocks normal datastore startup on inert legacy TODO file. Coordination-only 0.143.1 built from published source plus previously tested inert-file migration repair; installed official binary remains independent full validator. No database edited.",
+        "Reviewed source inventory changed only accepted Cargo package 0.143.0 to 0.143.1 after pin112287a9. No candidate proof-source delta or requirement change. Current digest50af27077a026878a187611c381226be611ae10f45bfec77fc205282258d3ccf.",
+        "User requested rebase but earlier no-force rule remains; prepare history-preserving integration pending optional rewrite preference. PR1661 only; other PRs untouched."
+      ]
     }
   },
   "legacy_digests": {

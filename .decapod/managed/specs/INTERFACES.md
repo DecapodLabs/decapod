@@ -1,5 +1,17 @@
 # Interfaces
 
+## Custody and prerequisite diagnostics (#1661)
+
+`workspace status` reports `can_work=false` when checkout custody is unproven.
+`govern project-check --format json` remains usable after `init --no-git` and
+reports `scope=project_prerequisites`, `publication_ready=false`, and no readiness
+result. Full `validate` rejects that same non-Git directory with
+`gate=workspace_protection` / `AUTHORING_CHECKOUT_UNVERIFIED`.
+Task renewal and lifecycle operations update or retire their checkout binding
+atomically; a second live binding is `AUTHORING_TASK_ALREADY_BOUND`.
+`resource:<name>` overlap diagnostics identify the affected shared operation,
+and occupied release/integration reservations yield `SHARED_RESOURCE_OCCUPIED`.
+
 ## Optional reflection on existing interfaces
 
 `infer orientation --task-id <id> --reflection '<JSON>'` and
@@ -1142,7 +1154,7 @@ field. Nothing in this operation authorizes a mutation, approval or completion.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `0f5182b61bd9df72c7689c6b907417c45695f0cbec319899f912c2d9c1398f2b`
+- Repository signal fingerprint: `2b121bcac52e002c3be06f937132e585746dec4c07dfecd42f836fa54e5e2ae0`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (231 files), `tests/` (232 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

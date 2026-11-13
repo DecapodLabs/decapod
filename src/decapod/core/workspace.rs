@@ -264,18 +264,67 @@ pub fn get_workspace_status(repo_root: &Path) -> Result<WorkspaceStatus, Decapod
             .push("Run `decapod workspace ensure` and cd into the created worktree".to_string());
     }
 
-    let mut can_work = !git.is_main_repo && !git.is_protected;
+    let mut can_work = git.in_worktree && !git.is_main_repo && !git.is_protected;
+    if !git.in_worktree && !git.is_main_repo && !git.is_protected {
+        blockers.push(Blocker {
+            kind: BlockerKind::WorkspaceRequired,
+            message: "AUTHORING_CHECKOUT_UNVERIFIED: current directory is not a registered Git worktree.".to_string(),
+            resolve_hint: "Enter an initialized Decapod repository and run `decapod workspace ensure` to bind an isolated worktree.".to_string(),
+        });
+        required_actions
+            .push("Run `decapod workspace ensure` from the initialized repository".to_string());
+    }
     if can_work && is_canonical_decapod_workspace_path(repo_root) {
-        let main = get_main_repo_root(repo_root)?;
-        if let Err(reason) = todo::check_authoring(
-            &main.join(".decapod/data"),
-            repo_root,
-            &crate::current_agent_id(),
-            false,
-        ) {
-            can_work = false;
-            blockers.push(Blocker { kind: BlockerKind::WorkspaceRequired, message: reason.to_string(),
-                resolve_hint: "Inspect current task/actor/lease and run workspace ensure to verify and bind this checkout; a claim alone does not admit authoring.".into() });
+        match get_main_repo_root(repo_root) {
+            Ok(main) => {
+                if let Err(reason) = todo::check_authoring(
+                    &main.join(".decapod/data"),
+                    repo_root,
+                    &crate::current_agent_id(),
+                    false,
+                ) {
+                    can_work = false;
+                    let msg = reason.to_string();
+                    let resolve_hint = if msg.contains("AUTHORING_PROFILE_UNSUPPORTED") {
+                        "Cloud task profiles do not infer host checkout bindings; switch to a local task custody profile or run read-only cloud inspection.".to_string()
+                    } else if msg.contains("AUTHORING_ACTOR_REQUIRED") {
+                        "Set explicit agent identity (`DECAPOD_AGENT_ID`) matching the task lease owner, then run `decapod workspace ensure`.".to_string()
+                    } else if msg.contains("AUTHORING_EVIDENCE_UNAVAILABLE") {
+                        "Canonical `.decapod/data` task custody evidence is unavailable; verify main repository initialization before authoring.".to_string()
+                    } else if msg.contains("AUTHORING_CHECKOUT_OCCUPIED")
+                        || msg.contains("AUTHORING_TASK_ALREADY_BOUND")
+                    {
+                        "Checkout/task binding is already occupied by active custody; create a distinct task-scoped worktree with `decapod workspace ensure` or retire the prior lease first.".to_string()
+                    } else if msg.contains("AUTHORING_CUSTODY_STALE") {
+                        "Active exclusive lease custody is missing or expired; run `decapod todo claim --id <task-id>` (or `todo renew`) and then `decapod workspace ensure`.".to_string()
+                    } else {
+                        "Inspect current task/actor/lease and run `decapod workspace ensure` to verify and bind this checkout; a claim alone does not admit authoring.".to_string()
+                    };
+                    blockers.push(Blocker {
+                        kind: BlockerKind::WorkspaceRequired,
+                        message: msg,
+                        resolve_hint,
+                    });
+                    required_actions.push(
+                        "Verify active task lease custody and run `decapod workspace ensure`"
+                            .to_string(),
+                    );
+                }
+            }
+            Err(reason) => {
+                can_work = false;
+                blockers.push(Blocker {
+                    kind: BlockerKind::WorkspaceRequired,
+                    message: format!(
+                        "AUTHORING_EVIDENCE_UNAVAILABLE: could not resolve main repository root: {reason}"
+                    ),
+                    resolve_hint: "Verify the linked Git worktree metadata and rerun `decapod workspace ensure`.".to_string(),
+                });
+                required_actions.push(
+                    "Repair or recreate the linked Git worktree with `decapod workspace ensure`"
+                        .to_string(),
+                );
+            }
         }
     }
     let root_isolation = git
@@ -1267,6 +1316,23 @@ fn registered_worktree(repo: &Path, canonical: &Path) -> bool {
     })
 }
 
+/// Fail-closed check for whether `target_worktree_id` still corresponds to a
+/// live, on-disk Git-registered worktree of `main_repo`. If Git worktree
+/// inspection itself is unavailable, return `true` so a transient failure
+/// never evicts an active checkout binding.
+pub(crate) fn is_registered_worktree_id(main_repo: &Path, target_worktree_id: &str) -> bool {
+    let Some(listed) = git_output(main_repo, &["worktree", "list", "--porcelain"]) else {
+        return true;
+    };
+    listed.lines().any(|line| {
+        let Some(raw) = line.strip_prefix("worktree ") else {
+            return false;
+        };
+        let path = Path::new(raw.trim());
+        path.exists() && observe_checkout(path).worktree_id == target_worktree_id
+    })
+}
+
 /// Observe a checkout. Aliases resolve to the same physical identity;
 /// missing paths and unregistered checkouts are not verified.
 pub fn observe_checkout(path: &Path) -> CheckoutIdentity {
@@ -2241,6 +2307,14 @@ pub(crate) fn publish_workspace_with_readiness(
     // treated as publication to the upstream GitHub repository.
     let publish_remote = resolve_publish_remote(repo_root)?;
     let base_branch = resolve_base_branch(repo_root, None);
+    let main_repo = get_main_repo_root(repo_root)?;
+    let base_integration_resource = format!("resource:integration:{base_branch}");
+    todo::enforce_shared_resource_available(
+        &main_repo.join(".decapod/data"),
+        &crate::current_agent_id(),
+        &["resource:integration", &base_integration_resource],
+        "workspace.publish",
+    )?;
 
     let dir = repo_root.to_str().unwrap_or(".");
 
@@ -3470,6 +3544,8 @@ fn prune_workspaces_report_with_process_dir(
                 continue;
             }
 
+            let observed_worktree_id = observe_checkout(&dir_path).worktree_id;
+
             // Attempt to remove git worktree if registered
             if matching_wt.is_some() {
                 let mut args = vec!["worktree", "remove"];
@@ -3529,6 +3605,15 @@ fn prune_workspaces_report_with_process_dir(
                     detail: format!("workspace cleanup incomplete: {error}"),
                 });
                 continue;
+            }
+
+            if !observed_worktree_id.is_empty() {
+                let _ = todo::release_authoring_binding(
+                    &main_repo.join(".decapod/data"),
+                    &observed_worktree_id,
+                    &crate::current_agent_id(),
+                    "workspace.prune",
+                );
             }
 
             pruned.push(PrunedWorkspace {

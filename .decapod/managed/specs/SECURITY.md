@@ -1,5 +1,16 @@
 # Security
 
+## Diagnostic success grants no checkout authority (#1661)
+
+Non-Git prerequisite diagnostics may inspect project configuration without a
+task-bound Git workspace. They do not change `can_work=false`, mint a full
+readiness judgment, or admit authoring/publication. Full validation continues to
+reject that directory. CLI regression coverage exercises all three observations
+using the real binary without Git-gate overrides. The custody transaction also
+rejects second live bindings and rolls back binding persistence if event evidence
+cannot be committed. Local actor labels and Git filesystem identities remain
+host-local cooperative authority, not authenticated cloud or OS isolation.
+
 ## Agent-owned browser handoff
 
 `authorization_url` exposes only Dactyl's validated, short-lived browser handoff.
@@ -610,7 +621,7 @@ execution evidence remains required before publication readiness.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `0f5182b61bd9df72c7689c6b907417c45695f0cbec319899f912c2d9c1398f2b`
+- Repository signal fingerprint: `2b121bcac52e002c3be06f937132e585746dec4c07dfecd42f836fa54e5e2ae0`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (231 files), `tests/` (232 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

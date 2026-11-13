@@ -1,5 +1,16 @@
 # Intent
 
+## Concurrent custody and diagnostic scope (#1469, #1661)
+
+Independent tasks can author concurrently in distinct admitted worktrees. A task
+lease has one live checkout binding; transfer, retirement and renewal preserve
+fencing. Explicit shared-resource reservations govern integration and release
+operations rather than excluding unrelated source work. Non-Git projects can
+run bounded prerequisite diagnostics without being admitted for authoring or
+claiming publication readiness. This repair retains the accepted master policy
+and Decapod 0.143.1 release contract; it does not complete the broader ten-worker
+or autonomous-runtime acceptance mandate.
+
 ## Evidence-grounded reflection before consequential action
 
 Decapod helps agents reconsider a proposed action through optional bounded
@@ -341,7 +352,7 @@ These declarations select authoring and proof obligations; they do not attest im
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `0f5182b61bd9df72c7689c6b907417c45695f0cbec319899f912c2d9c1398f2b`
+- Repository signal fingerprint: `2b121bcac52e002c3be06f937132e585746dec4c07dfecd42f836fa54e5e2ae0`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (231 files), `tests/` (232 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

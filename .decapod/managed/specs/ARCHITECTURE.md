@@ -1,5 +1,20 @@
 # Architecture
 
+## Checkout custody and non-Git diagnostics (#1661)
+
+`core::authoring` enforces one live checkout per task lease transactionally with
+the existing task journal and workspace lifecycle events. Renew advances the
+binding generation; yield, release, reclaim, handoff, terminal status and prune
+retire it. `core::fleet_coord` treats `resource:<name>` as a resource reservation,
+not a repository path. Release and publication consume the corresponding gate.
+
+`workspace::get_workspace_status` remains fail closed for non-worktrees and
+unavailable custody evidence. `lib::run_validate_command_local` permits non-Git
+projects to execute only explicitly partial diagnostic scopes without workspace
+admission. A successful project check has no publication judgment. Full validation
+still requires a registered, governed candidate. Host custody remains cooperative
+and is not an OS sandbox against direct filesystem or Git access.
+
 ## Composed reflection continuation
 
 `core/mentor/reflection.rs` composes the existing mentor ADR detector, canonical
@@ -905,7 +920,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `0f5182b61bd9df72c7689c6b907417c45695f0cbec319899f912c2d9c1398f2b`
+- Repository signal fingerprint: `2b121bcac52e002c3be06f937132e585746dec4c07dfecd42f836fa54e5e2ae0`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (231 files), `tests/` (232 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
