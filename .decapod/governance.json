@@ -632,6 +632,11 @@
       "id": "docs-agent-command-contracts",
       "summary": "Regenerate command-contracts.md with 1-to-1 worktree binding and resource reservation contracts",
       "input_digest": "sha256:7e6596065390e8bb3ec10c24e1047cc108c48d1ba27657832915b90e077cd35e"
+    },
+    {
+      "id": "docs-arch-concurrency-custody",
+      "summary": "Update concurrency-custody architecture docs for 1-to-1 bindings, lifecycle retirement, and resource gates",
+      "input_digest": "sha256:5ed5ebdd7b81c3510eb6dba45aacab2810d31d048a9977b7d7d4864d0045fe47"
     }
   ],
   "intents": {
