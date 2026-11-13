@@ -707,6 +707,11 @@
       "id": "fix-clippy-useless-pathbuf-conversion",
       "summary": "Remove redundant PathBuf::from conversion in tests/plugins/todo.rs",
       "input_digest": "sha256:94343ec8ae8ba5a0f368ecd783b33bde47722c1c3b974e2e17bf574bc1dd0c29"
+    },
+    {
+      "id": "reconcile-v01431-master",
+      "summary": "Reconcile accepted master v0.143.1 (#1655/#1664) and refresh 0.143.1 projections",
+      "input_digest": "sha256:3366659189fe509dfd47eecb202ccf57b8bf24edbc7e0f855cdc6964748684ca"
     }
   ],
   "intents": {
@@ -751,23 +756,23 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Updated ARCHITECTURE.md for transactional 1-to-1 authoring_bindings custody, lifecycle retirement, and shared-resource reservation gates (#1469).",
-          "reviewed_code_fingerprint": "d38d3f6da33c50f03492b7cfc8b8937af37534586d1ea4ff56261275738a0754",
-          "spec_material_hash": "d24697bcd487d903ffe3759e307f869b594aba4beddf1f37d2f75725f31859f9"
+          "reason": "Reconciled #1469 concurrency isolation specs with accepted v0.143.1 master (#1655/#1664).",
+          "reviewed_code_fingerprint": "912dfc714f93447c59caa03fc3cf966b378b2c8a8c0f6e5267665e0fef3d9f39",
+          "spec_material_hash": "2cdb85e89875f03126d973e3fae8e883fbd6d48c71872dea165010de483e9eeb"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Updated INTERFACES.md for workspace.authoring.* 1-to-1 binding, lifecycle retirement, and resource:<name> reservation error codes (#1469).",
-          "reviewed_code_fingerprint": "d38d3f6da33c50f03492b7cfc8b8937af37534586d1ea4ff56261275738a0754",
+          "reason": "Reconciled #1469 concurrency isolation specs with accepted v0.143.1 master (#1655/#1664).",
+          "reviewed_code_fingerprint": "912dfc714f93447c59caa03fc3cf966b378b2c8a8c0f6e5267665e0fef3d9f39",
           "spec_material_hash": "9da8b3e0e9ec98d7b2754ed1f12be0f3192fada694b2fe4b4976b468b5f72813"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Updated SECURITY.md for fail-closed workspace status, non-elevating resource:<name> reservations, and combined-candidate readiness boundaries (#1469).",
-          "reviewed_code_fingerprint": "d38d3f6da33c50f03492b7cfc8b8937af37534586d1ea4ff56261275738a0754",
-          "spec_material_hash": "743712ff0748db56657ecb73300909e3c6271355fb0df728afee1e00f27f1fac"
+          "reason": "Reconciled #1469 concurrency isolation specs with accepted v0.143.1 master (#1655/#1664).",
+          "reviewed_code_fingerprint": "912dfc714f93447c59caa03fc3cf966b378b2c8a8c0f6e5267665e0fef3d9f39",
+          "spec_material_hash": "02d412b9121d08ee2cd9a8e45c41d0902f36b845e130aa2b6069c692cf039634"
         }
       ],
       "state": "APPROVED",
@@ -778,7 +783,7 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1794545685Z"
+      "updated_at": "1794547848Z"
     },
     "trajectory": {
       "active_boundaries": [
