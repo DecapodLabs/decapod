@@ -648,6 +648,11 @@
       "id": "pin-spec-manifest-01410",
       "summary": "chore(specs): refresh specs .manifest.json for 0.141.0",
       "input_digest": "sha256:e3f5c25656d5407c8a69e82e64563b63762d8e2561b4d21c354f7d6d0cb281f7"
+    },
+    {
+      "id": "add-storage-contracts",
+      "summary": "feat(storage): add versioned UTF-8 byte, collection, JSON, and authority contracts",
+      "input_digest": "sha256:bb21a1c7229a1fc73dd899e8b473acf38a44cf1e99e88c72a2c7074712290e84"
     }
   ],
   "intents": {
