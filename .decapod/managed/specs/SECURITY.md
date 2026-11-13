@@ -965,3 +965,19 @@ Do not delete lock sidecars, signal foreign processes, steal claims, replay ambi
 ## PR1662 current-master preparation
 
 Worktree policy edits cannot self-grant capabilities. db.recover remains owner-only and cloud authority fails closed when it cannot be authenticated. Retain non-destructive lock diagnosis, current-process-only release and confined backups. Coordination receipts are not independent acceptance proof.
+
+## Diagnostic variables never confer acceptance (#1659)
+
+An unrestricted caller may select diagnostics but cannot use those flags to
+obtain a full readiness or verified-completion observation through supported
+current interfaces. The shared runtime denies before execution; publication and
+completion also guard cached/historical admission. Existing successful evidence
+is preserved as history, not rewritten into failure. New applicability still
+requires current source, policy, task and custody checks.
+
+Broker context treats diagnostic flags as caller-scoped values, removing prior
+worker values before application. The originating local validated-completion
+command rejects overrides before transport. These are kernel operation-boundary
+guarantees, not OS filesystem isolation or a remote forge merge restriction.
+Forged workunit declarations without overrides remain separately tracked by1660;
+this change does not claim to discharge that independent proof obligation.
