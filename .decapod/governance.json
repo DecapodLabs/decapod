@@ -699,6 +699,11 @@
       "id": "docs-storage-inventory-v2",
       "summary": "docs(storage): document format v2 metadata and component store attribution (#1630)",
       "input_digest": "sha256:d95af8b24260befa1fceb317cd4b28b6e99217704ea1f2bdcc4d5a40e9faaa8b"
+    },
+    {
+      "id": "test-datastore-contract",
+      "summary": "test(storage): verify write-admission bounds, lossless oversized patch, and convergence (#1630)",
+      "input_digest": "sha256:e948fcb736ed5197dda4036e20856aa1d2917ded44a04145a388f9226d0c334a"
     }
   ],
   "intents": {
