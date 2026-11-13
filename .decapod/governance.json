@@ -636,6 +636,11 @@
       "id": "c18-config-digest-01430",
       "summary": "chore(proof): update reviewed_sources_digest for accepted v0.143.0 source inventory",
       "input_digest": "sha256:a0f330ba367efe4ca2f2e509865f896ec53029a1f17cb3663367c24fe9e53ac5"
+    },
+    {
+      "id": "c19-spec-intent-01430",
+      "summary": "docs(specs): refresh INTENT.md projection for v0.143.0",
+      "input_digest": "sha256:7ab3daf96472480d84c35d7d08566ca3f288fc950a507827b5539667fd88845f"
     }
   ],
   "intents": {
