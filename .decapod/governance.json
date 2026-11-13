@@ -614,6 +614,11 @@
       "id": "hf-spec-readme",
       "summary": "docs(specs): refresh specs README.md codebase attestation",
       "input_digest": "sha256:a7e42bd40cb21631d850de20766c79ff3e6626124cde1cbdc5d6a8a374bbc5e7"
+    },
+    {
+      "id": "hf-spec-semantics",
+      "summary": "docs(specs): refresh SEMANTICS.md codebase attestation",
+      "input_digest": "sha256:97c60542e1229941763a228f26938b0abc8feb9278f8b31c4ecdae1a2ae3d0cd"
     }
   ],
   "intents": {
