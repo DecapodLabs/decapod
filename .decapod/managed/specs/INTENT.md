@@ -352,7 +352,7 @@ These declarations select authoring and proof obligations; they do not attest im
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `fbccc9cfb5bf2b38e6ef970f60ff59a1d618c570d9b96d317b9f5bd0c40da905`
+- Repository signal fingerprint: `4d29b2ddd81902f7faec1d56bf9251726253493115b750bd9d3e77a7392fef55`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (234 files), `tests/` (232 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
@@ -557,3 +557,16 @@ Expose only project-opted local database maintenance capabilities to the agent. 
 ## PR1662 current-master preparation
 
 Preserve prepared PR1662 capability-scoped database maintenance before integrating accepted master3afa9df9 and the0.144.2 source release. Default-deny accepted policy, owner-only repair, bounded safe operations and non-destructive lock custody remain obligations. Hosted CI must establish the exact integrated candidate; no local tests are run.
+
+## Published SDK convergence (#1667)
+
+Adopt the current published `dactyl-db =0.16.1` registry artifact, preserving
+SQLite/Neon/default Supabase features and application-owned governance decisions.
+The official sparse index reports non-yanked checksum
+`1b41dde2e8be3fc986f7f5a7eb4e5bfb9af49d4c39dabe98fd74a0ccb4ad7ac6`;
+the downloaded crate matches it. The 0.16.1 patch has identical `src/*.rs` bytes
+to 0.16.0 and repairs upstream test compatibility. Version 0.15 adds bounded
+resource accounting and scans; 0.16 adds logical connectors/session transport.
+These additions do not confer application authority or independently prove a
+hosted deployment. Exact candidate compatibility remains a hosted verification
+obligation, with no local test execution.
