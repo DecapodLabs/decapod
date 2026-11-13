@@ -599,6 +599,11 @@
       "id": "propagate-quota-custody-budget",
       "summary": "fix(snapshot_provider): preserve shared GitHub quota state on custody budgets",
       "input_digest": "sha256:bad354dc48dc55e11b585ce853b139bab7e0f3e708bf5b9c409dbc78858606a9"
+    },
+    {
+      "id": "update-collection-test-budgets",
+      "summary": "test(snapshot_provider): initialize github_quota in collection budget fixtures",
+      "input_digest": "sha256:232b6cdabaf5a6f63d276856203527211c369398c7f81f8f3be9663bbfb5c831"
     }
   ],
   "intents": {
