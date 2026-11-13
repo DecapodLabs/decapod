@@ -2873,9 +2873,10 @@ mod tests {
 
         std::fs::write(
             root.join(".decapod/config.toml"),
-            "schema_version = \"1.0.0\"\n\n[governance]\nprotected_paths = [\"config/production.toml\"]\n",
+            "schema_version = \"1.0.0\"\n\n[init]\nspecs = true\nci = true\ndiagram_style = \"mermaid\"\nentrypoints = [\"AGENTS.md\"]\n\n[repo]\nproduct_name = \"test\"\nproduct_summary = \"test\"\narchitecture_direction = \"cli\"\nproduct_type = \"service_or_library\"\ndone_criteria = \"tests pass\"\nprimary_languages = [\"rust\"]\ndetected_surfaces = [\"cargo\"]\n\n[governance]\nprotected_paths = [\"config/production.toml\"]\n",
         )
         .unwrap();
+        crate::cli::DecapodProjectConfig::load(root).unwrap();
         std::fs::write(root.join("config/production.toml"), "mode = \"prod\"\n").unwrap();
         std::fs::write(root.join(".env.production"), "APP_MODE=prod\n").unwrap();
         std::fs::write(root.join("migrations/001.sql"), "SELECT 1;\n").unwrap();
@@ -2950,17 +2951,22 @@ mod tests {
 
         let mut plan = crate::plan_governance::init_plan(
             root,
-            "Protected path scope test",
-            "Verify plan forbidden_paths enforcement",
-            &[],
-            &[],
-            &[],
-            &[],
-            &[],
-            &[],
+            crate::plan_governance::InitPlanInput {
+                title: "Protected path scope test".to_string(),
+                intent: "Verify plan forbidden_paths enforcement".to_string(),
+                todo_ids: Vec::new(),
+                proof_hooks: Vec::new(),
+                unknowns: Vec::new(),
+                human_questions: Vec::new(),
+                stop_conditions: Vec::new(),
+                unresolved_contradictions: Vec::new(),
+                deferred_questions: Vec::new(),
+                constraints: Default::default(),
+                phases: Vec::new(),
+            },
         )
         .unwrap();
-        plan.constraints.forbidden_paths = vec!["migrations/**".to_string()];
+        plan.constraints.forbidden_paths = vec!["migrations".to_string()];
         crate::plan_governance::save_plan(root, &plan).unwrap();
 
         assert_eq!(

@@ -634,6 +634,11 @@
       "id": "hf-bind-plan-todo-receipt",
       "summary": "Bind todo_ids on governed plan and fresh v0.143.2 validation receipt",
       "input_digest": "sha256:79664533a6e08e1730d21e3ad047bbb1e210db3e205ab375739e25ebcafc1cc4"
+    },
+    {
+      "id": "fix-validation-rules-test",
+      "summary": "Fix InitPlanInput and config schema in protected_paths unit test",
+      "input_digest": "sha256:13646d7e3738a9bbc0684e50ea7872d44ea8e7f0a53d205dfb7367b4621709aa"
     }
   ],
   "intents": {
@@ -717,24 +722,24 @@
       "schema_version": "1.1.0",
       "spec_reviews": [
         {
-          "disposition": "unchanged_with_reason",
+          "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Internal evaluate_gatekeeper_rule scoping in validation_rules.rs preserves architectural component boundaries",
-          "reviewed_code_fingerprint": "a4e7f3ad5ed5f94a303dd4bd008ea9d584d7f081dd49b483c2a364368a9d1666",
-          "spec_material_hash": "11ce1ecc3ba50564b2ec464e88d3c899f039ce3a31c2f6fc08ec189e743b91bd"
+          "reason": "Document linked-worktree workunit runtime datastore resolution via runtime_data_dir",
+          "reviewed_code_fingerprint": "c8edcfc9631096f2d1092dd8d5c7390a630a6ba83c679ab4bd07ab03a7faf22e",
+          "spec_material_hash": "9ca7f9ef9f7c9c69436ba91817d96e325a34084c908c062d3dbc2545c11f7231"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "No CLI, RPC, or schema contract changes",
-          "reviewed_code_fingerprint": "a4e7f3ad5ed5f94a303dd4bd008ea9d584d7f081dd49b483c2a364368a9d1666",
+          "reason": "CLI and RPC command contracts remain unchanged",
+          "reviewed_code_fingerprint": "c8edcfc9631096f2d1092dd8d5c7390a630a6ba83c679ab4bd07ab03a7faf22e",
           "spec_material_hash": "bdd0ceb5cd3b9c68d05ceb15fc4c5981aecb18fb53823d649298222f5c2142fe"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Documented path-and-diff scoping of decapod.scope.protected_paths in claimed worktrees",
-          "reviewed_code_fingerprint": "a4e7f3ad5ed5f94a303dd4bd008ea9d584d7f081dd49b483c2a364368a9d1666",
+          "reason": "Protected-path rule scope and workunit runtime boundary documented",
+          "reviewed_code_fingerprint": "c8edcfc9631096f2d1092dd8d5c7390a630a6ba83c679ab4bd07ab03a7faf22e",
           "spec_material_hash": "d199566703dbcc9ccd40e84e4e5dfab82bec10d85adb5dfcdf59057b6480e5d2"
         }
       ],
@@ -746,7 +751,7 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1794555858Z"
+      "updated_at": "1794558939Z"
     },
     "trajectory": {
       "active_boundaries": [
