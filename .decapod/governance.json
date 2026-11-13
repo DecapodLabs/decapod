@@ -597,6 +597,14 @@
       "proof_refs": [
         "https://github.com/DecapodLabs/decapod/issues/1667"
       ]
+    },
+    {
+      "id": "issue-1667-file-8",
+      "summary": "test(storage): preserve oversized historical reader controls with SDK budgets; file-by-file checkpoint, verification pending.",
+      "input_digest": "sha256:8de5eb35ac1a24750d3fdd3caaf31f1439da0a972c685e4d290418e8f0404228",
+      "proof_refs": [
+        "https://github.com/DecapodLabs/decapod/issues/1667"
+      ]
     }
   ],
   "intents": {
@@ -647,7 +655,7 @@
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:301f5a5fe52b8c917c3322a44032b632983d7535a34901a654153f7cdb3fdd6b",
+      "artifact_hash": "sha256:a58f907f2fbf110264f2b19a808aaffaa9c72eb9fb592c25a912fc308c21b6be",
       "checks": [],
       "current_phase": "implementation",
       "custody": {
@@ -712,10 +720,17 @@
             "intent_id": "intent:change_01M7BCN0CS3Z8AJ7TZ491WJ7CJ",
             "kind": "trajectory_step_recorded",
             "sequence": 10
+          },
+          {
+            "detail": "trajectory:branch_01M7BCN0FD8AE623HXNGA0C8F9",
+            "event_id": "event:11",
+            "intent_id": "intent:change_01M7BCN0CS3Z8AJ7TZ491WJ7CJ",
+            "kind": "trajectory_step_recorded",
+            "sequence": 11
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 10,
+        "next_sequence": 11,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M7BCN0FD8AE623HXNGA0C8F9": {
@@ -834,6 +849,22 @@
                 "validation_findings": [
                   "Hosted verification and exact-candidate publication readiness remain pending; no local tests run."
                 ]
+              },
+              {
+                "action": "implementation",
+                "custody_event_id": "event:11",
+                "observations": [
+                  "tests/unit/core/task_transfer_tests.rs",
+                  "https://github.com/DecapodLabs/decapod/issues/1667"
+                ],
+                "proof_refs": [],
+                "scope": [
+                  "issue-1667"
+                ],
+                "sequence": 11,
+                "validation_findings": [
+                  "Hosted verification and exact-candidate publication readiness remain pending; no local tests run."
+                ]
               }
             ]
           }
@@ -852,7 +883,8 @@
         "Cargo.toml",
         "MODULE.bazel.lock",
         "tests/release_dependency_policy.rs",
-        "tests/unit/core/task_journal_tests.rs"
+        "tests/unit/core/task_journal_tests.rs",
+        "tests/unit/core/task_transfer_tests.rs"
       ],
       "next_transitions": [
         "Refine plan and declare falsifiable checks"
