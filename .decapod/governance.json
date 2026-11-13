@@ -589,6 +589,11 @@
       "id": "hf-spec-validation",
       "summary": "docs(specs): document protected_paths regression in VALIDATION.md",
       "input_digest": "sha256:d93539cfdbb5bbf257c7697b0870fd93bcb92a37063e42a893ceb449e9b8ab91"
+    },
+    {
+      "id": "hf-spec-arch",
+      "summary": "docs(specs): refresh ARCHITECTURE.md codebase attestation",
+      "input_digest": "sha256:d0bc33a15e0c3f8fc58c038671bcacd3bd1f62108fc3f32b30bd91b423c4f05c"
     }
   ],
   "intents": {
