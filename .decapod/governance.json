@@ -554,6 +554,11 @@
       "id": "hf-validation-rules",
       "summary": "fix(validate): scope protected_paths rule to path and diff checks",
       "input_digest": "sha256:ebeded5d365e055ea8a53db7b5e85ad97a7ece15495955d1e55dc84c095f7927"
+    },
+    {
+      "id": "hf-agents-md",
+      "summary": "chore(entrypoints): refresh AGENTS.md for Decapod v0.143.2",
+      "input_digest": "sha256:4e20c5de115767405673bfaa6ca74f151c57feb67525360b1c815da29cac39cf"
     }
   ],
   "intents": {
