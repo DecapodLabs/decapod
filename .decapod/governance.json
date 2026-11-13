@@ -674,6 +674,11 @@
       "id": "aptitude-write-contracts",
       "summary": "feat(aptitude): enforce UTF-8 byte, NUL, and tag bounds on aptitude writes (#1630)",
       "input_digest": "sha256:e95556ee090c068b3e31e51e25fe41d19c3d304269c3ce61e4a1b3ac13566f85"
+    },
+    {
+      "id": "verify-plugin-contracts",
+      "summary": "feat(verify): enforce proof-plan and artifact write contracts (#1630)",
+      "input_digest": "sha256:85ea4c19a83efda78c8779bf6c6957c9bceef0c93e46765fc725618b2ea5e0f5"
     }
   ],
   "intents": {
