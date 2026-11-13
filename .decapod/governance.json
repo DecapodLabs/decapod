@@ -607,6 +607,14 @@
       "proof_refs": [
         "CODEX.md"
       ]
+    },
+    {
+      "id": "refresh-gemini-entrypoint-01410",
+      "summary": "Refresh GEMINI.md release-bound entrypoint pin to Decapod 0.141.0",
+      "input_digest": "sha256:a63f7230be09e14dc286158dac591a8886139ff9d4dfb39d28582e13491ea26a",
+      "proof_refs": [
+        "GEMINI.md"
+      ]
     }
   ],
   "intents": {
@@ -662,7 +670,7 @@
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:987feb1532a93d6e0fe6153cffe82852feebba587cb66040788d51c33f452c35",
+      "artifact_hash": "sha256:8fc192786681d683306b7edc434cb41fa4c12c4f7ef7593d031d81d9efaa3628",
       "checks": [],
       "current_phase": "execution",
       "custody": {
@@ -727,10 +735,17 @@
             "intent_id": "intent:change_01M79A0G0YSR12S2RHJE84QPHR",
             "kind": "trajectory_step_recorded",
             "sequence": 10
+          },
+          {
+            "detail": "trajectory:branch_01M79A0G5E35FVE2EYNYQVQ3XY",
+            "event_id": "event:11",
+            "intent_id": "intent:change_01M79A0G0YSR12S2RHJE84QPHR",
+            "kind": "trajectory_step_recorded",
+            "sequence": 11
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 10,
+        "next_sequence": 11,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M79A0G5E35FVE2EYNYQVQ3XY": {
@@ -849,6 +864,22 @@
                 ],
                 "sequence": 10,
                 "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:11",
+                "observations": [
+                  "GEMINI.md"
+                ],
+                "proof_refs": [],
+                "scope": [
+                  "\".decapod/config.toml\"",
+                  "\".decapod/managed/specs\"]",
+                  "\"assets/tools/build_lifecycle_tests.rs\"",
+                  "paths:[\"assets/tools/build_lifecycle.rs\""
+                ],
+                "sequence": 11,
+                "validation_findings": []
               }
             ]
           }
@@ -888,6 +919,7 @@
         "AGENTS.md",
         "CLAUDE.md",
         "CODEX.md",
+        "GEMINI.md",
         "assets/tools/build_lifecycle.rs",
         "assets/tools/build_lifecycle_tests.rs"
       ],
