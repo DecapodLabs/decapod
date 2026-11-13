@@ -643,6 +643,11 @@
       "id": "pin-spec-validation-01410",
       "summary": "chore(specs): refresh VALIDATION.md release header to 0.141.0",
       "input_digest": "sha256:2dea351ed672c72a50450ad95c6fc6742ed827c4629cf89318cd528829c4da45"
+    },
+    {
+      "id": "pin-spec-manifest-01410",
+      "summary": "chore(specs): refresh specs .manifest.json for 0.141.0",
+      "input_digest": "sha256:e3f5c25656d5407c8a69e82e64563b63762d8e2561b4d21c354f7d6d0cb281f7"
     }
   ],
   "intents": {
