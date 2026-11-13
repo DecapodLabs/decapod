@@ -644,6 +644,11 @@
       "id": "refresh-dockerfile-v01431",
       "summary": "chore(container): refresh managed Dockerfile pin to Decapod v0.143.1",
       "input_digest": "sha256:9f40348bfa8deca0855ab6b9ff8c2ebdaf9901468f1c3ac4a2cc5d7f004fdc4f"
+    },
+    {
+      "id": "spec-architecture-1573",
+      "summary": "docs(specs): document advisory anonymous GitHub reader pacing in ARCHITECTURE.md",
+      "input_digest": "sha256:868c2f9e8628697e220acef8ec943097f9aabdc4079b57b0dbcc79a6745b7054"
     }
   ],
   "intents": {

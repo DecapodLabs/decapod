@@ -905,8 +905,8 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `0f5182b61bd9df72c7689c6b907417c45695f0cbec319899f912c2d9c1398f2b`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (231 files), `tests/` (232 files)
+- Repository signal fingerprint: `c7d83e4fa9bf8fd016119da5a6b23f3802ebc90a1d8354fceb321065859c642c`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (232 files), `tests/` (232 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 
@@ -1158,3 +1158,7 @@ The resolved native project also supplies the repository field of newly created 
 ## Versioned cloud mutation receipts
 
 The machine-private cloud todo receipt file uses a version-two envelope around its bounded records. Legacy flat arrays migrate under the existing stable file lock; array-only older clients cannot parse and rewrite the new envelope, so they cannot silently remove resolved-project bindings. This changes neither credential custody nor the server data protocol.
+
+## Advisory anonymous GitHub reader pacing (#1573)
+
+`src/decapod/core/snapshot_provider/github_quota.rs` attaches an in-process `GithubQuota` tracker (`Arc<Mutex<GithubQuota>>`) to `snapshot_provider::Budget` and propagates that shared handle across derived `CustodyRead::budget` and `NamedArchiveSelection::collect` budgets. `PublicGithubReads::execute` consults `Budget::wait_for_public_github_quota` before authorizing and spawning `curl`, and records verified HTTP 200 header hints through `Budget::observe_public_github_quota`. In `src/decapod/core/snapshot_provider/automatic.rs`, `wait_for_source_runs` snapshots `Budget::public_github_requests` around each `poll` iteration and calls `Budget::wait_for_public_github_poll`: cold Buildkite locator discovery polls that consume anonymous GitHub requests pace against half of the remaining rate-limit window, whereas bound Buildkite envelope polls consume zero GitHub requests and retain their configured `interval`. `wait_for_source_runs` also removes the duplicate pre-`recheck` `provider::verify_remote_binding` call because `TerminalSourceRuns::recheck` already verifies remote commit/ref binding immediately afterward.
