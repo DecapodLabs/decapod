@@ -734,6 +734,11 @@
       "id": "test-unit-task-journal",
       "summary": "test(journal): verify v2 component deduplication and >10K keyset paged verify (#1630)",
       "input_digest": "sha256:6d45a7bf18768f7a744a419be94c1adc47ace28b75f8b9014ca6eb5ccea0562b"
+    },
+    {
+      "id": "test-unit-task-transfer",
+      "summary": "test(transfer): verify externalized component bundle round-trip and tamper rejection (#1630)",
+      "input_digest": "sha256:e1045d325f9234dff1e9c9bd4f6bbc28bf4befebe9abf232595a2aa55fffdfc9"
     }
   ],
   "intents": {
