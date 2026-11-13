@@ -884,6 +884,11 @@
       "id": "refresh-spec-semantics-md-v0-143-1",
       "summary": "chore(specs): refresh SEMANTICS.md attestation for Decapod v0.143.1",
       "input_digest": "sha256:aeb16b788fa0a7f4cb7437b789ba5f50d5bcdf4b457141ab50949d414ee1bcfb"
+    },
+    {
+      "id": "refresh-spec-readme-md-v0-143-1",
+      "summary": "chore(specs): refresh README.md attestation for Decapod v0.143.1",
+      "input_digest": "sha256:3b1df92bbe39bdffe9b523462b9384c6bf1d38e07fd8a90a6d60993e9a68d820"
     }
   ],
   "intents": {
