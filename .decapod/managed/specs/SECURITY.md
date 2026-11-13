@@ -965,3 +965,15 @@ Do not delete lock sidecars, signal foreign processes, steal claims, replay ambi
 ## PR1662 current-master preparation
 
 Worktree policy edits cannot self-grant capabilities. db.recover remains owner-only and cloud authority fails closed when it cannot be authenticated. Retain non-destructive lock diagnosis, current-process-only release and confined backups. Coordination receipts are not independent acceptance proof.
+
+## SDK 0.16.1 authority and budget boundary (#1667)
+
+The latest non-yanked registry artifact is pinned by checksum in Cargo and Bazel.
+The SDK keeps transport/resource bounds distinct from application authorization.
+No uncertain mutation is replayed by this upgrade, no cloud denial selects local
+SQLite, and no connector feature grants repository policy or subscription access.
+The existing Quinn protocol floor and storage features remain required. Native
+fixtures and offline Supabase checks do not establish hosted deployment assurance.
+Historical oversized-row tests construct corruption inside disposable SQLite
+instead of evading the smaller SDK parameter-cell budget; the kernel's original
+oversized-reader rejection remains asserted.
