@@ -894,7 +894,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `0a0498aa94eb3f7551fe07c380ef13b469d188ab33218c72f80fc2e081fc3951`
+- Repository signal fingerprint: `97f60f7a1060e9989264ddbf5b97ac333fcbf0a63c78a0d5afe38d3cd2d94b3e`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (231 files), `tests/` (232 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
@@ -1147,3 +1147,31 @@ The resolved native project also supplies the repository field of newly created 
 ## Versioned cloud mutation receipts
 
 The machine-private cloud todo receipt file uses a version-two envelope around its bounded records. Legacy flat arrays migrate under the existing stable file lock; array-only older clients cannot parse and rewrite the new envelope, so they cannot silently remove resolved-project bindings. This changes neither credential custody nor the server data protocol.
+
+## Project-opted agent database maintenance (#1568)
+
+`src/decapod/core/db_maintenance.rs` and `src/decapod/core/storage_lock.rs`
+implement local-first, project-opted database maintenance and lock-custody
+diagnostics for repository agents. Policy loads exclusively from the canonical
+main checkout's `.decapod/config.toml` (`[governance.db_maintenance]`), anchored
+to the configured accepted Git base ref so unmerged candidate-branch edits cannot
+self-grant maintenance capabilities. `src/decapod/lib.rs::run` dispatches
+governed `data database` subcommands and `data.database.*` RPCs before ordinary
+startup migration, so read-only inspection, verification, capability lookup and
+lock diagnostics remain reachable while `decapod.db` is degraded or contested.
+
+`storage_lock.rs` extends `.decapod/data/decapod.db.lock` with a bounded
+(`<= 4 KiB`), single-link, `0600` metadata payload (`decapod.storage-lock.v1`)
+written under active `flock` ownership. It records `holder_pid`,
+`process_start_token`, `agent_id`, `session_token_digest`, `worktree_digest`,
+`operation`, `acquired_at` and `lease_hint_ms`, and truncates metadata before
+advisory unlock. `lock release-own` verifies kernel lock state first: an active
+foreign process's advisory lock cannot be cleared, same-session inactive markers
+are cleared only under `LOCK_EX | LOCK_NB`, and `.lock` inodes are never unlinked.
+
+Every governed attempt writes a secret-redacted JSONL record to
+`.decapod/data/db_maintenance_audit.jsonl` (and mirrors to SQLite `events` when
+healthy) binding policy digest, accepted-base commit, actor/session/worktree
+digests, capability, outcome and duration. Destructive `db.recover` stays
+denied to agents with `OWNER_REPAIR_AUTHORITY_REQUIRED` pending repository-owner
+repair authority (#1590); cloud backends fail closed.

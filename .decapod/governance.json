@@ -656,6 +656,11 @@
       "id": "c22-spec-semantics-01430",
       "summary": "docs(specs): refresh SEMANTICS.md projection for v0.143.0",
       "input_digest": "sha256:4e13dd80133459577cb3c65355b1074ca06e180938bba5a5bad414b9e51f08af"
+    },
+    {
+      "id": "c23-spec-architecture-1568",
+      "summary": "docs(specs): document project-opted agent database maintenance architecture (#1568)",
+      "input_digest": "sha256:79649f714a963e73513e24408f2a0c50549616c304dec5c67bac74e110baf1fd"
     }
   ],
   "intents": {
