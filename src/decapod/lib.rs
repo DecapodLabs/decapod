@@ -3140,6 +3140,18 @@ pub fn run() -> Result<(), error::DecapodError> {
                 root: store_root.clone(),
             };
 
+            // Reject a full completion claim in the originating process before
+            // an older broker can discard or inherit diagnostic environment.
+            if local_storage_startup
+                && let Command::Todo(todo_cli) = &cli.command
+                && matches!(
+                    &todo_cli.command,
+                    todo::TodoCommand::Done { validated: true, .. }
+                )
+            {
+                core::validation_runtime::require_full_readiness_environment()?;
+            }
+
             if local_storage_startup && should_route_via_group_broker(&cli.command, &argv) {
                 let mut finish = |stdout: &str, request_id: &str| match &cli.command {
                     Command::Todo(todo_cli) => todo::finish_broker_claim_response(
