@@ -639,6 +639,14 @@
       "proof_refs": [
         ".decapod/managed/specs/INTERFACES.md"
       ]
+    },
+    {
+      "id": "refresh-operations-spec-attestation-01410",
+      "summary": "Refresh OPERATIONS.md codebase attestation for 0.141.0 build_lifecycle slice",
+      "input_digest": "sha256:5267f6d790d005b5c090383674836812557f456a9d19e142644ba9dd3053a6ac",
+      "proof_refs": [
+        ".decapod/managed/specs/OPERATIONS.md"
+      ]
     }
   ],
   "intents": {
@@ -694,7 +702,7 @@
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:b9ca6401dde779195b57ba5a7803dcb382ea52e8aac7bc7f738c7465ee31a8fd",
+      "artifact_hash": "sha256:5e4883128d3f28b35cb4dd118865ff57ba522e9d347a1f6848a5367a73fcc5d3",
       "checks": [],
       "current_phase": "execution",
       "custody": {
@@ -787,10 +795,17 @@
             "intent_id": "intent:change_01M79A0G0YSR12S2RHJE84QPHR",
             "kind": "trajectory_step_recorded",
             "sequence": 14
+          },
+          {
+            "detail": "trajectory:branch_01M79A0G5E35FVE2EYNYQVQ3XY",
+            "event_id": "event:15",
+            "intent_id": "intent:change_01M79A0G0YSR12S2RHJE84QPHR",
+            "kind": "trajectory_step_recorded",
+            "sequence": 15
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 14,
+        "next_sequence": 15,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M79A0G5E35FVE2EYNYQVQ3XY": {
@@ -973,6 +988,22 @@
                 ],
                 "sequence": 14,
                 "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:15",
+                "observations": [
+                  ".decapod/managed/specs/OPERATIONS.md"
+                ],
+                "proof_refs": [],
+                "scope": [
+                  "\".decapod/config.toml\"",
+                  "\".decapod/managed/specs\"]",
+                  "\"assets/tools/build_lifecycle_tests.rs\"",
+                  "paths:[\"assets/tools/build_lifecycle.rs\""
+                ],
+                "sequence": 15,
+                "validation_findings": []
               }
             ]
           }
@@ -1012,6 +1043,7 @@
         ".decapod/managed/Dockerfile.decapod",
         ".decapod/managed/specs/INTENT.md",
         ".decapod/managed/specs/INTERFACES.md",
+        ".decapod/managed/specs/OPERATIONS.md",
         "AGENTS.md",
         "CLAUDE.md",
         "CODEX.md",
