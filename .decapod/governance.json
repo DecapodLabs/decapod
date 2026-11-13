@@ -574,6 +574,11 @@
       "id": "add-github-quota",
       "summary": "fix(snapshot_provider): add bounded anonymous GitHub quota pacing (#1573)",
       "input_digest": "sha256:cf66b681cda9552e08483ae6271d41a418dc1472c88fbab33daac68e2c360ccf"
+    },
+    {
+      "id": "wire-github-quota-budget",
+      "summary": "fix(snapshot_provider): wire anonymous GitHub quota tracking into Budget and PublicGithubReads",
+      "input_digest": "sha256:e11ebbe7799d386bfa26af38a5da338896a0b385efb9dfd4eed2de2e6b4b8ee6"
     }
   ],
   "intents": {
