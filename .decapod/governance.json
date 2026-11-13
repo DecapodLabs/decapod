@@ -684,6 +684,11 @@
       "id": "docs-logical-contract-v1",
       "summary": "docs(storage): publish logical_contract_v1 field, collection, and component contracts (#1630)",
       "input_digest": "sha256:32bc9d116b2e32e6280ed4af7cc4e1961f56bfb71defc2eb4dc81685a76a3a7e"
+    },
+    {
+      "id": "docs-compaction-benchmarks",
+      "summary": "docs(storage): record reproducible 1K-100K checkpoint compaction and contention benchmarks (#1630)",
+      "input_digest": "sha256:8ccc272714e3793004730c6be18823830c875057cdacdbb9287d0af4f32cff6c"
     }
   ],
   "intents": {
