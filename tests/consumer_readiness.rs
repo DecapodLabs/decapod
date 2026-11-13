@@ -462,8 +462,8 @@ fn candidate_repinning_cannot_replace_an_accepted_required_local_check() {
     assert_eq!(host.selections, 0);
 }
 
-#[test]
-fn candidate_cannot_repin_a_rewritten_accepted_check_script() {
+/// Registered explicitly by the required CLI target so selection includes it.
+pub fn candidate_cannot_repin_a_rewritten_accepted_check_script() {
     let mut fixture = Fixture::new();
     git(&fixture.options.root, &["push", "origin", "HEAD:main"]);
     git(&fixture.options.root, &["fetch", "origin", "main"]);
@@ -501,7 +501,11 @@ fn local_source_policy_can_change_after_separate_target_acceptance() {
     git(&fixture.options.root, &["fetch", "origin", "main"]);
     let script = fixture.options.root.join("scripts/check_source.py");
     let original = fs::read_to_string(&script).unwrap();
-    fs::write(script, format!("# Reviewed target policy revision\n{original}")).unwrap();
+    fs::write(
+        script,
+        format!("# Reviewed target policy revision\n{original}"),
+    )
+    .unwrap();
     fixture
         .proof
         .required_profile
