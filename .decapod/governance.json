@@ -741,6 +741,14 @@
       "proof_refs": [
         "https://github.com/DecapodLabs/decapod/issues/1659"
       ]
+    },
+    {
+      "id": "issue-1659-file-26",
+      "summary": "test(broker): distinguish scoped diagnostic flags from arbitrary controls; file-by-file checkpoint, verification pending.",
+      "input_digest": "sha256:37551c6ae811c17ea91a7d4caed9d076125f967651df60d73eed13d07597785e",
+      "proof_refs": [
+        "https://github.com/DecapodLabs/decapod/issues/1659"
+      ]
     }
   ],
   "intents": {
@@ -781,22 +789,22 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Hosted CI proved actual files retained old release headers after metadata-only refresh. Supported init regenerated all four actual templates; authored config and required contracts are preserved, and generated backup changes are retained outside Git. No local tests.",
-          "reviewed_code_fingerprint": "311a998d7de802bb734406f1ea75264e161343f5ee64ba3c08c80b5739c7f2d8",
+          "reason": "Diagnostic flags must reach the authoritative readiness guard with the original caller; arbitrary controls remain denied. Hosted run 43527744168 found this obsolete deny-list expectation.",
+          "reviewed_code_fingerprint": "aa71248f8fb187be0cfa86dde3512da21df48f130263b219494a5c32be596cf3",
           "spec_material_hash": "7393e220900cbc6f4ddeb0bd9b9835305dbeaa3e21494a74edc55487949f8123"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Hosted CI proved actual files retained old release headers after metadata-only refresh. Supported init regenerated all four actual templates; authored config and required contracts are preserved, and generated backup changes are retained outside Git. No local tests.",
-          "reviewed_code_fingerprint": "311a998d7de802bb734406f1ea75264e161343f5ee64ba3c08c80b5739c7f2d8",
+          "reason": "Diagnostic flags must reach the authoritative readiness guard with the original caller; arbitrary controls remain denied. Hosted run 43527744168 found this obsolete deny-list expectation.",
+          "reviewed_code_fingerprint": "aa71248f8fb187be0cfa86dde3512da21df48f130263b219494a5c32be596cf3",
           "spec_material_hash": "09829c5df95306633263d0edd36dd78fd07c643e6939781caa40f5e6568a8cd3"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Hosted CI proved actual files retained old release headers after metadata-only refresh. Supported init regenerated all four actual templates; authored config and required contracts are preserved, and generated backup changes are retained outside Git. No local tests.",
-          "reviewed_code_fingerprint": "311a998d7de802bb734406f1ea75264e161343f5ee64ba3c08c80b5739c7f2d8",
+          "reason": "Diagnostic flags must reach the authoritative readiness guard with the original caller; arbitrary controls remain denied. Hosted run 43527744168 found this obsolete deny-list expectation.",
+          "reviewed_code_fingerprint": "aa71248f8fb187be0cfa86dde3512da21df48f130263b219494a5c32be596cf3",
           "spec_material_hash": "a19fd3a1497ea4b61d73ff910b7be5696baa3e2db029c515072d00eee838f4d0"
         }
       ],
@@ -808,13 +816,13 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1794612676Z"
+      "updated_at": "1794614107Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:9545070c2d812ef264dbd1b89bbbc18b7c1ed2196c7dc1d679a685bd878d9cd0",
+      "artifact_hash": "sha256:29ad118fe0524e4a51ceea1edfa6ecfe4a97d3453478bb18b70a57263ac14d49",
       "checks": [],
       "current_phase": "implementation",
       "custody": {
@@ -1012,10 +1020,17 @@
             "intent_id": "intent:change_01M7BCEHXJQR8HVADJF91PJKGD",
             "kind": "trajectory_step_recorded",
             "sequence": 29
+          },
+          {
+            "detail": "trajectory:branch_01M7BCEJ05EP527M18XXSF6GK6",
+            "event_id": "event:30",
+            "intent_id": "intent:change_01M7BCEHXJQR8HVADJF91PJKGD",
+            "kind": "trajectory_step_recorded",
+            "sequence": 30
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 29,
+        "next_sequence": 30,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M7BCEJ05EP527M18XXSF6GK6": {
@@ -1434,6 +1449,22 @@
                   "issue-1659"
                 ],
                 "sequence": 29,
+                "validation_findings": [
+                  "Hosted verification and exact-candidate publication readiness remain pending; no local tests run."
+                ]
+              },
+              {
+                "action": "implementation",
+                "custody_event_id": "event:30",
+                "observations": [
+                  "tests/unit/core/group_broker_tests.rs",
+                  "https://github.com/DecapodLabs/decapod/issues/1659"
+                ],
+                "proof_refs": [],
+                "scope": [
+                  "issue-1659"
+                ],
+                "sequence": 30,
                 "validation_findings": [
                   "Hosted verification and exact-candidate publication readiness remain pending; no local tests run."
                 ]

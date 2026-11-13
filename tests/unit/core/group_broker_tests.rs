@@ -4,7 +4,7 @@ fn broker_diagnostic_scope_is_request_local() {
     use crate::core::bounded_process::BoundedCommand;
     const PROBE: &str = "DECAPOD_TEST_BROKER_DIAGNOSTIC_SCOPE";
     let names = [
-        "DECAPOD_VALIDATE_SKIP_GIT_GATES",
+        "DECAPOD_VALIDATE_UNKNOWN_BYPASS",
         "DECAPOD_VALIDATE_SKIP_TOOLING_GATES",
         "DECAPOD_VALIDATE_SKIP_FINGERPRINT_GATES",
     ];
