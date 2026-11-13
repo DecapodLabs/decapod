@@ -641,6 +641,11 @@
       "id": "c19-spec-intent-01430",
       "summary": "docs(specs): refresh INTENT.md projection for v0.143.0",
       "input_digest": "sha256:7ab3daf96472480d84c35d7d08566ca3f288fc950a507827b5539667fd88845f"
+    },
+    {
+      "id": "c20-spec-operations-01430",
+      "summary": "docs(specs): refresh OPERATIONS.md projection for v0.143.0",
+      "input_digest": "sha256:01d4dfa4ff41794d68b347e3d0449d7f3d015db6f78cb3ed0351a45d18b37765"
     }
   ],
   "intents": {
