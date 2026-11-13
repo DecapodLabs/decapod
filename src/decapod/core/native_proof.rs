@@ -15,7 +15,7 @@ use super::readiness_evidence::{
     ExpectedPlan, Failure, MaterialIdentity, Observation, Provider, Requirement, SuiteEvidence,
     material,
 };
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
 use std::collections::{BTreeMap, BTreeSet};
 use std::fs;
@@ -118,7 +118,8 @@ impl Invocation {
 
 /// Policy-selected input inventories, independent of observed successes.
 /// Actual file bytes/modes and Git revisions/history are measured at each capture.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
 pub struct IdentityInputs {
     pub root: PathBuf,
     pub git_program: PathBuf,
@@ -431,6 +432,20 @@ fn capture_identity(
     invocations: &BTreeMap<CheckKey, Invocation>,
     budget: &mut Budget<'_>,
 ) -> io::Result<MaterialIdentity> {
+    capture_identity_with_toolchains(inputs, budget, |budget| {
+        invocations
+            .iter()
+            .map(|(key, invocation)| Ok((key.clone(), measured_toolchain(invocation, budget)?)))
+            .collect()
+    })
+}
+
+// Both live execution and read-only applicability use this same identity formula.
+fn capture_identity_with_toolchains(
+    inputs: &IdentityInputs,
+    budget: &mut Budget<'_>,
+    measure: impl FnOnce(&mut Budget<'_>) -> io::Result<BTreeMap<CheckKey, String>>,
+) -> io::Result<MaterialIdentity> {
     let material = material::capture_with_io(&inputs.root, &inputs.declared_untracked, budget)?;
     let accepted_base_revision = text(budget.git(
         &inputs.root,
@@ -453,10 +468,7 @@ fn capture_identity(
             "--",
         ],
     )?;
-    let mut toolchain = BTreeMap::new();
-    for (key, invocation) in invocations {
-        toolchain.insert(key.clone(), measured_toolchain(invocation, budget)?);
-    }
+    let toolchain = measure(budget)?;
     let git_identity = budget.hash_file(&inputs.git_program)?;
     let identity = MaterialIdentity {
         repository: inputs.repository.clone(),
@@ -494,13 +506,38 @@ pub fn executable_digest(program: &Path) -> io::Result<String> {
     budget.hash_file(program)
 }
 
+/// Read-only references to the exact tool closure selected by the live planner.
+/// This value has no arguments, environment, command execution or authority seam.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub(crate) struct ToolchainInputs {
+    program: PathBuf,
+    files: BTreeMap<String, PathBuf>,
+    following_programs: Vec<PathBuf>,
+}
+impl From<&Invocation> for ToolchainInputs {
+    fn from(invocation: &Invocation) -> Self {
+        Self {
+            program: invocation.program.clone(),
+            files: invocation.toolchain_files.clone(),
+            following_programs: invocation
+                .following
+                .iter()
+                .map(|step| step.program.clone())
+                .collect(),
+        }
+    }
+}
 fn measured_toolchain(invocation: &Invocation, budget: &mut Budget<'_>) -> io::Result<String> {
+    measured_toolchain_inputs(&ToolchainInputs::from(invocation), budget)
+}
+fn measured_toolchain_inputs(
+    inputs: &ToolchainInputs,
+    budget: &mut Budget<'_>,
+) -> io::Result<String> {
     let mut files = BTreeMap::new();
-    files.insert(
-        "program".to_string(),
-        budget.hash_file(&invocation.program)?,
-    );
-    for (name, path) in &invocation.toolchain_files {
+    files.insert("program".to_string(), budget.hash_file(&inputs.program)?);
+    for (name, path) in &inputs.files {
         if name.trim().is_empty()
             || name == "program"
             || !path.is_absolute()
@@ -512,14 +549,14 @@ fn measured_toolchain(invocation: &Invocation, budget: &mut Budget<'_>) -> io::R
         }
         files.insert(name.clone(), budget.hash_file(path)?);
     }
-    if invocation.following.is_empty() {
+    if inputs.following_programs.is_empty() {
         // Preserve existing single-command toolchain identities and labels.
         json_digest(&files)
     } else {
-        let programs: Vec<_> = invocation
-            .following
+        let programs: Vec<_> = inputs
+            .following_programs
             .iter()
-            .map(|step| budget.hash_file(&step.program))
+            .map(|program| budget.hash_file(program))
             .collect::<io::Result<_>>()?;
         json_digest(&(files, programs))
     }
@@ -1425,6 +1462,50 @@ pub fn capture_current_identity(
         git_output_limit: limits.git_output_limit,
     };
     capture_identity(inputs, invocations, &mut budget)
+}
+
+/// Reconstruct a canonical producer record's applicability without running a check.
+/// Callers must obtain these references from the canonical observed-proof owner,
+/// never from an agent-supplied receipt or command declaration.
+pub(crate) fn capture_readonly_identity(
+    inputs: &IdentityInputs,
+    toolchains: &[(CheckKey, ToolchainInputs)],
+    limits: SuiteLimits,
+    cancel: &Cancellation,
+) -> io::Result<MaterialIdentity> {
+    if toolchains.len() > limits.max_checks {
+        return Err(invalid("read-only toolchain inventory exceeds check bound"));
+    }
+    native_executable(&inputs.git_program)?;
+    let mut budget = Budget {
+        deadline: Instant::now()
+            .checked_add(limits.timeout)
+            .ok_or_else(|| invalid("suite deadline overflow"))?,
+        cancel,
+        remaining_bytes: limits.max_hashed_bytes,
+        git_program: inputs.git_program.clone(),
+        git_output_limit: limits.git_output_limit,
+    };
+    capture_identity_with_toolchains(inputs, &mut budget, |budget| {
+        let mut measured = BTreeMap::new();
+        for (key, tools) in toolchains {
+            if tools.files.len() > 4096 || tools.following_programs.len() > 1024 {
+                return Err(invalid("read-only toolchain inventory exceeds file bound"));
+            }
+            for path in std::iter::once(&tools.program).chain(tools.following_programs.iter()) {
+                if !path.is_absolute() || path.canonicalize()? != *path {
+                    return Err(invalid("read-only program identity is not canonical"));
+                }
+            }
+            if measured
+                .insert(key.clone(), measured_toolchain_inputs(tools, budget)?)
+                .is_some()
+            {
+                return Err(invalid("duplicate read-only toolchain check"));
+            }
+        }
+        Ok(measured)
+    })
 }
 
 fn capture_snapshot(
