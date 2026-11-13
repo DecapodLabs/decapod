@@ -187,7 +187,7 @@ pub fn query(
     }
     let sql_limit = i64::try_from(limit.max(1)).unwrap_or(i64::MAX);
     let mut stmt = conn.prepare(
-        "SELECT event_id, ts, seq, event_type, payload, actor FROM events
+        "SELECT event_id, ts, seq, event_type, payload, actor, subject_kind, subject_id FROM events
          WHERE stream = ?1
          ORDER BY seq DESC, event_id DESC LIMIT ?2",
     )?;
@@ -200,12 +200,24 @@ pub fn query(
             row.get::<_, String>(3)?,
             payload,
             row.get::<_, String>(5)?,
+            row.get::<_, Option<String>>(6)?,
+            row.get::<_, Option<String>>(7)?,
         ))
     })?;
     let mut events = Vec::new();
     for row in rows {
-        let (event_id, ts, seq, event_type, payload, actor) = row?;
-        let payload = serde_json::from_str(&payload).map_err(|err| {
+        let (event_id, ts, seq, event_type, payload, actor, subject_kind, subject_id) = row?;
+        let payload = reconstruct_stored_payload(
+            stream,
+            &event_id,
+            &ts,
+            &event_type,
+            &actor,
+            subject_kind.as_deref(),
+            subject_id.as_deref(),
+            &payload,
+        )
+        .map_err(|err| {
             error::DecapodError::ValidationError(format!(
                 "invalid canonical event payload in events for {event_id}: {err}"
             ))
@@ -256,7 +268,7 @@ pub fn query_all_on_conn(
     loop {
         let (sql, query_params) = if let Some((seq, event_id)) = cursor.as_ref() {
             (
-                "SELECT event_id, ts, seq, event_type, payload, actor FROM events
+                "SELECT event_id, ts, seq, event_type, payload, actor, subject_kind, subject_id FROM events
                  WHERE stream = ?1
                    AND (seq > ?2 OR (seq = ?2 AND event_id > ?3))
                  ORDER BY seq ASC, event_id ASC LIMIT ?4",
@@ -264,7 +276,7 @@ pub fn query_all_on_conn(
             )
         } else {
             (
-                "SELECT event_id, ts, seq, event_type, payload, actor FROM events
+                "SELECT event_id, ts, seq, event_type, payload, actor, subject_kind, subject_id FROM events
                  WHERE stream = ?1
                  ORDER BY seq ASC, event_id ASC LIMIT ?2",
                 params![stream, QUERY_PAGE_SIZE],
@@ -281,12 +293,24 @@ pub fn query_all_on_conn(
                 row.get::<_, String>(3)?,
                 payload,
                 row.get::<_, String>(5)?,
+                row.get::<_, Option<String>>(6)?,
+                row.get::<_, Option<String>>(7)?,
             ))
         })?;
         let mut page = Vec::new();
         for row in rows {
-            let (event_id, ts, seq, event_type, payload, actor) = row?;
-            let payload = serde_json::from_str(&payload).map_err(|err| {
+            let (event_id, ts, seq, event_type, payload, actor, subject_kind, subject_id) = row?;
+            let payload = reconstruct_stored_payload(
+                stream,
+                &event_id,
+                &ts,
+                &event_type,
+                &actor,
+                subject_kind.as_deref(),
+                subject_id.as_deref(),
+                &payload,
+            )
+            .map_err(|err| {
                 error::DecapodError::ValidationError(format!(
                     "invalid canonical event payload in {event_id}: {err}"
                 ))
@@ -379,8 +403,17 @@ pub fn query_subject_on_conn(
         {
             return Err(invalid("journal changed or exceeded its verified bound"));
         }
-        let payload = serde_json::from_str(&raw)
-            .map_err(|_| invalid("malformed canonical subject payload"))?;
+        let payload = reconstruct_stored_payload(
+            stream,
+            &event_id,
+            &ts,
+            &event_type,
+            &actor,
+            Some(subject_kind),
+            Some(subject_id),
+            &raw,
+        )
+        .map_err(|_| invalid("malformed canonical subject payload"))?;
         output.push(StoredEvent {
             stream: stream.to_string(),
             event_id,
@@ -454,8 +487,17 @@ pub fn query_subject_event_on_conn(
     if raw.len() as u64 > MAX_SUBJECT_RECORD_BYTES {
         return Err(invalid("event exceeds record byte bound"));
     }
-    let payload =
-        serde_json::from_str(&raw).map_err(|_| invalid("malformed canonical subject payload"))?;
+    let payload = reconstruct_stored_payload(
+        stream,
+        event_id,
+        &ts,
+        &event_type,
+        &actor,
+        Some(subject_kind),
+        Some(subject_id),
+        &raw,
+    )
+    .map_err(|_| invalid("malformed canonical subject payload"))?;
     Ok(Some(StoredEvent {
         stream: stream.into(),
         event_id: event_id.into(),
@@ -503,13 +545,32 @@ pub fn check_subject_append_capacity(
         }
         return Err(invalid("conflicting existing event identity"));
     }
+    let ts = event
+        .get("ts")
+        .and_then(Value::as_str)
+        .unwrap_or("1970-01-01T00:00:00Z");
     let event_type = event
         .get("event_type")
         .or_else(|| event.get("op"))
         .and_then(Value::as_str)
         .unwrap_or("");
-    let payload = domain_payload_for_storage(stream, event, &id, event_type)?;
-    let added_bytes = serde_json::to_vec(&payload)
+    let actor = event
+        .get("actor")
+        .or_else(|| event.get("actor_id"))
+        .and_then(Value::as_str)
+        .unwrap_or("decapod");
+    let domain_payload = domain_payload_for_storage(stream, event, &id, event_type)?;
+    let stored_payload = compact_envelope_for_storage(
+        stream,
+        &id,
+        ts,
+        event_type,
+        actor,
+        Some(subject_kind),
+        Some(subject_id),
+        &domain_payload,
+    );
+    let added_bytes = serde_json::to_vec(&stored_payload)
         .map_err(|_| invalid("unserializable event payload"))?
         .len() as u64;
     let (count, bytes, largest): (u64, u64, u64) = conn.query_row(
@@ -868,6 +929,28 @@ fn append_on_conn_inner(
         )));
     }
 
+    crate::core::storage_contracts::validate_event_append(
+        stream,
+        &event_id,
+        &ts,
+        event_type,
+        actor,
+        subject_kind.as_deref().filter(|s| !s.is_empty()),
+        subject_id.as_deref().filter(|s| !s.is_empty()),
+        event,
+    )?;
+
+    let stored_payload = compact_envelope_for_storage(
+        stream,
+        &event_id,
+        &ts,
+        event_type,
+        actor,
+        subject_kind.as_deref(),
+        subject_id.as_deref(),
+        &payload_value,
+    );
+
     let seq: u64 = conn.query_row(
         "SELECT COALESCE(MAX(seq), 0) + 1 FROM events WHERE stream = ?1",
         [stream],
@@ -885,7 +968,7 @@ fn append_on_conn_inner(
             subject_kind,
             subject_id,
             event_type,
-            serde_json::to_string(&payload_value).unwrap(),
+            serde_json::to_string(&stored_payload).unwrap(),
             actor
         ],
     )?;
@@ -1470,6 +1553,271 @@ fn file_content_hash(path: &Path) -> Result<String, error::DecapodError> {
     Ok(format!("{:x}", digest.finalize()))
 }
 
+// ---------------------------------------------------------------------------
+// Compact lossless event envelope codec (`_ce_v1`, #1630)
+// ---------------------------------------------------------------------------
+
+/// Internal sentinel key identifying a compact event envelope whose duplicated
+/// column metadata and default/null BrokerEvent fields have been elided.
+pub const COMPACT_ENVELOPE_KEY: &str = "_ce_v1";
+/// Collision-escape wrapper key used when a caller-supplied JSON object itself
+/// contains [`COMPACT_ENVELOPE_KEY`] or [`COMPACT_RAW_ESCAPE_KEY`].
+pub const COMPACT_RAW_ESCAPE_KEY: &str = "_ce_raw";
+
+const CE_BIT_EVENT_ID: u64 = 1 << 0;
+const CE_BIT_TS: u64 = 1 << 1;
+const CE_BIT_EVENT_TYPE: u64 = 1 << 2;
+const CE_BIT_ACTOR: u64 = 1 << 3;
+const CE_BIT_TASK_ID: u64 = 1 << 4;
+const CE_BIT_CANDIDATE_SHA: u64 = 1 << 5;
+const CE_BIT_STATUS_SUCCESS: u64 = 1 << 6;
+const CE_BIT_ACTOR_ID_EQ_ACTOR: u64 = 1 << 7;
+const CE_BIT_SCHEMA_V1_1_0: u64 = 1 << 8;
+const CE_BIT_DB_ID_DECAPOD: u64 = 1 << 9;
+const CE_BIT_NULL_SESSION_ID: u64 = 1 << 10;
+const CE_BIT_NULL_CORRELATION_ID: u64 = 1 << 11;
+const CE_BIT_NULL_CAUSATION_ID: u64 = 1 << 12;
+const CE_BIT_NULL_IDEMPOTENCY_KEY: u64 = 1 << 13;
+const CE_BIT_NULL_INTENT_REF: u64 = 1 << 14;
+const CE_BIT_EMPTY_REQUEST_ID: u64 = 1 << 15;
+const CE_BIT_EMPTY_CALLER_AGENT_ID: u64 = 1 << 16;
+const CE_ALL_BITS: u64 = (1 << 17) - 1;
+
+/// True when a stored JSON value uses the compact `_ce_v1` envelope representation.
+pub fn is_compact_envelope_value(value: &Value) -> bool {
+    value
+        .as_object()
+        .is_some_and(|map| map.contains_key(COMPACT_ENVELOPE_KEY))
+}
+
+/// Losslessly compact an event envelope by stripping fields that match the row's
+/// canonical SQLite columns (`event_id`, `ts`, `event_type`, `actor`, `subject_id`)
+/// or standard `BrokerEvent` defaults/nulls, recording an exact reconstruction
+/// bitmask under `_ce_v1`.
+///
+/// - `federation` payloads are never touched here (they already store bare inner objects).
+/// - Objects containing `_ce_v1` or `_ce_raw` are wrapped under `{"_ce_raw": ...}` so
+///   arbitrary caller keys round-trip without ambiguity.
+/// - Non-matching or non-string envelope values are left inline untouched.
+#[allow(clippy::too_many_arguments)]
+pub fn compact_envelope_for_storage(
+    stream: &str,
+    event_id: &str,
+    ts: &str,
+    event_type: &str,
+    actor: &str,
+    subject_kind: Option<&str>,
+    subject_id: Option<&str>,
+    payload_value: &Value,
+) -> Value {
+    if stream == FEDERATION {
+        return payload_value.clone();
+    }
+    let Some(orig_map) = payload_value.as_object() else {
+        return payload_value.clone();
+    };
+    if orig_map.contains_key(COMPACT_ENVELOPE_KEY) || orig_map.contains_key(COMPACT_RAW_ESCAPE_KEY)
+    {
+        return serde_json::json!({ COMPACT_RAW_ESCAPE_KEY: payload_value });
+    }
+
+    let mut map = orig_map.clone();
+    let mut mask = 0u64;
+
+    let mut strip_str = |key: &str, expected: &str, bit: u64| {
+        if map.get(key).and_then(Value::as_str) == Some(expected) {
+            map.remove(key);
+            mask |= bit;
+        }
+    };
+
+    strip_str("event_id", event_id, CE_BIT_EVENT_ID);
+    strip_str("ts", ts, CE_BIT_TS);
+    strip_str("event_type", event_type, CE_BIT_EVENT_TYPE);
+    strip_str("actor", actor, CE_BIT_ACTOR);
+    strip_str("status", "success", CE_BIT_STATUS_SUCCESS);
+
+    if subject_kind == Some("task")
+        && let Some(sid) = subject_id.filter(|s| !s.is_empty())
+    {
+        strip_str("task_id", sid, CE_BIT_TASK_ID);
+    }
+    if subject_kind == Some("commit")
+        && let Some(sid) = subject_id.filter(|s| !s.is_empty())
+    {
+        strip_str("candidate_sha", sid, CE_BIT_CANDIDATE_SHA);
+    }
+
+    if stream == BROKER {
+        strip_str("actor_id", actor, CE_BIT_ACTOR_ID_EQ_ACTOR);
+        strip_str("schema_version", "1.1.0", CE_BIT_SCHEMA_V1_1_0);
+        strip_str("db_id", schemas::LOCAL_DB_NAME, CE_BIT_DB_ID_DECAPOD);
+        strip_str("request_id", "", CE_BIT_EMPTY_REQUEST_ID);
+        strip_str("caller_agent_id", "", CE_BIT_EMPTY_CALLER_AGENT_ID);
+
+        for (key, bit) in [
+            ("session_id", CE_BIT_NULL_SESSION_ID),
+            ("correlation_id", CE_BIT_NULL_CORRELATION_ID),
+            ("causation_id", CE_BIT_NULL_CAUSATION_ID),
+            ("idempotency_key", CE_BIT_NULL_IDEMPOTENCY_KEY),
+            ("intent_ref", CE_BIT_NULL_INTENT_REF),
+        ] {
+            if map.get(key) == Some(&Value::Null) {
+                map.remove(key);
+                mask |= bit;
+            }
+        }
+    }
+
+    if mask == 0 {
+        return payload_value.clone();
+    }
+    map.insert(COMPACT_ENVELOPE_KEY.to_owned(), Value::from(mask));
+    let candidate = Value::Object(map);
+    let orig_len = serde_json::to_vec(payload_value)
+        .map(|b| b.len())
+        .unwrap_or(usize::MAX);
+    let cand_len = serde_json::to_vec(&candidate)
+        .map(|b| b.len())
+        .unwrap_or(usize::MAX);
+    if cand_len < orig_len {
+        candidate
+    } else {
+        payload_value.clone()
+    }
+}
+
+/// Parse and losslessly reconstruct a stored `events.payload` column back into its
+/// exact canonical `serde_json::Value`, supporting both legacy whole-envelope rows
+/// and `_ce_v1` compact rows.
+#[allow(clippy::too_many_arguments)]
+pub fn reconstruct_stored_payload(
+    stream: &str,
+    event_id: &str,
+    ts: &str,
+    event_type: &str,
+    actor: &str,
+    subject_kind: Option<&str>,
+    subject_id: Option<&str>,
+    raw_payload: &str,
+) -> Result<Value, error::DecapodError> {
+    let parsed: Value = serde_json::from_str(raw_payload)
+        .map_err(|e| error::DecapodError::ValidationError(format!("invalid JSON payload: {e}")))?;
+    if stream == FEDERATION {
+        return Ok(parsed);
+    }
+    let Value::Object(mut map) = parsed else {
+        return Ok(parsed);
+    };
+    if map.len() == 1 && map.contains_key(COMPACT_RAW_ESCAPE_KEY) {
+        return Ok(map
+            .remove(COMPACT_RAW_ESCAPE_KEY)
+            .expect("escape key checked"));
+    }
+    let Some(marker) = map.remove(COMPACT_ENVELOPE_KEY) else {
+        return Ok(Value::Object(map));
+    };
+    let Some(mask) = marker
+        .as_u64()
+        .filter(|&m| m != 0 && (m & !CE_ALL_BITS) == 0)
+    else {
+        return Err(error::DecapodError::ValidationError(format!(
+            "COMPACT_EVENT_ENVELOPE: event '{event_id}' has unsupported or corrupt _ce_v1 bitmask"
+        )));
+    };
+
+    let restore = |map: &mut serde_json::Map<String, Value>,
+                   key: &str,
+                   val: Value|
+     -> Result<(), error::DecapodError> {
+        if map.contains_key(key) {
+            return Err(error::DecapodError::ValidationError(format!(
+                "COMPACT_EVENT_ENVELOPE: event '{event_id}' contains conflicting inline '{key}' alongside _ce_v1"
+            )));
+        }
+        map.insert(key.to_owned(), val);
+        Ok(())
+    };
+
+    if mask & CE_BIT_EVENT_ID != 0 {
+        restore(&mut map, "event_id", Value::String(event_id.to_owned()))?;
+    }
+    if mask & CE_BIT_TS != 0 {
+        restore(&mut map, "ts", Value::String(ts.to_owned()))?;
+    }
+    if mask & CE_BIT_EVENT_TYPE != 0 {
+        restore(&mut map, "event_type", Value::String(event_type.to_owned()))?;
+    }
+    if mask & CE_BIT_ACTOR != 0 {
+        restore(&mut map, "actor", Value::String(actor.to_owned()))?;
+    }
+    if mask & CE_BIT_TASK_ID != 0 {
+        let sid = subject_id
+            .filter(|_| subject_kind == Some("task"))
+            .filter(|s| !s.is_empty())
+            .ok_or_else(|| {
+                error::DecapodError::ValidationError(format!(
+                    "COMPACT_EVENT_ENVELOPE: event '{event_id}' missing task subject_id for _ce_v1"
+                ))
+            })?;
+        restore(&mut map, "task_id", Value::String(sid.to_owned()))?;
+    }
+    if mask & CE_BIT_CANDIDATE_SHA != 0 {
+        let sid = subject_id
+            .filter(|_| subject_kind == Some("commit"))
+            .filter(|s| !s.is_empty())
+            .ok_or_else(|| {
+                error::DecapodError::ValidationError(format!(
+                    "COMPACT_EVENT_ENVELOPE: event '{event_id}' missing commit subject_id for _ce_v1"
+                ))
+            })?;
+        restore(&mut map, "candidate_sha", Value::String(sid.to_owned()))?;
+    }
+    if mask & CE_BIT_STATUS_SUCCESS != 0 {
+        restore(&mut map, "status", Value::String("success".to_owned()))?;
+    }
+    if mask & CE_BIT_ACTOR_ID_EQ_ACTOR != 0 {
+        restore(&mut map, "actor_id", Value::String(actor.to_owned()))?;
+    }
+    if mask & CE_BIT_SCHEMA_V1_1_0 != 0 {
+        restore(
+            &mut map,
+            "schema_version",
+            Value::String("1.1.0".to_owned()),
+        )?;
+    }
+    if mask & CE_BIT_DB_ID_DECAPOD != 0 {
+        restore(
+            &mut map,
+            "db_id",
+            Value::String(schemas::LOCAL_DB_NAME.to_owned()),
+        )?;
+    }
+    if mask & CE_BIT_NULL_SESSION_ID != 0 {
+        restore(&mut map, "session_id", Value::Null)?;
+    }
+    if mask & CE_BIT_NULL_CORRELATION_ID != 0 {
+        restore(&mut map, "correlation_id", Value::Null)?;
+    }
+    if mask & CE_BIT_NULL_CAUSATION_ID != 0 {
+        restore(&mut map, "causation_id", Value::Null)?;
+    }
+    if mask & CE_BIT_NULL_IDEMPOTENCY_KEY != 0 {
+        restore(&mut map, "idempotency_key", Value::Null)?;
+    }
+    if mask & CE_BIT_NULL_INTENT_REF != 0 {
+        restore(&mut map, "intent_ref", Value::Null)?;
+    }
+    if mask & CE_BIT_EMPTY_REQUEST_ID != 0 {
+        restore(&mut map, "request_id", Value::String(String::new()))?;
+    }
+    if mask & CE_BIT_EMPTY_CALLER_AGENT_ID != 0 {
+        restore(&mut map, "caller_agent_id", Value::String(String::new()))?;
+    }
+
+    Ok(Value::Object(map))
+}
+
 #[derive(Debug)]
 struct CanonicalEventShape {
     ts: String,
@@ -1486,7 +1834,7 @@ fn load_canonical_event_shape(
 ) -> Result<Option<CanonicalEventShape>, error::DecapodError> {
     let existing = conn
         .query_row(
-            "SELECT ts, event_type, payload, actor, subject_id
+            "SELECT ts, event_type, payload, actor, subject_kind, subject_id
              FROM events WHERE stream = ?1 AND event_id = ?2",
             params![stream, event_id],
             |row| {
@@ -1496,14 +1844,25 @@ fn load_canonical_event_shape(
                     row.get::<_, String>(2)?,
                     row.get::<_, String>(3)?,
                     row.get::<_, Option<String>>(4)?,
+                    row.get::<_, Option<String>>(5)?,
                 ))
             },
         )
         .optional()?;
-    let Some((ts, event_type, payload, actor, node_id)) = existing else {
+    let Some((ts, event_type, payload, actor, subject_kind, node_id)) = existing else {
         return Ok(None);
     };
-    let payload = serde_json::from_str(&payload).map_err(|e| {
+    let payload = reconstruct_stored_payload(
+        stream,
+        event_id,
+        &ts,
+        &event_type,
+        &actor,
+        subject_kind.as_deref(),
+        node_id.as_deref(),
+        &payload,
+    )
+    .map_err(|e| {
         error::DecapodError::ValidationError(format!(
             "invalid canonical {stream} event payload for '{event_id}': {e}"
         ))

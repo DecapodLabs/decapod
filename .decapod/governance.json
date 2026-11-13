@@ -614,6 +614,11 @@
       "id": "schemas-component-store-ddl",
       "summary": "feat(storage): add compact component store and migration manifest DDL (#1630)",
       "input_digest": "sha256:45b30f0281526c536bbf77b058987252d22ec7932b2afeccdbdd3262f63a3aca"
+    },
+    {
+      "id": "events-compact-envelopes",
+      "summary": "feat(events): compact non-federation event envelopes with lossless reconstruction (#1630)",
+      "input_digest": "sha256:68fe3c27bd3d1be12fa5224cacd11420b25b2ce528afce58c12b8ffe05a7bcab"
     }
   ],
   "intents": {
