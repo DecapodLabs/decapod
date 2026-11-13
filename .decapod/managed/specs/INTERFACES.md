@@ -1154,7 +1154,7 @@ field. Nothing in this operation authorizes a mutation, approval or completion.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `2390465dfedd195b12c2fbc8af6a5769b39c1412cbef00d5ac791a4919936efb`
+- Repository signal fingerprint: `2487d83baaac8c821a8c74c32162635f369080997beb1019853005b454f1bd08`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (234 files), `tests/` (232 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
@@ -1510,3 +1510,23 @@ backup restrictions, unsupported destructive operations and concurrent retry.
 Two deterministic workers exercise actual claims/workspaces and custody; this is
 not a demonstration of two native LLM agent integrations. Existing operator
 recovery fixtures remain diagnostic and do not grant agent recovery authority.
+
+## Accepted repository-local contract changes (#1658)
+
+The existing validation runtime returns the actionable
+`ACCEPTED_REPOSITORY_CONTRACT_CHANGED` blocker when a candidate removes or replaces
+accepted local obligations, even with internally consistent new review digests.
+The check precedes execution-provider selection. Remove the weakening and retain
+the accepted checks, or first establish a separately accepted policy transition
+on the target. Additional required checks are allowed. Initial local adoption and
+unchanged accepted contracts continue through the existing runtime and receipt
+interfaces; no new command or bypass is exposed.
+
+### Source-definition changes
+
+`ACCEPTED_REPOSITORY_CONTRACT_CHANGED` also identifies replacement of the accepted
+local source-definition digest. Recomputing a candidate digest cannot authorize
+changed inventoried check scripts, build/dependency definitions or provider
+inputs. Retain the accepted inventory or establish the reviewed revision on the
+target before revalidation. Additive commands under that inventory and first
+local adoption remain supported; no override or second policy store is added.

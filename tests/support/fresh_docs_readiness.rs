@@ -76,7 +76,12 @@ pub fn fresh_governed_docs_cli_admission_then_runtime_executes_first_proof() {
             .unwrap()
             .digest()
             .unwrap();
-    config["proof"] = toml::Value::try_from(&fixture.proof).unwrap();
+    // This scenario proves first adoption through the genuine CLI. Its
+    // workspace-specific execution environment is authored only after the
+    // workspace exists; do not pretend that later policy was accepted on main.
+    // Separate consumer tests preserve and execute an already accepted contract.
+    config["proof"] =
+        toml::Value::try_from(decapod::core::proof::ProjectProofConfig::default()).unwrap();
     config["repo"]["base_branch"] = "main".into();
     fs::write(root.join(CONFIG), toml::to_string_pretty(&config).unwrap()).unwrap();
     // Init seeds the accepted baseline. Authoring refresh belongs in the

@@ -430,6 +430,258 @@ fn accepted_strict_profile_cannot_be_downgraded_by_candidate_local_contract() {
 }
 
 #[test]
+fn candidate_repinning_cannot_replace_an_accepted_required_local_check() {
+    let mut fixture = Fixture::new();
+    // Establish the reviewed local contract on the independently observed base.
+    git(&fixture.options.root, &["push", "origin", "HEAD:main"]);
+    git(&fixture.options.root, &["fetch", "origin", "main"]);
+    fs::write(fixture.options.root.join("second.txt"), "invalid source\n").unwrap();
+    let command = fixture
+        .proof
+        .commands
+        .iter_mut()
+        .find(|command| command.name == "inspect-second")
+        .unwrap();
+    command.args = [
+        "-I",
+        "-S",
+        "-B",
+        "-c",
+        "print('claimed success without inspection')",
+    ]
+    .map(str::to_owned)
+    .into();
+    fixture.review_commands();
+    fixture.save_config();
+    fixture.commit("replace accepted check and repin its claimed review");
+    let mut host = fixture.host();
+    blocked(
+        &fixture.validate(&mut host),
+        "ACCEPTED_REPOSITORY_CONTRACT_CHANGED",
+    );
+    assert_eq!(host.selections, 0);
+}
+
+/// Registered explicitly by the required CLI target so selection includes it.
+pub fn candidate_cannot_repin_a_rewritten_accepted_check_script() {
+    let mut fixture = Fixture::new();
+    git(&fixture.options.root, &["push", "origin", "HEAD:main"]);
+    git(&fixture.options.root, &["fetch", "origin", "main"]);
+    fs::write(fixture.options.root.join("payload.txt"), "invalid source\n").unwrap();
+    fs::write(
+        fixture.options.root.join("scripts/check_source.py"),
+        "print('claimed success without inspecting the invalid source')\n",
+    )
+    .unwrap();
+    fixture
+        .proof
+        .required_profile
+        .as_mut()
+        .unwrap()
+        .reviewed_sources_digest =
+        runtime::discover_source_inventory(&fixture.options, &Cancellation::default())
+            .unwrap()
+            .digest()
+            .unwrap();
+    fixture.save_config();
+    fixture.commit("repin rewritten accepted check with unchanged command");
+    let mut host = fixture.host();
+    blocked(
+        &fixture.validate(&mut host),
+        "ACCEPTED_REPOSITORY_CONTRACT_CHANGED",
+    );
+    assert_eq!(host.selections, 0);
+    assert_eq!(host.execution_attempts, 0);
+}
+
+#[test]
+fn local_source_policy_can_change_after_separate_target_acceptance() {
+    let mut fixture = Fixture::new();
+    git(&fixture.options.root, &["push", "origin", "HEAD:main"]);
+    git(&fixture.options.root, &["fetch", "origin", "main"]);
+    let script = fixture.options.root.join("scripts/check_source.py");
+    let original = fs::read_to_string(&script).unwrap();
+    fs::write(
+        script,
+        format!("# Reviewed target policy revision\n{original}"),
+    )
+    .unwrap();
+    fixture
+        .proof
+        .required_profile
+        .as_mut()
+        .unwrap()
+        .reviewed_sources_digest =
+        runtime::discover_source_inventory(&fixture.options, &Cancellation::default())
+            .unwrap()
+            .digest()
+            .unwrap();
+    fixture.save_config();
+    fixture.commit("separately accept the changed source verification policy");
+    git(&fixture.options.root, &["push", "origin", "HEAD:main"]);
+    git(&fixture.options.root, &["fetch", "origin", "main"]);
+    let mut host = fixture.host();
+    let report = fixture.validate(&mut host);
+    assert!(report.ready, "{report:?}");
+    assert_eq!(report.scope, repository_profile::READINESS_SCOPE);
+    assert_eq!(host.execution_attempts, 1);
+}
+
+#[test]
+fn repinned_local_policy_removal_execution_and_coverage_changes_fail_before_selection() {
+    for change in [
+        "remove",
+        "program",
+        "directory",
+        "environment",
+        "toolchain",
+        "timeout",
+        "coverage",
+        "ci-only",
+    ] {
+        let mut fixture = Fixture::new();
+        git(&fixture.options.root, &["push", "origin", "HEAD:main"]);
+        git(&fixture.options.root, &["fetch", "origin", "main"]);
+        let contract = fixture.proof.repository_contract.as_mut().unwrap();
+        match change {
+            "remove" => {
+                fixture
+                    .proof
+                    .commands
+                    .retain(|command| command.name != "inspect-second");
+                contract.executions.remove("inspect-second");
+                contract.source_coverage[0]
+                    .commands
+                    .retain(|name| name != "inspect-second");
+            }
+            "program" => {
+                let shell = fs::canonicalize("/bin/sh").unwrap();
+                let shell = shell.to_str().unwrap().to_owned();
+                let command = fixture
+                    .proof
+                    .commands
+                    .iter_mut()
+                    .find(|command| command.name == "inspect-second")
+                    .unwrap();
+                command.command = shell.clone();
+                command.args = vec![
+                    "-c".into(),
+                    "printf 'claimed success without inspection'".into(),
+                ];
+                let execution = contract.executions.get_mut("inspect-second").unwrap();
+                execution.program = shell.clone();
+                execution.toolchain_files.insert("shell".into(), shell);
+            }
+            "directory" => {
+                fs::create_dir(fixture.options.root.join("nested")).unwrap();
+                fs::write(fixture.options.root.join("nested/input.txt"), "input\n").unwrap();
+                contract
+                    .executions
+                    .get_mut("inspect-second")
+                    .unwrap()
+                    .directory = "nested".into();
+            }
+            "environment" => {
+                contract
+                    .executions
+                    .get_mut("inspect-second")
+                    .unwrap()
+                    .environment
+                    .insert("UNREVIEWED_INPUT".into(), "replacement".into());
+            }
+            "toolchain" => {
+                contract
+                    .executions
+                    .get_mut("inspect-second")
+                    .unwrap()
+                    .toolchain_files
+                    .insert("replacement".into(), "/unreviewed/runtime".into());
+            }
+            "timeout" => {
+                contract
+                    .executions
+                    .get_mut("inspect-second")
+                    .unwrap()
+                    .timeout_seconds += 1
+            }
+            "coverage" => contract.source_coverage[0]
+                .commands
+                .retain(|name| name != "inspect-second"),
+            "ci-only" => {
+                contract.source_coverage[0].commands.clear();
+                contract.source_coverage[0].ci_only = true;
+                contract.source_coverage[0].reason =
+                    Some("candidate claims external coverage".into());
+            }
+            _ => unreachable!(),
+        }
+        fixture.review_commands();
+        fixture.save_config();
+        fixture.commit("repin replacement local verification policy");
+        let mut host = fixture.host();
+        blocked(
+            &fixture.validate(&mut host),
+            "ACCEPTED_REPOSITORY_CONTRACT_CHANGED",
+        );
+        assert_eq!(host.selections, 0, "{change}");
+        assert_eq!(host.execution_attempts, 0, "{change}");
+    }
+}
+
+#[test]
+fn accepted_local_contract_executes_current_checks_and_never_reuses_an_old_source_pass() {
+    let fixture = Fixture::new();
+    git(&fixture.options.root, &["push", "origin", "HEAD:main"]);
+    git(&fixture.options.root, &["fetch", "origin", "main"]);
+    let mut host = fixture.host();
+    let historical = fixture.validate(&mut host);
+    assert!(historical.ready, "{historical:?}");
+    assert_eq!(historical.scope, repository_profile::READINESS_SCOPE);
+    assert_eq!(host.execution_attempts, 1);
+    fs::write(
+        fixture.options.root.join("second.txt"),
+        "changed after successful proof\n",
+    )
+    .unwrap();
+    fixture.commit("invalidate source evidence");
+    let mut host = fixture.host();
+    let current = fixture.validate(&mut host);
+    assert!(!current.ready, "{current:?}");
+    assert!(!current.proof_ready);
+    assert_eq!(host.execution_attempts, 1);
+    assert!(
+        historical.ready,
+        "historical observations must remain intact"
+    );
+}
+
+#[test]
+fn candidate_can_add_required_local_checks_without_replacing_accepted_ones() {
+    let mut fixture = Fixture::new();
+    git(&fixture.options.root, &["push", "origin", "HEAD:main"]);
+    git(&fixture.options.root, &["fetch", "origin", "main"]);
+    let mut additional = fixture.proof.commands[0].clone();
+    let contract = fixture.proof.repository_contract.as_mut().unwrap();
+    let execution = contract.executions[&additional.name].clone();
+    additional.name = "inspect-third".into();
+    contract
+        .executions
+        .insert(additional.name.clone(), execution);
+    contract.source_coverage[0]
+        .commands
+        .push(additional.name.clone());
+    fixture.proof.commands.push(additional);
+    fixture.review_commands();
+    fixture.save_config();
+    fixture.commit("add an extra required local check");
+    let mut host = fixture.host();
+    let report = fixture.validate(&mut host);
+    assert!(report.ready, "{report:?}");
+    assert_eq!(report.scope, repository_profile::READINESS_SCOPE);
+    assert_eq!(host.execution_attempts, 1);
+}
+
+#[test]
 fn source_change_during_selection_prevents_any_execution() {
     let fixture = Fixture::new();
     let mut host = fixture.host();
