@@ -603,6 +603,11 @@
       "id": "pin-dockerfile-01410",
       "summary": "chore(container): refresh managed Dockerfile.decapod pin to v0.141.0",
       "input_digest": "sha256:f3146863eec5ed530efcdc87b14b69400ed63e8247e0d5a8151ca7b49f09e280"
+    },
+    {
+      "id": "pin-spec-readme-01410",
+      "summary": "chore(specs): refresh README.md release header to 0.141.0",
+      "input_digest": "sha256:e34223efbb4030892faff75c7f9a60d570456e04dd89e4bd2f9344edd9932921"
     }
   ],
   "intents": {
