@@ -257,6 +257,7 @@ fn failure_never_enters_cache_and_cached_reads_still_obey_deadline_cancel_and_li
         deadline: Instant::now(),
         cancel: &cancel,
         max_bytes: normal.max_bytes,
+        github_quota: Default::default(),
     };
     assert_eq!(
         cache.get(&request(1), &expired).unwrap_err().kind(),
@@ -434,6 +435,7 @@ fn metadata_batch_never_uses_an_archive_sized_output_allowance() {
         deadline: Instant::now() + Duration::from_secs(1),
         cancel: &cancel,
         max_bytes: 17 * 1024 * 1024,
+        github_quota: Default::default(),
     };
     struct DefaultReader;
     impl PublicReader for DefaultReader {

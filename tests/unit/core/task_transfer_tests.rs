@@ -500,3 +500,96 @@ fn recovery_rejects_mismatched_durable_event_actor_and_oversized_record() {
         .expect("oversized record must fail");
     assert!(error.to_string().contains("record byte bound"));
 }
+
+#[test]
+fn v2_transfer_bundle_embeds_externalized_components_for_self_contained_import_and_rejects_component_tampering()
+ {
+    let (src_repo, root, _unused_small_id) = source();
+    let large_desc = "Portable externalized v2 task description.\n".repeat(48);
+    let large_scope = format!(
+        "paths:{}",
+        serde_json::to_string(&vec![
+            "src/decapod/core/task_transfer.rs",
+            "src/decapod/core/task_journal.rs",
+            "src/decapod/core/storage_compaction.rs",
+            "src/decapod/core/storage_contracts.rs",
+            "src/decapod/core/events.rs",
+        ])
+        .unwrap()
+    );
+    let large_proof = serde_json::json!({
+        "gates": vec!["validate_passes"; 24],
+        "notes": "Self-contained component bundle proof bytes"
+    })
+    .to_string();
+
+    let added = todo::add_task(
+        &root,
+        &todo::TodoCommand::Add {
+            title: "Portable v2 externalized task".into(),
+            description: large_desc.clone(),
+            priority: "high".into(),
+            tags: "transfer,v2".into(),
+            owner: String::new(),
+            due: None,
+            r#ref: "issue:1630".into(),
+            scope: large_scope.clone(),
+            dir: Some(src_repo.path().to_string_lossy().into_owned()),
+            depends_on: String::new(),
+            blocks: String::new(),
+            parent: None,
+            one_shot: 0,
+        },
+    )
+    .unwrap();
+    let id = added["id"].as_str().unwrap().to_owned();
+    with_task_journal(
+        &DbBroker::new(&root),
+        &todo_db_path(&root),
+        SOURCE,
+        None,
+        "fixture.proof",
+        TaskJournalSelection::Ids(vec![id.clone()]),
+        |conn| {
+            conn.execute(
+                "INSERT INTO task_verification(todo_id,proof_plan,verification_artifacts,last_verified_status,verification_policy_days,updated_at)
+                 VALUES(?1,'[]',?2,'passed',90,?3)",
+                params![id, large_proof, now_iso()],
+            )?;
+            Ok(())
+        },
+    )
+    .unwrap();
+    todo::claim_task(&root, &id, SOURCE, todo::ClaimMode::Exclusive).unwrap();
+    todo::yield_claim_lease(&root, &id, SOURCE, "cross-host v2 handoff").unwrap();
+
+    let bundle = export_bundle(&root, &id, RECEIVER, SOURCE).unwrap();
+    assert!(
+        bundle.components.len() >= 3,
+        "expected externalized description, scope, and verification_artifacts in bundle.components"
+    );
+    assert_eq!(
+        bundle.projection.task.description.as_deref(),
+        Some(large_desc.as_str())
+    );
+
+    // Destination starts with zero rows in storage_components; omitting or corrupting bundle.components must fail closed!
+    let (_bad_dest, bad_dest_root) = destination(src_repo.path());
+    let mut missing_comp_bundle = bundle.clone();
+    missing_comp_bundle.components.pop();
+    assert!(import_bundle(&bad_dest_root, &missing_comp_bundle, RECEIVER).is_err());
+
+    let mut tampered_comp_bundle = bundle.clone();
+    tampered_comp_bundle.components[0].utf8_value = "corrupted component text".into();
+    assert!(import_bundle(&bad_dest_root, &tampered_comp_bundle, RECEIVER).is_err());
+
+    // Untampered self-contained v2 bundle imports cleanly into a fresh destination store!
+    let (_ok_dest, ok_dest_root) = destination(src_repo.path());
+    let imported = import_bundle(&ok_dest_root, &bundle, RECEIVER).unwrap();
+    assert_eq!(imported["status"], "ok");
+    let after = projection(&ok_dest_root, &id);
+    assert_eq!(after.task.description.as_deref(), Some(large_desc.as_str()));
+    assert_eq!(after.task.scope, large_scope);
+    let dest_conn = Connection::open(todo_db_path(&ok_dest_root)).unwrap();
+    assert_eq!(verify(&dest_conn).unwrap()["status"], "ok");
+}

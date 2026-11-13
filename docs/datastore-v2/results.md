@@ -106,3 +106,14 @@ for that invocation only. No shared toolchain or project configuration was
 replaced. Fixture-created databases, roles and PostgREST processes were cleaned
 by the test. This is baseline RPC evidence, not a cloud optimization or hosted
 Supabase/published-Decapod-client qualification.
+
+## Increment 2: Lossless component-deduplicated checkpoints and compact event envelopes (`#1630`)
+
+Increment 1 established that index compaction alone saves `1.03%–2.27%` of packed SQLite bytes because repeated task checkpoint projections and duplicated event-envelope JSON keys dominate the file. Increment 2 (`#1630`) addresses payload growth directly without lossy truncation:
+
+- **Task journal v2 (`storage_components` + `storage_component_refs`)**: Externalizes immutable strings `>= 128` UTF-8 bytes (`task.description`, `task.scope`, `verification.proof_plan`, `verification.verification_artifacts`, `verification.last_verified_notes`) with content-addressed SHA-256 + zlib compression and `ON DELETE RESTRICT` reference tracking, preserving exact `TaskProjection` reconstruction and `projection_digest` parity.
+- **Compact event envelopes (`_ce_v1` / `_ce_raw`)**: Strips envelope metadata already stored in dedicated `events` columns on non-`federation` streams and reconstructs exact JSON on read; forward migration `sqlite.compact_lossless_storage.v002` (`1200`) compacts historical rows atomically under pre/post logical SHA-256 verification.
+- **Measured packed SQLite savings (`docs/datastore-v2/compaction-benchmarks-v0.141.0.md`)**:
+  - `1,000` checkpoints (`25` tasks): `2,383,872` B -> `1,650,688` B (**`30.76%` reduction**, `-65.96%` `events.payload` bytes).
+  - `10,000` checkpoints (`250` tasks): `21,999,616` B -> `14,544,896` B (**`33.89%` reduction**, `-65.93%` `events.payload` bytes).
+  - `100,000` checkpoints (`2,500` tasks): `218,513,408` B -> `143,917,056` B (**`34.14%` reduction**, `74,596,352` B saved, `-65.88%` `events.payload` bytes).

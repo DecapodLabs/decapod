@@ -1,5 +1,16 @@
 # Intent
 
+## Concurrent custody and diagnostic scope (#1469, #1661)
+
+Independent tasks can author concurrently in distinct admitted worktrees. A task
+lease has one live checkout binding; transfer, retirement and renewal preserve
+fencing. Explicit shared-resource reservations govern integration and release
+operations rather than excluding unrelated source work. Non-Git projects can
+run bounded prerequisite diagnostics without being admitted for authoring or
+claiming publication readiness. This repair retains the accepted master policy
+and Decapod 0.143.1 release contract; it does not complete the broader ten-worker
+or autonomous-runtime acceptance mandate.
+
 ## Evidence-grounded reflection before consequential action
 
 Decapod helps agents reconsider a proposed action through optional bounded
@@ -341,8 +352,8 @@ These declarations select authoring and proof obligations; they do not attest im
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `a6e059f4f377dff525c0c4d75cf6bf53027bbe21837532452d334229f3a93914`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (232 files), `tests/` (232 files)
+- Repository signal fingerprint: `fbccc9cfb5bf2b38e6ef970f60ff59a1d618c570d9b96d317b9f5bd0c40da905`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (234 files), `tests/` (232 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 
@@ -526,6 +537,18 @@ remain separate work and are not claimed by this presentation change.
 Managed cloud commands must distinguish the local Git checkout from a service-issued project reference. `cloud projects` lists authenticated project names; `cloud project use` selects an exact name or a previously shown entry; `cloud project create` explicitly materializes a project through the existing idempotent account contract. Selection does not grant access. Existing session custody and local operation remain independent of this account-routing cache.
 
 The resolved native project also supplies the repository field of newly created tasks. Before the first possible write dispatch, the existing machine-private todo operation journal atomically binds the operation to a digest of its resolved service/project route. Preflight login and initial project selection retain the same operation ID; subsequent selection changes cannot replay an uncertain or successful write into another project. Older unknown records remain bound to their original canonical repository semantics. The real PostgreSQL consumer exposed the former Git-label write mismatch; that failed candidate supplies no successful native proof.
+
+## PR 1666: accepted v0.143.2 source integration
+
+Reduce anonymous GitHub discovery consumption while preserving exact-source proof, immediate denial behavior and the original invocation deadline. Quota hints govern waiting, not acceptance; this proposal does not establish current provider execution.
+
+## PR1666 current-master integration
+
+Incorporate accepted master 9b900254, including custody, protected-path/workunit fixes and the 0.144.0 source release. Preserve the quota-pacing feature and its original PR history, then repair hosted CI failures one at a time. No local test execution or independent full readiness is claimed.
+
+## PR1663 integrated storage behavior
+
+Integrate PR1663 on accepted master5e23ad68 and0.144.1 while preserving storage admission, lossless history and format obligations. Keep accepted custody, quota and runtime-owner changes. Historical benchmark claims remain historical; only fresh hosted execution can establish this candidate's checks.
 
 ## PR 1662: accepted v0.143.2 source integration
 

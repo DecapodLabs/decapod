@@ -328,6 +328,33 @@ fn test_validate_passes_after_init_without_git_repo() {
         !output.contains("requires isolated git worktree"),
         "fresh non-git validation should not be rejected by workspace preflight. Output:\n{output}"
     );
+
+    let status = run_raw(&temp_path, &["workspace", "status"], &[]);
+    assert!(status.status.success());
+    let status: serde_json::Value = serde_json::from_slice(&status.stdout).unwrap();
+    assert_eq!(status["workspace"]["can_work"], false);
+
+    let prerequisites = run_raw(
+        &temp_path,
+        &["govern", "project-check", "--format", "json"],
+        &[],
+    );
+    assert!(prerequisites.status.success());
+    let report: serde_json::Value = serde_json::from_slice(&prerequisites.stdout).unwrap();
+    assert_eq!(report["scope"], "project_prerequisites");
+    assert_eq!(report["publication_ready"], false);
+    assert!(report["readiness"].is_null());
+
+    let publication = run_raw(&temp_path, &["validate", "--format", "json"], &[]);
+    assert!(!publication.status.success());
+    let report: serde_json::Value = serde_json::from_slice(&publication.stdout).unwrap();
+    assert_eq!(report["gate"], "workspace_protection");
+    assert!(
+        report["error"]
+            .as_str()
+            .unwrap()
+            .contains("AUTHORING_CHECKOUT_UNVERIFIED")
+    );
 }
 
 #[test]

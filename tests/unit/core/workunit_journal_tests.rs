@@ -835,3 +835,61 @@ fn terminal_contract_uses_current_journal_epoch_and_preserves_explicit_proof_obl
         crate::core::validation_rules::load_terminal_workunit(root.path(), "task_test").is_err()
     );
 }
+
+#[test]
+fn linked_git_worktree_uses_initialized_main_repo_runtime_and_rejects_uninitialized_parent() {
+    let parent = tempfile::tempdir().unwrap();
+    let run_git = |cwd: &Path, args: &[&str]| {
+        let out = std::process::Command::new("git")
+            .current_dir(cwd)
+            .args(args)
+            .output()
+            .unwrap();
+        assert!(
+            out.status.success(),
+            "git {args:?} failed: {}",
+            String::from_utf8_lossy(&out.stderr)
+        );
+    };
+    run_git(parent.path(), &["init", "-b", "main"]);
+    run_git(parent.path(), &["config", "user.name", "Test"]);
+    run_git(parent.path(), &["config", "user.email", "test@example.com"]);
+    fs::write(parent.path().join("README.md"), "# test\n").unwrap();
+    run_git(parent.path(), &["add", "README.md"]);
+    run_git(parent.path(), &["commit", "-m", "initial"]);
+
+    let worktree = parent.path().join(".decapod/workspaces/wt-test");
+    fs::create_dir_all(worktree.parent().unwrap()).unwrap();
+    run_git(
+        parent.path(),
+        &[
+            "worktree",
+            "add",
+            "-b",
+            "agent/test/task_wt-branch",
+            worktree.to_str().unwrap(),
+            "main",
+        ],
+    );
+    assert!(worktree.join(".git").is_file());
+
+    // Parent runtime not initialized yet -> worktree mutation must fail closed.
+    let err = init_workunit(&worktree, "task_wt", "intent:wt").unwrap_err();
+    assert!(err.to_string().contains("WORKUNIT_RUNTIME_UNINITIALIZED"));
+    assert!(!worktree.join(".decapod/data/decapod.db").exists());
+
+    // Initialize parent runtime -> worktree mutation must use parent policy/journal DB
+    // while keeping projection under the worktree's ignored .decapod/data/workunits/.
+    crate::core::todo::initialize_todo_db(&parent.path().join(".decapod/data")).unwrap();
+    let initialized = init_workunit(&worktree, "task_wt", "intent:wt").unwrap();
+    assert_eq!(initialized.task_id, "task_wt");
+    set_proof_plan(&worktree, "task_wt", &["docs-proof".to_string()]).unwrap();
+    let status = workunit_journal_status(&worktree, "task_wt").unwrap();
+    assert_eq!(status.generation, Some(2));
+    assert_eq!(status.projection_state, "current");
+    assert!(workunit_path(&worktree, "task_wt").unwrap().is_file());
+    assert!(
+        !worktree.join(".decapod/data/decapod.db").exists(),
+        "linked worktree must not create an events-only local decapod.db"
+    );
+}

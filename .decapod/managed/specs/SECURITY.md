@@ -1,5 +1,21 @@
 # Security
 
+Absence of `.git` does not establish checkout admission, including outside
+`.decapod/workspaces`. `init --no-git` enables prerequisite diagnostics only.
+The partial project-check route handles that compatibility explicitly; workspace
+status and full validation retain their independent fail-closed boundaries.
+
+## Diagnostic success grants no checkout authority (#1661)
+
+Non-Git prerequisite diagnostics may inspect project configuration without a
+task-bound Git workspace. They do not change `can_work=false`, mint a full
+readiness judgment, or admit authoring/publication. Full validation continues to
+reject that directory. CLI regression coverage exercises all three observations
+using the real binary without Git-gate overrides. The custody transaction also
+rejects second live bindings and rolls back binding persistence if event evidence
+cannot be committed. Local actor labels and Git filesystem identities remain
+host-local cooperative authority, not authenticated cloud or OS isolation.
+
 ## Agent-owned browser handoff
 
 `authorization_url` exposes only Dactyl's validated, short-lived browser handoff.
@@ -610,8 +626,8 @@ execution evidence remains required before publication readiness.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `a6e059f4f377dff525c0c4d75cf6bf53027bbe21837532452d334229f3a93914`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (232 files), `tests/` (232 files)
+- Repository signal fingerprint: `fbccc9cfb5bf2b38e6ef970f60ff59a1d618c570d9b96d317b9f5bd0c40da905`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (234 files), `tests/` (232 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 
@@ -929,6 +945,18 @@ Operation-route binding must survive clients of different releases. Versioned re
 ## Canonical terminal rule context and proof-backed completion custody
 
 Terminal rule evaluation (`core/validation_rules.rs::evaluate_terminal_rules`) derives `task_type` and `git_ref` from verified trajectory/branch task identities and canonical `refs/heads/<branch>` names without creating or mutating `.decapod/data` SQLite state. Plural store categories (`features`, `bugs`, `tests`) normalize to the built-in rule vocabulary (`feature`, `bugfix`, `test`) so pre-execution and publication scope/custody/evidence rules cannot be bypassed by category naming differences, while unmapped administrative categories fall back to `None` so `task_types`-scoped constitutional rules remain enforced. Undeclared workunits never block ordinary first-validation bootstrap, whereas any durably declared workunit remains fail-closed (`TERMINAL_WORKUNIT_UNPROVEN` or `UNVERIFIED_COMPLETION`) until its checkpointed execution binding and required proof-plan gates pass.
+
+## PR 1666: accepted v0.143.2 source integration
+
+Header parsing is bounded and accepts only unambiguous numeric quota hints from verified HTTP200 transport responses. A quota hint authenticates no evidence and authorizes no fallback identity. Exact repository/candidate/target and provenance checks remain necessary.
+
+## PR1666 current-master integration
+
+Preserve exact source/base checks, public-reader denial, final remote binding verification and accepted path/custody gates. GitHub PR metadata must identify the actual master tip before a fresh event is emitted. A successful process or historical test does not establish current independent readiness.
+
+## PR1663 integrated storage behavior
+
+Missing components, corrupt references, incompatible readers/writers and unauthorized custody must remain rejected. Storage migration1200 and format-v2 behavior stay confined to source and hosted disposable fixtures during this update. No direct machine datastore edit or candidate migration is authorized.
 
 ## PR 1662: accepted v0.143.2 source integration
 

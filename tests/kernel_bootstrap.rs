@@ -387,3 +387,303 @@ fn independent_tasks_bootstrap_and_bind_observed_worktrees() {
             .contains("CUSTODY_STALE")
     );
 }
+
+#[test]
+fn cross_process_checkout_contention_and_interrupted_ensure_recovery() {
+    let temp = tempfile::tempdir().unwrap();
+    let root = temp.path();
+    git(root, &["init", "-q", "-b", "master"]);
+    git(root, &["config", "user.email", "fixture@example.invalid"]);
+    git(root, &["config", "user.name", "Fixture"]);
+    fs::write(root.join("shared.rs"), "pub fn value() -> u8 { 1 }\n").unwrap();
+    git(root, &["add", "."]);
+    git(
+        root,
+        &["-c", "commit.gpgsign=false", "commit", "-qm", "base"],
+    );
+    cli(
+        root,
+        "alpha",
+        &["init", "--backend", "local", "--force", "--proof"],
+    );
+    let config_path = root.join(".decapod/config.toml");
+    let config = fs::read_to_string(&config_path)
+        .unwrap()
+        .replace(
+            "container_workspaces = true",
+            "container_workspaces = false",
+        )
+        .replace("isolation = \"container\"", "isolation = \"worktree\"");
+    fs::write(&config_path, config).unwrap();
+    git(root, &["add", "."]);
+    git(
+        root,
+        &["-c", "commit.gpgsign=false", "commit", "-qm", "initialize"],
+    );
+
+    let bin = resolve_decapod_bin();
+    let store = root.join(".decapod/data");
+
+    // 1. Two concurrent OS processes provisioning two overlapping tasks in separate worktrees both succeed.
+    let task_a = add(root, "alpha", "Concurrent isolated slice A");
+    let task_b = add(root, "beta", "Concurrent isolated slice B");
+    assert_eq!(
+        cli(
+            root,
+            "alpha",
+            &["todo", "claim", "--id", &task_a, "--format", "json"]
+        )["status"],
+        "ok"
+    );
+    assert_eq!(
+        cli(
+            root,
+            "beta",
+            &["todo", "claim", "--id", &task_b, "--format", "json"]
+        )["status"],
+        "ok"
+    );
+
+    let branch_a = format!("agent/alpha/{task_a}-par");
+    let branch_b = format!("agent/beta/{task_b}-par");
+    let child_a = Command::new(&bin)
+        .current_dir(root)
+        .env("DECAPOD_AGENT_ID", "alpha")
+        .env("DECAPOD_CLAIM_AUTORUN", "0")
+        .env_remove("DECAPOD_VALIDATE_SKIP_GIT_GATES")
+        .args(["workspace", "ensure", "--branch", &branch_a])
+        .stdout(std::process::Stdio::piped())
+        .stderr(std::process::Stdio::piped())
+        .spawn()
+        .unwrap();
+    let child_b = Command::new(&bin)
+        .current_dir(root)
+        .env("DECAPOD_AGENT_ID", "beta")
+        .env("DECAPOD_CLAIM_AUTORUN", "0")
+        .env_remove("DECAPOD_VALIDATE_SKIP_GIT_GATES")
+        .args(["workspace", "ensure", "--branch", &branch_b])
+        .stdout(std::process::Stdio::piped())
+        .stderr(std::process::Stdio::piped())
+        .spawn()
+        .unwrap();
+    let out_a = child_a.wait_with_output().unwrap();
+    let out_b = child_b.wait_with_output().unwrap();
+    assert!(
+        out_a.status.success(),
+        "alpha ensure failed: {}",
+        String::from_utf8_lossy(&out_a.stderr)
+    );
+    assert!(
+        out_b.status.success(),
+        "beta ensure failed: {}",
+        String::from_utf8_lossy(&out_b.stderr)
+    );
+    let json_a: Value = serde_json::from_slice(&out_a.stdout).unwrap();
+    let json_b: Value = serde_json::from_slice(&out_b.stdout).unwrap();
+    assert_eq!(json_a["can_work"], true, "{json_a}");
+    assert_eq!(json_b["can_work"], true, "{json_b}");
+    assert_ne!(json_a["worktree_path"], json_b["worktree_path"]);
+
+    // 2. Two concurrent OS processes racing to bind ONE task across TWO live worktrees:
+    //    exactly one wins and one fails with AUTHORING_TASK_ALREADY_BOUND.
+    let task_dual = add(root, "alpha", "Single task dual worktree race");
+    assert_eq!(
+        cli(
+            root,
+            "alpha",
+            &["todo", "claim", "--id", &task_dual, "--format", "json"]
+        )["status"],
+        "ok"
+    );
+    let wt_left = root.join(".decapod/workspaces/dual-left");
+    let wt_right = root.join(".decapod/workspaces/dual-right");
+    fs::create_dir_all(wt_left.parent().unwrap()).unwrap();
+    git(
+        root,
+        &[
+            "worktree",
+            "add",
+            "-q",
+            "-b",
+            &format!("agent/alpha/{task_dual}-left"),
+            wt_left.to_str().unwrap(),
+            "master",
+        ],
+    );
+    git(
+        root,
+        &[
+            "worktree",
+            "add",
+            "-q",
+            "-b",
+            &format!("agent/alpha/{task_dual}-right"),
+            wt_right.to_str().unwrap(),
+            "master",
+        ],
+    );
+    let proc_left = Command::new(&bin)
+        .current_dir(&wt_left)
+        .env("DECAPOD_AGENT_ID", "alpha")
+        .env("DECAPOD_CLAIM_AUTORUN", "0")
+        .env_remove("DECAPOD_VALIDATE_SKIP_GIT_GATES")
+        .args(["workspace", "ensure"])
+        .stdout(std::process::Stdio::piped())
+        .stderr(std::process::Stdio::piped())
+        .spawn()
+        .unwrap();
+    let proc_right = Command::new(&bin)
+        .current_dir(&wt_right)
+        .env("DECAPOD_AGENT_ID", "alpha")
+        .env("DECAPOD_CLAIM_AUTORUN", "0")
+        .env_remove("DECAPOD_VALIDATE_SKIP_GIT_GATES")
+        .args(["workspace", "ensure"])
+        .stdout(std::process::Stdio::piped())
+        .stderr(std::process::Stdio::piped())
+        .spawn()
+        .unwrap();
+    let res_left = proc_left.wait_with_output().unwrap();
+    let res_right = proc_right.wait_with_output().unwrap();
+    let successes = [res_left.status.success(), res_right.status.success()]
+        .into_iter()
+        .filter(|ok| *ok)
+        .count();
+    assert_eq!(
+        successes,
+        1,
+        "left=({:?}, {}) right=({:?}, {})",
+        res_left.status,
+        String::from_utf8_lossy(&res_left.stderr),
+        res_right.status,
+        String::from_utf8_lossy(&res_right.stderr)
+    );
+    let loser_stderr = if !res_left.status.success() {
+        String::from_utf8_lossy(&res_left.stderr).into_owned()
+    } else {
+        String::from_utf8_lossy(&res_right.stderr).into_owned()
+    };
+    assert!(
+        loser_stderr.contains("AUTHORING_TASK_ALREADY_BOUND"),
+        "{loser_stderr}"
+    );
+    let db = decapod::core::db::Connection::open(todo::todo_db_path(&store)).unwrap();
+    let dual_rows: i64 = db
+        .query_row(
+            "SELECT count(*) FROM authoring_bindings WHERE task_id=?1",
+            [&task_dual],
+            |r| r.get(0),
+        )
+        .unwrap();
+    assert_eq!(dual_rows, 1);
+
+    // 3. Two concurrent OS processes racing on ONE checkout commit exactly one binding & one event.
+    let task_same_wt = add(root, "alpha", "Same checkout concurrent ensure");
+    assert_eq!(
+        cli(
+            root,
+            "alpha",
+            &["todo", "claim", "--id", &task_same_wt, "--format", "json"]
+        )["status"],
+        "ok"
+    );
+    let wt_shared = root.join(".decapod/workspaces/shared-race");
+    git(
+        root,
+        &[
+            "worktree",
+            "add",
+            "-q",
+            "-b",
+            &format!("agent/alpha/{task_same_wt}-shared"),
+            wt_shared.to_str().unwrap(),
+            "master",
+        ],
+    );
+    let same_1 = Command::new(&bin)
+        .current_dir(&wt_shared)
+        .env("DECAPOD_AGENT_ID", "alpha")
+        .env("DECAPOD_CLAIM_AUTORUN", "0")
+        .env_remove("DECAPOD_VALIDATE_SKIP_GIT_GATES")
+        .args(["workspace", "ensure"])
+        .stdout(std::process::Stdio::piped())
+        .stderr(std::process::Stdio::piped())
+        .spawn()
+        .unwrap();
+    let same_2 = Command::new(&bin)
+        .current_dir(&wt_shared)
+        .env("DECAPOD_AGENT_ID", "alpha")
+        .env("DECAPOD_CLAIM_AUTORUN", "0")
+        .env_remove("DECAPOD_VALIDATE_SKIP_GIT_GATES")
+        .args(["workspace", "ensure"])
+        .stdout(std::process::Stdio::piped())
+        .stderr(std::process::Stdio::piped())
+        .spawn()
+        .unwrap();
+    let same_out_1 = same_1.wait_with_output().unwrap();
+    let same_out_2 = same_2.wait_with_output().unwrap();
+    assert!(
+        same_out_1.status.success() || same_out_2.status.success(),
+        "at least one concurrent ensure on the same checkout must succeed"
+    );
+    let same_rows: i64 = db
+        .query_row(
+            "SELECT count(*) FROM authoring_bindings WHERE task_id=?1",
+            [&task_same_wt],
+            |r| r.get(0),
+        )
+        .unwrap();
+    let same_events: i64 = db
+        .query_row(
+            "SELECT count(*) FROM events WHERE event_type='authoring.bind' AND payload LIKE ?1",
+            [format!("%{task_same_wt}%")],
+            |r| r.get(0),
+        )
+        .unwrap();
+    assert_eq!(same_rows, 1);
+    assert_eq!(same_events, 1);
+
+    // 4. Interrupted workspace ensure (worktree exists without binding/governance) fails closed
+    //    on status, recovers on retry, and stays can_work=true across CLI `todo renew`.
+    let task_int = add(root, "alpha", "Interrupted ensure recovery");
+    assert_eq!(
+        cli(
+            root,
+            "alpha",
+            &["todo", "claim", "--id", &task_int, "--format", "json"]
+        )["status"],
+        "ok"
+    );
+    let wt_int = root.join(".decapod/workspaces/interrupted-wt");
+    git(
+        root,
+        &[
+            "worktree",
+            "add",
+            "-q",
+            "-b",
+            &format!("agent/alpha/{task_int}-int"),
+            wt_int.to_str().unwrap(),
+            "master",
+        ],
+    );
+    let pre_status = cli(&wt_int, "alpha", &["workspace", "status"]);
+    assert_eq!(pre_status["workspace"]["can_work"], false, "{pre_status}");
+    assert!(
+        pre_status["workspace"]["blockers"]
+            .to_string()
+            .contains("AUTHORING_BINDING_REQUIRED"),
+        "{pre_status}"
+    );
+
+    let recovered = cli(&wt_int, "alpha", &["workspace", "ensure"]);
+    assert_eq!(recovered["can_work"], true, "{recovered}");
+    assert!(wt_int.join(".decapod/governance.json").is_file());
+
+    let renewed = cli(&wt_int, "alpha", &["todo", "renew", "--id", &task_int]);
+    assert_eq!(renewed["status"], "ok", "{renewed}");
+    let post_renew_status = cli(&wt_int, "alpha", &["workspace", "status"]);
+    assert_eq!(
+        post_renew_status["workspace"]["can_work"], true,
+        "CLI todo renew must advance authoring_bindings without breaking workspace status: {post_renew_status}"
+    );
+}

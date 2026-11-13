@@ -1,5 +1,20 @@
 # Architecture
 
+## Checkout custody and non-Git diagnostics (#1661)
+
+`core::authoring` enforces one live checkout per task lease transactionally with
+the existing task journal and workspace lifecycle events. Renew advances the
+binding generation; yield, release, reclaim, handoff, terminal status and prune
+retire it. `core::fleet_coord` treats `resource:<name>` as a resource reservation,
+not a repository path. Release and publication consume the corresponding gate.
+
+`workspace::get_workspace_status` remains fail closed for non-worktrees and
+unavailable custody evidence. `lib::run_validate_command_local` permits non-Git
+projects to execute only explicitly partial diagnostic scopes without workspace
+admission. A successful project check has no publication judgment. Full validation
+still requires a registered, governed candidate. Host custody remains cooperative
+and is not an OS sandbox against direct filesystem or Git access.
+
 ## Composed reflection continuation
 
 `core/mentor/reflection.rs` composes the existing mentor ADR detector, canonical
@@ -905,8 +920,8 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `a6e059f4f377dff525c0c4d75cf6bf53027bbe21837532452d334229f3a93914`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (232 files), `tests/` (232 files)
+- Repository signal fingerprint: `fbccc9cfb5bf2b38e6ef970f60ff59a1d618c570d9b96d317b9f5bd0c40da905`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (234 files), `tests/` (232 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 
@@ -1160,6 +1175,18 @@ The resolved native project also supplies the repository field of newly created 
 ## Versioned cloud mutation receipts
 
 The machine-private cloud todo receipt file uses a version-two envelope around its bounded records. Legacy flat arrays migrate under the existing stable file lock; array-only older clients cannot parse and rewrite the new envelope, so they cannot silently remove resolved-project bindings. This changes neither credential custody nor the server data protocol.
+
+## PR 1666: accepted v0.143.2 source integration
+
+`snapshot_provider::github_quota::GithubQuota` is shared by the existing Budget. Validated successful HTTP response hints pace cold GitHub locator discovery; known Buildkite envelopes retain their normal polling interval. The final binding and fresh-registry recheck remain authoritative after removal of a redundant earlier binding read.
+
+## PR1666 current-master integration
+
+The shared GithubQuota/Budget mechanism continues to pace only anonymous discovery, preserve final verification capacity, and honor bounded deadlines. Accepted custody and workunit runtime ownership changes remain in place; this integration adds no competing verifier or provider policy.
+
+## PR1663 integrated storage behavior
+
+The integrated `todo` module exports both accepted authoring/resource custody functions and component-aware journal verification. Keep initialized runtime ownership and task binding retirement alongside storage format guards, compact event reconstruction, content-addressed components and snapshot-consistent verification. The coordination kernel is the published0.144.1 source with only the previously scoped inert-placeholder repair; it does not contain or execute this proposed storage migration.
 
 ## PR 1662: accepted v0.143.2 source integration
 

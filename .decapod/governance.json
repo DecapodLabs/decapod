@@ -547,6 +547,14 @@
       "proof_refs": [
         "git:6f29dd43d5dea21ea3d442cb1270847e2b7e86bf"
       ]
+    },
+    {
+      "id": "pr1662-accepted-master-1442-integration-2",
+      "summary": "Resolve accepted-master integration preserving scoped maintenance and accepted storage/custody guards, reviewed0.144.2 inputs and release surfaces. No local tests or live candidate operations.",
+      "input_digest": "sha256:2862cf884c5aff051822f0c84cb9d144840e274b80aca405656c4f1ffdf917c7",
+      "proof_refs": [
+        "git:3afa9df97d9d15504b5f76021867182b78ba596d"
+      ]
     }
   ],
   "intents": {
@@ -587,23 +595,23 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Prepared original maintenance source is preserved for integration, with explicit accepted-policy admission, bounded maintenance and owner-repair obligations. Historical measurements remain historical; no local tests or live candidate datastore migration are performed. Hosted CI must independently establish the current result.",
-          "reviewed_code_fingerprint": "a6e059f4f377dff525c0c4d75cf6bf53027bbe21837532452d334229f3a93914",
-          "spec_material_hash": "a11f13f76063b3bc99190b95852b3760321087746e91e53ff0abba9401c4b987"
+          "reason": "Production changes auto-merged with accepted storage/custody guards. Canonical policy stays default-deny; owner repair, cloud denial and non-destructive lock custody remain enforced by the maintenance boundary. Official0.144.2 source inventory and release projections are current. Hosted CI must establish tests; no local tests or candidate live-store operations run.",
+          "reviewed_code_fingerprint": "fbccc9cfb5bf2b38e6ef970f60ff59a1d618c570d9b96d317b9f5bd0c40da905",
+          "spec_material_hash": "1fd0daadc96dd31eb16cf1ec6ff5bad5f893e903f487167ceb85b864812060c7"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Prepared original maintenance source is preserved for integration, with explicit accepted-policy admission, bounded maintenance and owner-repair obligations. Historical measurements remain historical; no local tests or live candidate datastore migration are performed. Hosted CI must independently establish the current result.",
-          "reviewed_code_fingerprint": "a6e059f4f377dff525c0c4d75cf6bf53027bbe21837532452d334229f3a93914",
-          "spec_material_hash": "74ed2903bb7b1a180bcb904d971caa8a847e8ae9ffad7c2c6ad1153aaafb5c5f"
+          "reason": "Production changes auto-merged with accepted storage/custody guards. Canonical policy stays default-deny; owner repair, cloud denial and non-destructive lock custody remain enforced by the maintenance boundary. Official0.144.2 source inventory and release projections are current. Hosted CI must establish tests; no local tests or candidate live-store operations run.",
+          "reviewed_code_fingerprint": "fbccc9cfb5bf2b38e6ef970f60ff59a1d618c570d9b96d317b9f5bd0c40da905",
+          "spec_material_hash": "a019febc805e23daa61f4e97014148bf6446b8ac5d0cc0fd77f26287c2db4039"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Prepared original maintenance source is preserved for integration, with explicit accepted-policy admission, bounded maintenance and owner-repair obligations. Historical measurements remain historical; no local tests or live candidate datastore migration are performed. Hosted CI must independently establish the current result.",
-          "reviewed_code_fingerprint": "a6e059f4f377dff525c0c4d75cf6bf53027bbe21837532452d334229f3a93914",
-          "spec_material_hash": "22279c86898c7d516686453127fc5f50faa9bd461756e3fee09a2dc4922a9fec"
+          "reason": "Production changes auto-merged with accepted storage/custody guards. Canonical policy stays default-deny; owner repair, cloud denial and non-destructive lock custody remain enforced by the maintenance boundary. Official0.144.2 source inventory and release projections are current. Hosted CI must establish tests; no local tests or candidate live-store operations run.",
+          "reviewed_code_fingerprint": "fbccc9cfb5bf2b38e6ef970f60ff59a1d618c570d9b96d317b9f5bd0c40da905",
+          "spec_material_hash": "550c8b7a75eddef6e649172aa6a8f8c160c7a8db659e782f9c6525794bcaa87d"
         }
       ],
       "state": "APPROVED",
@@ -614,14 +622,14 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1794601632Z"
+      "updated_at": "1794601965Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch",
         "Preserve original source and parents; no force-push, local tests, live candidate migrations or automatic merge."
       ],
-      "artifact_hash": "sha256:b723a1fbec9cc21fcc5126b362647aea198b839f7dcff9168d7291c29f228501",
+      "artifact_hash": "sha256:7887a9244b6a75a3f2db618c42c2fce62b8ef293330aac16477eabb6002735f2",
       "checks": [],
       "current_phase": "integration",
       "custody": {
@@ -644,10 +652,17 @@
             "intent_id": "intent:change_01M79W28WN1PPYPJZSQ1SBX1GX",
             "kind": "trajectory_step_recorded",
             "sequence": 4
+          },
+          {
+            "detail": "trajectory:branch_01M79W290WKBD0ZJ6QJAZ9SNB8",
+            "event_id": "event:5",
+            "intent_id": "intent:change_01M79W28WN1PPYPJZSQ1SBX1GX",
+            "kind": "trajectory_step_recorded",
+            "sequence": 5
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 4,
+        "next_sequence": 5,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M79W290WKBD0ZJ6QJAZ9SNB8": {
@@ -669,19 +684,43 @@
                 "validation_findings": [
                   "Historical source tests and benchmarks do not prove the new accepted-target integration."
                 ]
+              },
+              {
+                "action": "integration",
+                "command": "Merge accepted master; retain accepted storage/custody and maintenance dispatch; preserve accepted product specs and document maintenance obligations; refresh reviewed source and release bindings.",
+                "custody_event_id": "event:5",
+                "observations": [
+                  "src/decapod/core/db_maintenance.rs",
+                  "git:3afa9df97d9d15504b5f76021867182b78ba596d",
+                  "/private/tmp/decapod-pr1662-master1442-inventory.json"
+                ],
+                "proof_refs": [],
+                "scope": [
+                  "pr-1662-master-1432"
+                ],
+                "sequence": 5,
+                "validation_findings": [
+                  "Current hosted CI and production datastore compatibility remain unproven."
+                ]
               }
             ]
           }
         }
       },
-      "declared_commands": [],
+      "declared_commands": [
+        "Merge accepted master; retain accepted storage/custody and maintenance dispatch; preserve accepted product specs and document maintenance obligations; refresh reviewed source and release bindings."
+      ],
       "destination": "pull request",
       "evidence": [
+        "/private/tmp/decapod-pr1662-master1442-inventory.json",
+        "git:3afa9df97d9d15504b5f76021867182b78ba596d",
         "git:6f29dd43d5dea21ea3d442cb1270847e2b7e86bf"
       ],
       "inspected_files": [],
       "intent_id": "intent:change_01M79W28WN1PPYPJZSQ1SBX1GX",
-      "modified_files": [],
+      "modified_files": [
+        "src/decapod/core/db_maintenance.rs"
+      ],
       "next_transitions": [
         "Refine plan and declare falsifiable checks"
       ],
@@ -694,6 +733,7 @@
       "task_id": "bugs_01m79w147bj8bq1k",
       "tool_calls": [],
       "unresolved_assumptions": [
+        "Current hosted CI and production datastore compatibility remain unproven.",
         "Historical source tests and benchmarks do not prove the new accepted-target integration."
       ]
     }

@@ -1,5 +1,21 @@
 # Validation
 
+## PR1661 repair evidence contract
+
+The non-Git entrypoint regression must demonstrate successful prerequisite-only
+diagnostics, unavailable authoring custody, and rejected full publication
+validation for the same initialized project. Guided-path traversal is checked
+through `govern project-check`, which must return the actual configuration
+failure rather than an earlier workspace diagnostic. Existing transactional
+binding, full lease-lifecycle, shared-resource, cross-process recovery and
+combined-candidate tests remain required. Clippy must accept the real PathBuf
+returned by workspace ensure without a redundant conversion. Exact final source
+and current accepted master require a new full validation result; earlier PR
+statuses, source fixtures and project checks cannot establish that readiness.
+After a reviewed proof-source digest update, `rpc --op specs.refresh` must bind
+the manifest to the final config bytes. Standalone validation rejects a stale
+`config_input_hash` even when the underlying prerequisite checks pass.
+
 The required `tests/consumer_readiness.rs` regression carries a recorded
 Decapod intent through a real source-check failure, a committed source repair,
 native validation and an inspectable receipt. It verifies that failure issues
@@ -1325,8 +1341,8 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `a6e059f4f377dff525c0c4d75cf6bf53027bbe21837532452d334229f3a93914`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (232 files), `tests/` (232 files)
+- Repository signal fingerprint: `fbccc9cfb5bf2b38e6ef970f60ff59a1d618c570d9b96d317b9f5bd0c40da905`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (234 files), `tests/` (232 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 
@@ -1840,6 +1856,42 @@ from the `0.143.1` controller and updates `reviewed_sources_digest` to
 `sha256:50af27077a026878a187611c381226be611ae10f45bfec77fc205282258d3ccf`;
 full CI and `decapod validate` execution on the exact merged commit remain
 required before publication readiness.
+
+## PR 1666: accepted v0.143.2 source integration
+
+Run the current `github_quota` tests and the real automatic discovery pacing regression. Synthetic curl responses exercise transport/pacing behavior only. A current complete independent provider judgment remains required; prior project checks and pre-reset observations are not readiness.
+
+### v0.143.2 fresh-docs workunit fixture initialization
+
+`tests/support/fresh_docs_readiness.rs` initializes the workspace-local workunit runtime using the real `init --refresh --proof` CLI before declaring unverified completion. Root datastore initialization does not initialize this journal. The scenario still requires a clean unchanged candidate, rejects unverified completion and withholds readiness receipts; the production `WORKUNIT_RUNTIME_UNINITIALIZED` guard remains intact. The repair passed on the baseline Dactyl dependency before SDK-specific verification.
+
+## PR1666 current-master integration
+
+Current accepted source is master 9b900254; the source package version is 0.144.0. The release was compiling and assets were unavailable at setup. Use actual hosted CI results for this update, push each addressed root cause and do not run tests locally. Refresh official release-bound projections through supported tooling when that release becomes available; no cached earlier green result is treated as current proof.
+
+### Reviewed 0.144.0 build-input binding
+
+The accepted release changes the Decapod package version in Cargo.toml and Cargo.lock. Review the actual source inventory and bind its current digest without changing required checks, providers or toolchain requirements. Git symlink targets retain their accepted identity; no toolchain change is claimed from comparing a symlink blob with dereferenced contents. The original PR parent remains in the merge graph. No local tests are executed.
+
+### Official 0.144.0 projection drift repair
+
+The hosted standalone validator passed project prerequisites but rejected uncommitted release-bound regeneration: entrypoints and the managed Docker image/version still referenced0.143.2. The official installed0.144.0 kernel now regenerates those projections and their manifest through supported init/spec interfaces. Preserve the exact reviewed configuration and the drift gate; no local test execution or passing full-readiness receipt is claimed.
+
+### Bounded complete CLI contract execution
+
+Hosted Contract Conformance exhausted the300s aggregate while entering the schema-determinism case after16 completed cases in the22-case sequential suite; the matching push job passed. `tests/cli_contract_enforcement.rs` now uses a60s process-group deadline in its shared command helper, producing a command-specific failure instead of an unbounded child wait. The Bazel target uses the existing finite900s long class, retains exclusive isolation and executes all22 cases without removing assertions. The reviewed source-inventory update covers that explicit build-input budget change; required checks, providers and proof semantics are unchanged. No local tests are run.
+
+## PR1663 integrated storage behavior
+
+Current accepted target is5e23ad68 (0.144.1). Preserve all original regression sources and use hosted CI for the new integrated candidate; do not run local tests. The resolved source export conflict retains both custody/resource guards and the component-journal API. Source inventory, release projections and current-content reviews are refreshed without changing required provider policy or claiming independent full readiness.
+
+### Blank-title write-admission regression
+
+Hosted Gatling failed because its legacy EDGE-1 case expected an empty task title to be accepted. The storage contract rejects empty and whitespace-only new titles. The same existing real-CLI case now requires failure with the typed title-admission diagnostic and compares task identities/titles before and after each rejection, preserving the no-task-created invariant. Production admission is unchanged; historical read compatibility is not redefined. Current hosted execution must verify the repair; no local tests run.
+
+### Complete bounded todo-plugin execution
+
+Hosted plugin verification exhausted the300s moderate aggregate after more than30 completed cases in the40-case todo suite. That target now uses the finite900s long class and exclusive target scheduling, while its internal concurrent workers and all assertions remain intact. Its serial CLI helper keeps broker routing, uses a1s idle window and a120s child-process deadline with command diagnostics. Optional container behavior is preserved. The reviewed build-input binding records these execution-budget changes; no local tests or production latency assertions are removed.
 
 ## PR 1662: accepted v0.143.2 source integration
 

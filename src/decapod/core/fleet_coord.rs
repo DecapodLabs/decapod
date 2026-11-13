@@ -121,6 +121,12 @@ pub struct ClaimOverlap {
     /// Logical source overlap is advisory; only named mutable resources exclude.
     #[serde(default)]
     pub enforced: bool,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub predicate: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub resource: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub affected_operation: Option<String>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -543,9 +549,81 @@ pub fn declared_paths(scope: &str) -> Result<Option<Vec<String>>, String> {
     Ok(Some(paths))
 }
 
-/// Map explicit paths into the claim's repository location. Legacy/invalid
+/// Extract canonical `resource:<name>` reservations from a task scope.
+/// Empty or malformed `resource:` prefixes never invent a resource identifier.
+pub fn declared_resources(scope: &str) -> Vec<String> {
+    let mut resources = Vec::new();
+    for token in scope.split(',') {
+        let trimmed = token.trim();
+        let lower = trimmed.to_ascii_lowercase();
+        if let Some(name) = lower.strip_prefix("resource:") {
+            let name = name.trim();
+            if !name.is_empty()
+                && name.len() <= 256
+                && name
+                    .chars()
+                    .all(|c| c.is_ascii_alphanumeric() || matches!(c, ':' | '_' | '-' | '.' | '/'))
+            {
+                resources.push(format!("resource:{name}"));
+            }
+        }
+    }
+    resources.sort();
+    resources.dedup();
+    resources
+}
+
+/// True when the scope is exclusively a shared-resource reservation rather
+/// than a repository source footprint.
+pub fn is_resource_scope(scope: &str) -> bool {
+    let trimmed = scope.trim();
+    if trimmed.is_empty() {
+        return false;
+    }
+    let resources = declared_resources(trimmed);
+    !resources.is_empty()
+        && trimmed
+            .split(',')
+            .all(|token| !declared_resources(token).is_empty())
+}
+
+fn resource_tokens_conflict(left: &str, right: &str) -> Option<String> {
+    if left == right {
+        return Some(left.to_string());
+    }
+    if left == "resource:integration" && right.starts_with("resource:integration:") {
+        return Some(right.to_string());
+    }
+    if right == "resource:integration" && left.starts_with("resource:integration:") {
+        return Some(left.to_string());
+    }
+    None
+}
+
+/// Return the colliding canonical `resource:<name>` reservation, if any.
+pub fn matching_resource_reservation(a: &str, b: &str) -> Option<String> {
+    let left = declared_resources(a);
+    if left.is_empty() {
+        return None;
+    }
+    let right = declared_resources(b);
+    for l in &left {
+        for r in &right {
+            if let Some(matched) = resource_tokens_conflict(l, r) {
+                return Some(matched);
+            }
+        }
+    }
+    None
+}
+
+/// Map explicit paths into the claim's repository location. Shared-resource
+/// reservations do not claim repository source paths; legacy/invalid source
 /// declarations retain the conservative directory footprint.
 pub fn claim_paths(scope: &str, dir: &str) -> Vec<String> {
+    if is_resource_scope(scope) {
+        return Vec::new();
+    }
     match declared_paths(scope) {
         Ok(Some(paths)) => paths
             .into_iter()
@@ -573,6 +651,12 @@ pub fn scopes_overlap(a: &str, b: &str) -> bool {
         return false;
     }
     if a == "root" || b == "root" || a == "workspace" || b == "workspace" {
+        return false;
+    }
+    if matching_resource_reservation(a, b).is_some() {
+        return true;
+    }
+    if is_resource_scope(a) || is_resource_scope(b) {
         return false;
     }
     a.eq_ignore_ascii_case(b)
@@ -626,20 +710,33 @@ pub fn detect_overlaps(
                 surface: "category".to_string(),
                 expected: candidate_category.to_string(),
                 observed: claim.category.clone(),
+                predicate: Some("advisory_category_overlap".to_string()),
+                resource: None,
+                affected_operation: Some("integration_reconciliation".to_string()),
             });
         }
         if scopes_overlap(candidate_scope, &claim.scope) {
+            let resource = matching_resource_reservation(candidate_scope, &claim.scope);
+            let enforced = resource.is_some();
             out.push(ClaimOverlap {
                 task_id: claim.task_id.clone(),
                 agent_id: claim.agent_id.clone(),
-                enforced: candidate_scope
-                    .trim()
-                    .to_ascii_lowercase()
-                    .starts_with("resource:"),
+                enforced,
                 reason: "scope_overlap".to_string(),
                 surface: "scope".to_string(),
                 expected: candidate_scope.to_string(),
                 observed: claim.scope.clone(),
+                predicate: Some(if enforced {
+                    "resource_reservation".to_string()
+                } else {
+                    "advisory_scope_overlap".to_string()
+                }),
+                resource,
+                affected_operation: Some(if enforced {
+                    "shared_resource_mutation".to_string()
+                } else {
+                    "integration_reconciliation".to_string()
+                }),
             });
         }
         let candidate_paths = claim_paths(candidate_scope, candidate_dir);
@@ -661,6 +758,9 @@ pub fn detect_overlaps(
                 surface: "dir_path".to_string(),
                 expected: candidate_dir.to_string(),
                 observed: claim.dir_path.clone(),
+                predicate: Some("advisory_path_overlap".to_string()),
+                resource: None,
+                affected_operation: Some("integration_reconciliation".to_string()),
             });
         }
     }
@@ -706,21 +806,33 @@ pub fn detect_fleet_overlaps(active: &[ActiveClaimView], now_ts: &str) -> Vec<Cl
                     surface: "category".to_string(),
                     expected: left.category.clone(),
                     observed: right.category.clone(),
+                    predicate: Some("advisory_category_overlap".to_string()),
+                    resource: None,
+                    affected_operation: Some("integration_reconciliation".to_string()),
                 });
             }
             if scopes_overlap(&left.scope, &right.scope) {
+                let resource = matching_resource_reservation(&left.scope, &right.scope);
+                let enforced = resource.is_some();
                 out.push(ClaimOverlap {
                     task_id: right.task_id.clone(),
                     agent_id: right.agent_id.clone(),
-                    enforced: left
-                        .scope
-                        .trim()
-                        .to_ascii_lowercase()
-                        .starts_with("resource:"),
+                    enforced,
                     reason: "scope_overlap".to_string(),
                     surface: "scope".to_string(),
                     expected: left.scope.clone(),
                     observed: right.scope.clone(),
+                    predicate: Some(if enforced {
+                        "resource_reservation".to_string()
+                    } else {
+                        "advisory_scope_overlap".to_string()
+                    }),
+                    resource,
+                    affected_operation: Some(if enforced {
+                        "shared_resource_mutation".to_string()
+                    } else {
+                        "integration_reconciliation".to_string()
+                    }),
                 });
             }
             if claim_paths(&left.scope, &left.dir_path).iter().any(|a| {
@@ -740,6 +852,9 @@ pub fn detect_fleet_overlaps(active: &[ActiveClaimView], now_ts: &str) -> Vec<Cl
                     surface: "dir_path".to_string(),
                     expected: left.dir_path.clone(),
                     observed: right.dir_path.clone(),
+                    predicate: Some("advisory_path_overlap".to_string()),
+                    resource: None,
+                    affected_operation: Some("integration_reconciliation".to_string()),
                 });
             }
         }

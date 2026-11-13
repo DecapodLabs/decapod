@@ -1020,3 +1020,131 @@ fn other_event_is_authenticated_before_filtering_and_duplicate_push_still_reject
         );
     }
 }
+
+#[test]
+fn buildkite_wait_drops_duplicate_binding_check_and_paces_only_anonymous_github_polls() {
+    struct QuotaMetadata {
+        inner: CountMetadata,
+        rate_header: Option<Vec<u8>>,
+    }
+    impl Runner for QuotaMetadata {
+        fn execute(&mut self, spec: &CommandSpec, budget: &Budget<'_>) -> Result<Reply> {
+            let reply = self.inner.execute(spec, budget)?;
+            if spec.provider_request().is_some()
+                && let Some(header) = &self.rate_header
+            {
+                budget.observe_public_github_quota(header)?;
+            }
+            Ok(reply)
+        }
+    }
+
+    struct FlippingBk {
+        inner: Bk,
+        promote_after_calls: usize,
+    }
+    impl buildkite::PublicReader for FlippingBk {
+        fn get(
+            &mut self,
+            request: &buildkite::PublicRequest,
+            budget: &Budget<'_>,
+        ) -> Result<Vec<u8>> {
+            if self.inner.calls >= self.promote_after_calls {
+                self.inner.envelopes.get_mut(&7).unwrap()["state"] = json!("passed");
+            }
+            self.inner.get(request, budget)
+        }
+    }
+
+    let future_tight_quota =
+        b"HTTP/2 200\r\nX-RateLimit-Remaining: 4\r\nX-RateLimit-Reset: 4102444800\r\n\r\n{}"
+            .to_vec();
+    let plan = buildkite_only_plan();
+
+    // 1. Cold partial discovery uses the anonymous GitHub reader and paces against half-allowance.
+    let cancel = Cancellation::default();
+    let tight_budget = Budget::new(Duration::from_millis(25), 4096, &cancel).unwrap();
+    let mut partial_gh = QuotaMetadata {
+        inner: CountMetadata::default(),
+        rate_header: Some(future_tight_quota.clone()),
+    };
+    partial_gh.inner.inner.urls.pop();
+    let mut partial_bk = Bk::default();
+    let err = wait_for_source_runs(
+        &mut partial_gh,
+        &mut partial_bk,
+        &snapshot(),
+        &plan,
+        Duration::from_secs(1),
+        &tight_budget,
+    )
+    .unwrap_err();
+    assert_eq!(err.kind(), io::ErrorKind::TimedOut);
+    assert!(
+        err.to_string().contains("rate_limit_reset_unix=4102444800"),
+        "expected quota-paced cold discovery wait, got: {err}"
+    );
+
+    // 2. Once initial discovery binds every required Buildkite workflow (even with a tight
+    //    future reset header recorded during discovery), subsequent bound Buildkite envelope
+    //    polls issue zero anonymous GitHub reads and return immediately on their ordinary interval.
+    let cancel = Cancellation::default();
+    let bound_poll_budget = Budget::new(Duration::from_millis(200), 4096, &cancel).unwrap();
+    let mut bound_gh = QuotaMetadata {
+        inner: CountMetadata::default(),
+        rate_header: Some(future_tight_quota),
+    };
+    let mut bound_bk = Bk::default();
+    bound_bk.envelopes.get_mut(&7).unwrap()["state"] = json!("running");
+    let mut state = PollState::default();
+    assert!(
+        !poll(
+            &mut bound_gh,
+            &mut bound_bk,
+            &snapshot(),
+            &plan,
+            &mut state,
+            &bound_poll_budget,
+        )
+        .unwrap()
+    );
+    assert_eq!(bound_gh.inner.paths.len(), 2);
+    let requests_before = bound_poll_budget.public_github_requests().unwrap();
+    assert!(
+        !poll(
+            &mut bound_gh,
+            &mut bound_bk,
+            &snapshot(),
+            &plan,
+            &mut state,
+            &bound_poll_budget,
+        )
+        .unwrap()
+    );
+    assert_eq!(bound_gh.inner.paths.len(), 2);
+    bound_poll_budget
+        .wait_for_public_github_poll(requests_before, Duration::from_millis(1))
+        .unwrap();
+
+    // 3. Full wait_for_source_runs across bound Buildkite polling performs 10 total GitHub GETs:
+    //    3 initial verify_remote_binding + 2 initial locator + 0 across bound polls + 2 recheck locator + 3 recheck verify_remote_binding.
+    let cancel = Cancellation::default();
+    let wait_budget = Budget::new(Duration::from_secs(5), 4096, &cancel).unwrap();
+    let mut gh = CountMetadata::default();
+    let mut bk = FlippingBk {
+        inner: Bk::default(),
+        promote_after_calls: 2,
+    };
+    bk.inner.envelopes.get_mut(&7).unwrap()["state"] = json!("running");
+    let terminal = wait_for_source_runs(
+        &mut gh,
+        &mut bk,
+        &snapshot(),
+        &plan,
+        Duration::from_secs(1),
+        &wait_budget,
+    )
+    .unwrap();
+    assert_eq!(terminal.buildkite.len(), 2);
+    assert_eq!(gh.paths.len(), 10);
+}

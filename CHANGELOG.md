@@ -7,6 +7,210 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.144.2](https://github.com/DecapodLabs/decapod/compare/v0.144.1...v0.144.2) - 2026-11-13
+
+### Added
+
+- *(verify)* enforce proof-plan and artifact write contracts ([#1630](https://github.com/DecapodLabs/decapod/pull/1630))
+- *(aptitude)* enforce UTF-8 byte, NUL, and tag bounds on aptitude writes ([#1630](https://github.com/DecapodLabs/decapod/pull/1630))
+- *(storage)* report format version and deduplicated component store metrics in inventory ([#1630](https://github.com/DecapodLabs/decapod/pull/1630))
+- *(todo)* enforce write contracts, format version guard, and v2 journal integration ([#1630](https://github.com/DecapodLabs/decapod/pull/1630))
+- *(migration)* register migration 1200 compact lossless storage upgrade ([#1630](https://github.com/DecapodLabs/decapod/pull/1630))
+- *(storage)* implement v2 compaction migration, format guard, reference GC, and explicit vacuum ([#1630](https://github.com/DecapodLabs/decapod/pull/1630))
+- *(transfer)* bundle and verify externalized storage components across task transfers ([#1630](https://github.com/DecapodLabs/decapod/pull/1630))
+- *(journal)* add v2 component deduplication and snapshot-consistent keyset verify ([#1630](https://github.com/DecapodLabs/decapod/pull/1630))
+- *(validate)* reconstruct compact knowledge event envelopes ([#1630](https://github.com/DecapodLabs/decapod/pull/1630))
+- *(trace)* reconstruct compact event envelopes in get_last_traces ([#1630](https://github.com/DecapodLabs/decapod/pull/1630))
+- *(workspace)* reconstruct compact event envelopes in ownership lookup ([#1630](https://github.com/DecapodLabs/decapod/pull/1630))
+- *(lcm)* reconstruct compact event envelopes when reading LCM ledger ([#1630](https://github.com/DecapodLabs/decapod/pull/1630))
+- *(events)* compact non-federation event envelopes with lossless reconstruction ([#1630](https://github.com/DecapodLabs/decapod/pull/1630))
+- *(storage)* add compact component store and migration manifest DDL ([#1630](https://github.com/DecapodLabs/decapod/pull/1630))
+- *(storage)* export storage_contracts module in core ([#1630](https://github.com/DecapodLabs/decapod/pull/1630))
+- *(storage)* add versioned field, collection, and authority contracts ([#1630](https://github.com/DecapodLabs/decapod/pull/1630))
+
+### Fixed
+
+- *(ci)* bound complete todo plugin verification
+- *(storage)* preserve PR1663 for current-master integration
+- *(knowledge)* reconstruct compact promotion event envelopes
+- *(map)* reconstruct compact event envelopes via events::query
+- *(workspace)* factor LifecycleEventRow alias for clippy::type_complexity ([#1630](https://github.com/DecapodLabs/decapod/pull/1630))
+- *(todo)* factor LifecycleEventRow alias for clippy::type_complexity ([#1630](https://github.com/DecapodLabs/decapod/pull/1630))
+- *(journal)* factor ExternalizedProjection alias for clippy::type_complexity ([#1630](https://github.com/DecapodLabs/decapod/pull/1630))
+- *(storage)* allow clippy::too_many_arguments on validate_event_append ([#1630](https://github.com/DecapodLabs/decapod/pull/1630))
+
+### Other
+
+- *(storage)* enforce blank-title admission in Gatling
+- resolve PR1663 conflicts and preserve original history
+- integrate PR1663 with current Decapod master
+- *(governance)* bind v0.143.1 project-check receipt
+- *(merge)* reconcile accepted master ([#1665](https://github.com/DecapodLabs/decapod/pull/1665)) into #1630
+- *(specs)* cover map_ops and knowledge envelope reconstruction
+- *(map)* assert compact map event envelope metadata round-trip
+- *(broker)* read broker audit events via query_all_on_conn
+- *(governance)* record v0.143.1 trajectory and project-check receipt ([#1630](https://github.com/DecapodLabs/decapod/pull/1630))
+- *(specs)* refresh .manifest.json and record v0.143.1 spec reviews ([#1630](https://github.com/DecapodLabs/decapod/pull/1630))
+- *(specs)* refresh README.md attestation for Decapod v0.143.1
+- *(specs)* refresh SEMANTICS.md attestation for Decapod v0.143.1
+- *(specs)* refresh OPERATIONS.md attestation for Decapod v0.143.1
+- *(specs)* refresh VALIDATION.md attestation for Decapod v0.143.1
+- *(specs)* refresh SECURITY.md attestation for Decapod v0.143.1
+- *(specs)* refresh INTERFACES.md attestation for Decapod v0.143.1
+- *(specs)* refresh ARCHITECTURE.md attestation for Decapod v0.143.1
+- *(specs)* refresh INTENT.md attestation for Decapod v0.143.1
+- *(release)* refresh Dockerfile.decapod for Decapod v0.143.1
+- *(release)* refresh GEMINI.md for Decapod v0.143.1
+- *(release)* refresh CODEX.md for Decapod v0.143.1
+- *(release)* refresh CLAUDE.md for Decapod v0.143.1
+- *(release)* refresh AGENTS.md for Decapod v0.143.1
+- *(storage)* factor EventRowToExpand alias for clippy::type_complexity ([#1630](https://github.com/DecapodLabs/decapod/pull/1630))
+- *(storage)* align logical_contract_v1.json release with v0.143.1 ([#1630](https://github.com/DecapodLabs/decapod/pull/1630))
+- *(merge)* reconcile accepted master (#1655, v0.143.1) into #1630
+- *(governance)* record project-check validation receipt ([#1630](https://github.com/DecapodLabs/decapod/pull/1630))
+- *(specs)* refresh .manifest.json and record #1630 spec reviews ([#1630](https://github.com/DecapodLabs/decapod/pull/1630))
+- *(specs)* refresh specs README.md attestation for v0.143.0
+- *(specs)* update SEMANTICS.md for lossless historical reads and authority convergence ([#1630](https://github.com/DecapodLabs/decapod/pull/1630))
+- *(specs)* update OPERATIONS.md for migration 1200, reference GC, and explicit vacuum ([#1630](https://github.com/DecapodLabs/decapod/pull/1630))
+- *(specs)* update VALIDATION.md for #1630 compaction proofs and measured growth ([#1630](https://github.com/DecapodLabs/decapod/pull/1630))
+- *(specs)* update SECURITY.md for fail-closed UTF-8/NUL/JSON admission and tamper checks ([#1630](https://github.com/DecapodLabs/decapod/pull/1630))
+- *(specs)* update INTERFACES.md for write contracts, paged verify, and format v2 ([#1630](https://github.com/DecapodLabs/decapod/pull/1630))
+- *(specs)* update ARCHITECTURE.md for v2 component store and compact envelopes ([#1630](https://github.com/DecapodLabs/decapod/pull/1630))
+- *(specs)* update INTENT.md for bounded lossless compact storage ([#1630](https://github.com/DecapodLabs/decapod/pull/1630))
+- *(transfer)* verify externalized component bundle round-trip and tamper rejection ([#1630](https://github.com/DecapodLabs/decapod/pull/1630))
+- *(journal)* verify v2 component deduplication and >10K keyset paged verify ([#1630](https://github.com/DecapodLabs/decapod/pull/1630))
+- *(todo)* verify fail-closed task write bounds and v2 task journal integration ([#1630](https://github.com/DecapodLabs/decapod/pull/1630))
+- *(cli)* verify storage inventory v2 format and component store attribution ([#1630](https://github.com/DecapodLabs/decapod/pull/1630))
+- *(storage)* update storage inventory test fixtures for JSON path scopes ([#1630](https://github.com/DecapodLabs/decapod/pull/1630))
+- *(storage)* verify migration 1200 SHA-256 parity, downgrade guard, GC, and vacuum ([#1630](https://github.com/DecapodLabs/decapod/pull/1630))
+- *(storage)* verify >=30% lossless v2 compaction savings and benchmark harness ([#1630](https://github.com/DecapodLabs/decapod/pull/1630))
+- *(storage)* verify write-admission bounds, lossless oversized patch, and convergence ([#1630](https://github.com/DecapodLabs/decapod/pull/1630))
+- *(storage)* document format v2 metadata and component store attribution ([#1630](https://github.com/DecapodLabs/decapod/pull/1630))
+- *(storage)* update datastore-v2 measured growth and compaction results ([#1630](https://github.com/DecapodLabs/decapod/pull/1630))
+- *(storage)* record reproducible 1K-100K checkpoint compaction and contention benchmarks ([#1630](https://github.com/DecapodLabs/decapod/pull/1630))
+- *(storage)* publish logical_contract_v1 field, collection, and component contracts ([#1630](https://github.com/DecapodLabs/decapod/pull/1630))
+- *(container)* refresh Dockerfile.decapod pin to v0.143.0
+- *(entrypoints)* refresh GEMINI.md for Decapod v0.143.0
+- *(entrypoints)* refresh CODEX.md for Decapod v0.143.0
+- *(entrypoints)* refresh CLAUDE.md for Decapod v0.143.0
+- *(entrypoints)* refresh AGENTS.md for Decapod v0.143.0
+
+## [0.144.1](https://github.com/DecapodLabs/decapod/compare/v0.144.0...v0.144.1) - 2026-11-13
+
+### Fixed
+
+- *(ci)* bound complete CLI contract execution
+- *(ci)* refresh Decapod 0.144.0 release surfaces
+- integrate PR1666 with accepted Decapod v0.143.2
+- *(snapshot_provider)* preserve shared GitHub quota state on custody budgets
+- *(snapshot_provider)* preserve shared GitHub quota state on archive capture budgets
+- *(snapshot_provider)* pace only anonymous GitHub polls and drop duplicate remote binding check
+- *(snapshot_provider)* wire anonymous GitHub quota tracking into Budget and PublicGithubReads
+- *(snapshot_provider)* add bounded anonymous GitHub quota pacing ([#1573](https://github.com/DecapodLabs/decapod/pull/1573))
+
+### Other
+
+- resolve PR1666 conflicts and preserve original history
+- update PR1666 onto current master
+- *(governance)* bind v0.143.1 validation epoch receipt for #1573
+- *(specs)* refresh v0.143.1 specs manifest for #1573
+- *(specs)* refresh SEMANTICS.md codebase attestation
+- *(specs)* refresh specs README.md codebase attestation
+- *(specs)* refresh INTERFACES.md codebase attestation
+- *(specs)* refresh INTENT.md codebase attestation
+- *(specs)* document anonymous GitHub quota pacing regressions in VALIDATION.md
+- *(specs)* document bounded rate-limit hint parsing invariants in SECURITY.md
+- *(specs)* document public GitHub quota pacing for Buildkite waits in OPERATIONS.md
+- *(specs)* document advisory anonymous GitHub reader pacing in ARCHITECTURE.md
+- *(container)* refresh managed Dockerfile pin to Decapod v0.143.1
+- *(entrypoints)* refresh GEMINI.md for Decapod v0.143.1
+- *(entrypoints)* refresh CODEX.md for Decapod v0.143.1
+- *(entrypoints)* refresh CLAUDE.md for Decapod v0.143.1
+- *(entrypoints)* refresh AGENTS.md for Decapod v0.143.1
+- *(config)* update reviewed_sources_digest for v0.143.1 and github_quota.rs
+- *(snapshot_provider)* initialize github_quota in Buildkite timeout budget fixture
+- *(snapshot_provider)* initialize github_quota in custody budget fixtures
+- *(snapshot_provider)* initialize github_quota in collection budget fixtures
+- *(snapshot_provider)* cover cold discovery quota pacing and 10-GET bound Buildkite wait
+
+## [0.144.0](https://github.com/DecapodLabs/decapod/compare/v0.143.2...v0.144.0) - 2026-11-13
+
+### Fixed
+
+- *(ci)* refresh PR1669 accepted-base event binding
+- integrate PR1669 with accepted custody changes
+- integrate PR1661 with accepted Decapod v0.143.2
+- *(workunit)* resolve main runtime datastore in linked worktrees
+- *(validate)* scope protected_paths rule to path and diff checks
+- *(custody)* retain strict admission with partial non-git diagnostics
+- *(workspace)* preserve non-git init validation outside managed workspaces
+- *(specs)* bind PR1661 manifest to final validation config
+- *(custody)* restore scoped diagnostics on accepted 0.143.1 master
+- *(tests)* remove redundant PathBuf::from in plugins_todo_tests
+- *(release)* gate lineage-sync on resource:release reservation availability
+- *(todo)* enforce unique task binding index and retire bindings across lease transitions
+- *(workspace)* enforce fail-closed status, prune release, and publish resource gate
+- *(authoring)* enforce 1-to-1 checkout bindings, lifecycle retirement, and resource gates
+- *(fleet-coord)* isolate resource:<name> reservations from path overlaps
+- *(policy)* map workspace.authoring actions to dedicated risk zone
+
+### Other
+
+- resolve PR1669 conflicts with current master
+- *(governance)* bind validation receipt for PR #1669 CI fixes
+- *(specs)* refresh VALIDATION.md codebase attestation
+- *(specs)* refresh SEMANTICS.md codebase attestation
+- *(specs)* refresh SECURITY.md codebase attestation
+- *(specs)* refresh README.md codebase attestation
+- *(specs)* refresh OPERATIONS.md codebase attestation
+- *(specs)* refresh INTERFACES.md codebase attestation
+- *(specs)* refresh INTENT.md codebase attestation
+- *(specs)* refresh specs manifest for workunit fix
+- *(specs)* document linked-worktree workunit runtime resolution
+- *(workunit)* verify linked worktree runtime resolution
+- *(validate)* align protected_paths test with InitPlanInput
+- *(governance)* bind todo custody on plan and validation receipt
+- *(governance)* bind v0.143.2 validation receipt
+- *(specs)* refresh v0.143.2 specs manifest
+- *(specs)* refresh SEMANTICS.md codebase attestation
+- *(specs)* refresh specs README.md codebase attestation
+- *(specs)* refresh OPERATIONS.md codebase attestation
+- *(specs)* refresh INTERFACES.md codebase attestation
+- *(specs)* refresh INTENT.md codebase attestation
+- *(specs)* refresh ARCHITECTURE.md codebase attestation
+- *(specs)* document protected_paths regression in VALIDATION.md
+- *(specs)* document protected_paths rule scope in SECURITY.md
+- *(container)* refresh managed Dockerfile pin to v0.143.2
+- *(entrypoints)* refresh GEMINI.md for Decapod v0.143.2
+- *(entrypoints)* refresh CODEX.md for Decapod v0.143.2
+- *(entrypoints)* refresh CLAUDE.md for Decapod v0.143.2
+- *(entrypoints)* refresh AGENTS.md for Decapod v0.143.2
+- *(specs)* refresh spec attestations and manifest for #1469
+- *(merge)* retain concurrent PR1661 update
+- *(merge)* preserve PR1661 history on accepted master
+- *(merge)* reconcile accepted master v0.143.1 into #1469
+- *(specs)* refresh .manifest.json and record spec reviews ([#1469](https://github.com/DecapodLabs/decapod/pull/1469))
+- *(specs)* refresh SEMANTICS.md attestation for v0.143.0
+- *(specs)* refresh specs README.md attestation for v0.143.0
+- *(specs)* refresh OPERATIONS.md attestation for v0.143.0
+- *(specs)* update VALIDATION.md for #1469 concurrency and combined-candidate proofs
+- *(specs)* update SECURITY.md for fail-closed authoring and resource boundaries ([#1469](https://github.com/DecapodLabs/decapod/pull/1469))
+- *(specs)* update INTERFACES.md for authoring bindings and resource:<name> gates ([#1469](https://github.com/DecapodLabs/decapod/pull/1469))
+- *(specs)* update ARCHITECTURE.md for 1-to-1 bindings and resource gates ([#1469](https://github.com/DecapodLabs/decapod/pull/1469))
+- *(specs)* update INTENT.md for concurrent worktree custody ([#1469](https://github.com/DecapodLabs/decapod/pull/1469))
+- *(readiness)* verify combined-candidate validation across concurrent worktrees
+- *(bootstrap)* verify cross-process checkout contention and interrupted ensure recovery
+- *(todo)* verify authoring rollback, 1-to-1 uniqueness, retirement, and resource gates
+- *(fleet-coord)* verify resource:<name> overlap predicates and path isolation
+- *(architecture)* document 1-to-1 worktree custody and resource gates
+- *(contracts)* regenerate command-contracts.md for issue #1469
+- *(cli)* document 1-to-1 worktree bindings and resource:<name> reservation gates
+- *(container)* refresh Dockerfile.decapod pin to v0.143.0
+- *(entrypoints)* refresh GEMINI.md for Decapod v0.143.0
+- *(entrypoints)* refresh CODEX.md for Decapod v0.143.0
+- *(entrypoints)* refresh CLAUDE.md for Decapod v0.143.0
+- *(entrypoints)* refresh AGENTS.md for Decapod v0.143.0
+
 ## [0.143.2](https://github.com/DecapodLabs/decapod/compare/v0.143.1...v0.143.2) - 2026-11-13
 
 ### Fixed
