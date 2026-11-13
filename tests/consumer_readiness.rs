@@ -463,6 +463,67 @@ fn candidate_repinning_cannot_replace_an_accepted_required_local_check() {
 }
 
 #[test]
+fn candidate_cannot_repin_a_rewritten_accepted_check_script() {
+    let mut fixture = Fixture::new();
+    git(&fixture.options.root, &["push", "origin", "HEAD:main"]);
+    git(&fixture.options.root, &["fetch", "origin", "main"]);
+    fs::write(fixture.options.root.join("payload.txt"), "invalid source\n").unwrap();
+    fs::write(
+        fixture.options.root.join("scripts/check_source.py"),
+        "print('claimed success without inspecting the invalid source')\n",
+    )
+    .unwrap();
+    fixture
+        .proof
+        .required_profile
+        .as_mut()
+        .unwrap()
+        .reviewed_sources_digest =
+        runtime::discover_source_inventory(&fixture.options, &Cancellation::default())
+            .unwrap()
+            .digest()
+            .unwrap();
+    fixture.save_config();
+    fixture.commit("repin rewritten accepted check with unchanged command");
+    let mut host = fixture.host();
+    blocked(
+        &fixture.validate(&mut host),
+        "ACCEPTED_REPOSITORY_CONTRACT_CHANGED",
+    );
+    assert_eq!(host.selections, 0);
+    assert_eq!(host.execution_attempts, 0);
+}
+
+#[test]
+fn local_source_policy_can_change_after_separate_target_acceptance() {
+    let mut fixture = Fixture::new();
+    git(&fixture.options.root, &["push", "origin", "HEAD:main"]);
+    git(&fixture.options.root, &["fetch", "origin", "main"]);
+    let script = fixture.options.root.join("scripts/check_source.py");
+    let original = fs::read_to_string(&script).unwrap();
+    fs::write(script, format!("# Reviewed target policy revision\n{original}")).unwrap();
+    fixture
+        .proof
+        .required_profile
+        .as_mut()
+        .unwrap()
+        .reviewed_sources_digest =
+        runtime::discover_source_inventory(&fixture.options, &Cancellation::default())
+            .unwrap()
+            .digest()
+            .unwrap();
+    fixture.save_config();
+    fixture.commit("separately accept the changed source verification policy");
+    git(&fixture.options.root, &["push", "origin", "HEAD:main"]);
+    git(&fixture.options.root, &["fetch", "origin", "main"]);
+    let mut host = fixture.host();
+    let report = fixture.validate(&mut host);
+    assert!(report.ready, "{report:?}");
+    assert_eq!(report.scope, repository_profile::READINESS_SCOPE);
+    assert_eq!(host.execution_attempts, 1);
+}
+
+#[test]
 fn repinned_local_policy_removal_execution_and_coverage_changes_fail_before_selection() {
     for change in [
         "remove",
