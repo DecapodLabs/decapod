@@ -1500,3 +1500,13 @@ Existing `data database` maintenance/capability/lock/audit CLI and RPC operation
 ## PR1662 current-master preparation
 
 Preserve symmetric data.database CLI/RPC capability discovery, diagnostics, bounded maintenance and audit interfaces. Policy admission must happen before startup migrations for maintenance commands; raw SQL, destructive replacement and arbitrary destinations remain outside the delegated contract.
+
+## Maintenance proof scope (#1568)
+
+The supported `data database` / `data db maintain` CLI and `data.database.*` RPC
+contracts are unchanged. Required cases exercise default denial, canonical local
+opt-in, worktree self-elevation rejection, policy revocation, scoped capabilities,
+backup restrictions, unsupported destructive operations and concurrent retry.
+Two deterministic workers exercise actual claims/workspaces and custody; this is
+not a demonstration of two native LLM agent integrations. Existing operator
+recovery fixtures remain diagnostic and do not grant agent recovery authority.
