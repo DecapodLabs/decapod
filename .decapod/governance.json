@@ -575,6 +575,14 @@
       "proof_refs": [
         "assets/tools/build_lifecycle_tests.rs"
       ]
+    },
+    {
+      "id": "review-build-lifecycle-sources-digest",
+      "summary": "Update reviewed_sources_digest for build_lifecycle and build_lifecycle_tests",
+      "input_digest": "sha256:8ac5651da6b216e081ae2bba0ee3e71898b873eed3a88e49c2a34c5a6de00d1e",
+      "proof_refs": [
+        ".decapod/config.toml"
+      ]
     }
   ],
   "intents": {
@@ -630,7 +638,7 @@
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:a78f705d321993c0468d0215573aa45fb65d354085dfbd51eaa4354a88c3c9c9",
+      "artifact_hash": "sha256:f335eb59ad1ea5ae8ea71402f69ad776c8191ee8e16d81083c8afcf3cbe58d1c",
       "checks": [],
       "current_phase": "execution",
       "custody": {
@@ -667,10 +675,17 @@
             "intent_id": "intent:change_01M79A0G0YSR12S2RHJE84QPHR",
             "kind": "trajectory_step_recorded",
             "sequence": 6
+          },
+          {
+            "detail": "trajectory:branch_01M79A0G5E35FVE2EYNYQVQ3XY",
+            "event_id": "event:7",
+            "intent_id": "intent:change_01M79A0G0YSR12S2RHJE84QPHR",
+            "kind": "trajectory_step_recorded",
+            "sequence": 7
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 6,
+        "next_sequence": 7,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M79A0G5E35FVE2EYNYQVQ3XY": {
@@ -725,6 +740,22 @@
                 ],
                 "sequence": 6,
                 "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:7",
+                "observations": [
+                  ".decapod/config.toml"
+                ],
+                "proof_refs": [],
+                "scope": [
+                  "\".decapod/config.toml\"",
+                  "\".decapod/managed/specs\"]",
+                  "\"assets/tools/build_lifecycle_tests.rs\"",
+                  "paths:[\"assets/tools/build_lifecycle.rs\""
+                ],
+                "sequence": 7,
+                "validation_findings": []
               }
             ]
           }
@@ -760,6 +791,7 @@
         }
       ],
       "modified_files": [
+        ".decapod/config.toml",
         "assets/tools/build_lifecycle.rs",
         "assets/tools/build_lifecycle_tests.rs"
       ],
