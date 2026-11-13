@@ -702,6 +702,11 @@
       "id": "specs-manifest-and-reviews-v0143",
       "summary": "Refresh .manifest.json and record current-content spec reviews for INTERFACES.md, ARCHITECTURE.md, and SECURITY.md",
       "input_digest": "sha256:92ff2f446ff72289720db1368edbce3292d5767e521ae6c63d3411130d439dca"
+    },
+    {
+      "id": "fix-clippy-useless-pathbuf-conversion",
+      "summary": "Remove redundant PathBuf::from conversion in tests/plugins/todo.rs",
+      "input_digest": "sha256:94343ec8ae8ba5a0f368ecd783b33bde47722c1c3b974e2e17bf574bc1dd0c29"
     }
   ],
   "intents": {

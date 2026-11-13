@@ -2876,7 +2876,7 @@ fn authoring_binding_one_to_one_uniqueness_renew_and_full_lifecycle_retirement()
         "alpha",
     )
     .unwrap();
-    let wt_prune = PathBuf::from(ensured_prune.git.worktree_path.unwrap());
+    let wt_prune = ensured_prune.git.worktree_path.unwrap();
     decapod::core::todo::release_task_as_actor(&prune_store, &prune_task, "alpha").unwrap();
     let prune_snap = get_task(&prune_store, &prune_task).unwrap().unwrap();
     update_status(
