@@ -924,6 +924,11 @@
       "id": "cp-1630-arch-spec-readers",
       "summary": "docs(specs): cover map_ops and knowledge envelope reconstruction",
       "input_digest": "sha256:f33409e71fcef865bb986ad9a8d92b8554c129de0c830216cd6f70bcdac4bd40"
+    },
+    {
+      "id": "cp-1630-merge-master-1665",
+      "summary": "chore(merge): reconcile accepted master (#1665) into #1630",
+      "input_digest": "sha256:408715e854b82c5f3fef3f7c3ab409375509af960fd2c05b81f05a6a3ae2e363"
     }
   ],
   "intents": {
@@ -1014,23 +1019,23 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Refreshed Living Spec attestations and verified #1630 compact storage v2 prose on Decapod v0.143.1.",
-          "reviewed_code_fingerprint": "dfbc13afe4a3a5ab9e821b9954cb57ac109b071ffe7ff9ee50a7d94448409fa8",
-          "spec_material_hash": "c383fac21cb9d2b931ee49a664f7ae2afa3dcfcd5265f3ea08a21459edff0ea9"
+          "reason": "Updated compact event envelope reconstruction coverage for map_ops and knowledge alongside merged #1665",
+          "reviewed_code_fingerprint": "ff3e2a496d831a45a823998fc00ca08b811fc3ac3ef320f95ad6835e48c1a9f6",
+          "spec_material_hash": "12686e34f1001eee891f30c0000b4ef621f393faa596ad440427e75955011fd6"
         },
         {
-          "disposition": "updated",
+          "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Refreshed Living Spec attestations and verified #1630 compact storage v2 prose on Decapod v0.143.1.",
-          "reviewed_code_fingerprint": "dfbc13afe4a3a5ab9e821b9954cb57ac109b071ffe7ff9ee50a7d94448409fa8",
+          "reason": "Refreshed attestation after reconciling accepted master (#1665) and compact-envelope reader fixes",
+          "reviewed_code_fingerprint": "ff3e2a496d831a45a823998fc00ca08b811fc3ac3ef320f95ad6835e48c1a9f6",
           "spec_material_hash": "a15254c6f3429d6375a1117d432376f3e94bfbadc88f902250b5ad9b97b2d67d"
         },
         {
-          "disposition": "updated",
+          "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Refreshed Living Spec attestations and verified #1630 compact storage v2 prose on Decapod v0.143.1.",
-          "reviewed_code_fingerprint": "dfbc13afe4a3a5ab9e821b9954cb57ac109b071ffe7ff9ee50a7d94448409fa8",
-          "spec_material_hash": "0f82aa34ae257d2e4c511ddded1b09ee75106a9970cb17064ce1dfe75eb2398b"
+          "reason": "Refreshed attestation after reconciling accepted master (#1665) and compact-envelope reader fixes",
+          "reviewed_code_fingerprint": "ff3e2a496d831a45a823998fc00ca08b811fc3ac3ef320f95ad6835e48c1a9f6",
+          "spec_material_hash": "2487ef520c7504f9c0e1b193b726233ddfb8605f307b2c8acc0a2c4f389194fe"
         }
       ],
       "state": "APPROVED",
@@ -1041,7 +1046,7 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1794549148Z"
+      "updated_at": "1794553471Z"
     },
     "trajectory": {
       "active_boundaries": [
