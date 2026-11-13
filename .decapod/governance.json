@@ -616,6 +616,11 @@
       "id": "c14-claude-01430",
       "summary": "chore(entrypoints): refresh CLAUDE.md for Decapod v0.143.0",
       "input_digest": "sha256:1a717982935a05b97a0281f9113eba4f5bdc7337fbf15b3587aa3627e9b423c4"
+    },
+    {
+      "id": "c15-codex-01430",
+      "summary": "chore(entrypoints): refresh CODEX.md for Decapod v0.143.0",
+      "input_digest": "sha256:8dec49ec55a93cc965b1f7beadd1ce400b944cdc180088ab0ff77513d0aff196"
     }
   ],
   "intents": {
