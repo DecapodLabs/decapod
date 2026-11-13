@@ -249,11 +249,41 @@ fn validate_operation_id(operation_id: &str) -> Result<(), error::DecapodError> 
     Ok(())
 }
 
+/// Resolve the owning `.decapod/data` directory for workunit runtime policy
+/// checks and journal persistence.
+///
+/// Linked Git worktrees (`<worktree>/.git` file) share the initialized
+/// control-plane datastore (`agents`, `risk_zones`, `events`) at
+/// `<main_repo>/.decapod/data`, unless a complete worktree-local datastore
+/// with policy tables was explicitly initialized at `<worktree>/.decapod/data`.
+fn runtime_data_dir(root: &Path) -> PathBuf {
+    let local = root.join(".decapod/data");
+    if root.join(".git").is_file() {
+        let local_initialized = {
+            let db = crate::core::events::canonical_db_path(&local);
+            db.is_file()
+                && crate::core::db::db_connect_for_validate(&db.to_string_lossy())
+                    .ok()
+                    .is_some_and(|conn| {
+                        conn.has_table("agents").unwrap_or(false)
+                            && conn.has_table("risk_zones").unwrap_or(false)
+                    })
+        };
+        if !local_initialized
+            && let Ok(main_root) = crate::core::workspace::get_main_repo_root(root)
+            && main_root != root
+        {
+            return main_root.join(".decapod/data");
+        }
+    }
+    local
+}
+
 /// Workunit mutations require the existing initialized runtime policy owner.
 /// Never create an events-only datastore that cannot authorize its next write,
 /// or silently fill missing policy tables with a new default policy.
 fn require_initialized_workunit_runtime(root: &Path) -> Result<(), error::DecapodError> {
-    let path = crate::core::events::canonical_db_path(&root.join(".decapod/data"));
+    let path = crate::core::events::canonical_db_path(&runtime_data_dir(root));
     let uninitialized = || {
         journal_error(
             "WORKUNIT_RUNTIME_UNINITIALIZED",
@@ -387,7 +417,7 @@ fn journal_records(
     task_id: &str,
 ) -> Result<Vec<WorkUnitJournalRecord>, error::DecapodError> {
     validate_task_id(task_id)?;
-    let path = crate::core::events::canonical_db_path(&root.join(".decapod/data"));
+    let path = crate::core::events::canonical_db_path(&runtime_data_dir(root));
     if !path.exists() {
         return Ok(Vec::new());
     }
@@ -704,7 +734,7 @@ fn append_snapshot(
             "manifest exceeds recoverable projection byte bound",
         ));
     }
-    let data = root.join(".decapod/data");
+    let data = runtime_data_dir(root);
     let broker = crate::core::broker::DbBroker::new(&data);
     let actor = std::env::var("DECAPOD_AGENT_ID").unwrap_or_else(|_| "decapod".to_string());
     broker.with_transaction(

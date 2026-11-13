@@ -1341,7 +1341,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `de413bb8b9557fdd650ef2e4e52a44a5c94e550ec405aaa016a937ee1f3d3393`
+- Repository signal fingerprint: `e3acf43f4e5a1699b21f5a31e5f814c7ea593e42430111c4a28d89ba577ccf4c`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (231 files), `tests/` (232 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
@@ -1860,3 +1860,11 @@ required before publication readiness.
 ### v0.143.2 fresh-docs workunit fixture initialization
 
 `tests/support/fresh_docs_readiness.rs` initializes the workspace-local workunit runtime using the real `init --refresh --proof` CLI before declaring unverified completion. Root datastore initialization does not initialize this journal. The scenario still requires a clean unchanged candidate, rejects unverified completion and withholds readiness receipts; the production `WORKUNIT_RUNTIME_UNINITIALIZED` guard remains intact. The repair passed on the baseline Dactyl dependency before SDK-specific verification.
+
+## PR1669 accepted-master integration
+
+The current request explicitly prohibits tests. Preserve the original protected-path and linked-worktree journal regression source, inspect the integrated source and Git parent history, refresh supported source-bound spec attestations, checkpoint and push. No test execution or successful independent readiness is claimed for this integration. The accepted master includes the fresh-docs fixture initialization from PR1661.
+
+### Exact CI event base after accepted-target movement
+
+The first hosted PR run after integration rejected its context before any tests: the synthetic checkout merged candidate `95adedd6` into accepted master `f450bdf3`, while the event still named previous base `6f1d2a39`. Re-selecting the existing `master` base through the GitHub PR API updated that metadata to `f450bdf3`. A new push obtains a fresh event; replaying the old event would retain the stale binding. Preserve the exact ordered-parent check and independently verify the new hosted result. This metadata repair is not passing test evidence, and no tests were executed locally.

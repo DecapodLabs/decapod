@@ -920,7 +920,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `de413bb8b9557fdd650ef2e4e52a44a5c94e550ec405aaa016a937ee1f3d3393`
+- Repository signal fingerprint: `e3acf43f4e5a1699b21f5a31e5f814c7ea593e42430111c4a28d89ba577ccf4c`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (231 files), `tests/` (232 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
@@ -1175,3 +1175,7 @@ The resolved native project also supplies the repository field of newly created 
 ## Versioned cloud mutation receipts
 
 The machine-private cloud todo receipt file uses a version-two envelope around its bounded records. Legacy flat arrays migrate under the existing stable file lock; array-only older clients cannot parse and rewrite the new envelope, so they cannot silently remove resolved-project bindings. This changes neither credential custody nor the server data protocol.
+
+## PR1669 accepted-master integration
+
+`validation_rules::evaluate_gatekeeper_paths_and_diff` enforces configured protected/blocked paths, plan forbidden paths and the diff ceiling over changed paths. Unchanged include_str dependencies do not become changed paths. Full staged-file secret and dangerous-pattern scans remain in validate_gatekeeper_gate. `workunit::runtime_data_dir` prefers a complete local runtime and otherwise resolves the initialized parent runtime for linked Git worktrees; runtime policy checks and journal reads/writes share that owner, while projections stay local.
