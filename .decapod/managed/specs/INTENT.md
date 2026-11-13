@@ -24,7 +24,7 @@ See `core/mentor/reflection.rs` and `docs/architecture/bounded-reflection.md`.
 
 ## Published SDK adoption (#1638)
 
-The client pins the normally published registry `dactyl-db =0.14.0` release
+The client pins the normally published registry `dactyl-db =0.16.1` release
 without changing local/cloud composition, session custody, role authority or
 transport selection. Its patched `quinn-proto >=0.11.19` requirement must hold
 for every resolved lock entry, including inactive dependencies. This adoption

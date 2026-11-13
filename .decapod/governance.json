@@ -629,6 +629,14 @@
       "proof_refs": [
         "https://github.com/DecapodLabs/decapod/issues/1667"
       ]
+    },
+    {
+      "id": "issue-1667-file-12",
+      "summary": "docs(specs): converge current SDK architecture and compatibility; file-by-file checkpoint, verification pending.",
+      "input_digest": "sha256:3a3dd2931101c91c2d29344c89fd93ddcbbef3f470f0d4dd1c25d5e3a9ca3518",
+      "proof_refs": [
+        "https://github.com/DecapodLabs/decapod/issues/1667"
+      ]
     }
   ],
   "intents": {
@@ -679,7 +687,7 @@
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:8138f132256c12c2257869c1b8847fbd4be162c12350055da3d41ba872936cc1",
+      "artifact_hash": "sha256:c1edb19ccb4c5507cae4b8d217710066a047e68ded65c0005850ccf76d719b75",
       "checks": [],
       "current_phase": "implementation",
       "custody": {
@@ -772,10 +780,17 @@
             "intent_id": "intent:change_01M7BCN0CS3Z8AJ7TZ491WJ7CJ",
             "kind": "trajectory_step_recorded",
             "sequence": 14
+          },
+          {
+            "detail": "trajectory:branch_01M7BCN0FD8AE623HXNGA0C8F9",
+            "event_id": "event:15",
+            "intent_id": "intent:change_01M7BCN0CS3Z8AJ7TZ491WJ7CJ",
+            "kind": "trajectory_step_recorded",
+            "sequence": 15
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 14,
+        "next_sequence": 15,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M7BCN0FD8AE623HXNGA0C8F9": {
@@ -955,6 +970,22 @@
                   "issue-1667"
                 ],
                 "sequence": 14,
+                "validation_findings": [
+                  "Hosted verification and exact-candidate publication readiness remain pending; no local tests run."
+                ]
+              },
+              {
+                "action": "implementation",
+                "custody_event_id": "event:15",
+                "observations": [
+                  ".decapod/managed/specs/INTENT.md",
+                  "https://github.com/DecapodLabs/decapod/issues/1667"
+                ],
+                "proof_refs": [],
+                "scope": [
+                  "issue-1667"
+                ],
+                "sequence": 15,
                 "validation_findings": [
                   "Hosted verification and exact-candidate publication readiness remain pending; no local tests run."
                 ]
