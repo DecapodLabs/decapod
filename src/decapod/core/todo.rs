@@ -8686,6 +8686,17 @@ fn mark_todo_claimed_pending_proof(
     )
 }
 
+/// Originating CLI admission inspects completion intent without exposing parser state.
+pub(crate) fn is_validated_completion(cli: &TodoCli) -> bool {
+    matches!(
+        cli.command,
+        TodoCommand::Done {
+            validated: true,
+            ..
+        }
+    )
+}
+
 pub fn is_heartbeat_command(cli: &TodoCli) -> bool {
     matches!(cli.command, TodoCommand::Heartbeat { .. })
 }
