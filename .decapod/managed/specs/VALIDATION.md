@@ -12,6 +12,9 @@ combined-candidate tests remain required. Clippy must accept the real PathBuf
 returned by workspace ensure without a redundant conversion. Exact final source
 and current accepted master require a new full validation result; earlier PR
 statuses, source fixtures and project checks cannot establish that readiness.
+After a reviewed proof-source digest update, `rpc --op specs.refresh` must bind
+the manifest to the final config bytes. Standalone validation rejects a stale
+`config_input_hash` even when the underlying prerequisite checks pass.
 
 The required `tests/consumer_readiness.rs` regression carries a recorded
 Decapod intent through a real source-check failure, a committed source repair,

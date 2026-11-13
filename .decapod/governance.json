@@ -586,6 +586,11 @@
       "id": "pr1661-concurrent-remote-reconciliation",
       "summary": "Retain concurrently published240bc35a as an actual merge parent, keeping all remote commits, latest accepted master and tested diagnostic repair; no source changes from already-tested material.",
       "input_digest": "sha256:57ccd6a46792ce096ec5d593e727b5ccc412965a0965bb56308b85539e67916b"
+    },
+    {
+      "id": "pr1661-final-config-manifest",
+      "summary": "Refresh final config/spec manifest through official0.143.1 after reviewed proof-source pin; fix observed standalone CI drift and preserve blocked public-provider rate-limit evidence.",
+      "input_digest": "sha256:2031e4926ea3f9c5e45b94c7a84c11e738787e57b856b9f8d249ec15a79dd5c6"
     }
   ],
   "intents": {
@@ -659,7 +664,7 @@
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:5ac9b2da211fc51c322571374d1db6fba284a99f5388142ea48b28b711766210",
+      "artifact_hash": "sha256:f0b3a7cc0e8f4619dd6bd0b2fd4f54de7a2facc7e1e5de90ea97e18cccea9277",
       "checks": [
         {
           "name": "binding-rollback-and-lifecycle",
@@ -694,12 +699,20 @@
           "status": "passed"
         },
         {
+          "name": "manifest-final-config-binding",
+          "status": "partial"
+        },
+        {
           "name": "non-git-partial-and-publication-boundary",
           "status": "passed"
         },
         {
           "name": "shared-resource-exclusion",
           "status": "passed"
+        },
+        {
+          "name": "standalone-manifest-before-refresh",
+          "status": "failed"
         }
       ],
       "current_phase": "integration",
@@ -737,10 +750,17 @@
             "intent_id": "intent:change_01M79NVT2SXTG0QCCYXQADTVWT",
             "kind": "trajectory_step_recorded",
             "sequence": 6
+          },
+          {
+            "detail": "trajectory:branch_01M79NVT5SX7NJTXX34J543M80",
+            "event_id": "event:7",
+            "intent_id": "intent:change_01M79NVT2SXTG0QCCYXQADTVWT",
+            "kind": "trajectory_step_recorded",
+            "sequence": 7
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 6,
+        "next_sequence": 7,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M79NVT5SX7NJTXX34J543M80": {
@@ -807,6 +827,23 @@
                 ],
                 "sequence": 6,
                 "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:7",
+                "observations": [],
+                "proof_refs": [
+                  "standalone-manifest-before-refresh",
+                  "independent-full-readiness",
+                  "manifest-final-config-binding"
+                ],
+                "scope": [
+                  "pr-1661-repair"
+                ],
+                "sequence": 7,
+                "validation_findings": [
+                  "Official full validation7f696510 blocked on public GitHub provider HTTP403 rate limit, reset2026-11-13T06:49:13Z; no alternate proof/authentication route used. Standalone CI found stale config_input_hash after reviewed source pin; official specs.refresh now regenerates final config/spec hashes, fresh CI still required."
+                ]
               }
             ]
           }
@@ -843,6 +880,7 @@
       "unresolved_assumptions": [
         "Conflict resolution selects committed current-master repair material for governance, version1431 projections, semantic specs and already-fixed source/test conflicts; no feature source omitted. No force push or merge to master.",
         "Official 0.143.1 still blocks normal datastore startup on inert legacy TODO file. Coordination-only 0.143.1 built from published source plus previously tested inert-file migration repair; installed official binary remains independent full validator. No database edited.",
+        "Official full validation7f696510 blocked on public GitHub provider HTTP403 rate limit, reset2026-11-13T06:49:13Z; no alternate proof/authentication route used. Standalone CI found stale config_input_hash after reviewed source pin; official specs.refresh now regenerates final config/spec hashes, fresh CI still required.",
         "Reviewed source inventory changed only accepted Cargo package 0.143.0 to 0.143.1 after pin112287a9. No candidate proof-source delta or requirement change. Current digest50af27077a026878a187611c381226be611ae10f45bfec77fc205282258d3ccf.",
         "User requested rebase but earlier no-force rule remains; prepare history-preserving integration pending optional rewrite preference. PR1661 only; other PRs untouched."
       ]
