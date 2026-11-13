@@ -40,7 +40,7 @@ aliases from being counted as progress on case-insensitive workspaces.
 
 ## Registry dependency closure (#1638)
 
-`Cargo.toml` pins Dactyl 0.14.0 while retaining `sqlite` and `neon`, and the
+`Cargo.toml` pins Dactyl 0.16.1 while retaining `sqlite` and `neon`, and the
 existing default `supabase-cloud` feature still forwards `dactyl-db/supabase`.
 Cargo resolves the registry checksum and patched Quinn protocol floor; pinned
 Bazel regenerates its crate-universe metadata from those same committed Cargo
@@ -1195,3 +1195,12 @@ The integrated `todo` module exports both accepted authoring/resource custody fu
 ## PR1662 current-master preparation
 
 The db_maintenance module resolves accepted canonical-repository policy and uses existing Dactyl and StorageLock primitives. It does not replace the datastore or migration authority. Retain current-master storage format guards, task custody, provider verification and runtime ownership while integrating this operation boundary.
+
+## Published bounded SDK (#1667)
+
+`Cargo.lock` owns the registry 0.16.1 SDK and `MODULE.bazel.lock` derives its
+crate-universe mappings. Nix reads that same Cargo.lock; no separate package hash
+or Nix input update is necessary. SQLite, Neon and default Supabase features
+remain selected by the existing application facade. SDK resource budgets are
+retained: SQL, parameters, decoded rows, wire bodies and deadlines fail closed.
+No new connector policy interpreter, daemon, HTTP/3 or hosted runner is added.
