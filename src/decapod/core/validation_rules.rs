@@ -1823,28 +1823,17 @@ fn evaluate_workunit_rule(_rule: &ResolvedRule, context: &RuleEvaluationContext)
     let Some(root) = context.repo_root.as_deref() else {
         return RuleVerdict::Unverifiable;
     };
-    // Supported workunit commands bind the current epoch through the durable
-    // ExecutionStateBinding verified by load_terminal_workunit. Optional legacy
-    // fields are additional constraints when present, not invented prerequisites.
-    if manifest
-        .validation_epoch
-        .as_ref()
-        .is_some_and(|epoch| epoch != &context.validation_epoch)
-        || manifest.proof_results.iter().any(|result| {
-            manifest.proof_plan.contains(&result.gate)
-                && (result
-                    .validation_epoch
-                    .as_ref()
-                    .is_some_and(|epoch| epoch != &context.validation_epoch)
-                    || result
-                        .evaluator_epoch
-                        .as_deref()
-                        .is_some_and(|epoch| epoch != context.validation_epoch.epoch_id))
-        })
-    {
-        return RuleVerdict::Stale;
-    }
-    if crate::core::workunit::validate_verified_manifest(manifest).is_err()
+    // This is the current complete runtime observation, before its canonical
+    // append. It must not depend on an agent's pass row or an earlier VERIFIED
+    // projection: first proof would otherwise become circular. Durable subject
+    // binding is checked by load_terminal_workunit and again by the producer.
+    if !matches!(
+        manifest.status,
+        crate::core::workunit::WorkUnitStatus::Claimed
+            | crate::core::workunit::WorkUnitStatus::Verified
+    ) || terminal.proof.verify().is_err()
+        || crate::core::validation_history::ensure_full_validation_plan(&manifest.proof_plan)
+            .is_err()
         || crate::core::workunit::ensure_living_specs_bound_for_proof(root, manifest).is_err()
         || crate::core::workunit::verify_capsule_policy_lineage_for_task(root, manifest).is_err()
     {
