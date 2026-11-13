@@ -613,6 +613,11 @@
       "id": "pin-spec-intent-01410",
       "summary": "chore(specs): refresh INTENT.md release header to 0.141.0",
       "input_digest": "sha256:9b90411b35797130aa27d7ddae454f0d6175c301ba2301a3e4651ce956a0af03"
+    },
+    {
+      "id": "pin-spec-arch-01410",
+      "summary": "chore(specs): refresh ARCHITECTURE.md release header to 0.141.0",
+      "input_digest": "sha256:3e20be0d898aedee39614aee171bf92b908d9940fd1cc81fd8bd2a06c43b0702"
     }
   ],
   "intents": {
