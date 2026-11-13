@@ -589,6 +589,14 @@
       "proof_refs": [
         "https://github.com/DecapodLabs/decapod/issues/1573"
       ]
+    },
+    {
+      "id": "issue-1573-integrate-f779e391",
+      "summary": "Integrate accepted master f779e39111ec8b3c8c41569f68a3a7604df167e7 and merged1675 accepted-policy hardening with issue1573. Preserve current task journal/checkpoints and authored specs from both branches; regenerate projections through the kernel. Previous candidate readiness does not apply; no local tests.",
+      "input_digest": "sha256:0af64cdfd067a42292c077b7b74f95b134bcf09b382f17e5cd8a186333d1d6f5",
+      "proof_refs": [
+        "https://github.com/DecapodLabs/decapod/pull/1675"
+      ]
     }
   ],
   "intents": {
@@ -629,23 +637,23 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Reconcile merged public-reader quota pacing with actual complete official0.144.3 provider collection; preserve independent authorization, accepted provider obligations, deadline/cancellation and explicit denial. Dedicated current-candidate proof remains pending; no local tests.",
-          "reviewed_code_fingerprint": "4d29b2ddd81902f7faec1d56bf9251726253493115b750bd9d3e77a7392fef55",
-          "spec_material_hash": "edc37fbf030600635f0f0bf7c52383f604312f27c5b105f2ffb183c0cbe6cc12"
+          "reason": "Integrate accepted master f779e39111ec8b3c8c41569f68a3a7604df167e7 and merged1675 accepted-policy hardening with issue1573. Preserve current task journal/checkpoints and authored specs from both branches; regenerate projections through the kernel. Previous candidate readiness does not apply; no local tests.",
+          "reviewed_code_fingerprint": "ba894b60287b8a2e77aefdc63e9c2500db01e809bd43d40de19cb32596270211",
+          "spec_material_hash": "eace639381505e6def0a254fac6e2acd2d7f3175e13d498a8a76c84583c154c9"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Reconcile merged public-reader quota pacing with actual complete official0.144.3 provider collection; preserve independent authorization, accepted provider obligations, deadline/cancellation and explicit denial. Dedicated current-candidate proof remains pending; no local tests.",
-          "reviewed_code_fingerprint": "4d29b2ddd81902f7faec1d56bf9251726253493115b750bd9d3e77a7392fef55",
-          "spec_material_hash": "152abf6c0eb3db2370aa2daabe194778de88e603fea2ff1c458cce4ac2877346"
+          "reason": "Integrate accepted master f779e39111ec8b3c8c41569f68a3a7604df167e7 and merged1675 accepted-policy hardening with issue1573. Preserve current task journal/checkpoints and authored specs from both branches; regenerate projections through the kernel. Previous candidate readiness does not apply; no local tests.",
+          "reviewed_code_fingerprint": "ba894b60287b8a2e77aefdc63e9c2500db01e809bd43d40de19cb32596270211",
+          "spec_material_hash": "39b12d81de3fce2ec075e00288ad0168a747ccbc403bae0c9f7fb08e123ffaae"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Reconcile merged public-reader quota pacing with actual complete official0.144.3 provider collection; preserve independent authorization, accepted provider obligations, deadline/cancellation and explicit denial. Dedicated current-candidate proof remains pending; no local tests.",
-          "reviewed_code_fingerprint": "4d29b2ddd81902f7faec1d56bf9251726253493115b750bd9d3e77a7392fef55",
-          "spec_material_hash": "c6fa5ef32ef63ed9a536de7a66e003d47c623b31be681d5bcee1a5a77031a9c0"
+          "reason": "Integrate accepted master f779e39111ec8b3c8c41569f68a3a7604df167e7 and merged1675 accepted-policy hardening with issue1573. Preserve current task journal/checkpoints and authored specs from both branches; regenerate projections through the kernel. Previous candidate readiness does not apply; no local tests.",
+          "reviewed_code_fingerprint": "ba894b60287b8a2e77aefdc63e9c2500db01e809bd43d40de19cb32596270211",
+          "spec_material_hash": "1d22ca331c3ede5a4add9e28bacfa070a32f7376b52e08ac7fbe3af720e7d586"
         }
       ],
       "state": "APPROVED",
@@ -656,13 +664,13 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1794611246Z"
+      "updated_at": "1794611361Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:8b01935efad6d5e5781c56c3aa4f299ddcf107ba9690d0cb8bdfc7f1ba64e9f1",
+      "artifact_hash": "sha256:f8580823bc5a773a265450f02d1739003ecd14d06f0c72cd56598400782c2fbd",
       "checks": [],
       "current_phase": "implementation",
       "custody": {
@@ -720,10 +728,17 @@
             "intent_id": "intent:change_01M7BCGX392JKZBS50NX3PPP8A",
             "kind": "trajectory_step_recorded",
             "sequence": 9
+          },
+          {
+            "detail": "trajectory:branch_01M7BCGX5QABS0MJP84D9PV95G",
+            "event_id": "event:10",
+            "intent_id": "intent:change_01M7BCGX392JKZBS50NX3PPP8A",
+            "kind": "trajectory_step_recorded",
+            "sequence": 10
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 9,
+        "next_sequence": 10,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M7BCGX5QABS0MJP84D9PV95G": {
@@ -826,6 +841,21 @@
                 "validation_findings": [
                   "Hosted verification and exact-candidate publication readiness remain pending; no local tests run."
                 ]
+              },
+              {
+                "action": "implementation",
+                "custody_event_id": "event:10",
+                "observations": [
+                  "https://github.com/DecapodLabs/decapod/pull/1675"
+                ],
+                "proof_refs": [],
+                "scope": [
+                  "issue-1573"
+                ],
+                "sequence": 10,
+                "validation_findings": [
+                  "Integrate accepted master f779e39111ec8b3c8c41569f68a3a7604df167e7 and merged1675 accepted-policy hardening with issue1573. Preserve current task journal/checkpoints and authored specs from both branches; regenerate projections through the kernel. Previous candidate readiness does not apply; no local tests."
+                ]
               }
             ]
           }
@@ -834,7 +864,8 @@
       "declared_commands": [],
       "destination": "pull request",
       "evidence": [
-        "https://github.com/DecapodLabs/decapod/issues/1573"
+        "https://github.com/DecapodLabs/decapod/issues/1573",
+        "https://github.com/DecapodLabs/decapod/pull/1675"
       ],
       "inspected_files": [],
       "intent_id": "intent:change_01M7BCGX392JKZBS50NX3PPP8A",
@@ -858,7 +889,8 @@
       "task_id": "cicd_01m7bcga6rkdryvj",
       "tool_calls": [],
       "unresolved_assumptions": [
-        "Hosted verification and exact-candidate publication readiness remain pending; no local tests run."
+        "Hosted verification and exact-candidate publication readiness remain pending; no local tests run.",
+        "Integrate accepted master f779e39111ec8b3c8c41569f68a3a7604df167e7 and merged1675 accepted-policy hardening with issue1573. Preserve current task journal/checkpoints and authored specs from both branches; regenerate projections through the kernel. Previous candidate readiness does not apply; no local tests."
       ]
     }
   },
