@@ -1607,6 +1607,12 @@ pub fn validate_verified_manifest(
     root: &Path,
     manifest: &WorkUnitManifest,
 ) -> Result<(), error::DecapodError> {
+    if manifest.status != WorkUnitStatus::Verified {
+        return Err(journal_error(
+            "WORKUNIT_PROOF_UNVERIFIABLE",
+            "current status is not VERIFIED",
+        ));
+    }
     ensure_verified_ready(manifest)?;
     let observed = crate::core::validation_history::current_workunit_proof(
         root,
