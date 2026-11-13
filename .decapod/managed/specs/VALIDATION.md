@@ -1325,7 +1325,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `05f69cf01548a4df7447f432f373a07c595346c26c8bc32f1b06748f923b0aa7`
+- Repository signal fingerprint: `7693d5010b19979e4cb8189dcb7d189c3ada65fb2953147b491cc708cd5ae8ec`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (231 files), `tests/` (232 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
@@ -1832,3 +1832,11 @@ the combined `v0.143.0`, `#1651`, `assets/tools/build_lifecycle.rs`, and
 Source review and local projection refresh do not prove execution; full
 configured `decapod validate` on the exact candidate commit against accepted
 `master` remains mandatory before merge.
+
+Reconciling `#1629` with accepted `master` (`64c4ff2e`, `v0.143.1` including
+`#1655` and `#1664`) regenerates `0.143.1` release-bound entrypoints,
+`.decapod/managed/Dockerfile.decapod`, and `.decapod/managed/specs/.manifest.json`
+from the `0.143.1` controller and updates `reviewed_sources_digest` to
+`sha256:50af27077a026878a187611c381226be611ae10f45bfec77fc205282258d3ccf`;
+full CI and `decapod validate` execution on the exact merged commit remain
+required before publication readiness.
