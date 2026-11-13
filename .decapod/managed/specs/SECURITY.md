@@ -598,8 +598,8 @@ execution evidence remains required before publication readiness.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `6a3addd1b9727eaa3c371ddafc239c5ed36e2705b96d18996de05e9e72f1f7f0`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (230 files), `tests/` (232 files)
+- Repository signal fingerprint: `0a0498aa94eb3f7551fe07c380ef13b469d188ab33218c72f80fc2e081fc3951`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (231 files), `tests/` (232 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 
@@ -903,3 +903,13 @@ instructions and leave the record untouched. Native format, canonical path,
 ownership, single-link, byte-size and digest checks remain enforced. Model setup
 uses bounded credential-free public asset transport. Opaque user configuration
 extensions survive refresh but cannot enable evaluation or grant authority.
+
+## Explicit managed project routing
+
+The private project record is a routing cache, never authorization. Every selected route checks current server account/project status before a native operation, and the native operation independently authorizes membership/grant/assignment and current session. Forged metadata, account switches and denied references cannot silently select a different project or SQLite. The auxiliary file uses private no-follow regular-file checks, exact custody binding, bounded decoding and atomic durable replacement under the credential lock. A rejected data bearer is compared under the original Git checkout custody scope, even when the data route uses a managed project reference.
+
+The resolved native project also supplies the repository field of newly created tasks. Before the first possible write dispatch, the existing machine-private todo operation journal atomically binds the operation to a digest of its resolved service/project route. Preflight login and initial project selection retain the same operation ID; subsequent selection changes cannot replay an uncertain or successful write into another project. Older unknown records remain bound to their original canonical repository semantics. The real PostgreSQL consumer exposed the former Git-label write mismatch; that failed candidate supplies no successful native proof.
+
+## Versioned cloud mutation receipts
+
+Operation-route binding must survive clients of different releases. Versioned receipt envelopes reject older array-only writers before dispatch, while the stable lock serializes migration with older in-flight writes. Both record count and actual encoded bytes are bounded before atomic replacement; an upgrade that would exceed the byte cap preserves the original evidence instead of truncating it.
