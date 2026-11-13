@@ -7,6 +7,33 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.143.1](https://github.com/DecapodLabs/decapod/compare/v0.143.0...v0.143.1) - 2026-11-13
+
+### Fixed
+
+- *(build)* recover owned mode-000 scratch permissions on cleanup
+
+### Other
+
+- *(merge)* reconcile accepted master v0.143.0 into #1643
+- *(merge)* reconcile accepted master v0.142.0 into #1643
+- *(specs)* refresh specs manifest and record publication spec reviews
+- *(specs)* document #1643 supervisor regressions and 0.141.0 inventory
+- *(specs)* document build_lifecycle owned scratch cleanup in ARCHITECTURE.md
+- *(specs)* document bounded owned mode-000 scratch permission recovery
+- *(specs)* refresh SEMANTICS.md codebase attestation for 0.141.0
+- *(specs)* refresh specs README.md codebase attestation for 0.141.0
+- *(specs)* refresh OPERATIONS.md codebase attestation for 0.141.0
+- *(specs)* refresh INTERFACES.md codebase attestation for 0.141.0
+- *(specs)* refresh INTENT.md codebase attestation for 0.141.0
+- *(managed)* refresh Dockerfile.decapod image pin to v0.141.0-debian
+- *(entrypoints)* refresh GEMINI.md release pin to 0.141.0
+- *(entrypoints)* refresh CODEX.md release pin to 0.141.0
+- *(entrypoints)* refresh CLAUDE.md release pin to 0.141.0
+- *(entrypoints)* refresh AGENTS.md release pin to 0.141.0
+- *(config)* update reviewed_sources_digest for build_lifecycle inputs
+- *(build)* add Podman mode-000 scratch cleanup and escape regressions
+
 ## [0.143.0](https://github.com/DecapodLabs/decapod/compare/v0.142.0...v0.143.0) - 2026-11-13
 
 ### Added
