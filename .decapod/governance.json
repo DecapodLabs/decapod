@@ -664,6 +664,11 @@
       "id": "spec-validation-1573",
       "summary": "docs(specs): document anonymous GitHub quota pacing regressions in VALIDATION.md",
       "input_digest": "sha256:7f025ed52bb0e05fe4656e65a86b699c580f4426edd2ae50148c6b262f994a45"
+    },
+    {
+      "id": "spec-intent-attestation",
+      "summary": "docs(specs): refresh INTENT.md codebase attestation",
+      "input_digest": "sha256:7cfb5475269fb5e142ed990671e1f7c5ceb9cb53c68ada8f70daea0276d960c7"
     }
   ],
   "intents": {
