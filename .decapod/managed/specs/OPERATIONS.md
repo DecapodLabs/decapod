@@ -1,5 +1,26 @@
 # Operations
 
+## Forward storage compaction migration, reference-aware GC, and explicit VACUUM (#1630)
+
+Startup migration `sqlite.compact_lossless_storage.v002` (`sequence = 1200` in
+`src/decapod/core/migration.rs`) upgrades existing local SQLite stores inside a
+transaction: ensuring `storage_components`, `storage_component_refs`, and
+`storage_migration_manifests`, deduplicating identical `(context, prompt_text)`
+rows in `agent_prompts`, compacting historical non-`federation` event envelopes,
+verifying pre/post logical event SHA-256 equality and `pragma_foreign_key_check`,
+recording a redacted manifest row, and stamping `storage` compatibility metadata
+in `meta`. Zero-byte or tableless legacy `todo.db` sidecar stubs are ignored by
+`legacy_todo_db_has_authority_rows` rather than falsely blocking canonical
+`decapod.db` startup with `TASK_JOURNAL_MIGRATION_REQUIRED`.
+
+Unreferenced component cleanup runs through `storage_compaction::gc_unreferenced_components`
+(supporting `dry_run` reporting before deletion) and checks both
+`storage_component_refs` (`ON DELETE RESTRICT`) and embedded checkpoint/transfer
+references in `events` before deleting unreachable rows. Physical SQLite page
+reclamation (`VACUUM`) is isolated to `storage_compaction::reclaim_pages_explicit`
+and is never invoked automatically during normal CLI commands or startup
+migrations, keeping freed pages in SQLite's freelist for bounded O(1) reuse.
+
 ## Inspecting native validation completion
 
 ## Operations Overview
@@ -374,8 +395,8 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `0a0498aa94eb3f7551fe07c380ef13b469d188ab33218c72f80fc2e081fc3951`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (231 files), `tests/` (232 files)
+- Repository signal fingerprint: `b84ca1bad99d65494836397a0df5421c6c961d64f3278bf14a3474754a944739`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (232 files), `tests/` (232 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 
