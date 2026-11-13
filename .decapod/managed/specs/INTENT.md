@@ -352,7 +352,7 @@ These declarations select authoring and proof obligations; they do not attest im
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `fbccc9cfb5bf2b38e6ef970f60ff59a1d618c570d9b96d317b9f5bd0c40da905`
+- Repository signal fingerprint: `4d29b2ddd81902f7faec1d56bf9251726253493115b750bd9d3e77a7392fef55`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (234 files), `tests/` (232 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
@@ -557,3 +557,22 @@ Expose only project-opted local database maintenance capabilities to the agent. 
 ## PR1662 current-master preparation
 
 Preserve prepared PR1662 capability-scoped database maintenance before integrating accepted master3afa9df9 and the0.144.2 source release. Default-deny accepted policy, owner-only repair, bounded safe operations and non-destructive lock custody remain obligations. Hosted CI must establish the exact integrated candidate; no local tests are run.
+
+## Observed workunit proof convergence (#1660)
+
+The existing `record_proof_result` pass row is a declaration: it initializes both
+proof epochs to None, and `ensure_verified_ready` currently checks only pass rows.
+Durable execution binding and referenced-byte hashes preserve custody/integrity
+but do not authenticate who observed a successful check. Whole publication has
+additional gates, so misleading VERIFIED state is not by itself a proven forge
+merge bypass. Preserve that distinction in real binary adversarial controls.
+
+Converge VERIFIED with the existing canonical `validation_history` producer.
+A current canonical observation must bind this exact task, workunit contract,
+source, accepted target, policy and tool closure. Add only bounded references and
+read-only applicability inputs to existing proof records, not a second datastore
+or evaluator. Runtime terminal judgment must consume actual completed checks;
+opaque additional gates remain unproven. Legacy declarations retain history and
+require fresh observed proof, with explicit safe downgrade/recovery. No new
+cryptographic trust root or OS-isolation claim is inferred from shared UID access.
+No local tests run; supported real CLI/runtime and hosted proof remain required.
