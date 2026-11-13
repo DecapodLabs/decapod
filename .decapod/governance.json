@@ -646,6 +646,11 @@
       "id": "c20-spec-operations-01430",
       "summary": "docs(specs): refresh OPERATIONS.md projection for v0.143.0",
       "input_digest": "sha256:01d4dfa4ff41794d68b347e3d0449d7f3d015db6f78cb3ed0351a45d18b37765"
+    },
+    {
+      "id": "c21-spec-readme-01430",
+      "summary": "docs(specs): refresh specs README.md projection for v0.143.0",
+      "input_digest": "sha256:565ed7292ae5754528a2b2f4c761bd404289233a014add285fbb0a6464cf37c1"
     }
   ],
   "intents": {
