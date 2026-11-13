@@ -7,6 +7,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.142.0](https://github.com/DecapodLabs/decapod/compare/v0.141.0...v0.142.0) - 2026-11-13
+
+### Added
+
+- *(cloud)* hand persistent connections to the agent
+
+### Fixed
+
+- integrate governed first-proof admission into agent handoff
+- preserve agent lifecycle through Decapod after setup
+- *(cloud)* sanitize task connection recovery guidance
+- *(cloud)* preserve browser links in text handoffs
+
+### Other
+
+- refresh v0.141.0 release-bound entrypoints and Dockerfile pin
+- reconcile v0.141.0 master and Dactyl 0.14.0 into PR 1647
+- reconcile 0.140.1 storage and cloud proof boundaries
+- reconcile accepted 0.140.0 proof surfaces
+- *(cloud)* align generated files with the accepted release
+- *(cloud)* reconcile the accepted release target
+- *(cloud)* reconcile the accepted connector foundation
+
 ## [0.141.0](https://github.com/DecapodLabs/decapod/compare/v0.140.3...v0.141.0) - 2026-11-13
 
 ### Added
