@@ -654,6 +654,11 @@
       "id": "storage-compaction-migration-gc",
       "summary": "feat(storage): implement v2 compaction migration, format guard, reference GC, and explicit vacuum (#1630)",
       "input_digest": "sha256:4d1ee0fa33ffec35d93fec3ff87605e3e0078284ee3cce52e31fed7e9f55c409"
+    },
+    {
+      "id": "migration-1200-compact-storage",
+      "summary": "feat(migration): register migration 1200 compact lossless storage upgrade (#1630)",
+      "input_digest": "sha256:44e438d07d1408471a1447b33b0fe48361849b712c74398484ae18d57cbb5be3"
     }
   ],
   "intents": {

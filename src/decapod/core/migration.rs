@@ -183,6 +183,17 @@ pub fn all_migrations() -> Vec<Migration> {
             description: "Compact redundant indexes, composite-key btrees, and cold LCM text",
             up: migrate_compact_redundant_relational_indexes,
         },
+        Migration {
+            id: crate::core::storage_compaction::V2_COMPACTION_MIGRATION_ID,
+            sequence: 1200,
+            scope: "global",
+            kind: "rust",
+            script_path: None,
+            min_version: "0.141.0",
+            target_version: "0.141.0",
+            description: "Compact historical event envelopes, deduplicate agent prompts, initialize externalized component tables, and stamp v2 storage format compatibility (#1630)",
+            up: migrate_compact_lossless_storage_v002,
+        },
     ]
 }
 
@@ -347,6 +358,17 @@ fn migrate_compact_redundant_relational_indexes(root: &Path) -> Result<(), error
             Err(error)
         }
     }
+}
+
+fn migrate_compact_lossless_storage_v002(root: &Path) -> Result<(), error::DecapodError> {
+    let path = root.join("data").join(schemas::LOCAL_DB_NAME);
+    if !path.exists() {
+        return Ok(());
+    }
+    let conn = db::db_connect(&path.to_string_lossy())?;
+    let _manifest = crate::core::storage_compaction::apply_v2_compaction_migration(&conn)?;
+    crate::core::storage_scope::ensure(&conn, &root.join("data"))?;
+    Ok(())
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -591,6 +613,7 @@ fn schema_upgrade_pending(data_root: &Path) -> Result<bool, error::DecapodError>
         return Ok(true);
     }
     let conn = db::db_connect(&todo_db.to_string_lossy())?;
+    crate::core::storage_compaction::check_storage_format_compatibility(&conn)?;
     let version_res: Result<String, _> = conn.query_row(
         "SELECT value FROM meta WHERE namespace = ?1 AND key = 'schema_version'",
         [schemas::TODO_META_NAMESPACE],
@@ -1134,6 +1157,41 @@ fn touch_generated_migration_catalog(
 
 // Migration functions:
 
+fn legacy_todo_db_has_authority_rows(todo_db_path: &Path) -> Result<bool, error::DecapodError> {
+    if !todo_db_path.exists() {
+        return Ok(false);
+    }
+    let wal_path = todo_db_path.with_file_name(format!("{}-wal", schemas::TODO_DB_NAME));
+    if fs::metadata(todo_db_path)
+        .map(|m| m.len() == 0)
+        .unwrap_or(false)
+        && !wal_path.exists()
+    {
+        return Ok(false);
+    }
+    let conn = db::db_connect_for_validate(&todo_db_path.to_string_lossy())?;
+    for table in [
+        "tasks",
+        "task_events",
+        "task_verification",
+        "task_owners",
+        "task_dependencies",
+    ] {
+        if !conn.has_table(table)? {
+            continue;
+        }
+        let populated: bool = conn.query_row(
+            &format!("SELECT EXISTS(SELECT 1 FROM \"{table}\")"),
+            [],
+            |r| r.get(0),
+        )?;
+        if populated {
+            return Ok(true);
+        }
+    }
+    Ok(false)
+}
+
 /// Reconstruct the canonical todo event table from current todo.db state.
 /// JSONL is a read-only migration input; this migration never creates it.
 fn migrate_reconstruct_todo_events(decapod_root: &Path) -> Result<(), error::DecapodError> {
@@ -1141,7 +1199,7 @@ fn migrate_reconstruct_todo_events(decapod_root: &Path) -> Result<(), error::Dec
 
     let db_path = decapod_root.join("data/todo.db");
 
-    if !db_path.exists() {
+    if !legacy_todo_db_has_authority_rows(&db_path)? {
         return Ok(()); // Nothing to migrate
     }
 
@@ -1321,7 +1379,8 @@ fn migrate_consolidate_single_datastore(decapod_root: &Path) -> Result<(), error
     let target = db::db_connect(&target_path.to_string_lossy())?;
     // Legacy task imports cannot be mixed into an already journaled authority.
     // Check before schema initialization, event import, or source-file removal.
-    if data_root.join(schemas::TODO_DB_NAME).exists() {
+    // Ignore 0-byte or tableless `todo.db` stubs that carry no task rows.
+    if legacy_todo_db_has_authority_rows(&data_root.join(schemas::TODO_DB_NAME))? {
         crate::core::todo::refuse_task_journal_migration(
             &target,
             "legacy task database consolidation",
