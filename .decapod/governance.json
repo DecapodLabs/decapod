@@ -733,6 +733,14 @@
       "proof_refs": [
         "https://github.com/DecapodLabs/decapod/issues/1659"
       ]
+    },
+    {
+      "id": "issue-1659-file-25",
+      "summary": "fix(governance): regenerate actual 0.144.4 entrypoint templates; file-by-file checkpoint, verification pending.",
+      "input_digest": "sha256:408ce7fea90b957462a93872dc73763c4f0b6e6747a36c34ffd0c20b710a7f2c",
+      "proof_refs": [
+        "https://github.com/DecapodLabs/decapod/issues/1659"
+      ]
     }
   ],
   "intents": {
@@ -773,21 +781,21 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Hosted CI reported release-bound drift after the master0.144.4 release. Regenerate projections with independently installed registry0.144.4, retain authored semantics and required checks, and collect fresh hosted proof. No local tests.",
+          "reason": "Hosted CI proved actual files retained old release headers after metadata-only refresh. Supported init regenerated all four actual templates; authored config and required contracts are preserved, and generated backup changes are retained outside Git. No local tests.",
           "reviewed_code_fingerprint": "311a998d7de802bb734406f1ea75264e161343f5ee64ba3c08c80b5739c7f2d8",
           "spec_material_hash": "7393e220900cbc6f4ddeb0bd9b9835305dbeaa3e21494a74edc55487949f8123"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Hosted CI reported release-bound drift after the master0.144.4 release. Regenerate projections with independently installed registry0.144.4, retain authored semantics and required checks, and collect fresh hosted proof. No local tests.",
+          "reason": "Hosted CI proved actual files retained old release headers after metadata-only refresh. Supported init regenerated all four actual templates; authored config and required contracts are preserved, and generated backup changes are retained outside Git. No local tests.",
           "reviewed_code_fingerprint": "311a998d7de802bb734406f1ea75264e161343f5ee64ba3c08c80b5739c7f2d8",
           "spec_material_hash": "09829c5df95306633263d0edd36dd78fd07c643e6939781caa40f5e6568a8cd3"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Hosted CI reported release-bound drift after the master0.144.4 release. Regenerate projections with independently installed registry0.144.4, retain authored semantics and required checks, and collect fresh hosted proof. No local tests.",
+          "reason": "Hosted CI proved actual files retained old release headers after metadata-only refresh. Supported init regenerated all four actual templates; authored config and required contracts are preserved, and generated backup changes are retained outside Git. No local tests.",
           "reviewed_code_fingerprint": "311a998d7de802bb734406f1ea75264e161343f5ee64ba3c08c80b5739c7f2d8",
           "spec_material_hash": "a19fd3a1497ea4b61d73ff910b7be5696baa3e2db029c515072d00eee838f4d0"
         }
@@ -800,13 +808,13 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1794611767Z"
+      "updated_at": "1794612676Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:a591bf2535c76e21942b0d9ce4aae95fc2e289d2fef49f5cec64e92c8b7c69c3",
+      "artifact_hash": "sha256:9545070c2d812ef264dbd1b89bbbc18b7c1ed2196c7dc1d679a685bd878d9cd0",
       "checks": [],
       "current_phase": "implementation",
       "custody": {
@@ -990,10 +998,24 @@
             "intent_id": "intent:change_01M7BCEHXJQR8HVADJF91PJKGD",
             "kind": "trajectory_step_recorded",
             "sequence": 27
+          },
+          {
+            "detail": "trajectory:branch_01M7BCEJ05EP527M18XXSF6GK6",
+            "event_id": "event:28",
+            "intent_id": "intent:change_01M7BCEHXJQR8HVADJF91PJKGD",
+            "kind": "trajectory_step_recorded",
+            "sequence": 28
+          },
+          {
+            "detail": "trajectory:branch_01M7BCEJ05EP527M18XXSF6GK6",
+            "event_id": "event:29",
+            "intent_id": "intent:change_01M7BCEHXJQR8HVADJF91PJKGD",
+            "kind": "trajectory_step_recorded",
+            "sequence": 29
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 27,
+        "next_sequence": 29,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M7BCEJ05EP527M18XXSF6GK6": {
@@ -1380,6 +1402,38 @@
                   "issue-1659"
                 ],
                 "sequence": 27,
+                "validation_findings": [
+                  "Hosted verification and exact-candidate publication readiness remain pending; no local tests run."
+                ]
+              },
+              {
+                "action": "implementation",
+                "custody_event_id": "event:28",
+                "observations": [
+                  ".decapod/managed/specs/VALIDATION.md",
+                  "https://github.com/DecapodLabs/decapod/issues/1659"
+                ],
+                "proof_refs": [],
+                "scope": [
+                  "issue-1659"
+                ],
+                "sequence": 28,
+                "validation_findings": [
+                  "Hosted verification and exact-candidate publication readiness remain pending; no local tests run."
+                ]
+              },
+              {
+                "action": "implementation",
+                "custody_event_id": "event:29",
+                "observations": [
+                  ".decapod/managed/specs/VALIDATION.md",
+                  "https://github.com/DecapodLabs/decapod/issues/1659"
+                ],
+                "proof_refs": [],
+                "scope": [
+                  "issue-1659"
+                ],
+                "sequence": 29,
                 "validation_findings": [
                   "Hosted verification and exact-candidate publication readiness remain pending; no local tests run."
                 ]
