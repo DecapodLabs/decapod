@@ -599,6 +599,11 @@
       "id": "refresh-dockerfile-v0-143-0",
       "summary": "chore(container): refresh Dockerfile.decapod pin to v0.143.0",
       "input_digest": "sha256:b9046b553841d28fb05a0f022f108aab2d4b49ccccae1ab521eca6b5bc4ef7b4"
+    },
+    {
+      "id": "storage-contracts",
+      "summary": "feat(storage): add versioned field, collection, and authority contracts (#1630)",
+      "input_digest": "sha256:7fc325967023b82d5f78824280d3e577d30cb96ec5878ec39a99e5e144204da0"
     }
   ],
   "intents": {
