@@ -653,6 +653,11 @@
       "id": "add-storage-contracts",
       "summary": "feat(storage): add versioned UTF-8 byte, collection, JSON, and authority contracts",
       "input_digest": "sha256:bb21a1c7229a1fc73dd899e8b473acf38a44cf1e99e88c72a2c7074712290e84"
+    },
+    {
+      "id": "export-storage-contracts-mod",
+      "summary": "feat(storage): export storage_contracts module in core",
+      "input_digest": "sha256:453fd94f94d70ff9c9124ae4bc1e700d5fe73d2102febc26806365044dda502e"
     }
   ],
   "intents": {
