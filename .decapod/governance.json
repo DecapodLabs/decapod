@@ -619,6 +619,11 @@
       "id": "spec-interfaces-refresh-0-143-0",
       "summary": "docs(specs): refresh INTERFACES.md attestation for v0.143.0",
       "input_digest": "sha256:c2e364b0b31199a7a877f4cd2fc4112d9d2768fdb20693355d8ebe74ff963253"
+    },
+    {
+      "id": "spec-operations-refresh-0-143-0",
+      "summary": "docs(specs): refresh OPERATIONS.md attestation for v0.143.0",
+      "input_digest": "sha256:24ac00501afc9004277b7c36fe604c8075f42ab1c86d739bf77d39aca10f9d82"
     }
   ],
   "intents": {
