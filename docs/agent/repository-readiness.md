@@ -174,3 +174,20 @@ Explicit opt-in uses `mode = "required"` and the reviewed `model_manifest_digest
 printed by `decapod setup laya`. Init can select that reviewed digest without
 installing or executing a model. Omitted options preserve current Laya policy,
 backend preference, CPU fallback and local binding settings. Dry-run is read-only.
+
+### Diagnostic gate overrides and full readiness
+
+`DECAPOD_VALIDATE_SKIP_GIT_GATES` and
+`DECAPOD_VALIDATE_SKIP_TOOLING_GATES` are presence-based diagnostic flags.
+`DECAPOD_VALIDATE_SKIP_FINGERPRINT_GATES` uses its existing truth-value parser.
+An active override produces `READINESS_GATE_OVERRIDE_UNSUPPORTED` for full
+validation, supported workspace publication and validated completion, including
+historical completion admission. Remove it and collect fresh applicable proof;
+reusing a cached receipt does not grant the missing authority.
+
+CI-local and project-prerequisite diagnostics keep explicit partial scope and
+cannot authorize publication. Historical observations remain inspectable. Broker
+requests preserve their caller diagnostic scope, and local validated completion
+rejects before broker handoff. An unknown write outcome still requires inspection;
+never replay it merely because an override was removed. Direct unrestricted Git
+and filesystem access remain outside this local operation boundary.
