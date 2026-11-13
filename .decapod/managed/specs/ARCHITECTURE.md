@@ -401,6 +401,17 @@ version-resolution adapter. Shell, Docker, generated executable,
 foreign-platform and derivative adapters remain explicit obligations; sequence
 support alone does not establish complete native/Buildkite equivalence.
 
+`assets/tools/build_lifecycle.rs` supervises Bazel (`--run_under=//:build_lifecycle`)
+and Cargo build/test invocations inside an atomically allocated per-invocation
+scratch directory. After child exit and bounded process-group teardown,
+`Scratch::clean` verifies parent and scratch directory identity before removing
+the owned scratch tree. On Unix `PermissionDenied` (including mode-`0o000`
+rootless container overlay directories left under a disposable `HOME`),
+`Scratch::recover_owned_permissions` restores owner `0o700` traversal only on
+verified same-UID, same-device non-symlink directories within bounded depth and
+entry limits, leaving `cleanup_diagnostics` read-only and external caches or
+symlink targets untouched.
+
 ## Execution Path
 
 An invocation parses a command or RPC request and resolves its project context.
@@ -886,7 +897,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `ef0b809779d89f44a5898a162dc5f2c358e9bd025aa03cb27e7b0b01c56c2078`
+- Repository signal fingerprint: `2e78d5222e4634cae73a931b81187b35194b569d14c6049c19bd245d0d6a280b`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (230 files), `tests/` (232 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

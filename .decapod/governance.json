@@ -671,6 +671,14 @@
       "proof_refs": [
         ".decapod/managed/specs/SECURITY.md"
       ]
+    },
+    {
+      "id": "document-build-lifecycle-architecture",
+      "summary": "Document build_lifecycle owned scratch supervision and Unix cleanup recovery in ARCHITECTURE.md",
+      "input_digest": "sha256:806fda825d0df0637f96bc0adb577b6fef4eb33a0fb0f5a3bf1b868aa80b668b",
+      "proof_refs": [
+        ".decapod/managed/specs/ARCHITECTURE.md"
+      ]
     }
   ],
   "intents": {
@@ -726,7 +734,7 @@
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:b78513b48cb1c21c4b8ba9bbd70e071ef4c90191df37c11f6ffc9edf3d5e3a74",
+      "artifact_hash": "sha256:00d6e0028442c609bcd4c34ffd0cd55dd375391f6350d05ed1c6c2424c011001",
       "checks": [],
       "current_phase": "execution",
       "custody": {
@@ -847,10 +855,17 @@
             "intent_id": "intent:change_01M79A0G0YSR12S2RHJE84QPHR",
             "kind": "trajectory_step_recorded",
             "sequence": 18
+          },
+          {
+            "detail": "trajectory:branch_01M79A0G5E35FVE2EYNYQVQ3XY",
+            "event_id": "event:19",
+            "intent_id": "intent:change_01M79A0G0YSR12S2RHJE84QPHR",
+            "kind": "trajectory_step_recorded",
+            "sequence": 19
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 18,
+        "next_sequence": 19,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M79A0G5E35FVE2EYNYQVQ3XY": {
@@ -1097,6 +1112,22 @@
                 ],
                 "sequence": 18,
                 "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:19",
+                "observations": [
+                  ".decapod/managed/specs/ARCHITECTURE.md"
+                ],
+                "proof_refs": [],
+                "scope": [
+                  "\".decapod/config.toml\"",
+                  "\".decapod/managed/specs\"]",
+                  "\"assets/tools/build_lifecycle_tests.rs\"",
+                  "paths:[\"assets/tools/build_lifecycle.rs\""
+                ],
+                "sequence": 19,
+                "validation_findings": []
               }
             ]
           }
@@ -1134,6 +1165,7 @@
       "modified_files": [
         ".decapod/config.toml",
         ".decapod/managed/Dockerfile.decapod",
+        ".decapod/managed/specs/ARCHITECTURE.md",
         ".decapod/managed/specs/INTENT.md",
         ".decapod/managed/specs/INTERFACES.md",
         ".decapod/managed/specs/OPERATIONS.md",
