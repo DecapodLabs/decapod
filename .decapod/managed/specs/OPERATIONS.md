@@ -374,8 +374,8 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `9dd1adce7cccd5b451d3e5190d70ef6a631f185f21d1e1222d4328c1864166d1`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (232 files), `tests/` (232 files)
+- Repository signal fingerprint: `a87a7c93f1c30d85611e9c7520700ad2980c41199162cf7b3035954db79152c8`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (233 files), `tests/` (232 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 
@@ -412,3 +412,7 @@ and commit the present observation. Resolve its returned `history-recovery:<sha>
 obligation with the archived observation and relevant current evidence references;
 checkpoint/commit that resolution and run complete independent validation.
 This recovers current work. It leaves old history unproven and enables no waiver.
+
+## PR1663 integrated storage behavior
+
+Do not install or run the compaction candidate against the machine coordination store while repairing this PR. Existing forward migration, backup/parity and format guards are part of the proposed behavior and must be exercised on disposable hosted fixtures. VACUUM remains explicit-only; historical benchmark percentages are not a new production measurement.

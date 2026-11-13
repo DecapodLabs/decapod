@@ -39,6 +39,18 @@ mod task_journal;
 pub use authoring::{
     admit_authoring, check_authoring, enforce_shared_resource_available, release_authoring_binding,
 };
+pub use task_journal::{
+    VerifyBudget as TaskJournalVerifyBudget, VerifyCursor as TaskJournalVerifyCursor,
+};
+
+/// Snapshot-consistent, keyset-paged task journal verification (`#1630` `F5`).
+pub fn verify_task_journal_with_budget(
+    conn: &Connection,
+    budget: &TaskJournalVerifyBudget,
+    cursor: Option<&TaskJournalVerifyCursor>,
+) -> Result<JsonValue, error::DecapodError> {
+    task_journal::verify_with_budget(conn, budget, cursor)
+}
 
 /// The original task contract and custody captured before full validation.
 /// Revision changes are accepted only through the independently checked journal.
@@ -1052,12 +1064,14 @@ fn ensure_schema(conn: &Connection) -> Result<(), error::DecapodError> {
     // here turns an otherwise valid read into a ReadOnly storage failure.
     // A missing or incompatible schema still fails at the actual query and
     // is repaired by the next governed initialization/migration step.
+    crate::core::storage_compaction::check_read_compatibility(conn)?;
     if conn.is_read_only() {
         return Ok(());
     }
 
     guard_task_schema_initialization(conn)?;
     conn.execute(schemas::TODO_DB_SCHEMA_META, [])?;
+    crate::core::storage_compaction::check_storage_format_compatibility(conn)?;
     crate::core::events::ensure_tables(conn)?;
 
     let current: Option<String> = conn
@@ -1111,6 +1125,12 @@ fn ensure_schema(conn: &Connection) -> Result<(), error::DecapodError> {
         CREATE UNIQUE INDEX IF NOT EXISTS idx_authoring_bindings_task_id
         ON authoring_bindings(task_id);",
     )?;
+    conn.execute_batch(schemas::STORAGE_COMPONENTS_SCHEMA)
+        .map_err(error::DecapodError::StorageError)?;
+    conn.execute_batch(schemas::STORAGE_COMPONENT_REFS_SCHEMA)
+        .map_err(error::DecapodError::StorageError)?;
+    conn.execute_batch(schemas::STORAGE_MIGRATION_MANIFESTS_SCHEMA)
+        .map_err(error::DecapodError::StorageError)?;
     seed_default_risk_zones(conn)?;
     // Houseboat 2 lease columns must exist even if meta was advanced without the ALTER.
     let _ = conn.execute("ALTER TABLE tasks ADD COLUMN lease_expires_at TEXT", []);
@@ -1253,6 +1273,9 @@ fn ensure_schema(conn: &Connection) -> Result<(), error::DecapodError> {
             schemas::TODO_SCHEMA_VERSION.to_string()
         ],
     )?;
+    if current_version == 0 {
+        crate::core::storage_compaction::stamp_storage_format_metadata(conn)?;
+    }
 
     Ok(())
 }
@@ -3211,7 +3234,7 @@ fn fetch_task_comments(
 ) -> Result<Vec<TaskComment>, error::DecapodError> {
     let mut stmt = conn
         .prepare(
-            "SELECT ts, actor, payload
+            "SELECT event_id, ts, event_type, actor, subject_kind, subject_id, payload
              FROM events
              WHERE stream = 'todo'
                AND subject_id = ?1
@@ -3221,12 +3244,28 @@ fn fetch_task_comments(
         .map_err(error::DecapodError::StorageError)?;
     let rows = stmt
         .query_map([task_id], |row| {
-            let payload: String = row.get(2)?;
-            let raw: JsonValue = serde_json::from_str(&payload).unwrap_or(JsonValue::Null);
+            let event_id: String = row.get(0)?;
+            let ts: String = row.get(1)?;
+            let event_type: String = row.get(2)?;
+            let actor: String = row.get(3)?;
+            let subject_kind: Option<String> = row.get(4)?;
+            let subject_id: Option<String> = row.get(5)?;
+            let payload: String = row.get(6)?;
+            let raw: JsonValue = crate::core::events::reconstruct_stored_payload(
+                "todo",
+                &event_id,
+                &ts,
+                &event_type,
+                &actor,
+                subject_kind.as_deref(),
+                subject_id.as_deref(),
+                &payload,
+            )
+            .unwrap_or_else(|_| serde_json::from_str(&payload).unwrap_or(JsonValue::Null));
             let payload = event_inner_payload(&raw);
             Ok(TaskComment {
-                ts: row.get(0)?,
-                actor: row.get(1)?,
+                ts,
+                actor,
                 comment: payload
                     .get("comment")
                     .and_then(|v| v.as_str())
@@ -3256,6 +3295,7 @@ fn write_task_comment_event(
     payload_extra: JsonValue,
     ts: &str,
 ) -> Result<(), error::DecapodError> {
+    crate::core::storage_contracts::validate_task_comment(task_id, actor, comment)?;
     let mut payload = serde_json::json!({ "comment": comment });
     if let (Some(payload_obj), Some(extra_obj)) =
         (payload.as_object_mut(), payload_extra.as_object())
@@ -3395,8 +3435,26 @@ pub fn add_task(root: &Path, args: &TodoCommand) -> Result<serde_json::Value, er
     let ts = now_iso();
     let intent_ref = format!("intent:todo.add:{}", crate::core::ulid::new_ulid());
     let owner_list = parse_owners_input(owner);
+    let validated_collections = crate::core::storage_contracts::validate_task_write(
+        &crate::core::storage_contracts::TaskWriteInput {
+            title,
+            description,
+            priority,
+            tags,
+            owners: &owner_list,
+            due: due.as_deref(),
+            r#ref,
+            scope: &scope,
+            dir_path: &dir_abs,
+            depends_on,
+            blocks,
+            parent_task_id: parent.as_deref(),
+        },
+    )?;
     let primary_owner = owner_list.first().cloned().unwrap_or_default();
-    let effective_tags = tags.clone();
+    let effective_tags = validated_collections.tags_csv;
+    let normalized_depends_on = validated_collections.depends_on_csv;
+    let normalized_blocks = validated_collections.blocks_csv;
 
     let broker = DbBroker::new(root);
     let db_path = todo_db_path(root);
@@ -3455,8 +3513,8 @@ pub fn add_task(root: &Path, args: &TodoCommand) -> Result<serde_json::Value, er
                 scope,
                 parent,
                 priority,
-                depends_on,
-                blocks,
+                normalized_depends_on,
+                normalized_blocks,
                 category,
                 assigned_to,
                 assigned_at,
@@ -3464,7 +3522,7 @@ pub fn add_task(root: &Path, args: &TodoCommand) -> Result<serde_json::Value, er
             ],
         )?;
             sync_task_tags(conn, &task_id, &effective_tags)?;
-            sync_task_dependencies(conn, &task_id, depends_on, &ts)?;
+            sync_task_dependencies(conn, &task_id, &normalized_depends_on, &ts)?;
 
             let mut payload = serde_json::json!({
                 "intent_ref": intent_ref,
@@ -3479,8 +3537,8 @@ pub fn add_task(root: &Path, args: &TodoCommand) -> Result<serde_json::Value, er
                 "scope": scope,
                 "parent_task_id": parent,
                 "priority": priority,
-                "depends_on": depends_on,
-                "blocks": blocks,
+                "depends_on": normalized_depends_on,
+                "blocks": normalized_blocks,
                 "category": category,
                 "hash": task_hash,
                 "task_type": task_type,
@@ -3890,7 +3948,7 @@ fn update_status_with_verification(
     Ok(output)
 }
 
-fn comment_task(
+pub fn comment_task(
     root: &Path,
     id: &str,
     comment: &str,
@@ -3921,7 +3979,7 @@ fn comment_task(
     }))
 }
 
-fn edit_task(
+pub fn edit_task(
     root: &Path,
     id: &str,
     title: Option<&str>,
@@ -3929,6 +3987,16 @@ fn edit_task(
     owner: Option<&str>,
     category: Option<&str>,
 ) -> Result<serde_json::Value, error::DecapodError> {
+    let parsed_owners = owner.map(parse_owners_input);
+    crate::core::storage_contracts::validate_task_patch(
+        &crate::core::storage_contracts::TaskPatchInput {
+            id,
+            title,
+            description,
+            owners: parsed_owners.as_deref(),
+            category,
+        },
+    )?;
     let ts = now_iso();
     let broker = DbBroker::new(root);
     let db_path = todo_db_path(root);
@@ -7178,21 +7246,65 @@ fn claim_followup_once(
     use crate::core::events;
     let key = format!("claim.container.{request_id}");
     let broker = DbBroker::new(root);
-    let existing = broker.with_transaction(&todo_db_path(root), "decapod", None, "todo.claim.container.reserve", |conn| {
-        let existing: Option<String> = conn.query_row(
-            "SELECT payload FROM events WHERE stream = ?1 AND event_type = ?2 ORDER BY seq DESC LIMIT 1",
-            params![events::WORKSPACE_LIFECYCLE, key], |row| row.get(0)).optional()?;
-        if existing.is_none() {
-            events::append_on_conn(conn, events::WORKSPACE_LIFECYCLE, &serde_json::json!({
-                "event_id": crate::core::ulid::new_ulid(), "event_type": key,
-                "ts": now_iso(), "phase": "started", "request_id": request_id,
-            }))?;
-        }
-        Ok(existing)
-    })?;
-    if let Some(raw) = existing {
-        let receipt: JsonValue = serde_json::from_str(&raw)
-            .map_err(|e| error::DecapodError::ValidationError(e.to_string()))?;
+    let existing = broker.with_transaction(
+        &todo_db_path(root),
+        "decapod",
+        None,
+        "todo.claim.container.reserve",
+        |conn| {
+            type LifecycleEventRow = (
+                String,
+                String,
+                String,
+                String,
+                Option<String>,
+                Option<String>,
+                String,
+            );
+            let existing: Option<LifecycleEventRow> = conn
+                .query_row(
+                    "SELECT event_id, ts, event_type, actor, subject_kind, subject_id, payload
+             FROM events
+             WHERE stream = ?1 AND event_type = ?2
+             ORDER BY seq DESC LIMIT 1",
+                    params![events::WORKSPACE_LIFECYCLE, key],
+                    |row| {
+                        Ok((
+                            row.get(0)?,
+                            row.get(1)?,
+                            row.get(2)?,
+                            row.get(3)?,
+                            row.get(4)?,
+                            row.get(5)?,
+                            row.get(6)?,
+                        ))
+                    },
+                )
+                .optional()?;
+            if existing.is_none() {
+                events::append_on_conn(
+                    conn,
+                    events::WORKSPACE_LIFECYCLE,
+                    &serde_json::json!({
+                        "event_id": crate::core::ulid::new_ulid(), "event_type": key,
+                        "ts": now_iso(), "phase": "started", "request_id": request_id,
+                    }),
+                )?;
+            }
+            Ok(existing)
+        },
+    )?;
+    if let Some((event_id, ts, event_type, actor, subject_kind, subject_id, raw)) = existing {
+        let receipt: JsonValue = events::reconstruct_stored_payload(
+            events::WORKSPACE_LIFECYCLE,
+            &event_id,
+            &ts,
+            &event_type,
+            &actor,
+            subject_kind.as_deref(),
+            subject_id.as_deref(),
+            &raw,
+        )?;
         return Ok(receipt.get("result").cloned().unwrap_or_else(|| claim_container_warning(
             "Container follow-up already started or was interrupted; automatic retry is suppressed to avoid duplicating the command.")));
     }

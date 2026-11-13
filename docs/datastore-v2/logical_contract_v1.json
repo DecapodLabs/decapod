@@ -1,10 +1,42 @@
 {
   "schema": "decapod.logical-storage-inventory.v1",
   "status": "provisional_source_inventory_requires_effective_runtime_and_postgres_catalog_proof",
-  "release": "0.136.4",
-  "pinned_source_sha": "6de3d7a196752a2f869c04fdbeff18be28437926",
+  "release": "0.143.1",
+  "pinned_source_sha": "d3542c30ac0088f3c07e83b775471b8677875e7e",
   "inventory_blob_sha": "f409aa80ea5cfa17aa82365b2dab7c69ace15160",
-  "field_policy": "no narrowing or deletion authorized by this inventory",
+  "field_policy": "explicit_utf8_byte_json_and_collection_bounds_enforced_fail_closed_on_writes_historical_reads_lossless",
+  "field_contracts": {
+    "schema": "decapod.storage-field-contracts.v1",
+    "unit": "utf8_bytes",
+    "nul_byte_policy": "reject_0x00_on_all_writes",
+    "historical_oversized_read_policy": "lossless_untruncated_read",
+    "limits": {
+      "id_bytes": 128,
+      "principal_bytes": 128,
+      "stream_bytes": 64,
+      "event_type_bytes": 128,
+      "timestamp_bytes": 64,
+      "enum_token_bytes": 64,
+      "category_bytes": 128,
+      "tag_bytes": 128,
+      "title_bytes": 512,
+      "scope_bytes": 4096,
+      "path_or_ref_bytes": 2048,
+      "description_bytes": 65536,
+      "proof_plan_bytes": 65536,
+      "verification_artifacts_bytes": 262144,
+      "event_payload_bytes": 524288,
+      "transfer_event_payload_bytes": 4456448,
+      "json_max_depth": 24,
+      "tags_per_task": 64,
+      "owners_per_task": 32,
+      "dependencies_per_task": 128
+    }
+  },
+  "authority_convergence": {
+    "tasks_tags": "tasks.tags normalized sorted unique CSV and task_tags WITHOUT ROWID junction represent identical tag sets on write",
+    "tasks_dependencies": "tasks.depends_on preserves canonical authored dependency IDs (including unresolved future IDs); task_dependencies stores exact resolved FK edges against existing tasks.id"
+  },
   "runtime_scope": {
     "sqlite": "one_repository_per_file_no_tenant_strings",
     "postgresql": "server_derived_compact_repository_key",
@@ -2109,6 +2141,211 @@
           "unique": false
         }
       ]
+    },
+    {
+      "logical_name": "storage_component_refs",
+      "authority": "authoritative_operational",
+      "columns": [
+        {
+          "name": "ref_scope",
+          "sqlite_type": "TEXT",
+          "not_null": true,
+          "pk_ordinal": 1,
+          "default_sql": null
+        },
+        {
+          "name": "ref_id",
+          "sqlite_type": "TEXT",
+          "not_null": true,
+          "pk_ordinal": 2,
+          "default_sql": null
+        },
+        {
+          "name": "component_kind",
+          "sqlite_type": "TEXT",
+          "not_null": true,
+          "pk_ordinal": 3,
+          "default_sql": null
+        },
+        {
+          "name": "codec_version",
+          "sqlite_type": "INTEGER",
+          "not_null": true,
+          "pk_ordinal": 4,
+          "default_sql": null
+        },
+        {
+          "name": "byte_len",
+          "sqlite_type": "INTEGER",
+          "not_null": true,
+          "pk_ordinal": 5,
+          "default_sql": null
+        },
+        {
+          "name": "content_sha256",
+          "sqlite_type": "TEXT",
+          "not_null": true,
+          "pk_ordinal": 6,
+          "default_sql": null
+        }
+      ],
+      "primary_key": [
+        "ref_scope",
+        "ref_id",
+        "component_kind",
+        "codec_version",
+        "byte_len",
+        "content_sha256"
+      ],
+      "unique": [],
+      "foreign_keys": [
+        {
+          "from": [
+            "component_kind",
+            "codec_version",
+            "byte_len",
+            "content_sha256"
+          ],
+          "ref_table": "storage_components",
+          "ref_columns": [
+            "component_kind",
+            "codec_version",
+            "byte_len",
+            "content_sha256"
+          ],
+          "on_delete": "restrict"
+        }
+      ],
+      "indexes": [
+        {
+          "name": "idx_storage_component_refs_target",
+          "columns": [
+            "component_kind",
+            "codec_version",
+            "byte_len",
+            "content_sha256"
+          ],
+          "unique": false
+        }
+      ]
+    },
+    {
+      "logical_name": "storage_components",
+      "authority": "immutable_artifact_reference",
+      "columns": [
+        {
+          "name": "component_kind",
+          "sqlite_type": "TEXT",
+          "not_null": true,
+          "pk_ordinal": 1,
+          "default_sql": null
+        },
+        {
+          "name": "codec_version",
+          "sqlite_type": "INTEGER",
+          "not_null": true,
+          "pk_ordinal": 2,
+          "default_sql": null
+        },
+        {
+          "name": "byte_len",
+          "sqlite_type": "INTEGER",
+          "not_null": true,
+          "pk_ordinal": 3,
+          "default_sql": null
+        },
+        {
+          "name": "content_sha256",
+          "sqlite_type": "TEXT",
+          "not_null": true,
+          "pk_ordinal": 4,
+          "default_sql": null
+        },
+        {
+          "name": "stored_bytes",
+          "sqlite_type": "BLOB",
+          "not_null": true,
+          "pk_ordinal": 0,
+          "default_sql": null
+        },
+        {
+          "name": "created_at",
+          "sqlite_type": "TEXT",
+          "not_null": true,
+          "pk_ordinal": 0,
+          "default_sql": null
+        }
+      ],
+      "primary_key": [
+        "component_kind",
+        "codec_version",
+        "byte_len",
+        "content_sha256"
+      ],
+      "unique": [],
+      "foreign_keys": [],
+      "indexes": []
+    },
+    {
+      "logical_name": "storage_migration_manifests",
+      "authority": "authoritative_operational",
+      "columns": [
+        {
+          "name": "migration_id",
+          "sqlite_type": "TEXT",
+          "not_null": false,
+          "pk_ordinal": 1,
+          "default_sql": null
+        },
+        {
+          "name": "schema_version",
+          "sqlite_type": "TEXT",
+          "not_null": true,
+          "pk_ordinal": 0,
+          "default_sql": null
+        },
+        {
+          "name": "applied_at",
+          "sqlite_type": "TEXT",
+          "not_null": true,
+          "pk_ordinal": 0,
+          "default_sql": null
+        },
+        {
+          "name": "binary_version",
+          "sqlite_type": "TEXT",
+          "not_null": true,
+          "pk_ordinal": 0,
+          "default_sql": null
+        },
+        {
+          "name": "pre_digest",
+          "sqlite_type": "TEXT",
+          "not_null": true,
+          "pk_ordinal": 0,
+          "default_sql": null
+        },
+        {
+          "name": "post_digest",
+          "sqlite_type": "TEXT",
+          "not_null": true,
+          "pk_ordinal": 0,
+          "default_sql": null
+        },
+        {
+          "name": "manifest_json",
+          "sqlite_type": "TEXT",
+          "not_null": true,
+          "pk_ordinal": 0,
+          "default_sql": null
+        }
+      ],
+      "primary_key": [
+        "migration_id"
+      ],
+      "unique": [],
+      "foreign_keys": [],
+      "indexes": []
     },
     {
       "logical_name": "summaries",

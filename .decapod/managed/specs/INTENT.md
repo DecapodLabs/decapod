@@ -352,8 +352,8 @@ These declarations select authoring and proof obligations; they do not attest im
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `9dd1adce7cccd5b451d3e5190d70ef6a631f185f21d1e1222d4328c1864166d1`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (232 files), `tests/` (232 files)
+- Repository signal fingerprint: `a87a7c93f1c30d85611e9c7520700ad2980c41199162cf7b3035954db79152c8`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (233 files), `tests/` (232 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 
@@ -545,3 +545,7 @@ Reduce anonymous GitHub discovery consumption while preserving exact-source proo
 ## PR1666 current-master integration
 
 Incorporate accepted master 9b900254, including custody, protected-path/workunit fixes and the 0.144.0 source release. Preserve the quota-pacing feature and its original PR history, then repair hosted CI failures one at a time. No local test execution or independent full readiness is claimed.
+
+## PR1663 integrated storage behavior
+
+Integrate PR1663 on accepted master5e23ad68 and0.144.1 while preserving storage admission, lossless history and format obligations. Keep accepted custody, quota and runtime-owner changes. Historical benchmark claims remain historical; only fresh hosted execution can establish this candidate's checks.

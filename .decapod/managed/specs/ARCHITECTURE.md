@@ -920,8 +920,8 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `9dd1adce7cccd5b451d3e5190d70ef6a631f185f21d1e1222d4328c1864166d1`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (232 files), `tests/` (232 files)
+- Repository signal fingerprint: `a87a7c93f1c30d85611e9c7520700ad2980c41199162cf7b3035954db79152c8`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (233 files), `tests/` (232 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 
@@ -1183,3 +1183,7 @@ The machine-private cloud todo receipt file uses a version-two envelope around i
 ## PR1666 current-master integration
 
 The shared GithubQuota/Budget mechanism continues to pace only anonymous discovery, preserve final verification capacity, and honor bounded deadlines. Accepted custody and workunit runtime ownership changes remain in place; this integration adds no competing verifier or provider policy.
+
+## PR1663 integrated storage behavior
+
+The integrated `todo` module exports both accepted authoring/resource custody functions and component-aware journal verification. Keep initialized runtime ownership and task binding retirement alongside storage format guards, compact event reconstruction, content-addressed components and snapshot-consistent verification. The coordination kernel is the published0.144.1 source with only the previously scoped inert-placeholder repair; it does not contain or execute this proposed storage migration.

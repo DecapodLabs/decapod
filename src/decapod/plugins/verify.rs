@@ -673,6 +673,13 @@ fn persist_result_on_connection(
             ));
     }
     let proof_plan = target.proof_plan.as_deref().unwrap_or("[]");
+    crate::core::storage_contracts::validate_verification_write(
+        &target.todo_id,
+        proof_plan,
+        target.artifacts.as_deref(),
+        Some(status),
+        Some(notes),
+    )?;
     conn.execute(
             "INSERT INTO task_verification(todo_id, proof_plan, verification_artifacts, last_verified_at, last_verified_status, last_verified_notes, verification_policy_days, updated_at)
              VALUES(?1, ?2, ?3, ?4, ?5, ?6, ?7, ?4)
@@ -1430,6 +1437,13 @@ impl PreparedTodoVerification {
         } else {
             "[\"validate_passes\"]"
         };
+        crate::core::storage_contracts::validate_verification_write(
+            &self.todo_id,
+            proof_plan,
+            Some(&artifacts_json),
+            Some("pass"),
+            Some("baseline captured"),
+        )?;
         conn.execute(
             "INSERT INTO task_verification(todo_id, proof_plan, verification_artifacts, last_verified_at, last_verified_status, last_verified_notes, verification_policy_days, updated_at)
              VALUES(?1, ?4, ?2, ?3, 'pass', 'baseline captured', 90, ?3)
@@ -1994,6 +2008,15 @@ fn refresh_batch_baselines_with_captures(
                 }
             }
             for (target, artifacts_json, proof_plan_json, artifacts) in &updates {
+                crate::core::storage_contracts::validate_verification_write(
+                    &target.todo_id,
+                    proof_plan_json,
+                    Some(artifacts_json),
+                    Some("CLAIMED"),
+                    Some(
+                        "current recovery evidence captured; awaiting final aggregate verification",
+                    ),
+                )?;
                 conn.execute(
                 "INSERT INTO task_verification(todo_id, proof_plan, verification_artifacts,
                      last_verified_status, last_verified_notes, verification_policy_days, updated_at)

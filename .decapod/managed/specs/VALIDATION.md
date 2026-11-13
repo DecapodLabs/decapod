@@ -1341,8 +1341,8 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `9dd1adce7cccd5b451d3e5190d70ef6a631f185f21d1e1222d4328c1864166d1`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (232 files), `tests/` (232 files)
+- Repository signal fingerprint: `a87a7c93f1c30d85611e9c7520700ad2980c41199162cf7b3035954db79152c8`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (233 files), `tests/` (232 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 
@@ -1880,3 +1880,15 @@ The hosted standalone validator passed project prerequisites but rejected uncomm
 ### Bounded complete CLI contract execution
 
 Hosted Contract Conformance exhausted the300s aggregate while entering the schema-determinism case after16 completed cases in the22-case sequential suite; the matching push job passed. `tests/cli_contract_enforcement.rs` now uses a60s process-group deadline in its shared command helper, producing a command-specific failure instead of an unbounded child wait. The Bazel target uses the existing finite900s long class, retains exclusive isolation and executes all22 cases without removing assertions. The reviewed source-inventory update covers that explicit build-input budget change; required checks, providers and proof semantics are unchanged. No local tests are run.
+
+## PR1663 integrated storage behavior
+
+Current accepted target is5e23ad68 (0.144.1). Preserve all original regression sources and use hosted CI for the new integrated candidate; do not run local tests. The resolved source export conflict retains both custody/resource guards and the component-journal API. Source inventory, release projections and current-content reviews are refreshed without changing required provider policy or claiming independent full readiness.
+
+### Blank-title write-admission regression
+
+Hosted Gatling failed because its legacy EDGE-1 case expected an empty task title to be accepted. The storage contract rejects empty and whitespace-only new titles. The same existing real-CLI case now requires failure with the typed title-admission diagnostic and compares task identities/titles before and after each rejection, preserving the no-task-created invariant. Production admission is unchanged; historical read compatibility is not redefined. Current hosted execution must verify the repair; no local tests run.
+
+### Complete bounded todo-plugin execution
+
+Hosted plugin verification exhausted the300s moderate aggregate after more than30 completed cases in the40-case todo suite. That target now uses the finite900s long class and exclusive target scheduling, while its internal concurrent workers and all assertions remain intact. Its serial CLI helper keeps broker routing, uses a1s idle window and a120s child-process deadline with command diagnostics. Optional container behavior is preserved. The reviewed build-input binding records these execution-budget changes; no local tests or production latency assertions are removed.

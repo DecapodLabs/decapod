@@ -5160,22 +5160,51 @@ fn validate_knowledge_integrity(
 fn load_knowledge_promotion_event_ids(
     conn: &crate::core::db::Connection,
 ) -> Result<HashSet<String>, error::DecapodError> {
+    if !conn.has_table("events")? {
+        return Ok(HashSet::new());
+    }
     let mut stmt = conn
-        .prepare("SELECT payload FROM events WHERE stream = 'knowledge'")
+        .prepare(
+            "SELECT event_id, ts, event_type, actor, subject_kind, subject_id, payload \
+             FROM events WHERE stream = 'knowledge'",
+        )
         .map_err(error::DecapodError::StorageError)?;
     let rows = stmt
-        .query_map([], |row| row.get::<_, String>(0))
+        .query_map([], |row| {
+            Ok((
+                row.get::<_, String>(0)?,
+                row.get::<_, String>(1)?,
+                row.get::<_, String>(2)?,
+                row.get::<_, String>(3)?,
+                row.get::<_, Option<String>>(4)?,
+                row.get::<_, Option<String>>(5)?,
+                row.get::<_, String>(6)?,
+            ))
+        })
         .map_err(error::DecapodError::StorageError)?;
     let mut ids = HashSet::new();
     for row in rows {
-        let raw = row.map_err(error::DecapodError::StorageError)?;
-        let v: serde_json::Value = serde_json::from_str(&raw).map_err(|e| {
+        let (event_id, ts, event_type, actor, subject_kind, subject_id, raw) =
+            row.map_err(error::DecapodError::StorageError)?;
+        let v = crate::core::events::reconstruct_stored_payload(
+            crate::core::events::KNOWLEDGE,
+            &event_id,
+            &ts,
+            &event_type,
+            &actor,
+            subject_kind.as_deref(),
+            subject_id.as_deref(),
+            &raw,
+        )
+        .map_err(|e| {
             error::DecapodError::ValidationError(format!(
                 "invalid knowledge promotion event in decapod.db:events (stream=knowledge): {e}"
             ))
         })?;
         if let Some(id) = v.get("event_id").and_then(|x| x.as_str()) {
             ids.insert(id.to_string());
+        } else if !event_id.is_empty() {
+            ids.insert(event_id);
         }
     }
     Ok(ids)

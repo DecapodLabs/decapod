@@ -1,3 +1,4 @@
+use decapod::core::bounded_process::BoundedCommand;
 use decapod::core::broker::DbBroker;
 use decapod::core::db::Connection;
 use decapod::core::events;
@@ -632,13 +633,18 @@ fn run_raw_as(repo_root: &Path, args: &[&str], actor: &str) -> std::process::Out
         .args(args)
         .env("DECAPOD_AGENT_ID", actor)
         .stdin(std::process::Stdio::null())
+        // Fixture commands are serial; retain broker execution without its
+        // production batching delay after every CLI call.
+        .env("DECAPOD_GROUP_BROKER_IDLE_SECS", "1")
         .env("DECAPOD_VALIDATE_SKIP_GIT_GATES", "1")
         .env("GIT_AUTHOR_NAME", "Decapod Test")
         .env("GIT_AUTHOR_EMAIL", "decapod-test@example.com")
         .env("GIT_COMMITTER_NAME", "Decapod Test")
         .env("GIT_COMMITTER_EMAIL", "decapod-test@example.com")
-        .output()
-        .expect("run decapod")
+        .bounded_output(Duration::from_secs(120))
+        .unwrap_or_else(|error| {
+            panic!("decapod {args:?} did not finish within the plugin command budget: {error}")
+        })
 }
 
 fn bootstrap_repo(repo: &Path) {
@@ -1761,8 +1767,44 @@ fn handoff_checks_real_actor_and_preserves_owner_until_approved() {
         get_task(root, &id).unwrap().unwrap().assigned_to,
         "recovery-caller"
     );
-    let event: String = db.query_row("SELECT payload FROM events WHERE stream='todo' AND subject_id=?1 AND event_type='task.handoff' ORDER BY seq DESC LIMIT 1", [&id], |row| row.get(0)).unwrap();
-    let event: Value = serde_json::from_str(&event).unwrap();
+    let (event_id, ts, actor, subject_kind, subject_id, raw): (
+        String,
+        String,
+        String,
+        Option<String>,
+        Option<String>,
+        String,
+    ) = db
+        .query_row(
+            "SELECT event_id, ts, actor, subject_kind, subject_id, payload
+             FROM events
+             WHERE stream='todo' AND subject_id=?1 AND event_type='task.handoff'
+             ORDER BY seq DESC LIMIT 1",
+            [&id],
+            |row| {
+                Ok((
+                    row.get(0)?,
+                    row.get(1)?,
+                    row.get(2)?,
+                    row.get(3)?,
+                    row.get(4)?,
+                    row.get(5)?,
+                ))
+            },
+        )
+        .unwrap();
+    assert!(raw.contains("\"_ce_v1\""));
+    let event = decapod::core::events::reconstruct_stored_payload(
+        "todo",
+        &event_id,
+        &ts,
+        "task.handoff",
+        &actor,
+        subject_kind.as_deref(),
+        subject_id.as_deref(),
+        &raw,
+    )
+    .unwrap();
     assert_eq!(event["actor"], "recovery-caller");
     assert_eq!(event["payload"]["from"], "missing-owner");
 }
@@ -2330,11 +2372,44 @@ fn basic_shared_claim_opt_in_is_bounded_and_audited() {
             .any(|owner| owner.agent_id == "member" && owner.claim_type == "secondary")
     );
     let db = Connection::open(root.join(schemas::LOCAL_DB_NAME)).unwrap();
-    let raw: String = db.query_row(
-        "SELECT payload FROM events WHERE stream='todo' AND subject_id=?1 AND event_type='policy.basic_shared_claim.used' ORDER BY seq DESC LIMIT 1",
-        [&id], |row| row.get(0),
-    ).unwrap();
-    let event: Value = serde_json::from_str(&raw).unwrap();
+    let (event_id, ts, actor, subject_kind, subject_id, raw): (
+        String,
+        String,
+        String,
+        Option<String>,
+        Option<String>,
+        String,
+    ) = db
+        .query_row(
+            "SELECT event_id, ts, actor, subject_kind, subject_id, payload
+             FROM events
+             WHERE stream='todo' AND subject_id=?1 AND event_type='policy.basic_shared_claim.used'
+             ORDER BY seq DESC LIMIT 1",
+            [&id],
+            |row| {
+                Ok((
+                    row.get(0)?,
+                    row.get(1)?,
+                    row.get(2)?,
+                    row.get(3)?,
+                    row.get(4)?,
+                    row.get(5)?,
+                ))
+            },
+        )
+        .unwrap();
+    assert!(raw.contains("\"_ce_v1\""));
+    let event = decapod::core::events::reconstruct_stored_payload(
+        "todo",
+        &event_id,
+        &ts,
+        "policy.basic_shared_claim.used",
+        &actor,
+        subject_kind.as_deref(),
+        subject_id.as_deref(),
+        &raw,
+    )
+    .unwrap();
     assert_eq!(event["actor"], "member");
     assert_eq!(event["payload"]["primary_owner_label"], "owner");
     assert_eq!(

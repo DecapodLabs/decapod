@@ -626,8 +626,8 @@ execution evidence remains required before publication readiness.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `9dd1adce7cccd5b451d3e5190d70ef6a631f185f21d1e1222d4328c1864166d1`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (232 files), `tests/` (232 files)
+- Repository signal fingerprint: `a87a7c93f1c30d85611e9c7520700ad2980c41199162cf7b3035954db79152c8`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (233 files), `tests/` (232 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 
@@ -953,3 +953,7 @@ Header parsing is bounded and accepts only unambiguous numeric quota hints from 
 ## PR1666 current-master integration
 
 Preserve exact source/base checks, public-reader denial, final remote binding verification and accepted path/custody gates. GitHub PR metadata must identify the actual master tip before a fresh event is emitted. A successful process or historical test does not establish current independent readiness.
+
+## PR1663 integrated storage behavior
+
+Missing components, corrupt references, incompatible readers/writers and unauthorized custody must remain rejected. Storage migration1200 and format-v2 behavior stay confined to source and hosted disposable fixtures during this update. No direct machine datastore edit or candidate migration is authorized.
