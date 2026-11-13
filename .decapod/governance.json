@@ -631,6 +631,11 @@
       "id": "c17-dockerfile-01430",
       "summary": "chore(container): refresh managed Dockerfile pin for Decapod v0.143.0",
       "input_digest": "sha256:0692d738c0671ce8956d642cd9af043385123b3cff54811ea6a0063eb6015dd3"
+    },
+    {
+      "id": "c18-config-digest-01430",
+      "summary": "chore(proof): update reviewed_sources_digest for accepted v0.143.0 source inventory",
+      "input_digest": "sha256:a0f330ba367efe4ca2f2e509865f896ec53029a1f17cb3663367c24fe9e53ac5"
     }
   ],
   "intents": {
