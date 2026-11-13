@@ -659,6 +659,11 @@
       "id": "migration-1200-compact-storage",
       "summary": "feat(migration): register migration 1200 compact lossless storage upgrade (#1630)",
       "input_digest": "sha256:44e438d07d1408471a1447b33b0fe48361849b712c74398484ae18d57cbb5be3"
+    },
+    {
+      "id": "todo-contracts-v2-format-guard",
+      "summary": "feat(todo): enforce write contracts, format version guard, and v2 journal integration (#1630)",
+      "input_digest": "sha256:048909f167faabbcaa8233cd69f5c9bf0017cd29b93c7148ea044148326e8a92"
     }
   ],
   "intents": {
