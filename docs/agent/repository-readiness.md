@@ -186,3 +186,16 @@ Explicit opt-in uses `mode = "required"` and the reviewed `model_manifest_digest
 printed by `decapod setup laya`. Init can select that reviewed digest without
 installing or executing a model. Omitted options preserve current Laya policy,
 backend preference, CPU fallback and local binding settings. Dry-run is read-only.
+
+### Updating an accepted local verification-source inventory
+
+For an already accepted `repo.pr-readiness.v1` contract, candidate review cannot
+replace the accepted source-definition digest. This includes inventoried check
+scripts and build, dependency and provider definitions. A new candidate digest
+for changed definitions returns `ACCEPTED_REPOSITORY_CONTRACT_CHANGED`; establish
+the intended policy revision on the accepted target before revalidation.
+Additional required commands under the existing inventory remain possible. New
+inventoried check files require the same separate policy transition. First
+adoption remains supported. Normal subject changes still receive fresh checks
+and exact source bindings. Discovery and declared tool closure do not infer the
+semantic or transitive completeness of arbitrary verification commands.
