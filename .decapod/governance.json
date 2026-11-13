@@ -572,6 +572,11 @@
       "id": "refresh-agents-md-v0143",
       "summary": "Refresh AGENTS.md to canonical Decapod v0.143.0 template",
       "input_digest": "sha256:02bfb0467d2f82434cff4d89fb27e162626fbf82bfc14b27ce5891aafd46e2aa"
+    },
+    {
+      "id": "refresh-claude-md-v0143",
+      "summary": "Refresh CLAUDE.md to canonical Decapod v0.143.0 template",
+      "input_digest": "sha256:9fbab72d0999f8db8702a125292a0f4ad34c46bfec339186e0ae936976307094"
     }
   ],
   "intents": {
