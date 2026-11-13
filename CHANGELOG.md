@@ -7,6 +7,31 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.141.0](https://github.com/DecapodLabs/decapod/compare/v0.140.3...v0.141.0) - 2026-11-13
+
+### Added
+
+- compose bounded evidence-grounded reflection
+
+### Fixed
+
+- *(ci)* refresh living spec manifest and extend entrypoint correctness timeout
+- reconcile reflection PR with current master
+- accept optional blockers in reflection continuation test
+- preserve reflection across governed phase progress
+- reconcile reflection validation with accepted recovery
+- bind orientation reflection to explicit task intent
+- preserve legacy plan validation fixtures
+- bind reflection to captured sources and path identity
+- reconcile reviewed release source inventory
+
+### Other
+
+- reconcile reflection with storage inventory release
+- preserve exact validation and release authorization blocker
+- reconcile accepted target and reflection continuity
+- preserve validation repair continuity
+
 ## [0.140.3](https://github.com/DecapodLabs/decapod/compare/v0.140.2...v0.140.3) - 2026-11-12
 
 ### Other
