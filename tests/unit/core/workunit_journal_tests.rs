@@ -204,6 +204,7 @@ fn legacy_baseline_is_explicit_and_does_not_reanimate_verified_proof() {
             validation_epoch: None,
         }],
         validation_epoch: None,
+        validation_record: None,
         status: WorkUnitStatus::Verified,
     };
     publish_projection(root.path(), &manifest).unwrap();
@@ -300,6 +301,7 @@ fn checkpoint_cannot_rebind_any_unbound_historical_pass_to_current_source() {
                 validation_epoch: None,
             }],
             validation_epoch: None,
+            validation_record: None,
             status,
         };
         fs::write(root.path().join("proof.txt"), "old proof bytes").unwrap();
