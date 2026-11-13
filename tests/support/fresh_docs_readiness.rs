@@ -220,6 +220,62 @@ pub fn fresh_governed_docs_cli_admission_then_runtime_executes_first_proof() {
         "prepared candidate must be clean: {prepared_status}"
     );
     let head = git(&workspace, &["rev-parse", "HEAD"]);
+    // These are genuine admitted CLI invocations with provider flags removed by
+    // governed_command. A diagnostic skip cannot authorize any full boundary.
+    for (args, name, value) in [
+        (
+            vec!["validate", "--format", "json"],
+            "DECAPOD_VALIDATE_SKIP_GIT_GATES",
+            "0",
+        ),
+        (
+            vec!["rpc", "--op", "validate.run", "--params", "{}"],
+            "DECAPOD_VALIDATE_SKIP_TOOLING_GATES",
+            "1",
+        ),
+        (
+            vec!["workspace", "publish"],
+            "DECAPOD_VALIDATE_SKIP_FINGERPRINT_GATES",
+            "true",
+        ),
+        (
+            vec!["todo", "done", "--id", id, "--validated", "--commit", &head],
+            "DECAPOD_VALIDATE_SKIP_GIT_GATES",
+            "1",
+        ),
+    ] {
+        let output = governed_command(&workspace, &storage, &args)
+            .env(name, value)
+            .bounded_output(Duration::from_secs(30))
+            .unwrap();
+        let diagnostic = format!(
+            "stdout={} stderr={}",
+            String::from_utf8_lossy(&output.stdout),
+            String::from_utf8_lossy(&output.stderr)
+        );
+        assert!(
+            diagnostic.contains("READINESS_GATE_OVERRIDE_UNSUPPORTED"),
+            "{args:?} with {name}: {diagnostic}"
+        );
+        let response = serde_json::from_slice::<serde_json::Value>(&output.stdout).ok();
+        if let Some(response) = &response {
+            assert_ne!(response["success"], true);
+            assert_ne!(response["publication_ready"], true);
+            assert_ne!(response["result"]["publication_ready"], true);
+        }
+        assert!(
+            !output.status.success()
+                || response.is_some_and(|response| response["success"] == false),
+            "an exit-zero transport must still report a failed judgment: {diagnostic}"
+        );
+        assert!(
+            governance_document::read_section(&workspace, "validation")
+                .unwrap()
+                .is_none()
+        );
+        assert_eq!(git(&workspace, &["rev-parse", "HEAD"]), head);
+        assert!(git(&workspace, &["status", "--porcelain"]).is_empty());
+    }
     let premature_done = governed_command(
         &workspace,
         &storage,
