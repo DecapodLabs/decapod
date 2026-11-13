@@ -614,6 +614,11 @@
       "id": "spec-intent-refresh-0-143-0",
       "summary": "docs(specs): refresh INTENT.md attestation for v0.143.0",
       "input_digest": "sha256:b45be3a4a54ca618069d7a15a564e551ff0cafc4eac834e1e7c8638062d44d48"
+    },
+    {
+      "id": "spec-interfaces-refresh-0-143-0",
+      "summary": "docs(specs): refresh INTERFACES.md attestation for v0.143.0",
+      "input_digest": "sha256:c2e364b0b31199a7a877f4cd2fc4112d9d2768fdb20693355d8ebe74ff963253"
     }
   ],
   "intents": {
