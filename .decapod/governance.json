@@ -677,6 +677,14 @@
       "proof_refs": [
         "https://github.com/DecapodLabs/decapod/issues/1667"
       ]
+    },
+    {
+      "id": "issue-1667-file-18",
+      "summary": "fix(bazel): finalize SDK lock under normal generation environment; file-by-file checkpoint, verification pending.",
+      "input_digest": "sha256:ba37b06d311bbc0308bec3ce542c20f7b0f96f7041627271b0cf55686678e051",
+      "proof_refs": [
+        "https://github.com/DecapodLabs/decapod/issues/1667"
+      ]
     }
   ],
   "intents": {
@@ -717,21 +725,21 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Review published Dactyl 0.16.1 checksum, resource budgets, unchanged feature/authority contracts and lockfile generation. Oversized reader controls remain actual corruption fixtures, not removed assertions. Hosted compatibility and full native publication proof pending; no local tests.",
+          "reason": "Hosted setup rejected the temporary CARGO_BAZEL_REPIN=1 lock input. Regenerate under the normal unset environment and preserve parsed values/accepted indentation; no local build or test.",
           "reviewed_code_fingerprint": "abcef30d7183362a0ee48960d05c6a5c6b5eb95e7faa96ce992e3cc4472b3413",
           "spec_material_hash": "3d374960746fa09b7742ed4c1037737846f3384dc249f12cdd3304a51dfc9418"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Review published Dactyl 0.16.1 checksum, resource budgets, unchanged feature/authority contracts and lockfile generation. Oversized reader controls remain actual corruption fixtures, not removed assertions. Hosted compatibility and full native publication proof pending; no local tests.",
+          "reason": "Hosted setup rejected the temporary CARGO_BAZEL_REPIN=1 lock input. Regenerate under the normal unset environment and preserve parsed values/accepted indentation; no local build or test.",
           "reviewed_code_fingerprint": "abcef30d7183362a0ee48960d05c6a5c6b5eb95e7faa96ce992e3cc4472b3413",
           "spec_material_hash": "3a61c1bdb97a731b3ff3a1af34b91194c3371580c372371eea8c49b9ea8ead4d"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Review published Dactyl 0.16.1 checksum, resource budgets, unchanged feature/authority contracts and lockfile generation. Oversized reader controls remain actual corruption fixtures, not removed assertions. Hosted compatibility and full native publication proof pending; no local tests.",
+          "reason": "Hosted setup rejected the temporary CARGO_BAZEL_REPIN=1 lock input. Regenerate under the normal unset environment and preserve parsed values/accepted indentation; no local build or test.",
           "reviewed_code_fingerprint": "abcef30d7183362a0ee48960d05c6a5c6b5eb95e7faa96ce992e3cc4472b3413",
           "spec_material_hash": "7bbeb9496ca39c59f7d01134362a2e78b9a972cca832c1d4ee72593c08f13024"
         }
@@ -744,13 +752,13 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1794610071Z"
+      "updated_at": "1794610724Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:29de39bf4fea69972a39b3fdac1d5f063210197da019afd6a49bd8151430c4b7",
+      "artifact_hash": "sha256:562bfa2fb35b5c57dd05b8cc29d5d75e55043bc4b6a5c405b1182a1d149f6740",
       "checks": [],
       "current_phase": "implementation",
       "custody": {
@@ -885,10 +893,17 @@
             "intent_id": "intent:change_01M7BCN0CS3Z8AJ7TZ491WJ7CJ",
             "kind": "trajectory_step_recorded",
             "sequence": 20
+          },
+          {
+            "detail": "trajectory:branch_01M7BCN0FD8AE623HXNGA0C8F9",
+            "event_id": "event:21",
+            "intent_id": "intent:change_01M7BCN0CS3Z8AJ7TZ491WJ7CJ",
+            "kind": "trajectory_step_recorded",
+            "sequence": 21
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 20,
+        "next_sequence": 21,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M7BCN0FD8AE623HXNGA0C8F9": {
@@ -1164,6 +1179,22 @@
                   "issue-1667"
                 ],
                 "sequence": 20,
+                "validation_findings": [
+                  "Hosted verification and exact-candidate publication readiness remain pending; no local tests run."
+                ]
+              },
+              {
+                "action": "implementation",
+                "custody_event_id": "event:21",
+                "observations": [
+                  "MODULE.bazel.lock",
+                  "https://github.com/DecapodLabs/decapod/issues/1667"
+                ],
+                "proof_refs": [],
+                "scope": [
+                  "issue-1667"
+                ],
+                "sequence": 21,
                 "validation_findings": [
                   "Hosted verification and exact-candidate publication readiness remain pending; no local tests run."
                 ]
