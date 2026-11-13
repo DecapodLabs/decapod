@@ -633,6 +633,11 @@
       "id": "pin-spec-operations-01410",
       "summary": "chore(specs): refresh OPERATIONS.md release header to 0.141.0",
       "input_digest": "sha256:54e693c5e3ec5346c1f214165197959589bd3b10166252f22e123d3ec6e0ac21"
+    },
+    {
+      "id": "pin-spec-security-01410",
+      "summary": "chore(specs): refresh SECURITY.md release header to 0.141.0",
+      "input_digest": "sha256:0efa08cf32c16f7af2c06384d3d4be4b94ccb8994235f84b96007b32e379a4f2"
     }
   ],
   "intents": {
