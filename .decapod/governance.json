@@ -601,6 +601,11 @@
       "id": "c11-config-schema-doc",
       "summary": "docs(agent): regenerate config-schema.md with governance.db_maintenance section",
       "input_digest": "sha256:b9586b95116496153347805e0e7a8367cd98bad1fead742b4c9befb183009529"
+    },
+    {
+      "id": "c12-sqlite-maintenance-tests",
+      "summary": "test(maintenance): add end-to-end RBAC, anti-self-elevation, and concurrent lock custody tests",
+      "input_digest": "sha256:fc5410a6127107876c0fb11af5f890534f7a0de793f0a88fcd48ec327afc2513"
     }
   ],
   "intents": {
