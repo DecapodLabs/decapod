@@ -834,6 +834,11 @@
       "id": "refresh-claude-md-v0-143-1",
       "summary": "chore(release): refresh CLAUDE.md for Decapod v0.143.1",
       "input_digest": "sha256:0fce2d5d1fe7cee2d50df3f10bb28fbb846a6ca43562b7ea0c2dd60225064ae4"
+    },
+    {
+      "id": "refresh-codex-md-v0-143-1",
+      "summary": "chore(release): refresh CODEX.md for Decapod v0.143.1",
+      "input_digest": "sha256:2a0895f7bbcc1ea726d92cb8ab0134e656290d28c8e4e243a1509857975aa96a"
     }
   ],
   "intents": {
