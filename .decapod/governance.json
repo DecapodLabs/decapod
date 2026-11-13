@@ -4409,6 +4409,11 @@
       "id": "storage-lock-diagnosis-unit-tests",
       "summary": "Add unit tests for StorageLock::diagnose and release_owned_if_idle (#1568)",
       "input_digest": "sha256:a446fe16967f6fda74252d21c13cfac4110445c679924b4102afd68859db052d"
+    },
+    {
+      "id": "core-db-maintenance-policy-and-audit",
+      "summary": "Add core::db_maintenance canonical policy resolution, capability catalog, bounded retry, and redacted audit log (#1568)",
+      "input_digest": "sha256:efad5a8ea6bbf88cd5c9c135cd387d532b5a289c5f94ef0a6fb86f2bb7a8a547"
     }
   ],
   "intents": {
