@@ -1341,7 +1341,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `0d140f822861af6859920da41d1f4ba3d8044bb8e2f36cc90745a23c2efca4cb`
+- Repository signal fingerprint: `311a998d7de802bb734406f1ea75264e161343f5ee64ba3c08c80b5739c7f2d8`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (234 files), `tests/` (232 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
@@ -1926,3 +1926,42 @@ The existing partial CLI admission checks `scope=ci_local` and
 complete proof. Current hosted execution and full remote readiness are pending.
 No local tests, disabled required checks, fabricated receipts or workunit-forgery
 completion claims are included in this checkpoint.
+
+## Accepted local proof policy regressions (#1658)
+
+The dedicated v0.144.3 branch preserves accepted command, program, argument,
+directory, environment, toolchain, timeout and coverage declarations before
+provider selection. `tests/consumer_readiness.rs`, included by the required
+`cli_contracts` target, exercises real Git targets and native child processes.
+Controls cover repinned success-printing replacements, removals, execution and
+coverage edits, additive checks, unchanged accepted execution and stale source.
+
+A further adversarial case keeps the command unchanged, corrupts source, rewrites
+its accepted check script and repins the source-definition digest. This captures
+a remaining source-admission question; it must be rejected before closure. A
+positive control independently accepts a source-policy revision on the target
+before validation. The genuine fresh-CLI scenario explicitly covers initial
+adoption, rather than labeling its later workspace-specific environment as
+already accepted policy.
+
+No current hosted result or local test is claimed at this checkpoint. Push the
+regressions to collect the actual judgment, preserve any observed false green,
+repair the source boundary, and require fresh exact-candidate hosted proof.
+Configured source-PR readiness remains strict and provider-backed. A local
+consumer result cannot stand in for unavailable external assurance.
+
+### Observed check-script false green and required repair
+
+[Buildkite9472 CLI execution](https://buildkite.com/decapodlabs/decapod/builds/9472#01a1d6e5-1809-485a-b0dd-5acc62254ffe)
+evaluated059dec1b against422e0b56. The registered source-script attack produced
+`ready=true`, `proof_ready=true`, local-readiness scope, completed native evidence
+and no blockers. The real regression failed; the suite recorded86 passed,
+one failed and one ignored in189.18s. The full CLI job took640.61s including its
+build and all three targets; those are separate runtime measurements.
+
+The repair additionally preserves the accepted local source-definition digest
+before provider selection. The same attack must now return the typed accepted-
+contract blocker with zero selections/executions, while unchanged policy,
+additive commands, first adoption and separately accepted target-policy evolution
+still execute real proof. Current hosted revalidation remains pending; previous
+failed evidence is retained and no local tests or full PR readiness are claimed.

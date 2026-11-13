@@ -191,6 +191,15 @@ fn contract_fixture_is_private_at_creation() {
 // and initialization regressions in that required suite rather than relying
 // on Cargo's discovery of otherwise unscheduled standalone test targets.
 mod consumer_readiness;
+
+// Register this acceptance control at the selected CLI target boundary. Changes
+// confined to a shared consumer module are not selected by the accepted recipe.
+#[cfg(any(target_os = "linux", target_os = "macos"))]
+#[test]
+fn accepted_local_check_script_cannot_be_replaced_by_candidate_repinning() {
+    consumer_readiness::candidate_cannot_repin_a_rewritten_accepted_check_script();
+}
+
 mod init_ci_scaffolding;
 mod init_config_behavior;
 

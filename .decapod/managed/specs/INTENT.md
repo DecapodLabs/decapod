@@ -352,7 +352,7 @@ These declarations select authoring and proof obligations; they do not attest im
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `0d140f822861af6859920da41d1f4ba3d8044bb8e2f36cc90745a23c2efca4cb`
+- Repository signal fingerprint: `311a998d7de802bb734406f1ea75264e161343f5ee64ba3c08c80b5739c7f2d8`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (234 files), `tests/` (232 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
@@ -572,3 +572,20 @@ observations intact and require a fresh applicable validation after removing an
 override. Real child-process regressions isolate environment changes and must
 verify both rejected full claims and truthful diagnostics. No local test result,
 current hosted success or completed repair is claimed by this plan.
+
+## Accepted local verification requirements (#1658)
+
+Decapod must preserve the repository-local verification contract already accepted
+on the target. A candidate may add required checks, but replacing a command,
+arguments, measured toolchain, environment, timeout or coverage declaration must
+not become authoritative merely because the candidate recomputes a review digest.
+`repository_profile` owns this preservation check; `validation_runtime` must apply
+it before selecting an execution provider. A previously accepted strict profile
+continues to require its existing external assurance.
+
+The dedicated change restores the preserved repair against v0.144.3 and adds
+real-process consumer regressions for repinning, additive checks and stale source.
+Initial adoption remains supported. Requirement replacement needs a separately
+accepted target-policy transition; this work introduces no candidate-side override
+or new authority store. Hosted tests and exact-candidate validation remain pending
+until their actual observations are collected; no local test result is claimed.
