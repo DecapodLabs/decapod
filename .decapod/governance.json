@@ -651,6 +651,11 @@
       "id": "c21-spec-readme-01430",
       "summary": "docs(specs): refresh specs README.md projection for v0.143.0",
       "input_digest": "sha256:565ed7292ae5754528a2b2f4c761bd404289233a014add285fbb0a6464cf37c1"
+    },
+    {
+      "id": "c22-spec-semantics-01430",
+      "summary": "docs(specs): refresh SEMANTICS.md projection for v0.143.0",
+      "input_digest": "sha256:4e13dd80133459577cb3c65355b1074ca06e180938bba5a5bad414b9e51f08af"
     }
   ],
   "intents": {
