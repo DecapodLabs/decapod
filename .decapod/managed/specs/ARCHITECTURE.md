@@ -1,5 +1,52 @@
 # Architecture
 
+## Lossless compact storage, v2 component-deduplicated checkpoints, and keyset-paged verification (#1630)
+
+`src/decapod/core/storage_contracts.rs` defines the canonical `decapod.storage-field-contracts.v1`
+admission layer enforced before SQLite mutations across `events::append_on_conn`,
+`todo::add_task`, `todo::edit_task`, `todo::write_task_comment_event`,
+`plugins::verify`, and `plugins::aptitude`. Multi-byte UTF-8 inputs are measured
+by exact UTF-8 byte length rather than character count, embedded `0x00` bytes
+are rejected across all text and JSON keys/strings, and duplicated task
+collection authorities converge on write (`tasks.tags` normalized sorted CSV
+matching `task_tags`, and `task_dependencies` storing exact resolved FK edges
+from `tasks.depends_on`).
+
+`src/decapod/core/schemas.rs` adds three `WITHOUT ROWID` tables:
+`storage_components` keyed by `(component_kind, codec_version, byte_len, content_sha256)`,
+`storage_component_refs` with `ON DELETE RESTRICT` foreign-key custody, and
+`storage_migration_manifests`. `src/decapod/core/task_journal.rs` advances
+`SCHEMA_VERSION` to `2` (`MIN_SCHEMA_VERSION = 1`), externalizing eligible string
+fields (`task.description`, `task.scope`, `verification.proof_plan`,
+`verification.verification_artifacts`, `verification.last_verified_notes`) of at
+least `128` UTF-8 bytes into `storage_components` (`codec_version = 1` framed
+zlib via `storage_codec` when smaller, otherwise `codec_version = 0` plain UTF-8)
+within the same SQLite transaction. `Checkpoint::hash` normalizes externalized
+fields so wire and hydrated checkpoints produce the identical `record_digest`,
+and v2 checkpoints bind `ts` directly inside the hashed checkpoint record.
+`src/decapod/core/task_transfer.rs` carries referenced components inside
+`Bundle.components` with digest and canonical-order validation on export/import.
+
+`src/decapod/core/events.rs` compacts non-`federation` event envelopes via a
+`_ce_v1` bitmask that strips outer keys equal to canonical `events` row columns
+(escaping literal reserved keys under `_ce_raw`) and reconstructs full envelopes
+losslessly in `reconstruct_stored_payload` across `events`, `todo`, `task_journal`,
+`trace`, `validate`, `workspace_lifecycle`, and `plugins::lcm`.
+
+`task_journal::verify_with_budget` executes inside a single `BEGIN DEFERRED`
+read snapshot, paging `events` by `(seq, event_id)` and `tasks` by `id` while
+retaining compact `TaskHeadSummary` state and streaming `BTreeMap`-ordered JSON
+bytes into `Sha256` for `current_digest`. Split-cursor resumes recheck
+`(watermark, tasks_count, current_digest)` and fail closed with
+`TASK_JOURNAL_SNAPSHOT_CHANGED` if mutated between pages.
+
+`src/decapod/core/migration.rs` (`sqlite.compact_lossless_storage.v002`,
+`sequence = 1200`) and `src/decapod/core/storage_compaction.rs` perform
+transactional historical event compaction and `agent_prompts` deduplication,
+verifying pre/post logical event stream SHA-256 parity before recording
+`storage_migration_manifests` and stamping `meta` (`namespace = 'storage'`,
+`format_version = 2`, `min_reader_version`, `min_writer_version`).
+
 ## Composed reflection continuation
 
 `core/mentor/reflection.rs` composes the existing mentor ADR detector, canonical
@@ -894,8 +941,8 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `0a0498aa94eb3f7551fe07c380ef13b469d188ab33218c72f80fc2e081fc3951`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (231 files), `tests/` (232 files)
+- Repository signal fingerprint: `b84ca1bad99d65494836397a0df5421c6c961d64f3278bf14a3474754a944739`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (232 files), `tests/` (232 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 

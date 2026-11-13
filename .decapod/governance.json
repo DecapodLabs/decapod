@@ -744,6 +744,11 @@
       "id": "specs-intent-1630",
       "summary": "docs(specs): update INTENT.md for bounded lossless compact storage (#1630)",
       "input_digest": "sha256:678c4f31131d78bd92fe32e636fd15418d2a02e580e5a0afa8f49704d5edc581"
+    },
+    {
+      "id": "specs-architecture-1630",
+      "summary": "docs(specs): update ARCHITECTURE.md for v2 component store and compact envelopes (#1630)",
+      "input_digest": "sha256:cfcc327baef2d334d9aaeb908cd401ba9620246a5108abfa90139f682e8ada97"
     }
   ],
   "intents": {
