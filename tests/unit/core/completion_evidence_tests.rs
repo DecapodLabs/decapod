@@ -226,6 +226,7 @@ fn local_record_replays_and_detects_artifact_change() {
             validation_epoch: Some(epoch.clone()),
         }],
         validation_epoch: Some(epoch),
+        validation_record: None,
         status: WorkUnitStatus::Verified,
     };
     crate::core::todo::initialize_todo_db(&root.join(".decapod/data"))
