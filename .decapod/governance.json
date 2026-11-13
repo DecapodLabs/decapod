@@ -594,6 +594,11 @@
       "id": "propagate-quota-archive-budget",
       "summary": "fix(snapshot_provider): preserve shared GitHub quota state on archive capture budgets",
       "input_digest": "sha256:5e97753c523cbc69cb677e51402b3cd34c943d8681faf10598f60281d6bab013"
+    },
+    {
+      "id": "propagate-quota-custody-budget",
+      "summary": "fix(snapshot_provider): preserve shared GitHub quota state on custody budgets",
+      "input_digest": "sha256:bad354dc48dc55e11b585ce853b139bab7e0f3e708bf5b9c409dbc78858606a9"
     }
   ],
   "intents": {
