@@ -697,6 +697,11 @@
       "id": "specs-semantics-refresh-v0143",
       "summary": "Refresh SEMANTICS.md codebase attestation for Decapod v0.143.0",
       "input_digest": "sha256:1f5ea1a3d14d1e5b9d83d60bd94be46752256ac7458abab0dd18540c26f76c2d"
+    },
+    {
+      "id": "specs-manifest-and-reviews-v0143",
+      "summary": "Refresh .manifest.json and record current-content spec reviews for INTERFACES.md, ARCHITECTURE.md, and SECURITY.md",
+      "input_digest": "sha256:92ff2f446ff72289720db1368edbce3292d5767e521ae6c63d3411130d439dca"
     }
   ],
   "intents": {
@@ -737,6 +742,29 @@
         "cargo test --test consumer_readiness two_isolated_worktrees_require_combined_candidate_validation_and_target_freshness"
       ],
       "schema_version": "1.1.0",
+      "spec_reviews": [
+        {
+          "disposition": "updated",
+          "path": ".decapod/managed/specs/ARCHITECTURE.md",
+          "reason": "Updated ARCHITECTURE.md for transactional 1-to-1 authoring_bindings custody, lifecycle retirement, and shared-resource reservation gates (#1469).",
+          "reviewed_code_fingerprint": "d38d3f6da33c50f03492b7cfc8b8937af37534586d1ea4ff56261275738a0754",
+          "spec_material_hash": "d24697bcd487d903ffe3759e307f869b594aba4beddf1f37d2f75725f31859f9"
+        },
+        {
+          "disposition": "updated",
+          "path": ".decapod/managed/specs/INTERFACES.md",
+          "reason": "Updated INTERFACES.md for workspace.authoring.* 1-to-1 binding, lifecycle retirement, and resource:<name> reservation error codes (#1469).",
+          "reviewed_code_fingerprint": "d38d3f6da33c50f03492b7cfc8b8937af37534586d1ea4ff56261275738a0754",
+          "spec_material_hash": "9da8b3e0e9ec98d7b2754ed1f12be0f3192fada694b2fe4b4976b468b5f72813"
+        },
+        {
+          "disposition": "updated",
+          "path": ".decapod/managed/specs/SECURITY.md",
+          "reason": "Updated SECURITY.md for fail-closed workspace status, non-elevating resource:<name> reservations, and combined-candidate readiness boundaries (#1469).",
+          "reviewed_code_fingerprint": "d38d3f6da33c50f03492b7cfc8b8937af37534586d1ea4ff56261275738a0754",
+          "spec_material_hash": "743712ff0748db56657ecb73300909e3c6271355fb0df728afee1e00f27f1fac"
+        }
+      ],
       "state": "APPROVED",
       "stop_conditions": [],
       "title": "Close #1469: 1-to-1 worktree authoring bindings, lifecycle retirement, shared-resource gates, and combined-candidate proof",
@@ -745,7 +773,7 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1794545412Z"
+      "updated_at": "1794545685Z"
     },
     "trajectory": {
       "active_boundaries": [
