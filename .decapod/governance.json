@@ -604,6 +604,11 @@
       "id": "storage-contracts",
       "summary": "feat(storage): add versioned field, collection, and authority contracts (#1630)",
       "input_digest": "sha256:7fc325967023b82d5f78824280d3e577d30cb96ec5878ec39a99e5e144204da0"
+    },
+    {
+      "id": "core-export-storage-contracts",
+      "summary": "feat(storage): export storage_contracts module in core (#1630)",
+      "input_digest": "sha256:fd1b9dbb937db620f5918e594b78af36d7c83eb20c84a92b03c2c24c4e1e7ffd"
     }
   ],
   "intents": {
