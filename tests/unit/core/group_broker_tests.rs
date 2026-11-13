@@ -1,5 +1,87 @@
 // Moved from src/decapod/core/group_broker.rs
 #[test]
+fn broker_diagnostic_scope_is_request_local() {
+    use crate::core::bounded_process::BoundedCommand;
+    const PROBE: &str = "DECAPOD_TEST_BROKER_DIAGNOSTIC_SCOPE";
+    let names = [
+        "DECAPOD_VALIDATE_SKIP_GIT_GATES",
+        "DECAPOD_VALIDATE_SKIP_TOOLING_GATES",
+        "DECAPOD_VALIDATE_SKIP_FINGERPRINT_GATES",
+    ];
+    let mode = std::env::var(PROBE).unwrap_or_default();
+    if mode == "observe_scope" {
+        assert_eq!(std::env::var(names[0]).unwrap(), "0");
+        assert!(std::env::var_os(names[1]).is_none());
+        assert_eq!(std::env::var(names[2]).unwrap(), "false");
+        let error = crate::core::validation_runtime::require_full_readiness_environment()
+            .unwrap_err();
+        assert!(error.to_string().contains("READINESS_GATE_OVERRIDE_UNSUPPORTED"));
+        return;
+    }
+    if mode == "observe_clear" {
+        for name in names {
+            assert!(std::env::var_os(name).is_none(), "{name}");
+        }
+        crate::core::validation_runtime::require_full_readiness_environment().unwrap();
+        return;
+    }
+    let case = format!(
+        "{}::broker_diagnostic_scope_is_request_local",
+        module_path!().split_once("::").unwrap().1
+    );
+    let command = |mode| {
+        let mut command = std::process::Command::new(std::env::current_exe().unwrap());
+        command.args(["--exact", &case, "--nocapture"]).env(PROBE, mode);
+        command
+    };
+    if mode == "capture_scope" || mode == "capture_clear" {
+        let caller = super::CallerContext::capture().unwrap();
+        let mut child = command(if mode == "capture_scope" {
+            "observe_scope"
+        } else {
+            "observe_clear"
+        });
+        for name in names {
+            child.env(name, "previous-worker-scope");
+        }
+        caller.apply(&mut child);
+        let output = child
+            .bounded_output(std::time::Duration::from_secs(30))
+            .unwrap();
+        assert!(
+            output.status.success(),
+            "{} {}",
+            String::from_utf8_lossy(&output.stdout),
+            String::from_utf8_lossy(&output.stderr)
+        );
+        assert!(String::from_utf8_lossy(&output.stdout).contains("1 passed"));
+        return;
+    }
+    for mode in ["capture_scope", "capture_clear"] {
+        let mut child = command(mode);
+        for name in names {
+            child.env_remove(name);
+        }
+        child
+            .env("DECAPOD_AGENT_ID", "broker-scope-agent")
+            .env_remove("DECAPOD_SESSION_PASSWORD");
+        if mode == "capture_scope" {
+            child.env(names[0], "0").env(names[2], "false");
+        }
+        let output = child
+            .bounded_output(std::time::Duration::from_secs(60))
+            .unwrap();
+        assert!(
+            output.status.success(),
+            "{} {}",
+            String::from_utf8_lossy(&output.stdout),
+            String::from_utf8_lossy(&output.stderr)
+        );
+        assert!(String::from_utf8_lossy(&output.stdout).contains("1 passed"));
+    }
+}
+
+#[test]
 fn stale_pid_marker_does_not_block_or_signal_unrelated_process() {
     let temp = tempfile::tempdir().unwrap();
     let path = temp.path().join("broker.lock");
