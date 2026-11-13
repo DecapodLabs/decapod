@@ -67,11 +67,14 @@ overlap stored payload bytes and each other. They must not be added to table
 totals. JSON interpretation is limited to 1 MiB per payload with serde's normal
 depth bound. Oversized or invalid JSON is counted as unavailable sample
 observations. Prefix metadata and targeted checkpoint observations may overlap,
-so their unavailable counts are not unique-row counts. Checkpoint
-version fields and LCM v1 BLOB framing are observations only: inventory does not
-verify task chains, compressed bodies, checksums or migration eligibility. LCM
-declared decoded sizes remain explicitly unverified. Only the whitelisted numeric
-TODO schema version is emitted from metadata; raw metadata values stay private.
+so their unavailable counts are not unique-row counts. Checkpoint version fields, compact event envelope markers (`_ce_v1` / `_ce_raw`),
+checkpoint v2 externalized `component_refs`, `storage_components` codec entries,
+and LCM v1 BLOB framing are observations only: inventory does not verify task
+chains, compressed bodies, checksums or migration eligibility. Declared decoded
+sizes for LCM cells, `storage_components`, and checkpoint `component_refs` remain
+explicitly unverified. Only the whitelisted numeric TODO schema version and
+storage format compatibility markers (`format_version`, `min_reader_version`,
+`min_writer_version`) are emitted from `meta`; raw metadata values stay private.
 
 The default sample ceiling is 10,000 rows per table, the conservative decoded
 scan budget is 64 MiB, and the pretty JSON report limit is 4 MiB. Limits allow

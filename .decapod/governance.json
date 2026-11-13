@@ -694,6 +694,11 @@
       "id": "docs-datastore-v2-results",
       "summary": "docs(storage): update datastore-v2 measured growth and compaction results (#1630)",
       "input_digest": "sha256:ebc76ad486c8d50d584a5ae1eec4690fee88eeaf85d1da9023dbb7fabce4253f"
+    },
+    {
+      "id": "docs-storage-inventory-v2",
+      "summary": "docs(storage): document format v2 metadata and component store attribution (#1630)",
+      "input_digest": "sha256:d95af8b24260befa1fceb317cd4b28b6e99217704ea1f2bdcc4d5a40e9faaa8b"
     }
   ],
   "intents": {
