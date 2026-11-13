@@ -551,6 +551,11 @@
       "id": "c01-storage-lock",
       "summary": "feat(storage): add non-destructive lock diagnostics and idle owned-lease release",
       "input_digest": "sha256:f9ecc0b5a7581bdda1883643904d273a980f7dec425efefbaf7e982e8b0c3c7f"
+    },
+    {
+      "id": "c02-storage-lock-tests",
+      "summary": "test(storage): cover lock contention diagnostics and owned-lease release safety",
+      "input_digest": "sha256:f9da2443eb881f7bd36f49ab59cdc5a28d1516af530bb3804ed26dcacdb14bdb"
     }
   ],
   "intents": {
