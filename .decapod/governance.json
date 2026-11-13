@@ -854,6 +854,11 @@
       "id": "refresh-spec-intent-md-v0-143-1",
       "summary": "chore(specs): refresh INTENT.md attestation for Decapod v0.143.1",
       "input_digest": "sha256:150101e7225667b4ae483deb9dfc2fe1107c2e86fc4c548b3ebec3f65582767f"
+    },
+    {
+      "id": "refresh-spec-architecture-md-v0-143-1",
+      "summary": "chore(specs): refresh ARCHITECTURE.md attestation for Decapod v0.143.1",
+      "input_digest": "sha256:f5b04a85311bb03141ac6105d704b3542b97397170f1a92b4b014858c105cb5d"
     }
   ],
   "intents": {
