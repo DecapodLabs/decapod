@@ -582,6 +582,11 @@
       "id": "refresh-codex-md-v0143",
       "summary": "Refresh CODEX.md to canonical Decapod v0.143.0 template",
       "input_digest": "sha256:9b78e6fce5c70fecd25530eb7a388601716f0146521b92e284fa66717ae3b946"
+    },
+    {
+      "id": "refresh-gemini-md-v0143",
+      "summary": "Refresh GEMINI.md to canonical Decapod v0.143.0 template",
+      "input_digest": "sha256:241c46613e009a1b69fa0c9e9f2d865c4fb23c01f5ab5fae280a9812bc9e55fd"
     }
   ],
   "intents": {
