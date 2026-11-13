@@ -27,6 +27,16 @@ approval and proof independently of a reflection disposition.
 
 ## Cloud initialization, continuation, and readiness (#1628)
 
+The human's sole setup command is init; subsequent use belongs to the agent.
+`decapod cloud login` starts/resumes managed sign-in and checks current access;
+`--restart` explicitly replaces an expired, revoked or uncertain flow. The
+existing init restart flag remains compatible. `CloudAuthDiagnostic` and cloud
+TODO operation diagnostics add optional `authorization_url` (omitted when
+absent) without changing their v1 schema identifiers. Agents share the link,
+poll for up to five minutes and continue without waiting for a second chat
+message. A pending `todo add` retains its exact original operation identifier
+and arguments across login; authentication never certifies task creation.
+
 `decapod init --backend cloud`, `decapod session acquire`, and ordinary cloud
 TODO operations share `core::cloud_client::connect`. Missing custody starts a
 bounded sign-in and returns non-success `onboarding_pending` with a validated
@@ -46,11 +56,18 @@ retry, mutation replay, or local fallback.
 `decapod cloud status` reports only private local phase, credential presence,
 and expiry; its `server_readiness` remains `not_checked`. `--proof` on cloud
 initialization prepares configuration only and does not synthesize sign-in or
-claim readiness. The legacy `cloud login` alias uses the same managed flow.
+claim readiness. The agent-owned `cloud login` command uses the same managed flow.
 No new project provider, deployment, credential, price, or roster field exists.
 The fixture-only origin requires explicit test mode and literal loopback HTTP.
 
-The client consumes the exact published `dactyl-db 0.14.0` registry API. Pending
+The connector currently accepts a canonical repository routing assertion, not
+an existing paid project ID. Selecting an account-directory project and binding
+this checkout to that server ID needs a supported upstream attachment contract;
+this client does not invent one or claim that SCM ownership or paid-project
+attachment has been verified. Browser directory registration remains distinct.
+
+The client consumes the exact published `dactyl-db 0.14.0` registry API;
+current-candidate fixture execution remains required for the complete composition. Pending
 secrets round-trip through its public Serde contract; authentication status and
 code exchange return strings, and completion confirms the session handoff.
 The caller retains its exact origin/repository/checkout binding and saved flow
@@ -1125,7 +1142,7 @@ field. Nothing in this operation authorizes a mutation, approval or completion.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `ef0b809779d89f44a5898a162dc5f2c358e9bd025aa03cb27e7b0b01c56c2078`
+- Repository signal fingerprint: `6a3addd1b9727eaa3c371ddafc239c5ed36e2705b96d18996de05e9e72f1f7f0`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (230 files), `tests/` (232 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

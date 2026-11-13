@@ -45,8 +45,11 @@ Discover the features supported by the current Decapod binary.
 Optional cloud credential operations. These commands do not enable cloud
 storage or change the local SQLite default.
 
-- `cloud login`: deprecated compatibility alias. Human setup belongs to
-  `decapod init --backend cloud`; the alias remains only for existing scripts.
+- `cloud login`: the agent starts or resumes the repository's saved sign-in
+  flow and checks current repository access. The human runs init once.
+- `cloud login --restart`: the agent explicitly starts a fresh sign-in after
+  an expired, revoked, or uncertain exchange, preserving the interrupted task
+  and its operation ID. An uncertain exchange is never replayed.
 - `cloud status`: inspect private phase, credential presence, and expiry without
   network I/O or printing a token. `server_readiness` remains `not_checked`.
   See [Cloud sign-in and task access](propodus.md) for live confirmation.

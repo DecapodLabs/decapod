@@ -238,15 +238,6 @@ fn bootstrap_cloud_session(project_root: &Path, restart: bool) -> Result<(), err
             );
             Ok(())
         }
-        Err(error @ error::DecapodError::CloudAuth(_)) => {
-            if let error::DecapodError::CloudAuth(diagnostic) = &error {
-                println!(
-                    "Cloud setup requires attention: {}; next action: {}",
-                    diagnostic.message, diagnostic.next_action
-                );
-            }
-            Err(error)
-        }
         Err(error) => Err(error),
     }
 }
@@ -267,17 +258,14 @@ fn print_cloud_auth_json_if_needed(
 fn run_cloud_command(cloud_cli: CloudCli) -> Result<(), error::DecapodError> {
     let CloudCli { format, command } = cloud_cli;
     match command {
-        CloudCommand::Login => {
+        CloudCommand::Login { restart } => {
             let current_dir = std::env::current_dir()?;
-            eprintln!(
-                "Deprecated compatibility command; use `decapod init --backend cloud` for human setup."
-            );
             // Resolve repository scope before project configuration so a
             // login attempt outside a GitHub repository fails with the
             // actionable origin error rather than a misleading config error.
             core::repo_identity::resolve_repository_identity(&current_dir)?;
             let project_root = find_decapod_project_root(&current_dir)?;
-            match bootstrap_cloud_session(&project_root, false) {
+            match bootstrap_cloud_session(&project_root, restart) {
                 Ok(()) => Ok(()),
                 Err(error @ error::DecapodError::CloudAuth(_)) => {
                     if let error::DecapodError::CloudAuth(diagnostic) = &error {
@@ -2879,6 +2867,14 @@ pub fn run() -> Result<(), error::DecapodError> {
             );
             if !is_interactive {
                 print_init_reconciliation(&reconciliation);
+                if !init_with.dry_run {
+                    println!(
+                        "Continue with your coding agent. Describe what you want to build; your agent handles Decapod from here."
+                    );
+                    if config.repo.effective_backend().is_cloud() {
+                        println!("Your agent will guide you through browser sign-in when needed.");
+                    }
+                }
             }
             if !init_with.dry_run && config.repo.effective_backend().is_cloud() {
                 if init_with.proof {
