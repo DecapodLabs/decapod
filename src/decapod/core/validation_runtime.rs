@@ -667,6 +667,19 @@ fn load_project(options: &Options, budget: &mut RuntimeBudget<'_>) -> io::Result
                 "ACCEPTED_REPOSITORY_CONTRACT_CHANGED: another profile cannot replace accepted repository-local checks",
             ));
         }
+        if configuration
+            .required_profile
+            .as_ref()
+            .map(|profile| &profile.reviewed_sources_digest)
+            != accepted
+                .required_profile
+                .as_ref()
+                .map(|profile| &profile.reviewed_sources_digest)
+        {
+            return Err(invalid(
+                "ACCEPTED_REPOSITORY_CONTRACT_CHANGED: source definitions changed; preserve the accepted source digest or establish a separately accepted target-policy transition before revalidation",
+            ));
+        }
         super::repository_profile::preserve_accepted(
             &configuration.commands,
             configuration.repository_contract.as_ref(),
