@@ -596,6 +596,11 @@
       "id": "fix-nongit-init-workspace-status",
       "summary": "Require registered Git worktree only inside Git repos or managed workspaces",
       "input_digest": "sha256:caababf20342cb54cab9e63f6cc3e59aacf7572ebc47db2e6ff2c32ca472f1ab"
+    },
+    {
+      "id": "refresh-specs-and-manifest-nongit-fix",
+      "summary": "Refresh living spec attestations and manifest after non-git workspace fix",
+      "input_digest": "sha256:512025dc10b3a989068e71e5d842dd1df3601b1eebd6fdbddd2d53ffbfef4fe8"
     }
   ],
   "intents": {
@@ -636,22 +641,22 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Reviewed real custody transactions and non-Git diagnostic routing; project-check never admits authoring or publication.",
-          "reviewed_code_fingerprint": "2b121bcac52e002c3be06f937132e585746dec4c07dfecd42f836fa54e5e2ae0",
+          "reason": "Refreshed living spec attestations and manifest after non-git workspace status fix (#1469).",
+          "reviewed_code_fingerprint": "d8d4c61825757469a518d296488bdc65a839267b34bf7484ca6b7d611e74f1a3",
           "spec_material_hash": "64d2650f577b02cfe61d723b109c11fbd207e93bcd485330bca382df773ee76d"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Public CLI regression verifies partial scope, false publication_ready, blocked workspace status and rejected full validation for the same non-Git project.",
-          "reviewed_code_fingerprint": "2b121bcac52e002c3be06f937132e585746dec4c07dfecd42f836fa54e5e2ae0",
+          "reason": "Refreshed living spec attestations and manifest after non-git workspace status fix (#1469).",
+          "reviewed_code_fingerprint": "d8d4c61825757469a518d296488bdc65a839267b34bf7484ca6b7d611e74f1a3",
           "spec_material_hash": "c03675582c56d958bf2797cb400db15e7865703e0186531fd907402067c1efa7"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Real rollback, lease lifecycle, resource exclusion, interruption recovery and combined-candidate tests passed; local custody is cooperative and full independent proof remains required.",
-          "reviewed_code_fingerprint": "2b121bcac52e002c3be06f937132e585746dec4c07dfecd42f836fa54e5e2ae0",
+          "reason": "Refreshed living spec attestations and manifest after non-git workspace status fix (#1469).",
+          "reviewed_code_fingerprint": "d8d4c61825757469a518d296488bdc65a839267b34bf7484ca6b7d611e74f1a3",
           "spec_material_hash": "b22a787f02a258ae554291105ce68cbb1dfd49fb929bb854cb874a660dc35a4a"
         }
       ],
@@ -663,7 +668,7 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1794550291Z"
+      "updated_at": "1794551846Z"
     },
     "trajectory": {
       "active_boundaries": [
