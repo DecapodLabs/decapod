@@ -591,6 +591,15 @@
         "git:ac33672af00617964068da875de2a61a55aac5b4",
         "git:f450bdf319ea724d628daaaf282e45addd639d13"
       ]
+    },
+    {
+      "id": "pr1669-ci-event-base-repair-3",
+      "summary": "Record observed stale PR base metadata, refresh the same accepted master target through GitHub, and push for a new exact-bound event without weakening checks or running local tests.",
+      "input_digest": "sha256:7e162585a7981f4dd0fda13942b0597e69556413fef7e38a4cd4a9bba2bcb809",
+      "proof_refs": [
+        "/private/tmp/decapod-pr1669-job-131813499158.log",
+        "git:f450bdf319ea724d628daaaf282e45addd639d13"
+      ]
     }
   ],
   "intents": {
@@ -621,7 +630,7 @@
       },
       "deferred_questions": [],
       "human_questions": [],
-      "intent": "Preserve the existing protected-path/diff-only rule and linked-worktree runtime owner implementation. Incorporate accepted master f450bdf3, preserve original PR history and custody checkpoints, resolve conflicts, refresh current source-bound specs, commit and push the existing PR. No tests, CI runs, force-push or merge of PR1669 are authorized in this update.",
+      "intent": "Repair hosted CI failures for PR1669 one concrete root cause at a time, preserving exact source/base checks and original protected-path/runtime behavior. GitHub PR base metadata was stale after master moved: refresh the same master base to its actual f450bdf3 identity, record the binding, commit and push so new events carry the correct accepted base. Do not execute tests locally, weaken gates, force-push, or merge this PR.",
       "phases": [],
       "proof_hooks": [
         "Inspect source parity, actual Git parents, conflict resolution and staged governance material; do not execute tests."
@@ -658,21 +667,25 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1794562966Z"
+      "updated_at": "1794563298Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch",
         "Preserve original remote PR parents; no force-push; no merge authorization for PR1669."
       ],
-      "artifact_hash": "sha256:7617044b059c0b376eeb1f580c02abbc9f8aa9d96c674a87b88b40b15a0328d4",
+      "artifact_hash": "sha256:e8a43eee258630b484d5782105d1799fe77d9b8566a41c8ceb3184a4334b7140",
       "checks": [
+        {
+          "name": "hosted-pr-context",
+          "status": "failed"
+        },
         {
           "name": "test-execution",
           "status": "unavailable"
         }
       ],
-      "current_phase": "integration",
+      "current_phase": "ci-repair",
       "custody": {
         "events": [
           {
@@ -693,10 +706,17 @@
             "intent_id": "intent:change_01M7A4FX8HZRENJCY5N6E2ANEX",
             "kind": "trajectory_step_recorded",
             "sequence": 4
+          },
+          {
+            "detail": "trajectory:branch_01M7A4FXCZEZXFKNPGD4EREXC0",
+            "event_id": "event:5",
+            "intent_id": "intent:change_01M7A4FX8HZRENJCY5N6E2ANEX",
+            "kind": "trajectory_step_recorded",
+            "sequence": 5
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 4,
+        "next_sequence": 5,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M7A4FXCZEZXFKNPGD4EREXC0": {
@@ -722,16 +742,36 @@
                 "validation_findings": [
                   "Tests are not executed by explicit user instruction; historical results are not current readiness."
                 ]
+              },
+              {
+                "action": "ci-repair",
+                "command": "GitHub update_pull_request base_branch=master; observed accepted base f450bdf319ea724d628daaaf282e45addd639d13 after update",
+                "custody_event_id": "event:5",
+                "observations": [
+                  "/private/tmp/decapod-pr1669-job-131813499158.log"
+                ],
+                "proof_refs": [
+                  "hosted-pr-context"
+                ],
+                "scope": [
+                  "pr1669-integration"
+                ],
+                "sequence": 5,
+                "validation_findings": [
+                  "The fresh event must still pass the exact-parent gate and actual hosted execution; metadata repair supplies no passing test proof."
+                ]
               }
             ]
           }
         }
       },
       "declared_commands": [
+        "GitHub update_pull_request base_branch=master; observed accepted base f450bdf319ea724d628daaaf282e45addd639d13 after update",
         "git diff exact original material; git apply --3way; supported specs refresh and reviews"
       ],
       "destination": "pull request",
       "evidence": [
+        "/private/tmp/decapod-pr1669-job-131813499158.log",
         "git:ac33672af00617964068da875de2a61a55aac5b4",
         "git:f450bdf319ea724d628daaaf282e45addd639d13"
       ],
@@ -750,7 +790,8 @@
       "task_id": "bugs_01m7a44k3th3dh3c",
       "tool_calls": [],
       "unresolved_assumptions": [
-        "Tests are not executed by explicit user instruction; historical results are not current readiness."
+        "Tests are not executed by explicit user instruction; historical results are not current readiness.",
+        "The fresh event must still pass the exact-parent gate and actual hosted execution; metadata repair supplies no passing test proof."
       ]
     }
   },

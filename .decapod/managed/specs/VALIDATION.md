@@ -1864,3 +1864,7 @@ required before publication readiness.
 ## PR1669 accepted-master integration
 
 The current request explicitly prohibits tests. Preserve the original protected-path and linked-worktree journal regression source, inspect the integrated source and Git parent history, refresh supported source-bound spec attestations, checkpoint and push. No test execution or successful independent readiness is claimed for this integration. The accepted master includes the fresh-docs fixture initialization from PR1661.
+
+### Exact CI event base after accepted-target movement
+
+The first hosted PR run after integration rejected its context before any tests: the synthetic checkout merged candidate `95adedd6` into accepted master `f450bdf3`, while the event still named previous base `6f1d2a39`. Re-selecting the existing `master` base through the GitHub PR API updated that metadata to `f450bdf3`. A new push obtains a fresh event; replaying the old event would retain the stale binding. Preserve the exact ordered-parent check and independently verify the new hosted result. This metadata repair is not passing test evidence, and no tests were executed locally.
