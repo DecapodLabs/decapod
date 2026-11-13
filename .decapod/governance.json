@@ -637,6 +637,11 @@
       "id": "docs-arch-concurrency-custody",
       "summary": "Update concurrency-custody architecture docs for 1-to-1 bindings, lifecycle retirement, and resource gates",
       "input_digest": "sha256:5ed5ebdd7b81c3510eb6dba45aacab2810d31d048a9977b7d7d4864d0045fe47"
+    },
+    {
+      "id": "tests-unit-fleet-coord",
+      "summary": "Add unit tests isolating resource:<name> reservations from path overlaps",
+      "input_digest": "sha256:0eb836baec390270e7fc4f5a629ab3b415b1e0e23775264c420b5db04744ac29"
     }
   ],
   "intents": {
