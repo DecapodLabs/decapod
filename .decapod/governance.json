@@ -647,6 +647,11 @@
       "id": "tests-plugins-todo-authoring-and-resources",
       "summary": "Add integration tests for transactional rollback, 1-to-1 uniqueness, lifecycle retirement, and resource gates",
       "input_digest": "sha256:8d2c61802a5c4012c0f654157aa73f7ffcc471bdc443c52fd90ec79a337666bc"
+    },
+    {
+      "id": "tests-kernel-bootstrap-contention-recovery",
+      "summary": "Add subprocess checkout contention and interrupted workspace ensure recovery tests",
+      "input_digest": "sha256:66af54eae0f6c7e39d412aa1c5c246585405c6db62684e40a699e1a4eaa41aae"
     }
   ],
   "intents": {
