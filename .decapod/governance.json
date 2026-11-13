@@ -589,6 +589,11 @@
       "id": "refresh-reviewed-sources-digest",
       "summary": "chore(config): update reviewed_sources_digest for v0.143.0 source inventory",
       "input_digest": "sha256:6a9584fd0bb835ee1946df87ec1d376ce36d8a4a476efb8b8fc5354fd108706f"
+    },
+    {
+      "id": "terminal-rule-task-and-ref-context",
+      "summary": "fix(validation): populate canonical task_type and git_ref in terminal rules (#1629)",
+      "input_digest": "sha256:451fc8c427cd1d7b86c5fb145d13918f87f43799b64d98e33422cf3241bcc06e"
     }
   ],
   "intents": {
