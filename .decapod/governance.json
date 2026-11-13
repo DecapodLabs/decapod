@@ -574,6 +574,11 @@
       "id": "hf-gemini-md",
       "summary": "chore(entrypoints): refresh GEMINI.md for Decapod v0.143.2",
       "input_digest": "sha256:34ef87a4146d8a2396bde47fb95361ce7ab6b759138d8d0b4275f317b4d4a855"
+    },
+    {
+      "id": "hf-dockerfile",
+      "summary": "chore(container): refresh managed Dockerfile pin to v0.143.2",
+      "input_digest": "sha256:a26b27069287fded35eb02c51a08187782219e4761a2b704df1b7c47d3d8f48a"
     }
   ],
   "intents": {
