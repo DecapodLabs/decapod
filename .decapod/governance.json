@@ -582,6 +582,15 @@
         "git:ac33672af00617964068da875de2a61a55aac5b4",
         "git:f450bdf319ea724d628daaaf282e45addd639d13"
       ]
+    },
+    {
+      "id": "pr1669-preserve-original-parent-2",
+      "summary": "Resolve integration conflicts using current admitted governance and reviewed specs; preserve original PR1669 parent and unchanged production material. No tests executed.",
+      "input_digest": "sha256:bcda13fa5aeae544f6bc3545491c2be6805ad06908052cab43d4602e20543752",
+      "proof_refs": [
+        "git:ac33672af00617964068da875de2a61a55aac5b4",
+        "git:f450bdf319ea724d628daaaf282e45addd639d13"
+      ]
     }
   ],
   "intents": {
