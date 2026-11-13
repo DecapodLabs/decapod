@@ -1486,6 +1486,7 @@ pub(crate) fn prepare_verified_completion(
     todo_id: &str,
     artifact_paths: Vec<String>,
 ) -> Result<PreparedTodoVerification, error::DecapodError> {
+    crate::core::validation_runtime::require_full_readiness_environment()?;
     prepare_verified_completion_with(store, repo_root, todo_id, artifact_paths, || {
         run_validate_and_hash(&store.root, repo_root, Some(todo_id))
     })
@@ -1516,6 +1517,7 @@ pub(crate) fn prepare_historical_completion(
     todo_id: &str,
     candidate_sha: &str,
 ) -> Result<PreparedTodoVerification, error::DecapodError> {
+    crate::core::validation_runtime::require_full_readiness_environment()?;
     let targets = load_targets(store, Some(todo_id))?;
     let target = targets
         .into_iter()
