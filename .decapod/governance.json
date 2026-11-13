@@ -639,6 +639,11 @@
       "id": "fix-validation-rules-test",
       "summary": "Fix InitPlanInput and config schema in protected_paths unit test",
       "input_digest": "sha256:13646d7e3738a9bbc0684e50ea7872d44ea8e7f0a53d205dfb7367b4621709aa"
+    },
+    {
+      "id": "fix-workunit-worktree-runtime",
+      "summary": "Resolve main repository runtime datastore from linked Git worktrees",
+      "input_digest": "sha256:ca0b8d3e51a123548fbad341e0474b3fa55ff50d5e98bd0eb87757b33901cdaf"
     }
   ],
   "intents": {
