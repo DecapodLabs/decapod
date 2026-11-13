@@ -920,8 +920,8 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `a87a7c93f1c30d85611e9c7520700ad2980c41199162cf7b3035954db79152c8`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (233 files), `tests/` (232 files)
+- Repository signal fingerprint: `fbccc9cfb5bf2b38e6ef970f60ff59a1d618c570d9b96d317b9f5bd0c40da905`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (234 files), `tests/` (232 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 
@@ -1187,3 +1187,11 @@ The shared GithubQuota/Budget mechanism continues to pace only anonymous discove
 ## PR1663 integrated storage behavior
 
 The integrated `todo` module exports both accepted authoring/resource custody functions and component-aware journal verification. Keep initialized runtime ownership and task binding retirement alongside storage format guards, compact event reconstruction, content-addressed components and snapshot-consistent verification. The coordination kernel is the published0.144.1 source with only the previously scoped inert-placeholder repair; it does not contain or execute this proposed storage migration.
+
+## PR 1662: accepted v0.143.2 source integration
+
+`core::db_maintenance` centralizes capability admission against canonical accepted project configuration. `storage_lock` retains OS-backed descriptor custody, and Dactyl remains the physical backup/verification boundary. CLI and RPC dispatch this narrow surface before startup migration without adding a second datastore authority.
+
+## PR1662 current-master preparation
+
+The db_maintenance module resolves accepted canonical-repository policy and uses existing Dactyl and StorageLock primitives. It does not replace the datastore or migration authority. Retain current-master storage format guards, task custody, provider verification and runtime ownership while integrating this operation boundary.

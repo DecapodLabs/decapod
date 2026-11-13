@@ -352,8 +352,8 @@ These declarations select authoring and proof obligations; they do not attest im
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `a87a7c93f1c30d85611e9c7520700ad2980c41199162cf7b3035954db79152c8`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (233 files), `tests/` (232 files)
+- Repository signal fingerprint: `fbccc9cfb5bf2b38e6ef970f60ff59a1d618c570d9b96d317b9f5bd0c40da905`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (234 files), `tests/` (232 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 
@@ -549,3 +549,11 @@ Incorporate accepted master 9b900254, including custody, protected-path/workunit
 ## PR1663 integrated storage behavior
 
 Integrate PR1663 on accepted master5e23ad68 and0.144.1 while preserving storage admission, lossless history and format obligations. Keep accepted custody, quota and runtime-owner changes. Historical benchmark claims remain historical; only fresh hosted execution can establish this candidate's checks.
+
+## PR 1662: accepted v0.143.2 source integration
+
+Expose only project-opted local database maintenance capabilities to the agent. Repository policy and exact operation authority govern diagnostics and safe maintenance; a project flag does not confer recovery, raw SQL, cloud privilege or task/checkout ownership.
+
+## PR1662 current-master preparation
+
+Preserve prepared PR1662 capability-scoped database maintenance before integrating accepted master3afa9df9 and the0.144.2 source release. Default-deny accepted policy, owner-only repair, bounded safe operations and non-destructive lock custody remain obligations. Hosted CI must establish the exact integrated candidate; no local tests are run.

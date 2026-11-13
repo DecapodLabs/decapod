@@ -1640,6 +1640,7 @@ fn init_with_from_config(
         existing_ci_attested: config.proof.ci_attested.clone(),
         existing_allow_basic_shared_claims: config.governance.allow_basic_shared_claims,
         existing_rbac: config.governance.rbac.clone(),
+        existing_db_maintenance: config.governance.db_maintenance.clone(),
         existing_laya: config.laya.clone(),
         laya_decisions: Some(config.laya.mode == core::laya_readiness::Mode::Required),
         validation_buildkite_preflights: Some(config.proof.validation_buildkite_preflights),
@@ -1752,6 +1753,7 @@ fn preserve_unspecified_init_options(
     init.existing_ci_attested = existing.existing_ci_attested;
     init.existing_allow_basic_shared_claims = existing.existing_allow_basic_shared_claims;
     init.existing_rbac = existing.existing_rbac;
+    init.existing_db_maintenance = existing.existing_db_maintenance;
     init.existing_laya = existing.existing_laya;
 }
 
@@ -1837,6 +1839,7 @@ fn config_from_init_with(init: &InitWithCli, repo: RepoContext) -> DecapodProjec
             approval_categories,
             allow_basic_shared_claims: init.existing_allow_basic_shared_claims,
             rbac: init.existing_rbac.clone(),
+            db_maintenance: init.existing_db_maintenance.clone(),
         },
         proof: proof::ProjectProofConfig {
             validation_buildkite_preflights: init.validation_buildkite_preflights.unwrap_or(false),
@@ -2723,6 +2726,11 @@ pub fn run() -> Result<(), error::DecapodError> {
             let root = find_decapod_project_root(&std::env::current_dir()?)?;
             return run_storage_inventory(&root, &scope, &format, &options);
         }
+        Command::Data(DataCli {
+            command: DataCommand::Database(DatabaseCli { command: db_cmd }),
+        }) if should_dispatch_governed_database_cli(&std::env::current_dir()?, &db_cmd) => {
+            return run_governed_database_cli(&std::env::current_dir()?, db_cmd);
+        }
         command => command,
     };
     let predecoded_rpc_request = match &command {
@@ -2734,6 +2742,11 @@ pub fn run() -> Result<(), error::DecapodError> {
     {
         let root = find_decapod_project_root(&std::env::current_dir()?)?;
         return run_storage_inventory_rpc(&root, request);
+    }
+    if let Some(request) = predecoded_rpc_request.as_ref()
+        && is_governed_db_maintenance_rpc_op(&request.op)
+    {
+        return run_governed_database_rpc(&std::env::current_dir()?, request);
     }
     let cli = Cli { command };
     let argv: Vec<String> = std::env::args().skip(1).collect();
@@ -2823,6 +2836,8 @@ pub fn run() -> Result<(), error::DecapodError> {
                             existing_ci_attested: None,
                             existing_allow_basic_shared_claims: false,
                             existing_rbac: crate::cli::GovernanceRbac::default(),
+                            existing_db_maintenance:
+                                crate::core::db_maintenance::DbMaintenanceConfig::default(),
                             existing_laya: crate::core::laya_readiness::Configuration::default(),
                             laya_decisions: init_group.laya_decisions,
                             validation_buildkite_preflights: init_group
@@ -9442,12 +9457,19 @@ fn run_data_command(
             DatabaseCommand::Inspect { .. } => {
                 unreachable!("read-only inventory dispatched before startup")
             }
-            DatabaseCommand::Verify => verify_database_integrity(store_root)?,
-            DatabaseCommand::Backup { destination } => {
+            DatabaseCommand::Capabilities { .. }
+            | DatabaseCommand::Lock(_)
+            | DatabaseCommand::Maintain(_)
+            | DatabaseCommand::Audit { .. } => {
+                unreachable!("governed db maintenance dispatched before startup")
+            }
+            DatabaseCommand::Verify { .. } => verify_database_integrity(store_root)?,
+            DatabaseCommand::Backup { destination, .. } => {
                 backup_database_with_dactyl(store_root, &destination)?
             }
             DatabaseCommand::Recover {
                 preserve_original_at,
+                ..
             } => recover_database_with_dactyl(store_root, &preserve_original_at)?,
         },
         DataCommand::Aptitude(aptitude_cli) => {
@@ -9595,6 +9617,664 @@ fn run_storage_inventory_rpc(
         ));
     }
     Ok(())
+}
+
+fn is_governed_db_maintenance_rpc_op(op: &str) -> bool {
+    matches!(
+        op,
+        "data.database.capabilities"
+            | "data.database.maintain.inspect"
+            | "data.database.verify"
+            | "data.database.backup"
+            | "data.database.recover"
+            | "data.database.lock.diagnose"
+            | "data.database.lock.retry"
+            | "data.database.lock.release_own"
+            | "data.database.audit"
+    )
+}
+
+fn should_dispatch_governed_database_cli(invocation_dir: &Path, command: &DatabaseCommand) -> bool {
+    match command {
+        DatabaseCommand::Inspect { .. } => false,
+        DatabaseCommand::Capabilities { .. }
+        | DatabaseCommand::Lock(_)
+        | DatabaseCommand::Maintain(_)
+        | DatabaseCommand::Audit { .. } => true,
+        DatabaseCommand::Verify {
+            governed,
+            operation_id,
+            expected_policy_sha256,
+            actor,
+        }
+        | DatabaseCommand::Backup {
+            governed,
+            operation_id,
+            expected_policy_sha256,
+            actor,
+            ..
+        }
+        | DatabaseCommand::Recover {
+            governed,
+            operation_id,
+            expected_policy_sha256,
+            actor,
+            ..
+        } => {
+            if *governed
+                || operation_id.is_some()
+                || expected_policy_sha256.is_some()
+                || actor.is_some()
+            {
+                return true;
+            }
+            if std::env::var_os("DECAPOD_VALIDATE_SKIP_GIT_GATES").is_some()
+                && let Ok(root) = find_decapod_project_root(invocation_dir)
+                && find_governance_root(&root) == root
+            {
+                return false;
+            }
+            true
+        }
+    }
+}
+
+fn verify_strict_local_agent_session(
+    workspace_root: &Path,
+    main_root: &Path,
+    agent_id: &str,
+    supplied_password: &str,
+) -> Result<String, (&'static str, String)> {
+    let now = now_epoch_secs();
+    let mut candidate_roots = vec![workspace_root];
+    if main_root != workspace_root {
+        candidate_roots.push(main_root);
+    }
+    let mut saw_expired = false;
+    let mut saw_wrong_password = false;
+    let mut saw_wrong_backend = false;
+
+    for root in candidate_roots {
+        let rec_opt = read_agent_session(root, agent_id).map_err(|e| {
+            (
+                "AGENT_IDENTITY_UNAUTHENTICATED",
+                format!("failed to read agent session state: {e}"),
+            )
+        })?;
+        let Some(rec) = rec_opt else {
+            continue;
+        };
+        if rec.agent_id != agent_id {
+            return Err((
+                "AGENT_IDENTITY_FORGED",
+                format!(
+                    "session record agent_id '{}' does not match '{}'",
+                    rec.agent_id, agent_id
+                ),
+            ));
+        }
+        if !session_token_matches_backend(&rec.token, BackendType::Local) {
+            saw_wrong_backend = true;
+            continue;
+        }
+        if rec.expires_at_epoch_secs <= now {
+            saw_expired = true;
+            continue;
+        }
+        if hash_password(supplied_password, &rec.token) != rec.password_hash {
+            saw_wrong_password = true;
+            continue;
+        }
+        return Ok(rec.token);
+    }
+
+    if saw_wrong_password {
+        Err((
+            "AGENT_IDENTITY_FORGED",
+            "DECAPOD_SESSION_PASSWORD does not match active local session".to_string(),
+        ))
+    } else if saw_expired {
+        Err((
+            "AGENT_IDENTITY_UNAUTHENTICATED",
+            "active local agent session has expired; run `decapod session acquire`".to_string(),
+        ))
+    } else if saw_wrong_backend {
+        Err((
+            "AGENT_IDENTITY_UNAUTHENTICATED",
+            "session token is not a local Decapod session".to_string(),
+        ))
+    } else {
+        Err((
+            "AGENT_IDENTITY_UNAUTHENTICATED",
+            format!("no active local session found for agent '{agent_id}'"),
+        ))
+    }
+}
+
+fn print_governed_maintenance_json(value: &serde_json::Value) -> Result<(), error::DecapodError> {
+    println!(
+        "{}",
+        serde_json::to_string_pretty(value).map_err(|e| {
+            error::DecapodError::ValidationError(format!(
+                "DB_MAINTENANCE_ENCODING: failed to serialize response: {e}"
+            ))
+        })?
+    );
+    Ok(())
+}
+
+fn run_governed_database_cli(
+    invocation_dir: &Path,
+    command: DatabaseCommand,
+) -> Result<(), error::DecapodError> {
+    use crate::cli::{DatabaseLockCommand, DatabaseMaintainCommand};
+    use crate::core::db_maintenance;
+
+    let payload = match command {
+        DatabaseCommand::Inspect { .. } => {
+            unreachable!("legacy read-only inventory handled separately")
+        }
+        DatabaseCommand::Capabilities { probes, actor } => {
+            let policy = db_maintenance::resolve_canonical_policy(invocation_dir).map_err(
+                |(code, msg)| error::DecapodError::ValidationError(format!("{code}: {msg}")),
+            )?;
+            let verified_actor = db_maintenance::verify_actor_and_custody(
+                invocation_dir,
+                &policy,
+                actor.as_deref(),
+                &verify_strict_local_agent_session,
+            )
+            .map_err(|(code, msg)| {
+                error::DecapodError::ValidationError(format!(
+                    "{code}: {}",
+                    db_maintenance::redact_for_repo(&msg, &policy.main_root)
+                ))
+            })?;
+            db_maintenance::build_capabilities_report(&policy, &verified_actor, &probes)
+        }
+        DatabaseCommand::Audit { limit } => {
+            let policy = db_maintenance::resolve_canonical_policy(invocation_dir).map_err(
+                |(code, msg)| error::DecapodError::ValidationError(format!("{code}: {msg}")),
+            )?;
+            let verified_actor = db_maintenance::verify_actor_and_custody(
+                invocation_dir,
+                &policy,
+                None,
+                &verify_strict_local_agent_session,
+            )
+            .map_err(|(code, msg)| {
+                error::DecapodError::ValidationError(format!(
+                    "{code}: {}",
+                    db_maintenance::redact_for_repo(&msg, &policy.main_root)
+                ))
+            })?;
+            let records = db_maintenance::read_audit_records(&policy.main_store_root, limit)?;
+            serde_json::json!({
+                "schema_version": db_maintenance::DB_MAINTENANCE_AUDIT_SCHEMA_VERSION,
+                "status": "ok",
+                "repo_identity": policy.repo_identity,
+                "actor": verified_actor.agent_id,
+                "count": records.len(),
+                "records": records,
+                "implies_validation_ready": false,
+            })
+        }
+        DatabaseCommand::Lock(lock_cli) => match lock_cli.command {
+            DatabaseLockCommand::Diagnose {
+                timeout_ms,
+                operation_id,
+                expected_policy_sha256,
+                actor,
+            } => db_maintenance::execute_governed_capability(
+                invocation_dir,
+                "db.lock.diagnose",
+                actor.as_deref(),
+                operation_id.as_deref(),
+                expected_policy_sha256.as_deref(),
+                &verify_strict_local_agent_session,
+                vec![format!("timeout_ms={timeout_ms}")],
+                |policy, _| db_maintenance::run_maintain_lock_diagnose(policy, timeout_ms),
+            )?,
+            DatabaseLockCommand::Retry {
+                target,
+                destination,
+                max_attempts,
+                initial_backoff_ms,
+                deadline_ms,
+                operation_id,
+                expected_policy_sha256,
+                actor,
+            } => {
+                let spec = db_maintenance::LockRetrySpec {
+                    target,
+                    destination,
+                    max_attempts,
+                    initial_backoff_ms,
+                    deadline_ms,
+                    operation_id: operation_id.clone(),
+                    expected_policy_sha256: expected_policy_sha256.clone(),
+                };
+                db_maintenance::execute_governed_capability(
+                    invocation_dir,
+                    "db.lock.retry",
+                    actor.as_deref(),
+                    operation_id.as_deref(),
+                    expected_policy_sha256.as_deref(),
+                    &verify_strict_local_agent_session,
+                    vec![
+                        format!("target={}", target.as_capability().as_str()),
+                        format!("max_attempts={max_attempts}"),
+                        format!("initial_backoff_ms={initial_backoff_ms}"),
+                        format!("deadline_ms={deadline_ms}"),
+                    ],
+                    |_, _| db_maintenance::run_maintain_lock_retry(invocation_dir, &spec),
+                )?
+            }
+            DatabaseLockCommand::ReleaseOwn {
+                operation_id,
+                expected_policy_sha256,
+                actor,
+            } => db_maintenance::execute_governed_capability(
+                invocation_dir,
+                "db.lock.release_own",
+                actor.as_deref(),
+                operation_id.as_deref(),
+                expected_policy_sha256.as_deref(),
+                &verify_strict_local_agent_session,
+                vec![],
+                |policy, _| db_maintenance::run_maintain_lock_release_own(policy),
+            )?,
+        },
+        DatabaseCommand::Maintain(maint_cli) => match maint_cli.command {
+            DatabaseMaintainCommand::Inspect {
+                operation_id,
+                expected_policy_sha256,
+                actor,
+            } => db_maintenance::execute_governed_capability(
+                invocation_dir,
+                "db.inspect",
+                actor.as_deref(),
+                operation_id.as_deref(),
+                expected_policy_sha256.as_deref(),
+                &verify_strict_local_agent_session,
+                vec![],
+                |policy, _| db_maintenance::run_maintain_inspect(policy),
+            )?,
+            DatabaseMaintainCommand::Verify {
+                operation_id,
+                expected_policy_sha256,
+                actor,
+            } => db_maintenance::execute_governed_capability(
+                invocation_dir,
+                "db.verify",
+                actor.as_deref(),
+                operation_id.as_deref(),
+                expected_policy_sha256.as_deref(),
+                &verify_strict_local_agent_session,
+                vec![],
+                |policy, _| db_maintenance::run_maintain_verify(policy),
+            )?,
+            DatabaseMaintainCommand::Backup {
+                destination,
+                operation_id,
+                expected_policy_sha256,
+                actor,
+            } => db_maintenance::execute_governed_capability(
+                invocation_dir,
+                "db.backup",
+                actor.as_deref(),
+                operation_id.as_deref(),
+                expected_policy_sha256.as_deref(),
+                &verify_strict_local_agent_session,
+                vec!["destination=<bounded-backups-dir>".to_string()],
+                |policy, _| db_maintenance::run_maintain_backup(policy, &destination),
+            )?,
+            DatabaseMaintainCommand::Recover {
+                preserve_original_at: _,
+                operation_id,
+                expected_policy_sha256,
+                actor,
+            } => db_maintenance::execute_governed_capability(
+                invocation_dir,
+                "db.recover",
+                actor.as_deref(),
+                operation_id.as_deref(),
+                expected_policy_sha256.as_deref(),
+                &verify_strict_local_agent_session,
+                vec!["tier=owner".to_string()],
+                |_, _| {
+                    Err((
+                        "OWNER_REPAIR_AUTHORITY_REQUIRED",
+                        "db.recover requires explicit repository owner repair authority (#1590)"
+                            .to_string(),
+                    ))
+                },
+            )?,
+        },
+        DatabaseCommand::Verify {
+            operation_id,
+            expected_policy_sha256,
+            actor,
+            ..
+        } => db_maintenance::execute_governed_capability(
+            invocation_dir,
+            "db.verify",
+            actor.as_deref(),
+            operation_id.as_deref(),
+            expected_policy_sha256.as_deref(),
+            &verify_strict_local_agent_session,
+            vec![],
+            |policy, _| db_maintenance::run_maintain_verify(policy),
+        )?,
+        DatabaseCommand::Backup {
+            destination,
+            operation_id,
+            expected_policy_sha256,
+            actor,
+            ..
+        } => db_maintenance::execute_governed_capability(
+            invocation_dir,
+            "db.backup",
+            actor.as_deref(),
+            operation_id.as_deref(),
+            expected_policy_sha256.as_deref(),
+            &verify_strict_local_agent_session,
+            vec!["destination=<bounded-backups-dir>".to_string()],
+            |policy, _| db_maintenance::run_maintain_backup(policy, &destination),
+        )?,
+        DatabaseCommand::Recover {
+            preserve_original_at: _,
+            operation_id,
+            expected_policy_sha256,
+            actor,
+            ..
+        } => db_maintenance::execute_governed_capability(
+            invocation_dir,
+            "db.recover",
+            actor.as_deref(),
+            operation_id.as_deref(),
+            expected_policy_sha256.as_deref(),
+            &verify_strict_local_agent_session,
+            vec!["tier=owner".to_string()],
+            |_, _| {
+                Err((
+                    "OWNER_REPAIR_AUTHORITY_REQUIRED",
+                    "db.recover requires explicit repository owner repair authority (#1590)"
+                        .to_string(),
+                ))
+            },
+        )?,
+    };
+
+    print_governed_maintenance_json(&payload)
+}
+
+fn extract_maintenance_error_code_and_message(error: &error::DecapodError) -> (String, String) {
+    match error {
+        error::DecapodError::ValidationError(message) => {
+            if let Some((code, rest)) = message.split_once(':') {
+                let trimmed_code = code.trim();
+                if !trimmed_code.is_empty()
+                    && trimmed_code
+                        .chars()
+                        .all(|c| c.is_ascii_uppercase() || c.is_ascii_digit() || c == '_')
+                {
+                    return (trimmed_code.to_string(), rest.trim().to_string());
+                }
+            }
+            ("DB_MAINTENANCE_DENIED".to_string(), message.clone())
+        }
+        other => ("DB_MAINTENANCE_FAILED".to_string(), other.to_string()),
+    }
+}
+
+fn parse_governed_rpc_params<T: Default + serde::de::DeserializeOwned>(
+    raw: &serde_json::Value,
+) -> Result<T, error::DecapodError> {
+    if raw.is_null() {
+        Ok(T::default())
+    } else {
+        serde_json::from_value(raw.clone()).map_err(|e| {
+            error::DecapodError::ValidationError(format!(
+                "DB_MAINTENANCE_PARAMETERS: invalid parameters: {e}"
+            ))
+        })
+    }
+}
+
+fn parse_required_governed_rpc_params<T: serde::de::DeserializeOwned>(
+    raw: &serde_json::Value,
+) -> Result<T, error::DecapodError> {
+    serde_json::from_value(raw.clone()).map_err(|e| {
+        error::DecapodError::ValidationError(format!(
+            "DB_MAINTENANCE_PARAMETERS: invalid parameters: {e}"
+        ))
+    })
+}
+
+fn run_governed_database_rpc(
+    invocation_dir: &Path,
+    request: &core::rpc::RpcRequest,
+) -> Result<(), error::DecapodError> {
+    use crate::core::db_maintenance;
+    use crate::core::rpc::{
+        DatabaseAuditParams, DatabaseBackupParams, DatabaseCapabilitiesParams,
+        DatabaseLockDiagnoseParams, DatabaseLockReleaseOwnParams, DatabaseLockRetryParams,
+        DatabaseMaintainInspectParams, DatabaseRecoverParams, DatabaseVerifyParams,
+    };
+
+    let outcome: Result<serde_json::Value, error::DecapodError> = (|| match request.op.as_str() {
+        "data.database.capabilities" => {
+            let params: DatabaseCapabilitiesParams = parse_governed_rpc_params(&request.params)?;
+            let policy = db_maintenance::resolve_canonical_policy(invocation_dir).map_err(
+                |(code, msg)| error::DecapodError::ValidationError(format!("{code}: {msg}")),
+            )?;
+            let verified_actor = db_maintenance::verify_actor_and_custody(
+                invocation_dir,
+                &policy,
+                params.actor.as_deref(),
+                &verify_strict_local_agent_session,
+            )
+            .map_err(|(code, msg)| {
+                error::DecapodError::ValidationError(format!(
+                    "{code}: {}",
+                    db_maintenance::redact_for_repo(&msg, &policy.main_root)
+                ))
+            })?;
+            Ok(db_maintenance::build_capabilities_report(
+                &policy,
+                &verified_actor,
+                &params.probes,
+            ))
+        }
+        "data.database.audit" => {
+            let params: DatabaseAuditParams = parse_governed_rpc_params(&request.params)?;
+            let policy = db_maintenance::resolve_canonical_policy(invocation_dir).map_err(
+                |(code, msg)| error::DecapodError::ValidationError(format!("{code}: {msg}")),
+            )?;
+            let verified_actor = db_maintenance::verify_actor_and_custody(
+                invocation_dir,
+                &policy,
+                params.actor.as_deref(),
+                &verify_strict_local_agent_session,
+            )
+            .map_err(|(code, msg)| {
+                error::DecapodError::ValidationError(format!(
+                    "{code}: {}",
+                    db_maintenance::redact_for_repo(&msg, &policy.main_root)
+                ))
+            })?;
+            let records =
+                db_maintenance::read_audit_records(&policy.main_store_root, params.limit)?;
+            Ok(serde_json::json!({
+                "schema_version": db_maintenance::DB_MAINTENANCE_AUDIT_SCHEMA_VERSION,
+                "status": "ok",
+                "repo_identity": policy.repo_identity,
+                "actor": verified_actor.agent_id,
+                "count": records.len(),
+                "records": records,
+                "implies_validation_ready": false,
+            }))
+        }
+        "data.database.maintain.inspect" => {
+            let params: DatabaseMaintainInspectParams = parse_governed_rpc_params(&request.params)?;
+            db_maintenance::execute_governed_capability(
+                invocation_dir,
+                "db.inspect",
+                params.actor.as_deref(),
+                params.operation_id.as_deref(),
+                params.expected_policy_sha256.as_deref(),
+                &verify_strict_local_agent_session,
+                vec![],
+                |policy, _| db_maintenance::run_maintain_inspect(policy),
+            )
+        }
+        "data.database.verify" => {
+            let params: DatabaseVerifyParams = parse_governed_rpc_params(&request.params)?;
+            db_maintenance::execute_governed_capability(
+                invocation_dir,
+                "db.verify",
+                params.actor.as_deref(),
+                params.operation_id.as_deref(),
+                params.expected_policy_sha256.as_deref(),
+                &verify_strict_local_agent_session,
+                vec![],
+                |policy, _| db_maintenance::run_maintain_verify(policy),
+            )
+        }
+        "data.database.backup" => {
+            let params: DatabaseBackupParams = parse_required_governed_rpc_params(&request.params)?;
+            db_maintenance::execute_governed_capability(
+                invocation_dir,
+                "db.backup",
+                params.actor.as_deref(),
+                params.operation_id.as_deref(),
+                params.expected_policy_sha256.as_deref(),
+                &verify_strict_local_agent_session,
+                vec!["destination=<bounded-backups-dir>".to_string()],
+                |policy, _| db_maintenance::run_maintain_backup(policy, &params.destination),
+            )
+        }
+        "data.database.recover" => {
+            let params: DatabaseRecoverParams =
+                parse_required_governed_rpc_params(&request.params)?;
+            let _ = &params.preserve_original_at;
+            db_maintenance::execute_governed_capability(
+                invocation_dir,
+                "db.recover",
+                params.actor.as_deref(),
+                params.operation_id.as_deref(),
+                params.expected_policy_sha256.as_deref(),
+                &verify_strict_local_agent_session,
+                vec!["tier=owner".to_string()],
+                |_, _| {
+                    Err((
+                        "OWNER_REPAIR_AUTHORITY_REQUIRED",
+                        "db.recover requires explicit repository owner repair authority (#1590)"
+                            .to_string(),
+                    ))
+                },
+            )
+        }
+        "data.database.lock.diagnose" => {
+            let params: DatabaseLockDiagnoseParams = parse_governed_rpc_params(&request.params)?;
+            db_maintenance::execute_governed_capability(
+                invocation_dir,
+                "db.lock.diagnose",
+                params.actor.as_deref(),
+                params.operation_id.as_deref(),
+                params.expected_policy_sha256.as_deref(),
+                &verify_strict_local_agent_session,
+                vec![format!("timeout_ms={}", params.timeout_ms)],
+                |policy, _| db_maintenance::run_maintain_lock_diagnose(policy, params.timeout_ms),
+            )
+        }
+        "data.database.lock.retry" => {
+            let params: DatabaseLockRetryParams =
+                parse_required_governed_rpc_params(&request.params)?;
+            let spec = db_maintenance::LockRetrySpec {
+                target: params.target,
+                destination: params.destination,
+                max_attempts: params.max_attempts,
+                initial_backoff_ms: params.initial_backoff_ms,
+                deadline_ms: params.deadline_ms,
+                operation_id: params.operation_id.clone(),
+                expected_policy_sha256: params.expected_policy_sha256.clone(),
+            };
+            db_maintenance::execute_governed_capability(
+                invocation_dir,
+                "db.lock.retry",
+                params.actor.as_deref(),
+                params.operation_id.as_deref(),
+                params.expected_policy_sha256.as_deref(),
+                &verify_strict_local_agent_session,
+                vec![
+                    format!("target={}", params.target.as_capability().as_str()),
+                    format!("max_attempts={}", params.max_attempts),
+                    format!("initial_backoff_ms={}", params.initial_backoff_ms),
+                    format!("deadline_ms={}", params.deadline_ms),
+                ],
+                |_, _| db_maintenance::run_maintain_lock_retry(invocation_dir, &spec),
+            )
+        }
+        "data.database.lock.release_own" => {
+            let params: DatabaseLockReleaseOwnParams = parse_governed_rpc_params(&request.params)?;
+            db_maintenance::execute_governed_capability(
+                invocation_dir,
+                "db.lock.release_own",
+                params.actor.as_deref(),
+                params.operation_id.as_deref(),
+                params.expected_policy_sha256.as_deref(),
+                &verify_strict_local_agent_session,
+                vec![],
+                |policy, _| db_maintenance::run_maintain_lock_release_own(policy),
+            )
+        }
+        other => Err(error::DecapodError::ValidationError(format!(
+            "CAPABILITY_UNSUPPORTED: unknown database maintenance operation '{other}'"
+        ))),
+    })();
+
+    match outcome {
+        Ok(report) => {
+            let response = core::rpc::success_response(
+                request.id.clone(),
+                request.op.clone(),
+                request.params.clone(),
+                Some(report),
+                vec![".decapod/data/decapod.db".to_string()],
+                None,
+                vec![],
+                vec![],
+            );
+            println!(
+                "{}",
+                serde_json::to_string_pretty(&response).map_err(|_| {
+                    error::DecapodError::ValidationError("DB_MAINTENANCE_ENCODING".into())
+                })?
+            );
+            Ok(())
+        }
+        Err(error) => {
+            let (code, msg) = extract_maintenance_error_code_and_message(&error);
+            let response = core::rpc::error_response(
+                request.id.clone(),
+                request.op.clone(),
+                request.params.clone(),
+                code,
+                msg,
+                None,
+                vec![],
+            );
+            println!(
+                "{}",
+                serde_json::to_string_pretty(&response).map_err(|_| {
+                    error::DecapodError::ValidationError("DB_MAINTENANCE_ENCODING".into())
+                })?
+            );
+            Err(error)
+        }
+    }
 }
 
 /// Run a read-only integrity probe through Dactyl's native maintenance API.
@@ -12553,6 +13233,17 @@ fn parse_rpc_request(cli: &RpcCli) -> Result<core::rpc::RpcRequest, error::Decap
                 .transpose()
                 .map_err(|_| {
                     error::DecapodError::ValidationError("Invalid inventory parameters".into())
+                })?
+                .unwrap_or(serde_json::json!({}))
+        } else if is_governed_db_maintenance_rpc_op(&op) {
+            cli.params
+                .as_ref()
+                .map(|params| serde_json::from_str(params))
+                .transpose()
+                .map_err(|_| {
+                    error::DecapodError::ValidationError(
+                        "DB_MAINTENANCE_PARAMETERS: invalid JSON parameters".into(),
+                    )
                 })?
                 .unwrap_or(serde_json::json!({}))
         } else {

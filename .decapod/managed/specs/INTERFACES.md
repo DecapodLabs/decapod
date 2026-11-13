@@ -1154,8 +1154,8 @@ field. Nothing in this operation authorizes a mutation, approval or completion.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `a87a7c93f1c30d85611e9c7520700ad2980c41199162cf7b3035954db79152c8`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (233 files), `tests/` (232 files)
+- Repository signal fingerprint: `fbccc9cfb5bf2b38e6ef970f60ff59a1d618c570d9b96d317b9f5bd0c40da905`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (234 files), `tests/` (232 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 
@@ -1492,3 +1492,11 @@ Existing snapshot-provider calls and typed failures remain unchanged. HTTP403/42
 ## PR1663 integrated storage behavior
 
 Preserve versioned journal/transfer and inventory outputs, checked write admission and explicit-only page reclamation. Existing custody and resource APIs remain exported. No provider/check requirement is removed; current-source inventory is reviewed after accepted-master integration.
+
+## PR 1662: accepted v0.143.2 source integration
+
+Existing `data database` maintenance/capability/lock/audit CLI and RPC operations report allowed, denied or unsupported capability decisions. Candidate-only opt-in remains `DB_MAINTENANCE_POLICY_UNACCEPTED`; owner repair is separate. Configured local authority cannot imply authenticated cloud access.
+
+## PR1662 current-master preparation
+
+Preserve symmetric data.database CLI/RPC capability discovery, diagnostics, bounded maintenance and audit interfaces. Policy admission must happen before startup migrations for maintenance commands; raw SQL, destructive replacement and arbitrary destinations remain outside the delegated contract.

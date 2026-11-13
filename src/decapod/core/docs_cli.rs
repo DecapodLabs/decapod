@@ -654,6 +654,9 @@ fn build_docs(touched: Vec<PathBuf>) -> Result<(), error::DecapodError> {
                 "validate" => {
                     writeln!(file, "{}", readiness_contract())?;
                 }
+                "data" => {
+                    writeln!(file, "\n{}", db_maintenance_command_contract())?;
+                }
                 _ => {}
             }
             writeln!(file)?;
@@ -710,6 +713,14 @@ fn build_docs(touched: Vec<PathBuf>) -> Result<(), error::DecapodError> {
     Ok(())
 }
 
+fn db_maintenance_command_contract() -> &'static str {
+    r#"### Governed Local Database Maintenance (`decapod data db ...`)
+
+- **Read-only inventory (ungated):** `decapod data database inspect` / RPC `data.database.inspect` remains non-initializing and read-only.
+- **Governed capabilities (default-deny):** `decapod data db capabilities`, `decapod data db lock {diagnose,retry,release-own}`, `decapod data db maintain {inspect,verify,backup,recover}`, and `decapod data db audit` (plus `data.database.{capabilities,maintain.inspect,verify,backup,recover,lock.diagnose,lock.retry,lock.release_own,audit}`) require an authenticated local `DECAPOD_AGENT_ID` + `DECAPOD_SESSION_PASSWORD` inside the agent's claimed `.decapod/workspaces/*` worktree and canonical main-repository `[governance.db_maintenance] enabled = true`.
+- **Boundaries:** `db.backup` writes only to non-existing paths under `.decapod/backups/` (`<= 512 MiB`) and never implies `db.recover`; `db.recover` requires repository `owner` repair authority (`#1590`); `backend = "cloud"` fails closed (`CLOUD_PRINCIPAL_UNVERIFIED`); raw SQL, `sqlite3`, vacuum, and restore are unmodeled (`CAPABILITY_UNSUPPORTED`)."#
+}
+
 fn shared_claim_config_contract() -> &'static str {
     r#"## RBAC exceptions and Laya
 
@@ -720,6 +731,18 @@ repair requires an explicitly granted role and records the policy fingerprint
 with the reviewed repairs. `validate --bypass-validation --bypass-reason`
 requires its own role and leaves proof and publication readiness false.
 These actor labels are cooperative identities, not authenticated users.
+
+`[governance.db_maintenance]` is default-deny (`enabled = false`). When the
+canonical main-repository `.decapod/config.toml` sets `enabled = true` on a
+`local` backend, authenticated agents inside their claimed `.decapod/workspaces/*`
+worktree may invoke the allowlisted safe capability slice (`db.inspect`,
+`db.verify`, `db.lock.diagnose`, `db.lock.retry`, `db.lock.release_own`,
+`db.backup` under `.decapod/backups/`). Worktree or unmerged-branch config edits
+cannot self-elevate, `db.recover` remains reserved for repository `owner` repair
+authority (`#1590`), `backend = "cloud"` fails closed (`CLOUD_PRINCIPAL_UNVERIFIED`)
+until Propodus `#88` verifies a repository-privileged human principal, raw SQL /
+`sqlite3` / vacuum / restore remain unmodeled, and every attempt writes a
+redacted NDJSON audit entry (`implies_validation_ready = false`).
 
 `[laya] mode = "disabled"` is the default. Set `mode = "required"`
 and install the reviewed profile to opt in to post-proof Laya judgment.

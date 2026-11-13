@@ -535,69 +535,52 @@
     }
   },
   "change": {
-    "id": "change_01M79W3PBHXH8GNF8YWMNPHZCD",
+    "id": "change_01M79W28WN1PPYPJZSQ1SBX1GX",
     "base_commit": "6f1d2a39ad0b5b2f7e70fe12f75f0d8b360d9453",
     "target_base": "origin/master"
   },
   "checkpoints": [
     {
-      "id": "pr1663-prepared-source-preservation-1",
-      "summary": "Checkpoint prepared original storage implementation and current task custody before accepted-master integration; no local tests or live candidate migrations.",
-      "input_digest": "sha256:e934f13495757ac78d5ddac0926c381fc7af0de51d9bd3975183d3a927cae438",
+      "id": "pr1662-prepared-source-preservation-1",
+      "summary": "Checkpoint prepared original maintenance implementation and current task custody before accepted-master integration; no local tests or live candidate migrations.",
+      "input_digest": "sha256:69b7af82da6e368951f6a62dca847ff6e31809e85bbfc09f1d254f6a30ed72f7",
       "proof_refs": [
-        "git:1c60df45c5db1731fb348069cf1e8f8f5dc410cc"
+        "git:6f29dd43d5dea21ea3d442cb1270847e2b7e86bf"
       ]
     },
     {
-      "id": "pr1663-accepted-master-1441-integration-2",
-      "summary": "Resolve accepted-master integration with both storage journal APIs and custody/resource guards, reviewed0.144.1 inputs and current release surfaces. No local tests or live candidate migrations.",
-      "input_digest": "sha256:e84cf08617f8203104ab6a10bd939663added696e8883d63b6eea0332c08d011",
+      "id": "pr1662-accepted-master-1442-integration-2",
+      "summary": "Resolve accepted-master integration preserving scoped maintenance and accepted storage/custody guards, reviewed0.144.2 inputs and release surfaces. No local tests or live candidate operations.",
+      "input_digest": "sha256:2862cf884c5aff051822f0c84cb9d144840e274b80aca405656c4f1ffdf917c7",
       "proof_refs": [
-        "git:5e23ad68142e0de5decbd6fc8e655593ef5fe83b"
+        "git:3afa9df97d9d15504b5f76021867182b78ba596d"
       ]
     },
     {
-      "id": "pr1663-preserve-original-parent-3",
-      "summary": "Preserve original PR1663 parent and resolve duplicate governance/spec/export overlap using the current reviewed integration; storage behavior and accepted custody guards remain intact. No local tests or live candidate migrations.",
-      "input_digest": "sha256:e84cf08617f8203104ab6a10bd939663added696e8883d63b6eea0332c08d011",
+      "id": "pr1662-preserve-original-parent-3",
+      "summary": "Preserve all original PR1662 commits as actual ancestry while retaining resolved current-master maintenance integration and official0.144.2 projections. No local tests or candidate live-store operations.",
+      "input_digest": "sha256:8e54a579e7b7364ebe4d0b8ac11f597d19c672590d1eb327057b6927cf0b76d1",
       "proof_refs": [
-        "git:1c60df45c5db1731fb348069cf1e8f8f5dc410cc",
-        "git:5e23ad68142e0de5decbd6fc8e655593ef5fe83b"
-      ]
-    },
-    {
-      "id": "pr1663-blank-title-regression-fix-4",
-      "summary": "Repair legacy empty-title Gatling expectation by requiring real typed rejection and unchanged task identities for empty/whitespace inputs. No admission weakening or local tests.",
-      "input_digest": "sha256:08544eb948ad6c8f49ba93d9b3301acab7c6aee757faa5fda2e559bd5cd4e611",
-      "proof_refs": [
-        "/private/tmp/decapod-pr1663-gatling0-132118203905.log"
-      ]
-    },
-    {
-      "id": "pr1663-plugin-runtime-budget-fix-5",
-      "summary": "Repair observed todo-plugin aggregate timeout with complete40-case scheduling, finite900s aggregate/120s CLI child bounds and test-only broker idle tuning; retain all assertions and internal workers. No local tests.",
-      "input_digest": "sha256:75fe4f0eca5e77c86e340c25be61f10ca41d751e545d928042130fdaa497d832",
-      "proof_refs": [
-        "/private/tmp/decapod-pr1663-plugins-132122885776.log"
+        "git:3afa9df97d9d15504b5f76021867182b78ba596d"
       ]
     }
   ],
   "intents": {
-    "intent:change_01M79W3PBHXH8GNF8YWMNPHZCD": {
+    "intent:change_01M79W28WN1PPYPJZSQ1SBX1GX": {
       "acceptance_criteria": [],
       "assumptions": [],
       "boundaries": [
         "Current claimed task and isolated work branch"
       ],
       "constraints": [
-        "pr-1663-master-1432"
+        "pr-1662-master-1432"
       ],
       "created_sequence": 1,
-      "id": "intent:change_01M79W3PBHXH8GNF8YWMNPHZCD",
+      "id": "intent:change_01M79W28WN1PPYPJZSQ1SBX1GX",
       "out_of_scope": [],
       "proof_requirements": [],
-      "raw_intent": "bugs: update PR 1663 onto accepted Decapod 0.143.2 master\n\nUser requests all open PR branches updated. Preserve PR1663 implementation and historical proof, resolve current accepted-master conflicts, refresh official0.143.2 projections and exact-source evidence, checkpoint commits and push existing PR without force or merge. Retain any known native acceptance/controller blockers and draft status.",
-      "refined_intent": "bugs: update PR 1663 onto accepted Decapod 0.143.2 master\n\nUser requests all open PR branches updated. Preserve PR1663 implementation and historical proof, resolve current accepted-master conflicts, refresh official0.143.2 projections and exact-source evidence, checkpoint commits and push existing PR without force or merge. Retain any known native acceptance/controller blockers and draft status.",
+      "raw_intent": "bugs: update PR 1662 onto accepted Decapod 0.143.2 master\n\nUser requests all open PR branches updated. Preserve PR1662 implementation and historical proof, resolve current accepted-master conflicts, refresh official0.143.2 projections and exact-source evidence, checkpoint commits and push existing PR without force or merge. Retain any known native acceptance/controller blockers and draft status.",
+      "refined_intent": "bugs: update PR 1662 onto accepted Decapod 0.143.2 master\n\nUser requests all open PR branches updated. Preserve PR1662 implementation and historical proof, resolve current accepted-master conflicts, refresh official0.143.2 projections and exact-source evidence, checkpoint commits and push existing PR without force or merge. Retain any known native acceptance/controller blockers and draft status.",
       "status": "refined",
       "updated_sequence": 3
     }
@@ -610,7 +593,7 @@
       },
       "deferred_questions": [],
       "human_questions": [],
-      "intent": "Update existing PR1663 against accepted master5e23ad68 and0.144.1 release. Preserve lossless compaction, write-admission guards, versioned event/journal formats, component integrity and original commit history. Resolve conflicts with accepted custody/quota/runtime changes, push each repair and drive hosted CI until green. Do not run local tests, execute candidate migrations against the live datastore, force-push or merge the PR. Historical benchmarks are not current-candidate proof.",
+      "intent": "Update PR1662 onto current master3afa9df9 and0.144.2 source. Preserve default-deny accepted-policy maintenance, non-destructive locks, owner repair and original history. Resolve conflicts, commit/push each repair and drive hosted CI green; no local tests, candidate live-store execution, force push or auto merge.",
       "phases": [],
       "proof_hooks": [
         "Source/material parity against original PR; focused affected regression checks; checkpoint-history inspection; official exact-current-target validation where the accepted controller supports the contract."
@@ -618,115 +601,99 @@
       "schema_version": "1.1.0",
       "spec_reviews": [
         {
-          "disposition": "unchanged_with_reason",
+          "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Production storage/custody semantics and required tests remain unchanged. The complete40-case todo plugin suite gets finite aggregate and child deadlines plus test-only scheduling/idle tuning. Internal concurrency, optional container behavior and all assertions remain; VALIDATION documents the observed hosted timeout.",
-          "reviewed_code_fingerprint": "a87a7c93f1c30d85611e9c7520700ad2980c41199162cf7b3035954db79152c8",
-          "spec_material_hash": "66e671df924ac36cdfef5d07a591497c64e2dec29cabfbb215970595a74d137c"
+          "reason": "Production changes auto-merged with accepted storage/custody guards. Canonical policy stays default-deny; owner repair, cloud denial and non-destructive lock custody remain enforced by the maintenance boundary. Official0.144.2 source inventory and release projections are current. Hosted CI must establish tests; no local tests or candidate live-store operations run.",
+          "reviewed_code_fingerprint": "fbccc9cfb5bf2b38e6ef970f60ff59a1d618c570d9b96d317b9f5bd0c40da905",
+          "spec_material_hash": "1fd0daadc96dd31eb16cf1ec6ff5bad5f893e903f487167ceb85b864812060c7"
         },
         {
-          "disposition": "unchanged_with_reason",
+          "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Production storage/custody semantics and required tests remain unchanged. The complete40-case todo plugin suite gets finite aggregate and child deadlines plus test-only scheduling/idle tuning. Internal concurrency, optional container behavior and all assertions remain; VALIDATION documents the observed hosted timeout.",
-          "reviewed_code_fingerprint": "a87a7c93f1c30d85611e9c7520700ad2980c41199162cf7b3035954db79152c8",
-          "spec_material_hash": "c2909739996e7a385f361bf721602e56d51c3ce2db0face804b571ebc36d19a4"
+          "reason": "Production changes auto-merged with accepted storage/custody guards. Canonical policy stays default-deny; owner repair, cloud denial and non-destructive lock custody remain enforced by the maintenance boundary. Official0.144.2 source inventory and release projections are current. Hosted CI must establish tests; no local tests or candidate live-store operations run.",
+          "reviewed_code_fingerprint": "fbccc9cfb5bf2b38e6ef970f60ff59a1d618c570d9b96d317b9f5bd0c40da905",
+          "spec_material_hash": "a019febc805e23daa61f4e97014148bf6446b8ac5d0cc0fd77f26287c2db4039"
         },
         {
-          "disposition": "unchanged_with_reason",
+          "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Production storage/custody semantics and required tests remain unchanged. The complete40-case todo plugin suite gets finite aggregate and child deadlines plus test-only scheduling/idle tuning. Internal concurrency, optional container behavior and all assertions remain; VALIDATION documents the observed hosted timeout.",
-          "reviewed_code_fingerprint": "a87a7c93f1c30d85611e9c7520700ad2980c41199162cf7b3035954db79152c8",
-          "spec_material_hash": "30a6061554c0714340a021db4033946b2028ecfa01cfb47cdcec51f41fad8e9e"
+          "reason": "Production changes auto-merged with accepted storage/custody guards. Canonical policy stays default-deny; owner repair, cloud denial and non-destructive lock custody remain enforced by the maintenance boundary. Official0.144.2 source inventory and release projections are current. Hosted CI must establish tests; no local tests or candidate live-store operations run.",
+          "reviewed_code_fingerprint": "fbccc9cfb5bf2b38e6ef970f60ff59a1d618c570d9b96d317b9f5bd0c40da905",
+          "spec_material_hash": "550c8b7a75eddef6e649172aa6a8f8c160c7a8db659e782f9c6525794bcaa87d"
         }
       ],
       "state": "APPROVED",
       "stop_conditions": [],
-      "title": "Integrate PR1663 on accepted0.143.2 master",
+      "title": "Integrate PR1662 on accepted0.143.2 master",
       "todo_ids": [
-        "bugs_01m79w2ky7pvy503"
+        "bugs_01m79w147bj8bq1k"
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1794599754Z"
+      "updated_at": "1794601965Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch",
         "Preserve original source and parents; no force-push, local tests, live candidate migrations or automatic merge."
       ],
-      "artifact_hash": "sha256:ee3c7f1fa1a1eeeab353b43a4ea4a582ad876b79dd0ed58fc7877e8219957375",
-      "checks": [
-        {
-          "name": "gatling-blank-title-expectation",
-          "status": "failed"
-        },
-        {
-          "name": "plugins-todo-aggregate-timeout",
-          "status": "failed"
-        }
-      ],
-      "current_phase": "ci-repair",
+      "artifact_hash": "sha256:b792b7339ac60c0d4410186a22db6fef95d63a5c4693c6d11b1cab5b4ae4376a",
+      "checks": [],
+      "current_phase": "integration",
       "custody": {
         "events": [
           {
             "event_id": "event:2",
-            "intent_id": "intent:change_01M79W3PBHXH8GNF8YWMNPHZCD",
+            "intent_id": "intent:change_01M79W28WN1PPYPJZSQ1SBX1GX",
             "kind": "created",
             "sequence": 2
           },
           {
             "event_id": "event:3",
-            "intent_id": "intent:change_01M79W3PBHXH8GNF8YWMNPHZCD",
+            "intent_id": "intent:change_01M79W28WN1PPYPJZSQ1SBX1GX",
             "kind": "refined",
             "sequence": 3
           },
           {
-            "detail": "trajectory:branch_01M79W3PFCRQMK8QZJN5TWCK5K",
+            "detail": "trajectory:branch_01M79W290WKBD0ZJ6QJAZ9SNB8",
             "event_id": "event:4",
-            "intent_id": "intent:change_01M79W3PBHXH8GNF8YWMNPHZCD",
+            "intent_id": "intent:change_01M79W28WN1PPYPJZSQ1SBX1GX",
             "kind": "trajectory_step_recorded",
             "sequence": 4
           },
           {
-            "detail": "trajectory:branch_01M79W3PFCRQMK8QZJN5TWCK5K",
+            "detail": "trajectory:branch_01M79W290WKBD0ZJ6QJAZ9SNB8",
             "event_id": "event:5",
-            "intent_id": "intent:change_01M79W3PBHXH8GNF8YWMNPHZCD",
+            "intent_id": "intent:change_01M79W28WN1PPYPJZSQ1SBX1GX",
             "kind": "trajectory_step_recorded",
             "sequence": 5
           },
           {
-            "detail": "trajectory:branch_01M79W3PFCRQMK8QZJN5TWCK5K",
+            "detail": "trajectory:branch_01M79W290WKBD0ZJ6QJAZ9SNB8",
             "event_id": "event:6",
-            "intent_id": "intent:change_01M79W3PBHXH8GNF8YWMNPHZCD",
+            "intent_id": "intent:change_01M79W28WN1PPYPJZSQ1SBX1GX",
             "kind": "trajectory_step_recorded",
             "sequence": 6
-          },
-          {
-            "detail": "trajectory:branch_01M79W3PFCRQMK8QZJN5TWCK5K",
-            "event_id": "event:7",
-            "intent_id": "intent:change_01M79W3PBHXH8GNF8YWMNPHZCD",
-            "kind": "trajectory_step_recorded",
-            "sequence": 7
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 7,
+        "next_sequence": 6,
         "schema_version": "1.0.0",
         "trajectories": {
-          "branch_01M79W3PFCRQMK8QZJN5TWCK5K": {
+          "branch_01M79W290WKBD0ZJ6QJAZ9SNB8": {
             "evidence_only": true,
-            "id": "branch_01M79W3PFCRQMK8QZJN5TWCK5K",
-            "intent_id": "intent:change_01M79W3PBHXH8GNF8YWMNPHZCD",
+            "id": "branch_01M79W290WKBD0ZJ6QJAZ9SNB8",
+            "intent_id": "intent:change_01M79W28WN1PPYPJZSQ1SBX1GX",
             "steps": [
               {
                 "action": "integration",
                 "custody_event_id": "event:4",
                 "observations": [
-                  "git:1c60df45c5db1731fb348069cf1e8f8f5dc410cc"
+                  "git:6f29dd43d5dea21ea3d442cb1270847e2b7e86bf"
                 ],
                 "proof_refs": [],
                 "scope": [
-                  "pr-1663-master-1432"
+                  "pr-1662-master-1432"
                 ],
                 "sequence": 4,
                 "validation_findings": [
@@ -735,16 +702,16 @@
               },
               {
                 "action": "integration",
-                "command": "Merge accepted master; retain authoring/resource and journal exports; retain accepted product specs and document storage obligations; refresh reviewed source and release bindings.",
+                "command": "Merge accepted master; retain accepted storage/custody and maintenance dispatch; preserve accepted product specs and document maintenance obligations; refresh reviewed source and release bindings.",
                 "custody_event_id": "event:5",
                 "observations": [
-                  "src/decapod/core/todo.rs",
-                  "git:5e23ad68142e0de5decbd6fc8e655593ef5fe83b",
-                  "/private/tmp/decapod-pr1663-master1441-inventory.json"
+                  "src/decapod/core/db_maintenance.rs",
+                  "git:3afa9df97d9d15504b5f76021867182b78ba596d",
+                  "/private/tmp/decapod-pr1662-master1442-inventory.json"
                 ],
                 "proof_refs": [],
                 "scope": [
-                  "pr-1663-master-1432"
+                  "pr-1662-master-1432"
                 ],
                 "sequence": 5,
                 "validation_findings": [
@@ -752,40 +719,21 @@
                 ]
               },
               {
-                "action": "ci-repair",
-                "command": "Align existing real-CLI regression with empty/whitespace title rejection and verify unchanged task identities; preserve production admission.",
+                "action": "integration",
+                "command": "Merge accepted master; retain accepted storage/custody and maintenance dispatch; preserve accepted product specs and document maintenance obligations; refresh reviewed source and release bindings.",
                 "custody_event_id": "event:6",
                 "observations": [
-                  "tests/gatling.rs",
-                  "/private/tmp/decapod-pr1663-gatling0-132118203905.log"
+                  "src/decapod/core/db_maintenance.rs",
+                  "git:3afa9df97d9d15504b5f76021867182b78ba596d",
+                  "/private/tmp/decapod-pr1662-master1442-inventory.json"
                 ],
-                "proof_refs": [
-                  "gatling-blank-title-expectation"
-                ],
+                "proof_refs": [],
                 "scope": [
-                  "pr-1663-master-1432"
+                  "pr-1662-master-1432"
                 ],
                 "sequence": 6,
                 "validation_findings": [
-                  "New hosted execution remains required; no local tests or live candidate migrations."
-                ]
-              },
-              {
-                "action": "ci-repair",
-                "command": "Preserve40 plugin cases and internal concurrency under finite900s target/120s child bounds; retain broker routing with1s serial fixture idle; review changed build input.",
-                "custody_event_id": "event:7",
-                "observations": [
-                  "/private/tmp/decapod-pr1663-plugins-132122885776.log"
-                ],
-                "proof_refs": [
-                  "plugins-todo-aggregate-timeout"
-                ],
-                "scope": [
-                  "pr-1663-master-1432"
-                ],
-                "sequence": 7,
-                "validation_findings": [
-                  "Fresh hosted execution is required; no local tests or live candidate migrations."
+                  "Current hosted CI and production datastore compatibility remain unproven."
                 ]
               }
             ]
@@ -793,40 +741,33 @@
         }
       },
       "declared_commands": [
-        "Align existing real-CLI regression with empty/whitespace title rejection and verify unchanged task identities; preserve production admission.",
-        "Merge accepted master; retain authoring/resource and journal exports; retain accepted product specs and document storage obligations; refresh reviewed source and release bindings.",
-        "Preserve40 plugin cases and internal concurrency under finite900s target/120s child bounds; retain broker routing with1s serial fixture idle; review changed build input."
+        "Merge accepted master; retain accepted storage/custody and maintenance dispatch; preserve accepted product specs and document maintenance obligations; refresh reviewed source and release bindings."
       ],
       "destination": "pull request",
       "evidence": [
-        "/private/tmp/decapod-pr1663-gatling0-132118203905.log",
-        "/private/tmp/decapod-pr1663-master1441-inventory.json",
-        "/private/tmp/decapod-pr1663-plugins-132122885776.log",
-        "git:1c60df45c5db1731fb348069cf1e8f8f5dc410cc",
-        "git:5e23ad68142e0de5decbd6fc8e655593ef5fe83b"
+        "/private/tmp/decapod-pr1662-master1442-inventory.json",
+        "git:3afa9df97d9d15504b5f76021867182b78ba596d",
+        "git:6f29dd43d5dea21ea3d442cb1270847e2b7e86bf"
       ],
       "inspected_files": [],
-      "intent_id": "intent:change_01M79W3PBHXH8GNF8YWMNPHZCD",
+      "intent_id": "intent:change_01M79W28WN1PPYPJZSQ1SBX1GX",
       "modified_files": [
-        "src/decapod/core/todo.rs",
-        "tests/gatling.rs"
+        "src/decapod/core/db_maintenance.rs"
       ],
       "next_transitions": [
         "Refine plan and declare falsifiable checks"
       ],
       "repo_scope": [
-        "pr-1663-master-1432"
+        "pr-1662-master-1432"
       ],
-      "run_id": "branch_01M79W3PFCRQMK8QZJN5TWCK5K",
+      "run_id": "branch_01M79W290WKBD0ZJ6QJAZ9SNB8",
       "schema_version": "1.1.0",
       "shortcut_risk_signals": [],
-      "task_id": "bugs_01m79w2ky7pvy503",
+      "task_id": "bugs_01m79w147bj8bq1k",
       "tool_calls": [],
       "unresolved_assumptions": [
         "Current hosted CI and production datastore compatibility remain unproven.",
-        "Fresh hosted execution is required; no local tests or live candidate migrations.",
-        "Historical source tests and benchmarks do not prove the new accepted-target integration.",
-        "New hosted execution remains required; no local tests or live candidate migrations."
+        "Historical source tests and benchmarks do not prove the new accepted-target integration."
       ]
     }
   },

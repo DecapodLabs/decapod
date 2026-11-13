@@ -626,8 +626,8 @@ execution evidence remains required before publication readiness.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `a87a7c93f1c30d85611e9c7520700ad2980c41199162cf7b3035954db79152c8`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (233 files), `tests/` (232 files)
+- Repository signal fingerprint: `fbccc9cfb5bf2b38e6ef970f60ff59a1d618c570d9b96d317b9f5bd0c40da905`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (234 files), `tests/` (232 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 
@@ -957,3 +957,11 @@ Preserve exact source/base checks, public-reader denial, final remote binding ve
 ## PR1663 integrated storage behavior
 
 Missing components, corrupt references, incompatible readers/writers and unauthorized custody must remain rejected. Storage migration1200 and format-v2 behavior stay confined to source and hosted disposable fixtures during this update. No direct machine datastore edit or candidate migration is authorized.
+
+## PR 1662: accepted v0.143.2 source integration
+
+Do not delete lock sidecars, signal foreign processes, steal claims, replay ambiguous writes or infer cloud privilege from local actor labels. Backup destinations and audit output remain bounded and confined. Default denial and accepted-policy revision checks survive integration with current master.
+
+## PR1662 current-master preparation
+
+Worktree policy edits cannot self-grant capabilities. db.recover remains owner-only and cloud authority fails closed when it cannot be authenticated. Retain non-destructive lock diagnosis, current-process-only release and confined backups. Coordination receipts are not independent acceptance proof.

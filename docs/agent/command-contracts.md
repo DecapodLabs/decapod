@@ -150,6 +150,12 @@ This document defines the normative operational contracts for the Decapod CLI.
 ## `decapod data`
 - **Intent:** Data: archives, knowledge, context, schemas
 
+### Governed Local Database Maintenance (`decapod data db ...`)
+
+- **Read-only inventory (ungated):** `decapod data database inspect` / RPC `data.database.inspect` remains non-initializing and read-only.
+- **Governed capabilities (default-deny):** `decapod data db capabilities`, `decapod data db lock {diagnose,retry,release-own}`, `decapod data db maintain {inspect,verify,backup,recover}`, and `decapod data db audit` (plus `data.database.{capabilities,maintain.inspect,verify,backup,recover,lock.diagnose,lock.retry,lock.release_own,audit}`) require an authenticated local `DECAPOD_AGENT_ID` + `DECAPOD_SESSION_PASSWORD` inside the agent's claimed `.decapod/workspaces/*` worktree and canonical main-repository `[governance.db_maintenance] enabled = true`.
+- **Boundaries:** `db.backup` writes only to non-existing paths under `.decapod/backups/` (`<= 512 MiB`) and never implies `db.recover`; `db.recover` requires repository `owner` repair authority (`#1590`); `backend = "cloud"` fails closed (`CLOUD_PRINCIPAL_UNVERIFIED`); raw SQL, `sqlite3`, vacuum, and restore are unmodeled (`CAPABILITY_UNSUPPORTED`).
+
 ## `decapod auto`
 - **Intent:** Automation: scheduled and event-driven
 
@@ -206,6 +212,15 @@ This document defines the normative operational contracts for the Decapod CLI.
 ### Operation: `AgentRegistryQuery`
 ### Operation: `SchemaGet`
 ### Operation: `StorageInventory`
+### Operation: `DatabaseCapabilities`
+### Operation: `DatabaseMaintainInspect`
+### Operation: `DatabaseVerify`
+### Operation: `DatabaseBackup`
+### Operation: `DatabaseRecover`
+### Operation: `DatabaseLockDiagnose`
+### Operation: `DatabaseLockRetry`
+### Operation: `DatabaseLockReleaseOwn`
+### Operation: `DatabaseAudit`
 ### Operation: `StoreUpsert`
 ### Operation: `StoreQuery`
 ### Operation: `ValidateRun`

@@ -355,6 +355,107 @@ impl Default for StorageInventoryParams {
     }
 }
 
+/// Governed capability discovery for local agent database maintenance (#1568).
+#[derive(Debug, Clone, Default, Deserialize, Serialize)]
+#[serde(default, deny_unknown_fields)]
+pub struct DatabaseCapabilitiesParams {
+    pub probes: Vec<String>,
+    pub actor: Option<String>,
+}
+
+#[derive(Debug, Clone, Default, Deserialize, Serialize)]
+#[serde(default, deny_unknown_fields)]
+pub struct DatabaseMaintainInspectParams {
+    pub operation_id: Option<String>,
+    pub expected_policy_sha256: Option<String>,
+    pub actor: Option<String>,
+}
+
+#[derive(Debug, Clone, Default, Deserialize, Serialize)]
+#[serde(default, deny_unknown_fields)]
+pub struct DatabaseVerifyParams {
+    pub operation_id: Option<String>,
+    pub expected_policy_sha256: Option<String>,
+    pub actor: Option<String>,
+}
+
+#[derive(Debug, Clone, Deserialize, Serialize)]
+#[serde(deny_unknown_fields)]
+pub struct DatabaseBackupParams {
+    pub destination: std::path::PathBuf,
+    #[serde(default)]
+    pub operation_id: Option<String>,
+    #[serde(default)]
+    pub expected_policy_sha256: Option<String>,
+    #[serde(default)]
+    pub actor: Option<String>,
+}
+
+#[derive(Debug, Clone, Deserialize, Serialize)]
+#[serde(deny_unknown_fields)]
+pub struct DatabaseRecoverParams {
+    pub preserve_original_at: std::path::PathBuf,
+    #[serde(default)]
+    pub operation_id: Option<String>,
+    #[serde(default)]
+    pub expected_policy_sha256: Option<String>,
+    #[serde(default)]
+    pub actor: Option<String>,
+}
+
+#[derive(Debug, Clone, Default, Deserialize, Serialize)]
+#[serde(default, deny_unknown_fields)]
+pub struct DatabaseLockDiagnoseParams {
+    pub timeout_ms: u64,
+    pub operation_id: Option<String>,
+    pub expected_policy_sha256: Option<String>,
+    pub actor: Option<String>,
+}
+
+#[derive(Debug, Clone, Deserialize, Serialize)]
+#[serde(deny_unknown_fields)]
+pub struct DatabaseLockRetryParams {
+    pub target: crate::core::db_maintenance::RetryTargetCapability,
+    #[serde(default)]
+    pub destination: Option<std::path::PathBuf>,
+    #[serde(default = "crate::core::db_maintenance::default_retry_max_attempts")]
+    pub max_attempts: u32,
+    #[serde(default = "crate::core::db_maintenance::default_retry_initial_backoff_ms")]
+    pub initial_backoff_ms: u64,
+    #[serde(default = "crate::core::db_maintenance::default_retry_deadline_ms")]
+    pub deadline_ms: u64,
+    #[serde(default)]
+    pub operation_id: Option<String>,
+    #[serde(default)]
+    pub expected_policy_sha256: Option<String>,
+    #[serde(default)]
+    pub actor: Option<String>,
+}
+
+#[derive(Debug, Clone, Default, Deserialize, Serialize)]
+#[serde(default, deny_unknown_fields)]
+pub struct DatabaseLockReleaseOwnParams {
+    pub operation_id: Option<String>,
+    pub expected_policy_sha256: Option<String>,
+    pub actor: Option<String>,
+}
+
+#[derive(Debug, Clone, Deserialize, Serialize)]
+#[serde(default, deny_unknown_fields)]
+pub struct DatabaseAuditParams {
+    pub limit: usize,
+    pub actor: Option<String>,
+}
+
+impl Default for DatabaseAuditParams {
+    fn default() -> Self {
+        Self {
+            limit: 50,
+            actor: None,
+        }
+    }
+}
+
 // Store Subsystem
 #[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct StoreUpsertParams {
@@ -919,6 +1020,60 @@ pub fn generate_capabilities() -> CapabilitiesReport {
                 description: "Bounded read-only local storage inventory without startup migrations or maintenance".to_string(),
                 stability: "beta".to_string(),
                 cost: "bounded_scan".to_string(),
+            },
+            Capability {
+                name: "data.database.capabilities".to_string(),
+                description: "Discover canonical project-opted local database maintenance capabilities and reason codes".to_string(),
+                stability: "beta".to_string(),
+                cost: "low".to_string(),
+            },
+            Capability {
+                name: "data.database.maintain.inspect".to_string(),
+                description: "Governed db.inspect combining Dactyl storage inventory and non-destructive lock diagnosis".to_string(),
+                stability: "beta".to_string(),
+                cost: "bounded_scan".to_string(),
+            },
+            Capability {
+                name: "data.database.verify".to_string(),
+                description: "Governed db.verify read-only Dactyl SQLite integrity check".to_string(),
+                stability: "beta".to_string(),
+                cost: "low".to_string(),
+            },
+            Capability {
+                name: "data.database.backup".to_string(),
+                description: "Governed db.backup online SQLite snapshot under .decapod/backups/".to_string(),
+                stability: "beta".to_string(),
+                cost: "medium".to_string(),
+            },
+            Capability {
+                name: "data.database.recover".to_string(),
+                description: "Governed db.recover logical rebuild (denied without repository owner repair authority)".to_string(),
+                stability: "beta".to_string(),
+                cost: "high".to_string(),
+            },
+            Capability {
+                name: "data.database.lock.diagnose".to_string(),
+                description: "Governed db.lock.diagnose non-destructive sidecar lock contention probe".to_string(),
+                stability: "beta".to_string(),
+                cost: "low".to_string(),
+            },
+            Capability {
+                name: "data.database.lock.retry".to_string(),
+                description: "Governed db.lock.retry bounded backoff/deadline retry over authorized safe database operations".to_string(),
+                stability: "beta".to_string(),
+                cost: "medium".to_string(),
+            },
+            Capability {
+                name: "data.database.lock.release_own".to_string(),
+                description: "Governed db.lock.release_own safe relinquish of an idle current-process lease".to_string(),
+                stability: "beta".to_string(),
+                cost: "low".to_string(),
+            },
+            Capability {
+                name: "data.database.audit".to_string(),
+                description: "Read recent redacted append-only database maintenance audit records".to_string(),
+                stability: "beta".to_string(),
+                cost: "low".to_string(),
             },
             Capability {
                 name: "store.upsert".to_string(),
