@@ -674,6 +674,11 @@
       "id": "spec-interfaces-attestation",
       "summary": "docs(specs): refresh INTERFACES.md codebase attestation",
       "input_digest": "sha256:3c788138a4bc1a4847dec1c5a052e17bab37a3fdad88ac590fb7f875ddff235f"
+    },
+    {
+      "id": "spec-readme-attestation",
+      "summary": "docs(specs): refresh specs README.md codebase attestation",
+      "input_digest": "sha256:85781f325748e9dae53c00f04e2c2309584c686cb9fddb28caaa787277851dc3"
     }
   ],
   "intents": {
