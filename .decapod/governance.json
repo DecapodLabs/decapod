@@ -627,6 +627,11 @@
       "id": "docs-cli-claim-scope-contract",
       "summary": "Document 1-to-1 checkout bindings, lifecycle retirement, and resource:<name> gates in embedded CLI docs",
       "input_digest": "sha256:fd43dd457dc34112f2c31f844063afe5f572806eb9b35a458277c6fa558647d5"
+    },
+    {
+      "id": "docs-agent-command-contracts",
+      "summary": "Regenerate command-contracts.md with 1-to-1 worktree binding and resource reservation contracts",
+      "input_digest": "sha256:7e6596065390e8bb3ec10c24e1047cc108c48d1ba27657832915b90e077cd35e"
     }
   ],
   "intents": {
