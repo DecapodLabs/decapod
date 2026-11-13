@@ -589,6 +589,11 @@
       "id": "test-buildkite-wait-quota-pacing",
       "summary": "test(snapshot_provider): cover cold discovery quota pacing and 10-GET bound Buildkite wait",
       "input_digest": "sha256:3e280d73ef0e1172c4d4fbd39f63ed214119c80a6cc3afe564604ea5c5d4eab2"
+    },
+    {
+      "id": "propagate-quota-archive-budget",
+      "summary": "fix(snapshot_provider): preserve shared GitHub quota state on archive capture budgets",
+      "input_digest": "sha256:5e97753c523cbc69cb677e51402b3cd34c943d8681faf10598f60281d6bab013"
     }
   ],
   "intents": {
