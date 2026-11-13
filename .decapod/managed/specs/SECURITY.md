@@ -965,3 +965,11 @@ Do not delete lock sidecars, signal foreign processes, steal claims, replay ambi
 ## PR1662 current-master preparation
 
 Worktree policy edits cannot self-grant capabilities. db.recover remains owner-only and cloud authority fails closed when it cannot be authenticated. Retain non-destructive lock diagnosis, current-process-only release and confined backups. Coordination receipts are not independent acceptance proof.
+
+## Bounded independent collection (#1573)
+
+Only successful bounded quota headers affect polling. Denied requests remain
+denials: there is no automatic alternate identity, authenticated fallback or
+provider substitution. Hints cannot extend the deadline, erase cancellation,
+authorize an endpoint or manufacture an execution receipt. Preserved real
+complete collection on1658 does not silently complete this separate task.
