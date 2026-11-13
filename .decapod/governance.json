@@ -679,6 +679,11 @@
       "id": "verify-plugin-contracts",
       "summary": "feat(verify): enforce proof-plan and artifact write contracts (#1630)",
       "input_digest": "sha256:85ea4c19a83efda78c8779bf6c6957c9bceef0c93e46765fc725618b2ea5e0f5"
+    },
+    {
+      "id": "docs-logical-contract-v1",
+      "summary": "docs(storage): publish logical_contract_v1 field, collection, and component contracts (#1630)",
+      "input_digest": "sha256:32bc9d116b2e32e6280ed4af7cc4e1961f56bfb71defc2eb4dc81685a76a3a7e"
     }
   ],
   "intents": {
