@@ -677,6 +677,11 @@
       "id": "specs-security-issue-1469",
       "summary": "Update SECURITY.md with fail-closed custody boundaries and resource:<name> non-elevation guarantees",
       "input_digest": "sha256:8e59e51008724eb8a576fdd34186d923734fbb38120ba860e8096c5bbd61c44e"
+    },
+    {
+      "id": "specs-validation-issue-1469",
+      "summary": "Update VALIDATION.md with falsifiable #1469 proof suites and combined-candidate readiness check",
+      "input_digest": "sha256:6e15433cde944916951272f49657528547493d57f4c170bf97f04f8c3a712065"
     }
   ],
   "intents": {

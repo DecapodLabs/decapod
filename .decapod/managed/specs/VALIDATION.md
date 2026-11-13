@@ -1,5 +1,41 @@
 # Validation
 
+## Concurrent worktree custody, rollback and combined-candidate proof (#1469)
+
+Issue #1469 closure is verified across unit, transactional datastore,
+multi-process CLI, and runtime readiness suites on accepted base
+`d3542c30ac0088f3c07e83b775471b8677875e7e` (`v0.142.0`) without modifying
+`Cargo.toml`, `.config/build/decapod.BUILD.bzl`, or reviewed source-profile
+digests:
+
+- `tests/unit/core/fleet_coord_tests.rs` (`resource_reservations_do_not_claim_repo_paths_and_report_exact_predicates`)
+  verifies `declared_resources`, empty `claim_paths` for `resource:<name>`,
+  branch-vs-global `resource:integration` conflict matching, and `ClaimOverlap`
+  predicate/resource/operation metadata.
+- `tests/plugins/todo.rs` (`authoring_bind_forced_event_failure_rolls_back_with_zero_orphan_rows`,
+  `authoring_binding_one_to_one_uniqueness_renew_and_full_lifecycle_retirement`,
+  `shared_resource_reservations_gate_release_and_publish_without_blocking_source_authoring`)
+  proves SQLite trigger-forced `authoring.bind` failure rolls back
+  `authoring_bindings` with zero orphan rows under `workspace.authoring.bind`,
+  1-to-1 live worktree uniqueness (`AUTHORING_TASK_ALREADY_BOUND`), deleted-worktree
+  replacement, `todo renew` generation advancement, retirement across
+  `yield`/`release`/`reclaim`/`handoff`/`archive`/`workspace prune`, fail-closed
+  `get_workspace_status`, and `SHARED_RESOURCE_OCCUPIED` enforcement on
+  `release lineage-sync` and `workspace.publish`.
+- `tests/kernel_bootstrap.rs` (`cross_process_checkout_contention_and_interrupted_ensure_recovery`)
+  spawns concurrent CLI processes proving parallel 2-task/2-worktree admission,
+  single-winner dual-worktree exclusion, single-row same-checkout idempotence,
+  interrupted `workspace ensure` recovery, and CLI `todo renew` continuity.
+- `tests/consumer_readiness.rs` (`two_isolated_worktrees_require_combined_candidate_validation_and_target_freshness`)
+  proves two isolated task branches passing `runtime::validate` independently do
+  not authorize a semantically broken clean merge (`ready=false`, no receipt),
+  pass after explicit reconciliation, and lose readiness when upstream
+  `refs/heads/main` advances until re-integrated and revalidated.
+
+Local fixture runs are engineering evidence only; PR publication still requires
+complete `decapod validate` readiness on the exact committed candidate against
+`origin/master`.
+
 The required `tests/consumer_readiness.rs` regression carries a recorded
 Decapod intent through a real source-check failure, a committed source repair,
 native validation and an inspectable receipt. It verifies that failure issues
@@ -1325,7 +1361,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `0a0498aa94eb3f7551fe07c380ef13b469d188ab33218c72f80fc2e081fc3951`
+- Repository signal fingerprint: `d38d3f6da33c50f03492b7cfc8b8937af37534586d1ea4ff56261275738a0754`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (231 files), `tests/` (232 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
