@@ -7,6 +7,7 @@ pub mod automatic;
 #[cfg(test)]
 pub(crate) mod fixture_config;
 pub mod github_artifacts;
+mod github_quota;
 pub mod provider;
 pub mod public_buildkite;
 pub mod read_authorization;
@@ -112,6 +113,7 @@ pub struct Budget<'a> {
     deadline: Instant,
     cancel: &'a Cancellation,
     pub(crate) max_bytes: usize,
+    github_quota: std::sync::Arc<std::sync::Mutex<github_quota::GithubQuota>>,
 }
 impl<'a> Budget<'a> {
     pub fn new(timeout: Duration, max_bytes: usize, cancel: &'a Cancellation) -> Result<Self> {
@@ -126,6 +128,7 @@ impl<'a> Budget<'a> {
             deadline: Instant::now() + timeout,
             cancel,
             max_bytes,
+            github_quota: Default::default(),
         })
     }
     pub(crate) fn remaining(&self) -> Result<Duration> {
@@ -545,6 +548,7 @@ impl<R: Runner> Runner for PublicGithubReads<R> {
             path.starts_with(&format!("{}/", self.repository.api())),
             "public reader repository mismatch",
         )?;
+        budget.wait_for_public_github_quota()?;
         (self.authorize)(spec, &self.curl)?;
         let mut command = Command::new(&self.curl);
         public_network_environment(&mut command);
@@ -593,6 +597,7 @@ impl<R: Runner> Runner for PublicGithubReads<R> {
                     status == 200,
                     "public GitHub endpoint did not return HTTP 200",
                 )?;
+                budget.observe_public_github_quota(&output.output.stdout)?;
                 Ok(Reply {
                     exit_code: 0,
                     stdout: body.to_vec(),
