@@ -1502,12 +1502,7 @@ fn ensure_historical_proof_plan(plan: Option<&str>) -> Result<(), error::Decapod
             "VALIDATION_HISTORY_TASK_PROOF_UNSUPPORTED: malformed task proof plan".into(),
         )
     })?;
-    if gates.len() != 1 || !matches!(gates[0].as_str(), "validate_passes" | "validated_commit") {
-        return Err(error::DecapodError::ValidationError(
-            "VALIDATION_HISTORY_TASK_PROOF_UNSUPPORTED: recorded full validation cannot discharge additional or missing task proof obligations".into(),
-        ));
-    }
-    Ok(())
+    validation_history::ensure_full_validation_plan(&gates)
 }
 
 pub(crate) fn prepare_historical_completion(
