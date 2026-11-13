@@ -1341,7 +1341,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `f3290b4c716fb303be9c9a783d504a8e2e52adbb04312f1c6d9b6a4999c77c26`
+- Repository signal fingerprint: `963e3d670bf1700f0c26e66fd1590519638f528ec8c25d814049a17e44ce4b4a`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (233 files), `tests/` (232 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
@@ -1884,3 +1884,7 @@ Hosted Contract Conformance exhausted the300s aggregate while entering the schem
 ## PR1663 integrated storage behavior
 
 Current accepted target is5e23ad68 (0.144.1). Preserve all original regression sources and use hosted CI for the new integrated candidate; do not run local tests. The resolved source export conflict retains both custody/resource guards and the component-journal API. Source inventory, release projections and current-content reviews are refreshed without changing required provider policy or claiming independent full readiness.
+
+### Blank-title write-admission regression
+
+Hosted Gatling failed because its legacy EDGE-1 case expected an empty task title to be accepted. The storage contract rejects empty and whitespace-only new titles. The same existing real-CLI case now requires failure with the typed title-admission diagnostic and compares task identities/titles before and after each rejection, preserving the no-task-created invariant. Production admission is unchanged; historical read compatibility is not redefined. Current hosted execution must verify the repair; no local tests run.

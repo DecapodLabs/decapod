@@ -1323,9 +1323,36 @@ fn t280_invalid_subcommand() {
 
 #[test]
 fn t281_todo_add_empty_string() {
+    fn tasks(dir: &Path) -> Vec<(String, String)> {
+        let out = host_output(dir, &["todo", "--format", "json", "list"]);
+        assert!(out.status.success(), "task snapshot failed");
+        let json: serde_json::Value = serde_json::from_slice(&out.stdout).unwrap();
+        let mut tasks: Vec<_> = json["items"]
+            .as_array()
+            .expect("task list must contain items")
+            .iter()
+            .map(|task| {
+                (
+                    task["id"].as_str().unwrap().to_owned(),
+                    task["title"].as_str().unwrap().to_owned(),
+                )
+            })
+            .collect();
+        tasks.sort_unstable();
+        tasks
+    }
+
     let (_tmp, dir) = setup_workspace();
-    // Currently succeeds — noted as EDGE-1 in audit
-    ok(&dir, &["todo", "add", ""]);
+    let before = tasks(&dir);
+    for title in ["", " \t"] {
+        let (success, output) = run(&dir, &["todo", "add", title]);
+        assert!(!success, "blank task title must be rejected: {output}");
+        assert!(
+            output.contains("STORAGE_CONTRACT_VIOLATION") && output.contains("field 'title'"),
+            "must reject the title at storage admission: {output}"
+        );
+        assert_eq!(tasks(&dir), before, "rejected title must not create a task");
+    }
 }
 
 #[test]

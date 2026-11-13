@@ -564,6 +564,14 @@
         "git:1c60df45c5db1731fb348069cf1e8f8f5dc410cc",
         "git:5e23ad68142e0de5decbd6fc8e655593ef5fe83b"
       ]
+    },
+    {
+      "id": "pr1663-blank-title-regression-fix-4",
+      "summary": "Repair legacy empty-title Gatling expectation by requiring real typed rejection and unchanged task identities for empty/whitespace inputs. No admission weakening or local tests.",
+      "input_digest": "sha256:08544eb948ad6c8f49ba93d9b3301acab7c6aee757faa5fda2e559bd5cd4e611",
+      "proof_refs": [
+        "/private/tmp/decapod-pr1663-gatling0-132118203905.log"
+      ]
     }
   ],
   "intents": {
@@ -602,24 +610,24 @@
       "schema_version": "1.1.0",
       "spec_reviews": [
         {
-          "disposition": "updated",
+          "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Resolved todo export overlap by retaining custody/resource functions and component-journal verification. Integrated storage changes preserve accepted master behavior; source0.144.1 inventory and official release projections are current. Hosted CI must establish tests; no local tests or live candidate migrations run.",
-          "reviewed_code_fingerprint": "f3290b4c716fb303be9c9a783d504a8e2e52adbb04312f1c6d9b6a4999c77c26",
+          "reason": "Production storage contract and custody behavior are unchanged. The existing real-CLI blank-title regression now checks typed rejection and unchanged task identities/titles instead of the legacy unsafe acceptance expectation; VALIDATION documents this observed hosted failure. No local tests run.",
+          "reviewed_code_fingerprint": "963e3d670bf1700f0c26e66fd1590519638f528ec8c25d814049a17e44ce4b4a",
           "spec_material_hash": "66e671df924ac36cdfef5d07a591497c64e2dec29cabfbb215970595a74d137c"
         },
         {
-          "disposition": "updated",
+          "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Resolved todo export overlap by retaining custody/resource functions and component-journal verification. Integrated storage changes preserve accepted master behavior; source0.144.1 inventory and official release projections are current. Hosted CI must establish tests; no local tests or live candidate migrations run.",
-          "reviewed_code_fingerprint": "f3290b4c716fb303be9c9a783d504a8e2e52adbb04312f1c6d9b6a4999c77c26",
+          "reason": "Production storage contract and custody behavior are unchanged. The existing real-CLI blank-title regression now checks typed rejection and unchanged task identities/titles instead of the legacy unsafe acceptance expectation; VALIDATION documents this observed hosted failure. No local tests run.",
+          "reviewed_code_fingerprint": "963e3d670bf1700f0c26e66fd1590519638f528ec8c25d814049a17e44ce4b4a",
           "spec_material_hash": "c2909739996e7a385f361bf721602e56d51c3ce2db0face804b571ebc36d19a4"
         },
         {
-          "disposition": "updated",
+          "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Resolved todo export overlap by retaining custody/resource functions and component-journal verification. Integrated storage changes preserve accepted master behavior; source0.144.1 inventory and official release projections are current. Hosted CI must establish tests; no local tests or live candidate migrations run.",
-          "reviewed_code_fingerprint": "f3290b4c716fb303be9c9a783d504a8e2e52adbb04312f1c6d9b6a4999c77c26",
+          "reason": "Production storage contract and custody behavior are unchanged. The existing real-CLI blank-title regression now checks typed rejection and unchanged task identities/titles instead of the legacy unsafe acceptance expectation; VALIDATION documents this observed hosted failure. No local tests run.",
+          "reviewed_code_fingerprint": "963e3d670bf1700f0c26e66fd1590519638f528ec8c25d814049a17e44ce4b4a",
           "spec_material_hash": "30a6061554c0714340a021db4033946b2028ecfa01cfb47cdcec51f41fad8e9e"
         }
       ],
@@ -631,16 +639,21 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1794597763Z"
+      "updated_at": "1794598663Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch",
         "Preserve original source and parents; no force-push, local tests, live candidate migrations or automatic merge."
       ],
-      "artifact_hash": "sha256:cc0945b5b8e7039f34e219575728bb250449253e4bc6a22dae4467460d9bcc1f",
-      "checks": [],
-      "current_phase": "integration",
+      "artifact_hash": "sha256:52a3bb666bb3a97dedcfaa25d855b6444b780134ab66e52b1ded12ace5846b0a",
+      "checks": [
+        {
+          "name": "gatling-blank-title-expectation",
+          "status": "failed"
+        }
+      ],
+      "current_phase": "ci-repair",
       "custody": {
         "events": [
           {
@@ -668,10 +681,17 @@
             "intent_id": "intent:change_01M79W3PBHXH8GNF8YWMNPHZCD",
             "kind": "trajectory_step_recorded",
             "sequence": 5
+          },
+          {
+            "detail": "trajectory:branch_01M79W3PFCRQMK8QZJN5TWCK5K",
+            "event_id": "event:6",
+            "intent_id": "intent:change_01M79W3PBHXH8GNF8YWMNPHZCD",
+            "kind": "trajectory_step_recorded",
+            "sequence": 6
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 5,
+        "next_sequence": 6,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M79W3PFCRQMK8QZJN5TWCK5K": {
@@ -711,16 +731,37 @@
                 "validation_findings": [
                   "Current hosted CI and production datastore compatibility remain unproven."
                 ]
+              },
+              {
+                "action": "ci-repair",
+                "command": "Align existing real-CLI regression with empty/whitespace title rejection and verify unchanged task identities; preserve production admission.",
+                "custody_event_id": "event:6",
+                "observations": [
+                  "tests/gatling.rs",
+                  "/private/tmp/decapod-pr1663-gatling0-132118203905.log"
+                ],
+                "proof_refs": [
+                  "gatling-blank-title-expectation"
+                ],
+                "scope": [
+                  "pr-1663-master-1432"
+                ],
+                "sequence": 6,
+                "validation_findings": [
+                  "New hosted execution remains required; no local tests or live candidate migrations."
+                ]
               }
             ]
           }
         }
       },
       "declared_commands": [
+        "Align existing real-CLI regression with empty/whitespace title rejection and verify unchanged task identities; preserve production admission.",
         "Merge accepted master; retain authoring/resource and journal exports; retain accepted product specs and document storage obligations; refresh reviewed source and release bindings."
       ],
       "destination": "pull request",
       "evidence": [
+        "/private/tmp/decapod-pr1663-gatling0-132118203905.log",
         "/private/tmp/decapod-pr1663-master1441-inventory.json",
         "git:1c60df45c5db1731fb348069cf1e8f8f5dc410cc",
         "git:5e23ad68142e0de5decbd6fc8e655593ef5fe83b"
@@ -728,7 +769,8 @@
       "inspected_files": [],
       "intent_id": "intent:change_01M79W3PBHXH8GNF8YWMNPHZCD",
       "modified_files": [
-        "src/decapod/core/todo.rs"
+        "src/decapod/core/todo.rs",
+        "tests/gatling.rs"
       ],
       "next_transitions": [
         "Refine plan and declare falsifiable checks"
@@ -743,7 +785,8 @@
       "tool_calls": [],
       "unresolved_assumptions": [
         "Current hosted CI and production datastore compatibility remain unproven.",
-        "Historical source tests and benchmarks do not prove the new accepted-target integration."
+        "Historical source tests and benchmarks do not prove the new accepted-target integration.",
+        "New hosted execution remains required; no local tests or live candidate migrations."
       ]
     }
   },
