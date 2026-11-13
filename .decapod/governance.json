@@ -687,6 +687,11 @@
       "id": "specs-operations-refresh-v0143",
       "summary": "Refresh OPERATIONS.md codebase attestation for Decapod v0.143.0",
       "input_digest": "sha256:92268095df8f647bdb8825906d15a43a494ee5567030ac7bc18b6e2a5918bfda"
+    },
+    {
+      "id": "specs-readme-refresh-v0143",
+      "summary": "Refresh specs README.md codebase attestation for Decapod v0.143.0",
+      "input_digest": "sha256:0557168bd8301118cbfe1334875aa616f843ee3879cbe144cb2a0e75fbd3a059"
     }
   ],
   "intents": {
