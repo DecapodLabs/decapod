@@ -674,6 +674,11 @@
       "id": "specs-refresh-wt5-4",
       "summary": "Refresh OPERATIONS.md codebase attestation",
       "input_digest": "sha256:33ae6a8fcabaf00b14121406cf668bb0bbbd38f35e90642bd773940dc6daf8bc"
+    },
+    {
+      "id": "specs-refresh-wt5-5",
+      "summary": "Refresh README.md codebase attestation",
+      "input_digest": "sha256:873b7da4651fe5ae963cfaeac8bbfdf8c0e285bf4b70c53ff842ec0282673f87"
     }
   ],
   "intents": {
