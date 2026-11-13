@@ -669,6 +669,11 @@
       "id": "spec-intent-attestation",
       "summary": "docs(specs): refresh INTENT.md codebase attestation",
       "input_digest": "sha256:7cfb5475269fb5e142ed990671e1f7c5ceb9cb53c68ada8f70daea0276d960c7"
+    },
+    {
+      "id": "spec-interfaces-attestation",
+      "summary": "docs(specs): refresh INTERFACES.md codebase attestation",
+      "input_digest": "sha256:3c788138a4bc1a4847dec1c5a052e17bab37a3fdad88ac590fb7f875ddff235f"
     }
   ],
   "intents": {
