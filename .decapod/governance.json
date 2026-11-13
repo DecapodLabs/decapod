@@ -604,6 +604,11 @@
       "id": "hf-spec-interfaces",
       "summary": "docs(specs): refresh INTERFACES.md codebase attestation",
       "input_digest": "sha256:cc36e5cce7d2e8989cf0aed93f995ecb5149ec38c8a54296c12ba8c5a8d99692"
+    },
+    {
+      "id": "hf-spec-ops",
+      "summary": "docs(specs): refresh OPERATIONS.md codebase attestation",
+      "input_digest": "sha256:ac35b5333a35b3e0c4bf9c48d541638d4355d50add5770500ae15bd6862fe88d"
     }
   ],
   "intents": {
