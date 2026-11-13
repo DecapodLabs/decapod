@@ -567,6 +567,14 @@
       "proof_refs": [
         "assets/tools/build_lifecycle.rs"
       ]
+    },
+    {
+      "id": "add-podman-mode000-regressions",
+      "summary": "Add Podman mode-000 overlay cleanup and symlink/UID/device/bound escape regressions",
+      "input_digest": "sha256:60ae45b205775b70d225c406e2d03d9b78bb212bbca207ea120bff5b0258f300",
+      "proof_refs": [
+        "assets/tools/build_lifecycle_tests.rs"
+      ]
     }
   ],
   "intents": {
@@ -622,7 +630,7 @@
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:1cd055188af131aba1fa505e1c4fafe4f941d8eff7cf52b9c7fb3b5bc793d5f7",
+      "artifact_hash": "sha256:a78f705d321993c0468d0215573aa45fb65d354085dfbd51eaa4354a88c3c9c9",
       "checks": [],
       "current_phase": "execution",
       "custody": {
@@ -652,10 +660,17 @@
             "intent_id": "intent:change_01M79A0G0YSR12S2RHJE84QPHR",
             "kind": "trajectory_step_recorded",
             "sequence": 5
+          },
+          {
+            "detail": "trajectory:branch_01M79A0G5E35FVE2EYNYQVQ3XY",
+            "event_id": "event:6",
+            "intent_id": "intent:change_01M79A0G0YSR12S2RHJE84QPHR",
+            "kind": "trajectory_step_recorded",
+            "sequence": 6
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 5,
+        "next_sequence": 6,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M79A0G5E35FVE2EYNYQVQ3XY": {
@@ -694,6 +709,22 @@
                 ],
                 "sequence": 5,
                 "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:6",
+                "observations": [
+                  "assets/tools/build_lifecycle_tests.rs"
+                ],
+                "proof_refs": [],
+                "scope": [
+                  "\".decapod/config.toml\"",
+                  "\".decapod/managed/specs\"]",
+                  "\"assets/tools/build_lifecycle_tests.rs\"",
+                  "paths:[\"assets/tools/build_lifecycle.rs\""
+                ],
+                "sequence": 6,
+                "validation_findings": []
               }
             ]
           }
@@ -729,7 +760,8 @@
         }
       ],
       "modified_files": [
-        "assets/tools/build_lifecycle.rs"
+        "assets/tools/build_lifecycle.rs",
+        "assets/tools/build_lifecycle_tests.rs"
       ],
       "next_transitions": [
         "Refine plan and declare falsifiable checks"
