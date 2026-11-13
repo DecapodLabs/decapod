@@ -556,6 +556,11 @@
       "id": "c02-storage-lock-tests",
       "summary": "test(storage): cover lock contention diagnostics and owned-lease release safety",
       "input_digest": "sha256:f9da2443eb881f7bd36f49ab59cdc5a28d1516af530bb3804ed26dcacdb14bdb"
+    },
+    {
+      "id": "c03-db-maintenance-core",
+      "summary": "feat(governance): implement canonical-policy-bound agent database maintenance engine",
+      "input_digest": "sha256:4c1065c790f128a953c765643ef8baf5760f3c32e7ea7429ddf805c471d15226"
     }
   ],
   "intents": {
