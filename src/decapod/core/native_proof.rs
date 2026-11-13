@@ -1496,6 +1496,7 @@ pub(crate) fn capture_readonly_identity(
                 if !path.is_absolute() || path.canonicalize()? != *path {
                     return Err(invalid("read-only program identity is not canonical"));
                 }
+                native_executable(path)?;
             }
             if measured
                 .insert(key.clone(), measured_toolchain_inputs(tools, budget)?)
