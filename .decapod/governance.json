@@ -566,6 +566,11 @@
       "id": "c04-core-mod-export",
       "summary": "feat(core): register db_maintenance module",
       "input_digest": "sha256:d21d61833998634d3c48d0352897c07334b570f367dc488a194ebc9377cfab81"
+    },
+    {
+      "id": "c05-cli-db-maintenance",
+      "summary": "feat(cli): add governed data database capabilities, lock, maintain, and audit commands",
+      "input_digest": "sha256:b758e24797e5c51ae3ae0e812bfe1293349bfa78566e1cc5769c9f80b3422c14"
     }
   ],
   "intents": {
