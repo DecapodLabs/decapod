@@ -729,6 +729,11 @@
       "id": "test-plugins-todo-contracts",
       "summary": "test(todo): verify fail-closed task write bounds and v2 task journal integration (#1630)",
       "input_digest": "sha256:51c1074970582cce77ed5002d91d9e6a4df0d53179a9424b0fd9528d957004b6"
+    },
+    {
+      "id": "test-unit-task-journal",
+      "summary": "test(journal): verify v2 component deduplication and >10K keyset paged verify (#1630)",
+      "input_digest": "sha256:6d45a7bf18768f7a744a419be94c1adc47ace28b75f8b9014ca6eb5ccea0562b"
     }
   ],
   "intents": {
