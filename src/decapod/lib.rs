@@ -3146,7 +3146,10 @@ pub fn run() -> Result<(), error::DecapodError> {
                 && let Command::Todo(todo_cli) = &cli.command
                 && matches!(
                     &todo_cli.command,
-                    todo::TodoCommand::Done { validated: true, .. }
+                    todo::TodoCommand::Done {
+                        validated: true,
+                        ..
+                    }
                 )
             {
                 core::validation_runtime::require_full_readiness_environment()?;
