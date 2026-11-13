@@ -619,6 +619,11 @@
       "id": "hf-spec-semantics",
       "summary": "docs(specs): refresh SEMANTICS.md codebase attestation",
       "input_digest": "sha256:97c60542e1229941763a228f26938b0abc8feb9278f8b31c4ecdae1a2ae3d0cd"
+    },
+    {
+      "id": "hf-spec-manifest",
+      "summary": "chore(specs): refresh v0.143.2 specs manifest",
+      "input_digest": "sha256:4e9877b044da335b46cf63b173df702229067afad50cac52b0b7fdcc8a6b02e8"
     }
   ],
   "intents": {
