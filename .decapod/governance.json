@@ -623,6 +623,14 @@
       "proof_refs": [
         ".decapod/managed/Dockerfile.decapod"
       ]
+    },
+    {
+      "id": "refresh-intent-spec-attestation-01410",
+      "summary": "Refresh INTENT.md codebase attestation for 0.141.0 build_lifecycle slice",
+      "input_digest": "sha256:2bfb07023d920b6f1d374bd56d06b70611260f29af6e9c213dc1de9a6a8d6932",
+      "proof_refs": [
+        ".decapod/managed/specs/INTENT.md"
+      ]
     }
   ],
   "intents": {
@@ -678,7 +686,7 @@
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:5f67fb955832345daab0a823ac47f66c9113161329c83836e6a94cebad2bf571",
+      "artifact_hash": "sha256:b19a8855039112d5421b634f5935627faa0f4704cb67187d337baa4e5b5f0606",
       "checks": [],
       "current_phase": "execution",
       "custody": {
@@ -757,10 +765,17 @@
             "intent_id": "intent:change_01M79A0G0YSR12S2RHJE84QPHR",
             "kind": "trajectory_step_recorded",
             "sequence": 12
+          },
+          {
+            "detail": "trajectory:branch_01M79A0G5E35FVE2EYNYQVQ3XY",
+            "event_id": "event:13",
+            "intent_id": "intent:change_01M79A0G0YSR12S2RHJE84QPHR",
+            "kind": "trajectory_step_recorded",
+            "sequence": 13
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 12,
+        "next_sequence": 13,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M79A0G5E35FVE2EYNYQVQ3XY": {
@@ -911,6 +926,22 @@
                 ],
                 "sequence": 12,
                 "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:13",
+                "observations": [
+                  ".decapod/managed/specs/INTENT.md"
+                ],
+                "proof_refs": [],
+                "scope": [
+                  "\".decapod/config.toml\"",
+                  "\".decapod/managed/specs\"]",
+                  "\"assets/tools/build_lifecycle_tests.rs\"",
+                  "paths:[\"assets/tools/build_lifecycle.rs\""
+                ],
+                "sequence": 13,
+                "validation_findings": []
               }
             ]
           }
@@ -948,6 +979,7 @@
       "modified_files": [
         ".decapod/config.toml",
         ".decapod/managed/Dockerfile.decapod",
+        ".decapod/managed/specs/INTENT.md",
         "AGENTS.md",
         "CLAUDE.md",
         "CODEX.md",
