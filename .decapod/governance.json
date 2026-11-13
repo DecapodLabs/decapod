@@ -549,6 +549,14 @@
       "proof_refs": [
         "https://github.com/DecapodLabs/decapod/issues/1568"
       ]
+    },
+    {
+      "id": "issue-1568-file-2",
+      "summary": "test(maintenance): require SQLite and isolate governed fixture context; file-by-file checkpoint, verification pending.",
+      "input_digest": "sha256:7670bc4dfa89b5268fc391485dd00924b3ae58dc330d97cc8d8bb5640c0cfa86",
+      "proof_refs": [
+        "https://github.com/DecapodLabs/decapod/issues/1568"
+      ]
     }
   ],
   "intents": {
@@ -599,7 +607,7 @@
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:41dedcf61221351d621d7bba5086c5a66af2c327f9ebfa00a2fe3748e0febca6",
+      "artifact_hash": "sha256:6a7b3aa73b328e485e3f40a51abfa5a32993985d205d085fd5080d1b252c9694",
       "checks": [],
       "current_phase": "implementation",
       "custody": {
@@ -622,10 +630,17 @@
             "intent_id": "intent:change_01M7BCJGVSZZ72B0C1Y6FVMPP4",
             "kind": "trajectory_step_recorded",
             "sequence": 4
+          },
+          {
+            "detail": "trajectory:branch_01M7BCJGZ6T52EA2CECBZAPK5W",
+            "event_id": "event:5",
+            "intent_id": "intent:change_01M7BCJGVSZZ72B0C1Y6FVMPP4",
+            "kind": "trajectory_step_recorded",
+            "sequence": 5
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 4,
+        "next_sequence": 5,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M7BCJGZ6T52EA2CECBZAPK5W": {
@@ -648,6 +663,22 @@
                 "validation_findings": [
                   "Hosted verification and exact-candidate publication readiness remain pending; no local tests run."
                 ]
+              },
+              {
+                "action": "implementation",
+                "custody_event_id": "event:5",
+                "observations": [
+                  "tests/sqlite_maintenance.rs",
+                  "https://github.com/DecapodLabs/decapod/issues/1568"
+                ],
+                "proof_refs": [],
+                "scope": [
+                  "issue-1568"
+                ],
+                "sequence": 5,
+                "validation_findings": [
+                  "Hosted verification and exact-candidate publication readiness remain pending; no local tests run."
+                ]
               }
             ]
           }
@@ -661,7 +692,8 @@
       "inspected_files": [],
       "intent_id": "intent:change_01M7BCJGVSZZ72B0C1Y6FVMPP4",
       "modified_files": [
-        ".decapod/managed/specs/INTENT.md"
+        ".decapod/managed/specs/INTENT.md",
+        "tests/sqlite_maintenance.rs"
       ],
       "next_transitions": [
         "Refine plan and declare falsifiable checks"

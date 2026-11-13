@@ -24,26 +24,16 @@ fn private_recovery_directory() -> TempDir {
     directory
 }
 
-fn open_local(path: &Path, access_mode: AccessMode) -> Option<DactylBridge> {
-    match DactylBridge::open_local(path, access_mode) {
-        Ok(bridge) => Some(bridge),
-        Err(DecapodError::DactylError(error))
-            if error.adapter_code() == Some("sqlite_runtime_unavailable") =>
-        {
-            eprintln!("skipping native SQLite maintenance test: {error}");
-            None
-        }
-        Err(error) => panic!("open local Dactyl bridge: {error}"),
-    }
+fn open_local(path: &Path, access_mode: AccessMode) -> DactylBridge {
+    DactylBridge::open_local(path, access_mode)
+        .expect("required native SQLite maintenance capability must be available")
 }
 
 #[test]
 fn healthy_verification_reports_dactyl_metadata() {
     let directory = tempdir().expect("temporary directory");
     let path = directory.path().join("healthy.db");
-    let Some(db) = open_local(&path, AccessMode::ReadWrite) else {
-        return;
-    };
+    let db = open_local(&path, AccessMode::ReadWrite);
     db.write(
         "create table records (id integer primary key, value text)",
         &[],
@@ -69,9 +59,7 @@ fn online_backup_preserves_wal_data_metadata_and_has_no_sidecars() {
     let directory = tempdir().expect("temporary directory");
     let source_path = directory.path().join("source.db");
     let backup_path = directory.path().join("backup.db");
-    let Some(source) = open_local(&source_path, AccessMode::ReadWrite) else {
-        return;
-    };
+    let source = open_local(&source_path, AccessMode::ReadWrite);
     source
         .write(
             "create table records (id integer primary key, payload blob)",
@@ -106,7 +94,7 @@ fn online_backup_preserves_wal_data_metadata_and_has_no_sidecars() {
     // A WAL database must be reopened read-write so SQLite can establish its
     // own current sidecars; the backup itself was published without copying
     // source `-wal`/`-shm` files.
-    let backup = open_local(&backup_path, AccessMode::ReadWrite).expect("open backup");
+    let backup = open_local(&backup_path, AccessMode::ReadWrite);
     let report = backup.verify_integrity().expect("backup verification");
     assert_eq!(report.journal_mode.to_ascii_lowercase(), "wal");
     assert_eq!(report.user_version, 9);
@@ -124,9 +112,7 @@ fn damaged_secondary_index_is_reported_and_explicit_recovery_preserves_data() {
     let source_path = directory.path().join("corrupt.db");
     let archive_path = directory.path().join("corrupt.before-recovery.db");
     let (page_size, root_page) = {
-        let Some(db) = open_local(&source_path, AccessMode::ReadWrite) else {
-            return;
-        };
+        let db = open_local(&source_path, AccessMode::ReadWrite);
         db.write(
             "create table records (id integer primary key, name text not null, payload blob)",
             &[],
@@ -181,9 +167,7 @@ fn damaged_secondary_index_is_reported_and_explicit_recovery_preserves_data() {
     file.sync_all().expect("sync corruption fixture");
     let damaged_bytes = fs::read(&source_path).expect("read damaged fixture");
 
-    let Some(mut db) = open_local(&source_path, AccessMode::ReadWrite) else {
-        return;
-    };
+    let mut db = open_local(&source_path, AccessMode::ReadWrite);
     let error = db
         .verify_integrity()
         .expect_err("damaged index must fail verification");
@@ -232,13 +216,11 @@ fn recovery_requires_quiesced_connections_and_preserves_existing_archive() {
     let directory = private_recovery_directory();
     let source_path = directory.path().join("source.db");
     let archive_path = directory.path().join("archive.db");
-    let Some(mut primary) = open_local(&source_path, AccessMode::ReadWrite) else {
-        return;
-    };
+    let mut primary = open_local(&source_path, AccessMode::ReadWrite);
     primary
         .write("create table records (id integer primary key)", &[])
         .expect("schema");
-    let sibling = open_local(&source_path, AccessMode::ReadWrite).expect("sibling connection");
+    let sibling = open_local(&source_path, AccessMode::ReadWrite);
     let error = primary
         .recover_from_dump_reload(&archive_path)
         .expect_err("open sibling must block recovery");
@@ -347,9 +329,7 @@ fn operator_cli_exposes_verify_backup_and_recovery_without_automatic_repair() {
     // have the same physical parent spelling, so use the resolved data path.
     let data_root = fs::canonicalize(project.join(".decapod/data")).expect("data directory");
     let source_path = data_root.join("decapod.db");
-    let Some(db) = open_local(&source_path, AccessMode::ReadWrite) else {
-        return;
-    };
+    let db = open_local(&source_path, AccessMode::ReadWrite);
     db.write(
         "create table records (id integer primary key, value text)",
         &[],
@@ -423,8 +403,7 @@ fn operator_cli_exposes_verify_backup_and_recovery_without_automatic_repair() {
         assert_eq!(json["diagnostic_status"], "unsupported");
         assert_eq!(json["failure_code"], "secure_recovery_unsupported");
         assert!(!archive_path.exists());
-        let db =
-            open_local(&source_path, AccessMode::ReadOnly).expect("original remains available");
+        let db = open_local(&source_path, AccessMode::ReadOnly);
         assert_eq!(
             db.read("select value from records", &[])
                 .unwrap()
@@ -533,9 +512,7 @@ fn unsupported_platform_recovery_is_typed_and_preserves_the_original() {
     let directory = private_recovery_directory();
     let source = directory.path().join("source.db");
     let archive = directory.path().join("archive.db");
-    let Some(mut db) = open_local(&source, AccessMode::ReadWrite) else {
-        return;
-    };
+    let mut db = open_local(&source, AccessMode::ReadWrite);
     db.write("create table keep_original (id integer)", &[])
         .unwrap();
     let before = fs::read(&source).unwrap();
@@ -590,8 +567,7 @@ impl GovernedRepoFixture {
         git(&["config", "user.email", "test@decapod.local"]);
         git(&["config", "user.name", "Decapod Test"]);
 
-        let exe = env!("CARGO_BIN_EXE_decapod");
-        let init = Command::new(exe)
+        let init = Self::isolated_command()
             .args(["init", "--force", "--dir"])
             .arg(&repo_root)
             .env("XDG_CONFIG_HOME", &xdg_config)
@@ -615,8 +591,37 @@ impl GovernedRepoFixture {
         }
     }
 
+    // These children own disposable repositories. Provider context describes
+    // the outer source job and must never impersonate a child checkout.
+    fn isolated_command() -> Command {
+        let mut command = Command::new(env!("CARGO_BIN_EXE_decapod"));
+        for key in [
+            "GITHUB_ACTIONS",
+            "BUILDKITE",
+            "GITHUB_EVENT_NAME",
+            "GITHUB_WORKSPACE",
+            "BUILDKITE_BUILD_CHECKOUT_PATH",
+            "CHANGE_EVENT",
+            "CHANGE_BASE",
+            "CHANGE_HEAD",
+            "DECAPOD_VALIDATE_REQUIRE_CHANGE_CONTEXT",
+            "DECAPOD_VALIDATE_SKIP_GIT_GATES",
+            "DECAPOD_VALIDATE_SKIP_TOOLING_GATES",
+            "DECAPOD_VALIDATE_SKIP_FINGERPRINT_GATES",
+            "DECAPOD_SESSION_PASSWORD",
+            "DECAPOD_USER_ID",
+            "DECAPOD_ROLE",
+        ] {
+            command.env_remove(key);
+        }
+        command
+            .env("DECAPOD_CLAIM_AUTORUN", "0")
+            .env("DECAPOD_GROUP_BROKER_IDLE_SECS", "1");
+        command
+    }
+
     fn decapod_cmd(&self, cwd: &Path, agent_id: &str, password: Option<&str>) -> Command {
-        let mut cmd = Command::new(env!("CARGO_BIN_EXE_decapod"));
+        let mut cmd = Self::isolated_command();
         cmd.current_dir(cwd)
             .env("XDG_CONFIG_HOME", &self.xdg_config)
             .env("HOME", &self.home_dir)
