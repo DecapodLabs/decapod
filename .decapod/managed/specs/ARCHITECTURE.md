@@ -31,7 +31,7 @@ and v2 checkpoints bind `ts` directly inside the hashed checkpoint record.
 `_ce_v1` bitmask that strips outer keys equal to canonical `events` row columns
 (escaping literal reserved keys under `_ce_raw`) and reconstructs full envelopes
 losslessly in `reconstruct_stored_payload` across `events`, `todo`, `task_journal`,
-`trace`, `validate`, `workspace_lifecycle`, and `plugins::lcm`.
+`trace`, `validate`, `workspace_lifecycle`, and `plugins::{knowledge, lcm, map_ops}`.
 
 `task_journal::verify_with_budget` executes inside a single `BEGIN DEFERRED`
 read snapshot, paging `events` by `(seq, event_id)` and `tasks` by `id` while

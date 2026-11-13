@@ -919,6 +919,11 @@
       "id": "cp-1630-map-ops-test",
       "summary": "test(map): assert compact map event envelope metadata round-trip",
       "input_digest": "sha256:d3b4e3663048581422c525b0afc343d07ebc4979b09e9d05fc6c8146cec18bd6"
+    },
+    {
+      "id": "cp-1630-arch-spec-readers",
+      "summary": "docs(specs): cover map_ops and knowledge envelope reconstruction",
+      "input_digest": "sha256:f33409e71fcef865bb986ad9a8d92b8554c129de0c830216cd6f70bcdac4bd40"
     }
   ],
   "intents": {
