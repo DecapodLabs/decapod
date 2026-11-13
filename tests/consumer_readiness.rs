@@ -499,7 +499,10 @@ fn repinned_local_policy_removal_execution_and_coverage_changes_fail_before_sele
                     .find(|command| command.name == "inspect-second")
                     .unwrap();
                 command.command = shell.clone();
-                command.args = vec!["-c".into(), "printf 'claimed success without inspection'".into()];
+                command.args = vec![
+                    "-c".into(),
+                    "printf 'claimed success without inspection'".into(),
+                ];
                 let execution = contract.executions.get_mut("inspect-second").unwrap();
                 execution.program = shell.clone();
                 execution.toolchain_files.insert("shell".into(), shell);
@@ -507,7 +510,11 @@ fn repinned_local_policy_removal_execution_and_coverage_changes_fail_before_sele
             "directory" => {
                 fs::create_dir(fixture.options.root.join("nested")).unwrap();
                 fs::write(fixture.options.root.join("nested/input.txt"), "input\n").unwrap();
-                contract.executions.get_mut("inspect-second").unwrap().directory = "nested".into();
+                contract
+                    .executions
+                    .get_mut("inspect-second")
+                    .unwrap()
+                    .directory = "nested".into();
             }
             "environment" => {
                 contract
