@@ -622,6 +622,11 @@
       "id": "release-lineage-sync-resource-gate",
       "summary": "Gate release lineage-sync on resource:release reservation availability",
       "input_digest": "sha256:eb0210a2f22808c3febaf87980ff4190401b925b3e30679a58b55a78dc4e9e96"
+    },
+    {
+      "id": "docs-cli-claim-scope-contract",
+      "summary": "Document 1-to-1 checkout bindings, lifecycle retirement, and resource:<name> gates in embedded CLI docs",
+      "input_digest": "sha256:fd43dd457dc34112f2c31f844063afe5f572806eb9b35a458277c6fa558647d5"
     }
   ],
   "intents": {
