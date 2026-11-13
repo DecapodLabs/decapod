@@ -644,6 +644,11 @@
       "id": "task-journal-v2-and-paged-verify",
       "summary": "feat(journal): add v2 component deduplication and snapshot-consistent keyset verify (#1630)",
       "input_digest": "sha256:b3aaa4ee0f083cdcd5cf94c832224ebac27c78eadc9cbaad3ff76516801d36bc"
+    },
+    {
+      "id": "task-transfer-component-bundles",
+      "summary": "feat(transfer): bundle and verify externalized storage components across task transfers (#1630)",
+      "input_digest": "sha256:7112eb99f4f5466a225c68dbbbb37d4bddbf9f3f70285d251fa264c2d4f78d96"
     }
   ],
   "intents": {
