@@ -482,12 +482,15 @@ pub fn resolve_canonical_policy(
     })
 }
 
+type ResolvedPolicyInputs = (Vec<u8>, DecapodProjectConfig, String, Option<String>);
+type PolicyResolutionError = (&'static str, String);
+
 fn resolve_branch_safe_policy(
     main_root: &Path,
     configured_base: &str,
     working_bytes: Vec<u8>,
     working_cfg: DecapodProjectConfig,
-) -> Result<(Vec<u8>, DecapodProjectConfig, String, Option<String>), (&'static str, String)> {
+) -> Result<ResolvedPolicyInputs, PolicyResolutionError> {
     if !main_root.join(".git").exists() {
         return Err((
             "CANONICAL_GIT_BOUNDARY_REQUIRED",
@@ -1454,12 +1457,12 @@ pub fn run_maintain_lock_retry(
         let outcome = match spec.target {
             RetryTargetCapability::Inspect => run_maintain_inspect(&fresh_policy),
             RetryTargetCapability::Verify => {
-                run_verify_with_bounded_lock(&fresh_policy, remaining_ms.max(25).min(350))
+                run_verify_with_bounded_lock(&fresh_policy, remaining_ms.clamp(25, 350))
             }
             RetryTargetCapability::Backup => run_backup_with_bounded_lock(
                 &fresh_policy,
                 spec.destination.as_deref().unwrap(),
-                remaining_ms.max(25).min(350),
+                remaining_ms.clamp(25, 350),
             ),
         };
 

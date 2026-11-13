@@ -731,6 +731,11 @@
       "id": "c36-project-check-receipt",
       "summary": "chore(governance): record project-check prerequisite receipt for #1568",
       "input_digest": "sha256:0793c5d20c5a6f90af1be1a12e0914c0e97253b7f041996f7d40de57e6610bdb"
+    },
+    {
+      "id": "fix-db-maintenance-clippy",
+      "summary": "Factor policy tuple type aliases and use clamp() in db_maintenance.rs",
+      "input_digest": "sha256:592ed17b6c65a1f312fb0efdcabd429560b7f006138c25e3cd3ad89a7f0d6c94"
     }
   ],
   "intents": {
