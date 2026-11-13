@@ -599,6 +599,11 @@
       "id": "hf-spec-intent",
       "summary": "docs(specs): refresh INTENT.md codebase attestation",
       "input_digest": "sha256:ecc1c10be4de0506049855945913722e748f823a98399f1a12f8d0f9d81bc18b"
+    },
+    {
+      "id": "hf-spec-interfaces",
+      "summary": "docs(specs): refresh INTERFACES.md codebase attestation",
+      "input_digest": "sha256:cc36e5cce7d2e8989cf0aed93f995ecb5149ec38c8a54296c12ba8c5a8d99692"
     }
   ],
   "intents": {
