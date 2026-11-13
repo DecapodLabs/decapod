@@ -1,5 +1,28 @@
 # Architecture
 
+## Composed reflection continuation
+
+`core/mentor/reflection.rs` composes the existing mentor ADR detector, canonical
+plan constraints, execution-custody capture and governance-document lock/atomic
+writer. Orientation and `mentor.obligations` share this implementation. One
+optional journal in `GovernedPlan` preserves at most three compact receipts and
+a terminal stop; it adds no database table, index, event stream or transcript.
+Current plan/accepted-base, policy, ADR and supplied source identities invalidate
+dependent conclusions. The existing plan execution, trajectory checkpoint/resume
+and validation boundaries reject binding unresolved or stale reflection.
+The unchanged approval and exact-candidate publication gates remain necessary.
+The reflection contract hash reuses the plan's existing acceptance/progress
+reset on a clone. Approval and measured phase/gate progress do not consume
+reflection rounds; changes to the actual phase/gate definitions still invalidate
+convergence. The original execution and proof gates remain authoritative.
+Mentor text matches stay advisory. `state::project_federation_decision` now
+honors lifecycle before labels and preserves confidence, scope and provenance;
+an inferred/imported accepted tag cannot become a human-confirmed decision.
+ADR context identity and potential-conflict detection consume the same bounded
+captured bytes, followed by current-source revalidation before the atomic write.
+Case-folded proposed paths and challenge identities prevent spelling-only
+aliases from being counted as progress on case-insensitive workspaces.
+
 ## Registry dependency closure (#1638)
 
 `Cargo.toml` pins Dactyl 0.14.0 while retaining `sqlite` and `neon`, and the
@@ -863,8 +886,8 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `2c13ac97125866e43fe4a4ecdc70bdcbce68a442f71ea46ff271f18116138629`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (229 files), `tests/` (230 files)
+- Repository signal fingerprint: `ef0b809779d89f44a5898a162dc5f2c358e9bd025aa03cb27e7b0b01c56c2078`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (230 files), `tests/` (232 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 

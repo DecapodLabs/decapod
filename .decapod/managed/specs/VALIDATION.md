@@ -1,5 +1,62 @@
 # Validation
 
+## Reflection adversarial proof contract
+
+The work branch incorporates accepted target
+`d31112a1d66899e93dad48a10cc3a6363da2c7db`, including SDK 0.14.0 and the
+required terminal-onboarding fixtures. The installed controller is published
+0.140.3. This conflict-repair update is pushed without tests or full validation
+at the user's explicit request. Earlier measurements below remain historical;
+current-candidate readiness is pending. Generated surfaces match the evaluator.
+
+Required Buildkite library execution on `dc7bf2fa198abeebba072c5394709af0dfca9d86`
+passed 1709 tests (8 ignored), including all 16 reflection cases and the canonical
+lifecycle case. Evidence is build 8602, job
+`01a1cfd6-5d0d-4abb-853c-b4ed9164f022`. The selected scope flaw was detected
+before action, an evidence-bound narrower proposal proceeded in round 2, and
+the original approval/proof requirements and false completion proof were retained.
+Stagnation terminates in round 2 and unresolved progress in round 3. Six ordinary
+phase transitions preserve convergence; an actual governing edit invalidates it.
+Source/custody changes, replay, competing submissions, untrusted instructions
+and invented human approval are covered. These are deterministic protocol
+assertions, not a language-model evaluation or proof of a future cache design.
+
+The canonical lifecycle fixture registers verified writers in its isolated
+store, then exercises actual federation mutations. Supersession, withdrawal,
+dispute, inferred/imported classification, repository-path scope and source
+provenance passed. Production writer trust and approval policy remain unchanged;
+confidence is source classification, not authenticated human authority.
+
+The existing required entrypoint suite includes `infer_precision.rs`. Its first
+execution reached the actual CLI-to-RPC round-2 continuation, then failed a test
+expectation that successful `blocked_by` was always an array. The unchanged
+envelope omits empty blockers. The fixture accepts omission or an empty array,
+and rejects malformed/nonempty blockers. Missing outer task binding must still
+fail before recording round 1. Current-candidate CLI proof must be rerun.
+
+Numeric measurements are emitted by existing fixtures: safe protocol call
+75.213 ms / 575 outcome bytes / 1490 governance bytes growth; conflict and
+revision 58.845 and 43.966 ms, with 1213 and 575 outcome bytes. The two-round
+compact journal was 2843 bytes and total governance growth 4017 bytes. The safe
+fixture observed zero main-database-file growth. Timings exclude CLI startup,
+are samples under concurrent CI load, and carry no portable performance promise.
+
+The only added build input relative to accepted target is the existing
+`infer_precision.rs` file in the required entrypoint suite. Reviewed inventory
+`sha256:d8781827659ed6d9c4702265a3d159509daf789e067ac13e961434a36d5b6d37`
+preserves the profile, accepted executor, required graph and final verdict.
+The current task journal was retained canonically; accepted journals remain in
+Git history.
+
+Failed or incomplete earlier attempts do not establish readiness: provider quota,
+accepted-base/tag movement and release-projection drift remain in trajectory
+evidence. Full validation on `dc7bf2fa` returned `SNAPSHOT_NOT_READY` for the
+CLI fixture failure in build 8602 after 3427640 ms provider wait; private snapshot
+`decapod-snapshot-YH2wgS` preserves that attempt. Passing individual jobs and
+checkpoint-history verification never replace the complete exact-candidate gate.
+Plain `decapod validate` owns the configured build/tests; no separate manual
+build, fabricated proof or weakened check is allowed.
+
 ## Current SDK 0.14 adoption (#1638)
 
 The current registry dependency is exactly Dactyl 0.14.0, checksum
@@ -1215,8 +1272,8 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `2c13ac97125866e43fe4a4ecdc70bdcbce68a442f71ea46ff271f18116138629`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (229 files), `tests/` (230 files)
+- Repository signal fingerprint: `ef0b809779d89f44a5898a162dc5f2c358e9bd025aa03cb27e7b0b01c56c2078`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (230 files), `tests/` (232 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 

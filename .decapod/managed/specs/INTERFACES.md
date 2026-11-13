@@ -1,5 +1,30 @@
 # Interfaces
 
+## Optional reflection on existing interfaces
+
+`infer orientation --task-id <id> --reflection '<JSON>'` and
+`mentor.obligations`' optional `reflection` parameter accept the same typed
+request: task/submission ID, operation (`change|modify|update`), literal proposed
+paths, optional expected token, explanation and evidence references. Existing
+calls omit the extension and preserve their response contract. Responses add
+`reflection` with `decapod.reflection.v1`, disposition
+(`proceed|reflect|human_decision|blocked`), reason, one optional challenge,
+token, context digest, round/remaining budget, terminal/execution-blocked flags,
+next action and always-false completion proof. Challenges expose a stable ID,
+bounded question, trigger, source references, investigation and binding flag.
+`state.resolve` decision records add optional `knowledge` provenance.
+The default round limit is three; one plan supports one current local task
+continuation. Source/path/input limits fail explicitly. No new RPC operation,
+authority hierarchy or persistence format is introduced.
+The CLI requires an explicit matching outer `--task-id` for reflection. This
+keeps its legacy orientation gates and the continuation on the same governing
+task intent. An omitted or conflicting binding fails before recording a round;
+the RPC continues to use the task ID in its typed reflection request.
+The plan source hash identifies its contract projection: reflection receipts,
+timestamps, approval state and measured phase/gate progress are normalized out.
+Governing definitions remain bound, and execution checks still require current
+approval and proof independently of a reflection disposition.
+
 ## Cloud initialization, continuation, and readiness (#1628)
 
 `decapod init --backend cloud`, `decapod session acquire`, and ordinary cloud
@@ -1100,8 +1125,8 @@ field. Nothing in this operation authorizes a mutation, approval or completion.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `2c13ac97125866e43fe4a4ecdc70bdcbce68a442f71ea46ff271f18116138629`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (229 files), `tests/` (230 files)
+- Repository signal fingerprint: `ef0b809779d89f44a5898a162dc5f2c358e9bd025aa03cb27e7b0b01c56c2078`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (230 files), `tests/` (232 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 

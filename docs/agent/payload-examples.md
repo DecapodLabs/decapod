@@ -1,5 +1,84 @@
 # Payload Examples
 
+## Bounded reflection
+
+This illustrative exchange uses an already claimed task and a plan whose
+`constraints.forbidden_paths` contains `src/mutations.rs`. The invariant is
+immediate visibility of concurrent mutations. Tokens/hashes below are returned
+values, not proof receipts. The executable counterpart is
+`test_orientation_and_mentor_share_the_reflection_continuation`.
+
+```sh
+decapod infer orientation --task-id <task-id> --reflection '{
+  "task_id":"<task-id>",
+  "submission_id":"cache-proposal",
+  "op":"change",
+  "touched_paths":["src/mutations.rs","src/read_adapter.rs"],
+  "rationale":"Cache reads at the mutation source."
+}'
+```
+
+The `reflection` field returns the complete continuation contract:
+
+```json
+{
+  "schema_version":"decapod.reflection.v1",
+  "disposition":"reflect",
+  "reason":"investigate_current_gap",
+  "challenge":{
+    "id":"<stable challenge digest>",
+    "question":"How will the proposed action avoid changing src/mutations.rs, which the current plan excludes?",
+    "trigger":"forbidden_path:src/mutations.rs",
+    "sources":[{"ref_path":".decapod/governance.json#/sections/plan","hash":"<contract digest>"}],
+    "investigation":"Inspect the cited contract and narrow the declared action or resolve its governing question through the existing authority surface.",
+    "enforceable":true
+  },
+  "token":"<returned continuation token>",
+  "round":1,
+  "remaining_rounds":2,
+  "terminal":false,
+  "execution_blocked":true,
+  "context_digest":"<current governing context digest>",
+  "next_action":"Investigate the single challenge and return an observably revised action.",
+  "completion_proven":false
+}
+```
+
+The agent inspects the invariant, removes mutation-source edits from its proposed
+scope, retains an adapter investigation and the visibility regression proof
+requirement, then continues through the existing RPC:
+
+```sh
+decapod rpc --op mentor.obligations --params '{
+  "reflection":{
+    "task_id":"<task-id>",
+    "submission_id":"adapter-only",
+    "expected_token":"<returned continuation token>",
+    "op":"change",
+    "touched_paths":["src/read_adapter.rs"],
+    "evidence":[{"ref_path":".decapod/governance.json#/sections/plan","hash":"<contract digest>"}],
+    "rationale":"Keep the mutation source unchanged; investigate fresh reads in the adapter and independently test visibility."
+  }
+}'
+```
+
+`result.reflection` now has `disposition: proceed`, `round: 2`,
+`remaining_rounds: 1`, `challenge: null`, `execution_blocked: false` and
+`completion_proven: false`, plus a new token/context digest and next-action
+instruction to check the existing gates. The plan receipt links the removed
+challenge to the inspected source and revised scope. No implementation or test
+has been certified. A persuasive answer with the original scope instead returns
+terminal `blocked/no_observable_progress` in round 2.
+
+Request fields are `task_id`, `submission_id`, `op` (`change`, `modify`
+or `update`), and `touched_paths`; `expected_token`, `rationale` (2048 bytes)
+and `evidence` (up to eight references) are optional. Hashes can be omitted to
+capture current source identity. Outer mentor operation/paths, when present,
+must match the nested action. Unknown request fields, nonliteral/symlink paths,
+input limits, unbound tasks, stale custody, stale evidence and conflicting
+tokens fail without recording a successful transition. Existing RPC envelopes,
+receipts and allowed-next-operation fields remain available.
+
 This document provides grounded examples of correct Decapod command invocations and structured RPC payloads.
 
 ### Prompt Safety Gate

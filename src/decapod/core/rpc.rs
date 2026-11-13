@@ -30,6 +30,8 @@ pub struct OrientationPacket {
     pub known_unknowns: Vec<String>,
     pub decision_gates: Vec<DecisionGate>,
     pub next_action: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub reflection: Option<crate::core::mentor::reflection::Outcome>,
 }
 
 /// The plan context agents must see before selecting an implementation path.
@@ -66,6 +68,14 @@ pub struct DecisionGate {
 pub struct DecisionOption {
     pub label: String,
     pub impact: String,
+}
+
+/// Shared legacy orientation gate; reflection cannot override its human boundary.
+pub fn architectural_alignment_required(goal: &str) -> bool {
+    let goal = goal.to_lowercase();
+    ["refactor", "architecture", "interface"]
+        .iter()
+        .any(|term| goal.contains(term))
 }
 
 /// Standard RPC request envelope
@@ -440,11 +450,14 @@ pub struct MentorObligationsParams {
     pub project_profile_id: Option<String>,
     pub session_id: Option<String>,
     pub high_risk: Option<bool>,
+    pub reflection: Option<crate::core::mentor::reflection::Request>,
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct MentorObligationsResult {
     pub obligations: crate::core::mentor::Obligations,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub reflection: Option<crate::core::mentor::reflection::Outcome>,
 }
 
 // Assurance Subsystem

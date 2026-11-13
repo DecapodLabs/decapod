@@ -1,7 +1,7 @@
 {
   "schema_version": "1.0.0",
   "baseline": {
-    "accepted_commit": "df15c9b8dcaeff2e4cba7ddd4918a1e2e954d455",
+    "accepted_commit": "19acd21f7ff50656323d037915273f03cdedc04e",
     "policy": {
       "change_control": {
         "requires_human_review": true,
@@ -47,15 +47,6 @@
         "statement": "The collector removes repeated exact-request reads and overlaps bounded independent metadata retrieval, while preserving all exact-source and terminal custody checks; CI optimizations reduce measured critical-path overhead without skipping applicable execution.",
         "status": "open"
       },
-      "claim:bounded-storage-inventory": {
-        "falsifier": "A meaningful inventory regression fails, read-only inspection changes application state, private contents are emitted, or unavailable/partial observations are misrepresented",
-        "proof_refs": [
-          "docs/storage-inventory.md",
-          "tests/support/storage_inventory.rs"
-        ],
-        "statement": "Native CLI and RPC provide bounded consistent read-only storage measurements with explicit coverage, separate checkpoint strata and redaction, without initializing missing stores",
-        "status": "open"
-      },
       "claim:broker-caller-custody": {
         "falsifier": "Required two/eight caller returned, persisted or audit identities differ; twenty concurrent mutators fail progress; physical opens recur per request.",
         "proof_refs": [
@@ -89,14 +80,6 @@
         "question": "Should a future Bazel release permit the generated module lockfile to move under .config/build, or must it remain root-discovered?",
         "status": "deferred"
       },
-      "claim:claim:billing-cloud-approval": {
-        "falsifier": "Unreviewed source changes, unapproved cloud action, dropped local/cloud boundary, missing current tests, stale target or any missing native readiness evidence.",
-        "proof_refs": [
-          ".decapod/managed/specs/VALIDATION.md"
-        ],
-        "statement": "Recover the reviewed cloud-init requested-seat and purchase-approval handoff onto accepted master; repair obsolete session assertions; preserve native governance and proof boundaries without deploying billing or claiming paid cloud is operational.",
-        "status": "open"
-      },
       "claim:claim:container-work-preservation": {
         "falsifier": "A failed or interrupted command, local-only history, dirty tracked or untracked work, or unreadable Git status is deleted automatically; or eligible clean successful work cannot be removed.",
         "proof_refs": [
@@ -108,8 +91,7 @@
       "claim:claim:decapod-cloud-client": {
         "falsifier": "Any project provider/token/price/roster requirement; direct legacy auth transport on managed init/session/TODO; cross-binding credential reuse; replay of uncertain one-time exchange/rotation; account privilege inferred locally; false ready message; leaked private credential; SQLite fallback; missing required checks or fixture results claimed as hosted evidence.",
         "proof_refs": [
-          ".decapod/managed/specs/VALIDATION.md",
-          "git:19acd21f7ff50656323d037915273f03cdedc04e:.decapod/governance.json#/claims/claim:decapod-cloud-client"
+          ".decapod/managed/specs/VALIDATION.md"
         ],
         "statement": "Implement issue1628 client slice: logical project backend, all managed discovery/auth/account/data transport through Dactyl, repository/project/origin-bound private custody with serialized refresh and crash recovery, honest server-confirmed readiness, explicit account denial/action requirements, headless continuation and no cloud-to-SQLite fallback. Preserve local independence and existing governed publication/release dependency gates.",
         "status": "open"
@@ -407,16 +389,6 @@
         "statement": "The importer accepts only independently reviewed official0.102.7 compiler/Linux/Darwin executable identities, with unchanged source, producer, recipe and artifact custody checks; older, unknown, mixed and swapped tuples remain invalid.",
         "status": "open"
       },
-      "claim:sdk014-registry-floor": {
-        "falsifier": "A Git/path override, mismatchedregistrychecksum, missing/unpatchedQuinnprotoentry, featureloss, transport/session/authorization change or relaxed required proof can pass the release policy and complete current-source checks.",
-        "proof_refs": [
-          "Cargo.lock",
-          "Cargo.toml",
-          "tests/release_dependency_policy.rs"
-        ],
-        "statement": "The published Dactyl0.14.0 registry dependency retains SQLite/Neon/defaultSupabase features and every resolved quinn-proto entry is at least0.11.19; transport/session/role boundaries and required full-proof graph remain unchanged.",
-        "status": "open"
-      },
       "claim:strict-protocol-rollout": {
         "falsifier": "The fallback accepts altered or new carrier content after only changing the review digest, supported R failure falls back to H, or an old released executable is claimed to acquire unimplemented bootstrap behavior.",
         "proof_refs": [
@@ -441,11 +413,6 @@
           "tests/unit/core/trajectory_tests.rs"
         ],
         "statement": "Starting a different trajectory cannot replace an uncommitted governance journal through supported APIs",
-        "status": "open"
-      },
-      "claim:validation-bootstrap": {
-        "falsifier": "A fresh docs task cannot reach a reviewed command, a failing command obtains readiness, or stale/forged/mismatched evidence passes terminal rules",
-        "statement": "Fresh governed tasks can execute their first full proof without a prior receipt; terminal readiness requires actual current bound proof and declared workunit gates",
         "status": "open"
       },
       "claim:validation-without-operator-receipt": {
@@ -483,7 +450,6 @@
       "trajectory:150b60dea853e3ba": "Real native measurements and separate holdout risk/coverage are required; current source CI success is insufficient. Evaluation criteria recorded before model outputs; no readiness fitting or holdout evaluation executed.",
       "trajectory:17669a7d73b8ecb7": "RPC download403 is runner-specific; same pinned URL succeeded on another fresh runner. Policy fixture exit126 OS detail is unknown because stderr was discarded.",
       "trajectory:19c255ade3d72661": "25unit tests and actualMetal8elementprobe passed; one138tokenCPU inference matches independent scalar subset, memory chunks inactive, same-author/shared-infrastructure limits remain. Metal model reset failed; holdout not executed. New owned-model discard, reuse assertion, real alternate-API fallback diagnostics, nonempty-chunk fixture and independent four-phase collector are authored repairs awaiting fresh validation. No 5percent production calibration claim.",
-      "trajectory:19d4c4d210854527": "Terminal runtime owns freshly verified suite; persisted receipt cannot authorize new proof",
       "trajectory:22ceeec9cc8afae2": "Validmodeluncertaintyyes0.573/two-labelsetcausedcalibrationpositiveabstainbothbackends; frozenexpectedacceptmismatchpreservednotrelabeled. Workingmeaningfulmodelapprovalsareobservedgate/prompt; alladversecontrolsnonready. We donotknowwhythemodelabstained. Independentcoverageauditdemonstratedmetadatafixtureclaimedorderbutonlyinvalidlength/namechecked; addcanonical+all23permutationchecksandtruthfulobservationacrossfamily. Currentvalidatedworkandactualcheckinventoryexpand; no question/threshold/weight/calibration/labeltuning. Userclarificationonsafeabstentionpending; strictallpositive ruleunchanged. Fullnewcandidatevalidate,donotclaimpreviousfullreportgreen or domainaccuracy. Sameoriginaltaskbranch/custody/noPRmerge release.",
       "trajectory:2318b54d5863154f": "Confirmed pinned CUDA dynamic links can prevent worker startup before its CPU path. Prepare optional separately pinned CPU executable in private local binding; model-free GPU startup before exposing model/state, typed hardware-only fallback, exact immutable pins and same deadline. Negative/abstaining/malformed inference and numerical failures remain non-ready and never trigger a new answer search. No actual Metal/model/reference/holdout evidence exists yet.",
       "trajectory:280aab34e7c0084a": "Source-built generator is used solely for report-prescribed Markdown regeneration and grants no kernel authority. No native build or scientific test executed on132because source docs proof failed. All earlier failed reports retained. Return to official1191 plain validate on exact repaired candidate; no bootstrap exception or manual shadow preflight.",
@@ -558,47 +524,143 @@
     }
   },
   "change": {
-    "id": "pr1648-rebase-20261112",
-    "base_commit": "df15c9b8dcaeff2e4cba7ddd4918a1e2e954d455",
+    "id": "change_01M77NNMKGESW1QW4Y2GQ8V6NC",
+    "base_commit": "19acd21f7ff50656323d037915273f03cdedc04e",
     "target_base": "origin/master"
   },
   "claims": {
-    "terminal-required-coverage": {
-      "statement": "All six original Unix PTY onboarding cases and portable ioctl request typing survive this rebase inside the required cli_contracts target, preserving accepted SDK and inventory wiring.",
-      "falsifier": "Any original terminal case or assertion is lost, required selector omits the target, or accepted inventory wiring changes.",
+    "bounded-reflection": {
+      "statement": "A protected-path proposal produces one source-bound challenge; an evidenced narrower proposal proceeds while approval and proof requirements remain intact; non-progress terminates within three rounds.",
+      "falsifier": "Adversarial corpus permits protected execution, accepts prose as proof, revives superseded authority, changes custody, or exceeds the round limit.",
       "status": "supported",
       "proof_refs": [
-        "target/terminal-ci-private/rebase-20261112/static-audit.json"
+        "tests/infer_precision.rs",
+        "tests/unit/core/reflection_tests.rs",
+        "tests/unit/core/state_knowledge_tests.rs"
       ]
     }
   },
   "checkpoints": [
     {
-      "id": "terminal-required-rebase-20261112-001",
-      "summary": "Rebase required terminal onboarding coverage onto df15c9b8 with release0.140.2 native projections and SDK0.14 inventory preservation",
-      "input_digest": "sha256:bf6c64ad108829b4a1c484b121741f11aac845866aaf7dfddd917df2ee403b02",
+      "id": "reflection-1639-initial",
+      "summary": "Compose bounded reflection with orientation, mentor and governed-plan continuity; repair federation lifecycle projection; author adversarial corpus and living contracts. Runtime proof pending plain validation.",
+      "input_digest": "sha256:d629a1248a1799bf85ef5f92ca23f075e0f1ab6dc7fd7d2d81bd05ad0b0d6371",
       "proof_refs": [
-        "target/terminal-ci-private/rebase-20261112/project-check.json",
-        "target/terminal-ci-private/rebase-20261112/static-audit.json"
+        "docs/architecture/bounded-reflection.md",
+        "tests/infer_precision.rs",
+        "tests/unit/core/reflection_tests.rs",
+        "tests/unit/core/state_knowledge_tests.rs"
       ]
+    },
+    {
+      "id": "reflection-1639-inventory",
+      "summary": "Reconcile reviewed source inventory after accepted package version bump; retain all required proof and provider policy; preserve initial validation failure before retry.",
+      "input_digest": "sha256:cdca23c1cb2420d3be1963e404ec8baa1ad2f30817ed1c9f98e78b2e1377251a",
+      "proof_refs": [
+        ".decapod/managed/specs/VALIDATION.md",
+        "docs/architecture/bounded-reflection.md"
+      ]
+    },
+    {
+      "id": "reflection-1639-resume",
+      "summary": "Clear the repaired current inventory blocker through trajectory interface; retain initial failure history and require fresh full proof.",
+      "input_digest": "sha256:45d72c49c6e8b89d3e01ce24d86c19459fdd6378a2928cbf57ff5701bb3aa6b2",
+      "proof_refs": [
+        ".decapod/managed/specs/VALIDATION.md"
+      ]
+    },
+    {
+      "id": "reflection-1639-source-repair",
+      "summary": "Repair CLI module qualification and harden source snapshot/progress alias handling; preserve external provider 403 blocker and add adversarial coverage without claiming runtime pass.",
+      "input_digest": "sha256:7f03a8984d26e89eff1dc6859e3750e928ab66a5cc740d82c38cf8b7a763c14c",
+      "proof_refs": [
+        ".decapod/managed/specs/VALIDATION.md",
+        "tests/unit/core/reflection_tests.rs"
+      ]
+    },
+    {
+      "id": "reflection-1639-merge-1391",
+      "summary": "Merge accepted bc0a7197 into the same task branch, regenerate conflicting projections, retain current canonical task journal, reconcile release-byte inventory, and protect terminal replay/human-question identities. Full proof remains pending.",
+      "input_digest": "sha256:5bd9dd7e8b068951d0255079c0537d288ab0adbb60ca05ac49b9737de71a7967",
+      "proof_refs": [
+        ".decapod/managed/specs/VALIDATION.md",
+        "tests/unit/core/reflection_tests.rs"
+      ]
+    },
+    {
+      "id": "reflection-1639-legacy-fixture",
+      "summary": "Repair legacy plan fixture after accepted-source CI test compilation; preserve release drift and unproven corpus status.",
+      "input_digest": "sha256:1d43033fe345216e4ca1c528c36786e3df17dcbf9f1f8ee0a5256c4fb4ea20cb"
+    },
+    {
+      "id": "reflection-1639-cli-intent-binding",
+      "summary": "Require matching CLI task context before reflection; fix observed assertion lint without suppressing proof checks.",
+      "input_digest": "sha256:f8f15b1c43062e352a83a593fcdc03ccd4e1d0cd08c3412f25eec6e0b68a1776"
+    },
+    {
+      "id": "reflection-1639-release-gate",
+      "summary": "Preserve failed full Buildkite validation, passed candidate clippy, pending corpus proof and explicit release-update authority boundary.",
+      "input_digest": "sha256:069118dc7c84b3ddb96ff9df44d78a415409709a0ce81a63b77d50c337df1ca6"
+    },
+    {
+      "id": "reflection-1639-validation-recovery",
+      "summary": "Merge accepted validation recovery, authorize lifecycle fixture writers, include reflection CLI in the required suite and expose bounded measurements.",
+      "input_digest": "sha256:9e3b7211d190f4a47c484489b3ab73702f14443b0ed48e0a16f5bfe1987d82ad"
+    },
+    {
+      "id": "reflection-1639-release-140",
+      "summary": "Reconcile accepted release 0.140.0 and preserve convergence across measured phase progress using existing plan semantics.",
+      "input_digest": "sha256:689c85b3e7c00f75a09c73cea49165f7291beb62fce8333f112cbc15cb8ac1df"
+    },
+    {
+      "id": "reflection-1639-optional-envelope",
+      "summary": "Preserve optional RPC blocker omission and record executed reflection/lifecycle outcomes and measured storage/latency.",
+      "input_digest": "sha256:98df870bf89bfcc6d988bd4cff471b5e8cb015ef74cacff7b5f96dfeaaf0c7a8"
+    },
+    {
+      "id": "reflection-1639-storage-target",
+      "summary": "Reconcile bounded reflection with accepted storage inventory and 0.140.1 release; retain measured evidence and exact-candidate validation requirement.",
+      "input_digest": "sha256:7f50302367af4df51f7ad191ed07a29500ecabcd555082ab63b231f661c1d5cd",
+      "proof_refs": [
+        "https://buildkite.com/decapodlabs/decapod/builds/8602"
+      ]
+    },
+    {
+      "id": "pr1649-conflict-repair-20261112",
+      "summary": "Preserve original validated reflection history and fixes, merge currentmasterd31112a1, repair nativegovernance/specs/releaseprojections. Push-only update at explicituserrequest; tests/fullvalidation notrun.",
+      "input_digest": "sha256:015cef94229fa6ccef152632ed12e6469eb8d5d675811a5ca4c4ff8065dcc9b9",
+      "proof_refs": [
+        "pr1649-preserved-history-and-merge-review"
+      ]
+    },
+    {
+      "id": "pr1649-ci-budget-spec-refresh",
+      "summary": "Reconcile living spec manifest hashes and extend entrypoint correctness Bazel timeout for CI",
+      "input_digest": "sha256:3c3e7c3ec4b86dd4cae2948c8cfdfcd6d0d1214da459b75685fa748db709a860"
     }
   ],
   "intents": {
-    "intent:pr1648-rebase-20261112": {
+    "intent:change_01M77NNMKGESW1QW4Y2GQ8V6NC": {
       "acceptance_criteria": [],
       "assumptions": [],
       "boundaries": [
-        "No authored workflow, selector, budget, carrier or SDK implementation changes. Previous readiness is historical."
+        "Current claimed task and isolated work branch"
       ],
       "constraints": [
-        "tests/cli_contracts.rs,tests/init_cli.rs,living specs and native generated release/inventory metadata"
+        "paths:[\"src/decapod/core\"",
+        "\"src/decapod/plugins/federation.rs\"",
+        "\"tests\"",
+        "\"docs\"",
+        "\"constitution\"",
+        "\"assets/schemas\"",
+        "\".decapod/managed/specs\"]"
       ],
       "created_sequence": 1,
-      "id": "intent:pr1648-rebase-20261112",
+      "id": "intent:change_01M77NNMKGESW1QW4Y2GQ8V6NC",
       "out_of_scope": [],
       "proof_requirements": [],
-      "raw_intent": "fetch master from origin, rebase and use latest decapod to get through merge conflicts and sha fingerprints on PR #1648",
-      "refined_intent": "Replay the terminal coverage as one fresh native-checkpointed commit on current master; archive the original five-commit tip and historical proof.",
+      "raw_intent": "Implement bounded evidence-grounded reflection in orientation\n\nCompose mentor obligations, current governed state, plans and evidence into a deterministic finite reflection continuation; audit authoritative source paths, preserve authority and proof boundaries, adversarially test, document, validate and publish only when exact-candidate gates pass.",
+      "refined_intent": "Implement bounded evidence-grounded reflection in orientation\n\nCompose mentor obligations, current governed state, plans and evidence into a deterministic finite reflection continuation; audit authoritative source paths, preserve authority and proof boundaries, adversarially test, document, validate and publish only when exact-candidate gates pass.",
       "status": "refined",
       "updated_sequence": 3
     }
@@ -611,7 +673,7 @@
       },
       "deferred_questions": [],
       "human_questions": [],
-      "intent": "Rebase existing PR1648 onto origin/master using released Decapod0.140.2. Preserve all six terminal scenarios, portable ioctl request cast and accepted Dactyl0.14/inventory wiring. Refresh generated release and SHA projections through native commands. Preserve original f2dc7e3d history and old evidence; obtain fresh proof for one newly checkpointed rebased commit.",
+      "intent": "Implement a bounded deterministic reflection continuation through existing orientation and mentor contracts. Reuse governed-plan custody and canonical evidence; challenge relevant conflicts before execution while retaining independent approval, validation and publication gates.",
       "phases": [],
       "proof_hooks": [
         "decapod validate"
@@ -621,139 +683,798 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Document required CLI selector ownership of the six terminal onboarding regressions; preserve whole-product architecture.",
-          "reviewed_code_fingerprint": "2c13ac97125866e43fe4a4ecdc70bdcbce68a442f71ea46ff271f18116138629",
-          "spec_material_hash": "c3f1e13215f8cee411f4478d7bf9cc8a478762602540455cb60a276d5abd033a"
+          "reason": "Preserved validated reflection implementation and all authored source/authority descriptions while merging accepted SDK14/onboarding/release1403. User directs push without tests; no new proof or completion claim.",
+          "reviewed_code_fingerprint": "ef0b809779d89f44a5898a162dc5f2c358e9bd025aa03cb27e7b0b01c56c2078",
+          "spec_material_hash": "f7fe654cf50d54efb952f9a648fc2f490c6539b9176dde3c05feedc93a80ac42"
         },
         {
-          "disposition": "unchanged_with_reason",
+          "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Rebase and test placement preserve accepted public commands, native inventory interfaces and SDK0.14 behavior. Native release projections refreshed.",
-          "reviewed_code_fingerprint": "2c13ac97125866e43fe4a4ecdc70bdcbce68a442f71ea46ff271f18116138629",
-          "spec_material_hash": "27d92a04e2055509758e030b5d902354662d9602008d5576de958248c7d32333"
+          "reason": "Preserved validated reflection implementation and all authored source/authority descriptions while merging accepted SDK14/onboarding/release1403. User directs push without tests; no new proof or completion claim.",
+          "reviewed_code_fingerprint": "ef0b809779d89f44a5898a162dc5f2c358e9bd025aa03cb27e7b0b01c56c2078",
+          "spec_material_hash": "5c82da80912928b3ff94be3ddfebd1d97d7fbfb10e495821d4c1a034794878eb"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Existing private PTY fixtures and consent assertions are byte-preserved. Reviewed five local test-binary process boundaries: argv arrays, no shell. No security boundary or scanner policy changes.",
-          "reviewed_code_fingerprint": "2c13ac97125866e43fe4a4ecdc70bdcbce68a442f71ea46ff271f18116138629",
+          "reason": "Preserved validated reflection implementation and all authored source/authority descriptions while merging accepted SDK14/onboarding/release1403. User directs push without tests; no new proof or completion claim.",
+          "reviewed_code_fingerprint": "ef0b809779d89f44a5898a162dc5f2c358e9bd025aa03cb27e7b0b01c56c2078",
           "spec_material_hash": "d19fb5ab8a937310fab585de295899572101fbd2e2b6bf9ba7d44daa35066221"
         }
       ],
       "state": "APPROVED",
-      "stop_conditions": [],
-      "title": "Rebase PR1648 terminal coverage onto current master",
+      "stop_conditions": [
+        "Stop publication on unavailable required proof, controller incompatibility, denied authority or unresolved human decision."
+      ],
+      "title": "Implement bounded evidence-grounded reflection in orientation",
       "todo_ids": [
-        "fend_01m77rxqa1sqdtwk"
+        "feat_01m77nmmjwd12v30"
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1794502321Z"
+      "updated_at": "1794506689Z"
     },
     "trajectory": {
       "active_boundaries": [
-        "No authored workflow, selector, budget, carrier or SDK implementation changes. Previous readiness is historical."
+        "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:abd884d6f65093587f33a7cdbfb8ec3d5c5510e88ffc6987d66a50ce31890c42",
+      "artifact_hash": "sha256:9e05ef9a3faaf047449991be8ef5744eb54ade67e1b88d5b5b3bd5dc59d92107",
       "checks": [
         {
-          "name": "bounded-project-preparation",
+          "name": "buildkite-clippy",
           "status": "failed"
         },
         {
-          "name": "format-and-diff",
+          "name": "buildkite-clippy-ac9bd730",
           "status": "passed"
         },
         {
-          "name": "six-scenarios-and-accepted-wiring",
+          "name": "cli-envelope-assertion-dc7bf2fa",
+          "status": "failed"
+        },
+        {
+          "name": "cli-reflection-task-binding",
+          "status": "partial"
+        },
+        {
+          "name": "controller-release-1391",
+          "status": "passed"
+        },
+        {
+          "name": "core-suite-dc7bf2fa",
+          "status": "passed"
+        },
+        {
+          "name": "current-tests",
+          "status": "unavailable"
+        },
+        {
+          "name": "format-and-whitespace",
+          "status": "passed"
+        },
+        {
+          "name": "formatting",
+          "status": "passed"
+        },
+        {
+          "name": "full-validation",
+          "status": "unavailable"
+        },
+        {
+          "name": "full-validation-42571aaf",
+          "status": "failed"
+        },
+        {
+          "name": "full-validation-be4cfbb6",
+          "status": "unavailable"
+        },
+        {
+          "name": "full-validation-dc7bf2fa",
+          "status": "failed"
+        },
+        {
+          "name": "full_current_candidate",
+          "status": "unavailable"
+        },
+        {
+          "name": "legacy-plan-fixture-compilation",
+          "status": "failed"
+        },
+        {
+          "name": "lifecycle-fixture-32fdc534",
+          "status": "failed"
+        },
+        {
+          "name": "local-projection-bootstrap",
+          "status": "partial"
+        },
+        {
+          "name": "merge_material_review",
+          "status": "passed"
+        },
+        {
+          "name": "published-controller-140",
+          "status": "passed"
+        },
+        {
+          "name": "reflection-15-cases-32fdc534",
+          "status": "passed"
+        },
+        {
+          "name": "reflection-behavioral-corpus",
+          "status": "unavailable"
+        },
+        {
+          "name": "reflection16-lifecycle-dc7bf2fa",
+          "status": "passed"
+        },
+        {
+          "name": "release_1401_projection_bootstrap",
+          "status": "partial"
+        },
+        {
+          "name": "required_candidate_c0d3",
+          "status": "unavailable"
+        },
+        {
+          "name": "reviewed-profile-inventory",
           "status": "passed"
         }
       ],
-      "current_phase": "verification",
+      "current_phase": "push-only-conflict-repair",
       "custody": {
         "events": [
           {
             "event_id": "event:2",
-            "intent_id": "intent:pr1648-rebase-20261112",
+            "intent_id": "intent:change_01M77NNMKGESW1QW4Y2GQ8V6NC",
             "kind": "created",
             "sequence": 2
           },
           {
             "event_id": "event:3",
-            "intent_id": "intent:pr1648-rebase-20261112",
+            "intent_id": "intent:change_01M77NNMKGESW1QW4Y2GQ8V6NC",
             "kind": "refined",
             "sequence": 3
           },
           {
-            "detail": "trajectory:pr1648-rebase-20261112",
+            "detail": "trajectory:branch_01M77NNMPBCKJFWXSA4SD6RFHS",
             "event_id": "event:4",
-            "intent_id": "intent:pr1648-rebase-20261112",
+            "intent_id": "intent:change_01M77NNMKGESW1QW4Y2GQ8V6NC",
             "kind": "trajectory_step_recorded",
             "sequence": 4
+          },
+          {
+            "detail": "trajectory:branch_01M77NNMPBCKJFWXSA4SD6RFHS",
+            "event_id": "event:5",
+            "intent_id": "intent:change_01M77NNMKGESW1QW4Y2GQ8V6NC",
+            "kind": "trajectory_step_recorded",
+            "sequence": 5
+          },
+          {
+            "detail": "trajectory:branch_01M77NNMPBCKJFWXSA4SD6RFHS",
+            "event_id": "event:6",
+            "intent_id": "intent:change_01M77NNMKGESW1QW4Y2GQ8V6NC",
+            "kind": "trajectory_step_recorded",
+            "sequence": 6
+          },
+          {
+            "detail": "trajectory:branch_01M77NNMPBCKJFWXSA4SD6RFHS",
+            "event_id": "event:7",
+            "intent_id": "intent:change_01M77NNMKGESW1QW4Y2GQ8V6NC",
+            "kind": "trajectory_step_recorded",
+            "sequence": 7
+          },
+          {
+            "detail": "trajectory:branch_01M77NNMPBCKJFWXSA4SD6RFHS",
+            "event_id": "event:8",
+            "intent_id": "intent:change_01M77NNMKGESW1QW4Y2GQ8V6NC",
+            "kind": "trajectory_step_recorded",
+            "sequence": 8
+          },
+          {
+            "detail": "trajectory:branch_01M77NNMPBCKJFWXSA4SD6RFHS",
+            "event_id": "event:9",
+            "intent_id": "intent:change_01M77NNMKGESW1QW4Y2GQ8V6NC",
+            "kind": "trajectory_step_recorded",
+            "sequence": 9
+          },
+          {
+            "detail": "trajectory:branch_01M77NNMPBCKJFWXSA4SD6RFHS",
+            "event_id": "event:10",
+            "intent_id": "intent:change_01M77NNMKGESW1QW4Y2GQ8V6NC",
+            "kind": "trajectory_step_recorded",
+            "sequence": 10
+          },
+          {
+            "detail": "trajectory:branch_01M77NNMPBCKJFWXSA4SD6RFHS",
+            "event_id": "event:11",
+            "intent_id": "intent:change_01M77NNMKGESW1QW4Y2GQ8V6NC",
+            "kind": "trajectory_step_recorded",
+            "sequence": 11
+          },
+          {
+            "detail": "trajectory:branch_01M77NNMPBCKJFWXSA4SD6RFHS",
+            "event_id": "event:12",
+            "intent_id": "intent:change_01M77NNMKGESW1QW4Y2GQ8V6NC",
+            "kind": "trajectory_step_recorded",
+            "sequence": 12
+          },
+          {
+            "detail": "trajectory:branch_01M77NNMPBCKJFWXSA4SD6RFHS",
+            "event_id": "event:13",
+            "intent_id": "intent:change_01M77NNMKGESW1QW4Y2GQ8V6NC",
+            "kind": "trajectory_step_recorded",
+            "sequence": 13
+          },
+          {
+            "detail": "trajectory:branch_01M77NNMPBCKJFWXSA4SD6RFHS",
+            "event_id": "event:14",
+            "intent_id": "intent:change_01M77NNMKGESW1QW4Y2GQ8V6NC",
+            "kind": "trajectory_step_recorded",
+            "sequence": 14
+          },
+          {
+            "detail": "trajectory:branch_01M77NNMPBCKJFWXSA4SD6RFHS",
+            "event_id": "event:15",
+            "intent_id": "intent:change_01M77NNMKGESW1QW4Y2GQ8V6NC",
+            "kind": "trajectory_step_recorded",
+            "sequence": 15
+          },
+          {
+            "detail": "trajectory:branch_01M77NNMPBCKJFWXSA4SD6RFHS",
+            "event_id": "event:16",
+            "intent_id": "intent:change_01M77NNMKGESW1QW4Y2GQ8V6NC",
+            "kind": "trajectory_step_recorded",
+            "sequence": 16
+          },
+          {
+            "detail": "trajectory:branch_01M77NNMPBCKJFWXSA4SD6RFHS",
+            "event_id": "event:17",
+            "intent_id": "intent:change_01M77NNMKGESW1QW4Y2GQ8V6NC",
+            "kind": "trajectory_step_recorded",
+            "sequence": 17
+          },
+          {
+            "detail": "trajectory:branch_01M77NNMPBCKJFWXSA4SD6RFHS",
+            "event_id": "event:18",
+            "intent_id": "intent:change_01M77NNMKGESW1QW4Y2GQ8V6NC",
+            "kind": "trajectory_step_recorded",
+            "sequence": 18
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 4,
+        "next_sequence": 18,
         "schema_version": "1.0.0",
         "trajectories": {
-          "pr1648-rebase-20261112": {
+          "branch_01M77NNMPBCKJFWXSA4SD6RFHS": {
             "evidence_only": true,
-            "id": "pr1648-rebase-20261112",
-            "intent_id": "intent:pr1648-rebase-20261112",
+            "id": "branch_01M77NNMPBCKJFWXSA4SD6RFHS",
+            "intent_id": "intent:change_01M77NNMKGESW1QW4Y2GQ8V6NC",
             "steps": [
               {
-                "action": "verification",
+                "action": "trajectory.record",
                 "custody_event_id": "event:4",
                 "observations": [
-                  "tests/cli_contracts.rs",
-                  ".decapod/managed/specs/ARCHITECTURE.md",
-                  ".decapod/managed/specs/VALIDATION.md",
-                  "target/terminal-ci-private/rebase-20261112/static-audit.json",
-                  "target/terminal-ci-private/rebase-20261112/project-check.json"
+                  "src/decapod/core/mentor.rs",
+                  "src/decapod/core/state.rs",
+                  "src/decapod/plan_governance.rs",
+                  "docs/architecture/bounded-reflection.md",
+                  "https://github.com/DecapodLabs/decapod/issues/1639",
+                  "https://github.com/DecapodLabs/decapod/issues/1640"
                 ],
-                "proof_refs": [
-                  "six-scenarios-and-accepted-wiring",
-                  "format-and-diff",
-                  "bounded-project-preparation"
-                ],
+                "proof_refs": [],
                 "scope": [
-                  "tests/cli_contracts.rs,tests/init_cli.rs,living specs and native generated release/inventory metadata"
+                  "\".decapod/managed/specs\"]",
+                  "\"assets/schemas\"",
+                  "\"constitution\"",
+                  "\"docs\"",
+                  "\"src/decapod/plugins/federation.rs\"",
+                  "\"tests\"",
+                  "paths:[\"src/decapod/core\""
                 ],
                 "sequence": 4,
                 "validation_findings": [
-                  "Preparation failures retain host custody, accepted old HEAD projections, commit-often staging, five reviewed local-binary process boundaries, and unrelated legacy todo proof; none are represented as full validation."
+                  "Mentor literal matches remain advisory; source identity and narrower declared scope do not prove implementation semantics."
                 ]
+              },
+              {
+                "action": "implementation",
+                "command": "cargo fmt --all",
+                "custody_event_id": "event:5",
+                "observations": [
+                  "src/decapod/core/mentor/reflection.rs",
+                  "src/decapod/core/state.rs",
+                  "tests/unit/core/reflection_tests.rs",
+                  "tests/unit/core/state_knowledge_tests.rs",
+                  "tests/infer_precision.rs",
+                  "docs/architecture/bounded-reflection.md"
+                ],
+                "proof_refs": [
+                  "formatting"
+                ],
+                "scope": [
+                  "\".decapod/managed/specs\"]",
+                  "\"assets/schemas\"",
+                  "\"constitution\"",
+                  "\"docs\"",
+                  "\"src/decapod/plugins/federation.rs\"",
+                  "\"tests\"",
+                  "paths:[\"src/decapod/core\""
+                ],
+                "sequence": 5,
+                "validation_findings": [
+                  "Behavioral, latency and growth measurements await configured validation; authored tests are not proof."
+                ]
+              },
+              {
+                "action": "validation-repair",
+                "command": "decapod validate",
+                "custody_event_id": "event:6",
+                "observations": [
+                  ".decapod/config.toml",
+                  "docs/architecture/bounded-reflection.md",
+                  ".decapod/managed/specs/VALIDATION.md"
+                ],
+                "proof_refs": [
+                  "full-validation"
+                ],
+                "scope": [
+                  "\".decapod/managed/specs\"]",
+                  "\"assets/schemas\"",
+                  "\"constitution\"",
+                  "\"docs\"",
+                  "\"src/decapod/plugins/federation.rs\"",
+                  "\"tests\"",
+                  "paths:[\"src/decapod/core\""
+                ],
+                "sequence": 6,
+                "validation_findings": []
+              },
+              {
+                "action": "validating",
+                "custody_event_id": "event:7",
+                "observations": [
+                  ".decapod/managed/specs/VALIDATION.md"
+                ],
+                "proof_refs": [],
+                "scope": [
+                  "\".decapod/managed/specs\"]",
+                  "\"assets/schemas\"",
+                  "\"constitution\"",
+                  "\"docs\"",
+                  "\"src/decapod/plugins/federation.rs\"",
+                  "\"tests\"",
+                  "paths:[\"src/decapod/core\""
+                ],
+                "sequence": 7,
+                "validation_findings": [
+                  "Inventory reconciliation removes the recorded current blocker only; earlier failed proof remains historical and full proof is still required."
+                ]
+              },
+              {
+                "action": "source-repair",
+                "custody_event_id": "event:8",
+                "observations": [
+                  "src/decapod/core/mentor/reflection.rs",
+                  "tests/unit/core/reflection_tests.rs",
+                  ".decapod/managed/specs/VALIDATION.md",
+                  "https://github.com/DecapodLabs/decapod/actions/runs/43206246190"
+                ],
+                "proof_refs": [
+                  "full-validation"
+                ],
+                "scope": [
+                  "\".decapod/managed/specs\"]",
+                  "\"assets/schemas\"",
+                  "\"constitution\"",
+                  "\"docs\"",
+                  "\"src/decapod/plugins/federation.rs\"",
+                  "\"tests\"",
+                  "paths:[\"src/decapod/core\""
+                ],
+                "sequence": 8,
+                "validation_findings": [
+                  "Independent GitHub diagnostics can identify source errors but cannot establish Buildkite publication readiness."
+                ]
+              },
+              {
+                "action": "target-reconciliation",
+                "command": "git merge --no-commit --no-ff origin/master",
+                "custody_event_id": "event:9",
+                "observations": [
+                  ".decapod/config.toml",
+                  ".decapod/managed/specs/VALIDATION.md",
+                  ".decapod/managed/specs/VALIDATION.md"
+                ],
+                "proof_refs": [],
+                "scope": [
+                  "\".decapod/managed/specs\"]",
+                  "\"assets/schemas\"",
+                  "\"constitution\"",
+                  "\"docs\"",
+                  "\"src/decapod/plugins/federation.rs\"",
+                  "\"tests\"",
+                  "paths:[\"src/decapod/core\""
+                ],
+                "sequence": 9,
+                "validation_findings": [
+                  "Accepted target bc0a7197 merged; the committed current-task governance record was retained while accepted work remains in Git history. Generated conflicts were refreshed by specs.refresh; no proof or authority was invented."
+                ]
+              },
+              {
+                "action": "validation-preparation",
+                "custody_event_id": "event:10",
+                "observations": [
+                  "src/decapod/core/mentor/reflection.rs",
+                  "tests/unit/core/reflection_tests.rs",
+                  ".decapod/managed/specs/VALIDATION.md"
+                ],
+                "proof_refs": [],
+                "scope": [
+                  "\".decapod/managed/specs\"]",
+                  "\"assets/schemas\"",
+                  "\"constitution\"",
+                  "\"docs\"",
+                  "\"src/decapod/plugins/federation.rs\"",
+                  "\"tests\"",
+                  "paths:[\"src/decapod/core\""
+                ],
+                "sequence": 10,
+                "validation_findings": [
+                  "The previous HTTP 403 and unavailable proof remain historical evidence. Clearing the prior attempt blocker prepares a fresh attempt after its reset, and does not establish provider access or readiness."
+                ]
+              },
+              {
+                "action": "validation-repair",
+                "custody_event_id": "event:11",
+                "observations": [
+                  "tests/unit/core/validate_tests.rs",
+                  "docs/architecture/bounded-reflection.md",
+                  ".decapod/managed/specs/VALIDATION.md",
+                  "https://github.com/DecapodLabs/decapod/actions/runs/43210330914/job/131156236192",
+                  "https://github.com/DecapodLabs/decapod/actions/runs/43210330738/job/131155983763"
+                ],
+                "proof_refs": [
+                  "legacy-plan-fixture-compilation",
+                  "format-and-whitespace"
+                ],
+                "scope": [
+                  "\".decapod/managed/specs\"]",
+                  "\"assets/schemas\"",
+                  "\"constitution\"",
+                  "\"docs\"",
+                  "\"src/decapod/plugins/federation.rs\"",
+                  "\"tests\"",
+                  "paths:[\"src/decapod/core\""
+                ],
+                "sequence": 11,
+                "validation_findings": [
+                  "Test compilation requires the repaired legacy fixture; no behavioral pass is claimed. Release 0.139.1 controller update awaits explicit approval; CI release drift remains unresolved."
+                ]
+              },
+              {
+                "action": "authority-binding-repair",
+                "custody_event_id": "event:12",
+                "observations": [
+                  "src/decapod/lib.rs",
+                  "tests/infer_precision.rs",
+                  "tests/unit/core/reflection_tests.rs",
+                  "docs/agent/state-model.md",
+                  "docs/architecture/bounded-reflection.md",
+                  ".decapod/managed/specs/INTERFACES.md",
+                  ".decapod/managed/specs/VALIDATION.md",
+                  "https://buildkite.com/decapodlabs/decapod/builds/8515#01a1cf92-cad8-45ac-a70d-7d463e25d016"
+                ],
+                "proof_refs": [
+                  "cli-reflection-task-binding",
+                  "buildkite-clippy",
+                  "format-and-whitespace"
+                ],
+                "scope": [
+                  "\".decapod/managed/specs\"]",
+                  "\"assets/schemas\"",
+                  "\"constitution\"",
+                  "\"docs\"",
+                  "\"src/decapod/plugins/federation.rs\"",
+                  "\"tests\"",
+                  "paths:[\"src/decapod/core\""
+                ],
+                "sequence": 12,
+                "validation_findings": [
+                  "Source review found missing outer CLI task binding could evaluate different intent. The new regression rejects it before round 1; behavioral execution remains pending. Buildkite clippy assertion-style failure is repaired without lint suppression."
+                ]
+              },
+              {
+                "action": "awaiting-release-authorization",
+                "custody_event_id": "event:13",
+                "observations": [
+                  "https://buildkite.com/decapodlabs/decapod/builds/8517",
+                  "https://buildkite.com/decapodlabs/decapod/builds/8536#01a1cf9a-dfb5-4957-835e-baeef49b7705",
+                  "https://buildkite.com/decapodlabs/decapod/builds/8537#01a1cf9a-58fa-40d9-bd63-958c6bf567ad"
+                ],
+                "proof_refs": [
+                  "full-validation-42571aaf",
+                  "buildkite-clippy-ac9bd730",
+                  "reflection-behavioral-corpus"
+                ],
+                "scope": [
+                  "\".decapod/managed/specs\"]",
+                  "\"assets/schemas\"",
+                  "\"constitution\"",
+                  "\"docs\"",
+                  "\"src/decapod/plugins/federation.rs\"",
+                  "\"tests\"",
+                  "paths:[\"src/decapod/core\""
+                ],
+                "sequence": 13,
+                "validation_findings": [
+                  "Full validation ended SNAPSHOT_NOT_READY after 638132 ms provider wait; no local process was interrupted. Exact private snapshot remains decapod-snapshot-iZThaW. Complete runtime corpus and cost deltas are unproven."
+                ]
+              },
+              {
+                "action": "validation-preparation",
+                "custody_event_id": "event:14",
+                "observations": [
+                  "tests/unit/core/state_knowledge_tests.rs",
+                  "tests/unit/core/reflection_tests.rs",
+                  "tests/infer_precision.rs",
+                  "tests/entrypoint_correctness.rs",
+                  ".config/build/decapod.BUILD.bzl",
+                  "docs/architecture/bounded-reflection.md",
+                  ".decapod/managed/specs/VALIDATION.md",
+                  "https://github.com/DecapodLabs/decapod/actions/runs/43215838324/job/131175931908"
+                ],
+                "proof_refs": [
+                  "reflection-15-cases-32fdc534",
+                  "lifecycle-fixture-32fdc534",
+                  "controller-release-1391",
+                  "reviewed-profile-inventory",
+                  "format-and-whitespace"
+                ],
+                "scope": [
+                  "\".decapod/managed/specs\"]",
+                  "\"assets/schemas\"",
+                  "\"constitution\"",
+                  "\"docs\"",
+                  "\"src/decapod/plugins/federation.rs\"",
+                  "\"tests\"",
+                  "paths:[\"src/decapod/core\""
+                ],
+                "sequence": 14,
+                "validation_findings": [
+                  "User continuation authorizes the previously requested 0.139.1 update. Session acquire required no install: the installed binary already reports 0.139.1. Temporary update opt-in was removed and binary/config backed up privately.",
+                  "Accepted f1a6c7a0 merged; current task journal retained and generated conflicts refreshed by supported interfaces. The reviewed build delta adds infer_precision.rs to the existing required entrypoint suite without changing the required graph.",
+                  "All 15 protocol regressions passed on earlier code. Repaired lifecycle setup, CLI suite inclusion and numeric measurements require new exact-candidate execution."
+                ]
+              },
+              {
+                "action": "validation-preparation",
+                "custody_event_id": "event:15",
+                "observations": [
+                  "src/decapod/core/mentor/reflection.rs",
+                  "src/decapod/plan_governance.rs",
+                  "tests/unit/core/reflection_tests.rs",
+                  "tests/infer_precision.rs",
+                  "docs/agent/state-model.md",
+                  "snapshot:decapod-snapshot-yStc2X",
+                  "https://github.com/DecapodLabs/decapod/commit/fc1e2b94f6909633bf6dd7044fd7a54a05e85a4b"
+                ],
+                "proof_refs": [
+                  "full-validation-be4cfbb6",
+                  "published-controller-140",
+                  "local-projection-bootstrap",
+                  "format-and-whitespace"
+                ],
+                "scope": [
+                  "\".decapod/managed/specs\"]",
+                  "\"assets/schemas\"",
+                  "\"constitution\"",
+                  "\"docs\"",
+                  "\"src/decapod/plugins/federation.rs\"",
+                  "\"tests\"",
+                  "paths:[\"src/decapod/core\""
+                ],
+                "sequence": 15,
+                "validation_findings": [
+                  "Plain validation be4cfbb6 stopped because accepted base moved to released 0.140.0. The session-acquire path installed that published release after private backups; update opt-in was restored to its original absence.",
+                  "Projection bootstrap applied supported release repairs but is partial, with host container/candidate gates unmet. It is not readiness or an alternate proof path; full Buildkite validation owns all configured prerequisites.",
+                  "Source review found routine phase progress unnecessarily invalidated reflection. Reusing existing progress normalization fixes the coupling while independent approval/proof gates remain required; the new regression awaits configured execution."
+                ]
+              },
+              {
+                "action": "validation-repair",
+                "custody_event_id": "event:16",
+                "observations": [
+                  "tests/infer_precision.rs",
+                  "docs/agent/state-model.md",
+                  "docs/architecture/bounded-reflection.md",
+                  ".decapod/managed/specs/VALIDATION.md",
+                  "https://buildkite.com/decapodlabs/decapod/builds/8602#01a1cfd6-5d0d-4abb-853c-b4ed9164f022",
+                  "https://buildkite.com/decapodlabs/decapod/builds/8602#01a1cfd6-5d5a-469d-af87-6e10fbab0321",
+                  "snapshot:decapod-snapshot-YH2wgS"
+                ],
+                "proof_refs": [
+                  "full-validation-dc7bf2fa",
+                  "reflection16-lifecycle-dc7bf2fa",
+                  "core-suite-dc7bf2fa",
+                  "cli-envelope-assertion-dc7bf2fa",
+                  "format-and-whitespace"
+                ],
+                "scope": [
+                  "\".decapod/managed/specs\"]",
+                  "\"assets/schemas\"",
+                  "\"constitution\"",
+                  "\"docs\"",
+                  "\"src/decapod/plugins/federation.rs\"",
+                  "\"tests\"",
+                  "paths:[\"src/decapod/core\""
+                ],
+                "sequence": 16,
+                "validation_findings": [
+                  "Full validation ended SNAPSHOT_NOT_READY after 3427640 ms provider wait. The only failed Buildkite job was a CLI fixture assertion assuming blocked_by is always an array; actual round-2 proceed and false completion proof had already passed. The fixed assertion preserves the existing omission contract.",
+                  "Required library execution passed 1709 tests with 8 ignored, including all 16 reflection cases and canonical lifecycle. Protocol samples and storage growth are now documented with immutable source references; this narrow evidence supports the recorded claim, not complete current readiness."
+                ]
+              },
+              {
+                "action": "validation",
+                "custody_event_id": "event:17",
+                "observations": [
+                  "https://buildkite.com/decapodlabs/decapod/builds/8652",
+                  "/private/var/folders/h9/41kb5hv95hg9yw44654rnl9c0000gn/T/decapod-snapshot-2P6hYI"
+                ],
+                "proof_refs": [
+                  "required_candidate_c0d3",
+                  "release_1401_projection_bootstrap",
+                  "merge_material_review",
+                  "full_current_candidate"
+                ],
+                "scope": [
+                  "\".decapod/managed/specs\"]",
+                  "\"assets/schemas\"",
+                  "\"constitution\"",
+                  "\"docs\"",
+                  "\"src/decapod/plugins/federation.rs\"",
+                  "\"tests\"",
+                  "paths:[\"src/decapod/core\""
+                ],
+                "sequence": 17,
+                "validation_findings": [
+                  "Prior candidate proof became stale after accepted master advanced; SNAPSHOT_NOT_READY after 516740 ms is preserved, never readiness.",
+                  "Supported session update installed 0.140.1, private backups preserved, temporary session_auto_update preference removed. Project-check refreshed release projections but remained partial with 201 passed and five host/staging/unrelated-task failures; it is not full proof.",
+                  "Merge accepted 1d04f232c46864eecfadb9c8b9b23069ca0e906e including storage inventory, Dactyl 0.13.0 and release 0.140.1. No unrelated task or scanner policy changed."
+                ]
+              },
+              {
+                "action": "push-only-conflict-repair",
+                "custody_event_id": "event:18",
+                "observations": [
+                  "User explicitly requests fix and push PR1649 without tests. No tests/build/fullvalidation executed in this repair. Prior native proof at5fb5dec5 remains historical only.",
+                  "Interrupted local rebase8eeb8915 inheritedPR1648governance and dropped validatedreflection progress,terminalreplay,human-question fixes. Preserved it onarchive/pr1649-interrupted-rebase-20261112-8eeb8915 and saved originalspecedits inGitstash (privatepreservationmetadata). RestoredactualPRhead5fb5dec5withoutreset/force, originalnativegovernancestatussucceeds; reclaimedoriginalfeat01m77nmmjwd12v30, workspacecan_worktrue,orientation/authority/context current.",
+                  "Mergedcurrentmasterd31112a1 preservingoriginalPRsource exactly (git diff5fb5--src empty), originaljournal and all authoredreflection prefixes plusacceptedSDK14/onboarding specs. Resolveddiff3markers; native1403agent.init/specs.refresh succeeds. Reusedexactnative1403generatedtask-neutral entrypoints/Dockerfile fromaf23 Git snapshot, onlyreleaseheaderchangesvsacceptedmaster; noquota implementation imported. Reviewed105proofinputhashes; onlyexistinginfer_precision source declarationdiffersfrommaster; digestd8781827659ed6d9c4702265a3d159509daf789e067ac13e961434a36d5b6d37 explicitlydeclaredwithbackup."
+                ],
+                "proof_refs": [
+                  "current-tests"
+                ],
+                "scope": [
+                  "\".decapod/managed/specs\"]",
+                  "\"assets/schemas\"",
+                  "\"constitution\"",
+                  "\"docs\"",
+                  "\"src/decapod/plugins/federation.rs\"",
+                  "\"tests\"",
+                  "paths:[\"src/decapod/core\""
+                ],
+                "sequence": 18,
+                "validation_findings": []
               }
             ]
           }
         }
       },
-      "declared_commands": [],
+      "declared_commands": [
+        "cargo fmt --all",
+        "decapod docs build",
+        "decapod rpc --op agent.init",
+        "decapod validate",
+        "git merge --no-commit --no-ff origin/master"
+      ],
+      "destination": "pull request",
       "evidence": [
-        "target/terminal-ci-private/rebase-20261112/project-check.json",
-        "target/terminal-ci-private/rebase-20261112/static-audit.json"
+        ".decapod/managed/specs/VALIDATION.md",
+        "/private/var/folders/h9/41kb5hv95hg9yw44654rnl9c0000gn/T/decapod-snapshot-2P6hYI",
+        "Interrupted local rebase8eeb8915 inheritedPR1648governance and dropped validatedreflection progress,terminalreplay,human-question fixes. Preserved it onarchive/pr1649-interrupted-rebase-20261112-8eeb8915 and saved originalspecedits inGitstash (privatepreservationmetadata). RestoredactualPRhead5fb5dec5withoutreset/force, originalnativegovernancestatussucceeds; reclaimedoriginalfeat01m77nmmjwd12v30, workspacecan_worktrue,orientation/authority/context current.",
+        "Mergedcurrentmasterd31112a1 preservingoriginalPRsource exactly (git diff5fb5--src empty), originaljournal and all authoredreflection prefixes plusacceptedSDK14/onboarding specs. Resolveddiff3markers; native1403agent.init/specs.refresh succeeds. Reusedexactnative1403generatedtask-neutral entrypoints/Dockerfile fromaf23 Git snapshot, onlyreleaseheaderchangesvsacceptedmaster; noquota implementation imported. Reviewed105proofinputhashes; onlyexistinginfer_precision source declarationdiffersfrommaster; digestd8781827659ed6d9c4702265a3d159509daf789e067ac13e961434a36d5b6d37 explicitlydeclaredwithbackup.",
+        "User explicitly requests fix and push PR1649 without tests. No tests/build/fullvalidation executed in this repair. Prior native proof at5fb5dec5 remains historical only.",
+        "docs/architecture/bounded-reflection.md",
+        "https://buildkite.com/decapodlabs/decapod/builds/8515#01a1cf92-cad8-45ac-a70d-7d463e25d016",
+        "https://buildkite.com/decapodlabs/decapod/builds/8517",
+        "https://buildkite.com/decapodlabs/decapod/builds/8536#01a1cf9a-dfb5-4957-835e-baeef49b7705",
+        "https://buildkite.com/decapodlabs/decapod/builds/8537#01a1cf9a-58fa-40d9-bd63-958c6bf567ad",
+        "https://buildkite.com/decapodlabs/decapod/builds/8602#01a1cfd6-5d0d-4abb-853c-b4ed9164f022",
+        "https://buildkite.com/decapodlabs/decapod/builds/8602#01a1cfd6-5d5a-469d-af87-6e10fbab0321",
+        "https://buildkite.com/decapodlabs/decapod/builds/8652",
+        "https://github.com/DecapodLabs/decapod/actions/runs/43206246190",
+        "https://github.com/DecapodLabs/decapod/actions/runs/43210330738/job/131155983763",
+        "https://github.com/DecapodLabs/decapod/actions/runs/43210330914/job/131156236192",
+        "https://github.com/DecapodLabs/decapod/actions/runs/43215838324/job/131175931908",
+        "https://github.com/DecapodLabs/decapod/commit/fc1e2b94f6909633bf6dd7044fd7a54a05e85a4b",
+        "https://github.com/DecapodLabs/decapod/issues/1639",
+        "https://github.com/DecapodLabs/decapod/issues/1640",
+        "snapshot:decapod-snapshot-YH2wgS",
+        "snapshot:decapod-snapshot-yStc2X"
       ],
       "inspected_files": [
-        "tests/cli_contracts.rs"
+        "src/decapod/core/mentor.rs",
+        "src/decapod/core/state.rs",
+        "src/decapod/plan_governance.rs"
       ],
-      "intent_id": "intent:pr1648-rebase-20261112",
+      "intent_id": "intent:change_01M77NNMKGESW1QW4Y2GQ8V6NC",
       "modified_files": [
-        ".decapod/managed/specs/ARCHITECTURE.md",
-        ".decapod/managed/specs/VALIDATION.md"
+        ".config/build/decapod.BUILD.bzl",
+        ".decapod/config.toml",
+        ".decapod/managed/specs/INTERFACES.md",
+        ".decapod/managed/specs/VALIDATION.md",
+        "docs/agent/state-model.md",
+        "docs/architecture/bounded-reflection.md",
+        "src/decapod/core/mentor/reflection.rs",
+        "src/decapod/core/state.rs",
+        "src/decapod/lib.rs",
+        "src/decapod/plan_governance.rs",
+        "tests/entrypoint_correctness.rs",
+        "tests/infer_precision.rs",
+        "tests/unit/core/reflection_tests.rs",
+        "tests/unit/core/state_knowledge_tests.rs",
+        "tests/unit/core/validate_tests.rs"
       ],
       "next_transitions": [
-        "Checkpoint one rebased commit, verify native checkpoint custody, push with exact remote lease, and obtain full validation for current head/base."
+        "After explicit release approval, back up binary/config, use session acquire update, regenerate supported projections, checkpoint and revalidate the new exact candidate against the current accepted target.",
+        "Checkpoint and commit merged exact candidate, then plain decapod validate; publish only after complete readiness.",
+        "Commit exact candidate against accepted fc1e2b94 and run plain full decapod validate; preserve all failed/unavailable history.",
+        "Commit exact candidate and run plain decapod validate",
+        "Commit fixture repair and run plain validation after provider reset; retain release gate until approved supported update.",
+        "Commit the merged implementation candidate and run plain decapod validate against accepted f1a6c7a0; keep all previous failed attempts historical.",
+        "Commit the optional-envelope fixture repair and measured evidence, then rerun plain exact-candidate decapod validate against accepted fc1e2b94.",
+        "Recordmergecheckpoint, commit and normalfastforwardpush originalPRbranch; updatePRdescription currenttestsnotrun. No nativepublisher/fullvalidation/testing requested.",
+        "Refine plan and declare falsifiable checks",
+        "Revalidate the new exact candidate after prior validation ends; release update still requires pending explicit approval.",
+        "Run full exact-candidate validation after repaired inventory declaration",
+        "Run plain exact-candidate validation after public-reader reset 2026-11-12T11:42:39Z; do not substitute authentication or proof."
       ],
       "repo_scope": [
-        "tests/cli_contracts.rs,tests/init_cli.rs,living specs and native generated release/inventory metadata"
+        "\".decapod/managed/specs\"]",
+        "\"assets/schemas\"",
+        "\"constitution\"",
+        "\"docs\"",
+        "\"src/decapod/plugins/federation.rs\"",
+        "\"tests\"",
+        "paths:[\"src/decapod/core\""
       ],
-      "run_id": "pr1648-rebase-20261112",
+      "run_id": "branch_01M77NNMPBCKJFWXSA4SD6RFHS",
       "schema_version": "1.1.0",
       "shortcut_risk_signals": [],
-      "task_id": "fend_01m77rxqa1sqdtwk",
+      "task_id": "feat_01m77nmmjwd12v30",
       "tool_calls": [],
       "unresolved_assumptions": [
-        "Preparation failures retain host custody, accepted old HEAD projections, commit-often staging, five reviewed local-binary process boundaries, and unrelated legacy todo proof; none are represented as full validation."
+        "Accepted f1a6c7a0 merged; current task journal retained and generated conflicts refreshed by supported interfaces. The reviewed build delta adds infer_precision.rs to the existing required entrypoint suite without changing the required graph.",
+        "Accepted target bc0a7197 merged; the committed current-task governance record was retained while accepted work remains in Git history. Generated conflicts were refreshed by specs.refresh; no proof or authority was invented.",
+        "All 15 protocol regressions passed on earlier code. Repaired lifecycle setup, CLI suite inclusion and numeric measurements require new exact-candidate execution.",
+        "Behavioral, latency and growth measurements await configured validation; authored tests are not proof.",
+        "Full validation ended SNAPSHOT_NOT_READY after 3427640 ms provider wait. The only failed Buildkite job was a CLI fixture assertion assuming blocked_by is always an array; actual round-2 proceed and false completion proof had already passed. The fixed assertion preserves the existing omission contract.",
+        "Full validation ended SNAPSHOT_NOT_READY after 638132 ms provider wait; no local process was interrupted. Exact private snapshot remains decapod-snapshot-iZThaW. Complete runtime corpus and cost deltas are unproven.",
+        "Independent GitHub diagnostics can identify source errors but cannot establish Buildkite publication readiness.",
+        "Inventory reconciliation removes the recorded current blocker only; earlier failed proof remains historical and full proof is still required.",
+        "Mentor literal matches remain advisory; source identity and narrower declared scope do not prove implementation semantics.",
+        "Merge accepted 1d04f232c46864eecfadb9c8b9b23069ca0e906e including storage inventory, Dactyl 0.13.0 and release 0.140.1. No unrelated task or scanner policy changed.",
+        "Plain validation be4cfbb6 stopped because accepted base moved to released 0.140.0. The session-acquire path installed that published release after private backups; update opt-in was restored to its original absence.",
+        "Prior candidate proof became stale after accepted master advanced; SNAPSHOT_NOT_READY after 516740 ms is preserved, never readiness.",
+        "Projection bootstrap applied supported release repairs but is partial, with host container/candidate gates unmet. It is not readiness or an alternate proof path; full Buildkite validation owns all configured prerequisites.",
+        "Required library execution passed 1709 tests with 8 ignored, including all 16 reflection cases and canonical lifecycle. Protocol samples and storage growth are now documented with immutable source references; this narrow evidence supports the recorded claim, not complete current readiness.",
+        "Source review found missing outer CLI task binding could evaluate different intent. The new regression rejects it before round 1; behavioral execution remains pending. Buildkite clippy assertion-style failure is repaired without lint suppression.",
+        "Source review found routine phase progress unnecessarily invalidated reflection. Reusing existing progress normalization fixes the coupling while independent approval/proof gates remain required; the new regression awaits configured execution.",
+        "Supported session update installed 0.140.1, private backups preserved, temporary session_auto_update preference removed. Project-check refreshed release projections but remained partial with 201 passed and five host/staging/unrelated-task failures; it is not full proof.",
+        "Test compilation requires the repaired legacy fixture; no behavioral pass is claimed. Release 0.139.1 controller update awaits explicit approval; CI release drift remains unresolved.",
+        "The previous HTTP 403 and unavailable proof remain historical evidence. Clearing the prior attempt blocker prepares a fresh attempt after its reset, and does not establish provider access or readiness.",
+        "User continuation authorizes the previously requested 0.139.1 update. Session acquire required no install: the installed binary already reports 0.139.1. Temporary update opt-in was removed and binary/config backed up privately."
       ]
     }
   },

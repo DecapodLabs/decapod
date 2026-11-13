@@ -53,6 +53,21 @@ coordination and execution gates are satisfied. Missing state never establishes
 ownership or proves that no collision exists. Real ambiguity, conflicts, and
 unsatisfied execution or publication gates still require resolution.
 
+### Challenge a Proposed Action
+
+At a consequential decision boundary, optionally pass `--reflection '<request-json>'`
+to `infer orientation --task-id <id>`, or the same request as `reflection` in
+`mentor.obligations`. This composes existing mentor potential conflicts, governed
+plan constraints and task custody into one source-bound question and at most
+three rounds. Ordinary orientation without this input remains stateless.
+
+Follow `reflection.disposition`, `challenge.enforceable`, `execution_blocked`,
+`expected_token` and `remaining_rounds`; `proceed` clears only reflection.
+It never approves a plan, supplies human authority, runs a test or establishes
+publication readiness. Rephrasing an answer cannot establish progress.
+See [the complete exchange](payload-examples.md#bounded-reflection) and
+[the state contract](state-model.md#bounded-reflection-continuity).
+
 ### Reconcile Intent as the Code Evolves
 
 Use `decapod rpc --op intent.reconcile --params '{}'` to inspect the current

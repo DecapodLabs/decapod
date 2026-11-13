@@ -1,5 +1,16 @@
 # Intent
 
+## Evidence-grounded reflection before consequential action
+
+Decapod helps agents reconsider a proposed action through optional bounded
+reflection in orientation and mentor. It challenges a conflict with the current
+plan or a literal ADR match, then recognizes an inspectable scope correction or
+separately resolved governing gap. The ordinary orientation path remains simple.
+Reflection is a reasoning aid: it establishes neither human authorization nor
+semantic correctness, executed proof or completion. The kernel remains local,
+daemonless and deterministic, with no model or new memory service.
+See `core/mentor/reflection.rs` and `docs/architecture/bounded-reflection.md`.
+
 ## Published SDK adoption (#1638)
 
 The client pins the normally published registry `dactyl-db =0.14.0` release
@@ -315,8 +326,8 @@ These declarations select authoring and proof obligations; they do not attest im
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `2c13ac97125866e43fe4a4ecdc70bdcbce68a442f71ea46ff271f18116138629`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (229 files), `tests/` (230 files)
+- Repository signal fingerprint: `ef0b809779d89f44a5898a162dc5f2c358e9bd025aa03cb27e7b0b01c56c2078`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (230 files), `tests/` (232 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 
