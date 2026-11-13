@@ -1,5 +1,28 @@
 # Security
 
+## Host checkout authoring custody and shared-resource enforcement (#1469)
+
+`core::authoring` enforces a strict 1-to-1 custody boundary between an active
+exclusive task lease and a verified host Git worktree (`authoring_bindings`
+primary key `worktree_id` plus unique index `idx_authoring_bindings_task_id`).
+Checkout identity is observed directly from filesystem device, inode, creation
+metadata, canonical `.git` common dir, and live `git worktree list --porcelain`
+registration (`workspace::is_registered_worktree_id`), never accepted from
+caller-supplied labels. `workspace::get_workspace_status` fails closed
+(`can_work=false`) whenever the checkout is unbound, stale, missing datastore
+evidence, or bound to another task/actor.
+
+Binding mutations execute through `DbBroker::with_transaction` under dedicated
+operations `workspace.authoring.bind` and `workspace.authoring.release` in the
+`workspace.authoring` risk zone (`basic` trust, no human approval gate), so a
+failed `authoring.bind` event append rolls back `authoring_bindings` with zero
+orphan rows. Lifecycle transitions (`yield`, `release`, expired `reclaim`,
+`handoff`, `done`, `archived`, and `workspace prune`) retire bindings so prior
+custody never lingers, while `todo renew` advances the same owner's admitted
+binding generation atomically. Shared mutations (`release lineage-sync` and
+`workspace publish`) enforce active `resource:<name>` reservations fail-closed
+with `SHARED_RESOURCE_OCCUPIED` without blocking isolated worktree authoring.
+
 ## Agent-owned browser handoff
 
 `authorization_url` exposes only Dactyl's validated, short-lived browser handoff.
@@ -598,7 +621,7 @@ execution evidence remains required before publication readiness.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `0a0498aa94eb3f7551fe07c380ef13b469d188ab33218c72f80fc2e081fc3951`
+- Repository signal fingerprint: `d38d3f6da33c50f03492b7cfc8b8937af37534586d1ea4ff56261275738a0754`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (231 files), `tests/` (232 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

@@ -672,6 +672,11 @@
       "id": "specs-interfaces-issue-1469",
       "summary": "Update INTERFACES.md with workspace.authoring.* RPC/CLI contracts and resource:<name> error codes",
       "input_digest": "sha256:c0089b8e88c680c2d8e4945def5542281431877aa6d7f89b7775901176f00350"
+    },
+    {
+      "id": "specs-security-issue-1469",
+      "summary": "Update SECURITY.md with fail-closed custody boundaries and resource:<name> non-elevation guarantees",
+      "input_digest": "sha256:8e59e51008724eb8a576fdd34186d923734fbb38120ba860e8096c5bbd61c44e"
     }
   ],
   "intents": {
