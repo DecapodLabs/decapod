@@ -593,6 +593,11 @@
       "id": "pin-codex-01410",
       "summary": "chore(entrypoints): refresh CODEX.md release-bound pin to 0.141.0",
       "input_digest": "sha256:ca06581a9cd4fc92fbf61076e7fc4d4e8df443ec6c0b14d9dfeda0942dbb6a41"
+    },
+    {
+      "id": "pin-gemini-01410",
+      "summary": "chore(entrypoints): refresh GEMINI.md release-bound pin to 0.141.0",
+      "input_digest": "sha256:99bcc49c6c9f6f744207121af9b282e8049c700826644851a96e28f8f8f11a22"
     }
   ],
   "intents": {
