@@ -579,6 +579,11 @@
       "id": "refresh-gemini-0-143-0",
       "summary": "chore(entrypoints): refresh GEMINI.md for v0.143.0",
       "input_digest": "sha256:0e961655d618e82773abf2a5955ef74bc52863709c4e6ab4307444181ecf7908"
+    },
+    {
+      "id": "refresh-dockerfile-0-143-0",
+      "summary": "chore(container): refresh Dockerfile.decapod pin for v0.143.0",
+      "input_digest": "sha256:bbd4cc2d8080c244b47e0aa17a9001ca7c31b5399c55a3330330cbb54beb6a4e"
     }
   ],
   "intents": {
