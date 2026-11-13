@@ -30,6 +30,7 @@ pub mod dactyl;
 pub mod dactyl_db;
 pub mod dactyl_todo;
 pub mod db;
+pub mod db_maintenance;
 pub mod derived_release_driver;
 pub mod derived_release_profile;
 pub mod dirty_classification;

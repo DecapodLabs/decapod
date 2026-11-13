@@ -4414,6 +4414,11 @@
       "id": "core-db-maintenance-policy-and-audit",
       "summary": "Add core::db_maintenance canonical policy resolution, capability catalog, bounded retry, and redacted audit log (#1568)",
       "input_digest": "sha256:efad5a8ea6bbf88cd5c9c135cd387d532b5a289c5f94ef0a6fb86f2bb7a8a547"
+    },
+    {
+      "id": "register-db-maintenance-core-module",
+      "summary": "Export core::db_maintenance module in src/decapod/core/mod.rs (#1568)",
+      "input_digest": "sha256:1b5c922f42a04efe533fe0f63eaf8a32d7fcf41a5449989bbbf95fa24a2af3f4"
     }
   ],
   "intents": {
