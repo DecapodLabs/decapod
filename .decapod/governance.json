@@ -606,6 +606,11 @@
       "id": "c12-sqlite-maintenance-tests",
       "summary": "test(maintenance): add end-to-end RBAC, anti-self-elevation, and concurrent lock custody tests",
       "input_digest": "sha256:fc5410a6127107876c0fb11af5f890534f7a0de793f0a88fcd48ec327afc2513"
+    },
+    {
+      "id": "c13-agents-01430",
+      "summary": "chore(entrypoints): refresh AGENTS.md for Decapod v0.143.0",
+      "input_digest": "sha256:1a048f773301e31980b26ccc65e9861d15914549daf9323752c9fbf09e04eba9"
     }
   ],
   "intents": {
