@@ -609,6 +609,11 @@
       "id": "core-export-storage-contracts",
       "summary": "feat(storage): export storage_contracts module in core (#1630)",
       "input_digest": "sha256:fd1b9dbb937db620f5918e594b78af36d7c83eb20c84a92b03c2c24c4e1e7ffd"
+    },
+    {
+      "id": "schemas-component-store-ddl",
+      "summary": "feat(storage): add compact component store and migration manifest DDL (#1630)",
+      "input_digest": "sha256:45b30f0281526c536bbf77b058987252d22ec7932b2afeccdbdd3262f63a3aca"
     }
   ],
   "intents": {
