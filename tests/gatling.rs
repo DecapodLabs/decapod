@@ -621,8 +621,26 @@ fn t060_validate() {
             "{command} must reject missing full proof: {output}"
         );
         assert!(
+            output.contains("READINESS_GATE_OVERRIDE_UNSUPPORTED"),
+            "{command} must reject the fixture diagnostic override: {output}"
+        );
+        // The no-override control retains the actual missing-profile boundary.
+        // Scope changes belong to this child, never the parent provider/test.
+        let output = host_command(&dir, &[command])
+            .env_remove("DECAPOD_VALIDATE_SKIP_GIT_GATES")
+            .env_remove("DECAPOD_VALIDATE_SKIP_TOOLING_GATES")
+            .env_remove("DECAPOD_VALIDATE_SKIP_FINGERPRINT_GATES")
+            .output()
+            .expect("run full validation without diagnostic overrides");
+        assert!(!output.status.success());
+        let output = format!(
+            "{}\n{}",
+            String::from_utf8_lossy(&output.stdout),
+            String::from_utf8_lossy(&output.stderr)
+        );
+        assert!(
             output.contains("READINESS_PROFILE_REQUIRED"),
-            "{command} must reach the same full-readiness boundary: {output}"
+            "{command} without overrides must retain full profile admission: {output}"
         );
     }
 }
