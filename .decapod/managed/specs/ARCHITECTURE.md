@@ -1195,3 +1195,11 @@ The integrated `todo` module exports both accepted authoring/resource custody fu
 ## PR1662 current-master preparation
 
 The db_maintenance module resolves accepted canonical-repository policy and uses existing Dactyl and StorageLock primitives. It does not replace the datastore or migration authority. Retain current-master storage format guards, task custody, provider verification and runtime ownership while integrating this operation boundary.
+
+## Bounded independent collection (#1573)
+
+`snapshot_provider::github_quota` is advisory scheduling inside the existing
+independent reader. It changes neither provider selection nor evidence authority.
+The shared budget carries hints into custody/archive reads; actual source suites
+and final exact identities remain owned by their existing verifiers. See
+`docs/architecture/public-proof-collection.md` for the measured supported run.
