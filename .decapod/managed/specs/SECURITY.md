@@ -965,3 +965,18 @@ Do not delete lock sidecars, signal foreign processes, steal claims, replay ambi
 ## PR1662 current-master preparation
 
 Worktree policy edits cannot self-grant capabilities. db.recover remains owner-only and cloud authority fails closed when it cannot be authenticated. Retain non-destructive lock diagnosis, current-process-only release and confined backups. Coordination receipts are not independent acceptance proof.
+
+## Candidate repinning is not accepted policy (#1658)
+
+The accepted target's local proof requirements remain authoritative even when a
+candidate supplies a valid new digest for different commands, execution inputs
+or coverage. `repository_profile::preserve_accepted` rejects those replacements
+before selection; required failures cannot disappear through candidate review.
+Accepted external limitations cannot become unsupported local-equivalence claims.
+
+The regression boundary uses real Git targets and native subprocess checks,
+including a replacement command that only prints claimed success. These tests
+exercise kernel admission; a model refusal or a predetermined provider error
+would not establish the guarantee. Accepted-target observation and the configured
+executor remain trust roots. This repair does not claim OS isolation from an
+unrestricted agent or add authenticated cloud authority.
