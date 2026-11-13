@@ -248,16 +248,15 @@ struct PreparedExternalComponent {
     stored_bytes: Vec<u8>,
 }
 
+type ExternalizedProjection = (
+    TaskProjection,
+    BTreeMap<String, ComponentRef>,
+    Vec<PreparedExternalComponent>,
+);
+
 fn prepare_externalized_projection(
     projection: &TaskProjection,
-) -> Result<
-    (
-        TaskProjection,
-        BTreeMap<String, ComponentRef>,
-        Vec<PreparedExternalComponent>,
-    ),
-    DecapodError,
-> {
+) -> Result<ExternalizedProjection, DecapodError> {
     let mut wire = projection.clone();
     let mut refs = BTreeMap::new();
     let mut components = Vec::new();

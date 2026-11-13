@@ -804,6 +804,11 @@
       "id": "fix-clippy-storage-contracts",
       "summary": "fix(storage): allow clippy::too_many_arguments on validate_event_append (#1630)",
       "input_digest": "sha256:a29af47a06d3c871153ac9ee0bf1feadb56696f01c85a2cdd94a228d1c864887"
+    },
+    {
+      "id": "fix-clippy-task-journal",
+      "summary": "fix(journal): factor ExternalizedProjection alias for clippy::type_complexity (#1630)",
+      "input_digest": "sha256:9198c5e0a6885b9d0753dbb88864d9805cf9889df3ada017e2ab3357691837f9"
     }
   ],
   "intents": {
