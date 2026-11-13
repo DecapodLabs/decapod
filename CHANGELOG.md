@@ -7,6 +7,35 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.143.2](https://github.com/DecapodLabs/decapod/compare/v0.143.1...v0.143.2) - 2026-11-13
+
+### Fixed
+
+- *(validation)* normalize workspace task_type for pre-execution rules ([#1629](https://github.com/DecapodLabs/decapod/pull/1629))
+- *(validation)* populate canonical task_type and git_ref in terminal rules ([#1629](https://github.com/DecapodLabs/decapod/pull/1629))
+
+### Other
+
+- *(governance)* bind v0.143.1 validation epoch receipt
+- *(merge)* reconcile accepted master v0.143.1 into #1629
+- *(merge)* reconcile accepted master ([#1655](https://github.com/DecapodLabs/decapod/pull/1655)) into #1629
+- *(specs)* refresh .manifest.json and record publication spec reviews
+- *(specs)* document negative proof-backed completion CLI and unit regressions
+- *(specs)* refresh SEMANTICS.md attestation for v0.143.0
+- *(specs)* document terminal rule context and proof-backed completion custody
+- *(specs)* refresh specs README.md attestation for v0.143.0
+- *(specs)* refresh OPERATIONS.md attestation for v0.143.0
+- *(specs)* refresh INTERFACES.md attestation for v0.143.0
+- *(specs)* refresh INTENT.md attestation for v0.143.0
+- *(specs)* document canonical terminal rule task_type and git_ref lifecycle
+- *(validation)* verify negative proof-backed completion gates on fresh docs task ([#1629](https://github.com/DecapodLabs/decapod/pull/1629))
+- *(config)* update reviewed_sources_digest for v0.143.0 source inventory
+- *(container)* refresh Dockerfile.decapod pin for v0.143.0
+- *(entrypoints)* refresh GEMINI.md for v0.143.0
+- *(entrypoints)* refresh CODEX.md for v0.143.0
+- *(entrypoints)* refresh CLAUDE.md for v0.143.0
+- *(entrypoints)* refresh AGENTS.md for v0.143.0
+
 ## [0.143.1](https://github.com/DecapodLabs/decapod/compare/v0.143.0...v0.143.1) - 2026-11-13
 
 ### Fixed
