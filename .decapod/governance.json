@@ -628,6 +628,11 @@
       "id": "pin-spec-semantics-01410",
       "summary": "chore(specs): refresh SEMANTICS.md release header to 0.141.0",
       "input_digest": "sha256:67bce2889e7711fbd8bfaa48b0776d0d67797d69fc67a7e4735006cb981aa544"
+    },
+    {
+      "id": "pin-spec-operations-01410",
+      "summary": "chore(specs): refresh OPERATIONS.md release header to 0.141.0",
+      "input_digest": "sha256:54e693c5e3ec5346c1f214165197959589bd3b10166252f22e123d3ec6e0ac21"
     }
   ],
   "intents": {
