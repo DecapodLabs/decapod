@@ -565,6 +565,14 @@
       "proof_refs": [
         "https://github.com/DecapodLabs/decapod/issues/1658"
       ]
+    },
+    {
+      "id": "issue-1658-file-4",
+      "summary": "test(validation): reject repinned accepted proof requirements; file-by-file checkpoint, verification pending.",
+      "input_digest": "sha256:1a8d66010fe1ba4a61314f37b8a472f06c7480a07e385efc8adf9e57caf587bb",
+      "proof_refs": [
+        "https://github.com/DecapodLabs/decapod/issues/1658"
+      ]
     }
   ],
   "intents": {
@@ -605,22 +613,22 @@
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Wire the existing repository_profile preservation check into current-project discovery before provider selection. Accepted required local checks and external limits cannot be replaced by candidate repinning; strict-profile authority remains unchanged. Actual hosted regression execution is pending and is not inferred from this checkpoint.",
-          "reviewed_code_fingerprint": "09df26ae1fc5fafd17970a2ef96dc8a7850cdd4db7525a6174ea6ad0457266be",
+          "reason": "Add public-runtime regressions using actual Git repositories and native subprocess checks for fabricated success replacement, removed checks, execution and coverage repinning, additive checks and stale source. Source-bound proof semantics stay in the existing runtime; these cases have not been run locally and hosted execution remains required.",
+          "reviewed_code_fingerprint": "12fb2fe330056e052684abc419d65d2efd395e529a8e85d73186b26850bd901a",
           "spec_material_hash": "1fd0daadc96dd31eb16cf1ec6ff5bad5f893e903f487167ceb85b864812060c7"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Wire the existing repository_profile preservation check into current-project discovery before provider selection. Accepted required local checks and external limits cannot be replaced by candidate repinning; strict-profile authority remains unchanged. Actual hosted regression execution is pending and is not inferred from this checkpoint.",
-          "reviewed_code_fingerprint": "09df26ae1fc5fafd17970a2ef96dc8a7850cdd4db7525a6174ea6ad0457266be",
+          "reason": "Add public-runtime regressions using actual Git repositories and native subprocess checks for fabricated success replacement, removed checks, execution and coverage repinning, additive checks and stale source. Source-bound proof semantics stay in the existing runtime; these cases have not been run locally and hosted execution remains required.",
+          "reviewed_code_fingerprint": "12fb2fe330056e052684abc419d65d2efd395e529a8e85d73186b26850bd901a",
           "spec_material_hash": "a019febc805e23daa61f4e97014148bf6446b8ac5d0cc0fd77f26287c2db4039"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Wire the existing repository_profile preservation check into current-project discovery before provider selection. Accepted required local checks and external limits cannot be replaced by candidate repinning; strict-profile authority remains unchanged. Actual hosted regression execution is pending and is not inferred from this checkpoint.",
-          "reviewed_code_fingerprint": "09df26ae1fc5fafd17970a2ef96dc8a7850cdd4db7525a6174ea6ad0457266be",
+          "reason": "Add public-runtime regressions using actual Git repositories and native subprocess checks for fabricated success replacement, removed checks, execution and coverage repinning, additive checks and stale source. Source-bound proof semantics stay in the existing runtime; these cases have not been run locally and hosted execution remains required.",
+          "reviewed_code_fingerprint": "12fb2fe330056e052684abc419d65d2efd395e529a8e85d73186b26850bd901a",
           "spec_material_hash": "550c8b7a75eddef6e649172aa6a8f8c160c7a8db659e782f9c6525794bcaa87d"
         }
       ],
@@ -632,13 +640,13 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1794605087Z"
+      "updated_at": "1794605148Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:c351f48e82dfb692f62e446c964fe8713bfbb083a0cb1d0d27c5a756532bf9df",
+      "artifact_hash": "sha256:d933f403ff0beb60413d0b3e8b06a1d93b6923c5f8658e94cf4c4268387a08ae",
       "checks": [],
       "current_phase": "implementation",
       "custody": {
@@ -675,10 +683,17 @@
             "intent_id": "intent:change_01M7BCDS8K3F7RT5QZW52H6VT3",
             "kind": "trajectory_step_recorded",
             "sequence": 6
+          },
+          {
+            "detail": "trajectory:branch_01M7BCDSB9RK1ZV4N4XY039SMT",
+            "event_id": "event:7",
+            "intent_id": "intent:change_01M7BCDS8K3F7RT5QZW52H6VT3",
+            "kind": "trajectory_step_recorded",
+            "sequence": 7
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 6,
+        "next_sequence": 7,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M7BCDSB9RK1ZV4N4XY039SMT": {
@@ -733,6 +748,22 @@
                 "validation_findings": [
                   "Hosted verification and exact-candidate publication readiness remain pending; no local tests run."
                 ]
+              },
+              {
+                "action": "implementation",
+                "custody_event_id": "event:7",
+                "observations": [
+                  "tests/consumer_readiness.rs",
+                  "https://github.com/DecapodLabs/decapod/issues/1658"
+                ],
+                "proof_refs": [],
+                "scope": [
+                  "issue-1658"
+                ],
+                "sequence": 7,
+                "validation_findings": [
+                  "Hosted verification and exact-candidate publication readiness remain pending; no local tests run."
+                ]
               }
             ]
           }
@@ -748,7 +779,8 @@
       "modified_files": [
         ".decapod/managed/specs/INTENT.md",
         "src/decapod/core/repository_profile.rs",
-        "src/decapod/core/validation_runtime.rs"
+        "src/decapod/core/validation_runtime.rs",
+        "tests/consumer_readiness.rs"
       ],
       "next_transitions": [
         "Refine plan and declare falsifiable checks"
