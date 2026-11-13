@@ -549,6 +549,14 @@
       "proof_refs": [
         "https://github.com/DecapodLabs/decapod/issues/1658"
       ]
+    },
+    {
+      "id": "issue-1658-file-2",
+      "summary": "fix(validation): retain accepted local check definitions; file-by-file checkpoint, verification pending.",
+      "input_digest": "sha256:929c340082013adaeed7c29f2e43e72954165eb0e5e833898ab1a1550e6ceab6",
+      "proof_refs": [
+        "https://github.com/DecapodLabs/decapod/issues/1658"
+      ]
     }
   ],
   "intents": {
@@ -589,22 +597,22 @@
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Current product architecture and interfaces remain intact. This intent records the pending accepted-policy repair in repository_profile and validation_runtime, real-process repinning regressions, additive-check compatibility and unchanged strict/external assurance. No implementation or test success is claimed by the plan.",
-          "reviewed_code_fingerprint": "4d29b2ddd81902f7faec1d56bf9251726253493115b750bd9d3e77a7392fef55",
+          "reason": "Add one internal accepted-contract preservation function to the existing repository_profile owner. It compares required commands and execution/coverage declarations while permitting additive checks. Public types and providers are unchanged; runtime wiring and hosted regressions follow in separate file commits. No test success is claimed.",
+          "reviewed_code_fingerprint": "82315ed8a4fff432f4bb5e5acf86d74407b6f6ec9e1557a6fa4f99771b40afb8",
           "spec_material_hash": "1fd0daadc96dd31eb16cf1ec6ff5bad5f893e903f487167ceb85b864812060c7"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Current product architecture and interfaces remain intact. This intent records the pending accepted-policy repair in repository_profile and validation_runtime, real-process repinning regressions, additive-check compatibility and unchanged strict/external assurance. No implementation or test success is claimed by the plan.",
-          "reviewed_code_fingerprint": "4d29b2ddd81902f7faec1d56bf9251726253493115b750bd9d3e77a7392fef55",
+          "reason": "Add one internal accepted-contract preservation function to the existing repository_profile owner. It compares required commands and execution/coverage declarations while permitting additive checks. Public types and providers are unchanged; runtime wiring and hosted regressions follow in separate file commits. No test success is claimed.",
+          "reviewed_code_fingerprint": "82315ed8a4fff432f4bb5e5acf86d74407b6f6ec9e1557a6fa4f99771b40afb8",
           "spec_material_hash": "a019febc805e23daa61f4e97014148bf6446b8ac5d0cc0fd77f26287c2db4039"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Current product architecture and interfaces remain intact. This intent records the pending accepted-policy repair in repository_profile and validation_runtime, real-process repinning regressions, additive-check compatibility and unchanged strict/external assurance. No implementation or test success is claimed by the plan.",
-          "reviewed_code_fingerprint": "4d29b2ddd81902f7faec1d56bf9251726253493115b750bd9d3e77a7392fef55",
+          "reason": "Add one internal accepted-contract preservation function to the existing repository_profile owner. It compares required commands and execution/coverage declarations while permitting additive checks. Public types and providers are unchanged; runtime wiring and hosted regressions follow in separate file commits. No test success is claimed.",
+          "reviewed_code_fingerprint": "82315ed8a4fff432f4bb5e5acf86d74407b6f6ec9e1557a6fa4f99771b40afb8",
           "spec_material_hash": "550c8b7a75eddef6e649172aa6a8f8c160c7a8db659e782f9c6525794bcaa87d"
         }
       ],
@@ -616,13 +624,13 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1794604988Z"
+      "updated_at": "1794605038Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:ac5e2968892bc3bf9afbfb0b2247432261645bf81dad2a29395eeb150a0b324d",
+      "artifact_hash": "sha256:d1c323dd3f4baa25b1f22c61fff5fba6a2a6ce0b4cd526d561cca1b18e9a4a7b",
       "checks": [],
       "current_phase": "implementation",
       "custody": {
@@ -645,10 +653,17 @@
             "intent_id": "intent:change_01M7BCDS8K3F7RT5QZW52H6VT3",
             "kind": "trajectory_step_recorded",
             "sequence": 4
+          },
+          {
+            "detail": "trajectory:branch_01M7BCDSB9RK1ZV4N4XY039SMT",
+            "event_id": "event:5",
+            "intent_id": "intent:change_01M7BCDS8K3F7RT5QZW52H6VT3",
+            "kind": "trajectory_step_recorded",
+            "sequence": 5
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 4,
+        "next_sequence": 5,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M7BCDSB9RK1ZV4N4XY039SMT": {
@@ -671,6 +686,22 @@
                 "validation_findings": [
                   "Hosted verification and exact-candidate publication readiness remain pending; no local tests run."
                 ]
+              },
+              {
+                "action": "implementation",
+                "custody_event_id": "event:5",
+                "observations": [
+                  "src/decapod/core/repository_profile.rs",
+                  "https://github.com/DecapodLabs/decapod/issues/1658"
+                ],
+                "proof_refs": [],
+                "scope": [
+                  "issue-1658"
+                ],
+                "sequence": 5,
+                "validation_findings": [
+                  "Hosted verification and exact-candidate publication readiness remain pending; no local tests run."
+                ]
               }
             ]
           }
@@ -684,7 +715,8 @@
       "inspected_files": [],
       "intent_id": "intent:change_01M7BCDS8K3F7RT5QZW52H6VT3",
       "modified_files": [
-        ".decapod/managed/specs/INTENT.md"
+        ".decapod/managed/specs/INTENT.md",
+        "src/decapod/core/repository_profile.rs"
       ],
       "next_transitions": [
         "Refine plan and declare falsifiable checks"
