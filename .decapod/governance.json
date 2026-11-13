@@ -709,6 +709,14 @@
       "proof_refs": [
         "https://github.com/DecapodLabs/decapod/issues/1659"
       ]
+    },
+    {
+      "id": "issue-1659-file-22",
+      "summary": "test(governance): retain actual override and workspace rejection boundaries; file-by-file checkpoint, verification pending.",
+      "input_digest": "sha256:eb02eee1d39c8cc691cf65984320433a348a1f20dfb85bbc713aa6e6ab816e2b",
+      "proof_refs": [
+        "https://github.com/DecapodLabs/decapod/issues/1659"
+      ]
     }
   ],
   "intents": {
@@ -749,22 +757,22 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Hosted gatling3 reached the new typed override rejection. Keep that negative control and retain a real separate no-override missing-profile control. No local tests.",
-          "reviewed_code_fingerprint": "58e5db6c155f61233c03332f32c959b89cbcd5e387b7a780c17a4044b4a05c5f",
+          "reason": "Hosted Gatling2/3 exposed earlier fixture assumptions: diagnostic full claims now deny before profile inspection; clearing diagnostic scope restores real protected-workspace admission. Preserve unchanged task status/revision and alias parity. No local tests.",
+          "reviewed_code_fingerprint": "0d140f822861af6859920da41d1f4ba3d8044bb8e2f36cc90745a23c2efca4cb",
           "spec_material_hash": "947ff1d67ee628e6c055728cd90113c4d377be40deebba0babf15359e1cee6b1"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Hosted gatling3 reached the new typed override rejection. Keep that negative control and retain a real separate no-override missing-profile control. No local tests.",
-          "reviewed_code_fingerprint": "58e5db6c155f61233c03332f32c959b89cbcd5e387b7a780c17a4044b4a05c5f",
+          "reason": "Hosted Gatling2/3 exposed earlier fixture assumptions: diagnostic full claims now deny before profile inspection; clearing diagnostic scope restores real protected-workspace admission. Preserve unchanged task status/revision and alias parity. No local tests.",
+          "reviewed_code_fingerprint": "0d140f822861af6859920da41d1f4ba3d8044bb8e2f36cc90745a23c2efca4cb",
           "spec_material_hash": "fb2cc0c696d7c054d3500dd9531494b74d9cff8e776affa8b27d28fb9ca7fb2b"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Hosted gatling3 reached the new typed override rejection. Keep that negative control and retain a real separate no-override missing-profile control. No local tests.",
-          "reviewed_code_fingerprint": "58e5db6c155f61233c03332f32c959b89cbcd5e387b7a780c17a4044b4a05c5f",
+          "reason": "Hosted Gatling2/3 exposed earlier fixture assumptions: diagnostic full claims now deny before profile inspection; clearing diagnostic scope restores real protected-workspace admission. Preserve unchanged task status/revision and alias parity. No local tests.",
+          "reviewed_code_fingerprint": "0d140f822861af6859920da41d1f4ba3d8044bb8e2f36cc90745a23c2efca4cb",
           "spec_material_hash": "673e627ff59f9eb89b9b617a568c62100ba1b44ea30983a0330453aa0561dea6"
         }
       ],
@@ -776,13 +784,13 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1794610005Z"
+      "updated_at": "1794610712Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:38e38ec8335623fa642ee5154cd059f277941bb890979f93319957329bc33b54",
+      "artifact_hash": "sha256:74a4d85490374fc729d6d86b5780c355373ae758b8a74a5a1a5d601f2ab6d19c",
       "checks": [],
       "current_phase": "implementation",
       "custody": {
@@ -945,10 +953,17 @@
             "intent_id": "intent:change_01M7BCEHXJQR8HVADJF91PJKGD",
             "kind": "trajectory_step_recorded",
             "sequence": 24
+          },
+          {
+            "detail": "trajectory:branch_01M7BCEJ05EP527M18XXSF6GK6",
+            "event_id": "event:25",
+            "intent_id": "intent:change_01M7BCEHXJQR8HVADJF91PJKGD",
+            "kind": "trajectory_step_recorded",
+            "sequence": 25
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 24,
+        "next_sequence": 25,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M7BCEJ05EP527M18XXSF6GK6": {
@@ -1288,6 +1303,22 @@
                   "issue-1659"
                 ],
                 "sequence": 24,
+                "validation_findings": [
+                  "Hosted verification and exact-candidate publication readiness remain pending; no local tests run."
+                ]
+              },
+              {
+                "action": "implementation",
+                "custody_event_id": "event:25",
+                "observations": [
+                  "tests/gatling.rs",
+                  "https://github.com/DecapodLabs/decapod/issues/1659"
+                ],
+                "proof_refs": [],
+                "scope": [
+                  "issue-1659"
+                ],
+                "sequence": 25,
                 "validation_findings": [
                   "Hosted verification and exact-candidate publication readiness remain pending; no local tests run."
                 ]
