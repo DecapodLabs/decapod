@@ -3144,13 +3144,7 @@ pub fn run() -> Result<(), error::DecapodError> {
             // an older broker can discard or inherit diagnostic environment.
             if local_storage_startup
                 && let Command::Todo(todo_cli) = &cli.command
-                && matches!(
-                    &todo_cli.command,
-                    todo::TodoCommand::Done {
-                        validated: true,
-                        ..
-                    }
-                )
+                && todo::is_validated_completion(todo_cli)
             {
                 core::validation_runtime::require_full_readiness_environment()?;
             }

@@ -693,6 +693,14 @@
       "proof_refs": [
         "https://github.com/DecapodLabs/decapod/issues/1659"
       ]
+    },
+    {
+      "id": "issue-1659-file-20",
+      "summary": "fix(readiness): query completion intent through todo boundary; file-by-file checkpoint, verification pending.",
+      "input_digest": "sha256:6b90ad1a2fedff4b58a622e14e003e837c10d83d96936429e18da29513290e34",
+      "proof_refs": [
+        "https://github.com/DecapodLabs/decapod/issues/1659"
+      ]
     }
   ],
   "intents": {
@@ -733,22 +741,22 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Review the shared full-readiness environment guard, originating CLI and RPC admission, workspace publication, current/historical validated completion and request-scoped broker diagnostics. Real child-process and admitted CLI controls are authored; no local tests or hosted success are claimed. Partial diagnostics and historical observations retain their scopes.",
-          "reviewed_code_fingerprint": "cc545ae0184ed66b6ea36a5e9694a2f06d9616bd9fc6ce9ad3a3800afd60d587",
+          "reason": "Repair hosted E0616 through the owning todo helper; retain pre-broker rejection and private parser fields. No local tests.",
+          "reviewed_code_fingerprint": "583f2736344c616dfd0c3b57c101d042b7f48d653ae1a993ecbaec3eba0a505e",
           "spec_material_hash": "947ff1d67ee628e6c055728cd90113c4d377be40deebba0babf15359e1cee6b1"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Review the shared full-readiness environment guard, originating CLI and RPC admission, workspace publication, current/historical validated completion and request-scoped broker diagnostics. Real child-process and admitted CLI controls are authored; no local tests or hosted success are claimed. Partial diagnostics and historical observations retain their scopes.",
-          "reviewed_code_fingerprint": "cc545ae0184ed66b6ea36a5e9694a2f06d9616bd9fc6ce9ad3a3800afd60d587",
+          "reason": "Repair hosted E0616 through the owning todo helper; retain pre-broker rejection and private parser fields. No local tests.",
+          "reviewed_code_fingerprint": "583f2736344c616dfd0c3b57c101d042b7f48d653ae1a993ecbaec3eba0a505e",
           "spec_material_hash": "fb2cc0c696d7c054d3500dd9531494b74d9cff8e776affa8b27d28fb9ca7fb2b"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Review the shared full-readiness environment guard, originating CLI and RPC admission, workspace publication, current/historical validated completion and request-scoped broker diagnostics. Real child-process and admitted CLI controls are authored; no local tests or hosted success are claimed. Partial diagnostics and historical observations retain their scopes.",
-          "reviewed_code_fingerprint": "cc545ae0184ed66b6ea36a5e9694a2f06d9616bd9fc6ce9ad3a3800afd60d587",
+          "reason": "Repair hosted E0616 through the owning todo helper; retain pre-broker rejection and private parser fields. No local tests.",
+          "reviewed_code_fingerprint": "583f2736344c616dfd0c3b57c101d042b7f48d653ae1a993ecbaec3eba0a505e",
           "spec_material_hash": "673e627ff59f9eb89b9b617a568c62100ba1b44ea30983a0330453aa0561dea6"
         }
       ],
@@ -760,13 +768,13 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1794608543Z"
+      "updated_at": "1794609325Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:c6fff198fef6b973cff2c37705cf878e1e072eb84af8a12efa2209ac3a6bbe3c",
+      "artifact_hash": "sha256:2b97f0b64b9caa0df6390205c2d010c4f3b454d3a50e45270b6c5f5445cb5f39",
       "checks": [],
       "current_phase": "implementation",
       "custody": {
@@ -915,10 +923,17 @@
             "intent_id": "intent:change_01M7BCEHXJQR8HVADJF91PJKGD",
             "kind": "trajectory_step_recorded",
             "sequence": 22
+          },
+          {
+            "detail": "trajectory:branch_01M7BCEJ05EP527M18XXSF6GK6",
+            "event_id": "event:23",
+            "intent_id": "intent:change_01M7BCEHXJQR8HVADJF91PJKGD",
+            "kind": "trajectory_step_recorded",
+            "sequence": 23
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 22,
+        "next_sequence": 23,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M7BCEJ05EP527M18XXSF6GK6": {
@@ -1226,6 +1241,22 @@
                   "issue-1659"
                 ],
                 "sequence": 22,
+                "validation_findings": [
+                  "Hosted verification and exact-candidate publication readiness remain pending; no local tests run."
+                ]
+              },
+              {
+                "action": "implementation",
+                "custody_event_id": "event:23",
+                "observations": [
+                  "src/decapod/lib.rs",
+                  "https://github.com/DecapodLabs/decapod/issues/1659"
+                ],
+                "proof_refs": [],
+                "scope": [
+                  "issue-1659"
+                ],
+                "sequence": 23,
                 "validation_findings": [
                   "Hosted verification and exact-candidate publication readiness remain pending; no local tests run."
                 ]
