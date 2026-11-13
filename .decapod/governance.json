@@ -624,6 +624,11 @@
       "id": "spec-operations-refresh-0-143-0",
       "summary": "docs(specs): refresh OPERATIONS.md attestation for v0.143.0",
       "input_digest": "sha256:24ac00501afc9004277b7c36fe604c8075f42ab1c86d739bf77d39aca10f9d82"
+    },
+    {
+      "id": "spec-readme-refresh-0-143-0",
+      "summary": "docs(specs): refresh specs README.md attestation for v0.143.0",
+      "input_digest": "sha256:b2eaf19f95042ee9799dd37f313086ee76c024c6c04f148f5bac0d920f0fbe4b"
     }
   ],
   "intents": {
