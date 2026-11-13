@@ -717,6 +717,14 @@
       "proof_refs": [
         "https://github.com/DecapodLabs/decapod/issues/1658"
       ]
+    },
+    {
+      "id": "issue-1658-file-23",
+      "summary": "docs(specs): preserve hosted false-green evidence and repair requirements; file-by-file checkpoint, verification pending.",
+      "input_digest": "sha256:6fdbb97b06f714877991baa42b42f8dc91a29100bed9e0ff19cd5a5c976f45d7",
+      "proof_refs": [
+        "https://github.com/DecapodLabs/decapod/issues/1658"
+      ]
     }
   ],
   "intents": {
@@ -757,23 +765,23 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Register the real adversarial script-repinning case exactly once in the required CLI target so the accepted selective recipe actually executes it. The prior green CLI job was explicitly not_applicable, and no proof is claimed from it. Hosted formatting feedback is repaired; source-boundary regression execution remains pending.",
-          "reviewed_code_fingerprint": "8665e48db0423093aa104aefc35d0748396b4901c12dc0422980ed18b814106a",
-          "spec_material_hash": "48cf84ee066d2602f97ca5b1e8f5ddd5d7a4aa5eef0b6fa0f394cbee5a8fd0e3"
+          "reason": "Hosted Buildkite9472 on059dec1b reproduced ready=true/proof_ready=true after accepted check-script replacement and source repinning. Preserve accepted local source-definition digest plus command/execution/coverage, retain initial adoption and separately accepted target-policy evolution. Current repair still requires fresh hosted proof; no local tests run.",
+          "reviewed_code_fingerprint": "b96bc08c4088f5c296dcb9c3c55e9b4b8800be9fb1ca71807dad991d821ec936",
+          "spec_material_hash": "6cada0b2ccd5556dd0f6251728fa0ee9b887aa06487a23b63b5f04c11874f6a4"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Register the real adversarial script-repinning case exactly once in the required CLI target so the accepted selective recipe actually executes it. The prior green CLI job was explicitly not_applicable, and no proof is claimed from it. Hosted formatting feedback is repaired; source-boundary regression execution remains pending.",
-          "reviewed_code_fingerprint": "8665e48db0423093aa104aefc35d0748396b4901c12dc0422980ed18b814106a",
-          "spec_material_hash": "923ab390e92ff1a304ad6d7e6692fcc35827a646e231ff360d974858263d6d01"
+          "reason": "Hosted Buildkite9472 on059dec1b reproduced ready=true/proof_ready=true after accepted check-script replacement and source repinning. Preserve accepted local source-definition digest plus command/execution/coverage, retain initial adoption and separately accepted target-policy evolution. Current repair still requires fresh hosted proof; no local tests run.",
+          "reviewed_code_fingerprint": "b96bc08c4088f5c296dcb9c3c55e9b4b8800be9fb1ca71807dad991d821ec936",
+          "spec_material_hash": "81d9a5b3b8da4779f9f697a3272c967996f7f0f7db6aac740881b36798a66638"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Register the real adversarial script-repinning case exactly once in the required CLI target so the accepted selective recipe actually executes it. The prior green CLI job was explicitly not_applicable, and no proof is claimed from it. Hosted formatting feedback is repaired; source-boundary regression execution remains pending.",
-          "reviewed_code_fingerprint": "8665e48db0423093aa104aefc35d0748396b4901c12dc0422980ed18b814106a",
-          "spec_material_hash": "bdd709fd067d42dfe14335353360daff3e3eb3707cfba13bfb9bd0220158d4ee"
+          "reason": "Hosted Buildkite9472 on059dec1b reproduced ready=true/proof_ready=true after accepted check-script replacement and source repinning. Preserve accepted local source-definition digest plus command/execution/coverage, retain initial adoption and separately accepted target-policy evolution. Current repair still requires fresh hosted proof; no local tests run.",
+          "reviewed_code_fingerprint": "b96bc08c4088f5c296dcb9c3c55e9b4b8800be9fb1ca71807dad991d821ec936",
+          "spec_material_hash": "fa85ff736ae9bd16044a48bb34a30dd8fdbb8d7209b3dbf7642d1d94f38a9c96"
         }
       ],
       "state": "APPROVED",
@@ -784,13 +792,13 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1794606656Z"
+      "updated_at": "1794607817Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:a5003a404578e095008d981edaad5911425d4f6bafa11f934f1e0d60d9f2d2c8",
+      "artifact_hash": "sha256:d7dd7f999232d39902683ee7c496e253f15aca7d16a9914ffccf730a4757f556",
       "checks": [
         {
           "name": "hosted_cli_source_repinning",
@@ -972,10 +980,17 @@
             "intent_id": "intent:change_01M7BCDS8K3F7RT5QZW52H6VT3",
             "kind": "trajectory_step_recorded",
             "sequence": 26
+          },
+          {
+            "detail": "trajectory:branch_01M7BCDSB9RK1ZV4N4XY039SMT",
+            "event_id": "event:27",
+            "intent_id": "intent:change_01M7BCDS8K3F7RT5QZW52H6VT3",
+            "kind": "trajectory_step_recorded",
+            "sequence": 27
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 26,
+        "next_sequence": 27,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M7BCDSB9RK1ZV4N4XY039SMT": {
@@ -1348,6 +1363,22 @@
                   "issue-1658"
                 ],
                 "sequence": 26,
+                "validation_findings": [
+                  "Hosted verification and exact-candidate publication readiness remain pending; no local tests run."
+                ]
+              },
+              {
+                "action": "implementation",
+                "custody_event_id": "event:27",
+                "observations": [
+                  ".decapod/managed/specs/VALIDATION.md",
+                  "https://github.com/DecapodLabs/decapod/issues/1658"
+                ],
+                "proof_refs": [],
+                "scope": [
+                  "issue-1658"
+                ],
+                "sequence": 27,
                 "validation_findings": [
                   "Hosted verification and exact-candidate publication readiness remain pending; no local tests run."
                 ]

@@ -1341,7 +1341,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `8665e48db0423093aa104aefc35d0748396b4901c12dc0422980ed18b814106a`
+- Repository signal fingerprint: `b96bc08c4088f5c296dcb9c3c55e9b4b8800be9fb1ca71807dad991d821ec936`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (234 files), `tests/` (232 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
@@ -1927,3 +1927,19 @@ regressions to collect the actual judgment, preserve any observed false green,
 repair the source boundary, and require fresh exact-candidate hosted proof.
 Configured source-PR readiness remains strict and provider-backed. A local
 consumer result cannot stand in for unavailable external assurance.
+
+### Observed check-script false green and required repair
+
+[Buildkite9472 CLI execution](https://buildkite.com/decapodlabs/decapod/builds/9472#01a1d6e5-1809-485a-b0dd-5acc62254ffe)
+evaluated059dec1b against422e0b56. The registered source-script attack produced
+`ready=true`, `proof_ready=true`, local-readiness scope, completed native evidence
+and no blockers. The real regression failed; the suite recorded86 passed,
+one failed and one ignored in189.18s. The full CLI job took640.61s including its
+build and all three targets; those are separate runtime measurements.
+
+The repair additionally preserves the accepted local source-definition digest
+before provider selection. The same attack must now return the typed accepted-
+contract blocker with zero selections/executions, while unchanged policy,
+additive commands, first adoption and separately accepted target-policy evolution
+still execute real proof. Current hosted revalidation remains pending; previous
+failed evidence is retained and no local tests or full PR readiness are claimed.
