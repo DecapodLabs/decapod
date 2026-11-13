@@ -614,6 +614,11 @@
       "id": "update-buildkite-test-budgets",
       "summary": "test(snapshot_provider): initialize github_quota in Buildkite timeout budget fixture",
       "input_digest": "sha256:b84440968c55080f7a54bb6b783faa0c993d450b36bc340c610bf276af1457f2"
+    },
+    {
+      "id": "update-reviewed-sources-digest",
+      "summary": "chore(config): update reviewed_sources_digest for v0.143.1 and github_quota.rs",
+      "input_digest": "sha256:5539fd41a84c341a304a04e496707d3b904406735b1fd14c15c1c61a7897012e"
     }
   ],
   "intents": {
