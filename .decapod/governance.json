@@ -684,6 +684,11 @@
       "id": "spec-semantics-attestation",
       "summary": "docs(specs): refresh SEMANTICS.md codebase attestation",
       "input_digest": "sha256:369faeb2632210113e50ea19876c66239631c41cb60cb34f543a7a2e46cb1eea"
+    },
+    {
+      "id": "refresh-specs-manifest-1573",
+      "summary": "chore(specs): refresh v0.143.1 specs manifest and record spec reviews for #1573",
+      "input_digest": "sha256:f75d9d8be54da592a7cfd3c5bd7b7e4d9a931af5d956851036cee16da26cd8be"
     }
   ],
   "intents": {
@@ -767,6 +772,29 @@
         "decapod validate"
       ],
       "schema_version": "1.1.0",
+      "spec_reviews": [
+        {
+          "disposition": "updated",
+          "path": ".decapod/managed/specs/ARCHITECTURE.md",
+          "reason": "Documented GithubQuota shared Budget tracking, cold discovery half-window pacing, unpaced bound Buildkite polling, and removal of duplicate pre-recheck verify_remote_binding (#1573).",
+          "reviewed_code_fingerprint": "c7d83e4fa9bf8fd016119da5a6b23f3802ebc90a1d8354fceb321065859c642c",
+          "spec_material_hash": "26bbd386f4eccbf365cc4e6ebfb3a04c292d659ae2e02b38d250282600cff862"
+        },
+        {
+          "disposition": "unchanged_with_reason",
+          "path": ".decapod/managed/specs/INTERFACES.md",
+          "reason": "Internal snapshot_provider pacing and Budget propagation do not alter public CLI or RPC interfaces.",
+          "reviewed_code_fingerprint": "c7d83e4fa9bf8fd016119da5a6b23f3802ebc90a1d8354fceb321065859c642c",
+          "spec_material_hash": "bdd0ceb5cd3b9c68d05ceb15fc4c5981aecb18fb53823d649298222f5c2142fe"
+        },
+        {
+          "disposition": "updated",
+          "path": ".decapod/managed/specs/SECURITY.md",
+          "reason": "Documented bounded 64 KiB single-valued ASCII decimal header parsing, fail-closed unknown reset on exhausted quota, and Instant/Budget deadline preservation (#1573).",
+          "reviewed_code_fingerprint": "c7d83e4fa9bf8fd016119da5a6b23f3802ebc90a1d8354fceb321065859c642c",
+          "spec_material_hash": "1aba6685c48a3d5e1de4351bf22778c3bb4f0b5367f7ed442315e22b0f1238ea"
+        }
+      ],
       "state": "APPROVED",
       "stop_conditions": [],
       "title": "Fix #1573 public GitHub reader quota pacing and redundant binding checks",
@@ -775,7 +803,7 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1794549850Z"
+      "updated_at": "1794549965Z"
     },
     "trajectory": {
       "active_boundaries": [
