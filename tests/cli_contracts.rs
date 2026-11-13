@@ -832,9 +832,44 @@ mod claim_boundaries {
             .optional()
             .unwrap();
         assert_eq!(trust.as_deref().unwrap_or("basic"), "basic");
-        let raw: String = db.query_row("SELECT payload FROM events WHERE stream='todo' AND subject_id=?1 AND event_type='policy.basic_shared_claim.used' ORDER BY seq DESC LIMIT 1",
-            [&task], |row| row.get(0)).unwrap();
-        let event: Value = serde_json::from_str(&raw).unwrap();
+        let (event_id, ts, actor, subject_kind, subject_id, raw): (
+            String,
+            String,
+            String,
+            Option<String>,
+            Option<String>,
+            String,
+        ) = db
+            .query_row(
+                "SELECT event_id, ts, actor, subject_kind, subject_id, payload
+                 FROM events
+                 WHERE stream='todo' AND subject_id=?1 AND event_type='policy.basic_shared_claim.used'
+                 ORDER BY seq DESC LIMIT 1",
+                [&task],
+                |row| {
+                    Ok((
+                        row.get(0)?,
+                        row.get(1)?,
+                        row.get(2)?,
+                        row.get(3)?,
+                        row.get(4)?,
+                        row.get(5)?,
+                    ))
+                },
+            )
+            .unwrap();
+        assert!(raw.contains("\"_ce_v1\""));
+        let event = decapod::core::events::reconstruct_stored_payload(
+            "todo",
+            &event_id,
+            &ts,
+            "policy.basic_shared_claim.used",
+            &actor,
+            subject_kind.as_deref(),
+            subject_id.as_deref(),
+            &raw,
+        )
+        .unwrap();
         assert_eq!(event["actor"], "member");
         assert_eq!(event["payload"]["primary_owner_label"], "primary");
         assert_eq!(

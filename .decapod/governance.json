@@ -719,6 +719,11 @@
       "id": "test-support-storage-inventory",
       "summary": "test(storage): update storage inventory test fixtures for JSON path scopes (#1630)",
       "input_digest": "sha256:04dd95109e1afda46d19ce543974e74d54ff2900fb01ef8f799c3a095be84001"
+    },
+    {
+      "id": "test-cli-contracts-inventory",
+      "summary": "test(cli): verify storage inventory v2 format and component store attribution (#1630)",
+      "input_digest": "sha256:4de6bf198089b361206cc2aff67c42959bbb21ef7b1288e31a5c6423ca7b2dbc"
     }
   ],
   "intents": {
