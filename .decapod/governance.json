@@ -602,6 +602,11 @@
       "id": "fleet-coord-resource-predicates",
       "summary": "Separate resource:<name> reservation scopes from source path overlaps",
       "input_digest": "sha256:642767e7ba7e5f53c5b4bb836ed2225dee3790eb6f35a3e96b435614c0c85011"
+    },
+    {
+      "id": "authoring-1to1-lifecycle-and-resources",
+      "summary": "Enforce transactional 1-to-1 authoring bindings, lifecycle retirement, and shared-resource gates",
+      "input_digest": "sha256:0e665649269db9e561894f59e5295b0d091ad2ac5c62a8acb3691f2c96158e8c"
     }
   ],
   "intents": {
