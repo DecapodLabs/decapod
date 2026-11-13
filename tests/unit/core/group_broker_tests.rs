@@ -13,9 +13,13 @@ fn broker_diagnostic_scope_is_request_local() {
         assert_eq!(std::env::var(names[0]).unwrap(), "0");
         assert!(std::env::var_os(names[1]).is_none());
         assert_eq!(std::env::var(names[2]).unwrap(), "false");
-        let error = crate::core::validation_runtime::require_full_readiness_environment()
-            .unwrap_err();
-        assert!(error.to_string().contains("READINESS_GATE_OVERRIDE_UNSUPPORTED"));
+        let error =
+            crate::core::validation_runtime::require_full_readiness_environment().unwrap_err();
+        assert!(
+            error
+                .to_string()
+                .contains("READINESS_GATE_OVERRIDE_UNSUPPORTED")
+        );
         return;
     }
     if mode == "observe_clear" {
@@ -31,7 +35,9 @@ fn broker_diagnostic_scope_is_request_local() {
     );
     let command = |mode| {
         let mut command = std::process::Command::new(std::env::current_exe().unwrap());
-        command.args(["--exact", &case, "--nocapture"]).env(PROBE, mode);
+        command
+            .args(["--exact", &case, "--nocapture"])
+            .env(PROBE, mode);
         command
     };
     if mode == "capture_scope" || mode == "capture_clear" {
