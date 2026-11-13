@@ -1904,3 +1904,13 @@ Exercise actual `sqlite_maintenance` CLI/RPC worktree cases and storage-lock reg
 ## PR1662 current-master preparation
 
 This checkpoint preserves original source and tests before integration with current master. Preserve failure history and all assertions; use hosted CI for verification, without local tests or running the maintenance candidate against the live machine datastore. Prior test observations do not prove the new integration.
+
+## Bounded independent collection (#1573)
+
+Existing `github_quota` tests cover discovery headroom/direct Buildkite polls,
+exhaustion/unknown reset, malformed/duplicate/missing/overflow hints and deadline/
+cancellation preservation. Adapter tests preserve bounded failure information.
+The real complete1658 observation and five Buildkite workflow executions are
+documented separately from mechanism tests and historical403 failures. This
+dedicated closure candidate still requires its own hosted suite and full native
+publication gate against current accepted master. No local tests were run.

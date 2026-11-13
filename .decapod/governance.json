@@ -581,6 +581,14 @@
       "proof_refs": [
         "https://github.com/DecapodLabs/decapod/issues/1573"
       ]
+    },
+    {
+      "id": "issue-1573-file-6",
+      "summary": "docs(specs): preserve independent collector proof and recovery boundaries; file-by-file checkpoint, verification pending.",
+      "input_digest": "sha256:594d20eb7eafa5f3b9a1eccd92bdf79579ac1e826cb9de591a0e29b0e6275494",
+      "proof_refs": [
+        "https://github.com/DecapodLabs/decapod/issues/1573"
+      ]
     }
   ],
   "intents": {
@@ -617,6 +625,29 @@
         "decapod validate"
       ],
       "schema_version": "1.1.0",
+      "spec_reviews": [
+        {
+          "disposition": "updated",
+          "path": ".decapod/managed/specs/ARCHITECTURE.md",
+          "reason": "Reconcile merged public-reader quota pacing with actual complete official0.144.3 provider collection; preserve independent authorization, accepted provider obligations, deadline/cancellation and explicit denial. Dedicated current-candidate proof remains pending; no local tests.",
+          "reviewed_code_fingerprint": "4d29b2ddd81902f7faec1d56bf9251726253493115b750bd9d3e77a7392fef55",
+          "spec_material_hash": "edc37fbf030600635f0f0bf7c52383f604312f27c5b105f2ffb183c0cbe6cc12"
+        },
+        {
+          "disposition": "updated",
+          "path": ".decapod/managed/specs/INTERFACES.md",
+          "reason": "Reconcile merged public-reader quota pacing with actual complete official0.144.3 provider collection; preserve independent authorization, accepted provider obligations, deadline/cancellation and explicit denial. Dedicated current-candidate proof remains pending; no local tests.",
+          "reviewed_code_fingerprint": "4d29b2ddd81902f7faec1d56bf9251726253493115b750bd9d3e77a7392fef55",
+          "spec_material_hash": "152abf6c0eb3db2370aa2daabe194778de88e603fea2ff1c458cce4ac2877346"
+        },
+        {
+          "disposition": "updated",
+          "path": ".decapod/managed/specs/SECURITY.md",
+          "reason": "Reconcile merged public-reader quota pacing with actual complete official0.144.3 provider collection; preserve independent authorization, accepted provider obligations, deadline/cancellation and explicit denial. Dedicated current-candidate proof remains pending; no local tests.",
+          "reviewed_code_fingerprint": "4d29b2ddd81902f7faec1d56bf9251726253493115b750bd9d3e77a7392fef55",
+          "spec_material_hash": "c6fa5ef32ef63ed9a536de7a66e003d47c623b31be681d5bcee1a5a77031a9c0"
+        }
+      ],
       "state": "APPROVED",
       "stop_conditions": [],
       "title": "code: resolve #1573 Independent publication collector exhausts public GitHub quota while waiting for imported workflows",
@@ -625,13 +656,13 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1794611174Z"
+      "updated_at": "1794611246Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:f0df0cea7df64d1c7c85a29c1375fd5a03e866faea11ef8fd49d4c255fe2b4d0",
+      "artifact_hash": "sha256:8b01935efad6d5e5781c56c3aa4f299ddcf107ba9690d0cb8bdfc7f1ba64e9f1",
       "checks": [],
       "current_phase": "implementation",
       "custody": {
@@ -682,10 +713,17 @@
             "intent_id": "intent:change_01M7BCGX392JKZBS50NX3PPP8A",
             "kind": "trajectory_step_recorded",
             "sequence": 8
+          },
+          {
+            "detail": "trajectory:branch_01M7BCGX5QABS0MJP84D9PV95G",
+            "event_id": "event:9",
+            "intent_id": "intent:change_01M7BCGX392JKZBS50NX3PPP8A",
+            "kind": "trajectory_step_recorded",
+            "sequence": 9
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 8,
+        "next_sequence": 9,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M7BCGX5QABS0MJP84D9PV95G": {
@@ -772,6 +810,22 @@
                 "validation_findings": [
                   "Hosted verification and exact-candidate publication readiness remain pending; no local tests run."
                 ]
+              },
+              {
+                "action": "implementation",
+                "custody_event_id": "event:9",
+                "observations": [
+                  ".decapod/managed/specs/VALIDATION.md",
+                  "https://github.com/DecapodLabs/decapod/issues/1573"
+                ],
+                "proof_refs": [],
+                "scope": [
+                  "issue-1573"
+                ],
+                "sequence": 9,
+                "validation_findings": [
+                  "Hosted verification and exact-candidate publication readiness remain pending; no local tests run."
+                ]
               }
             ]
           }
@@ -789,6 +843,7 @@
         ".decapod/managed/specs/INTENT.md",
         ".decapod/managed/specs/INTERFACES.md",
         ".decapod/managed/specs/SECURITY.md",
+        ".decapod/managed/specs/VALIDATION.md",
         "docs/architecture/public-proof-collection.md"
       ],
       "next_transitions": [
