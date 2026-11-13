@@ -191,7 +191,7 @@ fn lookup(root: &Path, target: &Path) -> Result<Option<Receipt>, DecapodError> {
     if !conn.has_table("events")? {
         return Ok(None);
     }
-    let row: Option<(
+    type LifecycleEventRow = (
         String,
         String,
         String,
@@ -199,7 +199,8 @@ fn lookup(root: &Path, target: &Path) -> Result<Option<Receipt>, DecapodError> {
         Option<String>,
         Option<String>,
         String,
-    )> = conn
+    );
+    let row: Option<LifecycleEventRow> = conn
         .query_row(
             "SELECT event_id, ts, event_type, actor, subject_kind, subject_id, payload
              FROM events WHERE stream = ?1 AND event_type = ?2 ORDER BY seq DESC LIMIT 1",
