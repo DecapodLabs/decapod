@@ -799,6 +799,11 @@
       "id": "align-logical-contract-v0-143-1",
       "summary": "docs(storage): align logical_contract_v1.json release with v0.143.1 (#1630)",
       "input_digest": "sha256:82447e6a8cabcaf902f93bee6f97800a5515e7f281343ae2b4e3f33a9b6e3d1a"
+    },
+    {
+      "id": "fix-clippy-storage-contracts",
+      "summary": "fix(storage): allow clippy::too_many_arguments on validate_event_append (#1630)",
+      "input_digest": "sha256:a29af47a06d3c871153ac9ee0bf1feadb56696f01c85a2cdd94a228d1c864887"
     }
   ],
   "intents": {

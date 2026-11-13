@@ -413,6 +413,7 @@ pub fn validate_verification_write(
 }
 
 /// Validate canonical event envelope and payload bounds at `events::append_on_conn`.
+#[allow(clippy::too_many_arguments)]
 pub fn validate_event_append(
     stream: &str,
     event_id: &str,
