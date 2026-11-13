@@ -611,6 +611,11 @@
       "id": "c13-agents-01430",
       "summary": "chore(entrypoints): refresh AGENTS.md for Decapod v0.143.0",
       "input_digest": "sha256:1a048f773301e31980b26ccc65e9861d15914549daf9323752c9fbf09e04eba9"
+    },
+    {
+      "id": "c14-claude-01430",
+      "summary": "chore(entrypoints): refresh CLAUDE.md for Decapod v0.143.0",
+      "input_digest": "sha256:1a717982935a05b97a0281f9113eba4f5bdc7337fbf15b3587aa3627e9b423c4"
     }
   ],
   "intents": {
