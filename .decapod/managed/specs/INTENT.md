@@ -1,5 +1,14 @@
 # Intent
 
+## Accepted verification requirements
+
+REQ-ACCEPTED-LOCAL-POLICY: autonomous work must retain the repository-local
+verification obligations accepted on its target. A candidate can add required
+checks; replacing accepted commands, execution declarations or coverage requires
+separately accepted policy. A calculated review digest establishes consistency
+of bytes and cannot grant review authority. `tests/consumer_readiness.rs`
+exercises the formerly false-green repinning attack and current rejection.
+
 ## Evidence-grounded reflection before consequential action
 
 Decapod helps agents reconsider a proposed action through optional bounded
@@ -341,7 +350,7 @@ These declarations select authoring and proof obligations; they do not attest im
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `4ce96e9def05100a4c633bdd94b3afdecc378ec76460519654a377c5070216a5`
+- Repository signal fingerprint: `dfb4c309616ecb4cf21875ace89d5be436f79c42e678b2b4b550a0a99f37ba69`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (231 files), `tests/` (232 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

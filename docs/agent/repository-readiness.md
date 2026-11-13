@@ -47,6 +47,18 @@ agent-writable mutation operation that updates coverage or digests; `init` and
 reconciliation path is an explicit, separate limitation of the profile (#1531),
 not a gap agents can close through any RPC op.
 
+Review digests establish internal content consistency. Once the accepted target
+has a repository-local contract, the candidate must preserve its required command
+names, programs, arguments, measured-tool declarations, environment, directory,
+timeouts and workflow coverage. Additional required checks are allowed. Replacing
+or removing accepted checks, converting their coverage to CI-only, or changing
+profiles returns `ACCEPTED_REPOSITORY_CONTRACT_CHANGED` before execution selection.
+Editing and repinning candidate configuration cannot authorize that transition.
+Replacement policy must first be independently accepted on the target through
+repository-maintainer authority. There is no agent-side waiver or automatic
+policy migration. First adoption still requires explicit operator review; a
+matching digest does not authenticate that reviewer.
+
 `proof.commands[].command` names the declared executable (or uses its absolute
 path); `args` remain separate literal arguments. Runtime resolves no YAML, shell
 text, auto-installed tools, or ambient environment. The installed executable and

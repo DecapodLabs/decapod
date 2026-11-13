@@ -1,5 +1,15 @@
 # Architecture
 
+## Accepted local policy in the existing validation runtime
+
+`validation_runtime::discover_project` reads both candidate and immutable
+accepted-target configuration. `repository_profile::preserve_accepted` retains
+accepted local invocations, execution prerequisites and source coverage before
+executor selection. Existing catalog derivation, evidence evaluation and native
+execution remain the only readiness path. The comparison introduces no durable
+store or new verdict taxonomy. The strict source profile and its accepted
+provider requirements are preserved.
+
 ## Composed reflection continuation
 
 `core/mentor/reflection.rs` composes the existing mentor ADR detector, canonical
@@ -894,7 +904,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `4ce96e9def05100a4c633bdd94b3afdecc378ec76460519654a377c5070216a5`
+- Repository signal fingerprint: `dfb4c309616ecb4cf21875ace89d5be436f79c42e678b2b4b550a0a99f37ba69`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (231 files), `tests/` (232 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

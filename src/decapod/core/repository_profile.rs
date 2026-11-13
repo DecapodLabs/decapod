@@ -86,6 +86,67 @@ pub fn command_contract_digest(
 fn invalid(message: impl Into<String>) -> PlanningFailure {
     PlanningFailure::InvalidPlan(format!("REPOSITORY_CONTRACT_INVALID: {}", message.into()))
 }
+
+/// Candidate review digests establish internal consistency, not authority to
+/// replace requirements already accepted on the target. Additive checks are
+/// allowed; accepted execution and coverage obligations must remain intact.
+pub(crate) fn preserve_accepted(
+    commands: &[ProofDef],
+    contract: Option<&RepositoryContract>,
+    accepted_commands: &[ProofDef],
+    accepted_contract: Option<&RepositoryContract>,
+) -> Result<(), PlanningFailure> {
+    let changed = || {
+        invalid(
+            "ACCEPTED_REPOSITORY_CONTRACT_CHANGED: preserve the accepted local checks, execution declarations and coverage; replacement requires a separately accepted policy transition, not a candidate-authored review digest",
+        )
+    };
+    let accepted = accepted_contract.ok_or_else(changed)?;
+    let candidate = contract.ok_or_else(changed)?;
+    if accepted_commands.is_empty()
+        || command_contract_digest(accepted_commands, accepted)?
+            != accepted.reviewed_commands_digest
+    {
+        return Err(changed());
+    }
+    for required in accepted_commands {
+        let current = commands
+            .iter()
+            .find(|command| command.name == required.name)
+            .ok_or_else(changed)?;
+        if !required.required
+            || !current.required
+            || current.command != required.command
+            || current.args != required.args
+            || !accepted.executions.contains_key(&required.name)
+            || candidate.executions.get(&required.name) != accepted.executions.get(&required.name)
+        {
+            return Err(changed());
+        }
+    }
+    for coverage in &accepted.source_coverage {
+        let current = candidate
+            .source_coverage
+            .iter()
+            .find(|row| row.source == coverage.source)
+            .ok_or_else(changed)?;
+        if coverage.ci_only {
+            // A candidate cannot turn an accepted external limitation into an
+            // unsupported local-equivalence claim.
+            if current != coverage {
+                return Err(changed());
+            }
+        } else if current.ci_only
+            || !coverage
+                .commands
+                .iter()
+                .all(|name| current.commands.contains(name))
+        {
+            return Err(changed());
+        }
+    }
+    Ok(())
+}
 fn relative(path: &str) -> bool {
     !path.is_empty()
         && !path.contains(['\\', '\0'])

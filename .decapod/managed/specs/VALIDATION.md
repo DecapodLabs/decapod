@@ -1,5 +1,17 @@
 # Validation
 
+## Accepted local-policy regression
+
+`tests/consumer_readiness.rs` first established the accepted-local-policy
+repinning flaw through real bounded local execution: corrupted source passed
+after its candidate replaced and repinned a required command. The repair
+rejects that replacement before executor selection. Regression cases cover
+required-command removal, execution/tool/environment/timeout changes, source
+coverage weakening, stale source and a positive additional-required-check
+control. The 19-case suite passed, followed by the additional-check control.
+The fixtures substitute project prerequisites and target transport; actual-binary
+A–H acceptance, concurrency proof and final strict readiness remain required.
+
 The required `tests/consumer_readiness.rs` regression carries a recorded
 Decapod intent through a real source-check failure, a committed source repair,
 native validation and an inspectable receipt. It verifies that failure issues
@@ -1325,7 +1337,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `4ce96e9def05100a4c633bdd94b3afdecc378ec76460519654a377c5070216a5`
+- Repository signal fingerprint: `dfb4c309616ecb4cf21875ace89d5be436f79c42e678b2b4b550a0a99f37ba69`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (231 files), `tests/` (232 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

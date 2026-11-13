@@ -539,6 +539,17 @@
     "base_commit": "3b6b31f83edfb2b77f07aa4df3b8d958074134d9",
     "target_base": "origin/master"
   },
+  "claims": {
+    "accepted-local-policy": {
+      "statement": "Candidate repinning cannot remove or replace accepted local verification invocations or execution and coverage obligations; additional required checks remain possible",
+      "falsifier": "A candidate corrupts source, substitutes a success-only command, repins its review digest, and receives current local readiness against an accepted contract",
+      "status": "supported",
+      "proof_refs": [
+        "src/decapod/core/repository_profile.rs",
+        "tests/consumer_readiness.rs"
+      ]
+    }
+  },
   "checkpoints": [
     {
       "id": "inert-legacy-todo-repair",
@@ -547,6 +558,24 @@
       "proof_refs": [
         "src/decapod/core/migration.rs",
         "tests/unit/core/migration_tests.rs"
+      ]
+    },
+    {
+      "id": "accepted-local-policy-repair",
+      "summary": "Bind accepted local command, execution and coverage requirements before candidate selection; reject the reproduced repinning false green while allowing additional checks. Record source/test audit and reconcile only the accepted version-only inventory drift.",
+      "input_digest": "sha256:bb0551316fd84933ae19685344ba8d5c6906c76cfa41f67ff2dcf56c1a2dde46",
+      "proof_refs": [
+        "docs/architecture/continuous-governance-audit.md",
+        "tests/consumer_readiness.rs"
+      ]
+    },
+    {
+      "id": "accepted-local-policy-final",
+      "summary": "Preserve accepted repository-local verification policy and additive checks, record the reproduced false green and successful repairs, update living specs and audit, and reconcile accepted version-only source inventory drift without changing required checks.",
+      "input_digest": "sha256:0301e33c44c70297d653aa4070bdfa485477149c678f5ee521bcba783e2ca82e",
+      "proof_refs": [
+        "docs/architecture/continuous-governance-audit.md",
+        "tests/consumer_readiness.rs"
       ]
     }
   ],
@@ -587,6 +616,29 @@
         "decapod validate exact candidate and accepted target"
       ],
       "schema_version": "1.1.0",
+      "spec_reviews": [
+        {
+          "disposition": "updated",
+          "path": ".decapod/managed/specs/ARCHITECTURE.md",
+          "reason": "Reviewed the authored changes for the inert-file repair and accepted-local-policy comparison against production source and executed regressions; existing product and trust boundaries are preserved.",
+          "reviewed_code_fingerprint": "dfb4c309616ecb4cf21875ace89d5be436f79c42e678b2b4b550a0a99f37ba69",
+          "spec_material_hash": "0ed0a6821ad6a5bf266db07d355f8896d1f8fe335077bde7666a6478e26b5302"
+        },
+        {
+          "disposition": "updated",
+          "path": ".decapod/managed/specs/INTERFACES.md",
+          "reason": "Reviewed the authored changes for the inert-file repair and accepted-local-policy comparison against production source and executed regressions; existing product and trust boundaries are preserved.",
+          "reviewed_code_fingerprint": "dfb4c309616ecb4cf21875ace89d5be436f79c42e678b2b4b550a0a99f37ba69",
+          "spec_material_hash": "a4f4f820ba5b0d1afec222fd356279e593dbe7ec9fc292569aa1a6ab4cc3bb20"
+        },
+        {
+          "disposition": "updated",
+          "path": ".decapod/managed/specs/SECURITY.md",
+          "reason": "Reviewed the authored changes for the inert-file repair and accepted-local-policy comparison against production source and executed regressions; existing product and trust boundaries are preserved.",
+          "reviewed_code_fingerprint": "dfb4c309616ecb4cf21875ace89d5be436f79c42e678b2b4b550a0a99f37ba69",
+          "spec_material_hash": "7ee61a7edd2449d93db3a8af99b7381a479c03ad5892cb35e7c05a8f44fec313"
+        }
+      ],
       "state": "APPROVED",
       "stop_conditions": [
         "Do not publish when independent controller, required assurance or authenticated authority is unavailable"
@@ -597,15 +649,27 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1794543700Z"
+      "updated_at": "1794544719Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch",
         "Official controller currently hits the inert legacy TODO blocker; complete strict validation remains required"
       ],
-      "artifact_hash": "sha256:948940ab337007e6a3663f0e6b35d5f32eb68036e0dd45f8c5eadb8c76ee9acb",
+      "artifact_hash": "sha256:3e364e1504f2091aeb47d5eb9e3e5f6d2c295c97f16bafec9a39cb341b825c56",
       "checks": [
+        {
+          "name": "accepted_policy_repinning_regression",
+          "status": "passed"
+        },
+        {
+          "name": "additive_policy_positive_control",
+          "status": "passed"
+        },
+        {
+          "name": "consumer_readiness_suite",
+          "status": "passed"
+        },
         {
           "name": "full_independent_validation",
           "status": "unavailable"
@@ -640,10 +704,17 @@
             "intent_id": "intent:change_01M79J4VRQAVWYKWZPH6979EC7",
             "kind": "trajectory_step_recorded",
             "sequence": 4
+          },
+          {
+            "detail": "trajectory:branch_01M79J4VXDZVDK8XGBDCX80BM0",
+            "event_id": "event:5",
+            "intent_id": "intent:change_01M79J4VRQAVWYKWZPH6979EC7",
+            "kind": "trajectory_step_recorded",
+            "sequence": 5
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 4,
+        "next_sequence": 5,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M79J4VXDZVDK8XGBDCX80BM0": {
@@ -670,6 +741,29 @@
                 ],
                 "sequence": 4,
                 "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:5",
+                "observations": [
+                  "src/decapod/core/validation_runtime.rs",
+                  "src/decapod/core/repository_profile.rs",
+                  "tests/consumer_readiness.rs",
+                  "src/decapod/core/repository_profile.rs",
+                  "src/decapod/core/validation_runtime.rs",
+                  "docs/architecture/continuous-governance-audit.md",
+                  "Before repair the real runtime returned ready=true and proof_ready=true for corrupted second.txt and a candidate-repinned replacement check. After repair it rejects before selection. All 19 consumer tests passed in 8.24s; added-required-check positive control passed in 4.35s. The fixture substitutes only project prerequisites and target transport, so full CLI acceptance remains outstanding. Inventory review confirmed only accepted package-version changes since last pin; config backed up and digest reconciled without dropping required checks."
+                ],
+                "proof_refs": [
+                  "accepted_policy_repinning_regression",
+                  "consumer_readiness_suite",
+                  "additive_policy_positive_control"
+                ],
+                "scope": [
+                  "validation-kernel"
+                ],
+                "sequence": 5,
+                "validation_findings": []
               }
             ]
           }
@@ -678,13 +772,21 @@
       "declared_commands": [],
       "destination": "pull request",
       "evidence": [
+        "Before repair the real runtime returned ready=true and proof_ready=true for corrupted second.txt and a candidate-repinned replacement check. After repair it rejects before selection. All 19 consumer tests passed in 8.24s; added-required-check positive control passed in 4.35s. The fixture substitutes only project prerequisites and target transport, so full CLI acceptance remains outstanding. Inventory review confirmed only accepted package-version changes since last pin; config backed up and digest reconciled without dropping required checks.",
         "Bootstrap commit 28016a2c: nine migration tests passed in 1.53s; 55 readiness-evidence tests passed in 1.80s. Installed journal verification before task creation preserved digest db5c58ff674709b268fa2bc8576c113777edd6763c86d3ee0ba9360bcd6a32d4, 86 tasks and 739 records. User authorized a scoped isolated bootstrap exception; candidate tooling resumed coordination and has not issued independent readiness."
       ],
-      "inspected_files": [],
+      "inspected_files": [
+        "src/decapod/core/repository_profile.rs",
+        "src/decapod/core/validation_runtime.rs"
+      ],
       "intent_id": "intent:change_01M79J4VRQAVWYKWZPH6979EC7",
       "modified_files": [
         ".decapod/managed/specs/OPERATIONS.md",
+        "docs/architecture/continuous-governance-audit.md",
         "src/decapod/core/migration.rs",
+        "src/decapod/core/repository_profile.rs",
+        "src/decapod/core/validation_runtime.rs",
+        "tests/consumer_readiness.rs",
         "tests/unit/core/migration_tests.rs"
       ],
       "next_transitions": [

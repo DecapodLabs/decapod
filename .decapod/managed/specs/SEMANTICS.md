@@ -1,5 +1,14 @@
 # Semantics
 
+## Review digests and accepted local obligations
+
+A candidate's consistent command/coverage digest describes its proposed policy;
+it cannot authorize replacement of repository-local obligations accepted on the
+target. Such replacement is blocked before proof execution. Additional required
+checks preserve the accepted requirements. Prior successful observations retain
+their history while applicability to changed source, target or effective policy
+must be established anew by the existing readiness evaluator.
+
 ## Reflection, progress and authority
 
 Distinct recorded human questions and spec-review decisions retain distinct
@@ -321,7 +330,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `4ce96e9def05100a4c633bdd94b3afdecc378ec76460519654a377c5070216a5`
+- Repository signal fingerprint: `dfb4c309616ecb4cf21875ace89d5be436f79c42e678b2b4b550a0a99f37ba69`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (231 files), `tests/` (232 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

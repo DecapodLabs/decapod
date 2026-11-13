@@ -1,5 +1,16 @@
 # Interfaces
 
+## Accepted repository-local verification policy
+
+`validation_runtime::discover_project` compares an accepted repository-local
+contract with candidate commands and execution/coverage declarations before
+selecting an executor. `repository_profile::preserve_accepted` allows additional
+required checks and rejects replacement of accepted obligations with
+`ACCEPTED_REPOSITORY_CONTRACT_CHANGED`. Candidate review digests remain content
+bindings; they cannot supply independent approval for changed accepted policy.
+Replacement requires separately accepted target policy. This adds no RPC,
+receipt-import interface, schema, daemon or publication authorization.
+
 ## Optional reflection on existing interfaces
 
 `infer orientation --task-id <id> --reflection '<JSON>'` and
@@ -1142,7 +1153,7 @@ field. Nothing in this operation authorizes a mutation, approval or completion.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `4ce96e9def05100a4c633bdd94b3afdecc378ec76460519654a377c5070216a5`
+- Repository signal fingerprint: `dfb4c309616ecb4cf21875ace89d5be436f79c42e678b2b4b550a0a99f37ba69`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (231 files), `tests/` (232 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

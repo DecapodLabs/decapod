@@ -657,6 +657,24 @@ fn load_project(options: &Options, budget: &mut RuntimeBudget<'_>) -> io::Result
         .required_profile
         .as_ref()
         .is_some_and(|p| p.id == super::repository_profile::REQUIRED_PROFILE);
+    if accepted
+        .required_profile
+        .as_ref()
+        .is_some_and(|p| p.id == super::repository_profile::REQUIRED_PROFILE)
+    {
+        if !repository_local {
+            return Err(invalid(
+                "ACCEPTED_REPOSITORY_CONTRACT_CHANGED: another profile cannot replace accepted repository-local checks",
+            ));
+        }
+        super::repository_profile::preserve_accepted(
+            &configuration.commands,
+            configuration.repository_contract.as_ref(),
+            &accepted.commands,
+            accepted.repository_contract.as_ref(),
+        )
+        .map_err(io::Error::other)?;
+    }
     let (executor, catalog) = if repository_local {
         if configuration.validation_buildkite_preflights {
             return Err(invalid(
