@@ -655,6 +655,14 @@
       "proof_refs": [
         ".decapod/managed/specs/README.md"
       ]
+    },
+    {
+      "id": "refresh-semantics-spec-attestation-01410",
+      "summary": "Refresh SEMANTICS.md codebase attestation for 0.141.0 build_lifecycle slice",
+      "input_digest": "sha256:dcfa9c0d396ff2eabc31514a9b3d87b9599bafcee748cc4ed2ff37a5c7b6e337",
+      "proof_refs": [
+        ".decapod/managed/specs/SEMANTICS.md"
+      ]
     }
   ],
   "intents": {
@@ -710,7 +718,7 @@
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:437dae6004750b4bcc2ebe9ae9f8e721a22c93ca9807c5e089e88dde9c315f01",
+      "artifact_hash": "sha256:db55442262592cb5a897613339a41e6e1ba0cdddb28c42bd3886e4997b2f401e",
       "checks": [],
       "current_phase": "execution",
       "custody": {
@@ -817,10 +825,17 @@
             "intent_id": "intent:change_01M79A0G0YSR12S2RHJE84QPHR",
             "kind": "trajectory_step_recorded",
             "sequence": 16
+          },
+          {
+            "detail": "trajectory:branch_01M79A0G5E35FVE2EYNYQVQ3XY",
+            "event_id": "event:17",
+            "intent_id": "intent:change_01M79A0G0YSR12S2RHJE84QPHR",
+            "kind": "trajectory_step_recorded",
+            "sequence": 17
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 16,
+        "next_sequence": 17,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M79A0G5E35FVE2EYNYQVQ3XY": {
@@ -1035,6 +1050,22 @@
                 ],
                 "sequence": 16,
                 "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:17",
+                "observations": [
+                  ".decapod/managed/specs/SEMANTICS.md"
+                ],
+                "proof_refs": [],
+                "scope": [
+                  "\".decapod/config.toml\"",
+                  "\".decapod/managed/specs\"]",
+                  "\"assets/tools/build_lifecycle_tests.rs\"",
+                  "paths:[\"assets/tools/build_lifecycle.rs\""
+                ],
+                "sequence": 17,
+                "validation_findings": []
               }
             ]
           }
@@ -1076,6 +1107,7 @@
         ".decapod/managed/specs/INTERFACES.md",
         ".decapod/managed/specs/OPERATIONS.md",
         ".decapod/managed/specs/README.md",
+        ".decapod/managed/specs/SEMANTICS.md",
         "AGENTS.md",
         "CLAUDE.md",
         "CODEX.md",
