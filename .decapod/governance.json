@@ -4578,6 +4578,14 @@
       "proof_refs": [
         ".decapod/managed/specs/VALIDATION.md"
       ]
+    },
+    {
+      "id": "refresh-01410-release-bound-surfaces",
+      "summary": "Regenerate v0.141.0 release-bound entrypoints, managed Dockerfile pin, and spec manifest, and update VALIDATION.md for PR #1647",
+      "input_digest": "sha256:007c77af48c1b0ef51c3fa4445f411e54b89266a432e5804b531d825c08400ce",
+      "proof_refs": [
+        ".decapod/managed/specs/.manifest.json"
+      ]
     }
   ],
   "intents": {
@@ -4618,21 +4626,21 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Reconciled PR #1647 agent-owned cloud sign-in architecture with accepted v0.141.0 bounded reflection, native storage inventory, terminal onboarding, and published dactyl-db 0.14.0 dependency; exact-candidate Buildkite proof required.",
+          "reason": "Reconciled PR #1647 agent-owned cloud sign-in architecture with accepted v0.141.0 release-bound entrypoints, Dockerfile pin, and published dactyl-db 0.14.0 dependency.",
           "reviewed_code_fingerprint": "6a3addd1b9727eaa3c371ddafc239c5ed36e2705b96d18996de05e9e72f1f7f0",
           "spec_material_hash": "3f7a43155b3fa003bf6c1407ac7b829560b8ca1aa6fd97cda6d57f7188f98528"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Updated PR #1647 agent-owned cloud login and structured authorization_url handoff contracts for v0.141.0 and published dactyl-db 0.14.0; preserved bounded reflection RPC envelope semantics and repository-bound cloud routing.",
+          "reason": "Updated PR #1647 agent-owned cloud login and structured authorization_url handoff contracts for v0.141.0 and published dactyl-db 0.14.0.",
           "reviewed_code_fingerprint": "6a3addd1b9727eaa3c371ddafc239c5ed36e2705b96d18996de05e9e72f1f7f0",
           "spec_material_hash": "5b676233b993a193c0e409d9f423343c00ee1b70e3c3ac747d029f18da92558d"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Verified PR #1647 private session custody, public authorization_url boundary, redaction of private adapter messages on task receipts, and v0.141.0 / dactyl-db 0.14.0 quinn-proto >= 0.11.19 security invariants.",
+          "reason": "Verified PR #1647 private session custody, public authorization_url boundary, redaction of private adapter messages on task receipts, and v0.141.0 / dactyl-db 0.14.0 security invariants.",
           "reviewed_code_fingerprint": "6a3addd1b9727eaa3c371ddafc239c5ed36e2705b96d18996de05e9e72f1f7f0",
           "spec_material_hash": "d1494f6203bc568de785e5d8055e9a6ceed0ca288b9ad340c181ae93dd8f6359"
         }
@@ -4645,7 +4653,7 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1794534872Z"
+      "updated_at": "1794535735Z"
     },
     "trajectory": {
       "active_boundaries": [
@@ -4658,7 +4666,7 @@
         "Reviewed managed client and private custody source; configured Buildkite proof remains required and Dactyl registry API availability requires native confirmation",
         "Same-task reviewed corrections and checkpointed source push only; complete Buildkite readiness and separate registry handoff remain unsatisfied"
       ],
-      "artifact_hash": "sha256:7fd812db0a8007b9eee86e67bb0981ac4ce03a6fff4b4a8c1d0703e8de896743",
+      "artifact_hash": "sha256:ae0860ab5825ce07ca6128a4496e6d63f98a374e1755bdda2fc7441d26943b2d",
       "checks": [
         {
           "name": "accepted-consumer",
@@ -4861,6 +4869,10 @@
           "status": "failed"
         },
         {
+          "name": "v0.141.0-entrypoint-pin-alignment",
+          "status": "passed"
+        },
+        {
           "name": "v0.141.0-merge-reconciliation",
           "status": "passed"
         }
@@ -5061,10 +5073,17 @@
             "intent_id": "intent:change_01M76ECD1993X600J9GEM0D7FY",
             "kind": "trajectory_step_recorded",
             "sequence": 29
+          },
+          {
+            "detail": "trajectory:branch_01M76ECD20HF9M6Q15W5AKE2WQ",
+            "event_id": "event:30",
+            "intent_id": "intent:change_01M76ECD1993X600J9GEM0D7FY",
+            "kind": "trajectory_step_recorded",
+            "sequence": 30
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 29,
+        "next_sequence": 30,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M76ECD20HF9M6Q15W5AKE2WQ": {
@@ -5549,6 +5568,30 @@
                 ],
                 "sequence": 29,
                 "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "command": "decapod govern project-check --format json",
+                "custody_event_id": "event:30",
+                "observations": [
+                  "AGENTS.md",
+                  "CLAUDE.md",
+                  "CODEX.md",
+                  "GEMINI.md",
+                  ".decapod/managed/Dockerfile.decapod",
+                  ".decapod/managed/specs/VALIDATION.md",
+                  ".decapod/managed/specs/.manifest.json",
+                  "Regenerated AGENTS.md, CLAUDE.md, CODEX.md, GEMINI.md, Dockerfile.decapod, and .manifest.json with published Decapod 0.141.0 (all entrypoint template_hash == content_hash) and updated VALIDATION.md."
+                ],
+                "proof_refs": [
+                  "v0.141.0-entrypoint-pin-alignment"
+                ],
+                "scope": [
+                  "decapod-cloud-client",
+                  "root"
+                ],
+                "sequence": 30,
+                "validation_findings": []
               }
             ]
           }
@@ -5559,6 +5602,7 @@
         "bazelisk --batch mod deps --lockfile_mode=update",
         "cargo fmt --all",
         "cargo update -p dactyl-db --precise 0.12.0",
+        "decapod govern project-check --format json",
         "decapod init --proof --force --no-specs --no-ci --all",
         "decapod rpc --op specs.refresh",
         "git fetch origin"
@@ -5588,6 +5632,7 @@
         "Native0.140 full validation passed99ff0015 againstfc1e2b94 at14:08UTC with publication_ready=true and zero blockers; all required Buildkite execution and all32 GitHub checks passed after one isolated ETXTBSY fixture retry. Native workspace publish mandatory fresh GithubObjects recheck hit public quota403 reset1794495632. No PR created. Accepted master advanced through1645/1646 to1d04f232, so the passed report is historical, not current readiness. Preserved immutable native report/verdict/observations and failure separately outside Git.",
         "PR 1635 merged into master as c87e4f49 while Buildkite 8320 jobs waited. Git merge-base verification then correctly failed before fmt/contracts/specs execution because candidate lacked the new accepted target. Fetched and merged that exact target with no source conflicts. The full journal is retained: optional compact begin-pr was refused because the added follow-up checkpoints are still unaccepted. Original a096 source consumer job 131083920439 passed 1674 library tests with 8 ignored and 33 boundary tests including all 13 managed scenarios; this proof is not reused as readiness. Deliver remaining UX through a new follow-up PR after full exact-candidate proof.",
         "Published Dactyl 0.12.0 cloud.rs maps dropped response transport to Unavailable. Completion now preserves the saved credential and checking_readiness state for Unavailable, Transport and Timeout; existing lost completion CLI fixture is mandatory execution coverage. This source review is not executed product proof.",
+        "Regenerated AGENTS.md, CLAUDE.md, CODEX.md, GEMINI.md, Dockerfile.decapod, and .manifest.json with published Decapod 0.141.0 (all entrypoint template_hash == content_hash) and updated VALIDATION.md.",
         "Reviewed new source inventory change: accepted decapod.BUILD.bzl adds the canonical shared fixture to three existing test targets and the real CLI support to entrypoint_correctness. Existing required graph, budgets and adapter protocol remain intact. Pin reconciled to independently computed31fa30d.",
         "Reviewed source inventory delta: accepted Cargo package/lock version 0.139.0 to 0.139.1 only; graph, workflow, helper bytes and required proof policy unchanged. Pin reconciled to c9d2697.",
         "Same original task and journal continue from 1289a80a782d651af337125ee447db4b5723cbd7. Native full publisher in run 43117917740 returned SNAPSHOT_NOT_READY for Buildkite docs_sync build 7937. Direct observed job output compiled dactyl-db 0.11.1, then reported 11 E0433/E0425 errors for missing CloudConnector, AuthenticationSecrets, AuthenticationState and UserSession; one unused auth/cloud_backend import warning was also observed. Evidence artifact sha256:71dff4b541fe957f4e8f3b62ba538738d91d25824b608013d0cf4225527dd4f8 records exact log locations. These are historical candidate failures, not results on this correction. Reviewed patches remove unused imports and correct overlay wording; authored VALIDATION states that no governed pre-readiness source-overlay recipe is configured. Only formatting, native projections, checkpoint/history checks and a normal same-branch source push are performed. New CLI/custody tests, full Buildkite readiness and registry release handoff remain unproven; no path/Git dependency fallback or profile weakening occurs. Correction run 43123429502 then stopped after native cargo fmt because the pre-format import-layout hash differed. Its verified encrypted diagnostics archive sha256:d9d5fef54128f7571623cdc85bbe2ce6b75b43db1853fb1e7b4b225371d09485 preserves the actual output: only state moved to the next import line beside state_commit; every other source byte and all approved documentation/spec changes matched. No new checkpoint, commit, push, build or test occurred, and the original journal remained intact. The revised replay patch matches that exact observed formatter output (sha256:a607389e0f43dad013b315df52500a3357252cecf33098a25db812516599531f); exact source hash checks remain enforced, and the latest sealed successor continues the same task. Correction run 43124963685 passed the exact formatted source checks and then stopped after native specs.refresh and trajectory recording because the authored VALIDATION hash included one duplicate blank line. Supported capability-overlay refresh collapses three consecutive newlines to two; approved prose is unchanged, and generated fingerprint changes stay inside existing marker blocks. The revised insertion removes only its final newline and pins the observed authored hash sha256:1a51db2abfc394e552cf520ac9d54bd64d00489d0c07377d8c2bfc344fb7f849. The failed attempt made no checkpoint, commit or push. Its uncommitted native journal is preserved by encrypted diagnostics archive sha256:776d5e4500639f6c3608ff3cab5bf8689fc0aee9886304b152fec4ed97f31967 and reconstructed journal digest sha256:75413445dd842e0ef71e00253e1552e1729a517c7dd8c1e60aab47db31b5dfa8. Archived trajectory branch_01M76ECD20HF9M6Q15W5AKE2WQ event event:5, sequence 5, has step digest sha256:4b6e8108c1a392130940c40b71bb1fc89df6d56fcb2a99767522ed1e277cf87d (UTF-8 sorted-key compact JSON); native trajectory artifact hash sha256:184610a2a7a10452ab83f27794aea0f7e19b6a9ba7f08dc00e61b38499e7d083. This archived step is historical evidence, not restored current authority. The latest sealed task continues on the same committed journal through native CLI recording; no raw projection bytes are restored. Exact source, authored-spec, checkpoint and publication boundaries remain enforced.",
@@ -5605,8 +5650,14 @@
       "intent_id": "intent:change_01M76ECD1993X600J9GEM0D7FY",
       "modified_files": [
         ".decapod/config.toml",
+        ".decapod/managed/Dockerfile.decapod",
+        ".decapod/managed/specs/.manifest.json",
         ".decapod/managed/specs/INTERFACES.md",
         ".decapod/managed/specs/VALIDATION.md",
+        "AGENTS.md",
+        "CLAUDE.md",
+        "CODEX.md",
+        "GEMINI.md",
         "README.md",
         "docs/agent/state-model.md",
         "docs/book/src/reference/propodus.md",
