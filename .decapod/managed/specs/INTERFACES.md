@@ -1,5 +1,34 @@
 # Interfaces
 
+## Checkout authoring admission and shared-resource diagnostics (#1469)
+
+`decapod workspace ensure` binds a canonical `.decapod/workspaces/*` Git
+worktree via `workspace.authoring.bind` (`workspace.authoring` basic-trust risk
+zone) and initializes branch governance; `decapod workspace status` evaluates
+`todo::check_authoring(..., false)` read-only and returns `can_work=false` with
+actionable remediation blockers on `AUTHORING_BINDING_REQUIRED`,
+`AUTHORING_BINDING_STALE`, `AUTHORING_CHECKOUT_OCCUPIED`,
+`AUTHORING_TASK_ALREADY_BOUND`, `AUTHORING_CUSTODY_STALE`,
+`AUTHORING_ACTOR_REQUIRED`, `AUTHORING_EVIDENCE_UNAVAILABLE`, or
+`AUTHORING_PROFILE_UNSUPPORTED`. Same-owner `decapod todo renew` preserves
+`can_work=true` by advancing the admitted binding's `lease_generation`
+atomically, while `yield`, `release`, `reclaim`, `handoff`, `done`, `archive`,
+and `workspace prune` retire bindings (`authoring.release`).
+
+`ClaimOverlap` (`src/decapod/core/fleet_coord.rs`) exposes optional backwards-compatible
+`predicate`, `resource`, and `affected_operation` fields, and `todo claim` /
+`todo handoff` responses surface `authoring_permission` and
+`integration_readiness`. Exclusive `--scope 'resource:<name>'` claims return
+`conflict_class=shared_resource` (`predicate=resource_reservation`,
+`affected_operation=shared_resource_mutation`) against competing reservations of
+the same resource (with global `resource:integration` covering
+`resource:integration:<base_branch>`), and gate `decapod release lineage-sync`
+(`resource:release`) and `decapod workspace publish` (`resource:integration`,
+`resource:integration:<base_branch>`) with `SHARED_RESOURCE_OCCUPIED` when held
+by another active agent. Embedded agent contract docs in
+`src/decapod/core/docs_cli.rs` and `docs/agent/command-contracts.md` match this
+surface.
+
 ## Optional reflection on existing interfaces
 
 `infer orientation --task-id <id> --reflection '<JSON>'` and
@@ -1142,7 +1171,7 @@ field. Nothing in this operation authorizes a mutation, approval or completion.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `0a0498aa94eb3f7551fe07c380ef13b469d188ab33218c72f80fc2e081fc3951`
+- Repository signal fingerprint: `d38d3f6da33c50f03492b7cfc8b8937af37534586d1ea4ff56261275738a0754`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (231 files), `tests/` (232 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
