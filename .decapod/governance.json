@@ -564,6 +564,11 @@
       "id": "hf-claude-md",
       "summary": "chore(entrypoints): refresh CLAUDE.md for Decapod v0.143.2",
       "input_digest": "sha256:247df0131b539b81c1a88fe446a734329ce19429f763a2652070bada04a420e2"
+    },
+    {
+      "id": "hf-codex-md",
+      "summary": "chore(entrypoints): refresh CODEX.md for Decapod v0.143.2",
+      "input_digest": "sha256:840832a8b2b37916092f0b66e5961a6cb209bb008589f91b4db7e40124ad0536"
     }
   ],
   "intents": {
