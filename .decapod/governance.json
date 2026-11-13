@@ -604,6 +604,11 @@
       "id": "fresh-docs-negative-completion-regression",
       "summary": "test(validation): verify negative proof-backed completion gates on fresh docs task (#1629)",
       "input_digest": "sha256:d120ba700e209f017ea77ff910c4317b24dd4e347b05aef377d0f51303bce145"
+    },
+    {
+      "id": "spec-architecture-terminal-context",
+      "summary": "docs(specs): document canonical terminal rule task_type and git_ref lifecycle",
+      "input_digest": "sha256:6543f8985a9eded0c0bc945ec068d097fef95b5ea3ca05a5d4d88953e5cfcc87"
     }
   ],
   "intents": {
