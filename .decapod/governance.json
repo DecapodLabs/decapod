@@ -604,6 +604,11 @@
       "id": "update-collection-test-budgets",
       "summary": "test(snapshot_provider): initialize github_quota in collection budget fixtures",
       "input_digest": "sha256:232b6cdabaf5a6f63d276856203527211c369398c7f81f8f3be9663bbfb5c831"
+    },
+    {
+      "id": "update-custody-test-budgets",
+      "summary": "test(snapshot_provider): initialize github_quota in custody budget fixtures",
+      "input_digest": "sha256:0b876d313e4e57523e1d254678a64bf25a61b5915e70cf5bc2ad1be8d3bbd400"
     }
   ],
   "intents": {
