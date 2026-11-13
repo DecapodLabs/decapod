@@ -724,6 +724,11 @@
       "id": "test-cli-contracts-inventory",
       "summary": "test(cli): verify storage inventory v2 format and component store attribution (#1630)",
       "input_digest": "sha256:4de6bf198089b361206cc2aff67c42959bbb21ef7b1288e31a5c6423ca7b2dbc"
+    },
+    {
+      "id": "test-plugins-todo-contracts",
+      "summary": "test(todo): verify fail-closed task write bounds and v2 task journal integration (#1630)",
+      "input_digest": "sha256:51c1074970582cce77ed5002d91d9e6a4df0d53179a9424b0fd9528d957004b6"
     }
   ],
   "intents": {
