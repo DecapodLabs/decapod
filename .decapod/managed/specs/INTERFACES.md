@@ -78,7 +78,7 @@ this checkout to that server ID needs a supported upstream attachment contract;
 this client does not invent one or claim that SCM ownership or paid-project
 attachment has been verified. Browser directory registration remains distinct.
 
-The client consumes the exact published `dactyl-db 0.14.0` registry API;
+The client consumes the exact published `dactyl-db 0.16.1` registry API;
 current-candidate fixture execution remains required for the complete composition. Pending
 secrets round-trip through its public Serde contract; authentication status and
 code exchange return strings, and completion confirms the session handoff.
@@ -1500,3 +1500,13 @@ Existing `data database` maintenance/capability/lock/audit CLI and RPC operation
 ## PR1662 current-master preparation
 
 Preserve symmetric data.database CLI/RPC capability discovery, diagnostics, bounded maintenance and audit interfaces. Policy admission must happen before startup migrations for maintenance commands; raw SQL, destructive replacement and arbitrary destinations remain outside the delegated contract.
+
+## SDK resource and uncertainty compatibility (#1667)
+
+The shipped 0.15/0.16 API adds `ResourceBudget`, `open_with_budget`, `visit_rows`,
+`has_table`, `has_column`, failure-origin/mutation-outcome classifiers and logical
+connector/session types without replacing the existing open/read/write facade.
+The 0.16.1 patch retains identical Rust library bytes. This dependency adoption
+does not claim that every caller has migrated to the additive interfaces or that
+a remote capability error grants local fallback or replay permission. Existing
+backend owners remain authoritative for those decisions.
