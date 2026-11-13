@@ -612,6 +612,11 @@
       "id": "workspace-status-prune-and-publish-gates",
       "summary": "Fail closed on workspace status, retire bindings on prune, and gate publish on resource:integration",
       "input_digest": "sha256:d5342f6f98e3da33e7a9fd63872adf50503bf1c1be9b258893914524f2dc7cd6"
+    },
+    {
+      "id": "todo-unique-binding-renew-and-retirement",
+      "summary": "Add unique task binding index, sync generation on renew, and retire bindings across lease transitions",
+      "input_digest": "sha256:dc7fa93295811504a75a3b0cd8e59481f5ca691b5315a3d7aa14e75bea44824e"
     }
   ],
   "intents": {
