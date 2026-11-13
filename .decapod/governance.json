@@ -653,6 +653,14 @@
       "proof_refs": [
         "https://github.com/DecapodLabs/decapod/issues/1658"
       ]
+    },
+    {
+      "id": "issue-1658-file-15",
+      "summary": "docs(specs): declare hosted accepted-policy adversarial controls; file-by-file checkpoint, verification pending.",
+      "input_digest": "sha256:5a9d8192355d8bc7b523786c064a8789a69c4bd427ccd8f81497ca993f0c6cb0",
+      "proof_refs": [
+        "https://github.com/DecapodLabs/decapod/issues/1658"
+      ]
     }
   ],
   "intents": {
@@ -691,25 +699,25 @@
       "schema_version": "1.1.0",
       "spec_reviews": [
         {
-          "disposition": "unchanged_with_reason",
+          "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Add public-runtime regressions using actual Git repositories and native subprocess checks for fabricated success replacement, removed checks, execution and coverage repinning, additive checks and stale source. Source-bound proof semantics stay in the existing runtime; these cases have not been run locally and hosted execution remains required.",
-          "reviewed_code_fingerprint": "12fb2fe330056e052684abc419d65d2efd395e529a8e85d73186b26850bd901a",
-          "spec_material_hash": "1fd0daadc96dd31eb16cf1ec6ff5bad5f893e903f487167ceb85b864812060c7"
+          "reason": "Review the coherent command-preservation slice and its real-runtime regression controls, while explicitly preserving the unproven check-script source-repinning case. Initial adoption and separately accepted target-policy changes are distinct. No local tests or full readiness are claimed; hosted regression evidence must precede closure.",
+          "reviewed_code_fingerprint": "895d3e39f7ebfc2b37127a4351aa20e3b4e486eecf398b86ce335ebb549c235d",
+          "spec_material_hash": "48cf84ee066d2602f97ca5b1e8f5ddd5d7a4aa5eef0b6fa0f394cbee5a8fd0e3"
         },
         {
-          "disposition": "unchanged_with_reason",
+          "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Add public-runtime regressions using actual Git repositories and native subprocess checks for fabricated success replacement, removed checks, execution and coverage repinning, additive checks and stale source. Source-bound proof semantics stay in the existing runtime; these cases have not been run locally and hosted execution remains required.",
-          "reviewed_code_fingerprint": "12fb2fe330056e052684abc419d65d2efd395e529a8e85d73186b26850bd901a",
-          "spec_material_hash": "a019febc805e23daa61f4e97014148bf6446b8ac5d0cc0fd77f26287c2db4039"
+          "reason": "Review the coherent command-preservation slice and its real-runtime regression controls, while explicitly preserving the unproven check-script source-repinning case. Initial adoption and separately accepted target-policy changes are distinct. No local tests or full readiness are claimed; hosted regression evidence must precede closure.",
+          "reviewed_code_fingerprint": "895d3e39f7ebfc2b37127a4351aa20e3b4e486eecf398b86ce335ebb549c235d",
+          "spec_material_hash": "923ab390e92ff1a304ad6d7e6692fcc35827a646e231ff360d974858263d6d01"
         },
         {
-          "disposition": "unchanged_with_reason",
+          "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Add public-runtime regressions using actual Git repositories and native subprocess checks for fabricated success replacement, removed checks, execution and coverage repinning, additive checks and stale source. Source-bound proof semantics stay in the existing runtime; these cases have not been run locally and hosted execution remains required.",
-          "reviewed_code_fingerprint": "12fb2fe330056e052684abc419d65d2efd395e529a8e85d73186b26850bd901a",
-          "spec_material_hash": "550c8b7a75eddef6e649172aa6a8f8c160c7a8db659e782f9c6525794bcaa87d"
+          "reason": "Review the coherent command-preservation slice and its real-runtime regression controls, while explicitly preserving the unproven check-script source-repinning case. Initial adoption and separately accepted target-policy changes are distinct. No local tests or full readiness are claimed; hosted regression evidence must precede closure.",
+          "reviewed_code_fingerprint": "895d3e39f7ebfc2b37127a4351aa20e3b4e486eecf398b86ce335ebb549c235d",
+          "spec_material_hash": "bdd709fd067d42dfe14335353360daff3e3eb3707cfba13bfb9bd0220158d4ee"
         }
       ],
       "state": "APPROVED",
@@ -720,13 +728,13 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1794605148Z"
+      "updated_at": "1794606230Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:1aace466da68a85e6a7ab301b7472c88de2c0e3a2ef60cf6c271192fb832bfc6",
+      "artifact_hash": "sha256:8540c16501d867352d6ba133d483be2e16825f96286e8b7ae91893067ffd366a",
       "checks": [],
       "current_phase": "implementation",
       "custody": {
@@ -840,10 +848,17 @@
             "intent_id": "intent:change_01M7BCDS8K3F7RT5QZW52H6VT3",
             "kind": "trajectory_step_recorded",
             "sequence": 17
+          },
+          {
+            "detail": "trajectory:branch_01M7BCDSB9RK1ZV4N4XY039SMT",
+            "event_id": "event:18",
+            "intent_id": "intent:change_01M7BCDS8K3F7RT5QZW52H6VT3",
+            "kind": "trajectory_step_recorded",
+            "sequence": 18
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 17,
+        "next_sequence": 18,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M7BCDSB9RK1ZV4N4XY039SMT": {
@@ -1074,6 +1089,22 @@
                 "validation_findings": [
                   "Hosted verification and exact-candidate publication readiness remain pending; no local tests run."
                 ]
+              },
+              {
+                "action": "implementation",
+                "custody_event_id": "event:18",
+                "observations": [
+                  ".decapod/managed/specs/VALIDATION.md",
+                  "https://github.com/DecapodLabs/decapod/issues/1658"
+                ],
+                "proof_refs": [],
+                "scope": [
+                  "issue-1658"
+                ],
+                "sequence": 18,
+                "validation_findings": [
+                  "Hosted verification and exact-candidate publication readiness remain pending; no local tests run."
+                ]
               }
             ]
           }
@@ -1092,6 +1123,7 @@
         ".decapod/managed/specs/INTENT.md",
         ".decapod/managed/specs/INTERFACES.md",
         ".decapod/managed/specs/SECURITY.md",
+        ".decapod/managed/specs/VALIDATION.md",
         "docs/agent/repository-readiness.md",
         "docs/architecture/governed-execution.md",
         "src/decapod/core/repository_profile.rs",
