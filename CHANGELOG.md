@@ -7,6 +7,44 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.144.1](https://github.com/DecapodLabs/decapod/compare/v0.144.0...v0.144.1) - 2026-11-13
+
+### Fixed
+
+- *(ci)* bound complete CLI contract execution
+- *(ci)* refresh Decapod 0.144.0 release surfaces
+- integrate PR1666 with accepted Decapod v0.143.2
+- *(snapshot_provider)* preserve shared GitHub quota state on custody budgets
+- *(snapshot_provider)* preserve shared GitHub quota state on archive capture budgets
+- *(snapshot_provider)* pace only anonymous GitHub polls and drop duplicate remote binding check
+- *(snapshot_provider)* wire anonymous GitHub quota tracking into Budget and PublicGithubReads
+- *(snapshot_provider)* add bounded anonymous GitHub quota pacing ([#1573](https://github.com/DecapodLabs/decapod/pull/1573))
+
+### Other
+
+- resolve PR1666 conflicts and preserve original history
+- update PR1666 onto current master
+- *(governance)* bind v0.143.1 validation epoch receipt for #1573
+- *(specs)* refresh v0.143.1 specs manifest for #1573
+- *(specs)* refresh SEMANTICS.md codebase attestation
+- *(specs)* refresh specs README.md codebase attestation
+- *(specs)* refresh INTERFACES.md codebase attestation
+- *(specs)* refresh INTENT.md codebase attestation
+- *(specs)* document anonymous GitHub quota pacing regressions in VALIDATION.md
+- *(specs)* document bounded rate-limit hint parsing invariants in SECURITY.md
+- *(specs)* document public GitHub quota pacing for Buildkite waits in OPERATIONS.md
+- *(specs)* document advisory anonymous GitHub reader pacing in ARCHITECTURE.md
+- *(container)* refresh managed Dockerfile pin to Decapod v0.143.1
+- *(entrypoints)* refresh GEMINI.md for Decapod v0.143.1
+- *(entrypoints)* refresh CODEX.md for Decapod v0.143.1
+- *(entrypoints)* refresh CLAUDE.md for Decapod v0.143.1
+- *(entrypoints)* refresh AGENTS.md for Decapod v0.143.1
+- *(config)* update reviewed_sources_digest for v0.143.1 and github_quota.rs
+- *(snapshot_provider)* initialize github_quota in Buildkite timeout budget fixture
+- *(snapshot_provider)* initialize github_quota in custody budget fixtures
+- *(snapshot_provider)* initialize github_quota in collection budget fixtures
+- *(snapshot_provider)* cover cold discovery quota pacing and 10-GET bound Buildkite wait
+
 ## [0.144.0](https://github.com/DecapodLabs/decapod/compare/v0.143.2...v0.144.0) - 2026-11-13
 
 ### Fixed
