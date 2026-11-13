@@ -30,6 +30,7 @@ fn write_manifest(
             })
             .collect(),
         validation_epoch: None,
+        validation_record: None,
         status,
     };
 
