@@ -619,6 +619,11 @@
       "id": "events-compact-envelopes",
       "summary": "feat(events): compact non-federation event envelopes with lossless reconstruction (#1630)",
       "input_digest": "sha256:68fe3c27bd3d1be12fa5224cacd11420b25b2ce528afce58c12b8ffe05a7bcab"
+    },
+    {
+      "id": "lcm-compact-event-reads",
+      "summary": "feat(lcm): reconstruct compact event envelopes when reading LCM ledger (#1630)",
+      "input_digest": "sha256:7ee7a5a6e8c7c6fd74dba3a049955eff076201374da3bb2bea90d17f409a431e"
     }
   ],
   "intents": {
