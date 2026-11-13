@@ -689,6 +689,11 @@
       "id": "specs-refresh-wt5-7",
       "summary": "Refresh SEMANTICS.md codebase attestation",
       "input_digest": "sha256:679a482d249dab20b16fdc96cfb80a12be4e1d0304dfc17d88961f45bd407076"
+    },
+    {
+      "id": "specs-refresh-wt5-8",
+      "summary": "Refresh VALIDATION.md codebase attestation",
+      "input_digest": "sha256:4995a60683fdcb0afe0c3da1c31ea81452e9089e3b5243a1c83f70baf03ef40a"
     }
   ],
   "intents": {
