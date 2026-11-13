@@ -581,6 +581,11 @@
       "id": "pr1661-original-history-merge",
       "summary": "Merge original published PR1661 history into current-master governed repair. Resolve projections to supported0.143.1 and preserve imported original checkpoint lineage; source remains exactly tested repair.",
       "input_digest": "sha256:abdf742c22f538a3508ef4ef89025ff5dde5cac95cb1e9c8d5182be17e09cc83"
+    },
+    {
+      "id": "pr1661-concurrent-remote-reconciliation",
+      "summary": "Retain concurrently published240bc35a as an actual merge parent, keeping all remote commits, latest accepted master and tested diagnostic repair; no source changes from already-tested material.",
+      "input_digest": "sha256:57ccd6a46792ce096ec5d593e727b5ccc412965a0965bb56308b85539e67916b"
     }
   ],
   "intents": {
@@ -654,7 +659,7 @@
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:62e4932bc0ea2c28f45398da88cb760e762c3ec56260c7c6a1d398f528c1b030",
+      "artifact_hash": "sha256:5ac9b2da211fc51c322571374d1db6fba284a99f5388142ea48b28b711766210",
       "checks": [
         {
           "name": "binding-rollback-and-lifecycle",
@@ -666,6 +671,10 @@
         },
         {
           "name": "combined-candidate-freshness",
+          "status": "passed"
+        },
+        {
+          "name": "concurrent-remote-source-reconciliation",
           "status": "passed"
         },
         {
@@ -721,10 +730,17 @@
             "intent_id": "intent:change_01M79NVT2SXTG0QCCYXQADTVWT",
             "kind": "trajectory_step_recorded",
             "sequence": 5
+          },
+          {
+            "detail": "trajectory:branch_01M79NVT5SX7NJTXX34J543M80",
+            "event_id": "event:6",
+            "intent_id": "intent:change_01M79NVT2SXTG0QCCYXQADTVWT",
+            "kind": "trajectory_step_recorded",
+            "sequence": 6
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 5,
+        "next_sequence": 6,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M79NVT5SX7NJTXX34J543M80": {
@@ -777,13 +793,28 @@
                 "validation_findings": [
                   "Conflict resolution selects committed current-master repair material for governance, version1431 projections, semantic specs and already-fixed source/test conflicts; no feature source omitted. No force push or merge to master."
                 ]
+              },
+              {
+                "action": "trajectory.record",
+                "command": "Observed concurrent PR1661 head advance f1cf3332 to240bc35a. Fetched and merged actual update normally; it contains same Clippy fix and accepted1431 master. Preserve all remote ancestry and current authored diagnostic repair.",
+                "custody_event_id": "event:6",
+                "observations": [],
+                "proof_refs": [
+                  "concurrent-remote-source-reconciliation"
+                ],
+                "scope": [
+                  "pr-1661-repair"
+                ],
+                "sequence": 6,
+                "validation_findings": []
               }
             ]
           }
         }
       },
       "declared_commands": [
-        "Normal merge original PR1661 f1cf3332 into current-master repair629202b1; retain both parents and original independent checkpoint history."
+        "Normal merge original PR1661 f1cf3332 into current-master repair629202b1; retain both parents and original independent checkpoint history.",
+        "Observed concurrent PR1661 head advance f1cf3332 to240bc35a. Fetched and merged actual update normally; it contains same Clippy fix and accepted1431 master. Preserve all remote ancestry and current authored diagnostic repair."
       ],
       "destination": "pull request",
       "evidence": [],
