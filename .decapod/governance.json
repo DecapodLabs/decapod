@@ -644,6 +644,11 @@
       "id": "spec-validation-negative-completion",
       "summary": "docs(specs): document negative proof-backed completion CLI and unit regressions",
       "input_digest": "sha256:e958ec7266f5f57e465ad30575ab4fe81e6213ff457468b794ec4352701d108a"
+    },
+    {
+      "id": "spec-manifest-refresh-0-143-0",
+      "summary": "docs(specs): refresh .manifest.json and record publication spec reviews",
+      "input_digest": "sha256:0dd55290f8a92cf7f572e7f3a3dc47134c500ebc9b7de21d9cadc29992b5bd7d"
     }
   ],
   "intents": {
@@ -683,6 +688,29 @@
         "decapod validate"
       ],
       "schema_version": "1.1.0",
+      "spec_reviews": [
+        {
+          "disposition": "updated",
+          "path": ".decapod/managed/specs/ARCHITECTURE.md",
+          "reason": "Document canonical task_type and git_ref normalization across pre-execution and terminal validation rules",
+          "reviewed_code_fingerprint": "6083549392b8149286d1b5e4e2d33cffe84916de1fe2e7a919b9b3ce8197ae3d",
+          "spec_material_hash": "3aca112d314a857e2b7e0f111f6dcce2d912030e5aab5b4e556900a60dce5e3b"
+        },
+        {
+          "disposition": "unchanged_with_reason",
+          "path": ".decapod/managed/specs/INTERFACES.md",
+          "reason": "Public CLI and RPC command schemas remain unchanged; internal validation rule context normalization and negative CLI regressions preserve existing interfaces",
+          "reviewed_code_fingerprint": "6083549392b8149286d1b5e4e2d33cffe84916de1fe2e7a919b9b3ce8197ae3d",
+          "spec_material_hash": "bdd0ceb5cd3b9c68d05ceb15fc4c5981aecb18fb53823d649298222f5c2142fe"
+        },
+        {
+          "disposition": "updated",
+          "path": ".decapod/managed/specs/SECURITY.md",
+          "reason": "Document fail-closed terminal rule context resolution and proof-backed completion custody boundaries",
+          "reviewed_code_fingerprint": "6083549392b8149286d1b5e4e2d33cffe84916de1fe2e7a919b9b3ce8197ae3d",
+          "spec_material_hash": "2e0ccd4018835cd767ce2256291ec4b66822c36cde3d797049c46fe8523e14de"
+        }
+      ],
       "state": "APPROVED",
       "stop_conditions": [],
       "title": "Fix #1629 terminal rule task_type/git_ref context and negative proof-backed completion CLI regression",
@@ -691,7 +719,7 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1794546453Z"
+      "updated_at": "1794546506Z"
     },
     "trajectory": {
       "active_boundaries": [
