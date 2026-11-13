@@ -1142,7 +1142,7 @@ field. Nothing in this operation authorizes a mutation, approval or completion.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `0a0498aa94eb3f7551fe07c380ef13b469d188ab33218c72f80fc2e081fc3951`
+- Repository signal fingerprint: `97f60f7a1060e9989264ddbf5b97ac333fcbf0a63c78a0d5afe38d3cd2d94b3e`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (231 files), `tests/` (232 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
@@ -1468,3 +1468,36 @@ The resolved native project also supplies the repository field of newly created 
 ## Versioned cloud mutation receipts
 
 Cloud todo receipt cache v2 is an object with version=2 and records. The reader accepts legacy flat record arrays, preserves their uncertainty and original repository semantics, and rewrites them as v2 under the stable lock. Unsupported future versions fail without replacement. Server request/result contracts and the cloud-session credential record remain unchanged.
+
+## Capability-scoped database maintenance CLI and RPC (#1568)
+
+`src/decapod/cli.rs::DatabaseCommand` and `src/decapod/core/interop.rs` add
+symmetric CLI and RPC operations over the canonical local SQLite datastore while
+preserving `decapod data database inspect` and `data.database.inspect`:
+
+- `data database capabilities` / `data.database.capabilities`: effective
+  `[governance.db_maintenance]` allowlist, accepted-base policy digest and
+  per-capability grant reasons (`db.inspect`, `db.verify`, `db.backup`,
+  `db.lock.diagnose`, `db.lock.retry`, `db.lock.release_own`, `db.recover`).
+- `data database maintain inspect` / `data.database.maintain.inspect`: bounded
+  read-only Dactyl inventory plus non-destructive lock-holder snapshot.
+- `data database maintain verify` (or governed `data database verify`) /
+  `data.database.verify`: read-only Dactyl SQLite integrity probe.
+- `data database maintain backup --destination <path>` (or governed
+  `data database backup`) / `data.database.backup`: safe online backup through
+  `DactylBridge::backup` confined strictly inside `.decapod/backups/` with
+  regular-file, no-symlink, non-overwrite and size-ceiling gates.
+- `data database lock diagnose|retry|release-own` /
+  `data.database.lock.{diagnose,retry,release_own}`: structured lock-holder
+  attribution, bounded backoff retry (`--target`, `--max-attempts`,
+  `--initial-backoff-ms`, `--deadline-ms`, `--operation-id`), and idle
+  current-process lease release without deleting `.lock` sidecars.
+- `data database maintain recover --preserve-original-at <path>` (or governed
+  `data database recover`) / `data.database.recover`: denied to agents with
+  `OWNER_REPAIR_AUTHORITY_REQUIRED` pending owner repair authority (#1590).
+- `data database audit [--limit <n>]` / `data.database.audit`: bounded readback
+  of `.decapod/data/db_maintenance_audit.jsonl`.
+
+`.decapod/config.toml` adds `[governance.db_maintenance]` (`enabled = false` by
+default, closed `allowed_capabilities`, optional `agent_overrides`).
+`decapod init` preserves existing `[governance.db_maintenance]` configuration.

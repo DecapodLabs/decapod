@@ -661,6 +661,11 @@
       "id": "c23-spec-architecture-1568",
       "summary": "docs(specs): document project-opted agent database maintenance architecture (#1568)",
       "input_digest": "sha256:79649f714a963e73513e24408f2a0c50549616c304dec5c67bac74e110baf1fd"
+    },
+    {
+      "id": "c24-spec-interfaces-1568",
+      "summary": "docs(specs): document capability-scoped database maintenance CLI and RPC (#1568)",
+      "input_digest": "sha256:c2adeb8da261666ae3e2a2d348af2b89727815a08db82a82085b7e39299941c5"
     }
   ],
   "intents": {
