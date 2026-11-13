@@ -623,6 +623,11 @@
       "id": "pin-spec-interfaces-01410",
       "summary": "chore(specs): refresh INTERFACES.md release header to 0.141.0",
       "input_digest": "sha256:2253baa918dba72edd17ef2cfe1a62641d4048cec093ecb0c81aca6bdaf2c6dd"
+    },
+    {
+      "id": "pin-spec-semantics-01410",
+      "summary": "chore(specs): refresh SEMANTICS.md release header to 0.141.0",
+      "input_digest": "sha256:67bce2889e7711fbd8bfaa48b0776d0d67797d69fc67a7e4735006cb981aa544"
     }
   ],
   "intents": {
