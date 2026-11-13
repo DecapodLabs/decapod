@@ -36,7 +36,9 @@ use std::path::{Path, PathBuf};
 mod authoring;
 #[path = "task_journal.rs"]
 mod task_journal;
-pub use authoring::{admit_authoring, check_authoring};
+pub use authoring::{
+    admit_authoring, check_authoring, enforce_shared_resource_available, release_authoring_binding,
+};
 pub use task_journal::{
     VerifyBudget as TaskJournalVerifyBudget, VerifyCursor as TaskJournalVerifyCursor,
 };
@@ -1115,7 +1117,13 @@ fn ensure_schema(conn: &Connection) -> Result<(), error::DecapodError> {
         "CREATE TABLE IF NOT EXISTS authoring_bindings (
         worktree_id TEXT PRIMARY KEY, task_id TEXT NOT NULL, agent_id TEXT NOT NULL,
         lease_generation INTEGER NOT NULL, branch TEXT NOT NULL,
-        repository_id TEXT NOT NULL, updated_at TEXT NOT NULL);",
+        repository_id TEXT NOT NULL, updated_at TEXT NOT NULL);
+        DELETE FROM authoring_bindings
+        WHERE rowid NOT IN (
+            SELECT MAX(rowid) FROM authoring_bindings GROUP BY task_id
+        );
+        CREATE UNIQUE INDEX IF NOT EXISTS idx_authoring_bindings_task_id
+        ON authoring_bindings(task_id);",
     )?;
     conn.execute_batch(schemas::STORAGE_COMPONENTS_SCHEMA)
         .map_err(error::DecapodError::StorageError)?;
@@ -1308,6 +1316,12 @@ fn seed_default_risk_zones(conn: &Connection) -> Result<(), error::DecapodError>
         (
             "aptitude.mutate",
             "Aptitude preference mutations require basic trust",
+            "basic",
+            0,
+        ),
+        (
+            "workspace.authoring",
+            "Workspace checkout authoring bindings require basic trust",
             "basic",
             0,
         ),
@@ -3805,6 +3819,9 @@ fn update_status_with_verification(
             if let Some(proof) = verification {
                 proof.commit_on_connection(conn)?;
             }
+            if matches!(new_status, "done" | "archived") {
+                authoring::retire_task_bindings_on_conn(conn, id, &actor, event_type, &ts)?;
+            }
 
             let new_revision = expected_revision + 1;
             if let Some(obj) = payload.as_object_mut() {
@@ -4445,6 +4462,10 @@ pub fn claim_task_with_lease(
                                 "status": "conflict",
                                 "mode": "exclusive",
                                 "conflict_class": "shared_resource",
+                                "predicate": "resource_reservation",
+                                "affected_operation": "shared_resource_mutation",
+                                "authoring_permission": "isolated_source_authoring_unaffected",
+                                "integration_readiness": "requires_shared_resource_custody",
                                 "resolution": "wait_for_resource_custody",
                                 "message": format!(
                                     "Task {} conflicts with {} enforced shared resource claim(s)",
@@ -4591,7 +4612,13 @@ pub fn claim_task_with_lease(
             }
             if !advisory_overlaps.is_empty() {
                 ok["advisory_overlaps"] = serde_json::json!(advisory_overlaps);
+                ok["integration_readiness"] =
+                    serde_json::json!("combined_candidate_reconciliation_required");
+            } else {
+                ok["integration_readiness"] = serde_json::json!("validation_required");
             }
+            ok["authoring_permission"] =
+                serde_json::json!("permitted_after_isolated_workspace_bind");
             ok["authoring_state"] = serde_json::json!("custody_pending");
             ok["authoring_isolation"] = serde_json::json!("custody_acquired_workspace_unproven");
             Ok(ok)
@@ -4650,6 +4677,7 @@ fn force_release_assignment(
         crate::core::db::params![task_id, previous_agent],
     )
     .map_err(error::DecapodError::StorageError)?;
+    authoring::retire_task_bindings_on_conn(conn, task_id, actor, reason, ts)?;
     let ev = TodoEvent {
         ts: ts.to_string(),
         event_id: crate::core::ulid::new_ulid(),
@@ -4870,6 +4898,14 @@ pub fn renew_claim_lease(
                         ],
                     )
                     .map_err(error::DecapodError::StorageError)?;
+                    authoring::renew_task_binding_on_conn(
+                        conn,
+                        id,
+                        agent_id,
+                        prev_gen as i64,
+                        generation as i64,
+                        &ts,
+                    )?;
                     let ev = TodoEvent {
                         ts: ts.clone(),
                         event_id: crate::core::ulid::new_ulid(),
@@ -4988,6 +5024,7 @@ pub fn yield_claim_lease(
                         crate::core::db::params![id, agent_id],
                     )
                     .map_err(error::DecapodError::StorageError)?;
+                    authoring::retire_task_bindings_on_conn(conn, id, agent_id, "task.yield", &ts)?;
                     let reason = if reason.trim().is_empty() {
                         "yielded"
                     } else {
@@ -5669,6 +5706,10 @@ fn handoff_task_impl(
                     serde_json::json!({
                         "status": "conflict",
                         "conflict_class": "shared_resource",
+                        "predicate": "resource_reservation",
+                        "affected_operation": "shared_resource_mutation",
+                        "authoring_permission": "isolated_source_authoring_unaffected",
+                        "integration_readiness": "requires_shared_resource_custody",
                         "resolution": "wait_for_resource_custody",
                         "message": format!(
                             "Task {id} handoff to {to} conflicts with {} enforced shared resource claim(s)",
@@ -5752,6 +5793,7 @@ fn handoff_task_impl(
 
             let claim_id = upsert_task_owner(conn, id, to, "primary", &ts)?;
             sync_legacy_owner_column(conn, id)?;
+            authoring::retire_task_bindings_on_conn(conn, id, acting_agent, "task.handoff", &ts)?;
 
             let event_id = crate::core::ulid::new_ulid();
             let ev = TodoEvent {
@@ -5803,6 +5845,12 @@ fn handoff_task_impl(
                     "lease_state": "active",
                     "dependency_readiness": dependency_readiness,
                     "advisory_overlaps": handoff_advisory,
+                    "authoring_permission": "permitted_after_isolated_workspace_bind",
+                    "integration_readiness": if handoff_advisory.is_empty() {
+                        "validation_required"
+                    } else {
+                        "combined_candidate_reconciliation_required"
+                    },
                     "authoring_isolation": authoring_isolation
                 }),
                 event_id,
@@ -6166,7 +6214,7 @@ fn release_task(root: &Path, id: &str) -> Result<serde_json::Value, error::Decap
     release_task_as_actor(root, id, &mutation_actor(None))
 }
 
-fn release_task_as_actor(
+pub fn release_task_as_actor(
     root: &Path,
     id: &str,
     actor: &str,
@@ -6252,6 +6300,7 @@ fn release_task_as_actor(
                 )?;
                 sync_legacy_owner_column(conn, id)?;
             }
+            authoring::retire_task_bindings_on_conn(conn, id, actor, "task.release", &ts)?;
 
             // Create release event
             let ev = TodoEvent {

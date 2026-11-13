@@ -546,3 +546,240 @@ fn configuration_change_after_successful_execution_invalidates_readiness() {
         },
     )));
 }
+
+#[test]
+fn two_isolated_worktrees_require_combined_candidate_validation_and_target_freshness() {
+    use consumer_readiness_fixture::CONFIG;
+    use decapod::core::bounded_process::Cancellation;
+    use decapod::core::todo::{self, ClaimMode, TodoCommand};
+    use std::path::Path;
+
+    let mut fixture = Fixture::new();
+    let main_repo = fixture.options.root.clone();
+
+    // Establish a shared semantic invariant across two regions of `shared_contract.py`:
+    // LEFT_DELTA + RIGHT_DELTA <= 1. Each isolated agent edit satisfies the invariant
+    // on its own branch, while a clean textual merge violates it until reconciled.
+    fs::write(
+        main_repo.join("shared_contract.py"),
+        "LEFT_DELTA = 0\n\n\nRIGHT_DELTA = 0\n",
+    )
+    .unwrap();
+    fs::write(
+        main_repo.join("scripts/check_source.py"),
+        "import os\nassert not os.path.exists('Cargo.toml')\nassert open('payload.txt').read() == 'ready\\n', 'consumer source is invalid'\nns = {}\nexec(open('shared_contract.py').read(), ns)\nassert ns['LEFT_DELTA'] + ns['RIGHT_DELTA'] <= 1, 'combined concurrency budget exceeded'\nassert not os.path.realpath(os.getcwd()).startswith(os.path.realpath(os.environ['FIXTURE_WORKTREE'])), 'proof used mutable worktree'\nassert os.environ['DECAPOD_NATIVE_PROOF_ACTIVE'] == '1'\nassert os.path.isdir(os.environ['HOME'])\nprint('consumer-source-inspected')\n",
+    )
+    .unwrap();
+
+    fs::write(
+        main_repo.join(".gitignore"),
+        ".decapod/data/\n.decapod/managed/governance-document.lock\n.decapod/workspaces/\n",
+    )
+    .unwrap();
+    let sources =
+        runtime::discover_source_inventory(&fixture.options, &Cancellation::default()).unwrap();
+    fixture
+        .proof
+        .required_profile
+        .as_mut()
+        .unwrap()
+        .reviewed_sources_digest = sources.digest().unwrap();
+    let root_cfg = toml::Value::try_from(serde_json::json!({
+        "schema_version": "1.0.0",
+        "init": {"diagram_style": "ascii", "entrypoints": []},
+        "repo": {},
+        "proof": fixture.proof,
+    }))
+    .unwrap();
+    fs::write(
+        main_repo.join(CONFIG),
+        toml::to_string_pretty(&root_cfg).unwrap(),
+    )
+    .unwrap();
+    fixture.commit("add shared semantic invariant to consumer contract");
+    git(&main_repo, &["checkout", "main"]);
+    git(&main_repo, &["merge", "--ff-only", "consumer-work"]);
+    git(&main_repo, &["push", "origin", "main"]);
+    git(&main_repo, &["checkout", "consumer-work"]);
+
+    // Provision canonical task store and two overlapping tasks in distinct isolated worktrees.
+    let store = main_repo.join(".decapod/data");
+    fs::create_dir_all(&store).unwrap();
+    todo::initialize_todo_db(&store).unwrap();
+    let add_scoped = |title: &str| -> String {
+        let cmd = TodoCommand::Add {
+            title: title.to_string(),
+            description: String::new(),
+            tags: String::new(),
+            owner: String::new(),
+            due: None,
+            r#ref: String::new(),
+            scope: r#"paths:["shared_contract.py"]"#.to_string(),
+            dir: Some(main_repo.to_string_lossy().to_string()),
+            priority: "medium".to_string(),
+            depends_on: String::new(),
+            blocks: String::new(),
+            parent: None,
+            one_shot: 0,
+        };
+        todo::add_task(&store, &cmd).unwrap()["id"]
+            .as_str()
+            .unwrap()
+            .to_string()
+    };
+    let task_a = add_scoped("Agent alpha left-delta slice");
+    let task_b = add_scoped("Agent beta right-delta slice");
+    assert_eq!(
+        todo::claim_task(&store, &task_a, "alpha", ClaimMode::Exclusive).unwrap()["status"],
+        "ok"
+    );
+    let beta_claim = todo::claim_task(&store, &task_b, "beta", ClaimMode::Exclusive).unwrap();
+    assert_eq!(beta_claim["status"], "ok");
+    assert_eq!(
+        beta_claim["result"]["integration_readiness"],
+        "combined_candidate_reconciliation_required"
+    );
+
+    let wt_alpha_raw = main_repo.join(".decapod/workspaces/wt-alpha");
+    let wt_beta_raw = main_repo.join(".decapod/workspaces/wt-beta");
+    fs::create_dir_all(wt_alpha_raw.parent().unwrap()).unwrap();
+    let branch_alpha = format!("agent/alpha/{task_a}-left");
+    let branch_beta = format!("agent/beta/{task_b}-right");
+    git(
+        &main_repo,
+        &[
+            "worktree",
+            "add",
+            "-b",
+            &branch_alpha,
+            wt_alpha_raw.to_str().unwrap(),
+            "main",
+        ],
+    );
+    git(
+        &main_repo,
+        &[
+            "worktree",
+            "add",
+            "-b",
+            &branch_beta,
+            wt_beta_raw.to_str().unwrap(),
+            "main",
+        ],
+    );
+    let wt_alpha = wt_alpha_raw.canonicalize().unwrap();
+    let wt_beta = wt_beta_raw.canonicalize().unwrap();
+    todo::admit_authoring(&store, &wt_alpha, "alpha").unwrap();
+    todo::admit_authoring(&store, &wt_beta, "beta").unwrap();
+
+    // Helper to build an isolated Fixture view targeting a specific worktree checkout
+    // without mutating `.decapod/config.toml` across branches.
+    let make_wt_options = |wt: &Path, suffix: &str| -> (runtime::Options, Fixture) {
+        let mut opts = fixture.options.clone();
+        opts.root = wt.to_path_buf();
+        opts.evidence_parent = fixture._storage.path().join(format!("evidence-{suffix}"));
+        fs::create_dir_all(&opts.evidence_parent).unwrap();
+        let sub_fixture = Fixture {
+            _storage: tempfile::tempdir().unwrap(),
+            upstream: fixture.upstream.clone(),
+            options: opts.clone(),
+            proof: fixture.proof.clone(),
+        };
+        (opts, sub_fixture)
+    };
+
+    // 1. Both isolated branches independently validate and pass (`ready == true`).
+    fs::write(
+        wt_alpha.join("shared_contract.py"),
+        "LEFT_DELTA = 1\n\n\nRIGHT_DELTA = 0\n",
+    )
+    .unwrap();
+    git(&wt_alpha, &["add", "shared_contract.py"]);
+    git(&wt_alpha, &["commit", "-m", "alpha isolated change"]);
+    let (_, alpha_fixture) = make_wt_options(&wt_alpha, "alpha-1");
+    let mut alpha_host = LocalHost::new(&alpha_fixture, false);
+    let alpha_report = alpha_fixture.validate(&mut alpha_host);
+    assert!(alpha_report.ready, "{alpha_report:?}");
+
+    fs::write(
+        wt_beta.join("shared_contract.py"),
+        "LEFT_DELTA = 0\n\n\nRIGHT_DELTA = 1\n",
+    )
+    .unwrap();
+    git(&wt_beta, &["add", "shared_contract.py"]);
+    git(&wt_beta, &["commit", "-m", "beta isolated change"]);
+    let (_, beta_fixture) = make_wt_options(&wt_beta, "beta-1");
+    let mut beta_host = LocalHost::new(&beta_fixture, false);
+    let beta_report = beta_fixture.validate(&mut beta_host);
+    assert!(beta_report.ready, "{beta_report:?}");
+
+    // 2. Clean textual Git merge into `wt_alpha` breaks the combined semantic invariant:
+    //    `runtime::validate` MUST fail (`ready == false`) with no readiness receipt.
+    git(&wt_alpha, &["merge", "--no-edit", &branch_beta]);
+    let (_, merged_fixture) = make_wt_options(&wt_alpha, "alpha-merged-broken");
+    let mut merged_host = LocalHost::new(&merged_fixture, false);
+    let merged_report = merged_fixture.validate(&mut merged_host);
+    assert!(
+        !merged_report.ready,
+        "semantically broken combined candidate must not pass readiness: {merged_report:?}"
+    );
+    let merged_dir = merged_report.evidence_path.unwrap();
+    assert!(
+        !merged_dir
+            .join("completion/native-readiness-receipt.json")
+            .exists(),
+        "failed combined candidate must not emit a readiness receipt"
+    );
+
+    // 3. Reconciling the combined candidate restores readiness (`ready == true`).
+    fs::write(
+        wt_alpha.join("shared_contract.py"),
+        "LEFT_DELTA = 1\n\n\nRIGHT_DELTA = 0\n",
+    )
+    .unwrap();
+    git(&wt_alpha, &["add", "shared_contract.py"]);
+    git(
+        &wt_alpha,
+        &["commit", "-m", "reconcile combined candidate invariant"],
+    );
+    let (_, reconciled_fixture) = make_wt_options(&wt_alpha, "alpha-reconciled");
+    let mut reconciled_host = LocalHost::new(&reconciled_fixture, false);
+    let reconciled_report = reconciled_fixture.validate(&mut reconciled_host);
+    assert!(reconciled_report.ready, "{reconciled_report:?}");
+    assert!(
+        reconciled_report
+            .evidence_path
+            .unwrap()
+            .join("completion/native-readiness-receipt.json")
+            .is_file()
+    );
+
+    // 4. Advancing upstream `refs/heads/main` invalidates prior readiness until re-integrated.
+    git(&main_repo, &["checkout", "main"]);
+    git(
+        &main_repo,
+        &[
+            "commit",
+            "--allow-empty",
+            "-m",
+            "upstream accepted target advance",
+        ],
+    );
+    git(&main_repo, &["push", "origin", "main"]);
+
+    let (_, stale_target_fixture) = make_wt_options(&wt_alpha, "alpha-stale-target");
+    let mut stale_target_host = LocalHost::new(&stale_target_fixture, false);
+    let stale_target_report = stale_target_fixture.validate(&mut stale_target_host);
+    assert!(
+        !stale_target_report.ready,
+        "advancing upstream target must invalidate candidate readiness until rebased/merged: {stale_target_report:?}"
+    );
+
+    // Fetching and merging the new upstream `origin/main` + revalidating succeeds again.
+    git(&wt_alpha, &["fetch", "origin", "main"]);
+    git(&wt_alpha, &["merge", "--no-edit", "origin/main"]);
+    let (_, refreshed_fixture) = make_wt_options(&wt_alpha, "alpha-refreshed-target");
+    let mut refreshed_host = LocalHost::new(&refreshed_fixture, false);
+    let refreshed_report = refreshed_fixture.validate(&mut refreshed_host);
+    assert!(refreshed_report.ready, "{refreshed_report:?}");
+}

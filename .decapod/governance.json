@@ -547,6 +547,14 @@
       "proof_refs": [
         "git:1c60df45c5db1731fb348069cf1e8f8f5dc410cc"
       ]
+    },
+    {
+      "id": "pr1663-accepted-master-1441-integration-2",
+      "summary": "Resolve accepted-master integration with both storage journal APIs and custody/resource guards, reviewed0.144.1 inputs and current release surfaces. No local tests or live candidate migrations.",
+      "input_digest": "sha256:e84cf08617f8203104ab6a10bd939663added696e8883d63b6eea0332c08d011",
+      "proof_refs": [
+        "git:5e23ad68142e0de5decbd6fc8e655593ef5fe83b"
+      ]
     }
   ],
   "intents": {
@@ -587,23 +595,23 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Prepared original storage source is preserved for integration, with explicit lossless reconstruction, admission, component and format obligations. Historical measurements remain historical; no local tests or live candidate datastore migration are performed. Hosted CI must independently establish the current result.",
-          "reviewed_code_fingerprint": "765977d9bdd6b9a88e48e73a6ed6fab691831c884d1721f3591f1781c9960dc5",
-          "spec_material_hash": "0b608f2d0f5b5db6e8d06cd8f1434a72e0e0f69a97e4b5867495b2316b8e26b4"
+          "reason": "Resolved todo export overlap by retaining custody/resource functions and component-journal verification. Integrated storage changes preserve accepted master behavior; source0.144.1 inventory and official release projections are current. Hosted CI must establish tests; no local tests or live candidate migrations run.",
+          "reviewed_code_fingerprint": "f3290b4c716fb303be9c9a783d504a8e2e52adbb04312f1c6d9b6a4999c77c26",
+          "spec_material_hash": "66e671df924ac36cdfef5d07a591497c64e2dec29cabfbb215970595a74d137c"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Prepared original storage source is preserved for integration, with explicit lossless reconstruction, admission, component and format obligations. Historical measurements remain historical; no local tests or live candidate datastore migration are performed. Hosted CI must independently establish the current result.",
-          "reviewed_code_fingerprint": "765977d9bdd6b9a88e48e73a6ed6fab691831c884d1721f3591f1781c9960dc5",
-          "spec_material_hash": "e03e68b61ecf38f0355d80eb5252cb75b5c9df38437e960926f8c499652920cf"
+          "reason": "Resolved todo export overlap by retaining custody/resource functions and component-journal verification. Integrated storage changes preserve accepted master behavior; source0.144.1 inventory and official release projections are current. Hosted CI must establish tests; no local tests or live candidate migrations run.",
+          "reviewed_code_fingerprint": "f3290b4c716fb303be9c9a783d504a8e2e52adbb04312f1c6d9b6a4999c77c26",
+          "spec_material_hash": "c2909739996e7a385f361bf721602e56d51c3ce2db0face804b571ebc36d19a4"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Prepared original storage source is preserved for integration, with explicit lossless reconstruction, admission, component and format obligations. Historical measurements remain historical; no local tests or live candidate datastore migration are performed. Hosted CI must independently establish the current result.",
-          "reviewed_code_fingerprint": "765977d9bdd6b9a88e48e73a6ed6fab691831c884d1721f3591f1781c9960dc5",
-          "spec_material_hash": "a75e291c74f5dcd8fa90674b6f81bb564f7d5e8a97dbe1c23f45b971f11f62bb"
+          "reason": "Resolved todo export overlap by retaining custody/resource functions and component-journal verification. Integrated storage changes preserve accepted master behavior; source0.144.1 inventory and official release projections are current. Hosted CI must establish tests; no local tests or live candidate migrations run.",
+          "reviewed_code_fingerprint": "f3290b4c716fb303be9c9a783d504a8e2e52adbb04312f1c6d9b6a4999c77c26",
+          "spec_material_hash": "30a6061554c0714340a021db4033946b2028ecfa01cfb47cdcec51f41fad8e9e"
         }
       ],
       "state": "APPROVED",
@@ -614,14 +622,14 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1794597420Z"
+      "updated_at": "1794597763Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch",
         "Preserve original source and parents; no force-push, local tests, live candidate migrations or automatic merge."
       ],
-      "artifact_hash": "sha256:0416d43f2e953dad24ae14d43901316d53c07b2ed1f3cfff2ac85be8cefbb86c",
+      "artifact_hash": "sha256:cc0945b5b8e7039f34e219575728bb250449253e4bc6a22dae4467460d9bcc1f",
       "checks": [],
       "current_phase": "integration",
       "custody": {
@@ -644,10 +652,17 @@
             "intent_id": "intent:change_01M79W3PBHXH8GNF8YWMNPHZCD",
             "kind": "trajectory_step_recorded",
             "sequence": 4
+          },
+          {
+            "detail": "trajectory:branch_01M79W3PFCRQMK8QZJN5TWCK5K",
+            "event_id": "event:5",
+            "intent_id": "intent:change_01M79W3PBHXH8GNF8YWMNPHZCD",
+            "kind": "trajectory_step_recorded",
+            "sequence": 5
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 4,
+        "next_sequence": 5,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M79W3PFCRQMK8QZJN5TWCK5K": {
@@ -669,19 +684,43 @@
                 "validation_findings": [
                   "Historical source tests and benchmarks do not prove the new accepted-target integration."
                 ]
+              },
+              {
+                "action": "integration",
+                "command": "Merge accepted master; retain authoring/resource and journal exports; retain accepted product specs and document storage obligations; refresh reviewed source and release bindings.",
+                "custody_event_id": "event:5",
+                "observations": [
+                  "src/decapod/core/todo.rs",
+                  "git:5e23ad68142e0de5decbd6fc8e655593ef5fe83b",
+                  "/private/tmp/decapod-pr1663-master1441-inventory.json"
+                ],
+                "proof_refs": [],
+                "scope": [
+                  "pr-1663-master-1432"
+                ],
+                "sequence": 5,
+                "validation_findings": [
+                  "Current hosted CI and production datastore compatibility remain unproven."
+                ]
               }
             ]
           }
         }
       },
-      "declared_commands": [],
+      "declared_commands": [
+        "Merge accepted master; retain authoring/resource and journal exports; retain accepted product specs and document storage obligations; refresh reviewed source and release bindings."
+      ],
       "destination": "pull request",
       "evidence": [
-        "git:1c60df45c5db1731fb348069cf1e8f8f5dc410cc"
+        "/private/tmp/decapod-pr1663-master1441-inventory.json",
+        "git:1c60df45c5db1731fb348069cf1e8f8f5dc410cc",
+        "git:5e23ad68142e0de5decbd6fc8e655593ef5fe83b"
       ],
       "inspected_files": [],
       "intent_id": "intent:change_01M79W3PBHXH8GNF8YWMNPHZCD",
-      "modified_files": [],
+      "modified_files": [
+        "src/decapod/core/todo.rs"
+      ],
       "next_transitions": [
         "Refine plan and declare falsifiable checks"
       ],
@@ -694,6 +733,7 @@
       "task_id": "bugs_01m79w2ky7pvy503",
       "tool_calls": [],
       "unresolved_assumptions": [
+        "Current hosted CI and production datastore compatibility remain unproven.",
         "Historical source tests and benchmarks do not prove the new accepted-target integration."
       ]
     }

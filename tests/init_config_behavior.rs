@@ -1244,7 +1244,7 @@ fn init_validation_rejects_traversal_in_guided_paths() {
         "init should preserve noninteractive behavior"
     );
 
-    let validate = run_decapod(tmp.path(), &["validate", "--format", "json"]);
+    let validate = run_decapod(tmp.path(), &["govern", "project-check", "--format", "json"]);
     assert!(
         !validate.status.success(),
         "validate must reject traversal paths: {}",

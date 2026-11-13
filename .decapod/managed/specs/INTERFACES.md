@@ -1,5 +1,17 @@
 # Interfaces
 
+## Custody and prerequisite diagnostics (#1661)
+
+`workspace status` reports `can_work=false` when checkout custody is unproven.
+`govern project-check --format json` remains usable after `init --no-git` and
+reports `scope=project_prerequisites`, `publication_ready=false`, and no readiness
+result. Full `validate` rejects that same non-Git directory with
+`gate=workspace_protection` / `AUTHORING_CHECKOUT_UNVERIFIED`.
+Task renewal and lifecycle operations update or retire their checkout binding
+atomically; a second live binding is `AUTHORING_TASK_ALREADY_BOUND`.
+`resource:<name>` overlap diagnostics identify the affected shared operation,
+and occupied release/integration reservations yield `SHARED_RESOURCE_OCCUPIED`.
+
 ## Optional reflection on existing interfaces
 
 `infer orientation --task-id <id> --reflection '<JSON>'` and
@@ -1142,8 +1154,8 @@ field. Nothing in this operation authorizes a mutation, approval or completion.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `765977d9bdd6b9a88e48e73a6ed6fab691831c884d1721f3591f1781c9960dc5`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (232 files), `tests/` (232 files)
+- Repository signal fingerprint: `f3290b4c716fb303be9c9a783d504a8e2e52adbb04312f1c6d9b6a4999c77c26`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (233 files), `tests/` (232 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 
@@ -1469,10 +1481,14 @@ The resolved native project also supplies the repository field of newly created 
 
 Cloud todo receipt cache v2 is an object with version=2 and records. The reader accepts legacy flat record arrays, preserves their uncertainty and original repository semantics, and rewrites them as v2 under the stable lock. Unsupported future versions fail without replacement. Server request/result contracts and the cloud-session credential record remain unchanged.
 
-## PR 1663: accepted v0.143.2 source integration
+## PR 1666: accepted v0.143.2 source integration
 
-Readers distinguish supported legacy/current formats from `STORAGE_FORMAT_INCOMPATIBLE`. Snapshot-bound paged verification reports drift rather than completing a mixed history. Component transfer remains self-contained; inventory reports aggregate format/reuse attribution without exposing source records.
+The existing public provider and Budget interfaces retain HTTP403/429 failures and cancellation/deadline semantics. Missing or malformed quota reset information cannot authorize another request or a ready judgment. No alternate credential, provider, receipt or daemon is introduced.
 
-## PR1663 current-master preparation
+## PR1666 current-master integration
 
-Preserve existing storage inventory, journal verification and transfer interfaces, explicit-only page reclamation and versioned format guards. Merge accepted custody and runtime-owner behavior without dropping storage validation or replay protections. Current public-source CI is the verification provider for this update; no local test results are claimed.
+Existing snapshot-provider calls and typed failures remain unchanged. HTTP403/429 denial remains immediate and no authentication fallback is added. Integration preserves the current source-CI event contract and its exact base/head binding.
+
+## PR1663 integrated storage behavior
+
+Preserve versioned journal/transfer and inventory outputs, checked write admission and explicit-only page reclamation. Existing custody and resource APIs remain exported. No provider/check requirement is removed; current-source inventory is reviewed after accepted-master integration.

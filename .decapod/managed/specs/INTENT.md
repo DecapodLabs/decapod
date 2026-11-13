@@ -1,5 +1,16 @@
 # Intent
 
+## Concurrent custody and diagnostic scope (#1469, #1661)
+
+Independent tasks can author concurrently in distinct admitted worktrees. A task
+lease has one live checkout binding; transfer, retirement and renewal preserve
+fencing. Explicit shared-resource reservations govern integration and release
+operations rather than excluding unrelated source work. Non-Git projects can
+run bounded prerequisite diagnostics without being admitted for authoring or
+claiming publication readiness. This repair retains the accepted master policy
+and Decapod 0.143.1 release contract; it does not complete the broader ten-worker
+or autonomous-runtime acceptance mandate.
+
 ## Evidence-grounded reflection before consequential action
 
 Decapod helps agents reconsider a proposed action through optional bounded
@@ -341,8 +352,8 @@ These declarations select authoring and proof obligations; they do not attest im
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `765977d9bdd6b9a88e48e73a6ed6fab691831c884d1721f3591f1781c9960dc5`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (232 files), `tests/` (232 files)
+- Repository signal fingerprint: `f3290b4c716fb303be9c9a783d504a8e2e52adbb04312f1c6d9b6a4999c77c26`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (233 files), `tests/` (232 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 
@@ -527,10 +538,14 @@ Managed cloud commands must distinguish the local Git checkout from a service-is
 
 The resolved native project also supplies the repository field of newly created tasks. Before the first possible write dispatch, the existing machine-private todo operation journal atomically binds the operation to a digest of its resolved service/project route. Preflight login and initial project selection retain the same operation ID; subsequent selection changes cannot replay an uncertain or successful write into another project. Older unknown records remain bound to their original canonical repository semantics. The real PostgreSQL consumer exposed the former Git-label write mismatch; that failed candidate supplies no successful native proof.
 
-## PR 1663: accepted v0.143.2 source integration
+## PR 1666: accepted v0.143.2 source integration
 
-Bound durable task writes and reduce repeated storage without losing historical logical states, custody, digests or ordering. Current-source integration preserves the proposed lossless format and its explicit compatibility failures; it does not claim unexecuted hosted PostgreSQL or historical production-store measurements.
+Reduce anonymous GitHub discovery consumption while preserving exact-source proof, immediate denial behavior and the original invocation deadline. Quota hints govern waiting, not acceptance; this proposal does not establish current provider execution.
 
-## PR1663 current-master preparation
+## PR1666 current-master integration
 
-Preserve the prepared PR1663 storage implementation before integrating current master5e23ad68 and the0.144.1 source release. Lossless reconstruction, bounded new writes, journal/component integrity and safe recovery remain obligations. Historical synthetic SQLite benchmarks do not establish present PostgreSQL parity or complete current readiness.
+Incorporate accepted master 9b900254, including custody, protected-path/workunit fixes and the 0.144.0 source release. Preserve the quota-pacing feature and its original PR history, then repair hosted CI failures one at a time. No local test execution or independent full readiness is claimed.
+
+## PR1663 integrated storage behavior
+
+Integrate PR1663 on accepted master5e23ad68 and0.144.1 while preserving storage admission, lossless history and format obligations. Keep accepted custody, quota and runtime-owner changes. Historical benchmark claims remain historical; only fresh hosted execution can establish this candidate's checks.

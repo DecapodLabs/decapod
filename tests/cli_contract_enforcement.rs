@@ -1,6 +1,8 @@
+use decapod::core::bounded_process::BoundedCommand;
 use std::path::{Path, PathBuf};
 use std::process::Command;
 use std::sync::OnceLock;
+use std::time::Duration;
 use tempfile::TempDir;
 
 static SHARED_REPO: OnceLock<(TempDir, PathBuf)> = OnceLock::new();
@@ -36,8 +38,10 @@ fn run_decapod(dir: &Path, args: &[&str]) -> std::process::Output {
         .current_dir(dir)
         .env("DECAPOD_VALIDATE_SKIP_GIT_GATES", "1")
         .args(args)
-        .output()
-        .expect("run decapod")
+        .bounded_output(Duration::from_secs(60))
+        .unwrap_or_else(|error| {
+            panic!("decapod {args:?} did not finish within the command budget: {error}")
+        })
 }
 
 #[test]
