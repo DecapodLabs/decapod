@@ -1195,3 +1195,13 @@ The integrated `todo` module exports both accepted authoring/resource custody fu
 ## PR1662 current-master preparation
 
 The db_maintenance module resolves accepted canonical-repository policy and uses existing Dactyl and StorageLock primitives. It does not replace the datastore or migration authority. Retain current-master storage format guards, task custody, provider verification and runtime ownership while integrating this operation boundary.
+
+## Diagnostic overrides and full readiness (#1659)
+
+`validation_runtime::require_full_readiness_environment` is the shared admission
+for full claims. The runtime invokes it before prerequisites or selection; CLI
+and RPC full dispatch, workspace publication and current/historical validated
+completion invoke the same owner. The originating local completion process checks
+before broker handoff. `group_broker::CallerContext` carries and clears diagnostic
+flags per request so worker scope cannot come from another caller. Partial
+project-prerequisite and CI-local routes do not gain publication authority.

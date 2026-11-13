@@ -637,6 +637,14 @@
       "proof_refs": [
         "https://github.com/DecapodLabs/decapod/issues/1659"
       ]
+    },
+    {
+      "id": "issue-1659-file-13",
+      "summary": "docs(specs): centralize diagnostic override admission; file-by-file checkpoint, verification pending.",
+      "input_digest": "sha256:5eda60c5b2910e2ccdda2dae36bf414a84f77919b40d395bae816b961960a821",
+      "proof_refs": [
+        "https://github.com/DecapodLabs/decapod/issues/1659"
+      ]
     }
   ],
   "intents": {
@@ -687,7 +695,7 @@
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:0e2db849136e44bb44091fdd969fab14e3b9ed7b39298a19eea5b44f1179b22d",
+      "artifact_hash": "sha256:4a1616ef62c12fa62e7dae0bf31b87072f7d5ff92ca5bde04aea9a16ac503e60",
       "checks": [],
       "current_phase": "implementation",
       "custody": {
@@ -787,10 +795,17 @@
             "intent_id": "intent:change_01M7BCEHXJQR8HVADJF91PJKGD",
             "kind": "trajectory_step_recorded",
             "sequence": 15
+          },
+          {
+            "detail": "trajectory:branch_01M7BCEJ05EP527M18XXSF6GK6",
+            "event_id": "event:16",
+            "intent_id": "intent:change_01M7BCEHXJQR8HVADJF91PJKGD",
+            "kind": "trajectory_step_recorded",
+            "sequence": 16
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 15,
+        "next_sequence": 16,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M7BCEJ05EP527M18XXSF6GK6": {
@@ -989,6 +1004,22 @@
                 "validation_findings": [
                   "Hosted verification and exact-candidate publication readiness remain pending; no local tests run."
                 ]
+              },
+              {
+                "action": "implementation",
+                "custody_event_id": "event:16",
+                "observations": [
+                  ".decapod/managed/specs/ARCHITECTURE.md",
+                  "https://github.com/DecapodLabs/decapod/issues/1659"
+                ],
+                "proof_refs": [],
+                "scope": [
+                  "issue-1659"
+                ],
+                "sequence": 16,
+                "validation_findings": [
+                  "Hosted verification and exact-candidate publication readiness remain pending; no local tests run."
+                ]
               }
             ]
           }
@@ -1002,6 +1033,7 @@
       "inspected_files": [],
       "intent_id": "intent:change_01M7BCEHXJQR8HVADJF91PJKGD",
       "modified_files": [
+        ".decapod/managed/specs/ARCHITECTURE.md",
         ".decapod/managed/specs/INTENT.md",
         "src/decapod/core/group_broker.rs",
         "src/decapod/core/validation_runtime.rs",
