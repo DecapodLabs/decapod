@@ -701,6 +701,11 @@
       "id": "c30-refresh-operations",
       "summary": "docs(specs): synchronize OPERATIONS.md overlay digest after #1568 update",
       "input_digest": "sha256:1c76c8793e8c128a7172812d76387a35f2f63aba0a9541dc9be47c1436fc2406"
+    },
+    {
+      "id": "c31-refresh-readme",
+      "summary": "docs(specs): synchronize specs README.md overlay digest after #1568 update",
+      "input_digest": "sha256:e4c000ee83b5d61ffacb1ea65116d63b1d6e8848fc038a8d238d41b676cf7f2d"
     }
   ],
   "intents": {
