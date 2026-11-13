@@ -1500,3 +1500,15 @@ Existing `data database` maintenance/capability/lock/audit CLI and RPC operation
 ## PR1662 current-master preparation
 
 Preserve symmetric data.database CLI/RPC capability discovery, diagnostics, bounded maintenance and audit interfaces. Policy admission must happen before startup migrations for maintenance commands; raw SQL, destructive replacement and arbitrary destinations remain outside the delegated contract.
+
+## Full claims with diagnostic gate overrides (#1659)
+
+`READINESS_GATE_OVERRIDE_UNSUPPORTED` identifies an active Git/tooling skip or a
+truthy fingerprint skip. Remove the override and obtain fresh validation in the
+claimed worktree. Presence-only Git/tooling flags remain active even with empty,
+zero or false strings; the existing fingerprint truth-value parser is preserved.
+Explicit `ci_local` and `project_prerequisites` diagnostics retain their output
+scopes and cannot yield `publication_ready=true`. An audited validation bypass
+also remains non-proof. No new command, adapter policy or verdict taxonomy is
+introduced. Older brokers reject unfamiliar context fields; inspect uncertain
+operation outcomes rather than blindly replaying a write.
