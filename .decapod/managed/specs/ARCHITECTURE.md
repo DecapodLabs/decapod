@@ -920,7 +920,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `abcef30d7183362a0ee48960d05c6a5c6b5eb95e7faa96ce992e3cc4472b3413`
+- Repository signal fingerprint: `88d0133dc8e8d47f8ce0c253a315e9b551165fb8e644fc6b1c7d188b10ddea23`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (234 files), `tests/` (232 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
@@ -1204,3 +1204,24 @@ or Nix input update is necessary. SQLite, Neon and default Supabase features
 remain selected by the existing application facade. SDK resource budgets are
 retained: SQL, parameters, decoded rows, wire bodies and deadlines fail closed.
 No new connector policy interpreter, daemon, HTTP/3 or hosted runner is added.
+
+## Preserve accepted local verification policy (#1658)
+
+`validation_runtime::load_project` reads the target's committed proof configuration
+and calls `repository_profile::preserve_accepted` before provider selection when
+that target uses repository-local proof. The existing contract owner compares
+required commands, arguments, execution declarations and workflow coverage.
+Additive required checks remain possible; replacement and profile substitution
+fail with `ACCEPTED_REPOSITORY_CONTRACT_CHANGED`. Candidate review digests still
+establish internal consistency, while the accepted Git target supplies policy
+authority. No new policy interpreter, receipt store or service is introduced.
+
+### Accepted source-definition binding
+
+The local-profile branch also requires the candidate source-definition review
+digest to equal the accepted target's digest. Discovery still independently
+checks the actual bytes. This closes check-script replacement with an unchanged
+command. The existing discovered validation inventory is the boundary; it is not
+a claim to infer the semantic or transitive completeness of arbitrary commands.
+Ordinary subject changes still require fresh source-bound execution. Changes to
+inventoried validation definitions require a separately accepted policy revision.

@@ -685,6 +685,14 @@
       "proof_refs": [
         "https://github.com/DecapodLabs/decapod/issues/1667"
       ]
+    },
+    {
+      "id": "issue-1667-integrate-f779e391",
+      "summary": "Integrate accepted master f779e39111ec8b3c8c41569f68a3a7604df167e7 and merged1675 accepted-policy hardening with issue1667. Preserve current task journal/checkpoints and authored specs from both branches; regenerate projections through the kernel. Previous candidate readiness does not apply; no local tests.",
+      "input_digest": "sha256:fb34c70e77b47a357525875b27c2cdf6d215df9c28bb20b988759672cc4881ee",
+      "proof_refs": [
+        "https://github.com/DecapodLabs/decapod/pull/1675"
+      ]
     }
   ],
   "intents": {
@@ -725,23 +733,23 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Hosted setup rejected the temporary CARGO_BAZEL_REPIN=1 lock input. Regenerate under the normal unset environment and preserve parsed values/accepted indentation; no local build or test.",
-          "reviewed_code_fingerprint": "abcef30d7183362a0ee48960d05c6a5c6b5eb95e7faa96ce992e3cc4472b3413",
-          "spec_material_hash": "3d374960746fa09b7742ed4c1037737846f3384dc249f12cdd3304a51dfc9418"
+          "reason": "Integrate accepted master f779e39111ec8b3c8c41569f68a3a7604df167e7 and merged1675 accepted-policy hardening with issue1667. Preserve current task journal/checkpoints and authored specs from both branches; regenerate projections through the kernel. Previous candidate readiness does not apply; no local tests.",
+          "reviewed_code_fingerprint": "88d0133dc8e8d47f8ce0c253a315e9b551165fb8e644fc6b1c7d188b10ddea23",
+          "spec_material_hash": "c7ec7fc6a463392c5fb87a434d69170abe5c13dc147d849bef9f26443187a1ec"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Hosted setup rejected the temporary CARGO_BAZEL_REPIN=1 lock input. Regenerate under the normal unset environment and preserve parsed values/accepted indentation; no local build or test.",
-          "reviewed_code_fingerprint": "abcef30d7183362a0ee48960d05c6a5c6b5eb95e7faa96ce992e3cc4472b3413",
-          "spec_material_hash": "3a61c1bdb97a731b3ff3a1af34b91194c3371580c372371eea8c49b9ea8ead4d"
+          "reason": "Integrate accepted master f779e39111ec8b3c8c41569f68a3a7604df167e7 and merged1675 accepted-policy hardening with issue1667. Preserve current task journal/checkpoints and authored specs from both branches; regenerate projections through the kernel. Previous candidate readiness does not apply; no local tests.",
+          "reviewed_code_fingerprint": "88d0133dc8e8d47f8ce0c253a315e9b551165fb8e644fc6b1c7d188b10ddea23",
+          "spec_material_hash": "b47a7a8fd245a5d1b462b2a396c2b82ee9fc123008e19dbf15c1d5398ebed229"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Hosted setup rejected the temporary CARGO_BAZEL_REPIN=1 lock input. Regenerate under the normal unset environment and preserve parsed values/accepted indentation; no local build or test.",
-          "reviewed_code_fingerprint": "abcef30d7183362a0ee48960d05c6a5c6b5eb95e7faa96ce992e3cc4472b3413",
-          "spec_material_hash": "7bbeb9496ca39c59f7d01134362a2e78b9a972cca832c1d4ee72593c08f13024"
+          "reason": "Integrate accepted master f779e39111ec8b3c8c41569f68a3a7604df167e7 and merged1675 accepted-policy hardening with issue1667. Preserve current task journal/checkpoints and authored specs from both branches; regenerate projections through the kernel. Previous candidate readiness does not apply; no local tests.",
+          "reviewed_code_fingerprint": "88d0133dc8e8d47f8ce0c253a315e9b551165fb8e644fc6b1c7d188b10ddea23",
+          "spec_material_hash": "c4b217ac3486512e3460310c437a0250686d37ce1a2211f0f7e1d101871b67aa"
         }
       ],
       "state": "APPROVED",
@@ -752,13 +760,13 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1794610724Z"
+      "updated_at": "1794611037Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:562bfa2fb35b5c57dd05b8cc29d5d75e55043bc4b6a5c405b1182a1d149f6740",
+      "artifact_hash": "sha256:e597eeb9900c1054f95e25613f77450799eb27030e1c238d2c976673db99087b",
       "checks": [],
       "current_phase": "implementation",
       "custody": {
@@ -900,10 +908,17 @@
             "intent_id": "intent:change_01M7BCN0CS3Z8AJ7TZ491WJ7CJ",
             "kind": "trajectory_step_recorded",
             "sequence": 21
+          },
+          {
+            "detail": "trajectory:branch_01M7BCN0FD8AE623HXNGA0C8F9",
+            "event_id": "event:22",
+            "intent_id": "intent:change_01M7BCN0CS3Z8AJ7TZ491WJ7CJ",
+            "kind": "trajectory_step_recorded",
+            "sequence": 22
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 21,
+        "next_sequence": 22,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M7BCN0FD8AE623HXNGA0C8F9": {
@@ -1198,6 +1213,21 @@
                 "validation_findings": [
                   "Hosted verification and exact-candidate publication readiness remain pending; no local tests run."
                 ]
+              },
+              {
+                "action": "implementation",
+                "custody_event_id": "event:22",
+                "observations": [
+                  "https://github.com/DecapodLabs/decapod/pull/1675"
+                ],
+                "proof_refs": [],
+                "scope": [
+                  "issue-1667"
+                ],
+                "sequence": 22,
+                "validation_findings": [
+                  "Integrate accepted master f779e39111ec8b3c8c41569f68a3a7604df167e7 and merged1675 accepted-policy hardening with issue1667. Preserve current task journal/checkpoints and authored specs from both branches; regenerate projections through the kernel. Previous candidate readiness does not apply; no local tests."
+                ]
               }
             ]
           }
@@ -1206,7 +1236,8 @@
       "declared_commands": [],
       "destination": "pull request",
       "evidence": [
-        "https://github.com/DecapodLabs/decapod/issues/1667"
+        "https://github.com/DecapodLabs/decapod/issues/1667",
+        "https://github.com/DecapodLabs/decapod/pull/1675"
       ],
       "inspected_files": [],
       "intent_id": "intent:change_01M7BCN0CS3Z8AJ7TZ491WJ7CJ",
@@ -1239,7 +1270,8 @@
       "task_id": "code_01m7bcmcpzhpz8hw",
       "tool_calls": [],
       "unresolved_assumptions": [
-        "Hosted verification and exact-candidate publication readiness remain pending; no local tests run."
+        "Hosted verification and exact-candidate publication readiness remain pending; no local tests run.",
+        "Integrate accepted master f779e39111ec8b3c8c41569f68a3a7604df167e7 and merged1675 accepted-policy hardening with issue1667. Preserve current task journal/checkpoints and authored specs from both branches; regenerate projections through the kernel. Previous candidate readiness does not apply; no local tests."
       ]
     }
   },

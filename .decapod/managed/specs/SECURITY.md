@@ -626,7 +626,7 @@ execution evidence remains required before publication readiness.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `abcef30d7183362a0ee48960d05c6a5c6b5eb95e7faa96ce992e3cc4472b3413`
+- Repository signal fingerprint: `88d0133dc8e8d47f8ce0c253a315e9b551165fb8e644fc6b1c7d188b10ddea23`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (234 files), `tests/` (232 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
@@ -977,3 +977,29 @@ fixtures and offline Supabase checks do not establish hosted deployment assuranc
 Historical oversized-row tests construct corruption inside disposable SQLite
 instead of evading the smaller SDK parameter-cell budget; the kernel's original
 oversized-reader rejection remains asserted.
+
+## Candidate repinning is not accepted policy (#1658)
+
+The accepted target's local proof requirements remain authoritative even when a
+candidate supplies a valid new digest for different commands, execution inputs
+or coverage. `repository_profile::preserve_accepted` rejects those replacements
+before selection; required failures cannot disappear through candidate review.
+Accepted external limitations cannot become unsupported local-equivalence claims.
+
+The regression boundary uses real Git targets and native subprocess checks,
+including a replacement command that only prints claimed success. These tests
+exercise kernel admission; a model refusal or a predetermined provider error
+would not establish the guarantee. Accepted-target observation and the configured
+executor remain trust roots. This repair does not claim OS isolation from an
+unrestricted agent or add authenticated cloud authority.
+
+### Hosted source-check substitution control
+
+Buildkite9472 on candidate059dec1b actually returned local `ready=true` and
+`proof_ready=true` after a candidate corrupted source, replaced its inventoried
+check script with a success-printing script and repinned the source digest.
+Command-only preservation was insufficient. The runtime now also preserves the
+accepted local source-definition digest before selection. The failed observation
+remains historical; fresh hosted execution must establish the repair. This is a
+local-readiness finding, not evidence of bypassing an independent remote merge
+service or of OS isolation from an unrestricted producer.

@@ -352,7 +352,7 @@ These declarations select authoring and proof obligations; they do not attest im
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `abcef30d7183362a0ee48960d05c6a5c6b5eb95e7faa96ce992e3cc4472b3413`
+- Repository signal fingerprint: `88d0133dc8e8d47f8ce0c253a315e9b551165fb8e644fc6b1c7d188b10ddea23`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (234 files), `tests/` (232 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
@@ -570,3 +570,20 @@ resource accounting and scans; 0.16 adds logical connectors/session transport.
 These additions do not confer application authority or independently prove a
 hosted deployment. Exact candidate compatibility remains a hosted verification
 obligation, with no local test execution.
+
+## Accepted local verification requirements (#1658)
+
+Decapod must preserve the repository-local verification contract already accepted
+on the target. A candidate may add required checks, but replacing a command,
+arguments, measured toolchain, environment, timeout or coverage declaration must
+not become authoritative merely because the candidate recomputes a review digest.
+`repository_profile` owns this preservation check; `validation_runtime` must apply
+it before selecting an execution provider. A previously accepted strict profile
+continues to require its existing external assurance.
+
+The dedicated change restores the preserved repair against v0.144.3 and adds
+real-process consumer regressions for repinning, additive checks and stale source.
+Initial adoption remains supported. Requirement replacement needs a separately
+accepted target-policy transition; this work introduces no candidate-side override
+or new authority store. Hosted tests and exact-candidate validation remain pending
+until their actual observations are collected; no local test result is claimed.
