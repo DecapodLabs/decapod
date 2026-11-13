@@ -659,6 +659,11 @@
       "id": "spec-security-1573",
       "summary": "docs(specs): document bounded rate-limit hint parsing invariants in SECURITY.md",
       "input_digest": "sha256:bcc8cadc741cf30677ac0734cd613a6ac813eedbf272c155f0eea7713b6afd17"
+    },
+    {
+      "id": "spec-validation-1573",
+      "summary": "docs(specs): document anonymous GitHub quota pacing regressions in VALIDATION.md",
+      "input_digest": "sha256:7f025ed52bb0e05fe4656e65a86b699c580f4426edd2ae50148c6b262f994a45"
     }
   ],
   "intents": {

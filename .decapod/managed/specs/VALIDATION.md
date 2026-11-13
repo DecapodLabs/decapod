@@ -1325,8 +1325,8 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `0f5182b61bd9df72c7689c6b907417c45695f0cbec319899f912c2d9c1398f2b`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (231 files), `tests/` (232 files)
+- Repository signal fingerprint: `c7d83e4fa9bf8fd016119da5a6b23f3802ebc90a1d8354fceb321065859c642c`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (232 files), `tests/` (232 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 
@@ -1832,3 +1832,32 @@ the combined `v0.143.0`, `#1651`, `assets/tools/build_lifecycle.rs`, and
 Source review and local projection refresh do not prove execution; full
 configured `decapod validate` on the exact candidate commit against accepted
 `master` remains mandatory before merge.
+
+## Anonymous GitHub quota pacing and Buildkite wait verification (#1573)
+
+`src/decapod/core/snapshot_provider/github_quota.rs` (`core::snapshot_provider::github_quota::tests`)
+verifies half-allowance discovery headroom vs unpaced zero-request Buildkite
+polls (`discovery_reserves_headroom_but_direct_buildkite_polls_are_not_delayed`),
+exhausted-success reset waiting and fail-closed unknown-reset blocking
+(`only_exhausted_success_waits_for_reset_and_unknown_reset_blocks`), rejection of
+malformed/duplicate/missing/overflowing rate-limit headers
+(`malformed_duplicate_missing_and_overflowing_hints_remain_unknown`), deadline and
+cancellation preservation with `rate_limit_reset_unix=` diagnostics
+(`quota_wait_preserves_the_original_deadline_and_cancellation`), and Unix
+synthetic-`curl` transport enforcement preventing a second request after
+`X-RateLimit-Remaining: 0` while keeping HTTP 403/429 denials immediate
+(`exhausted_success_prevents_a_second_request_when_reset_is_unknown_or_budget_expires`,
+`denied_responses_stop_once_without_waiting_for_their_future_reset`).
+`src/decapod/core/snapshot_provider/automatic/tests.rs`
+(`buildkite_wait_drops_duplicate_binding_check_and_paces_only_anonymous_github_polls`)
+verifies that `wait_for_source_runs` paces partial cold Buildkite discovery when
+tight anonymous GitHub rate-limit headers are observed, keeps the ordinary 1s
+poll interval once required Buildkite workflows are bound, and performs 10 total
+GitHub GETs across admission, initial locator discovery, and `TerminalSourceRuns::recheck`
+after removing the duplicate pre-`recheck` `verify_remote_binding` call.
+Reconciled on accepted `master` (`64c4ff2e`, `v0.143.1`), release-bound
+projections and `.decapod/config.toml` `reviewed_sources_digest`
+(`sha256:50af27077a026878a187611c381226be611ae10f45bfec77fc205282258d3ccf`)
+match the `0.143.1` controller and current source inventory; full CI and
+`decapod validate` execution on the candidate commit remain required for
+publication readiness.
