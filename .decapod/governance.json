@@ -644,6 +644,11 @@
       "id": "fix-workunit-worktree-runtime",
       "summary": "Resolve main repository runtime datastore from linked Git worktrees",
       "input_digest": "sha256:ca0b8d3e51a123548fbad341e0474b3fa55ff50d5e98bd0eb87757b33901cdaf"
+    },
+    {
+      "id": "test-workunit-linked-worktree",
+      "summary": "Add linked Git worktree runtime resolution regression test",
+      "input_digest": "sha256:1045b3ca9942de855ec073490cdb6665be0bfb4251c95312505eee68bfa0afa1"
     }
   ],
   "intents": {
