@@ -160,6 +160,25 @@ fn child_fixture() {
             drop((client, accepted, listener));
         }
     }
+    #[cfg(unix)]
+    if behavior == "podman-overlay-mode-000" {
+        use std::os::unix::fs::{PermissionsExt, symlink};
+        let home = PathBuf::from(env::var_os("HOME").unwrap());
+        assert_eq!(home, scratch);
+        let overlay = home.join(".local/share/containers/storage/overlay/opaque-layer");
+        let work_parent = overlay.join("work");
+        let work_inner = work_parent.join("work");
+        let lower_ro = overlay.join("diff/etc");
+        fs::create_dir_all(&work_inner).unwrap();
+        fs::create_dir_all(&lower_ro).unwrap();
+        fs::write(lower_ro.join("resolv.conf"), "nameserver 127.0.0.1\n").unwrap();
+        if let Some(shared_cache) = env::var_os("DECAPOD_BUILD_TEST_EXTERNAL_CACHE") {
+            symlink(shared_cache, overlay.join("shared-cache-link")).unwrap();
+        }
+        fs::set_permissions(&lower_ro, fs::Permissions::from_mode(0o555)).unwrap();
+        fs::set_permissions(&work_inner, fs::Permissions::from_mode(0o000)).unwrap();
+        fs::set_permissions(&work_parent, fs::Permissions::from_mode(0o500)).unwrap();
+    }
     if behavior == "wait" || behavior == "ignore-term" {
         while !record.with_extension("release").exists() {
             thread::sleep(Duration::from_millis(10));
@@ -512,6 +531,162 @@ fn cleanup_diagnostics_report_readonly_paths_without_changing_or_following_them(
     );
     fs::set_permissions(&readonly, fs::Permissions::from_mode(0o755)).unwrap();
     scratch.clean().unwrap();
+}
+
+#[cfg(unix)]
+#[test]
+fn supervisor_recovers_owned_mode_000_podman_overlay_scratch_without_touching_shared_caches() {
+    use std::os::unix::fs::PermissionsExt;
+    let fixture = Fixture::new();
+    let bazel_parent = fixture.path().join("bazel-tmpdir");
+    let shared_cache = fixture.path().join("shared-container-cache");
+    let unrelated_storage = fixture.path().join("unrelated-containers-storage/work");
+    fs::create_dir_all(&bazel_parent).unwrap();
+    fs::create_dir_all(&shared_cache).unwrap();
+    fs::create_dir_all(&unrelated_storage).unwrap();
+    fs::write(shared_cache.join("layer.tar"), "shared blob").unwrap();
+    fs::set_permissions(&shared_cache, fs::Permissions::from_mode(0o555)).unwrap();
+    fs::set_permissions(&unrelated_storage, fs::Permissions::from_mode(0o000)).unwrap();
+
+    let record = fixture.path().join("record");
+    let output = supervisor(&bazel_parent, &record, "podman-overlay-mode-000")
+        .env("TEST_TMPDIR", &bazel_parent)
+        .env("HOME", &bazel_parent)
+        .env("DECAPOD_BUILD_TEST_BAZEL", "1")
+        .env("DECAPOD_BUILD_TEST_EXTERNAL_CACHE", &shared_cache)
+        .output()
+        .unwrap();
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    assert!(output.status.success(), "supervisor failed: {stderr}");
+    assert!(
+        !stderr.contains("build cleanup:"),
+        "unexpected cleanup diagnostic: {stderr}"
+    );
+    let scratch = wait_record(&record);
+    assert!(!scratch.exists(), "owned mode-000 scratch must be removed");
+    assert_eq!(
+        fs::metadata(&shared_cache).unwrap().permissions().mode() & 0o777,
+        0o555
+    );
+    assert_eq!(
+        fs::read_to_string(shared_cache.join("layer.tar")).unwrap(),
+        "shared blob"
+    );
+    assert_eq!(
+        fs::symlink_metadata(&unrelated_storage)
+            .unwrap()
+            .permissions()
+            .mode()
+            & 0o777,
+        0o000
+    );
+
+    // Restore fixture permissions before Drop cleans fixture.
+    fs::set_permissions(&shared_cache, fs::Permissions::from_mode(0o700)).unwrap();
+    fs::set_permissions(&unrelated_storage, fs::Permissions::from_mode(0o700)).unwrap();
+}
+
+#[cfg(unix)]
+#[test]
+fn owned_permission_recovery_rejects_symlink_uid_device_and_bound_escapes() {
+    use std::os::unix::fs::{MetadataExt, PermissionsExt, symlink};
+    let fixture = Fixture::new();
+
+    // 1. Direct recovery restores mode 0o700 on nested mode-000 directories
+    // (including when tests execute as uid 0) without touching symlink targets.
+    let external = fixture.path().join("external-readonly");
+    fs::create_dir(&external).unwrap();
+    fs::write(external.join("keep"), "untouched").unwrap();
+    fs::set_permissions(&external, fs::Permissions::from_mode(0o555)).unwrap();
+
+    let scratch = Scratch::create(fixture.path()).unwrap();
+    let outer = scratch.path.join("overlay/work");
+    let inner = outer.join("work");
+    fs::create_dir_all(&inner).unwrap();
+    symlink(&external, outer.join("external-link")).unwrap();
+    fs::set_permissions(&inner, fs::Permissions::from_mode(0o000)).unwrap();
+    fs::set_permissions(&outer, fs::Permissions::from_mode(0o000)).unwrap();
+
+    scratch.recover_owned_permissions().unwrap();
+    assert_eq!(
+        fs::symlink_metadata(&outer).unwrap().permissions().mode() & 0o777,
+        0o700
+    );
+    assert_eq!(
+        fs::symlink_metadata(&inner).unwrap().permissions().mode() & 0o777,
+        0o700
+    );
+    assert_eq!(
+        fs::metadata(&external).unwrap().permissions().mode() & 0o777,
+        0o555
+    );
+    scratch.clean().unwrap();
+    assert!(!scratch.path.exists());
+    assert_eq!(
+        fs::read_to_string(external.join("keep")).unwrap(),
+        "untouched"
+    );
+
+    // 2. Foreign-UID and cross-device entries are rejected before chmod/descent.
+    let guarded = Scratch::create(fixture.path()).unwrap();
+    let nested = guarded.path.join("foreign-or-mounted/work");
+    fs::create_dir_all(&nested).unwrap();
+    fs::set_permissions(&nested, fs::Permissions::from_mode(0o000)).unwrap();
+
+    let uid_err = guarded
+        .recover_owned_permissions_with_bounds(
+            guarded.identity.uid().wrapping_add(1),
+            guarded.identity.dev(),
+            MAX_PERMISSION_RECOVERY_DEPTH,
+            MAX_PERMISSION_RECOVERY_ENTRIES,
+        )
+        .unwrap_err();
+    assert_eq!(uid_err.kind(), io::ErrorKind::PermissionDenied);
+    assert!(uid_err.to_string().contains("foreign owner"));
+    assert_eq!(
+        fs::symlink_metadata(&nested).unwrap().permissions().mode() & 0o777,
+        0o000
+    );
+
+    let dev_err = guarded
+        .recover_owned_permissions_with_bounds(
+            guarded.identity.uid(),
+            guarded.identity.dev().wrapping_add(1),
+            MAX_PERMISSION_RECOVERY_DEPTH,
+            MAX_PERMISSION_RECOVERY_ENTRIES,
+        )
+        .unwrap_err();
+    assert_eq!(dev_err.kind(), io::ErrorKind::PermissionDenied);
+    assert!(dev_err.to_string().contains("device boundary"));
+    assert_eq!(
+        fs::symlink_metadata(&nested).unwrap().permissions().mode() & 0o777,
+        0o000
+    );
+
+    // 3. Depth and entry bounds fail closed without unbounded traversal.
+    let depth_err = guarded
+        .recover_owned_permissions_with_bounds(
+            guarded.identity.uid(),
+            guarded.identity.dev(),
+            1,
+            MAX_PERMISSION_RECOVERY_ENTRIES,
+        )
+        .unwrap_err();
+    assert!(depth_err.to_string().contains("bounded directory depth"));
+
+    let entry_err = guarded
+        .recover_owned_permissions_with_bounds(
+            guarded.identity.uid(),
+            guarded.identity.dev(),
+            MAX_PERMISSION_RECOVERY_DEPTH,
+            1,
+        )
+        .unwrap_err();
+    assert!(entry_err.to_string().contains("bounded entry limit"));
+
+    fs::set_permissions(&nested, fs::Permissions::from_mode(0o700)).unwrap();
+    fs::set_permissions(&external, fs::Permissions::from_mode(0o700)).unwrap();
+    guarded.clean().unwrap();
 }
 
 #[test]

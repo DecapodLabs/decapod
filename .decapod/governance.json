@@ -789,6 +789,11 @@
       "id": "record-project-check-receipt-1630",
       "summary": "chore(governance): record project-check validation receipt for #1630",
       "input_digest": "sha256:775866b4eeaf56690e3d5b8ce14a45cd38914ffe568a1afa1227c09ad5ac03bf"
+    },
+    {
+      "id": "merge-origin-master-v0-143-1",
+      "summary": "chore(merge): reconcile accepted master (#1655, v0.143.1) into #1630",
+      "input_digest": "sha256:6b95216d3d975df6191f15d0250113b07539a94836f8138d4f2a728ccbe794fa"
     }
   ],
   "intents": {
@@ -879,23 +884,23 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Updated Living Spec prose and source citations for #1630 bounded, lossless compact storage v2.",
-          "reviewed_code_fingerprint": "b84ca1bad99d65494836397a0df5421c6c961d64f3278bf14a3474754a944739",
-          "spec_material_hash": "3968d101efd70b74483225a3c213a3ed9e2dd360e224bb2d99a12a65b7c90308"
+          "reason": "Reconciled accepted master (#1655 and v0.143.1) with #1630 bounded, lossless compact storage v2.",
+          "reviewed_code_fingerprint": "ea40c303b66a4f3dea73e77c2024639cff162d1b520ed23666554a7ca468bf23",
+          "spec_material_hash": "c383fac21cb9d2b931ee49a664f7ae2afa3dcfcd5265f3ea08a21459edff0ea9"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Updated Living Spec prose and source citations for #1630 bounded, lossless compact storage v2.",
-          "reviewed_code_fingerprint": "b84ca1bad99d65494836397a0df5421c6c961d64f3278bf14a3474754a944739",
+          "reason": "Reconciled accepted master (#1655 and v0.143.1) with #1630 bounded, lossless compact storage v2.",
+          "reviewed_code_fingerprint": "ea40c303b66a4f3dea73e77c2024639cff162d1b520ed23666554a7ca468bf23",
           "spec_material_hash": "a15254c6f3429d6375a1117d432376f3e94bfbadc88f902250b5ad9b97b2d67d"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Updated Living Spec prose and source citations for #1630 bounded, lossless compact storage v2.",
-          "reviewed_code_fingerprint": "b84ca1bad99d65494836397a0df5421c6c961d64f3278bf14a3474754a944739",
-          "spec_material_hash": "750c36008e14b4949e0a2c0c44432072f8e112cfbfb8b928d55c7540eaeb19fd"
+          "reason": "Reconciled accepted master (#1655 and v0.143.1) with #1630 bounded, lossless compact storage v2.",
+          "reviewed_code_fingerprint": "ea40c303b66a4f3dea73e77c2024639cff162d1b520ed23666554a7ca468bf23",
+          "spec_material_hash": "0f82aa34ae257d2e4c511ddded1b09ee75106a9970cb17064ce1dfe75eb2398b"
         }
       ],
       "state": "APPROVED",
@@ -906,7 +911,7 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1794546399Z"
+      "updated_at": "1794547416Z"
     },
     "trajectory": {
       "active_boundaries": [
