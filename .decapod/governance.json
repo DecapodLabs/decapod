@@ -669,6 +669,14 @@
       "proof_refs": [
         "https://github.com/DecapodLabs/decapod/issues/1658"
       ]
+    },
+    {
+      "id": "issue-1658-file-17",
+      "summary": "test(cli): register accepted check-script repinning at required boundary; file-by-file checkpoint, verification pending.",
+      "input_digest": "sha256:5061e7b704858b8f49c780ee252da6c30bd5fe5e918f11bef94f736b8d718b70",
+      "proof_refs": [
+        "https://github.com/DecapodLabs/decapod/issues/1658"
+      ]
     }
   ],
   "intents": {
@@ -709,22 +717,22 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Review the coherent command-preservation slice and its real-runtime regression controls, while explicitly preserving the unproven check-script source-repinning case. Initial adoption and separately accepted target-policy changes are distinct. No local tests or full readiness are claimed; hosted regression evidence must precede closure.",
-          "reviewed_code_fingerprint": "895d3e39f7ebfc2b37127a4351aa20e3b4e486eecf398b86ce335ebb549c235d",
+          "reason": "Register the real adversarial script-repinning case exactly once in the required CLI target so the accepted selective recipe actually executes it. The prior green CLI job was explicitly not_applicable, and no proof is claimed from it. Hosted formatting feedback is repaired; source-boundary regression execution remains pending.",
+          "reviewed_code_fingerprint": "8665e48db0423093aa104aefc35d0748396b4901c12dc0422980ed18b814106a",
           "spec_material_hash": "48cf84ee066d2602f97ca5b1e8f5ddd5d7a4aa5eef0b6fa0f394cbee5a8fd0e3"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Review the coherent command-preservation slice and its real-runtime regression controls, while explicitly preserving the unproven check-script source-repinning case. Initial adoption and separately accepted target-policy changes are distinct. No local tests or full readiness are claimed; hosted regression evidence must precede closure.",
-          "reviewed_code_fingerprint": "895d3e39f7ebfc2b37127a4351aa20e3b4e486eecf398b86ce335ebb549c235d",
+          "reason": "Register the real adversarial script-repinning case exactly once in the required CLI target so the accepted selective recipe actually executes it. The prior green CLI job was explicitly not_applicable, and no proof is claimed from it. Hosted formatting feedback is repaired; source-boundary regression execution remains pending.",
+          "reviewed_code_fingerprint": "8665e48db0423093aa104aefc35d0748396b4901c12dc0422980ed18b814106a",
           "spec_material_hash": "923ab390e92ff1a304ad6d7e6692fcc35827a646e231ff360d974858263d6d01"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Review the coherent command-preservation slice and its real-runtime regression controls, while explicitly preserving the unproven check-script source-repinning case. Initial adoption and separately accepted target-policy changes are distinct. No local tests or full readiness are claimed; hosted regression evidence must precede closure.",
-          "reviewed_code_fingerprint": "895d3e39f7ebfc2b37127a4351aa20e3b4e486eecf398b86ce335ebb549c235d",
+          "reason": "Register the real adversarial script-repinning case exactly once in the required CLI target so the accepted selective recipe actually executes it. The prior green CLI job was explicitly not_applicable, and no proof is claimed from it. Hosted formatting feedback is repaired; source-boundary regression execution remains pending.",
+          "reviewed_code_fingerprint": "8665e48db0423093aa104aefc35d0748396b4901c12dc0422980ed18b814106a",
           "spec_material_hash": "bdd709fd067d42dfe14335353360daff3e3eb3707cfba13bfb9bd0220158d4ee"
         }
       ],
@@ -736,13 +744,13 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1794606230Z"
+      "updated_at": "1794606656Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:62a2b0bf4c09c2cc80c58a61e3c8b59781b4455be8eb8158e510b38398936f75",
+      "artifact_hash": "sha256:4e9591fd3fefc596ca0150e182ff552edcd060b1362106730d955c6452ed8be8",
       "checks": [],
       "current_phase": "implementation",
       "custody": {
@@ -870,10 +878,17 @@
             "intent_id": "intent:change_01M7BCDS8K3F7RT5QZW52H6VT3",
             "kind": "trajectory_step_recorded",
             "sequence": 19
+          },
+          {
+            "detail": "trajectory:branch_01M7BCDSB9RK1ZV4N4XY039SMT",
+            "event_id": "event:20",
+            "intent_id": "intent:change_01M7BCDS8K3F7RT5QZW52H6VT3",
+            "kind": "trajectory_step_recorded",
+            "sequence": 20
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 19,
+        "next_sequence": 20,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M7BCDSB9RK1ZV4N4XY039SMT": {
@@ -1136,6 +1151,22 @@
                 "validation_findings": [
                   "Hosted verification and exact-candidate publication readiness remain pending; no local tests run."
                 ]
+              },
+              {
+                "action": "implementation",
+                "custody_event_id": "event:20",
+                "observations": [
+                  "tests/cli_contracts.rs",
+                  "https://github.com/DecapodLabs/decapod/issues/1658"
+                ],
+                "proof_refs": [],
+                "scope": [
+                  "issue-1658"
+                ],
+                "sequence": 20,
+                "validation_findings": [
+                  "Hosted verification and exact-candidate publication readiness remain pending; no local tests run."
+                ]
               }
             ]
           }
@@ -1159,6 +1190,7 @@
         "docs/architecture/governed-execution.md",
         "src/decapod/core/repository_profile.rs",
         "src/decapod/core/validation_runtime.rs",
+        "tests/cli_contracts.rs",
         "tests/consumer_readiness.rs",
         "tests/support/fresh_docs_readiness.rs"
       ],
