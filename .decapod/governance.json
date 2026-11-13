@@ -849,6 +849,11 @@
       "id": "refresh-dockerfile-decapod-v0-143-1",
       "summary": "chore(release): refresh Dockerfile.decapod for Decapod v0.143.1",
       "input_digest": "sha256:175d614785b4b175d0a2fe4f293c3f147d71ced49caff0f18e3c6e5620524f13"
+    },
+    {
+      "id": "refresh-spec-intent-md-v0-143-1",
+      "summary": "chore(specs): refresh INTENT.md attestation for Decapod v0.143.1",
+      "input_digest": "sha256:150101e7225667b4ae483deb9dfc2fe1107c2e86fc4c548b3ebec3f65582767f"
     }
   ],
   "intents": {
