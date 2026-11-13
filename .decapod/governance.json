@@ -689,6 +689,11 @@
       "id": "docs-compaction-benchmarks",
       "summary": "docs(storage): record reproducible 1K-100K checkpoint compaction and contention benchmarks (#1630)",
       "input_digest": "sha256:8ccc272714e3793004730c6be18823830c875057cdacdbb9287d0af4f32cff6c"
+    },
+    {
+      "id": "docs-datastore-v2-results",
+      "summary": "docs(storage): update datastore-v2 measured growth and compaction results (#1630)",
+      "input_digest": "sha256:ebc76ad486c8d50d584a5ae1eec4690fee88eeaf85d1da9023dbb7fabce4253f"
     }
   ],
   "intents": {
