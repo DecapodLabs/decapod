@@ -4424,6 +4424,11 @@
       "id": "cli-db-maintenance-config-and-subcommands",
       "summary": "Add [governance.db_maintenance] config schema and data db capabilities/lock/maintain/audit subcommands (#1568)",
       "input_digest": "sha256:d8e84709e196591618d3a15b46b9a97f17f777006359080cd4b6a6e7f1066974"
+    },
+    {
+      "id": "rpc-db-maintenance-params-and-capabilities",
+      "summary": "Add typed RPC params and capability metadata for governed data.database.* operations (#1568)",
+      "input_digest": "sha256:17bc6ec1379373aa9d0cf7a55ef31569690de2bee73cf4a9a0ae9b53e74b81b4"
     }
   ],
   "intents": {
