@@ -920,8 +920,8 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `e3acf43f4e5a1699b21f5a31e5f814c7ea593e42430111c4a28d89ba577ccf4c`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (231 files), `tests/` (232 files)
+- Repository signal fingerprint: `9dd1adce7cccd5b451d3e5190d70ef6a631f185f21d1e1222d4328c1864166d1`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (232 files), `tests/` (232 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 
@@ -1176,6 +1176,10 @@ The resolved native project also supplies the repository field of newly created 
 
 The machine-private cloud todo receipt file uses a version-two envelope around its bounded records. Legacy flat arrays migrate under the existing stable file lock; array-only older clients cannot parse and rewrite the new envelope, so they cannot silently remove resolved-project bindings. This changes neither credential custody nor the server data protocol.
 
-## PR1669 accepted-master integration
+## PR 1666: accepted v0.143.2 source integration
 
-`validation_rules::evaluate_gatekeeper_paths_and_diff` enforces configured protected/blocked paths, plan forbidden paths and the diff ceiling over changed paths. Unchanged include_str dependencies do not become changed paths. Full staged-file secret and dangerous-pattern scans remain in validate_gatekeeper_gate. `workunit::runtime_data_dir` prefers a complete local runtime and otherwise resolves the initialized parent runtime for linked Git worktrees; runtime policy checks and journal reads/writes share that owner, while projections stay local.
+`snapshot_provider::github_quota::GithubQuota` is shared by the existing Budget. Validated successful HTTP response hints pace cold GitHub locator discovery; known Buildkite envelopes retain their normal polling interval. The final binding and fresh-registry recheck remain authoritative after removal of a redundant earlier binding read.
+
+## PR1666 current-master integration
+
+The shared GithubQuota/Budget mechanism continues to pace only anonymous discovery, preserve final verification capacity, and honor bounded deadlines. Accepted custody and workunit runtime ownership changes remain in place; this integration adds no competing verifier or provider policy.

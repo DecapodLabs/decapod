@@ -1,7 +1,7 @@
 {
   "schema_version": "1.0.0",
   "baseline": {
-    "accepted_commit": "f450bdf319ea724d628daaaf282e45addd639d13",
+    "accepted_commit": "6f1d2a39ad0b5b2f7e70fe12f75f0d8b360d9453",
     "policy": {
       "change_control": {
         "requires_human_review": true,
@@ -12,14 +12,6 @@
       "review_policy": "Reviewers must check that every claim remains falsifiable, evidence status is bounded by observed evidence, proof references resolve, and changes preserve schema compatibility or explicitly version it."
     },
     "unresolved": {
-      "claim:accepted-1432-integration": {
-        "falsifier": "A missing accepted ancestor, lost original material, weakened proof requirement, fabricated historical checkpoint or failed affected regression refutes the integration claim.",
-        "proof_refs": [
-          "git:6f1d2a39ad0b5b2f7e70fe12f75f0d8b360d9453"
-        ],
-        "statement": "PR1661 preserves its reviewed feature while incorporating accepted master 6f1d2a39 and official v0.143.2 projections, with the real CLI fresh-docs negative fixture initialized explicitly.",
-        "status": "open"
-      },
       "claim:accepted-executor-candidate-build": {
         "falsifier": "A changed carrier, altered accepted executor, missing or mismatched dual-root identity, incomplete required graph, or unauthenticated artifact can establish readiness; or candidate helper changes require a separate manual build despite a supported accepted executor.",
         "proof_refs": [
@@ -102,15 +94,6 @@
           ".decapod/managed/specs/VALIDATION.md"
         ],
         "statement": "Implement issue1628 client slice: logical project backend, all managed discovery/auth/account/data transport through Dactyl, repository/project/origin-bound private custody with serialized refresh and crash recovery, honest server-confirmed readiness, explicit account denial/action requirements, headless continuation and no cloud-to-SQLite fallback. Preserve local independence and existing governed publication/release dependency gates.",
-        "status": "open"
-      },
-      "claim:claim:owned-scratch-mode000-cleanup": {
-        "falsifier": "Owned mode-000 nested directories still fail Scratch::clean, or permission recovery follows a symlink, alters foreign-UID or cross-device directories, mutates paths during read-only diagnostics, or traverses unboundedly.",
-        "proof_refs": [
-          "assets/tools/build_lifecycle.rs",
-          "assets/tools/build_lifecycle_tests.rs"
-        ],
-        "statement": "When remove_dir_all fails with PermissionDenied on an invocation-owned scratch tree after child process-group exit, Scratch::clean recovers 0o700 permissions only on real directories matching the scratch root UID and filesystem device within a bounded traversal, rejects symlink/UID/device/replacement escapes, keeps cleanup_diagnostics read-only, and completes bounded scratch removal.",
         "status": "open"
       },
       "claim:claim:recovery-aptitude": {
@@ -255,6 +238,14 @@
           "tests/plugins/todo.rs"
         ],
         "statement": "Independent task source overlap does not reserve a repository; task and observed checkout custody remain exclusive with fenced handoff and typed evaluation recovery.",
+        "status": "open"
+      },
+      "claim:managed-project-native-routing": {
+        "falsifier": "A selected project is ignored, a forged or foreign account reference authorizes data, a lost creation creates another project, refresh leaves the next native request using an old bearer, or cloud denial creates local storage.",
+        "proof_refs": [
+          "tests/common/cloud_managed_scenarios.rs"
+        ],
+        "statement": "An explicitly selected managed project controls the next native data reference while current server eligibility and checkout-scoped credential custody remain intact.",
         "status": "open"
       },
       "claim:measured-latency-reduction": {
@@ -463,36 +454,29 @@
       "trajectory:01e30f48c2e7df81": "Native worker decoder fixtures have moved to portable worker tests but have not executed; root CI cannot substitute for these or native acceptance.",
       "trajectory:0369d7ba53eadf4c": "Candidate-assisted normal admission is not independent publication proof",
       "trajectory:06645c9215349379": "custody isolation is container, but this host has no Docker; the work uses a git worktree workspace",
-      "trajectory:0fa17bb254cbf39b": "Full validation ended SNAPSHOT_NOT_READY after 3427640 ms provider wait. The only failed Buildkite job was a CLI fixture assertion assuming blocked_by is always an array; actual round-2 proceed and false completion proof had already passed. The fixed assertion preserves the existing omission contract.",
+      "trajectory:083d2ad8e4cb2b22": "Current v2 mutation receipts and Dactyl 0.13.0 native consumer require fresh full proof; prior source proof is historical.",
       "trajectory:13217192dadb3ee3": "No local prerequisite suite run; remote full validation remains required",
-      "trajectory:147aac9f7f821159": "Merge accepted 1d04f232c46864eecfadb9c8b9b23069ca0e906e including storage inventory, Dactyl 0.13.0 and release 0.140.1. No unrelated task or scanner policy changed.",
       "trajectory:150b60dea853e3ba": "Real native measurements and separate holdout risk/coverage are required; current source CI success is insufficient. Evaluation criteria recorded before model outputs; no readiness fitting or holdout evaluation executed.",
       "trajectory:17669a7d73b8ecb7": "RPC download403 is runner-specific; same pinned URL succeeded on another fresh runner. Policy fixture exit126 OS detail is unknown because stderr was discarded.",
       "trajectory:19c255ade3d72661": "25unit tests and actualMetal8elementprobe passed; one138tokenCPU inference matches independent scalar subset, memory chunks inactive, same-author/shared-infrastructure limits remain. Metal model reset failed; holdout not executed. New owned-model discard, reuse assertion, real alternate-API fallback diagnostics, nonempty-chunk fixture and independent four-phase collector are authored repairs awaiting fresh validation. No 5percent production calibration claim.",
-      "trajectory:1d9e4398a515c525": "User requested rebase but earlier no-force rule remains; prepare history-preserving integration pending optional rewrite preference. PR1661 only; other PRs untouched.",
       "trajectory:22ceeec9cc8afae2": "Validmodeluncertaintyyes0.573/two-labelsetcausedcalibrationpositiveabstainbothbackends; frozenexpectedacceptmismatchpreservednotrelabeled. Workingmeaningfulmodelapprovalsareobservedgate/prompt; alladversecontrolsnonready. We donotknowwhythemodelabstained. Independentcoverageauditdemonstratedmetadatafixtureclaimedorderbutonlyinvalidlength/namechecked; addcanonical+all23permutationchecksandtruthfulobservationacrossfamily. Currentvalidatedworkandactualcheckinventoryexpand; no question/threshold/weight/calibration/labeltuning. Userclarificationonsafeabstentionpending; strictallpositive ruleunchanged. Fullnewcandidatevalidate,donotclaimpreviousfullreportgreen or domainaccuracy. Sameoriginaltaskbranch/custody/noPRmerge release.",
       "trajectory:2318b54d5863154f": "Confirmed pinned CUDA dynamic links can prevent worker startup before its CPU path. Prepare optional separately pinned CPU executable in private local binding; model-free GPU startup before exposing model/state, typed hardware-only fallback, exact immutable pins and same deadline. Negative/abstaining/malformed inference and numerical failures remain non-ready and never trigger a new answer search. No actual Metal/model/reference/holdout evidence exists yet.",
       "trajectory:280aab34e7c0084a": "Source-built generator is used solely for report-prescribed Markdown regeneration and grants no kernel authority. No native build or scientific test executed on132because source docs proof failed. All earlier failed reports retained. Return to official1191 plain validate on exact repaired candidate; no bootstrap exception or manual shadow preflight.",
       "trajectory:306f3433d7e5e778": "Final candidate and provider proof remain required; local macOS failures are not waived.",
       "trajectory:30ef4cc2d51da604": "The new already-authorized retry wording still needs generation by its exact updated binary; the existing controller can now admit the source catalog and own remote verification.",
       "trajectory:331b4335c37f48d2": "New source and its tests require first execution through prescribed validate. No candidate output is an independent label, no old private proof is imported, and collection-only command success is not scientific acceptance. F64 resource cap4096 is not measured full-context equivalence. Corpus23lineages/proxy labels/observed false-ready keep calibration unsatisfied. CUDA hardware and full production loader-companion routing are not verified by M1 component fallback.",
-      "trajectory:34919c064a5c4d5f": "Source review found missing outer CLI task binding could evaluate different intent. The new regression rejects it before round 1; behavioral execution remains pending. Buildkite clippy assertion-style failure is repaired without lint suppression.",
       "trajectory:3a8cce72f404c6a2": "Explicit latest user decision replaces only research qualification prerequisite, retains all deterministic and functional required active-model gates. Original task/custody/branch preserved; current remoteHEADfef84896/master7371ad25, clean. Prior12modelrequests all actual singletonreject; constructed baseline discloses nonexecution and unassessed trajectory so not a meaningful ready positive. Need faithful production-shaped known-outcome cases, shared code, unchanged model/calibration/tolerances, preserve failures and no cherry-picking.",
-      "trajectory:3cc9817702005845": "Supported session update installed 0.140.1, private backups preserved, temporary session_auto_update preference removed. Project-check refreshed release projections but remained partial with 201 passed and five host/staging/unrelated-task failures; it is not full proof.",
       "trajectory:3ce44b0c351b9137": "Existing exact-source branch create, fast-forward and reuse already need no operator receipt; this change adds explicit authorized retry guidance, not a policy bypass.",
       "trajectory:3e14f62d9baafc47": "New user response do what you know is best delegated safe-abstention interpretation; prompt gateALLOW69e5f7124ee6af1940ffdf80b881644b9126467b4b0aa77ec95b368fa3ce4542. Preserve all12frozen labels/97b4667e and original59ea22of24 mismatch; do not claim all-positive or old research passed. Verification qualification requires actual approval on each backend and every adverse/protocol case; safe abstention only on ready controls, with mismatch and non-ready verdict retained. Main model input, model/calibration/threshold/math/tolerance and runtime predicate unchanged. Two additional native tests authored, require full exact-candidate official validation. Public signed-push replay recovered39source steps but produced duplicate auxiliary builds; released controller rejected them, no deletion or guard waiver. This genuine qualification/documentation checkpoint uses original branch/task/custody and fresh required CI; no new infrastructure/prerequisite/branch/merge/release.",
       "trajectory:42a30b6dcb8fd580": "Provider scheduling and ARM execution currently exceed the five-minute full target; only completed comparable runs can establish gain",
-      "trajectory:430e0ca84a9c921a": "Full validation ended SNAPSHOT_NOT_READY after 638132 ms provider wait; no local process was interrupted. Exact private snapshot remains decapod-snapshot-iZThaW. Complete runtime corpus and cost deltas are unproven.",
       "trajectory:448419562500c551": "Actual40 native tests and real Metal primitive checks pass, but download failures and incomplete CPU holdout with false-ready outcomes are not model parity or production calibration. Preserve later diagnostics on early strict aggregate error without making collection success readiness. Pin/error reporting preserves denial kinds and all setup safety. New source must run through official1191 validation; no manual builds or source-proof reuse as current scientific acceptance.",
       "trajectory:44ab164f90c301d9": "The existing traversal regression expected compact human output to contain every failure; use the complete structured failure list and preserve the exact traversal rejection assertion.",
-      "trajectory:473c758a8e77117a": "Test compilation requires the repaired legacy fixture; no behavioral pass is claimed. Release 0.139.1 controller update awaits explicit approval; CI release drift remains unresolved.",
       "trajectory:4d4fa5c9f32018c3": "Focused tests and live GET are diagnostic; full released-controller validation remains required.",
       "trajectory:4daee12c8c51710b": "Fullvalidate5635stoppedbefore native because public docs workflow2290failed generatedconfigschema. Followed actualreport source-built docs build via reviewed existing docs-repairscript; no candidatecontrollergovernance. GitHubClippydiagnostic found single needlessborrow newly extracted sharedfunction. Fixwithoutlint suppression, preservefailedreport, rerunexactcandidate. No previousnativepassisclaimedforthisnewcode.",
       "trajectory:50af5d188a338fdf": "First rollout cannot retroactively teach the existing released controller this new protocol; use independently built supported controller custody without claiming automatic replacement.",
-      "trajectory:539eb5722ee74156": "Source review found routine phase progress unnecessarily invalidated reflection. Reusing existing progress normalization fixes the coupling while independent approval/proof gates remain required; the new regression awaits configured execution.",
       "trajectory:54138daaebe9eade": "A declared human decision reference is provenance, not authenticated publication authority; candidate-only exception records cannot waive proof.",
-      "trajectory:5678afde598ff336": "The previous HTTP 403 and unavailable proof remain historical evidence. Clearing the prior attempt blocker prepares a fresh attempt after its reset, and does not establish provider access or readiness.",
       "trajectory:576cf7a5bf4d1081": "Accepted master a56fd2d3 is user merge of release1402; only Cargo package version and changelog changed from d891d81d",
+      "trajectory:5df598ceaca5724c": "Native account projects have service-owned references distinct from Git labels. Reuse accepted session custody and preserve credential record format; account IDs and metadata are routing facts, never authorization.",
       "trajectory:5fe8315a1e8b30f0": "Native acceptance remains unmet mandatory publication evidence in blocked claim, plan proof hooks, deferred evidence, and publication stop condition; not an unresolved architecture decision.",
       "trajectory:62203fa208725296": "Four-platform release packaging is outside current source readiness; genuine artifact proof and resource limits must remain explicit",
       "trajectory:6279504af9ea3fac": "Substantive evidence/spec reconciliation only; implementation/model/recipe/criteria unchanged. 719 sourceCI passes but BuildkiteCI helper failed before workflow parsing, latest full validation has public403. Public logs are diagnostics, not substituted proof. 23-lineage agent-proxy holdout has related cases and four positives without P2P; all byte bounds do not imply token bounds. Native719 repairs and model holdout remain unexecuted; no PR readiness claim.",
@@ -506,8 +490,6 @@
       "trajectory:760c8a45e61249ac": "E0603 is a separate-worker interface error, not a failed model comparison or permission issue. Local nonce syntax validation replaces the inaccessible helper without changing model-installation API visibility, required acceptance or filesystem invariants. Preserve all reports and rerun official controller against exact repaired source; no manual build/test or candidate-controller authority.",
       "trajectory:77ee70aff183fb2e": "ConcretefixtureIncompletePlan failurepreserved. Sourceandcandidate-build requiredkinds unchanged; actualnativeexecutable suppliesbuildartifact hash, notafakeartifact orverifierwaiver. Newregressionmustreject removal. Functionalcasebytes/labels frozenbeforefirstinference unchanged; nofit/tuning ormodel/calibration/tolerance change. Newtestsauthorednotpassed; normalvalidateownsallverification. Originaltask/branch/custody unchanged.",
       "trajectory:790a50c1b5645599": "No code test failed in the inspected source-CI logs; reported blockers were stale target/base custody.",
-      "trajectory:7928c30c3d424a45": "Required library execution passed 1709 tests with 8 ignored, including all 16 reflection cases and canonical lifecycle. Protocol samples and storage growth are now documented with immutable source references; this narrow evidence supports the recorded claim, not complete current readiness.",
-      "trajectory:7b2661970ed8194d": "Accepted target bc0a7197 merged; the committed current-task governance record was retained while accepted work remains in Git history. Generated conflicts were refreshed by specs.refresh; no proof or authority was invented.",
       "trajectory:7d1680219f61cd41": "Separate native-validation prerequisite feat_01m55h3p8vy7d94x is inspected, draft and yielded; root-scope overlap rejected. Original feature task reclaimed only after supported yield/category registration, original identity/provenance retained.",
       "trajectory:7d90d3eaf34454b7": "Five-minute end-to-end target remains subject to measured queue and unavoidable execution costs.",
       "trajectory:7ef3c7e2168ec922": "Source-inspected shared-memory hazard is repaired narrowly in separate pinned subpackage; no claim of executed repair or functional causality before prescribed validation. New independent scalar primitive oracle uses no candidate math. Cargo targeted resolver normalized existing Windows-only edges without version changes; Windows unverified. External model/calibration/corpus and numerical/risk criteria unchanged; long-context, full productionfallback and independentlabel gaps remain.",
@@ -520,13 +502,11 @@
       "trajectory:8a2fbdef1f3ce7d9": "All project tests and verification remain owned by plain decapod validate with Buildkite enabled",
       "trajectory:8a7663240329d9ea": "Before any numerical observations: independent reference supports only dense single text prompts up to512tokens, rawblocks13/19 without finalnorm. Provisional component tolerance0.005+0.001abs(reference) and normalizedRMS<=0.002 for raw samples and real pooled features; existing conditional-engine/calibration tolerances unchanged. Report all errors and unsupported long/chunked/multimodal cases; no threshold adjustment after outputs without recorded rationale/revalidation.",
       "trajectory:8a97ab0f9510847b": "Author shared projection seam and regression coverage; preserve all scientific failures and production authority. User requires complete functional integration, rejects prior inactive-stage proposal. Public related execution/release issues are consumed boundaries, not automatically closure scope.",
-      "trajectory:8c9b8bf2845272bb": "All 15 protocol regressions passed on earlier code. Repaired lifecycle setup, CLI suite inclusion and numeric measurements require new exact-candidate execution.",
-      "trajectory:92b5a23261d772d2": "Earlier b191 integration job failed downloading missing bootstrap artifact before any tests. It is unavailable execution, not a source test result; fresh final-candidate full proof remains mandatory.",
       "trajectory:92d20e7a29fe6436": "CompilerreportedoneResulttypeerrorinnewproductioncollector; use?andOk tocoerceIOerrorintoBoxerror. Source39and1463librarytests didpass304; no nativeunit/modeltest ran because separate worker compilationfailed. Preserve allfailedreports, no manualCargo workerbuild/test, noauthfallback, nosciencecriterionwaiver. Same originalclaimedtask/branch; checkpointthenrerunfullvalidate. No newprerequisite or PR.",
-      "trajectory:99e5dbbb4f3de7c7": "Projection bootstrap applied supported release repairs but is partial, with host container/candidate gates unmet. It is not readiness or an alternate proof path; full Buildkite validation owns all configured prerequisites.",
       "trajectory:9cae7985f5372144": "50dfe init/cli_contracts target passed217.4s, but sibling enforcement timed out300s at real validate; same enforcement succeeded standalone247.6s. Isolate enforcement from sibling Bazel tests without changing commands/coverage/budgets; reviewed inventory781faa8360d5ca7701b61a3941ae6994681c7e98b229289a90bcb740e3236f97. New shared model pin/local runtime registration, native format/hash checks, bounded private records, frozen custody before proof and stale binding/model/runtime rejection before acceptance are authored not executed. Explicit registration does not run worker or certify provenance. Current worker still Metal-only; CPU/CUDA/fallback and genuine native/reference/holdout evidence remain mandatory gaps.",
       "trajectory:9ccc878a4150c313": "Native snapshot now succeeds, but dependency compilation failed before any worker tests or model/probe/reference/evaluation. Repair is compatible upstream runtime pin update on same feature branch; all new actual execution still pending.",
       "trajectory:9ec958ffca8a0a63": "Independent scalar reference repair only; own block19 floor-bucket accumulation and analytic anchors do not call candidate pooling. New tests and nonempty chunk comparisons unexecuted until next fullvalidate. Model/runtime/calibration/holdout/tolerances fixed; partial model-judgment failures and long-reference/productionfallback/independentlabel gaps still block publication.",
+      "trajectory:a20c20e43c7307b1": "Neighboring session/onboarding owners confirmed project binding is outside their scopes. Full source validation owns build/tests; no separate manual test was run. Real native service evidence remains separate from modeled HTTP.",
       "trajectory:ac23859f7db4e13e": "Preserve explicit cancellation and all remote sourcepass evidence. Late final report failure must dominate earlier readiness; this repair changes no scientific threshold or model result. Sourcepass is not nativeverification. Continue official validate exactnewcandidate on originalbranch; no new ownership, manual tests, forcepush, PR while acceptance fails, merge or release.",
       "trajectory:ad78b8b133b57577": "Only released119 snapshot blocker retired: merged fix is officially published1191. Native/parity/calibration acceptance remains unverified and required recipe remains nonaccepting until actual evidence; authored inputs and frozen criteria unchanged.",
       "trajectory:afd7f835abf45cbd": "Native full graph still requires actual platform capabilities; current Mac does not by itself establish Linux or four-archive release execution",
@@ -535,89 +515,100 @@
       "trajectory:ba2463fc9d91ddb4": "User clarification concerns product flow and instructions, not a waiver of scientific acceptance. Preserve all checks and original ownership. After quota reset run plain validate on genuinely changed candidate; no empty retry commit, authentication substitution for denied public read, manual build or shadow preflight. OAuth timed out with no credentials; public diagnostics remain readable without login.",
       "trajectory:bcd92ac4414c0831": "Pinned transformersv5.3.0 aad13b87ed59f2afcfaebc985f403301887a35fc modeling_qwen3_5.py SHA0e7410f5251e5c324a5628c5340ee3551f7a6a505ce398569fcc3b5f3ac07f7a read as mathematical specification only, never executed. Source config b90b86f35c8e6925ef74ee04d0e758f0a845c83a42089ad82bbaa948de9b4204, weight SHA04b1c301231dd422b8860db31311ab2721511346a32cb1e079c4c4e5f1fe4696 independently pinned. Metadata range only read, not installed or used as inference proof.",
       "trajectory:be3ba7edc9e65ad8": "Normalpostresetvalidateef3clearedremoteproof/custodyandnativefullsnapshotpreparation, thennativecompilationfailedE0599atnewexportwrite_all becauseWrite trait wasnotinscope. Addsamefunctionlocaltraitimportusedbyexistingexporter, no manualbuild/test. Staticreviewalsofoundrelated-repository syntheticfixture stillusedoriginalreviewURLafterrepochange; correctbothfixtureURLs toretainstrictidentitycheckandaddwrong-URLassertion. Allsixnewnative testsremainunexecuted, notpassingclaims; main1461/source39passed. No model/calibration/corpus/math/tolerance/8runrecipe/deadline/authoritychange. Preserveef3failureandallolderhistory; exactnewcandidate mustrerunofficialvalidate.",
-      "trajectory:be5a9482ed29e593": "Conflict resolution selects committed current-master repair material for governance, version1431 projections, semantic specs and already-fixed source/test conflicts; no feature source omitted. No force push or merge to master.",
-      "trajectory:becc41df3c98779c": "Inventory reconciliation removes the recorded current blocker only; earlier failed proof remains historical and full proof is still required.",
-      "trajectory:c6312edcffc30b4c": "Original concurrentf18c9d06 and2c659521 remain in history. Reverse only unsafe workspace admission change; preserve current canonical governance checkpoint journal through conflict resolution. No force push.",
-      "trajectory:cd2db709c2e179f7": "Prior candidate proof became stale after accepted master advanced; SNAPSHOT_NOT_READY after 516740 ms is preserved, never readiness.",
-      "trajectory:cfbad650411edd9e": "Behavioral, latency and growth measurements await configured validation; authored tests are not proof.",
       "trajectory:d2ed52f5ef441b6a": "Source fixtures are synthetic and generated at runtime; no real credential hidden or scanner exemption added. Existing scanner/redaction regressions must execute again. Native model/reference/holdout proof remains unexecuted.",
       "trajectory:d347ed41a83079c8": "Historical README report is scoped to873ab797 and f2073bd4 and is not current candidate proof",
-      "trajectory:d701d5b639190ea7": "User continuation authorizes the previously requested 0.139.1 update. Session acquire required no install: the installed binary already reports 0.139.1. Temporary update opt-in was removed and binary/config backed up privately.",
-      "trajectory:d71006433065a93e": "Official 0.143.1 still blocks normal datastore startup on inert legacy TODO file. Coordination-only 0.143.1 built from published source plus previously tested inert-file migration repair; installed official binary remains independent full validator. No database edited.",
       "trajectory:d7af311d2cbb71e4": "Hosted Buildkite source validation cannot be completed without network access; CI results must be independently verified",
       "trajectory:d9ace8c29a759626": "All six frozen v2 holdout shards completed: each backend executed102 cases with36 unsupported lengths,52 abstentions,29 acceptances and23 false-ready proxy outcomes. Preserve this failure and original corpus/criteria. Actual source1459 tests, native43 tests and138/314/4096-token fixed numerical comparisons passed. Public review corpus remains prospective and unverified; no fitting or heldout inference has used it. Inspection confirmed projection includes plan.intent only, omitting proof_hooks/deferred questions/stop conditions and phase gates. Add bounded obligation facts without whole-plan metadata, model changes, relaxed gates or fabricated rationale. Final source/material/governance identity checks remain authoritative.",
       "trajectory:da69bbaf7f07e535": "Legacy event history is incomplete and cannot prove full reconstruction; establish explicit current-state migration baseline without synthesizing historical custody.",
-      "trajectory:db8da4a3cea64692": "Reviewed source inventory changed only accepted Cargo package 0.143.0 to 0.143.1 after pin112287a9. No candidate proof-source delta or requirement change. Current digest50af27077a026878a187611c381226be611ae10f45bfec77fc205282258d3ccf.",
       "trajectory:e0f0a51392feb190": "Actual benchmark model evaluation has not executed. A last-stage bounded evaluation must report partial/error/abstention separately and keep final acceptance unsatisfied when risk or label authority is inadequate.",
-      "trajectory:e51b3168fe87b531": "Mentor literal matches remain advisory; source identity and narrower declared scope do not prove implementation semantics.",
       "trajectory:e59eda56341d71a3": "New tests/MetalCPUproductiondiagnostics authored and require prescribed validate; no new pass claims. User rejects inactive stage; fitting source only inspected, no Python executed. Current official upstream has old base+two generic adapters and incompatible universal port/stats engine, none demonstrated readiness-qualified. Reviewed24source candidates still zero admissible complete final units. Preserve old study/failures and every required original criterion. Final admission stays missing rather than repeating exposed final data. No branch/custody/controller changes.",
-      "trajectory:e685aa0b60a90ecd": "Focused regression evidence does not establish independent full readiness or erase historical draft blockers.",
       "trajectory:e6b0bb96ddfbd405": "Preserve040d sourceCI lock failure and separate officialvalidator publicGithubCommitChecks403/reset1792449991. Actual anonymous publicBuildkite setup log confirms MODULE.bazel.lock stale because Cargo.toml packagingexclusion changed; prescribed repair is bazel mod deps --lockfile_mode=update. Installed officialHomebrewBazelisk1.29 afterreading officialformula/installerdocs, restored Homebrew developer modeoff. Run batch metadata regeneration only underrepositorypinnedBazel9.3, notmanualbuild/test orshadowpreflight; preserve dependencies, scientificgates and failedholdout. No native execution on040d is claimed. Newfullvalidation mustwaitreportedpublicAPIreset and bindcorrectedexactcandidate.",
       "trajectory:e75f5b9f6163b9ce": "the maintainers create the decapod Cachix cache and the CACHIX_AUTH_TOKEN secret; until then the publish step is skipped",
       "trajectory:e765d893d1533fc1": "Standalone integration targets are not automatically scheduled by the finite accepted CI recipe; include the three consumer regression modules in required cli_contracts.",
-      "trajectory:e8bc768a78c67892": "Official full validation7f696510 blocked on public GitHub provider HTTP403 rate limit, reset2026-11-13T06:49:13Z; no alternate proof/authentication route used. Standalone CI found stale config_input_hash after reviewed source pin; official specs.refresh now regenerates final config/spec hashes, fresh CI still required.",
       "trajectory:e8f66e34f627d476": "Direct Git transport unavailable in this container; exact remote source check pending",
       "trajectory:e99e15278c8de6ad": "User explicitly authorizes functional acceptance replacingresearchqualification, not fabricatedsuccess/accuracy. Fixedcasebytes97b4667e frozen before firstmodelrun, nofitting/threshold/model/calibration/tolerancechange. Actualcontractchecksrun beforeobservationconstruction; three meaningful positives, negative/uncertain/manipulated/declared-proof and failed/stale controls. Sharedproduction code andstrictfinalreducer rederiveoutcomes; oldstudiesfailures preserved. Issue1445andbroader1052/1069/1070/1398/1024updated; closeonlyfullyresolved1445. Sourceconfigreview0e9afdd8 unchanged8runargs; no newprereq/task/branch. Preserve originaltask/branch andfullfinalvalidationgates.",
       "trajectory:ec49216a39e5bf93": "The config decision is cooperative; its author and agent labels are not authenticated.",
       "trajectory:ecfec9650d4ed288": "Independent standalone validation exposed four stale generated release-bound entrypoints; supported init refresh changed headers only, required graph preserved.",
       "trajectory:f000bb05667cb46e": "No actual four-target release artifact build is scheduled by ordinary source preflight;1049 latency improvement remains unmeasured",
-      "trajectory:f40d13a9b17b5167": "Independent GitHub diagnostics can identify source errors but cannot establish Buildkite publication readiness.",
-      "trajectory:f6822b8e5b9aee46": "Plain validation be4cfbb6 stopped because accepted base moved to released 0.140.0. The session-acquire path installed that published release after private backups; update opt-in was restored to its original absence.",
       "trajectory:f9fb9362db79deb2": "Userauthorizesboundedcontractdiagnosis and evidence-backed productdecision, no repeatedfailedfullrun before causalcorrection. No sourcecode/math/weights/calibration/tolerance/gate/recipe changes justified bycontractreview. Authoranexposed-study audit andsourceadmissionledger, maintainlivingvalidation/intent interpretations, andprepareexplicitunappliedscopeproposal. Actualproductionprojection differsfromoldfullpatchharness andcannotbeclaimedtestedbythose29outcomes.",
-      "trajectory:fa421ac6b37186ed": "Automatic trusted remote controller bootstrap is absent; a two-revision independent provider harness requires separate scope decision. Diagnostics do not claim to close that gap.",
-      "trajectory:fc13a70ef7557ace": "Accepted f1a6c7a0 merged; current task journal retained and generated conflicts refreshed by supported interfaces. The reviewed build delta adds infer_precision.rs to the existing required entrypoint suite without changing the required graph."
+      "trajectory:fa421ac6b37186ed": "Automatic trusted remote controller bootstrap is absent; a two-revision independent provider harness requires separate scope decision. Diagnostics do not claim to close that gap."
     }
   },
   "change": {
-    "id": "change_01M7A4FX8HZRENJCY5N6E2ANEX",
-    "base_commit": "f450bdf319ea724d628daaaf282e45addd639d13",
+    "id": "change_01M79W0QF1GA7DKV736SKKE9A3",
+    "base_commit": "6f1d2a39ad0b5b2f7e70fe12f75f0d8b360d9453",
     "target_base": "origin/master"
+  },
+  "claims": {
+    "accepted-1432-integration": {
+      "statement": "PR1666 preserves its reviewed feature while incorporating accepted master 6f1d2a39 and official v0.143.2 projections, with the real CLI fresh-docs negative fixture initialized explicitly.",
+      "falsifier": "A missing accepted ancestor, lost original material, weakened proof requirement, fabricated historical checkpoint or failed affected regression refutes the integration claim.",
+      "status": "open",
+      "proof_refs": [
+        "git:6f1d2a39ad0b5b2f7e70fe12f75f0d8b360d9453"
+      ]
+    }
   },
   "checkpoints": [
     {
-      "id": "pr1669-accepted-master-integration-1",
-      "summary": "Preserve PR1669 source on accepted master f450bdf3 with current source-bound specs; tests not executed by user instruction.",
-      "input_digest": "sha256:bcda13fa5aeae544f6bc3545491c2be6805ad06908052cab43d4602e20543752",
+      "id": "pr1666-accepted-1432-integration-1",
+      "summary": "Integrate accepted v0.143.2 for PR1666, preserving feature scope and repairing public-CLI negative proof fixture setup.",
+      "input_digest": "sha256:82701572f3da061ecb0b8e6c1389a1f9f57f35f0e3ec2c5e9756ce0d28f834b9",
       "proof_refs": [
-        "git:ac33672af00617964068da875de2a61a55aac5b4",
-        "git:f450bdf319ea724d628daaaf282e45addd639d13"
+        "/private/tmp/decapod-pr1661-1432-fresh-docs-initialized.log",
+        "git:6f1d2a39ad0b5b2f7e70fe12f75f0d8b360d9453"
       ]
     },
     {
-      "id": "pr1669-preserve-original-parent-2",
-      "summary": "Resolve integration conflicts using current admitted governance and reviewed specs; preserve original PR1669 parent and unchanged production material. No tests executed.",
-      "input_digest": "sha256:bcda13fa5aeae544f6bc3545491c2be6805ad06908052cab43d4602e20543752",
+      "id": "pr1666-current-master-1440-2",
+      "summary": "Incorporate accepted master9b900254 and preserve quota-pacing behavior while resolving governance/spec conflicts; local tests not executed.",
+      "input_digest": "sha256:e9183291e5c6e2b9f56f9482710c322f9d44b25f03cdbfb3f65f3c235fc082be",
       "proof_refs": [
-        "git:ac33672af00617964068da875de2a61a55aac5b4",
-        "git:f450bdf319ea724d628daaaf282e45addd639d13"
+        "git:9b90025444dcc9b223f77388b1bcd151d88bf62b"
       ]
     },
     {
-      "id": "pr1669-ci-event-base-repair-3",
-      "summary": "Record observed stale PR base metadata, refresh the same accepted master target through GitHub, and push for a new exact-bound event without weakening checks or running local tests.",
-      "input_digest": "sha256:7e162585a7981f4dd0fda13942b0597e69556413fef7e38a4cd4a9bba2bcb809",
+      "id": "pr1666-preserve-parent-current-master-3",
+      "summary": "Resolve original-parent conflicts on accepted master9b900254, bind reviewed0.144.0 build inputs and preserve strict provider checks. No local tests executed.",
+      "input_digest": "sha256:9053d02da6ad47f22e52dffee696bbd7d57efb70f77efe0a2393f994770fb9d3",
       "proof_refs": [
-        "/private/tmp/decapod-pr1669-job-131813499158.log",
-        "git:f450bdf319ea724d628daaaf282e45addd639d13"
+        "git:7418add4e1c72ad4cae54f0f7ad5679648316397",
+        "git:9b90025444dcc9b223f77388b1bcd151d88bf62b"
+      ]
+    },
+    {
+      "id": "pr1666-release-bound-01440-fix-4",
+      "summary": "Repair hosted release-bound projection drift with official0.144.0 entrypoints, Docker pins and regenerated manifest; required drift gate remains intact and no local tests run.",
+      "input_digest": "sha256:1773c6121e426a867da66d70af1a8cf7484b9d2297600e60780127cab6daf916",
+      "proof_refs": [
+        "/private/tmp/decapod-pr1666-bk9331-validation.txt"
+      ]
+    },
+    {
+      "id": "pr1666-contract-runtime-bound-fix-5",
+      "summary": "Repair observed300s CLI contract aggregate timeout while bounding shared child commands at60s and preserving all22 cases, assertions and required checks. No local tests run.",
+      "input_digest": "sha256:e680ea229c360a785c7658fcf29d097fd6db2455570095e94a3b8138b66593c2",
+      "proof_refs": [
+        "/private/tmp/decapod-pr1666-contract-131829523580.log"
       ]
     }
   ],
   "intents": {
-    "intent:change_01M7A4FX8HZRENJCY5N6E2ANEX": {
+    "intent:change_01M79W0QF1GA7DKV736SKKE9A3": {
       "acceptance_criteria": [],
       "assumptions": [],
       "boundaries": [
         "Current claimed task and isolated work branch"
       ],
       "constraints": [
-        "pr1669-integration"
+        "pr-1666-master-1432"
       ],
       "created_sequence": 1,
-      "id": "intent:change_01M7A4FX8HZRENJCY5N6E2ANEX",
+      "id": "intent:change_01M79W0QF1GA7DKV736SKKE9A3",
       "out_of_scope": [],
       "proof_requirements": [],
-      "raw_intent": "bugs: Integrate PR1669 with accepted master and resolve conflicts\n\nPreserve PR1669 protected-path validation semantics and original checkpoints; incorporate current master, resolve conflicting specs/governance through supported interfaces, push the existing PR branch without force, and use hosted CI for verification. User has authorized prep, not merging PR1669 yet.",
-      "refined_intent": "bugs: Integrate PR1669 with accepted master and resolve conflicts\n\nPreserve PR1669 protected-path validation semantics and original checkpoints; incorporate current master, resolve conflicting specs/governance through supported interfaces, push the existing PR branch without force, and use hosted CI for verification. User has authorized prep, not merging PR1669 yet.",
+      "raw_intent": "bugs: update PR 1666 onto accepted Decapod 0.143.2 master\n\nUser requests all open PR branches updated. Preserve PR1666 implementation and historical proof, resolve current accepted-master conflicts, refresh official0.143.2 projections and exact-source evidence, checkpoint commits and push existing PR without force or merge. Retain any known native acceptance/controller blockers and draft status.",
+      "refined_intent": "bugs: update PR 1666 onto accepted Decapod 0.143.2 master\n\nUser requests all open PR branches updated. Preserve PR1666 implementation and historical proof, resolve current accepted-master conflicts, refresh official0.143.2 projections and exact-source evidence, checkpoint commits and push existing PR without force or merge. Retain any known native acceptance/controller blockers and draft status.",
       "status": "refined",
       "updated_sequence": 3
     }
@@ -630,59 +621,64 @@
       },
       "deferred_questions": [],
       "human_questions": [],
-      "intent": "Repair hosted CI failures for PR1669 one concrete root cause at a time, preserving exact source/base checks and original protected-path/runtime behavior. GitHub PR base metadata was stale after master moved: refresh the same master base to its actual f450bdf3 identity, record the binding, commit and push so new events carry the correct accepted base. Do not execute tests locally, weaken gates, force-push, or merge this PR.",
+      "intent": "Integrate existing PR1666 with current accepted master 9b900254 and preserve original quota pacing, denial behavior, request binding and source history. Resolve conflicts and push each repair, using actual hosted CI failures until CI is green. Do not run local tests, weaken proof checks, force-push or merge the PR. Official 0.144.0 release assets were not yet published at setup; retain supported installed tooling until the release is available.",
       "phases": [],
       "proof_hooks": [
-        "Inspect source parity, actual Git parents, conflict resolution and staged governance material; do not execute tests."
+        "Source/material parity against original PR; focused affected regression checks; checkpoint-history inspection; official exact-current-target validation where the accepted controller supports the contract."
       ],
       "schema_version": "1.1.0",
       "spec_reviews": [
         {
-          "disposition": "updated",
+          "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Reviewed preserved PR1669 implementation against accepted master custody and fresh-docs changes. Path/diff enforcement, staged content scans and initialized-runtime fail-closed checks remain distinct. User prohibits tests; current readiness is not claimed.",
-          "reviewed_code_fingerprint": "e3acf43f4e5a1699b21f5a31e5f814c7ea593e42430111c4a28d89ba577ccf4c",
-          "spec_material_hash": "7751695ee29bf68a296317cf3982267b6f4a5bfd034fb1aa083388ec96ed1192"
+          "reason": "Production quota, authority and evidence interfaces are unchanged. The existing22-case CLI contract suite gains a finite900s aggregate class and shared60s subprocess bound; no assertion or required check is removed. VALIDATION documents the observed hosted failure and repair.",
+          "reviewed_code_fingerprint": "9dd1adce7cccd5b451d3e5190d70ef6a631f185f21d1e1222d4328c1864166d1",
+          "spec_material_hash": "fd49b4c6a425a4961c7c8f20e9a1bb62962c2726e815e91f8e2120a5d2984be7"
         },
         {
-          "disposition": "updated",
+          "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Reviewed preserved PR1669 implementation against accepted master custody and fresh-docs changes. Path/diff enforcement, staged content scans and initialized-runtime fail-closed checks remain distinct. User prohibits tests; current readiness is not claimed.",
-          "reviewed_code_fingerprint": "e3acf43f4e5a1699b21f5a31e5f814c7ea593e42430111c4a28d89ba577ccf4c",
-          "spec_material_hash": "ee9309fd48da145ddec3a41585d2a0fe5e0d90a9a086167c94149db5f5690836"
+          "reason": "Production quota, authority and evidence interfaces are unchanged. The existing22-case CLI contract suite gains a finite900s aggregate class and shared60s subprocess bound; no assertion or required check is removed. VALIDATION documents the observed hosted failure and repair.",
+          "reviewed_code_fingerprint": "9dd1adce7cccd5b451d3e5190d70ef6a631f185f21d1e1222d4328c1864166d1",
+          "spec_material_hash": "3c826cd20c1f20607be288a67abb7c4e0f8c0ba039a4f123f6da9b78f37cba0f"
         },
         {
-          "disposition": "updated",
+          "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Reviewed preserved PR1669 implementation against accepted master custody and fresh-docs changes. Path/diff enforcement, staged content scans and initialized-runtime fail-closed checks remain distinct. User prohibits tests; current readiness is not claimed.",
-          "reviewed_code_fingerprint": "e3acf43f4e5a1699b21f5a31e5f814c7ea593e42430111c4a28d89ba577ccf4c",
-          "spec_material_hash": "d41130662a576c2d9b83b54ff74c86d64ae2d85eaaaaf0932ff3dc2bb4f77575"
+          "reason": "Production quota, authority and evidence interfaces are unchanged. The existing22-case CLI contract suite gains a finite900s aggregate class and shared60s subprocess bound; no assertion or required check is removed. VALIDATION documents the observed hosted failure and repair.",
+          "reviewed_code_fingerprint": "9dd1adce7cccd5b451d3e5190d70ef6a631f185f21d1e1222d4328c1864166d1",
+          "spec_material_hash": "5bfc55956c17aac5ec1642038211d1ab14340dde37af15695d7fb0a09730db76"
         }
       ],
       "state": "APPROVED",
       "stop_conditions": [],
-      "title": "Integrate existing PR1669 on accepted master",
+      "title": "Integrate PR1666 on accepted0.143.2 master",
       "todo_ids": [
-        "bugs_01m7a44k3th3dh3c"
+        "bugs_01m79vzq51kt730b"
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1794563298Z"
+      "updated_at": "1794566548Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch",
-        "Preserve original remote PR parents; no force-push; no merge authorization for PR1669."
+        "Preserve actual original PR parent history, no force-push, no local tests and no merge authorization.",
+        "Preserve original PR history; ordinary merges only, no force-push or automatic merge."
       ],
-      "artifact_hash": "sha256:e8a43eee258630b484d5782105d1799fe77d9b8566a41c8ceb3184a4334b7140",
+      "artifact_hash": "sha256:635b552c0908317532f8cf97d330251e0b4feada6121ac8dadb770a322a13f1d",
       "checks": [
         {
-          "name": "hosted-pr-context",
+          "name": "fresh-docs-baseline-initialized",
+          "status": "passed"
+        },
+        {
+          "name": "hosted-contract-aggregate-timeout",
           "status": "failed"
         },
         {
-          "name": "test-execution",
-          "status": "unavailable"
+          "name": "hosted-release-projection-drift",
+          "status": "failed"
         }
       ],
       "current_phase": "ci-repair",
@@ -690,75 +686,147 @@
         "events": [
           {
             "event_id": "event:2",
-            "intent_id": "intent:change_01M7A4FX8HZRENJCY5N6E2ANEX",
+            "intent_id": "intent:change_01M79W0QF1GA7DKV736SKKE9A3",
             "kind": "created",
             "sequence": 2
           },
           {
             "event_id": "event:3",
-            "intent_id": "intent:change_01M7A4FX8HZRENJCY5N6E2ANEX",
+            "intent_id": "intent:change_01M79W0QF1GA7DKV736SKKE9A3",
             "kind": "refined",
             "sequence": 3
           },
           {
-            "detail": "trajectory:branch_01M7A4FXCZEZXFKNPGD4EREXC0",
+            "detail": "trajectory:branch_01M79W0QKPSAKS1YRWC4A3YT4H",
             "event_id": "event:4",
-            "intent_id": "intent:change_01M7A4FX8HZRENJCY5N6E2ANEX",
+            "intent_id": "intent:change_01M79W0QF1GA7DKV736SKKE9A3",
             "kind": "trajectory_step_recorded",
             "sequence": 4
           },
           {
-            "detail": "trajectory:branch_01M7A4FXCZEZXFKNPGD4EREXC0",
+            "detail": "trajectory:branch_01M79W0QKPSAKS1YRWC4A3YT4H",
             "event_id": "event:5",
-            "intent_id": "intent:change_01M7A4FX8HZRENJCY5N6E2ANEX",
+            "intent_id": "intent:change_01M79W0QF1GA7DKV736SKKE9A3",
             "kind": "trajectory_step_recorded",
             "sequence": 5
+          },
+          {
+            "detail": "trajectory:branch_01M79W0QKPSAKS1YRWC4A3YT4H",
+            "event_id": "event:6",
+            "intent_id": "intent:change_01M79W0QF1GA7DKV736SKKE9A3",
+            "kind": "trajectory_step_recorded",
+            "sequence": 6
+          },
+          {
+            "detail": "trajectory:branch_01M79W0QKPSAKS1YRWC4A3YT4H",
+            "event_id": "event:7",
+            "intent_id": "intent:change_01M79W0QF1GA7DKV736SKKE9A3",
+            "kind": "trajectory_step_recorded",
+            "sequence": 7
+          },
+          {
+            "detail": "trajectory:branch_01M79W0QKPSAKS1YRWC4A3YT4H",
+            "event_id": "event:8",
+            "intent_id": "intent:change_01M79W0QF1GA7DKV736SKKE9A3",
+            "kind": "trajectory_step_recorded",
+            "sequence": 8
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 5,
+        "next_sequence": 8,
         "schema_version": "1.0.0",
         "trajectories": {
-          "branch_01M7A4FXCZEZXFKNPGD4EREXC0": {
+          "branch_01M79W0QKPSAKS1YRWC4A3YT4H": {
             "evidence_only": true,
-            "id": "branch_01M7A4FXCZEZXFKNPGD4EREXC0",
-            "intent_id": "intent:change_01M7A4FX8HZRENJCY5N6E2ANEX",
+            "id": "branch_01M79W0QKPSAKS1YRWC4A3YT4H",
+            "intent_id": "intent:change_01M79W0QF1GA7DKV736SKKE9A3",
             "steps": [
               {
                 "action": "integration",
-                "command": "git diff exact original material; git apply --3way; supported specs refresh and reviews",
+                "command": "git merge accepted origin/master; official decapod init --refresh --proof --force; supported specs.refresh and content-bound reviews",
                 "custody_event_id": "event:4",
                 "observations": [
-                  "git:ac33672af00617964068da875de2a61a55aac5b4",
-                  "git:f450bdf319ea724d628daaaf282e45addd639d13"
+                  "tests/support/fresh_docs_readiness.rs",
+                  "/private/tmp/decapod-pr1661-1432-fresh-docs-initialized.log"
                 ],
                 "proof_refs": [
-                  "test-execution"
+                  "fresh-docs-baseline-initialized"
                 ],
                 "scope": [
-                  "pr1669-integration"
+                  "pr-1666-master-1432"
                 ],
                 "sequence": 4,
                 "validation_findings": [
-                  "Tests are not executed by explicit user instruction; historical results are not current readiness."
+                  "Focused regression evidence does not establish independent full readiness or erase historical draft blockers."
+                ]
+              },
+              {
+                "action": "integration",
+                "command": "git merge origin/master; resolve canonical governance from committed current work; merge authored prose and refresh supported fingerprints",
+                "custody_event_id": "event:5",
+                "observations": [
+                  "git:9b90025444dcc9b223f77388b1bcd151d88bf62b"
+                ],
+                "proof_refs": [],
+                "scope": [
+                  "pr-1666-master-1432"
+                ],
+                "sequence": 5,
+                "validation_findings": [
+                  "Official0.144.0 release assets were unavailable at setup; release-bound tooling refresh may remain necessary."
                 ]
               },
               {
                 "action": "ci-repair",
-                "command": "GitHub update_pull_request base_branch=master; observed accepted base f450bdf319ea724d628daaaf282e45addd639d13 after update",
-                "custody_event_id": "event:5",
+                "command": "Preserve original remote PR parent, review accepted Cargo0.144.0 inventory, refresh binding without changing assurance requirements",
+                "custody_event_id": "event:6",
                 "observations": [
-                  "/private/tmp/decapod-pr1669-job-131813499158.log"
+                  "/private/tmp/decapod-pr1666-agent-init-144-source.json",
+                  "git:7418add4e1c72ad4cae54f0f7ad5679648316397"
+                ],
+                "proof_refs": [],
+                "scope": [
+                  "pr-1666-master-1432"
+                ],
+                "sequence": 6,
+                "validation_findings": [
+                  "Full current hosted CI remains unproven until the new pushed candidate executes."
+                ]
+              },
+              {
+                "action": "ci-repair",
+                "command": "Official0.144.0 init refreshed release-bound projections; exact reviewed configuration restored; source-bound specs refreshed through supported RPC.",
+                "custody_event_id": "event:7",
+                "observations": [
+                  "/private/tmp/decapod-pr1666-bk9331-validation.txt"
                 ],
                 "proof_refs": [
-                  "hosted-pr-context"
+                  "hosted-release-projection-drift"
                 ],
                 "scope": [
-                  "pr1669-integration"
+                  "pr-1666-master-1432"
                 ],
-                "sequence": 5,
+                "sequence": 7,
                 "validation_findings": [
-                  "The fresh event must still pass the exact-parent gate and actual hosted execution; metadata repair supplies no passing test proof."
+                  "Coordination-only0.144.0 includes the previously scoped inert legacy-placeholder repair, sha256:4e96e246023ea1b28bcd55f68abe9973601f6024cae3234173e92e1b332103d7; it is not an independent publication verifier."
+                ]
+              },
+              {
+                "action": "ci-repair",
+                "command": "Bound shared CLI child execution at60s; preserve all22 contract cases under finite900s aggregate class; refresh reviewed build-input binding.",
+                "custody_event_id": "event:8",
+                "observations": [
+                  "/private/tmp/decapod-pr1666-contract-131829523580.log"
+                ],
+                "proof_refs": [
+                  "hosted-contract-aggregate-timeout"
+                ],
+                "scope": [
+                  "pr-1666-master-1432"
+                ],
+                "sequence": 8,
+                "validation_findings": [
+                  "Fresh hosted execution must establish completion; no local tests or independent full-readiness claim."
                 ]
               }
             ]
@@ -766,32 +834,44 @@
         }
       },
       "declared_commands": [
-        "GitHub update_pull_request base_branch=master; observed accepted base f450bdf319ea724d628daaaf282e45addd639d13 after update",
-        "git diff exact original material; git apply --3way; supported specs refresh and reviews"
+        "Bound shared CLI child execution at60s; preserve all22 contract cases under finite900s aggregate class; refresh reviewed build-input binding.",
+        "Official0.144.0 init refreshed release-bound projections; exact reviewed configuration restored; source-bound specs refreshed through supported RPC.",
+        "Preserve original remote PR parent, review accepted Cargo0.144.0 inventory, refresh binding without changing assurance requirements",
+        "git merge accepted origin/master; official decapod init --refresh --proof --force; supported specs.refresh and content-bound reviews",
+        "git merge origin/master; resolve canonical governance from committed current work; merge authored prose and refresh supported fingerprints"
       ],
       "destination": "pull request",
       "evidence": [
-        "/private/tmp/decapod-pr1669-job-131813499158.log",
-        "git:ac33672af00617964068da875de2a61a55aac5b4",
-        "git:f450bdf319ea724d628daaaf282e45addd639d13"
+        "/private/tmp/decapod-pr1661-1432-fresh-docs-initialized.log",
+        "/private/tmp/decapod-pr1666-agent-init-144-source.json",
+        "/private/tmp/decapod-pr1666-bk9331-validation.txt",
+        "/private/tmp/decapod-pr1666-contract-131829523580.log",
+        "git:7418add4e1c72ad4cae54f0f7ad5679648316397",
+        "git:9b90025444dcc9b223f77388b1bcd151d88bf62b"
       ],
       "inspected_files": [],
-      "intent_id": "intent:change_01M7A4FX8HZRENJCY5N6E2ANEX",
-      "modified_files": [],
+      "intent_id": "intent:change_01M79W0QF1GA7DKV736SKKE9A3",
+      "modified_files": [
+        "tests/support/fresh_docs_readiness.rs"
+      ],
       "next_transitions": [
+        "Preserve original remote PR parent, inspect checkpoint graph, push existing PR branch and observe required providers.",
         "Refine plan and declare falsifiable checks"
       ],
       "repo_scope": [
-        "pr1669-integration"
+        "pr-1666-master-1432"
       ],
-      "run_id": "branch_01M7A4FXCZEZXFKNPGD4EREXC0",
+      "run_id": "branch_01M79W0QKPSAKS1YRWC4A3YT4H",
       "schema_version": "1.1.0",
       "shortcut_risk_signals": [],
-      "task_id": "bugs_01m7a44k3th3dh3c",
+      "task_id": "bugs_01m79vzq51kt730b",
       "tool_calls": [],
       "unresolved_assumptions": [
-        "Tests are not executed by explicit user instruction; historical results are not current readiness.",
-        "The fresh event must still pass the exact-parent gate and actual hosted execution; metadata repair supplies no passing test proof."
+        "Coordination-only0.144.0 includes the previously scoped inert legacy-placeholder repair, sha256:4e96e246023ea1b28bcd55f68abe9973601f6024cae3234173e92e1b332103d7; it is not an independent publication verifier.",
+        "Focused regression evidence does not establish independent full readiness or erase historical draft blockers.",
+        "Fresh hosted execution must establish completion; no local tests or independent full-readiness claim.",
+        "Full current hosted CI remains unproven until the new pushed candidate executes.",
+        "Official0.144.0 release assets were unavailable at setup; release-bound tooling refresh may remain necessary."
       ]
     }
   },

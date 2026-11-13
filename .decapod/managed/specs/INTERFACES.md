@@ -1154,8 +1154,8 @@ field. Nothing in this operation authorizes a mutation, approval or completion.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `e3acf43f4e5a1699b21f5a31e5f814c7ea593e42430111c4a28d89ba577ccf4c`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (231 files), `tests/` (232 files)
+- Repository signal fingerprint: `9dd1adce7cccd5b451d3e5190d70ef6a631f185f21d1e1222d4328c1864166d1`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (232 files), `tests/` (232 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 
@@ -1481,6 +1481,10 @@ The resolved native project also supplies the repository field of newly created 
 
 Cloud todo receipt cache v2 is an object with version=2 and records. The reader accepts legacy flat record arrays, preserves their uncertainty and original repository semantics, and rewrites them as v2 under the stable lock. Unsupported future versions fail without replacement. Server request/result contracts and the cloud-session credential record remain unchanged.
 
-## PR1669 accepted-master integration
+## PR 1666: accepted v0.143.2 source integration
 
-No command or proof vocabulary changes. The existing protected-path rule keeps path/diff judgments separate from staged content scans. Workunit initialization still rejects an uninitialized owner, and parent runtime selection grants no new task, cloud or publication authority. Original regression source is preserved without executing tests during this requested integration.
+The existing public provider and Budget interfaces retain HTTP403/429 failures and cancellation/deadline semantics. Missing or malformed quota reset information cannot authorize another request or a ready judgment. No alternate credential, provider, receipt or daemon is introduced.
+
+## PR1666 current-master integration
+
+Existing snapshot-provider calls and typed failures remain unchanged. HTTP403/429 denial remains immediate and no authentication fallback is added. Integration preserves the current source-CI event contract and its exact base/head binding.

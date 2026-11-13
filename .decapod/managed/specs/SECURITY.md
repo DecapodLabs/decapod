@@ -626,8 +626,8 @@ execution evidence remains required before publication readiness.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `e3acf43f4e5a1699b21f5a31e5f814c7ea593e42430111c4a28d89ba577ccf4c`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (231 files), `tests/` (232 files)
+- Repository signal fingerprint: `9dd1adce7cccd5b451d3e5190d70ef6a631f185f21d1e1222d4328c1864166d1`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (232 files), `tests/` (232 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 
@@ -946,6 +946,10 @@ Operation-route binding must survive clients of different releases. Versioned re
 
 Terminal rule evaluation (`core/validation_rules.rs::evaluate_terminal_rules`) derives `task_type` and `git_ref` from verified trajectory/branch task identities and canonical `refs/heads/<branch>` names without creating or mutating `.decapod/data` SQLite state. Plural store categories (`features`, `bugs`, `tests`) normalize to the built-in rule vocabulary (`feature`, `bugfix`, `test`) so pre-execution and publication scope/custody/evidence rules cannot be bypassed by category naming differences, while unmapped administrative categories fall back to `None` so `task_types`-scoped constitutional rules remain enforced. Undeclared workunits never block ordinary first-validation bootstrap, whereas any durably declared workunit remains fail-closed (`TERMINAL_WORKUNIT_UNPROVEN` or `UNVERIFIED_COMPLETION`) until its checkpointed execution binding and required proof-plan gates pass.
 
-## PR1669 accepted-master integration
+## PR 1666: accepted v0.143.2 source integration
 
-Protected, blocked and plan-forbidden paths remain rejected, oversized diffs remain rejected, and the full staged-content gate remains enabled. Linked-worktree runtime selection does not synthesize missing policy tables or silently grant default policy. Host Git worktrees do not establish OS isolation. Current independent publication readiness remains unproven.
+Header parsing is bounded and accepts only unambiguous numeric quota hints from verified HTTP200 transport responses. A quota hint authenticates no evidence and authorizes no fallback identity. Exact repository/candidate/target and provenance checks remain necessary.
+
+## PR1666 current-master integration
+
+Preserve exact source/base checks, public-reader denial, final remote binding verification and accepted path/custody gates. GitHub PR metadata must identify the actual master tip before a fresh event is emitted. A successful process or historical test does not establish current independent readiness.

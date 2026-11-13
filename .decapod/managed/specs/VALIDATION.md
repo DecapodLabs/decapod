@@ -1341,8 +1341,8 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `e3acf43f4e5a1699b21f5a31e5f814c7ea593e42430111c4a28d89ba577ccf4c`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (231 files), `tests/` (232 files)
+- Repository signal fingerprint: `9dd1adce7cccd5b451d3e5190d70ef6a631f185f21d1e1222d4328c1864166d1`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (232 files), `tests/` (232 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 
@@ -1857,14 +1857,26 @@ from the `0.143.1` controller and updates `reviewed_sources_digest` to
 full CI and `decapod validate` execution on the exact merged commit remain
 required before publication readiness.
 
+## PR 1666: accepted v0.143.2 source integration
+
+Run the current `github_quota` tests and the real automatic discovery pacing regression. Synthetic curl responses exercise transport/pacing behavior only. A current complete independent provider judgment remains required; prior project checks and pre-reset observations are not readiness.
+
 ### v0.143.2 fresh-docs workunit fixture initialization
 
 `tests/support/fresh_docs_readiness.rs` initializes the workspace-local workunit runtime using the real `init --refresh --proof` CLI before declaring unverified completion. Root datastore initialization does not initialize this journal. The scenario still requires a clean unchanged candidate, rejects unverified completion and withholds readiness receipts; the production `WORKUNIT_RUNTIME_UNINITIALIZED` guard remains intact. The repair passed on the baseline Dactyl dependency before SDK-specific verification.
 
-## PR1669 accepted-master integration
+## PR1666 current-master integration
 
-The current request explicitly prohibits tests. Preserve the original protected-path and linked-worktree journal regression source, inspect the integrated source and Git parent history, refresh supported source-bound spec attestations, checkpoint and push. No test execution or successful independent readiness is claimed for this integration. The accepted master includes the fresh-docs fixture initialization from PR1661.
+Current accepted source is master 9b900254; the source package version is 0.144.0. The release was compiling and assets were unavailable at setup. Use actual hosted CI results for this update, push each addressed root cause and do not run tests locally. Refresh official release-bound projections through supported tooling when that release becomes available; no cached earlier green result is treated as current proof.
 
-### Exact CI event base after accepted-target movement
+### Reviewed 0.144.0 build-input binding
 
-The first hosted PR run after integration rejected its context before any tests: the synthetic checkout merged candidate `95adedd6` into accepted master `f450bdf3`, while the event still named previous base `6f1d2a39`. Re-selecting the existing `master` base through the GitHub PR API updated that metadata to `f450bdf3`. A new push obtains a fresh event; replaying the old event would retain the stale binding. Preserve the exact ordered-parent check and independently verify the new hosted result. This metadata repair is not passing test evidence, and no tests were executed locally.
+The accepted release changes the Decapod package version in Cargo.toml and Cargo.lock. Review the actual source inventory and bind its current digest without changing required checks, providers or toolchain requirements. Git symlink targets retain their accepted identity; no toolchain change is claimed from comparing a symlink blob with dereferenced contents. The original PR parent remains in the merge graph. No local tests are executed.
+
+### Official 0.144.0 projection drift repair
+
+The hosted standalone validator passed project prerequisites but rejected uncommitted release-bound regeneration: entrypoints and the managed Docker image/version still referenced0.143.2. The official installed0.144.0 kernel now regenerates those projections and their manifest through supported init/spec interfaces. Preserve the exact reviewed configuration and the drift gate; no local test execution or passing full-readiness receipt is claimed.
+
+### Bounded complete CLI contract execution
+
+Hosted Contract Conformance exhausted the300s aggregate while entering the schema-determinism case after16 completed cases in the22-case sequential suite; the matching push job passed. `tests/cli_contract_enforcement.rs` now uses a60s process-group deadline in its shared command helper, producing a command-specific failure instead of an unbounded child wait. The Bazel target uses the existing finite900s long class, retains exclusive isolation and executes all22 cases without removing assertions. The reviewed source-inventory update covers that explicit build-input budget change; required checks, providers and proof semantics are unchanged. No local tests are run.

@@ -244,7 +244,10 @@ def decapod_targets():
             # Use the finite 900s aggregate class for its real CLI fixtures.
             # The entrypoint suite includes genuine docs CLI admission and
             # infer_precision; give it the finite 900s budget and exclusive isolation.
-            timeout = "long" if path in ["tests/gatling.rs", "tests/group_broker.rs", "tests/interop_conformance.rs", "tests/cli_contracts.rs", "tests/entrypoint_correctness.rs"] else "moderate",
+            # Contract enforcement runs 22 real CLI cases sequentially; its
+            # 300s aggregate expired after 16 completed cases in hosted CI.
+            # The shared helper retains a separate 60s subprocess deadline.
+            timeout = "long" if path in ["tests/gatling.rs", "tests/group_broker.rs", "tests/interop_conformance.rs", "tests/cli_contracts.rs", "tests/cli_contract_enforcement.rs", "tests/entrypoint_correctness.rs"] else "moderate",
             # These suites depend on finite process/request deadlines. Rust's
             # test-threads flag alone does not isolate concurrent Bazel targets.
             # Keep all broker clients concurrent within its exclusive target.

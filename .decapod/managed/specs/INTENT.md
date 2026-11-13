@@ -352,8 +352,8 @@ These declarations select authoring and proof obligations; they do not attest im
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `e3acf43f4e5a1699b21f5a31e5f814c7ea593e42430111c4a28d89ba577ccf4c`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (231 files), `tests/` (232 files)
+- Repository signal fingerprint: `9dd1adce7cccd5b451d3e5190d70ef6a631f185f21d1e1222d4328c1864166d1`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (232 files), `tests/` (232 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 
@@ -538,6 +538,10 @@ Managed cloud commands must distinguish the local Git checkout from a service-is
 
 The resolved native project also supplies the repository field of newly created tasks. Before the first possible write dispatch, the existing machine-private todo operation journal atomically binds the operation to a digest of its resolved service/project route. Preflight login and initial project selection retain the same operation ID; subsequent selection changes cannot replay an uncertain or successful write into another project. Older unknown records remain bound to their original canonical repository semantics. The real PostgreSQL consumer exposed the former Git-label write mismatch; that failed candidate supplies no successful native proof.
 
-## PR1669 accepted-master integration
+## PR 1666: accepted v0.143.2 source integration
 
-Preserve PR1669 while incorporating the accepted custody integration at master f450bdf3. The protected-path rule judges changed path boundaries and diff size; staged full-file scanning remains a separate acceptance gate. Preserve initialized workunit policy ownership across linked worktrees. This integration does not establish new readiness evidence.
+Reduce anonymous GitHub discovery consumption while preserving exact-source proof, immediate denial behavior and the original invocation deadline. Quota hints govern waiting, not acceptance; this proposal does not establish current provider execution.
+
+## PR1666 current-master integration
+
+Incorporate accepted master 9b900254, including custody, protected-path/workunit fixes and the 0.144.0 source release. Preserve the quota-pacing feature and its original PR history, then repair hosted CI failures one at a time. No local test execution or independent full readiness is claimed.
