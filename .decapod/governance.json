@@ -751,6 +751,11 @@
       "id": "start-v01431-trajectory-run",
       "summary": "Initialize reconciled v0.143.1 trajectory run for #1568",
       "input_digest": "sha256:422f3abee8466bfff8c6f3b2030bd426944cb9684eb4006cb25c0f749864b92f"
+    },
+    {
+      "id": "sync-docs-command-contracts",
+      "summary": "Regenerate docs/agent/command-contracts.md from #1568 source-built CLI and config schema",
+      "input_digest": "sha256:f39fca05d54a0fe6d00b5cc1c17ca0abd4b41da91e95c34455a220ce653c6659"
     }
   ],
   "intents": {
