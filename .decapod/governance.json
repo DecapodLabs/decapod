@@ -583,6 +583,11 @@
       "id": "pin-agents-01410",
       "summary": "chore(entrypoints): refresh AGENTS.md release-bound pin to 0.141.0",
       "input_digest": "sha256:12dcfc4bf1dcafbf7101e97e6736fb0cdc3a81c1ced4a25cfb6a9a22bc961a02"
+    },
+    {
+      "id": "pin-claude-01410",
+      "summary": "chore(entrypoints): refresh CLAUDE.md release-bound pin to 0.141.0",
+      "input_digest": "sha256:dd992c0c63fd7d6833e52a88169aaad9c1ed8e35781f32c54a43b6caa542c065"
     }
   ],
   "intents": {
