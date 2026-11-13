@@ -608,6 +608,11 @@
       "id": "pin-spec-readme-01410",
       "summary": "chore(specs): refresh README.md release header to 0.141.0",
       "input_digest": "sha256:e34223efbb4030892faff75c7f9a60d570456e04dd89e4bd2f9344edd9932921"
+    },
+    {
+      "id": "pin-spec-intent-01410",
+      "summary": "chore(specs): refresh INTENT.md release header to 0.141.0",
+      "input_digest": "sha256:9b90411b35797130aa27d7ddae454f0d6175c301ba2301a3e4651ce956a0af03"
     }
   ],
   "intents": {
