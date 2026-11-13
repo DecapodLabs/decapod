@@ -691,6 +691,11 @@
       "id": "c28-refresh-intent",
       "summary": "docs(specs): synchronize INTENT.md overlay digest after #1568 update",
       "input_digest": "sha256:e1412ea11c425aa676c58db2788dc76680a855510f10c57f3d87f1a264675a2c"
+    },
+    {
+      "id": "c29-refresh-interfaces",
+      "summary": "docs(specs): synchronize INTERFACES.md overlay digest after #1568 update",
+      "input_digest": "sha256:e90a58c0f9d6ab8569964062503dbf8eb887cca2752449a079272c4ccde09f69"
     }
   ],
   "intents": {
