@@ -264,13 +264,8 @@ pub fn get_workspace_status(repo_root: &Path) -> Result<WorkspaceStatus, Decapod
             .push("Run `decapod workspace ensure` and cd into the created worktree".to_string());
     }
 
-    let has_git_repo = repo_root.join(".git").exists();
-    let in_managed_workspaces_dir = is_canonical_decapod_workspace_path(repo_root);
-    let requires_registered_worktree = has_git_repo || in_managed_workspaces_dir;
-    let mut can_work = (!requires_registered_worktree || git.in_worktree)
-        && !git.is_main_repo
-        && !git.is_protected;
-    if requires_registered_worktree && !git.in_worktree && !git.is_main_repo && !git.is_protected {
+    let mut can_work = git.in_worktree && !git.is_main_repo && !git.is_protected;
+    if !git.in_worktree && !git.is_main_repo && !git.is_protected {
         blockers.push(Blocker {
             kind: BlockerKind::WorkspaceRequired,
             message: "AUTHORING_CHECKOUT_UNVERIFIED: current directory is not a registered Git worktree.".to_string(),

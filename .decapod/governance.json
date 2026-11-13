@@ -601,6 +601,11 @@
       "id": "refresh-specs-and-manifest-nongit-fix",
       "summary": "Refresh living spec attestations and manifest after non-git workspace fix",
       "input_digest": "sha256:512025dc10b3a989068e71e5d842dd1df3601b1eebd6fdbddd2d53ffbfef4fe8"
+    },
+    {
+      "id": "restore-strict-non-git-admission",
+      "summary": "Retain concurrent2c659521 history, reverse only unsafe can_work relaxation demonstrated by real CLI failure; preserve partial diagnostics, bind final reviews/specs and actual passing regression, preserve unavailable superseded artifact evidence.",
+      "input_digest": "sha256:5488933cb6ba0c8845f61b84ab3f4f7e5c29130b89c36134ce97789366feee47"
     }
   ],
   "intents": {
@@ -641,23 +646,23 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Refreshed living spec attestations and manifest after non-git workspace status fix (#1469).",
-          "reviewed_code_fingerprint": "d8d4c61825757469a518d296488bdc65a839267b34bf7484ca6b7d611e74f1a3",
+          "reason": "Final code restores strict checkout admission after concurrent relaxation produced real CLI can_work=true regression. Non-Git diagnostics remain restricted to partial project-check/CI scope.",
+          "reviewed_code_fingerprint": "2b121bcac52e002c3be06f937132e585746dec4c07dfecd42f836fa54e5e2ae0",
           "spec_material_hash": "64d2650f577b02cfe61d723b109c11fbd207e93bcd485330bca382df773ee76d"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Refreshed living spec attestations and manifest after non-git workspace status fix (#1469).",
-          "reviewed_code_fingerprint": "d8d4c61825757469a518d296488bdc65a839267b34bf7484ca6b7d611e74f1a3",
+          "reason": "Reviewed current strict get_workspace_status and explicitly partial diagnostic frontend. Same non-Git directory must report no authoring custody and reject full validation; positive rerun underway.",
+          "reviewed_code_fingerprint": "2b121bcac52e002c3be06f937132e585746dec4c07dfecd42f836fa54e5e2ae0",
           "spec_material_hash": "c03675582c56d958bf2797cb400db15e7865703e0186531fd907402067c1efa7"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Refreshed living spec attestations and manifest after non-git workspace status fix (#1469).",
-          "reviewed_code_fingerprint": "d8d4c61825757469a518d296488bdc65a839267b34bf7484ca6b7d611e74f1a3",
-          "spec_material_hash": "b22a787f02a258ae554291105ce68cbb1dfd49fb929bb854cb874a660dc35a4a"
+          "reason": "Absence of .git outside a managed path is not admissible checkout custody. Current code preserves fail-closed authoring/publication, compatibility only through partial diagnostics, no OS isolation claim.",
+          "reviewed_code_fingerprint": "2b121bcac52e002c3be06f937132e585746dec4c07dfecd42f836fa54e5e2ae0",
+          "spec_material_hash": "a390e2ed19c6ed0a9008315020033c950f77ae8187cabca2fa646dfcee4ce947"
         }
       ],
       "state": "APPROVED",
@@ -668,13 +673,13 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1794551846Z"
+      "updated_at": "1794552613Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:f0b3a7cc0e8f4619dd6bd0b2fd4f54de7a2facc7e1e5de90ea97e18cccea9277",
+      "artifact_hash": "sha256:ee33f30e34c91d141056931092024575f93fc8c58325f8db0b868ad1d2962bea",
       "checks": [
         {
           "name": "binding-rollback-and-lifecycle",
@@ -687,6 +692,10 @@
         {
           "name": "combined-candidate-freshness",
           "status": "passed"
+        },
+        {
+          "name": "concurrent-non-git-admission-regression",
+          "status": "failed"
         },
         {
           "name": "concurrent-remote-source-reconciliation",
@@ -717,12 +726,20 @@
           "status": "passed"
         },
         {
+          "name": "restored-strict-admission-cli",
+          "status": "passed"
+        },
+        {
           "name": "shared-resource-exclusion",
           "status": "passed"
         },
         {
           "name": "standalone-manifest-before-refresh",
           "status": "failed"
+        },
+        {
+          "name": "superseded-integration-tests",
+          "status": "unavailable"
         }
       ],
       "current_phase": "integration",
@@ -767,10 +784,17 @@
             "intent_id": "intent:change_01M79NVT2SXTG0QCCYXQADTVWT",
             "kind": "trajectory_step_recorded",
             "sequence": 7
+          },
+          {
+            "detail": "trajectory:branch_01M79NVT5SX7NJTXX34J543M80",
+            "event_id": "event:8",
+            "intent_id": "intent:change_01M79NVT2SXTG0QCCYXQADTVWT",
+            "kind": "trajectory_step_recorded",
+            "sequence": 8
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 7,
+        "next_sequence": 8,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M79NVT5SX7NJTXX34J543M80": {
@@ -854,12 +878,32 @@
                 "validation_findings": [
                   "Official full validation7f696510 blocked on public GitHub provider HTTP403 rate limit, reset2026-11-13T06:49:13Z; no alternate proof/authentication route used. Standalone CI found stale config_input_hash after reviewed source pin; official specs.refresh now regenerates final config/spec hashes, fresh CI still required."
                 ]
+              },
+              {
+                "action": "trajectory.record",
+                "command": "Fast-forwarded concurrent2c659521, reproduced actual CLI assertion can_work=true on non-Git directory; restored strict workspace status, preserved partial diagnostic frontend; actual CLI regression passes14.62s.",
+                "custody_event_id": "event:8",
+                "observations": [],
+                "proof_refs": [
+                  "concurrent-non-git-admission-regression",
+                  "restored-strict-admission-cli",
+                  "superseded-integration-tests"
+                ],
+                "scope": [
+                  "pr-1661-repair"
+                ],
+                "sequence": 8,
+                "validation_findings": [
+                  "Original concurrentf18c9d06 and2c659521 remain in history. Reverse only unsafe workspace admission change; preserve current canonical governance checkpoint journal through conflict resolution. No force push.",
+                  "Earlier b191 integration job failed downloading missing bootstrap artifact before any tests. It is unavailable execution, not a source test result; fresh final-candidate full proof remains mandatory."
+                ]
               }
             ]
           }
         }
       },
       "declared_commands": [
+        "Fast-forwarded concurrent2c659521, reproduced actual CLI assertion can_work=true on non-Git directory; restored strict workspace status, preserved partial diagnostic frontend; actual CLI regression passes14.62s.",
         "Normal merge original PR1661 f1cf3332 into current-master repair629202b1; retain both parents and original independent checkpoint history.",
         "Observed concurrent PR1661 head advance f1cf3332 to240bc35a. Fetched and merged actual update normally; it contains same Clippy fix and accepted1431 master. Preserve all remote ancestry and current authored diagnostic repair."
       ],
@@ -889,8 +933,10 @@
       "tool_calls": [],
       "unresolved_assumptions": [
         "Conflict resolution selects committed current-master repair material for governance, version1431 projections, semantic specs and already-fixed source/test conflicts; no feature source omitted. No force push or merge to master.",
+        "Earlier b191 integration job failed downloading missing bootstrap artifact before any tests. It is unavailable execution, not a source test result; fresh final-candidate full proof remains mandatory.",
         "Official 0.143.1 still blocks normal datastore startup on inert legacy TODO file. Coordination-only 0.143.1 built from published source plus previously tested inert-file migration repair; installed official binary remains independent full validator. No database edited.",
         "Official full validation7f696510 blocked on public GitHub provider HTTP403 rate limit, reset2026-11-13T06:49:13Z; no alternate proof/authentication route used. Standalone CI found stale config_input_hash after reviewed source pin; official specs.refresh now regenerates final config/spec hashes, fresh CI still required.",
+        "Original concurrentf18c9d06 and2c659521 remain in history. Reverse only unsafe workspace admission change; preserve current canonical governance checkpoint journal through conflict resolution. No force push.",
         "Reviewed source inventory changed only accepted Cargo package 0.143.0 to 0.143.1 after pin112287a9. No candidate proof-source delta or requirement change. Current digest50af27077a026878a187611c381226be611ae10f45bfec77fc205282258d3ccf.",
         "User requested rebase but earlier no-force rule remains; prepare history-preserving integration pending optional rewrite preference. PR1661 only; other PRs untouched."
       ]
