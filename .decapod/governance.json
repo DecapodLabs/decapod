@@ -819,6 +819,11 @@
       "id": "fix-clippy-workspace-lifecycle-row",
       "summary": "fix(workspace): factor LifecycleEventRow alias for clippy::type_complexity (#1630)",
       "input_digest": "sha256:9700b0bd3cd09636962a4bec7de4369b5f59ef0997c67fb6baad5c9ba02b0025"
+    },
+    {
+      "id": "fix-clippy-datastore-efficiency",
+      "summary": "test(storage): factor EventRowToExpand alias for clippy::type_complexity (#1630)",
+      "input_digest": "sha256:2a062e3184f859b72b2172f5e5d3e424c1b606aa4f9560dfd2f40031e811fa90"
     }
   ],
   "intents": {

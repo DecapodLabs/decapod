@@ -517,7 +517,17 @@ fn v2_checkpoint_and_event_compaction_reduces_bytes_losslessly() {
     .unwrap();
     let v1_conn = Connection::open(v1_data.join(schemas::LOCAL_DB_NAME)).unwrap();
     v1_conn.execute_batch("BEGIN IMMEDIATE").unwrap();
-    let rows_to_expand: Vec<(String, String, String, String, String, Option<String>, Option<String>, String)> = v1_conn
+    type EventRowToExpand = (
+        String,
+        String,
+        String,
+        String,
+        String,
+        Option<String>,
+        Option<String>,
+        String,
+    );
+    let rows_to_expand: Vec<EventRowToExpand> = v1_conn
         .prepare("SELECT stream,event_id,ts,event_type,actor,subject_kind,subject_id,payload FROM events")
         .unwrap()
         .query_map([], |r| {
