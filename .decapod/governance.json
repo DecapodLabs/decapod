@@ -591,6 +591,14 @@
       "proof_refs": [
         "AGENTS.md"
       ]
+    },
+    {
+      "id": "refresh-claude-entrypoint-01410",
+      "summary": "Refresh CLAUDE.md release-bound entrypoint pin to Decapod 0.141.0",
+      "input_digest": "sha256:c4ad4bdff77eda204a6a6a523bac98ec7186293eaac230a99c30751177af15e0",
+      "proof_refs": [
+        "CLAUDE.md"
+      ]
     }
   ],
   "intents": {
@@ -646,7 +654,7 @@
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:fc4a1a77a6d39e1c3b2e6704f95c101f80ff3e2dd39bb50664ce0e37e0d0d9cd",
+      "artifact_hash": "sha256:9136dc352a3c8b7dea66111f7b22aca86d413963adb079014d8e698b85e9f9cc",
       "checks": [],
       "current_phase": "execution",
       "custody": {
@@ -697,10 +705,17 @@
             "intent_id": "intent:change_01M79A0G0YSR12S2RHJE84QPHR",
             "kind": "trajectory_step_recorded",
             "sequence": 8
+          },
+          {
+            "detail": "trajectory:branch_01M79A0G5E35FVE2EYNYQVQ3XY",
+            "event_id": "event:9",
+            "intent_id": "intent:change_01M79A0G0YSR12S2RHJE84QPHR",
+            "kind": "trajectory_step_recorded",
+            "sequence": 9
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 8,
+        "next_sequence": 9,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M79A0G5E35FVE2EYNYQVQ3XY": {
@@ -787,6 +802,22 @@
                 ],
                 "sequence": 8,
                 "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:9",
+                "observations": [
+                  "CLAUDE.md"
+                ],
+                "proof_refs": [],
+                "scope": [
+                  "\".decapod/config.toml\"",
+                  "\".decapod/managed/specs\"]",
+                  "\"assets/tools/build_lifecycle_tests.rs\"",
+                  "paths:[\"assets/tools/build_lifecycle.rs\""
+                ],
+                "sequence": 9,
+                "validation_findings": []
               }
             ]
           }
@@ -824,6 +855,7 @@
       "modified_files": [
         ".decapod/config.toml",
         "AGENTS.md",
+        "CLAUDE.md",
         "assets/tools/build_lifecycle.rs",
         "assets/tools/build_lifecycle_tests.rs"
       ],
