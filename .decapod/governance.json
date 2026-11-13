@@ -869,6 +869,11 @@
       "id": "refresh-spec-security-md-v0-143-1",
       "summary": "chore(specs): refresh SECURITY.md attestation for Decapod v0.143.1",
       "input_digest": "sha256:4b222ed8e8cc6a543889651fc67faa71ad1754ce792ee9a760d8e5f53c3506cf"
+    },
+    {
+      "id": "refresh-spec-validation-md-v0-143-1",
+      "summary": "chore(specs): refresh VALIDATION.md attestation for Decapod v0.143.1",
+      "input_digest": "sha256:ffa9ac8561cc5cb12cc34b0ce4a169d0ba2a45db4a456fe4c19f349bbb08fb9d"
     }
   ],
   "intents": {
