@@ -654,6 +654,11 @@
       "id": "docs-specs-architecture-workunit",
       "summary": "Document linked-worktree workunit runtime datastore resolution",
       "input_digest": "sha256:035d376a1a8685f0e929cf685e699aa64209852c817ddd6729c87a5f8c1ed0c0"
+    },
+    {
+      "id": "specs-refresh-wt5-1",
+      "summary": "Refresh .manifest.json codebase attestation",
+      "input_digest": "sha256:1d9d8cf505b4a613509fdaafb93ecac83949f3740ce7baf2d5bc3c6cf042d210"
     }
   ],
   "intents": {
