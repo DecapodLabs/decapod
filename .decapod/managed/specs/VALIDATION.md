@@ -1,5 +1,21 @@
 # Validation
 
+## PR1661 repair evidence contract
+
+The non-Git entrypoint regression must demonstrate successful prerequisite-only
+diagnostics, unavailable authoring custody, and rejected full publication
+validation for the same initialized project. Guided-path traversal is checked
+through `govern project-check`, which must return the actual configuration
+failure rather than an earlier workspace diagnostic. Existing transactional
+binding, full lease-lifecycle, shared-resource, cross-process recovery and
+combined-candidate tests remain required. Clippy must accept the real PathBuf
+returned by workspace ensure without a redundant conversion. Exact final source
+and current accepted master require a new full validation result; earlier PR
+statuses, source fixtures and project checks cannot establish that readiness.
+After a reviewed proof-source digest update, `rpc --op specs.refresh` must bind
+the manifest to the final config bytes. Standalone validation rejects a stale
+`config_input_hash` even when the underlying prerequisite checks pass.
+
 The required `tests/consumer_readiness.rs` regression carries a recorded
 Decapod intent through a real source-check failure, a committed source repair,
 native validation and an inspectable receipt. It verifies that failure issues
@@ -1325,7 +1341,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `7693d5010b19979e4cb8189dcb7d189c3ada65fb2953147b491cc708cd5ae8ec`
+- Repository signal fingerprint: `de413bb8b9557fdd650ef2e4e52a44a5c94e550ec405aaa016a937ee1f3d3393`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (231 files), `tests/` (232 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
@@ -1840,3 +1856,7 @@ from the `0.143.1` controller and updates `reviewed_sources_digest` to
 `sha256:50af27077a026878a187611c381226be611ae10f45bfec77fc205282258d3ccf`;
 full CI and `decapod validate` execution on the exact merged commit remain
 required before publication readiness.
+
+### v0.143.2 fresh-docs workunit fixture initialization
+
+`tests/support/fresh_docs_readiness.rs` initializes the workspace-local workunit runtime using the real `init --refresh --proof` CLI before declaring unverified completion. Root datastore initialization does not initialize this journal. The scenario still requires a clean unchanged candidate, rejects unverified completion and withholds readiness receipts; the production `WORKUNIT_RUNTIME_UNINITIALIZED` guard remains intact. The repair passed on the baseline Dactyl dependency before SDK-specific verification.

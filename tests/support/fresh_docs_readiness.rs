@@ -327,6 +327,10 @@ pub fn fresh_governed_docs_cli_admission_then_runtime_executes_first_proof() {
                 .map(str::to_owned)
         })
         .expect("governed orientation must populate trajectory intent_id");
+    // Workunit journals are workspace-local. Initialize their runtime through
+    // the public CLI before introducing the negative completion declaration;
+    // the root repository's initialized datastore does not initialize this one.
+    governed_ok(&workspace, &storage, &["init", "--refresh", "--proof"]);
     governed_ok(
         &workspace,
         &storage,

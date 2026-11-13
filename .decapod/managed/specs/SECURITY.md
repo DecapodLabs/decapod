@@ -1,5 +1,21 @@
 # Security
 
+Absence of `.git` does not establish checkout admission, including outside
+`.decapod/workspaces`. `init --no-git` enables prerequisite diagnostics only.
+The partial project-check route handles that compatibility explicitly; workspace
+status and full validation retain their independent fail-closed boundaries.
+
+## Diagnostic success grants no checkout authority (#1661)
+
+Non-Git prerequisite diagnostics may inspect project configuration without a
+task-bound Git workspace. They do not change `can_work=false`, mint a full
+readiness judgment, or admit authoring/publication. Full validation continues to
+reject that directory. CLI regression coverage exercises all three observations
+using the real binary without Git-gate overrides. The custody transaction also
+rejects second live bindings and rolls back binding persistence if event evidence
+cannot be committed. Local actor labels and Git filesystem identities remain
+host-local cooperative authority, not authenticated cloud or OS isolation.
+
 ## Agent-owned browser handoff
 
 `authorization_url` exposes only Dactyl's validated, short-lived browser handoff.
@@ -610,7 +626,7 @@ execution evidence remains required before publication readiness.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `7693d5010b19979e4cb8189dcb7d189c3ada65fb2953147b491cc708cd5ae8ec`
+- Repository signal fingerprint: `de413bb8b9557fdd650ef2e4e52a44a5c94e550ec405aaa016a937ee1f3d3393`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (231 files), `tests/` (232 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
