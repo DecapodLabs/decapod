@@ -709,6 +709,11 @@
       "id": "test-datastore-efficiency",
       "summary": "test(storage): verify >=30% lossless v2 compaction savings and benchmark harness (#1630)",
       "input_digest": "sha256:a6e4dd7f6076d3da692058bf7e1e3c68232535d75ea2b4a356853f88eeed28a9"
+    },
+    {
+      "id": "test-relational-compaction",
+      "summary": "test(storage): verify migration 1200 SHA-256 parity, downgrade guard, GC, and vacuum (#1630)",
+      "input_digest": "sha256:1143dcf7118ad34ba8d7c46c28ffff1ff25cf18bcacf39204ab966e09ec456dc"
     }
   ],
   "intents": {
