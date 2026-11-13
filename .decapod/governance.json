@@ -634,6 +634,11 @@
       "id": "trace-compact-event-reads",
       "summary": "feat(trace): reconstruct compact event envelopes in get_last_traces (#1630)",
       "input_digest": "sha256:d27c0189f1728e7564cc552ba04e2998515db6c99d128bbd03c74b869cbc5db4"
+    },
+    {
+      "id": "validate-compact-event-reads",
+      "summary": "feat(validate): reconstruct compact knowledge event envelopes (#1630)",
+      "input_digest": "sha256:f61ac5d293867a6b03cc7b3ed933c6923dba8d84f5e8b1008bdd912916ed72ec"
     }
   ],
   "intents": {
