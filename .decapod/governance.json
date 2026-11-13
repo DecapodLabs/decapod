@@ -605,6 +605,14 @@
       "proof_refs": [
         "https://github.com/DecapodLabs/decapod/issues/1658"
       ]
+    },
+    {
+      "id": "issue-1658-file-9",
+      "summary": "docs(governance): distinguish review digests from policy authority; file-by-file checkpoint, verification pending.",
+      "input_digest": "sha256:58b9909fb163c1555597bca515ab6cf8f0b6c96612c92ae1355b93c6c48e4787",
+      "proof_refs": [
+        "https://github.com/DecapodLabs/decapod/issues/1658"
+      ]
     }
   ],
   "intents": {
@@ -678,7 +686,7 @@
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:04dcf463bc5ee2bbc2ffcaa10c25124de85e4e199ac52ab9c37001e3f38d44cc",
+      "artifact_hash": "sha256:39aa31c075eb16bb7963b5e370377355bd1978dc8f8ddead3c77c71f3bae0af8",
       "checks": [],
       "current_phase": "implementation",
       "custody": {
@@ -750,10 +758,17 @@
             "intent_id": "intent:change_01M7BCDS8K3F7RT5QZW52H6VT3",
             "kind": "trajectory_step_recorded",
             "sequence": 11
+          },
+          {
+            "detail": "trajectory:branch_01M7BCDSB9RK1ZV4N4XY039SMT",
+            "event_id": "event:12",
+            "intent_id": "intent:change_01M7BCDS8K3F7RT5QZW52H6VT3",
+            "kind": "trajectory_step_recorded",
+            "sequence": 12
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 11,
+        "next_sequence": 12,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M7BCDSB9RK1ZV4N4XY039SMT": {
@@ -888,6 +903,22 @@
                 "validation_findings": [
                   "Hosted verification and exact-candidate publication readiness remain pending; no local tests run."
                 ]
+              },
+              {
+                "action": "implementation",
+                "custody_event_id": "event:12",
+                "observations": [
+                  "docs/architecture/governed-execution.md",
+                  "https://github.com/DecapodLabs/decapod/issues/1658"
+                ],
+                "proof_refs": [],
+                "scope": [
+                  "issue-1658"
+                ],
+                "sequence": 12,
+                "validation_findings": [
+                  "Hosted verification and exact-candidate publication readiness remain pending; no local tests run."
+                ]
               }
             ]
           }
@@ -906,6 +937,7 @@
         ".decapod/managed/specs/INTERFACES.md",
         ".decapod/managed/specs/SECURITY.md",
         "docs/agent/repository-readiness.md",
+        "docs/architecture/governed-execution.md",
         "src/decapod/core/repository_profile.rs",
         "src/decapod/core/validation_runtime.rs",
         "tests/consumer_readiness.rs"
