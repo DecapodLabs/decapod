@@ -594,6 +594,11 @@
       "id": "terminal-rule-task-and-ref-context",
       "summary": "fix(validation): populate canonical task_type and git_ref in terminal rules (#1629)",
       "input_digest": "sha256:451fc8c427cd1d7b86c5fb145d13918f87f43799b64d98e33422cf3241bcc06e"
+    },
+    {
+      "id": "validate-canonical-task-type",
+      "summary": "fix(validation): normalize workspace task_type for pre-execution rules (#1629)",
+      "input_digest": "sha256:1fc07435c1c6ca75ebb1e2185bec5101bed17ab025528faa309be96fb08a1616"
     }
   ],
   "intents": {
