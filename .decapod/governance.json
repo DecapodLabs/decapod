@@ -561,6 +561,11 @@
       "id": "c03-db-maintenance-core",
       "summary": "feat(governance): implement canonical-policy-bound agent database maintenance engine",
       "input_digest": "sha256:4c1065c790f128a953c765643ef8baf5760f3c32e7ea7429ddf805c471d15226"
+    },
+    {
+      "id": "c04-core-mod-export",
+      "summary": "feat(core): register db_maintenance module",
+      "input_digest": "sha256:d21d61833998634d3c48d0352897c07334b570f367dc488a194ebc9377cfab81"
     }
   ],
   "intents": {
