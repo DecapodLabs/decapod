@@ -605,6 +605,14 @@
       "proof_refs": [
         "https://github.com/DecapodLabs/decapod/issues/1667"
       ]
+    },
+    {
+      "id": "issue-1667-file-9",
+      "summary": "docs(cloud): track published SDK and bounded transport compatibility; file-by-file checkpoint, verification pending.",
+      "input_digest": "sha256:5c7142e57b115be6d1834eb798689645e8f87923ba211c987d0debe55f8f19be",
+      "proof_refs": [
+        "https://github.com/DecapodLabs/decapod/issues/1667"
+      ]
     }
   ],
   "intents": {
@@ -655,7 +663,7 @@
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:a58f907f2fbf110264f2b19a808aaffaa9c72eb9fb592c25a912fc308c21b6be",
+      "artifact_hash": "sha256:c71bc201f5a31309998408b652592d8dc97b2e5d8a9591be9ad8df0429649303",
       "checks": [],
       "current_phase": "implementation",
       "custody": {
@@ -727,10 +735,17 @@
             "intent_id": "intent:change_01M7BCN0CS3Z8AJ7TZ491WJ7CJ",
             "kind": "trajectory_step_recorded",
             "sequence": 11
+          },
+          {
+            "detail": "trajectory:branch_01M7BCN0FD8AE623HXNGA0C8F9",
+            "event_id": "event:12",
+            "intent_id": "intent:change_01M7BCN0CS3Z8AJ7TZ491WJ7CJ",
+            "kind": "trajectory_step_recorded",
+            "sequence": 12
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 11,
+        "next_sequence": 12,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M7BCN0FD8AE623HXNGA0C8F9": {
@@ -865,6 +880,22 @@
                 "validation_findings": [
                   "Hosted verification and exact-candidate publication readiness remain pending; no local tests run."
                 ]
+              },
+              {
+                "action": "implementation",
+                "custody_event_id": "event:12",
+                "observations": [
+                  "docs/book/src/reference/propodus.md",
+                  "https://github.com/DecapodLabs/decapod/issues/1667"
+                ],
+                "proof_refs": [],
+                "scope": [
+                  "issue-1667"
+                ],
+                "sequence": 12,
+                "validation_findings": [
+                  "Hosted verification and exact-candidate publication readiness remain pending; no local tests run."
+                ]
               }
             ]
           }
@@ -882,6 +913,7 @@
         "Cargo.lock",
         "Cargo.toml",
         "MODULE.bazel.lock",
+        "docs/book/src/reference/propodus.md",
         "tests/release_dependency_policy.rs",
         "tests/unit/core/task_journal_tests.rs",
         "tests/unit/core/task_transfer_tests.rs"
