@@ -549,6 +549,14 @@
       "proof_refs": [
         "https://github.com/DecapodLabs/decapod/issues/1659"
       ]
+    },
+    {
+      "id": "issue-1659-file-2",
+      "summary": "fix(readiness): reject diagnostic gate overrides in shared runtime; file-by-file checkpoint, verification pending.",
+      "input_digest": "sha256:6f9d062450ccd00bdfcbbf96ae2cfb25e14c375599f9b5c6c2ee584f920d4cc4",
+      "proof_refs": [
+        "https://github.com/DecapodLabs/decapod/issues/1659"
+      ]
     }
   ],
   "intents": {
@@ -599,7 +607,7 @@
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:e3e647eb2dc4700c5c9073e0fbec0b05133f0b5255238adcc4c80b2b71f1d00d",
+      "artifact_hash": "sha256:2fa405f4c002868189bd506041008b0deb26093b3fc376c6ec0e22750f4bd54a",
       "checks": [],
       "current_phase": "implementation",
       "custody": {
@@ -622,10 +630,17 @@
             "intent_id": "intent:change_01M7BCEHXJQR8HVADJF91PJKGD",
             "kind": "trajectory_step_recorded",
             "sequence": 4
+          },
+          {
+            "detail": "trajectory:branch_01M7BCEJ05EP527M18XXSF6GK6",
+            "event_id": "event:5",
+            "intent_id": "intent:change_01M7BCEHXJQR8HVADJF91PJKGD",
+            "kind": "trajectory_step_recorded",
+            "sequence": 5
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 4,
+        "next_sequence": 5,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M7BCEJ05EP527M18XXSF6GK6": {
@@ -648,6 +663,22 @@
                 "validation_findings": [
                   "Hosted verification and exact-candidate publication readiness remain pending; no local tests run."
                 ]
+              },
+              {
+                "action": "implementation",
+                "custody_event_id": "event:5",
+                "observations": [
+                  "src/decapod/core/validation_runtime.rs",
+                  "https://github.com/DecapodLabs/decapod/issues/1659"
+                ],
+                "proof_refs": [],
+                "scope": [
+                  "issue-1659"
+                ],
+                "sequence": 5,
+                "validation_findings": [
+                  "Hosted verification and exact-candidate publication readiness remain pending; no local tests run."
+                ]
               }
             ]
           }
@@ -661,7 +692,8 @@
       "inspected_files": [],
       "intent_id": "intent:change_01M7BCEHXJQR8HVADJF91PJKGD",
       "modified_files": [
-        ".decapod/managed/specs/INTENT.md"
+        ".decapod/managed/specs/INTENT.md",
+        "src/decapod/core/validation_runtime.rs"
       ],
       "next_transitions": [
         "Refine plan and declare falsifiable checks"
