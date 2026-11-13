@@ -659,6 +659,11 @@
       "id": "specs-refresh-wt5-1",
       "summary": "Refresh .manifest.json codebase attestation",
       "input_digest": "sha256:1d9d8cf505b4a613509fdaafb93ecac83949f3740ce7baf2d5bc3c6cf042d210"
+    },
+    {
+      "id": "specs-refresh-wt5-2",
+      "summary": "Refresh INTENT.md codebase attestation",
+      "input_digest": "sha256:5444dd5be68ca84f9dde72095b1a66ca644c91adb066d0a7972263f9f930114c"
     }
   ],
   "intents": {
