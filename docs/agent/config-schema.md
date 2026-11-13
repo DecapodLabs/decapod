@@ -33,18 +33,6 @@ with the reviewed repairs. `validate --bypass-validation --bypass-reason`
 requires its own role and leaves proof and publication readiness false.
 These actor labels are cooperative identities, not authenticated users.
 
-`[governance.db_maintenance]` is default-deny (`enabled = false`). When the
-canonical main-repository `.decapod/config.toml` sets `enabled = true` on a
-`local` backend, authenticated agents inside their claimed `.decapod/workspaces/*`
-worktree may invoke the allowlisted safe capability slice (`db.inspect`,
-`db.verify`, `db.lock.diagnose`, `db.lock.retry`, `db.lock.release_own`,
-`db.backup` under `.decapod/backups/`). Worktree or unmerged-branch config edits
-cannot self-elevate, `db.recover` remains reserved for repository `owner` repair
-authority (`#1590`), `backend = "cloud"` fails closed (`CLOUD_PRINCIPAL_UNVERIFIED`)
-until Propodus `#88` verifies a repository-privileged human principal, raw SQL /
-`sqlite3` / vacuum / restore remain unmodeled, and every attempt writes a
-redacted NDJSON audit entry (`implies_validation_ready = false`).
-
 `[laya] mode = "disabled"` is the default. Set `mode = "required"`
 and install the reviewed profile to opt in to post-proof Laya judgment.
 Required accepted policy cannot be silently disabled.

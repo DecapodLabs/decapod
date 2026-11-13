@@ -15,6 +15,11 @@ use std::time::Duration;
 #[cfg(unix)]
 use std::time::Instant;
 
+#[cfg(unix)]
+const MAX_PERMISSION_RECOVERY_DEPTH: usize = 128;
+#[cfg(unix)]
+const MAX_PERMISSION_RECOVERY_ENTRIES: usize = 65_536;
+
 struct Scratch {
     path: PathBuf,
     identity: fs::Metadata,
@@ -57,7 +62,7 @@ impl Scratch {
         ))
     }
 
-    fn clean(&self) -> io::Result<()> {
+    fn verify_root(&self) -> io::Result<Option<fs::Metadata>> {
         let parent = fs::metadata(self.path.parent().expect("scratch has a parent"))?;
         if !same_directory(&self.parent_identity, &parent) {
             return Err(io::Error::other(
@@ -66,21 +71,224 @@ impl Scratch {
         }
         let current = match fs::symlink_metadata(&self.path) {
             Ok(current) => current,
-            Err(error) if error.kind() == io::ErrorKind::NotFound => return Ok(()),
+            Err(error) if error.kind() == io::ErrorKind::NotFound => return Ok(None),
             Err(error) => return Err(error),
         };
-        if !current.is_dir() || !same_directory(&self.identity, &current) {
+        if current.file_type().is_symlink()
+            || !current.is_dir()
+            || !same_directory(&self.identity, &current)
+        {
             return Err(io::Error::other(
                 "scratch directory was replaced; refusing cleanup",
             ));
         }
+        #[cfg(unix)]
+        {
+            use std::os::unix::fs::MetadataExt;
+            if current.uid() != self.identity.uid() {
+                return Err(io::Error::new(
+                    io::ErrorKind::PermissionDenied,
+                    format!(
+                        "scratch directory owner changed (expected uid={}, observed uid={})",
+                        self.identity.uid(),
+                        current.uid()
+                    ),
+                ));
+            }
+        }
+        Ok(Some(current))
+    }
+
+    #[cfg(unix)]
+    fn recover_owned_permissions(&self) -> io::Result<()> {
+        use std::os::unix::fs::MetadataExt;
+        self.recover_owned_permissions_with_bounds(
+            self.identity.uid(),
+            self.identity.dev(),
+            MAX_PERMISSION_RECOVERY_DEPTH,
+            MAX_PERMISSION_RECOVERY_ENTRIES,
+        )
+    }
+
+    #[cfg(unix)]
+    fn recover_owned_permissions_with_bounds(
+        &self,
+        expected_uid: u32,
+        expected_dev: u64,
+        max_depth: usize,
+        max_entries: usize,
+    ) -> io::Result<()> {
+        use std::os::unix::fs::{MetadataExt, PermissionsExt};
+
+        let Some(root_meta) = self.verify_root()? else {
+            return Ok(());
+        };
+        // Lock the scratch root to owner-only 0o700 first so no other local
+        // principal can traverse or mutate paths inside it during recovery.
+        if (root_meta.mode() & 0o777) != 0o700 {
+            fs::set_permissions(&self.path, fs::Permissions::from_mode(0o700))?;
+            let Some(rechecked) = self.verify_root()? else {
+                return Ok(());
+            };
+            if (rechecked.mode() & 0o700) != 0o700 {
+                return Err(io::Error::new(
+                    io::ErrorKind::PermissionDenied,
+                    "could not restore owner permissions on scratch root",
+                ));
+            }
+        }
+
+        let mut stack = vec![(self.path.clone(), self.identity.ino(), 0usize)];
+        let mut visited_entries = 0usize;
+
+        while let Some((dir_path, expected_ino, depth)) = stack.pop() {
+            let current = fs::symlink_metadata(&dir_path)?;
+            if current.file_type().is_symlink() || !current.is_dir() {
+                return Err(io::Error::other(format!(
+                    "scratch directory {} was replaced by a non-directory; refusing cleanup",
+                    dir_path.display()
+                )));
+            }
+            let required_dev = if depth == 0 {
+                self.identity.dev()
+            } else {
+                expected_dev
+            };
+            let required_uid = if depth == 0 {
+                self.identity.uid()
+            } else {
+                expected_uid
+            };
+            if current.dev() != required_dev {
+                return Err(io::Error::new(
+                    io::ErrorKind::PermissionDenied,
+                    format!(
+                        "scratch directory {} crossed filesystem device boundary; refusing cleanup",
+                        dir_path.display()
+                    ),
+                ));
+            }
+            if current.ino() != expected_ino {
+                return Err(io::Error::other(format!(
+                    "scratch directory {} inode changed during cleanup; refusing cleanup",
+                    dir_path.display()
+                )));
+            }
+            if current.uid() != required_uid {
+                return Err(io::Error::new(
+                    io::ErrorKind::PermissionDenied,
+                    format!(
+                        "scratch directory {} has foreign owner uid={} (expected uid={}); refusing cleanup",
+                        dir_path.display(),
+                        current.uid(),
+                        required_uid
+                    ),
+                ));
+            }
+            if depth > 0 && (current.mode() & 0o777) != 0o700 {
+                fs::set_permissions(&dir_path, fs::Permissions::from_mode(0o700))?;
+                let after = fs::symlink_metadata(&dir_path)?;
+                if after.file_type().is_symlink()
+                    || !after.is_dir()
+                    || after.dev() != required_dev
+                    || after.ino() != expected_ino
+                    || after.uid() != required_uid
+                {
+                    return Err(io::Error::other(format!(
+                        "scratch directory {} changed identity during permission recovery",
+                        dir_path.display()
+                    )));
+                }
+            }
+
+            for entry in fs::read_dir(&dir_path)? {
+                visited_entries += 1;
+                if visited_entries > max_entries {
+                    return Err(io::Error::other(
+                        "scratch permission recovery exceeded bounded entry limit",
+                    ));
+                }
+                let entry = entry?;
+                let entry_path = entry.path();
+                // symlink_metadata inspects the link entry itself without following
+                // it, keeping external caches and symlink targets untouched.
+                let entry_meta = fs::symlink_metadata(&entry_path)?;
+                if entry_meta.file_type().is_symlink() {
+                    continue;
+                }
+                if entry_meta.dev() != expected_dev {
+                    return Err(io::Error::new(
+                        io::ErrorKind::PermissionDenied,
+                        format!(
+                            "scratch entry {} crossed filesystem device boundary; refusing cleanup",
+                            entry_path.display()
+                        ),
+                    ));
+                }
+                if entry_meta.uid() != expected_uid {
+                    return Err(io::Error::new(
+                        io::ErrorKind::PermissionDenied,
+                        format!(
+                            "scratch entry {} has foreign owner uid={} (expected uid={}); refusing cleanup",
+                            entry_path.display(),
+                            entry_meta.uid(),
+                            expected_uid
+                        ),
+                    ));
+                }
+                if entry_meta.is_dir() {
+                    if depth + 1 > max_depth {
+                        return Err(io::Error::other(
+                            "scratch permission recovery exceeded bounded directory depth",
+                        ));
+                    }
+                    stack.push((entry_path, entry_meta.ino(), depth + 1));
+                }
+            }
+        }
+
+        Ok(())
+    }
+
+    fn clean(&self) -> io::Result<()> {
+        if self.verify_root()?.is_none() {
+            return Ok(());
+        }
         // remove_dir_all does not follow symlinks within the owned tree.
-        fs::remove_dir_all(&self.path).map_err(|error| {
-            io::Error::new(
+        match fs::remove_dir_all(&self.path) {
+            Ok(()) => Ok(()),
+            #[cfg(unix)]
+            Err(first_error) if first_error.kind() == io::ErrorKind::PermissionDenied => {
+                // Rootless container storage (e.g., Podman overlay work/work under a
+                // disposable HOME) can leave same-UID mode-000 or read-only nested
+                // directories inside the invocation-owned scratch tree. Recover owner
+                // rwx only on verified same-UID, same-device real directories and retry.
+                if let Err(recovery_error) = self.recover_owned_permissions() {
+                    return Err(io::Error::new(
+                        first_error.kind(),
+                        format!(
+                            "{first_error} (permission recovery stopped: {recovery_error}); {}",
+                            cleanup_diagnostics(&self.path)
+                        ),
+                    ));
+                }
+                if self.verify_root()?.is_none() {
+                    return Ok(());
+                }
+                match fs::remove_dir_all(&self.path) {
+                    Ok(()) => Ok(()),
+                    Err(error) if error.kind() == io::ErrorKind::NotFound => Ok(()),
+                    Err(error) => Err(io::Error::new(
+                        error.kind(),
+                        format!("{error}; {}", cleanup_diagnostics(&self.path)),
+                    )),
+                }
+            }
+            Err(error) => Err(io::Error::new(
                 error.kind(),
                 format!("{error}; {}", cleanup_diagnostics(&self.path)),
-            )
-        })
+            )),
+        }
     }
 }
 

@@ -1325,7 +1325,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `b7dcb4f7556a255f0a7c8f5092dc8187b228d500c2406e1d428c3f5168fc77f7`
+- Repository signal fingerprint: `154d18a2eb6930e75636273e6e3af31080221218207eaf3c46b3210af378be0b`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (232 files), `tests/` (232 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
@@ -1800,6 +1800,38 @@ the rebased source requires its own current checkpoint and complete validation.
 ## Accepted v0.142.0 master reconciliation
 
 Reconciling `origin/master` (`d3542c30`, `v0.142.0`, incorporating PR #1647 cloud sign-in/diagnostic updates, PR #1649 bounded reflection, and `release-plz` v0.142.0) preserves PR #1651's `cloud projects` / `cloud project use|create` routing and v2 operation cache alongside `CloudCommand::Login { restart }` and `authorization_url` recovery diagnostics. The 105-file reviewed source inventory hashes to `sha256:6d13f890e76d0c0b69e338bb571d2858166afbf30adeeb1e58313a6b12042c87` (adding `Cargo.toml`/`Cargo.lock` `0.142.0` package versions and `.config/build/decapod.BUILD.bzl` entrypoint target inputs without dropping any required check, workflow, selector, or budget). All prior historical validation receipts remain bound to earlier commits; the merged candidate carries `0.142.0` controller projections, `specs.refresh`, checkpointing, and requires complete `decapod validate` proof.
+
+## Owned scratch mode-000 cleanup (#1643)
+
+`assets/tools/build_lifecycle_tests.rs` covers rootless container overlay
+permission recovery through `//:build_lifecycle_tests` and the Cargo binary test
+suite. `supervisor_recovers_owned_mode_000_podman_overlay_scratch_without_touching_shared_caches`
+spawns the real supervisor binary with a child that populates
+`$HOME/.local/share/containers/storage/overlay/opaque-layer/work/work` (`0o000`
+under `0o500`), a read-only `0o555` layer directory, and a symlink to an
+external `0o555` shared cache alongside an unrelated `0o000` sibling directory,
+requiring clean exit, zero `build cleanup:` stderr diagnostics, complete scratch
+removal, and untouched external permissions and files.
+`owned_permission_recovery_rejects_symlink_uid_device_and_bound_escapes`
+directly exercises `Scratch::recover_owned_permissions` and
+`Scratch::recover_owned_permissions_with_bounds` across nested `0o000`
+directories (independent of host effective UID), symlink non-traversal,
+foreign-UID and cross-device rejection before chmod/descent, and closed failure
+on depth and entry bounds, while `cleanup_diagnostics` retains its read-only
+contract.
+
+Reconciled with accepted `master` (`3b6b31f8`, `v0.143.0` including `#1651` and
+`#1656`), the installed `0.143.0` controller regenerates the release-bound
+`AGENTS.md`, `CLAUDE.md`, `CODEX.md`, `GEMINI.md`,
+`.decapod/managed/Dockerfile.decapod` and `.decapod/managed/specs/.manifest.json`
+projections, and `.decapod/config.toml` updates
+`proof.required_profile.reviewed_sources_digest` to
+`sha256:ea92a8706fe811047b6ffbc92826d4ddeb008db851ab1b9c1853b024d65df768` for
+the combined `v0.143.0`, `#1651`, `assets/tools/build_lifecycle.rs`, and
+`assets/tools/build_lifecycle_tests.rs` inputs in the reviewed source inventory.
+Source review and local projection refresh do not prove execution; full
+configured `decapod validate` on the exact candidate commit against accepted
+`master` remains mandatory before merge.
 
 ## Capability-scoped SQLite maintenance regressions (#1568)
 

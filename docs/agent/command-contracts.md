@@ -150,12 +150,6 @@ This document defines the normative operational contracts for the Decapod CLI.
 ## `decapod data`
 - **Intent:** Data: archives, knowledge, context, schemas
 
-### Governed Local Database Maintenance (`decapod data db ...`)
-
-- **Read-only inventory (ungated):** `decapod data database inspect` / RPC `data.database.inspect` remains non-initializing and read-only.
-- **Governed capabilities (default-deny):** `decapod data db capabilities`, `decapod data db lock {diagnose,retry,release-own}`, `decapod data db maintain {inspect,verify,backup,recover}`, and `decapod data db audit` (plus `data.database.{capabilities,maintain.inspect,verify,backup,recover,lock.diagnose,lock.retry,lock.release_own,audit}`) require an authenticated local `DECAPOD_AGENT_ID` + `DECAPOD_SESSION_PASSWORD` inside the agent's claimed `.decapod/workspaces/*` worktree and canonical main-repository `[governance.db_maintenance] enabled = true`.
-- **Boundaries:** `db.backup` writes only to non-existing paths under `.decapod/backups/` (`<= 512 MiB`) and never implies `db.recover`; `db.recover` requires repository `owner` repair authority (`#1590`); `backend = "cloud"` fails closed (`CLOUD_PRINCIPAL_UNVERIFIED`); raw SQL, `sqlite3`, vacuum, and restore are unmodeled (`CAPABILITY_UNSUPPORTED`).
-
 ## `decapod auto`
 - **Intent:** Automation: scheduled and event-driven
 
@@ -428,3 +422,18 @@ the same footprint. Different explicit scopes are not fuzzy-merged as duplicate
 todos even when their titles are similar. This is not a trust-grant API: shared
 claims retain their existing verified-trust requirement. Humans provide intent
 through the agent; the only human-executed Decapod command remains init.
+
+Checkout authoring admission (`workspace.authoring.bind` / `workspace.authoring.release`)
+maintains a 1-to-1 invariant between live registered Git worktrees and active task
+leases (`authoring_bindings(worktree_id)` primary key plus unique `task_id` index):
+one checkout binds at most one active task (`AUTHORING_CHECKOUT_OCCUPIED`), and one
+active task lease binds at most one live worktree (`AUTHORING_TASK_ALREADY_BOUND`),
+while deleted/unregistered worktrees are replaced atomically on retry (`replaced_missing_worktree`).
+Same-owner `todo renew` advances an already-admitted binding's `lease_generation`
+in-transaction (`authoring.renew`), whereas `yield`, `release`, `reclaim`, `handoff`,
+`done`, `archive`, and `workspace prune` retire bindings and emit `authoring.release`.
+Explicit `--scope 'resource:<name>'` reservations do not claim repository source
+paths; they exclude conflicting resource claims (`predicate=resource_reservation`)
+and gate shared mutations (`release lineage-sync` on `resource:release`; `workspace publish`
+on `resource:integration` / `resource:integration:<base_branch>`) with `SHARED_RESOURCE_OCCUPIED`
+while leaving isolated worktree authoring and local validation unblocked.
