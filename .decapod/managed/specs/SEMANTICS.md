@@ -1,5 +1,28 @@
 # Semantics
 
+## Lossless compact storage and authority convergence (#1630)
+
+Physical compaction in `events` (`_ce_v1`), `task_journal` schema v2
+(`storage_components` + `storage_component_refs`), and `agent_prompts` changes
+only physical SQLite representation, never logical authority or historical
+meaning. A v1 inline checkpoint and a v2 component-referenced checkpoint for the
+same `TaskProjection` carry identical `projection_digest` values and hydrate to
+equal `TaskProjection` structures.
+
+Write-time bounds (`STORAGE_CONTRACT_VIOLATION`) govern new mutations only;
+historical rows already committed with larger text payloads remain readable and
+modifiable on unrelated columns so durability is never sacrificed to retroactive
+narrowing. On write, `tasks.tags` and `task_tags` converge to the exact same
+canonical tag set, while `tasks.depends_on` preserves authored dependency IDs
+(including unresolved future task IDs) and `task_dependencies` materializes the
+exact subset of resolved foreign-key edges.
+
+Budgeted journal verification (`verify_with_budget`) distinguishes `"status": "ok"`
+(`complete = true`), `"status": "conflict"`, and `"status": "partial"`
+(`complete = false`, `limitation = "caller_budget_reached"`). A partial page
+verdict never certifies unvisited tail records, and a mutated snapshot across
+split cursors fails closed with `TASK_JOURNAL_SNAPSHOT_CHANGED`.
+
 ## Reflection, progress and authority
 
 Distinct recorded human questions and spec-review decisions retain distinct
@@ -321,7 +344,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `0a0498aa94eb3f7551fe07c380ef13b469d188ab33218c72f80fc2e081fc3951`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (231 files), `tests/` (232 files)
+- Repository signal fingerprint: `b84ca1bad99d65494836397a0df5421c6c961d64f3278bf14a3474754a944739`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (232 files), `tests/` (232 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

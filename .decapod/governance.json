@@ -769,6 +769,11 @@
       "id": "specs-operations-1630",
       "summary": "docs(specs): update OPERATIONS.md for migration 1200, reference GC, and explicit vacuum (#1630)",
       "input_digest": "sha256:a7571ab6f4a6f9760792e54465db901580c7d8ac1f2e449ede54931efc9fb670"
+    },
+    {
+      "id": "specs-semantics-1630",
+      "summary": "docs(specs): update SEMANTICS.md for lossless historical reads and authority convergence (#1630)",
+      "input_digest": "sha256:15aa076b274dc142fe2d14c661e142653aa87ded72abdc46b2d6e14b82d1c011"
     }
   ],
   "intents": {
