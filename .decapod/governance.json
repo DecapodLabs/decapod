@@ -687,6 +687,17 @@
       "proof_refs": [
         ".decapod/managed/specs/VALIDATION.md"
       ]
+    },
+    {
+      "id": "refresh-specs-manifest-and-reviews",
+      "summary": "Refresh 0.141.0 specs manifest and record publication spec reviews for #1643",
+      "input_digest": "sha256:a531ccff7c529f2d4569c90691aad7ff367ded65192d6018dfbe108dbed8390f",
+      "proof_refs": [
+        ".decapod/managed/specs/.manifest.json",
+        ".decapod/managed/specs/ARCHITECTURE.md",
+        ".decapod/managed/specs/SECURITY.md",
+        ".decapod/managed/specs/VALIDATION.md"
+      ]
     }
   ],
   "intents": {
@@ -726,6 +737,29 @@
         "decapod validate"
       ],
       "schema_version": "1.1.0",
+      "spec_reviews": [
+        {
+          "disposition": "updated",
+          "path": ".decapod/managed/specs/ARCHITECTURE.md",
+          "reason": "Documented build_lifecycle.rs per-invocation scratch supervision and bounded Unix PermissionDenied cleanup recovery.",
+          "reviewed_code_fingerprint": "2e78d5222e4634cae73a931b81187b35194b569d14c6049c19bd245d0d6a280b",
+          "spec_material_hash": "5072c4fedf9a62c455473389866fe152c3559e01a7cc5dfbb197dd1a8d13d06b"
+        },
+        {
+          "disposition": "unchanged_with_reason",
+          "path": ".decapod/managed/specs/INTERFACES.md",
+          "reason": "CLI, RPC, and public interface schemas are unchanged; owned mode-000 scratch recovery is internal to the build_lifecycle supervisor.",
+          "reviewed_code_fingerprint": "2e78d5222e4634cae73a931b81187b35194b569d14c6049c19bd245d0d6a280b",
+          "spec_material_hash": "5c82da80912928b3ff94be3ddfebd1d97d7fbfb10e495821d4c1a034794878eb"
+        },
+        {
+          "disposition": "updated",
+          "path": ".decapod/managed/specs/SECURITY.md",
+          "reason": "Documented bounded same-UID/same-device mode-000 scratch permission recovery, symlink/UID/device/depth/entry escape rejection, and read-only cleanup_diagnostics in build_lifecycle.rs.",
+          "reviewed_code_fingerprint": "2e78d5222e4634cae73a931b81187b35194b569d14c6049c19bd245d0d6a280b",
+          "spec_material_hash": "5c321818a57ee8d569cd78ddba4c33b7cd44211591fc205e64f67fac38b5c526"
+        }
+      ],
       "state": "APPROVED",
       "stop_conditions": [
         "Stop if scratch cleanup would traverse symlinks, cross filesystem devices, or alter foreign-UID paths outside the authenticated scratch root."
@@ -736,14 +770,19 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1794535264Z"
+      "updated_at": "1794536738Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:67ea202b9925d6593c14206fada83cf608fc03e19c25038cc3c11e9de6b7ac15",
-      "checks": [],
+      "artifact_hash": "sha256:3e3b8e6a00f0a232359f76fc0f7d39b9836d9f4a8d08b5e77f870dbffbe7a751",
+      "checks": [
+        {
+          "name": "spec_reviews",
+          "status": "passed"
+        }
+      ],
       "current_phase": "execution",
       "custody": {
         "events": [
@@ -877,10 +916,17 @@
             "intent_id": "intent:change_01M79A0G0YSR12S2RHJE84QPHR",
             "kind": "trajectory_step_recorded",
             "sequence": 20
+          },
+          {
+            "detail": "trajectory:branch_01M79A0G5E35FVE2EYNYQVQ3XY",
+            "event_id": "event:21",
+            "intent_id": "intent:change_01M79A0G0YSR12S2RHJE84QPHR",
+            "kind": "trajectory_step_recorded",
+            "sequence": 21
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 20,
+        "next_sequence": 21,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M79A0G5E35FVE2EYNYQVQ3XY": {
@@ -1159,6 +1205,24 @@
                 ],
                 "sequence": 20,
                 "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:21",
+                "observations": [
+                  ".decapod/managed/specs/.manifest.json"
+                ],
+                "proof_refs": [
+                  "spec_reviews"
+                ],
+                "scope": [
+                  "\".decapod/config.toml\"",
+                  "\".decapod/managed/specs\"]",
+                  "\"assets/tools/build_lifecycle_tests.rs\"",
+                  "paths:[\"assets/tools/build_lifecycle.rs\""
+                ],
+                "sequence": 21,
+                "validation_findings": []
               }
             ]
           }
@@ -1196,6 +1260,7 @@
       "modified_files": [
         ".decapod/config.toml",
         ".decapod/managed/Dockerfile.decapod",
+        ".decapod/managed/specs/.manifest.json",
         ".decapod/managed/specs/ARCHITECTURE.md",
         ".decapod/managed/specs/INTENT.md",
         ".decapod/managed/specs/INTERFACES.md",
