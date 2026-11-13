@@ -246,6 +246,15 @@ struct Formats {
     checkpoint_versions: BTreeMap<u64, u64>,
     checkpoint_unknown_version_rows: u64,
     checkpoint_version_overflow_rows: u64,
+    checkpoint_v2_component_ref_rows: u64,
+    checkpoint_externalized_declared_bytes_unverified: u64,
+    compact_envelope_v1_rows: u64,
+    compact_envelope_escaped_rows: u64,
+    legacy_envelope_rows: u64,
+    storage_component_zlib_rows: u64,
+    storage_component_plain_rows: u64,
+    storage_component_unknown_rows: u64,
+    storage_component_declared_decoded_bytes_unverified: u64,
     lcm_plain_text_cells: u64,
     lcm_v1_header_cells: u64,
     lcm_declared_decoded_bytes_unverified: u64,
@@ -274,6 +283,24 @@ impl Formats {
                 }
             }
             _ => self.lcm_unknown_cells += 1,
+        }
+    }
+
+    fn observe_storage_component(&mut self, codec_version: Option<u64>, byte_len: Option<u64>) {
+        match codec_version {
+            Some(0) => {
+                self.storage_component_plain_rows += 1;
+                if let Some(len) = byte_len {
+                    self.storage_component_declared_decoded_bytes_unverified += len;
+                }
+            }
+            Some(1) => {
+                self.storage_component_zlib_rows += 1;
+                if let Some(len) = byte_len {
+                    self.storage_component_declared_decoded_bytes_unverified += len;
+                }
+            }
+            _ => self.storage_component_unknown_rows += 1,
         }
     }
 }
@@ -316,6 +343,16 @@ fn component_classes(
         } else {
             formats.checkpoint_unknown_version_rows += 1;
         }
+        if let Some(refs) = checkpoint.get("component_refs").and_then(Value::as_object)
+            && !refs.is_empty()
+        {
+            formats.checkpoint_v2_component_ref_rows += 1;
+            for item in refs.values() {
+                if let Some(len) = item.get("byte_len").and_then(Value::as_u64) {
+                    formats.checkpoint_externalized_declared_bytes_unverified += len;
+                }
+            }
+        }
         for (class, pointer) in [
             ("checkpoint_task", "/projection/task"),
             ("checkpoint_owners", "/projection/owners"),
@@ -343,6 +380,15 @@ fn component_classes(
         }
     }
     if let Some(object) = value.as_object() {
+        if !checkpoint_event {
+            if object.contains_key("_ce_v1") {
+                formats.compact_envelope_v1_rows += 1;
+            } else if object.contains_key("_ce_raw") {
+                formats.compact_envelope_escaped_rows += 1;
+            } else {
+                formats.legacy_envelope_rows += 1;
+            }
+        }
         let metadata: serde_json::Map<String, Value> = [
             "event_id",
             "ts",
@@ -492,7 +538,7 @@ pub fn inspect(
             Err(error) => return Err(error),
         }
         let mut table_count = 0;
-        report["observed_application_schema"] = json!({"todo":null});
+        report["observed_application_schema"] = json!({"todo":null, "storage":null});
         for item in catalog.as_slice() {
             if item.get_str_ref("type")? != "table" { continue; }
             table_count += 1;
@@ -515,6 +561,16 @@ pub fn inspect(
                 let version = value.as_str().and_then(|v| v.parse::<u32>().ok());
                 report["observed_application_schema"]["todo"] = json!({
                     "version":version, "status":if version.is_some() {"observed"} else {"unavailable"}});
+                let fmt_val = scalar(reader, "SELECT value FROM meta WHERE namespace='storage' AND key='format_version' LIMIT 1")?;
+                let fmt_ver = fmt_val.as_str().and_then(|v| v.parse::<u32>().ok());
+                let min_reader = scalar(reader, "SELECT value FROM meta WHERE namespace='storage' AND key='min_reader_version' LIMIT 1")?;
+                let min_writer = scalar(reader, "SELECT value FROM meta WHERE namespace='storage' AND key='min_writer_version' LIMIT 1")?;
+                report["observed_application_schema"]["storage"] = json!({
+                    "format_version": fmt_ver,
+                    "min_reader_version": min_reader.as_str(),
+                    "min_writer_version": min_writer.as_str(),
+                    "status": if fmt_ver.is_some() { "observed" } else { "unmigrated_v1" }
+                });
             }
             let mut keys: Vec<(i64, String)> = columns.as_slice().iter().filter_map(|row| {
                 let pk = row.get_int("pk").ok()?; (pk > 0).then(|| (pk, row.get_str_ref("name").unwrap().to_owned()))
@@ -524,11 +580,18 @@ pub fn inspect(
             let total = scalar(reader, &format!("SELECT count(*) FROM {}", quoted(table)))?;
             let mut fields: Vec<Field> = names.iter().map(|_| Field::default()).collect();
             let payload_column = names.iter().position(|name| name == "payload");
+            let codec_col = names.iter().position(|name| name == "codec_version");
+            let byte_len_col = names.iter().position(|name| name == "byte_len");
             let checkpoint_columns = payload_column.is_some() && names.iter().any(|name| name == "event_type");
             let scan = reader.visit(&format!("SELECT * FROM {} ORDER BY {ordering} LIMIT {}", quoted(table), options.rows_per_table), &[], &mut |row| {
                 for (field, value) in fields.iter_mut().zip(&row.values) { field.observe(value); }
                 if table == "events" && let Some(Value::String(payload)) = payload_column.and_then(|index| row.values.get(index)) {
                     component_classes(payload, false, &mut classes, &mut skipped_json, &mut formats);
+                }
+                if table == "storage_components" {
+                    let codec_ver = codec_col.and_then(|idx| row.values.get(idx)).and_then(Value::as_u64);
+                    let b_len = byte_len_col.and_then(|idx| row.values.get(idx)).and_then(Value::as_u64);
+                    formats.observe_storage_component(codec_ver, b_len);
                 }
                 if table == "summaries" {
                     for (name, value) in names.iter().zip(&row.values) {

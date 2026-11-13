@@ -664,6 +664,11 @@
       "id": "todo-contracts-v2-format-guard",
       "summary": "feat(todo): enforce write contracts, format version guard, and v2 journal integration (#1630)",
       "input_digest": "sha256:048909f167faabbcaa8233cd69f5c9bf0017cd29b93c7148ea044148326e8a92"
+    },
+    {
+      "id": "storage-inventory-v2-attribution",
+      "summary": "feat(storage): report format version and deduplicated component store metrics in inventory (#1630)",
+      "input_digest": "sha256:2d19a5349b6a1994bfed60f7db08c3504814045d56b7ebe7a039928317922ffc"
     }
   ],
   "intents": {
