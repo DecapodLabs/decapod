@@ -619,6 +619,11 @@
       "id": "update-reviewed-sources-digest",
       "summary": "chore(config): update reviewed_sources_digest for v0.143.1 and github_quota.rs",
       "input_digest": "sha256:5539fd41a84c341a304a04e496707d3b904406735b1fd14c15c1c61a7897012e"
+    },
+    {
+      "id": "refresh-agents-v01431",
+      "summary": "chore(entrypoints): refresh AGENTS.md for Decapod v0.143.1",
+      "input_digest": "sha256:6b3014684c5c5feb33873145757543c7524cf8158abdae38d6094b5e5542721b"
     }
   ],
   "intents": {
