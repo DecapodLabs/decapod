@@ -45,6 +45,10 @@ const CALLER_ENV_KEYS: &[&str] = &[
     "DECAPOD_CAUSATION_ID",
     "DECAPOD_IDEMPOTENCY_KEY",
     "DECAPOD_CLAIM_AUTORUN",
+    // Diagnostic scope belongs to this caller, never a previous broker caller.
+    "DECAPOD_VALIDATE_SKIP_GIT_GATES",
+    "DECAPOD_VALIDATE_SKIP_TOOLING_GATES",
+    "DECAPOD_VALIDATE_SKIP_FINGERPRINT_GATES",
 ];
 
 // Deliberately no Debug implementation: the credential is ephemeral transport,
