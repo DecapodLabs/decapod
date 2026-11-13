@@ -584,6 +584,11 @@
       "id": "pace-discovery-drop-dup-binding",
       "summary": "fix(snapshot_provider): pace only anonymous GitHub polls and drop duplicate remote binding check",
       "input_digest": "sha256:49ad6f8ba2a858bce3f479fb20eee9cd9460eb53431563a733d512e6bd6207e3"
+    },
+    {
+      "id": "test-buildkite-wait-quota-pacing",
+      "summary": "test(snapshot_provider): cover cold discovery quota pacing and 10-GET bound Buildkite wait",
+      "input_digest": "sha256:3e280d73ef0e1172c4d4fbd39f63ed214119c80a6cc3afe564604ea5c5d4eab2"
     }
   ],
   "intents": {
