@@ -555,6 +555,15 @@
       "proof_refs": [
         "git:5e23ad68142e0de5decbd6fc8e655593ef5fe83b"
       ]
+    },
+    {
+      "id": "pr1663-preserve-original-parent-3",
+      "summary": "Preserve original PR1663 parent and resolve duplicate governance/spec/export overlap using the current reviewed integration; storage behavior and accepted custody guards remain intact. No local tests or live candidate migrations.",
+      "input_digest": "sha256:e84cf08617f8203104ab6a10bd939663added696e8883d63b6eea0332c08d011",
+      "proof_refs": [
+        "git:1c60df45c5db1731fb348069cf1e8f8f5dc410cc",
+        "git:5e23ad68142e0de5decbd6fc8e655593ef5fe83b"
+      ]
     }
   ],
   "intents": {
