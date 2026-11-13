@@ -1,5 +1,32 @@
 # Interfaces
 
+## Storage field contracts, compatibility guards, and inventory attribution (#1630)
+
+Write-admission failures across `todo`, `events`, `verify`, and `aptitude` return
+`ValidationError` prefixed with `STORAGE_CONTRACT_VIOLATION: <field> ...` without
+partial writes. Opening a datastore whose `meta` `storage` namespace declares an
+unsupported `format_version`, `min_reader_version`, or `min_writer_version` fails
+closed with `STORAGE_FORMAT_INCOMPATIBLE` (`storage_compaction::check_read_compatibility`
+and `check_storage_format_compatibility`).
+
+`todo::verify_task_journal_with_budget` (`TaskJournalVerifyBudget`,
+`TaskJournalVerifyCursor`) extends task-journal verification with caller-supplied
+row, decoded-byte, and wall-clock budgets. Full runs preserve `"status": "ok"`
+and `"complete": true`; budgeted stops return `"status": "partial"`,
+`"complete": false`, `"limitation": "caller_budget_reached"`, and `"next_cursor"`
+without claiming full store verification.
+
+`storage_inventory::inspect` (`decapod data database inspect`) preserves the
+redacted `decapod.storage-inventory.v1` envelope while adding
+`observed_application_schema.storage` (`format_version`, `min_reader_version`,
+`min_writer_version`) and `sampled_format_observations` counters for
+`compact_envelope_v1_rows`, `compact_envelope_escaped_rows`,
+`legacy_envelope_rows`, `checkpoint_v2_component_ref_rows`,
+`checkpoint_externalized_declared_bytes_unverified`,
+`storage_component_zlib_rows`, `storage_component_plain_rows`, and
+`storage_component_declared_decoded_bytes_unverified`. Declared decoded byte
+totals remain explicitly labeled unverified in inventory output.
+
 ## Optional reflection on existing interfaces
 
 `infer orientation --task-id <id> --reflection '<JSON>'` and
@@ -1142,8 +1169,8 @@ field. Nothing in this operation authorizes a mutation, approval or completion.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `0a0498aa94eb3f7551fe07c380ef13b469d188ab33218c72f80fc2e081fc3951`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (231 files), `tests/` (232 files)
+- Repository signal fingerprint: `b84ca1bad99d65494836397a0df5421c6c961d64f3278bf14a3474754a944739`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (232 files), `tests/` (232 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 

@@ -749,6 +749,11 @@
       "id": "specs-architecture-1630",
       "summary": "docs(specs): update ARCHITECTURE.md for v2 component store and compact envelopes (#1630)",
       "input_digest": "sha256:cfcc327baef2d334d9aaeb908cd401ba9620246a5108abfa90139f682e8ada97"
+    },
+    {
+      "id": "specs-interfaces-1630",
+      "summary": "docs(specs): update INTERFACES.md for write contracts, paged verify, and format v2 (#1630)",
+      "input_digest": "sha256:aad57b564d91e0f814633f8430e7539bf5e57a0b8d05c112a35905a4dde85de2"
     }
   ],
   "intents": {
