@@ -276,6 +276,74 @@ fn run_cloud_command(cloud_cli: CloudCli) -> Result<(), error::DecapodError> {
                 Err(error) => Err(error),
             }
         }
+        CloudCommand::Projects | CloudCommand::Project { .. } => {
+            #[cfg(not(feature = "supabase-cloud"))]
+            {
+                core::cloud_client::selected_origin()?;
+                unreachable!("cloud capability required");
+            }
+            #[cfg(feature = "supabase-cloud")]
+            {
+                let project_root = find_decapod_project_root(&std::env::current_dir()?)?;
+                let identity = core::repo_identity::resolve_repository_identity(&project_root)?;
+                let operation = match command {
+                    CloudCommand::Projects => core::cloud_project::Operation::List,
+                    CloudCommand::Project {
+                        command: CloudProjectCommand::Use { choice },
+                    } => core::cloud_project::Operation::Use(choice),
+                    CloudCommand::Project {
+                        command: CloudProjectCommand::Create { name },
+                    } => core::cloud_project::Operation::Create(name),
+                    _ => unreachable!("project operation"),
+                };
+                match core::cloud_client::projects(&project_root, &identity, operation) {
+                    Ok(output) => {
+                        if format == "json" {
+                            println!(
+                                "{}",
+                                serde_json::to_string_pretty(&output)
+                                    .map_err(std::io::Error::other)?
+                            );
+                        } else if output.projects.is_empty() {
+                            println!(
+                                "No managed projects are available. Create one with `decapod cloud project create NAME` or accept a project invitation."
+                            );
+                        } else {
+                            for (index, project) in output.projects.iter().enumerate() {
+                                if output.selected {
+                                    println!(
+                                        "Selected project: {} ({}).",
+                                        project.name, project.status
+                                    );
+                                } else {
+                                    println!("{}. {}", index + 1, project.name);
+                                }
+                            }
+                            if !output.selected {
+                                println!(
+                                    "Select a saved entry with `decapod cloud project use NUMBER`, or use its exact name."
+                                );
+                            } else if output
+                                .projects
+                                .iter()
+                                .any(|p| p.backend_authorized == Some(false))
+                            {
+                                println!(
+                                    "The service has not granted data access. Resolve account access in the cloud portal or with the project administrator, then retry."
+                                );
+                            }
+                        }
+                        Ok(())
+                    }
+                    Err(error) => {
+                        if let error::DecapodError::CloudAuth(diagnostic) = &error {
+                            print_cloud_auth_json_if_needed(diagnostic, Some(&format));
+                        }
+                        Err(error)
+                    }
+                }
+            }
+        }
         CloudCommand::Status => {
             let project_root = find_decapod_project_root(&std::env::current_dir()?)?;
             let identity = core::repo_identity::resolve_repository_identity(&project_root)?;

@@ -706,6 +706,11 @@
       "proof_refs": [
         ".decapod/managed/specs/VALIDATION.md"
       ]
+    },
+    {
+      "id": "reconcile-v0-143-0",
+      "summary": "Reconcile accepted master v0.143.0 into #1643",
+      "input_digest": "sha256:f6c52752b631d68ccb5a668236e28714a9d4322e17dc74809a17f6007f6ae715"
     }
   ],
   "intents": {
@@ -749,23 +754,23 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Documented Scratch::recover_owned_permissions lifecycle ordering in build_lifecycle.rs.",
-          "reviewed_code_fingerprint": "9a5c0379b4635eb874f91906c4ba6aa5319c98edc304a58e23fe7e5cb4eb3895",
-          "spec_material_hash": "074144f815e73143e9d4b2f88b83f2801145734feeabfbccccddd91c307a3e18"
+          "reason": "Reconciled #1643 Podman mode-000 scratch cleanup prose with accepted master v0.143.0 (#1651 and #1656).",
+          "reviewed_code_fingerprint": "0f5182b61bd9df72c7689c6b907417c45695f0cbec319899f912c2d9c1398f2b",
+          "spec_material_hash": "0080ad1bc8a6387061be0f938f3f79dbc30b0c5707be96b6dfabbd22caad0f58"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Internal build-supervisor scratch cleanup change introduces no public CLI, RPC, or wire schema changes beyond accepted master d3542c30.",
-          "reviewed_code_fingerprint": "9a5c0379b4635eb874f91906c4ba6aa5319c98edc304a58e23fe7e5cb4eb3895",
-          "spec_material_hash": "5b676233b993a193c0e409d9f423343c00ee1b70e3c3ac747d029f18da92558d"
+          "reason": "Preserved accepted master v0.143.0 (#1651) interface and security contracts; #1643 changes internal scratch cleanup only.",
+          "reviewed_code_fingerprint": "0f5182b61bd9df72c7689c6b907417c45695f0cbec319899f912c2d9c1398f2b",
+          "spec_material_hash": "bdd0ceb5cd3b9c68d05ceb15fc4c5981aecb18fb53823d649298222f5c2142fe"
         },
         {
-          "disposition": "updated",
+          "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Documented owned-scratch verification and bounded mode-000 permission recovery security invariants.",
-          "reviewed_code_fingerprint": "9a5c0379b4635eb874f91906c4ba6aa5319c98edc304a58e23fe7e5cb4eb3895",
-          "spec_material_hash": "30ff7c26407e22e0d04dd0f4919eb5c70ee1e3ed13021388e9da3b9eed87178e"
+          "reason": "Preserved accepted master v0.143.0 (#1651) interface and security contracts; #1643 changes internal scratch cleanup only.",
+          "reviewed_code_fingerprint": "0f5182b61bd9df72c7689c6b907417c45695f0cbec319899f912c2d9c1398f2b",
+          "spec_material_hash": "97c2544f70a436eeca3ea07b70088d349f5401279598b073fcc1376d3ad32024"
         }
       ],
       "state": "APPROVED",
@@ -778,7 +783,7 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1794538447Z"
+      "updated_at": "1794545108Z"
     },
     "trajectory": {
       "active_boundaries": [

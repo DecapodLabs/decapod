@@ -89,7 +89,7 @@ pub fn transport_error(error: dactyl_db::DactylError) -> DecapodError {
         Some("authorization_denied" | "repository_not_authorized") => (
             CloudAuthStatus::RepositoryDenied,
             "The service denied access to this repository.",
-            "Ask the repository or organization owner to review the authenticated account's access.",
+            "Run `decapod cloud projects` and explicitly select the intended project with `decapod cloud project use`, or ask its administrator to review access.",
         ),
         Some("outcome_unknown") => return restart_required(),
         Some("flow_expired" | "flow_not_found" | "invalid_flow_state") => (
@@ -278,9 +278,9 @@ pub fn record_rejected_credential(
     let Some(origin) = context.route().cloud_uri() else {
         return Ok(());
     };
-    let Some(identity) = context.route().repository_identity() else {
-        return Ok(());
-    };
+    // Data routing may use a server project reference. Credential custody is
+    // still scoped to the original Git checkout, not that routing reference.
+    let identity = crate::core::repo_identity::resolve_repository_identity(project_root)?;
     let Some(rejected) = context.bearer() else {
         return Ok(());
     };
@@ -302,12 +302,11 @@ pub fn record_rejected_credential(
 /// polls an existing handoff even when stdin is not a terminal. One invocation
 /// performs at most one status check and never sleeps or repeats a mutation.
 #[cfg(feature = "supabase-cloud")]
-pub fn connect(
+fn acquire(
     project_root: &Path,
     identity: &RepositoryIdentity,
     restart: bool,
-    check_readiness: bool,
-) -> Result<StorageContext, DecapodError> {
+) -> Result<(dactyl_db::CloudConnector, SessionGuard), DecapodError> {
     let selected = selected_origin()?;
     let connector = dactyl_db::CloudConnector::discover(&selected).map_err(transport_error)?;
     let store =
@@ -507,7 +506,23 @@ pub fn connect(
     if session.expires_at <= now() || state.phase != Phase::Ready {
         return Err(restart_required());
     }
-    let context = context(connector.origin(), identity, session)?;
+    Ok((connector, guard))
+}
+
+#[cfg(feature = "supabase-cloud")]
+pub fn connect(
+    project_root: &Path,
+    identity: &RepositoryIdentity,
+    restart: bool,
+    check_readiness: bool,
+) -> Result<StorageContext, DecapodError> {
+    let (connector, mut guard) = acquire(project_root, identity, restart)?;
+    let state = guard.state().clone();
+    let session = state.session.as_ref().ok_or_else(restart_required)?;
+    let result =
+        crate::core::cloud_project::route(&connector, &guard, &session.access_token, identity);
+    let routed = account_result(&mut guard, result)?;
+    let context = context(connector.origin(), &routed, session)?;
     if check_readiness {
         // A valid cached token is not evidence of current account access.
         // This uses the service's existing authorized task-read contract,
@@ -515,7 +530,7 @@ pub fn connect(
         // no generic SELECT 1 or health-check authorization shortcut.
         if let Err(error) = crate::core::dactyl_todo::DactylTodoStore::new(
             context.clone(),
-            identity.canonical_name.clone(),
+            routed.canonical_name.clone(),
         )
         .check_read_access()
         {
@@ -536,6 +551,42 @@ pub fn connect(
         }
     }
     Ok(context)
+}
+
+/// Account/project administration stays reachable before data eligibility.
+#[cfg(feature = "supabase-cloud")]
+pub fn projects(
+    project_root: &Path,
+    identity: &RepositoryIdentity,
+    operation: crate::core::cloud_project::Operation,
+) -> Result<crate::core::cloud_project::ProjectOutput, DecapodError> {
+    let (connector, mut guard) = acquire(project_root, identity, false)?;
+    let bearer = guard
+        .state()
+        .session
+        .as_ref()
+        .ok_or_else(restart_required)?
+        .access_token
+        .clone();
+    let result = crate::core::cloud_project::execute(&connector, &mut guard, &bearer, operation);
+    account_result(&mut guard, result)
+}
+
+#[cfg(feature = "supabase-cloud")]
+fn account_result<T>(
+    guard: &mut SessionGuard,
+    result: Result<T, DecapodError>,
+) -> Result<T, DecapodError> {
+    if let Err(DecapodError::CloudAuth(diagnostic)) = &result
+        && matches!(
+            diagnostic.status,
+            CloudAuthStatus::AuthRequired | CloudAuthStatus::Revoked
+        )
+    {
+        let state = guard.state().clone();
+        persist_restart(guard, state)?;
+    }
+    result
 }
 
 #[cfg(not(feature = "supabase-cloud"))]

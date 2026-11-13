@@ -7,6 +7,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.143.0](https://github.com/DecapodLabs/decapod/compare/v0.142.0...v0.143.0) - 2026-11-13
+
+### Added
+
+- *(cloud)* select service-owned projects before native access
+
+### Fixed
+
+- *(cloud)* preserve operation bindings across client versions
+- *(cloud)* bind task writes and retries to the selected project
+
+### Other
+
+- reconcile v0.142.0 master and PR 1647 cloud sign-in with managed projects
+- reconcile patched registry dependency release
+- reconcile accepted storage inventory release
+- reconcile project routing with accepted 0.140 release
+- reconcile accepted proof lifecycle before project validation
+- reconcile managed project routing with accepted onboarding
+- *(cloud)* cover project association and native consumer phases
+
 ## [0.142.0](https://github.com/DecapodLabs/decapod/compare/v0.141.0...v0.142.0) - 2026-11-13
 
 ### Added
