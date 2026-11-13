@@ -609,6 +609,11 @@
       "id": "update-custody-test-budgets",
       "summary": "test(snapshot_provider): initialize github_quota in custody budget fixtures",
       "input_digest": "sha256:0b876d313e4e57523e1d254678a64bf25a61b5915e70cf5bc2ad1be8d3bbd400"
+    },
+    {
+      "id": "update-buildkite-test-budgets",
+      "summary": "test(snapshot_provider): initialize github_quota in Buildkite timeout budget fixture",
+      "input_digest": "sha256:b84440968c55080f7a54bb6b783faa0c993d450b36bc340c610bf276af1457f2"
     }
   ],
   "intents": {
