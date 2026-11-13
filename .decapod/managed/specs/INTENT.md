@@ -1,5 +1,27 @@
 # Intent
 
+## Bounded and compact local data with lossless history and measured growth (#1630)
+
+Decapod bounds and compacts local SQLite storage in `.decapod/data/decapod.db`
+without discarding or truncating historical audit, proof, or task-lineage data.
+Every write boundary enforces explicit UTF-8 byte, NUL-byte (`0x00`), JSON depth,
+JSON byte, and collection-cardinality contracts (`src/decapod/core/storage_contracts.rs`
+and `docs/datastore-v2/logical_contract_v1.json`) fail-closed before mutating
+storage, while historical rows that exceed new write ceilings remain losslessly
+readable and patchable on unrelated columns.
+
+Repeated large task-checkpoint components (`>= 128` UTF-8 bytes) and redundant
+outer event envelope metadata are deduplicated and compacted losslessly across
+`storage_components`, `storage_component_refs`, `task_journal` schema v2, and
+`events` (`_ce_v1`), preserving exact `TaskProjection` reconstruction, identical
+`projection_digest` values across v1 and v2 checkpoints, and exact reconstructed
+`StoredEvent` JSON envelopes. Global task-journal verification replaces fixed
+whole-store 10k-task / 100k-record / 32 MiB ceilings with snapshot-consistent,
+keyset-paged verification (`verify_with_budget`) so repositories scale beyond
+those historical limits while surfacing caller-supplied budget stops explicitly
+as partial results rather than silent truncation or false `ok` verdicts.
+Physical `VACUUM` page reclamation is never triggered implicitly on hot CLI paths.
+
 ## Evidence-grounded reflection before consequential action
 
 Decapod helps agents reconsider a proposed action through optional bounded
@@ -341,8 +363,8 @@ These declarations select authoring and proof obligations; they do not attest im
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `0a0498aa94eb3f7551fe07c380ef13b469d188ab33218c72f80fc2e081fc3951`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (231 files), `tests/` (232 files)
+- Repository signal fingerprint: `b84ca1bad99d65494836397a0df5421c6c961d64f3278bf14a3474754a944739`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (232 files), `tests/` (232 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 

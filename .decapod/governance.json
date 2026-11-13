@@ -739,6 +739,11 @@
       "id": "test-unit-task-transfer",
       "summary": "test(transfer): verify externalized component bundle round-trip and tamper rejection (#1630)",
       "input_digest": "sha256:e1045d325f9234dff1e9c9bd4f6bbc28bf4befebe9abf232595a2aa55fffdfc9"
+    },
+    {
+      "id": "specs-intent-1630",
+      "summary": "docs(specs): update INTENT.md for bounded lossless compact storage (#1630)",
+      "input_digest": "sha256:678c4f31131d78bd92fe32e636fd15418d2a02e580e5a0afa8f49704d5edc581"
     }
   ],
   "intents": {
