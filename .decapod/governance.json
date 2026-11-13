@@ -559,6 +559,11 @@
       "id": "hf-agents-md",
       "summary": "chore(entrypoints): refresh AGENTS.md for Decapod v0.143.2",
       "input_digest": "sha256:4e20c5de115767405673bfaa6ca74f151c57feb67525360b1c815da29cac39cf"
+    },
+    {
+      "id": "hf-claude-md",
+      "summary": "chore(entrypoints): refresh CLAUDE.md for Decapod v0.143.2",
+      "input_digest": "sha256:247df0131b539b81c1a88fe446a734329ce19429f763a2652070bada04a420e2"
     }
   ],
   "intents": {
