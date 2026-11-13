@@ -685,6 +685,14 @@
       "proof_refs": [
         "https://github.com/DecapodLabs/decapod/issues/1658"
       ]
+    },
+    {
+      "id": "issue-1658-file-19",
+      "summary": "docs(specs): preserve accepted validation source definitions; file-by-file checkpoint, verification pending.",
+      "input_digest": "sha256:6d1ec100375bd7ec3176cd2883abc5dfd965f6eb89026a179a2a2b49d0e104d8",
+      "proof_refs": [
+        "https://github.com/DecapodLabs/decapod/issues/1658"
+      ]
     }
   ],
   "intents": {
@@ -758,8 +766,13 @@
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:3223b95248ae8e5e9c91aab434c62ef2379fd7ace236ef0eb5060ad9ffb55b3f",
-      "checks": [],
+      "artifact_hash": "sha256:91d0d01ac8f5f7c1594b46bdf169ea00a37ae2c4a641613f97d3a4c9458c3883",
+      "checks": [
+        {
+          "name": "hosted_cli_source_repinning",
+          "status": "failed"
+        }
+      ],
       "current_phase": "implementation",
       "custody": {
         "events": [
@@ -900,10 +913,24 @@
             "intent_id": "intent:change_01M7BCDS8K3F7RT5QZW52H6VT3",
             "kind": "trajectory_step_recorded",
             "sequence": 21
+          },
+          {
+            "detail": "trajectory:branch_01M7BCDSB9RK1ZV4N4XY039SMT",
+            "event_id": "event:22",
+            "intent_id": "intent:change_01M7BCDS8K3F7RT5QZW52H6VT3",
+            "kind": "trajectory_step_recorded",
+            "sequence": 22
+          },
+          {
+            "detail": "trajectory:branch_01M7BCDSB9RK1ZV4N4XY039SMT",
+            "event_id": "event:23",
+            "intent_id": "intent:change_01M7BCDS8K3F7RT5QZW52H6VT3",
+            "kind": "trajectory_step_recorded",
+            "sequence": 23
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 21,
+        "next_sequence": 23,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M7BCDSB9RK1ZV4N4XY039SMT": {
@@ -1198,6 +1225,39 @@
                 "validation_findings": [
                   "Hosted verification and exact-candidate publication readiness remain pending; no local tests run."
                 ]
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:22",
+                "observations": [
+                  "https://buildkite.com/decapodlabs/decapod/builds/9472#01a1d6e5-1809-485a-b0dd-5acc62254ffe"
+                ],
+                "proof_refs": [
+                  "hosted_cli_source_repinning"
+                ],
+                "scope": [
+                  "issue-1658"
+                ],
+                "sequence": 22,
+                "validation_findings": [
+                  "The actual local runtime produced unsupported ready=true and proof_ready=true after source-check replacement; preserve this failed observation."
+                ]
+              },
+              {
+                "action": "implementation",
+                "custody_event_id": "event:23",
+                "observations": [
+                  ".decapod/managed/specs/ARCHITECTURE.md",
+                  "https://github.com/DecapodLabs/decapod/issues/1658"
+                ],
+                "proof_refs": [],
+                "scope": [
+                  "issue-1658"
+                ],
+                "sequence": 23,
+                "validation_findings": [
+                  "Hosted verification and exact-candidate publication readiness remain pending; no local tests run."
+                ]
               }
             ]
           }
@@ -1206,6 +1266,7 @@
       "declared_commands": [],
       "destination": "pull request",
       "evidence": [
+        "https://buildkite.com/decapodlabs/decapod/builds/9472#01a1d6e5-1809-485a-b0dd-5acc62254ffe",
         "https://github.com/DecapodLabs/decapod/issues/1658"
       ],
       "inspected_files": [],
@@ -1237,7 +1298,8 @@
       "task_id": "code_01m7bcahe223a9rk",
       "tool_calls": [],
       "unresolved_assumptions": [
-        "Hosted verification and exact-candidate publication readiness remain pending; no local tests run."
+        "Hosted verification and exact-candidate publication readiness remain pending; no local tests run.",
+        "The actual local runtime produced unsupported ready=true and proof_ready=true after source-check replacement; preserve this failed observation."
       ]
     }
   },

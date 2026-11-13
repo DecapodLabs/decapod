@@ -1206,3 +1206,13 @@ Additive required checks remain possible; replacement and profile substitution
 fail with `ACCEPTED_REPOSITORY_CONTRACT_CHANGED`. Candidate review digests still
 establish internal consistency, while the accepted Git target supplies policy
 authority. No new policy interpreter, receipt store or service is introduced.
+
+### Accepted source-definition binding
+
+The local-profile branch also requires the candidate source-definition review
+digest to equal the accepted target's digest. Discovery still independently
+checks the actual bytes. This closes check-script replacement with an unchanged
+command. The existing discovered validation inventory is the boundary; it is not
+a claim to infer the semantic or transitive completeness of arbitrary commands.
+Ordinary subject changes still require fresh source-bound execution. Changes to
+inventoried validation definitions require a separately accepted policy revision.
