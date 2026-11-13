@@ -756,6 +756,11 @@
       "id": "sync-docs-command-contracts",
       "summary": "Regenerate docs/agent/command-contracts.md from #1568 source-built CLI and config schema",
       "input_digest": "sha256:f39fca05d54a0fe6d00b5cc1c17ca0abd4b41da91e95c34455a220ce653c6659"
+    },
+    {
+      "id": "sync-docs-config-schema",
+      "summary": "Regenerate docs/agent/config-schema.md from #1568 source-built CLI and config schema",
+      "input_digest": "sha256:edbdec73fd4c8540e80131fbd7399bb53e647174387b0c4560c57501c842ed86"
     }
   ],
   "intents": {
