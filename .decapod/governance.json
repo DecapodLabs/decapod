@@ -682,6 +682,11 @@
       "id": "specs-validation-issue-1469",
       "summary": "Update VALIDATION.md with falsifiable #1469 proof suites and combined-candidate readiness check",
       "input_digest": "sha256:6e15433cde944916951272f49657528547493d57f4c170bf97f04f8c3a712065"
+    },
+    {
+      "id": "specs-operations-refresh-v0143",
+      "summary": "Refresh OPERATIONS.md codebase attestation for Decapod v0.143.0",
+      "input_digest": "sha256:92268095df8f647bdb8825906d15a43a494ee5567030ac7bc18b6e2a5918bfda"
     }
   ],
   "intents": {
