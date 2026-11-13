@@ -7,6 +7,62 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.144.3](https://github.com/DecapodLabs/decapod/compare/v0.144.2...v0.144.3) - 2026-11-13
+
+### Added
+
+- *(runtime)* wire pre-startup governed database CLI/RPC dispatch and config preservation
+- *(interop)* register governed data.database.* operations in RPC manifest
+- *(rpc)* add typed request structs for governed data.database.* operations
+- *(cli)* add governed data database capabilities, lock, maintain, and audit commands
+- *(core)* register db_maintenance module
+- *(governance)* implement canonical-policy-bound agent database maintenance engine
+- *(storage)* add non-destructive lock diagnostics and idle owned-lease release
+
+### Fixed
+
+- *(governance)* preserve PR1662 for current-master integration
+- *(tests)* resolve clippy lints in sqlite_maintenance integration tests
+- *(maintenance)* resolve clippy type_complexity and manual_clamp lints
+
+### Other
+
+- resolve PR1662 conflicts and preserve original history
+- integrate PR1662 with current Decapod master
+- *(agent)* sync generated config-schema.md for #1568
+- *(agent)* sync generated command-contracts.md for #1568
+- *(governance)* initialize reconciled v0.143.1 trajectory run for #1568
+- *(merge)* reconcile accepted master v0.143.1 into #1568
+- *(governance)* record project-check prerequisite receipt for #1568
+- *(governance)* refresh specs manifest and record spec reviews for #1568
+- *(specs)* synchronize VALIDATION.md overlay digest after #1568 update
+- *(specs)* synchronize SEMANTICS.md overlay digest after #1568 update
+- *(specs)* synchronize SECURITY.md overlay digest after #1568 update
+- *(specs)* synchronize specs README.md overlay digest after #1568 update
+- *(specs)* synchronize OPERATIONS.md overlay digest after #1568 update
+- *(specs)* synchronize INTERFACES.md overlay digest after #1568 update
+- *(specs)* synchronize INTENT.md overlay digest after #1568 update
+- *(specs)* synchronize ARCHITECTURE.md overlay digest after #1568 update
+- *(specs)* document SQLite maintenance unit and integration regression coverage ([#1568](https://github.com/DecapodLabs/decapod/pull/1568))
+- *(specs)* document local database maintenance security and custody boundaries ([#1568](https://github.com/DecapodLabs/decapod/pull/1568))
+- *(specs)* document capability-scoped database maintenance CLI and RPC ([#1568](https://github.com/DecapodLabs/decapod/pull/1568))
+- *(specs)* document project-opted agent database maintenance architecture ([#1568](https://github.com/DecapodLabs/decapod/pull/1568))
+- *(specs)* refresh SEMANTICS.md projection for v0.143.0
+- *(specs)* refresh specs README.md projection for v0.143.0
+- *(specs)* refresh OPERATIONS.md projection for v0.143.0
+- *(specs)* refresh INTENT.md projection for v0.143.0
+- *(proof)* update reviewed_sources_digest for accepted v0.143.0 source inventory
+- *(container)* refresh managed Dockerfile pin for Decapod v0.143.0
+- *(entrypoints)* refresh GEMINI.md for Decapod v0.143.0
+- *(entrypoints)* refresh CODEX.md for Decapod v0.143.0
+- *(entrypoints)* refresh CLAUDE.md for Decapod v0.143.0
+- *(entrypoints)* refresh AGENTS.md for Decapod v0.143.0
+- *(maintenance)* add end-to-end RBAC, anti-self-elevation, and concurrent lock custody tests
+- *(agent)* regenerate config-schema.md with governance.db_maintenance section
+- *(agent)* regenerate command-contracts.md with governed database maintenance surface
+- *(generator)* document governed database maintenance contracts and config schema
+- *(storage)* cover lock contention diagnostics and owned-lease release safety
+
 ## [0.144.2](https://github.com/DecapodLabs/decapod/compare/v0.144.1...v0.144.2) - 2026-11-13
 
 ### Added
