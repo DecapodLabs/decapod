@@ -629,6 +629,11 @@
       "id": "hf-project-check-receipt",
       "summary": "Bind v0.143.2 validation epoch receipt and spec reviews",
       "input_digest": "sha256:f8515b0ef7d9b068c89046e5d3d74edf776e0742592bb733853c013a3e4b5d50"
+    },
+    {
+      "id": "hf-bind-plan-todo-receipt",
+      "summary": "Bind todo_ids on governed plan and fresh v0.143.2 validation receipt",
+      "input_digest": "sha256:79664533a6e08e1730d21e3ad047bbb1e210db3e205ab375739e25ebcafc1cc4"
     }
   ],
   "intents": {
@@ -733,13 +738,15 @@
           "spec_material_hash": "d199566703dbcc9ccd40e84e4e5dfab82bec10d85adb5dfcdf59057b6480e5d2"
         }
       ],
-      "state": "APPROVED",
+      "state": "DRAFT",
       "stop_conditions": [],
       "title": "Scope decapod.scope.protected_paths evaluator to path and diff-size checks",
-      "todo_ids": [],
+      "todo_ids": [
+        "code_01m79x7c10xe4fk4"
+      ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1794555812Z"
+      "updated_at": "1794555858Z"
     },
     "trajectory": {
       "active_boundaries": [
