@@ -567,8 +567,8 @@ identities, chronology, custody/proof bindings and unknown outcomes. Diagnose
 equivalence, divergence and corruption independently; do not implicitly merge
 contradictory state, delete legacy input, reconstruct missing proof, or replay an
 unknown mutation. Ordinary operation resumes only after an inspectable safe
-recovery result. Current empty-stub handling is retained as a narrower completed
-case. Hosted regressions must exercise real store and recovery boundaries.
+recovery result. The empty-stub path is a bounded first repair; general nonempty reconciliation
+remains unimplemented. Hosted regressions must exercise real store and recovery boundaries.
 
 ## Accepted local verification requirements (#1658)
 
