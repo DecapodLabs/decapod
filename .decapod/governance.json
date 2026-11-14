@@ -580,6 +580,14 @@
       "proof_refs": [
         "tests/unit/core/reflection_tests.rs"
       ]
+    },
+    {
+      "id": "convergence-source-4",
+      "summary": "Implement issue1690 bounded escalation extension in tests/infer_precision.rs; preserve existing authority and proof; execution verification pending",
+      "input_digest": "sha256:c071aa21d6074f1580ba6bc9ff20ccf4dfdb9d5bfb249d2489e16ddfe43b594a",
+      "proof_refs": [
+        "tests/infer_precision.rs"
+      ]
     }
   ],
   "intents": {
