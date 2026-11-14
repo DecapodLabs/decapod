@@ -363,7 +363,7 @@ These declarations select authoring and proof obligations; they do not attest im
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `e4a9eab6a572ab64287dd18c0d314fd69f2b6bc5a2f1e310a5d8c2afc5aa9f4e`
+- Repository signal fingerprint: `acc382d4543f13beeecc330661ce3de7cd003629902459930d94fd32903e044f`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (234 files), `tests/` (233 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
@@ -682,3 +682,20 @@ Initial adoption remains supported. Requirement replacement needs a separately
 accepted target-policy transition; this work introduces no candidate-side override
 or new authority store. Hosted tests and exact-candidate validation remain pending
 until their actual observations are collected; no local test result is claimed.
+
+## Current continuous-governance audit (#1069)
+
+Refresh the existing implementation map against accepted Decapod0.145.5 master
+without changing the kernel, validation policy or publication authority. Separate
+accepted code from pending PRs, and source-bound executed observations from
+unexecuted requirements. Cover exact proof, observed workunit acceptance,
+diagnostic overrides, workspace/custody, local readiness and cloud independence.
+
+Keep missing native runtime integration, complete ten-worker A-H proof,
+independent exception/cloud authority, unsupported workspace-store convergence
+and five-minute sharding explicit. A green source-CI record does not become a
+full native publication receipt. Preserve the existing architecture and SQLite
+foundation; do not implement a competing engine to satisfy an older ticket.
+Documentation-only changes use hosted verification and no local tests or
+Buildkite evidence collection. Previously merged fixes need accurate tracking,
+not duplicate implementation or unsupported issue closure.
