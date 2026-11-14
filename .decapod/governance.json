@@ -1847,6 +1847,14 @@
       "proof_refs": [
         ".decapod/managed/specs/SECURITY.md"
       ]
+    },
+    {
+      "id": "convergence-classification-binding-semanticsmd",
+      "summary": "Refresh source identity for evidence-supported classification correction with immutable governing obligations",
+      "input_digest": "sha256:b4209b9621185731574aa7d5b65eddab2fbb1a81011b5ca0f93688fec8cde3bf",
+      "proof_refs": [
+        ".decapod/managed/specs/SEMANTICS.md"
+      ]
     }
   ],
   "intents": {
