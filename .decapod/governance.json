@@ -773,6 +773,14 @@
       "proof_refs": [
         "https://github.com/DecapodLabs/decapod/issues/1667"
       ]
+    },
+    {
+      "id": "issue-1667-file-30",
+      "summary": "docs(specs): distinguish cell compatibility from parameter headroom; file-by-file checkpoint, verification pending.",
+      "input_digest": "sha256:97e4f04a5ab26a8f9c775c5db4aac035baf36126a56622f12f3ecfd4e39156f6",
+      "proof_refs": [
+        "https://github.com/DecapodLabs/decapod/issues/1667"
+      ]
     }
   ],
   "intents": {
@@ -813,22 +821,22 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Integrate accepted master fded2dd0b5f02f9c874301d4b98cfd59ad188357 after merged PR1682 native inventory evidence with issue1667. Preserve current task journal/checkpoints and authored specs from both branches; regenerate projections through the kernel. Previous candidate readiness does not apply; no local tests.",
-          "reviewed_code_fingerprint": "d5859e56ccb21b9d055034be328fe1dc4f62cfb47b4ad64bc6a435c7ee675e35",
+          "reason": "Document the specific physical compatibility edge without increasing logical field, decoded result, cloud or proof authority. GitHub Actions verification is pending and no local tests were run.",
+          "reviewed_code_fingerprint": "2bedc737f0eb8c4c445e75bc26b6144f8be885097ce304b779807b732d923714",
           "spec_material_hash": "c7ec7fc6a463392c5fb87a434d69170abe5c13dc147d849bef9f26443187a1ec"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Integrate accepted master fded2dd0b5f02f9c874301d4b98cfd59ad188357 after merged PR1682 native inventory evidence with issue1667. Preserve current task journal/checkpoints and authored specs from both branches; regenerate projections through the kernel. Previous candidate readiness does not apply; no local tests.",
-          "reviewed_code_fingerprint": "d5859e56ccb21b9d055034be328fe1dc4f62cfb47b4ad64bc6a435c7ee675e35",
-          "spec_material_hash": "b47a7a8fd245a5d1b462b2a396c2b82ee9fc123008e19dbf15c1d5398ebed229"
+          "reason": "Document the specific physical compatibility edge without increasing logical field, decoded result, cloud or proof authority. GitHub Actions verification is pending and no local tests were run.",
+          "reviewed_code_fingerprint": "2bedc737f0eb8c4c445e75bc26b6144f8be885097ce304b779807b732d923714",
+          "spec_material_hash": "7981fad2540aea0fa271ca07480be5ef3fed060fda68a8a81695705de7f1b981"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Integrate accepted master fded2dd0b5f02f9c874301d4b98cfd59ad188357 after merged PR1682 native inventory evidence with issue1667. Preserve current task journal/checkpoints and authored specs from both branches; regenerate projections through the kernel. Previous candidate readiness does not apply; no local tests.",
-          "reviewed_code_fingerprint": "d5859e56ccb21b9d055034be328fe1dc4f62cfb47b4ad64bc6a435c7ee675e35",
+          "reason": "Document the specific physical compatibility edge without increasing logical field, decoded result, cloud or proof authority. GitHub Actions verification is pending and no local tests were run.",
+          "reviewed_code_fingerprint": "2bedc737f0eb8c4c445e75bc26b6144f8be885097ce304b779807b732d923714",
           "spec_material_hash": "c4b217ac3486512e3460310c437a0250686d37ce1a2211f0f7e1d101871b67aa"
         }
       ],
@@ -840,13 +848,13 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1794623465Z"
+      "updated_at": "1794624348Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:33237b1fc614a2897f33a688584fc6f54711ab13fb198c2ec58cfdde300b05f9",
+      "artifact_hash": "sha256:954c5c991c38b42d8da29eb848765d2cab814d99518fa5e8d5cde0a2d9887f8e",
       "checks": [],
       "current_phase": "implementation",
       "custody": {
@@ -1065,10 +1073,17 @@
             "intent_id": "intent:change_01M7BCN0CS3Z8AJ7TZ491WJ7CJ",
             "kind": "trajectory_step_recorded",
             "sequence": 32
+          },
+          {
+            "detail": "trajectory:branch_01M7BCN0FD8AE623HXNGA0C8F9",
+            "event_id": "event:33",
+            "intent_id": "intent:change_01M7BCN0CS3Z8AJ7TZ491WJ7CJ",
+            "kind": "trajectory_step_recorded",
+            "sequence": 33
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 32,
+        "next_sequence": 33,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M7BCN0FD8AE623HXNGA0C8F9": {
@@ -1534,6 +1549,22 @@
                   "issue-1667"
                 ],
                 "sequence": 32,
+                "validation_findings": [
+                  "Hosted verification and exact-candidate publication readiness remain pending; no local tests run."
+                ]
+              },
+              {
+                "action": "implementation",
+                "custody_event_id": "event:33",
+                "observations": [
+                  ".decapod/managed/specs/INTERFACES.md",
+                  "https://github.com/DecapodLabs/decapod/issues/1667"
+                ],
+                "proof_refs": [],
+                "scope": [
+                  "issue-1667"
+                ],
+                "sequence": 33,
                 "validation_findings": [
                   "Hosted verification and exact-candidate publication readiness remain pending; no local tests run."
                 ]

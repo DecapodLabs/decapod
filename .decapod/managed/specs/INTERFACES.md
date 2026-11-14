@@ -1154,7 +1154,7 @@ field. Nothing in this operation authorizes a mutation, approval or completion.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `d5859e56ccb21b9d055034be328fe1dc4f62cfb47b4ad64bc6a435c7ee675e35`
+- Repository signal fingerprint: `2bedc737f0eb8c4c445e75bc26b6144f8be885097ce304b779807b732d923714`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (234 files), `tests/` (232 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
@@ -1530,3 +1530,14 @@ changed inventoried check scripts, build/dependency definitions or provider
 inputs. Retain the accepted inventory or establish the reviewed revision on the
 target before revalidation. Additive commands under that inventory and first
 local adoption remain supported; no override or second policy store is added.
+
+### Local SDK value and parameter ceilings
+
+The physical local bridge retains an 8 MiB per-value compatibility ceiling and
+allows 16 MiB per bound parameter set so a ceiling-sized value can coexist with
+its primary key and metadata. These are separate resource limits. Result bytes
+and row counts retain SDK v1 defaults, and application field admission remains
+unchanged. The real SQLite regression tests the exact 8 MiB boundary with a
+bound key, lossless re-read, unrelated update and rejection before a write of
+a value exceeding the cell ceiling. A codec decoding guard does not authorize
+larger application records.
