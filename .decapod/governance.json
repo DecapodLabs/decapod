@@ -1543,6 +1543,14 @@
       "proof_refs": [
         ".decapod/managed/specs/SEMANTICS.md"
       ]
+    },
+    {
+      "id": "convergence-scope-freshness-validationmd",
+      "summary": "Refresh current source identity after authority scope freshness repair",
+      "input_digest": "sha256:1ceee70b315e07adc10340ee3ef31201b2d446b3eb1e18edd5e50ebc1f48e2f4",
+      "proof_refs": [
+        ".decapod/managed/specs/VALIDATION.md"
+      ]
     }
   ],
   "intents": {
