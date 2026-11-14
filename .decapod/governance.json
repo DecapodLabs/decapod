@@ -893,6 +893,14 @@
       "proof_refs": [
         "https://github.com/DecapodLabs/decapod/issues/1660"
       ]
+    },
+    {
+      "id": "issue-1660-file-45",
+      "summary": "test(recovery): retain unproven claimed history without granting resumability; file-by-file checkpoint, verification pending.",
+      "input_digest": "sha256:5d4f5abb4efced0da7b5d7b1b264273898a273f497b832e6efee39c3f46b0454",
+      "proof_refs": [
+        "https://github.com/DecapodLabs/decapod/issues/1660"
+      ]
     }
   ],
   "intents": {
@@ -933,22 +941,22 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Hosted Clippy rejects option_env unwrap. Explicit availability supports compilation inside the real library producer fixture while refusing CLI admission without an actual binary.",
-          "reviewed_code_fingerprint": "a113641796c1faad4f05b6bfcf47a0d2220da12500e644fa91ee4a1a509410dd",
+          "reason": "A CLAIMED journal snapshot can be restored as history while changed artifact bytes produce resumable=false with WORKUNIT_PROOF_CHANGED. Assert that exact supported outcome and denied verified consumption; do not require deletion or a fabricated VERIFIED state.",
+          "reviewed_code_fingerprint": "cda887d637545a67f3972571a18abe345bb6e1bf8e373ff79bb86dbfdc09e91f",
           "spec_material_hash": "e799665f0f6c5025ac094765c6f38097a6894c63fd4f08593900c2567475d6e9"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Hosted Clippy rejects option_env unwrap. Explicit availability supports compilation inside the real library producer fixture while refusing CLI admission without an actual binary.",
-          "reviewed_code_fingerprint": "a113641796c1faad4f05b6bfcf47a0d2220da12500e644fa91ee4a1a509410dd",
+          "reason": "A CLAIMED journal snapshot can be restored as history while changed artifact bytes produce resumable=false with WORKUNIT_PROOF_CHANGED. Assert that exact supported outcome and denied verified consumption; do not require deletion or a fabricated VERIFIED state.",
+          "reviewed_code_fingerprint": "cda887d637545a67f3972571a18abe345bb6e1bf8e373ff79bb86dbfdc09e91f",
           "spec_material_hash": "10df59dc9f256a32e3851047d6d684158b0453828124370c3bb74edc6e74af49"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Hosted Clippy rejects option_env unwrap. Explicit availability supports compilation inside the real library producer fixture while refusing CLI admission without an actual binary.",
-          "reviewed_code_fingerprint": "a113641796c1faad4f05b6bfcf47a0d2220da12500e644fa91ee4a1a509410dd",
+          "reason": "A CLAIMED journal snapshot can be restored as history while changed artifact bytes produce resumable=false with WORKUNIT_PROOF_CHANGED. Assert that exact supported outcome and denied verified consumption; do not require deletion or a fabricated VERIFIED state.",
+          "reviewed_code_fingerprint": "cda887d637545a67f3972571a18abe345bb6e1bf8e373ff79bb86dbfdc09e91f",
           "spec_material_hash": "eaeef50281b687b740ee9cdc33c571d5d409b1869d8e28fdb292f09e76d562fb"
         }
       ],
@@ -960,13 +968,13 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1794615479Z"
+      "updated_at": "1794616380Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:aedc2bdca7a7c97f1208b71f255bf99173df79ca3b122145977bb4d883d5bc65",
+      "artifact_hash": "sha256:7ae7b1b8362cb1e45e85e87acb25b784404a739f0b66d644f5c32135633f3cc0",
       "checks": [],
       "current_phase": "implementation",
       "custody": {
@@ -1290,10 +1298,17 @@
             "intent_id": "intent:change_01M7BCFASGT4DQG4ZADT2BP5G0",
             "kind": "trajectory_step_recorded",
             "sequence": 47
+          },
+          {
+            "detail": "trajectory:branch_01M7BCFAWAYM3TXSVTHC1N7YZE",
+            "event_id": "event:48",
+            "intent_id": "intent:change_01M7BCFASGT4DQG4ZADT2BP5G0",
+            "kind": "trajectory_step_recorded",
+            "sequence": 48
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 47,
+        "next_sequence": 48,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M7BCFAWAYM3TXSVTHC1N7YZE": {
@@ -2000,6 +2015,22 @@
                   "issue-1660"
                 ],
                 "sequence": 47,
+                "validation_findings": [
+                  "Hosted verification and exact-candidate publication readiness remain pending; no local tests run."
+                ]
+              },
+              {
+                "action": "implementation",
+                "custody_event_id": "event:48",
+                "observations": [
+                  "tests/unit/core/workunit_journal_tests.rs",
+                  "https://github.com/DecapodLabs/decapod/issues/1660"
+                ],
+                "proof_refs": [],
+                "scope": [
+                  "issue-1660"
+                ],
+                "sequence": 48,
                 "validation_findings": [
                   "Hosted verification and exact-candidate publication readiness remain pending; no local tests run."
                 ]

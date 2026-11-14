@@ -613,13 +613,18 @@ fn bound_declared_artifacts_are_resumable_without_granting_verified_status() {
             .contains("WORKUNIT_PROOF_CHANGED")
     );
     fs::remove_file(workunit_path(root.path(), "task_test").unwrap()).unwrap();
+    let recovered = recover_workunit(root.path(), "task_test").unwrap();
+    assert!(!recovered.resumable);
     assert!(
-        recover_workunit(root.path(), "task_test")
-            .unwrap_err()
-            .to_string()
+        recovered
+            .resume_blocker
+            .as_deref()
+            .unwrap()
             .contains("WORKUNIT_PROOF_CHANGED")
     );
-    assert!(!workunit_path(root.path(), "task_test").unwrap().exists());
+    let manifest = load_workunit(root.path(), "task_test").unwrap();
+    assert_eq!(manifest.status, WorkUnitStatus::Claimed);
+    assert!(validate_verified_manifest(root.path(), &manifest).is_err());
 }
 
 #[test]
