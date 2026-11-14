@@ -167,8 +167,10 @@ pub(super) fn authority_snapshot(
     } else {
         false
     };
-    Ok(json!({"risk":risk, "requirements":requirements,
-        "human_required":required && !approved, "approved":approved}))
+    Ok(
+        json!({"operation":request, "risk":risk, "requirements":requirements,
+        "human_required":required && !approved, "approved":approved}),
+    )
 }
 
 pub(super) fn authority(plan: &GovernedPlan) -> Option<&AuthorityRequest> {

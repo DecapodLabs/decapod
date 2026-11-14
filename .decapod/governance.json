@@ -1471,6 +1471,14 @@
       "proof_refs": [
         "https://buildkite.com/decapodlabs/decapod/builds/10661"
       ]
+    },
+    {
+      "id": "convergence-authority-scope-context",
+      "summary": "Bind policy observations to exact command and target so narrowed scope invalidates broader historical replies",
+      "input_digest": "sha256:56bdd0121850638217f6e1ca5e9983c181ccb5f8e93ad30d3cd5040735f7b467",
+      "proof_refs": [
+        "src/decapod/core/mentor/reflection/escalation.rs"
+      ]
     }
   ],
   "intents": {
