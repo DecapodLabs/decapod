@@ -1775,6 +1775,14 @@
       "proof_refs": [
         "src/decapod/core/mentor/reflection/escalation.rs"
       ]
+    },
+    {
+      "id": "convergence-reclassification-regression",
+      "summary": "Distinguish evidence-supported correction from relabeling and preserve observed approval despite a changed uncertainty declaration",
+      "input_digest": "sha256:caf60a2a4e548d9195c184a9ab21e79eb0d379b1adfc823182b702e1d52ae3c7",
+      "proof_refs": [
+        "tests/unit/core/reflection_tests.rs"
+      ]
     }
   ],
   "intents": {

@@ -740,6 +740,54 @@ fn investigation_can_find_new_source_facts_while_retaining_the_governing_citatio
 }
 
 #[test]
+fn classification_correction_requires_observed_progress_and_never_waives_authority() {
+    for investigated in [false, true] {
+        let (temp, request) = escalation_fixture(escalation::Uncertainty::MissingAuthority);
+        let first = submit(temp.path(), &request).unwrap();
+        let mut revised = next(&request, &first, "classification-corrected");
+        revised.escalation.as_mut().unwrap().uncertainty =
+            escalation::Uncertainty::DiscoverableInformation;
+        if investigated {
+            supported_resolution(&mut revised);
+        }
+        let outcome = submit(temp.path(), &revised).unwrap();
+        assert_eq!(outcome.round, 2);
+        if investigated {
+            assert_eq!(outcome.disposition, Disposition::Proceed);
+            assert_eq!(outcome.progress, Some(Progress::ReducedObligations));
+        } else {
+            assert_eq!(outcome.disposition, Disposition::Blocked);
+            assert_eq!(outcome.progress, Some(Progress::Stagnant));
+        }
+        assert!(!outcome.escalation.unwrap().human_escalation_permitted);
+        assert!(!outcome.completion_proven);
+    }
+    let (temp, mut request) = escalation_fixture(escalation::Uncertainty::MissingAuthority);
+    let mut config = crate::cli::DecapodProjectConfig::default();
+    config.governance.approval_categories = vec!["destructive_operations".into()];
+    fs::write(
+        temp.path().join(".decapod/config.toml"),
+        toml::to_string(&config).unwrap(),
+    )
+    .unwrap();
+    crate::plugins::policy::initialize_policy_db(&temp.path().join(".decapod/data")).unwrap();
+    request.escalation.as_mut().unwrap().authority = Some(escalation::AuthorityRequest {
+        command: "todo.archive".into(),
+        target: Some(request.task_id.clone()),
+    });
+    let first = submit(temp.path(), &request).unwrap();
+    let mut revised = next(&request, &first, "authority-is-not-a-label");
+    revised.escalation.as_mut().unwrap().uncertainty =
+        escalation::Uncertainty::DiscoverableInformation;
+    supported_resolution(&mut revised);
+    let outcome = submit(temp.path(), &revised).unwrap();
+    assert_eq!(outcome.disposition, Disposition::HumanDecision);
+    assert!(outcome.execution_blocked);
+    assert!(outcome.escalation.unwrap().human_escalation_permitted);
+    assert!(!outcome.completion_proven);
+}
+
+#[test]
 fn escalation_paraphrases_and_self_reported_exhaustion_terminate_without_permission() {
     let (temp, request) = escalation_fixture(escalation::Uncertainty::InferableDecision);
     let first = submit(temp.path(), &request).unwrap();
