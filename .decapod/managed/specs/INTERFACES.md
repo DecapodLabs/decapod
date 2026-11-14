@@ -1166,7 +1166,7 @@ field. Nothing in this operation authorizes a mutation, approval or completion.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `7cbf0a7a9cdc5bccac3773653b64c76afef63ad96740632ba683b9358ae9412f`
+- Repository signal fingerprint: `e4a9eab6a572ab64287dd18c0d314fd69f2b6bc5a2f1e310a5d8c2afc5aa9f4e`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (234 files), `tests/` (233 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
@@ -1512,6 +1512,14 @@ Existing `data database` maintenance/capability/lock/audit CLI and RPC operation
 ## PR1662 current-master preparation
 
 Preserve symmetric data.database CLI/RPC capability discovery, diagnostics, bounded maintenance and audit interfaces. Policy admission must happen before startup migrations for maintenance commands; raw SQL, destructive replacement and arbitrary destinations remain outside the delegated contract.
+
+## Bounded independent collection (#1573)
+
+Public403 failures retain operation/method/endpoint/status and bounded numeric
+reset hints, without treating an authenticated diagnostic client's quota as the
+public reader's grant. A safely replayable collection starts only after the
+reported window and actual workflow production/completion, with source/target
+rechecked. Unknown, missing and unsupported proof cannot become readiness.
 
 ## Maintenance proof scope (#1568)
 

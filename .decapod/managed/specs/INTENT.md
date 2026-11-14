@@ -363,7 +363,7 @@ These declarations select authoring and proof obligations; they do not attest im
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `7cbf0a7a9cdc5bccac3773653b64c76afef63ad96740632ba683b9358ae9412f`
+- Repository signal fingerprint: `e4a9eab6a572ab64287dd18c0d314fd69f2b6bc5a2f1e310a5d8c2afc5aa9f4e`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (234 files), `tests/` (233 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
@@ -568,6 +568,16 @@ Expose only project-opted local database maintenance capabilities to the agent. 
 ## PR1662 current-master preparation
 
 Preserve prepared PR1662 capability-scoped database maintenance before integrating accepted master3afa9df9 and the0.144.2 source release. Default-deny accepted policy, owner-only repair, bounded safe operations and non-destructive lock custody remain obligations. Hosted CI must establish the exact integrated candidate; no local tests are run.
+
+## Independent collector closure (#1573)
+
+Merged1666 supplies bounded anonymous GitHub quota pacing. Preserve required
+provider/source/repository identities, explicit access denial and the invocation
+deadline while reconciling actual complete collection evidence. Official0.144.3
+completed the complete1658 provider contract without identity substitution. This
+follow-up records the actual observation and separately validates its own task
+and current candidate; a prior task's proof never completes this task by itself.
+No new credential path, provider fallback, receipt authority or local tests.
 
 ## Required maintenance evidence completion (#1568)
 
