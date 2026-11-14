@@ -1663,6 +1663,14 @@
       "proof_refs": [
         ".decapod/managed/specs/.manifest.json"
       ]
+    },
+    {
+      "id": "convergence-investigation-proof-candidate",
+      "summary": "Bind the complete reviewed protocol and current regression scope for full validation",
+      "input_digest": "sha256:cdcc72f1c0f4d6c33c5792af8548b2301abfb75f81aa53dae31bce05e6082a6b",
+      "proof_refs": [
+        "tests/unit/core/reflection_tests.rs"
+      ]
     }
   ],
   "intents": {
@@ -1703,22 +1711,22 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Reviewed exact authority-scope context binding: omitted scope can be investigated without resetting rounds, established scope cannot change, and broader historical replies become stale after narrowing.",
-          "reviewed_code_fingerprint": "9f9bc8d18a15b595eb67ee69b175c70f6bd55fa40bcb6325a14c79ac3833367d",
+          "reason": "Reviewed source-fact investigation through the existing governing citation guard, exact authority-scope freshness, finite budgets and independent execution/publication authority.",
+          "reviewed_code_fingerprint": "8548242f78ad40ec956e15a466de8748f0852a17d9abbc138ee66a3578338d5a",
           "spec_material_hash": "df7a941f9d82a6095083540e5c69d3c27ca2a8aae3d7d909673794bd2eaf261e"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Reviewed exact authority-scope context binding: omitted scope can be investigated without resetting rounds, established scope cannot change, and broader historical replies become stale after narrowing.",
-          "reviewed_code_fingerprint": "9f9bc8d18a15b595eb67ee69b175c70f6bd55fa40bcb6325a14c79ac3833367d",
+          "reason": "Reviewed source-fact investigation through the existing governing citation guard, exact authority-scope freshness, finite budgets and independent execution/publication authority.",
+          "reviewed_code_fingerprint": "8548242f78ad40ec956e15a466de8748f0852a17d9abbc138ee66a3578338d5a",
           "spec_material_hash": "4f2025b9b1385b0be839d8080d4e38686b29b5c5ea41ec90d4c1e35e6115683d"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Reviewed exact authority-scope context binding: omitted scope can be investigated without resetting rounds, established scope cannot change, and broader historical replies become stale after narrowing.",
-          "reviewed_code_fingerprint": "9f9bc8d18a15b595eb67ee69b175c70f6bd55fa40bcb6325a14c79ac3833367d",
+          "reason": "Reviewed source-fact investigation through the existing governing citation guard, exact authority-scope freshness, finite budgets and independent execution/publication authority.",
+          "reviewed_code_fingerprint": "8548242f78ad40ec956e15a466de8748f0852a17d9abbc138ee66a3578338d5a",
           "spec_material_hash": "fd3211c63495669c2998feee5675bdd3e167b0dc4ed0fff15b04c6853f489af3"
         }
       ],
@@ -1732,13 +1740,13 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1794693475Z"
+      "updated_at": "1794694089Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Keep approval, scope, custody, proof and publication authoritative; no transcripts, daemon or semantic-proof claims"
       ],
-      "artifact_hash": "sha256:4a81bc67046079cecb743c9ad749ce4b1034a474648eef944a020cc4bd6e9794",
+      "artifact_hash": "sha256:379cf318a13dff32010a9e32b71b543882caae612bac1f170982bbc95297008b",
       "checks": [
         {
           "name": "authority_refinement",
@@ -1755,6 +1763,10 @@
         {
           "name": "full_validation",
           "status": "failed"
+        },
+        {
+          "name": "investigation_continuity",
+          "status": "partial"
         },
         {
           "name": "prior_candidate_source_ci",
@@ -1860,10 +1872,17 @@
             "intent_id": "intent:convergence-1690",
             "kind": "trajectory_step_recorded",
             "sequence": 14
+          },
+          {
+            "detail": "trajectory:convergence-1690",
+            "event_id": "event:15",
+            "intent_id": "intent:convergence-1690",
+            "kind": "trajectory_step_recorded",
+            "sequence": 15
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 14,
+        "next_sequence": 15,
         "schema_version": "1.0.0",
         "trajectories": {
           "convergence-1690": {
@@ -2047,6 +2066,22 @@
                 ],
                 "sequence": 14,
                 "validation_findings": []
+              },
+              {
+                "action": "candidate-validation",
+                "custody_event_id": "event:15",
+                "observations": [
+                  "Removed a duplicate child source-path restriction that rejected observed facts discovered in other authorized repository files. Parent governing-source citation remains required. Added positive new-file investigation and negative missing-governing-citation cases; their execution is pending.",
+                  "Interrupted only the owned 62d validator through its PTY before replacing its candidate; CI operation cancelled evidence retained at decapod-snapshot-DM5W0T. No older proof or cancellation authorizes publication."
+                ],
+                "proof_refs": [
+                  "investigation_continuity"
+                ],
+                "scope": [
+                  "src/decapod/core/mentor and canonical agent integration/tests"
+                ],
+                "sequence": 15,
+                "validation_findings": []
               }
             ]
           }
@@ -2064,11 +2099,13 @@
         "Candidate d6bb48798b5477a5fb006cd6f559a21e3c809c3c was blocked by ACCEPTED_BASE_NOT_ANCESTOR after external PR1680/release1455 integration. Incorporated f5da0e61, retained both semantic spec scopes, regenerated canonical pins through official1455 session update, restored temporary config. Reclaimed genuinely unassigned task and rebound existing workspace after session cleanup.",
         "Draft extends existing three-round journal and orientation/mentor input with typed escalation proposals, observed source predicates and existing policy/approval reads. Concise source facts are not proof of execution or semantic exhaustion. Adversarial unit and CLI mock harness authored; not yet executed. Preserve per-file exact checkpoints and native publication gates.",
         "Generated entrypoint integration test passed; public native Buildkite reader is available. Cancelled unnecessary bk diagnostic device login without credentials; no access grant is required for the configured reader.",
+        "Interrupted only the owned 62d validator through its PTY before replacing its candidate; CI operation cancelled evidence retained at decapod-snapshot-DM5W0T. No older proof or cancellation authorizes publication.",
         "Interrupted only the owned ec25 validator through its PTY before replacing that candidate; truthful CI operation cancelled evidence retained at decapod-snapshot-Xzr8uF. No prior green execution or cancellation supplies publication authority.",
         "Issue1696 records the prerequisite repair. Extracted existing unit helper to tests/support/recovery_filesystem.rs; preserved all selection/refusal tests, reused the probe in CLI success fixtures, declared aggregate and standalone Bazel inputs. No production guard, recipe, provider or required graph changed.",
         "Native full validation for 9026474f ended failed on Buildkite10656; retained snapshot decapod-snapshot-sHOu1M. Only CLI recipe failed: two existing SQLite success fixtures violated Dactyl same-device staging prerequisite; entrypoint aggregate and new CLI harness passed, full library1771 passed with8 ignored, core recipe passed.",
         "Newly admissible canonical human dependency is explicit progress; repeating it is not. Earlier candidate6db3 provider results remain separate and cannot authorize this changed candidate.",
         "Obsolete failed-candidate validator interrupted after verifying exact process/worktree; its terminal SNAPSHOT_NOT_READY: CI operation cancelled retained at decapod-snapshot-eDeb4p. Source test failures and measurements remain recorded separately.",
+        "Removed a duplicate child source-path restriction that rejected observed facts discovered in other authorized repository files. Parent governing-source citation remains required. Added positive new-file investigation and negative missing-governing-citation cases; their execution is pending.",
         "Review identified a concrete protocol contradiction: the challenge requested an omitted operation but the subject hash rejected supplying it. Bound established operation/target separately, permit only omission refinement, retain original token and three-round budget. Added adversarial regression tests; no execution result is claimed for these new changes yet.",
         "Review removed inference from absent approval gate; added adversarial unconfigured-operation fixture. No feature tests have run yet.",
         "Session refresh released the original feature assignment through session.release. Reclaimed the same unassigned task and re-admitted its original worktree through workspace ensure before resuming governed writes; no prior full-validation proof existed. Typed orientation now removes only legacy title-keyword hints after the canonical escalation outcome, retaining actual plan/policy gates.",
@@ -2091,6 +2128,7 @@
         "Run complete exact-candidate validation against accepted v0.145.5; no readiness receipt exists yet.",
         "Run complete native validation on the new exact candidate and current accepted target.",
         "Run full exact-candidate Decapod validation; repair reported source failures without substituting GitHub status for configured provider proof.",
+        "Run full exact-candidate proof and retain fixed source until an actual reported failure requires repair.",
         "Run full exact-candidate proof with source fixed; repair only actual reported failures.",
         "Run full exact-candidate validation including the new authority-discovery regression and guarded recovery fixtures.",
         "Run full proof for the final authority-continuity candidate; leave source unchanged unless actual validation reports a repair."
