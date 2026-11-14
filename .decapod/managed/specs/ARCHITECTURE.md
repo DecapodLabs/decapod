@@ -40,7 +40,7 @@ aliases from being counted as progress on case-insensitive workspaces.
 
 ## Registry dependency closure (#1638)
 
-`Cargo.toml` pins Dactyl 0.14.0 while retaining `sqlite` and `neon`, and the
+`Cargo.toml` pins Dactyl 0.16.1 while retaining `sqlite` and `neon`, and the
 existing default `supabase-cloud` feature still forwards `dactyl-db/supabase`.
 Cargo resolves the registry checksum and patched Quinn protocol floor; pinned
 Bazel regenerates its crate-universe metadata from those same committed Cargo
@@ -920,8 +920,8 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `13493688272495c41929214e768ea4473f3b7904d9979f4c24c9fb37489d0a6f`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (234 files), `tests/` (232 files)
+- Repository signal fingerprint: `f4e8df743eb7c2cb5701c3b274f1bd7077902fa546b5bb05a6f76d558417891e`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (234 files), `tests/` (233 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 
@@ -1196,6 +1196,34 @@ The integrated `todo` module exports both accepted authoring/resource custody fu
 
 The db_maintenance module resolves accepted canonical-repository policy and uses existing Dactyl and StorageLock primitives. It does not replace the datastore or migration authority. Retain current-master storage format guards, task custody, provider verification and runtime ownership while integrating this operation boundary.
 
+## Required maintenance execution (#1568)
+
+The existing `db_maintenance` owner still decides backend, canonical policy,
+capability and task/worktree custody before the Dactyl operation. This follow-up
+adds no policy engine. `tests/cli_contracts.rs` includes the standalone maintenance
+module, and `.config/build/decapod.BUILD.bzl` supplies its source to the existing
+required Bazel target. Consequently source-CI selects and executes those actual
+boundaries instead of inferring coverage from unrelated green jobs.
+
+## Published bounded SDK (#1667)
+
+`Cargo.lock` owns the registry 0.16.1 SDK and `MODULE.bazel.lock` derives its
+crate-universe mappings. Nix reads that same Cargo.lock; no separate package hash
+or Nix input update is necessary. SQLite, Neon and default Supabase features
+remain selected by the existing application facade. SDK resource budgets are
+retained: SQL, parameters, decoded rows, wire bodies and deadlines fail closed.
+No new connector policy interpreter, daemon, HTTP/3 or hosted runner is added.
+
+## Diagnostic overrides and full readiness (#1659)
+
+`validation_runtime::require_full_readiness_environment` is the shared admission
+for full claims. The runtime invokes it before prerequisites or selection; CLI
+and RPC full dispatch, workspace publication and current/historical validated
+completion invoke the same owner. The originating local completion process checks
+before broker handoff. `group_broker::CallerContext` carries and clears diagnostic
+flags per request so worker scope cannot come from another caller. Partial
+project-prerequisite and CI-local routes do not gain publication authority.
+
 ## Preserve accepted local verification policy (#1658)
 
 `validation_runtime::load_project` reads the target's committed proof configuration
@@ -1217,16 +1245,17 @@ a claim to infer the semantic or transitive completeness of arbitrary commands.
 Ordinary subject changes still require fresh source-bound execution. Changes to
 inventoried validation definitions require a separately accepted policy revision.
 
-## Core and CLI coverage before partition activation (#1672)
+## Observed workunit acceptance (#1660)
 
-`assets/tools/source_ci_profile.rs` remains the finite source-check authority.
-Its core and CLI selectors now include the test sources executed by their
-existing recipes, shared consumer fixtures and Bazel target declarations. Core
-test changes choose the existing full runtime recipe, and CLI test changes
-choose the existing three-target recipe; no command or mandatory check is
-removed. The accepted target still controls source execution. This change
-repairs a coverage prerequisite; workflow partitioning, compile reuse and a
-measured five-minute job budget remain pending.
+`validation_runtime` remains the complete proof producer and
+`validation_history::finish_archive` owns canonical verification-journal append.
+`workunit::transition_status` consumes that observed record and remeasures current
+inputs rather than treating declared pass rows, file hashes or resumable custody
+as completion proof. The existing workunit journal retains original generations;
+its projection, execution binding and independently checked proof must all be
+current at public consumption. Optional bounded, deduplicated input references
+reuse the canonical record; there is no second receipt store.
+See `docs/architecture/workunit-observed-proof.md` for migration and scope.
 
 ## Legacy TODO bootstrap boundary (#1657)
 

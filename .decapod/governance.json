@@ -669,6 +669,15 @@
       "proof_refs": [
         "https://github.com/DecapodLabs/decapod/pull/1683"
       ]
+    },
+    {
+      "id": "pr1684-integrate-official1453",
+      "summary": "Integrate accepted master ee0c3ffe and regenerate all entrypoints with actual installed 0.145.3 in this source-version merge. Preserve published f7ff0127 history and prior task receipts. Retain failed unpublished tail on archive/pr1684-1452-validation-blocked; no readiness asserted.",
+      "input_digest": "sha256:2af526db31ae6e74c0803587e29fb576dacb714dac6f52c6e11c1982e67a6a6a",
+      "proof_refs": [
+        "git:archive/pr1684-1452-validation-blocked",
+        "git:ee0c3ffe41f0631ec22a54778a2b7d111ef04ca9"
+      ]
     }
   ],
   "intents": {

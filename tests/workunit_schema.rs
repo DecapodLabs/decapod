@@ -37,6 +37,7 @@ fn workunit_canonical_serialization_is_deterministic() {
             },
         ],
         validation_epoch: None,
+        validation_record: None,
         status: WorkUnitStatus::Claimed,
     };
 
@@ -65,6 +66,7 @@ fn workunit_canonicalization_sorts_and_dedups_contract_arrays() {
             validation_epoch: None,
         }],
         validation_epoch: None,
+        validation_record: None,
         status: WorkUnitStatus::Draft,
     };
 
@@ -72,4 +74,16 @@ fn workunit_canonicalization_sorts_and_dedups_contract_arrays() {
     assert_eq!(c.spec_refs, vec!["spec://a", "spec://b"]);
     assert_eq!(c.state_refs, vec!["state://1", "state://2"]);
     assert_eq!(c.proof_plan, vec!["a", "z"]);
+}
+
+#[test]
+fn legacy_manifests_preserve_canonical_bytes_without_producer_provenance() {
+    let legacy = serde_json::json!({
+        "task_id": "legacy", "intent_ref": "intent:old",
+        "spec_refs": [], "state_refs": [], "proof_plan": ["validate_passes"],
+        "proof_results": [], "status": "CLAIMED"
+    });
+    let manifest: WorkUnitManifest = serde_json::from_value(legacy.clone()).unwrap();
+    assert!(manifest.validation_record.is_none());
+    assert_eq!(serde_json::to_value(&manifest).unwrap(), legacy);
 }

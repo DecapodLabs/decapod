@@ -23,8 +23,30 @@ const BROKER_PHASE_HOOK_FILE_ENV: &str = "DECAPOD_GROUP_BROKER_TEST_HOOK_FILE";
 const BROKER_HALT_PHASE_ENV: &str = "DECAPOD_GROUP_BROKER_TEST_HALT_PHASE";
 const BROKER_PROTOCOL_DEFAULT: u32 = 3;
 const REQUEST_BUDGET: Duration = Duration::from_secs(120);
-const MAX_SESSION: Duration = Duration::from_secs(120);
+const MAX_REQUEST_BUDGET: Duration = Duration::from_secs(300);
+const REQUEST_BUDGET_ENV: &str = "DECAPOD_GROUP_BROKER_REQUEST_BUDGET_MS";
 const MAX_REQUEST_BYTES: u64 = 1024 * 1024;
+
+fn invalid_request_budget() -> error::DecapodError {
+    error::DecapodError::ValidationError(
+        "BROKER_REQUEST_BUDGET_INVALID: expected milliseconds from 1 through 300000".into(),
+    )
+}
+
+fn request_budget() -> Result<Duration, error::DecapodError> {
+    match std::env::var(REQUEST_BUDGET_ENV) {
+        Err(std::env::VarError::NotPresent) => Ok(REQUEST_BUDGET),
+        Ok(value) => value
+            .parse::<u64>()
+            .ok()
+            .filter(|milliseconds| {
+                *milliseconds > 0 && *milliseconds <= MAX_REQUEST_BUDGET.as_millis() as u64
+            })
+            .map(Duration::from_millis)
+            .ok_or_else(invalid_request_budget),
+        Err(_) => Err(invalid_request_budget()),
+    }
+}
 
 fn epoch_ms() -> u64 {
     SystemTime::now()
@@ -45,6 +67,10 @@ const CALLER_ENV_KEYS: &[&str] = &[
     "DECAPOD_CAUSATION_ID",
     "DECAPOD_IDEMPOTENCY_KEY",
     "DECAPOD_CLAIM_AUTORUN",
+    // Diagnostic scope belongs to this caller, never a previous broker caller.
+    "DECAPOD_VALIDATE_SKIP_GIT_GATES",
+    "DECAPOD_VALIDATE_SKIP_TOOLING_GATES",
+    "DECAPOD_VALIDATE_SKIP_FINGERPRINT_GATES",
 ];
 
 // Deliberately no Debug implementation: the credential is ephemeral transport,
@@ -187,6 +213,7 @@ fn run_unix_broker(
     crate::core::local_socket::ensure_directory(&socket_path, broker_root)?;
     let lock_path = broker_lock_path(broker_root);
 
+    let budget = request_budget()?;
     let caller = CallerContext::capture()?;
     let request = BrokerRequest {
         protocol_version: client_protocol_version(),
@@ -195,7 +222,7 @@ fn run_unix_broker(
         argv: argv.to_vec(),
         payload_hash: hash_payload(argv, &caller),
         caller,
-        deadline_ms: epoch_ms() + REQUEST_BUDGET.as_millis() as u64,
+        deadline_ms: epoch_ms().saturating_add(budget.as_millis() as u64),
     };
 
     // Retry only a connection that was never established. After sending any
@@ -243,6 +270,11 @@ fn run_as_leader(
         return Err(std::io::Error::last_os_error().into());
     }
     let session_started = Instant::now();
+    // The foreground election honors the originating request's bounded budget.
+    // Queueing and execution still share each request's original deadline.
+    let session_budget =
+        Duration::from_millis(local_request.deadline_ms.saturating_sub(epoch_ms()))
+            .min(MAX_REQUEST_BUDGET);
     listener
         .set_nonblocking(true)
         .map_err(error::DecapodError::IoError)?;
@@ -285,7 +317,7 @@ fn run_as_leader(
     let mut last_activity = Instant::now();
 
     loop {
-        if last_activity.elapsed() >= idle_timeout || session_started.elapsed() >= MAX_SESSION {
+        if last_activity.elapsed() >= idle_timeout || session_started.elapsed() >= session_budget {
             break;
         }
 
@@ -471,6 +503,21 @@ fn execute_request(
         });
     }
 
+    // Native peers cannot extend execution beyond the same public hard ceiling.
+    // An existing durable outcome takes precedence over retry timing. Reject
+    // only new admission here; malformed retries cannot erase known uncertainty.
+    if request.deadline_ms.saturating_sub(epoch_ms()) > MAX_REQUEST_BUDGET.as_millis() as u64 {
+        return Ok(BrokerResponse {
+            protocol_version: server_protocol_version(),
+            status: "NOT_COMMITTED".into(),
+            commit_marker: None,
+            result_envelope: serde_json::json!({
+                "error": "BROKER_REQUEST_BUDGET_INVALID",
+                "request_id": request.request_id,
+            }),
+            retry_after_ms_hint: None,
+        });
+    }
     if epoch_ms() >= request.deadline_ms {
         return Ok(BrokerResponse {
             protocol_version: server_protocol_version(),

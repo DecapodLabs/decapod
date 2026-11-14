@@ -78,7 +78,7 @@ this checkout to that server ID needs a supported upstream attachment contract;
 this client does not invent one or claim that SCM ownership or paid-project
 attachment has been verified. Browser directory registration remains distinct.
 
-The client consumes the exact published `dactyl-db 0.14.0` registry API;
+The client consumes the exact published `dactyl-db 0.16.1` registry API;
 current-candidate fixture execution remains required for the complete composition. Pending
 secrets round-trip through its public Serde contract; authentication status and
 code exchange return strings, and completion confirms the session handoff.
@@ -1154,8 +1154,8 @@ field. Nothing in this operation authorizes a mutation, approval or completion.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `13493688272495c41929214e768ea4473f3b7904d9979f4c24c9fb37489d0a6f`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (234 files), `tests/` (232 files)
+- Repository signal fingerprint: `f4e8df743eb7c2cb5701c3b274f1bd7077902fa546b5bb05a6f76d558417891e`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (234 files), `tests/` (233 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 
@@ -1501,6 +1501,58 @@ Existing `data database` maintenance/capability/lock/audit CLI and RPC operation
 
 Preserve symmetric data.database CLI/RPC capability discovery, diagnostics, bounded maintenance and audit interfaces. Policy admission must happen before startup migrations for maintenance commands; raw SQL, destructive replacement and arbitrary destinations remain outside the delegated contract.
 
+## Maintenance proof scope (#1568)
+
+The supported `data database` / `data db maintain` CLI and `data.database.*` RPC
+contracts are unchanged. Required cases exercise default denial, canonical local
+opt-in, worktree self-elevation rejection, policy revocation, scoped capabilities,
+backup restrictions, unsupported destructive operations and concurrent retry.
+Two deterministic workers exercise actual claims/workspaces and custody; this is
+not a demonstration of two native LLM agent integrations. Existing operator
+recovery fixtures remain diagnostic and do not grant agent recovery authority.
+
+## SDK resource and uncertainty compatibility (#1667)
+
+The shipped 0.15/0.16 API adds `ResourceBudget`, `open_with_budget`, `visit_rows`,
+`has_table`, `has_column`, failure-origin/mutation-outcome classifiers and logical
+connector/session types without replacing the existing open/read/write facade.
+The 0.16.1 patch retains identical Rust library bytes. This dependency adoption
+does not claim that every caller has migrated to the additive interfaces or that
+a remote capability error grants local fallback or replay permission. Existing
+backend owners remain authoritative for those decisions.
+
+### Local SDK value and parameter ceilings
+
+The physical local bridge retains an 8 MiB per-value compatibility ceiling and
+allows 16 MiB per bound parameter set so a ceiling-sized value can coexist with
+its primary key and metadata. These are separate resource limits. SDK v1 charges
+BLOB result bytes at 32 times their raw length, so the local decoded-result
+accounting ceiling is 272 MiB: one 8 MiB component plus 16 MiB of accounted
+headroom. This is an accounting bound, not a buffer allocation or a new logical
+field allowance. Row counts and cloud budgets retain SDK defaults; application
+field admission remains unchanged. The real SQLite regression tests the exact 8 MiB boundary with a
+bound key, lossless re-read, unrelated update and rejection before a write of
+a value exceeding the cell ceiling. A codec decoding guard does not authorize
+larger application records.
+
+The journal regression persists and independently reconstructs a retained
+codec-0 component at the full cell ceiling, checking its exact byte length and
+SHA-256 through the production component owner. It does not rewrite historical
+bytes or establish task completion. New text values above the cell ceiling and
+aggregate parameter sets above their separate budget still fail before mutation.
+
+## Full claims with diagnostic gate overrides (#1659)
+
+`READINESS_GATE_OVERRIDE_UNSUPPORTED` identifies an active Git/tooling skip or a
+truthy fingerprint skip. Remove the override and obtain fresh validation in the
+claimed worktree. Presence-only Git/tooling flags remain active even with empty,
+zero or false strings; the existing fingerprint truth-value parser is preserved.
+Explicit `ci_local` and `project_prerequisites` diagnostics retain their output
+scopes and cannot yield `publication_ready=true`. An audited validation bypass
+also remains non-proof. No new command, adapter policy or verdict taxonomy is
+introduced. Older brokers reject unfamiliar context fields; inspect uncertain
+operation outcomes rather than blindly replaying a write.
+
 ## Accepted repository-local contract changes (#1658)
 
 The existing validation runtime returns the actionable
@@ -1521,17 +1573,55 @@ inputs. Retain the accepted inventory or establish the reviewed revision on the
 target before revalidation. Additive commands under that inventory and first
 local adoption remain supported; no override or second policy store is added.
 
-## Required source-CI selection inputs (#1672)
+## Group broker workload budget
 
-The existing `selected`, `commands` and `inventory` interfaces in
-`assets/tools/source_ci_profile.rs` retain the same finite check IDs and direct
-argument recipes. Test files and shared fixtures are material selection inputs,
-including `tests/consumer_readiness.rs`, `tests/sqlite_maintenance.rs`,
-`tests/common/*`, the owning runtime tests and Bazel declarations. An unrelated
-document does not select these lanes, and genuine release-only changes preserve
-the accepted release dispositions. The existing source-profile regression suite
-checks selection, complete recipe equivalence and required inventory together.
-No new shard protocol, provider authority or performance judgment is declared.
+`src/decapod/core/group_broker.rs` accepts the optional
+`DECAPOD_GROUP_BROKER_REQUEST_BUDGET_MS` workload input on the Unix broker path.
+The default is 120000 milliseconds; valid explicit values are 1 through 300000.
+Malformed, zero and oversized client values fail before mutation admission.
+Native peers also face the hard maximum before a new dedupe receipt can be created.
+A matching durable outcome is resolved first: expired or overlong retry deadlines
+cannot replace an existing UNKNOWN or committed result with NOT_COMMITTED. The
+real execution-boundary regression checks both outcomes and both retry timings,
+including the unchanged stored result and commit marker. No new operation runs
+when the same-ID outcome is already recorded.
+The foreground acceptance window follows the originating request budget, and
+existing per-command limits and UNKNOWN/replay handling remain in force.
+
+`tests/group_broker.rs` declares its existing 300-second twenty-client workload
+at both the outer process boundary and broker request boundary, retains the
+all-twenty exact-once assertions, and exercises invalid inputs through the actual
+CLI with no task or receipt mutation. The native oversized-deadline regression
+traverses the real execution boundary. Fresh hosted verification is required;
+these declarations are not a successful validation observation.
+
+## Canonical workunit validation contract (#1660)
+
+Existing workunit CLI operations remain the request surface. `record-proof`
+records a declaration; requesting VERIFIED requires a current canonical full
+observation for exactly one supported `validate_passes`/`validated_commit`
+obligation. The kernel derives the result, epoch and optional validation-record
+selector. Caller-supplied selectors cannot import producer success. File artifact
+paths retain byte-integrity semantics. Historical JSON omits the optional field;
+Rust manifest literals add `validation_record: None`, and verification consumers
+pass repository context to `validate_verified_manifest(root, manifest)`.
+Publication and human merge authorization remain independent operations.
+
+## Scoped container-runtime recovery during prerequisites
+
+`src/decapod/plugins/container.rs::heal_container_runtime_override` first uses
+the existing disabled-runtime marker predicate. A missing or unrelated override
+returns unchanged without probing or starting a container engine. An existing
+disabled-runtime override retains the existing availability probe and scoped
+recovery behavior. Required validation checks and publication proof requirements
+remain independent of this optional preparation step.
+
+The isolated subprocess regression in `tests/unit/plugins/container_tests.rs`
+observes runtime invocations for missing, unrelated and disabled override cases,
+and checks preservation of unrelated content. It does not claim live container
+isolation or publication readiness. The actual CLI runtime probe retains its
+10-second per-call and 20-second aggregate requirements; fresh hosted execution
+must establish the resulting candidate's behavior and timing.
 
 ## Legacy input recovery scope (#1657)
 

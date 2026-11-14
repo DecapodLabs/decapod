@@ -1,5 +1,93 @@
 // Moved from src/decapod/core/group_broker.rs
 #[test]
+fn broker_diagnostic_scope_is_request_local() {
+    use crate::core::bounded_process::BoundedCommand;
+    const PROBE: &str = "DECAPOD_TEST_BROKER_DIAGNOSTIC_SCOPE";
+    let names = [
+        "DECAPOD_VALIDATE_SKIP_GIT_GATES",
+        "DECAPOD_VALIDATE_SKIP_TOOLING_GATES",
+        "DECAPOD_VALIDATE_SKIP_FINGERPRINT_GATES",
+    ];
+    let mode = std::env::var(PROBE).unwrap_or_default();
+    if mode == "observe_scope" {
+        assert_eq!(std::env::var(names[0]).unwrap(), "0");
+        assert!(std::env::var_os(names[1]).is_none());
+        assert_eq!(std::env::var(names[2]).unwrap(), "false");
+        let error =
+            crate::core::validation_runtime::require_full_readiness_environment().unwrap_err();
+        assert!(
+            error
+                .to_string()
+                .contains("READINESS_GATE_OVERRIDE_UNSUPPORTED")
+        );
+        return;
+    }
+    if mode == "observe_clear" {
+        for name in names {
+            assert!(std::env::var_os(name).is_none(), "{name}");
+        }
+        crate::core::validation_runtime::require_full_readiness_environment().unwrap();
+        return;
+    }
+    let case = format!(
+        "{}::broker_diagnostic_scope_is_request_local",
+        module_path!().split_once("::").unwrap().1
+    );
+    let command = |mode| {
+        let mut command = std::process::Command::new(std::env::current_exe().unwrap());
+        command
+            .args(["--exact", &case, "--nocapture"])
+            .env(PROBE, mode);
+        command
+    };
+    if mode == "capture_scope" || mode == "capture_clear" {
+        let caller = super::CallerContext::capture().unwrap();
+        let mut child = command(if mode == "capture_scope" {
+            "observe_scope"
+        } else {
+            "observe_clear"
+        });
+        for name in names {
+            child.env(name, "previous-worker-scope");
+        }
+        caller.apply(&mut child);
+        let output = child
+            .bounded_output(std::time::Duration::from_secs(30))
+            .unwrap();
+        assert!(
+            output.status.success(),
+            "{} {}",
+            String::from_utf8_lossy(&output.stdout),
+            String::from_utf8_lossy(&output.stderr)
+        );
+        assert!(String::from_utf8_lossy(&output.stdout).contains("1 passed"));
+        return;
+    }
+    for mode in ["capture_scope", "capture_clear"] {
+        let mut child = command(mode);
+        for name in names {
+            child.env_remove(name);
+        }
+        child
+            .env("DECAPOD_AGENT_ID", "broker-scope-agent")
+            .env_remove("DECAPOD_SESSION_PASSWORD");
+        if mode == "capture_scope" {
+            child.env(names[0], "0").env(names[2], "false");
+        }
+        let output = child
+            .bounded_output(std::time::Duration::from_secs(60))
+            .unwrap();
+        assert!(
+            output.status.success(),
+            "{} {}",
+            String::from_utf8_lossy(&output.stdout),
+            String::from_utf8_lossy(&output.stderr)
+        );
+        assert!(String::from_utf8_lossy(&output.stdout).contains("1 passed"));
+    }
+}
+
+#[test]
 fn stale_pid_marker_does_not_block_or_signal_unrelated_process() {
     let temp = tempfile::tempdir().unwrap();
     let path = temp.path().join("broker.lock");
@@ -205,7 +293,7 @@ fn caller_context_cannot_forward_arbitrary_environment_or_broker_controls() {
     for key in [
         "PATH",
         "DECAPOD_GROUP_BROKER_INTERNAL",
-        "DECAPOD_VALIDATE_SKIP_GIT_GATES",
+        "DECAPOD_VALIDATE_UNKNOWN_BYPASS",
     ] {
         caller.environment.insert(key.into(), "1".into());
         assert!(caller.validate().is_err(), "accepted unscoped key {key}");
@@ -358,4 +446,65 @@ fn trickling_reply_cannot_extend_the_absolute_deadline() {
     assert!(start.elapsed() < std::time::Duration::from_millis(500));
     drop(server);
     writer.join().unwrap();
+}
+
+#[test]
+fn oversized_native_deadline_is_rejected_before_durable_admission() {
+    let dir = tempfile::tempdir().unwrap();
+    let caller = caller_context("caller-a");
+    let argv = vec!["must-never-spawn".into()];
+    let request = super::BrokerRequest {
+        protocol_version: super::BROKER_PROTOCOL_DEFAULT,
+        request_id: "oversized-deadline".into(),
+        payload_hash: super::hash_payload(&argv, &caller),
+        argv,
+        caller,
+        deadline_ms: u64::MAX,
+    };
+    let result = super::execute_request(dir.path(), &request, false).unwrap();
+    assert_eq!(result.status, "NOT_COMMITTED");
+    assert_eq!(
+        result.result_envelope["error"],
+        "BROKER_REQUEST_BUDGET_INVALID"
+    );
+    assert!(result.commit_marker.is_none());
+    assert!(!super::dedupe_db_path(dir.path()).exists());
+}
+
+#[test]
+fn retry_deadline_cannot_replace_a_durable_outcome() {
+    for status in ["UNKNOWN", "COMMITTED"] {
+        let dir = tempfile::tempdir().unwrap();
+        let caller = caller_context("caller-a");
+        let argv = vec!["must-never-spawn".into()];
+        let mut request = super::BrokerRequest {
+            protocol_version: super::BROKER_PROTOCOL_DEFAULT,
+            request_id: "retained-outcome".into(),
+            payload_hash: super::hash_payload(&argv, &caller),
+            argv,
+            caller,
+            deadline_ms: super::epoch_ms() + 1000,
+        };
+        let recorded = super::BrokerResponse {
+            protocol_version: super::BROKER_PROTOCOL_DEFAULT,
+            status: status.into(),
+            commit_marker: (status == "COMMITTED").then(|| "original-commit".into()),
+            result_envelope: serde_json::json!({"original_outcome": status}),
+            retry_after_ms_hint: None,
+        };
+        super::dedupe_store(dir.path(), &request, &recorded).unwrap();
+        // Both an expired retry and an overlong native deadline must retrieve
+        // the original durable outcome without executing another mutation.
+        for deadline in [0, u64::MAX] {
+            request.deadline_ms = deadline;
+            let result = super::execute_request(dir.path(), &request, false).unwrap();
+            assert_eq!(result.status, recorded.status);
+            assert_eq!(result.commit_marker, recorded.commit_marker);
+            assert_eq!(result.result_envelope, recorded.result_envelope);
+            let retained = super::dedupe_lookup(dir.path(), &request).unwrap().unwrap();
+            assert_eq!(retained.status, recorded.status);
+            assert_eq!(retained.commit_marker, recorded.commit_marker);
+            assert_eq!(retained.result_envelope, recorded.result_envelope);
+        }
+    }
 }
