@@ -1302,3 +1302,15 @@ protected-master push. Nix checks the locked toolchain, builds and smoke-checks
 both supported native systems, with an additional Linux reproducibility check.
 Only the separate authenticated publisher can write Cachix after those jobs
 succeed. No new runtime, service, policy interpreter or release authority exists.
+
+The finite adapter in `core/readiness_profile.rs::reviewed_workflow_digests`
+explicitly pins the reviewed Nix workflow bytes. The squash-gate change updates
+that single compiled pin after reviewing triggers, jobs, matrices, actions and
+source predicates; no required job or provider is removed. A declaration digest
+cannot override the compiled contract. An older installed controller that does
+not support these bytes cannot gain authority merely from candidate repinning;
+independently accepted controller support is still required for full native
+readiness. Existing accepted-executor tamper tests remain unchanged. The initial
+hosted consumer run rejected eleven fixture setups at the old Nix pin, rather
+than establishing the later admission assertions; fresh execution must verify
+the reconciled candidate.

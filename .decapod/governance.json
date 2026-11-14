@@ -643,6 +643,14 @@
       "proof_refs": [
         "https://github.com/DecapodLabs/decapod/issues/1626"
       ]
+    },
+    {
+      "id": "issue1626-release-file-12",
+      "summary": "docs(proof): retain the independently accepted controller boundary for Nix edits; implementation checkpoint, hosted verification pending.",
+      "input_digest": "sha256:24896860de68be7773fcf3fc905987b21461f6806bb357b345a27582b80de19f",
+      "proof_refs": [
+        "https://github.com/DecapodLabs/decapod/issues/1626"
+      ]
     }
   ],
   "intents": {
@@ -716,7 +724,7 @@
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:5c167403b544ff20d2d4707db27d3a70975930bcec7d5023345abc711036f9f4",
+      "artifact_hash": "sha256:f2f2807267967078cccb239992c98511d7a4b80b89bd1588df807238fdd1995c",
       "checks": [
         {
           "name": "hosted-candidate",
@@ -821,10 +829,17 @@
             "intent_id": "intent:change_01M7E32W7EEDSJFJ6J3WPTZZBP",
             "kind": "trajectory_step_recorded",
             "sequence": 15
+          },
+          {
+            "detail": "trajectory:branch_01M7E32WAD102GEWSSGTDX5P73",
+            "event_id": "event:16",
+            "intent_id": "intent:change_01M7E32W7EEDSJFJ6J3WPTZZBP",
+            "kind": "trajectory_step_recorded",
+            "sequence": 16
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 15,
+        "next_sequence": 16,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M7E32WAD102GEWSSGTDX5P73": {
@@ -1021,6 +1036,22 @@
                   "root"
                 ],
                 "sequence": 15,
+                "validation_findings": [
+                  "Implementation in progress; exact-candidate hosted checks pending; no local tests or Buildkite execution."
+                ]
+              },
+              {
+                "action": "implementation",
+                "custody_event_id": "event:16",
+                "observations": [
+                  ".decapod/managed/specs/ARCHITECTURE.md",
+                  "https://github.com/DecapodLabs/decapod/issues/1626"
+                ],
+                "proof_refs": [],
+                "scope": [
+                  "root"
+                ],
+                "sequence": 16,
                 "validation_findings": [
                   "Implementation in progress; exact-candidate hosted checks pending; no local tests or Buildkite execution."
                 ]
