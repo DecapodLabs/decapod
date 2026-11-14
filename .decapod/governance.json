@@ -751,6 +751,14 @@
       "proof_refs": [
         "docs/architecture/bounded-reflection.md"
       ]
+    },
+    {
+      "id": "convergence-accepted1454",
+      "summary": "Integrate accepted PR1684 and release0.145.4 from master5002f1db; preserve authored convergence and coverage specs plus own cumulative journal; regenerate source-version entrypoints with actual installed0.145.4. No full readiness asserted.",
+      "input_digest": "sha256:43b77f4dbbc54481d4b4b08400028afec380e9ec603742cee1006e448374c1c2",
+      "proof_refs": [
+        "git:5002f1db286f4d41c92ce4d4b4a58468bf55aa3b"
+      ]
     }
   ],
   "intents": {

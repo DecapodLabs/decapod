@@ -434,7 +434,7 @@ dependencies = [
 
 [[package]]
 name = "decapod"
-version = "0.145.3"
+version = "0.145.4"
 dependencies = [
  "anyhow",
  "async-trait",

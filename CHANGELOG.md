@@ -7,6 +7,42 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.145.4](https://github.com/DecapodLabs/decapod/compare/v0.145.3...v0.145.4) - 2026-11-14
+
+### Fixed
+
+- *(governance)* retain reviewed config.toml on v0.145.3
+- *(governance)* record the unchanged security review honestly
+- *(governance)* regenerate actual 0.144.5 entrypoint templates
+- *(governance)* regenerate actual 0.144.4 entrypoint templates
+- *(ci)* retain core and CLI coverage for test-only changes
+
+### Other
+
+- *(governance)* bind official v0.145.3 delivery reviews
+- *(specs)* refresh VALIDATION.md with v0.145.3
+- *(specs)* refresh SEMANTICS.md with v0.145.3
+- *(specs)* refresh SECURITY.md with v0.145.3
+- *(specs)* refresh README.md with v0.145.3
+- *(specs)* refresh OPERATIONS.md with v0.145.3
+- *(specs)* refresh .manifest.json with v0.145.3
+- *(specs)* retain reviewed INTERFACES.md on v0.145.3
+- *(specs)* retain reviewed ARCHITECTURE.md on v0.145.3
+- *(specs)* retain reviewed coverage intent on v0.145.3
+- integrate v0.145.3 with canonical release entrypoints
+- integrate current accepted master for issue1672
+- *(validation)* delimit steady-state runtime measurement
+- *(runtime)* measure repeated validation with established custody
+- integrate current accepted master for issue1672
+- integrate current accepted master for issue1672
+- *(ci)* format dependency-aware selection helpers
+- *(governance)* record reviewed selector source inventory
+- *(specs)* describe dependency-aware required CI lane selection
+- *(specs)* bind CI test dependencies before shard rollout
+- *(ci)* prove test-only changes keep required recipes selected
+- integrate accepted policy hardening for issue1672
+- *(specs)* preserve core and CLI coverage before CI partition rollout
+
 ## [0.145.3](https://github.com/DecapodLabs/decapod/compare/v0.145.2...v0.145.3) - 2026-11-14
 
 ### Fixed
