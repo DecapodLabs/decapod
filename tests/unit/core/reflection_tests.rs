@@ -821,6 +821,38 @@ fn explicit_business_dependency_allows_human_question_but_assertion_alone_does_n
 }
 
 #[test]
+fn human_question_admission_rejects_truncated_prefix_collisions() {
+    let (temp, mut request) = escalation_fixture(escalation::Uncertainty::IrreducibleAmbiguity);
+    let prefix = "x".repeat(512);
+    let canonical = format!("{prefix} Which contractual retention requirement applies?");
+    plan_governance::patch_plan(
+        temp.path(),
+        PlanPatch {
+            human_questions: Some(vec![canonical.clone()]),
+            ..Default::default()
+        },
+    )
+    .unwrap();
+    request.escalation.as_mut().unwrap().question =
+        format!("{prefix} Please decide an unrelated engineering convention.");
+    let rejected = submit(temp.path(), &request).unwrap();
+    assert_eq!(rejected.disposition, Disposition::HumanDecision);
+    assert!(
+        !rejected
+            .escalation
+            .as_ref()
+            .unwrap()
+            .human_escalation_permitted
+    );
+    let mut targeted = next(&request, &rejected, "complete-canonical-question");
+    targeted.escalation.as_mut().unwrap().question = canonical;
+    let admitted = submit(temp.path(), &targeted).unwrap();
+    assert!(admitted.escalation.unwrap().human_escalation_permitted);
+    assert_eq!(admitted.progress, Some(Progress::HumanDependency));
+    assert!(admitted.execution_blocked && !admitted.completion_proven);
+}
+
+#[test]
 fn observed_authority_gate_preempts_reasoning_and_source_quotes_cannot_supply_approval() {
     let (temp, mut request) = escalation_fixture(escalation::Uncertainty::MissingAuthority);
     let mut config = crate::cli::DecapodProjectConfig::default();

@@ -1679,6 +1679,14 @@
       "proof_refs": [
         "src/decapod/core/mentor/reflection/escalation.rs"
       ]
+    },
+    {
+      "id": "convergence-question-collision-test",
+      "summary": "Reject a forged long question sharing the display prefix while admitting the complete canonical dependency",
+      "input_digest": "sha256:7c08f9c0686c844ddee8f2f8b1e286de5fa56ba498d022352356e1ca11a58fe5",
+      "proof_refs": [
+        "tests/unit/core/reflection_tests.rs"
+      ]
     }
   ],
   "intents": {
