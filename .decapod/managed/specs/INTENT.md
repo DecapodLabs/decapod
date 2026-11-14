@@ -352,7 +352,7 @@ These declarations select authoring and proof obligations; they do not attest im
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `711cacd4dbbdd67d9d03528b2ddb864567aadd4a9a641d332929dd75e685b7ad`
+- Repository signal fingerprint: `d7a7f9d438fe7858ef2de639ad631508f21ab6eb915532b7204ae3b8de1aaee4`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (234 files), `tests/` (232 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
@@ -568,6 +568,18 @@ provider authority. Native SQLite absence must fail these required cases.
 Cloud policy/delegation remains separately enforced by Propodus; local opt-in
 and forged principal environment never establish authenticated cloud authority.
 Hosted execution and exact-candidate readiness remain pending.
+
+## Mixed-store recovery (#1657)
+
+Provide explicit, versioned and idempotent recovery for a nonempty legacy TODO
+store beside valid canonical task-journal state. Reuse datastore lifecycle,
+maintenance authority and journal verification. Preserve original files, task
+identities, chronology, custody/proof bindings and unknown outcomes. Diagnose
+equivalence, divergence and corruption independently; do not implicitly merge
+contradictory state, delete legacy input, reconstruct missing proof, or replay an
+unknown mutation. Ordinary operation resumes only after an inspectable safe
+recovery result. The empty-stub path is a bounded first repair; general nonempty reconciliation
+remains unimplemented. Hosted regressions must exercise real store and recovery boundaries.
 
 ## Storage convergence follow-through (#1630)
 

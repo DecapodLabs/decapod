@@ -1154,7 +1154,7 @@ field. Nothing in this operation authorizes a mutation, approval or completion.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `711cacd4dbbdd67d9d03528b2ddb864567aadd4a9a641d332929dd75e685b7ad`
+- Repository signal fingerprint: `d7a7f9d438fe7858ef2de639ad631508f21ab6eb915532b7204ae3b8de1aaee4`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (234 files), `tests/` (232 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
@@ -1530,3 +1530,12 @@ changed inventoried check scripts, build/dependency definitions or provider
 inputs. Retain the accepted inventory or establish the reviewed revision on the
 target before revalidation. Additive commands under that inventory and first
 local adoption remain supported; no override or second policy store is added.
+
+## Legacy input recovery scope (#1657)
+
+Normal supported startup/workspace/task interfaces reuse the existing migration
+owner's inert-placeholder handling. There is no new slash command or agent
+prompt requirement. TASK_JOURNAL_MIGRATION_REQUIRED continues to block non-inert
+TODO inputs beside canonical journal state; an explicit versioned nonempty
+recovery command and compatible authority contract remain required. See
+`docs/architecture/legacy-todo-recovery.md`.
