@@ -678,6 +678,14 @@
         "git:archive/pr1684-1452-validation-blocked",
         "git:ee0c3ffe41f0631ec22a54778a2b7d111ef04ca9"
       ]
+    },
+    {
+      "id": "pr1684-v1453-material-0",
+      "summary": "Reauthor reviewed .decapod/config.toml after canonical 0.145.3 merge; prior failed tail remains archived",
+      "input_digest": "sha256:9c2dfa8575c36eb226d50de2de5bad20167c41582feb0255c9631e036a110f93",
+      "proof_refs": [
+        "git:archive/pr1684-1452-validation-blocked"
+      ]
     }
   ],
   "intents": {
