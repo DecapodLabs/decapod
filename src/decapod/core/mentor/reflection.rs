@@ -567,26 +567,6 @@ pub fn submit(root: &Path, request: &Request) -> Result<Outcome, DecapodError> {
             .and_then(|p| p.authority.as_ref());
         let context_digest = context_with_adrs(root, &plan, &evidence, &adrs, authority)?;
         let mut pending = challenges(root, &plan, request, &adrs)?;
-        let database = todo::todo_db_path(&find_governance_root(root).join(".decapod/data"));
-        let conn = crate::core::db::db_connect_for_validate(
-            database.to_str().ok_or_else(|| invalid("STORE_PATH"))?,
-        )?;
-        let title: String = conn.query_row(
-            "SELECT title FROM tasks WHERE id=?1",
-            [&request.task_id],
-            |row| row.get(0),
-        )?;
-        drop(conn);
-        // A keyword is an inference cue, not observed missing authority. The
-        // typed protocol binds canonical intent and preserves real plan/policy
-        // human gates above; legacy reflection keeps its established shape.
-        if request.escalation.is_none()
-            && crate::core::rpc::architectural_alignment_required(&title)
-        {
-            pending.insert(0, challenge("human_orientation_alignment",
-                "Which architectural direction has the human accepted for this task? Preserve the existing orientation decision gate.".into(),
-                SourceRef { ref_path: PLAN_REF.into(), hash: digest(&plan_contract(&plan)?)? }, true)?);
-        }
         let escalation = escalation::assess(root, &plan, request, &evidence, &mut pending)?;
         let pending_ids: Vec<String> = pending.iter().map(|c| c.id.clone()).collect();
         if pending_ids.len() > 64 {

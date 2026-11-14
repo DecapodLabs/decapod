@@ -687,6 +687,14 @@
       "proof_refs": [
         "src/decapod/core/mentor/reflection/escalation.rs"
       ]
+    },
+    {
+      "id": "convergence-reviewed-1",
+      "summary": "Refine src/decapod/core/mentor/reflection.rs after review: preserve actual authority, separate inference cues, observe fixtures and document proof limits",
+      "input_digest": "sha256:357a97258767cb78ff74030a13d517cf769a0ef416391ed4b6b7e03d62583493",
+      "proof_refs": [
+        "src/decapod/core/mentor/reflection.rs"
+      ]
     }
   ],
   "intents": {
