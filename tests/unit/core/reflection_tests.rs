@@ -890,7 +890,7 @@ fn absent_policy_requirement_cannot_be_inferred_as_missing_authority() {
     let assessment = outcome.escalation.unwrap();
     assert_eq!(
         assessment.reason_code,
-        escalation::ReasonCode::ObservedSourcePredicate
+        escalation::ReasonCode::AuthorityNotEstablished
     );
     assert!(!assessment.human_escalation_permitted);
     assert!(!outcome.completion_proven);

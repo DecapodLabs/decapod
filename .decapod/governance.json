@@ -911,6 +911,14 @@
       "proof_refs": [
         "src/decapod/core/mentor/reflection/escalation.rs"
       ]
+    },
+    {
+      "id": "convergence-authority-reason-test",
+      "summary": "Assert the unresolved authority reason on unconfigured-operation proposals",
+      "input_digest": "sha256:ebd4fe00defea0814a49957d34fe424ec216df55cdbca737927b0e7001a5833a",
+      "proof_refs": [
+        "tests/unit/core/reflection_tests.rs"
+      ]
     }
   ],
   "intents": {
