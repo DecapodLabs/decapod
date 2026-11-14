@@ -25,8 +25,9 @@ pub struct DecapodProjectConfig {
 
 ## RBAC exceptions and Laya
 
-`[governance.rbac]` declares `actor_roles`, `journal_repair_roles`
-and `validation_bypass_roles`, all empty/denied by default. The main
+`[governance.rbac]` declares `actor_roles`, `journal_repair_roles`,
+`legacy_todo_reconcile_roles` and `validation_bypass_roles`, all empty/denied by
+default. The main
 repository config is the sole source for a bounded policy read. Journal
 repair requires an explicitly granted role and records the policy fingerprint
 with the reviewed repairs. `validate --bypass-validation --bypass-reason`
@@ -274,3 +275,14 @@ Explicit opt-in uses `mode = "required"` and the reviewed `model_manifest_digest
 printed by `decapod setup laya`. Init can select that reviewed digest without
 installing or executing a model. Omitted options preserve current Laya policy,
 backend preference, CPU fallback and local binding settings. Dry-run is read-only.
+
+## Explicit legacy TODO retirement permission
+
+`governance.rbac.legacy_todo_reconcile_roles = ["maintainer"]` grants only
+`todo.legacy.reconcile` to actors holding that role in the canonical main
+repository's `actor_roles`. It defaults to empty and is separate from journal
+repair, maintenance and validation bypass. Worktree-only edits cannot grant it.
+The versioned physical recovery command supports empty input/exact canonical
+copies only, requires an active local session for apply, and never establishes
+task completion or publication readiness. Actor labels and policy files remain
+in the local host's trust domain; protect them independently when needed.
