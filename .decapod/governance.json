@@ -763,6 +763,14 @@
       "proof_refs": [
         "https://github.com/DecapodLabs/decapod/issues/1657"
       ]
+    },
+    {
+      "id": "issue1657-reviewed-v1-generator-fix",
+      "summary": "Conservative versioned physical retirement candidate; source-grounded specs and projections refreshed. Hosted verification pending; full native publication unproven.",
+      "input_digest": "sha256:e163cd329b13d3050ba6c98a55f9d0c8d24c07b5266f2cb09df3800662ba6e79",
+      "proof_refs": [
+        "https://github.com/DecapodLabs/decapod/issues/1657"
+      ]
     }
   ],
   "intents": {
@@ -799,6 +807,29 @@
         "decapod validate"
       ],
       "schema_version": "1.1.0",
+      "spec_reviews": [
+        {
+          "disposition": "updated",
+          "path": ".decapod/managed/specs/ARCHITECTURE.md",
+          "reason": "Reviewed actual legacy_todo_recovery, typed bootstrap dispatch, canonical explicit permission and real CLI regressions. Physical retirement only; historical-row migration and independent same-UID security remain unresolved; hosted proof pending.",
+          "reviewed_code_fingerprint": "d62e03a1249b75ddd01f080a201d32aa316dd48bc33fd80b59ba9b55b4249bc0",
+          "spec_material_hash": "2134e2aa3586618b0562190343f7ec79bc90f1f7187904be3ac9346dcefd320c"
+        },
+        {
+          "disposition": "updated",
+          "path": ".decapod/managed/specs/INTERFACES.md",
+          "reason": "Reviewed actual legacy_todo_recovery, typed bootstrap dispatch, canonical explicit permission and real CLI regressions. Physical retirement only; historical-row migration and independent same-UID security remain unresolved; hosted proof pending.",
+          "reviewed_code_fingerprint": "d62e03a1249b75ddd01f080a201d32aa316dd48bc33fd80b59ba9b55b4249bc0",
+          "spec_material_hash": "64f6676fe47299663bcd4aec88430d7feb1ceb8859e25e05dd8fe7f299e1ea9e"
+        },
+        {
+          "disposition": "updated",
+          "path": ".decapod/managed/specs/SECURITY.md",
+          "reason": "Reviewed actual legacy_todo_recovery, typed bootstrap dispatch, canonical explicit permission and real CLI regressions. Physical retirement only; historical-row migration and independent same-UID security remain unresolved; hosted proof pending.",
+          "reviewed_code_fingerprint": "d62e03a1249b75ddd01f080a201d32aa316dd48bc33fd80b59ba9b55b4249bc0",
+          "spec_material_hash": "2d54b671d4b31bd9b29143de319a4cebeeff4379d3e7b3d165062fd7718206a2"
+        }
+      ],
       "state": "DRAFT",
       "stop_conditions": [],
       "title": "code: resolve #1657 Add explicit recovery for legacy TODO stores beside journaled canonical state",
@@ -807,20 +838,20 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1794695684Z"
+      "updated_at": "1794695799Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:c1c6727c8af8bb047d05067a53a1a01cf1c8622686f47637251dfdc1c50f39f3",
+      "artifact_hash": "sha256:afb5e33c8962d2241c0864cc09ec63668936b87d34dc08b14fc51f44a35d8e67",
       "checks": [
         {
           "name": "github-prior-compilation",
           "status": "failed"
         }
       ],
-      "current_phase": "implementation",
+      "current_phase": "validation",
       "custody": {
         "events": [
           {
@@ -1023,10 +1054,17 @@
             "intent_id": "intent:change_01M7DXW29MW090TM7TAHZF5JJK",
             "kind": "trajectory_step_recorded",
             "sequence": 30
+          },
+          {
+            "detail": "trajectory:branch_01M7DXW2DCAD18R4V58TWM41F2",
+            "event_id": "event:31",
+            "intent_id": "intent:change_01M7DXW29MW090TM7TAHZF5JJK",
+            "kind": "trajectory_step_recorded",
+            "sequence": 31
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 30,
+        "next_sequence": 31,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M7DXW2DCAD18R4V58TWM41F2": {
@@ -1465,6 +1503,23 @@
                 "sequence": 30,
                 "validation_findings": [
                   "Implementation in progress; exact-candidate hosted checks pending; no local tests or Buildkite execution."
+                ]
+              },
+              {
+                "action": "validation",
+                "custody_event_id": "event:31",
+                "observations": [
+                  "https://github.com/DecapodLabs/decapod/actions/runs/43647667684"
+                ],
+                "proof_refs": [
+                  "github-prior-compilation"
+                ],
+                "scope": [
+                  "issue-1657"
+                ],
+                "sequence": 31,
+                "validation_findings": [
+                  "Prior hosted compilation rejected private test API references; repaired in source. Fresh exact-candidate GitHub proof pending. No local tests or Buildkite execution; full native publication remains unproven."
                 ]
               }
             ]
