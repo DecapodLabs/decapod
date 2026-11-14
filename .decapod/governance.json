@@ -1,7 +1,7 @@
 {
   "schema_version": "1.0.0",
   "baseline": {
-    "accepted_commit": "6f1d2a39ad0b5b2f7e70fe12f75f0d8b360d9453",
+    "accepted_commit": "422e0b56879abc1439032528a6d3e4514932e807",
     "policy": {
       "change_control": {
         "requires_human_review": true,
@@ -521,12 +521,14 @@
       "trajectory:d9ace8c29a759626": "All six frozen v2 holdout shards completed: each backend executed102 cases with36 unsupported lengths,52 abstentions,29 acceptances and23 false-ready proxy outcomes. Preserve this failure and original corpus/criteria. Actual source1459 tests, native43 tests and138/314/4096-token fixed numerical comparisons passed. Public review corpus remains prospective and unverified; no fitting or heldout inference has used it. Inspection confirmed projection includes plan.intent only, omitting proof_hooks/deferred questions/stop conditions and phase gates. Add bounded obligation facts without whole-plan metadata, model changes, relaxed gates or fabricated rationale. Final source/material/governance identity checks remain authoritative.",
       "trajectory:da69bbaf7f07e535": "Legacy event history is incomplete and cannot prove full reconstruction; establish explicit current-state migration baseline without synthesizing historical custody.",
       "trajectory:e0f0a51392feb190": "Actual benchmark model evaluation has not executed. A last-stage bounded evaluation must report partial/error/abstention separately and keep final acceptance unsatisfied when risk or label authority is inadequate.",
+      "trajectory:e25fd9dbe106dcd4": "Current hosted CI and production datastore compatibility remain unproven.",
       "trajectory:e59eda56341d71a3": "New tests/MetalCPUproductiondiagnostics authored and require prescribed validate; no new pass claims. User rejects inactive stage; fitting source only inspected, no Python executed. Current official upstream has old base+two generic adapters and incompatible universal port/stats engine, none demonstrated readiness-qualified. Reviewed24source candidates still zero admissible complete final units. Preserve old study/failures and every required original criterion. Final admission stays missing rather than repeating exposed final data. No branch/custody/controller changes.",
       "trajectory:e6b0bb96ddfbd405": "Preserve040d sourceCI lock failure and separate officialvalidator publicGithubCommitChecks403/reset1792449991. Actual anonymous publicBuildkite setup log confirms MODULE.bazel.lock stale because Cargo.toml packagingexclusion changed; prescribed repair is bazel mod deps --lockfile_mode=update. Installed officialHomebrewBazelisk1.29 afterreading officialformula/installerdocs, restored Homebrew developer modeoff. Run batch metadata regeneration only underrepositorypinnedBazel9.3, notmanualbuild/test orshadowpreflight; preserve dependencies, scientificgates and failedholdout. No native execution on040d is claimed. Newfullvalidation mustwaitreportedpublicAPIreset and bindcorrectedexactcandidate.",
       "trajectory:e75f5b9f6163b9ce": "the maintainers create the decapod Cachix cache and the CACHIX_AUTH_TOKEN secret; until then the publish step is skipped",
       "trajectory:e765d893d1533fc1": "Standalone integration targets are not automatically scheduled by the finite accepted CI recipe; include the three consumer regression modules in required cli_contracts.",
       "trajectory:e8f66e34f627d476": "Direct Git transport unavailable in this container; exact remote source check pending",
       "trajectory:e99e15278c8de6ad": "User explicitly authorizes functional acceptance replacingresearchqualification, not fabricatedsuccess/accuracy. Fixedcasebytes97b4667e frozen before firstmodelrun, nofitting/threshold/model/calibration/tolerancechange. Actualcontractchecksrun beforeobservationconstruction; three meaningful positives, negative/uncertain/manipulated/declared-proof and failed/stale controls. Sharedproduction code andstrictfinalreducer rederiveoutcomes; oldstudiesfailures preserved. Issue1445andbroader1052/1069/1070/1398/1024updated; closeonlyfullyresolved1445. Sourceconfigreview0e9afdd8 unchanged8runargs; no newprereq/task/branch. Preserve originaltask/branch andfullfinalvalidationgates.",
+      "trajectory:eb8e7d89645f7cab": "Historical source tests and benchmarks do not prove the new accepted-target integration.",
       "trajectory:ec49216a39e5bf93": "The config decision is cooperative; its author and agent labels are not authenticated.",
       "trajectory:ecfec9650d4ed288": "Independent standalone validation exposed four stale generated release-bound entrypoints; supported init refresh changed headers only, required graph preserved.",
       "trajectory:f000bb05667cb46e": "No actual four-target release artifact build is scheduled by ordinary source preflight;1049 latency improvement remains unmeasured",
@@ -535,52 +537,36 @@
     }
   },
   "change": {
-    "id": "change_01M79W28WN1PPYPJZSQ1SBX1GX",
-    "base_commit": "6f1d2a39ad0b5b2f7e70fe12f75f0d8b360d9453",
+    "id": "change_01M7BCNZ9TJKBMSZ02W24H1NVM",
+    "base_commit": "422e0b56879abc1439032528a6d3e4514932e807",
     "target_base": "origin/master"
   },
   "checkpoints": [
     {
-      "id": "pr1662-prepared-source-preservation-1",
-      "summary": "Checkpoint prepared original maintenance implementation and current task custody before accepted-master integration; no local tests or live candidate migrations.",
-      "input_digest": "sha256:69b7af82da6e368951f6a62dca847ff6e31809e85bbfc09f1d254f6a30ed72f7",
+      "id": "issue-1630-file-1",
+      "summary": "docs(intent): bind storage follow-through to current native inspection and evidence; file-by-file checkpoint, verification pending.",
+      "input_digest": "sha256:9c1fce70de6fd2b9d7ae0d5bbd04079bc546f5910599bd74c6bbbdbbb33cd1b2",
       "proof_refs": [
-        "git:6f29dd43d5dea21ea3d442cb1270847e2b7e86bf"
-      ]
-    },
-    {
-      "id": "pr1662-accepted-master-1442-integration-2",
-      "summary": "Resolve accepted-master integration preserving scoped maintenance and accepted storage/custody guards, reviewed0.144.2 inputs and release surfaces. No local tests or live candidate operations.",
-      "input_digest": "sha256:2862cf884c5aff051822f0c84cb9d144840e274b80aca405656c4f1ffdf917c7",
-      "proof_refs": [
-        "git:3afa9df97d9d15504b5f76021867182b78ba596d"
-      ]
-    },
-    {
-      "id": "pr1662-preserve-original-parent-3",
-      "summary": "Preserve all original PR1662 commits as actual ancestry while retaining resolved current-master maintenance integration and official0.144.2 projections. No local tests or candidate live-store operations.",
-      "input_digest": "sha256:8e54a579e7b7364ebe4d0b8ac11f597d19c672590d1eb327057b6927cf0b76d1",
-      "proof_refs": [
-        "git:3afa9df97d9d15504b5f76021867182b78ba596d"
+        "https://github.com/DecapodLabs/decapod/issues/1630"
       ]
     }
   ],
   "intents": {
-    "intent:change_01M79W28WN1PPYPJZSQ1SBX1GX": {
+    "intent:change_01M7BCNZ9TJKBMSZ02W24H1NVM": {
       "acceptance_criteria": [],
       "assumptions": [],
       "boundaries": [
         "Current claimed task and isolated work branch"
       ],
       "constraints": [
-        "pr-1662-master-1432"
+        "issue-1630"
       ],
       "created_sequence": 1,
-      "id": "intent:change_01M79W28WN1PPYPJZSQ1SBX1GX",
+      "id": "intent:change_01M7BCNZ9TJKBMSZ02W24H1NVM",
       "out_of_scope": [],
       "proof_requirements": [],
-      "raw_intent": "bugs: update PR 1662 onto accepted Decapod 0.143.2 master\n\nUser requests all open PR branches updated. Preserve PR1662 implementation and historical proof, resolve current accepted-master conflicts, refresh official0.143.2 projections and exact-source evidence, checkpoint commits and push existing PR without force or merge. Retain any known native acceptance/controller blockers and draft status.",
-      "refined_intent": "bugs: update PR 1662 onto accepted Decapod 0.143.2 master\n\nUser requests all open PR branches updated. Preserve PR1662 implementation and historical proof, resolve current accepted-master conflicts, refresh official0.143.2 projections and exact-source evidence, checkpoint commits and push existing PR without force or merge. Retain any known native acceptance/controller blockers and draft status.",
+      "raw_intent": "code: resolve #1630 Bound and compact decapod data with lossless history and measured growth\n\nComplete DecapodLabs/decapod#1630 in its own governed worktree from latest origin/master with official0.144.3. The complete current issue acceptance contract is authoritative; inspect existing implementation and preserve historical evidence. Commit each authored file edit, push work and use hosted verification, preserve required policy/custody/proof and no automatic merge. Do not close unresolved acceptance or fabricate unavailable hosted evidence.",
+      "refined_intent": "code: resolve #1630 Bound and compact decapod data with lossless history and measured growth\n\nComplete DecapodLabs/decapod#1630 in its own governed worktree from latest origin/master with official0.144.3. The complete current issue acceptance contract is authoritative; inspect existing implementation and preserve historical evidence. Commit each authored file edit, push work and use hosted verification, preserve required policy/custody/proof and no automatic merge. Do not close unresolved acceptance or fabricate unavailable hosted evidence.",
       "status": "refined",
       "updated_sequence": 3
     }
@@ -588,186 +574,108 @@
   "sections": {
     "plan": {
       "constraints": {
-        "file_touch_budget": 100,
+        "file_touch_budget": 30,
         "forbidden_paths": []
       },
       "deferred_questions": [],
       "human_questions": [],
-      "intent": "Update PR1662 onto current master3afa9df9 and0.144.2 source. Preserve default-deny accepted-policy maintenance, non-destructive locks, owner repair and original history. Resolve conflicts, commit/push each repair and drive hosted CI green; no local tests, candidate live-store execution, force push or auto merge.",
+      "intent": "Resolve issue 1630 on current accepted Decapod 0.144.4. Audit the merged lossless storage implementation; preserve existing canonical representations, authority and historical benchmark limits. Record supported read-only live inventories for Decapod, Dactyl and Propodus, close missing executable coverage or bounded-inspection defects, and use hosted execution for performance/correctness evidence. Keep unmet cloud and scale acceptance explicit.",
       "phases": [],
       "proof_hooks": [
-        "Source/material parity against original PR; focused affected regression checks; checkpoint-history inspection; official exact-current-target validation where the accepted controller supports the contract."
+        "decapod validate"
       ],
       "schema_version": "1.1.0",
-      "spec_reviews": [
-        {
-          "disposition": "updated",
-          "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Production changes auto-merged with accepted storage/custody guards. Canonical policy stays default-deny; owner repair, cloud denial and non-destructive lock custody remain enforced by the maintenance boundary. Official0.144.2 source inventory and release projections are current. Hosted CI must establish tests; no local tests or candidate live-store operations run.",
-          "reviewed_code_fingerprint": "fbccc9cfb5bf2b38e6ef970f60ff59a1d618c570d9b96d317b9f5bd0c40da905",
-          "spec_material_hash": "1fd0daadc96dd31eb16cf1ec6ff5bad5f893e903f487167ceb85b864812060c7"
-        },
-        {
-          "disposition": "updated",
-          "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Production changes auto-merged with accepted storage/custody guards. Canonical policy stays default-deny; owner repair, cloud denial and non-destructive lock custody remain enforced by the maintenance boundary. Official0.144.2 source inventory and release projections are current. Hosted CI must establish tests; no local tests or candidate live-store operations run.",
-          "reviewed_code_fingerprint": "fbccc9cfb5bf2b38e6ef970f60ff59a1d618c570d9b96d317b9f5bd0c40da905",
-          "spec_material_hash": "a019febc805e23daa61f4e97014148bf6446b8ac5d0cc0fd77f26287c2db4039"
-        },
-        {
-          "disposition": "updated",
-          "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Production changes auto-merged with accepted storage/custody guards. Canonical policy stays default-deny; owner repair, cloud denial and non-destructive lock custody remain enforced by the maintenance boundary. Official0.144.2 source inventory and release projections are current. Hosted CI must establish tests; no local tests or candidate live-store operations run.",
-          "reviewed_code_fingerprint": "fbccc9cfb5bf2b38e6ef970f60ff59a1d618c570d9b96d317b9f5bd0c40da905",
-          "spec_material_hash": "550c8b7a75eddef6e649172aa6a8f8c160c7a8db659e782f9c6525794bcaa87d"
-        }
-      ],
       "state": "APPROVED",
       "stop_conditions": [],
-      "title": "Integrate PR1662 on accepted0.143.2 master",
+      "title": "code: resolve #1630 Bound and compact decapod data with lossless history and measured growth",
       "todo_ids": [
-        "bugs_01m79w147bj8bq1k"
+        "code_01m7bcn603pscgcv"
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1794601965Z"
+      "updated_at": "1794615525Z"
     },
     "trajectory": {
       "active_boundaries": [
-        "Current claimed task and isolated work branch",
-        "Preserve original source and parents; no force-push, local tests, live candidate migrations or automatic merge."
+        "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:b792b7339ac60c0d4410186a22db6fef95d63a5c4693c6d11b1cab5b4ae4376a",
+      "artifact_hash": "sha256:0eb806370116029699eb9d12690b9ccdc138a149d5830ccf687bf2219151836d",
       "checks": [],
-      "current_phase": "integration",
+      "current_phase": "implementation",
       "custody": {
         "events": [
           {
             "event_id": "event:2",
-            "intent_id": "intent:change_01M79W28WN1PPYPJZSQ1SBX1GX",
+            "intent_id": "intent:change_01M7BCNZ9TJKBMSZ02W24H1NVM",
             "kind": "created",
             "sequence": 2
           },
           {
             "event_id": "event:3",
-            "intent_id": "intent:change_01M79W28WN1PPYPJZSQ1SBX1GX",
+            "intent_id": "intent:change_01M7BCNZ9TJKBMSZ02W24H1NVM",
             "kind": "refined",
             "sequence": 3
           },
           {
-            "detail": "trajectory:branch_01M79W290WKBD0ZJ6QJAZ9SNB8",
+            "detail": "trajectory:branch_01M7BCNZCTB4NMCF83PG1F5XQV",
             "event_id": "event:4",
-            "intent_id": "intent:change_01M79W28WN1PPYPJZSQ1SBX1GX",
+            "intent_id": "intent:change_01M7BCNZ9TJKBMSZ02W24H1NVM",
             "kind": "trajectory_step_recorded",
             "sequence": 4
-          },
-          {
-            "detail": "trajectory:branch_01M79W290WKBD0ZJ6QJAZ9SNB8",
-            "event_id": "event:5",
-            "intent_id": "intent:change_01M79W28WN1PPYPJZSQ1SBX1GX",
-            "kind": "trajectory_step_recorded",
-            "sequence": 5
-          },
-          {
-            "detail": "trajectory:branch_01M79W290WKBD0ZJ6QJAZ9SNB8",
-            "event_id": "event:6",
-            "intent_id": "intent:change_01M79W28WN1PPYPJZSQ1SBX1GX",
-            "kind": "trajectory_step_recorded",
-            "sequence": 6
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 6,
+        "next_sequence": 4,
         "schema_version": "1.0.0",
         "trajectories": {
-          "branch_01M79W290WKBD0ZJ6QJAZ9SNB8": {
+          "branch_01M7BCNZCTB4NMCF83PG1F5XQV": {
             "evidence_only": true,
-            "id": "branch_01M79W290WKBD0ZJ6QJAZ9SNB8",
-            "intent_id": "intent:change_01M79W28WN1PPYPJZSQ1SBX1GX",
+            "id": "branch_01M7BCNZCTB4NMCF83PG1F5XQV",
+            "intent_id": "intent:change_01M7BCNZ9TJKBMSZ02W24H1NVM",
             "steps": [
               {
-                "action": "integration",
+                "action": "implementation",
                 "custody_event_id": "event:4",
                 "observations": [
-                  "git:6f29dd43d5dea21ea3d442cb1270847e2b7e86bf"
+                  ".decapod/managed/specs/INTENT.md",
+                  "https://github.com/DecapodLabs/decapod/issues/1630"
                 ],
                 "proof_refs": [],
                 "scope": [
-                  "pr-1662-master-1432"
+                  "issue-1630"
                 ],
                 "sequence": 4,
                 "validation_findings": [
-                  "Historical source tests and benchmarks do not prove the new accepted-target integration."
-                ]
-              },
-              {
-                "action": "integration",
-                "command": "Merge accepted master; retain accepted storage/custody and maintenance dispatch; preserve accepted product specs and document maintenance obligations; refresh reviewed source and release bindings.",
-                "custody_event_id": "event:5",
-                "observations": [
-                  "src/decapod/core/db_maintenance.rs",
-                  "git:3afa9df97d9d15504b5f76021867182b78ba596d",
-                  "/private/tmp/decapod-pr1662-master1442-inventory.json"
-                ],
-                "proof_refs": [],
-                "scope": [
-                  "pr-1662-master-1432"
-                ],
-                "sequence": 5,
-                "validation_findings": [
-                  "Current hosted CI and production datastore compatibility remain unproven."
-                ]
-              },
-              {
-                "action": "integration",
-                "command": "Merge accepted master; retain accepted storage/custody and maintenance dispatch; preserve accepted product specs and document maintenance obligations; refresh reviewed source and release bindings.",
-                "custody_event_id": "event:6",
-                "observations": [
-                  "src/decapod/core/db_maintenance.rs",
-                  "git:3afa9df97d9d15504b5f76021867182b78ba596d",
-                  "/private/tmp/decapod-pr1662-master1442-inventory.json"
-                ],
-                "proof_refs": [],
-                "scope": [
-                  "pr-1662-master-1432"
-                ],
-                "sequence": 6,
-                "validation_findings": [
-                  "Current hosted CI and production datastore compatibility remain unproven."
+                  "Hosted verification and exact-candidate publication readiness remain pending; no local tests run."
                 ]
               }
             ]
           }
         }
       },
-      "declared_commands": [
-        "Merge accepted master; retain accepted storage/custody and maintenance dispatch; preserve accepted product specs and document maintenance obligations; refresh reviewed source and release bindings."
-      ],
+      "declared_commands": [],
       "destination": "pull request",
       "evidence": [
-        "/private/tmp/decapod-pr1662-master1442-inventory.json",
-        "git:3afa9df97d9d15504b5f76021867182b78ba596d",
-        "git:6f29dd43d5dea21ea3d442cb1270847e2b7e86bf"
+        "https://github.com/DecapodLabs/decapod/issues/1630"
       ],
       "inspected_files": [],
-      "intent_id": "intent:change_01M79W28WN1PPYPJZSQ1SBX1GX",
+      "intent_id": "intent:change_01M7BCNZ9TJKBMSZ02W24H1NVM",
       "modified_files": [
-        "src/decapod/core/db_maintenance.rs"
+        ".decapod/managed/specs/INTENT.md"
       ],
       "next_transitions": [
         "Refine plan and declare falsifiable checks"
       ],
       "repo_scope": [
-        "pr-1662-master-1432"
+        "issue-1630"
       ],
-      "run_id": "branch_01M79W290WKBD0ZJ6QJAZ9SNB8",
+      "run_id": "branch_01M7BCNZCTB4NMCF83PG1F5XQV",
       "schema_version": "1.1.0",
       "shortcut_risk_signals": [],
-      "task_id": "bugs_01m79w147bj8bq1k",
+      "task_id": "code_01m7bcn603pscgcv",
       "tool_calls": [],
       "unresolved_assumptions": [
-        "Current hosted CI and production datastore compatibility remain unproven.",
-        "Historical source tests and benchmarks do not prove the new accepted-target integration."
+        "Hosted verification and exact-candidate publication readiness remain pending; no local tests run."
       ]
     }
   },
