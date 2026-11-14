@@ -645,15 +645,41 @@ fn legacy_database_artifact_exists(data_root: &Path, name: &str) -> bool {
 /// open it (which can populate it), import it or remove it. Any sidecar,
 /// symlink, nonregular object or uncertain metadata requires guarded recovery.
 fn inert_legacy_todo_placeholder(data_root: &Path) -> bool {
-    fs::symlink_metadata(data_root.join(schemas::TODO_DB_NAME))
+    inert_database_placeholder(data_root, schemas::TODO_DB_NAME)
+}
+
+fn inert_database_placeholder(data_root: &Path, name: &str) -> bool {
+    fs::symlink_metadata(data_root.join(name))
         .is_ok_and(|metadata| metadata.file_type().is_file() && metadata.len() == 0)
         && ["-wal", "-shm", "-journal"].iter().all(|suffix| {
-            matches!(fs::symlink_metadata(data_root.join(format!("{}{suffix}", schemas::TODO_DB_NAME))),
+            matches!(fs::symlink_metadata(data_root.join(format!("{name}{suffix}"))),
                 Err(error) if error.kind() == std::io::ErrorKind::NotFound)
         })
 }
 
+// Check before opening any legacy source for checkpoint/backup preparation.
+// A read-only canonical peek cannot turn uncertain legacy input into authority.
+fn guard_legacy_todo_before_checkpointing(data_root: &Path) -> Result<(), error::DecapodError> {
+    if !legacy_database_artifact_exists(data_root, schemas::TODO_DB_NAME) {
+        return Ok(());
+    }
+    let canonical = schemas::LOCAL_DB_NAME;
+    let canonical_absent = ["", "-wal", "-shm", "-journal"].iter().all(|suffix| {
+        matches!(fs::symlink_metadata(data_root.join(format!("{canonical}{suffix}"))),
+            Err(error) if error.kind() == std::io::ErrorKind::NotFound)
+    });
+    if canonical_absent || inert_database_placeholder(data_root, canonical) {
+        return Ok(());
+    }
+    let conn = db::db_connect_for_validate(&data_root.join(canonical).to_string_lossy())?;
+    crate::core::todo::refuse_task_journal_migration(
+        &conn,
+        "legacy task checkpoint/backup preparation",
+    )
+}
+
 fn checkpoint_legacy_databases(data_root: &Path) -> Result<(), error::DecapodError> {
+    guard_legacy_todo_before_checkpointing(data_root)?;
     for name in LEGACY_LOCAL_DATABASES
         .iter()
         .copied()
