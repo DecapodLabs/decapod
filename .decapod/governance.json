@@ -831,6 +831,14 @@
       "proof_refs": [
         ".decapod/managed/specs/INTERFACES.md"
       ]
+    },
+    {
+      "id": "convergence-refresh1454-operationsmd",
+      "summary": "Refresh supported OPERATIONS.md projection with the current source identity",
+      "input_digest": "sha256:e871ebd33835beb10bf9aa66d991869169dfec1f687d3288496f76b8771f5820",
+      "proof_refs": [
+        ".decapod/managed/specs/OPERATIONS.md"
+      ]
     }
   ],
   "intents": {
