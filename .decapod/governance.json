@@ -1703,6 +1703,14 @@
       "proof_refs": [
         ".decapod/managed/specs/INTENT.md"
       ]
+    },
+    {
+      "id": "convergence-question-binding-interfacesmd",
+      "summary": "Refresh source identity for complete canonical human-question matching",
+      "input_digest": "sha256:54068e590449257595bc9264b1fa797ee57535508e72a87c1a89c5fb6477b567",
+      "proof_refs": [
+        ".decapod/managed/specs/INTERFACES.md"
+      ]
     }
   ],
   "intents": {
