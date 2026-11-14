@@ -22,7 +22,7 @@ const MAX_SOURCE_BYTES: u64 = 64 * 1024 * 1024;
 const MAX_CANONICAL_BYTES: u64 = 512 * 1024 * 1024;
 const MAX_RECEIPT_BYTES: u64 = 16 * 1024;
 const RECEIPT_NAME: &str = "legacy-todo-recovery-v1.json";
-const ARCHIVE_NAME: &str = "legacy-todo-recovery-v1.db";
+const ARCHIVE_NAME: &str = "todo.db.legacy-recovery-v1.archive";
 
 fn invalid(message: &str) -> DecapodError {
     DecapodError::ValidationError(format!("LEGACY_TODO_RECONCILIATION: {message}"))
@@ -278,7 +278,7 @@ fn review_locked(
         ));
     }
     let classification = classify(&source, &canonical)?;
-    let authority = policy::authorize_rbac_exception(root, actor, "todo.journal.repair");
+    let authority = policy::authorize_rbac_exception(root, actor, "todo.legacy.reconcile");
     let authority_status = match &authority {
         Ok(_) => "authorized",
         Err(error) if error.to_string().contains("RBAC_PERMISSION_DENIED") => "permission_denied",
@@ -309,7 +309,7 @@ fn review_locked(
             "review_sha256": review, "source_sha256": source.digest,
             "canonical_sha256": canonical.digest, "source_bytes": source.bytes,
             "canonical_journal_verified": true, "source_preserved": true,
-            "can_reconcile": binding.is_some(), "required_permission": "todo.journal.repair",
+            "can_reconcile": binding.is_some(), "required_permission": "todo.legacy.reconcile",
             "authority_status": authority_status,
             "identity_assurance": "cooperative_not_authenticated", "mutations_replayed": 0,
             "publication_ready": false, "completion_proven": false,
@@ -326,6 +326,14 @@ fn is_digest(value: &str) -> bool {
                 .bytes()
                 .all(|byte| byte.is_ascii_digit() || (b'a'..=b'f').contains(&byte))
     })
+}
+
+fn valid_actor(actor: &str) -> bool {
+    !actor.is_empty()
+        && actor.len() <= 128
+        && actor
+            .bytes()
+            .all(|byte| byte.is_ascii_alphanumeric() || b"-_.:".contains(&byte))
 }
 
 fn exists(path: &Path) -> Result<bool, DecapodError> {
@@ -362,6 +370,10 @@ fn load_receipt(root: &Path) -> Result<Option<Receipt>, DecapodError> {
         || !is_digest(&receipt.binding.canonical_sha256)
         || !is_digest(&receipt.binding.policy_sha256)
         || receipt.binding.source_bytes > MAX_SOURCE_BYTES
+        || !valid_actor(&receipt.binding.actor)
+        || (receipt.phase == "prepared" && receipt.completed_by.is_some())
+        || (receipt.phase == "committed"
+            && !receipt.completed_by.as_deref().is_some_and(valid_actor))
         || receipt.binding.store_identity != store_identity(root)?
         || receipt.binding.digest()? != receipt.review_sha256
         || (receipt.binding.classification == "canonical_copy"
@@ -389,9 +401,10 @@ pub(super) fn guard_pending(root: &Path) -> Result<(), DecapodError> {
     if let Some(receipt) = load_receipt(root)?
         && receipt.phase != "committed"
     {
-        return Err(invalid(
-            "recovery is prepared but not committed; resume todo journal reconcile-legacy with the original --expected-review",
-        ));
+        return Err(DecapodError::ValidationError(format!(
+            "LEGACY_TODO_RECOVERY_PENDING: recovery is prepared but not committed; resume todo journal reconcile-legacy --expected-review {}",
+            receipt.review_sha256
+        )));
     }
     Ok(())
 }
@@ -460,12 +473,7 @@ pub(super) fn run(
             "cloud authority never falls back to local recovery",
         ));
     }
-    if actor.is_empty()
-        || actor.len() > 128
-        || !actor
-            .bytes()
-            .all(|byte| byte.is_ascii_alphanumeric() || b"-_.:".contains(&byte))
-    {
+    if !valid_actor(actor) {
         return Err(invalid("invalid local actor identity"));
     }
     if expected.is_some_and(|value| !is_digest(value)) || (prepare_only && expected.is_none()) {
@@ -477,7 +485,7 @@ pub(super) fn run(
         Some(policy::authorize_rbac_exception(
             root,
             actor,
-            "todo.journal.repair",
+            "todo.legacy.reconcile",
         )?)
     } else {
         None
@@ -534,7 +542,7 @@ pub(super) fn run(
         return Err(invalid("inputs or policy changed after preparation"));
     }
     let Some(expected) = expected else {
-        if policy::authorize_rbac_exception(root, actor, "todo.journal.repair").is_err() {
+        if policy::authorize_rbac_exception(root, actor, "todo.legacy.reconcile").is_err() {
             report["status"] = json!("blocked");
             report["can_reconcile"] = json!(false);
         }
@@ -560,7 +568,7 @@ pub(super) fn run(
     }
     // Recheck authority immediately before physical publication. The receipt is
     // a local operation journal, not independently authenticated authorization.
-    if policy::authorize_rbac_exception(root, actor, "todo.journal.repair")?
+    if policy::authorize_rbac_exception(root, actor, "todo.legacy.reconcile")?
         != receipt.binding.policy_sha256
     {
         return Err(invalid("policy changed before archival"));
@@ -588,7 +596,7 @@ pub(super) fn run(
                 "legacy input changed before unlink; archive and source preserved",
             ));
         }
-        if policy::authorize_rbac_exception(root, actor, "todo.journal.repair")?
+        if policy::authorize_rbac_exception(root, actor, "todo.legacy.reconcile")?
             != receipt.binding.policy_sha256
         {
             return Err(invalid("policy changed before retiring legacy path"));
