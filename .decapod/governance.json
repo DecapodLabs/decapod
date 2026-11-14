@@ -829,6 +829,14 @@
       "proof_refs": [
         "https://github.com/DecapodLabs/decapod/issues/1659"
       ]
+    },
+    {
+      "id": "issue-1659-file-37",
+      "summary": "test(broker): bind twenty-worker stress to its declared budget; file-by-file checkpoint, verification pending.",
+      "input_digest": "sha256:6f453697306b62beb7232201e4a9239e3a4a87404f0da37108ea0b5e4b1524ce",
+      "proof_refs": [
+        "https://github.com/DecapodLabs/decapod/issues/1659"
+      ]
     }
   ],
   "intents": {
@@ -902,7 +910,7 @@
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:a765209a6b5a870d42ba457d62bb0dead9c97756ab6993a074d731d74848f50c",
+      "artifact_hash": "sha256:c5f12d91301d2a90ff1b954afa00a78fdfe4d7e2bd0e9fe33bf604638fe9ead6",
       "checks": [],
       "current_phase": "implementation",
       "custody": {
@@ -1177,10 +1185,17 @@
             "intent_id": "intent:change_01M7BCEHXJQR8HVADJF91PJKGD",
             "kind": "trajectory_step_recorded",
             "sequence": 40
+          },
+          {
+            "detail": "trajectory:branch_01M7BCEJ05EP527M18XXSF6GK6",
+            "event_id": "event:41",
+            "intent_id": "intent:change_01M7BCEHXJQR8HVADJF91PJKGD",
+            "kind": "trajectory_step_recorded",
+            "sequence": 41
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 40,
+        "next_sequence": 41,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M7BCEJ05EP527M18XXSF6GK6": {
@@ -1776,6 +1791,22 @@
                 "validation_findings": [
                   "Hosted verification and exact-candidate publication readiness remain pending; no local tests run."
                 ]
+              },
+              {
+                "action": "implementation",
+                "custody_event_id": "event:41",
+                "observations": [
+                  "tests/group_broker.rs",
+                  "https://github.com/DecapodLabs/decapod/issues/1659"
+                ],
+                "proof_refs": [],
+                "scope": [
+                  "issue-1659"
+                ],
+                "sequence": 41,
+                "validation_findings": [
+                  "Hosted verification and exact-candidate publication readiness remain pending; no local tests run."
+                ]
               }
             ]
           }
@@ -1808,6 +1839,7 @@
         "tests/consumer_readiness.rs",
         "tests/entrypoint_correctness.rs",
         "tests/gatling.rs",
+        "tests/group_broker.rs",
         "tests/support/fresh_docs_readiness.rs",
         "tests/unit/core/group_broker_tests.rs",
         "tests/validate_termination.rs"
