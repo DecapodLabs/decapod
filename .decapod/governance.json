@@ -563,6 +563,14 @@
       "proof_refs": [
         "https://github.com/DecapodLabs/decapod/issues/1626"
       ]
+    },
+    {
+      "id": "issue1626-release-file-3",
+      "summary": "test(nix): execute both release gates against real shallow Git histories; implementation checkpoint, hosted verification pending.",
+      "input_digest": "sha256:1befc609a9d64dcaccc9b206cb31523f5575746dc4cd54328007f759d15373a7",
+      "proof_refs": [
+        "https://github.com/DecapodLabs/decapod/issues/1626"
+      ]
     }
   ],
   "intents": {
@@ -593,7 +601,7 @@
       },
       "deferred_questions": [],
       "human_questions": [],
-      "intent": "Fix squash release detection in Nix publication (#1626)\n\nRecognize immutable squash/linear release commits and conventional release merges without broadening native protected-master publication or trusting candidate content for independent authority. Use dedicated worktree from latest origin/master, Rust-native shared classifier, actual Git fixtures, hosted-only verification. No local tests, Buildkite or automatic merges.",
+      "intent": "Repair the two existing Nix workflow gates for squash/linear and ordinary two-parent release commits. Preserve native protected-master publication, credential-free selector and packaging requirements. Use Rust regression tests executing the actual workflow scripts against real Git histories; keep existing workflow glue rather than introduce a parallel classifier. No local tests, Buildkite, cache mutation or automatic merge.",
       "phases": [],
       "proof_hooks": [
         "decapod validate"
@@ -607,13 +615,13 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1794695829Z"
+      "updated_at": "1794696085Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:22555311276ca53fca5f2d6665433a69b735801d57d853c36d559a2779f55929",
+      "artifact_hash": "sha256:010bbb50c789d5de8109c4c6db281d8629ab9b0073c41df83ea967c2fa5a086f",
       "checks": [],
       "current_phase": "implementation",
       "custody": {
@@ -643,10 +651,17 @@
             "intent_id": "intent:change_01M7E32W7EEDSJFJ6J3WPTZZBP",
             "kind": "trajectory_step_recorded",
             "sequence": 5
+          },
+          {
+            "detail": "trajectory:branch_01M7E32WAD102GEWSSGTDX5P73",
+            "event_id": "event:6",
+            "intent_id": "intent:change_01M7E32W7EEDSJFJ6J3WPTZZBP",
+            "kind": "trajectory_step_recorded",
+            "sequence": 6
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 5,
+        "next_sequence": 6,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M7E32WAD102GEWSSGTDX5P73": {
@@ -685,6 +700,22 @@
                 "validation_findings": [
                   "Implementation in progress; exact-candidate hosted checks pending; no local tests or Buildkite execution."
                 ]
+              },
+              {
+                "action": "implementation",
+                "custody_event_id": "event:6",
+                "observations": [
+                  "tests/release_metadata_policy.rs",
+                  "https://github.com/DecapodLabs/decapod/issues/1626"
+                ],
+                "proof_refs": [],
+                "scope": [
+                  "root"
+                ],
+                "sequence": 6,
+                "validation_findings": [
+                  "Implementation in progress; exact-candidate hosted checks pending; no local tests or Buildkite execution."
+                ]
               }
             ]
           }
@@ -699,7 +730,8 @@
       "intent_id": "intent:change_01M7E32W7EEDSJFJ6J3WPTZZBP",
       "modified_files": [
         ".decapod/managed/specs/INTENT.md",
-        ".github/workflows/nix-flake.yml"
+        ".github/workflows/nix-flake.yml",
+        "tests/release_metadata_policy.rs"
       ],
       "next_transitions": [
         "Refine plan and declare falsifiable checks"
