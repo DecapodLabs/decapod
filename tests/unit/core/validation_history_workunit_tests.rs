@@ -357,3 +357,37 @@ fn new_declaration_downgrades_actual_verified_proof_and_preserves_history() {
         reference.record_digest
     );
 }
+
+#[test]
+fn weaker_workunit_cannot_discharge_additional_canonical_task_obligations() {
+    let (fixture, store) = prepared();
+    let root = &fixture.options.root;
+    todo::with_task_journal(&DbBroker::new(&store.root), &todo::todo_db_path(&store.root),
+        &crate::current_agent_id(), Some(TASK), "test.additional_proof_obligation",
+        todo::TaskJournalSelection::Ids(vec![TASK.into()]), |conn| {
+            conn.execute("INSERT INTO task_verification(todo_id, proof_plan, verification_policy_days, updated_at) VALUES (?1,?2,0,'1Z')",
+                db::params![TASK, r#"["validate_passes","independent_security_review"]"#])?;
+            Ok(())
+        }).unwrap();
+    workunit::checkpoint_workunit(root, TASK, "additional-task-obligation", None).unwrap();
+    let mut host = fixture.host();
+    let report = fixture.validate(&mut host);
+    assert_eq!(
+        host.execution_attempts, 1,
+        "real source checks must have executed"
+    );
+    assert!(!report.ready && !report.proof_ready, "{report:?}");
+    assert!(
+        report
+            .blockers
+            .iter()
+            .any(|b| b.detail.contains("TERMINAL_VALIDATION_RULES_FAILED")),
+        "{report:?}"
+    );
+    let head = consumer::git(root, &["rev-parse", "HEAD"]);
+    assert!(lookup(root, &store, &head).is_err());
+    assert_eq!(
+        workunit::load_workunit(root, TASK).unwrap().status,
+        workunit::WorkUnitStatus::Claimed
+    );
+}
