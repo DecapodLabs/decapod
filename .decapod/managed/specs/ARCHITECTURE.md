@@ -1,5 +1,20 @@
 # Architecture
 
+## Agent-facing escalation convergence (#1690–#1692)
+
+`core/mentor/reflection/escalation.rs` composes source observations with the
+existing `reflection` continuation, `plan_governance` journal and
+`plugins::policy` authority owner. It adds no tables or reasoning runtime.
+Typed proposals bind canonical intent and the missing subject; receipts retain
+digests, source identities, typed reasons, progress and dispositions. Prose and
+literal source bodies remain transient. The existing lock, custody checks,
+freshness checks, idempotent submissions, 64 KiB journal limit and three-round
+budget remain authoritative. Literal byte predicates do not establish semantic
+relevance, source authenticity, actual test execution or publication readiness.
+`governed_transition::CapabilityGap` distinguishes agent-directed inference
+escalation from a separately admitted human dependency. Cooperating harnesses
+invoke the protocol; arbitrary external conversation cannot be intercepted.
+
 ## Checkout custody and non-Git diagnostics (#1661)
 
 `core::authoring` enforces one live checkout per task lease transactionally with
