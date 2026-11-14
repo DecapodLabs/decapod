@@ -1199,6 +1199,14 @@
       "proof_refs": [
         "tests/support/recovery_filesystem.rs"
       ]
+    },
+    {
+      "id": "recovery1696-unit-owner",
+      "summary": "Retain all existing filesystem selection and refusal regressions against the shared helper",
+      "input_digest": "sha256:049444a1f48d038bdcec235a91d27972ce885ba8a52e1c980bf57680851ba9ea",
+      "proof_refs": [
+        "tests/unit/core/fs_permissions_tests.rs"
+      ]
     }
   ],
   "intents": {
