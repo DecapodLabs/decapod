@@ -455,9 +455,9 @@ fn validate_request(root: &Path, request: &Request) -> Result<(), DecapodError> 
     {
         return Err(invalid("INPUT_LIMIT"));
     }
-    if !matches!(request.op.as_str(), "change" | "modify" | "update")
-        && !(request.op == "escalate" && request.escalation.is_some())
-    {
+    let supported_operation = matches!(request.op.as_str(), "change" | "modify" | "update")
+        || (request.op == "escalate" && request.escalation.is_some());
+    if !supported_operation {
         return Err(invalid(
             "INVALID_OPERATION: reflection covers change, modify or update; use ordinary orientation for informational queries",
         ));

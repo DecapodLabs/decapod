@@ -775,6 +775,14 @@
       "proof_refs": [
         "tests/unit/core/reflection_tests.rs"
       ]
+    },
+    {
+      "id": "convergence-operation-guard",
+      "summary": "Name the supported reflection operation predicate",
+      "input_digest": "sha256:11832b73f3914dce8c0ae402f18783c45248d9eaeb6daf788367d832e190f5a1",
+      "proof_refs": [
+        "src/decapod/core/mentor/reflection.rs"
+      ]
     }
   ],
   "intents": {
