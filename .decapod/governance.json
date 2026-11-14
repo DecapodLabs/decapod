@@ -813,6 +813,14 @@
       "proof_refs": [
         "https://github.com/DecapodLabs/decapod/issues/1667"
       ]
+    },
+    {
+      "id": "issue-1667-integrate-9767ae9a",
+      "summary": "Integrate accepted master 9767ae9a3ff1c7452101482218a17c55cf569b71 after accepted release v0.144.5 with issue1667. Preserve current task journal/checkpoints and authored specs from both branches; regenerate projections through the kernel. Previous candidate readiness does not apply; no local tests.",
+      "input_digest": "sha256:c1ce2655771e61d10b4bc83cd12cb45865bbcac5b9b4e3e829251fe9c3cc3a60",
+      "proof_refs": [
+        "https://github.com/DecapodLabs/decapod/pull/1685"
+      ]
     }
   ],
   "intents": {
@@ -853,22 +861,22 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Specify the bounded local accounting allowance required for existing raw checkpoint components; keep logical admission, row and cloud authority separate. GitHub Actions verification remains pending; no local tests.",
-          "reviewed_code_fingerprint": "ff085488220394d6698930b3a8017fadf5e713f97140b11c7f9a735446cbd789",
+          "reason": "Integrate accepted master 9767ae9a3ff1c7452101482218a17c55cf569b71 after accepted release v0.144.5 with issue1667. Preserve current task journal/checkpoints and authored specs from both branches; regenerate projections through the kernel. Previous candidate readiness does not apply; no local tests.",
+          "reviewed_code_fingerprint": "56d7ee145448965ea2640f559111c60b6d00a3249167c00959fb30051190e559",
           "spec_material_hash": "c7ec7fc6a463392c5fb87a434d69170abe5c13dc147d849bef9f26443187a1ec"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Specify the bounded local accounting allowance required for existing raw checkpoint components; keep logical admission, row and cloud authority separate. GitHub Actions verification remains pending; no local tests.",
-          "reviewed_code_fingerprint": "ff085488220394d6698930b3a8017fadf5e713f97140b11c7f9a735446cbd789",
+          "reason": "Integrate accepted master 9767ae9a3ff1c7452101482218a17c55cf569b71 after accepted release v0.144.5 with issue1667. Preserve current task journal/checkpoints and authored specs from both branches; regenerate projections through the kernel. Previous candidate readiness does not apply; no local tests.",
+          "reviewed_code_fingerprint": "56d7ee145448965ea2640f559111c60b6d00a3249167c00959fb30051190e559",
           "spec_material_hash": "c9d1a9a5828728285a5694da0a8be9309c719be76e2d2166dab040933fadab87"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Specify the bounded local accounting allowance required for existing raw checkpoint components; keep logical admission, row and cloud authority separate. GitHub Actions verification remains pending; no local tests.",
-          "reviewed_code_fingerprint": "ff085488220394d6698930b3a8017fadf5e713f97140b11c7f9a735446cbd789",
+          "reason": "Integrate accepted master 9767ae9a3ff1c7452101482218a17c55cf569b71 after accepted release v0.144.5 with issue1667. Preserve current task journal/checkpoints and authored specs from both branches; regenerate projections through the kernel. Previous candidate readiness does not apply; no local tests.",
+          "reviewed_code_fingerprint": "56d7ee145448965ea2640f559111c60b6d00a3249167c00959fb30051190e559",
           "spec_material_hash": "c4b217ac3486512e3460310c437a0250686d37ce1a2211f0f7e1d101871b67aa"
         }
       ],
@@ -880,13 +888,13 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1794624675Z"
+      "updated_at": "1794627430Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:58bc4aa4919980642082f88d123e4f609f306e9f8afa9b39cdfb1fbee37b66da",
+      "artifact_hash": "sha256:6c4d2dbab6d215c73a767df6cdad86f03e4633cb288d77a3abdec0b45164dfaa",
       "checks": [],
       "current_phase": "implementation",
       "custody": {
@@ -1140,10 +1148,17 @@
             "intent_id": "intent:change_01M7BCN0CS3Z8AJ7TZ491WJ7CJ",
             "kind": "trajectory_step_recorded",
             "sequence": 37
+          },
+          {
+            "detail": "trajectory:branch_01M7BCN0FD8AE623HXNGA0C8F9",
+            "event_id": "event:38",
+            "intent_id": "intent:change_01M7BCN0CS3Z8AJ7TZ491WJ7CJ",
+            "kind": "trajectory_step_recorded",
+            "sequence": 38
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 37,
+        "next_sequence": 38,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M7BCN0FD8AE623HXNGA0C8F9": {
@@ -1692,6 +1707,21 @@
                 "validation_findings": [
                   "Hosted verification and exact-candidate publication readiness remain pending; no local tests run."
                 ]
+              },
+              {
+                "action": "implementation",
+                "custody_event_id": "event:38",
+                "observations": [
+                  "https://github.com/DecapodLabs/decapod/pull/1685"
+                ],
+                "proof_refs": [],
+                "scope": [
+                  "issue-1667"
+                ],
+                "sequence": 38,
+                "validation_findings": [
+                  "Integrate accepted master 9767ae9a3ff1c7452101482218a17c55cf569b71 after accepted release v0.144.5 with issue1667. Preserve current task journal/checkpoints and authored specs from both branches; regenerate projections through the kernel. Previous candidate readiness does not apply; no local tests."
+                ]
               }
             ]
           }
@@ -1702,7 +1732,8 @@
       "evidence": [
         "https://github.com/DecapodLabs/decapod/issues/1667",
         "https://github.com/DecapodLabs/decapod/pull/1675",
-        "https://github.com/DecapodLabs/decapod/pull/1682"
+        "https://github.com/DecapodLabs/decapod/pull/1682",
+        "https://github.com/DecapodLabs/decapod/pull/1685"
       ],
       "inspected_files": [],
       "intent_id": "intent:change_01M7BCN0CS3Z8AJ7TZ491WJ7CJ",
@@ -1739,6 +1770,7 @@
       "tool_calls": [],
       "unresolved_assumptions": [
         "Hosted verification and exact-candidate publication readiness remain pending; no local tests run.",
+        "Integrate accepted master 9767ae9a3ff1c7452101482218a17c55cf569b71 after accepted release v0.144.5 with issue1667. Preserve current task journal/checkpoints and authored specs from both branches; regenerate projections through the kernel. Previous candidate readiness does not apply; no local tests.",
         "Integrate accepted master f779e39111ec8b3c8c41569f68a3a7604df167e7 and merged1675 accepted-policy hardening with issue1667. Preserve current task journal/checkpoints and authored specs from both branches; regenerate projections through the kernel. Previous candidate readiness does not apply; no local tests.",
         "Integrate accepted master fded2dd0b5f02f9c874301d4b98cfd59ad188357 after merged PR1682 native inventory evidence with issue1667. Preserve current task journal/checkpoints and authored specs from both branches; regenerate projections through the kernel. Previous candidate readiness does not apply; no local tests."
       ]
