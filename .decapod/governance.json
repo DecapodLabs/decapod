@@ -1263,6 +1263,14 @@
       "proof_refs": [
         ".decapod/managed/specs/INTERFACES.md"
       ]
+    },
+    {
+      "id": "recovery1696-projection-operationsmd",
+      "summary": "Bind current source projection to the shared recovery fixture repair",
+      "input_digest": "sha256:3fb73a2f9e8d6e73dfa39a05c2982395bf5da763ac1762b8b7d37dc5fb676ff6",
+      "proof_refs": [
+        ".decapod/managed/specs/OPERATIONS.md"
+      ]
     }
   ],
   "intents": {
