@@ -853,6 +853,14 @@
       "proof_refs": [
         "https://github.com/DecapodLabs/decapod/issues/1660"
       ]
+    },
+    {
+      "id": "issue-1660-file-40",
+      "summary": "docs(specs): bind security to observed workunit proof; file-by-file checkpoint, verification pending.",
+      "input_digest": "sha256:f90995c05b23b241271dd4d075c1e782bf275ae4717fd1f49f36825efa351863",
+      "proof_refs": [
+        "https://github.com/DecapodLabs/decapod/issues/1660"
+      ]
     }
   ],
   "intents": {
@@ -926,7 +934,7 @@
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:23b0eb8d7f2f5868d38eb5ed577688a6bbc131f918e6baaf290d24159c6ed22b",
+      "artifact_hash": "sha256:ab127a1105e85727f3c6033ef7449b4e36b3cea0228fe3ce873f842b71fd3870",
       "checks": [],
       "current_phase": "implementation",
       "custody": {
@@ -1215,10 +1223,17 @@
             "intent_id": "intent:change_01M7BCFASGT4DQG4ZADT2BP5G0",
             "kind": "trajectory_step_recorded",
             "sequence": 42
+          },
+          {
+            "detail": "trajectory:branch_01M7BCFAWAYM3TXSVTHC1N7YZE",
+            "event_id": "event:43",
+            "intent_id": "intent:change_01M7BCFASGT4DQG4ZADT2BP5G0",
+            "kind": "trajectory_step_recorded",
+            "sequence": 43
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 42,
+        "next_sequence": 43,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M7BCFAWAYM3TXSVTHC1N7YZE": {
@@ -1848,6 +1863,22 @@
                 "validation_findings": [
                   "Hosted verification and exact-candidate publication readiness remain pending; no local tests run."
                 ]
+              },
+              {
+                "action": "implementation",
+                "custody_event_id": "event:43",
+                "observations": [
+                  ".decapod/managed/specs/SECURITY.md",
+                  "https://github.com/DecapodLabs/decapod/issues/1660"
+                ],
+                "proof_refs": [],
+                "scope": [
+                  "issue-1660"
+                ],
+                "sequence": 43,
+                "validation_findings": [
+                  "Hosted verification and exact-candidate publication readiness remain pending; no local tests run."
+                ]
               }
             ]
           }
@@ -1865,6 +1896,7 @@
         ".decapod/managed/specs/ARCHITECTURE.md",
         ".decapod/managed/specs/INTENT.md",
         ".decapod/managed/specs/INTERFACES.md",
+        ".decapod/managed/specs/SECURITY.md",
         "docs/architecture/workunit-observed-proof.md",
         "src/decapod/core/completion_evidence.rs",
         "src/decapod/core/native_proof.rs",

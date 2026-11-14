@@ -991,3 +991,15 @@ accepted local source-definition digest before selection. The failed observation
 remains historical; fresh hosted execution must establish the repair. This is a
 local-readiness finding, not evidence of bypassing an independent remote merge
 service or of OS isolation from an unrestricted producer.
+
+## Workunit producer and consumer boundary (#1660)
+
+Missing, altered, contradictory, unbound or stale canonical observations cannot
+be applied through supported workunit acceptance/completion/publication consumers.
+The verifier rechecks candidate/base/material/policy/tool/input identities, live
+task custody and durable workunit projection. Fresh complete terminal observation
+is distinct from a previously declared success, avoiding a first-proof cycle.
+History is retained after invalidation. Local hashes and a shared-UID datastore
+are not an authenticated independent security domain; unrestricted direct SQL or
+filesystem mutation requires separate isolation/enforcement. No signature, cloud
+identity, arbitrary filesystem prevention or remote merge authority is asserted.
