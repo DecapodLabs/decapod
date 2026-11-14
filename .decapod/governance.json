@@ -1023,6 +1023,14 @@
       "proof_refs": [
         ".decapod/managed/specs/ARCHITECTURE.md"
       ]
+    },
+    {
+      "id": "convergence-fixture-repair-attestation-intentmd",
+      "summary": "Refresh source binding after observed test fixture repairs",
+      "input_digest": "sha256:4a4702c3596f140e05de222bf8d1d5f7c9d6fab156841ce72cf1d60a7a5ef6ac",
+      "proof_refs": [
+        ".decapod/managed/specs/INTENT.md"
+      ]
     }
   ],
   "intents": {
