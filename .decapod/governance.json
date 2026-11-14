@@ -571,6 +571,14 @@
       "proof_refs": [
         "https://github.com/DecapodLabs/decapod/issues/1657"
       ]
+    },
+    {
+      "id": "issue1657-reconcile-file-4",
+      "summary": "feat(todo): expose versioned legacy reconciliation without an import path; implementation checkpoint, hosted verification pending.",
+      "input_digest": "sha256:8c5aca99b759f344cfa7d564807f62b555c1ac3ec4a0f903369f5a50408bb43d",
+      "proof_refs": [
+        "https://github.com/DecapodLabs/decapod/issues/1657"
+      ]
     }
   ],
   "intents": {
@@ -621,7 +629,7 @@
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:5b487b515644a559dc2f25e7f676d0324f9902070f989777abaedd5ea4def7b4",
+      "artifact_hash": "sha256:b01173d9bfb8f8408b95eb6b323f406ac33be571d3e61c2834e0cf305c709f77",
       "checks": [],
       "current_phase": "implementation",
       "custody": {
@@ -658,10 +666,17 @@
             "intent_id": "intent:change_01M7DXW29MW090TM7TAHZF5JJK",
             "kind": "trajectory_step_recorded",
             "sequence": 6
+          },
+          {
+            "detail": "trajectory:branch_01M7DXW2DCAD18R4V58TWM41F2",
+            "event_id": "event:7",
+            "intent_id": "intent:change_01M7DXW29MW090TM7TAHZF5JJK",
+            "kind": "trajectory_step_recorded",
+            "sequence": 7
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 6,
+        "next_sequence": 7,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M7DXW2DCAD18R4V58TWM41F2": {
@@ -716,6 +731,22 @@
                 "validation_findings": [
                   "Implementation in progress; exact-candidate hosted checks pending; no local tests or Buildkite execution."
                 ]
+              },
+              {
+                "action": "implementation",
+                "custody_event_id": "event:7",
+                "observations": [
+                  "src/decapod/core/todo.rs",
+                  "https://github.com/DecapodLabs/decapod/issues/1657"
+                ],
+                "proof_refs": [],
+                "scope": [
+                  "issue-1657"
+                ],
+                "sequence": 7,
+                "validation_findings": [
+                  "Implementation in progress; exact-candidate hosted checks pending; no local tests or Buildkite execution."
+                ]
               }
             ]
           }
@@ -730,7 +761,8 @@
       "intent_id": "intent:change_01M7DXW29MW090TM7TAHZF5JJK",
       "modified_files": [
         ".decapod/managed/specs/INTENT.md",
-        "src/decapod/core/legacy_todo_recovery.rs"
+        "src/decapod/core/legacy_todo_recovery.rs",
+        "src/decapod/core/todo.rs"
       ],
       "next_transitions": [
         "Refine plan and declare falsifiable checks"

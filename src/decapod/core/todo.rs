@@ -34,6 +34,8 @@ use std::path::{Path, PathBuf};
 
 #[path = "authoring.rs"]
 mod authoring;
+#[path = "legacy_todo_recovery.rs"]
+mod legacy_todo_recovery;
 #[path = "task_journal.rs"]
 mod task_journal;
 pub use authoring::{
@@ -42,6 +44,21 @@ pub use authoring::{
 pub use task_journal::{
     VerifyBudget as TaskJournalVerifyBudget, VerifyCursor as TaskJournalVerifyCursor,
 };
+
+/// Bootstrap-only recovery: the CLI authenticates apply requests before calling
+/// this crate-private kernel entrypoint. Local policy is rechecked by the owner.
+pub(crate) fn reconcile_legacy_todo(
+    root: &Path,
+    actor: &str,
+    expected_review: Option<&str>,
+    prepare_only: bool,
+) -> Result<JsonValue, error::DecapodError> {
+    legacy_todo_recovery::run(root, actor, expected_review, prepare_only)
+}
+
+pub(crate) fn guard_pending_legacy_reconciliation(root: &Path) -> Result<(), error::DecapodError> {
+    legacy_todo_recovery::guard_pending(root)
+}
 
 /// Snapshot-consistent, keyset-paged task journal verification (`#1630` `F5`).
 pub fn verify_task_journal_with_budget(
@@ -417,6 +434,15 @@ pub fn task_journal_restore(
 
 #[derive(Subcommand, Debug)]
 pub enum TodoJournalCommand {
+    /// Review mixed TODO input; explicitly prepare/apply only the exact reviewed
+    /// empty or byte-identical canonical copy. Unmatched history stays blocked.
+    ReconcileLegacy {
+        #[clap(long)]
+        expected_review: Option<String>,
+        /// Persist the versioned operation intent without retiring the input.
+        #[clap(long, requires = "expected_review")]
+        prepare_only: bool,
+    },
     /// Observe current state as an explicit versioned baseline.
     Checkpoint {
         /// Accept a reviewed historical gap for a task. Repeat this flag for
@@ -8365,6 +8391,11 @@ pub fn run_todo_cli_with_cloud_factory<F: CloudTodoStoreFactory>(
             TodoJournalCommand::Restore {
                 expected_current_digest,
             } => task_journal_restore(root, expected_current_digest)?,
+            TodoJournalCommand::ReconcileLegacy { .. } => {
+                return Err(error::DecapodError::ValidationError(
+                    "LEGACY_TODO_BOOTSTRAP_REQUIRED: use the native recovery dispatcher before storage initialization".into(),
+                ));
+            }
         },
         TodoCommand::Transfer { .. } => {
             unreachable!("transfer is dispatched before backend routing")
