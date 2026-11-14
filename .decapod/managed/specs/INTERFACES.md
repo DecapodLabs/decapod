@@ -1154,8 +1154,8 @@ field. Nothing in this operation authorizes a mutation, approval or completion.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `ba945b5c5952fa3044153d498bc24a7003fa19bbc9c34b35daa26b8a038a7598`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (234 files), `tests/` (232 files)
+- Repository signal fingerprint: `a52e4c3ea27fd78421168efba47f9a86173a8f3692d92f8e4e1bb5fe117facef`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (234 files), `tests/` (233 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 
@@ -1511,26 +1511,6 @@ does not claim that every caller has migrated to the additive interfaces or that
 a remote capability error grants local fallback or replay permission. Existing
 backend owners remain authoritative for those decisions.
 
-## Accepted repository-local contract changes (#1658)
-
-The existing validation runtime returns the actionable
-`ACCEPTED_REPOSITORY_CONTRACT_CHANGED` blocker when a candidate removes or replaces
-accepted local obligations, even with internally consistent new review digests.
-The check precedes execution-provider selection. Remove the weakening and retain
-the accepted checks, or first establish a separately accepted policy transition
-on the target. Additional required checks are allowed. Initial local adoption and
-unchanged accepted contracts continue through the existing runtime and receipt
-interfaces; no new command or bypass is exposed.
-
-### Source-definition changes
-
-`ACCEPTED_REPOSITORY_CONTRACT_CHANGED` also identifies replacement of the accepted
-local source-definition digest. Recomputing a candidate digest cannot authorize
-changed inventoried check scripts, build/dependency definitions or provider
-inputs. Retain the accepted inventory or establish the reviewed revision on the
-target before revalidation. Additive commands under that inventory and first
-local adoption remain supported; no override or second policy store is added.
-
 ### Local SDK value and parameter ceilings
 
 The physical local bridge retains an 8 MiB per-value compatibility ceiling and
@@ -1551,14 +1531,71 @@ SHA-256 through the production component owner. It does not rewrite historical
 bytes or establish task completion. New text values above the cell ceiling and
 aggregate parameter sets above their separate budget still fail before mutation.
 
-## Legacy input recovery scope (#1657)
+## Full claims with diagnostic gate overrides (#1659)
 
-Normal supported startup/workspace/task interfaces reuse the existing migration
-owner's inert-placeholder handling. There is no new slash command or agent
-prompt requirement. TASK_JOURNAL_MIGRATION_REQUIRED continues to block non-inert
-TODO inputs beside canonical journal state; an explicit versioned nonempty
-recovery command and compatible authority contract remain required. See
-`docs/architecture/legacy-todo-recovery.md`.
+`READINESS_GATE_OVERRIDE_UNSUPPORTED` identifies an active Git/tooling skip or a
+truthy fingerprint skip. Remove the override and obtain fresh validation in the
+claimed worktree. Presence-only Git/tooling flags remain active even with empty,
+zero or false strings; the existing fingerprint truth-value parser is preserved.
+Explicit `ci_local` and `project_prerequisites` diagnostics retain their output
+scopes and cannot yield `publication_ready=true`. An audited validation bypass
+also remains non-proof. No new command, adapter policy or verdict taxonomy is
+introduced. Older brokers reject unfamiliar context fields; inspect uncertain
+operation outcomes rather than blindly replaying a write.
+
+## Accepted repository-local contract changes (#1658)
+
+The existing validation runtime returns the actionable
+`ACCEPTED_REPOSITORY_CONTRACT_CHANGED` blocker when a candidate removes or replaces
+accepted local obligations, even with internally consistent new review digests.
+The check precedes execution-provider selection. Remove the weakening and retain
+the accepted checks, or first establish a separately accepted policy transition
+on the target. Additional required checks are allowed. Initial local adoption and
+unchanged accepted contracts continue through the existing runtime and receipt
+interfaces; no new command or bypass is exposed.
+
+### Source-definition changes
+
+`ACCEPTED_REPOSITORY_CONTRACT_CHANGED` also identifies replacement of the accepted
+local source-definition digest. Recomputing a candidate digest cannot authorize
+changed inventoried check scripts, build/dependency definitions or provider
+inputs. Retain the accepted inventory or establish the reviewed revision on the
+target before revalidation. Additive commands under that inventory and first
+local adoption remain supported; no override or second policy store is added.
+
+## Group broker workload budget
+
+`src/decapod/core/group_broker.rs` accepts the optional
+`DECAPOD_GROUP_BROKER_REQUEST_BUDGET_MS` workload input on the Unix broker path.
+The default is 120000 milliseconds; valid explicit values are 1 through 300000.
+Malformed, zero and oversized client values fail before mutation admission.
+Native peers also face the hard maximum before a new dedupe receipt can be created.
+A matching durable outcome is resolved first: expired or overlong retry deadlines
+cannot replace an existing UNKNOWN or committed result with NOT_COMMITTED. The
+real execution-boundary regression checks both outcomes and both retry timings,
+including the unchanged stored result and commit marker. No new operation runs
+when the same-ID outcome is already recorded.
+The foreground acceptance window follows the originating request budget, and
+existing per-command limits and UNKNOWN/replay handling remain in force.
+
+`tests/group_broker.rs` declares its existing 300-second twenty-client workload
+at both the outer process boundary and broker request boundary, retains the
+all-twenty exact-once assertions, and exercises invalid inputs through the actual
+CLI with no task or receipt mutation. The native oversized-deadline regression
+traverses the real execution boundary. Fresh hosted verification is required;
+these declarations are not a successful validation observation.
+
+## Canonical workunit validation contract (#1660)
+
+Existing workunit CLI operations remain the request surface. `record-proof`
+records a declaration; requesting VERIFIED requires a current canonical full
+observation for exactly one supported `validate_passes`/`validated_commit`
+obligation. The kernel derives the result, epoch and optional validation-record
+selector. Caller-supplied selectors cannot import producer success. File artifact
+paths retain byte-integrity semantics. Historical JSON omits the optional field;
+Rust manifest literals add `validation_record: None`, and verification consumers
+pass repository context to `validate_verified_manifest(root, manifest)`.
+Publication and human merge authorization remain independent operations.
 
 ## Scoped container-runtime recovery during prerequisites
 
@@ -1575,3 +1612,13 @@ and checks preservation of unrelated content. It does not claim live container
 isolation or publication readiness. The actual CLI runtime probe retains its
 10-second per-call and 20-second aggregate requirements; fresh hosted execution
 must establish the resulting candidate's behavior and timing.
+
+## Legacy input recovery scope (#1657)
+
+Normal supported startup/workspace/task interfaces reuse the existing migration
+owner's inert-placeholder handling. There is no new slash command or agent
+prompt requirement. TASK_JOURNAL_MIGRATION_REQUIRED continues to block non-inert
+TODO inputs beside canonical journal state; an explicit versioned nonempty
+recovery command and compatible authority contract remain required. See
+`docs/architecture/legacy-todo-recovery.md`.
+

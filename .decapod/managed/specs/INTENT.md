@@ -352,8 +352,8 @@ These declarations select authoring and proof obligations; they do not attest im
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `ba945b5c5952fa3044153d498bc24a7003fa19bbc9c34b35daa26b8a038a7598`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (234 files), `tests/` (232 files)
+- Repository signal fingerprint: `a52e4c3ea27fd78421168efba47f9a86173a8f3692d92f8e4e1bb5fe117facef`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (234 files), `tests/` (233 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 
@@ -570,6 +570,40 @@ resource accounting and scans; 0.16 adds logical connectors/session transport.
 These additions do not confer application authority or independently prove a
 hosted deployment. Exact candidate compatibility remains a hosted verification
 obligation, with no local test execution.
+
+## Diagnostic overrides cannot authorize readiness (#1659)
+
+Git, tooling and fingerprint gate-skip variables support diagnostic fixtures;
+their presence must never authorize full readiness, publication or verified
+completion. The shared runtime must reject a full claim before prerequisites or
+provider selection, and CLI/RPC/publication paths must preserve that boundary.
+Existing CI-local and project-prerequisite diagnostics retain their explicit
+partial scope and `publication_ready=false` behavior.
+
+Use the existing judgment, validation-history and receipt owners. Keep historical
+observations intact and require a fresh applicable validation after removing an
+override. Real child-process regressions isolate environment changes and must
+verify both rejected full claims and truthful diagnostics. No local test result,
+current hosted success or completed repair is claimed by this plan.
+
+## Observed workunit proof convergence (#1660)
+
+The existing `record_proof_result` pass row is a declaration: it initializes both
+proof epochs to None, and `ensure_verified_ready` currently checks only pass rows.
+Durable execution binding and referenced-byte hashes preserve custody/integrity
+but do not authenticate who observed a successful check. Whole publication has
+additional gates, so misleading VERIFIED state is not by itself a proven forge
+merge bypass. Preserve that distinction in real binary adversarial controls.
+
+Converge VERIFIED with the existing canonical `validation_history` producer.
+A current canonical observation must bind this exact task, workunit contract,
+source, accepted target, policy and tool closure. Add only bounded references and
+read-only applicability inputs to existing proof records, not a second datastore
+or evaluator. Runtime terminal judgment must consume actual completed checks;
+opaque additional gates remain unproven. Legacy declarations retain history and
+require fresh observed proof, with explicit safe downgrade/recovery. No new
+cryptographic trust root or OS-isolation claim is inferred from shared UID access.
+No local tests run; supported real CLI/runtime and hosted proof remain required.
 
 ## Mixed-store recovery (#1657)
 

@@ -1,7 +1,7 @@
 //! Real consumer runtime contracts. Shared support contains no test cases.
 #![cfg(any(target_os = "linux", target_os = "macos"))]
 
-use decapod::core::bounded_process::Cancellation;
+use decapod::core::bounded_process::{BoundedCommand, Cancellation};
 use decapod::core::readiness_evidence::{Conclusion, Observation, Provider, SuiteEvidence};
 use decapod::core::readiness_profile;
 use decapod::core::repository_profile;
@@ -31,6 +31,57 @@ fn blocked(report: &ValidationReport, expected: &str) {
             .any(|blocker| blocker.detail.contains(expected) || blocker.code.contains(expected)),
         "expected {expected}: {report:?}"
     );
+}
+
+#[test]
+fn diagnostic_overrides_cannot_establish_full_runtime_readiness() {
+    const PROBE: &str = "DECAPOD_TEST_READINESS_OVERRIDE_PROBE";
+    if let Ok(expected) = std::env::var(PROBE) {
+        let fixture = Fixture::new();
+        let mut host = fixture.host();
+        let report = fixture.validate(&mut host);
+        if expected == "allow" {
+            assert!(report.ready, "{report:?}");
+            assert!(report.proof_ready);
+            assert_eq!(host.execution_attempts, 1);
+        } else {
+            blocked(&report, "READINESS_GATE_OVERRIDE_UNSUPPORTED");
+            assert!(!report.proof_ready);
+            assert!(report.evidence_path.is_none());
+            assert_eq!(host.selections, 0);
+            assert_eq!(host.execution_attempts, 0);
+        }
+        return;
+    }
+    let prefix = module_path!()
+        .split_once("::")
+        .map(|(_, path)| format!("{path}::"))
+        .unwrap_or_default();
+    let case = format!("{prefix}diagnostic_overrides_cannot_establish_full_runtime_readiness");
+    for (name, value, expected) in [
+        ("DECAPOD_VALIDATE_SKIP_GIT_GATES", "", "deny"),
+        ("DECAPOD_VALIDATE_SKIP_GIT_GATES", "0", "deny"),
+        ("DECAPOD_VALIDATE_SKIP_TOOLING_GATES", "false", "deny"),
+        ("DECAPOD_VALIDATE_SKIP_FINGERPRINT_GATES", "true", "deny"),
+        ("DECAPOD_VALIDATE_SKIP_FINGERPRINT_GATES", "false", "allow"),
+    ] {
+        let output = std::process::Command::new(std::env::current_exe().unwrap())
+            .args(["--exact", &case, "--nocapture"])
+            .env_remove("DECAPOD_VALIDATE_SKIP_GIT_GATES")
+            .env_remove("DECAPOD_VALIDATE_SKIP_TOOLING_GATES")
+            .env_remove("DECAPOD_VALIDATE_SKIP_FINGERPRINT_GATES")
+            .env(PROBE, expected)
+            .env(name, value)
+            .bounded_output(std::time::Duration::from_secs(120))
+            .unwrap();
+        assert!(
+            output.status.success(),
+            "{name}={value:?}: stdout={} stderr={}",
+            String::from_utf8_lossy(&output.stdout),
+            String::from_utf8_lossy(&output.stderr)
+        );
+        assert!(String::from_utf8_lossy(&output.stdout).contains("1 passed"));
+    }
 }
 
 #[test]

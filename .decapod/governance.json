@@ -861,6 +861,14 @@
       "proof_refs": [
         "https://github.com/DecapodLabs/decapod/issues/1667"
       ]
+    },
+    {
+      "id": "pr1678-integrate-1c1fa5dc-v1451",
+      "summary": "Integrate accepted master 1c1fa5dcfc2d31cc2c09dcf5d18470dc62900dd5 and official v0.145.1 into PR1678 while retaining published Dactyl0.16.1, independent canonical proof, diagnostic admission denial, all required checks and the patched Quinn floor. Preserve current task history and both authored contracts, remove identical duplicate prose, and regenerate projections through the kernel. Fresh GitHub Actions pending; no local tests or Buildkite execution.",
+      "input_digest": "sha256:725b0655b65296dda28b98c0fed9b4a1c0d14aa7198475a8fc359d83898b2067",
+      "proof_refs": [
+        "https://github.com/DecapodLabs/decapod/pull/1688"
+      ]
     }
   ],
   "intents": {
@@ -901,23 +909,23 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "The SDK integration retains the same required proof and 10/20-second runtime bounds. Optional recovery probes only existing disabled-runtime overrides; actual hosted core revalidation is needed after job132367333351 failed at20.454 seconds. Unit transport observations do not prove real container isolation or publication readiness.",
-          "reviewed_code_fingerprint": "ba945b5c5952fa3044153d498bc24a7003fa19bbc9c34b35daa26b8a038a7598",
-          "spec_material_hash": "3aeba00a479cd53f1202378520b186fe8ee4b79652ac6cfec470671eccf9c528"
+          "reason": "Integrate accepted master 1c1fa5dcfc2d31cc2c09dcf5d18470dc62900dd5 and official v0.145.1 into PR1678 while retaining published Dactyl0.16.1, independent canonical proof, diagnostic admission denial, all required checks and the patched Quinn floor. Preserve current task history and both authored contracts, remove identical duplicate prose, and regenerate projections through the kernel. Fresh GitHub Actions pending; no local tests or Buildkite execution.",
+          "reviewed_code_fingerprint": "a52e4c3ea27fd78421168efba47f9a86173a8f3692d92f8e4e1bb5fe117facef",
+          "spec_material_hash": "f755465f6eea497867ed5dafc34d4e1f409d3241668ed695b7c925eeb67fcef1"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "The SDK integration retains the same required proof and 10/20-second runtime bounds. Optional recovery probes only existing disabled-runtime overrides; actual hosted core revalidation is needed after job132367333351 failed at20.454 seconds. Unit transport observations do not prove real container isolation or publication readiness.",
-          "reviewed_code_fingerprint": "ba945b5c5952fa3044153d498bc24a7003fa19bbc9c34b35daa26b8a038a7598",
-          "spec_material_hash": "d955792e88cfb971b70244613af33eb00753972b73d3ca1198529e589d660997"
+          "reason": "Integrate accepted master 1c1fa5dcfc2d31cc2c09dcf5d18470dc62900dd5 and official v0.145.1 into PR1678 while retaining published Dactyl0.16.1, independent canonical proof, diagnostic admission denial, all required checks and the patched Quinn floor. Preserve current task history and both authored contracts, remove identical duplicate prose, and regenerate projections through the kernel. Fresh GitHub Actions pending; no local tests or Buildkite execution.",
+          "reviewed_code_fingerprint": "a52e4c3ea27fd78421168efba47f9a86173a8f3692d92f8e4e1bb5fe117facef",
+          "spec_material_hash": "f36603a649e72ded62a3832502756388ce8ede9cfdd9e27d1f3da1a26e038cb1"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "The SDK integration retains the same required proof and 10/20-second runtime bounds. Optional recovery probes only existing disabled-runtime overrides; actual hosted core revalidation is needed after job132367333351 failed at20.454 seconds. Unit transport observations do not prove real container isolation or publication readiness.",
-          "reviewed_code_fingerprint": "ba945b5c5952fa3044153d498bc24a7003fa19bbc9c34b35daa26b8a038a7598",
-          "spec_material_hash": "8d3324c75b5544778861a99d656f23e500febb0d04269106c9f9562de4cde672"
+          "reason": "Integrate accepted master 1c1fa5dcfc2d31cc2c09dcf5d18470dc62900dd5 and official v0.145.1 into PR1678 while retaining published Dactyl0.16.1, independent canonical proof, diagnostic admission denial, all required checks and the patched Quinn floor. Preserve current task history and both authored contracts, remove identical duplicate prose, and regenerate projections through the kernel. Fresh GitHub Actions pending; no local tests or Buildkite execution.",
+          "reviewed_code_fingerprint": "a52e4c3ea27fd78421168efba47f9a86173a8f3692d92f8e4e1bb5fe117facef",
+          "spec_material_hash": "4968b9931ca9b7d18c80b4ae43bf1cba93fd71b4315abc11cc70911824fc146d"
         }
       ],
       "state": "APPROVED",
@@ -928,13 +936,13 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1794642008Z"
+      "updated_at": "1794656701Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:646934308b5bd8c223d27c304f93a0d80c47f1b7d0449e79f111cc992a50969e",
+      "artifact_hash": "sha256:3dd7d4e81eb455f7c2c4bd8a609bfb7288a4eee6d39032277b1e9616ead8a7f4",
       "checks": [],
       "current_phase": "implementation",
       "custody": {
@@ -1230,10 +1238,17 @@
             "intent_id": "intent:change_01M7BCN0CS3Z8AJ7TZ491WJ7CJ",
             "kind": "trajectory_step_recorded",
             "sequence": 43
+          },
+          {
+            "detail": "trajectory:branch_01M7BCN0FD8AE623HXNGA0C8F9",
+            "event_id": "event:44",
+            "intent_id": "intent:change_01M7BCN0CS3Z8AJ7TZ491WJ7CJ",
+            "kind": "trajectory_step_recorded",
+            "sequence": 44
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 43,
+        "next_sequence": 44,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M7BCN0FD8AE623HXNGA0C8F9": {
@@ -1876,6 +1891,22 @@
                 "validation_findings": [
                   "Hosted verification and exact-candidate publication readiness remain pending; no local tests run."
                 ]
+              },
+              {
+                "action": "implementation",
+                "custody_event_id": "event:44",
+                "observations": [
+                  ".decapod/managed/specs/VALIDATION.md",
+                  "https://github.com/DecapodLabs/decapod/pull/1688"
+                ],
+                "proof_refs": [],
+                "scope": [
+                  "issue-1667"
+                ],
+                "sequence": 44,
+                "validation_findings": [
+                  "Integrate accepted master 1c1fa5dcfc2d31cc2c09dcf5d18470dc62900dd5 and official v0.145.1 into PR1678 while retaining published Dactyl0.16.1, independent canonical proof, diagnostic admission denial, all required checks and the patched Quinn floor. Preserve current task history and both authored contracts, remove identical duplicate prose, and regenerate projections through the kernel. Fresh GitHub Actions pending; no local tests or Buildkite execution."
+                ]
               }
             ]
           }
@@ -1888,7 +1919,8 @@
         "https://github.com/DecapodLabs/decapod/pull/1675",
         "https://github.com/DecapodLabs/decapod/pull/1682",
         "https://github.com/DecapodLabs/decapod/pull/1683",
-        "https://github.com/DecapodLabs/decapod/pull/1685"
+        "https://github.com/DecapodLabs/decapod/pull/1685",
+        "https://github.com/DecapodLabs/decapod/pull/1688"
       ],
       "inspected_files": [],
       "intent_id": "intent:change_01M7BCN0CS3Z8AJ7TZ491WJ7CJ",
@@ -1927,6 +1959,7 @@
       "tool_calls": [],
       "unresolved_assumptions": [
         "Hosted verification and exact-candidate publication readiness remain pending; no local tests run.",
+        "Integrate accepted master 1c1fa5dcfc2d31cc2c09dcf5d18470dc62900dd5 and official v0.145.1 into PR1678 while retaining published Dactyl0.16.1, independent canonical proof, diagnostic admission denial, all required checks and the patched Quinn floor. Preserve current task history and both authored contracts, remove identical duplicate prose, and regenerate projections through the kernel. Fresh GitHub Actions pending; no local tests or Buildkite execution.",
         "Integrate accepted master 9767ae9a3ff1c7452101482218a17c55cf569b71 after accepted release v0.144.5 with issue1667. Preserve current task journal/checkpoints and authored specs from both branches; regenerate projections through the kernel. Previous candidate readiness does not apply; no local tests.",
         "Integrate accepted master e8f8848d19a02ad8e2a580cf7722fe4ff9342221 after merged bootstrap repair PR1683 with issue1667. Preserve current task journal/checkpoints and authored specs from both branches; regenerate projections through the kernel. Previous candidate readiness does not apply; no local tests.",
         "Integrate accepted master f779e39111ec8b3c8c41569f68a3a7604df167e7 and merged1675 accepted-policy hardening with issue1667. Preserve current task journal/checkpoints and authored specs from both branches; regenerate projections through the kernel. Previous candidate readiness does not apply; no local tests.",

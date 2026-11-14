@@ -1341,8 +1341,8 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `ba945b5c5952fa3044153d498bc24a7003fa19bbc9c34b35daa26b8a038a7598`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (234 files), `tests/` (232 files)
+- Repository signal fingerprint: `a52e4c3ea27fd78421168efba47f9a86173a8f3692d92f8e4e1bb5fe117facef`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (234 files), `tests/` (233 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 
@@ -1927,8 +1927,30 @@ consumer behavior; this update cannot establish real hosted backend parity.
 
 No local compilation or tests were run. Dependency resolution and Bazel module
 regeneration are input-authoring operations, not proof. Hosted execution and the
-full exact-candidate official Decapod0.144.3 publication gate remain pending;
+full exact-candidate official Decapod0.145.1 publication gate remain pending;
 provider requirements and accepted execution contracts are unchanged.
+
+## Diagnostic override acceptance regressions (#1659)
+
+`tests/consumer_readiness.rs` runs the actual full runtime in isolated child
+processes for empty/zero Git skips, false tooling skips, truthy fingerprint skips
+and a false fingerprint control. Denied claims must select/execute nothing and
+produce no evidence directory; the false fingerprint control must execute real
+native proof. No parent test process mutates its environment.
+
+The existing genuine claimed-worktree scenario in
+`tests/support/fresh_docs_readiness.rs` invokes full CLI validation, RPC validation,
+workspace publication and historical validated completion under overrides. It
+requires actual kernel rejection, no successful judgment or full receipt, and
+unchanged source, then retains the normal positive proof flow. Broker unit tests
+use real capture/apply subprocesses over different inherited worker values and
+invoke the real environment gate, proving both retained denial and cleared scope.
+
+The existing partial CLI admission checks `scope=ci_local` and
+`publication_ready=false`; it remains a prerequisite observation rather than
+complete proof. Current hosted execution and full remote readiness are pending.
+No local tests, disabled required checks, fabricated receipts or workunit-forgery
+completion claims are included in this checkpoint.
 
 ## Accepted local proof policy regressions (#1658)
 
@@ -1977,6 +1999,48 @@ After integrating accepted master `9767ae9a3ff1c7452101482218a17c55cf569b71`, re
 
 `tests/validate_termination.rs::validate_smoke_runtime_is_bounded_without_contention` establishes a named session before timing and asserts that repeated prerequisite checks reuse it. The existing per-call 10-second and aggregate 20-second limits remain unchanged. This measures steady-state prerequisite latency; it does not establish full publication readiness. Hosted verification is required for this candidate.
 
-## Accepted release projection refresh (v0.144.5)
+## Observed workunit regression evidence (#1660)
 
-After integrating accepted master `9767ae9a3ff1c7452101482218a17c55cf569b71`, regenerate the agent entrypoints and managed release projections with the official v0.144.5 binary. Accepted verification requirements remain unchanged. Projection integrity is a prerequisite; fresh hosted GitHub Actions must evaluate this candidate. No local tests or full publication-readiness claim accompany this refresh.
+`validation_history_workunit_tests` executes two real repository checks through
+the existing sealed runtime, archives their actual observation and exercises
+workunit acceptance, stale input rejection, selector substitution, interrupted
+projection recovery and archival races. Portable completion tests reuse genuine
+observed proof. Legacy CLI/publication cases reject pass-only declarations;
+journal tests preserve file-integrity and lease/recovery coverage without
+mislabeling resumability as VERIFIED proof. The local accepted-target transport
+is a real bare Git fixture, not full authenticated forge or native agent proof.
+Hosted execution and final exact-candidate publication validation remain pending.
+No local tests or CI are run during authoring.
+
+## PR1677 integration with accepted v0.145.0
+
+Integrate accepted master `706569c7ac2f156def00a331134fee52fb444042`, including the canonical observed-workunit
+proof producer from #1681. Diagnostic overrides must still be rejected before
+full readiness, publication and validated completion; the new canonical archive
+cannot convert a diagnostic result into full proof. Preserve both contracts and
+the broker's durable-outcome precedence and bounded request windows.
+
+Official Decapod v0.145.0 regenerates release-bound entrypoints, the managed image
+pin and spec projections. Reconcile the reviewed source inventory for this
+accepted release without changing required checks or provider policy. Earlier
+success for `65da34111d87d70792b59e8fb02ac067d15451ce` against `e8f8848d19a02ad8e2a580cf7722fe4ff9342221` remains historical.
+Fresh GitHub Actions must evaluate the integrated candidate. No local tests run;
+Buildkite is excluded at the user's direction and full kernel publication
+readiness is not asserted by this integration checkpoint.
+
+## PR1678 integration with accepted v0.145.1
+
+Integrate accepted master `1c1fa5dcfc2d31cc2c09dcf5d18470dc62900dd5` with the published Dactyl 0.16.1 registry
+pin and checksum. Retain the accepted canonical observed-proof and diagnostic
+admission boundaries from #1681 and #1677. The SDK remains transport/storage
+infrastructure; it cannot declare task completion or substitute local authority
+for a rejected cloud principal. Keep the patched Quinn floor and existing
+cell, parameter, result-accounting and wire limits distinct.
+
+Regenerate entrypoints, the managed image pin and projections through official
+Decapod v0.145.1. Reviewed inventory changes identify the accepted release and
+SDK inputs without changing required checks or provider policy. Source and
+proof metadata from `fbe399289d1f24011476312e16653e8d830f490a` against
+`e8f8848d19a02ad8e2a580cf7722fe4ff9342221` remain historical. Fresh GitHub Actions
+must verify this integrated candidate. No local tests run; Buildkite is excluded
+at the user's direction and full native publication readiness is not asserted.

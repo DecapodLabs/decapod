@@ -920,8 +920,8 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `ba945b5c5952fa3044153d498bc24a7003fa19bbc9c34b35daa26b8a038a7598`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (234 files), `tests/` (232 files)
+- Repository signal fingerprint: `a52e4c3ea27fd78421168efba47f9a86173a8f3692d92f8e4e1bb5fe117facef`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (234 files), `tests/` (233 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 
@@ -1205,6 +1205,16 @@ remain selected by the existing application facade. SDK resource budgets are
 retained: SQL, parameters, decoded rows, wire bodies and deadlines fail closed.
 No new connector policy interpreter, daemon, HTTP/3 or hosted runner is added.
 
+## Diagnostic overrides and full readiness (#1659)
+
+`validation_runtime::require_full_readiness_environment` is the shared admission
+for full claims. The runtime invokes it before prerequisites or selection; CLI
+and RPC full dispatch, workspace publication and current/historical validated
+completion invoke the same owner. The originating local completion process checks
+before broker handoff. `group_broker::CallerContext` carries and clears diagnostic
+flags per request so worker scope cannot come from another caller. Partial
+project-prerequisite and CI-local routes do not gain publication authority.
+
 ## Preserve accepted local verification policy (#1658)
 
 `validation_runtime::load_project` reads the target's committed proof configuration
@@ -1225,6 +1235,18 @@ command. The existing discovered validation inventory is the boundary; it is not
 a claim to infer the semantic or transitive completeness of arbitrary commands.
 Ordinary subject changes still require fresh source-bound execution. Changes to
 inventoried validation definitions require a separately accepted policy revision.
+
+## Observed workunit acceptance (#1660)
+
+`validation_runtime` remains the complete proof producer and
+`validation_history::finish_archive` owns canonical verification-journal append.
+`workunit::transition_status` consumes that observed record and remeasures current
+inputs rather than treating declared pass rows, file hashes or resumable custody
+as completion proof. The existing workunit journal retains original generations;
+its projection, execution binding and independently checked proof must all be
+current at public consumption. Optional bounded, deduplicated input references
+reuse the canonical record; there is no second receipt store.
+See `docs/architecture/workunit-observed-proof.md` for migration and scope.
 
 ## Legacy TODO bootstrap boundary (#1657)
 
