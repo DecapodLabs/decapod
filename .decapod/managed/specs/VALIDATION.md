@@ -1947,3 +1947,7 @@ failed evidence is retained and no local tests or full PR readiness are claimed.
 ## Repeated validation runtime fixture
 
 `tests/validate_termination.rs::validate_smoke_runtime_is_bounded_without_contention` establishes a named session before timing and asserts that repeated prerequisite checks reuse it. The existing per-call 10-second and aggregate 20-second limits remain unchanged. This measures steady-state prerequisite latency; it does not establish full publication readiness. Hosted verification is required for this candidate.
+
+## Accepted release projection refresh (v0.144.5)
+
+After integrating accepted master `9767ae9a3ff1c7452101482218a17c55cf569b71`, regenerate the agent entrypoints and managed release projections with the official v0.144.5 binary. Accepted verification requirements remain unchanged. Projection integrity is a prerequisite; fresh hosted GitHub Actions must evaluate this candidate. No local tests or full publication-readiness claim accompany this refresh.

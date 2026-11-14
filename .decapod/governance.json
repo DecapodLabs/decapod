@@ -677,6 +677,14 @@
       "proof_refs": [
         "https://github.com/DecapodLabs/decapod/issues/1657"
       ]
+    },
+    {
+      "id": "issue-1657-file-18",
+      "summary": "fix(governance): regenerate actual 0.144.5 entrypoint templates; file-by-file checkpoint, verification pending.",
+      "input_digest": "sha256:4d8e0c9a144560c603b37234a5ea61a4c3df5d675a17d5c5d160d74da66d3187",
+      "proof_refs": [
+        "https://github.com/DecapodLabs/decapod/issues/1657"
+      ]
     }
   ],
   "intents": {
@@ -717,21 +725,21 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Hosted GitHub Actions core job132301086296 failed the repeated-validation aggregate bound because the fixture re-enrolled an unknown identity for every iteration. Acquire named custody once before timing, assert session reuse, preserve all real checks and original10s/20s limits. No local tests.",
+          "reason": "Hosted GitHub standalone validation jobs132318205665 and132317939558 reported release-bound drift after the accepted v0.144.5 release. Regenerate through supported init refresh/proof on official0.144.5, preserve accepted checks/config, and collect fresh hosted proof. No local tests; Buildkite excluded by user.",
           "reviewed_code_fingerprint": "0aa343d6ff5346e283cc22ec80974c060944c3009863701d40965a0b3023c8b5",
           "spec_material_hash": "d4d40d000610752ebaae7f3d6ea748a11df0094304dcb0b43f75f702fba5e44f"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Hosted GitHub Actions core job132301086296 failed the repeated-validation aggregate bound because the fixture re-enrolled an unknown identity for every iteration. Acquire named custody once before timing, assert session reuse, preserve all real checks and original10s/20s limits. No local tests.",
+          "reason": "Hosted GitHub standalone validation jobs132318205665 and132317939558 reported release-bound drift after the accepted v0.144.5 release. Regenerate through supported init refresh/proof on official0.144.5, preserve accepted checks/config, and collect fresh hosted proof. No local tests; Buildkite excluded by user.",
           "reviewed_code_fingerprint": "0aa343d6ff5346e283cc22ec80974c060944c3009863701d40965a0b3023c8b5",
           "spec_material_hash": "93fba7c3a13b58509ecb595a2889861cc89a73027a1d9a3ee35032397120be24"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Hosted GitHub Actions core job132301086296 failed the repeated-validation aggregate bound because the fixture re-enrolled an unknown identity for every iteration. Acquire named custody once before timing, assert session reuse, preserve all real checks and original10s/20s limits. No local tests.",
+          "reason": "Hosted GitHub standalone validation jobs132318205665 and132317939558 reported release-bound drift after the accepted v0.144.5 release. Regenerate through supported init refresh/proof on official0.144.5, preserve accepted checks/config, and collect fresh hosted proof. No local tests; Buildkite excluded by user.",
           "reviewed_code_fingerprint": "0aa343d6ff5346e283cc22ec80974c060944c3009863701d40965a0b3023c8b5",
           "spec_material_hash": "3a29b03266a725360b19c334671e75185f9042ba962cc86262f2ef803dff9368"
         }
@@ -744,13 +752,13 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1794627801Z"
+      "updated_at": "1794630295Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:228ab17ee9cd2d9e47574eabc70edc68774af2c55cb9fe75833da10d7f7d551a",
+      "artifact_hash": "sha256:13a8060680c5f6a85ab9935ae9b5b2162d5bbb505d4954af6b44fc4ceb9ccae4",
       "checks": [],
       "current_phase": "implementation",
       "custody": {
@@ -885,10 +893,17 @@
             "intent_id": "intent:change_01M7BCHP65HZ6F2PKTZGVXHRDW",
             "kind": "trajectory_step_recorded",
             "sequence": 20
+          },
+          {
+            "detail": "trajectory:branch_01M7BCHP9CVSP7GQJ81EFVVC7P",
+            "event_id": "event:21",
+            "intent_id": "intent:change_01M7BCHP65HZ6F2PKTZGVXHRDW",
+            "kind": "trajectory_step_recorded",
+            "sequence": 21
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 20,
+        "next_sequence": 21,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M7BCHP9CVSP7GQJ81EFVVC7P": {
@@ -1161,6 +1176,22 @@
                   "issue-1657"
                 ],
                 "sequence": 20,
+                "validation_findings": [
+                  "Hosted verification and exact-candidate publication readiness remain pending; no local tests run."
+                ]
+              },
+              {
+                "action": "implementation",
+                "custody_event_id": "event:21",
+                "observations": [
+                  ".decapod/managed/specs/VALIDATION.md",
+                  "https://github.com/DecapodLabs/decapod/issues/1657"
+                ],
+                "proof_refs": [],
+                "scope": [
+                  "issue-1657"
+                ],
+                "sequence": 21,
                 "validation_findings": [
                   "Hosted verification and exact-candidate publication readiness remain pending; no local tests run."
                 ]
