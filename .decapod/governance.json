@@ -749,6 +749,14 @@
       "proof_refs": [
         "https://github.com/DecapodLabs/decapod/issues/1659"
       ]
+    },
+    {
+      "id": "issue-1659-file-27",
+      "summary": "test(broker): repair diagnostic forwarding probe and scoped control assertion; file-by-file checkpoint, verification pending.",
+      "input_digest": "sha256:5b02cb1b299bc69010bcb4910fad2a177462812c1251b948f7f56f678cecf5b6",
+      "proof_refs": [
+        "https://github.com/DecapodLabs/decapod/issues/1659"
+      ]
     }
   ],
   "intents": {
@@ -789,22 +797,22 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Diagnostic flags must reach the authoritative readiness guard with the original caller; arbitrary controls remain denied. Hosted run 43527744168 found this obsolete deny-list expectation.",
-          "reviewed_code_fingerprint": "aa71248f8fb187be0cfa86dde3512da21df48f130263b219494a5c32be596cf3",
+          "reason": "Hosted run 43530634580 exposed the previous edit hit the forwarding probe instead of the deny-list case. Restore the real diagnostic probe and scope arbitrary-control rejection to its exact test function.",
+          "reviewed_code_fingerprint": "f02924ab6ccbeabca590227b6b3e7522675e76078580d526fea8f578efe6f1b0",
           "spec_material_hash": "7393e220900cbc6f4ddeb0bd9b9835305dbeaa3e21494a74edc55487949f8123"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Diagnostic flags must reach the authoritative readiness guard with the original caller; arbitrary controls remain denied. Hosted run 43527744168 found this obsolete deny-list expectation.",
-          "reviewed_code_fingerprint": "aa71248f8fb187be0cfa86dde3512da21df48f130263b219494a5c32be596cf3",
+          "reason": "Hosted run 43530634580 exposed the previous edit hit the forwarding probe instead of the deny-list case. Restore the real diagnostic probe and scope arbitrary-control rejection to its exact test function.",
+          "reviewed_code_fingerprint": "f02924ab6ccbeabca590227b6b3e7522675e76078580d526fea8f578efe6f1b0",
           "spec_material_hash": "09829c5df95306633263d0edd36dd78fd07c643e6939781caa40f5e6568a8cd3"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Diagnostic flags must reach the authoritative readiness guard with the original caller; arbitrary controls remain denied. Hosted run 43527744168 found this obsolete deny-list expectation.",
-          "reviewed_code_fingerprint": "aa71248f8fb187be0cfa86dde3512da21df48f130263b219494a5c32be596cf3",
+          "reason": "Hosted run 43530634580 exposed the previous edit hit the forwarding probe instead of the deny-list case. Restore the real diagnostic probe and scope arbitrary-control rejection to its exact test function.",
+          "reviewed_code_fingerprint": "f02924ab6ccbeabca590227b6b3e7522675e76078580d526fea8f578efe6f1b0",
           "spec_material_hash": "a19fd3a1497ea4b61d73ff910b7be5696baa3e2db029c515072d00eee838f4d0"
         }
       ],
@@ -816,13 +824,13 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1794614107Z"
+      "updated_at": "1794615221Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:29ad118fe0524e4a51ceea1edfa6ecfe4a97d3453478bb18b70a57263ac14d49",
+      "artifact_hash": "sha256:a901ea8427903b4041b180ec09c2857f3baa19eccd4cbcd944c80cf9b3ff5cad",
       "checks": [],
       "current_phase": "implementation",
       "custody": {
@@ -1027,10 +1035,17 @@
             "intent_id": "intent:change_01M7BCEHXJQR8HVADJF91PJKGD",
             "kind": "trajectory_step_recorded",
             "sequence": 30
+          },
+          {
+            "detail": "trajectory:branch_01M7BCEJ05EP527M18XXSF6GK6",
+            "event_id": "event:31",
+            "intent_id": "intent:change_01M7BCEHXJQR8HVADJF91PJKGD",
+            "kind": "trajectory_step_recorded",
+            "sequence": 31
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 30,
+        "next_sequence": 31,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M7BCEJ05EP527M18XXSF6GK6": {
@@ -1465,6 +1480,22 @@
                   "issue-1659"
                 ],
                 "sequence": 30,
+                "validation_findings": [
+                  "Hosted verification and exact-candidate publication readiness remain pending; no local tests run."
+                ]
+              },
+              {
+                "action": "implementation",
+                "custody_event_id": "event:31",
+                "observations": [
+                  "tests/unit/core/group_broker_tests.rs",
+                  "https://github.com/DecapodLabs/decapod/issues/1659"
+                ],
+                "proof_refs": [],
+                "scope": [
+                  "issue-1659"
+                ],
+                "sequence": 31,
                 "validation_findings": [
                   "Hosted verification and exact-candidate publication readiness remain pending; no local tests run."
                 ]

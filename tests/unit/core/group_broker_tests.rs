@@ -4,7 +4,7 @@ fn broker_diagnostic_scope_is_request_local() {
     use crate::core::bounded_process::BoundedCommand;
     const PROBE: &str = "DECAPOD_TEST_BROKER_DIAGNOSTIC_SCOPE";
     let names = [
-        "DECAPOD_VALIDATE_UNKNOWN_BYPASS",
+        "DECAPOD_VALIDATE_SKIP_GIT_GATES",
         "DECAPOD_VALIDATE_SKIP_TOOLING_GATES",
         "DECAPOD_VALIDATE_SKIP_FINGERPRINT_GATES",
     ];
@@ -293,7 +293,7 @@ fn caller_context_cannot_forward_arbitrary_environment_or_broker_controls() {
     for key in [
         "PATH",
         "DECAPOD_GROUP_BROKER_INTERNAL",
-        "DECAPOD_VALIDATE_SKIP_GIT_GATES",
+        "DECAPOD_VALIDATE_UNKNOWN_BYPASS",
     ] {
         caller.environment.insert(key.into(), "1".into());
         assert!(caller.validate().is_err(), "accepted unscoped key {key}");
