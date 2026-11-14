@@ -1093,6 +1093,14 @@
       "proof_refs": [
         "https://github.com/DecapodLabs/decapod/issues/1660"
       ]
+    },
+    {
+      "id": "issue-1660-file-70",
+      "summary": "docs(workunit): document migration to owned verified status transitions; file-by-file checkpoint, verification pending.",
+      "input_digest": "sha256:538b860ccbce26ad438a4175ab1125f81db4cdfdea216292df529230b63eb6a9",
+      "proof_refs": [
+        "https://github.com/DecapodLabs/decapod/issues/1660"
+      ]
     }
   ],
   "intents": {
@@ -1133,22 +1141,22 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Describe the stricter reuse boundary while keeping historical observations immutable and already-verified read/resume behavior intact. Exact-candidate GitHub verification is pending; no local tests.",
-          "reviewed_code_fingerprint": "b0b92febd130c526e9f144ad72fed20e7b30d4202c074db4ca3ea5c9b85a2f37",
+          "reason": "Document the narrow unsafe-compatibility change, typed repair path and unchanged historical encoding. Fresh GitHub Actions proof remains pending; no local tests.",
+          "reviewed_code_fingerprint": "e3764591a8ba43e8d5ec3b90b7265c16157c90c2aa201b03b6ff69af003369a1",
           "spec_material_hash": "e799665f0f6c5025ac094765c6f38097a6894c63fd4f08593900c2567475d6e9"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Describe the stricter reuse boundary while keeping historical observations immutable and already-verified read/resume behavior intact. Exact-candidate GitHub verification is pending; no local tests.",
-          "reviewed_code_fingerprint": "b0b92febd130c526e9f144ad72fed20e7b30d4202c074db4ca3ea5c9b85a2f37",
+          "reason": "Document the narrow unsafe-compatibility change, typed repair path and unchanged historical encoding. Fresh GitHub Actions proof remains pending; no local tests.",
+          "reviewed_code_fingerprint": "e3764591a8ba43e8d5ec3b90b7265c16157c90c2aa201b03b6ff69af003369a1",
           "spec_material_hash": "10df59dc9f256a32e3851047d6d684158b0453828124370c3bb74edc6e74af49"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Describe the stricter reuse boundary while keeping historical observations immutable and already-verified read/resume behavior intact. Exact-candidate GitHub verification is pending; no local tests.",
-          "reviewed_code_fingerprint": "b0b92febd130c526e9f144ad72fed20e7b30d4202c074db4ca3ea5c9b85a2f37",
+          "reason": "Document the narrow unsafe-compatibility change, typed repair path and unchanged historical encoding. Fresh GitHub Actions proof remains pending; no local tests.",
+          "reviewed_code_fingerprint": "e3764591a8ba43e8d5ec3b90b7265c16157c90c2aa201b03b6ff69af003369a1",
           "spec_material_hash": "366e74fb3bc9491cc900dbede2cffce06e3d8f7667d3d9b64641eb9bd9d7a695"
         }
       ],
@@ -1160,13 +1168,13 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1794625728Z"
+      "updated_at": "1794626674Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:32c9732c434a05c559483ac424d5e700ef49e896a9d48b869a9ceb6e3e1acfa6",
+      "artifact_hash": "sha256:4783d32f53d3ad1242d5a6850775ded3f90a41d16371942c55ffdcc9a8c7c86e",
       "checks": [],
       "current_phase": "implementation",
       "custody": {
@@ -1665,10 +1673,17 @@
             "intent_id": "intent:change_01M7BCFASGT4DQG4ZADT2BP5G0",
             "kind": "trajectory_step_recorded",
             "sequence": 72
+          },
+          {
+            "detail": "trajectory:branch_01M7BCFAWAYM3TXSVTHC1N7YZE",
+            "event_id": "event:73",
+            "intent_id": "intent:change_01M7BCFASGT4DQG4ZADT2BP5G0",
+            "kind": "trajectory_step_recorded",
+            "sequence": 73
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 72,
+        "next_sequence": 73,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M7BCFAWAYM3TXSVTHC1N7YZE": {
@@ -2774,6 +2789,22 @@
                   "issue-1660"
                 ],
                 "sequence": 72,
+                "validation_findings": [
+                  "Hosted verification and exact-candidate publication readiness remain pending; no local tests run."
+                ]
+              },
+              {
+                "action": "implementation",
+                "custody_event_id": "event:73",
+                "observations": [
+                  "docs/architecture/workunit-observed-proof.md",
+                  "https://github.com/DecapodLabs/decapod/issues/1660"
+                ],
+                "proof_refs": [],
+                "scope": [
+                  "issue-1660"
+                ],
+                "sequence": 73,
                 "validation_findings": [
                   "Hosted verification and exact-candidate publication readiness remain pending; no local tests run."
                 ]

@@ -71,6 +71,14 @@ checkpoint, run full validation, then request the verified transition. Failed or
 unknown operations must be inspected before retry, using the existing journal
 recovery interfaces.
 
+Prepared snapshot writers must use the owned `transition_status` operation for
+changes into or out of `VERIFIED`. Keeping the same status with unchanged valid
+proof remains supported. This closes the retained-reference downgrade path:
+owned downgrade clears the old authority, and promotion checks the newly
+observed generation. Callers that previously edited this status in a prepared
+manifest receive `WORKUNIT_DOMAIN_TRANSITION_REQUIRED` and must migrate to that
+owned operation; no historical record is silently rewritten.
+
 Rust callers constructing `WorkUnitManifest` add `validation_record: None` for a
 legacy declaration. Proof consumers pass the repository root to
 `validate_verified_manifest(root, manifest)` so context-free status checks cannot
