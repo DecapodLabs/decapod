@@ -1150,7 +1150,22 @@ fn validate_smoke_runtime_is_bounded_without_contention() {
     // Time the bounded project prerequisite stage; full CI has its own execution budget.
     // This prerequisite result is not full publication-readiness proof.
 
-    let (_tmp, dir, password) = setup_repo();
+    let (_tmp, dir, _) = setup_repo();
+    // Unknown agents are deliberately re-enrolled on every command. Measure
+    // repeat validation with an established identity, rather than charging the
+    // enrollment funnel to every iteration of this steady-state runtime bound.
+    let agent = "validation-runtime-smoke";
+    let acquire = run_decapod(
+        &dir,
+        &["session", "acquire"],
+        &[("DECAPOD_AGENT_ID", agent)],
+    );
+    assert!(acquire.status.success(), "establish smoke session");
+    let password = String::from_utf8_lossy(&acquire.stdout)
+        .lines()
+        .find_map(|line| line.strip_prefix("Password: ").map(str::trim))
+        .expect("smoke session password")
+        .to_owned();
     let mut durations_ms = Vec::new();
 
     for iteration in 1..=3 {
@@ -1159,7 +1174,7 @@ fn validate_smoke_runtime_is_bounded_without_contention() {
             &dir,
             &["govern", "project-check", "--format", "json"],
             &[
-                ("DECAPOD_AGENT_ID", "unknown"),
+                ("DECAPOD_AGENT_ID", agent),
                 ("DECAPOD_SESSION_PASSWORD", &password),
                 ("DECAPOD_VALIDATE_SKIP_GIT_GATES", "1"),
                 ("DECAPOD_VALIDATE_TIMEOUT_SECS", "10"),
@@ -1169,6 +1184,10 @@ fn validate_smoke_runtime_is_bounded_without_contention() {
         durations_ms.push(elapsed);
         let stdout = String::from_utf8_lossy(&output.stdout);
         let stderr = String::from_utf8_lossy(&output.stderr);
+        assert!(
+            !stderr.contains("session: auto-acquired"),
+            "steady-state probe must reuse its established session: {stderr}"
+        );
         if let Ok(payload) = serde_json::from_slice::<Value>(&output.stdout) {
             let report = &payload["report"];
             eprintln!(

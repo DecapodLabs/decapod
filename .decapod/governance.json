@@ -741,6 +741,14 @@
       "proof_refs": [
         "https://github.com/DecapodLabs/decapod/issues/1667"
       ]
+    },
+    {
+      "id": "issue-1667-file-26",
+      "summary": "test(runtime): measure repeated validation with established custody; file-by-file checkpoint, verification pending.",
+      "input_digest": "sha256:a56845fd2ce4bb0586bb4f3ec274015366abb351dfd1630485b10e51ed05de25",
+      "proof_refs": [
+        "https://github.com/DecapodLabs/decapod/issues/1667"
+      ]
     }
   ],
   "intents": {
@@ -781,22 +789,22 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Exercise the actual Decapod-to-Dactyl SQLite route: round-trip a valid 5 MiB historical value, preserve it across an unrelated update, and reject 8 MiB overflow with no extra row.",
-          "reviewed_code_fingerprint": "fa2579d5c6ba3e26f91c027082bd959123c9fbda573e3fb923995b3951d5614d",
+          "reason": "Hosted smoke probes repeatedly enrolled unknown agents. Use a genuine pre-established named session, assert it is reused, and preserve the same real gates and 10s/20s performance bounds.",
+          "reviewed_code_fingerprint": "d5859e56ccb21b9d055034be328fe1dc4f62cfb47b4ad64bc6a435c7ee675e35",
           "spec_material_hash": "c7ec7fc6a463392c5fb87a434d69170abe5c13dc147d849bef9f26443187a1ec"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Exercise the actual Decapod-to-Dactyl SQLite route: round-trip a valid 5 MiB historical value, preserve it across an unrelated update, and reject 8 MiB overflow with no extra row.",
-          "reviewed_code_fingerprint": "fa2579d5c6ba3e26f91c027082bd959123c9fbda573e3fb923995b3951d5614d",
+          "reason": "Hosted smoke probes repeatedly enrolled unknown agents. Use a genuine pre-established named session, assert it is reused, and preserve the same real gates and 10s/20s performance bounds.",
+          "reviewed_code_fingerprint": "d5859e56ccb21b9d055034be328fe1dc4f62cfb47b4ad64bc6a435c7ee675e35",
           "spec_material_hash": "b47a7a8fd245a5d1b462b2a396c2b82ee9fc123008e19dbf15c1d5398ebed229"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Exercise the actual Decapod-to-Dactyl SQLite route: round-trip a valid 5 MiB historical value, preserve it across an unrelated update, and reject 8 MiB overflow with no extra row.",
-          "reviewed_code_fingerprint": "fa2579d5c6ba3e26f91c027082bd959123c9fbda573e3fb923995b3951d5614d",
+          "reason": "Hosted smoke probes repeatedly enrolled unknown agents. Use a genuine pre-established named session, assert it is reused, and preserve the same real gates and 10s/20s performance bounds.",
+          "reviewed_code_fingerprint": "d5859e56ccb21b9d055034be328fe1dc4f62cfb47b4ad64bc6a435c7ee675e35",
           "spec_material_hash": "c4b217ac3486512e3460310c437a0250686d37ce1a2211f0f7e1d101871b67aa"
         }
       ],
@@ -808,13 +816,13 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1794615885Z"
+      "updated_at": "1794621175Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:a4a06967d9e1471ed8e719aadfa52081200aaeb93acec9f7ab91dfe65c9951bf",
+      "artifact_hash": "sha256:53a44921dd8b02b63ebe26da6a98bd9e6a32dc570ba5a903a219458c9ffaf58c",
       "checks": [],
       "current_phase": "implementation",
       "custody": {
@@ -1005,10 +1013,17 @@
             "intent_id": "intent:change_01M7BCN0CS3Z8AJ7TZ491WJ7CJ",
             "kind": "trajectory_step_recorded",
             "sequence": 28
+          },
+          {
+            "detail": "trajectory:branch_01M7BCN0FD8AE623HXNGA0C8F9",
+            "event_id": "event:29",
+            "intent_id": "intent:change_01M7BCN0CS3Z8AJ7TZ491WJ7CJ",
+            "kind": "trajectory_step_recorded",
+            "sequence": 29
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 28,
+        "next_sequence": 29,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M7BCN0FD8AE623HXNGA0C8F9": {
@@ -1414,6 +1429,22 @@
                 "validation_findings": [
                   "Hosted verification and exact-candidate publication readiness remain pending; no local tests run."
                 ]
+              },
+              {
+                "action": "implementation",
+                "custody_event_id": "event:29",
+                "observations": [
+                  "tests/validate_termination.rs",
+                  "https://github.com/DecapodLabs/decapod/issues/1667"
+                ],
+                "proof_refs": [],
+                "scope": [
+                  "issue-1667"
+                ],
+                "sequence": 29,
+                "validation_findings": [
+                  "Hosted verification and exact-candidate publication readiness remain pending; no local tests run."
+                ]
               }
             ]
           }
@@ -1444,7 +1475,8 @@
         "tests/release_dependency_policy.rs",
         "tests/unit/core/events_tests.rs",
         "tests/unit/core/task_journal_tests.rs",
-        "tests/unit/core/task_transfer_tests.rs"
+        "tests/unit/core/task_transfer_tests.rs",
+        "tests/validate_termination.rs"
       ],
       "next_transitions": [
         "Refine plan and declare falsifiable checks"
