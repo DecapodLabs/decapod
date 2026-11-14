@@ -1871,6 +1871,14 @@
       "proof_refs": [
         ".decapod/managed/specs/.manifest.json"
       ]
+    },
+    {
+      "id": "convergence-complete-protocol-proof-candidate",
+      "summary": "Bind complete reviewed convergence behavior and latest adversarial coverage before full proof",
+      "input_digest": "sha256:0bf3a7de5349f99e8dcbf096ed6e7fe5566bc45dd1ebf270e2fb62a57496122c",
+      "proof_refs": [
+        "tests/unit/core/reflection_tests.rs"
+      ]
     }
   ],
   "intents": {
@@ -1911,22 +1919,22 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Reviewed exact complete canonical human-question matching, scope-bound replay protection, bounded discovery and preserved independent authority/proof gates.",
-          "reviewed_code_fingerprint": "5d68228b25b74aa72ea00f88b825f599a5e998153bf7374acdf24012cea999a3",
+          "reason": "Reviewed revisable uncertainty declarations with stable intent/missing subject, observed authority priority, exact canonical questions, source/custody continuity and unchanged proof boundaries.",
+          "reviewed_code_fingerprint": "dd1fe9332107e8059778728cb392cc3d009c72a0d8e705455150439fbf239595",
           "spec_material_hash": "df7a941f9d82a6095083540e5c69d3c27ca2a8aae3d7d909673794bd2eaf261e"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Reviewed exact complete canonical human-question matching, scope-bound replay protection, bounded discovery and preserved independent authority/proof gates.",
-          "reviewed_code_fingerprint": "5d68228b25b74aa72ea00f88b825f599a5e998153bf7374acdf24012cea999a3",
+          "reason": "Reviewed revisable uncertainty declarations with stable intent/missing subject, observed authority priority, exact canonical questions, source/custody continuity and unchanged proof boundaries.",
+          "reviewed_code_fingerprint": "dd1fe9332107e8059778728cb392cc3d009c72a0d8e705455150439fbf239595",
           "spec_material_hash": "4f2025b9b1385b0be839d8080d4e38686b29b5c5ea41ec90d4c1e35e6115683d"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Reviewed exact complete canonical human-question matching, scope-bound replay protection, bounded discovery and preserved independent authority/proof gates.",
-          "reviewed_code_fingerprint": "5d68228b25b74aa72ea00f88b825f599a5e998153bf7374acdf24012cea999a3",
+          "reason": "Reviewed revisable uncertainty declarations with stable intent/missing subject, observed authority priority, exact canonical questions, source/custody continuity and unchanged proof boundaries.",
+          "reviewed_code_fingerprint": "dd1fe9332107e8059778728cb392cc3d009c72a0d8e705455150439fbf239595",
           "spec_material_hash": "fd3211c63495669c2998feee5675bdd3e167b0dc4ed0fff15b04c6853f489af3"
         }
       ],
@@ -1940,13 +1948,13 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1794694924Z"
+      "updated_at": "1794696651Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Keep approval, scope, custody, proof and publication authoritative; no transcripts, daemon or semantic-proof claims"
       ],
-      "artifact_hash": "sha256:e1a1ff575c0f6474795f288cd78d1b6592fe9f883637e5a661343daff260fd00",
+      "artifact_hash": "sha256:571b04f76493d59d2acdddc47303333801e6bf04ce78d282c670603499abf005",
       "checks": [
         {
           "name": "authority_refinement",
@@ -1983,6 +1991,10 @@
         {
           "name": "source_ci",
           "status": "failed"
+        },
+        {
+          "name": "uncertainty_correction",
+          "status": "partial"
         }
       ],
       "current_phase": "candidate-validation",
@@ -2090,10 +2102,17 @@
             "intent_id": "intent:convergence-1690",
             "kind": "trajectory_step_recorded",
             "sequence": 16
+          },
+          {
+            "detail": "trajectory:convergence-1690",
+            "event_id": "event:17",
+            "intent_id": "intent:convergence-1690",
+            "kind": "trajectory_step_recorded",
+            "sequence": 17
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 16,
+        "next_sequence": 17,
         "schema_version": "1.0.0",
         "trajectories": {
           "convergence-1690": {
@@ -2309,6 +2328,22 @@
                 ],
                 "sequence": 16,
                 "validation_findings": []
+              },
+              {
+                "action": "candidate-validation",
+                "custody_event_id": "event:17",
+                "observations": [
+                  "Uncertainty classes are agent declarations, not governing authority. Investigation may correct a class without changing intent/missing subject or resetting rounds. Added evidence-supported correction, relabel-only stagnation and observed-approval preservation cases. Execution for this revision is pending.",
+                  "Owned 56eb validator interrupted through its PTY before candidate replacement; retained decapod-snapshot-IsJz4d. No older execution, diagnostic quota status or cancelled validation authorizes publication."
+                ],
+                "proof_refs": [
+                  "uncertainty_correction"
+                ],
+                "scope": [
+                  "src/decapod/core/mentor and canonical agent integration/tests"
+                ],
+                "sequence": 17,
+                "validation_findings": []
               }
             ]
           }
@@ -2333,12 +2368,14 @@
         "Native full validation for 9026474f ended failed on Buildkite10656; retained snapshot decapod-snapshot-sHOu1M. Only CLI recipe failed: two existing SQLite success fixtures violated Dactyl same-device staging prerequisite; entrypoint aggregate and new CLI harness passed, full library1771 passed with8 ignored, core recipe passed.",
         "Newly admissible canonical human dependency is explicit progress; repeating it is not. Earlier candidate6db3 provider results remain separate and cannot authorize this changed candidate.",
         "Obsolete failed-candidate validator interrupted after verifying exact process/worktree; its terminal SNAPSHOT_NOT_READY: CI operation cancelled retained at decapod-snapshot-eDeb4p. Source test failures and measurements remain recorded separately.",
+        "Owned 56eb validator interrupted through its PTY before candidate replacement; retained decapod-snapshot-IsJz4d. No older execution, diagnostic quota status or cancelled validation authorizes publication.",
         "Owned b130 validator interrupted before candidate replacement; retained decapod-snapshot-eU3CUB. Its public reader was waiting on observed quota reset1794697767 (2026-11-14T23:09:27Z), and made no request during that wait. Do not substitute authenticated diagnostics or change provider policy.",
         "Removed a duplicate child source-path restriction that rejected observed facts discovered in other authorized repository files. Parent governing-source citation remains required. Added positive new-file investigation and negative missing-governing-citation cases; their execution is pending.",
         "Review identified a concrete protocol contradiction: the challenge requested an omitted operation but the subject hash rejected supplying it. Bound established operation/target separately, permit only omission refinement, retain original token and three-round budget. Added adversarial regression tests; no execution result is claimed for these new changes yet.",
         "Review removed inference from absent approval gate; added adversarial unconfigured-operation fixture. No feature tests have run yet.",
         "Session refresh released the original feature assignment through session.release. Reclaimed the same unassigned task and re-admitted its original worktree through workspace ensure before resuming governed writes; no prior full-validation proof existed. Typed orientation now removes only legacy title-keyword hints after the canonical escalation outcome, retaining actual plan/policy gates.",
         "Targeted rustfmt and git diff --check exited zero; no compilation or tests have executed for this feature candidate yet.",
+        "Uncertainty classes are agent declarations, not governing authority. Investigation may correct a class without changing intent/missing subject or resetting rounds. Added evidence-supported correction, relabel-only stagnation and observed-approval preservation cases. Execution for this revision is pending.",
         "Verbatim mission safety evaluation returned allow, hash cb81d3717c7173a902fc5ba6b7004f6b654147cbc14fadfd088880b6f472cffa (15195 bytes). Initial evaluation had condensed the mission, so this preserves the corrected complete-input check rather than claiming it preceded earlier inspection. PR1684 merged externally as aedbc856; its full configured Buildkite attempt failed at build10583 with evidence decapod-snapshot-HcwP1O. Local bk is unauthenticated; GitHub success is not substituted for required producer proof."
       ],
       "inspected_files": [
@@ -2356,6 +2393,7 @@
         "Push this fixed candidate to its existing branch, let source CI execute, and collect full native proof after the reported public quota window.",
         "Rerun full Decapod validation for repaired exact candidate; no readiness receipt yet.",
         "Run complete exact-candidate validation against accepted v0.145.5; no readiness receipt exists yet.",
+        "Run complete exact-candidate validation; preserve fixed source through provider execution and publication readiness recheck.",
         "Run complete native validation on the new exact candidate and current accepted target.",
         "Run full exact-candidate Decapod validation; repair reported source failures without substituting GitHub status for configured provider proof.",
         "Run full exact-candidate proof and retain fixed source until an actual reported failure requires repair.",
