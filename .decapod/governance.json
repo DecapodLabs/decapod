@@ -636,6 +636,14 @@
       "proof_refs": [
         "docs/architecture/bounded-reflection.md"
       ]
+    },
+    {
+      "id": "convergence-contract-6",
+      "summary": "Integrate issue1691 escalation contract in docs/architecture/governed-transitions.md; distinguish agent investigation from human authority; validation pending",
+      "input_digest": "sha256:aa05f341faaa6b0e57abf9fa1a1913c191ffaed4cc1217d21226783eaeb67c27",
+      "proof_refs": [
+        "docs/architecture/governed-transitions.md"
+      ]
     }
   ],
   "intents": {
