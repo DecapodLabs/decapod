@@ -451,21 +451,36 @@ fn shared_test_inputs(path: &str) -> bool {
 fn core_test_inputs(path: &str) -> bool {
     shared_test_inputs(path)
         || [
-            "todo_enforcement", "validate_termination", "workspace_interlock",
-            "spec_workspace_ownership", "workspace_prune_regression",
-            "hermes_governance_substrate", "group_broker", "group_broker_strict",
-            "workunit_cli", "context_capsule_cli", "interop_conformance",
-        ].iter().any(|target| path == format!("tests/{target}.rs"))
+            "todo_enforcement",
+            "validate_termination",
+            "workspace_interlock",
+            "spec_workspace_ownership",
+            "workspace_prune_regression",
+            "hermes_governance_substrate",
+            "group_broker",
+            "group_broker_strict",
+            "workunit_cli",
+            "context_capsule_cli",
+            "interop_conformance",
+        ]
+        .iter()
+        .any(|target| path == format!("tests/{target}.rs"))
         || path == "tests/support/interop_harness.rs"
 }
 
 fn cli_test_inputs(path: &str) -> bool {
     shared_test_inputs(path)
-        || matches!(path,
-            "tests/cli_contract_enforcement.rs" | "tests/entrypoint_correctness.rs"
-            | "tests/cli_contracts.rs" | "tests/consumer_readiness.rs"
-            | "tests/init_ci_scaffolding.rs" | "tests/init_config_behavior.rs"
-            | "tests/infer_precision.rs" | "tests/sqlite_maintenance.rs")
+        || matches!(
+            path,
+            "tests/cli_contract_enforcement.rs"
+                | "tests/entrypoint_correctness.rs"
+                | "tests/cli_contracts.rs"
+                | "tests/consumer_readiness.rs"
+                | "tests/init_ci_scaffolding.rs"
+                | "tests/init_config_behavior.rs"
+                | "tests/infer_precision.rs"
+                | "tests/sqlite_maintenance.rs"
+        )
         || path.starts_with("tests/support/")
         || path.starts_with("tests/fixtures/justfile_consumer/")
 }
@@ -493,9 +508,10 @@ pub fn core_full(paths: &[String]) -> bool {
         "pool",
     ];
     paths.iter().any(|path| {
-        core_test_inputs(path) || AREAS
-            .iter()
-            .any(|area| path.contains(&format!("src/decapod/core/{area}")))
+        core_test_inputs(path)
+            || AREAS
+                .iter()
+                .any(|area| path.contains(&format!("src/decapod/core/{area}")))
     })
 }
 
@@ -505,7 +521,9 @@ pub fn selected(check: &Check, paths: &[String], release_only: bool) -> bool {
     }
     match check.selection {
         Selection::Always => true,
-        Selection::Core => paths.iter().any(|p| p.contains("src/decapod/core/") || core_test_inputs(p)),
+        Selection::Core => paths
+            .iter()
+            .any(|p| p.contains("src/decapod/core/") || core_test_inputs(p)),
         Selection::Plugins => paths
             .iter()
             .any(|p| p.contains("src/decapod/plugins/") || p.starts_with("tests/plugins/")),
