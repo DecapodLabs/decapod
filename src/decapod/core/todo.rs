@@ -569,6 +569,31 @@ pub struct TodoCli {
     command: TodoCommand,
 }
 
+pub(crate) struct LegacyReconciliationRequest<'a> {
+    pub(crate) expected_review: Option<&'a str>,
+    pub(crate) prepare_only: bool,
+    pub(crate) has_operation_id: bool,
+}
+
+impl TodoCli {
+    pub(crate) fn legacy_reconciliation_request(&self) -> Option<LegacyReconciliationRequest<'_>> {
+        match &self.command {
+            TodoCommand::Journal {
+                command:
+                    TodoJournalCommand::ReconcileLegacy {
+                        expected_review,
+                        prepare_only,
+                    },
+            } => Some(LegacyReconciliationRequest {
+                expected_review: expected_review.as_deref(),
+                prepare_only: *prepare_only,
+                has_operation_id: self.operation_id.is_some(),
+            }),
+            _ => None,
+        }
+    }
+}
+
 #[derive(Subcommand, Debug)]
 pub enum TodoCommand {
     /// Inspect non-secret machine-local cloud operation receipts after interruption.

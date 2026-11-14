@@ -627,6 +627,14 @@
       "proof_refs": [
         "https://github.com/DecapodLabs/decapod/issues/1657"
       ]
+    },
+    {
+      "id": "issue1657-reconcile-file-11",
+      "summary": "fix(cli): expose a narrow legacy recovery request accessor; implementation checkpoint, hosted verification pending.",
+      "input_digest": "sha256:6d7b7cd6dbd415ae30a611246b269c061b4fc60efd8e893a8bc5c1d4539d1b04",
+      "proof_refs": [
+        "https://github.com/DecapodLabs/decapod/issues/1657"
+      ]
     }
   ],
   "intents": {
@@ -677,7 +685,7 @@
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:1f6851e6685d4f9b1d662f476140f7f4272851b51da05cbb644e7b8583de6ca5",
+      "artifact_hash": "sha256:f3dd9a33507f5dd01d526f8bf97f9173dcc14fa5ddbea43d58462d930ced3836",
       "checks": [],
       "current_phase": "implementation",
       "custody": {
@@ -763,10 +771,17 @@
             "intent_id": "intent:change_01M7DXW29MW090TM7TAHZF5JJK",
             "kind": "trajectory_step_recorded",
             "sequence": 13
+          },
+          {
+            "detail": "trajectory:branch_01M7DXW2DCAD18R4V58TWM41F2",
+            "event_id": "event:14",
+            "intent_id": "intent:change_01M7DXW29MW090TM7TAHZF5JJK",
+            "kind": "trajectory_step_recorded",
+            "sequence": 14
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 13,
+        "next_sequence": 14,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M7DXW2DCAD18R4V58TWM41F2": {
@@ -930,6 +945,22 @@
                   "issue-1657"
                 ],
                 "sequence": 13,
+                "validation_findings": [
+                  "Implementation in progress; exact-candidate hosted checks pending; no local tests or Buildkite execution."
+                ]
+              },
+              {
+                "action": "implementation",
+                "custody_event_id": "event:14",
+                "observations": [
+                  "src/decapod/core/todo.rs",
+                  "https://github.com/DecapodLabs/decapod/issues/1657"
+                ],
+                "proof_refs": [],
+                "scope": [
+                  "issue-1657"
+                ],
+                "sequence": 14,
                 "validation_findings": [
                   "Implementation in progress; exact-candidate hosted checks pending; no local tests or Buildkite execution."
                 ]
