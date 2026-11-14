@@ -1167,6 +1167,14 @@
       "proof_refs": [
         ".decapod/managed/specs/SEMANTICS.md"
       ]
+    },
+    {
+      "id": "convergence-final1455-validationmd",
+      "summary": "Refresh source projection after accepted v0.145.5 integration",
+      "input_digest": "sha256:6dcce87dcdbc2b1bbfcffcaa06d80e080b7e96def9efea85d78971a5ed8a3c00",
+      "proof_refs": [
+        ".decapod/managed/specs/VALIDATION.md"
+      ]
     }
   ],
   "intents": {
