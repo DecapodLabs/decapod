@@ -557,6 +557,14 @@
       "proof_refs": [
         "https://github.com/DecapodLabs/decapod/pull/1675"
       ]
+    },
+    {
+      "id": "issue-1630-file-3",
+      "summary": "docs(storage): record bounded native inventories for all three dogfood stores; file-by-file checkpoint, verification pending.",
+      "input_digest": "sha256:07050b074bcbf0dcbf240cbe841a4a36632f032c313bafc8f1d1588a4a3577cb",
+      "proof_refs": [
+        "https://github.com/DecapodLabs/decapod/issues/1630"
+      ]
     }
   ],
   "intents": {
@@ -630,7 +638,7 @@
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:37b39640592bc5b31a0ff5b75cdfd6dd3c1afede98a22564b84c0916b4b235c5",
+      "artifact_hash": "sha256:a411044b5ad35d1d69303dc19ffa9a47f4fa96ab5764c03a7c98fb008e13b190",
       "checks": [],
       "current_phase": "implementation",
       "custody": {
@@ -660,10 +668,17 @@
             "intent_id": "intent:change_01M7BCNZ9TJKBMSZ02W24H1NVM",
             "kind": "trajectory_step_recorded",
             "sequence": 5
+          },
+          {
+            "detail": "trajectory:branch_01M7BCNZCTB4NMCF83PG1F5XQV",
+            "event_id": "event:6",
+            "intent_id": "intent:change_01M7BCNZ9TJKBMSZ02W24H1NVM",
+            "kind": "trajectory_step_recorded",
+            "sequence": 6
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 5,
+        "next_sequence": 6,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M7BCNZCTB4NMCF83PG1F5XQV": {
@@ -701,6 +716,22 @@
                 "validation_findings": [
                   "Integrate accepted master f779e39111ec8b3c8c41569f68a3a7604df167e7 and merged1675 accepted-policy hardening with issue1630. Preserve current task journal/checkpoints and authored specs from both branches; regenerate projections through the kernel. Previous candidate readiness does not apply; no local tests."
                 ]
+              },
+              {
+                "action": "implementation",
+                "custody_event_id": "event:6",
+                "observations": [
+                  "docs/datastore-v2/dogfood-inventory-v0.144.4.json",
+                  "https://github.com/DecapodLabs/decapod/issues/1630"
+                ],
+                "proof_refs": [],
+                "scope": [
+                  "issue-1630"
+                ],
+                "sequence": 6,
+                "validation_findings": [
+                  "Hosted verification and exact-candidate publication readiness remain pending; no local tests run."
+                ]
               }
             ]
           }
@@ -715,7 +746,8 @@
       "inspected_files": [],
       "intent_id": "intent:change_01M7BCNZ9TJKBMSZ02W24H1NVM",
       "modified_files": [
-        ".decapod/managed/specs/INTENT.md"
+        ".decapod/managed/specs/INTENT.md",
+        "docs/datastore-v2/dogfood-inventory-v0.144.4.json"
       ],
       "next_transitions": [
         "Refine plan and declare falsifiable checks"
