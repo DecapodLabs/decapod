@@ -1183,6 +1183,14 @@
       "proof_refs": [
         ".decapod/managed/specs/.manifest.json"
       ]
+    },
+    {
+      "id": "convergence-final1455-validation",
+      "summary": "Bind integrated spec reviews and truthful recovery history before full proof",
+      "input_digest": "sha256:d0c6c95b803a3123b58a9323cf52f0f36eb6c7f7f4a43e8105c277e0ed862dee",
+      "proof_refs": [
+        "docs/architecture/public-proof-collection.md"
+      ]
     }
   ],
   "intents": {
@@ -1223,23 +1231,23 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Reviewed current bounded escalation contract after observed fixture-only repairs; production authority, custody and publication gates remain unchanged.",
-          "reviewed_code_fingerprint": "dd2713bcfe5e25034fc01d668fd9c008502a83203c3431d6db42ce5d068e61b0",
-          "spec_material_hash": "7952eb8f867a95de58dc897dd48f69b346587e2e8c2c30f97e7a73dd494c6abe"
+          "reason": "Reviewed combined accepted public-reader boundaries and bounded escalation architecture; real execution and authority stay independently gated.",
+          "reviewed_code_fingerprint": "71940b59c91418271b1c56ebbe10a985160731cbdab4e2f2e73975e54223ca6b",
+          "spec_material_hash": "df7a941f9d82a6095083540e5c69d3c27ca2a8aae3d7d909673794bd2eaf261e"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Reviewed current bounded escalation contract after observed fixture-only repairs; production authority, custody and publication gates remain unchanged.",
-          "reviewed_code_fingerprint": "dd2713bcfe5e25034fc01d668fd9c008502a83203c3431d6db42ce5d068e61b0",
-          "spec_material_hash": "771b4349fee430e241326055d3d9cbfc52a391a3b6d663e61506257ec3927924"
+          "reason": "Reviewed combined accepted public-reader boundaries and bounded escalation architecture; real execution and authority stay independently gated.",
+          "reviewed_code_fingerprint": "71940b59c91418271b1c56ebbe10a985160731cbdab4e2f2e73975e54223ca6b",
+          "spec_material_hash": "e11905aa29b87213a126079812cccc67910e28e7b6c478e28c5e28ef6ac4e2a8"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Reviewed current bounded escalation contract after observed fixture-only repairs; production authority, custody and publication gates remain unchanged.",
-          "reviewed_code_fingerprint": "dd2713bcfe5e25034fc01d668fd9c008502a83203c3431d6db42ce5d068e61b0",
-          "spec_material_hash": "05cfa0fbce100299fd3ebdcd53266a8b203916de3c868ed5020b63fb6d50b752"
+          "reason": "Reviewed combined accepted public-reader boundaries and bounded escalation architecture; real execution and authority stay independently gated.",
+          "reviewed_code_fingerprint": "71940b59c91418271b1c56ebbe10a985160731cbdab4e2f2e73975e54223ca6b",
+          "spec_material_hash": "5a7a392cea7e073f3efad2efde3e285f784cddf4965cb81f2f2b669e06385d00"
         }
       ],
       "state": "APPROVED",
@@ -1252,13 +1260,13 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1794689284Z"
+      "updated_at": "1794690063Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Keep approval, scope, custody, proof and publication authoritative; no transcripts, daemon or semantic-proof claims"
       ],
-      "artifact_hash": "sha256:5474933b92ad45084ef81b87884381e8d40fb85de83f1417bedd3ae329758bfc",
+      "artifact_hash": "sha256:070e03d2e72ef72c0b6fdad13c9a7ff247a76fda82225b9121942272bca04027",
       "checks": [
         {
           "name": "formatting",
@@ -1269,11 +1277,15 @@
           "status": "failed"
         },
         {
+          "name": "repaired_candidate_preflight",
+          "status": "failed"
+        },
+        {
           "name": "source_ci",
           "status": "failed"
         }
       ],
-      "current_phase": "validation-repair",
+      "current_phase": "candidate-validation",
       "custody": {
         "events": [
           {
@@ -1329,10 +1341,17 @@
             "intent_id": "intent:convergence-1690",
             "kind": "trajectory_step_recorded",
             "sequence": 9
+          },
+          {
+            "detail": "trajectory:convergence-1690",
+            "event_id": "event:10",
+            "intent_id": "intent:convergence-1690",
+            "kind": "trajectory_step_recorded",
+            "sequence": 10
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 9,
+        "next_sequence": 10,
         "schema_version": "1.0.0",
         "trajectories": {
           "convergence-1690": {
@@ -1437,6 +1456,22 @@
                 ],
                 "sequence": 9,
                 "validation_findings": []
+              },
+              {
+                "action": "candidate-validation",
+                "custody_event_id": "event:10",
+                "observations": [
+                  "Candidate d6bb48798b5477a5fb006cd6f559a21e3c809c3c was blocked by ACCEPTED_BASE_NOT_ANCESTOR after external PR1680/release1455 integration. Incorporated f5da0e61, retained both semantic spec scopes, regenerated canonical pins through official1455 session update, restored temporary config. Reclaimed genuinely unassigned task and rebound existing workspace after session cleanup.",
+                  "Obsolete failed-candidate validator interrupted after verifying exact process/worktree; its terminal SNAPSHOT_NOT_READY: CI operation cancelled retained at decapod-snapshot-eDeb4p. Source test failures and measurements remain recorded separately."
+                ],
+                "proof_refs": [
+                  "repaired_candidate_preflight"
+                ],
+                "scope": [
+                  "src/decapod/core/mentor and canonical agent integration/tests"
+                ],
+                "sequence": 10,
+                "validation_findings": []
               }
             ]
           }
@@ -1449,8 +1484,10 @@
         "Actual deterministic comparison: baseline unnecessary questions 3, governed admitted questions 0, admissible decisions 3, total rounds 6, elapsed_us 1892663, governance_growth_bytes 20665. This does not measure LLM semantics or complete engineering tasks.",
         "Buildkite #10625 candidate 5ad1554990125c4b54aa6af857b2de8afd732a15: 1770 library tests passed, one new fixture failed due to incomplete TOML config; CLI aggregate 39 passed, one new fixture expected the wrong readiness error, four ignored. Both reported fixture defects repaired in dedicated commits.",
         "Candidate 3dff4da9 stopped before provider execution: SNAPSHOT_UPLOAD_INCOMPLETE, local release tags lagged remote. Retained snapshot decapod-snapshot-nT3E6x; fetched published v0.145.4 tag without tag publication.",
+        "Candidate d6bb48798b5477a5fb006cd6f559a21e3c809c3c was blocked by ACCEPTED_BASE_NOT_ANCESTOR after external PR1680/release1455 integration. Incorporated f5da0e61, retained both semantic spec scopes, regenerated canonical pins through official1455 session update, restored temporary config. Reclaimed genuinely unassigned task and rebound existing workspace after session cleanup.",
         "Draft extends existing three-round journal and orientation/mentor input with typed escalation proposals, observed source predicates and existing policy/approval reads. Concise source facts are not proof of execution or semantic exhaustion. Adversarial unit and CLI mock harness authored; not yet executed. Preserve per-file exact checkpoints and native publication gates.",
         "Generated entrypoint integration test passed; public native Buildkite reader is available. Cancelled unnecessary bk diagnostic device login without credentials; no access grant is required for the configured reader.",
+        "Obsolete failed-candidate validator interrupted after verifying exact process/worktree; its terminal SNAPSHOT_NOT_READY: CI operation cancelled retained at decapod-snapshot-eDeb4p. Source test failures and measurements remain recorded separately.",
         "Review removed inference from absent approval gate; added adversarial unconfigured-operation fixture. No feature tests have run yet.",
         "Session refresh released the original feature assignment through session.release. Reclaimed the same unassigned task and re-admitted its original worktree through workspace ensure before resuming governed writes; no prior full-validation proof existed. Typed orientation now removes only legacy title-keyword hints after the canonical escalation outcome, retaining actual plan/policy gates.",
         "Targeted rustfmt and git diff --check exited zero; no compilation or tests have executed for this feature candidate yet.",
@@ -1469,6 +1506,7 @@
       ],
       "next_transitions": [
         "Rerun full Decapod validation for repaired exact candidate; no readiness receipt yet.",
+        "Run complete exact-candidate validation against accepted v0.145.5; no readiness receipt exists yet.",
         "Run full exact-candidate Decapod validation; repair reported source failures without substituting GitHub status for configured provider proof."
       ],
       "repo_scope": [
