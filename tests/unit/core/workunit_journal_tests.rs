@@ -991,3 +991,30 @@ fn separately_initialized_workspace_cannot_replay_main_store_verified_authority(
     assert_eq!(journal_records(&workspace, task).unwrap().len(), 1);
     assert!(validate_verified_manifest(&workspace, &previous.manifest).is_err());
 }
+
+#[test]
+#[cfg(any(target_os = "linux", target_os = "macos"))]
+fn prepared_snapshot_cannot_retain_verified_authority_across_a_downgrade() {
+    let (_temp, root, task) =
+        crate::core::validation_history::workunit_observation_tests::verified_fixture();
+    let before = workunit_journal_status(&root, task).unwrap();
+    let original = load_workunit(&root, task).unwrap();
+    assert!(original.validation_record.is_some());
+    let mut prepared = original.clone();
+    prepared.status = WorkUnitStatus::Claimed;
+    let error = write_workunit_checked(
+        &root,
+        &prepared,
+        "retain-proof-across-downgrade",
+        before.generation,
+    )
+    .expect_err("a prepared status edit must use the owned downgrade operation");
+    assert!(
+        error
+            .to_string()
+            .contains("WORKUNIT_DOMAIN_TRANSITION_REQUIRED"),
+        "{error}"
+    );
+    assert_eq!(workunit_journal_status(&root, task).unwrap(), before);
+    assert_eq!(load_workunit(&root, task).unwrap(), original);
+}
