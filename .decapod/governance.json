@@ -1495,6 +1495,14 @@
       "proof_refs": [
         ".decapod/managed/specs/ARCHITECTURE.md"
       ]
+    },
+    {
+      "id": "convergence-scope-freshness-intentmd",
+      "summary": "Refresh current source identity after authority scope freshness repair",
+      "input_digest": "sha256:5d38afc713ebff45acaf66c41e379618aff533beef0374d31a045dcecb57c396",
+      "proof_refs": [
+        ".decapod/managed/specs/INTENT.md"
+      ]
     }
   ],
   "intents": {
