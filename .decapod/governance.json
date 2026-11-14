@@ -1591,6 +1591,14 @@
       "proof_refs": [
         "docs/agent/payload-examples.md"
       ]
+    },
+    {
+      "id": "convergence-investigation-binding-architecturemd",
+      "summary": "Refresh source identity for investigated evidence and governing citation continuity",
+      "input_digest": "sha256:03e8ebf63ae3f63918fdd12622a385ce2304138a2d461241bcb38edd65a375ae",
+      "proof_refs": [
+        ".decapod/managed/specs/ARCHITECTURE.md"
+      ]
     }
   ],
   "intents": {
