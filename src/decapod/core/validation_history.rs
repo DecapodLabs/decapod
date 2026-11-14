@@ -1851,4 +1851,4 @@ mod archive_tests;
 
 #[cfg(all(test, any(target_os = "linux", target_os = "macos")))]
 #[path = "../../../tests/unit/core/validation_history_workunit_tests.rs"]
-mod workunit_observation_tests;
+pub(crate) mod workunit_observation_tests;
