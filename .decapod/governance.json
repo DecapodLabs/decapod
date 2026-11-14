@@ -1567,6 +1567,14 @@
       "proof_refs": [
         "tests/unit/core/reflection_tests.rs"
       ]
+    },
+    {
+      "id": "convergence-discovered-source-facts",
+      "summary": "Allow observed facts found during investigation while reusing the parent governing-source citation guard",
+      "input_digest": "sha256:5f25ed0aa77c7977ed716262cb089d3c2c1e5f2dac64ac3e979cf7cc15ced46b",
+      "proof_refs": [
+        "src/decapod/core/mentor/reflection/escalation.rs"
+      ]
     }
   ],
   "intents": {

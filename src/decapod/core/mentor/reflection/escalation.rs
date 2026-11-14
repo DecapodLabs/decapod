@@ -262,11 +262,6 @@ pub(super) fn assess(
         .any(|c| c.trigger.starts_with("human_") && c.question == bounded(&proposal.question));
     let mut observed_facts = 0;
     if let Some(resolution) = &proposal.resolution {
-        let previous_focus = plan
-            .reflection
-            .as_ref()
-            .and_then(|j| j.receipts.last())
-            .and_then(|r| r.outcome.challenge.as_ref());
         for fact in &resolution.facts {
             if fact.source.ref_path == PLAN_REF {
                 return Err(invalid("SOURCE_FACT_REQUIRED"));
@@ -286,11 +281,7 @@ pub(super) fn assess(
             if !text.contains(&fact.literal) {
                 return Err(invalid("SOURCE_FACT_NOT_OBSERVED"));
             }
-            if previous_focus
-                .is_none_or(|c| c.sources.iter().any(|s| s.ref_path == fact.source.ref_path))
-            {
-                observed_facts += 1;
-            }
+            observed_facts += 1;
         }
     }
     if hard_authority {
