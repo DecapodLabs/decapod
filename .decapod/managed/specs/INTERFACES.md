@@ -1154,7 +1154,7 @@ field. Nothing in this operation authorizes a mutation, approval or completion.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `a52e4c3ea27fd78421168efba47f9a86173a8f3692d92f8e4e1bb5fe117facef`
+- Repository signal fingerprint: `f4e8df743eb7c2cb5701c3b274f1bd7077902fa546b5bb05a6f76d558417891e`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (234 files), `tests/` (233 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
@@ -1501,6 +1501,16 @@ Existing `data database` maintenance/capability/lock/audit CLI and RPC operation
 
 Preserve symmetric data.database CLI/RPC capability discovery, diagnostics, bounded maintenance and audit interfaces. Policy admission must happen before startup migrations for maintenance commands; raw SQL, destructive replacement and arbitrary destinations remain outside the delegated contract.
 
+## Maintenance proof scope (#1568)
+
+The supported `data database` / `data db maintain` CLI and `data.database.*` RPC
+contracts are unchanged. Required cases exercise default denial, canonical local
+opt-in, worktree self-elevation rejection, policy revocation, scoped capabilities,
+backup restrictions, unsupported destructive operations and concurrent retry.
+Two deterministic workers exercise actual claims/workspaces and custody; this is
+not a demonstration of two native LLM agent integrations. Existing operator
+recovery fixtures remain diagnostic and do not grant agent recovery authority.
+
 ## SDK resource and uncertainty compatibility (#1667)
 
 The shipped 0.15/0.16 API adds `ResourceBudget`, `open_with_budget`, `visit_rows`,
@@ -1621,4 +1631,3 @@ prompt requirement. TASK_JOURNAL_MIGRATION_REQUIRED continues to block non-inert
 TODO inputs beside canonical journal state; an explicit versioned nonempty
 recovery command and compatible authority contract remain required. See
 `docs/architecture/legacy-todo-recovery.md`.
-

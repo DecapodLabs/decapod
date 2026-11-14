@@ -537,356 +537,196 @@
     }
   },
   "change": {
-    "id": "change_01M7BCN0CS3Z8AJ7TZ491WJ7CJ",
+    "id": "change_01M7BCJGVSZZ72B0C1Y6FVMPP4",
     "base_commit": "422e0b56879abc1439032528a6d3e4514932e807",
     "target_base": "origin/master"
   },
   "checkpoints": [
     {
-      "id": "issue-1667-file-1",
-      "summary": "docs(specs): bind latest published Dactyl adoption intent; file-by-file checkpoint, verification pending.",
-      "input_digest": "sha256:12783ad82b815be972df57b10c9889914732104723c48f8cf688e025a7c431de",
+      "id": "issue-1568-file-1",
+      "summary": "docs(specs): require executable local maintenance acceptance evidence; file-by-file checkpoint, verification pending.",
+      "input_digest": "sha256:839f3eb6fbe34e43a9d10b765adeabb9de5e31219b8544c936dfb3bef7197f46",
       "proof_refs": [
-        "https://github.com/DecapodLabs/decapod/issues/1667"
+        "https://github.com/DecapodLabs/decapod/issues/1568"
       ]
     },
     {
-      "id": "issue-1667-file-2",
-      "summary": "chore(deps): adopt published Dactyl 0.16.1; file-by-file checkpoint, verification pending.",
-      "input_digest": "sha256:1c97817492d3921121848cb63a3c0bd60c069d128c7bf8d7b58571033f46d9e9",
+      "id": "issue-1568-file-2",
+      "summary": "test(maintenance): require SQLite and isolate governed fixture context; file-by-file checkpoint, verification pending.",
+      "input_digest": "sha256:7670bc4dfa89b5268fc391485dd00924b3ae58dc330d97cc8d8bb5640c0cfa86",
       "proof_refs": [
-        "https://github.com/DecapodLabs/decapod/issues/1667"
+        "https://github.com/DecapodLabs/decapod/issues/1568"
       ]
     },
     {
-      "id": "issue-1667-file-3",
-      "summary": "chore(deps): lock the published Dactyl 0.16.1 artifact; file-by-file checkpoint, verification pending.",
-      "input_digest": "sha256:186515598b764df8d5d801576d21a2eb3703d2ee66e2ce5ab663db89188f7770",
+      "id": "issue-1568-file-3",
+      "summary": "test(cli): execute real SQLite maintenance in the required contract suite; file-by-file checkpoint, verification pending.",
+      "input_digest": "sha256:900297227e0710c0f9dc5c8465cd8dc1afd6789fdfe4538aabeebabb7aabc162",
       "proof_refs": [
-        "https://github.com/DecapodLabs/decapod/issues/1667"
+        "https://github.com/DecapodLabs/decapod/issues/1568"
       ]
     },
     {
-      "id": "issue-1667-file-4",
-      "summary": "chore(bazel): regenerate registry SDK module inputs; file-by-file checkpoint, verification pending.",
-      "input_digest": "sha256:86c22a90b389cffa8f7ec939ba3e4c2712bd2d452ddc590d14a8a889a700ce43",
+      "id": "issue-1568-file-4",
+      "summary": "build(tests): include required maintenance module in CLI source closure; file-by-file checkpoint, verification pending.",
+      "input_digest": "sha256:ab8c455b34d1a50b4d13b9835914df354234991ed02ccff76f57a599310e24de",
       "proof_refs": [
-        "https://github.com/DecapodLabs/decapod/issues/1667"
+        "https://github.com/DecapodLabs/decapod/issues/1568"
       ]
     },
     {
-      "id": "issue-1667-file-5",
-      "summary": "style(bazel): retain accepted lockfile indentation; file-by-file checkpoint, verification pending.",
-      "input_digest": "sha256:c08d02265bdc1e9a1ddd38040d3065461b27283d939c849bdca5d031f162394d",
+      "id": "issue-1568-file-5",
+      "summary": "docs(specs): bind required maintenance proof scope; file-by-file checkpoint, verification pending.",
+      "input_digest": "sha256:59fb670afd4e0269faecbf9cdb67ad0541bca922270fb15848d01031f4538c7e",
       "proof_refs": [
-        "https://github.com/DecapodLabs/decapod/issues/1667"
+        "https://github.com/DecapodLabs/decapod/issues/1568"
       ]
     },
     {
-      "id": "issue-1667-file-6",
-      "summary": "test(deps): bind published SDK version and checksum; file-by-file checkpoint, verification pending.",
-      "input_digest": "sha256:b4e8c9e4df250792626b029e0c935bdf53d4c192accbb68182bd19fa50cb6dd7",
+      "id": "issue-1568-file-6",
+      "summary": "docs(specs): bind required maintenance proof scope; file-by-file checkpoint, verification pending.",
+      "input_digest": "sha256:956d41ce2e6ab034d54d293ece7c379848c7bf1bdb1a43fde0d86a4987debeb6",
       "proof_refs": [
-        "https://github.com/DecapodLabs/decapod/issues/1667"
+        "https://github.com/DecapodLabs/decapod/issues/1568"
       ]
     },
     {
-      "id": "issue-1667-file-7",
-      "summary": "test(storage): preserve oversized historical reader controls with SDK budgets; file-by-file checkpoint, verification pending.",
-      "input_digest": "sha256:4ac5a4078354ce1998f63b7219630772f6864b15b98dc17c7db968b2fa0a794f",
+      "id": "issue-1568-file-7",
+      "summary": "docs(specs): bind required maintenance proof scope; file-by-file checkpoint, verification pending.",
+      "input_digest": "sha256:7c6a56456340dfa1dec93fb5c4b6660540f7a1dedcddebee98c09e68687e6043",
       "proof_refs": [
-        "https://github.com/DecapodLabs/decapod/issues/1667"
+        "https://github.com/DecapodLabs/decapod/issues/1568"
       ]
     },
     {
-      "id": "issue-1667-file-8",
-      "summary": "test(storage): preserve oversized historical reader controls with SDK budgets; file-by-file checkpoint, verification pending.",
-      "input_digest": "sha256:8de5eb35ac1a24750d3fdd3caaf31f1439da0a972c685e4d290418e8f0404228",
+      "id": "issue-1568-file-8",
+      "summary": "chore(proof): bind required maintenance test source closure; file-by-file checkpoint, verification pending.",
+      "input_digest": "sha256:1d5ba2746e31e54aae07fc2e69f2cf0cf80ae6cc9f91c73bc0d14521c09557a5",
       "proof_refs": [
-        "https://github.com/DecapodLabs/decapod/issues/1667"
+        "https://github.com/DecapodLabs/decapod/issues/1568"
       ]
     },
     {
-      "id": "issue-1667-file-9",
-      "summary": "docs(cloud): track published SDK and bounded transport compatibility; file-by-file checkpoint, verification pending.",
-      "input_digest": "sha256:5c7142e57b115be6d1834eb798689645e8f87923ba211c987d0debe55f8f19be",
+      "id": "issue-1568-file-9",
+      "summary": "docs(specs): require hosted maintenance acceptance outcomes; file-by-file checkpoint, verification pending.",
+      "input_digest": "sha256:d1cf8f72da6782071676de75e1b7d5b5b47acfceb70e661da0e728dd4c6b7aff",
       "proof_refs": [
-        "https://github.com/DecapodLabs/decapod/issues/1667"
+        "https://github.com/DecapodLabs/decapod/issues/1568"
       ]
     },
     {
-      "id": "issue-1667-file-10",
-      "summary": "docs(cloud): track published SDK and bounded transport compatibility; file-by-file checkpoint, verification pending.",
-      "input_digest": "sha256:b40fa2690fa529f4d65240d065d17b4c3bffe300373d502c3afd5222efb2a41e",
-      "proof_refs": [
-        "https://github.com/DecapodLabs/decapod/issues/1667"
-      ]
-    },
-    {
-      "id": "issue-1667-file-11",
-      "summary": "docs(cloud): track published SDK and bounded transport compatibility; file-by-file checkpoint, verification pending.",
-      "input_digest": "sha256:b7a5f71127bfcd6b9cbd785154f7c5dc39c19b6b53052e6ad1098a133a0b951f",
-      "proof_refs": [
-        "https://github.com/DecapodLabs/decapod/issues/1667"
-      ]
-    },
-    {
-      "id": "issue-1667-file-12",
-      "summary": "docs(specs): converge current SDK architecture and compatibility; file-by-file checkpoint, verification pending.",
-      "input_digest": "sha256:3a3dd2931101c91c2d29344c89fd93ddcbbef3f470f0d4dd1c25d5e3a9ca3518",
-      "proof_refs": [
-        "https://github.com/DecapodLabs/decapod/issues/1667"
-      ]
-    },
-    {
-      "id": "issue-1667-file-13",
-      "summary": "docs(specs): converge current SDK architecture and compatibility; file-by-file checkpoint, verification pending.",
-      "input_digest": "sha256:1b953e97e72f0da4d618fb9974e42c5c2d20ee80cb9a00b5c20716286e30a03e",
-      "proof_refs": [
-        "https://github.com/DecapodLabs/decapod/issues/1667"
-      ]
-    },
-    {
-      "id": "issue-1667-file-14",
-      "summary": "docs(specs): converge current SDK architecture and compatibility; file-by-file checkpoint, verification pending.",
-      "input_digest": "sha256:45ea539e18d92478462cb31f8a84d1899db061c6c044dd4986b2b9a47b7f7edf",
-      "proof_refs": [
-        "https://github.com/DecapodLabs/decapod/issues/1667"
-      ]
-    },
-    {
-      "id": "issue-1667-file-15",
-      "summary": "docs(specs): preserve SDK resource and authority boundaries; file-by-file checkpoint, verification pending.",
-      "input_digest": "sha256:b934b25125bacefd6d2f9b7f069d83befe971d5ad96575fd611a3c2cba651f04",
-      "proof_refs": [
-        "https://github.com/DecapodLabs/decapod/issues/1667"
-      ]
-    },
-    {
-      "id": "issue-1667-file-16",
-      "summary": "chore(proof): bind published SDK dependency input closure; file-by-file checkpoint, verification pending.",
-      "input_digest": "sha256:7a5f917b336a068be2e0372071c7d82addfc80c00a9c0947605b8c81b1c6d5f9",
-      "proof_refs": [
-        "https://github.com/DecapodLabs/decapod/issues/1667"
-      ]
-    },
-    {
-      "id": "issue-1667-file-17",
-      "summary": "docs(specs): declare exact published SDK compatibility evidence; file-by-file checkpoint, verification pending.",
-      "input_digest": "sha256:e38719d5294e0eb5708d7d13386454f0899a8d1cf7c5e2acf70927cb0a37f1f9",
-      "proof_refs": [
-        "https://github.com/DecapodLabs/decapod/issues/1667"
-      ]
-    },
-    {
-      "id": "issue-1667-file-18",
-      "summary": "fix(bazel): finalize SDK lock under normal generation environment; file-by-file checkpoint, verification pending.",
-      "input_digest": "sha256:ba37b06d311bbc0308bec3ce542c20f7b0f96f7041627271b0cf55686678e051",
-      "proof_refs": [
-        "https://github.com/DecapodLabs/decapod/issues/1667"
-      ]
-    },
-    {
-      "id": "issue-1667-integrate-f779e391",
-      "summary": "Integrate accepted master f779e39111ec8b3c8c41569f68a3a7604df167e7 and merged1675 accepted-policy hardening with issue1667. Preserve current task journal/checkpoints and authored specs from both branches; regenerate projections through the kernel. Previous candidate readiness does not apply; no local tests.",
-      "input_digest": "sha256:fb34c70e77b47a357525875b27c2cdf6d215df9c28bb20b988759672cc4881ee",
+      "id": "issue-1568-integrate-ec31c959",
+      "summary": "Integrate accepted master ec31c959cf41800c250fb1f6d741beaa3baefc4e and merged1675 accepted-policy hardening with issue1568. Preserve current task journal/checkpoints and authored specs from both branches; regenerate projections through the kernel. Previous candidate readiness does not apply; no local tests.",
+      "input_digest": "sha256:79ce658a606fdc623282c9c81a96fcbe376ed41eb86645d2a3521ddb086318c1",
       "proof_refs": [
         "https://github.com/DecapodLabs/decapod/pull/1675"
       ]
     },
     {
-      "id": "issue-1667-file-20",
+      "id": "issue-1568-integrate-f779e391",
+      "summary": "Integrate accepted master f779e39111ec8b3c8c41569f68a3a7604df167e7 and merged1675 accepted-policy hardening with issue1568. Preserve current task journal/checkpoints and authored specs from both branches; regenerate projections through the kernel. Previous candidate readiness does not apply; no local tests.",
+      "input_digest": "sha256:caadb1d08377f71416132cb6f6f493aa39f3c39c75a7818753a6b11310aaeaa2",
+      "proof_refs": [
+        "https://github.com/DecapodLabs/decapod/pull/1675"
+      ]
+    },
+    {
+      "id": "issue-1568-file-12",
       "summary": "chore(governance): refresh official Decapod 0.144.4 release surfaces; file-by-file checkpoint, verification pending.",
-      "input_digest": "sha256:10ec04f9d652d060c803f889a70408e80239bd695bb24986cec7149482e200f9",
+      "input_digest": "sha256:dee0c15a6e5774820bee5ad8f027d6a397e9eeee81b732aeec2711667f3b4a76",
       "proof_refs": [
-        "https://github.com/DecapodLabs/decapod/issues/1667"
+        "https://github.com/DecapodLabs/decapod/issues/1568"
       ]
     },
     {
-      "id": "issue-1667-file-21",
+      "id": "issue-1568-file-13",
+      "summary": "test(maintenance): resolve the real binary before fixture directory changes; file-by-file checkpoint, verification pending.",
+      "input_digest": "sha256:3a4122d46a1a2563bc7153e4addb5d760a7bfc6da583de7e6e0ab423f4d5bcdf",
+      "proof_refs": [
+        "https://github.com/DecapodLabs/decapod/issues/1568"
+      ]
+    },
+    {
+      "id": "issue-1568-file-14",
       "summary": "fix(governance): regenerate actual 0.144.4 entrypoint templates; file-by-file checkpoint, verification pending.",
-      "input_digest": "sha256:b02f120c3f0a378ff7320415e14e8dd4ac7b3523a2a0747b877bb4c516b9080c",
+      "input_digest": "sha256:fd511f2bd565ab701e24faeb7e3412b71effef2f77b7f063f836f9b0c0105bab",
       "proof_refs": [
-        "https://github.com/DecapodLabs/decapod/issues/1667"
+        "https://github.com/DecapodLabs/decapod/issues/1568"
       ]
     },
     {
-      "id": "issue-1667-file-22",
-      "summary": "fix(storage): box the expanded local SDK connection variant; file-by-file checkpoint, verification pending.",
-      "input_digest": "sha256:620a52208a1de9b0603694f414f0ba4eb5d4380a39ff0f8df07db10d08db48e3",
-      "proof_refs": [
-        "https://github.com/DecapodLabs/decapod/issues/1667"
-      ]
-    },
-    {
-      "id": "issue-1667-file-23",
-      "summary": "test(events): construct oversized stored payload past SDK parameter limits; file-by-file checkpoint, verification pending.",
-      "input_digest": "sha256:4a8a1483bfc7c75d01af6b1741d6d72bd62457f4ec4df5eab65e293003eceed2",
-      "proof_refs": [
-        "https://github.com/DecapodLabs/decapod/issues/1667"
-      ]
-    },
-    {
-      "id": "issue-1667-file-24",
-      "summary": "fix(storage): preserve bounded legacy and transfer values across the SDK upgrade; file-by-file checkpoint, verification pending.",
-      "input_digest": "sha256:a1e60cce7e8a6375d2a8e58e41985d4e74e3c625f3f0b344b7cd0bab91f9ca9f",
-      "proof_refs": [
-        "https://github.com/DecapodLabs/decapod/issues/1667"
-      ]
-    },
-    {
-      "id": "issue-1667-file-25",
-      "summary": "test(storage): cover large-value SDK compatibility and unpersisted quota rejection; file-by-file checkpoint, verification pending.",
-      "input_digest": "sha256:a244b3f3a08aa02cd5cdd2d5b37664f70369c491770fdc1e0baf0c686d90474a",
-      "proof_refs": [
-        "https://github.com/DecapodLabs/decapod/issues/1667"
-      ]
-    },
-    {
-      "id": "issue-1667-file-26",
-      "summary": "test(runtime): measure repeated validation with established custody; file-by-file checkpoint, verification pending.",
-      "input_digest": "sha256:a56845fd2ce4bb0586bb4f3ec274015366abb351dfd1630485b10e51ed05de25",
-      "proof_refs": [
-        "https://github.com/DecapodLabs/decapod/issues/1667"
-      ]
-    },
-    {
-      "id": "issue-1667-integrate-fded2dd0",
-      "summary": "Integrate accepted master fded2dd0b5f02f9c874301d4b98cfd59ad188357 after merged PR1682 native inventory evidence with issue1667. Preserve current task journal/checkpoints and authored specs from both branches; regenerate projections through the kernel. Previous candidate readiness does not apply; no local tests.",
-      "input_digest": "sha256:06638b820a5d865b3142a9536a1f6e097d565ddae0f0d2f3feccb2a70a533f9d",
+      "id": "issue-1568-integrate-fded2dd0",
+      "summary": "Integrate accepted master fded2dd0b5f02f9c874301d4b98cfd59ad188357 after merged PR1682 native inventory evidence with issue1568. Preserve current task journal/checkpoints and authored specs from both branches; regenerate projections through the kernel. Previous candidate readiness does not apply; no local tests.",
+      "input_digest": "sha256:cf6fc0e4829627a3ab98c94d948bb9718f964945798fcf02858bfe105ab6ea51",
       "proof_refs": [
         "https://github.com/DecapodLabs/decapod/pull/1682"
       ]
     },
     {
-      "id": "issue-1667-file-28",
-      "summary": "fix(storage): reserve bounded parameter space for compatible row metadata; file-by-file checkpoint, verification pending.",
-      "input_digest": "sha256:8c25c8a06d1761fdc1f79c3930767a1d69f2f278f1e63126c274e26adb6b1777",
-      "proof_refs": [
-        "https://github.com/DecapodLabs/decapod/issues/1667"
-      ]
-    },
-    {
-      "id": "issue-1667-file-29",
-      "summary": "test(storage): round-trip the full compatible cell with a bound key; file-by-file checkpoint, verification pending.",
-      "input_digest": "sha256:d6f001c5cd91929b85f7c5c1e1f0b18bdefada45283fb48a5232a8803ffa73fb",
-      "proof_refs": [
-        "https://github.com/DecapodLabs/decapod/issues/1667"
-      ]
-    },
-    {
-      "id": "issue-1667-file-30",
-      "summary": "docs(specs): distinguish cell compatibility from parameter headroom; file-by-file checkpoint, verification pending.",
-      "input_digest": "sha256:97e4f04a5ab26a8f9c775c5db4aac035baf36126a56622f12f3ecfd4e39156f6",
-      "proof_refs": [
-        "https://github.com/DecapodLabs/decapod/issues/1667"
-      ]
-    },
-    {
-      "id": "issue-1667-file-31",
-      "summary": "test(storage): retain aggregate parameter refusal before mutation; file-by-file checkpoint, verification pending.",
-      "input_digest": "sha256:c614bcae44c384b43b69a619b5a7d7feb0ef0d5d016cdcbb1261af758d5e60f6",
-      "proof_refs": [
-        "https://github.com/DecapodLabs/decapod/issues/1667"
-      ]
-    },
-    {
-      "id": "issue-1667-file-32",
-      "summary": "fix(storage): preserve bounded raw component reads under SDK accounting; file-by-file checkpoint, verification pending.",
-      "input_digest": "sha256:829547b586248af0998e26e26522f682387f992916e6275f0cdeffd91edf10cb",
-      "proof_refs": [
-        "https://github.com/DecapodLabs/decapod/issues/1667"
-      ]
-    },
-    {
-      "id": "issue-1667-file-33",
-      "summary": "test(storage): reconstruct a full-size retained raw journal component; file-by-file checkpoint, verification pending.",
-      "input_digest": "sha256:a7948be9cf7d2cf173d35ab537c29581d5d49b307b001d25e089bbf05ce60f81",
-      "proof_refs": [
-        "https://github.com/DecapodLabs/decapod/issues/1667"
-      ]
-    },
-    {
-      "id": "issue-1667-file-34",
-      "summary": "docs(specs): record local BLOB accounting and retained component proof; file-by-file checkpoint, verification pending.",
-      "input_digest": "sha256:61e6c403406e38b0d959ba2bd46a9cd6ba1f0af5d8f45a19f263d0b6cfc47cd6",
-      "proof_refs": [
-        "https://github.com/DecapodLabs/decapod/issues/1667"
-      ]
-    },
-    {
-      "id": "issue-1667-integrate-9767ae9a",
-      "summary": "Integrate accepted master 9767ae9a3ff1c7452101482218a17c55cf569b71 after accepted release v0.144.5 with issue1667. Preserve current task journal/checkpoints and authored specs from both branches; regenerate projections through the kernel. Previous candidate readiness does not apply; no local tests.",
-      "input_digest": "sha256:c1ce2655771e61d10b4bc83cd12cb45865bbcac5b9b4e3e829251fe9c3cc3a60",
+      "id": "issue-1568-integrate-9767ae9a",
+      "summary": "Integrate accepted master 9767ae9a3ff1c7452101482218a17c55cf569b71 after accepted release v0.144.5 with issue1568. Preserve current task journal/checkpoints and authored specs from both branches; regenerate projections through the kernel. Previous candidate readiness does not apply; no local tests.",
+      "input_digest": "sha256:1b0d94f2b8b49bd7d18558b98a3dd1f9ab8a63931bde0951f16193ca257ddbbe",
       "proof_refs": [
         "https://github.com/DecapodLabs/decapod/pull/1685"
       ]
     },
     {
-      "id": "issue-1667-file-36",
+      "id": "issue-1568-file-17",
       "summary": "fix(governance): regenerate actual 0.144.5 entrypoint templates; file-by-file checkpoint, verification pending.",
-      "input_digest": "sha256:6ce9697421237116fbdddcc95b1d76823495700cb33d2ecb79872b3d3398189b",
+      "input_digest": "sha256:2a7084af939f0bc170fd688bf059242af607f7568637ffd50ba90a623d7ef210",
       "proof_refs": [
-        "https://github.com/DecapodLabs/decapod/issues/1667"
+        "https://github.com/DecapodLabs/decapod/issues/1568"
       ]
     },
     {
-      "id": "issue-1667-integrate-e8f8848d",
-      "summary": "Integrate accepted master e8f8848d19a02ad8e2a580cf7722fe4ff9342221 after merged bootstrap repair PR1683 with issue1667. Preserve current task journal/checkpoints and authored specs from both branches; regenerate projections through the kernel. Previous candidate readiness does not apply; no local tests.",
-      "input_digest": "sha256:efe75f47fbe4dc8783fe8ded3ccf22a7273472aeb133bb7e8032d917672740b6",
+      "id": "issue-1568-file-18",
+      "summary": "test(runtime): measure repeated validation with established custody; file-by-file checkpoint, verification pending.",
+      "input_digest": "sha256:0ad380393feb4a005f5e11fb1cb0d5eb8b785464d71dd8f86aebd3feb1913cd1",
+      "proof_refs": [
+        "https://github.com/DecapodLabs/decapod/issues/1568"
+      ]
+    },
+    {
+      "id": "issue-1568-file-19",
+      "summary": "docs(validation): delimit steady-state runtime measurement; file-by-file checkpoint, verification pending.",
+      "input_digest": "sha256:6d71785d29f1cc8601e109ed58f6265e488bb5fc7d80d13b9b66698c7a335801",
+      "proof_refs": [
+        "https://github.com/DecapodLabs/decapod/issues/1568"
+      ]
+    },
+    {
+      "id": "issue-1568-integrate-e8f8848d",
+      "summary": "Integrate accepted master e8f8848d19a02ad8e2a580cf7722fe4ff9342221 after merged bootstrap repair PR1683 with issue1568. Preserve current task journal/checkpoints and authored specs from both branches; regenerate projections through the kernel. Previous candidate readiness does not apply; no local tests.",
+      "input_digest": "sha256:b8bce3cec9c3241568e06abd111bc5e0e57e172f24736f52d10a29d0e141e462",
       "proof_refs": [
         "https://github.com/DecapodLabs/decapod/pull/1683"
       ]
     },
     {
-      "id": "issue-1667-file-38",
-      "summary": "fix(container): avoid runtime probes without a disabled override; file-by-file checkpoint, verification pending.",
-      "input_digest": "sha256:383ec8eeb2b5d8b2e86e19da0655bad624770c30a4805bea3d0823d8c0949549",
+      "id": "pr1679-integrate-0677f990-v1452",
+      "summary": "Reviewed SQLite maintenance required-suite execution against accepted v0.145.2, published Dactyl 0.16.1 and canonical observed-proof boundaries; no policy weakening; fresh GitHub verification pending and no local tests run.",
+      "input_digest": "sha256:0035a6b0eebc7a1d8fbe4ac47a19cccf02f2a7c74ed1fa1dc60ba64adfe9a660",
       "proof_refs": [
-        "https://github.com/DecapodLabs/decapod/issues/1667"
-      ]
-    },
-    {
-      "id": "issue-1667-file-39",
-      "summary": "test(container): require a disabled marker before runtime recovery probes; file-by-file checkpoint, verification pending.",
-      "input_digest": "sha256:3743f8396e6b473a370d966c03629d7ec06c997140e82384528e3149636060f2",
-      "proof_refs": [
-        "https://github.com/DecapodLabs/decapod/issues/1667"
-      ]
-    },
-    {
-      "id": "issue-1667-file-40",
-      "summary": "docs(container): scope optional prerequisite recovery on the SDK integration; file-by-file checkpoint, verification pending.",
-      "input_digest": "sha256:577fde734a57e6b9a4a23d1aa0868ca3a5cd0938c320d5c37f601adc12c4e833",
-      "proof_refs": [
-        "https://github.com/DecapodLabs/decapod/issues/1667"
-      ]
-    },
-    {
-      "id": "pr1678-integrate-1c1fa5dc-v1451",
-      "summary": "Integrate accepted master 1c1fa5dcfc2d31cc2c09dcf5d18470dc62900dd5 and official v0.145.1 into PR1678 while retaining published Dactyl0.16.1, independent canonical proof, diagnostic admission denial, all required checks and the patched Quinn floor. Preserve current task history and both authored contracts, remove identical duplicate prose, and regenerate projections through the kernel. Fresh GitHub Actions pending; no local tests or Buildkite execution.",
-      "input_digest": "sha256:725b0655b65296dda28b98c0fed9b4a1c0d14aa7198475a8fc359d83898b2067",
-      "proof_refs": [
-        "https://github.com/DecapodLabs/decapod/pull/1688"
+        "https://github.com/DecapodLabs/decapod/pull/1689"
       ]
     }
   ],
   "intents": {
-    "intent:change_01M7BCN0CS3Z8AJ7TZ491WJ7CJ": {
+    "intent:change_01M7BCJGVSZZ72B0C1Y6FVMPP4": {
       "acceptance_criteria": [],
       "assumptions": [],
       "boundaries": [
         "Current claimed task and isolated work branch"
       ],
       "constraints": [
-        "issue-1667"
+        "issue-1568"
       ],
       "created_sequence": 1,
-      "id": "intent:change_01M7BCN0CS3Z8AJ7TZ491WJ7CJ",
+      "id": "intent:change_01M7BCJGVSZZ72B0C1Y6FVMPP4",
       "out_of_scope": [],
       "proof_requirements": [],
-      "raw_intent": "code: resolve #1667 Upgrade the published Dactyl SDK from 0.14.0 to 0.16.0\n\nComplete DecapodLabs/decapod#1667 in its own governed worktree from latest origin/master with official0.144.3. The complete current issue acceptance contract is authoritative; inspect existing implementation and preserve historical evidence. Commit each authored file edit, push work and use hosted verification, preserve required policy/custody/proof and no automatic merge. Do not close unresolved acceptance or fabricate unavailable hosted evidence.",
-      "refined_intent": "code: resolve #1667 Upgrade the published Dactyl SDK from 0.14.0 to 0.16.0\n\nComplete DecapodLabs/decapod#1667 in its own governed worktree from latest origin/master with official0.144.3. The complete current issue acceptance contract is authoritative; inspect existing implementation and preserve historical evidence. Commit each authored file edit, push work and use hosted verification, preserve required policy/custody/proof and no automatic merge. Do not close unresolved acceptance or fabricate unavailable hosted evidence.",
+      "raw_intent": "code: resolve #1568 feat(governance): project-opted, capability-scoped agent database maintenance (local-first RBAC)\n\nComplete DecapodLabs/decapod#1568 in its own governed worktree from latest origin/master with official0.144.3. The complete current issue acceptance contract is authoritative; inspect existing implementation and preserve historical evidence. Commit each authored file edit, push work and use hosted verification, preserve required policy/custody/proof and no automatic merge. Do not close unresolved acceptance or fabricate unavailable hosted evidence.",
+      "refined_intent": "code: resolve #1568 feat(governance): project-opted, capability-scoped agent database maintenance (local-first RBAC)\n\nComplete DecapodLabs/decapod#1568 in its own governed worktree from latest origin/master with official0.144.3. The complete current issue acceptance contract is authoritative; inspect existing implementation and preserve historical evidence. Commit each authored file edit, push work and use hosted verification, preserve required policy/custody/proof and no automatic merge. Do not close unresolved acceptance or fabricate unavailable hosted evidence.",
       "status": "refined",
       "updated_sequence": 3
     }
@@ -894,12 +734,12 @@
   "sections": {
     "plan": {
       "constraints": {
-        "file_touch_budget": 30,
+        "file_touch_budget": 20,
         "forbidden_paths": []
       },
       "deferred_questions": [],
       "human_questions": [],
-      "intent": "Adopt the latest published non-yanked Dactyl SDK 0.16.1 in the dedicated issue1667 workspace. Review registry checksum and shipped 0.15/0.16/0.16.1 APIs; retain SQLite, Neon and Supabase feature/authority contracts. Regenerate Cargo/Bazel lock inputs without broad updates, retain Nix Cargo.lock authority, adapt historical oversized-reader fixtures without weakening admission, and collect hosted compatibility plus exact native publication proof. No local tests, HTTP/3, unpublished source overrides, hosted parity claims or auto-merge.",
+      "intent": "Complete the merged local-only maintenance implementation by executing its real SQLite/CLI/RPC tests through an existing required suite. Preserve canonical opt-in, default denial, rechecked policy and custody, bounded locks/backups/retry, and fail-closed cloud authority. Required maintenance tests must fail if SQLite is unavailable, not silently return pass. Run only hosted tests, keep provider selection/accepted obligations, and distinguish two deterministic workers from real LLM integration. No new cloud policy mirror, raw live database mutation or bypass.",
       "phases": [],
       "proof_hooks": [
         "decapod validate"
@@ -909,363 +749,223 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Integrate accepted master 1c1fa5dcfc2d31cc2c09dcf5d18470dc62900dd5 and official v0.145.1 into PR1678 while retaining published Dactyl0.16.1, independent canonical proof, diagnostic admission denial, all required checks and the patched Quinn floor. Preserve current task history and both authored contracts, remove identical duplicate prose, and regenerate projections through the kernel. Fresh GitHub Actions pending; no local tests or Buildkite execution.",
-          "reviewed_code_fingerprint": "a52e4c3ea27fd78421168efba47f9a86173a8f3692d92f8e4e1bb5fe117facef",
-          "spec_material_hash": "f755465f6eea497867ed5dafc34d4e1f409d3241668ed695b7c925eeb67fcef1"
+          "reason": "Reviewed SQLite maintenance required-suite execution against accepted v0.145.2, published Dactyl 0.16.1 and canonical observed-proof boundaries; no policy weakening; fresh GitHub verification pending and no local tests run.",
+          "reviewed_code_fingerprint": "f4e8df743eb7c2cb5701c3b274f1bd7077902fa546b5bb05a6f76d558417891e",
+          "spec_material_hash": "01adf7b177123fd19d679f44dc4dcf57d430444c07e2e7a0d29fe4a0ddcbc778"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Integrate accepted master 1c1fa5dcfc2d31cc2c09dcf5d18470dc62900dd5 and official v0.145.1 into PR1678 while retaining published Dactyl0.16.1, independent canonical proof, diagnostic admission denial, all required checks and the patched Quinn floor. Preserve current task history and both authored contracts, remove identical duplicate prose, and regenerate projections through the kernel. Fresh GitHub Actions pending; no local tests or Buildkite execution.",
-          "reviewed_code_fingerprint": "a52e4c3ea27fd78421168efba47f9a86173a8f3692d92f8e4e1bb5fe117facef",
-          "spec_material_hash": "f36603a649e72ded62a3832502756388ce8ede9cfdd9e27d1f3da1a26e038cb1"
+          "reason": "Reviewed SQLite maintenance required-suite execution against accepted v0.145.2, published Dactyl 0.16.1 and canonical observed-proof boundaries; no policy weakening; fresh GitHub verification pending and no local tests run.",
+          "reviewed_code_fingerprint": "f4e8df743eb7c2cb5701c3b274f1bd7077902fa546b5bb05a6f76d558417891e",
+          "spec_material_hash": "01e9486625b6df5e72f51a100ba625090f5a7057e042124ee5158da4df73e034"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Integrate accepted master 1c1fa5dcfc2d31cc2c09dcf5d18470dc62900dd5 and official v0.145.1 into PR1678 while retaining published Dactyl0.16.1, independent canonical proof, diagnostic admission denial, all required checks and the patched Quinn floor. Preserve current task history and both authored contracts, remove identical duplicate prose, and regenerate projections through the kernel. Fresh GitHub Actions pending; no local tests or Buildkite execution.",
-          "reviewed_code_fingerprint": "a52e4c3ea27fd78421168efba47f9a86173a8f3692d92f8e4e1bb5fe117facef",
-          "spec_material_hash": "4968b9931ca9b7d18c80b4ae43bf1cba93fd71b4315abc11cc70911824fc146d"
+          "reason": "Reviewed SQLite maintenance required-suite execution against accepted v0.145.2, published Dactyl 0.16.1 and canonical observed-proof boundaries; no policy weakening; fresh GitHub verification pending and no local tests run.",
+          "reviewed_code_fingerprint": "f4e8df743eb7c2cb5701c3b274f1bd7077902fa546b5bb05a6f76d558417891e",
+          "spec_material_hash": "c42f95b88c03ba2d51c9d1de316d6eb73c2c094aa36d1cd32f0898e3974c03cb"
         }
       ],
       "state": "APPROVED",
       "stop_conditions": [],
-      "title": "code: resolve #1667 Upgrade the published Dactyl SDK from 0.14.0 to 0.16.0",
+      "title": "code: resolve #1568 feat(governance): project-opted, capability-scoped agent database maintenance (local-first RBAC)",
       "todo_ids": [
-        "code_01m7bcmcpzhpz8hw"
+        "bend_01m7bchxbbkchy0y"
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1794656701Z"
+      "updated_at": "1794659581Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:3dd7d4e81eb455f7c2c4bd8a609bfb7288a4eee6d39032277b1e9616ead8a7f4",
+      "artifact_hash": "sha256:10abe0dbf7ea4a950d85715d429fc640fc10480e00b5f7bdb9d018c1389f2e40",
       "checks": [],
       "current_phase": "implementation",
       "custody": {
         "events": [
           {
             "event_id": "event:2",
-            "intent_id": "intent:change_01M7BCN0CS3Z8AJ7TZ491WJ7CJ",
+            "intent_id": "intent:change_01M7BCJGVSZZ72B0C1Y6FVMPP4",
             "kind": "created",
             "sequence": 2
           },
           {
             "event_id": "event:3",
-            "intent_id": "intent:change_01M7BCN0CS3Z8AJ7TZ491WJ7CJ",
+            "intent_id": "intent:change_01M7BCJGVSZZ72B0C1Y6FVMPP4",
             "kind": "refined",
             "sequence": 3
           },
           {
-            "detail": "trajectory:branch_01M7BCN0FD8AE623HXNGA0C8F9",
+            "detail": "trajectory:branch_01M7BCJGZ6T52EA2CECBZAPK5W",
             "event_id": "event:4",
-            "intent_id": "intent:change_01M7BCN0CS3Z8AJ7TZ491WJ7CJ",
+            "intent_id": "intent:change_01M7BCJGVSZZ72B0C1Y6FVMPP4",
             "kind": "trajectory_step_recorded",
             "sequence": 4
           },
           {
-            "detail": "trajectory:branch_01M7BCN0FD8AE623HXNGA0C8F9",
+            "detail": "trajectory:branch_01M7BCJGZ6T52EA2CECBZAPK5W",
             "event_id": "event:5",
-            "intent_id": "intent:change_01M7BCN0CS3Z8AJ7TZ491WJ7CJ",
+            "intent_id": "intent:change_01M7BCJGVSZZ72B0C1Y6FVMPP4",
             "kind": "trajectory_step_recorded",
             "sequence": 5
           },
           {
-            "detail": "trajectory:branch_01M7BCN0FD8AE623HXNGA0C8F9",
+            "detail": "trajectory:branch_01M7BCJGZ6T52EA2CECBZAPK5W",
             "event_id": "event:6",
-            "intent_id": "intent:change_01M7BCN0CS3Z8AJ7TZ491WJ7CJ",
+            "intent_id": "intent:change_01M7BCJGVSZZ72B0C1Y6FVMPP4",
             "kind": "trajectory_step_recorded",
             "sequence": 6
           },
           {
-            "detail": "trajectory:branch_01M7BCN0FD8AE623HXNGA0C8F9",
+            "detail": "trajectory:branch_01M7BCJGZ6T52EA2CECBZAPK5W",
             "event_id": "event:7",
-            "intent_id": "intent:change_01M7BCN0CS3Z8AJ7TZ491WJ7CJ",
+            "intent_id": "intent:change_01M7BCJGVSZZ72B0C1Y6FVMPP4",
             "kind": "trajectory_step_recorded",
             "sequence": 7
           },
           {
-            "detail": "trajectory:branch_01M7BCN0FD8AE623HXNGA0C8F9",
+            "detail": "trajectory:branch_01M7BCJGZ6T52EA2CECBZAPK5W",
             "event_id": "event:8",
-            "intent_id": "intent:change_01M7BCN0CS3Z8AJ7TZ491WJ7CJ",
+            "intent_id": "intent:change_01M7BCJGVSZZ72B0C1Y6FVMPP4",
             "kind": "trajectory_step_recorded",
             "sequence": 8
           },
           {
-            "detail": "trajectory:branch_01M7BCN0FD8AE623HXNGA0C8F9",
+            "detail": "trajectory:branch_01M7BCJGZ6T52EA2CECBZAPK5W",
             "event_id": "event:9",
-            "intent_id": "intent:change_01M7BCN0CS3Z8AJ7TZ491WJ7CJ",
+            "intent_id": "intent:change_01M7BCJGVSZZ72B0C1Y6FVMPP4",
             "kind": "trajectory_step_recorded",
             "sequence": 9
           },
           {
-            "detail": "trajectory:branch_01M7BCN0FD8AE623HXNGA0C8F9",
+            "detail": "trajectory:branch_01M7BCJGZ6T52EA2CECBZAPK5W",
             "event_id": "event:10",
-            "intent_id": "intent:change_01M7BCN0CS3Z8AJ7TZ491WJ7CJ",
+            "intent_id": "intent:change_01M7BCJGVSZZ72B0C1Y6FVMPP4",
             "kind": "trajectory_step_recorded",
             "sequence": 10
           },
           {
-            "detail": "trajectory:branch_01M7BCN0FD8AE623HXNGA0C8F9",
+            "detail": "trajectory:branch_01M7BCJGZ6T52EA2CECBZAPK5W",
             "event_id": "event:11",
-            "intent_id": "intent:change_01M7BCN0CS3Z8AJ7TZ491WJ7CJ",
+            "intent_id": "intent:change_01M7BCJGVSZZ72B0C1Y6FVMPP4",
             "kind": "trajectory_step_recorded",
             "sequence": 11
           },
           {
-            "detail": "trajectory:branch_01M7BCN0FD8AE623HXNGA0C8F9",
+            "detail": "trajectory:branch_01M7BCJGZ6T52EA2CECBZAPK5W",
             "event_id": "event:12",
-            "intent_id": "intent:change_01M7BCN0CS3Z8AJ7TZ491WJ7CJ",
+            "intent_id": "intent:change_01M7BCJGVSZZ72B0C1Y6FVMPP4",
             "kind": "trajectory_step_recorded",
             "sequence": 12
           },
           {
-            "detail": "trajectory:branch_01M7BCN0FD8AE623HXNGA0C8F9",
+            "detail": "trajectory:branch_01M7BCJGZ6T52EA2CECBZAPK5W",
             "event_id": "event:13",
-            "intent_id": "intent:change_01M7BCN0CS3Z8AJ7TZ491WJ7CJ",
+            "intent_id": "intent:change_01M7BCJGVSZZ72B0C1Y6FVMPP4",
             "kind": "trajectory_step_recorded",
             "sequence": 13
           },
           {
-            "detail": "trajectory:branch_01M7BCN0FD8AE623HXNGA0C8F9",
+            "detail": "trajectory:branch_01M7BCJGZ6T52EA2CECBZAPK5W",
             "event_id": "event:14",
-            "intent_id": "intent:change_01M7BCN0CS3Z8AJ7TZ491WJ7CJ",
+            "intent_id": "intent:change_01M7BCJGVSZZ72B0C1Y6FVMPP4",
             "kind": "trajectory_step_recorded",
             "sequence": 14
           },
           {
-            "detail": "trajectory:branch_01M7BCN0FD8AE623HXNGA0C8F9",
+            "detail": "trajectory:branch_01M7BCJGZ6T52EA2CECBZAPK5W",
             "event_id": "event:15",
-            "intent_id": "intent:change_01M7BCN0CS3Z8AJ7TZ491WJ7CJ",
+            "intent_id": "intent:change_01M7BCJGVSZZ72B0C1Y6FVMPP4",
             "kind": "trajectory_step_recorded",
             "sequence": 15
           },
           {
-            "detail": "trajectory:branch_01M7BCN0FD8AE623HXNGA0C8F9",
+            "detail": "trajectory:branch_01M7BCJGZ6T52EA2CECBZAPK5W",
             "event_id": "event:16",
-            "intent_id": "intent:change_01M7BCN0CS3Z8AJ7TZ491WJ7CJ",
+            "intent_id": "intent:change_01M7BCJGVSZZ72B0C1Y6FVMPP4",
             "kind": "trajectory_step_recorded",
             "sequence": 16
           },
           {
-            "detail": "trajectory:branch_01M7BCN0FD8AE623HXNGA0C8F9",
+            "detail": "trajectory:branch_01M7BCJGZ6T52EA2CECBZAPK5W",
             "event_id": "event:17",
-            "intent_id": "intent:change_01M7BCN0CS3Z8AJ7TZ491WJ7CJ",
+            "intent_id": "intent:change_01M7BCJGVSZZ72B0C1Y6FVMPP4",
             "kind": "trajectory_step_recorded",
             "sequence": 17
           },
           {
-            "detail": "trajectory:branch_01M7BCN0FD8AE623HXNGA0C8F9",
+            "detail": "trajectory:branch_01M7BCJGZ6T52EA2CECBZAPK5W",
             "event_id": "event:18",
-            "intent_id": "intent:change_01M7BCN0CS3Z8AJ7TZ491WJ7CJ",
+            "intent_id": "intent:change_01M7BCJGVSZZ72B0C1Y6FVMPP4",
             "kind": "trajectory_step_recorded",
             "sequence": 18
           },
           {
-            "detail": "trajectory:branch_01M7BCN0FD8AE623HXNGA0C8F9",
+            "detail": "trajectory:branch_01M7BCJGZ6T52EA2CECBZAPK5W",
             "event_id": "event:19",
-            "intent_id": "intent:change_01M7BCN0CS3Z8AJ7TZ491WJ7CJ",
+            "intent_id": "intent:change_01M7BCJGVSZZ72B0C1Y6FVMPP4",
             "kind": "trajectory_step_recorded",
             "sequence": 19
           },
           {
-            "detail": "trajectory:branch_01M7BCN0FD8AE623HXNGA0C8F9",
+            "detail": "trajectory:branch_01M7BCJGZ6T52EA2CECBZAPK5W",
             "event_id": "event:20",
-            "intent_id": "intent:change_01M7BCN0CS3Z8AJ7TZ491WJ7CJ",
+            "intent_id": "intent:change_01M7BCJGVSZZ72B0C1Y6FVMPP4",
             "kind": "trajectory_step_recorded",
             "sequence": 20
           },
           {
-            "detail": "trajectory:branch_01M7BCN0FD8AE623HXNGA0C8F9",
+            "detail": "trajectory:branch_01M7BCJGZ6T52EA2CECBZAPK5W",
             "event_id": "event:21",
-            "intent_id": "intent:change_01M7BCN0CS3Z8AJ7TZ491WJ7CJ",
+            "intent_id": "intent:change_01M7BCJGVSZZ72B0C1Y6FVMPP4",
             "kind": "trajectory_step_recorded",
             "sequence": 21
           },
           {
-            "detail": "trajectory:branch_01M7BCN0FD8AE623HXNGA0C8F9",
+            "detail": "trajectory:branch_01M7BCJGZ6T52EA2CECBZAPK5W",
             "event_id": "event:22",
-            "intent_id": "intent:change_01M7BCN0CS3Z8AJ7TZ491WJ7CJ",
+            "intent_id": "intent:change_01M7BCJGVSZZ72B0C1Y6FVMPP4",
             "kind": "trajectory_step_recorded",
             "sequence": 22
           },
           {
-            "detail": "trajectory:branch_01M7BCN0FD8AE623HXNGA0C8F9",
+            "detail": "trajectory:branch_01M7BCJGZ6T52EA2CECBZAPK5W",
             "event_id": "event:23",
-            "intent_id": "intent:change_01M7BCN0CS3Z8AJ7TZ491WJ7CJ",
+            "intent_id": "intent:change_01M7BCJGVSZZ72B0C1Y6FVMPP4",
             "kind": "trajectory_step_recorded",
             "sequence": 23
           },
           {
-            "detail": "trajectory:branch_01M7BCN0FD8AE623HXNGA0C8F9",
+            "detail": "trajectory:branch_01M7BCJGZ6T52EA2CECBZAPK5W",
             "event_id": "event:24",
-            "intent_id": "intent:change_01M7BCN0CS3Z8AJ7TZ491WJ7CJ",
+            "intent_id": "intent:change_01M7BCJGVSZZ72B0C1Y6FVMPP4",
             "kind": "trajectory_step_recorded",
             "sequence": 24
-          },
-          {
-            "detail": "trajectory:branch_01M7BCN0FD8AE623HXNGA0C8F9",
-            "event_id": "event:25",
-            "intent_id": "intent:change_01M7BCN0CS3Z8AJ7TZ491WJ7CJ",
-            "kind": "trajectory_step_recorded",
-            "sequence": 25
-          },
-          {
-            "detail": "trajectory:branch_01M7BCN0FD8AE623HXNGA0C8F9",
-            "event_id": "event:26",
-            "intent_id": "intent:change_01M7BCN0CS3Z8AJ7TZ491WJ7CJ",
-            "kind": "trajectory_step_recorded",
-            "sequence": 26
-          },
-          {
-            "detail": "trajectory:branch_01M7BCN0FD8AE623HXNGA0C8F9",
-            "event_id": "event:27",
-            "intent_id": "intent:change_01M7BCN0CS3Z8AJ7TZ491WJ7CJ",
-            "kind": "trajectory_step_recorded",
-            "sequence": 27
-          },
-          {
-            "detail": "trajectory:branch_01M7BCN0FD8AE623HXNGA0C8F9",
-            "event_id": "event:28",
-            "intent_id": "intent:change_01M7BCN0CS3Z8AJ7TZ491WJ7CJ",
-            "kind": "trajectory_step_recorded",
-            "sequence": 28
-          },
-          {
-            "detail": "trajectory:branch_01M7BCN0FD8AE623HXNGA0C8F9",
-            "event_id": "event:29",
-            "intent_id": "intent:change_01M7BCN0CS3Z8AJ7TZ491WJ7CJ",
-            "kind": "trajectory_step_recorded",
-            "sequence": 29
-          },
-          {
-            "detail": "trajectory:branch_01M7BCN0FD8AE623HXNGA0C8F9",
-            "event_id": "event:30",
-            "intent_id": "intent:change_01M7BCN0CS3Z8AJ7TZ491WJ7CJ",
-            "kind": "trajectory_step_recorded",
-            "sequence": 30
-          },
-          {
-            "detail": "trajectory:branch_01M7BCN0FD8AE623HXNGA0C8F9",
-            "event_id": "event:31",
-            "intent_id": "intent:change_01M7BCN0CS3Z8AJ7TZ491WJ7CJ",
-            "kind": "trajectory_step_recorded",
-            "sequence": 31
-          },
-          {
-            "detail": "trajectory:branch_01M7BCN0FD8AE623HXNGA0C8F9",
-            "event_id": "event:32",
-            "intent_id": "intent:change_01M7BCN0CS3Z8AJ7TZ491WJ7CJ",
-            "kind": "trajectory_step_recorded",
-            "sequence": 32
-          },
-          {
-            "detail": "trajectory:branch_01M7BCN0FD8AE623HXNGA0C8F9",
-            "event_id": "event:33",
-            "intent_id": "intent:change_01M7BCN0CS3Z8AJ7TZ491WJ7CJ",
-            "kind": "trajectory_step_recorded",
-            "sequence": 33
-          },
-          {
-            "detail": "trajectory:branch_01M7BCN0FD8AE623HXNGA0C8F9",
-            "event_id": "event:34",
-            "intent_id": "intent:change_01M7BCN0CS3Z8AJ7TZ491WJ7CJ",
-            "kind": "trajectory_step_recorded",
-            "sequence": 34
-          },
-          {
-            "detail": "trajectory:branch_01M7BCN0FD8AE623HXNGA0C8F9",
-            "event_id": "event:35",
-            "intent_id": "intent:change_01M7BCN0CS3Z8AJ7TZ491WJ7CJ",
-            "kind": "trajectory_step_recorded",
-            "sequence": 35
-          },
-          {
-            "detail": "trajectory:branch_01M7BCN0FD8AE623HXNGA0C8F9",
-            "event_id": "event:36",
-            "intent_id": "intent:change_01M7BCN0CS3Z8AJ7TZ491WJ7CJ",
-            "kind": "trajectory_step_recorded",
-            "sequence": 36
-          },
-          {
-            "detail": "trajectory:branch_01M7BCN0FD8AE623HXNGA0C8F9",
-            "event_id": "event:37",
-            "intent_id": "intent:change_01M7BCN0CS3Z8AJ7TZ491WJ7CJ",
-            "kind": "trajectory_step_recorded",
-            "sequence": 37
-          },
-          {
-            "detail": "trajectory:branch_01M7BCN0FD8AE623HXNGA0C8F9",
-            "event_id": "event:38",
-            "intent_id": "intent:change_01M7BCN0CS3Z8AJ7TZ491WJ7CJ",
-            "kind": "trajectory_step_recorded",
-            "sequence": 38
-          },
-          {
-            "detail": "trajectory:branch_01M7BCN0FD8AE623HXNGA0C8F9",
-            "event_id": "event:39",
-            "intent_id": "intent:change_01M7BCN0CS3Z8AJ7TZ491WJ7CJ",
-            "kind": "trajectory_step_recorded",
-            "sequence": 39
-          },
-          {
-            "detail": "trajectory:branch_01M7BCN0FD8AE623HXNGA0C8F9",
-            "event_id": "event:40",
-            "intent_id": "intent:change_01M7BCN0CS3Z8AJ7TZ491WJ7CJ",
-            "kind": "trajectory_step_recorded",
-            "sequence": 40
-          },
-          {
-            "detail": "trajectory:branch_01M7BCN0FD8AE623HXNGA0C8F9",
-            "event_id": "event:41",
-            "intent_id": "intent:change_01M7BCN0CS3Z8AJ7TZ491WJ7CJ",
-            "kind": "trajectory_step_recorded",
-            "sequence": 41
-          },
-          {
-            "detail": "trajectory:branch_01M7BCN0FD8AE623HXNGA0C8F9",
-            "event_id": "event:42",
-            "intent_id": "intent:change_01M7BCN0CS3Z8AJ7TZ491WJ7CJ",
-            "kind": "trajectory_step_recorded",
-            "sequence": 42
-          },
-          {
-            "detail": "trajectory:branch_01M7BCN0FD8AE623HXNGA0C8F9",
-            "event_id": "event:43",
-            "intent_id": "intent:change_01M7BCN0CS3Z8AJ7TZ491WJ7CJ",
-            "kind": "trajectory_step_recorded",
-            "sequence": 43
-          },
-          {
-            "detail": "trajectory:branch_01M7BCN0FD8AE623HXNGA0C8F9",
-            "event_id": "event:44",
-            "intent_id": "intent:change_01M7BCN0CS3Z8AJ7TZ491WJ7CJ",
-            "kind": "trajectory_step_recorded",
-            "sequence": 44
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 44,
+        "next_sequence": 24,
         "schema_version": "1.0.0",
         "trajectories": {
-          "branch_01M7BCN0FD8AE623HXNGA0C8F9": {
+          "branch_01M7BCJGZ6T52EA2CECBZAPK5W": {
             "evidence_only": true,
-            "id": "branch_01M7BCN0FD8AE623HXNGA0C8F9",
-            "intent_id": "intent:change_01M7BCN0CS3Z8AJ7TZ491WJ7CJ",
+            "id": "branch_01M7BCJGZ6T52EA2CECBZAPK5W",
+            "intent_id": "intent:change_01M7BCJGVSZZ72B0C1Y6FVMPP4",
             "steps": [
               {
                 "action": "implementation",
                 "custody_event_id": "event:4",
                 "observations": [
                   ".decapod/managed/specs/INTENT.md",
-                  "https://github.com/DecapodLabs/decapod/issues/1667"
+                  "https://github.com/DecapodLabs/decapod/issues/1568"
                 ],
                 "proof_refs": [],
                 "scope": [
-                  "issue-1667"
+                  "issue-1568"
                 ],
                 "sequence": 4,
                 "validation_findings": [
@@ -1276,12 +976,12 @@
                 "action": "implementation",
                 "custody_event_id": "event:5",
                 "observations": [
-                  "Cargo.toml",
-                  "https://github.com/DecapodLabs/decapod/issues/1667"
+                  "tests/sqlite_maintenance.rs",
+                  "https://github.com/DecapodLabs/decapod/issues/1568"
                 ],
                 "proof_refs": [],
                 "scope": [
-                  "issue-1667"
+                  "issue-1568"
                 ],
                 "sequence": 5,
                 "validation_findings": [
@@ -1292,12 +992,12 @@
                 "action": "implementation",
                 "custody_event_id": "event:6",
                 "observations": [
-                  "Cargo.lock",
-                  "https://github.com/DecapodLabs/decapod/issues/1667"
+                  "tests/cli_contracts.rs",
+                  "https://github.com/DecapodLabs/decapod/issues/1568"
                 ],
                 "proof_refs": [],
                 "scope": [
-                  "issue-1667"
+                  "issue-1568"
                 ],
                 "sequence": 6,
                 "validation_findings": [
@@ -1308,12 +1008,12 @@
                 "action": "implementation",
                 "custody_event_id": "event:7",
                 "observations": [
-                  "MODULE.bazel.lock",
-                  "https://github.com/DecapodLabs/decapod/issues/1667"
+                  ".config/build/decapod.BUILD.bzl",
+                  "https://github.com/DecapodLabs/decapod/issues/1568"
                 ],
                 "proof_refs": [],
                 "scope": [
-                  "issue-1667"
+                  "issue-1568"
                 ],
                 "sequence": 7,
                 "validation_findings": [
@@ -1324,12 +1024,12 @@
                 "action": "implementation",
                 "custody_event_id": "event:8",
                 "observations": [
-                  "MODULE.bazel.lock",
-                  "https://github.com/DecapodLabs/decapod/issues/1667"
+                  ".decapod/managed/specs/ARCHITECTURE.md",
+                  "https://github.com/DecapodLabs/decapod/issues/1568"
                 ],
                 "proof_refs": [],
                 "scope": [
-                  "issue-1667"
+                  "issue-1568"
                 ],
                 "sequence": 8,
                 "validation_findings": [
@@ -1340,12 +1040,12 @@
                 "action": "implementation",
                 "custody_event_id": "event:9",
                 "observations": [
-                  "tests/release_dependency_policy.rs",
-                  "https://github.com/DecapodLabs/decapod/issues/1667"
+                  ".decapod/managed/specs/INTERFACES.md",
+                  "https://github.com/DecapodLabs/decapod/issues/1568"
                 ],
                 "proof_refs": [],
                 "scope": [
-                  "issue-1667"
+                  "issue-1568"
                 ],
                 "sequence": 9,
                 "validation_findings": [
@@ -1356,12 +1056,12 @@
                 "action": "implementation",
                 "custody_event_id": "event:10",
                 "observations": [
-                  "tests/unit/core/task_journal_tests.rs",
-                  "https://github.com/DecapodLabs/decapod/issues/1667"
+                  ".decapod/managed/specs/SECURITY.md",
+                  "https://github.com/DecapodLabs/decapod/issues/1568"
                 ],
                 "proof_refs": [],
                 "scope": [
-                  "issue-1667"
+                  "issue-1568"
                 ],
                 "sequence": 10,
                 "validation_findings": [
@@ -1372,12 +1072,12 @@
                 "action": "implementation",
                 "custody_event_id": "event:11",
                 "observations": [
-                  "tests/unit/core/task_transfer_tests.rs",
-                  "https://github.com/DecapodLabs/decapod/issues/1667"
+                  ".decapod/config.toml",
+                  "https://github.com/DecapodLabs/decapod/issues/1568"
                 ],
                 "proof_refs": [],
                 "scope": [
-                  "issue-1667"
+                  "issue-1568"
                 ],
                 "sequence": 11,
                 "validation_findings": [
@@ -1388,12 +1088,12 @@
                 "action": "implementation",
                 "custody_event_id": "event:12",
                 "observations": [
-                  "docs/book/src/reference/propodus.md",
-                  "https://github.com/DecapodLabs/decapod/issues/1667"
+                  ".decapod/managed/specs/VALIDATION.md",
+                  "https://github.com/DecapodLabs/decapod/issues/1568"
                 ],
                 "proof_refs": [],
                 "scope": [
-                  "issue-1667"
+                  "issue-1568"
                 ],
                 "sequence": 12,
                 "validation_findings": [
@@ -1404,44 +1104,42 @@
                 "action": "implementation",
                 "custody_event_id": "event:13",
                 "observations": [
-                  "docs/book/src/reference/supabase-validation.md",
-                  "https://github.com/DecapodLabs/decapod/issues/1667"
+                  "https://github.com/DecapodLabs/decapod/pull/1675"
                 ],
                 "proof_refs": [],
                 "scope": [
-                  "issue-1667"
+                  "issue-1568"
                 ],
                 "sequence": 13,
                 "validation_findings": [
-                  "Hosted verification and exact-candidate publication readiness remain pending; no local tests run."
+                  "Integrate accepted master ec31c959cf41800c250fb1f6d741beaa3baefc4e and merged1675 accepted-policy hardening with issue1568. Preserve current task journal/checkpoints and authored specs from both branches; regenerate projections through the kernel. Previous candidate readiness does not apply; no local tests."
                 ]
               },
               {
                 "action": "implementation",
                 "custody_event_id": "event:14",
                 "observations": [
-                  "docs/cloud-repository-billing.md",
-                  "https://github.com/DecapodLabs/decapod/issues/1667"
+                  "https://github.com/DecapodLabs/decapod/pull/1675"
                 ],
                 "proof_refs": [],
                 "scope": [
-                  "issue-1667"
+                  "issue-1568"
                 ],
                 "sequence": 14,
                 "validation_findings": [
-                  "Hosted verification and exact-candidate publication readiness remain pending; no local tests run."
+                  "Integrate accepted master f779e39111ec8b3c8c41569f68a3a7604df167e7 and merged1675 accepted-policy hardening with issue1568. Preserve current task journal/checkpoints and authored specs from both branches; regenerate projections through the kernel. Previous candidate readiness does not apply; no local tests."
                 ]
               },
               {
                 "action": "implementation",
                 "custody_event_id": "event:15",
                 "observations": [
-                  ".decapod/managed/specs/INTENT.md",
-                  "https://github.com/DecapodLabs/decapod/issues/1667"
+                  ".decapod/managed/specs/VALIDATION.md",
+                  "https://github.com/DecapodLabs/decapod/issues/1568"
                 ],
                 "proof_refs": [],
                 "scope": [
-                  "issue-1667"
+                  "issue-1568"
                 ],
                 "sequence": 15,
                 "validation_findings": [
@@ -1452,12 +1150,12 @@
                 "action": "implementation",
                 "custody_event_id": "event:16",
                 "observations": [
-                  ".decapod/managed/specs/ARCHITECTURE.md",
-                  "https://github.com/DecapodLabs/decapod/issues/1667"
+                  "tests/sqlite_maintenance.rs",
+                  "https://github.com/DecapodLabs/decapod/issues/1568"
                 ],
                 "proof_refs": [],
                 "scope": [
-                  "issue-1667"
+                  "issue-1568"
                 ],
                 "sequence": 16,
                 "validation_findings": [
@@ -1468,12 +1166,12 @@
                 "action": "implementation",
                 "custody_event_id": "event:17",
                 "observations": [
-                  ".decapod/managed/specs/INTERFACES.md",
-                  "https://github.com/DecapodLabs/decapod/issues/1667"
+                  ".decapod/managed/specs/VALIDATION.md",
+                  "https://github.com/DecapodLabs/decapod/issues/1568"
                 ],
                 "proof_refs": [],
                 "scope": [
-                  "issue-1667"
+                  "issue-1568"
                 ],
                 "sequence": 17,
                 "validation_findings": [
@@ -1484,32 +1182,30 @@
                 "action": "implementation",
                 "custody_event_id": "event:18",
                 "observations": [
-                  ".decapod/managed/specs/SECURITY.md",
-                  "https://github.com/DecapodLabs/decapod/issues/1667"
+                  "https://github.com/DecapodLabs/decapod/pull/1682"
                 ],
                 "proof_refs": [],
                 "scope": [
-                  "issue-1667"
+                  "issue-1568"
                 ],
                 "sequence": 18,
                 "validation_findings": [
-                  "Hosted verification and exact-candidate publication readiness remain pending; no local tests run."
+                  "Integrate accepted master fded2dd0b5f02f9c874301d4b98cfd59ad188357 after merged PR1682 native inventory evidence with issue1568. Preserve current task journal/checkpoints and authored specs from both branches; regenerate projections through the kernel. Previous candidate readiness does not apply; no local tests."
                 ]
               },
               {
                 "action": "implementation",
                 "custody_event_id": "event:19",
                 "observations": [
-                  ".decapod/config.toml",
-                  "https://github.com/DecapodLabs/decapod/issues/1667"
+                  "https://github.com/DecapodLabs/decapod/pull/1685"
                 ],
                 "proof_refs": [],
                 "scope": [
-                  "issue-1667"
+                  "issue-1568"
                 ],
                 "sequence": 19,
                 "validation_findings": [
-                  "Hosted verification and exact-candidate publication readiness remain pending; no local tests run."
+                  "Integrate accepted master 9767ae9a3ff1c7452101482218a17c55cf569b71 after accepted release v0.144.5 with issue1568. Preserve current task journal/checkpoints and authored specs from both branches; regenerate projections through the kernel. Previous candidate readiness does not apply; no local tests."
                 ]
               },
               {
@@ -1517,11 +1213,11 @@
                 "custody_event_id": "event:20",
                 "observations": [
                   ".decapod/managed/specs/VALIDATION.md",
-                  "https://github.com/DecapodLabs/decapod/issues/1667"
+                  "https://github.com/DecapodLabs/decapod/issues/1568"
                 ],
                 "proof_refs": [],
                 "scope": [
-                  "issue-1667"
+                  "issue-1568"
                 ],
                 "sequence": 20,
                 "validation_findings": [
@@ -1532,12 +1228,12 @@
                 "action": "implementation",
                 "custody_event_id": "event:21",
                 "observations": [
-                  "MODULE.bazel.lock",
-                  "https://github.com/DecapodLabs/decapod/issues/1667"
+                  "tests/validate_termination.rs",
+                  "https://github.com/DecapodLabs/decapod/issues/1568"
                 ],
                 "proof_refs": [],
                 "scope": [
-                  "issue-1667"
+                  "issue-1568"
                 ],
                 "sequence": 21,
                 "validation_findings": [
@@ -1548,31 +1244,31 @@
                 "action": "implementation",
                 "custody_event_id": "event:22",
                 "observations": [
-                  "https://github.com/DecapodLabs/decapod/pull/1675"
+                  ".decapod/managed/specs/VALIDATION.md",
+                  "https://github.com/DecapodLabs/decapod/issues/1568"
                 ],
                 "proof_refs": [],
                 "scope": [
-                  "issue-1667"
+                  "issue-1568"
                 ],
                 "sequence": 22,
                 "validation_findings": [
-                  "Integrate accepted master f779e39111ec8b3c8c41569f68a3a7604df167e7 and merged1675 accepted-policy hardening with issue1667. Preserve current task journal/checkpoints and authored specs from both branches; regenerate projections through the kernel. Previous candidate readiness does not apply; no local tests."
+                  "Hosted verification and exact-candidate publication readiness remain pending; no local tests run."
                 ]
               },
               {
                 "action": "implementation",
                 "custody_event_id": "event:23",
                 "observations": [
-                  ".decapod/managed/specs/VALIDATION.md",
-                  "https://github.com/DecapodLabs/decapod/issues/1667"
+                  "https://github.com/DecapodLabs/decapod/pull/1683"
                 ],
                 "proof_refs": [],
                 "scope": [
-                  "issue-1667"
+                  "issue-1568"
                 ],
                 "sequence": 23,
                 "validation_findings": [
-                  "Hosted verification and exact-candidate publication readiness remain pending; no local tests run."
+                  "Integrate accepted master e8f8848d19a02ad8e2a580cf7722fe4ff9342221 after merged bootstrap repair PR1683 with issue1568. Preserve current task journal/checkpoints and authored specs from both branches; regenerate projections through the kernel. Previous candidate readiness does not apply; no local tests."
                 ]
               },
               {
@@ -1580,332 +1276,15 @@
                 "custody_event_id": "event:24",
                 "observations": [
                   ".decapod/managed/specs/VALIDATION.md",
-                  "https://github.com/DecapodLabs/decapod/issues/1667"
+                  "https://github.com/DecapodLabs/decapod/pull/1689"
                 ],
                 "proof_refs": [],
                 "scope": [
-                  "issue-1667"
+                  "issue-1568"
                 ],
                 "sequence": 24,
                 "validation_findings": [
-                  "Hosted verification and exact-candidate publication readiness remain pending; no local tests run."
-                ]
-              },
-              {
-                "action": "implementation",
-                "custody_event_id": "event:25",
-                "observations": [
-                  "src/decapod/core/dactyl_db.rs",
-                  "https://github.com/DecapodLabs/decapod/issues/1667"
-                ],
-                "proof_refs": [],
-                "scope": [
-                  "issue-1667"
-                ],
-                "sequence": 25,
-                "validation_findings": [
-                  "Hosted verification and exact-candidate publication readiness remain pending; no local tests run."
-                ]
-              },
-              {
-                "action": "implementation",
-                "custody_event_id": "event:26",
-                "observations": [
-                  "tests/unit/core/events_tests.rs",
-                  "https://github.com/DecapodLabs/decapod/issues/1667"
-                ],
-                "proof_refs": [],
-                "scope": [
-                  "issue-1667"
-                ],
-                "sequence": 26,
-                "validation_findings": [
-                  "Hosted verification and exact-candidate publication readiness remain pending; no local tests run."
-                ]
-              },
-              {
-                "action": "implementation",
-                "custody_event_id": "event:27",
-                "observations": [
-                  "src/decapod/core/dactyl_db.rs",
-                  "https://github.com/DecapodLabs/decapod/issues/1667"
-                ],
-                "proof_refs": [],
-                "scope": [
-                  "issue-1667"
-                ],
-                "sequence": 27,
-                "validation_findings": [
-                  "Hosted verification and exact-candidate publication readiness remain pending; no local tests run."
-                ]
-              },
-              {
-                "action": "implementation",
-                "custody_event_id": "event:28",
-                "observations": [
-                  "tests/release_dependency_policy.rs",
-                  "https://github.com/DecapodLabs/decapod/issues/1667"
-                ],
-                "proof_refs": [],
-                "scope": [
-                  "issue-1667"
-                ],
-                "sequence": 28,
-                "validation_findings": [
-                  "Hosted verification and exact-candidate publication readiness remain pending; no local tests run."
-                ]
-              },
-              {
-                "action": "implementation",
-                "custody_event_id": "event:29",
-                "observations": [
-                  "tests/validate_termination.rs",
-                  "https://github.com/DecapodLabs/decapod/issues/1667"
-                ],
-                "proof_refs": [],
-                "scope": [
-                  "issue-1667"
-                ],
-                "sequence": 29,
-                "validation_findings": [
-                  "Hosted verification and exact-candidate publication readiness remain pending; no local tests run."
-                ]
-              },
-              {
-                "action": "implementation",
-                "custody_event_id": "event:30",
-                "observations": [
-                  "https://github.com/DecapodLabs/decapod/pull/1682"
-                ],
-                "proof_refs": [],
-                "scope": [
-                  "issue-1667"
-                ],
-                "sequence": 30,
-                "validation_findings": [
-                  "Integrate accepted master fded2dd0b5f02f9c874301d4b98cfd59ad188357 after merged PR1682 native inventory evidence with issue1667. Preserve current task journal/checkpoints and authored specs from both branches; regenerate projections through the kernel. Previous candidate readiness does not apply; no local tests."
-                ]
-              },
-              {
-                "action": "implementation",
-                "custody_event_id": "event:31",
-                "observations": [
-                  "src/decapod/core/dactyl_db.rs",
-                  "https://github.com/DecapodLabs/decapod/issues/1667"
-                ],
-                "proof_refs": [],
-                "scope": [
-                  "issue-1667"
-                ],
-                "sequence": 31,
-                "validation_findings": [
-                  "Hosted verification and exact-candidate publication readiness remain pending; no local tests run."
-                ]
-              },
-              {
-                "action": "implementation",
-                "custody_event_id": "event:32",
-                "observations": [
-                  "tests/release_dependency_policy.rs",
-                  "https://github.com/DecapodLabs/decapod/issues/1667"
-                ],
-                "proof_refs": [],
-                "scope": [
-                  "issue-1667"
-                ],
-                "sequence": 32,
-                "validation_findings": [
-                  "Hosted verification and exact-candidate publication readiness remain pending; no local tests run."
-                ]
-              },
-              {
-                "action": "implementation",
-                "custody_event_id": "event:33",
-                "observations": [
-                  ".decapod/managed/specs/INTERFACES.md",
-                  "https://github.com/DecapodLabs/decapod/issues/1667"
-                ],
-                "proof_refs": [],
-                "scope": [
-                  "issue-1667"
-                ],
-                "sequence": 33,
-                "validation_findings": [
-                  "Hosted verification and exact-candidate publication readiness remain pending; no local tests run."
-                ]
-              },
-              {
-                "action": "implementation",
-                "custody_event_id": "event:34",
-                "observations": [
-                  "tests/release_dependency_policy.rs",
-                  "https://github.com/DecapodLabs/decapod/issues/1667"
-                ],
-                "proof_refs": [],
-                "scope": [
-                  "issue-1667"
-                ],
-                "sequence": 34,
-                "validation_findings": [
-                  "Hosted verification and exact-candidate publication readiness remain pending; no local tests run."
-                ]
-              },
-              {
-                "action": "implementation",
-                "custody_event_id": "event:35",
-                "observations": [
-                  "src/decapod/core/dactyl_db.rs",
-                  "https://github.com/DecapodLabs/decapod/issues/1667"
-                ],
-                "proof_refs": [],
-                "scope": [
-                  "issue-1667"
-                ],
-                "sequence": 35,
-                "validation_findings": [
-                  "Hosted verification and exact-candidate publication readiness remain pending; no local tests run."
-                ]
-              },
-              {
-                "action": "implementation",
-                "custody_event_id": "event:36",
-                "observations": [
-                  "tests/unit/core/task_journal_tests.rs",
-                  "https://github.com/DecapodLabs/decapod/issues/1667"
-                ],
-                "proof_refs": [],
-                "scope": [
-                  "issue-1667"
-                ],
-                "sequence": 36,
-                "validation_findings": [
-                  "Hosted verification and exact-candidate publication readiness remain pending; no local tests run."
-                ]
-              },
-              {
-                "action": "implementation",
-                "custody_event_id": "event:37",
-                "observations": [
-                  ".decapod/managed/specs/INTERFACES.md",
-                  "https://github.com/DecapodLabs/decapod/issues/1667"
-                ],
-                "proof_refs": [],
-                "scope": [
-                  "issue-1667"
-                ],
-                "sequence": 37,
-                "validation_findings": [
-                  "Hosted verification and exact-candidate publication readiness remain pending; no local tests run."
-                ]
-              },
-              {
-                "action": "implementation",
-                "custody_event_id": "event:38",
-                "observations": [
-                  "https://github.com/DecapodLabs/decapod/pull/1685"
-                ],
-                "proof_refs": [],
-                "scope": [
-                  "issue-1667"
-                ],
-                "sequence": 38,
-                "validation_findings": [
-                  "Integrate accepted master 9767ae9a3ff1c7452101482218a17c55cf569b71 after accepted release v0.144.5 with issue1667. Preserve current task journal/checkpoints and authored specs from both branches; regenerate projections through the kernel. Previous candidate readiness does not apply; no local tests."
-                ]
-              },
-              {
-                "action": "implementation",
-                "custody_event_id": "event:39",
-                "observations": [
-                  ".decapod/managed/specs/VALIDATION.md",
-                  "https://github.com/DecapodLabs/decapod/issues/1667"
-                ],
-                "proof_refs": [],
-                "scope": [
-                  "issue-1667"
-                ],
-                "sequence": 39,
-                "validation_findings": [
-                  "Hosted verification and exact-candidate publication readiness remain pending; no local tests run."
-                ]
-              },
-              {
-                "action": "implementation",
-                "custody_event_id": "event:40",
-                "observations": [
-                  "https://github.com/DecapodLabs/decapod/pull/1683"
-                ],
-                "proof_refs": [],
-                "scope": [
-                  "issue-1667"
-                ],
-                "sequence": 40,
-                "validation_findings": [
-                  "Integrate accepted master e8f8848d19a02ad8e2a580cf7722fe4ff9342221 after merged bootstrap repair PR1683 with issue1667. Preserve current task journal/checkpoints and authored specs from both branches; regenerate projections through the kernel. Previous candidate readiness does not apply; no local tests."
-                ]
-              },
-              {
-                "action": "implementation",
-                "custody_event_id": "event:41",
-                "observations": [
-                  "src/decapod/plugins/container.rs",
-                  "https://github.com/DecapodLabs/decapod/issues/1667"
-                ],
-                "proof_refs": [],
-                "scope": [
-                  "issue-1667"
-                ],
-                "sequence": 41,
-                "validation_findings": [
-                  "Hosted verification and exact-candidate publication readiness remain pending; no local tests run."
-                ]
-              },
-              {
-                "action": "implementation",
-                "custody_event_id": "event:42",
-                "observations": [
-                  "tests/unit/plugins/container_tests.rs",
-                  "https://github.com/DecapodLabs/decapod/issues/1667"
-                ],
-                "proof_refs": [],
-                "scope": [
-                  "issue-1667"
-                ],
-                "sequence": 42,
-                "validation_findings": [
-                  "Hosted verification and exact-candidate publication readiness remain pending; no local tests run."
-                ]
-              },
-              {
-                "action": "implementation",
-                "custody_event_id": "event:43",
-                "observations": [
-                  ".decapod/managed/specs/INTERFACES.md",
-                  "https://github.com/DecapodLabs/decapod/issues/1667"
-                ],
-                "proof_refs": [],
-                "scope": [
-                  "issue-1667"
-                ],
-                "sequence": 43,
-                "validation_findings": [
-                  "Hosted verification and exact-candidate publication readiness remain pending; no local tests run."
-                ]
-              },
-              {
-                "action": "implementation",
-                "custody_event_id": "event:44",
-                "observations": [
-                  ".decapod/managed/specs/VALIDATION.md",
-                  "https://github.com/DecapodLabs/decapod/pull/1688"
-                ],
-                "proof_refs": [],
-                "scope": [
-                  "issue-1667"
-                ],
-                "sequence": 44,
-                "validation_findings": [
-                  "Integrate accepted master 1c1fa5dcfc2d31cc2c09dcf5d18470dc62900dd5 and official v0.145.1 into PR1678 while retaining published Dactyl0.16.1, independent canonical proof, diagnostic admission denial, all required checks and the patched Quinn floor. Preserve current task history and both authored contracts, remove identical duplicate prose, and regenerate projections through the kernel. Fresh GitHub Actions pending; no local tests or Buildkite execution."
+                  "Fresh exact-candidate GitHub Actions required; no local tests; Buildkite excluded by user and full native publication readiness unproven."
                 ]
               }
             ]
@@ -1915,55 +1294,46 @@
       "declared_commands": [],
       "destination": "pull request",
       "evidence": [
-        "https://github.com/DecapodLabs/decapod/issues/1667",
+        "https://github.com/DecapodLabs/decapod/issues/1568",
         "https://github.com/DecapodLabs/decapod/pull/1675",
         "https://github.com/DecapodLabs/decapod/pull/1682",
         "https://github.com/DecapodLabs/decapod/pull/1683",
         "https://github.com/DecapodLabs/decapod/pull/1685",
-        "https://github.com/DecapodLabs/decapod/pull/1688"
+        "https://github.com/DecapodLabs/decapod/pull/1689"
       ],
       "inspected_files": [],
-      "intent_id": "intent:change_01M7BCN0CS3Z8AJ7TZ491WJ7CJ",
+      "intent_id": "intent:change_01M7BCJGVSZZ72B0C1Y6FVMPP4",
       "modified_files": [
+        ".config/build/decapod.BUILD.bzl",
         ".decapod/config.toml",
         ".decapod/managed/specs/ARCHITECTURE.md",
         ".decapod/managed/specs/INTENT.md",
         ".decapod/managed/specs/INTERFACES.md",
         ".decapod/managed/specs/SECURITY.md",
         ".decapod/managed/specs/VALIDATION.md",
-        "Cargo.lock",
-        "Cargo.toml",
-        "MODULE.bazel.lock",
-        "docs/book/src/reference/propodus.md",
-        "docs/book/src/reference/supabase-validation.md",
-        "docs/cloud-repository-billing.md",
-        "src/decapod/core/dactyl_db.rs",
-        "src/decapod/plugins/container.rs",
-        "tests/release_dependency_policy.rs",
-        "tests/unit/core/events_tests.rs",
-        "tests/unit/core/task_journal_tests.rs",
-        "tests/unit/core/task_transfer_tests.rs",
-        "tests/unit/plugins/container_tests.rs",
+        "tests/cli_contracts.rs",
+        "tests/sqlite_maintenance.rs",
         "tests/validate_termination.rs"
       ],
       "next_transitions": [
         "Refine plan and declare falsifiable checks"
       ],
       "repo_scope": [
-        "issue-1667"
+        "issue-1568"
       ],
-      "run_id": "branch_01M7BCN0FD8AE623HXNGA0C8F9",
+      "run_id": "branch_01M7BCJGZ6T52EA2CECBZAPK5W",
       "schema_version": "1.1.0",
       "shortcut_risk_signals": [],
-      "task_id": "code_01m7bcmcpzhpz8hw",
+      "task_id": "bend_01m7bchxbbkchy0y",
       "tool_calls": [],
       "unresolved_assumptions": [
+        "Fresh exact-candidate GitHub Actions required; no local tests; Buildkite excluded by user and full native publication readiness unproven.",
         "Hosted verification and exact-candidate publication readiness remain pending; no local tests run.",
-        "Integrate accepted master 1c1fa5dcfc2d31cc2c09dcf5d18470dc62900dd5 and official v0.145.1 into PR1678 while retaining published Dactyl0.16.1, independent canonical proof, diagnostic admission denial, all required checks and the patched Quinn floor. Preserve current task history and both authored contracts, remove identical duplicate prose, and regenerate projections through the kernel. Fresh GitHub Actions pending; no local tests or Buildkite execution.",
-        "Integrate accepted master 9767ae9a3ff1c7452101482218a17c55cf569b71 after accepted release v0.144.5 with issue1667. Preserve current task journal/checkpoints and authored specs from both branches; regenerate projections through the kernel. Previous candidate readiness does not apply; no local tests.",
-        "Integrate accepted master e8f8848d19a02ad8e2a580cf7722fe4ff9342221 after merged bootstrap repair PR1683 with issue1667. Preserve current task journal/checkpoints and authored specs from both branches; regenerate projections through the kernel. Previous candidate readiness does not apply; no local tests.",
-        "Integrate accepted master f779e39111ec8b3c8c41569f68a3a7604df167e7 and merged1675 accepted-policy hardening with issue1667. Preserve current task journal/checkpoints and authored specs from both branches; regenerate projections through the kernel. Previous candidate readiness does not apply; no local tests.",
-        "Integrate accepted master fded2dd0b5f02f9c874301d4b98cfd59ad188357 after merged PR1682 native inventory evidence with issue1667. Preserve current task journal/checkpoints and authored specs from both branches; regenerate projections through the kernel. Previous candidate readiness does not apply; no local tests."
+        "Integrate accepted master 9767ae9a3ff1c7452101482218a17c55cf569b71 after accepted release v0.144.5 with issue1568. Preserve current task journal/checkpoints and authored specs from both branches; regenerate projections through the kernel. Previous candidate readiness does not apply; no local tests.",
+        "Integrate accepted master e8f8848d19a02ad8e2a580cf7722fe4ff9342221 after merged bootstrap repair PR1683 with issue1568. Preserve current task journal/checkpoints and authored specs from both branches; regenerate projections through the kernel. Previous candidate readiness does not apply; no local tests.",
+        "Integrate accepted master ec31c959cf41800c250fb1f6d741beaa3baefc4e and merged1675 accepted-policy hardening with issue1568. Preserve current task journal/checkpoints and authored specs from both branches; regenerate projections through the kernel. Previous candidate readiness does not apply; no local tests.",
+        "Integrate accepted master f779e39111ec8b3c8c41569f68a3a7604df167e7 and merged1675 accepted-policy hardening with issue1568. Preserve current task journal/checkpoints and authored specs from both branches; regenerate projections through the kernel. Previous candidate readiness does not apply; no local tests.",
+        "Integrate accepted master fded2dd0b5f02f9c874301d4b98cfd59ad188357 after merged PR1682 native inventory evidence with issue1568. Preserve current task journal/checkpoints and authored specs from both branches; regenerate projections through the kernel. Previous candidate readiness does not apply; no local tests."
       ]
     }
   },

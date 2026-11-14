@@ -626,7 +626,7 @@ execution evidence remains required before publication readiness.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `a52e4c3ea27fd78421168efba47f9a86173a8f3692d92f8e4e1bb5fe117facef`
+- Repository signal fingerprint: `f4e8df743eb7c2cb5701c3b274f1bd7077902fa546b5bb05a6f76d558417891e`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (234 files), `tests/` (233 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
@@ -965,6 +965,16 @@ Do not delete lock sidecars, signal foreign processes, steal claims, replay ambi
 ## PR1662 current-master preparation
 
 Worktree policy edits cannot self-grant capabilities. db.recover remains owner-only and cloud authority fails closed when it cannot be authenticated. Retain non-destructive lock diagnosis, current-process-only release and confined backups. Coordination receipts are not independent acceptance proof.
+
+## Required native dependencies cannot silently pass (#1568)
+
+The required maintenance test helper now fails when native SQLite is missing;
+it cannot return without running a purported integrity/backup/recovery check.
+Governed fixture children remove inherited provider identity and diagnostic skip
+flags and disable optional container claim startup. They retain real session,
+task, workspace and custody admission. The parent job/provider context is never
+mutated. Cloud principal environment spoofing remains a denial case, not a grant;
+merged Propodus authority groundwork does not prove Decapod hosted consumption.
 
 ## SDK 0.16.1 authority and budget boundary (#1667)
 

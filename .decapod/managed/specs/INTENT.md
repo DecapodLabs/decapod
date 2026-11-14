@@ -352,7 +352,7 @@ These declarations select authoring and proof obligations; they do not attest im
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `a52e4c3ea27fd78421168efba47f9a86173a8f3692d92f8e4e1bb5fe117facef`
+- Repository signal fingerprint: `f4e8df743eb7c2cb5701c3b274f1bd7077902fa546b5bb05a6f76d558417891e`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (234 files), `tests/` (233 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
@@ -557,6 +557,17 @@ Expose only project-opted local database maintenance capabilities to the agent. 
 ## PR1662 current-master preparation
 
 Preserve prepared PR1662 capability-scoped database maintenance before integrating accepted master3afa9df9 and the0.144.2 source release. Default-deny accepted policy, owner-only repair, bounded safe operations and non-destructive lock custody remain obligations. Hosted CI must establish the exact integrated candidate; no local tests are run.
+
+## Required maintenance evidence completion (#1568)
+
+The local-only capability engine merged in1662. Its standalone
+`tests/sqlite_maintenance.rs` target was not explicitly part of the existing
+required source recipe. Register those actual storage/CLI/RPC controls in the
+required CLI contract target without substituting an adapter mock or changing
+provider authority. Native SQLite absence must fail these required cases.
+Cloud policy/delegation remains separately enforced by Propodus; local opt-in
+and forged principal environment never establish authenticated cloud authority.
+Hosted execution and exact-candidate readiness remain pending.
 
 ## Published SDK convergence (#1667)
 

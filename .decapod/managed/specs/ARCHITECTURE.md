@@ -920,7 +920,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `a52e4c3ea27fd78421168efba47f9a86173a8f3692d92f8e4e1bb5fe117facef`
+- Repository signal fingerprint: `f4e8df743eb7c2cb5701c3b274f1bd7077902fa546b5bb05a6f76d558417891e`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (234 files), `tests/` (233 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
@@ -1195,6 +1195,15 @@ The integrated `todo` module exports both accepted authoring/resource custody fu
 ## PR1662 current-master preparation
 
 The db_maintenance module resolves accepted canonical-repository policy and uses existing Dactyl and StorageLock primitives. It does not replace the datastore or migration authority. Retain current-master storage format guards, task custody, provider verification and runtime ownership while integrating this operation boundary.
+
+## Required maintenance execution (#1568)
+
+The existing `db_maintenance` owner still decides backend, canonical policy,
+capability and task/worktree custody before the Dactyl operation. This follow-up
+adds no policy engine. `tests/cli_contracts.rs` includes the standalone maintenance
+module, and `.config/build/decapod.BUILD.bzl` supplies its source to the existing
+required Bazel target. Consequently source-CI selects and executes those actual
+boundaries instead of inferring coverage from unrelated green jobs.
 
 ## Published bounded SDK (#1667)
 

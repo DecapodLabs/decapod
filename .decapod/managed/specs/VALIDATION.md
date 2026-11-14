@@ -1341,7 +1341,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `a52e4c3ea27fd78421168efba47f9a86173a8f3692d92f8e4e1bb5fe117facef`
+- Repository signal fingerprint: `f4e8df743eb7c2cb5701c3b274f1bd7077902fa546b5bb05a6f76d558417891e`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (234 files), `tests/` (233 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
@@ -1905,6 +1905,25 @@ Exercise actual `sqlite_maintenance` CLI/RPC worktree cases and storage-lock reg
 
 This checkpoint preserves original source and tests before integration with current master. Preserve failure history and all assertions; use hosted CI for verification, without local tests or running the maintenance candidate against the live machine datastore. Prior test observations do not prove the new integration.
 
+## Required local maintenance acceptance (#1568)
+
+The required `cli_contracts` target now includes `tests/sqlite_maintenance.rs`;
+Bazel supplies its module source explicitly. The tests traverse real Dactyl
+SQLite integrity/backup/recovery/lock behavior, the actual binary's operator
+surface, governed CLI/RPC opt-in and anti-self-elevation, and two real claimed
+worktrees with concurrent bounded retry and cross-custody rejection. No fake
+adapter/error replaces the maintenance acceptance path. Missing native SQLite
+fails the required cases instead of silently returning.
+
+The genuine governed fixtures clear inherited outer-provider context and all
+three diagnostic overrides only in their own children, retaining admission and
+leaving the parent source-job identity intact. Older operator bootstrap cases
+remain diagnostic; they are not claimed as full readiness or authenticated cloud
+proof. Existing exclusive operation locks, timeouts, backup path restrictions and
+cloud-denial assertions remain. The source suite's accepted provider graph,
+profile and original cases are preserved. No local tests ran; current hosted
+execution, case outcomes and full exact-candidate publication proof are pending.
+
 ## Current published SDK 0.16.1 adoption (#1667)
 
 The current exact registry pin/checksum is `dactyl-db =0.16.1` /
@@ -2044,3 +2063,23 @@ proof metadata from `fbe399289d1f24011476312e16653e8d830f490a` against
 `e8f8848d19a02ad8e2a580cf7722fe4ff9342221` remain historical. Fresh GitHub Actions
 must verify this integrated candidate. No local tests run; Buildkite is excluded
 at the user's direction and full native publication readiness is not asserted.
+
+## PR1679 integration with accepted v0.145.2
+
+Integrate accepted master `0677f9906d7e70651a9fc2337b2c27899bd331fa`, including
+the published Dactyl 0.16.1 SDK and the canonical observed-proof and diagnostic
+admission boundaries. Required CLI/Bazel execution still includes the real
+SQLite maintenance module: missing SQLite must fail, and repository-local
+fixtures must establish their own task custody and accepted maintenance policy.
+Candidate opt-in, cross-task claims and forged cloud principals cannot establish
+authority. SDK transport and same-user local execution do not add independent
+identity or isolation guarantees.
+
+Official Decapod v0.145.2 refreshes release-bound entrypoints, the managed image
+pin and spec projections. The reviewed inventory identifies these inputs without
+changing required checks or provider policy. Prior success for
+`331f6d748a44e91a4fd31c7af6d59372acd17eaa` against
+`e8f8848d19a02ad8e2a580cf7722fe4ff9342221` is historical evidence only. Fresh
+GitHub Actions must evaluate the integrated candidate. No local tests run;
+Buildkite is excluded at the user's direction and full native publication
+readiness remains unproven.
