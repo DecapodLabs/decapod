@@ -1,5 +1,16 @@
 # Validation
 
+## Real recovery fixture prerequisites (#1696)
+
+`tests/support/recovery_filesystem.rs` owns the existing private filesystem
+probe shared by unit filesystem regressions and `tests/sqlite_maintenance.rs`.
+It checks device identity, ownership, space and atomic no-clobber rename support
+before running recovery success assertions. Linux may select the preexisting
+`/dev/shm` candidate when the default temporary filesystem is incompatible;
+unavailable candidates produce explicit diagnostics and exhaustion fails.
+Production Dactyl guards and unsupported-path refusal tests remain authoritative.
+The standalone and aggregate Bazel targets declare this helper as a real input.
+
 ## Autonomous convergence protocol fixtures (#1690–#1692)
 
 `tests/unit/core/reflection_tests.rs` exercises source discovery, engineering

@@ -1223,6 +1223,14 @@
       "proof_refs": [
         ".config/build/decapod.BUILD.bzl"
       ]
+    },
+    {
+      "id": "recovery1696-validation-contract",
+      "summary": "Document real recovery prerequisites without skipping execution or weakening production checks",
+      "input_digest": "sha256:850d4b1f855d7ea23e808993c4feeb41de4803b85c54f9100796c39b806e0d60",
+      "proof_refs": [
+        ".decapod/managed/specs/VALIDATION.md"
+      ]
     }
   ],
   "intents": {
