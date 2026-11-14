@@ -188,13 +188,18 @@ dispositions. Proposed questions, investigation prose and quoted source bodies
 are not copied into the journal.
 
 `progress` distinguishes `initial`, `reduced_obligations`, `narrowed_scope`,
-`stagnant` and `regressed`. Added obligations are regression; paraphrases and
+`human_dependency`, `stagnant` and `regressed`. A newly admissible targeted
+human dependency is progress; repeating an admitted question is not. Other
+added obligations are regression; paraphrases and
 unobserved self-assessments stagnate. Source/hash failures leave the journal
 unchanged. The current kernel version and relevant source/policy observations
 bind conclusions without resetting the lifetime three-round budget. Ordinary
 checkpoint commits and phase progress do not manufacture additional rounds.
 
 An escalation's subject cannot be renamed or omitted during continuation.
+An omitted authority operation may be supplied after investigation, and its
+omitted target may be narrowed. Once supplied, the command and concrete target
+cannot be replaced or dropped. These refinements consume the existing rounds.
 Existing policy/approval requirements and canonical human dependencies take
 priority over reflection. The proposed human question must match a governing
 dependency, or the protocol redirects it. Missing approval returns the human

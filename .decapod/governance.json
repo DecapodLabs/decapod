@@ -1343,6 +1343,14 @@
       "proof_refs": [
         "tests/unit/core/reflection_tests.rs"
       ]
+    },
+    {
+      "id": "convergence-refined-authority-state",
+      "summary": "Document bounded authority discovery and genuine human-dependency progress",
+      "input_digest": "sha256:375a6aa768d1ad7e302d073fb8f2b7eea99e73d8e3c51dcc8a33f2375d917bbf",
+      "proof_refs": [
+        "docs/agent/state-model.md"
+      ]
     }
   ],
   "intents": {
