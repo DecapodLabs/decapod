@@ -776,7 +776,10 @@ pub(crate) fn authorize_rbac_exception(
     use sha2::{Digest, Sha256};
     use std::io::Read;
 
-    if !matches!(permission, "todo.journal.repair" | "validate.bypass") {
+    if !matches!(
+        permission,
+        "todo.journal.repair" | "todo.legacy.reconcile" | "validate.bypass"
+    ) {
         return Err(error::DecapodError::ValidationError(
             "RBAC_PERMISSION_UNKNOWN: no exceptional grant exists".into(),
         ));
