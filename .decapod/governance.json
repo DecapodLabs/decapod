@@ -685,6 +685,14 @@
       "proof_refs": [
         "https://github.com/DecapodLabs/decapod/issues/1568"
       ]
+    },
+    {
+      "id": "issue-1568-file-19",
+      "summary": "docs(validation): delimit steady-state runtime measurement; file-by-file checkpoint, verification pending.",
+      "input_digest": "sha256:6d71785d29f1cc8601e109ed58f6265e488bb5fc7d80d13b9b66698c7a335801",
+      "proof_refs": [
+        "https://github.com/DecapodLabs/decapod/issues/1568"
+      ]
     }
   ],
   "intents": {
@@ -725,22 +733,22 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Hosted GitHub standalone validation jobs132318205665 and132317939558 reported release-bound drift after the accepted v0.144.5 release. Regenerate through supported init refresh/proof on official0.144.5, preserve accepted checks/config, and collect fresh hosted proof. No local tests; Buildkite excluded by user.",
-          "reviewed_code_fingerprint": "ae7a799e46aaf9e2124ffc5227629a3294740245e3fe2767c4014922e09dc181",
+          "reason": "Hosted GitHub Actions core jobs132330806628 (23.903s) and132301086296 exceeded the unchanged20s repeated-validation aggregate bound because the shared fixture re-enrolled an unknown identity for every iteration. Acquire named custody once before timing, assert session reuse, preserve all real checks and original10s/20s limits. No local tests.",
+          "reviewed_code_fingerprint": "711cacd4dbbdd67d9d03528b2ddb864567aadd4a9a641d332929dd75e685b7ad",
           "spec_material_hash": "0bc38acf41a2aeb5f82f86b2237f03c756979daa53ab64de603368cb719b8ae5"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Hosted GitHub standalone validation jobs132318205665 and132317939558 reported release-bound drift after the accepted v0.144.5 release. Regenerate through supported init refresh/proof on official0.144.5, preserve accepted checks/config, and collect fresh hosted proof. No local tests; Buildkite excluded by user.",
-          "reviewed_code_fingerprint": "ae7a799e46aaf9e2124ffc5227629a3294740245e3fe2767c4014922e09dc181",
+          "reason": "Hosted GitHub Actions core jobs132330806628 (23.903s) and132301086296 exceeded the unchanged20s repeated-validation aggregate bound because the shared fixture re-enrolled an unknown identity for every iteration. Acquire named custody once before timing, assert session reuse, preserve all real checks and original10s/20s limits. No local tests.",
+          "reviewed_code_fingerprint": "711cacd4dbbdd67d9d03528b2ddb864567aadd4a9a641d332929dd75e685b7ad",
           "spec_material_hash": "0bd2bba11d788c73dd7a653432ffbcc402059821300c4e6b6002046c3d1f0c21"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Hosted GitHub standalone validation jobs132318205665 and132317939558 reported release-bound drift after the accepted v0.144.5 release. Regenerate through supported init refresh/proof on official0.144.5, preserve accepted checks/config, and collect fresh hosted proof. No local tests; Buildkite excluded by user.",
-          "reviewed_code_fingerprint": "ae7a799e46aaf9e2124ffc5227629a3294740245e3fe2767c4014922e09dc181",
+          "reason": "Hosted GitHub Actions core jobs132330806628 (23.903s) and132301086296 exceeded the unchanged20s repeated-validation aggregate bound because the shared fixture re-enrolled an unknown identity for every iteration. Acquire named custody once before timing, assert session reuse, preserve all real checks and original10s/20s limits. No local tests.",
+          "reviewed_code_fingerprint": "711cacd4dbbdd67d9d03528b2ddb864567aadd4a9a641d332929dd75e685b7ad",
           "spec_material_hash": "c288daf7a1c8282872088f5e6f37fc4d95b6f6bc83716c3ffeb11ef641f8fc97"
         }
       ],
@@ -752,13 +760,13 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1794630162Z"
+      "updated_at": "1794633456Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:d1249489b7e65cca689bab17b6b0cf3e922f832c83d7e5f580d289eadeb43843",
+      "artifact_hash": "sha256:3f9804bd4fcf2200710ba1eaaa8b1011a0397277e4e8ec31f0f154b1878857d3",
       "checks": [],
       "current_phase": "implementation",
       "custody": {
@@ -900,10 +908,17 @@
             "intent_id": "intent:change_01M7BCJGVSZZ72B0C1Y6FVMPP4",
             "kind": "trajectory_step_recorded",
             "sequence": 21
+          },
+          {
+            "detail": "trajectory:branch_01M7BCJGZ6T52EA2CECBZAPK5W",
+            "event_id": "event:22",
+            "intent_id": "intent:change_01M7BCJGVSZZ72B0C1Y6FVMPP4",
+            "kind": "trajectory_step_recorded",
+            "sequence": 22
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 21,
+        "next_sequence": 22,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M7BCJGZ6T52EA2CECBZAPK5W": {
@@ -1191,6 +1206,22 @@
                   "issue-1568"
                 ],
                 "sequence": 21,
+                "validation_findings": [
+                  "Hosted verification and exact-candidate publication readiness remain pending; no local tests run."
+                ]
+              },
+              {
+                "action": "implementation",
+                "custody_event_id": "event:22",
+                "observations": [
+                  ".decapod/managed/specs/VALIDATION.md",
+                  "https://github.com/DecapodLabs/decapod/issues/1568"
+                ],
+                "proof_refs": [],
+                "scope": [
+                  "issue-1568"
+                ],
+                "sequence": 22,
                 "validation_findings": [
                   "Hosted verification and exact-candidate publication readiness remain pending; no local tests run."
                 ]
