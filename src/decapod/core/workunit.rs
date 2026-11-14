@@ -893,6 +893,9 @@ fn append_snapshot(
                     "workunit changed after the caller prepared its update",
                 ));
             }
+            if manifest.status == WorkUnitStatus::Verified {
+                crate::core::validation_history::check_workunit_append_on_conn(conn, manifest)?;
+            }
             let mut record = WorkUnitJournalRecord {
                 schema_version: JOURNAL_SCHEMA.into(),
                 event_type: JOURNAL_EVENT.into(),
