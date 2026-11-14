@@ -61,6 +61,7 @@ pub enum Progress {
     Initial,
     ReducedObligations,
     NarrowedScope,
+    HumanDependency,
     Stagnant,
     Regressed,
 }
@@ -638,6 +639,16 @@ pub fn submit(root: &Path, request: &Request) -> Result<Outcome, DecapodError> {
         let focus = pending.into_iter().next();
         let token = digest(&json!({"task":request.task_id, "custody":custody_digest,
             "input":input_digest, "context":context_digest, "round":round}))?;
+        let established_human_dependency = human
+            && escalation
+                .as_ref()
+                .is_some_and(|e| e.human_escalation_permitted)
+            && last.is_some_and(|r| {
+                !r.outcome
+                    .escalation
+                    .as_ref()
+                    .is_some_and(|e| e.human_escalation_permitted)
+            });
         let outcome = Outcome {
             schema_version: if escalation.is_some() { "decapod.reflection.v2" } else { "decapod.reflection.v1" }.into(), disposition, reason: reason.into(),
             challenge: focus, token, round: round.min(ROUND_LIMIT),
@@ -652,6 +663,7 @@ pub fn submit(root: &Path, request: &Request) -> Result<Outcome, DecapodError> {
             completion_proven: false,
             escalation,
             progress: Some(if last.is_none() { Progress::Initial }
+                else if established_human_dependency { Progress::HumanDependency }
                 else if regressed { Progress::Regressed }
                 else if !resolved_ids.is_empty() { Progress::ReducedObligations }
                 else if narrowed { Progress::NarrowedScope } else { Progress::Stagnant }),

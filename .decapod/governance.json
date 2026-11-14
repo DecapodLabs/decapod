@@ -1327,6 +1327,14 @@
       "proof_refs": [
         "src/decapod/core/mentor/reflection/escalation.rs"
       ]
+    },
+    {
+      "id": "convergence-human-dependency-progress",
+      "summary": "Distinguish a newly admissible human dependency from stagnation or regression while preserving immediate authority disposition",
+      "input_digest": "sha256:cb04a077ed6d060676f57fc828b047da1cb4fd586f5928c2d1ee914decb947e6",
+      "proof_refs": [
+        "src/decapod/core/mentor/reflection.rs"
+      ]
     }
   ],
   "intents": {
