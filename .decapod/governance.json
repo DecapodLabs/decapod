@@ -823,6 +823,14 @@
       "proof_refs": [
         ".decapod/managed/specs/INTENT.md"
       ]
+    },
+    {
+      "id": "convergence-refresh1454-interfacesmd",
+      "summary": "Refresh supported INTERFACES.md projection with the current source identity",
+      "input_digest": "sha256:40e6bb584771e2ecce5478bdde8e7e09a4eca884e8d30551a2a9830457988b43",
+      "proof_refs": [
+        ".decapod/managed/specs/INTERFACES.md"
+      ]
     }
   ],
   "intents": {
