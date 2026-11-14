@@ -1,5 +1,22 @@
 # Validation
 
+## Autonomous convergence protocol fixtures (#1690–#1692)
+
+`tests/unit/core/reflection_tests.rs` exercises source discovery, engineering
+choices, inspected predicates, stagnation, regression, exhaustion, canonical
+business dependencies, actual policy approvals, forged/stale observations,
+idempotent retry and concurrent task isolation. Its deterministic comparison
+executes a baseline mock that delegates every proposed question and compares
+actual governed outcomes, rounds and retained bytes. It does not evaluate an
+LLM or claim improved semantic reasoning or completed engineering tasks.
+`tests/infer_precision.rs` exercises the real orientation-to-mentor continuation,
+preserves the native diagnostic/publication guard, verifies all four generated
+entrypoints route to the embedded contract, and checks that architecture words
+do not manufacture missing human authority. Existing native proof remains
+authoritative; source-CI observations cannot substitute for the required full
+exact-candidate validation receipt. Fixture output supplies actual measurements
+only when its owning test lane executes successfully.
+
 ## PR1661 repair evidence contract
 
 The non-Git entrypoint regression must demonstrate successful prerequisite-only

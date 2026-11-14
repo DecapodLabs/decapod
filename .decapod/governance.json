@@ -791,6 +791,14 @@
       "proof_refs": [
         ".decapod/managed/specs/SECURITY.md"
       ]
+    },
+    {
+      "id": "convergence-spec-validation",
+      "summary": "Document bounded escalation validation guarantees and actual proof limits",
+      "input_digest": "sha256:074c69434f5042fe4594278f7a5e52a912974c5e18eb99ff547705e37c61b889",
+      "proof_refs": [
+        ".decapod/managed/specs/VALIDATION.md"
+      ]
     }
   ],
   "intents": {
