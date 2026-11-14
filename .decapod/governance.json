@@ -1559,6 +1559,14 @@
       "proof_refs": [
         ".decapod/managed/specs/.manifest.json"
       ]
+    },
+    {
+      "id": "convergence-scope-bound-proof-candidate",
+      "summary": "Bind final scope freshness regression and current reviews before complete proof",
+      "input_digest": "sha256:424c29436a6d98fbc0b17357073b3688a301b078ee1a52403f900a760511d183",
+      "proof_refs": [
+        "tests/unit/core/reflection_tests.rs"
+      ]
     }
   ],
   "intents": {
@@ -1599,22 +1607,22 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Reviewed additive authority operation/target discovery within the original budget; established scope remains immutable and real human dependencies stay independently authoritative.",
-          "reviewed_code_fingerprint": "c8f0c6227de6d3ab218fc14cafe68ab327ca6fbbc80d9b792fce00636e2efe75",
+          "reason": "Reviewed exact authority-scope context binding: omitted scope can be investigated without resetting rounds, established scope cannot change, and broader historical replies become stale after narrowing.",
+          "reviewed_code_fingerprint": "9f9bc8d18a15b595eb67ee69b175c70f6bd55fa40bcb6325a14c79ac3833367d",
           "spec_material_hash": "df7a941f9d82a6095083540e5c69d3c27ca2a8aae3d7d909673794bd2eaf261e"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Reviewed additive authority operation/target discovery within the original budget; established scope remains immutable and real human dependencies stay independently authoritative.",
-          "reviewed_code_fingerprint": "c8f0c6227de6d3ab218fc14cafe68ab327ca6fbbc80d9b792fce00636e2efe75",
+          "reason": "Reviewed exact authority-scope context binding: omitted scope can be investigated without resetting rounds, established scope cannot change, and broader historical replies become stale after narrowing.",
+          "reviewed_code_fingerprint": "9f9bc8d18a15b595eb67ee69b175c70f6bd55fa40bcb6325a14c79ac3833367d",
           "spec_material_hash": "4f2025b9b1385b0be839d8080d4e38686b29b5c5ea41ec90d4c1e35e6115683d"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Reviewed additive authority operation/target discovery within the original budget; established scope remains immutable and real human dependencies stay independently authoritative.",
-          "reviewed_code_fingerprint": "c8f0c6227de6d3ab218fc14cafe68ab327ca6fbbc80d9b792fce00636e2efe75",
+          "reason": "Reviewed exact authority-scope context binding: omitted scope can be investigated without resetting rounds, established scope cannot change, and broader historical replies become stale after narrowing.",
+          "reviewed_code_fingerprint": "9f9bc8d18a15b595eb67ee69b175c70f6bd55fa40bcb6325a14c79ac3833367d",
           "spec_material_hash": "fd3211c63495669c2998feee5675bdd3e167b0dc4ed0fff15b04c6853f489af3"
         }
       ],
@@ -1628,16 +1636,20 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1794692740Z"
+      "updated_at": "1794693475Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Keep approval, scope, custody, proof and publication authoritative; no transcripts, daemon or semantic-proof claims"
       ],
-      "artifact_hash": "sha256:5f360d44d3ccf2e25201809915a0f2b7a4c5f123381e5741020487f5792e9e61",
+      "artifact_hash": "sha256:4a81bc67046079cecb743c9ad749ce4b1034a474648eef944a020cc4bd6e9794",
       "checks": [
         {
           "name": "authority_refinement",
+          "status": "partial"
+        },
+        {
+          "name": "authority_scope_replay",
           "status": "partial"
         },
         {
@@ -1745,10 +1757,17 @@
             "intent_id": "intent:convergence-1690",
             "kind": "trajectory_step_recorded",
             "sequence": 13
+          },
+          {
+            "detail": "trajectory:convergence-1690",
+            "event_id": "event:14",
+            "intent_id": "intent:convergence-1690",
+            "kind": "trajectory_step_recorded",
+            "sequence": 14
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 13,
+        "next_sequence": 14,
         "schema_version": "1.0.0",
         "trajectories": {
           "convergence-1690": {
@@ -1916,6 +1935,22 @@
                 ],
                 "sequence": 13,
                 "validation_findings": []
+              },
+              {
+                "action": "candidate-validation",
+                "custody_event_id": "event:14",
+                "observations": [
+                  "Authority refinement review identified that policy-equivalent target changes must still invalidate broader historical replies. Included exact operation and target identity in observed context and added a stale-broader-reply/current-exact-retry regression. Source parsing and diff checks pass; execution for these new changes is pending.",
+                  "Interrupted only the owned ec25 validator through its PTY before replacing that candidate; truthful CI operation cancelled evidence retained at decapod-snapshot-Xzr8uF. No prior green execution or cancellation supplies publication authority."
+                ],
+                "proof_refs": [
+                  "authority_scope_replay"
+                ],
+                "scope": [
+                  "src/decapod/core/mentor and canonical agent integration/tests"
+                ],
+                "sequence": 14,
+                "validation_findings": []
               }
             ]
           }
@@ -1926,12 +1961,14 @@
       ],
       "evidence": [
         "Actual deterministic comparison: baseline unnecessary questions 3, governed admitted questions 0, admissible decisions 3, total rounds 6, elapsed_us 1892663, governance_growth_bytes 20665. This does not measure LLM semantics or complete engineering tasks.",
+        "Authority refinement review identified that policy-equivalent target changes must still invalidate broader historical replies. Included exact operation and target identity in observed context and added a stale-broader-reply/current-exact-retry regression. Source parsing and diff checks pass; execution for these new changes is pending.",
         "Buildkite #10625 candidate 5ad1554990125c4b54aa6af857b2de8afd732a15: 1770 library tests passed, one new fixture failed due to incomplete TOML config; CLI aggregate 39 passed, one new fixture expected the wrong readiness error, four ignored. Both reported fixture defects repaired in dedicated commits.",
         "Buildkite10661 passed complete source workflow for candidate6db3c1f19b2d9adc592b5c476143bf3f244ca88d, including real SQLite recovery fixtures. Native validation correctly rejected SOURCE_CHANGED_DURING_SNAPSHOT_PROOF after the reviewed authority-continuation change; retained decapod-snapshot-IhdHfj. Prior green execution is not readiness for the new candidate.",
         "Candidate 3dff4da9 stopped before provider execution: SNAPSHOT_UPLOAD_INCOMPLETE, local release tags lagged remote. Retained snapshot decapod-snapshot-nT3E6x; fetched published v0.145.4 tag without tag publication.",
         "Candidate d6bb48798b5477a5fb006cd6f559a21e3c809c3c was blocked by ACCEPTED_BASE_NOT_ANCESTOR after external PR1680/release1455 integration. Incorporated f5da0e61, retained both semantic spec scopes, regenerated canonical pins through official1455 session update, restored temporary config. Reclaimed genuinely unassigned task and rebound existing workspace after session cleanup.",
         "Draft extends existing three-round journal and orientation/mentor input with typed escalation proposals, observed source predicates and existing policy/approval reads. Concise source facts are not proof of execution or semantic exhaustion. Adversarial unit and CLI mock harness authored; not yet executed. Preserve per-file exact checkpoints and native publication gates.",
         "Generated entrypoint integration test passed; public native Buildkite reader is available. Cancelled unnecessary bk diagnostic device login without credentials; no access grant is required for the configured reader.",
+        "Interrupted only the owned ec25 validator through its PTY before replacing that candidate; truthful CI operation cancelled evidence retained at decapod-snapshot-Xzr8uF. No prior green execution or cancellation supplies publication authority.",
         "Issue1696 records the prerequisite repair. Extracted existing unit helper to tests/support/recovery_filesystem.rs; preserved all selection/refusal tests, reused the probe in CLI success fixtures, declared aggregate and standalone Bazel inputs. No production guard, recipe, provider or required graph changed.",
         "Native full validation for 9026474f ended failed on Buildkite10656; retained snapshot decapod-snapshot-sHOu1M. Only CLI recipe failed: two existing SQLite success fixtures violated Dactyl same-device staging prerequisite; entrypoint aggregate and new CLI harness passed, full library1771 passed with8 ignored, core recipe passed.",
         "Newly admissible canonical human dependency is explicit progress; repeating it is not. Earlier candidate6db3 provider results remain separate and cannot authorize this changed candidate.",
@@ -1958,6 +1995,7 @@
         "Run complete exact-candidate validation against accepted v0.145.5; no readiness receipt exists yet.",
         "Run complete native validation on the new exact candidate and current accepted target.",
         "Run full exact-candidate Decapod validation; repair reported source failures without substituting GitHub status for configured provider proof.",
+        "Run full exact-candidate proof with source fixed; repair only actual reported failures.",
         "Run full exact-candidate validation including the new authority-discovery regression and guarded recovery fixtures.",
         "Run full proof for the final authority-continuity candidate; leave source unchanged unless actual validation reports a repair."
       ],
