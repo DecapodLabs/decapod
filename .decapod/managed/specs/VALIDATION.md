@@ -1956,3 +1956,7 @@ mislabeling resumability as VERIFIED proof. The local accepted-target transport
 is a real bare Git fixture, not full authenticated forge or native agent proof.
 Hosted execution and final exact-candidate publication validation remain pending.
 No local tests or CI are run during authoring.
+
+## Accepted release projection refresh (v0.144.5)
+
+After integrating accepted master `9767ae9a3ff1c7452101482218a17c55cf569b71`, regenerate the agent entrypoints and managed release projections with the official v0.144.5 binary. Accepted verification requirements remain unchanged. Projection integrity is a prerequisite; fresh hosted GitHub Actions must evaluate this candidate. No local tests or full publication-readiness claim accompany this refresh.
