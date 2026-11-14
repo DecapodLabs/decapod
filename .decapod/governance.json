@@ -983,6 +983,14 @@
       "proof_refs": [
         ".decapod/managed/specs/VALIDATION.md"
       ]
+    },
+    {
+      "id": "convergence-authority-attestation-manifestjson",
+      "summary": "Refresh source binding after the authority regression fix",
+      "input_digest": "sha256:004a251ee794e424b7a05d3f0732a83281d5ad2c871f380b4f0b29900703461f",
+      "proof_refs": [
+        ".decapod/managed/specs/.manifest.json"
+      ]
     }
   ],
   "intents": {
