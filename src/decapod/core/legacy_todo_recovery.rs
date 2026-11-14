@@ -96,8 +96,18 @@ fn sha256(bytes: &[u8]) -> String {
     format!("sha256:{:x}", Sha256::digest(bytes))
 }
 
-fn open_source(path: &Path) -> Result<File, DecapodError> {
-    fs_permissions::check_file(path, false)?;
+fn open_source(path: &Path, archival_link: bool) -> Result<File, DecapodError> {
+    if archival_link {
+        // Only the receipt-bound source/archive pair may temporarily have two
+        // links. Do not relax the shared state-file policy for other callers.
+        fs_permissions::check_directory(
+            path.parent()
+                .ok_or_else(|| invalid("source parent is absent"))?,
+            false,
+        )?;
+    } else {
+        fs_permissions::check_file(path, false)?;
+    }
     let mut options = OpenOptions::new();
     options.read(true);
     #[cfg(unix)]
@@ -108,6 +118,20 @@ fn open_source(path: &Path) -> Result<File, DecapodError> {
     let file = options.open(path)?;
     if !file.metadata()?.is_file() {
         return Err(invalid("source must be a regular file"));
+    }
+    #[cfg(unix)]
+    {
+        use std::os::unix::fs::MetadataExt;
+        let metadata = file.metadata()?;
+        let uid = unsafe { libc::geteuid() };
+        if (metadata.uid() != uid && metadata.uid() != 0)
+            || metadata.mode() & 0o022 != 0
+            || (metadata.nlink() != 1 && !(archival_link && metadata.nlink() == 2))
+        {
+            return Err(invalid(
+                "source ownership, write boundary or link count is unsafe",
+            ));
+        }
     }
     Ok(file)
 }
@@ -125,8 +149,9 @@ fn snapshot(
     output: &Path,
     ceiling: u64,
     deadline: Instant,
+    archival_link: bool,
 ) -> Result<Snapshot, DecapodError> {
-    let mut file = open_source(path)?;
+    let mut file = open_source(path, archival_link)?;
     let before = file.metadata()?;
     if before.len() > ceiling {
         return Err(invalid("source exceeds the bounded snapshot size"));
@@ -253,12 +278,14 @@ fn review_locked(
         &temporary.path().join("canonical.db"),
         MAX_CANONICAL_BYTES,
         deadline,
+        false,
     )?;
     let source = snapshot(
         source_path,
         &temporary.path().join("legacy.db"),
         MAX_SOURCE_BYTES,
         deadline,
+        allow_archive_link,
     )?;
     if source.identity == canonical.identity {
         return Err(invalid("legacy path aliases the canonical datastore"));
@@ -325,7 +352,7 @@ fn review_locked(
             "authority_status": authority_status,
             "identity_assurance": "cooperative_not_authenticated", "mutations_replayed": 0,
             "publication_ready": false, "completion_proven": false,
-            "next_action": if !supported { "preserve inputs; unmatched layouts/history require separately reviewed reconciliation" } else if binding.is_none() { "obtain the existing canonical journal-repair grant, then review again" } else { "review these exact inputs before requesting reconciliation" }
+            "next_action": if !supported { "preserve inputs; unmatched layouts/history require separately reviewed reconciliation" } else if binding.is_none() { "obtain the explicit canonical todo.legacy.reconcile grant, then review again" } else { "review these exact inputs before requesting reconciliation" }
         }),
         binding,
     ))
@@ -362,7 +389,7 @@ fn load_receipt(root: &Path) -> Result<Option<Receipt>, DecapodError> {
         return Ok(None);
     }
     let mut bytes = Vec::new();
-    open_source(&path)?
+    open_source(&path, false)?
         .take(MAX_RECEIPT_BYTES + 1)
         .read_to_end(&mut bytes)?;
     if bytes.len() as u64 > MAX_RECEIPT_BYTES {
@@ -428,7 +455,18 @@ fn check_archive(root: &Path, receipt: &Receipt) -> Result<(), DecapodError> {
         &temporary.path().join("archive.db"),
         MAX_SOURCE_BYTES,
         Instant::now() + Duration::from_secs(30),
+        true,
     )?;
+    let expected_links = if exists(&root.join("todo.db"))?
+        && identity(&fs::symlink_metadata(root.join("todo.db"))?)? == archive.identity
+    {
+        2
+    } else {
+        1
+    };
+    if archive.links != expected_links {
+        return Err(invalid("archive has an unrecognized hard-link alias"));
+    }
     if archive.digest != receipt.binding.source_sha256
         || archive.identity != receipt.binding.source_identity
         || archive.bytes != receipt.binding.source_bytes
@@ -447,6 +485,7 @@ fn check_canonical(root: &Path, receipt: &Receipt) -> Result<(), DecapodError> {
         &temporary.path().join("canonical.db"),
         MAX_CANONICAL_BYTES,
         Instant::now() + Duration::from_secs(30),
+        false,
     )?;
     if current.digest != receipt.binding.canonical_sha256
         || current.identity != receipt.binding.canonical_identity
@@ -544,7 +583,12 @@ pub(super) fn run(
     let binding_actor = prior
         .as_ref()
         .map_or(actor, |receipt| receipt.binding.actor.as_str());
-    let (mut report, binding) = review_locked(root, binding_actor, &source_path, has_archive)?;
+    let (mut report, binding) = review_locked(
+        root,
+        binding_actor,
+        &source_path,
+        has_archive && source_path == root.join("todo.db"),
+    )?;
     let Some(binding) = binding else {
         return Ok(report);
     };
@@ -591,7 +635,7 @@ pub(super) fn run(
         fs::hard_link(root.join("todo.db"), root.join(ARCHIVE_NAME))?;
     }
     check_archive(root, &receipt)?;
-    open_source(&root.join(ARCHIVE_NAME))?.sync_all()?;
+    open_source(&root.join(ARCHIVE_NAME), true)?.sync_all()?;
     crate::core::atomic::sync_parent_directory(root)?;
     if exists(&root.join("todo.db"))? {
         let temporary = tempfile::tempdir()?;
@@ -600,6 +644,7 @@ pub(super) fn run(
             &temporary.path().join("current.db"),
             MAX_SOURCE_BYTES,
             Instant::now() + Duration::from_secs(30),
+            true,
         )?;
         if current.digest != receipt.binding.source_sha256
             || current.identity != receipt.binding.source_identity
