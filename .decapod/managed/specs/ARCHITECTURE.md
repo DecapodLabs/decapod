@@ -1287,3 +1287,23 @@ classification is captured once for source import/cleanup. Every uncertain TODO
 artifact beside canonical task history remains guarded. General nonempty
 versioned reconciliation is still unresolved; no second journal authority or
 implicit projection rebuild is introduced.
+
+## Explicit physical legacy reconciliation (#1657)
+
+`core/todo.rs` exposes the versioned `journal reconcile-legacy` CLI contract;
+`core/legacy_todo_recovery.rs` owns bounded review and physical archival. The
+pre-migration dispatcher in `lib.rs` makes recovery reachable while normal
+startup remains guarded. V1 accepts only an empty input or a byte-identical
+complete canonical datastore copy, after verifying the copied canonical task
+journal. It never imports rows, rebuilds task projections, replays mutations or
+changes canonical SQLite bytes. Other historical layouts remain unresolved.
+
+One bounded `legacy-todo-recovery-v1.json` record tracks prepared/committed
+physical retirement, with a preserved `todo.db.legacy-recovery-v1.archive`.
+This operation record is not a second task authority or completion receipt.
+The review binds actual content, Unix file identities and modes, canonical
+policy fingerprint and actor. Supported storage locks exclude cooperating
+writers; SQLite sidecars require quiescence. Prepared recovery fences ordinary
+startup even after the legacy filename disappears. Resume remeasures the same
+inputs; changed policy or canonical bytes leave preparation unresolved rather
+than guessing an outcome. Only one retirement per store is supported in V1.
