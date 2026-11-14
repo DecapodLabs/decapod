@@ -1319,6 +1319,14 @@
       "proof_refs": [
         "https://github.com/DecapodLabs/decapod/issues/1696"
       ]
+    },
+    {
+      "id": "convergence-authority-refinement",
+      "summary": "Allow supplying an omitted authority operation and narrowing an omitted target without dropping or replacing established authority or resetting budget",
+      "input_digest": "sha256:6b0fc5448c0eb29f170f8d949ec8d74594867cf6816e97a0beac1abf5a9b2e97",
+      "proof_refs": [
+        "src/decapod/core/mentor/reflection/escalation.rs"
+      ]
     }
   ],
   "intents": {

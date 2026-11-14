@@ -231,11 +231,21 @@ pub(super) fn assess(
     }
     let subject = digest(
         &json!({"intent":proposal.intent, "missing":proposal.missing,
-        "uncertainty":proposal.uncertainty, "authority":proposal.authority}),
+        "uncertainty":proposal.uncertainty}),
     )?;
     if previous.is_some_and(|p| p.subject_digest != subject) {
         return Err(invalid(
             "ESCALATION_SUBJECT_CHANGED: preserve the original obligation",
+        ));
+    }
+    if let Some(bound) = previous.and_then(|p| p.authority.as_ref())
+        && proposal.authority.as_ref().is_none_or(|current| {
+            current.command != bound.command
+                || (bound.target.is_some() && current.target != bound.target)
+        })
+    {
+        return Err(invalid(
+            "ESCALATION_AUTHORITY_CHANGED: preserve the observed operation and target",
         ));
     }
     let policy = authority_snapshot(root, proposal.authority.as_ref())?;
