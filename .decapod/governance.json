@@ -758,6 +758,14 @@
       "proof_refs": [
         "decapod:specs.refresh"
       ]
+    },
+    {
+      "id": "pr1684-v1453-final-reviews",
+      "summary": "Retain current source-bound reviews and observed release-history repair before exact validation",
+      "input_digest": "sha256:46a48c2f9e847063e286e1076ccb7f261ab93b1d3d40abaaf16436815eff460b",
+      "proof_refs": [
+        "git:3fb7ccd3"
+      ]
     }
   ],
   "intents": {
@@ -800,23 +808,23 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Integrate accepted master e8f8848d19a02ad8e2a580cf7722fe4ff9342221 after merged bootstrap repair PR1683 with issue1672. Preserve current task journal/checkpoints and authored specs from both branches; regenerate projections through the kernel. Previous candidate readiness does not apply; no local tests.",
-          "reviewed_code_fingerprint": "13493688272495c41929214e768ea4473f3b7904d9979f4c24c9fb37489d0a6f",
-          "spec_material_hash": "f938c2279f24ae22116b1d77a75dd9b26f0a6dd281894a6c027fd92fbfe7c8c9"
+          "reason": "Reviewed implemented dependency-aware selection; finite checks, recipes and accepted executor remain unchanged. Sharding and five-minute timing remain separate issue1672 obligations.",
+          "reviewed_code_fingerprint": "7cbf0a7a9cdc5bccac3773653b64c76afef63ad96740632ba683b9358ae9412f",
+          "spec_material_hash": "43baf83168b3b939bbab9f24420ff8be09d2dc4c5edf8f7477029a28e314e1bc"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Integrate accepted master e8f8848d19a02ad8e2a580cf7722fe4ff9342221 after merged bootstrap repair PR1683 with issue1672. Preserve current task journal/checkpoints and authored specs from both branches; regenerate projections through the kernel. Previous candidate readiness does not apply; no local tests.",
-          "reviewed_code_fingerprint": "13493688272495c41929214e768ea4473f3b7904d9979f4c24c9fb37489d0a6f",
-          "spec_material_hash": "a8b920c00be62b10bf4ee16abbbfd9ba3ecc1db083639ca4b16d01a4eb22f1f3"
+          "reason": "Reviewed selector, complete command and required-inventory behavior against integrated master and current source fingerprint.",
+          "reviewed_code_fingerprint": "7cbf0a7a9cdc5bccac3773653b64c76afef63ad96740632ba683b9358ae9412f",
+          "spec_material_hash": "803939cdc548a10bf4466d027ed0e05a20720e4a0119b69b5c3ae0f2aaac64ce"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Integrate accepted master e8f8848d19a02ad8e2a580cf7722fe4ff9342221 after merged bootstrap repair PR1683 with issue1672. Preserve current task journal/checkpoints and authored specs from both branches; regenerate projections through the kernel. Previous candidate readiness does not apply; no local tests.",
-          "reviewed_code_fingerprint": "13493688272495c41929214e768ea4473f3b7904d9979f4c24c9fb37489d0a6f",
-          "spec_material_hash": "3a29b03266a725360b19c334671e75185f9042ba962cc86262f2ef803dff9368"
+          "reason": "Security semantics are unchanged against accepted master ee0c3ffe. Only generated fingerprint material differs; no approval or proof boundary is weakened.",
+          "reviewed_code_fingerprint": "7cbf0a7a9cdc5bccac3773653b64c76afef63ad96740632ba683b9358ae9412f",
+          "spec_material_hash": "c42f95b88c03ba2d51c9d1de316d6eb73c2c094aa36d1cd32f0898e3974c03cb"
         }
       ],
       "state": "APPROVED",
@@ -827,13 +835,13 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1794661753Z"
+      "updated_at": "1794661896Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:48a7cfc95cdd0563e38dd7296a3cb3aaf191a19baaf60afae7bd5a6b7caf3151",
+      "artifact_hash": "sha256:cbf2d67e4b696c70d3b173fb2d2c08e4b09be57edfacfe81711471728164406e",
       "checks": [],
       "current_phase": "implementation",
       "custody": {
@@ -961,10 +969,17 @@
             "intent_id": "intent:change_01M7BCG49JVT83YA5CJ6ZGTYFS",
             "kind": "trajectory_step_recorded",
             "sequence": 19
+          },
+          {
+            "detail": "trajectory:branch_01M7BCG4CA346XXGN460V3EX4S",
+            "event_id": "event:20",
+            "intent_id": "intent:change_01M7BCG49JVT83YA5CJ6ZGTYFS",
+            "kind": "trajectory_step_recorded",
+            "sequence": 20
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 19,
+        "next_sequence": 20,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M7BCG4CA346XXGN460V3EX4S": {
@@ -1223,6 +1238,19 @@
                 "validation_findings": [
                   "Integrate accepted master e8f8848d19a02ad8e2a580cf7722fe4ff9342221 after merged bootstrap repair PR1683 with issue1672. Preserve current task journal/checkpoints and authored specs from both branches; regenerate projections through the kernel. Previous candidate readiness does not apply; no local tests."
                 ]
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:20",
+                "observations": [
+                  "Official installed 0.145.3 regenerated canonical entrypoints inside the accepted-source merge 3fb7ccd3. Failed unpublished 0.145.2 tail retained at archive/pr1684-1452-validation-blocked. Published f7ff0127 ancestry preserved. Current material reauthored with exact per-file checkpoints; no local tests run."
+                ],
+                "proof_refs": [],
+                "scope": [
+                  "issue-1672"
+                ],
+                "sequence": 20,
+                "validation_findings": []
               }
             ]
           }
@@ -1231,6 +1259,7 @@
       "declared_commands": [],
       "destination": "pull request",
       "evidence": [
+        "Official installed 0.145.3 regenerated canonical entrypoints inside the accepted-source merge 3fb7ccd3. Failed unpublished 0.145.2 tail retained at archive/pr1684-1452-validation-blocked. Published f7ff0127 ancestry preserved. Current material reauthored with exact per-file checkpoints; no local tests run.",
         "https://github.com/DecapodLabs/decapod/issues/1672",
         "https://github.com/DecapodLabs/decapod/pull/1675",
         "https://github.com/DecapodLabs/decapod/pull/1682",
