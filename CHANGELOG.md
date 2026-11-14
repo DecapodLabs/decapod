@@ -7,6 +7,58 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.145.1](https://github.com/DecapodLabs/decapod/compare/v0.145.0...v0.145.1) - 2026-11-14
+
+### Fixed
+
+- *(broker)* preserve durable outcomes before retry deadline checks
+- *(broker)* admit explicit bounded request budgets
+- *(governance)* regenerate actual 0.144.5 entrypoint templates
+- *(governance)* regenerate actual 0.144.4 entrypoint templates
+- *(readiness)* query completion intent through todo boundary
+- *(todo)* expose scoped validated completion admission query
+- *(completion)* admit caller environment before broker handoff
+- *(broker)* preserve caller diagnostic scope across command execution
+- *(completion)* reject overrides before current and historical proof admission
+- *(publication)* reject diagnostic overrides before workspace publication
+- *(readiness)* enforce override boundary in CLI RPC and publication controller
+- *(readiness)* reject diagnostic gate overrides in shared runtime
+
+### Other
+
+- integrate v0.145.0 and canonical workunit proof into PR1677
+- *(broker)* specify durable outcome precedence for retry timing
+- *(broker)* retain unknown and committed outcomes on malformed retries
+- integrate current accepted master for issue1659
+- *(spec)* bind broker budget controls to native regressions
+- *(broker)* define bounded workload windows and unchanged proof gates
+- *(broker)* bind twenty-worker stress to its declared budget
+- *(broker)* reject oversized native deadlines before admission
+- *(validation)* delimit steady-state runtime measurement
+- *(runtime)* measure repeated validation with established custody
+- integrate current accepted master for issue1659
+- integrate current accepted master for issue1659
+- *(validation)* keep contention diagnostics in bounded prerequisite scope
+- *(entrypoints)* exercise tamper checks in prerequisite scope
+- *(broker)* repair diagnostic forwarding probe and scoped control assertion
+- *(broker)* distinguish scoped diagnostic flags from arbitrary controls
+- *(governance)* refresh official Decapod 0.144.4 release surfaces
+- integrate accepted policy hardening for issue1659
+- *(governance)* retain actual override and workspace rejection boundaries
+- *(cli)* separate diagnostic override and full profile admission controls
+- *(specs)* declare real override and broker acceptance controls
+- *(proof)* bind diagnostic override boundary source
+- *(readiness)* explain diagnostic skip recovery and assurance scope
+- *(specs)* deny override-based proof and broker scope confusion
+- *(specs)* define override blocker and diagnostic compatibility
+- *(specs)* centralize diagnostic override admission
+- *(readiness)* format lib override boundary
+- *(broker)* format diagnostic subprocess regression
+- *(broker)* exercise diagnostic scope capture and clearing in children
+- *(cli)* reject skipped full readiness publication and completion
+- *(readiness)* isolate override attacks in real runtime children
+- *(specs)* define diagnostic override readiness boundary
+
 ## [0.145.0](https://github.com/DecapodLabs/decapod/compare/v0.144.6...v0.145.0) - 2026-11-14
 
 ### Added
