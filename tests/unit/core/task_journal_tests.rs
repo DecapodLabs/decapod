@@ -1867,3 +1867,38 @@ fn paged_verify_with_budget_scales_beyond_10k_tasks_supports_cursor_resumption_a
         assert_eq!(scaled["records"], total);
     }
 }
+
+#[test]
+fn retained_raw_component_at_cell_ceiling_reconstructs_through_the_real_store() {
+    let (_temp, conn) = fixture();
+    // A codec-0 historical component retains its exact bytes; a dependency
+    // upgrade must not require rewriting it as a compressed representation.
+    // This physical compatibility fixture grants no task or completion proof.
+    let original = "r".repeat(8 * 1024 * 1024);
+    let reference = ComponentRef {
+        kind: COMP_TASK_DESCRIPTION.to_owned(),
+        codec_version: 0,
+        byte_len: original.len() as u64,
+        content_sha256: sha256_hex(original.as_bytes()),
+    };
+    persist_component_utf8_on_conn(
+        &conn,
+        &reference,
+        &original,
+        "compatibility-fixture",
+        "retained-raw-component",
+        CREATED,
+    )
+    .unwrap();
+    let restored = load_component_text_on_conn(&conn, &reference).unwrap();
+    assert!(
+        restored == original,
+        "retained component bytes must be lossless"
+    );
+    let count: i64 = conn
+        .query_row("SELECT count(*) FROM storage_components", [], |row| {
+            row.get(0)
+        })
+        .unwrap();
+    assert_eq!(count, 1);
+}
