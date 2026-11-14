@@ -565,6 +565,14 @@
       "proof_refs": [
         "https://github.com/DecapodLabs/decapod/issues/1672"
       ]
+    },
+    {
+      "id": "issue-1672-file-4",
+      "summary": "test(ci): prove test-only changes keep required recipes selected; file-by-file checkpoint, verification pending.",
+      "input_digest": "sha256:3b3b19d53a1742516d6fe8d59e634e79fb79af59ccfb641a53e0390b9aebb335",
+      "proof_refs": [
+        "https://github.com/DecapodLabs/decapod/issues/1672"
+      ]
     }
   ],
   "intents": {
@@ -640,7 +648,7 @@
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:c8b8c1d26de7b4fa7a798ae952f1ae10964fc5b717a0671a4019b312215c729a",
+      "artifact_hash": "sha256:795f6bb70b0b8c65255c13522269451b4b5486848dd35a055fbeb6219d1633e6",
       "checks": [],
       "current_phase": "implementation",
       "custody": {
@@ -677,10 +685,17 @@
             "intent_id": "intent:change_01M7BCG49JVT83YA5CJ6ZGTYFS",
             "kind": "trajectory_step_recorded",
             "sequence": 6
+          },
+          {
+            "detail": "trajectory:branch_01M7BCG4CA346XXGN460V3EX4S",
+            "event_id": "event:7",
+            "intent_id": "intent:change_01M7BCG49JVT83YA5CJ6ZGTYFS",
+            "kind": "trajectory_step_recorded",
+            "sequence": 7
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 6,
+        "next_sequence": 7,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M7BCG4CA346XXGN460V3EX4S": {
@@ -734,6 +749,22 @@
                 "validation_findings": [
                   "Hosted verification and exact-candidate publication readiness remain pending; no local tests run."
                 ]
+              },
+              {
+                "action": "implementation",
+                "custody_event_id": "event:7",
+                "observations": [
+                  "tests/source_ci_profile_policy.rs",
+                  "https://github.com/DecapodLabs/decapod/issues/1672"
+                ],
+                "proof_refs": [],
+                "scope": [
+                  "issue-1672"
+                ],
+                "sequence": 7,
+                "validation_findings": [
+                  "Hosted verification and exact-candidate publication readiness remain pending; no local tests run."
+                ]
               }
             ]
           }
@@ -749,7 +780,8 @@
       "intent_id": "intent:change_01M7BCG49JVT83YA5CJ6ZGTYFS",
       "modified_files": [
         ".decapod/managed/specs/INTENT.md",
-        "assets/tools/source_ci_profile.rs"
+        "assets/tools/source_ci_profile.rs",
+        "tests/source_ci_profile_policy.rs"
       ],
       "next_transitions": [
         "Refine plan and declare falsifiable checks"
