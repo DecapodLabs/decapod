@@ -1651,3 +1651,16 @@ prompt requirement. TASK_JOURNAL_MIGRATION_REQUIRED continues to block non-inert
 TODO inputs beside canonical journal state; an explicit versioned nonempty
 recovery command and compatible authority contract remain required. See
 `docs/architecture/legacy-todo-recovery.md`.
+
+## Nix release gate outputs (#1626)
+
+`Select Cachix publisher` retains `publish=true|false`; packaging retains
+`run=true|false`. Both recognize ordinary two-parent release merges and
+one-parent release commits such as `chore: release v0.138.0 (#1624)`. Parent
+shape must be supported and the selected subject must retain the existing
+`chore: release v` prefix. The credential-free owner fetches the exact protected
+pushed SHA at depth two, sufficient for the selected commit/parent subject.
+
+Manual `workflow_dispatch` still requests packaging proof only. The native-owner
+conditions and publisher dependency/ref/event restrictions remain unchanged;
+manual or imported/self-hosted execution cannot grant Cachix publication.
