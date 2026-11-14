@@ -1572,6 +1572,15 @@ pub fn transition_status(
             )));
         }
         if to == WorkUnitStatus::Verified {
+            if journal_records(root, task_id)?
+                .last()
+                .is_none_or(|record| record.binding.is_none())
+            {
+                return Err(journal_error(
+                    "WORKUNIT_CHECKPOINT_REQUIRED",
+                    "VERIFIED requires a current execution checkpoint",
+                ));
+            }
             crate::core::validation_history::ensure_full_validation_plan(&manifest.proof_plan)?;
             if gate.as_deref() != Some(manifest.proof_plan[0].as_str()) {
                 return Err(journal_error(
