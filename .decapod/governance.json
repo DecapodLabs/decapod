@@ -1231,6 +1231,14 @@
       "proof_refs": [
         ".decapod/managed/specs/VALIDATION.md"
       ]
+    },
+    {
+      "id": "recovery1696-reviewed-inputs",
+      "summary": "Reconcile added Bazel fixture input declarations while preserving the complete accepted check matrix and recipes",
+      "input_digest": "sha256:a9d06a6e98768f8e6326ab5bbcfd2586598280d35dcd1c4308bbd3392c2aa977",
+      "proof_refs": [
+        ".config/build/decapod.BUILD.bzl"
+      ]
     }
   ],
   "intents": {
