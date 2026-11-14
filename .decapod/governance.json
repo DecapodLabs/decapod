@@ -1447,6 +1447,14 @@
       "proof_refs": [
         ".decapod/managed/specs/VALIDATION.md"
       ]
+    },
+    {
+      "id": "convergence-refinement-projection-manifestjson",
+      "summary": "Refresh source binding for bounded authority discovery and explicit human dependency progress",
+      "input_digest": "sha256:40ff467fa5a2d0184a402d9c3046d5d5dc8f5ffb7657d9014bc7c99c3dfb84d8",
+      "proof_refs": [
+        ".decapod/managed/specs/.manifest.json"
+      ]
     }
   ],
   "intents": {
