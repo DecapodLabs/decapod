@@ -7,6 +7,55 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.145.2](https://github.com/DecapodLabs/decapod/compare/v0.145.1...v0.145.2) - 2026-11-14
+
+### Fixed
+
+- *(container)* avoid runtime probes without a disabled override
+- *(governance)* regenerate actual 0.144.5 entrypoint templates
+- *(storage)* preserve bounded raw component reads under SDK accounting
+- *(storage)* reserve bounded parameter space for compatible row metadata
+- *(storage)* preserve bounded legacy and transfer values across the SDK upgrade
+- *(storage)* box the expanded local SDK connection variant
+- *(governance)* regenerate actual 0.144.4 entrypoint templates
+- *(bazel)* finalize SDK lock under normal generation environment
+
+### Other
+
+- integrate v0.145.1 into the Dactyl SDK upgrade
+- *(container)* scope optional prerequisite recovery on the SDK integration
+- *(container)* require a disabled marker before runtime recovery probes
+- integrate current accepted master for issue1667
+- integrate current accepted master for issue1667
+- *(specs)* record local BLOB accounting and retained component proof
+- *(storage)* reconstruct a full-size retained raw journal component
+- *(storage)* retain aggregate parameter refusal before mutation
+- *(specs)* distinguish cell compatibility from parameter headroom
+- *(storage)* round-trip the full compatible cell with a bound key
+- integrate current accepted master for issue1667
+- *(runtime)* measure repeated validation with established custody
+- *(storage)* cover large-value SDK compatibility and unpersisted quota rejection
+- *(events)* construct oversized stored payload past SDK parameter limits
+- *(governance)* refresh official Decapod 0.144.4 release surfaces
+- integrate accepted policy hardening for issue1667
+- *(specs)* declare exact published SDK compatibility evidence
+- *(proof)* bind published SDK dependency input closure
+- *(specs)* preserve SDK resource and authority boundaries
+- *(specs)* converge current SDK architecture and compatibility
+- *(specs)* converge current SDK architecture and compatibility
+- *(specs)* converge current SDK architecture and compatibility
+- *(cloud)* track published SDK and bounded transport compatibility
+- *(cloud)* track published SDK and bounded transport compatibility
+- *(cloud)* track published SDK and bounded transport compatibility
+- *(storage)* preserve oversized historical reader controls with SDK budgets
+- *(storage)* preserve oversized historical reader controls with SDK budgets
+- *(deps)* bind published SDK version and checksum
+- *(bazel)* retain accepted lockfile indentation
+- *(bazel)* regenerate registry SDK module inputs
+- *(deps)* lock the published Dactyl 0.16.1 artifact
+- *(deps)* adopt published Dactyl 0.16.1
+- *(specs)* bind latest published Dactyl adoption intent
+
 ## [0.145.1](https://github.com/DecapodLabs/decapod/compare/v0.145.0...v0.145.1) - 2026-11-14
 
 ### Fixed
