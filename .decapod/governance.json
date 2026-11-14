@@ -711,6 +711,14 @@
       "proof_refs": [
         "src/decapod/lib.rs"
       ]
+    },
+    {
+      "id": "convergence-reviewed-4",
+      "summary": "Refine tests/infer_precision.rs after review: preserve actual authority, separate inference cues, observe fixtures and document proof limits",
+      "input_digest": "sha256:f6e0e957ca1d7f170485fd8b4e9a7df4b435ae5c82a2cde561ab76ee7f276737",
+      "proof_refs": [
+        "tests/infer_precision.rs"
+      ]
     }
   ],
   "intents": {

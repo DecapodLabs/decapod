@@ -355,7 +355,13 @@ fn deterministic_escalation_harness_investigates_before_asking_and_preserves_pub
         ],
     );
     assert!(human.status.success());
-    let human = extract_json(&human)["result"]["reflection"].clone();
+    let human_response = extract_json(&human);
+    assert!(
+        human_response
+            .get("allowed_next_ops")
+            .is_none_or(|ops| ops.as_array().is_some_and(Vec::is_empty))
+    );
+    let human = human_response["result"]["reflection"].clone();
     assert_eq!(human["disposition"], "human_decision");
     assert_eq!(human["escalation"]["human_escalation_permitted"], true);
     assert_eq!(human["execution_blocked"], true);
@@ -372,7 +378,7 @@ fn deterministic_escalation_harness_investigates_before_asking_and_preserves_pub
 }
 
 #[test]
-fn test_infer_orientation_ambiguous_architecture() {
+fn architecture_keywords_require_agent_investigation_without_manufacturing_human_authority() {
     let dir = tempdir().unwrap();
     let root = dir.path();
 
@@ -393,12 +399,37 @@ fn test_infer_orientation_ambiguous_architecture() {
     assert!(output.status.success());
 
     let json = extract_json(&output);
-    assert!(!json["decision_gates"].as_array().unwrap().is_empty());
-    assert_eq!(
-        json["decision_gates"][0]["decision"],
-        "Architectural alignment"
+    assert!(json["decision_gates"].as_array().unwrap().is_empty());
+    assert!(json["constraints"].as_array().unwrap().iter().any(|c| {
+        c.as_str()
+            .is_some_and(|s| s.contains("Inspect governing intent"))
+    }));
+    assert!(!json["next_action"].as_str().unwrap().contains("STOP"));
+}
+
+#[test]
+fn generated_agent_entrypoints_route_to_the_embedded_escalation_contract() {
+    let dir = tempdir().unwrap();
+    let root = dir.path();
+    init_git_repo(root);
+    assert!(
+        run_cmd(root, &["init", "--force", "--all", "--proof"])
+            .status
+            .success()
     );
-    assert!(json["next_action"].as_str().unwrap().contains("STOP"));
+    for name in ["AGENTS.md", "CODEX.md", "CLAUDE.md", "GEMINI.md"] {
+        let generated = fs::read_to_string(root.join(name)).unwrap();
+        assert!(generated.contains("decapod docs ingest"), "{name}");
+        assert!(generated.contains("decapod infer orientation"), "{name}");
+    }
+    // The shared generated entrypoints require ingestion; the build-time docs
+    // owner embeds this canonical API corpus for every supported agent.
+    let api = run_cmd(root, &["docs", "show", "docs/agent/api-index.md"]);
+    assert!(api.status.success());
+    let embedded = String::from_utf8_lossy(&api.stdout);
+    assert!(embedded.contains("Do What Must Be Done"));
+    assert!(embedded.contains("reflection.escalation"));
+    assert!(embedded.contains("human_escalation_permitted"));
 }
 
 #[test]
