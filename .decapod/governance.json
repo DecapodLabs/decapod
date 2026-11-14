@@ -637,6 +637,14 @@
       "proof_refs": [
         "https://github.com/DecapodLabs/decapod/issues/1657"
       ]
+    },
+    {
+      "id": "issue-1657-file-13",
+      "summary": "fix(migration): refuse mixed journal authority before exclusive maintenance; file-by-file checkpoint, verification pending.",
+      "input_digest": "sha256:d43ca2ecc0c748a03d447a6dd6791aa46cedc0299ed9a4f09fee65d7f49d0736",
+      "proof_refs": [
+        "https://github.com/DecapodLabs/decapod/issues/1657"
+      ]
     }
   ],
   "intents": {
@@ -677,22 +685,22 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Exercise the actual normal migration entrypoint instead of only its consolidation helper. Verify canonical journal, source bytes and all sidecar bytes survive the typed refusal.",
-          "reviewed_code_fingerprint": "7221eebec23b5386b64a66b9deb863f2c974a1a5c85b706d5c5b4bc378363036",
+          "reason": "Perform the read-only mixed-source guard at the public migration entrypoint before exclusive lifecycle admission or source checkpointing, then recheck in checkpoint preparation. Negative admission must preserve both sources without needless maintenance waiting.",
+          "reviewed_code_fingerprint": "749af9d4aafbbdad46d9ab64a5660c60497a8e7c7ac0a9e8e8de5d830b34723c",
           "spec_material_hash": "d4d40d000610752ebaae7f3d6ea748a11df0094304dcb0b43f75f702fba5e44f"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Exercise the actual normal migration entrypoint instead of only its consolidation helper. Verify canonical journal, source bytes and all sidecar bytes survive the typed refusal.",
-          "reviewed_code_fingerprint": "7221eebec23b5386b64a66b9deb863f2c974a1a5c85b706d5c5b4bc378363036",
+          "reason": "Perform the read-only mixed-source guard at the public migration entrypoint before exclusive lifecycle admission or source checkpointing, then recheck in checkpoint preparation. Negative admission must preserve both sources without needless maintenance waiting.",
+          "reviewed_code_fingerprint": "749af9d4aafbbdad46d9ab64a5660c60497a8e7c7ac0a9e8e8de5d830b34723c",
           "spec_material_hash": "93fba7c3a13b58509ecb595a2889861cc89a73027a1d9a3ee35032397120be24"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Exercise the actual normal migration entrypoint instead of only its consolidation helper. Verify canonical journal, source bytes and all sidecar bytes survive the typed refusal.",
-          "reviewed_code_fingerprint": "7221eebec23b5386b64a66b9deb863f2c974a1a5c85b706d5c5b4bc378363036",
+          "reason": "Perform the read-only mixed-source guard at the public migration entrypoint before exclusive lifecycle admission or source checkpointing, then recheck in checkpoint preparation. Negative admission must preserve both sources without needless maintenance waiting.",
+          "reviewed_code_fingerprint": "749af9d4aafbbdad46d9ab64a5660c60497a8e7c7ac0a9e8e8de5d830b34723c",
           "spec_material_hash": "3a29b03266a725360b19c334671e75185f9042ba962cc86262f2ef803dff9368"
         }
       ],
@@ -704,13 +712,13 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1794619588Z"
+      "updated_at": "1794620451Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:42e7d8bcea371d932a7a03b3e005cf156d92a299aed804c5c6c36bb7c82423d6",
+      "artifact_hash": "sha256:b44d53dbd60c976bb9c1e3d34fb3f034bdda3090af659ad48967b0416249e984",
       "checks": [],
       "current_phase": "implementation",
       "custody": {
@@ -810,10 +818,17 @@
             "intent_id": "intent:change_01M7BCHP65HZ6F2PKTZGVXHRDW",
             "kind": "trajectory_step_recorded",
             "sequence": 15
+          },
+          {
+            "detail": "trajectory:branch_01M7BCHP9CVSP7GQJ81EFVVC7P",
+            "event_id": "event:16",
+            "intent_id": "intent:change_01M7BCHP65HZ6F2PKTZGVXHRDW",
+            "kind": "trajectory_step_recorded",
+            "sequence": 16
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 15,
+        "next_sequence": 16,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M7BCHP9CVSP7GQJ81EFVVC7P": {
@@ -1008,6 +1023,22 @@
                   "issue-1657"
                 ],
                 "sequence": 15,
+                "validation_findings": [
+                  "Hosted verification and exact-candidate publication readiness remain pending; no local tests run."
+                ]
+              },
+              {
+                "action": "implementation",
+                "custody_event_id": "event:16",
+                "observations": [
+                  "src/decapod/core/migration.rs",
+                  "https://github.com/DecapodLabs/decapod/issues/1657"
+                ],
+                "proof_refs": [],
+                "scope": [
+                  "issue-1657"
+                ],
+                "sequence": 16,
                 "validation_findings": [
                   "Hosted verification and exact-candidate publication readiness remain pending; no local tests run."
                 ]

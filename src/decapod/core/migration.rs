@@ -511,6 +511,9 @@ where
     F: FnOnce(&Path) -> Result<(), error::DecapodError>,
 {
     let data_root = decapod_root.join("data");
+    // Refuse unsafe mixed authority before acquiring exclusive maintenance or
+    // opening any legacy source. The checkpoint path rechecks after admission.
+    guard_legacy_todo_before_checkpointing(&data_root)?;
     let upgrade_pending = schema_upgrade_pending(&data_root)?;
     // Exclusive lifecycle access excludes every shared physical-connection
     // guard across backup, migration and rollback replacement. This is not a
