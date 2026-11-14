@@ -429,15 +429,18 @@ impl Host for LocalHost {
 // Only its existing Host target transport reads a real local bare upstream.
 #[cfg(unix)]
 pub(super) fn governed_command(root: &Path, storage: &Path, args: &[&str]) -> Command {
-    let binary = Path::new(env!("CARGO_BIN_EXE_decapod"))
-        .canonicalize()
-        .or_else(|_| {
-            std::env::var_os("RUNFILES_DIR")
-                .map(PathBuf::from)
-                .map(|path| path.join("_main/decapod"))
-                .ok_or_else(|| io::Error::other("missing Decapod test binary"))
-        })
-        .unwrap();
+    let binary = Path::new(
+        option_env!("CARGO_BIN_EXE_decapod")
+            .expect("CLI admission requires the actual integration-test binary"),
+    )
+    .canonicalize()
+    .or_else(|_| {
+        std::env::var_os("RUNFILES_DIR")
+            .map(PathBuf::from)
+            .map(|path| path.join("_main/decapod"))
+            .ok_or_else(|| io::Error::other("missing Decapod test binary"))
+    })
+    .unwrap();
     let mut command = Command::new(binary);
     for (name, _) in std::env::vars_os() {
         let name_text = name.to_string_lossy();
