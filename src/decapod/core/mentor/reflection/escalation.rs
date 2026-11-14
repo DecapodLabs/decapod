@@ -242,10 +242,13 @@ pub(super) fn assess(
     }
     let policy = authority_snapshot(root, proposal.authority.as_ref())?;
     let hard_authority = policy.get("human_required").and_then(Value::as_bool) == Some(true);
-    let authority_available = policy.get("approved").and_then(Value::as_bool) == Some(true)
+    let authority_available = matches!(
+        proposal.uncertainty,
+        Uncertainty::MissingAuthority | Uncertainty::ExceptionalRisk
+    ) && (policy.get("approved").and_then(Value::as_bool) == Some(true)
         || (proposal.authority.is_some()
             && proposal.uncertainty == Uncertainty::MissingAuthority
-            && policy.get("human_required").and_then(Value::as_bool) == Some(false));
+            && policy.get("human_required").and_then(Value::as_bool) == Some(false)));
     let existing_human = pending.iter().any(|c| c.trigger.starts_with("human_"));
     let matches_human_question = pending
         .iter()

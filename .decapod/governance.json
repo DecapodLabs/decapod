@@ -548,6 +548,17 @@
     "base_commit": "ee0c3ffe41f0631ec22a54778a2b7d111ef04ca9",
     "target_base": "origin/master"
   },
+  "claims": {
+    "bounded-escalation-admissibility": {
+      "statement": "The invoked escalation protocol rejects unobserved/paraphrased routine questions, preserves observed authority and canonical human dependencies, and terminates within three rounds without declaring execution or semantic exhaustion proven.",
+      "falsifier": "A paraphrase, forged/stale source or cross-task continuation clears a gap; an actual required approval is inferred; a renamed subject resets the budget; reflection grants native verification/publication; or the loop persists beyond its bounded journal.",
+      "status": "open",
+      "proof_refs": [
+        "tests/infer_precision.rs",
+        "tests/unit/core/reflection_tests.rs"
+      ]
+    }
+  },
   "checkpoints": [
     {
       "id": "convergence-source-0",
@@ -668,6 +679,14 @@
       "proof_refs": [
         ".decapod/managed/specs/INTERFACES.md"
       ]
+    },
+    {
+      "id": "convergence-reviewed-0",
+      "summary": "Refine src/decapod/core/mentor/reflection/escalation.rs after review: preserve actual authority, separate inference cues, observe fixtures and document proof limits",
+      "input_digest": "sha256:e00bc3213b1df8eaa8aa2e31bd2e0849c4be145d367f9306a2c5ff38450f3623",
+      "proof_refs": [
+        "src/decapod/core/mentor/reflection/escalation.rs"
+      ]
     }
   ],
   "intents": {
@@ -720,7 +739,7 @@
       "active_boundaries": [
         "Keep approval, scope, custody, proof and publication authoritative; no transcripts, daemon or semantic-proof claims"
       ],
-      "artifact_hash": "sha256:f837af5ded7f2bacce794dda586eadadb81600acf2d483119ed0dbc17691f66e",
+      "artifact_hash": "sha256:b48ffa3a6bc8d1133c1e273d8e6fdfa2567502e5be645c4d463d5543b2737b3e",
       "checks": [],
       "custody": {
         "events": [
@@ -749,10 +768,17 @@
             "intent_id": "intent:convergence-1690",
             "kind": "trajectory_step_recorded",
             "sequence": 5
+          },
+          {
+            "detail": "trajectory:convergence-1690",
+            "event_id": "event:6",
+            "intent_id": "intent:convergence-1690",
+            "kind": "trajectory_step_recorded",
+            "sequence": 6
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 5,
+        "next_sequence": 6,
         "schema_version": "1.0.0",
         "trajectories": {
           "convergence-1690": {
@@ -788,6 +814,19 @@
                 ],
                 "sequence": 5,
                 "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:6",
+                "observations": [
+                  "Verbatim mission safety evaluation returned allow, hash cb81d3717c7173a902fc5ba6b7004f6b654147cbc14fadfd088880b6f472cffa (15195 bytes). Initial evaluation had condensed the mission, so this preserves the corrected complete-input check rather than claiming it preceded earlier inspection. PR1684 merged externally as aedbc856; its full configured Buildkite attempt failed at build10583 with evidence decapod-snapshot-HcwP1O. Local bk is unauthenticated; GitHub success is not substituted for required producer proof."
+                ],
+                "proof_refs": [],
+                "scope": [
+                  "src/decapod/core/mentor and canonical agent integration/tests"
+                ],
+                "sequence": 6,
+                "validation_findings": []
               }
             ]
           }
@@ -796,7 +835,8 @@
       "declared_commands": [],
       "evidence": [
         "Draft extends existing three-round journal and orientation/mentor input with typed escalation proposals, observed source predicates and existing policy/approval reads. Concise source facts are not proof of execution or semantic exhaustion. Adversarial unit and CLI mock harness authored; not yet executed. Preserve per-file exact checkpoints and native publication gates.",
-        "Session refresh released the original feature assignment through session.release. Reclaimed the same unassigned task and re-admitted its original worktree through workspace ensure before resuming governed writes; no prior full-validation proof existed. Typed orientation now removes only legacy title-keyword hints after the canonical escalation outcome, retaining actual plan/policy gates."
+        "Session refresh released the original feature assignment through session.release. Reclaimed the same unassigned task and re-admitted its original worktree through workspace ensure before resuming governed writes; no prior full-validation proof existed. Typed orientation now removes only legacy title-keyword hints after the canonical escalation outcome, retaining actual plan/policy gates.",
+        "Verbatim mission safety evaluation returned allow, hash cb81d3717c7173a902fc5ba6b7004f6b654147cbc14fadfd088880b6f472cffa (15195 bytes). Initial evaluation had condensed the mission, so this preserves the corrected complete-input check rather than claiming it preceded earlier inspection. PR1684 merged externally as aedbc856; its full configured Buildkite attempt failed at build10583 with evidence decapod-snapshot-HcwP1O. Local bk is unauthenticated; GitHub success is not substituted for required producer proof."
       ],
       "inspected_files": [
         "src/decapod/core/governed_transition.rs",
