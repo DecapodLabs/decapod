@@ -577,6 +577,23 @@ require fresh observed proof, with explicit safe downgrade/recovery. No new
 cryptographic trust root or OS-isolation claim is inferred from shared UID access.
 No local tests run; supported real CLI/runtime and hosted proof remain required.
 
+## Storage convergence follow-through (#1630)
+
+Audit the current merged compact journal/event/component and bounded inspection
+implementation before adding representation changes. Preserve canonical logical
+hashes, custody, snapshot-consistent continuation, historical oversized values
+and explicit physical-maintenance authority. Use supported native read-only
+inspection for the Decapod, Dactyl and Propodus dogfood stores. Publish aggregate
+measurements with binary/schema/codec identity and sampled/complete coverage;
+these observations are not before/after savings or hosted PostgreSQL proof.
+
+Hosted tests must cover any repaired inspection or reconstruction boundary.
+Existing historical fixture benchmarks retain their original release/environment
+scope. Cross-backend, scale, migration and deployment requirements remain open
+until supported executable evidence establishes them. No live store repair or
+physical compaction, policy weakening, local CI or payload publication is part of
+the measurement pass.
+
 ## Accepted local verification requirements (#1658)
 
 Decapod must preserve the repository-local verification contract already accepted
