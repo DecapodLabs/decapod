@@ -7,6 +7,32 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.144.6](https://github.com/DecapodLabs/decapod/compare/v0.144.5...v0.144.6) - 2026-11-14
+
+### Fixed
+
+- *(governance)* regenerate actual 0.144.5 entrypoint templates
+- *(migration)* refuse mixed journal authority before exclusive maintenance
+- *(migration)* guard uncertain TODO inputs before checkpoint preparation
+- *(governance)* regenerate actual 0.144.4 entrypoint templates
+- *(migration)* preserve inert TODO placeholders without opening or deleting them
+
+### Other
+
+- *(validation)* delimit steady-state runtime measurement
+- *(runtime)* measure repeated validation with established custody
+- integrate current accepted master for issue1657
+- integrate current accepted master for issue1657
+- *(migration)* traverse startup checkpoint and backup guards with real journals
+- *(specs)* bind security to the legacy TODO input boundary
+- *(specs)* bind interfaces to the legacy TODO input boundary
+- *(specs)* bind architecture to the legacy TODO input boundary
+- *(recovery)* define inert placeholders and retain nonempty cutover as unresolved
+- *(intent)* distinguish placeholder recovery from unresolved nonempty reconciliation
+- *(migration)* preserve real canonical journals across inert and uncertain legacy inputs
+- integrate accepted policy hardening for issue1657
+- *(intent)* govern explicit mixed TODO store recovery
+
 ## [0.144.5](https://github.com/DecapodLabs/decapod/compare/v0.144.4...v0.144.5) - 2026-11-14
 
 ### Fixed
