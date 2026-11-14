@@ -871,6 +871,14 @@
       "proof_refs": [
         ".decapod/managed/specs/VALIDATION.md"
       ]
+    },
+    {
+      "id": "convergence-refresh1454-manifestjson",
+      "summary": "Refresh supported .manifest.json projection with the current source identity",
+      "input_digest": "sha256:2a81808b7b16c8a0f93a6fb6a99b953400cde8da95cc03731cec3c8c2b5d8ba6",
+      "proof_refs": [
+        ".decapod/managed/specs/.manifest.json"
+      ]
     }
   ],
   "intents": {
