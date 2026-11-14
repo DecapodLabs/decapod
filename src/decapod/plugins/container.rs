@@ -559,6 +559,11 @@ fn clear_container_runtime_override(repo_root: &Path) -> Result<bool, error::Dec
 pub(crate) fn heal_container_runtime_override(
     repo_root: &Path,
 ) -> Result<ContainerRuntimeOverrideHeal, error::DecapodError> {
+    // Runtime recovery is needed only for an existing disabled-runtime override.
+    // Ordinary local validation must not probe or start an unrelated engine.
+    if !container_runtime_disabled(repo_root)? {
+        return Ok(ContainerRuntimeOverrideHeal::Unchanged);
+    }
     match container_runtime::find_container_runtime() {
         Ok(runtime) if ensure_container_runtime_access(&runtime).is_ok() => {
             if clear_container_runtime_override(repo_root)? {
