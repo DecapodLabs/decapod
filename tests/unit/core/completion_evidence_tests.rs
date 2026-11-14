@@ -208,12 +208,14 @@ fn local_record_replays_and_detects_artifact_change() {
     assert_eq!(report.local_decision, "accepted");
     assert!(report.decision_path.ends_with(".decision.json"));
     assert_eq!(report.custody_paths.len(), 2);
-    assert!(root.join(&report.decision_path).is_file());
+    let decision_path = root.join(&report.decision_path);
+    let original_decision = fs::read(&decision_path).expect("original receiver decision");
 
     fs::write(&proof_path, "altered\n").expect("alter proof");
     let report = verify_record(root, task, &record_path).expect("verify altered record");
     assert_eq!(report.status, "altered");
-    let (_, report) = import_record(root, task, &portable_path).expect("reinspect stale import");
+    let report = verify_portable_evidence(root, task, &imported, &portable_path)
+        .expect("reconstruct current receiver decision");
     assert_eq!(report.local_decision, "rejected");
     assert!(
         report.checks.iter().any(|check| {
@@ -223,4 +225,8 @@ fn local_record_replays_and_detects_artifact_change() {
         "the imported original bytes must not repair the receiver's altered artifact: {:?}",
         report.checks
     );
+    let error =
+        import_record(root, task, &portable_path).expect_err("retain immutable old decision");
+    assert!(error.to_string().contains("receiver decision is immutable"));
+    assert_eq!(fs::read(&decision_path).unwrap(), original_decision);
 }
