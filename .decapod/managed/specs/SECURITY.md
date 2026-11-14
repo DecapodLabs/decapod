@@ -626,7 +626,7 @@ execution evidence remains required before publication readiness.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `99790f45ba87a52faa57a27b522966d4c046e18f256f734fef32d2dba173a7a2`
+- Repository signal fingerprint: `e2fb26115fe1218f7f980ed36543640c413c052a37d1394d8b1b206859893a4b`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (234 files), `tests/` (233 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
@@ -965,6 +965,22 @@ Do not delete lock sidecars, signal foreign processes, steal claims, replay ambi
 ## PR1662 current-master preparation
 
 Worktree policy edits cannot self-grant capabilities. db.recover remains owner-only and cloud authority fails closed when it cannot be authenticated. Retain non-destructive lock diagnosis, current-process-only release and confined backups. Coordination receipts are not independent acceptance proof.
+
+## Diagnostic variables never confer acceptance (#1659)
+
+An unrestricted caller may select diagnostics but cannot use those flags to
+obtain a full readiness or verified-completion observation through supported
+current interfaces. The shared runtime denies before execution; publication and
+completion also guard cached/historical admission. Existing successful evidence
+is preserved as history, not rewritten into failure. New applicability still
+requires current source, policy, task and custody checks.
+
+Broker context treats diagnostic flags as caller-scoped values, removing prior
+worker values before application. The originating local validated-completion
+command rejects overrides before transport. These are kernel operation-boundary
+guarantees, not OS filesystem isolation or a remote forge merge restriction.
+Forged workunit declarations without overrides remain separately tracked by1660;
+this change does not claim to discharge that independent proof obligation.
 
 ## Candidate repinning is not accepted policy (#1658)
 

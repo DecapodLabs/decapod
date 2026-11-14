@@ -2282,6 +2282,7 @@ pub(crate) fn publish_workspace_with_readiness(
     description: Option<String>,
     readiness_invocation: &crate::ReadinessInvocation,
 ) -> Result<PublishResult, DecapodError> {
+    crate::core::validation_runtime::require_full_readiness_environment()?;
     readiness_invocation.validate()?;
     let status = get_workspace_status(repo_root)?;
 

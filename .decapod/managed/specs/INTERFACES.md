@@ -1154,7 +1154,7 @@ field. Nothing in this operation authorizes a mutation, approval or completion.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `99790f45ba87a52faa57a27b522966d4c046e18f256f734fef32d2dba173a7a2`
+- Repository signal fingerprint: `e2fb26115fe1218f7f980ed36543640c413c052a37d1394d8b1b206859893a4b`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (234 files), `tests/` (233 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
@@ -1501,6 +1501,18 @@ Existing `data database` maintenance/capability/lock/audit CLI and RPC operation
 
 Preserve symmetric data.database CLI/RPC capability discovery, diagnostics, bounded maintenance and audit interfaces. Policy admission must happen before startup migrations for maintenance commands; raw SQL, destructive replacement and arbitrary destinations remain outside the delegated contract.
 
+## Full claims with diagnostic gate overrides (#1659)
+
+`READINESS_GATE_OVERRIDE_UNSUPPORTED` identifies an active Git/tooling skip or a
+truthy fingerprint skip. Remove the override and obtain fresh validation in the
+claimed worktree. Presence-only Git/tooling flags remain active even with empty,
+zero or false strings; the existing fingerprint truth-value parser is preserved.
+Explicit `ci_local` and `project_prerequisites` diagnostics retain their output
+scopes and cannot yield `publication_ready=true`. An audited validation bypass
+also remains non-proof. No new command, adapter policy or verdict taxonomy is
+introduced. Older brokers reject unfamiliar context fields; inspect uncertain
+operation outcomes rather than blindly replaying a write.
+
 ## Accepted repository-local contract changes (#1658)
 
 The existing validation runtime returns the actionable
@@ -1520,6 +1532,28 @@ changed inventoried check scripts, build/dependency definitions or provider
 inputs. Retain the accepted inventory or establish the reviewed revision on the
 target before revalidation. Additive commands under that inventory and first
 local adoption remain supported; no override or second policy store is added.
+
+## Group broker workload budget
+
+`src/decapod/core/group_broker.rs` accepts the optional
+`DECAPOD_GROUP_BROKER_REQUEST_BUDGET_MS` workload input on the Unix broker path.
+The default is 120000 milliseconds; valid explicit values are 1 through 300000.
+Malformed, zero and oversized client values fail before mutation admission.
+Native peers also face the hard maximum before a new dedupe receipt can be created.
+A matching durable outcome is resolved first: expired or overlong retry deadlines
+cannot replace an existing UNKNOWN or committed result with NOT_COMMITTED. The
+real execution-boundary regression checks both outcomes and both retry timings,
+including the unchanged stored result and commit marker. No new operation runs
+when the same-ID outcome is already recorded.
+The foreground acceptance window follows the originating request budget, and
+existing per-command limits and UNKNOWN/replay handling remain in force.
+
+`tests/group_broker.rs` declares its existing 300-second twenty-client workload
+at both the outer process boundary and broker request boundary, retains the
+all-twenty exact-once assertions, and exercises invalid inputs through the actual
+CLI with no task or receipt mutation. The native oversized-deadline regression
+traverses the real execution boundary. Fresh hosted verification is required;
+these declarations are not a successful validation observation.
 
 ## Canonical workunit validation contract (#1660)
 

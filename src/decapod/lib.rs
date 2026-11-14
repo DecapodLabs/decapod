@@ -3144,6 +3144,15 @@ pub fn run() -> Result<(), error::DecapodError> {
                 root: store_root.clone(),
             };
 
+            // Reject a full completion claim in the originating process before
+            // an older broker can discard or inherit diagnostic environment.
+            if local_storage_startup
+                && let Command::Todo(todo_cli) = &cli.command
+                && todo::is_validated_completion(todo_cli)
+            {
+                core::validation_runtime::require_full_readiness_environment()?;
+            }
+
             if local_storage_startup && should_route_via_group_broker(&cli.command, &argv) {
                 let mut finish = |stdout: &str, request_id: &str| match &cli.command {
                     Command::Todo(todo_cli) => todo::finish_broker_claim_response(
@@ -6544,6 +6553,9 @@ fn run_validate_command(
     project_store: &Store,
     scope: ValidationScope,
 ) -> Result<(), error::DecapodError> {
+    if scope.requires_publication_proof() && !validate_cli.bypass_validation {
+        core::validation_runtime::require_full_readiness_environment()?;
+    }
     if validate_cli.bypass_validation {
         // A scoped, audited local exception. The publisher, worker, replay
         // verifier and CI still require genuine proof; no passing validation
@@ -7102,6 +7114,7 @@ fn run_current_workbranch_readiness_with(
     let mut report_scope = runtime::READINESS_SCOPE;
     let result = (|| -> Result<runtime::ValidationReport, error::DecapodError> {
         invocation.validate()?;
+        runtime::require_full_readiness_environment()?;
         let config = crate::cli::DecapodProjectConfig::load(workspace_root)?;
         if config
             .proof
@@ -12208,6 +12221,9 @@ mod rpc_handlers {
 
     pub(crate) fn handle_validate_run(ctx: &RpcCtx) -> Result<RpcResponse, error::DecapodError> {
         let scope = super::ValidationScope::public_validate();
+        if scope.requires_publication_proof() {
+            crate::core::validation_runtime::require_full_readiness_environment()?;
+        }
         let enabled = crate::cli::DecapodProjectConfig::load(ctx.project_root)?
             .proof
             .validation_buildkite_preflights;

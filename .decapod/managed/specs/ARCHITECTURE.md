@@ -920,7 +920,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `99790f45ba87a52faa57a27b522966d4c046e18f256f734fef32d2dba173a7a2`
+- Repository signal fingerprint: `e2fb26115fe1218f7f980ed36543640c413c052a37d1394d8b1b206859893a4b`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (234 files), `tests/` (233 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
@@ -1195,6 +1195,16 @@ The integrated `todo` module exports both accepted authoring/resource custody fu
 ## PR1662 current-master preparation
 
 The db_maintenance module resolves accepted canonical-repository policy and uses existing Dactyl and StorageLock primitives. It does not replace the datastore or migration authority. Retain current-master storage format guards, task custody, provider verification and runtime ownership while integrating this operation boundary.
+
+## Diagnostic overrides and full readiness (#1659)
+
+`validation_runtime::require_full_readiness_environment` is the shared admission
+for full claims. The runtime invokes it before prerequisites or selection; CLI
+and RPC full dispatch, workspace publication and current/historical validated
+completion invoke the same owner. The originating local completion process checks
+before broker handoff. `group_broker::CallerContext` carries and clears diagnostic
+flags per request so worker scope cannot come from another caller. Partial
+project-prerequisite and CI-local routes do not gain publication authority.
 
 ## Preserve accepted local verification policy (#1658)
 

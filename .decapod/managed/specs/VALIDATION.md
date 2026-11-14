@@ -1341,7 +1341,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `99790f45ba87a52faa57a27b522966d4c046e18f256f734fef32d2dba173a7a2`
+- Repository signal fingerprint: `e2fb26115fe1218f7f980ed36543640c413c052a37d1394d8b1b206859893a4b`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (234 files), `tests/` (233 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
@@ -1905,6 +1905,28 @@ Exercise actual `sqlite_maintenance` CLI/RPC worktree cases and storage-lock reg
 
 This checkpoint preserves original source and tests before integration with current master. Preserve failure history and all assertions; use hosted CI for verification, without local tests or running the maintenance candidate against the live machine datastore. Prior test observations do not prove the new integration.
 
+## Diagnostic override acceptance regressions (#1659)
+
+`tests/consumer_readiness.rs` runs the actual full runtime in isolated child
+processes for empty/zero Git skips, false tooling skips, truthy fingerprint skips
+and a false fingerprint control. Denied claims must select/execute nothing and
+produce no evidence directory; the false fingerprint control must execute real
+native proof. No parent test process mutates its environment.
+
+The existing genuine claimed-worktree scenario in
+`tests/support/fresh_docs_readiness.rs` invokes full CLI validation, RPC validation,
+workspace publication and historical validated completion under overrides. It
+requires actual kernel rejection, no successful judgment or full receipt, and
+unchanged source, then retains the normal positive proof flow. Broker unit tests
+use real capture/apply subprocesses over different inherited worker values and
+invoke the real environment gate, proving both retained denial and cleared scope.
+
+The existing partial CLI admission checks `scope=ci_local` and
+`publication_ready=false`; it remains a prerequisite observation rather than
+complete proof. Current hosted execution and full remote readiness are pending.
+No local tests, disabled required checks, fabricated receipts or workunit-forgery
+completion claims are included in this checkpoint.
+
 ## Accepted local proof policy regressions (#1658)
 
 The dedicated v0.144.3 branch preserves accepted command, program, argument,
@@ -1944,6 +1966,14 @@ additive commands, first adoption and separately accepted target-policy evolutio
 still execute real proof. Current hosted revalidation remains pending; previous
 failed evidence is retained and no local tests or full PR readiness are claimed.
 
+## Accepted release projection refresh (v0.144.5)
+
+After integrating accepted master `9767ae9a3ff1c7452101482218a17c55cf569b71`, regenerate the agent entrypoints and managed release projections with the official v0.144.5 binary. Accepted verification requirements remain unchanged. Projection integrity is a prerequisite; fresh hosted GitHub Actions must evaluate this candidate. No local tests or full publication-readiness claim accompany this refresh.
+
+## Repeated validation runtime fixture
+
+`tests/validate_termination.rs::validate_smoke_runtime_is_bounded_without_contention` establishes a named session before timing and asserts that repeated prerequisite checks reuse it. The existing per-call 10-second and aggregate 20-second limits remain unchanged. This measures steady-state prerequisite latency; it does not establish full publication readiness. Hosted verification is required for this candidate.
+
 ## Observed workunit regression evidence (#1660)
 
 `validation_history_workunit_tests` executes two real repository checks through
@@ -1957,18 +1987,18 @@ is a real bare Git fixture, not full authenticated forge or native agent proof.
 Hosted execution and final exact-candidate publication validation remain pending.
 No local tests or CI are run during authoring.
 
-## Accepted release projection refresh (v0.144.5)
+## PR1677 integration with accepted v0.145.0
 
-After integrating accepted master `9767ae9a3ff1c7452101482218a17c55cf569b71`, regenerate the agent entrypoints and managed release projections with the official v0.144.5 binary. Accepted verification requirements remain unchanged. Projection integrity is a prerequisite; fresh hosted GitHub Actions must evaluate this candidate. No local tests or full publication-readiness claim accompany this refresh.
+Integrate accepted master `706569c7ac2f156def00a331134fee52fb444042`, including the canonical observed-workunit
+proof producer from #1681. Diagnostic overrides must still be rejected before
+full readiness, publication and validated completion; the new canonical archive
+cannot convert a diagnostic result into full proof. Preserve both contracts and
+the broker's durable-outcome precedence and bounded request windows.
 
-## Repeated validation runtime fixture
-
-`tests/validate_termination.rs::validate_smoke_runtime_is_bounded_without_contention` establishes a named session before timing and asserts that repeated prerequisite checks reuse it. The existing per-call 10-second and aggregate 20-second limits remain unchanged. This measures steady-state prerequisite latency; it does not establish full publication readiness. Hosted verification is required for this candidate.
-
-## Repeated validation runtime fixture
-
-`tests/validate_termination.rs::validate_smoke_runtime_is_bounded_without_contention` establishes a named session before timing and asserts that repeated prerequisite checks reuse it. The existing per-call 10-second and aggregate 20-second limits remain unchanged. This measures steady-state prerequisite latency; it does not establish full publication readiness. Hosted verification is required for this candidate.
-
-## Accepted release projection refresh (v0.144.5)
-
-After integrating accepted master `9767ae9a3ff1c7452101482218a17c55cf569b71`, regenerate the agent entrypoints and managed release projections with the official v0.144.5 binary. Accepted verification requirements remain unchanged. Projection integrity is a prerequisite; fresh hosted GitHub Actions must evaluate this candidate. No local tests or full publication-readiness claim accompany this refresh.
+Official Decapod v0.145.0 regenerates release-bound entrypoints, the managed image
+pin and spec projections. Reconcile the reviewed source inventory for this
+accepted release without changing required checks or provider policy. Earlier
+success for `65da34111d87d70792b59e8fb02ac067d15451ce` against `e8f8848d19a02ad8e2a580cf7722fe4ff9342221` remains historical.
+Fresh GitHub Actions must evaluate the integrated candidate. No local tests run;
+Buildkite is excluded at the user's direction and full kernel publication
+readiness is not asserted by this integration checkpoint.
