@@ -460,12 +460,22 @@ impl Connection {
         // read-write datastore so the Dactyl open remains the authority for
         // the actual connection and header validation.
         ensure_dactyl_create_target(path.as_ref(), access_mode).map_err(Error::Io)?;
-        let driver = dactyl_db::Connection::open_with_options(
+        // The SDK v1 default is 4 MiB per cell/parameter set. Decapod's
+        // existing transfer envelope exceeds that ceiling, and bounded legacy
+        // journal/history readers support individual values through 8 MiB.
+        // Keep those compatibility bounds explicit without relaxing field
+        // admission, result/row limits, cloud policy or any semantic proof gate.
+        let compatibility_bytes = 8 * 1024 * 1024;
+        let driver = dactyl_db::Connection::open_with_budget(
             DatastoreRoute::sqlite(path.as_ref().to_string_lossy().into_owned()),
             OpenOptions {
                 access_mode,
                 lock_timeout,
             },
+            None,
+            dactyl_db::ResourceBudget::v1()
+                .with_max_cell_bytes(compatibility_bytes)
+                .with_max_param_bytes(compatibility_bytes),
         )?;
         #[cfg(unix)]
         if std::env::var("DECAPOD_STORAGE_OWNER_WORKER").as_deref() == Ok("1") {
