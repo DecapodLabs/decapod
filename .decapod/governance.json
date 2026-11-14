@@ -1399,6 +1399,14 @@
       "proof_refs": [
         ".decapod/managed/specs/INTENT.md"
       ]
+    },
+    {
+      "id": "convergence-refinement-projection-interfacesmd",
+      "summary": "Refresh source binding for bounded authority discovery and explicit human dependency progress",
+      "input_digest": "sha256:e5f5c13c13dd0ec5d4a4f9abaadf3d8f3b80b2ed9a55b24f7a97b6505761a584",
+      "proof_refs": [
+        ".decapod/managed/specs/INTERFACES.md"
+      ]
     }
   ],
   "intents": {
