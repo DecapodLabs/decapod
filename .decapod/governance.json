@@ -1013,6 +1013,14 @@
       "proof_refs": [
         "https://github.com/DecapodLabs/decapod/issues/1660"
       ]
+    },
+    {
+      "id": "issue-1660-file-60",
+      "summary": "refactor(todo): classify immutable task-plan inspection as a read operation; file-by-file checkpoint, verification pending.",
+      "input_digest": "sha256:bfa460285f8d65b1bf880ea18b803675f5a23eb067dc8daa9fac89705940bd99",
+      "proof_refs": [
+        "https://github.com/DecapodLabs/decapod/issues/1660"
+      ]
     }
   ],
   "intents": {
@@ -1053,22 +1061,22 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Bind the security specification to the actual transactional fence, supported canonical-parent runtime and explicitly unresolved split-store compatibility path.",
-          "reviewed_code_fingerprint": "f86dd087ab36c3061572e792579e54bb43e93d283a94b6416420d32b0e65c8db",
+          "reason": "Use the existing broker read-operation naming contract for the new immutable task-plan check; avoid a needless write-path operation lock while retaining canonical ownership and audit semantics.",
+          "reviewed_code_fingerprint": "35320c78356691ea19911505433468a99f8fed6fc239ae5fe993dc31ca9ef3b0",
           "spec_material_hash": "e799665f0f6c5025ac094765c6f38097a6894c63fd4f08593900c2567475d6e9"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Bind the security specification to the actual transactional fence, supported canonical-parent runtime and explicitly unresolved split-store compatibility path.",
-          "reviewed_code_fingerprint": "f86dd087ab36c3061572e792579e54bb43e93d283a94b6416420d32b0e65c8db",
+          "reason": "Use the existing broker read-operation naming contract for the new immutable task-plan check; avoid a needless write-path operation lock while retaining canonical ownership and audit semantics.",
+          "reviewed_code_fingerprint": "35320c78356691ea19911505433468a99f8fed6fc239ae5fe993dc31ca9ef3b0",
           "spec_material_hash": "10df59dc9f256a32e3851047d6d684158b0453828124370c3bb74edc6e74af49"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Bind the security specification to the actual transactional fence, supported canonical-parent runtime and explicitly unresolved split-store compatibility path.",
-          "reviewed_code_fingerprint": "f86dd087ab36c3061572e792579e54bb43e93d283a94b6416420d32b0e65c8db",
+          "reason": "Use the existing broker read-operation naming contract for the new immutable task-plan check; avoid a needless write-path operation lock while retaining canonical ownership and audit semantics.",
+          "reviewed_code_fingerprint": "35320c78356691ea19911505433468a99f8fed6fc239ae5fe993dc31ca9ef3b0",
           "spec_material_hash": "366e74fb3bc9491cc900dbede2cffce06e3d8f7667d3d9b64641eb9bd9d7a695"
         }
       ],
@@ -1080,13 +1088,13 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1794617399Z"
+      "updated_at": "1794619309Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:1e943a092bdbd1cfbcd52ef42d9d9a22a1ca5653e19190482fa9f45a6052540e",
+      "artifact_hash": "sha256:5114625e4e500bee026521397a54e62ecab7a8b1488e6cdae4fe3c5d4ae963f0",
       "checks": [],
       "current_phase": "implementation",
       "custody": {
@@ -1515,10 +1523,17 @@
             "intent_id": "intent:change_01M7BCFASGT4DQG4ZADT2BP5G0",
             "kind": "trajectory_step_recorded",
             "sequence": 62
+          },
+          {
+            "detail": "trajectory:branch_01M7BCFAWAYM3TXSVTHC1N7YZE",
+            "event_id": "event:63",
+            "intent_id": "intent:change_01M7BCFASGT4DQG4ZADT2BP5G0",
+            "kind": "trajectory_step_recorded",
+            "sequence": 63
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 62,
+        "next_sequence": 63,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M7BCFAWAYM3TXSVTHC1N7YZE": {
@@ -2465,6 +2480,22 @@
                   "issue-1660"
                 ],
                 "sequence": 62,
+                "validation_findings": [
+                  "Hosted verification and exact-candidate publication readiness remain pending; no local tests run."
+                ]
+              },
+              {
+                "action": "implementation",
+                "custody_event_id": "event:63",
+                "observations": [
+                  "src/decapod/core/todo.rs",
+                  "https://github.com/DecapodLabs/decapod/issues/1660"
+                ],
+                "proof_refs": [],
+                "scope": [
+                  "issue-1660"
+                ],
+                "sequence": 63,
                 "validation_findings": [
                   "Hosted verification and exact-candidate publication readiness remain pending; no local tests run."
                 ]

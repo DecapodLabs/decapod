@@ -106,7 +106,7 @@ pub(crate) fn ensure_task_full_validation_plan(
         &todo_db_path(store_root),
         "decapod",
         None,
-        "validation.workunit.task_plan",
+        "validation.workunit.task_plan.check",
         |conn| ensure_task_full_validation_plan_on_conn(conn, task_id),
     )
 }
