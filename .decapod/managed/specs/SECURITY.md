@@ -626,7 +626,7 @@ execution evidence remains required before publication readiness.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `c16ddebe2aa8e28afc8d182d72b58814cc3036152acfce15e3fd73b9727a235f`
+- Repository signal fingerprint: `99790f45ba87a52faa57a27b522966d4c046e18f256f734fef32d2dba173a7a2`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (234 files), `tests/` (233 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
@@ -1012,3 +1012,13 @@ path. Its compatible migration/convergence remains unresolved. Tests exercise
 the actual producer, owned task mutation and append boundary; hosted results
 remain pending. Canonical task obligations cannot be replaced by a weaker
 workunit declaration.
+
+## Preserved uncertain legacy authority (#1657)
+
+A placeholder decision uses no content timestamps and follows no symlink. Any
+nonzero content, nonregular object, sidecar or unreadable/uncertain metadata is
+not proof of emptiness. Journaled canonical authority cannot implicitly import
+or delete that source. Real-journal regressions preserve logical digest/custody
+and original input bytes across repeated reconciliation. This is no OS-level
+filesystem isolation or permission to replay an unknown broker mutation; general
+nonempty recovery remains unresolved and hosted proof is pending.

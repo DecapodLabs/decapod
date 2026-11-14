@@ -1165,6 +1165,14 @@
       "proof_refs": [
         "https://github.com/DecapodLabs/decapod/issues/1660"
       ]
+    },
+    {
+      "id": "issue-1660-integrate-e8f8848d",
+      "summary": "Integrate accepted master e8f8848d19a02ad8e2a580cf7722fe4ff9342221 after merged bootstrap repair PR1683 with issue1660. Preserve current task journal/checkpoints and authored specs from both branches; regenerate projections through the kernel. Previous candidate readiness does not apply; no local tests.",
+      "input_digest": "sha256:c1036bc89d74513762ce90d79470e839726aa5fea6c39086bd9ba5dd58befaf0",
+      "proof_refs": [
+        "https://github.com/DecapodLabs/decapod/pull/1683"
+      ]
     }
   ],
   "intents": {
@@ -1205,23 +1213,23 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Document the real no-op guard and subprocess side-effect regression for GitHub runtime failure132344083373. Retain all required checks and10s/20s bounds. Runtime availability and full publication proof are separate; no local tests.",
-          "reviewed_code_fingerprint": "c16ddebe2aa8e28afc8d182d72b58814cc3036152acfce15e3fd73b9727a235f",
-          "spec_material_hash": "e799665f0f6c5025ac094765c6f38097a6894c63fd4f08593900c2567475d6e9"
+          "reason": "Integrate accepted master e8f8848d19a02ad8e2a580cf7722fe4ff9342221 after merged bootstrap repair PR1683 with issue1660. Preserve current task journal/checkpoints and authored specs from both branches; regenerate projections through the kernel. Previous candidate readiness does not apply; no local tests.",
+          "reviewed_code_fingerprint": "99790f45ba87a52faa57a27b522966d4c046e18f256f734fef32d2dba173a7a2",
+          "spec_material_hash": "60b9c04a293152ed16742403915aab6d3fc2c0e02a7849f03ecd902525580452"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Document the real no-op guard and subprocess side-effect regression for GitHub runtime failure132344083373. Retain all required checks and10s/20s bounds. Runtime availability and full publication proof are separate; no local tests.",
-          "reviewed_code_fingerprint": "c16ddebe2aa8e28afc8d182d72b58814cc3036152acfce15e3fd73b9727a235f",
-          "spec_material_hash": "34ae7620bc7bf5ad635cb18bff3dae076dcb4cf719f210801517e6ebbff3e3f7"
+          "reason": "Integrate accepted master e8f8848d19a02ad8e2a580cf7722fe4ff9342221 after merged bootstrap repair PR1683 with issue1660. Preserve current task journal/checkpoints and authored specs from both branches; regenerate projections through the kernel. Previous candidate readiness does not apply; no local tests.",
+          "reviewed_code_fingerprint": "99790f45ba87a52faa57a27b522966d4c046e18f256f734fef32d2dba173a7a2",
+          "spec_material_hash": "26052dba65c56d6e10d80e79553148e439a0a9125d5f3deb7a0b2acd4121c435"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Document the real no-op guard and subprocess side-effect regression for GitHub runtime failure132344083373. Retain all required checks and10s/20s bounds. Runtime availability and full publication proof are separate; no local tests.",
-          "reviewed_code_fingerprint": "c16ddebe2aa8e28afc8d182d72b58814cc3036152acfce15e3fd73b9727a235f",
-          "spec_material_hash": "366e74fb3bc9491cc900dbede2cffce06e3d8f7667d3d9b64641eb9bd9d7a695"
+          "reason": "Integrate accepted master e8f8848d19a02ad8e2a580cf7722fe4ff9342221 after merged bootstrap repair PR1683 with issue1660. Preserve current task journal/checkpoints and authored specs from both branches; regenerate projections through the kernel. Previous candidate readiness does not apply; no local tests.",
+          "reviewed_code_fingerprint": "99790f45ba87a52faa57a27b522966d4c046e18f256f734fef32d2dba173a7a2",
+          "spec_material_hash": "12a359a4f9ca8ba5922b7097ca1921eec9269f96c5e687a004b3c4a0a24d1db0"
         }
       ],
       "state": "DRAFT",
@@ -1232,13 +1240,13 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1794638219Z"
+      "updated_at": "1794638967Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:12e42edb4709b23f50630d3070651a269550fa6ed7bba9232f6e61c67afd8abd",
+      "artifact_hash": "sha256:d8ddcbc9775417ff19cbf418518594fde418e92b41f71dc603f0c37ec1e48210",
       "checks": [],
       "current_phase": "implementation",
       "custody": {
@@ -1800,10 +1808,17 @@
             "intent_id": "intent:change_01M7BCFASGT4DQG4ZADT2BP5G0",
             "kind": "trajectory_step_recorded",
             "sequence": 81
+          },
+          {
+            "detail": "trajectory:branch_01M7BCFAWAYM3TXSVTHC1N7YZE",
+            "event_id": "event:82",
+            "intent_id": "intent:change_01M7BCFASGT4DQG4ZADT2BP5G0",
+            "kind": "trajectory_step_recorded",
+            "sequence": 82
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 81,
+        "next_sequence": 82,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M7BCFAWAYM3TXSVTHC1N7YZE": {
@@ -3055,6 +3070,21 @@
                 "validation_findings": [
                   "Hosted verification and exact-candidate publication readiness remain pending; no local tests run."
                 ]
+              },
+              {
+                "action": "implementation",
+                "custody_event_id": "event:82",
+                "observations": [
+                  "https://github.com/DecapodLabs/decapod/pull/1683"
+                ],
+                "proof_refs": [],
+                "scope": [
+                  "issue-1660"
+                ],
+                "sequence": 82,
+                "validation_findings": [
+                  "Integrate accepted master e8f8848d19a02ad8e2a580cf7722fe4ff9342221 after merged bootstrap repair PR1683 with issue1660. Preserve current task journal/checkpoints and authored specs from both branches; regenerate projections through the kernel. Previous candidate readiness does not apply; no local tests."
+                ]
               }
             ]
           }
@@ -3066,6 +3096,7 @@
         "https://github.com/DecapodLabs/decapod/issues/1660",
         "https://github.com/DecapodLabs/decapod/pull/1675",
         "https://github.com/DecapodLabs/decapod/pull/1682",
+        "https://github.com/DecapodLabs/decapod/pull/1683",
         "https://github.com/DecapodLabs/decapod/pull/1685"
       ],
       "inspected_files": [],
@@ -3117,6 +3148,7 @@
       "unresolved_assumptions": [
         "Hosted verification and exact-candidate publication readiness remain pending; no local tests run.",
         "Integrate accepted master 9767ae9a3ff1c7452101482218a17c55cf569b71 after accepted release v0.144.5 with issue1660. Preserve current task journal/checkpoints and authored specs from both branches; regenerate projections through the kernel. Previous candidate readiness does not apply; no local tests.",
+        "Integrate accepted master e8f8848d19a02ad8e2a580cf7722fe4ff9342221 after merged bootstrap repair PR1683 with issue1660. Preserve current task journal/checkpoints and authored specs from both branches; regenerate projections through the kernel. Previous candidate readiness does not apply; no local tests.",
         "Integrate accepted master f779e39111ec8b3c8c41569f68a3a7604df167e7 and merged1675 accepted-policy hardening with issue1660. Preserve current task journal/checkpoints and authored specs from both branches; regenerate projections through the kernel. Previous candidate readiness does not apply; no local tests.",
         "Integrate accepted master fded2dd0b5f02f9c874301d4b98cfd59ad188357 after merged PR1682 native inventory evidence with issue1660. Preserve current task journal/checkpoints and authored specs from both branches; regenerate projections through the kernel. Previous candidate readiness does not apply; no local tests."
       ]

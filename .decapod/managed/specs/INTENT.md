@@ -352,7 +352,7 @@ These declarations select authoring and proof obligations; they do not attest im
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `c16ddebe2aa8e28afc8d182d72b58814cc3036152acfce15e3fd73b9727a235f`
+- Repository signal fingerprint: `99790f45ba87a52faa57a27b522966d4c046e18f256f734fef32d2dba173a7a2`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (234 files), `tests/` (233 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
@@ -576,6 +576,18 @@ opaque additional gates remain unproven. Legacy declarations retain history and
 require fresh observed proof, with explicit safe downgrade/recovery. No new
 cryptographic trust root or OS-isolation claim is inferred from shared UID access.
 No local tests run; supported real CLI/runtime and hosted proof remain required.
+
+## Mixed-store recovery (#1657)
+
+Provide explicit, versioned and idempotent recovery for a nonempty legacy TODO
+store beside valid canonical task-journal state. Reuse datastore lifecycle,
+maintenance authority and journal verification. Preserve original files, task
+identities, chronology, custody/proof bindings and unknown outcomes. Diagnose
+equivalence, divergence and corruption independently; do not implicitly merge
+contradictory state, delete legacy input, reconstruct missing proof, or replay an
+unknown mutation. Ordinary operation resumes only after an inspectable safe
+recovery result. The empty-stub path is a bounded first repair; general nonempty reconciliation
+remains unimplemented. Hosted regressions must exercise real store and recovery boundaries.
 
 ## Storage convergence follow-through (#1630)
 

@@ -1341,7 +1341,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `c16ddebe2aa8e28afc8d182d72b58814cc3036152acfce15e3fd73b9727a235f`
+- Repository signal fingerprint: `99790f45ba87a52faa57a27b522966d4c046e18f256f734fef32d2dba173a7a2`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (234 files), `tests/` (233 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
@@ -1964,3 +1964,11 @@ After integrating accepted master `9767ae9a3ff1c7452101482218a17c55cf569b71`, re
 ## Repeated validation runtime fixture
 
 `tests/validate_termination.rs::validate_smoke_runtime_is_bounded_without_contention` establishes a named session before timing and asserts that repeated prerequisite checks reuse it. The existing per-call 10-second and aggregate 20-second limits remain unchanged. This measures steady-state prerequisite latency; it does not establish full publication readiness. Hosted verification is required for this candidate.
+
+## Repeated validation runtime fixture
+
+`tests/validate_termination.rs::validate_smoke_runtime_is_bounded_without_contention` establishes a named session before timing and asserts that repeated prerequisite checks reuse it. The existing per-call 10-second and aggregate 20-second limits remain unchanged. This measures steady-state prerequisite latency; it does not establish full publication readiness. Hosted verification is required for this candidate.
+
+## Accepted release projection refresh (v0.144.5)
+
+After integrating accepted master `9767ae9a3ff1c7452101482218a17c55cf569b71`, regenerate the agent entrypoints and managed release projections with the official v0.144.5 binary. Accepted verification requirements remain unchanged. Projection integrity is a prerequisite; fresh hosted GitHub Actions must evaluate this candidate. No local tests or full publication-readiness claim accompany this refresh.
