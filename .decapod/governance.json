@@ -1191,6 +1191,14 @@
       "proof_refs": [
         "docs/architecture/public-proof-collection.md"
       ]
+    },
+    {
+      "id": "recovery1696-shared-helper",
+      "summary": "Extract the existing guarded filesystem probe for reuse by real recovery fixtures",
+      "input_digest": "sha256:2211a396653a24c1e4130dee63dab38cd63c91f7c8ed3797be2cff766242e60b",
+      "proof_refs": [
+        "tests/support/recovery_filesystem.rs"
+      ]
     }
   ],
   "intents": {
