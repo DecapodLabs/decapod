@@ -949,6 +949,14 @@
       "proof_refs": [
         "https://github.com/DecapodLabs/decapod/issues/1660"
       ]
+    },
+    {
+      "id": "issue-1660-file-52",
+      "summary": "test(proof): fence custody races, receipt replay and split-store acceptance; file-by-file checkpoint, verification pending.",
+      "input_digest": "sha256:625efee97c0a198590ffe216f89e25b272c55f8dbe559a207d96edab62c81372",
+      "proof_refs": [
+        "https://github.com/DecapodLabs/decapod/issues/1660"
+      ]
     }
   ],
   "intents": {
@@ -974,7 +982,7 @@
   "sections": {
     "plan": {
       "constraints": {
-        "file_touch_budget": 35,
+        "file_touch_budget": 45,
         "forbidden_paths": []
       },
       "deferred_questions": [],
@@ -1008,7 +1016,7 @@
           "spec_material_hash": "eaeef50281b687b740ee9cdc33c571d5d409b1869d8e28fdb292f09e76d562fb"
         }
       ],
-      "state": "APPROVED",
+      "state": "DRAFT",
       "stop_conditions": [],
       "title": "code: resolve #1660 Require observed kernel proof for VERIFIED workunit transitions",
       "todo_ids": [
@@ -1016,13 +1024,13 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1794616380Z"
+      "updated_at": "1794616847Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:cbb084cf0b8626b6b04a69288e42a580c3dbc2f7be429280534e2c7fa9d87bfc",
+      "artifact_hash": "sha256:6a2261bd1ce52b8ad43a340a3f0f8f56dd5f4690d864886cc3ab2a565050a197",
       "checks": [],
       "current_phase": "implementation",
       "custody": {
@@ -1395,10 +1403,17 @@
             "intent_id": "intent:change_01M7BCFASGT4DQG4ZADT2BP5G0",
             "kind": "trajectory_step_recorded",
             "sequence": 54
+          },
+          {
+            "detail": "trajectory:branch_01M7BCFAWAYM3TXSVTHC1N7YZE",
+            "event_id": "event:55",
+            "intent_id": "intent:change_01M7BCFASGT4DQG4ZADT2BP5G0",
+            "kind": "trajectory_step_recorded",
+            "sequence": 55
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 54,
+        "next_sequence": 55,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M7BCFAWAYM3TXSVTHC1N7YZE": {
@@ -2217,6 +2232,22 @@
                   "issue-1660"
                 ],
                 "sequence": 54,
+                "validation_findings": [
+                  "Hosted verification and exact-candidate publication readiness remain pending; no local tests run."
+                ]
+              },
+              {
+                "action": "implementation",
+                "custody_event_id": "event:55",
+                "observations": [
+                  "tests/unit/core/workunit_journal_tests.rs",
+                  "https://github.com/DecapodLabs/decapod/issues/1660"
+                ],
+                "proof_refs": [],
+                "scope": [
+                  "issue-1660"
+                ],
+                "sequence": 55,
                 "validation_findings": [
                   "Hosted verification and exact-candidate publication readiness remain pending; no local tests run."
                 ]

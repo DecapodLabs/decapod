@@ -900,3 +900,92 @@ fn linked_git_worktree_uses_initialized_main_repo_runtime_and_rejects_uninitiali
         "linked worktree must not create an events-only local decapod.db"
     );
 }
+
+#[test]
+fn verified_append_and_idempotent_replay_fence_changed_task_custody_in_transaction() {
+    let (_temp, root, task) =
+        crate::core::validation_history::workunit_observation_tests::verified_fixture();
+    let before = journal_records(&root, task).unwrap();
+    let previous = before.last().unwrap().clone();
+    let data = root.join(".decapod/data");
+    crate::core::todo::with_task_journal(
+        &crate::core::broker::DbBroker::new(&data),
+        &crate::core::todo::todo_db_path(&data),
+        &crate::current_agent_id(), Some(task), "test.transfer_custody",
+        crate::core::todo::TaskJournalSelection::Ids(vec![task.into()]),
+        |conn| {
+            conn.execute("UPDATE tasks SET lease_generation=lease_generation+1, revision=revision+1 WHERE id=?1", db::params![task])?;
+            Ok(())
+        },
+    ).unwrap();
+    for replay in [false, true] {
+        let error = append_snapshot(
+            &root,
+            &previous.manifest,
+            if replay {
+                &previous.operation_id
+            } else {
+                "after-custody-change"
+            },
+            &previous.kind,
+            if replay {
+                previous.generation - 1
+            } else {
+                previous.generation
+            },
+            previous.binding.clone(),
+            previous.proof_hashes.clone(),
+        )
+        .unwrap_err();
+        assert!(
+            error.to_string().contains("VALIDATION_HISTORY_TASK_STALE"),
+            "{error}"
+        );
+        assert_eq!(journal_records(&root, task).unwrap().len(), before.len());
+    }
+    assert!(validate_verified_manifest(&root, &previous.manifest).is_err());
+}
+
+#[test]
+fn separately_initialized_workspace_cannot_replay_main_store_verified_authority() {
+    let (temp, root, task) =
+        crate::core::validation_history::workunit_observation_tests::verified_fixture();
+    let previous = journal_records(&root, task).unwrap().pop().unwrap();
+    let workspace = temp.path().join("split-workspace");
+    let output = std::process::Command::new("git")
+        .current_dir(&root)
+        .args(["worktree", "add", "-b", "split-workunit-authority"])
+        .arg(&workspace)
+        .arg("HEAD")
+        .output()
+        .unwrap();
+    assert!(
+        output.status.success(),
+        "{}",
+        String::from_utf8_lossy(&output.stderr)
+    );
+    crate::core::todo::initialize_todo_db(&workspace.join(".decapod/data")).unwrap();
+    // Compatibility import preserves this claimed history; it grants no current
+    // custody or producer authority in the independently initialized runtime.
+    write_workunit(&workspace, &previous.manifest).unwrap();
+    assert!(!workunit_journal_status(&workspace, task).unwrap().resumable);
+    let local = journal_records(&workspace, task).unwrap().pop().unwrap();
+    let error = append_snapshot(
+        &workspace,
+        &previous.manifest,
+        "cross-store-verified",
+        "mutation",
+        local.generation,
+        previous.binding,
+        previous.proof_hashes,
+    )
+    .unwrap_err();
+    assert!(
+        error
+            .to_string()
+            .contains("WORKUNIT_PROOF_ATOMIC_DOMAIN_UNSUPPORTED"),
+        "{error}"
+    );
+    assert_eq!(journal_records(&workspace, task).unwrap().len(), 1);
+    assert!(validate_verified_manifest(&workspace, &previous.manifest).is_err());
+}
