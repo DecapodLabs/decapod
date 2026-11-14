@@ -1006,7 +1006,9 @@ fn prepared_snapshot_cannot_retain_verified_authority_across_a_downgrade() {
         &root,
         &prepared,
         "retain-proof-across-downgrade",
-        before.generation,
+        before
+            .generation
+            .expect("verified fixture journal generation"),
     )
     .expect_err("a prepared status edit must use the owned downgrade operation");
     assert!(

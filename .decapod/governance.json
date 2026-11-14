@@ -1117,6 +1117,14 @@
       "proof_refs": [
         "https://github.com/DecapodLabs/decapod/issues/1660"
       ]
+    },
+    {
+      "id": "issue-1660-file-73",
+      "summary": "fix(test): require the verified fixture journal generation; file-by-file checkpoint, verification pending.",
+      "input_digest": "sha256:3788165156c4a9bb2f5feb5fad2b5ff4f5dcdce18d0a05be8e9573867c1f2c4a",
+      "proof_refs": [
+        "https://github.com/DecapodLabs/decapod/issues/1660"
+      ]
     }
   ],
   "intents": {
@@ -1157,22 +1165,22 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Hosted GitHub standalone validation jobs132318205665 and132317939558 reported release-bound drift after the accepted v0.144.5 release. Regenerate through supported init refresh/proof on official0.144.5, preserve accepted checks/config, and collect fresh hosted proof. No local tests; Buildkite excluded by user.",
-          "reviewed_code_fingerprint": "fd47f51ada7d7a78193b7357747ef267095212ffe9c838e261f7564eea7e828f",
+          "reason": "GitHub clippy132318080840 and library132318080766 report E0308 because journal status exposes Option<u64>. Assert the genuine verified fixture has a generation before calling the checked writer. Preserve production proof rules and negative denial assertions; no local tests.",
+          "reviewed_code_fingerprint": "9caa609b3bff85ee4f6999020af5cae8c6b90c2b45e22e9f7a15be94166a2454",
           "spec_material_hash": "e799665f0f6c5025ac094765c6f38097a6894c63fd4f08593900c2567475d6e9"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Hosted GitHub standalone validation jobs132318205665 and132317939558 reported release-bound drift after the accepted v0.144.5 release. Regenerate through supported init refresh/proof on official0.144.5, preserve accepted checks/config, and collect fresh hosted proof. No local tests; Buildkite excluded by user.",
-          "reviewed_code_fingerprint": "fd47f51ada7d7a78193b7357747ef267095212ffe9c838e261f7564eea7e828f",
+          "reason": "GitHub clippy132318080840 and library132318080766 report E0308 because journal status exposes Option<u64>. Assert the genuine verified fixture has a generation before calling the checked writer. Preserve production proof rules and negative denial assertions; no local tests.",
+          "reviewed_code_fingerprint": "9caa609b3bff85ee4f6999020af5cae8c6b90c2b45e22e9f7a15be94166a2454",
           "spec_material_hash": "10df59dc9f256a32e3851047d6d684158b0453828124370c3bb74edc6e74af49"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Hosted GitHub standalone validation jobs132318205665 and132317939558 reported release-bound drift after the accepted v0.144.5 release. Regenerate through supported init refresh/proof on official0.144.5, preserve accepted checks/config, and collect fresh hosted proof. No local tests; Buildkite excluded by user.",
-          "reviewed_code_fingerprint": "fd47f51ada7d7a78193b7357747ef267095212ffe9c838e261f7564eea7e828f",
+          "reason": "GitHub clippy132318080840 and library132318080766 report E0308 because journal status exposes Option<u64>. Assert the genuine verified fixture has a generation before calling the checked writer. Preserve production proof rules and negative denial assertions; no local tests.",
+          "reviewed_code_fingerprint": "9caa609b3bff85ee4f6999020af5cae8c6b90c2b45e22e9f7a15be94166a2454",
           "spec_material_hash": "366e74fb3bc9491cc900dbede2cffce06e3d8f7667d3d9b64641eb9bd9d7a695"
         }
       ],
@@ -1184,13 +1192,13 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1794629944Z"
+      "updated_at": "1794630041Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:e68e575b96802612d7c9f8473bf662c8ffe42d431025ac5397d853725445cb55",
+      "artifact_hash": "sha256:b31e68241f1a51241eb795d4125aeb7852b8563a68ebc0dc9d7539fa16df7c4c",
       "checks": [],
       "current_phase": "implementation",
       "custody": {
@@ -1710,10 +1718,17 @@
             "intent_id": "intent:change_01M7BCFASGT4DQG4ZADT2BP5G0",
             "kind": "trajectory_step_recorded",
             "sequence": 75
+          },
+          {
+            "detail": "trajectory:branch_01M7BCFAWAYM3TXSVTHC1N7YZE",
+            "event_id": "event:76",
+            "intent_id": "intent:change_01M7BCFASGT4DQG4ZADT2BP5G0",
+            "kind": "trajectory_step_recorded",
+            "sequence": 76
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 75,
+        "next_sequence": 76,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M7BCFAWAYM3TXSVTHC1N7YZE": {
@@ -2866,6 +2881,22 @@
                   "issue-1660"
                 ],
                 "sequence": 75,
+                "validation_findings": [
+                  "Hosted verification and exact-candidate publication readiness remain pending; no local tests run."
+                ]
+              },
+              {
+                "action": "implementation",
+                "custody_event_id": "event:76",
+                "observations": [
+                  "tests/unit/core/workunit_journal_tests.rs",
+                  "https://github.com/DecapodLabs/decapod/issues/1660"
+                ],
+                "proof_refs": [],
+                "scope": [
+                  "issue-1660"
+                ],
+                "sequence": 76,
                 "validation_findings": [
                   "Hosted verification and exact-candidate publication readiness remain pending; no local tests run."
                 ]
