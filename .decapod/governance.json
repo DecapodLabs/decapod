@@ -847,6 +847,14 @@
       "proof_refs": [
         ".decapod/managed/specs/README.md"
       ]
+    },
+    {
+      "id": "convergence-refresh1454-securitymd",
+      "summary": "Refresh supported SECURITY.md projection with the current source identity",
+      "input_digest": "sha256:d22b682bd65c941d5fbf31ab0be1183264c3b8b02631fdecf2e7f6bc4abd4ca0",
+      "proof_refs": [
+        ".decapod/managed/specs/SECURITY.md"
+      ]
     }
   ],
   "intents": {
