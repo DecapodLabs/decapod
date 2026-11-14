@@ -1,5 +1,16 @@
 # Intent
 
+## Required test dependency coverage (#1672, PR #1684)
+
+Test-only repairs must select the existing core or CLI lane that executes them.
+`assets/tools/source_ci_profile.rs` includes the runtime and CLI recipe inputs,
+shared consumer fixtures and Bazel declarations in that selection. An absent
+selection is not successful test execution. This delivery retains the accepted
+finite check IDs and complete recipes. Independently bounded shards, compilation
+reuse and the five-minute timing requirement remain open under #1672; this
+coverage prerequisite does not claim them. Exact-candidate validation remains
+required after integrating accepted v0.145.3 source.
+
 ## Concurrent custody and diagnostic scope (#1469, #1661)
 
 Independent tasks can author concurrently in distinct admitted worktrees. A task
@@ -352,7 +363,7 @@ These declarations select authoring and proof obligations; they do not attest im
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `f4e8df743eb7c2cb5701c3b274f1bd7077902fa546b5bb05a6f76d558417891e`
+- Repository signal fingerprint: `7cbf0a7a9cdc5bccac3773653b64c76afef63ad96740632ba683b9358ae9412f`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (234 files), `tests/` (233 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

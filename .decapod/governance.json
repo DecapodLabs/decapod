@@ -686,6 +686,14 @@
       "proof_refs": [
         "git:archive/pr1684-1452-validation-blocked"
       ]
+    },
+    {
+      "id": "pr1684-v1453-material-1",
+      "summary": "Reauthor reviewed .decapod/managed/specs/INTENT.md after canonical 0.145.3 merge; prior failed tail remains archived",
+      "input_digest": "sha256:ddc3555e09c1cae173c9de6cc11df55a0d1b00d3e21e4a8480faba2014666123",
+      "proof_refs": [
+        "git:archive/pr1684-1452-validation-blocked"
+      ]
     }
   ],
   "intents": {
