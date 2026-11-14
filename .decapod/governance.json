@@ -1631,6 +1631,14 @@
       "proof_refs": [
         ".decapod/managed/specs/README.md"
       ]
+    },
+    {
+      "id": "convergence-investigation-binding-securitymd",
+      "summary": "Refresh source identity for investigated evidence and governing citation continuity",
+      "input_digest": "sha256:55f6f01103b894dd7daab80fc9b17d134ad9e40dc3fdbe1e9c29d6bad122c795",
+      "proof_refs": [
+        ".decapod/managed/specs/SECURITY.md"
+      ]
     }
   ],
   "intents": {
