@@ -286,3 +286,63 @@ fn changed_workunit_during_actual_execution_cannot_publish_a_canonical_success()
         workunit::WorkUnitStatus::Claimed
     );
 }
+
+/// Reuse genuinely accepted proof for portable-evidence tests. The extra file
+/// is an explicitly declared optional artifact; it cannot satisfy the required
+/// full-validation gate and is independently hashed before export.
+pub(crate) fn verified_fixture() -> (tempfile::TempDir, PathBuf, &'static str) {
+    let (fixture, store) = prepared();
+    let root = fixture.options.root.clone();
+    fs::write(
+        root.join(".decapod/data/portable-proof.txt"),
+        "optional diagnostic artifact\n",
+    )
+    .unwrap();
+    workunit::record_proof_result(
+        &root,
+        TASK,
+        "diagnostic-artifact",
+        "pass",
+        Some(".decapod/data/portable-proof.txt".into()),
+    )
+    .unwrap();
+    observe(&fixture, &store);
+    workunit::transition_status(&root, TASK, workunit::WorkUnitStatus::Verified).unwrap();
+    (fixture._storage, root, TASK)
+}
+
+#[test]
+fn new_declaration_downgrades_actual_verified_proof_and_preserves_history() {
+    let (_temp, root, task) = verified_fixture();
+    let before = workunit::load_workunit(&root, task).unwrap();
+    let reference = before.validation_record.clone().unwrap();
+    let store = Store {
+        kind: super::super::store::StoreKind::Repo,
+        root: root.join(".decapod/data"),
+    };
+    for outcome in ["fail", "pass"] {
+        let claimed = workunit::record_proof_result(
+            &root,
+            task,
+            "validate_passes",
+            outcome,
+            Some(".decapod/data/portable-proof.txt".into()),
+        )
+        .unwrap();
+        assert_eq!(claimed.status, workunit::WorkUnitStatus::Claimed);
+        assert!(claimed.validation_record.is_none());
+        assert!(claimed.validation_epoch.is_none());
+        assert!(workunit::validate_verified_manifest(&root, &claimed).is_err());
+    }
+    assert_eq!(
+        lookup_record(
+            &root,
+            &store,
+            &reference.candidate_sha,
+            &reference.record_id
+        )
+        .unwrap()
+        .record_digest(),
+        reference.record_digest
+    );
+}
