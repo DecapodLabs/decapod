@@ -202,7 +202,10 @@ fn local_record_replays_and_detects_artifact_change() {
     let imported = read_portable_evidence(&portable_path).expect("read portable evidence");
     assert_eq!(imported.envelope_hash, envelope.envelope_hash);
     let (_, report) = import_record(root, task, &portable_path).expect("import evidence");
-    assert_eq!(report.local_decision, "rejected");
+    // Importing genuine current evidence into its own governed repository is
+    // admissible only because the receiver independently reconstructs the
+    // existing canonical proof. The portable envelope grants no new authority.
+    assert_eq!(report.local_decision, "accepted");
     assert!(report.decision_path.ends_with(".decision.json"));
     assert_eq!(report.custody_paths.len(), 2);
     assert!(root.join(&report.decision_path).is_file());
@@ -210,4 +213,14 @@ fn local_record_replays_and_detects_artifact_change() {
     fs::write(&proof_path, "altered\n").expect("alter proof");
     let report = verify_record(root, task, &record_path).expect("verify altered record");
     assert_eq!(report.status, "altered");
+    let (_, report) = import_record(root, task, &portable_path).expect("reinspect stale import");
+    assert_eq!(report.local_decision, "rejected");
+    assert!(
+        report.checks.iter().any(|check| {
+            check.name == "local:proof_artifact:.decapod/data/portable-proof.txt"
+                && check.status == "fail"
+        }),
+        "the imported original bytes must not repair the receiver's altered artifact: {:?}",
+        report.checks
+    );
 }
