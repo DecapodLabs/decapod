@@ -869,6 +869,14 @@
       "proof_refs": [
         "https://github.com/DecapodLabs/decapod/issues/1660"
       ]
+    },
+    {
+      "id": "issue-1660-file-42",
+      "summary": "fix(governance): regenerate actual 0.144.4 entrypoint templates; file-by-file checkpoint, verification pending.",
+      "input_digest": "sha256:71585596d8da9fbe63938853331313096caf186b76fbff024605f8d5729e7635",
+      "proof_refs": [
+        "https://github.com/DecapodLabs/decapod/issues/1660"
+      ]
     }
   ],
   "intents": {
@@ -909,23 +917,23 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Integrate accepted master f779e39111ec8b3c8c41569f68a3a7604df167e7 and merged1675 accepted-policy hardening with issue1660. Preserve current task journal/checkpoints and authored specs from both branches; regenerate projections through the kernel. Previous candidate readiness does not apply; no local tests.",
-          "reviewed_code_fingerprint": "ba894b60287b8a2e77aefdc63e9c2500db01e809bd43d40de19cb32596270211",
-          "spec_material_hash": "6cada0b2ccd5556dd0f6251728fa0ee9b887aa06487a23b63b5f04c11874f6a4"
+          "reason": "Hosted CI proved actual entrypoint files remained on0.144.3 after agent.init metadata refresh. Regenerate through supported init refresh/proof on official0.144.4, preserve exact authored config/verification requirements, and collect fresh hosted proof. No local tests.",
+          "reviewed_code_fingerprint": "66a1488e8ab6c6e1896cf35f343d0b2fcd570a23ad4e0308a86a1d315badc508",
+          "spec_material_hash": "e799665f0f6c5025ac094765c6f38097a6894c63fd4f08593900c2567475d6e9"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Integrate accepted master f779e39111ec8b3c8c41569f68a3a7604df167e7 and merged1675 accepted-policy hardening with issue1660. Preserve current task journal/checkpoints and authored specs from both branches; regenerate projections through the kernel. Previous candidate readiness does not apply; no local tests.",
-          "reviewed_code_fingerprint": "ba894b60287b8a2e77aefdc63e9c2500db01e809bd43d40de19cb32596270211",
-          "spec_material_hash": "81d9a5b3b8da4779f9f697a3272c967996f7f0f7db6aac740881b36798a66638"
+          "reason": "Hosted CI proved actual entrypoint files remained on0.144.3 after agent.init metadata refresh. Regenerate through supported init refresh/proof on official0.144.4, preserve exact authored config/verification requirements, and collect fresh hosted proof. No local tests.",
+          "reviewed_code_fingerprint": "66a1488e8ab6c6e1896cf35f343d0b2fcd570a23ad4e0308a86a1d315badc508",
+          "spec_material_hash": "10df59dc9f256a32e3851047d6d684158b0453828124370c3bb74edc6e74af49"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Integrate accepted master f779e39111ec8b3c8c41569f68a3a7604df167e7 and merged1675 accepted-policy hardening with issue1660. Preserve current task journal/checkpoints and authored specs from both branches; regenerate projections through the kernel. Previous candidate readiness does not apply; no local tests.",
-          "reviewed_code_fingerprint": "ba894b60287b8a2e77aefdc63e9c2500db01e809bd43d40de19cb32596270211",
-          "spec_material_hash": "fa85ff736ae9bd16044a48bb34a30dd8fdbb8d7209b3dbf7642d1d94f38a9c96"
+          "reason": "Hosted CI proved actual entrypoint files remained on0.144.3 after agent.init metadata refresh. Regenerate through supported init refresh/proof on official0.144.4, preserve exact authored config/verification requirements, and collect fresh hosted proof. No local tests.",
+          "reviewed_code_fingerprint": "66a1488e8ab6c6e1896cf35f343d0b2fcd570a23ad4e0308a86a1d315badc508",
+          "spec_material_hash": "eaeef50281b687b740ee9cdc33c571d5d409b1869d8e28fdb292f09e76d562fb"
         }
       ],
       "state": "APPROVED",
@@ -936,13 +944,13 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1794611753Z"
+      "updated_at": "1794615190Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:7a8ffcbda930481fb428fb7c672c852fa8813f024833f560bf5e43a65d4c3dcb",
+      "artifact_hash": "sha256:c39f877572fac9b4d82ad69a329d910a3fc4c87bd1c36c56c28ccef388774398",
       "checks": [],
       "current_phase": "implementation",
       "custody": {
@@ -1245,10 +1253,17 @@
             "intent_id": "intent:change_01M7BCFASGT4DQG4ZADT2BP5G0",
             "kind": "trajectory_step_recorded",
             "sequence": 44
+          },
+          {
+            "detail": "trajectory:branch_01M7BCFAWAYM3TXSVTHC1N7YZE",
+            "event_id": "event:45",
+            "intent_id": "intent:change_01M7BCFASGT4DQG4ZADT2BP5G0",
+            "kind": "trajectory_step_recorded",
+            "sequence": 45
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 44,
+        "next_sequence": 45,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M7BCFAWAYM3TXSVTHC1N7YZE": {
@@ -1907,6 +1922,22 @@
                   "issue-1660"
                 ],
                 "sequence": 44,
+                "validation_findings": [
+                  "Hosted verification and exact-candidate publication readiness remain pending; no local tests run."
+                ]
+              },
+              {
+                "action": "implementation",
+                "custody_event_id": "event:45",
+                "observations": [
+                  ".decapod/managed/specs/VALIDATION.md",
+                  "https://github.com/DecapodLabs/decapod/issues/1660"
+                ],
+                "proof_refs": [],
+                "scope": [
+                  "issue-1660"
+                ],
+                "sequence": 45,
                 "validation_findings": [
                   "Hosted verification and exact-candidate publication readiness remain pending; no local tests run."
                 ]
