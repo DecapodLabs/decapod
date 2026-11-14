@@ -1735,6 +1735,14 @@
       "proof_refs": [
         ".decapod/managed/specs/SECURITY.md"
       ]
+    },
+    {
+      "id": "convergence-question-binding-semanticsmd",
+      "summary": "Refresh source identity for complete canonical human-question matching",
+      "input_digest": "sha256:5a76a23015f533d1467bb19a52ca5cf73186cf43742e6170847154a13abdfb2e",
+      "proof_refs": [
+        ".decapod/managed/specs/SEMANTICS.md"
+      ]
     }
   ],
   "intents": {
