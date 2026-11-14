@@ -88,10 +88,10 @@ Do not spend reasoning rounds trying to infer approval. Preserve explicit grants
 already present in the user's request through the existing authority surface;
 do not ask for them again merely because a machine receipt is missing.
 
-Legacy architecture keywords and `escalation_required` identify inference
+Architecture keywords and `escalation_required` identify inference
 pressure, not automatic operator intervention. Inference capability gaps now
 identify `escalation_target: agent`. Typed escalation binds canonical intent and
-preserves actual plan/spec and policy human gates; it does not infer human need
+preserves actual plan/spec and policy human gates; orientation and reflection do not infer human need
 from a task-title keyword.
 
 The three-round lifetime budget, continuation token, source freshness, custody

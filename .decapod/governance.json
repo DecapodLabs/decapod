@@ -727,6 +727,14 @@
       "proof_refs": [
         "tests/unit/core/reflection_tests.rs"
       ]
+    },
+    {
+      "id": "convergence-reviewed-6",
+      "summary": "Refine docs/agent/api-index.md after review: preserve actual authority, separate inference cues, observe fixtures and document proof limits",
+      "input_digest": "sha256:b4d03c81649975af6740fcc8070facc40724df2371b496639ac87c545b4f0636",
+      "proof_refs": [
+        "docs/agent/api-index.md"
+      ]
     }
   ],
   "intents": {
