@@ -135,6 +135,21 @@ fn local_sdk_budget_preserves_large_compatible_values_and_rejects_overflow_befor
         ),
         "{error}"
     );
+    // Two individually admissible cells plus a key still exceed the bounded
+    // aggregate parameter allowance. Refuse before concatenation can persist
+    // an unreadable larger cell in SQLite.
+    let aggregate_error = conn
+        .execute(
+            "INSERT INTO legacy_values(id,body) VALUES (?1,?2 || ?3)",
+            params![3_i64, original.as_str(), original.as_str()],
+        )
+        .unwrap_err();
+    match &aggregate_error {
+        decapod::core::dactyl_db::Error::Dactyl(error) => {
+            assert_eq!(error.adapter_code(), Some("parameter_budget_exceeded"));
+        }
+        other => panic!("expected SDK aggregate preflight refusal: {other}"),
+    }
     let count: i64 = conn
         .query_row("SELECT count(*) FROM legacy_values", [], |row| row.get(0))
         .unwrap();

@@ -781,6 +781,14 @@
       "proof_refs": [
         "https://github.com/DecapodLabs/decapod/issues/1667"
       ]
+    },
+    {
+      "id": "issue-1667-file-31",
+      "summary": "test(storage): retain aggregate parameter refusal before mutation; file-by-file checkpoint, verification pending.",
+      "input_digest": "sha256:c614bcae44c384b43b69a619b5a7d7feb0ef0d5d016cdcbb1261af758d5e60f6",
+      "proof_refs": [
+        "https://github.com/DecapodLabs/decapod/issues/1667"
+      ]
     }
   ],
   "intents": {
@@ -821,22 +829,22 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Document the specific physical compatibility edge without increasing logical field, decoded result, cloud or proof authority. GitHub Actions verification is pending and no local tests were run.",
-          "reviewed_code_fingerprint": "2bedc737f0eb8c4c445e75bc26b6144f8be885097ce304b779807b732d923714",
+          "reason": "Two maximum-size cells plus a bound key exceed16MiB. Exercise the real SDK preflight code and assert no extra SQLite row is persisted; preserve cell and aggregate protections together. GitHub Actions only; no local tests.",
+          "reviewed_code_fingerprint": "7a3c199168381e27441eaadbab7fc22169e5a8259e956f61b497f356948ef639",
           "spec_material_hash": "c7ec7fc6a463392c5fb87a434d69170abe5c13dc147d849bef9f26443187a1ec"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Document the specific physical compatibility edge without increasing logical field, decoded result, cloud or proof authority. GitHub Actions verification is pending and no local tests were run.",
-          "reviewed_code_fingerprint": "2bedc737f0eb8c4c445e75bc26b6144f8be885097ce304b779807b732d923714",
+          "reason": "Two maximum-size cells plus a bound key exceed16MiB. Exercise the real SDK preflight code and assert no extra SQLite row is persisted; preserve cell and aggregate protections together. GitHub Actions only; no local tests.",
+          "reviewed_code_fingerprint": "7a3c199168381e27441eaadbab7fc22169e5a8259e956f61b497f356948ef639",
           "spec_material_hash": "7981fad2540aea0fa271ca07480be5ef3fed060fda68a8a81695705de7f1b981"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Document the specific physical compatibility edge without increasing logical field, decoded result, cloud or proof authority. GitHub Actions verification is pending and no local tests were run.",
-          "reviewed_code_fingerprint": "2bedc737f0eb8c4c445e75bc26b6144f8be885097ce304b779807b732d923714",
+          "reason": "Two maximum-size cells plus a bound key exceed16MiB. Exercise the real SDK preflight code and assert no extra SQLite row is persisted; preserve cell and aggregate protections together. GitHub Actions only; no local tests.",
+          "reviewed_code_fingerprint": "7a3c199168381e27441eaadbab7fc22169e5a8259e956f61b497f356948ef639",
           "spec_material_hash": "c4b217ac3486512e3460310c437a0250686d37ce1a2211f0f7e1d101871b67aa"
         }
       ],
@@ -848,13 +856,13 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1794624348Z"
+      "updated_at": "1794624416Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:954c5c991c38b42d8da29eb848765d2cab814d99518fa5e8d5cde0a2d9887f8e",
+      "artifact_hash": "sha256:6ef30fb917de07ed28899d1738ebc86215e49db5cfc682f8e5a0e40226849bb6",
       "checks": [],
       "current_phase": "implementation",
       "custody": {
@@ -1080,10 +1088,17 @@
             "intent_id": "intent:change_01M7BCN0CS3Z8AJ7TZ491WJ7CJ",
             "kind": "trajectory_step_recorded",
             "sequence": 33
+          },
+          {
+            "detail": "trajectory:branch_01M7BCN0FD8AE623HXNGA0C8F9",
+            "event_id": "event:34",
+            "intent_id": "intent:change_01M7BCN0CS3Z8AJ7TZ491WJ7CJ",
+            "kind": "trajectory_step_recorded",
+            "sequence": 34
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 33,
+        "next_sequence": 34,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M7BCN0FD8AE623HXNGA0C8F9": {
@@ -1565,6 +1580,22 @@
                   "issue-1667"
                 ],
                 "sequence": 33,
+                "validation_findings": [
+                  "Hosted verification and exact-candidate publication readiness remain pending; no local tests run."
+                ]
+              },
+              {
+                "action": "implementation",
+                "custody_event_id": "event:34",
+                "observations": [
+                  "tests/release_dependency_policy.rs",
+                  "https://github.com/DecapodLabs/decapod/issues/1667"
+                ],
+                "proof_refs": [],
+                "scope": [
+                  "issue-1667"
+                ],
+                "sequence": 34,
                 "validation_findings": [
                   "Hosted verification and exact-candidate publication readiness remain pending; no local tests run."
                 ]
