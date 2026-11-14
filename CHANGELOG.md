@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.144.5](https://github.com/DecapodLabs/decapod/compare/v0.144.4...v0.144.5) - 2026-11-14
+
+### Fixed
+
+- *(governance)* regenerate actual 0.144.4 entrypoint templates
+
+### Other
+
+- *(storage)* explain real inventory coverage and remaining acceptance
+- *(storage)* record bounded native inventories for all three dogfood stores
+- integrate accepted policy hardening for issue1630
+- *(intent)* bind storage follow-through to current native inspection and evidence
+
 ## [0.144.4](https://github.com/DecapodLabs/decapod/compare/v0.144.3...v0.144.4) - 2026-11-13
 
 ### Fixed
