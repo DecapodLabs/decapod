@@ -669,6 +669,14 @@
       "proof_refs": [
         "https://github.com/DecapodLabs/decapod/pull/1685"
       ]
+    },
+    {
+      "id": "issue-1568-file-17",
+      "summary": "fix(governance): regenerate actual 0.144.5 entrypoint templates; file-by-file checkpoint, verification pending.",
+      "input_digest": "sha256:2a7084af939f0bc170fd688bf059242af607f7568637ffd50ba90a623d7ef210",
+      "proof_refs": [
+        "https://github.com/DecapodLabs/decapod/issues/1568"
+      ]
     }
   ],
   "intents": {
@@ -709,21 +717,21 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Integrate accepted master 9767ae9a3ff1c7452101482218a17c55cf569b71 after accepted release v0.144.5 with issue1568. Preserve current task journal/checkpoints and authored specs from both branches; regenerate projections through the kernel. Previous candidate readiness does not apply; no local tests.",
+          "reason": "Hosted GitHub standalone validation jobs132318205665 and132317939558 reported release-bound drift after the accepted v0.144.5 release. Regenerate through supported init refresh/proof on official0.144.5, preserve accepted checks/config, and collect fresh hosted proof. No local tests; Buildkite excluded by user.",
           "reviewed_code_fingerprint": "ae7a799e46aaf9e2124ffc5227629a3294740245e3fe2767c4014922e09dc181",
           "spec_material_hash": "0bc38acf41a2aeb5f82f86b2237f03c756979daa53ab64de603368cb719b8ae5"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Integrate accepted master 9767ae9a3ff1c7452101482218a17c55cf569b71 after accepted release v0.144.5 with issue1568. Preserve current task journal/checkpoints and authored specs from both branches; regenerate projections through the kernel. Previous candidate readiness does not apply; no local tests.",
+          "reason": "Hosted GitHub standalone validation jobs132318205665 and132317939558 reported release-bound drift after the accepted v0.144.5 release. Regenerate through supported init refresh/proof on official0.144.5, preserve accepted checks/config, and collect fresh hosted proof. No local tests; Buildkite excluded by user.",
           "reviewed_code_fingerprint": "ae7a799e46aaf9e2124ffc5227629a3294740245e3fe2767c4014922e09dc181",
           "spec_material_hash": "0bd2bba11d788c73dd7a653432ffbcc402059821300c4e6b6002046c3d1f0c21"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Integrate accepted master 9767ae9a3ff1c7452101482218a17c55cf569b71 after accepted release v0.144.5 with issue1568. Preserve current task journal/checkpoints and authored specs from both branches; regenerate projections through the kernel. Previous candidate readiness does not apply; no local tests.",
+          "reason": "Hosted GitHub standalone validation jobs132318205665 and132317939558 reported release-bound drift after the accepted v0.144.5 release. Regenerate through supported init refresh/proof on official0.144.5, preserve accepted checks/config, and collect fresh hosted proof. No local tests; Buildkite excluded by user.",
           "reviewed_code_fingerprint": "ae7a799e46aaf9e2124ffc5227629a3294740245e3fe2767c4014922e09dc181",
           "spec_material_hash": "c288daf7a1c8282872088f5e6f37fc4d95b6f6bc83716c3ffeb11ef641f8fc97"
         }
@@ -736,13 +744,13 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1794627543Z"
+      "updated_at": "1794630162Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:88c6eda90feb79dd3e082aa359a133bd6467d7bda924570ffc5f95e8d996c9de",
+      "artifact_hash": "sha256:5277ed309e47d284ee226fd79476dc2f7f292f58f11cb7febe9ef08b77345220",
       "checks": [],
       "current_phase": "implementation",
       "custody": {
@@ -870,10 +878,17 @@
             "intent_id": "intent:change_01M7BCJGVSZZ72B0C1Y6FVMPP4",
             "kind": "trajectory_step_recorded",
             "sequence": 19
+          },
+          {
+            "detail": "trajectory:branch_01M7BCJGZ6T52EA2CECBZAPK5W",
+            "event_id": "event:20",
+            "intent_id": "intent:change_01M7BCJGVSZZ72B0C1Y6FVMPP4",
+            "kind": "trajectory_step_recorded",
+            "sequence": 20
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 19,
+        "next_sequence": 20,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M7BCJGZ6T52EA2CECBZAPK5W": {
@@ -1131,6 +1146,22 @@
                 "sequence": 19,
                 "validation_findings": [
                   "Integrate accepted master 9767ae9a3ff1c7452101482218a17c55cf569b71 after accepted release v0.144.5 with issue1568. Preserve current task journal/checkpoints and authored specs from both branches; regenerate projections through the kernel. Previous candidate readiness does not apply; no local tests."
+                ]
+              },
+              {
+                "action": "implementation",
+                "custody_event_id": "event:20",
+                "observations": [
+                  ".decapod/managed/specs/VALIDATION.md",
+                  "https://github.com/DecapodLabs/decapod/issues/1568"
+                ],
+                "proof_refs": [],
+                "scope": [
+                  "issue-1568"
+                ],
+                "sequence": 20,
+                "validation_findings": [
+                  "Hosted verification and exact-candidate publication readiness remain pending; no local tests run."
                 ]
               }
             ]
