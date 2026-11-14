@@ -1079,6 +1079,14 @@
       "proof_refs": [
         ".decapod/managed/specs/VALIDATION.md"
       ]
+    },
+    {
+      "id": "convergence-fixture-repair-attestation-manifestjson",
+      "summary": "Refresh source binding after observed test fixture repairs",
+      "input_digest": "sha256:b3bf1a828a7c5adfbd1b271b7ae98a2e06e52427bd2c9054a6af0c9a3fb7b85b",
+      "proof_refs": [
+        ".decapod/managed/specs/.manifest.json"
+      ]
     }
   ],
   "intents": {
