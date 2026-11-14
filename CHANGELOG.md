@@ -7,6 +7,30 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.145.5](https://github.com/DecapodLabs/decapod/compare/v0.145.4...v0.145.5) - 2026-11-14
+
+### Fixed
+
+- *(governance)* regenerate actual 0.144.5 entrypoint templates
+- *(governance)* regenerate actual 0.144.4 entrypoint templates
+
+### Other
+
+- integrate v0.145.4 into public proof collection documentation
+- integrate current accepted master for issue1573
+- *(validation)* delimit steady-state runtime measurement
+- *(runtime)* measure repeated validation with established custody
+- integrate current accepted master for issue1573
+- integrate current accepted master for issue1573
+- *(governance)* refresh official Decapod 0.144.4 release surfaces
+- integrate accepted policy hardening for issue1573
+- *(specs)* preserve independent collector proof and recovery boundaries
+- *(specs)* preserve independent collector proof and recovery boundaries
+- *(specs)* preserve independent collector proof and recovery boundaries
+- *(specs)* preserve independent collector proof and recovery boundaries
+- *(proof)* record bounded public collection and observed complete execution
+- *(specs)* bind independent collector closure intent
+
 ## [0.145.4](https://github.com/DecapodLabs/decapod/compare/v0.145.3...v0.145.4) - 2026-11-14
 
 ### Fixed
