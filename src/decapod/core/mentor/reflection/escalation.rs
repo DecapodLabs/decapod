@@ -104,8 +104,8 @@ pub(super) fn validate(proposal: &Proposal) -> Result<(), DecapodError> {
             return Err(invalid("ESCALATION_INPUT_LIMIT"));
         }
     }
-    if let Some(resolution) = &proposal.resolution {
-        if resolution.decision.trim().is_empty()
+    if let Some(resolution) = &proposal.resolution
+        && (resolution.decision.trim().is_empty()
             || resolution.decision.len() > 2048
             || resolution.facts.is_empty()
             || resolution.facts.len() > 8
@@ -114,18 +114,16 @@ pub(super) fn validate(proposal: &Proposal) -> Result<(), DecapodError> {
                     || f.literal.len() > 1024
                     || f.source.ref_path.len() > 256
                     || f.source.hash.len() > 71
-            })
-        {
-            return Err(invalid("ESCALATION_INPUT_LIMIT"));
-        }
+            }))
+    {
+        return Err(invalid("ESCALATION_INPUT_LIMIT"));
     }
-    if let Some(authority) = &proposal.authority {
-        if authority.command.trim().is_empty()
+    if let Some(authority) = &proposal.authority
+        && (authority.command.trim().is_empty()
             || authority.command.len() > 128
-            || authority.target.as_ref().is_some_and(|p| p.len() > 256)
-        {
-            return Err(invalid("ESCALATION_INPUT_LIMIT"));
-        }
+            || authority.target.as_ref().is_some_and(|p| p.len() > 256))
+    {
+        return Err(invalid("ESCALATION_INPUT_LIMIT"));
     }
     Ok(())
 }

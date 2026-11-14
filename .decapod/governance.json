@@ -759,6 +759,14 @@
       "proof_refs": [
         "git:5002f1db286f4d41c92ce4d4b4a58468bf55aa3b"
       ]
+    },
+    {
+      "id": "convergence-input-bounds",
+      "summary": "Use direct bounded-input guards for escalation payloads",
+      "input_digest": "sha256:f7ebdde8e6a822241fc421579c1c51bca5a3a932fb1a7c36ac1560415ccc6f08",
+      "proof_refs": [
+        "src/decapod/core/mentor/reflection/escalation.rs"
+      ]
     }
   ],
   "intents": {
