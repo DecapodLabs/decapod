@@ -1848,3 +1848,7 @@ mod integration_tests;
 #[cfg(test)]
 #[path = "../../../tests/unit/core/validation_history_archive_tests.rs"]
 mod archive_tests;
+
+#[cfg(all(test, any(target_os = "linux", target_os = "macos")))]
+#[path = "../../../tests/unit/core/validation_history_workunit_tests.rs"]
+mod workunit_observation_tests;
