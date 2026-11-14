@@ -56,6 +56,12 @@ remains. `semantic_exhaustion_proven` and `completion_proven` remain false. A
 literal is a byte-inspection observation, even when its text mentions tests or
 approval. It never becomes a native execution receipt or an approval grant.
 
+Keep the current challenge's source citations in `evidence`. Facts may come
+from other bounded repository paths discovered during investigation; those
+paths are captured with current identities. A new citation without an observed
+fact or admissible decision is not progress. Omitting the governing citation
+cannot clear the parent reflection gate.
+
 The uncertainty values are `discoverable_information`, `inferable_decision`,
 `verifiable_uncertainty`, `irreducible_ambiguity`, `missing_authority`, and
 `exceptional_risk`. They are declarations; observed policy/gates take precedence.

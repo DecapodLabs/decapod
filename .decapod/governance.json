@@ -1583,6 +1583,14 @@
       "proof_refs": [
         "tests/unit/core/reflection_tests.rs"
       ]
+    },
+    {
+      "id": "convergence-discovered-source-contract",
+      "summary": "Document newly found evidence with preserved governing citation and independent proof limits",
+      "input_digest": "sha256:ebf3d1d88224a66ba0f97e4ff0d37f7f77a91a13e80f19901563103b5708513e",
+      "proof_refs": [
+        "docs/agent/payload-examples.md"
+      ]
     }
   ],
   "intents": {
