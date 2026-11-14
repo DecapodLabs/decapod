@@ -1943,3 +1943,16 @@ contract blocker with zero selections/executions, while unchanged policy,
 additive commands, first adoption and separately accepted target-policy evolution
 still execute real proof. Current hosted revalidation remains pending; previous
 failed evidence is retained and no local tests or full PR readiness are claimed.
+
+## Observed workunit regression evidence (#1660)
+
+`validation_history_workunit_tests` executes two real repository checks through
+the existing sealed runtime, archives their actual observation and exercises
+workunit acceptance, stale input rejection, selector substitution, interrupted
+projection recovery and archival races. Portable completion tests reuse genuine
+observed proof. Legacy CLI/publication cases reject pass-only declarations;
+journal tests preserve file-integrity and lease/recovery coverage without
+mislabeling resumability as VERIFIED proof. The local accepted-target transport
+is a real bare Git fixture, not full authenticated forge or native agent proof.
+Hosted execution and final exact-candidate publication validation remain pending.
+No local tests or CI are run during authoring.
