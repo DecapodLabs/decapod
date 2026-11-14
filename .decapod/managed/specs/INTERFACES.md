@@ -78,7 +78,7 @@ this checkout to that server ID needs a supported upstream attachment contract;
 this client does not invent one or claim that SCM ownership or paid-project
 attachment has been verified. Browser directory registration remains distinct.
 
-The client consumes the exact published `dactyl-db 0.14.0` registry API;
+The client consumes the exact published `dactyl-db 0.16.1` registry API;
 current-candidate fixture execution remains required for the complete composition. Pending
 secrets round-trip through its public Serde contract; authentication status and
 code exchange return strings, and completion confirms the session handoff.
@@ -1154,7 +1154,7 @@ field. Nothing in this operation authorizes a mutation, approval or completion.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `e2fb26115fe1218f7f980ed36543640c413c052a37d1394d8b1b206859893a4b`
+- Repository signal fingerprint: `a52e4c3ea27fd78421168efba47f9a86173a8f3692d92f8e4e1bb5fe117facef`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (234 files), `tests/` (233 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
@@ -1501,6 +1501,36 @@ Existing `data database` maintenance/capability/lock/audit CLI and RPC operation
 
 Preserve symmetric data.database CLI/RPC capability discovery, diagnostics, bounded maintenance and audit interfaces. Policy admission must happen before startup migrations for maintenance commands; raw SQL, destructive replacement and arbitrary destinations remain outside the delegated contract.
 
+## SDK resource and uncertainty compatibility (#1667)
+
+The shipped 0.15/0.16 API adds `ResourceBudget`, `open_with_budget`, `visit_rows`,
+`has_table`, `has_column`, failure-origin/mutation-outcome classifiers and logical
+connector/session types without replacing the existing open/read/write facade.
+The 0.16.1 patch retains identical Rust library bytes. This dependency adoption
+does not claim that every caller has migrated to the additive interfaces or that
+a remote capability error grants local fallback or replay permission. Existing
+backend owners remain authoritative for those decisions.
+
+### Local SDK value and parameter ceilings
+
+The physical local bridge retains an 8 MiB per-value compatibility ceiling and
+allows 16 MiB per bound parameter set so a ceiling-sized value can coexist with
+its primary key and metadata. These are separate resource limits. SDK v1 charges
+BLOB result bytes at 32 times their raw length, so the local decoded-result
+accounting ceiling is 272 MiB: one 8 MiB component plus 16 MiB of accounted
+headroom. This is an accounting bound, not a buffer allocation or a new logical
+field allowance. Row counts and cloud budgets retain SDK defaults; application
+field admission remains unchanged. The real SQLite regression tests the exact 8 MiB boundary with a
+bound key, lossless re-read, unrelated update and rejection before a write of
+a value exceeding the cell ceiling. A codec decoding guard does not authorize
+larger application records.
+
+The journal regression persists and independently reconstructs a retained
+codec-0 component at the full cell ceiling, checking its exact byte length and
+SHA-256 through the production component owner. It does not rewrite historical
+bytes or establish task completion. New text values above the cell ceiling and
+aggregate parameter sets above their separate budget still fail before mutation.
+
 ## Full claims with diagnostic gate overrides (#1659)
 
 `READINESS_GATE_OVERRIDE_UNSUPPORTED` identifies an active Git/tooling skip or a
@@ -1591,3 +1621,4 @@ prompt requirement. TASK_JOURNAL_MIGRATION_REQUIRED continues to block non-inert
 TODO inputs beside canonical journal state; an explicit versioned nonempty
 recovery command and compatible authority contract remain required. See
 `docs/architecture/legacy-todo-recovery.md`.
+

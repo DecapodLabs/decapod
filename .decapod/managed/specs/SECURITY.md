@@ -626,7 +626,7 @@ execution evidence remains required before publication readiness.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `e2fb26115fe1218f7f980ed36543640c413c052a37d1394d8b1b206859893a4b`
+- Repository signal fingerprint: `a52e4c3ea27fd78421168efba47f9a86173a8f3692d92f8e4e1bb5fe117facef`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (234 files), `tests/` (233 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
@@ -965,6 +965,18 @@ Do not delete lock sidecars, signal foreign processes, steal claims, replay ambi
 ## PR1662 current-master preparation
 
 Worktree policy edits cannot self-grant capabilities. db.recover remains owner-only and cloud authority fails closed when it cannot be authenticated. Retain non-destructive lock diagnosis, current-process-only release and confined backups. Coordination receipts are not independent acceptance proof.
+
+## SDK 0.16.1 authority and budget boundary (#1667)
+
+The latest non-yanked registry artifact is pinned by checksum in Cargo and Bazel.
+The SDK keeps transport/resource bounds distinct from application authorization.
+No uncertain mutation is replayed by this upgrade, no cloud denial selects local
+SQLite, and no connector feature grants repository policy or subscription access.
+The existing Quinn protocol floor and storage features remain required. Native
+fixtures and offline Supabase checks do not establish hosted deployment assurance.
+Historical oversized-row tests construct corruption inside disposable SQLite
+instead of evading the smaller SDK parameter-cell budget; the kernel's original
+oversized-reader rejection remains asserted.
 
 ## Diagnostic variables never confer acceptance (#1659)
 

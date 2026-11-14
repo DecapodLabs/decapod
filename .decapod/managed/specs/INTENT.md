@@ -24,7 +24,7 @@ See `core/mentor/reflection.rs` and `docs/architecture/bounded-reflection.md`.
 
 ## Published SDK adoption (#1638)
 
-The client pins the normally published registry `dactyl-db =0.14.0` release
+The client pins the normally published registry `dactyl-db =0.16.1` release
 without changing local/cloud composition, session custody, role authority or
 transport selection. Its patched `quinn-proto >=0.11.19` requirement must hold
 for every resolved lock entry, including inactive dependencies. This adoption
@@ -352,7 +352,7 @@ These declarations select authoring and proof obligations; they do not attest im
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `e2fb26115fe1218f7f980ed36543640c413c052a37d1394d8b1b206859893a4b`
+- Repository signal fingerprint: `a52e4c3ea27fd78421168efba47f9a86173a8f3692d92f8e4e1bb5fe117facef`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (234 files), `tests/` (233 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
@@ -557,6 +557,19 @@ Expose only project-opted local database maintenance capabilities to the agent. 
 ## PR1662 current-master preparation
 
 Preserve prepared PR1662 capability-scoped database maintenance before integrating accepted master3afa9df9 and the0.144.2 source release. Default-deny accepted policy, owner-only repair, bounded safe operations and non-destructive lock custody remain obligations. Hosted CI must establish the exact integrated candidate; no local tests are run.
+
+## Published SDK convergence (#1667)
+
+Adopt the current published `dactyl-db =0.16.1` registry artifact, preserving
+SQLite/Neon/default Supabase features and application-owned governance decisions.
+The official sparse index reports non-yanked checksum
+`1b41dde2e8be3fc986f7f5a7eb4e5bfb9af49d4c39dabe98fd74a0ccb4ad7ac6`;
+the downloaded crate matches it. The 0.16.1 patch has identical `src/*.rs` bytes
+to 0.16.0 and repairs upstream test compatibility. Version 0.15 adds bounded
+resource accounting and scans; 0.16 adds logical connectors/session transport.
+These additions do not confer application authority or independently prove a
+hosted deployment. Exact candidate compatibility remains a hosted verification
+obligation, with no local test execution.
 
 ## Diagnostic overrides cannot authorize readiness (#1659)
 

@@ -126,9 +126,9 @@ checkpoint-history verification never replace the complete exact-candidate gate.
 Plain `decapod validate` owns the configured build/tests; no separate manual
 build, fabricated proof or weakened check is allowed.
 
-## Current SDK 0.14 adoption (#1638)
+## Historical SDK 0.14 adoption (#1638)
 
-The current registry dependency is exactly Dactyl 0.14.0, checksum
+The previous accepted registry dependency was Dactyl 0.14.0, checksum
 `d10824bf8882a26b92479f07edb26c1f6fde8da3019f4001befaf28699d7a990`.
 Historical 0.12 observations below describe earlier candidates. The existing
 release-policy test retains registry-only and feature checks, and now rejects
@@ -1341,7 +1341,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `e2fb26115fe1218f7f980ed36543640c413c052a37d1394d8b1b206859893a4b`
+- Repository signal fingerprint: `a52e4c3ea27fd78421168efba47f9a86173a8f3692d92f8e4e1bb5fe117facef`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (234 files), `tests/` (233 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
@@ -1905,6 +1905,31 @@ Exercise actual `sqlite_maintenance` CLI/RPC worktree cases and storage-lock reg
 
 This checkpoint preserves original source and tests before integration with current master. Preserve failure history and all assertions; use hosted CI for verification, without local tests or running the maintenance candidate against the live machine datastore. Prior test observations do not prove the new integration.
 
+## Current published SDK 0.16.1 adoption (#1667)
+
+The current exact registry pin/checksum is `dactyl-db =0.16.1` /
+`1b41dde2e8be3fc986f7f5a7eb4e5bfb9af49d4c39dabe98fd74a0ccb4ad7ac6`.
+Official sparse-index discovery and downloaded crate bytes agree. The Rust
+library sources match 0.16.0 byte for byte; its additive 0.15 resource accounting
+and 0.16 logical connectors retain the existing application facade. Rust 1.85
+remains below Decapod's unchanged 1.96.1 requirement. Cargo resolution updated
+only this requested SDK; Bazel crate-universe regeneration changed twelve lock
+lines after preserving the accepted one-space JSON representation. Nix derives
+its package graph from Cargo.lock and needs no separate SDK input update.
+
+`tests/release_dependency_policy.rs` pins the registry source, exact release and
+checksum while retaining storage-feature and patched Quinn-floor checks. The
+journal and transfer tests construct malformed historical payloads in disposable
+SQLite so SDK parameter budgets do not prevent exercising the original bounded
+reader rejection. No admission limit, proof assertion or existing check is
+removed. The required source suite still includes offline Supabase/Neon/local
+consumer behavior; this update cannot establish real hosted backend parity.
+
+No local compilation or tests were run. Dependency resolution and Bazel module
+regeneration are input-authoring operations, not proof. Hosted execution and the
+full exact-candidate official Decapod0.145.1 publication gate remain pending;
+provider requirements and accepted execution contracts are unchanged.
+
 ## Diagnostic override acceptance regressions (#1659)
 
 `tests/consumer_readiness.rs` runs the actual full runtime in isolated child
@@ -2002,3 +2027,20 @@ success for `65da34111d87d70792b59e8fb02ac067d15451ce` against `e8f8848d19a02ad8
 Fresh GitHub Actions must evaluate the integrated candidate. No local tests run;
 Buildkite is excluded at the user's direction and full kernel publication
 readiness is not asserted by this integration checkpoint.
+
+## PR1678 integration with accepted v0.145.1
+
+Integrate accepted master `1c1fa5dcfc2d31cc2c09dcf5d18470dc62900dd5` with the published Dactyl 0.16.1 registry
+pin and checksum. Retain the accepted canonical observed-proof and diagnostic
+admission boundaries from #1681 and #1677. The SDK remains transport/storage
+infrastructure; it cannot declare task completion or substitute local authority
+for a rejected cloud principal. Keep the patched Quinn floor and existing
+cell, parameter, result-accounting and wire limits distinct.
+
+Regenerate entrypoints, the managed image pin and projections through official
+Decapod v0.145.1. Reviewed inventory changes identify the accepted release and
+SDK inputs without changing required checks or provider policy. Source and
+proof metadata from `fbe399289d1f24011476312e16653e8d830f490a` against
+`e8f8848d19a02ad8e2a580cf7722fe4ff9342221` remain historical. Fresh GitHub Actions
+must verify this integrated candidate. No local tests run; Buildkite is excluded
+at the user's direction and full native publication readiness is not asserted.

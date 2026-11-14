@@ -40,7 +40,7 @@ aliases from being counted as progress on case-insensitive workspaces.
 
 ## Registry dependency closure (#1638)
 
-`Cargo.toml` pins Dactyl 0.14.0 while retaining `sqlite` and `neon`, and the
+`Cargo.toml` pins Dactyl 0.16.1 while retaining `sqlite` and `neon`, and the
 existing default `supabase-cloud` feature still forwards `dactyl-db/supabase`.
 Cargo resolves the registry checksum and patched Quinn protocol floor; pinned
 Bazel regenerates its crate-universe metadata from those same committed Cargo
@@ -920,7 +920,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `e2fb26115fe1218f7f980ed36543640c413c052a37d1394d8b1b206859893a4b`
+- Repository signal fingerprint: `a52e4c3ea27fd78421168efba47f9a86173a8f3692d92f8e4e1bb5fe117facef`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (234 files), `tests/` (233 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
@@ -1195,6 +1195,15 @@ The integrated `todo` module exports both accepted authoring/resource custody fu
 ## PR1662 current-master preparation
 
 The db_maintenance module resolves accepted canonical-repository policy and uses existing Dactyl and StorageLock primitives. It does not replace the datastore or migration authority. Retain current-master storage format guards, task custody, provider verification and runtime ownership while integrating this operation boundary.
+
+## Published bounded SDK (#1667)
+
+`Cargo.lock` owns the registry 0.16.1 SDK and `MODULE.bazel.lock` derives its
+crate-universe mappings. Nix reads that same Cargo.lock; no separate package hash
+or Nix input update is necessary. SQLite, Neon and default Supabase features
+remain selected by the existing application facade. SDK resource budgets are
+retained: SQL, parameters, decoded rows, wire bodies and deadlines fail closed.
+No new connector policy interpreter, daemon, HTTP/3 or hosted runner is added.
 
 ## Diagnostic overrides and full readiness (#1659)
 
