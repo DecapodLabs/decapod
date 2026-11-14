@@ -1239,6 +1239,14 @@
       "proof_refs": [
         ".config/build/decapod.BUILD.bzl"
       ]
+    },
+    {
+      "id": "recovery1696-projection-architecturemd",
+      "summary": "Bind current source projection to the shared recovery fixture repair",
+      "input_digest": "sha256:e5393b9ac2bf17e95ad708c422d8958ad8c44e7798253ec3d3376bd3cc24b425",
+      "proof_refs": [
+        ".decapod/managed/specs/ARCHITECTURE.md"
+      ]
     }
   ],
   "intents": {
