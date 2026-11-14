@@ -694,6 +694,14 @@
       "proof_refs": [
         "git:archive/pr1684-1452-validation-blocked"
       ]
+    },
+    {
+      "id": "pr1684-v1453-material-2",
+      "summary": "Reauthor reviewed .decapod/managed/specs/ARCHITECTURE.md after canonical 0.145.3 merge; prior failed tail remains archived",
+      "input_digest": "sha256:49877f8682d93f46f34517c0df34fde2a8ce60adc4c9e3913f5c14eed900b80f",
+      "proof_refs": [
+        "git:archive/pr1684-1452-validation-blocked"
+      ]
     }
   ],
   "intents": {
