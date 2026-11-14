@@ -1519,6 +1519,14 @@
       "proof_refs": [
         ".decapod/managed/specs/OPERATIONS.md"
       ]
+    },
+    {
+      "id": "convergence-scope-freshness-readmemd",
+      "summary": "Refresh current source identity after authority scope freshness repair",
+      "input_digest": "sha256:418f35389a0f76c03b91529863f4d54a9ad012380d96df55401f7a0a21c1aaec",
+      "proof_refs": [
+        ".decapod/managed/specs/README.md"
+      ]
     }
   ],
   "intents": {
