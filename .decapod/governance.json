@@ -1127,6 +1127,14 @@
       "proof_refs": [
         ".decapod/managed/specs/INTENT.md"
       ]
+    },
+    {
+      "id": "convergence-final1455-interfacesmd",
+      "summary": "Refresh source projection after accepted v0.145.5 integration",
+      "input_digest": "sha256:dd66688b1bdf6822e88cc2ed4ed6d5e6356ed4cb222ff29a9720658b8faf5469",
+      "proof_refs": [
+        ".decapod/managed/specs/INTERFACES.md"
+      ]
     }
   ],
   "intents": {
