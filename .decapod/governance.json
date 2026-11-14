@@ -1599,6 +1599,14 @@
       "proof_refs": [
         ".decapod/managed/specs/ARCHITECTURE.md"
       ]
+    },
+    {
+      "id": "convergence-investigation-binding-intentmd",
+      "summary": "Refresh source identity for investigated evidence and governing citation continuity",
+      "input_digest": "sha256:c0ef093699e887bd9fcac7b309cd3f072cca98933343933ed581798d79944c7e",
+      "proof_refs": [
+        ".decapod/managed/specs/INTENT.md"
+      ]
     }
   ],
   "intents": {
