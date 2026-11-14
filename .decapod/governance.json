@@ -837,6 +837,14 @@
       "proof_refs": [
         "https://github.com/DecapodLabs/decapod/pull/1683"
       ]
+    },
+    {
+      "id": "issue-1667-file-38",
+      "summary": "fix(container): avoid runtime probes without a disabled override; file-by-file checkpoint, verification pending.",
+      "input_digest": "sha256:383ec8eeb2b5d8b2e86e19da0655bad624770c30a4805bea3d0823d8c0949549",
+      "proof_refs": [
+        "https://github.com/DecapodLabs/decapod/issues/1667"
+      ]
     }
   ],
   "intents": {
@@ -910,7 +918,7 @@
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:24218532b966a6b7605787f4e6ad3f810d68a5b3694f2b02134b9c9547945d5a",
+      "artifact_hash": "sha256:ce95491810894c20f20c1a65f460068f48b6c884dee1f0988f3fcf6213608db7",
       "checks": [],
       "current_phase": "implementation",
       "custody": {
@@ -1185,10 +1193,17 @@
             "intent_id": "intent:change_01M7BCN0CS3Z8AJ7TZ491WJ7CJ",
             "kind": "trajectory_step_recorded",
             "sequence": 40
+          },
+          {
+            "detail": "trajectory:branch_01M7BCN0FD8AE623HXNGA0C8F9",
+            "event_id": "event:41",
+            "intent_id": "intent:change_01M7BCN0CS3Z8AJ7TZ491WJ7CJ",
+            "kind": "trajectory_step_recorded",
+            "sequence": 41
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 40,
+        "next_sequence": 41,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M7BCN0FD8AE623HXNGA0C8F9": {
@@ -1783,6 +1798,22 @@
                 "validation_findings": [
                   "Integrate accepted master e8f8848d19a02ad8e2a580cf7722fe4ff9342221 after merged bootstrap repair PR1683 with issue1667. Preserve current task journal/checkpoints and authored specs from both branches; regenerate projections through the kernel. Previous candidate readiness does not apply; no local tests."
                 ]
+              },
+              {
+                "action": "implementation",
+                "custody_event_id": "event:41",
+                "observations": [
+                  "src/decapod/plugins/container.rs",
+                  "https://github.com/DecapodLabs/decapod/issues/1667"
+                ],
+                "proof_refs": [],
+                "scope": [
+                  "issue-1667"
+                ],
+                "sequence": 41,
+                "validation_findings": [
+                  "Hosted verification and exact-candidate publication readiness remain pending; no local tests run."
+                ]
               }
             ]
           }
@@ -1813,6 +1844,7 @@
         "docs/book/src/reference/supabase-validation.md",
         "docs/cloud-repository-billing.md",
         "src/decapod/core/dactyl_db.rs",
+        "src/decapod/plugins/container.rs",
         "tests/release_dependency_policy.rs",
         "tests/unit/core/events_tests.rs",
         "tests/unit/core/task_journal_tests.rs",
