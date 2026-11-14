@@ -878,6 +878,25 @@ fn omitted_sources_are_bound_to_an_existing_repository_investigation_path() {
 }
 
 #[test]
+fn absent_policy_requirement_cannot_be_inferred_as_missing_authority() {
+    let (temp, mut request) = escalation_fixture(escalation::Uncertainty::MissingAuthority);
+    request.escalation.as_mut().unwrap().authority = Some(escalation::AuthorityRequest {
+        command: "unregistered.external_operation".into(),
+        target: None,
+    });
+    supported_resolution(&mut request);
+    let outcome = submit(temp.path(), &request).unwrap();
+    assert_eq!(outcome.disposition, Disposition::Reflect);
+    let assessment = outcome.escalation.unwrap();
+    assert_eq!(
+        assessment.reason_code,
+        escalation::ReasonCode::ObservedSourcePredicate
+    );
+    assert!(!assessment.human_escalation_permitted);
+    assert!(!outcome.completion_proven);
+}
+
+#[test]
 fn an_unrelated_approval_cannot_resolve_a_missing_business_requirement() {
     let (temp, mut request) = escalation_fixture(escalation::Uncertainty::IrreducibleAmbiguity);
     let store = crate::core::store::Store {

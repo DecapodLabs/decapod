@@ -895,6 +895,14 @@
       "proof_refs": [
         "src/decapod/core/mentor/reflection/escalation.rs"
       ]
+    },
+    {
+      "id": "convergence-no-authority-fixture",
+      "summary": "Reject a missing-authority proposal despite quoted source and an unconfigured operation",
+      "input_digest": "sha256:7550aebb4a437d493a9bb880f0acdcc302bac2d3d498306de11a485ffe5d63c9",
+      "proof_refs": [
+        "tests/unit/core/reflection_tests.rs"
+      ]
     }
   ],
   "intents": {
