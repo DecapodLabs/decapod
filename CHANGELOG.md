@@ -7,6 +7,35 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.145.3](https://github.com/DecapodLabs/decapod/compare/v0.145.2...v0.145.3) - 2026-11-14
+
+### Fixed
+
+- *(governance)* regenerate actual 0.144.5 entrypoint templates
+- *(governance)* regenerate actual 0.144.4 entrypoint templates
+
+### Other
+
+- integrate v0.145.2 into SQLite maintenance regression coverage
+- integrate current accepted master for issue1568
+- *(validation)* delimit steady-state runtime measurement
+- *(runtime)* measure repeated validation with established custody
+- integrate current accepted master for issue1568
+- integrate current accepted master for issue1568
+- *(maintenance)* resolve the real binary before fixture directory changes
+- *(governance)* refresh official Decapod 0.144.4 release surfaces
+- integrate accepted policy hardening for issue1568
+- integrate accepted policy hardening for issue1568
+- *(specs)* require hosted maintenance acceptance outcomes
+- *(proof)* bind required maintenance test source closure
+- *(specs)* bind required maintenance proof scope
+- *(specs)* bind required maintenance proof scope
+- *(specs)* bind required maintenance proof scope
+- *(tests)* include required maintenance module in CLI source closure
+- *(cli)* execute real SQLite maintenance in the required contract suite
+- *(maintenance)* require SQLite and isolate governed fixture context
+- *(specs)* require executable local maintenance acceptance evidence
+
 ## [0.145.2](https://github.com/DecapodLabs/decapod/compare/v0.145.1...v0.145.2) - 2026-11-14
 
 ### Fixed
