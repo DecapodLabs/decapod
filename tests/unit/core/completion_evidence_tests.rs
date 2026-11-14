@@ -164,6 +164,7 @@ fn portable_envelope_is_tamper_evident_and_fails_closed_without_local_binding() 
 }
 
 #[test]
+#[cfg(any(target_os = "linux", target_os = "macos"))]
 fn local_record_replays_and_detects_artifact_change() {
     let (_directory, root, task) =
         crate::core::validation_history::workunit_observation_tests::verified_fixture();
