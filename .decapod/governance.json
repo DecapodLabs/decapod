@@ -702,6 +702,14 @@
       "proof_refs": [
         "git:archive/pr1684-1452-validation-blocked"
       ]
+    },
+    {
+      "id": "pr1684-v1453-material-3",
+      "summary": "Reauthor reviewed .decapod/managed/specs/INTERFACES.md after canonical 0.145.3 merge; prior failed tail remains archived",
+      "input_digest": "sha256:b0c087ea1b3063b6db217dd19b18ff78bc446ecbbbc40b8c4f46cafa9336c692",
+      "proof_refs": [
+        "git:archive/pr1684-1452-validation-blocked"
+      ]
     }
   ],
   "intents": {

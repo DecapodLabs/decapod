@@ -1,5 +1,17 @@
 # Interfaces
 
+## Required source-CI test selection (#1672)
+
+`assets/tools/source_ci_profile.rs::{selected,commands,inventory}` includes
+the existing recipe test inputs as selection dependencies: named core runtime
+fixtures, CLI aggregate inputs including `tests/sqlite_maintenance.rs`, shared
+`tests/common/*` and `tests/support/*` fixtures, and Bazel declarations. The
+regression `required_test_source_changes_retain_the_complete_owning_recipe`
+checks selection, unchanged complete command recipes and applicable required
+inventory together. Unrelated documents stay unselected, and release-only
+dispositions retain their existing contract. No new shard protocol or timing
+guarantee is introduced by this coverage change.
+
 ## Custody and prerequisite diagnostics (#1661)
 
 `workspace status` reports `can_work=false` when checkout custody is unproven.
@@ -1154,7 +1166,7 @@ field. Nothing in this operation authorizes a mutation, approval or completion.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `f4e8df743eb7c2cb5701c3b274f1bd7077902fa546b5bb05a6f76d558417891e`
+- Repository signal fingerprint: `7cbf0a7a9cdc5bccac3773653b64c76afef63ad96740632ba683b9358ae9412f`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (234 files), `tests/` (233 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
