@@ -921,6 +921,7 @@ pub(crate) fn current_workunit_proof(
             "WORKUNIT_PROOF_UNVERIFIABLE: current task or caller custody differs",
         ));
     }
+    todo::ensure_task_full_validation_plan(&store.root, &manifest.task_id)?;
     let proof = if let Some((candidate, record)) = reference {
         if candidate != binding.candidate_sha {
             return Err(invalid(
@@ -931,7 +932,6 @@ pub(crate) fn current_workunit_proof(
     } else {
         lookup(root, &store, &binding.candidate_sha)?
     };
-    todo::ensure_task_full_validation_plan(&store.root, &manifest.task_id)?;
     let record = &proof.record;
     if record.task_binding != binding.task
         || record.validation_epoch != binding.epoch
