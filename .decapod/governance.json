@@ -1207,6 +1207,14 @@
       "proof_refs": [
         "tests/unit/core/fs_permissions_tests.rs"
       ]
+    },
+    {
+      "id": "recovery1696-cli-fixtures",
+      "summary": "Use the observed compatible private filesystem for real corruption and operator recovery assertions",
+      "input_digest": "sha256:0797892dddf0d44007b1075e7ca192f67110b2319fc6e28500e67d2fd1bcdb35",
+      "proof_refs": [
+        "tests/sqlite_maintenance.rs"
+      ]
     }
   ],
   "intents": {
