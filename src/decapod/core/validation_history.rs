@@ -562,6 +562,28 @@ impl CompletionRecord {
                 "canonical completion record failed identity or integrity checks",
             ));
         }
+        if self.workunit_subject.is_some() != self.proof.current_inputs.is_some() {
+            return Err(invalid(
+                "workunit observation and current-input provenance disagree",
+            ));
+        }
+        if let Some(subject) = &self.workunit_subject {
+            let sha256 = |value: &str| {
+                value.strip_prefix("sha256:").is_some_and(|v| {
+                    v.len() == 64
+                        && v.bytes()
+                            .all(|b| b.is_ascii_hexdigit() && !b.is_ascii_uppercase())
+                })
+            };
+            if subject.generation == 0
+                || !sha256(&subject.contract_digest)
+                || !sha256(&subject.manifest_digest)
+            {
+                return Err(invalid(
+                    "workunit observation has malformed identity or generation",
+                ));
+            }
+        }
         self.proof.verify()
     }
 }
