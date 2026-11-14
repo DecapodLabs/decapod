@@ -269,3 +269,104 @@ fn backup_restore_and_ledgers_keep_safe_modes_under_permissive_umask() {
         );
     }
 }
+
+#[test]
+fn empty_legacy_todo_is_preserved_without_reopening_or_changing_journal() {
+    let root = tempdir().unwrap();
+    check_and_migrate(root.path()).unwrap();
+    let data = root.path().join("data");
+    crate::core::todo::initialize_todo_db(&data).unwrap();
+    let conn = Connection::open(data.join(schemas::LOCAL_DB_NAME)).unwrap();
+    // A real task baseline, including the journal's complete projection.
+    conn.execute("INSERT INTO tasks(id,hash,title,status,created_at,updated_at,dir_path,scope) VALUES('feat_empty_legacy','hash:fixture','preserve custody','open','2026-01-01T00:00:00Z','2026-01-01T00:00:00Z','.','repo')", []).unwrap();
+    drop(conn);
+    crate::core::todo::task_journal_checkpoint(&data, None).unwrap();
+    let before = crate::core::todo::task_journal_verify(&data).unwrap();
+    let legacy = data.join(schemas::TODO_DB_NAME);
+    fs::write(&legacy, []).unwrap();
+    for other_legacy in [false, true, false] {
+        if other_legacy {
+            Connection::open(data.join(schemas::GOVERNANCE_DB_NAME)).unwrap();
+        }
+        check_and_migrate_with_backup_report(root.path(), |_| Ok(())).unwrap();
+        assert_eq!(fs::read(&legacy).unwrap(), Vec::<u8>::new());
+        assert_eq!(
+            crate::core::todo::task_journal_verify(&data).unwrap(),
+            before
+        );
+    }
+}
+
+#[test]
+fn uncertain_legacy_todo_remains_guarded_before_import_or_removal() {
+    for suffix in ["populated", "-wal", "-shm", "-journal"] {
+        let root = tempdir().unwrap();
+        check_and_migrate(root.path()).unwrap();
+        let data = root.path().join("data");
+        crate::core::todo::initialize_todo_db(&data).unwrap();
+        let conn = Connection::open(data.join(schemas::LOCAL_DB_NAME)).unwrap();
+        conn.execute("INSERT INTO tasks(id,hash,title,status,created_at,updated_at,dir_path,scope) VALUES('feat_uncertain_legacy','hash:fixture','preserve journal','open','1Z','1Z','.','repo')", []).unwrap();
+        drop(conn);
+        crate::core::todo::task_journal_checkpoint(&data, None).unwrap();
+        let canonical_before = crate::core::todo::task_journal_verify(&data).unwrap();
+        let legacy = data.join(schemas::TODO_DB_NAME);
+        fs::write(
+            &legacy,
+            if suffix == "populated" {
+                b"untrusted".as_slice()
+            } else {
+                b"".as_slice()
+            },
+        )
+        .unwrap();
+        if suffix != "populated" {
+            fs::write(
+                data.join(format!("{}{suffix}", schemas::TODO_DB_NAME)),
+                b"evidence",
+            )
+            .unwrap();
+        }
+        let before = fs::read(&legacy).unwrap();
+        let error = check_and_migrate_with_backup_report(root.path(), |_| Ok(())).unwrap_err();
+        assert!(
+            error
+                .to_string()
+                .contains("TASK_JOURNAL_MIGRATION_REQUIRED"),
+            "{suffix}: {error}"
+        );
+        assert_eq!(fs::read(&legacy).unwrap(), before);
+        if suffix != "populated" {
+            assert_eq!(
+                fs::read(data.join(format!("{}{suffix}", schemas::TODO_DB_NAME))).unwrap(),
+                b"evidence"
+            );
+        }
+        assert_eq!(
+            crate::core::todo::task_journal_verify(&data).unwrap(),
+            canonical_before
+        );
+    }
+}
+
+#[cfg(unix)]
+#[test]
+fn legacy_todo_symlink_is_never_classified_as_an_empty_placeholder() {
+    let root = tempdir().unwrap();
+    fs::write(root.path().join("outside"), []).unwrap();
+    std::os::unix::fs::symlink(
+        root.path().join("outside"),
+        root.path().join(schemas::TODO_DB_NAME),
+    )
+    .unwrap();
+    assert!(!inert_legacy_todo_placeholder(root.path()));
+    assert!(legacy_database_artifact_exists(
+        root.path(),
+        schemas::TODO_DB_NAME
+    ));
+    fs::remove_file(root.path().join("outside")).unwrap();
+    assert!(!inert_legacy_todo_placeholder(root.path()));
+    assert!(legacy_database_artifact_exists(
+        root.path(),
+        schemas::TODO_DB_NAME
+    ));
+}
