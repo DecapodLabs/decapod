@@ -879,6 +879,14 @@
       "proof_refs": [
         ".decapod/managed/specs/.manifest.json"
       ]
+    },
+    {
+      "id": "convergence-candidate-validation",
+      "summary": "Record current source-bound spec reviews and truthful prevalidation trajectory",
+      "input_digest": "sha256:8fc11b2660107a863b04d8bde1fa0395e4d3b36dd239833a3f1ab54913e4ff7d",
+      "proof_refs": [
+        "tests/infer_precision.rs"
+      ]
     }
   ],
   "intents": {
@@ -915,6 +923,29 @@
         "decapod validate"
       ],
       "schema_version": "1.1.0",
+      "spec_reviews": [
+        {
+          "disposition": "updated",
+          "path": ".decapod/managed/specs/ARCHITECTURE.md",
+          "reason": "Extended the existing three-round reflection journal with typed escalation assessments; no scheduler, model, daemon or additional transcript store.",
+          "reviewed_code_fingerprint": "b16d64eb40d16f6a65be1c1b9d82a6685a7aa234388583cf8fbebbafe8988336",
+          "spec_material_hash": "7952eb8f867a95de58dc897dd48f69b346587e2e8c2c30f97e7a73dd494c6abe"
+        },
+        {
+          "disposition": "updated",
+          "path": ".decapod/managed/specs/INTERFACES.md",
+          "reason": "Documented optional reflection.escalation on orientation and mentor, typed agent challenge and human admissibility, existing generated-entrypoint docs routing and enforcement boundaries.",
+          "reviewed_code_fingerprint": "b16d64eb40d16f6a65be1c1b9d82a6685a7aa234388583cf8fbebbafe8988336",
+          "spec_material_hash": "771b4349fee430e241326055d3d9cbfc52a391a3b6d663e61506257ec3927924"
+        },
+        {
+          "disposition": "updated",
+          "path": ".decapod/managed/specs/SECURITY.md",
+          "reason": "Documented real policy-ledger authority and custody, bounded transient proposals, stale and forged evidence rejection, and independent execution/publication gates.",
+          "reviewed_code_fingerprint": "b16d64eb40d16f6a65be1c1b9d82a6685a7aa234388583cf8fbebbafe8988336",
+          "spec_material_hash": "05cfa0fbce100299fd3ebdcd53266a8b203916de3c868ed5020b63fb6d50b752"
+        }
+      ],
       "state": "APPROVED",
       "stop_conditions": [
         "No weakening of authorization, scope, custody, evidence, verification or publication gates"
@@ -925,14 +956,20 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1794661190Z"
+      "updated_at": "1794688223Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Keep approval, scope, custody, proof and publication authoritative; no transcripts, daemon or semantic-proof claims"
       ],
-      "artifact_hash": "sha256:b48ffa3a6bc8d1133c1e273d8e6fdfa2567502e5be645c4d463d5543b2737b3e",
-      "checks": [],
+      "artifact_hash": "sha256:fdd4346333e119c4b371aaef075632701522fd6724cf64359f533d21ca97c8d1",
+      "checks": [
+        {
+          "name": "formatting",
+          "status": "passed"
+        }
+      ],
+      "current_phase": "candidate-validation",
       "custody": {
         "events": [
           {
@@ -967,10 +1004,17 @@
             "intent_id": "intent:convergence-1690",
             "kind": "trajectory_step_recorded",
             "sequence": 6
+          },
+          {
+            "detail": "trajectory:convergence-1690",
+            "event_id": "event:7",
+            "intent_id": "intent:convergence-1690",
+            "kind": "trajectory_step_recorded",
+            "sequence": 7
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 6,
+        "next_sequence": 7,
         "schema_version": "1.0.0",
         "trajectories": {
           "convergence-1690": {
@@ -1019,24 +1063,55 @@
                 ],
                 "sequence": 6,
                 "validation_findings": []
+              },
+              {
+                "action": "candidate-validation",
+                "command": "rustfmt targeted Rust files; git diff --check; Decapod specs.refresh and exact checkpoints",
+                "custody_event_id": "event:7",
+                "observations": [
+                  "src/decapod/plugins/policy.rs",
+                  "src/decapod/core/mentor/reflection/escalation.rs",
+                  "tests/unit/core/reflection_tests.rs",
+                  "Targeted rustfmt and git diff --check exited zero; no compilation or tests have executed for this feature candidate yet."
+                ],
+                "proof_refs": [
+                  "formatting"
+                ],
+                "scope": [
+                  "src/decapod/core/mentor and canonical agent integration/tests"
+                ],
+                "sequence": 7,
+                "validation_findings": [
+                  "Mock fixture counters are not LLM semantic reasoning measurements."
+                ]
               }
             ]
           }
         }
       },
-      "declared_commands": [],
+      "declared_commands": [
+        "rustfmt targeted Rust files; git diff --check; Decapod specs.refresh and exact checkpoints"
+      ],
       "evidence": [
         "Draft extends existing three-round journal and orientation/mentor input with typed escalation proposals, observed source predicates and existing policy/approval reads. Concise source facts are not proof of execution or semantic exhaustion. Adversarial unit and CLI mock harness authored; not yet executed. Preserve per-file exact checkpoints and native publication gates.",
         "Session refresh released the original feature assignment through session.release. Reclaimed the same unassigned task and re-admitted its original worktree through workspace ensure before resuming governed writes; no prior full-validation proof existed. Typed orientation now removes only legacy title-keyword hints after the canonical escalation outcome, retaining actual plan/policy gates.",
+        "Targeted rustfmt and git diff --check exited zero; no compilation or tests have executed for this feature candidate yet.",
         "Verbatim mission safety evaluation returned allow, hash cb81d3717c7173a902fc5ba6b7004f6b654147cbc14fadfd088880b6f472cffa (15195 bytes). Initial evaluation had condensed the mission, so this preserves the corrected complete-input check rather than claiming it preceded earlier inspection. PR1684 merged externally as aedbc856; its full configured Buildkite attempt failed at build10583 with evidence decapod-snapshot-HcwP1O. Local bk is unauthenticated; GitHub success is not substituted for required producer proof."
       ],
       "inspected_files": [
         "src/decapod/core/governed_transition.rs",
         "src/decapod/core/mentor/reflection.rs",
-        "src/decapod/plan_governance.rs"
+        "src/decapod/plan_governance.rs",
+        "src/decapod/plugins/policy.rs"
       ],
       "intent_id": "intent:convergence-1690",
-      "modified_files": [],
+      "modified_files": [
+        "src/decapod/core/mentor/reflection/escalation.rs",
+        "tests/unit/core/reflection_tests.rs"
+      ],
+      "next_transitions": [
+        "Run full exact-candidate Decapod validation; repair reported source failures without substituting GitHub status for configured provider proof."
+      ],
       "repo_scope": [
         "src/decapod/core/mentor and canonical agent integration/tests"
       ],
@@ -1045,7 +1120,9 @@
       "shortcut_risk_signals": [],
       "task_id": "feat_01m7d1cszv68qp3k",
       "tool_calls": [],
-      "unresolved_assumptions": []
+      "unresolved_assumptions": [
+        "Mock fixture counters are not LLM semantic reasoning measurements."
+      ]
     }
   },
   "legacy_digests": {
