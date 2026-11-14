@@ -1655,6 +1655,14 @@
       "proof_refs": [
         ".decapod/managed/specs/VALIDATION.md"
       ]
+    },
+    {
+      "id": "convergence-investigation-binding-manifestjson",
+      "summary": "Refresh source identity for investigated evidence and governing citation continuity",
+      "input_digest": "sha256:0ec44492e4229d2f9a60b7d6e59fb6bee993ededb55b9574334299d652126de0",
+      "proof_refs": [
+        ".decapod/managed/specs/.manifest.json"
+      ]
     }
   ],
   "intents": {
