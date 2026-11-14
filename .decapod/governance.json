@@ -1311,6 +1311,14 @@
       "proof_refs": [
         ".decapod/managed/specs/.manifest.json"
       ]
+    },
+    {
+      "id": "recovery1696-validation-candidate",
+      "summary": "Record real execution failure and guarded fixture repair before complete revalidation",
+      "input_digest": "sha256:3f7d4d7d2389751357fe5f434475251d3e120cf4155421e2ccb2d799ca840f3f",
+      "proof_refs": [
+        "https://github.com/DecapodLabs/decapod/issues/1696"
+      ]
     }
   ],
   "intents": {
@@ -1351,22 +1359,22 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Reviewed combined accepted public-reader boundaries and bounded escalation architecture; real execution and authority stay independently gated.",
-          "reviewed_code_fingerprint": "71940b59c91418271b1c56ebbe10a985160731cbdab4e2f2e73975e54223ca6b",
+          "reason": "Bounded escalation preserves independent authority and proof; the readiness repair only shares existing test filesystem prerequisites and declares their compile inputs.",
+          "reviewed_code_fingerprint": "7e2a3fcc4d896fca461dd987569c4c0927afcdbb2c83f69fb79aa6f29f67ee89",
           "spec_material_hash": "df7a941f9d82a6095083540e5c69d3c27ca2a8aae3d7d909673794bd2eaf261e"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Reviewed combined accepted public-reader boundaries and bounded escalation architecture; real execution and authority stay independently gated.",
-          "reviewed_code_fingerprint": "71940b59c91418271b1c56ebbe10a985160731cbdab4e2f2e73975e54223ca6b",
+          "reason": "Bounded escalation preserves independent authority and proof; the readiness repair only shares existing test filesystem prerequisites and declares their compile inputs.",
+          "reviewed_code_fingerprint": "7e2a3fcc4d896fca461dd987569c4c0927afcdbb2c83f69fb79aa6f29f67ee89",
           "spec_material_hash": "e11905aa29b87213a126079812cccc67910e28e7b6c478e28c5e28ef6ac4e2a8"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Reviewed combined accepted public-reader boundaries and bounded escalation architecture; real execution and authority stay independently gated.",
-          "reviewed_code_fingerprint": "71940b59c91418271b1c56ebbe10a985160731cbdab4e2f2e73975e54223ca6b",
+          "reason": "Bounded escalation preserves independent authority and proof; the readiness repair only shares existing test filesystem prerequisites and declares their compile inputs.",
+          "reviewed_code_fingerprint": "7e2a3fcc4d896fca461dd987569c4c0927afcdbb2c83f69fb79aa6f29f67ee89",
           "spec_material_hash": "5a7a392cea7e073f3efad2efde3e285f784cddf4965cb81f2f2b669e06385d00"
         }
       ],
@@ -1380,13 +1388,13 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1794690063Z"
+      "updated_at": "1794691545Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Keep approval, scope, custody, proof and publication authoritative; no transcripts, daemon or semantic-proof claims"
       ],
-      "artifact_hash": "sha256:070e03d2e72ef72c0b6fdad13c9a7ff247a76fda82225b9121942272bca04027",
+      "artifact_hash": "sha256:fac8f493ddf9a567b1882d3237bcd9defd5fca1fd5f296cd8e60be9869a58fc5",
       "checks": [
         {
           "name": "formatting",
@@ -1405,7 +1413,7 @@
           "status": "failed"
         }
       ],
-      "current_phase": "candidate-validation",
+      "current_phase": "validation-repair",
       "custody": {
         "events": [
           {
@@ -1468,10 +1476,17 @@
             "intent_id": "intent:convergence-1690",
             "kind": "trajectory_step_recorded",
             "sequence": 10
+          },
+          {
+            "detail": "trajectory:convergence-1690",
+            "event_id": "event:11",
+            "intent_id": "intent:convergence-1690",
+            "kind": "trajectory_step_recorded",
+            "sequence": 11
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 10,
+        "next_sequence": 11,
         "schema_version": "1.0.0",
         "trajectories": {
           "convergence-1690": {
@@ -1592,6 +1607,22 @@
                 ],
                 "sequence": 10,
                 "validation_findings": []
+              },
+              {
+                "action": "validation-repair",
+                "custody_event_id": "event:11",
+                "observations": [
+                  "Native full validation for 9026474f ended failed on Buildkite10656; retained snapshot decapod-snapshot-sHOu1M. Only CLI recipe failed: two existing SQLite success fixtures violated Dactyl same-device staging prerequisite; entrypoint aggregate and new CLI harness passed, full library1771 passed with8 ignored, core recipe passed.",
+                  "Issue1696 records the prerequisite repair. Extracted existing unit helper to tests/support/recovery_filesystem.rs; preserved all selection/refusal tests, reused the probe in CLI success fixtures, declared aggregate and standalone Bazel inputs. No production guard, recipe, provider or required graph changed."
+                ],
+                "proof_refs": [
+                  "full_validation"
+                ],
+                "scope": [
+                  "src/decapod/core/mentor and canonical agent integration/tests"
+                ],
+                "sequence": 11,
+                "validation_findings": []
               }
             ]
           }
@@ -1607,6 +1638,8 @@
         "Candidate d6bb48798b5477a5fb006cd6f559a21e3c809c3c was blocked by ACCEPTED_BASE_NOT_ANCESTOR after external PR1680/release1455 integration. Incorporated f5da0e61, retained both semantic spec scopes, regenerated canonical pins through official1455 session update, restored temporary config. Reclaimed genuinely unassigned task and rebound existing workspace after session cleanup.",
         "Draft extends existing three-round journal and orientation/mentor input with typed escalation proposals, observed source predicates and existing policy/approval reads. Concise source facts are not proof of execution or semantic exhaustion. Adversarial unit and CLI mock harness authored; not yet executed. Preserve per-file exact checkpoints and native publication gates.",
         "Generated entrypoint integration test passed; public native Buildkite reader is available. Cancelled unnecessary bk diagnostic device login without credentials; no access grant is required for the configured reader.",
+        "Issue1696 records the prerequisite repair. Extracted existing unit helper to tests/support/recovery_filesystem.rs; preserved all selection/refusal tests, reused the probe in CLI success fixtures, declared aggregate and standalone Bazel inputs. No production guard, recipe, provider or required graph changed.",
+        "Native full validation for 9026474f ended failed on Buildkite10656; retained snapshot decapod-snapshot-sHOu1M. Only CLI recipe failed: two existing SQLite success fixtures violated Dactyl same-device staging prerequisite; entrypoint aggregate and new CLI harness passed, full library1771 passed with8 ignored, core recipe passed.",
         "Obsolete failed-candidate validator interrupted after verifying exact process/worktree; its terminal SNAPSHOT_NOT_READY: CI operation cancelled retained at decapod-snapshot-eDeb4p. Source test failures and measurements remain recorded separately.",
         "Review removed inference from absent approval gate; added adversarial unconfigured-operation fixture. No feature tests have run yet.",
         "Session refresh released the original feature assignment through session.release. Reclaimed the same unassigned task and re-admitted its original worktree through workspace ensure before resuming governed writes; no prior full-validation proof existed. Typed orientation now removes only legacy title-keyword hints after the canonical escalation outcome, retaining actual plan/policy gates.",
@@ -1627,6 +1660,7 @@
       "next_transitions": [
         "Rerun full Decapod validation for repaired exact candidate; no readiness receipt yet.",
         "Run complete exact-candidate validation against accepted v0.145.5; no readiness receipt exists yet.",
+        "Run complete native validation on the new exact candidate and current accepted target.",
         "Run full exact-candidate Decapod validation; repair reported source failures without substituting GitHub status for configured provider proof."
       ],
       "repo_scope": [
