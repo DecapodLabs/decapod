@@ -86,3 +86,59 @@ fn dactyl_release_preserves_sqlite_neon_and_default_supabase_features() {
             .any(|value| value.as_str() == Some("dactyl-db/supabase"))
     );
 }
+
+#[test]
+fn local_sdk_budget_preserves_large_compatible_values_and_rejects_overflow_before_write() {
+    use decapod::core::db::{Connection, params};
+    let directory = tempfile::tempdir().unwrap();
+    let conn = Connection::open(directory.path().join("compatibility.db")).unwrap();
+    conn.execute_batch("CREATE TABLE legacy_values (id INTEGER PRIMARY KEY, body TEXT NOT NULL)")
+        .unwrap();
+    // A genuinely stored value above the new SDK default remains losslessly
+    // readable. This fixture does not bypass any production task/event schema.
+    let original = "x".repeat(5 * 1024 * 1024);
+    conn.execute(
+        "INSERT INTO legacy_values(id,body) VALUES (1,?1)",
+        params![original.as_str()],
+    )
+    .unwrap();
+    let actual: String = conn
+        .query_row("SELECT body FROM legacy_values WHERE id=1", [], |row| {
+            row.get(0)
+        })
+        .unwrap();
+    assert_eq!(actual, original);
+    // An unrelated update retains the original historical content.
+    conn.execute("UPDATE legacy_values SET id=2 WHERE id=1", [])
+        .unwrap();
+    let actual: String = conn
+        .query_row("SELECT body FROM legacy_values WHERE id=2", [], |row| {
+            row.get(0)
+        })
+        .unwrap();
+    assert_eq!(actual, original);
+    let overflow = "x".repeat(8 * 1024 * 1024 + 1);
+    let error = conn
+        .execute(
+            "INSERT INTO legacy_values(id,body) VALUES (3,?1)",
+            params![overflow.as_str()],
+        )
+        .unwrap_err();
+    assert!(
+        matches!(
+            error,
+            decapod::core::dactyl_db::Error::Dactyl(dactyl_db::DactylError::Adapter {
+                kind: dactyl_db::AdapterErrorKind::Quota,
+                ..
+            })
+        ),
+        "{error}"
+    );
+    let count: i64 = conn
+        .query_row("SELECT count(*) FROM legacy_values", [], |row| row.get(0))
+        .unwrap();
+    assert_eq!(
+        count, 1,
+        "budget rejection must not persist a partial write"
+    );
+}
