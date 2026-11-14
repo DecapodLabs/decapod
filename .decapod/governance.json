@@ -1575,6 +1575,14 @@
       "proof_refs": [
         "src/decapod/core/mentor/reflection/escalation.rs"
       ]
+    },
+    {
+      "id": "convergence-discovered-source-test",
+      "summary": "Demonstrate useful new-file investigation and reject a resolution that discards its governing source citation",
+      "input_digest": "sha256:710de3963efa19776dd553826dad318a7aa782381b8e16b6c3098391eb4f48a1",
+      "proof_refs": [
+        "tests/unit/core/reflection_tests.rs"
+      ]
     }
   ],
   "intents": {

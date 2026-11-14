@@ -702,6 +702,44 @@ fn deterministic_agent_simulation_reduces_routine_escalation_without_claiming_se
 }
 
 #[test]
+fn investigation_can_find_new_source_facts_while_retaining_the_governing_citation() {
+    for retain_governing_source in [true, false] {
+        let (temp, request) = escalation_fixture(escalation::Uncertainty::DiscoverableInformation);
+        fs::create_dir_all(temp.path().join("src")).unwrap();
+        fs::write(
+            temp.path().join("src/read_mode.rs"),
+            "pub const READ_MODE: &str = \"fresh\";\n",
+        )
+        .unwrap();
+        let first = submit(temp.path(), &request).unwrap();
+        let mut investigated = next(&request, &first, "source-discovered");
+        if !retain_governing_source {
+            investigated.evidence.clear();
+        }
+        investigated.escalation.as_mut().unwrap().resolution = Some(escalation::Resolution {
+            decision: "Follow the existing adapter's fresh-read convention.".into(),
+            facts: vec![escalation::SourceFact {
+                source: SourceRef {
+                    ref_path: "src/read_mode.rs".into(),
+                    hash: String::new(),
+                },
+                literal: "READ_MODE: &str = \"fresh\"".into(),
+            }],
+        });
+        let outcome = submit(temp.path(), &investigated).unwrap();
+        if retain_governing_source {
+            assert_eq!(outcome.disposition, Disposition::Proceed);
+            assert_eq!(outcome.progress, Some(Progress::ReducedObligations));
+        } else {
+            assert_eq!(outcome.disposition, Disposition::Blocked);
+            assert_eq!(outcome.reason, "resolution_source_required");
+        }
+        assert!(!outcome.completion_proven);
+        assert!(!outcome.escalation.unwrap().semantic_exhaustion_proven);
+    }
+}
+
+#[test]
 fn escalation_paraphrases_and_self_reported_exhaustion_terminate_without_permission() {
     let (temp, request) = escalation_fixture(escalation::Uncertainty::InferableDecision);
     let first = submit(temp.path(), &request).unwrap();
