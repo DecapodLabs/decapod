@@ -1431,6 +1431,14 @@
       "proof_refs": [
         ".decapod/managed/specs/SECURITY.md"
       ]
+    },
+    {
+      "id": "convergence-refinement-projection-semanticsmd",
+      "summary": "Refresh source binding for bounded authority discovery and explicit human dependency progress",
+      "input_digest": "sha256:0a81c02fb0703c7cc3807ca088ea4bfcf3ff41e8f8c0a72b6f17cad30569a128",
+      "proof_refs": [
+        ".decapod/managed/specs/SEMANTICS.md"
+      ]
     }
   ],
   "intents": {
