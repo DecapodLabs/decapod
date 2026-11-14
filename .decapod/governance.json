@@ -1215,6 +1215,14 @@
       "proof_refs": [
         "tests/sqlite_maintenance.rs"
       ]
+    },
+    {
+      "id": "recovery1696-bazel-inputs",
+      "summary": "Declare the shared recovery helper in standalone and aggregate Bazel compile inputs without changing recipes",
+      "input_digest": "sha256:edd5d2f9e3298c2fa36793db7445b24dbe0c1912f5cc748950f82ad4b9a51de7",
+      "proof_refs": [
+        ".config/build/decapod.BUILD.bzl"
+      ]
     }
   ],
   "intents": {
