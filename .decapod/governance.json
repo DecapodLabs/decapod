@@ -645,6 +645,14 @@
       "proof_refs": [
         "https://github.com/DecapodLabs/decapod/issues/1672"
       ]
+    },
+    {
+      "id": "issue-1672-file-14",
+      "summary": "docs(validation): delimit steady-state runtime measurement; file-by-file checkpoint, verification pending.",
+      "input_digest": "sha256:18d24f07991e65da0d4d64988c5bfdc38fab0413237ffcd5d91d1678b8a658cc",
+      "proof_refs": [
+        "https://github.com/DecapodLabs/decapod/issues/1672"
+      ]
     }
   ],
   "intents": {
@@ -685,22 +693,22 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Hosted GitHub standalone validation jobs132318205665 and132317939558 reported release-bound drift after the accepted v0.144.5 release. Regenerate through supported init refresh/proof on official0.144.5, preserve accepted checks/config, and collect fresh hosted proof. No local tests; Buildkite excluded by user.",
-          "reviewed_code_fingerprint": "d8a28e3ef1dc14965f4469841c8d043e42cbf2e6b4e1af1e30c52a76f158d299",
+          "reason": "Hosted GitHub Actions core jobs132330806628 (23.903s) and132301086296 exceeded the unchanged20s repeated-validation aggregate bound because the shared fixture re-enrolled an unknown identity for every iteration. Acquire named custody once before timing, assert session reuse, preserve all real checks and original10s/20s limits. No local tests.",
+          "reviewed_code_fingerprint": "4962ece0fc5b6eaf28001263c6761d8a8142bbe4750fee107fe41974ccd3d305",
           "spec_material_hash": "1da8dd7ffc667cc2844a6399e06188ee5608fa786ff11e1f1d9befdddc781d9a"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Hosted GitHub standalone validation jobs132318205665 and132317939558 reported release-bound drift after the accepted v0.144.5 release. Regenerate through supported init refresh/proof on official0.144.5, preserve accepted checks/config, and collect fresh hosted proof. No local tests; Buildkite excluded by user.",
-          "reviewed_code_fingerprint": "d8a28e3ef1dc14965f4469841c8d043e42cbf2e6b4e1af1e30c52a76f158d299",
+          "reason": "Hosted GitHub Actions core jobs132330806628 (23.903s) and132301086296 exceeded the unchanged20s repeated-validation aggregate bound because the shared fixture re-enrolled an unknown identity for every iteration. Acquire named custody once before timing, assert session reuse, preserve all real checks and original10s/20s limits. No local tests.",
+          "reviewed_code_fingerprint": "4962ece0fc5b6eaf28001263c6761d8a8142bbe4750fee107fe41974ccd3d305",
           "spec_material_hash": "273ce5f19bf1ca9e6794aeb0128755444edaf312ac6a39059259e764d9ded91b"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Hosted GitHub standalone validation jobs132318205665 and132317939558 reported release-bound drift after the accepted v0.144.5 release. Regenerate through supported init refresh/proof on official0.144.5, preserve accepted checks/config, and collect fresh hosted proof. No local tests; Buildkite excluded by user.",
-          "reviewed_code_fingerprint": "d8a28e3ef1dc14965f4469841c8d043e42cbf2e6b4e1af1e30c52a76f158d299",
+          "reason": "Hosted GitHub Actions core jobs132330806628 (23.903s) and132301086296 exceeded the unchanged20s repeated-validation aggregate bound because the shared fixture re-enrolled an unknown identity for every iteration. Acquire named custody once before timing, assert session reuse, preserve all real checks and original10s/20s limits. No local tests.",
+          "reviewed_code_fingerprint": "4962ece0fc5b6eaf28001263c6761d8a8142bbe4750fee107fe41974ccd3d305",
           "spec_material_hash": "fa85ff736ae9bd16044a48bb34a30dd8fdbb8d7209b3dbf7642d1d94f38a9c96"
         }
       ],
@@ -714,13 +722,13 @@
         "Accepted controller must support the new finite shard graph before candidate workflows can use it."
       ],
       "unresolved_contradictions": [],
-      "updated_at": "1794630349Z"
+      "updated_at": "1794633605Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:883ec27edb414805ebf0beea3df91a58f003d30442b06bc5d962d94da7841753",
+      "artifact_hash": "sha256:ecff4731f40093f0cd01a392ffed19655d03fcda2d6eaae5055e890dbc0e698b",
       "checks": [],
       "current_phase": "implementation",
       "custody": {
@@ -827,10 +835,17 @@
             "intent_id": "intent:change_01M7BCG49JVT83YA5CJ6ZGTYFS",
             "kind": "trajectory_step_recorded",
             "sequence": 16
+          },
+          {
+            "detail": "trajectory:branch_01M7BCG4CA346XXGN460V3EX4S",
+            "event_id": "event:17",
+            "intent_id": "intent:change_01M7BCG49JVT83YA5CJ6ZGTYFS",
+            "kind": "trajectory_step_recorded",
+            "sequence": 17
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 16,
+        "next_sequence": 17,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M7BCG4CA346XXGN460V3EX4S": {
@@ -1039,6 +1054,22 @@
                   "issue-1672"
                 ],
                 "sequence": 16,
+                "validation_findings": [
+                  "Hosted verification and exact-candidate publication readiness remain pending; no local tests run."
+                ]
+              },
+              {
+                "action": "implementation",
+                "custody_event_id": "event:17",
+                "observations": [
+                  ".decapod/managed/specs/VALIDATION.md",
+                  "https://github.com/DecapodLabs/decapod/issues/1672"
+                ],
+                "proof_refs": [],
+                "scope": [
+                  "issue-1672"
+                ],
+                "sequence": 17,
                 "validation_findings": [
                   "Hosted verification and exact-candidate publication readiness remain pending; no local tests run."
                 ]
