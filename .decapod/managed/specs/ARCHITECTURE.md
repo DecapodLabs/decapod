@@ -933,7 +933,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `e4a9eab6a572ab64287dd18c0d314fd69f2b6bc5a2f1e310a5d8c2afc5aa9f4e`
+- Repository signal fingerprint: `472f3a60d05913e607d14d9bc06e1171d8db1ef6341884d57bd05d3fff11006d`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (234 files), `tests/` (233 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
@@ -1287,3 +1287,30 @@ classification is captured once for source import/cleanup. Every uncertain TODO
 artifact beside canonical task history remains guarded. General nonempty
 versioned reconciliation is still unresolved; no second journal authority or
 implicit projection rebuild is introduced.
+
+## Nix release eligibility (#1626)
+
+The existing `.github/workflows/nix-flake.yml` owner and packaging gates inspect
+immutable Git parents and subjects. A one-parent squash/linear release uses its
+own subject; a two-parent release merge uses parent two's subject. Both retain
+the existing release prefix and reject root/octopus or non-release histories.
+This is packaging eligibility under the accepted workflow, not a replacement for
+kernel validation or an independently authenticated completion judgment.
+
+The credential-free publication owner still requires a native GitHub-hosted
+protected-master push. Nix checks the locked toolchain, builds and smoke-checks
+both supported native systems, with an additional Linux reproducibility check.
+Only the separate authenticated publisher can write Cachix after those jobs
+succeed. No new runtime, service, policy interpreter or release authority exists.
+
+The finite adapter in `core/readiness_profile.rs::reviewed_workflow_digests`
+explicitly pins the reviewed Nix workflow bytes. The squash-gate change updates
+that single compiled pin after reviewing triggers, jobs, matrices, actions and
+source predicates; no required job or provider is removed. A declaration digest
+cannot override the compiled contract. An older installed controller that does
+not support these bytes cannot gain authority merely from candidate repinning;
+independently accepted controller support is still required for full native
+readiness. Existing accepted-executor tamper tests remain unchanged. The initial
+hosted consumer run rejected eleven fixture setups at the old Nix pin, rather
+than establishing the later admission assertions; fresh execution must verify
+the reconciled candidate.

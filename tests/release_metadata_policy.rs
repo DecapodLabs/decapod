@@ -560,3 +560,185 @@ fn validation_push_accepts_protected_base_update_and_branch_fork_but_rejects_rew
         "a non-fast-forward branch rewrite must never qualify"
     );
 }
+
+// Run the actual Nix gates against real Git objects, including the selector's
+// shallow fetch. A process-local URL rewrite keeps fixtures entirely local;
+// neither credentials, Cachix, Nix nor a hosted workflow is invoked.
+fn nix_gate_script(step: &str) -> String {
+    let workflow = include_str!("../.github/workflows/nix-flake.yml");
+    let heading = format!("      - name: {step}\n");
+    workflow
+        .split_once(&heading)
+        .expect("Nix step")
+        .1
+        .split_once("        run: |\n")
+        .expect("literal workflow gate")
+        .1
+        .lines()
+        .take_while(|line| line.is_empty() || line.starts_with("          "))
+        .map(|line| line.strip_prefix("          ").unwrap_or(line))
+        .collect::<Vec<_>>()
+        .join("\n")
+}
+
+fn run_nix_gate(repo: &Repo, head: &str, owner: bool, event: &str, native: bool) -> String {
+    let run = tempfile::tempdir().unwrap();
+    let output_path = run.path().join("github-output");
+    let step = if owner {
+        "Authorize native release publication"
+    } else {
+        "Gate to release merge"
+    };
+    let mut command = Command::new("bash");
+    command
+        .arg("-c")
+        .arg(nix_gate_script(step))
+        .current_dir(if owner { run.path() } else { &repo.0 })
+        .env("GITHUB_OUTPUT", &output_path)
+        .env("GITHUB_SHA", head)
+        .env("GITHUB_EVENT_NAME", event)
+        .env("GITHUB_REF", "refs/heads/master")
+        .env("GITHUB_ACTIONS", "true")
+        .env(
+            "RUNNER_ENVIRONMENT",
+            if native {
+                "github-hosted"
+            } else {
+                "self-hosted"
+            },
+        )
+        .env_remove("BUILDKITE")
+        .env_remove("BUILDKITE_BUILD_ID")
+        .env_remove("GITHUB_TOKEN")
+        .env_remove("GH_TOKEN")
+        .env_remove("CACHIX_AUTH_TOKEN")
+        .env("GIT_CONFIG_GLOBAL", "/dev/null")
+        .env("GIT_CONFIG_SYSTEM", "/dev/null")
+        .env("GIT_CONFIG_COUNT", "1")
+        .env(
+            "GIT_CONFIG_KEY_0",
+            format!("url.{}.insteadOf", repo.0.display()),
+        )
+        .env(
+            "GIT_CONFIG_VALUE_0",
+            "https://github.com/DecapodLabs/decapod.git",
+        );
+    let result = command.output().unwrap();
+    assert!(
+        result.status.success(),
+        "{step}: {}",
+        String::from_utf8_lossy(&result.stderr)
+    );
+    fs::read_to_string(output_path).unwrap()
+}
+
+#[test]
+fn nix_gates_recognize_squash_linear_and_ordinary_release_commits() {
+    for shape in [
+        "squash",
+        "linear",
+        "release-merge",
+        "ordinary",
+        "ordinary-merge",
+        "root",
+        "octopus",
+    ] {
+        let repo = Repo::new();
+        let base = repo.git(&["rev-parse", "HEAD"]);
+        let head = match shape {
+            "linear" => {
+                repo.version("0.107.3");
+                repo.commit("chore: release v0.107.3 (#1624)")
+            }
+            "squash" => {
+                repo.git(&["checkout", "-q", "-b", "release-topic"]);
+                repo.version("0.107.3");
+                repo.commit("release branch version bump");
+                repo.git(&["checkout", "-q", "master"]);
+                repo.git(&["merge", "--squash", "-q", "release-topic"]);
+                repo.commit("chore: release v0.107.3 (#1624)")
+            }
+            "ordinary" => repo.commit("fix: ordinary candidate"),
+            "release-merge" | "ordinary-merge" => {
+                repo.git(&["checkout", "-q", "-b", "topic"]);
+                repo.version("0.107.3");
+                repo.commit(if shape == "release-merge" {
+                    "chore: release v0.107.3"
+                } else {
+                    "fix: ordinary topic"
+                });
+                repo.git(&["checkout", "-q", "master"]);
+                repo.git(&[
+                    "merge",
+                    "--no-ff",
+                    "-q",
+                    "topic",
+                    "-m",
+                    "Merge pull request",
+                ]);
+                repo.git(&["rev-parse", "HEAD"])
+            }
+            "root" => repo.git(&[
+                "commit-tree",
+                "HEAD^{tree}",
+                "-m",
+                "chore: release v0.107.3",
+            ]),
+            "octopus" => {
+                let two = repo.commit("chore: release v0.107.3");
+                let three = repo.commit("third parent");
+                repo.git(&[
+                    "commit-tree",
+                    "HEAD^{tree}",
+                    "-p",
+                    &base,
+                    "-p",
+                    &two,
+                    "-p",
+                    &three,
+                    "-m",
+                    "chore: release v0.107.3",
+                ])
+            }
+            _ => unreachable!(),
+        };
+        // The native owner fetches the protected pushed tip, including root
+        // and octopus fixtures, rather than relying on dangling-object fetch.
+        repo.git(&["update-ref", "refs/heads/master", &head]);
+        let expected = matches!(shape, "squash" | "linear" | "release-merge");
+        assert_eq!(
+            run_nix_gate(&repo, &head, true, "push", true),
+            format!("publish={expected}\n"),
+            "owner/{shape}"
+        );
+        assert_eq!(
+            run_nix_gate(&repo, &head, false, "push", true),
+            format!("run={expected}\n"),
+            "build/{shape}"
+        );
+        // The protected owner still excludes sanitized imported runners and
+        // manual/PR events even when the commit itself is a release.
+        if expected {
+            assert_eq!(
+                run_nix_gate(&repo, &head, true, "push", false),
+                "publish=false\n"
+            );
+            assert_eq!(
+                run_nix_gate(&repo, &head, true, "pull_request", true),
+                "publish=false\n"
+            );
+            assert_eq!(
+                run_nix_gate(&repo, &head, true, "workflow_dispatch", true),
+                "publish=false\n"
+            );
+        }
+    }
+    // An explicit manual packaging proof remains supported without granting
+    // the separate authenticated publication owner.
+    let repo = Repo::new();
+    let head = repo.git(&["rev-parse", "HEAD"]);
+    assert_eq!(
+        run_nix_gate(&repo, &head, false, "workflow_dispatch", true),
+        "run=true\n"
+    );
+}
