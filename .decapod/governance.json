@@ -637,6 +637,14 @@
       "proof_refs": [
         "https://github.com/DecapodLabs/decapod/issues/1573"
       ]
+    },
+    {
+      "id": "issue-1573-file-13",
+      "summary": "test(runtime): measure repeated validation with established custody; file-by-file checkpoint, verification pending.",
+      "input_digest": "sha256:aa975a59df892ae59db92043bbc1391bd9a9306ecf455afbb8f1065a99bd4089",
+      "proof_refs": [
+        "https://github.com/DecapodLabs/decapod/issues/1573"
+      ]
     }
   ],
   "intents": {
@@ -710,7 +718,7 @@
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:35ef7939499e3976576fe0e67d8b87a25d6a8885f8b4942accf4a78292e60a64",
+      "artifact_hash": "sha256:83a2f325746ef6f5ececa526872c422ab2c18318b621e272016f8c105e42ba77",
       "checks": [],
       "current_phase": "implementation",
       "custody": {
@@ -810,10 +818,17 @@
             "intent_id": "intent:change_01M7BCGX392JKZBS50NX3PPP8A",
             "kind": "trajectory_step_recorded",
             "sequence": 15
+          },
+          {
+            "detail": "trajectory:branch_01M7BCGX5QABS0MJP84D9PV95G",
+            "event_id": "event:16",
+            "intent_id": "intent:change_01M7BCGX392JKZBS50NX3PPP8A",
+            "kind": "trajectory_step_recorded",
+            "sequence": 16
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 15,
+        "next_sequence": 16,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M7BCGX5QABS0MJP84D9PV95G": {
@@ -1009,6 +1024,22 @@
                 "validation_findings": [
                   "Hosted verification and exact-candidate publication readiness remain pending; no local tests run."
                 ]
+              },
+              {
+                "action": "implementation",
+                "custody_event_id": "event:16",
+                "observations": [
+                  "tests/validate_termination.rs",
+                  "https://github.com/DecapodLabs/decapod/issues/1573"
+                ],
+                "proof_refs": [],
+                "scope": [
+                  "issue-1573"
+                ],
+                "sequence": 16,
+                "validation_findings": [
+                  "Hosted verification and exact-candidate publication readiness remain pending; no local tests run."
+                ]
               }
             ]
           }
@@ -1030,7 +1061,8 @@
         ".decapod/managed/specs/INTERFACES.md",
         ".decapod/managed/specs/SECURITY.md",
         ".decapod/managed/specs/VALIDATION.md",
-        "docs/architecture/public-proof-collection.md"
+        "docs/architecture/public-proof-collection.md",
+        "tests/validate_termination.rs"
       ],
       "next_transitions": [
         "Refine plan and declare falsifiable checks"
