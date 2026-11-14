@@ -845,6 +845,14 @@
       "proof_refs": [
         "https://github.com/DecapodLabs/decapod/issues/1659"
       ]
+    },
+    {
+      "id": "issue-1659-file-39",
+      "summary": "docs(spec): bind broker budget controls to native regressions; file-by-file checkpoint, verification pending.",
+      "input_digest": "sha256:6544882c34e78e510a72e9c593d95c4d1783fb9dfef45dc044644e4006e55f0a",
+      "proof_refs": [
+        "https://github.com/DecapodLabs/decapod/issues/1659"
+      ]
     }
   ],
   "intents": {
@@ -885,22 +893,22 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Hosted GitHub Actions core jobs132330806628 (23.903s) and132301086296 exceeded the unchanged20s repeated-validation aggregate bound because the shared fixture re-enrolled an unknown identity for every iteration. Acquire named custody once before timing, assert session reuse, preserve all real checks and original10s/20s limits. No local tests.",
-          "reviewed_code_fingerprint": "9757823880a0e5cb1f9d9bdd6dcf4b33223c908bd70acd07a27b2d08db3defd3",
+          "reason": "Finish the supported bounded workload contract for the observed GitHub concurrency failure. No check is skipped or weakened:20 exact-once successes remain required and UNKNOWN remains unproven; default120s and validation10s/20s stay unchanged. Await fresh hosted verification; no local tests.",
+          "reviewed_code_fingerprint": "cc1e2adcab1891e517bacd1711b6390bdedda433459c15609d2ab5d1a10860e8",
           "spec_material_hash": "7393e220900cbc6f4ddeb0bd9b9835305dbeaa3e21494a74edc55487949f8123"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Hosted GitHub Actions core jobs132330806628 (23.903s) and132301086296 exceeded the unchanged20s repeated-validation aggregate bound because the shared fixture re-enrolled an unknown identity for every iteration. Acquire named custody once before timing, assert session reuse, preserve all real checks and original10s/20s limits. No local tests.",
-          "reviewed_code_fingerprint": "9757823880a0e5cb1f9d9bdd6dcf4b33223c908bd70acd07a27b2d08db3defd3",
-          "spec_material_hash": "09829c5df95306633263d0edd36dd78fd07c643e6939781caa40f5e6568a8cd3"
+          "reason": "Finish the supported bounded workload contract for the observed GitHub concurrency failure. No check is skipped or weakened:20 exact-once successes remain required and UNKNOWN remains unproven; default120s and validation10s/20s stay unchanged. Await fresh hosted verification; no local tests.",
+          "reviewed_code_fingerprint": "cc1e2adcab1891e517bacd1711b6390bdedda433459c15609d2ab5d1a10860e8",
+          "spec_material_hash": "ac4f7ce54573d54a8cbc493e114df49db7e56e47cbf5f4b40b007891a87b7f20"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Hosted GitHub Actions core jobs132330806628 (23.903s) and132301086296 exceeded the unchanged20s repeated-validation aggregate bound because the shared fixture re-enrolled an unknown identity for every iteration. Acquire named custody once before timing, assert session reuse, preserve all real checks and original10s/20s limits. No local tests.",
-          "reviewed_code_fingerprint": "9757823880a0e5cb1f9d9bdd6dcf4b33223c908bd70acd07a27b2d08db3defd3",
+          "reason": "Finish the supported bounded workload contract for the observed GitHub concurrency failure. No check is skipped or weakened:20 exact-once successes remain required and UNKNOWN remains unproven; default120s and validation10s/20s stay unchanged. Await fresh hosted verification; no local tests.",
+          "reviewed_code_fingerprint": "cc1e2adcab1891e517bacd1711b6390bdedda433459c15609d2ab5d1a10860e8",
           "spec_material_hash": "a19fd3a1497ea4b61d73ff910b7be5696baa3e2db029c515072d00eee838f4d0"
         }
       ],
@@ -912,13 +920,13 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1794633316Z"
+      "updated_at": "1794636961Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:489fd5bbe13b6acba9044a1dc21ea64bfb13ae9a5a914c848bf3fc2d3fbf6040",
+      "artifact_hash": "sha256:5584e0b9c805425209fef3a3d95b9785c86149ee77ef2f51a1c66719c1f83a09",
       "checks": [],
       "current_phase": "implementation",
       "custody": {
@@ -1207,10 +1215,17 @@
             "intent_id": "intent:change_01M7BCEHXJQR8HVADJF91PJKGD",
             "kind": "trajectory_step_recorded",
             "sequence": 42
+          },
+          {
+            "detail": "trajectory:branch_01M7BCEJ05EP527M18XXSF6GK6",
+            "event_id": "event:43",
+            "intent_id": "intent:change_01M7BCEHXJQR8HVADJF91PJKGD",
+            "kind": "trajectory_step_recorded",
+            "sequence": 43
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 42,
+        "next_sequence": 43,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M7BCEJ05EP527M18XXSF6GK6": {
@@ -1835,6 +1850,22 @@
                   "issue-1659"
                 ],
                 "sequence": 42,
+                "validation_findings": [
+                  "Hosted verification and exact-candidate publication readiness remain pending; no local tests run."
+                ]
+              },
+              {
+                "action": "implementation",
+                "custody_event_id": "event:43",
+                "observations": [
+                  ".decapod/managed/specs/INTERFACES.md",
+                  "https://github.com/DecapodLabs/decapod/issues/1659"
+                ],
+                "proof_refs": [],
+                "scope": [
+                  "issue-1659"
+                ],
+                "sequence": 43,
                 "validation_findings": [
                   "Hosted verification and exact-candidate publication readiness remain pending; no local tests run."
                 ]

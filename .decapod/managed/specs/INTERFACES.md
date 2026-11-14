@@ -1154,7 +1154,7 @@ field. Nothing in this operation authorizes a mutation, approval or completion.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `9757823880a0e5cb1f9d9bdd6dcf4b33223c908bd70acd07a27b2d08db3defd3`
+- Repository signal fingerprint: `cc1e2adcab1891e517bacd1711b6390bdedda433459c15609d2ab5d1a10860e8`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (234 files), `tests/` (232 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
@@ -1532,3 +1532,20 @@ changed inventoried check scripts, build/dependency definitions or provider
 inputs. Retain the accepted inventory or establish the reviewed revision on the
 target before revalidation. Additive commands under that inventory and first
 local adoption remain supported; no override or second policy store is added.
+
+## Group broker workload budget
+
+`src/decapod/core/group_broker.rs` accepts the optional
+`DECAPOD_GROUP_BROKER_REQUEST_BUDGET_MS` workload input on the Unix broker path.
+The default is 120000 milliseconds; valid explicit values are 1 through 300000.
+Malformed, zero and oversized client values fail before mutation admission.
+Native peers also face the hard maximum before a dedupe receipt can be created.
+The foreground acceptance window follows the originating request budget, and
+existing per-command limits and UNKNOWN/replay handling remain in force.
+
+`tests/group_broker.rs` declares its existing 300-second twenty-client workload
+at both the outer process boundary and broker request boundary, retains the
+all-twenty exact-once assertions, and exercises invalid inputs through the actual
+CLI with no task or receipt mutation. The native oversized-deadline regression
+traverses the real execution boundary. Fresh hosted verification is required;
+these declarations are not a successful validation observation.
