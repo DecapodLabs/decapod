@@ -14108,6 +14108,12 @@ fn run_infer_orientation(
             ));
         }
         let outcome = crate::core::mentor::reflection::submit(project_root, &request)?;
+        if request.escalation.is_some() {
+            // This function's legacy decision_gates are title-keyword hints.
+            // Typed escalation has checked canonical intent and actual plan /
+            // policy human gates; retain those in its authoritative outcome.
+            packet.decision_gates.clear();
+        }
         packet.next_action = outcome.next_action.clone();
         packet.reflection = Some(outcome);
     }
