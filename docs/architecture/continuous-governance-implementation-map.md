@@ -115,6 +115,12 @@ child CLI admission is explicitly `ci_local` and publication false. The combined
 fixture is useful evidence for the local mechanism; it is not a normal-forge,
 full plain-CLI A-H demonstration or a native LLM-host integration.
 
+`workspace::resolve_readiness_repository` currently discovers a known network
+upstream and the reviewed GitHub adapter. A standalone bare/local upstream is
+not admitted by that full CLI discovery path. This is a concrete remaining
+implementation boundary for an offline representative-repository demonstration;
+a fixture transport must not be substituted for that supported acceptance path.
+
 A supported runtime can call existing context, scope/admission, execution-state,
 validation and publication interfaces. It must actually invoke them. The kernel
 owns the resulting decisions, but it cannot intercept arbitrary conversation or
@@ -127,8 +133,8 @@ semantics (`core/dactyl.rs`, `core/db.rs`). The old no-SQLite-engine condition i
 #1220 is not met by a facade or registry upgrade. This convergence work does not
 silently replace that accepted foundation with another engine. Cloud authority,
 revocation, server deployment and owner repair require their own verified
-contracts; cloud connectivity is not a prerequisite for legitimate solo local
-work. Billing, dashboards and hosted runners remain outside this effort.
+contracts; Propodus login is not required for local solo work. Complete offline-local
+upstream readiness admission remains the separate gap described above. Billing, dashboards and hosted runners remain outside this effort.
 
 ## Remaining end-to-end delivery
 
