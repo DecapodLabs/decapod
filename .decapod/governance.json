@@ -635,6 +635,14 @@
       "proof_refs": [
         "https://github.com/DecapodLabs/decapod/issues/1626"
       ]
+    },
+    {
+      "id": "issue1626-release-file-11",
+      "summary": "fix(proof): reconcile the reviewed Nix workflow contract without relaxing checks; implementation checkpoint, hosted verification pending.",
+      "input_digest": "sha256:f017d365f26f6fb4b91c75631db67d000e9a988a044d2520d47f07f4917654dc",
+      "proof_refs": [
+        "https://github.com/DecapodLabs/decapod/issues/1626"
+      ]
     }
   ],
   "intents": {
@@ -708,14 +716,14 @@
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:f3f75fa3b13c814d40a458704c98e10f3f20bee89ed772a3fc7ad424eaae7737",
+      "artifact_hash": "sha256:5c167403b544ff20d2d4707db27d3a70975930bcec7d5023345abc711036f9f4",
       "checks": [
         {
           "name": "hosted-candidate",
           "status": "partial"
         }
       ],
-      "current_phase": "validation",
+      "current_phase": "implementation",
       "custody": {
         "events": [
           {
@@ -806,10 +814,17 @@
             "intent_id": "intent:change_01M7E32W7EEDSJFJ6J3WPTZZBP",
             "kind": "trajectory_step_recorded",
             "sequence": 14
+          },
+          {
+            "detail": "trajectory:branch_01M7E32WAD102GEWSSGTDX5P73",
+            "event_id": "event:15",
+            "intent_id": "intent:change_01M7E32W7EEDSJFJ6J3WPTZZBP",
+            "kind": "trajectory_step_recorded",
+            "sequence": 15
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 14,
+        "next_sequence": 15,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M7E32WAD102GEWSSGTDX5P73": {
@@ -993,6 +1008,22 @@
                 "validation_findings": [
                   "No local tests. Buildkite evidence is not collected. Accepted native/provider requirements stay enabled. Actual historical cache availability requires separate native packaging/publication evidence."
                 ]
+              },
+              {
+                "action": "implementation",
+                "custody_event_id": "event:15",
+                "observations": [
+                  "src/decapod/core/readiness_profile.rs",
+                  "https://github.com/DecapodLabs/decapod/issues/1626"
+                ],
+                "proof_refs": [],
+                "scope": [
+                  "root"
+                ],
+                "sequence": 15,
+                "validation_findings": [
+                  "Implementation in progress; exact-candidate hosted checks pending; no local tests or Buildkite execution."
+                ]
               }
             ]
           }
@@ -1014,6 +1045,7 @@
         ".decapod/managed/specs/SECURITY.md",
         ".decapod/managed/specs/VALIDATION.md",
         ".github/workflows/nix-flake.yml",
+        "src/decapod/core/readiness_profile.rs",
         "tests/release_metadata_policy.rs"
       ],
       "next_transitions": [
