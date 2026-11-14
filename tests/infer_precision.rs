@@ -219,7 +219,7 @@ fn deterministic_escalation_harness_investigates_before_asking_and_preserves_pub
         "The existing adapter uses fresh reads.\n",
     )
     .unwrap();
-    let added = run_cmd(root, &["todo", "add", "Choose the read convention"]);
+    let added = run_cmd(root, &["todo", "add", "Choose the adapter architecture"]);
     let task = extract_json(&added)["id"].as_str().unwrap().to_string();
     assert!(
         run_cmd(root, &["todo", "claim", "--id", &task])
@@ -270,7 +270,9 @@ fn deterministic_escalation_harness_investigates_before_asking_and_preserves_pub
         ],
     );
     assert!(first.status.success());
-    let first = extract_json(&first)["reflection"].clone();
+    let packet = extract_json(&first);
+    assert!(packet["decision_gates"].as_array().unwrap().is_empty());
+    let first = packet["reflection"].clone();
     assert_eq!(first["disposition"], "reflect");
     assert_eq!(first["escalation"]["human_escalation_permitted"], false);
     assert_eq!(first["challenge"]["sources"][0]["ref_path"], "README.md");

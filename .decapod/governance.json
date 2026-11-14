@@ -596,6 +596,14 @@
       "proof_refs": [
         "src/decapod/lib.rs"
       ]
+    },
+    {
+      "id": "convergence-contract-1",
+      "summary": "Integrate issue1691 escalation contract in tests/infer_precision.rs; distinguish agent investigation from human authority; validation pending",
+      "input_digest": "sha256:a59745ff8b9337d30d32a5fc3cb62365ecc2cd23c99ef0d6df282752119e344a",
+      "proof_refs": [
+        "tests/infer_precision.rs"
+      ]
     }
   ],
   "intents": {
