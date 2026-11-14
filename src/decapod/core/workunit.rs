@@ -1342,6 +1342,15 @@ pub fn write_workunit_checked(
                 "prepared snapshots cannot alter intent or proof authority; use the owned proof/transition operations",
             ));
         }
+        if manifest.status != previous.manifest.status
+            && (manifest.status == WorkUnitStatus::Verified
+                || previous.manifest.status == WorkUnitStatus::Verified)
+        {
+            return Err(journal_error(
+                "WORKUNIT_DOMAIN_TRANSITION_REQUIRED",
+                "prepared snapshots cannot cross VERIFIED; use the owned status transition so proof custody is checked or cleared",
+            ));
+        }
         if !can_transition(&previous.manifest.status, &manifest.status) {
             return Err(journal_error(
                 "WORKUNIT_DOMAIN_TRANSITION_REQUIRED",
