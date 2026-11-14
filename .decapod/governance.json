@@ -719,6 +719,14 @@
       "proof_refs": [
         "tests/infer_precision.rs"
       ]
+    },
+    {
+      "id": "convergence-reviewed-5",
+      "summary": "Refine tests/unit/core/reflection_tests.rs after review: preserve actual authority, separate inference cues, observe fixtures and document proof limits",
+      "input_digest": "sha256:7ecbcbc1835720d80c588d93ea274674e21fa5e173feb1e55a5b72bed4ef899a",
+      "proof_refs": [
+        "tests/unit/core/reflection_tests.rs"
+      ]
     }
   ],
   "intents": {

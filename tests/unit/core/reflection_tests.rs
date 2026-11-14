@@ -629,13 +629,25 @@ fn deterministic_agent_simulation_reduces_routine_escalation_without_claiming_se
     let mut rounds = 0;
     let mut retained_bytes = 0;
     let mut corrected = 0;
+    let mut baseline_interruptions = 0;
+    let mut governed_interruptions = 0;
     for kind in [
         escalation::Uncertainty::DiscoverableInformation,
         escalation::Uncertainty::InferableDecision,
+        escalation::Uncertainty::VerifiableUncertainty,
     ] {
         let (temp, request) = escalation_fixture(kind);
+        // Explicit baseline mock policy: delegate every proposed question.
+        baseline_interruptions += usize::from(request.escalation.is_some());
         let before = bytes(temp.path()).len();
         let first = submit(temp.path(), &request).unwrap();
+        governed_interruptions += usize::from(
+            first
+                .escalation
+                .as_ref()
+                .unwrap()
+                .human_escalation_permitted,
+        );
         assert_eq!(first.disposition, Disposition::Reflect);
         assert!(
             !first
@@ -655,6 +667,13 @@ fn deterministic_agent_simulation_reduces_routine_escalation_without_claiming_se
         let mut revision = next(&request, &first, "investigated");
         supported_resolution(&mut revision);
         let improved = submit(temp.path(), &revision).unwrap();
+        governed_interruptions += usize::from(
+            improved
+                .escalation
+                .as_ref()
+                .unwrap()
+                .human_escalation_permitted,
+        );
         assert_eq!(improved.disposition, Disposition::Proceed);
         assert_eq!(improved.progress, Some(Progress::ReducedObligations));
         let assessment = improved.escalation.as_ref().unwrap();
@@ -672,12 +691,14 @@ fn deterministic_agent_simulation_reduces_routine_escalation_without_claiming_se
         retained_bytes += bytes(temp.path()).len() - before;
         corrected += 1;
     }
-    measurement(json!({"case":"escalation_mock_comparison", "fixtures":2,
-        "baseline_unnecessary_human_requests":2, "governed_unnecessary_human_requests":0,
+    measurement(
+        json!({"case":"escalation_mock_comparison", "fixtures":corrected,
+        "baseline_unnecessary_human_requests":baseline_interruptions, "governed_unnecessary_human_requests":governed_interruptions,
         "admissible_decisions_without_human":corrected, "convergence_rounds":rounds,
         "elapsed_us":start.elapsed().as_micros(), "governance_growth_bytes":retained_bytes,
         "semantic_reasoning_improvement_proven":false,
-        "scope":"paired deterministic fixture decisions; no real model or completed engineering task"}));
+        "scope":"paired deterministic fixture decisions; no real model or completed engineering task"}),
+    );
 }
 
 #[test]
@@ -849,6 +870,31 @@ fn omitted_sources_are_bound_to_an_existing_repository_investigation_path() {
         submit(temp.path(), &revised).unwrap().disposition,
         Disposition::Proceed
     );
+}
+
+#[test]
+fn an_unrelated_approval_cannot_resolve_a_missing_business_requirement() {
+    let (temp, mut request) = escalation_fixture(escalation::Uncertainty::IrreducibleAmbiguity);
+    let store = crate::core::store::Store {
+        kind: crate::core::store::StoreKind::Repo,
+        root: temp.path().join(".decapod/data"),
+    };
+    crate::plugins::policy::initialize_policy_db(&store.root).unwrap();
+    crate::plugins::policy::approve_action(
+        &store,
+        "todo.archive",
+        Some(&request.task_id),
+        "operator",
+        "global",
+    )
+    .unwrap();
+    request.escalation.as_mut().unwrap().authority = Some(escalation::AuthorityRequest {
+        command: "todo.archive".into(),
+        target: Some(request.task_id.clone()),
+    });
+    let outcome = submit(temp.path(), &request).unwrap();
+    assert_eq!(outcome.disposition, Disposition::Reflect);
+    assert!(!outcome.escalation.unwrap().human_escalation_permitted);
 }
 
 #[test]
