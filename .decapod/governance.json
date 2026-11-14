@@ -1335,6 +1335,14 @@
       "proof_refs": [
         "src/decapod/core/mentor/reflection.rs"
       ]
+    },
+    {
+      "id": "convergence-authority-refinement-tests",
+      "summary": "Exercise omitted operation and target discovery, fixed round budget and rejection of dropped or replaced authority",
+      "input_digest": "sha256:1210374bd0fdd12c12ba16cfbc0222d64fe33f7cb3b7f250a47de5b150956109",
+      "proof_refs": [
+        "tests/unit/core/reflection_tests.rs"
+      ]
     }
   ],
   "intents": {

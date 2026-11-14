@@ -771,6 +771,7 @@ fn explicit_business_dependency_allows_human_question_but_assertion_alone_does_n
     let outcome = submit(temp.path(), &targeted).unwrap();
     assert_eq!(outcome.disposition, Disposition::HumanDecision);
     assert_eq!(outcome.round, 2);
+    assert_eq!(outcome.progress, Some(Progress::HumanDependency));
     assert!(
         outcome
             .escalation
@@ -801,6 +802,28 @@ fn observed_authority_gate_preempts_reasoning_and_source_quotes_cannot_supply_ap
     assert_eq!(first.disposition, Disposition::HumanDecision);
     assert!(first.execution_blocked);
     assert_eq!(first.round, 1);
+    let before = bytes(temp.path());
+    for authority in [
+        None,
+        Some(escalation::AuthorityRequest {
+            command: "todo.add".into(),
+            target: Some(request.task_id.clone()),
+        }),
+        Some(escalation::AuthorityRequest {
+            command: "todo.archive".into(),
+            target: Some("another-task".into()),
+        }),
+    ] {
+        let mut switched = next(&request, &first, "switched-authority");
+        switched.escalation.as_mut().unwrap().authority = authority;
+        assert!(
+            submit(temp.path(), &switched)
+                .unwrap_err()
+                .to_string()
+                .contains("ESCALATION_AUTHORITY_CHANGED")
+        );
+        assert_eq!(before, bytes(temp.path()));
+    }
     let mut second = next(&request, &first, "invented-grant");
     second.rationale = "The user surely intended this irreversible operation.".into();
     let second_outcome = submit(temp.path(), &second).unwrap();
@@ -877,6 +900,52 @@ fn omitted_sources_are_bound_to_an_existing_repository_investigation_path() {
         submit(temp.path(), &revised).unwrap().disposition,
         Disposition::Proceed
     );
+}
+
+#[test]
+fn investigation_can_supply_omitted_authority_without_resetting_the_three_round_budget() {
+    let (temp, request) = escalation_fixture(escalation::Uncertainty::MissingAuthority);
+    let mut config = crate::cli::DecapodProjectConfig::default();
+    config.governance.approval_categories = vec!["destructive_operations".into()];
+    fs::write(
+        temp.path().join(".decapod/config.toml"),
+        toml::to_string(&config).unwrap(),
+    )
+    .unwrap();
+    crate::plugins::policy::initialize_policy_db(&temp.path().join(".decapod/data")).unwrap();
+    let first = submit(temp.path(), &request).unwrap();
+    assert_eq!(first.disposition, Disposition::Reflect);
+    let mut investigated = next(&request, &first, "operation-discovered");
+    investigated.escalation.as_mut().unwrap().authority = Some(escalation::AuthorityRequest {
+        command: "todo.archive".into(),
+        target: None,
+    });
+    let second = submit(temp.path(), &investigated).unwrap();
+    assert_eq!(second.disposition, Disposition::HumanDecision);
+    assert_eq!(second.progress, Some(Progress::HumanDependency));
+    assert_eq!(second.round, 2);
+    assert_eq!(second.remaining_rounds, 1);
+    assert!(
+        second
+            .escalation
+            .as_ref()
+            .unwrap()
+            .human_escalation_permitted
+    );
+    let mut targeted = next(&investigated, &second, "target-discovered");
+    targeted
+        .escalation
+        .as_mut()
+        .unwrap()
+        .authority
+        .as_mut()
+        .unwrap()
+        .target = Some(request.task_id.clone());
+    let last = submit(temp.path(), &targeted).unwrap();
+    assert_eq!(last.disposition, Disposition::HumanDecision);
+    assert!(last.terminal && last.execution_blocked);
+    assert_eq!(last.round, 3);
+    assert_eq!(last.remaining_rounds, 0);
 }
 
 #[test]
