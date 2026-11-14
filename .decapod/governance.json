@@ -628,6 +628,14 @@
       "proof_refs": [
         "docs/agent/state-model.md"
       ]
+    },
+    {
+      "id": "convergence-contract-5",
+      "summary": "Integrate issue1691 escalation contract in docs/architecture/bounded-reflection.md; distinguish agent investigation from human authority; validation pending",
+      "input_digest": "sha256:cf167839cb1d3a4647d3b6959cdcddeaebbd2cc0d0cf7d99129094bc78176844",
+      "proof_refs": [
+        "docs/architecture/bounded-reflection.md"
+      ]
     }
   ],
   "intents": {
