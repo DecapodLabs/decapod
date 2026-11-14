@@ -327,7 +327,7 @@ fn uncertain_legacy_todo_remains_guarded_before_import_or_removal() {
             .unwrap();
         }
         let before = fs::read(&legacy).unwrap();
-        let error = migrate_consolidate_single_datastore(root.path()).unwrap_err();
+        let error = check_and_migrate_with_backup_report(root.path(), |_| Ok(())).unwrap_err();
         assert!(
             error
                 .to_string()
@@ -335,6 +335,12 @@ fn uncertain_legacy_todo_remains_guarded_before_import_or_removal() {
             "{suffix}: {error}"
         );
         assert_eq!(fs::read(&legacy).unwrap(), before);
+        if suffix != "populated" {
+            assert_eq!(
+                fs::read(data.join(format!("{}{suffix}", schemas::TODO_DB_NAME))).unwrap(),
+                b"evidence"
+            );
+        }
         assert_eq!(
             crate::core::todo::task_journal_verify(&data).unwrap(),
             canonical_before
