@@ -783,6 +783,14 @@
       "proof_refs": [
         "src/decapod/core/mentor/reflection.rs"
       ]
+    },
+    {
+      "id": "convergence-spec-security",
+      "summary": "Document bounded escalation security guarantees and actual proof limits",
+      "input_digest": "sha256:1636f9e6e16d1e83d29d4d9b259c6109068870d901906e30854af02826023c7f",
+      "proof_refs": [
+        ".decapod/managed/specs/SECURITY.md"
+      ]
     }
   ],
   "intents": {

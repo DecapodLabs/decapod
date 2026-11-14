@@ -1,5 +1,18 @@
 # Security
 
+## Escalation admission preserves authority (#1690–#1692)
+
+`core/mentor/reflection/escalation.rs` observes existing policy and approval
+state; it issues no grant, changes no role and never promotes inferred intent
+into authority. A source predicate proves only current bytes, not provenance,
+semantic truth, test execution or authorization. Unrelated approvals and human
+questions cannot resolve another missing requirement. Task/custody bindings,
+source freshness, continuation tokens, immutable subjects and the existing
+three-round/64 KiB journal bounds protect the invoked protocol. Proposed question,
+investigation, decision and quote bodies remain transient, with digests retained
+for retry integrity; no private reasoning transcript is requested or stored.
+Actual mutation, verifier, validation and publication guards remain independent.
+
 Absence of `.git` does not establish checkout admission, including outside
 `.decapod/workspaces`. `init --no-git` enables prerequisite diagnostics only.
 The partial project-check route handles that compatibility explicitly; workspace
