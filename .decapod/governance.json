@@ -572,6 +572,14 @@
       "proof_refs": [
         "src/decapod/core/governed_transition.rs"
       ]
+    },
+    {
+      "id": "convergence-source-3",
+      "summary": "Implement issue1690 bounded escalation extension in tests/unit/core/reflection_tests.rs; preserve existing authority and proof; execution verification pending",
+      "input_digest": "sha256:0cab77828ad3614935f7e81cbb6fb3ea2b03c5bd181dc623f0262661700d07c7",
+      "proof_refs": [
+        "tests/unit/core/reflection_tests.rs"
+      ]
     }
   ],
   "intents": {
