@@ -352,7 +352,7 @@ These declarations select authoring and proof obligations; they do not attest im
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `47dbe380a09344673e43ed3e4394564d9a9a89ccb22998e1cfbf49c760499485`
+- Repository signal fingerprint: `0aa343d6ff5346e283cc22ec80974c060944c3009863701d40965a0b3023c8b5`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (234 files), `tests/` (232 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
@@ -567,6 +567,18 @@ completed the complete1658 provider contract without identity substitution. This
 follow-up records the actual observation and separately validates its own task
 and current candidate; a prior task's proof never completes this task by itself.
 No new credential path, provider fallback, receipt authority or local tests.
+
+## Mixed-store recovery (#1657)
+
+Provide explicit, versioned and idempotent recovery for a nonempty legacy TODO
+store beside valid canonical task-journal state. Reuse datastore lifecycle,
+maintenance authority and journal verification. Preserve original files, task
+identities, chronology, custody/proof bindings and unknown outcomes. Diagnose
+equivalence, divergence and corruption independently; do not implicitly merge
+contradictory state, delete legacy input, reconstruct missing proof, or replay an
+unknown mutation. Ordinary operation resumes only after an inspectable safe
+recovery result. The empty-stub path is a bounded first repair; general nonempty reconciliation
+remains unimplemented. Hosted regressions must exercise real store and recovery boundaries.
 
 ## Storage convergence follow-through (#1630)
 

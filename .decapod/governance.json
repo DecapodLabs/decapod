@@ -653,6 +653,14 @@
       "proof_refs": [
         "https://github.com/DecapodLabs/decapod/issues/1573"
       ]
+    },
+    {
+      "id": "issue-1573-integrate-e8f8848d",
+      "summary": "Integrate accepted master e8f8848d19a02ad8e2a580cf7722fe4ff9342221 after merged bootstrap repair PR1683 with issue1573. Preserve current task journal/checkpoints and authored specs from both branches; regenerate projections through the kernel. Previous candidate readiness does not apply; no local tests.",
+      "input_digest": "sha256:e68af8cfea025579b50b558e67ecb27f99b685e89e18337c84d6e434fca4e137",
+      "proof_refs": [
+        "https://github.com/DecapodLabs/decapod/pull/1683"
+      ]
     }
   ],
   "intents": {
@@ -693,23 +701,23 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Hosted GitHub Actions core jobs132330806628 (23.903s) and132301086296 exceeded the unchanged20s repeated-validation aggregate bound because the shared fixture re-enrolled an unknown identity for every iteration. Acquire named custody once before timing, assert session reuse, preserve all real checks and original10s/20s limits. No local tests.",
-          "reviewed_code_fingerprint": "47dbe380a09344673e43ed3e4394564d9a9a89ccb22998e1cfbf49c760499485",
-          "spec_material_hash": "eace639381505e6def0a254fac6e2acd2d7f3175e13d498a8a76c84583c154c9"
+          "reason": "Integrate accepted master e8f8848d19a02ad8e2a580cf7722fe4ff9342221 after merged bootstrap repair PR1683 with issue1573. Preserve current task journal/checkpoints and authored specs from both branches; regenerate projections through the kernel. Previous candidate readiness does not apply; no local tests.",
+          "reviewed_code_fingerprint": "0aa343d6ff5346e283cc22ec80974c060944c3009863701d40965a0b3023c8b5",
+          "spec_material_hash": "9456e5a2a100c81ec73b91a51702054e5008387a2a74a640c850d59aa6568683"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Hosted GitHub Actions core jobs132330806628 (23.903s) and132301086296 exceeded the unchanged20s repeated-validation aggregate bound because the shared fixture re-enrolled an unknown identity for every iteration. Acquire named custody once before timing, assert session reuse, preserve all real checks and original10s/20s limits. No local tests.",
-          "reviewed_code_fingerprint": "47dbe380a09344673e43ed3e4394564d9a9a89ccb22998e1cfbf49c760499485",
-          "spec_material_hash": "39b12d81de3fce2ec075e00288ad0168a747ccbc403bae0c9f7fb08e123ffaae"
+          "reason": "Integrate accepted master e8f8848d19a02ad8e2a580cf7722fe4ff9342221 after merged bootstrap repair PR1683 with issue1573. Preserve current task journal/checkpoints and authored specs from both branches; regenerate projections through the kernel. Previous candidate readiness does not apply; no local tests.",
+          "reviewed_code_fingerprint": "0aa343d6ff5346e283cc22ec80974c060944c3009863701d40965a0b3023c8b5",
+          "spec_material_hash": "6c305b32d966ba18506b820849ddc3874deac1ca34143028d9e12c6d3bfbb154"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Hosted GitHub Actions core jobs132330806628 (23.903s) and132301086296 exceeded the unchanged20s repeated-validation aggregate bound because the shared fixture re-enrolled an unknown identity for every iteration. Acquire named custody once before timing, assert session reuse, preserve all real checks and original10s/20s limits. No local tests.",
-          "reviewed_code_fingerprint": "47dbe380a09344673e43ed3e4394564d9a9a89ccb22998e1cfbf49c760499485",
-          "spec_material_hash": "1d22ca331c3ede5a4add9e28bacfa070a32f7376b52e08ac7fbe3af720e7d586"
+          "reason": "Integrate accepted master e8f8848d19a02ad8e2a580cf7722fe4ff9342221 after merged bootstrap repair PR1683 with issue1573. Preserve current task journal/checkpoints and authored specs from both branches; regenerate projections through the kernel. Previous candidate readiness does not apply; no local tests.",
+          "reviewed_code_fingerprint": "0aa343d6ff5346e283cc22ec80974c060944c3009863701d40965a0b3023c8b5",
+          "spec_material_hash": "68192af3f35c6f1dbeeb584155ff0a2f5b627e6e1ac61d16cacdb23d1a1718b4"
         }
       ],
       "state": "APPROVED",
@@ -720,13 +728,13 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1794633528Z"
+      "updated_at": "1794639194Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:25153ac8db90122d1c904d27f0bc2c2adcd65889f3f2e6fed3307488a5b38f0e",
+      "artifact_hash": "sha256:b347dbc6f05dff719bf27abbc84591ed2c32ed9d05f2dadebbaa0e278e3bc0e0",
       "checks": [],
       "current_phase": "implementation",
       "custody": {
@@ -840,10 +848,17 @@
             "intent_id": "intent:change_01M7BCGX392JKZBS50NX3PPP8A",
             "kind": "trajectory_step_recorded",
             "sequence": 17
+          },
+          {
+            "detail": "trajectory:branch_01M7BCGX5QABS0MJP84D9PV95G",
+            "event_id": "event:18",
+            "intent_id": "intent:change_01M7BCGX392JKZBS50NX3PPP8A",
+            "kind": "trajectory_step_recorded",
+            "sequence": 18
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 17,
+        "next_sequence": 18,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M7BCGX5QABS0MJP84D9PV95G": {
@@ -1071,6 +1086,21 @@
                 "validation_findings": [
                   "Hosted verification and exact-candidate publication readiness remain pending; no local tests run."
                 ]
+              },
+              {
+                "action": "implementation",
+                "custody_event_id": "event:18",
+                "observations": [
+                  "https://github.com/DecapodLabs/decapod/pull/1683"
+                ],
+                "proof_refs": [],
+                "scope": [
+                  "issue-1573"
+                ],
+                "sequence": 18,
+                "validation_findings": [
+                  "Integrate accepted master e8f8848d19a02ad8e2a580cf7722fe4ff9342221 after merged bootstrap repair PR1683 with issue1573. Preserve current task journal/checkpoints and authored specs from both branches; regenerate projections through the kernel. Previous candidate readiness does not apply; no local tests."
+                ]
               }
             ]
           }
@@ -1082,6 +1112,7 @@
         "https://github.com/DecapodLabs/decapod/issues/1573",
         "https://github.com/DecapodLabs/decapod/pull/1675",
         "https://github.com/DecapodLabs/decapod/pull/1682",
+        "https://github.com/DecapodLabs/decapod/pull/1683",
         "https://github.com/DecapodLabs/decapod/pull/1685"
       ],
       "inspected_files": [],
@@ -1109,6 +1140,7 @@
       "unresolved_assumptions": [
         "Hosted verification and exact-candidate publication readiness remain pending; no local tests run.",
         "Integrate accepted master 9767ae9a3ff1c7452101482218a17c55cf569b71 after accepted release v0.144.5 with issue1573. Preserve current task journal/checkpoints and authored specs from both branches; regenerate projections through the kernel. Previous candidate readiness does not apply; no local tests.",
+        "Integrate accepted master e8f8848d19a02ad8e2a580cf7722fe4ff9342221 after merged bootstrap repair PR1683 with issue1573. Preserve current task journal/checkpoints and authored specs from both branches; regenerate projections through the kernel. Previous candidate readiness does not apply; no local tests.",
         "Integrate accepted master f779e39111ec8b3c8c41569f68a3a7604df167e7 and merged1675 accepted-policy hardening with issue1573. Preserve current task journal/checkpoints and authored specs from both branches; regenerate projections through the kernel. Previous candidate readiness does not apply; no local tests.",
         "Integrate accepted master fded2dd0b5f02f9c874301d4b98cfd59ad188357 after merged PR1682 native inventory evidence with issue1573. Preserve current task journal/checkpoints and authored specs from both branches; regenerate projections through the kernel. Previous candidate readiness does not apply; no local tests."
       ]
