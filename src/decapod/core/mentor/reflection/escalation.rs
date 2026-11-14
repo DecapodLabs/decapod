@@ -341,7 +341,9 @@ pub(super) fn assess(
             else if existing_human && !matches_human_question { ReasonCode::ProposedQuestionDoesNotMatchGate }
             else if existing_human { ReasonCode::ExistingHumanDependency }
             else if authority_available { ReasonCode::AuthorityAvailable }
-            else if observed_facts > 0 { ReasonCode::ObservedSourcePredicate }
+            else if observed_facts > 0 && matches!(proposal.uncertainty,
+                Uncertainty::DiscoverableInformation | Uncertainty::InferableDecision | Uncertainty::VerifiableUncertainty)
+                { ReasonCode::ObservedSourcePredicate }
             else { match proposal.uncertainty {
                 Uncertainty::DiscoverableInformation => ReasonCode::DiscoverableSource,
                 Uncertainty::InferableDecision => ReasonCode::DecisionEvidenceAvailable,

@@ -903,6 +903,14 @@
       "proof_refs": [
         "tests/unit/core/reflection_tests.rs"
       ]
+    },
+    {
+      "id": "convergence-authority-reason",
+      "summary": "Report unresolved authority truthfully even when source byte facts are observed",
+      "input_digest": "sha256:36abd06df9e6a4119392085ae2d6fd02b472dd1844e10db13dcbf9a2a2bdb609",
+      "proof_refs": [
+        "src/decapod/core/mentor/reflection/escalation.rs"
+      ]
     }
   ],
   "intents": {
