@@ -1751,6 +1751,14 @@
       "proof_refs": [
         ".decapod/managed/specs/VALIDATION.md"
       ]
+    },
+    {
+      "id": "convergence-question-binding-manifestjson",
+      "summary": "Refresh source identity for complete canonical human-question matching",
+      "input_digest": "sha256:9e54dc9b9c1430e5c09d61006695fbbb66a36d4b1decc60932f5612397626b60",
+      "proof_refs": [
+        ".decapod/managed/specs/.manifest.json"
+      ]
     }
   ],
   "intents": {
