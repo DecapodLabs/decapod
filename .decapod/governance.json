@@ -1095,6 +1095,14 @@
       "proof_refs": [
         "https://buildkite.com/decapodlabs/decapod/builds/10625"
       ]
+    },
+    {
+      "id": "convergence-accepted1455",
+      "summary": "Integrate accepted v0.145.5 with matching official generated entrypoints and preserve both authored contract scopes",
+      "input_digest": "sha256:50d00568d366e97646f60d1b63bd835b807a37c69961bd602a0b6ada1827e910",
+      "proof_refs": [
+        "docs/architecture/public-proof-collection.md"
+      ]
     }
   ],
   "intents": {

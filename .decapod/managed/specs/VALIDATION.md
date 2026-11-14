@@ -1922,6 +1922,16 @@ Exercise actual `sqlite_maintenance` CLI/RPC worktree cases and storage-lock reg
 
 This checkpoint preserves original source and tests before integration with current master. Preserve failure history and all assertions; use hosted CI for verification, without local tests or running the maintenance candidate against the live machine datastore. Prior test observations do not prove the new integration.
 
+## Bounded independent collection (#1573)
+
+Existing `github_quota` tests cover discovery headroom/direct Buildkite polls,
+exhaustion/unknown reset, malformed/duplicate/missing/overflow hints and deadline/
+cancellation preservation. Adapter tests preserve bounded failure information.
+The real complete1658 observation and five Buildkite workflow executions are
+documented separately from mechanism tests and historical403 failures. This
+dedicated closure candidate still requires its own hosted suite and full native
+publication gate against current accepted master. No local tests were run.
+
 ## Required local maintenance acceptance (#1568)
 
 The required `cli_contracts` target now includes `tests/sqlite_maintenance.rs`;
@@ -2098,5 +2108,22 @@ changing required checks or provider policy. Prior success for
 `331f6d748a44e91a4fd31c7af6d59372acd17eaa` against
 `e8f8848d19a02ad8e2a580cf7722fe4ff9342221` is historical evidence only. Fresh
 GitHub Actions must evaluate the integrated candidate. No local tests run;
+Buildkite is excluded at the user's direction and full native publication
+readiness remains unproven.
+
+## PR1680 integration with accepted v0.145.4
+
+Integrate accepted master `5002f1db286f4d41c92ce4d4b4a58468bf55aa3b`, preserving
+the accepted canonical workunit producer, diagnostic admission rules, published
+SDK and required SQLite/CI selection coverage. Collector quota hints remain
+bounded scheduling inputs; denied public requests cannot acquire authority from
+a diagnostic client, a header or an unrelated successful job.
+
+Official Decapod v0.145.4 regenerates release-bound entrypoints, the managed image
+and projections. Reconcile the reviewed inventory without changing required
+checks or provider policy. The documented v0.144.3 provider collection and the
+prior documentation candidate `725b4114595bf17a36568afbe164ce5c9f7b9cf4` against
+`e8f8848d19a02ad8e2a580cf7722fe4ff9342221` remain historical observations. Fresh
+GitHub Actions must evaluate this integrated candidate. No local tests run;
 Buildkite is excluded at the user's direction and full native publication
 readiness remains unproven.

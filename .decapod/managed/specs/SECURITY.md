@@ -979,6 +979,14 @@ Do not delete lock sidecars, signal foreign processes, steal claims, replay ambi
 
 Worktree policy edits cannot self-grant capabilities. db.recover remains owner-only and cloud authority fails closed when it cannot be authenticated. Retain non-destructive lock diagnosis, current-process-only release and confined backups. Coordination receipts are not independent acceptance proof.
 
+## Bounded independent collection (#1573)
+
+Only successful bounded quota headers affect polling. Denied requests remain
+denials: there is no automatic alternate identity, authenticated fallback or
+provider substitution. Hints cannot extend the deadline, erase cancellation,
+authorize an endpoint or manufacture an execution receipt. Preserved real
+complete collection on1658 does not silently complete this separate task.
+
 ## Required native dependencies cannot silently pass (#1568)
 
 The required maintenance test helper now fails when native SQLite is missing;
