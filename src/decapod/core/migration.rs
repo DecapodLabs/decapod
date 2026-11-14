@@ -627,9 +627,30 @@ fn schema_upgrade_pending(data_root: &Path) -> Result<bool, error::DecapodError>
 }
 
 fn legacy_database_artifact_exists(data_root: &Path, name: &str) -> bool {
+    if name == schemas::TODO_DB_NAME && inert_legacy_todo_placeholder(data_root) {
+        return false;
+    }
+    if name == schemas::TODO_DB_NAME {
+        return ["", "-wal", "-shm", "-journal"].iter().any(|suffix| {
+            !matches!(fs::symlink_metadata(data_root.join(format!("{name}{suffix}"))),
+                Err(error) if error.kind() == std::io::ErrorKind::NotFound)
+        });
+    }
     data_root.join(name).exists()
         || data_root.join(format!("{name}-wal")).exists()
         || data_root.join(format!("{name}-shm")).exists()
+}
+
+/// A zero-byte regular TODO placeholder carries no SQLite authority. Do not
+/// open it (which can populate it), import it or remove it. Any sidecar,
+/// symlink, nonregular object or uncertain metadata requires guarded recovery.
+fn inert_legacy_todo_placeholder(data_root: &Path) -> bool {
+    fs::symlink_metadata(data_root.join(schemas::TODO_DB_NAME))
+        .is_ok_and(|metadata| metadata.file_type().is_file() && metadata.len() == 0)
+        && ["-wal", "-shm", "-journal"].iter().all(|suffix| {
+            matches!(fs::symlink_metadata(data_root.join(format!("{}{suffix}", schemas::TODO_DB_NAME))),
+                Err(error) if error.kind() == std::io::ErrorKind::NotFound)
+        })
 }
 
 fn checkpoint_legacy_databases(data_root: &Path) -> Result<(), error::DecapodError> {
@@ -639,6 +660,9 @@ fn checkpoint_legacy_databases(data_root: &Path) -> Result<(), error::DecapodErr
         .chain(std::iter::once(schemas::LOCAL_DB_NAME))
     {
         let path = data_root.join(name);
+        if name == schemas::TODO_DB_NAME && inert_legacy_todo_placeholder(data_root) {
+            continue;
+        }
         if !path.is_file() {
             continue;
         }
@@ -1199,7 +1223,9 @@ fn migrate_reconstruct_todo_events(decapod_root: &Path) -> Result<(), error::Dec
 
     let db_path = decapod_root.join("data/todo.db");
 
-    if !legacy_todo_db_has_authority_rows(&db_path)? {
+    if inert_legacy_todo_placeholder(&decapod_root.join("data"))
+        || !legacy_todo_db_has_authority_rows(&db_path)?
+    {
         return Ok(()); // Nothing to migrate
     }
 
@@ -1377,10 +1403,12 @@ fn migrate_consolidate_single_datastore(decapod_root: &Path) -> Result<(), error
 
     let target_path = data_root.join(schemas::LOCAL_DB_NAME);
     let target = db::db_connect(&target_path.to_string_lossy())?;
-    // Legacy task imports cannot be mixed into an already journaled authority.
-    // Check before schema initialization, event import, or source-file removal.
-    // Ignore 0-byte or tableless `todo.db` stubs that carry no task rows.
-    if legacy_todo_db_has_authority_rows(&data_root.join(schemas::TODO_DB_NAME))? {
+    // Capture once so a concurrent old writer cannot cause this invocation to
+    // import or remove an input initially classified as an inert placeholder.
+    let preserve_empty_todo = inert_legacy_todo_placeholder(&data_root);
+    // Every non-inert TODO artifact is uncertain beside journaled authority.
+    // Do not open SQLite to infer that an unknown source is safe to discard.
+    if !preserve_empty_todo && legacy_database_artifact_exists(&data_root, schemas::TODO_DB_NAME) {
         crate::core::todo::refuse_task_journal_migration(
             &target,
             "legacy task database consolidation",
@@ -1462,6 +1490,9 @@ fn migrate_consolidate_single_datastore(decapod_root: &Path) -> Result<(), error
     ];
 
     for (source_name, tables) in sources {
+        if source_name == schemas::TODO_DB_NAME && preserve_empty_todo {
+            continue;
+        }
         if source_name == schemas::LOCAL_DB_NAME {
             continue;
         }
@@ -1477,6 +1508,9 @@ fn migrate_consolidate_single_datastore(decapod_root: &Path) -> Result<(), error
     migrate_task_events_to_canonical_stream(&target)?;
 
     for name in LEGACY_LOCAL_DATABASES {
+        if *name == schemas::TODO_DB_NAME && preserve_empty_todo {
+            continue;
+        }
         let path = data_root.join(name);
         if path.exists() {
             fs::remove_file(&path).map_err(error::DecapodError::IoError)?;
