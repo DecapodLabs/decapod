@@ -597,6 +597,14 @@
       "proof_refs": [
         "https://github.com/DecapodLabs/decapod/issues/1672"
       ]
+    },
+    {
+      "id": "issue-1672-file-8",
+      "summary": "chore(governance): record reviewed selector source inventory; file-by-file checkpoint, verification pending.",
+      "input_digest": "sha256:4ac11cd1e46addc7e3e428f2b9c95b05999d553c40649bbe413ab79dc4190695",
+      "proof_refs": [
+        "https://github.com/DecapodLabs/decapod/issues/1672"
+      ]
     }
   ],
   "intents": {
@@ -637,21 +645,21 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Preserve exact required test selection before activating a new accepted controller graph. Hosted regression proof and five-minute performance acceptance remain pending.",
+          "reason": "Reviewed the finite selector diff and actual CLI/core dependency recipes; all accepted execution requirements remain unchanged. No profile weakening or five-minute performance claim.",
           "reviewed_code_fingerprint": "7c781bce47a287fed3dad066cef5dde0f9283eceda7b24860f3b632413819d7f",
           "spec_material_hash": "1da8dd7ffc667cc2844a6399e06188ee5608fa786ff11e1f1d9befdddc781d9a"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Preserve exact required test selection before activating a new accepted controller graph. Hosted regression proof and five-minute performance acceptance remain pending.",
+          "reason": "Reviewed the finite selector diff and actual CLI/core dependency recipes; all accepted execution requirements remain unchanged. No profile weakening or five-minute performance claim.",
           "reviewed_code_fingerprint": "7c781bce47a287fed3dad066cef5dde0f9283eceda7b24860f3b632413819d7f",
           "spec_material_hash": "273ce5f19bf1ca9e6794aeb0128755444edaf312ac6a39059259e764d9ded91b"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Preserve exact required test selection before activating a new accepted controller graph. Hosted regression proof and five-minute performance acceptance remain pending.",
+          "reason": "Reviewed the finite selector diff and actual CLI/core dependency recipes; all accepted execution requirements remain unchanged. No profile weakening or five-minute performance claim.",
           "reviewed_code_fingerprint": "7c781bce47a287fed3dad066cef5dde0f9283eceda7b24860f3b632413819d7f",
           "spec_material_hash": "fa85ff736ae9bd16044a48bb34a30dd8fdbb8d7209b3dbf7642d1d94f38a9c96"
         }
@@ -666,13 +674,13 @@
         "Accepted controller must support the new finite shard graph before candidate workflows can use it."
       ],
       "unresolved_contradictions": [],
-      "updated_at": "1794621645Z"
+      "updated_at": "1794621736Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:d62fcaaadc6556ddcdd0092152a9745c5e14920f6391eb01687a0a1143b15389",
+      "artifact_hash": "sha256:f3ddc0b63e03336421673443ac4889551b1425a7b8e06012cced80f8b84dd696",
       "checks": [],
       "current_phase": "implementation",
       "custody": {
@@ -737,10 +745,17 @@
             "intent_id": "intent:change_01M7BCG49JVT83YA5CJ6ZGTYFS",
             "kind": "trajectory_step_recorded",
             "sequence": 10
+          },
+          {
+            "detail": "trajectory:branch_01M7BCG4CA346XXGN460V3EX4S",
+            "event_id": "event:11",
+            "intent_id": "intent:change_01M7BCG49JVT83YA5CJ6ZGTYFS",
+            "kind": "trajectory_step_recorded",
+            "sequence": 11
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 10,
+        "next_sequence": 11,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M7BCG4CA346XXGN460V3EX4S": {
@@ -858,6 +873,22 @@
                 "validation_findings": [
                   "Hosted verification and exact-candidate publication readiness remain pending; no local tests run."
                 ]
+              },
+              {
+                "action": "implementation",
+                "custody_event_id": "event:11",
+                "observations": [
+                  ".decapod/config.toml",
+                  "https://github.com/DecapodLabs/decapod/issues/1672"
+                ],
+                "proof_refs": [],
+                "scope": [
+                  "issue-1672"
+                ],
+                "sequence": 11,
+                "validation_findings": [
+                  "Hosted verification and exact-candidate publication readiness remain pending; no local tests run."
+                ]
               }
             ]
           }
@@ -872,6 +903,7 @@
       "inspected_files": [],
       "intent_id": "intent:change_01M7BCG49JVT83YA5CJ6ZGTYFS",
       "modified_files": [
+        ".decapod/config.toml",
         ".decapod/managed/specs/ARCHITECTURE.md",
         ".decapod/managed/specs/INTENT.md",
         ".decapod/managed/specs/INTERFACES.md",
