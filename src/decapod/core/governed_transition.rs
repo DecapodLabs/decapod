@@ -1041,11 +1041,21 @@ impl BlockerClass {
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum EscalationTarget {
+    Agent,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 pub struct CapabilityGap {
     pub blocked_by: BlockerClass,
     pub required_capability: &'static str,
     pub provider_class: &'static str,
     pub escalation_required: bool,
+    /// Inference gaps request agent intelligence. Human questions require the
+    /// independent mentor reflection/escalation-admissibility contract.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub escalation_target: Option<EscalationTarget>,
 }
 
 fn class_for_admission(cause: AdmissionCause) -> Option<BlockerClass> {
@@ -1117,6 +1127,7 @@ pub fn capability_gap(class: BlockerClass) -> CapabilityGap {
         required_capability,
         provider_class,
         escalation_required,
+        escalation_target: escalation_required.then_some(EscalationTarget::Agent),
     }
 }
 
@@ -2379,6 +2390,11 @@ mod tests {
         );
         let gap = capability_gap(BlockerClass::Inference);
         assert!(gap.escalation_required);
+        assert_eq!(gap.escalation_target, Some(EscalationTarget::Agent));
+        assert_eq!(
+            capability_gap(BlockerClass::Verification).escalation_target,
+            None
+        );
         assert_eq!(gap.provider_class, "frontier");
         assert_eq!(
             admit_operation_surface(
