@@ -651,6 +651,14 @@
       "proof_refs": [
         "https://github.com/DecapodLabs/decapod/issues/1626"
       ]
+    },
+    {
+      "id": "issue1626-reviewed-adapter-pin",
+      "summary": "Review protected native Nix gate fix and real Git regressions; hosted proof pending; full native publication readiness unproven.",
+      "input_digest": "sha256:5c6d439e26cf215a883802f970f7cad37d61018e9e89b0087d3926c950db899e",
+      "proof_refs": [
+        "https://github.com/DecapodLabs/decapod/issues/1626"
+      ]
     }
   ],
   "intents": {
@@ -691,22 +699,22 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Reviewed the two existing Nix gate scripts, preserved native protected-master publication and locked packaging dependencies, and actual Git regression fixtures. Fresh hosted proof pending; no cache backfill or full native publication claim.",
-          "reviewed_code_fingerprint": "0f0adda3a97ddfb42dc6d47ecd1c73b2108d8889d35ee34a74a581532cabc679",
-          "spec_material_hash": "1b9bbe1257318d4c5786e9f3566352dd00e0a85e418d0a6c2f5b1e44bc09bf02"
+          "reason": "Reviewed the two existing Nix gate scripts, preserved native protected-master publication and locked packaging dependencies, the finite reviewed workflow pin and actual Git regression fixtures. Fresh hosted proof pending; no cache backfill or full native publication claim.",
+          "reviewed_code_fingerprint": "472f3a60d05913e607d14d9bc06e1171d8db1ef6341884d57bd05d3fff11006d",
+          "spec_material_hash": "151aa5f3ed881fa2d64520f4d976436c90407c6c1c7764b3adc9a53b3c064d06"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Reviewed the two existing Nix gate scripts, preserved native protected-master publication and locked packaging dependencies, and actual Git regression fixtures. Fresh hosted proof pending; no cache backfill or full native publication claim.",
-          "reviewed_code_fingerprint": "0f0adda3a97ddfb42dc6d47ecd1c73b2108d8889d35ee34a74a581532cabc679",
+          "reason": "Reviewed the two existing Nix gate scripts, preserved native protected-master publication and locked packaging dependencies, the finite reviewed workflow pin and actual Git regression fixtures. Fresh hosted proof pending; no cache backfill or full native publication claim.",
+          "reviewed_code_fingerprint": "472f3a60d05913e607d14d9bc06e1171d8db1ef6341884d57bd05d3fff11006d",
           "spec_material_hash": "c8137944c916b4afc0e6cdefa5350d4b7b8a3acf576d2b517dfc44da8cf7e181"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Reviewed the two existing Nix gate scripts, preserved native protected-master publication and locked packaging dependencies, and actual Git regression fixtures. Fresh hosted proof pending; no cache backfill or full native publication claim.",
-          "reviewed_code_fingerprint": "0f0adda3a97ddfb42dc6d47ecd1c73b2108d8889d35ee34a74a581532cabc679",
+          "reason": "Reviewed the two existing Nix gate scripts, preserved native protected-master publication and locked packaging dependencies, the finite reviewed workflow pin and actual Git regression fixtures. Fresh hosted proof pending; no cache backfill or full native publication claim.",
+          "reviewed_code_fingerprint": "472f3a60d05913e607d14d9bc06e1171d8db1ef6341884d57bd05d3fff11006d",
           "spec_material_hash": "617e34aa14f95d0325ad2225cbaf0914c4ba717bebd9d384594b0e803e48c680"
         }
       ],
@@ -718,20 +726,20 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1794696840Z"
+      "updated_at": "1794698017Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:f2f2807267967078cccb239992c98511d7a4b80b89bd1588df807238fdd1995c",
+      "artifact_hash": "sha256:0bd9ede0e145eba0c7294a8e897a0c7e02fb186adeb47595873c883ce78c5dd8",
       "checks": [
         {
           "name": "hosted-candidate",
           "status": "partial"
         }
       ],
-      "current_phase": "implementation",
+      "current_phase": "validation",
       "custody": {
         "events": [
           {
@@ -836,10 +844,17 @@
             "intent_id": "intent:change_01M7E32W7EEDSJFJ6J3WPTZZBP",
             "kind": "trajectory_step_recorded",
             "sequence": 16
+          },
+          {
+            "detail": "trajectory:branch_01M7E32WAD102GEWSSGTDX5P73",
+            "event_id": "event:17",
+            "intent_id": "intent:change_01M7E32W7EEDSJFJ6J3WPTZZBP",
+            "kind": "trajectory_step_recorded",
+            "sequence": 17
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 16,
+        "next_sequence": 17,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M7E32WAD102GEWSSGTDX5P73": {
@@ -1055,6 +1070,23 @@
                 "validation_findings": [
                   "Implementation in progress; exact-candidate hosted checks pending; no local tests or Buildkite execution."
                 ]
+              },
+              {
+                "action": "validation",
+                "custody_event_id": "event:17",
+                "observations": [
+                  "https://github.com/DecapodLabs/decapod/issues/1626"
+                ],
+                "proof_refs": [
+                  "hosted-candidate"
+                ],
+                "scope": [
+                  "root"
+                ],
+                "sequence": 17,
+                "validation_findings": [
+                  "Prior hosted consumer rejected eleven accepted-executor fixture setups at the old Nix workflow pin. The reviewed compiled pin is reconciled; fresh verification remains pending. No local tests or Buildkite evidence collection. Full native publication requires independently accepted controller support."
+                ]
               }
             ]
           }
@@ -1092,7 +1124,8 @@
       "tool_calls": [],
       "unresolved_assumptions": [
         "Implementation in progress; exact-candidate hosted checks pending; no local tests or Buildkite execution.",
-        "No local tests. Buildkite evidence is not collected. Accepted native/provider requirements stay enabled. Actual historical cache availability requires separate native packaging/publication evidence."
+        "No local tests. Buildkite evidence is not collected. Accepted native/provider requirements stay enabled. Actual historical cache availability requires separate native packaging/publication evidence.",
+        "Prior hosted consumer rejected eleven accepted-executor fixture setups at the old Nix workflow pin. The reviewed compiled pin is reconciled; fresh verification remains pending. No local tests or Buildkite evidence collection. Full native publication requires independently accepted controller support."
       ]
     }
   },
