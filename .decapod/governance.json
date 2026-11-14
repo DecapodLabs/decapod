@@ -1087,6 +1087,14 @@
       "proof_refs": [
         ".decapod/managed/specs/.manifest.json"
       ]
+    },
+    {
+      "id": "convergence-observed-fixture-retry",
+      "summary": "Retain real failed execution, measured mock limits and fixture repairs before new validation",
+      "input_digest": "sha256:0bd0db37f273af1f265a9688d9af4947e6ba9cd50808d7d008506473ccff03d0",
+      "proof_refs": [
+        "https://buildkite.com/decapodlabs/decapod/builds/10625"
+      ]
     }
   ],
   "intents": {
@@ -1127,22 +1135,22 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Current authored contract includes bounded escalation, source observations without semantic proof, and actual approval-ledger requirements; reviewed after the authority regression fix.",
-          "reviewed_code_fingerprint": "cd10d2e8bfc5f544ce548709c70bd3dff694509dc2cec7607dc8385294ea646c",
+          "reason": "Reviewed current bounded escalation contract after observed fixture-only repairs; production authority, custody and publication gates remain unchanged.",
+          "reviewed_code_fingerprint": "dd2713bcfe5e25034fc01d668fd9c008502a83203c3431d6db42ce5d068e61b0",
           "spec_material_hash": "7952eb8f867a95de58dc897dd48f69b346587e2e8c2c30f97e7a73dd494c6abe"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Current authored contract includes bounded escalation, source observations without semantic proof, and actual approval-ledger requirements; reviewed after the authority regression fix.",
-          "reviewed_code_fingerprint": "cd10d2e8bfc5f544ce548709c70bd3dff694509dc2cec7607dc8385294ea646c",
+          "reason": "Reviewed current bounded escalation contract after observed fixture-only repairs; production authority, custody and publication gates remain unchanged.",
+          "reviewed_code_fingerprint": "dd2713bcfe5e25034fc01d668fd9c008502a83203c3431d6db42ce5d068e61b0",
           "spec_material_hash": "771b4349fee430e241326055d3d9cbfc52a391a3b6d663e61506257ec3927924"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Current authored contract includes bounded escalation, source observations without semantic proof, and actual approval-ledger requirements; reviewed after the authority regression fix.",
-          "reviewed_code_fingerprint": "cd10d2e8bfc5f544ce548709c70bd3dff694509dc2cec7607dc8385294ea646c",
+          "reason": "Reviewed current bounded escalation contract after observed fixture-only repairs; production authority, custody and publication gates remain unchanged.",
+          "reviewed_code_fingerprint": "dd2713bcfe5e25034fc01d668fd9c008502a83203c3431d6db42ce5d068e61b0",
           "spec_material_hash": "05cfa0fbce100299fd3ebdcd53266a8b203916de3c868ed5020b63fb6d50b752"
         }
       ],
@@ -1156,13 +1164,13 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1794688526Z"
+      "updated_at": "1794689284Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Keep approval, scope, custody, proof and publication authoritative; no transcripts, daemon or semantic-proof claims"
       ],
-      "artifact_hash": "sha256:7856e7bb096aa3e0e0448684feb276ac962edc75853953258caeb98ce3ceeff1",
+      "artifact_hash": "sha256:5474933b92ad45084ef81b87884381e8d40fb85de83f1417bedd3ae329758bfc",
       "checks": [
         {
           "name": "formatting",
@@ -1171,9 +1179,13 @@
         {
           "name": "full_validation",
           "status": "failed"
+        },
+        {
+          "name": "source_ci",
+          "status": "failed"
         }
       ],
-      "current_phase": "candidate-validation",
+      "current_phase": "validation-repair",
       "custody": {
         "events": [
           {
@@ -1222,10 +1234,17 @@
             "intent_id": "intent:convergence-1690",
             "kind": "trajectory_step_recorded",
             "sequence": 8
+          },
+          {
+            "detail": "trajectory:convergence-1690",
+            "event_id": "event:9",
+            "intent_id": "intent:convergence-1690",
+            "kind": "trajectory_step_recorded",
+            "sequence": 9
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 8,
+        "next_sequence": 9,
         "schema_version": "1.0.0",
         "trajectories": {
           "convergence-1690": {
@@ -1313,6 +1332,23 @@
                 ],
                 "sequence": 8,
                 "validation_findings": []
+              },
+              {
+                "action": "validation-repair",
+                "custody_event_id": "event:9",
+                "observations": [
+                  "Buildkite #10625 candidate 5ad1554990125c4b54aa6af857b2de8afd732a15: 1770 library tests passed, one new fixture failed due to incomplete TOML config; CLI aggregate 39 passed, one new fixture expected the wrong readiness error, four ignored. Both reported fixture defects repaired in dedicated commits.",
+                  "Actual deterministic comparison: baseline unnecessary questions 3, governed admitted questions 0, admissible decisions 3, total rounds 6, elapsed_us 1892663, governance_growth_bytes 20665. This does not measure LLM semantics or complete engineering tasks.",
+                  "Generated entrypoint integration test passed; public native Buildkite reader is available. Cancelled unnecessary bk diagnostic device login without credentials; no access grant is required for the configured reader."
+                ],
+                "proof_refs": [
+                  "source_ci"
+                ],
+                "scope": [
+                  "src/decapod/core/mentor and canonical agent integration/tests"
+                ],
+                "sequence": 9,
+                "validation_findings": []
               }
             ]
           }
@@ -1322,8 +1358,11 @@
         "rustfmt targeted Rust files; git diff --check; Decapod specs.refresh and exact checkpoints"
       ],
       "evidence": [
+        "Actual deterministic comparison: baseline unnecessary questions 3, governed admitted questions 0, admissible decisions 3, total rounds 6, elapsed_us 1892663, governance_growth_bytes 20665. This does not measure LLM semantics or complete engineering tasks.",
+        "Buildkite #10625 candidate 5ad1554990125c4b54aa6af857b2de8afd732a15: 1770 library tests passed, one new fixture failed due to incomplete TOML config; CLI aggregate 39 passed, one new fixture expected the wrong readiness error, four ignored. Both reported fixture defects repaired in dedicated commits.",
         "Candidate 3dff4da9 stopped before provider execution: SNAPSHOT_UPLOAD_INCOMPLETE, local release tags lagged remote. Retained snapshot decapod-snapshot-nT3E6x; fetched published v0.145.4 tag without tag publication.",
         "Draft extends existing three-round journal and orientation/mentor input with typed escalation proposals, observed source predicates and existing policy/approval reads. Concise source facts are not proof of execution or semantic exhaustion. Adversarial unit and CLI mock harness authored; not yet executed. Preserve per-file exact checkpoints and native publication gates.",
+        "Generated entrypoint integration test passed; public native Buildkite reader is available. Cancelled unnecessary bk diagnostic device login without credentials; no access grant is required for the configured reader.",
         "Review removed inference from absent approval gate; added adversarial unconfigured-operation fixture. No feature tests have run yet.",
         "Session refresh released the original feature assignment through session.release. Reclaimed the same unassigned task and re-admitted its original worktree through workspace ensure before resuming governed writes; no prior full-validation proof existed. Typed orientation now removes only legacy title-keyword hints after the canonical escalation outcome, retaining actual plan/policy gates.",
         "Targeted rustfmt and git diff --check exited zero; no compilation or tests have executed for this feature candidate yet.",
@@ -1341,6 +1380,7 @@
         "tests/unit/core/reflection_tests.rs"
       ],
       "next_transitions": [
+        "Rerun full Decapod validation for repaired exact candidate; no readiness receipt yet.",
         "Run full exact-candidate Decapod validation; repair reported source failures without substituting GitHub status for configured provider proof."
       ],
       "repo_scope": [
