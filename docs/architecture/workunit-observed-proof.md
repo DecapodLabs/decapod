@@ -43,6 +43,12 @@ The durable current workunit projection must match its journal and execution
 binding. A missing projection can be recovered from that journal; divergent
 valid contents are preserved for explicit reconciliation.
 
+Promotion from a claim also requires the original observed manifest digest and
+journal generation to match. A new declaration or explicit downgrade cannot
+reuse an old observation, even if the resulting claim has identical bytes.
+Fresh full validation observes that new generation. An already verified durable
+result can still be inspected and resumed while its existing bindings hold.
+
 Read-only applicability checks do not execute repository commands or append
 success. Tool/input references are deduplicated and bounded; source snapshots and
 command outputs are not copied into the canonical record. Non-workunit history

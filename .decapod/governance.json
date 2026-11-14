@@ -1069,6 +1069,14 @@
       "proof_refs": [
         "https://github.com/DecapodLabs/decapod/issues/1660"
       ]
+    },
+    {
+      "id": "issue-1660-file-67",
+      "summary": "docs(proof): explain generation-bound promotion and revalidation; file-by-file checkpoint, verification pending.",
+      "input_digest": "sha256:9dd757a7cbe96b0ba4e0a657390b6c23d54f32dfb26bf35e37dd330418ff1c12",
+      "proof_refs": [
+        "https://github.com/DecapodLabs/decapod/issues/1660"
+      ]
     }
   ],
   "intents": {
@@ -1109,22 +1117,22 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Integrate accepted master fded2dd0b5f02f9c874301d4b98cfd59ad188357 after merged PR1682 native inventory evidence with issue1660. Preserve current task journal/checkpoints and authored specs from both branches; regenerate projections through the kernel. Previous candidate readiness does not apply; no local tests.",
-          "reviewed_code_fingerprint": "254f459309b2f71afa57f6b22f5c4bbb637d64c724da9ea050492216c850339b",
+          "reason": "Describe the stricter reuse boundary while keeping historical observations immutable and already-verified read/resume behavior intact. Exact-candidate GitHub verification is pending; no local tests.",
+          "reviewed_code_fingerprint": "b0b92febd130c526e9f144ad72fed20e7b30d4202c074db4ca3ea5c9b85a2f37",
           "spec_material_hash": "e799665f0f6c5025ac094765c6f38097a6894c63fd4f08593900c2567475d6e9"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Integrate accepted master fded2dd0b5f02f9c874301d4b98cfd59ad188357 after merged PR1682 native inventory evidence with issue1660. Preserve current task journal/checkpoints and authored specs from both branches; regenerate projections through the kernel. Previous candidate readiness does not apply; no local tests.",
-          "reviewed_code_fingerprint": "254f459309b2f71afa57f6b22f5c4bbb637d64c724da9ea050492216c850339b",
+          "reason": "Describe the stricter reuse boundary while keeping historical observations immutable and already-verified read/resume behavior intact. Exact-candidate GitHub verification is pending; no local tests.",
+          "reviewed_code_fingerprint": "b0b92febd130c526e9f144ad72fed20e7b30d4202c074db4ca3ea5c9b85a2f37",
           "spec_material_hash": "10df59dc9f256a32e3851047d6d684158b0453828124370c3bb74edc6e74af49"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Integrate accepted master fded2dd0b5f02f9c874301d4b98cfd59ad188357 after merged PR1682 native inventory evidence with issue1660. Preserve current task journal/checkpoints and authored specs from both branches; regenerate projections through the kernel. Previous candidate readiness does not apply; no local tests.",
-          "reviewed_code_fingerprint": "254f459309b2f71afa57f6b22f5c4bbb637d64c724da9ea050492216c850339b",
+          "reason": "Describe the stricter reuse boundary while keeping historical observations immutable and already-verified read/resume behavior intact. Exact-candidate GitHub verification is pending; no local tests.",
+          "reviewed_code_fingerprint": "b0b92febd130c526e9f144ad72fed20e7b30d4202c074db4ca3ea5c9b85a2f37",
           "spec_material_hash": "366e74fb3bc9491cc900dbede2cffce06e3d8f7667d3d9b64641eb9bd9d7a695"
         }
       ],
@@ -1136,13 +1144,13 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1794623464Z"
+      "updated_at": "1794625728Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:060602345ee19a12b29174c382e0ec963c13fbe6b236b7c63a0aa02992814232",
+      "artifact_hash": "sha256:dfd15c4d9c36daaa79f505ff28a62414c8db09b7d2def15a91aec1ca2575e96e",
       "checks": [],
       "current_phase": "implementation",
       "custody": {
@@ -1620,10 +1628,17 @@
             "intent_id": "intent:change_01M7BCFASGT4DQG4ZADT2BP5G0",
             "kind": "trajectory_step_recorded",
             "sequence": 69
+          },
+          {
+            "detail": "trajectory:branch_01M7BCFAWAYM3TXSVTHC1N7YZE",
+            "event_id": "event:70",
+            "intent_id": "intent:change_01M7BCFASGT4DQG4ZADT2BP5G0",
+            "kind": "trajectory_step_recorded",
+            "sequence": 70
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 69,
+        "next_sequence": 70,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M7BCFAWAYM3TXSVTHC1N7YZE": {
@@ -2681,6 +2696,22 @@
                   "issue-1660"
                 ],
                 "sequence": 69,
+                "validation_findings": [
+                  "Hosted verification and exact-candidate publication readiness remain pending; no local tests run."
+                ]
+              },
+              {
+                "action": "implementation",
+                "custody_event_id": "event:70",
+                "observations": [
+                  "docs/architecture/workunit-observed-proof.md",
+                  "https://github.com/DecapodLabs/decapod/issues/1660"
+                ],
+                "proof_refs": [],
+                "scope": [
+                  "issue-1660"
+                ],
+                "sequence": 70,
                 "validation_findings": [
                   "Hosted verification and exact-candidate publication readiness remain pending; no local tests run."
                 ]
