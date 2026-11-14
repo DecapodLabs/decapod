@@ -1,8 +1,5 @@
 // Moved from src/decapod/core/completion_evidence.rs
 use super::*;
-use crate::core::capsule_policy::CapsulePolicyBinding;
-use crate::core::workunit::{WorkUnitManifest, WorkUnitProofResult};
-use std::process::Command;
 use tempfile::tempdir;
 
 fn fixture() -> CompletionEvidenceRecord {
@@ -168,74 +165,14 @@ fn portable_envelope_is_tamper_evident_and_fails_closed_without_local_binding() 
 
 #[test]
 fn local_record_replays_and_detects_artifact_change() {
-    let directory = tempdir().expect("temp directory");
-    let root = directory.path();
-    git(root, &["init", "--initial-branch", "master"]);
-    git(root, &["config", "user.email", "test@example.com"]);
-    git(root, &["config", "user.name", "Test"]);
-    fs::write(root.join("README.md"), "fixture\n").expect("write fixture");
-    git(root, &["add", "README.md"]);
-    git(root, &["commit", "-m", "fixture"]);
+    let (_directory, root, task) =
+        crate::core::validation_history::workunit_observation_tests::verified_fixture();
+    let root = root.as_path();
+    let proof_path = root.join(".decapod/data/portable-proof.txt");
 
-    let capsule_path = root.join(".decapod/managed/context/task-1.json");
-    fs::create_dir_all(capsule_path.parent().unwrap()).expect("capsule directory");
-    let capsule = DeterministicContextCapsule {
-        schema_version: "1.1.0".to_string(),
-        topic: "fixture".to_string(),
-        scope: "core".to_string(),
-        task_id: Some("task-1".to_string()),
-        workunit_id: None,
-        sources: Vec::new(),
-        snippets: Vec::new(),
-        resolved_authority: Vec::new(),
-        capabilities: Vec::new(),
-        policy: CapsulePolicyBinding {
-            risk_tier: "low".to_string(),
-            policy_hash: "sha256:policy".to_string(),
-            policy_version: "1".to_string(),
-            policy_path: "policy.json".to_string(),
-            repo_revision: "HEAD".to_string(),
-        },
-        capsule_hash: String::new(),
-        repo_signal_fingerprint: String::new(),
-        config_input_hash: String::new(),
-        spec_input_hash: String::new(),
-    }
-    .with_recomputed_hash()
-    .expect("capsule hash");
-    fs::write(
-        &capsule_path,
-        serde_json::to_vec_pretty(&capsule).expect("capsule JSON"),
-    )
-    .expect("write capsule");
-
-    let proof_path = root.join("proof.txt");
-    fs::write(&proof_path, "proof\n").expect("write proof");
-    let epoch = active_validation_epoch(root).expect("validation epoch");
-    let manifest = WorkUnitManifest {
-        task_id: "task-1".to_string(),
-        intent_ref: "INTENT.md".to_string(),
-        spec_refs: vec!["ARCHITECTURE.md".to_string()],
-        state_refs: vec![".decapod/managed/context/task-1.json".to_string()],
-        proof_plan: vec!["proof".to_string()],
-        proof_results: vec![WorkUnitProofResult {
-            gate: "proof".to_string(),
-            status: "pass".to_string(),
-            artifact_ref: Some("proof.txt".to_string()),
-            evaluator_epoch: None,
-            validation_epoch: Some(epoch.clone()),
-        }],
-        validation_epoch: Some(epoch),
-        validation_record: None,
-        status: WorkUnitStatus::Verified,
-    };
-    crate::core::todo::initialize_todo_db(&root.join(".decapod/data"))
-        .expect("initialize runtime for workunit import");
-    workunit::write_workunit(root, &manifest).expect("write workunit");
-
-    let record = build_record(root, "task-1").expect("build record");
+    let record = build_record(root, task).expect("build record");
     let record_path = write_record(root, &record).expect("write record");
-    let report = verify_record(root, "task-1", &record_path).expect("verify record");
+    let report = verify_record(root, task, &record_path).expect("verify record");
     assert_eq!(report.status, "current");
     assert!(
         report
@@ -257,33 +194,19 @@ fn local_record_replays_and_detects_artifact_change() {
     }
     let portable_path = export_directory.path().join("completion-evidence.json");
     assert!(!portable_path.starts_with(root));
-    let envelope = export_record(root, "task-1", &record_path, &portable_path)
-        .expect("export portable evidence");
+    let envelope =
+        export_record(root, task, &record_path, &portable_path).expect("export portable evidence");
     assert_eq!(envelope.record.evidence_hash, record.evidence_hash);
     assert_eq!(envelope.artifact_contents.len(), 2);
     let imported = read_portable_evidence(&portable_path).expect("read portable evidence");
     assert_eq!(imported.envelope_hash, envelope.envelope_hash);
-    let (_, report) = import_record(root, "task-1", &portable_path).expect("import evidence");
+    let (_, report) = import_record(root, task, &portable_path).expect("import evidence");
     assert_eq!(report.local_decision, "rejected");
     assert!(report.decision_path.ends_with(".decision.json"));
     assert_eq!(report.custody_paths.len(), 2);
     assert!(root.join(&report.decision_path).is_file());
 
     fs::write(&proof_path, "altered\n").expect("alter proof");
-    let report = verify_record(root, "task-1", &record_path).expect("verify altered record");
+    let report = verify_record(root, task, &record_path).expect("verify altered record");
     assert_eq!(report.status, "altered");
-}
-
-fn git(root: &Path, args: &[&str]) {
-    let output = Command::new("git")
-        .args(args)
-        .current_dir(root)
-        .output()
-        .expect("run git");
-    assert!(
-        output.status.success(),
-        "git {} failed: {}",
-        args.join(" "),
-        String::from_utf8_lossy(&output.stderr)
-    );
 }
