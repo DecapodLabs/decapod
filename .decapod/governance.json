@@ -877,6 +877,14 @@
       "proof_refs": [
         "https://github.com/DecapodLabs/decapod/issues/1659"
       ]
+    },
+    {
+      "id": "issue-1659-file-43",
+      "summary": "docs(broker): specify durable outcome precedence for retry timing; file-by-file checkpoint, verification pending.",
+      "input_digest": "sha256:3fc46f62d40d1dde1e6851f1cd80d2e5875a56d0a85dc5bd94265ac0b34fd5d4",
+      "proof_refs": [
+        "https://github.com/DecapodLabs/decapod/issues/1659"
+      ]
     }
   ],
   "intents": {
@@ -917,22 +925,22 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Integrate accepted master e8f8848d19a02ad8e2a580cf7722fe4ff9342221 after merged bootstrap repair PR1683 with issue1659. Preserve current task journal/checkpoints and authored specs from both branches; regenerate projections through the kernel. Previous candidate readiness does not apply; no local tests.",
-          "reviewed_code_fingerprint": "6585aada6bc4c33c3425c81e5db9dfda0cec4a0dbf8ad221f3fe9491c1e93c9e",
+          "reason": "Retain the authoritative durable outcome before applying deadline limits to a new admission. Existing uncertainty and committed observations remain unchanged across malformed same-ID retries; hard budget limits and exact-once checks stay required. No local tests; fresh GitHub Actions required.",
+          "reviewed_code_fingerprint": "95da3866ace32bbb10d642f70d78ae5bff06bb9e5f8b6276204605c475786101",
           "spec_material_hash": "9b180eb47da7bf19cdc60b5f43b202644a5a0b345339582fa0023b614de228f5"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Integrate accepted master e8f8848d19a02ad8e2a580cf7722fe4ff9342221 after merged bootstrap repair PR1683 with issue1659. Preserve current task journal/checkpoints and authored specs from both branches; regenerate projections through the kernel. Previous candidate readiness does not apply; no local tests.",
-          "reviewed_code_fingerprint": "6585aada6bc4c33c3425c81e5db9dfda0cec4a0dbf8ad221f3fe9491c1e93c9e",
-          "spec_material_hash": "10b0443d22c7eeccdc1956a88da6541da1b67819933e558f9f7e6c96f6bc7774"
+          "reason": "Retain the authoritative durable outcome before applying deadline limits to a new admission. Existing uncertainty and committed observations remain unchanged across malformed same-ID retries; hard budget limits and exact-once checks stay required. No local tests; fresh GitHub Actions required.",
+          "reviewed_code_fingerprint": "95da3866ace32bbb10d642f70d78ae5bff06bb9e5f8b6276204605c475786101",
+          "spec_material_hash": "f54d47d67774e573f4e1cf35316084d48310d268f2613ad1ae381f9166b5008d"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Integrate accepted master e8f8848d19a02ad8e2a580cf7722fe4ff9342221 after merged bootstrap repair PR1683 with issue1659. Preserve current task journal/checkpoints and authored specs from both branches; regenerate projections through the kernel. Previous candidate readiness does not apply; no local tests.",
-          "reviewed_code_fingerprint": "6585aada6bc4c33c3425c81e5db9dfda0cec4a0dbf8ad221f3fe9491c1e93c9e",
+          "reason": "Retain the authoritative durable outcome before applying deadline limits to a new admission. Existing uncertainty and committed observations remain unchanged across malformed same-ID retries; hard budget limits and exact-once checks stay required. No local tests; fresh GitHub Actions required.",
+          "reviewed_code_fingerprint": "95da3866ace32bbb10d642f70d78ae5bff06bb9e5f8b6276204605c475786101",
           "spec_material_hash": "4fba17941a55d3f6de7e9ae943d187563ebe0ba95442d418b34deaa1c3f7b02c"
         }
       ],
@@ -944,13 +952,13 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1794638879Z"
+      "updated_at": "1794639432Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:0140fc386ae5c0f57677ef5d5b2ed247c8735aaf444a4c9f93966c7c3bba921d",
+      "artifact_hash": "sha256:a8b243f3fae1313f5aa43c31a4550a3e37b70a7cc05bbd782508daa536a7de02",
       "checks": [],
       "current_phase": "implementation",
       "custody": {
@@ -1267,10 +1275,17 @@
             "intent_id": "intent:change_01M7BCEHXJQR8HVADJF91PJKGD",
             "kind": "trajectory_step_recorded",
             "sequence": 46
+          },
+          {
+            "detail": "trajectory:branch_01M7BCEJ05EP527M18XXSF6GK6",
+            "event_id": "event:47",
+            "intent_id": "intent:change_01M7BCEHXJQR8HVADJF91PJKGD",
+            "kind": "trajectory_step_recorded",
+            "sequence": 47
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 46,
+        "next_sequence": 47,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M7BCEJ05EP527M18XXSF6GK6": {
@@ -1958,6 +1973,22 @@
                   "issue-1659"
                 ],
                 "sequence": 46,
+                "validation_findings": [
+                  "Hosted verification and exact-candidate publication readiness remain pending; no local tests run."
+                ]
+              },
+              {
+                "action": "implementation",
+                "custody_event_id": "event:47",
+                "observations": [
+                  ".decapod/managed/specs/INTERFACES.md",
+                  "https://github.com/DecapodLabs/decapod/issues/1659"
+                ],
+                "proof_refs": [],
+                "scope": [
+                  "issue-1659"
+                ],
+                "sequence": 47,
                 "validation_findings": [
                   "Hosted verification and exact-candidate publication readiness remain pending; no local tests run."
                 ]

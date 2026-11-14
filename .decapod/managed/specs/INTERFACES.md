@@ -1154,7 +1154,7 @@ field. Nothing in this operation authorizes a mutation, approval or completion.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `6585aada6bc4c33c3425c81e5db9dfda0cec4a0dbf8ad221f3fe9491c1e93c9e`
+- Repository signal fingerprint: `95da3866ace32bbb10d642f70d78ae5bff06bb9e5f8b6276204605c475786101`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (234 files), `tests/` (232 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
@@ -1539,7 +1539,12 @@ local adoption remain supported; no override or second policy store is added.
 `DECAPOD_GROUP_BROKER_REQUEST_BUDGET_MS` workload input on the Unix broker path.
 The default is 120000 milliseconds; valid explicit values are 1 through 300000.
 Malformed, zero and oversized client values fail before mutation admission.
-Native peers also face the hard maximum before a dedupe receipt can be created.
+Native peers also face the hard maximum before a new dedupe receipt can be created.
+A matching durable outcome is resolved first: expired or overlong retry deadlines
+cannot replace an existing UNKNOWN or committed result with NOT_COMMITTED. The
+real execution-boundary regression checks both outcomes and both retry timings,
+including the unchanged stored result and commit marker. No new operation runs
+when the same-ID outcome is already recorded.
 The foreground acceptance window follows the originating request budget, and
 existing per-command limits and UNKNOWN/replay handling remain in force.
 
