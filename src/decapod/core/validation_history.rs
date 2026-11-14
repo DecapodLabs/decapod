@@ -1811,6 +1811,7 @@ mod tests {
             trajectory_run_id: "run-trajectory".into(),
             task: record.task_binding.clone(),
             epoch: record.validation_epoch.clone(),
+            workunit_subject: None,
         };
         let mut report = ValidationReport {
             ready: true,
