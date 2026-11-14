@@ -1905,6 +1905,16 @@ Exercise actual `sqlite_maintenance` CLI/RPC worktree cases and storage-lock reg
 
 This checkpoint preserves original source and tests before integration with current master. Preserve failure history and all assertions; use hosted CI for verification, without local tests or running the maintenance candidate against the live machine datastore. Prior test observations do not prove the new integration.
 
+## Bounded independent collection (#1573)
+
+Existing `github_quota` tests cover discovery headroom/direct Buildkite polls,
+exhaustion/unknown reset, malformed/duplicate/missing/overflow hints and deadline/
+cancellation preservation. Adapter tests preserve bounded failure information.
+The real complete1658 observation and five Buildkite workflow executions are
+documented separately from mechanism tests and historical403 failures. This
+dedicated closure candidate still requires its own hosted suite and full native
+publication gate against current accepted master. No local tests were run.
+
 ## Accepted local proof policy regressions (#1658)
 
 The dedicated v0.144.3 branch preserves accepted command, program, argument,
@@ -1943,6 +1953,14 @@ contract blocker with zero selections/executions, while unchanged policy,
 additive commands, first adoption and separately accepted target-policy evolution
 still execute real proof. Current hosted revalidation remains pending; previous
 failed evidence is retained and no local tests or full PR readiness are claimed.
+
+## Accepted release projection refresh (v0.144.5)
+
+After integrating accepted master `9767ae9a3ff1c7452101482218a17c55cf569b71`, regenerate the agent entrypoints and managed release projections with the official v0.144.5 binary. Accepted verification requirements remain unchanged. Projection integrity is a prerequisite; fresh hosted GitHub Actions must evaluate this candidate. No local tests or full publication-readiness claim accompany this refresh.
+
+## Repeated validation runtime fixture
+
+`tests/validate_termination.rs::validate_smoke_runtime_is_bounded_without_contention` establishes a named session before timing and asserts that repeated prerequisite checks reuse it. The existing per-call 10-second and aggregate 20-second limits remain unchanged. This measures steady-state prerequisite latency; it does not establish full publication readiness. Hosted verification is required for this candidate.
 
 ## Repeated validation runtime fixture
 

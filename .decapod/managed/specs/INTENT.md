@@ -558,6 +558,16 @@ Expose only project-opted local database maintenance capabilities to the agent. 
 
 Preserve prepared PR1662 capability-scoped database maintenance before integrating accepted master3afa9df9 and the0.144.2 source release. Default-deny accepted policy, owner-only repair, bounded safe operations and non-destructive lock custody remain obligations. Hosted CI must establish the exact integrated candidate; no local tests are run.
 
+## Independent collector closure (#1573)
+
+Merged1666 supplies bounded anonymous GitHub quota pacing. Preserve required
+provider/source/repository identities, explicit access denial and the invocation
+deadline while reconciling actual complete collection evidence. Official0.144.3
+completed the complete1658 provider contract without identity substitution. This
+follow-up records the actual observation and separately validates its own task
+and current candidate; a prior task's proof never completes this task by itself.
+No new credential path, provider fallback, receipt authority or local tests.
+
 ## Mixed-store recovery (#1657)
 
 Provide explicit, versioned and idempotent recovery for a nonempty legacy TODO
