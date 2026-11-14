@@ -1791,6 +1791,14 @@
       "proof_refs": [
         "docs/agent/payload-examples.md"
       ]
+    },
+    {
+      "id": "convergence-classification-state",
+      "summary": "Keep declarations revisable while governing intent, obligations, authority and round continuity remain binding",
+      "input_digest": "sha256:8eaa4319555bfc3c90f1cf725a702dd2ce758fffee50b17a47fca2b8e708c252",
+      "proof_refs": [
+        "docs/agent/state-model.md"
+      ]
     }
   ],
   "intents": {

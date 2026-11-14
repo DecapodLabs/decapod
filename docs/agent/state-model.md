@@ -197,6 +197,9 @@ bind conclusions without resetting the lifetime three-round budget. Ordinary
 checkpoint commits and phase progress do not manufacture additional rounds.
 
 An escalation's subject cannot be renamed or omitted during continuation.
+Its uncertainty class is a revisable agent declaration. Correcting that label
+requires observable progress; it cannot waive an observed policy gate or a
+canonical human dependency and never renews the budget.
 An omitted authority operation may be supplied after investigation, and its
 omitted target may be narrowed. Once supplied, the command and concrete target
 cannot be replaced or dropped. These refinements consume the existing rounds.
