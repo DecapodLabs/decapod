@@ -1039,6 +1039,14 @@
       "proof_refs": [
         ".decapod/managed/specs/INTERFACES.md"
       ]
+    },
+    {
+      "id": "convergence-fixture-repair-attestation-operationsmd",
+      "summary": "Refresh source binding after observed test fixture repairs",
+      "input_digest": "sha256:46bee2ed4ed73a1c98292e396cf885e2df2d657d611611273ffeff7de1ac6b90",
+      "proof_refs": [
+        ".decapod/managed/specs/OPERATIONS.md"
+      ]
     }
   ],
   "intents": {
