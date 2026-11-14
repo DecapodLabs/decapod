@@ -799,6 +799,14 @@
       "proof_refs": [
         ".decapod/managed/specs/VALIDATION.md"
       ]
+    },
+    {
+      "id": "convergence-reviewed-inventory1454",
+      "summary": "Reconcile accepted test coverage closure and v0.145.4 package identity without changing proof requirements",
+      "input_digest": "sha256:aa0782575842df4bda656b770d7ec74faa114e0d1b81245a4790b6fbe0e949ab",
+      "proof_refs": [
+        ".decapod/config.toml"
+      ]
     }
   ],
   "intents": {
