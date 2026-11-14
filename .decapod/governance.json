@@ -885,6 +885,14 @@
       "proof_refs": [
         "https://github.com/DecapodLabs/decapod/issues/1659"
       ]
+    },
+    {
+      "id": "pr1677-integrate-706569c7-v1450",
+      "summary": "Integrate accepted master 706569c7ac2f156def00a331134fee52fb444042 and official v0.145.0 into PR1677. Preserve diagnostic full-readiness denial alongside independently observed workunit proof and all required checks. Resolve only additive authored spec conflicts, retain task history, regenerate projections and remove identical duplicated validation prose. Fresh GitHub Actions pending; no local tests and no Buildkite execution.",
+      "input_digest": "sha256:cafa26117e060917f2039d1459a9484294cbc3d47cdf80cebba8fb7ee835b7e8",
+      "proof_refs": [
+        "https://github.com/DecapodLabs/decapod/pull/1687"
+      ]
     }
   ],
   "intents": {
@@ -925,23 +933,23 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Retain the authoritative durable outcome before applying deadline limits to a new admission. Existing uncertainty and committed observations remain unchanged across malformed same-ID retries; hard budget limits and exact-once checks stay required. No local tests; fresh GitHub Actions required.",
-          "reviewed_code_fingerprint": "95da3866ace32bbb10d642f70d78ae5bff06bb9e5f8b6276204605c475786101",
-          "spec_material_hash": "9b180eb47da7bf19cdc60b5f43b202644a5a0b345339582fa0023b614de228f5"
+          "reason": "Integrate accepted master 706569c7ac2f156def00a331134fee52fb444042 and official v0.145.0 into PR1677. Preserve diagnostic full-readiness denial alongside independently observed workunit proof and all required checks. Resolve only additive authored spec conflicts, retain task history, regenerate projections and remove identical duplicated validation prose. Fresh GitHub Actions pending; no local tests and no Buildkite execution.",
+          "reviewed_code_fingerprint": "e2fb26115fe1218f7f980ed36543640c413c052a37d1394d8b1b206859893a4b",
+          "spec_material_hash": "58f92b51f87d2362f2e88fc7b093d976d6577cb503c8e459e9ac0be008a10c2a"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Retain the authoritative durable outcome before applying deadline limits to a new admission. Existing uncertainty and committed observations remain unchanged across malformed same-ID retries; hard budget limits and exact-once checks stay required. No local tests; fresh GitHub Actions required.",
-          "reviewed_code_fingerprint": "95da3866ace32bbb10d642f70d78ae5bff06bb9e5f8b6276204605c475786101",
-          "spec_material_hash": "f54d47d67774e573f4e1cf35316084d48310d268f2613ad1ae381f9166b5008d"
+          "reason": "Integrate accepted master 706569c7ac2f156def00a331134fee52fb444042 and official v0.145.0 into PR1677. Preserve diagnostic full-readiness denial alongside independently observed workunit proof and all required checks. Resolve only additive authored spec conflicts, retain task history, regenerate projections and remove identical duplicated validation prose. Fresh GitHub Actions pending; no local tests and no Buildkite execution.",
+          "reviewed_code_fingerprint": "e2fb26115fe1218f7f980ed36543640c413c052a37d1394d8b1b206859893a4b",
+          "spec_material_hash": "3b6b00630209e41f08c8ed88e3a808a72d090611877266ed5bfab00a86f441b4"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Retain the authoritative durable outcome before applying deadline limits to a new admission. Existing uncertainty and committed observations remain unchanged across malformed same-ID retries; hard budget limits and exact-once checks stay required. No local tests; fresh GitHub Actions required.",
-          "reviewed_code_fingerprint": "95da3866ace32bbb10d642f70d78ae5bff06bb9e5f8b6276204605c475786101",
-          "spec_material_hash": "4fba17941a55d3f6de7e9ae943d187563ebe0ba95442d418b34deaa1c3f7b02c"
+          "reason": "Integrate accepted master 706569c7ac2f156def00a331134fee52fb444042 and official v0.145.0 into PR1677. Preserve diagnostic full-readiness denial alongside independently observed workunit proof and all required checks. Resolve only additive authored spec conflicts, retain task history, regenerate projections and remove identical duplicated validation prose. Fresh GitHub Actions pending; no local tests and no Buildkite execution.",
+          "reviewed_code_fingerprint": "e2fb26115fe1218f7f980ed36543640c413c052a37d1394d8b1b206859893a4b",
+          "spec_material_hash": "c1746970e4f030e2c70f0e329285e8cd8f9d44814ef2eb895f7f2c73af200a85"
         }
       ],
       "state": "APPROVED",
@@ -952,13 +960,13 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1794639432Z"
+      "updated_at": "1794653762Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:a8b243f3fae1313f5aa43c31a4550a3e37b70a7cc05bbd782508daa536a7de02",
+      "artifact_hash": "sha256:93ee671a1e802c2aff6b86cd8a93dcb7c9e6d5551127c51cb34651d7f18c51f5",
       "checks": [],
       "current_phase": "implementation",
       "custody": {
@@ -1282,10 +1290,17 @@
             "intent_id": "intent:change_01M7BCEHXJQR8HVADJF91PJKGD",
             "kind": "trajectory_step_recorded",
             "sequence": 47
+          },
+          {
+            "detail": "trajectory:branch_01M7BCEJ05EP527M18XXSF6GK6",
+            "event_id": "event:48",
+            "intent_id": "intent:change_01M7BCEHXJQR8HVADJF91PJKGD",
+            "kind": "trajectory_step_recorded",
+            "sequence": 48
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 47,
+        "next_sequence": 48,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M7BCEJ05EP527M18XXSF6GK6": {
@@ -1992,6 +2007,22 @@
                 "validation_findings": [
                   "Hosted verification and exact-candidate publication readiness remain pending; no local tests run."
                 ]
+              },
+              {
+                "action": "implementation",
+                "custody_event_id": "event:48",
+                "observations": [
+                  ".decapod/managed/specs/VALIDATION.md",
+                  "https://github.com/DecapodLabs/decapod/pull/1687"
+                ],
+                "proof_refs": [],
+                "scope": [
+                  "issue-1659"
+                ],
+                "sequence": 48,
+                "validation_findings": [
+                  "Integrate accepted master 706569c7ac2f156def00a331134fee52fb444042 and official v0.145.0 into PR1677. Preserve diagnostic full-readiness denial alongside independently observed workunit proof and all required checks. Resolve only additive authored spec conflicts, retain task history, regenerate projections and remove identical duplicated validation prose. Fresh GitHub Actions pending; no local tests and no Buildkite execution."
+                ]
               }
             ]
           }
@@ -2004,7 +2035,8 @@
         "https://github.com/DecapodLabs/decapod/pull/1675",
         "https://github.com/DecapodLabs/decapod/pull/1682",
         "https://github.com/DecapodLabs/decapod/pull/1683",
-        "https://github.com/DecapodLabs/decapod/pull/1685"
+        "https://github.com/DecapodLabs/decapod/pull/1685",
+        "https://github.com/DecapodLabs/decapod/pull/1687"
       ],
       "inspected_files": [],
       "intent_id": "intent:change_01M7BCEHXJQR8HVADJF91PJKGD",
@@ -2044,6 +2076,7 @@
       "tool_calls": [],
       "unresolved_assumptions": [
         "Hosted verification and exact-candidate publication readiness remain pending; no local tests run.",
+        "Integrate accepted master 706569c7ac2f156def00a331134fee52fb444042 and official v0.145.0 into PR1677. Preserve diagnostic full-readiness denial alongside independently observed workunit proof and all required checks. Resolve only additive authored spec conflicts, retain task history, regenerate projections and remove identical duplicated validation prose. Fresh GitHub Actions pending; no local tests and no Buildkite execution.",
         "Integrate accepted master 9767ae9a3ff1c7452101482218a17c55cf569b71 after accepted release v0.144.5 with issue1659. Preserve current task journal/checkpoints and authored specs from both branches; regenerate projections through the kernel. Previous candidate readiness does not apply; no local tests.",
         "Integrate accepted master e8f8848d19a02ad8e2a580cf7722fe4ff9342221 after merged bootstrap repair PR1683 with issue1659. Preserve current task journal/checkpoints and authored specs from both branches; regenerate projections through the kernel. Previous candidate readiness does not apply; no local tests.",
         "Integrate accepted master f779e39111ec8b3c8c41569f68a3a7604df167e7 and merged1675 accepted-policy hardening with issue1659. Preserve current task journal/checkpoints and authored specs from both branches; regenerate projections through the kernel. Previous candidate readiness does not apply; no local tests.",

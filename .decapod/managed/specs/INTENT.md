@@ -352,8 +352,8 @@ These declarations select authoring and proof obligations; they do not attest im
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `95da3866ace32bbb10d642f70d78ae5bff06bb9e5f8b6276204605c475786101`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (234 files), `tests/` (232 files)
+- Repository signal fingerprint: `e2fb26115fe1218f7f980ed36543640c413c052a37d1394d8b1b206859893a4b`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (234 files), `tests/` (233 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 
@@ -572,6 +572,25 @@ observations intact and require a fresh applicable validation after removing an
 override. Real child-process regressions isolate environment changes and must
 verify both rejected full claims and truthful diagnostics. No local test result,
 current hosted success or completed repair is claimed by this plan.
+
+## Observed workunit proof convergence (#1660)
+
+The existing `record_proof_result` pass row is a declaration: it initializes both
+proof epochs to None, and `ensure_verified_ready` currently checks only pass rows.
+Durable execution binding and referenced-byte hashes preserve custody/integrity
+but do not authenticate who observed a successful check. Whole publication has
+additional gates, so misleading VERIFIED state is not by itself a proven forge
+merge bypass. Preserve that distinction in real binary adversarial controls.
+
+Converge VERIFIED with the existing canonical `validation_history` producer.
+A current canonical observation must bind this exact task, workunit contract,
+source, accepted target, policy and tool closure. Add only bounded references and
+read-only applicability inputs to existing proof records, not a second datastore
+or evaluator. Runtime terminal judgment must consume actual completed checks;
+opaque additional gates remain unproven. Legacy declarations retain history and
+require fresh observed proof, with explicit safe downgrade/recovery. No new
+cryptographic trust root or OS-isolation claim is inferred from shared UID access.
+No local tests run; supported real CLI/runtime and hosted proof remain required.
 
 ## Mixed-store recovery (#1657)
 

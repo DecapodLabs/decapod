@@ -626,8 +626,8 @@ execution evidence remains required before publication readiness.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `95da3866ace32bbb10d642f70d78ae5bff06bb9e5f8b6276204605c475786101`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (234 files), `tests/` (232 files)
+- Repository signal fingerprint: `e2fb26115fe1218f7f980ed36543640c413c052a37d1394d8b1b206859893a4b`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (234 files), `tests/` (233 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 
@@ -1007,6 +1007,27 @@ accepted local source-definition digest before selection. The failed observation
 remains historical; fresh hosted execution must establish the repair. This is a
 local-readiness finding, not evidence of bypassing an independent remote merge
 service or of OS isolation from an unrestricted producer.
+
+## Workunit producer and consumer boundary (#1660)
+
+Missing, altered, contradictory, unbound or stale canonical observations cannot
+be applied through supported workunit acceptance/completion/publication consumers.
+The verifier rechecks candidate/base/material/policy/tool/input identities, live
+task custody and durable workunit projection. Fresh complete terminal observation
+is distinct from a previously declared success, avoiding a first-proof cycle.
+History is retained after invalidation. Local hashes and a shared-UID datastore
+are not an authenticated independent security domain; unrestricted direct SQL or
+filesystem mutation requires separate isolation/enforcement. No signature, cloud
+identity, arbitrary filesystem prevention or remote merge authority is asserted.
+
+VERIFIED append and idempotent replay fence the canonical task checkpoint and
+active lease on the same connection as workunit commit. A separately initialized
+workspace workunit database cannot claim atomic acceptance against the parent
+canonical task/proof store: WORKUNIT_PROOF_ATOMIC_DOMAIN_UNSUPPORTED blocks that
+path. Its compatible migration/convergence remains unresolved. Tests exercise
+the actual producer, owned task mutation and append boundary; hosted results
+remain pending. Canonical task obligations cannot be replaced by a weaker
+workunit declaration.
 
 ## Preserved uncertain legacy authority (#1657)
 

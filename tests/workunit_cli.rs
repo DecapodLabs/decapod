@@ -402,13 +402,13 @@ fn workunit_transition_to_verified_requires_passing_proofs() {
         String::from_utf8_lossy(&out.stderr)
     );
     assert!(
-        combined.contains("missing passing proof result"),
-        "expected missing proof guard, got:\n{combined}"
+        combined.contains("WORKUNIT_CHECKPOINT_REQUIRED"),
+        "expected current-custody guard, got:\n{combined}"
     );
 }
 
 #[test]
-fn workunit_record_proof_and_transition_happy_path() {
+fn legacy_declared_pass_cannot_authorize_verified_transition() {
     let (_tmp, dir, password) = setup_repo();
     let envs = [
         ("DECAPOD_AGENT_ID", "unknown"),
@@ -520,11 +520,21 @@ fn workunit_record_proof_and_transition_happy_path() {
         &envs,
     );
     assert!(
-        final_step.status.success(),
-        "transition to verified failed: {}",
+        !final_step.status.success(),
+        "legacy pass declaration unexpectedly authorized VERIFIED: {}",
         String::from_utf8_lossy(&final_step.stderr)
     );
 
     let manifest = workunit::load_workunit(&dir, "test_007").expect("load workunit");
-    assert_eq!(manifest.status, workunit::WorkUnitStatus::Verified);
+    assert_eq!(manifest.status, workunit::WorkUnitStatus::Claimed);
+    assert!(manifest.validation_record.is_none());
+    let diagnostic = format!(
+        "{} {}",
+        String::from_utf8_lossy(&final_step.stdout),
+        String::from_utf8_lossy(&final_step.stderr)
+    );
+    assert!(
+        diagnostic.contains("WORKUNIT_CHECKPOINT_REQUIRED"),
+        "{diagnostic}"
+    );
 }

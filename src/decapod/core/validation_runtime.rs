@@ -1393,6 +1393,13 @@ fn run(
                 .laya_readiness
                 .as_ref()
                 .ok_or_else(|| invalid("successful readiness lacks a Laya disposition"))?,
+            Some(
+                super::validation_history::CurrentEvidenceInputs::capture(
+                    &project.identity_inputs,
+                    &selection,
+                )
+                .map_err(io::Error::other)?,
+            ),
         )
         .map_err(io::Error::other)?;
         let rules = within_terminal_budget(&budget, || {

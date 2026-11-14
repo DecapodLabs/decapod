@@ -1823,28 +1823,22 @@ fn evaluate_workunit_rule(_rule: &ResolvedRule, context: &RuleEvaluationContext)
     let Some(root) = context.repo_root.as_deref() else {
         return RuleVerdict::Unverifiable;
     };
-    // Supported workunit commands bind the current epoch through the durable
-    // ExecutionStateBinding verified by load_terminal_workunit. Optional legacy
-    // fields are additional constraints when present, not invented prerequisites.
-    if manifest
-        .validation_epoch
-        .as_ref()
-        .is_some_and(|epoch| epoch != &context.validation_epoch)
-        || manifest.proof_results.iter().any(|result| {
-            manifest.proof_plan.contains(&result.gate)
-                && (result
-                    .validation_epoch
-                    .as_ref()
-                    .is_some_and(|epoch| epoch != &context.validation_epoch)
-                    || result
-                        .evaluator_epoch
-                        .as_deref()
-                        .is_some_and(|epoch| epoch != context.validation_epoch.epoch_id))
-        })
-    {
-        return RuleVerdict::Stale;
-    }
-    if crate::core::workunit::validate_verified_manifest(manifest).is_err()
+    // This is the current complete runtime observation, before its canonical
+    // append. It must not depend on an agent's pass row or an earlier VERIFIED
+    // projection: first proof would otherwise become circular. Durable subject
+    // binding is checked by load_terminal_workunit and again by the producer.
+    if !matches!(
+        manifest.status,
+        crate::core::workunit::WorkUnitStatus::Claimed
+            | crate::core::workunit::WorkUnitStatus::Verified
+    ) || terminal.proof.verify().is_err()
+        || crate::core::validation_history::ensure_full_validation_plan(&manifest.proof_plan)
+            .is_err()
+        || crate::core::todo::ensure_task_full_validation_plan(
+            &crate::core::store::find_governance_root(root).join(".decapod/data"),
+            &manifest.task_id,
+        )
+        .is_err()
         || crate::core::workunit::ensure_living_specs_bound_for_proof(root, manifest).is_err()
         || crate::core::workunit::verify_capsule_policy_lineage_for_task(root, manifest).is_err()
     {
@@ -2291,7 +2285,7 @@ mod tests {
         let capsule_ref = capsule_path.strip_prefix(root).unwrap().to_string_lossy();
         workunit::add_state_ref(root, task, &capsule_ref).unwrap();
         workunit::add_spec_ref(root, task, spec).unwrap();
-        workunit::set_proof_plan(root, task, &["source-check".into()]).unwrap();
+        workunit::set_proof_plan(root, task, &["validate_passes".into()]).unwrap();
         for args in [
             vec!["add", "."],
             vec![
@@ -2321,7 +2315,6 @@ mod tests {
         for state in [
             workunit::WorkUnitStatus::Executing,
             workunit::WorkUnitStatus::Claimed,
-            workunit::WorkUnitStatus::Verified,
         ] {
             workunit::transition_status(root, task, state).unwrap();
         }
@@ -2340,7 +2333,9 @@ mod tests {
             .as_mut()
             .unwrap()
             .validation_epoch = Some(test_validation_epoch());
-        assert_eq!(evaluate_rule(&rule, &context).verdict, RuleVerdict::Stale);
+        // A stale optional legacy projection is not evidence for or against
+        // this fresh complete observation. Canonical append binds its subject.
+        assert_eq!(evaluate_rule(&rule, &context).verdict, RuleVerdict::Pass);
         context
             .terminal_evidence
             .as_mut()

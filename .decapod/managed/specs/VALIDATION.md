@@ -1341,8 +1341,8 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `95da3866ace32bbb10d642f70d78ae5bff06bb9e5f8b6276204605c475786101`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (234 files), `tests/` (232 files)
+- Repository signal fingerprint: `e2fb26115fe1218f7f980ed36543640c413c052a37d1394d8b1b206859893a4b`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (234 files), `tests/` (233 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 
@@ -1974,10 +1974,31 @@ After integrating accepted master `9767ae9a3ff1c7452101482218a17c55cf569b71`, re
 
 `tests/validate_termination.rs::validate_smoke_runtime_is_bounded_without_contention` establishes a named session before timing and asserts that repeated prerequisite checks reuse it. The existing per-call 10-second and aggregate 20-second limits remain unchanged. This measures steady-state prerequisite latency; it does not establish full publication readiness. Hosted verification is required for this candidate.
 
-## Repeated validation runtime fixture
+## Observed workunit regression evidence (#1660)
 
-`tests/validate_termination.rs::validate_smoke_runtime_is_bounded_without_contention` establishes a named session before timing and asserts that repeated prerequisite checks reuse it. The existing per-call 10-second and aggregate 20-second limits remain unchanged. This measures steady-state prerequisite latency; it does not establish full publication readiness. Hosted verification is required for this candidate.
+`validation_history_workunit_tests` executes two real repository checks through
+the existing sealed runtime, archives their actual observation and exercises
+workunit acceptance, stale input rejection, selector substitution, interrupted
+projection recovery and archival races. Portable completion tests reuse genuine
+observed proof. Legacy CLI/publication cases reject pass-only declarations;
+journal tests preserve file-integrity and lease/recovery coverage without
+mislabeling resumability as VERIFIED proof. The local accepted-target transport
+is a real bare Git fixture, not full authenticated forge or native agent proof.
+Hosted execution and final exact-candidate publication validation remain pending.
+No local tests or CI are run during authoring.
 
-## Accepted release projection refresh (v0.144.5)
+## PR1677 integration with accepted v0.145.0
 
-After integrating accepted master `9767ae9a3ff1c7452101482218a17c55cf569b71`, regenerate the agent entrypoints and managed release projections with the official v0.144.5 binary. Accepted verification requirements remain unchanged. Projection integrity is a prerequisite; fresh hosted GitHub Actions must evaluate this candidate. No local tests or full publication-readiness claim accompany this refresh.
+Integrate accepted master `706569c7ac2f156def00a331134fee52fb444042`, including the canonical observed-workunit
+proof producer from #1681. Diagnostic overrides must still be rejected before
+full readiness, publication and validated completion; the new canonical archive
+cannot convert a diagnostic result into full proof. Preserve both contracts and
+the broker's durable-outcome precedence and bounded request windows.
+
+Official Decapod v0.145.0 regenerates release-bound entrypoints, the managed image
+pin and spec projections. Reconcile the reviewed source inventory for this
+accepted release without changing required checks or provider policy. Earlier
+success for `65da34111d87d70792b59e8fb02ac067d15451ce` against `e8f8848d19a02ad8e2a580cf7722fe4ff9342221` remains historical.
+Fresh GitHub Actions must evaluate the integrated candidate. No local tests run;
+Buildkite is excluded at the user's direction and full kernel publication
+readiness is not asserted by this integration checkpoint.

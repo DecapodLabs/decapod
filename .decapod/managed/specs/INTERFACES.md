@@ -1154,8 +1154,8 @@ field. Nothing in this operation authorizes a mutation, approval or completion.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `95da3866ace32bbb10d642f70d78ae5bff06bb9e5f8b6276204605c475786101`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (234 files), `tests/` (232 files)
+- Repository signal fingerprint: `e2fb26115fe1218f7f980ed36543640c413c052a37d1394d8b1b206859893a4b`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (234 files), `tests/` (233 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 
@@ -1554,6 +1554,34 @@ all-twenty exact-once assertions, and exercises invalid inputs through the actua
 CLI with no task or receipt mutation. The native oversized-deadline regression
 traverses the real execution boundary. Fresh hosted verification is required;
 these declarations are not a successful validation observation.
+
+## Canonical workunit validation contract (#1660)
+
+Existing workunit CLI operations remain the request surface. `record-proof`
+records a declaration; requesting VERIFIED requires a current canonical full
+observation for exactly one supported `validate_passes`/`validated_commit`
+obligation. The kernel derives the result, epoch and optional validation-record
+selector. Caller-supplied selectors cannot import producer success. File artifact
+paths retain byte-integrity semantics. Historical JSON omits the optional field;
+Rust manifest literals add `validation_record: None`, and verification consumers
+pass repository context to `validate_verified_manifest(root, manifest)`.
+Publication and human merge authorization remain independent operations.
+
+## Scoped container-runtime recovery during prerequisites
+
+`src/decapod/plugins/container.rs::heal_container_runtime_override` first uses
+the existing disabled-runtime marker predicate. A missing or unrelated override
+returns unchanged without probing or starting a container engine. An existing
+disabled-runtime override retains the existing availability probe and scoped
+recovery behavior. Required validation checks and publication proof requirements
+remain independent of this optional preparation step.
+
+The isolated subprocess regression in `tests/unit/plugins/container_tests.rs`
+observes runtime invocations for missing, unrelated and disabled override cases,
+and checks preservation of unrelated content. It does not claim live container
+isolation or publication readiness. The actual CLI runtime probe retains its
+10-second per-call and 20-second aggregate requirements; fresh hosted execution
+must establish the resulting candidate's behavior and timing.
 
 ## Legacy input recovery scope (#1657)
 

@@ -1234,6 +1234,24 @@ fn validation_contract_digest(projection: &TaskProjection) -> Result<String, Dec
     digest(&contract)
 }
 
+/// A full-validation observation cannot discharge separately declared task gates.
+pub(super) fn ensure_task_full_validation_plan(
+    conn: &Connection,
+    task_id: &str,
+) -> Result<(), DecapodError> {
+    let projections = capture_selected(conn, &[task_id.to_owned()])?;
+    let projection = projections
+        .get(task_id)
+        .ok_or_else(|| invalid("VALIDATION_HISTORY_TASK_UNBOUND: missing task"))?;
+    let gates: Vec<String> = match &projection.verification {
+        Some(verification) => serde_json::from_str(&verification.proof_plan).map_err(|_| {
+            invalid("VALIDATION_HISTORY_TASK_PROOF_UNSUPPORTED: malformed task proof plan")
+        })?,
+        None => vec!["validate_passes".into()],
+    };
+    crate::core::validation_history::ensure_full_validation_plan(&gates)
+}
+
 pub(super) fn capture_validation_binding(
     conn: &Connection,
     task_id: &str,

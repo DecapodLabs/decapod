@@ -920,8 +920,8 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `95da3866ace32bbb10d642f70d78ae5bff06bb9e5f8b6276204605c475786101`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (234 files), `tests/` (232 files)
+- Repository signal fingerprint: `e2fb26115fe1218f7f980ed36543640c413c052a37d1394d8b1b206859893a4b`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (234 files), `tests/` (233 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 
@@ -1226,6 +1226,18 @@ command. The existing discovered validation inventory is the boundary; it is not
 a claim to infer the semantic or transitive completeness of arbitrary commands.
 Ordinary subject changes still require fresh source-bound execution. Changes to
 inventoried validation definitions require a separately accepted policy revision.
+
+## Observed workunit acceptance (#1660)
+
+`validation_runtime` remains the complete proof producer and
+`validation_history::finish_archive` owns canonical verification-journal append.
+`workunit::transition_status` consumes that observed record and remeasures current
+inputs rather than treating declared pass rows, file hashes or resumable custody
+as completion proof. The existing workunit journal retains original generations;
+its projection, execution binding and independently checked proof must all be
+current at public consumption. Optional bounded, deduplicated input references
+reuse the canonical record; there is no second receipt store.
+See `docs/architecture/workunit-observed-proof.md` for migration and scope.
 
 ## Legacy TODO bootstrap boundary (#1657)
 

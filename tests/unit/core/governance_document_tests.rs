@@ -1083,6 +1083,7 @@ fn workunit_initialization_cannot_overwrite_existing_legacy_proof() {
         proof_plan: vec![],
         proof_results: vec![],
         validation_epoch: None,
+        validation_record: None,
         status: WorkUnitStatus::Verified,
     };
     let legacy = root
