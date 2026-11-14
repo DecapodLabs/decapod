@@ -463,9 +463,12 @@ impl Connection {
         // The SDK v1 default is 4 MiB per cell/parameter set. Decapod's
         // existing transfer envelope exceeds that ceiling, and bounded legacy
         // journal/history readers support individual values through 8 MiB.
-        // Keep those compatibility bounds explicit without relaxing field
-        // admission, result/row limits, cloud policy or any semantic proof gate.
+        // A maximum-size value must also fit alongside its key/metadata in a
+        // bound statement. Aggregate parameter headroom is not a larger value
+        // admission limit. Keep result/row limits, cloud policy and semantic
+        // field/proof gates unchanged.
         let compatibility_bytes = 8 * 1024 * 1024;
+        let parameter_bytes = 2 * compatibility_bytes;
         let driver = dactyl_db::Connection::open_with_budget(
             DatastoreRoute::sqlite(path.as_ref().to_string_lossy().into_owned()),
             OpenOptions {
@@ -475,7 +478,7 @@ impl Connection {
             None,
             dactyl_db::ResourceBudget::v1()
                 .with_max_cell_bytes(compatibility_bytes)
-                .with_max_param_bytes(compatibility_bytes),
+                .with_max_param_bytes(parameter_bytes),
         )?;
         #[cfg(unix)]
         if std::env::var("DECAPOD_STORAGE_OWNER_WORKER").as_deref() == Ok("1") {
