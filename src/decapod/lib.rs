@@ -2716,28 +2716,19 @@ pub fn run() -> Result<(), error::DecapodError> {
     // worktree maintenance. Decode stdin RPC before that path as well, so HTTP
     // RPC (which uses the stdin carrier) has the same read-only guarantee.
     let command = match command {
-        Command::Todo(todo_cli)
-            if matches!(
-                &todo_cli.command,
-                TodoCommand::Journal {
-                    command: todo::TodoJournalCommand::ReconcileLegacy { .. }
-                }
-            ) =>
-        {
-            let TodoCommand::Journal {
-                command:
-                    todo::TodoJournalCommand::ReconcileLegacy {
-                        expected_review,
-                        prepare_only,
-                    },
-            } = todo_cli.command
-            else {
-                unreachable!("matched recovery command")
-            };
+        Command::Todo(todo_cli) if todo_cli.legacy_reconciliation_request().is_some() => {
+            let request = todo_cli.legacy_reconciliation_request().ok_or_else(|| {
+                error::DecapodError::ValidationError("LEGACY_TODO_DISPATCH_INVALID".into())
+            })?;
+            if request.has_operation_id {
+                return Err(error::DecapodError::ValidationError(
+                    "--operation-id is only supported for cloud todo add".into(),
+                ));
+            }
             let workspace_root = find_decapod_project_root(&std::env::current_dir()?)?;
             let main_root = find_governance_root(&workspace_root);
             let actor = current_agent_id();
-            if expected_review.is_some() {
+            if request.expected_review.is_some() {
                 let password = std::env::var("DECAPOD_SESSION_PASSWORD").map_err(|_| {
                     error::DecapodError::ValidationError(
                         "AGENT_IDENTITY_UNAUTHENTICATED: recovery apply requires an active local session password".into(),
@@ -2756,8 +2747,8 @@ pub fn run() -> Result<(), error::DecapodError> {
             let report = todo::reconcile_legacy_todo(
                 &main_root.join(".decapod/data"),
                 &actor,
-                expected_review.as_deref(),
-                prepare_only,
+                request.expected_review,
+                request.prepare_only,
             )?;
             println!(
                 "{}",
