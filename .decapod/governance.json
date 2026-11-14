@@ -805,6 +805,14 @@
       "proof_refs": [
         "https://github.com/DecapodLabs/decapod/issues/1667"
       ]
+    },
+    {
+      "id": "issue-1667-file-34",
+      "summary": "docs(specs): record local BLOB accounting and retained component proof; file-by-file checkpoint, verification pending.",
+      "input_digest": "sha256:61e6c403406e38b0d959ba2bd46a9cd6ba1f0af5d8f45a19f263d0b6cfc47cd6",
+      "proof_refs": [
+        "https://github.com/DecapodLabs/decapod/issues/1667"
+      ]
     }
   ],
   "intents": {
@@ -845,22 +853,22 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Two maximum-size cells plus a bound key exceed16MiB. Exercise the real SDK preflight code and assert no extra SQLite row is persisted; preserve cell and aggregate protections together. GitHub Actions only; no local tests.",
-          "reviewed_code_fingerprint": "7a3c199168381e27441eaadbab7fc22169e5a8259e956f61b497f356948ef639",
+          "reason": "Specify the bounded local accounting allowance required for existing raw checkpoint components; keep logical admission, row and cloud authority separate. GitHub Actions verification remains pending; no local tests.",
+          "reviewed_code_fingerprint": "ff085488220394d6698930b3a8017fadf5e713f97140b11c7f9a735446cbd789",
           "spec_material_hash": "c7ec7fc6a463392c5fb87a434d69170abe5c13dc147d849bef9f26443187a1ec"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Two maximum-size cells plus a bound key exceed16MiB. Exercise the real SDK preflight code and assert no extra SQLite row is persisted; preserve cell and aggregate protections together. GitHub Actions only; no local tests.",
-          "reviewed_code_fingerprint": "7a3c199168381e27441eaadbab7fc22169e5a8259e956f61b497f356948ef639",
-          "spec_material_hash": "7981fad2540aea0fa271ca07480be5ef3fed060fda68a8a81695705de7f1b981"
+          "reason": "Specify the bounded local accounting allowance required for existing raw checkpoint components; keep logical admission, row and cloud authority separate. GitHub Actions verification remains pending; no local tests.",
+          "reviewed_code_fingerprint": "ff085488220394d6698930b3a8017fadf5e713f97140b11c7f9a735446cbd789",
+          "spec_material_hash": "c9d1a9a5828728285a5694da0a8be9309c719be76e2d2166dab040933fadab87"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Two maximum-size cells plus a bound key exceed16MiB. Exercise the real SDK preflight code and assert no extra SQLite row is persisted; preserve cell and aggregate protections together. GitHub Actions only; no local tests.",
-          "reviewed_code_fingerprint": "7a3c199168381e27441eaadbab7fc22169e5a8259e956f61b497f356948ef639",
+          "reason": "Specify the bounded local accounting allowance required for existing raw checkpoint components; keep logical admission, row and cloud authority separate. GitHub Actions verification remains pending; no local tests.",
+          "reviewed_code_fingerprint": "ff085488220394d6698930b3a8017fadf5e713f97140b11c7f9a735446cbd789",
           "spec_material_hash": "c4b217ac3486512e3460310c437a0250686d37ce1a2211f0f7e1d101871b67aa"
         }
       ],
@@ -872,13 +880,13 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1794624416Z"
+      "updated_at": "1794624675Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:75a8770583d6a67001aaa0e717639b0893751ce957281c10966c22d6c18b4d7f",
+      "artifact_hash": "sha256:58bc4aa4919980642082f88d123e4f609f306e9f8afa9b39cdfb1fbee37b66da",
       "checks": [],
       "current_phase": "implementation",
       "custody": {
@@ -1125,10 +1133,17 @@
             "intent_id": "intent:change_01M7BCN0CS3Z8AJ7TZ491WJ7CJ",
             "kind": "trajectory_step_recorded",
             "sequence": 36
+          },
+          {
+            "detail": "trajectory:branch_01M7BCN0FD8AE623HXNGA0C8F9",
+            "event_id": "event:37",
+            "intent_id": "intent:change_01M7BCN0CS3Z8AJ7TZ491WJ7CJ",
+            "kind": "trajectory_step_recorded",
+            "sequence": 37
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 36,
+        "next_sequence": 37,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M7BCN0FD8AE623HXNGA0C8F9": {
@@ -1658,6 +1673,22 @@
                   "issue-1667"
                 ],
                 "sequence": 36,
+                "validation_findings": [
+                  "Hosted verification and exact-candidate publication readiness remain pending; no local tests run."
+                ]
+              },
+              {
+                "action": "implementation",
+                "custody_event_id": "event:37",
+                "observations": [
+                  ".decapod/managed/specs/INTERFACES.md",
+                  "https://github.com/DecapodLabs/decapod/issues/1667"
+                ],
+                "proof_refs": [],
+                "scope": [
+                  "issue-1667"
+                ],
+                "sequence": 37,
                 "validation_findings": [
                   "Hosted verification and exact-candidate publication readiness remain pending; no local tests run."
                 ]

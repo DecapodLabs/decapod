@@ -1154,7 +1154,7 @@ field. Nothing in this operation authorizes a mutation, approval or completion.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `7a3c199168381e27441eaadbab7fc22169e5a8259e956f61b497f356948ef639`
+- Repository signal fingerprint: `ff085488220394d6698930b3a8017fadf5e713f97140b11c7f9a735446cbd789`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (234 files), `tests/` (232 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
@@ -1535,9 +1535,18 @@ local adoption remain supported; no override or second policy store is added.
 
 The physical local bridge retains an 8 MiB per-value compatibility ceiling and
 allows 16 MiB per bound parameter set so a ceiling-sized value can coexist with
-its primary key and metadata. These are separate resource limits. Result bytes
-and row counts retain SDK v1 defaults, and application field admission remains
-unchanged. The real SQLite regression tests the exact 8 MiB boundary with a
+its primary key and metadata. These are separate resource limits. SDK v1 charges
+BLOB result bytes at 32 times their raw length, so the local decoded-result
+accounting ceiling is 272 MiB: one 8 MiB component plus 16 MiB of accounted
+headroom. This is an accounting bound, not a buffer allocation or a new logical
+field allowance. Row counts and cloud budgets retain SDK defaults; application
+field admission remains unchanged. The real SQLite regression tests the exact 8 MiB boundary with a
 bound key, lossless re-read, unrelated update and rejection before a write of
 a value exceeding the cell ceiling. A codec decoding guard does not authorize
 larger application records.
+
+The journal regression persists and independently reconstructs a retained
+codec-0 component at the full cell ceiling, checking its exact byte length and
+SHA-256 through the production component owner. It does not rewrite historical
+bytes or establish task completion. New text values above the cell ceiling and
+aggregate parameter sets above their separate budget still fail before mutation.
