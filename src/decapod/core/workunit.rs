@@ -867,6 +867,18 @@ fn append_snapshot(
         |conn| {
             let records = journal_records_on_conn(conn, &manifest.task_id)?;
             let latest = records.last();
+            if manifest.status == WorkUnitStatus::Verified
+                && (binding.is_some() || !matches!(kind, "initialized" | "legacy_baseline"))
+            {
+                let canonical = crate::core::store::find_governance_root(root).join(".decapod/data");
+                if crate::core::events::canonical_db_path(&data).canonicalize()?
+                    != crate::core::events::canonical_db_path(&canonical).canonicalize()?
+                {
+                    return Err(journal_error("WORKUNIT_PROOF_ATOMIC_DOMAIN_UNSUPPORTED",
+                        "workspace-local workunit state and canonical task proof use different databases; no cross-store atomic acceptance is asserted"));
+                }
+                crate::core::validation_history::check_workunit_append_on_conn(conn, manifest)?;
+            }
             let manifest_hash = manifest
                 .canonical_hash_hex()
                 .map_err(|e| journal_error("WORKUNIT_JOURNAL_INVALID", e))?;
@@ -892,9 +904,6 @@ fn append_snapshot(
                     "WORKUNIT_GENERATION_CONFLICT",
                     "workunit changed after the caller prepared its update",
                 ));
-            }
-            if manifest.status == WorkUnitStatus::Verified {
-                crate::core::validation_history::check_workunit_append_on_conn(conn, manifest)?;
             }
             let mut record = WorkUnitJournalRecord {
                 schema_version: JOURNAL_SCHEMA.into(),
