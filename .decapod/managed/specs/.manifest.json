@@ -1,7 +1,7 @@
 {
   "schema_version": "1.1.0",
   "template_version": "scaffold-v5",
-  "generated_at": "1794698866Z",
+  "generated_at": "1794700117Z",
   "repo_signal_fingerprint": "acc382d4543f13beeecc330661ce3de7cd003629902459930d94fd32903e044f",
   "declared_capabilities": [
     "agent-helper",
@@ -16,8 +16,8 @@
     "scheduled-jobs"
   ],
   "capability_definition_version": "1.0.0",
-  "config_input_hash": "7a84230d295c7d7c763b9b2c258ecf5252a53c99b8e86c09c7f304af2841380e",
-  "spec_input_hash": "b88db8ffab46f694a88abbca6fcf899d2b0bb7fa55b73541cb7005000c10a036",
+  "config_input_hash": "e1bcb309b2a1fb6c27f36c3b351b430644f5aedcffdc3f36fe1f6f11a949f5df",
+  "spec_input_hash": "65393e4f7f8d98098b0fe17f4ca755c1c2fcbcdd36ecf23379f130ea7bdc38bb",
   "decapod_release": "0.145.5",
   "entrypoints": [
     {
@@ -55,25 +55,25 @@
     {
       "path": ".decapod/managed/specs/INTENT.md",
       "template_hash": "8ffe828e95333b30b8996d0f4e92026b4da248cfddd11ae9b469c191c9cdce77",
-      "content_hash": "733545d00e43dcf0bdb0b8d2de0cf4e28d9bc19efb8f46340fbc273ab6f18a00",
+      "content_hash": "7d13eed67a4ec18559af3ea24938f0e6aa73edbba98ce31261508c272087db1e",
       "fingerprint": ""
     },
     {
       "path": ".decapod/managed/specs/ARCHITECTURE.md",
       "template_hash": "9c28fd9b2a670188295745c44eebe55b08fd385f330e24ee00f6802984e531a4",
-      "content_hash": "79b6adb8053e6e5a17cda2d000c9655b0890df8635fa9a4bc2c5d87cdad2476b",
+      "content_hash": "cf696d63222ca5d21d7528ba0ea662c10b4eac4a909b8270eaa26a4a099deabc",
       "fingerprint": ""
     },
     {
       "path": ".decapod/managed/specs/INTERFACES.md",
       "template_hash": "9c0a3212e52b599fe76b8747da869666f25710115c491adcb8a323782f13c099",
-      "content_hash": "68591fb060eadd54e952d9efaf62d94f05a0f28148fd79dadbd2d3651f2339f7",
+      "content_hash": "7ce2c2c23a1841c28717998ea25287151f4f3c0066669ecc3ab06b96da9be29f",
       "fingerprint": ""
     },
     {
       "path": ".decapod/managed/specs/VALIDATION.md",
       "template_hash": "517a57be410d28c2a061bcb46e1d223fb7fe8d18ec4909d6cba6a65c366bb8fd",
-      "content_hash": "0fa2096a073d541dc4f74fea9b749af7215aed619e4d93ef084331673a590ba1",
+      "content_hash": "b6ca636f9266c60935709b677498a26a916afcf7756448db7e56cd2999e5a293",
       "fingerprint": ""
     },
     {

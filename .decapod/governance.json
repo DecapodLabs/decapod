@@ -611,6 +611,14 @@
       "proof_refs": [
         "https://github.com/DecapodLabs/decapod/issues/1069"
       ]
+    },
+    {
+      "id": "issue1069-current-map-v1455",
+      "summary": "Current accepted-kernel audit with scoped source evidence and explicit missing delivery; this candidate hosted proof pending.",
+      "input_digest": "sha256:83fec5474673cfe9404dfe8cf07355e7409f8deaf62ec1c49890949de0c85cbf",
+      "proof_refs": [
+        "https://github.com/DecapodLabs/decapod/issues/1069"
+      ]
     }
   ],
   "intents": {
@@ -647,6 +655,29 @@
         "decapod validate"
       ],
       "schema_version": "1.1.0",
+      "spec_reviews": [
+        {
+          "disposition": "updated",
+          "path": ".decapod/managed/specs/ARCHITECTURE.md",
+          "reason": "Reviewed the accepted0.145.5 source map, exact foreign candidate evidence, canonical proof and remote publication/authority limits. Documentation only; no kernel or security contract changes. Native integration, offline CLI discovery, ten-worker A-H and complete native proof remain unresolved.",
+          "reviewed_code_fingerprint": "acc382d4543f13beeecc330661ce3de7cd003629902459930d94fd32903e044f",
+          "spec_material_hash": "814abed8876a5e4c82b603c1062c638043d506b3604524b2462d94e6eeb3899b"
+        },
+        {
+          "disposition": "updated",
+          "path": ".decapod/managed/specs/INTERFACES.md",
+          "reason": "Reviewed the accepted0.145.5 source map, exact foreign candidate evidence, canonical proof and remote publication/authority limits. Documentation only; no kernel or security contract changes. Native integration, offline CLI discovery, ten-worker A-H and complete native proof remain unresolved.",
+          "reviewed_code_fingerprint": "acc382d4543f13beeecc330661ce3de7cd003629902459930d94fd32903e044f",
+          "spec_material_hash": "513e27947a9fe91e25695dda6a09c225c4545520693921e68c02ae6d050014f2"
+        },
+        {
+          "disposition": "unchanged_with_reason",
+          "path": ".decapod/managed/specs/SECURITY.md",
+          "reason": "Reviewed the accepted0.145.5 source map, exact foreign candidate evidence, canonical proof and remote publication/authority limits. Documentation only; no kernel or security contract changes. Native integration, offline CLI discovery, ten-worker A-H and complete native proof remain unresolved.",
+          "reviewed_code_fingerprint": "acc382d4543f13beeecc330661ce3de7cd003629902459930d94fd32903e044f",
+          "spec_material_hash": "341bf0d375468eb00e1fdc39254d86421cf16396b246cd9585895b48d8be898b"
+        }
+      ],
       "state": "DRAFT",
       "stop_conditions": [],
       "title": "Refresh accepted-kernel enforcement audit and evidence boundaries (#1069)",
@@ -655,15 +686,20 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1794699031Z"
+      "updated_at": "1794700142Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:9f1f633a9f5af8ce273c48f293f7b246839c6d79660035cf502dd234fffe0bb6",
-      "checks": [],
-      "current_phase": "implementation",
+      "artifact_hash": "sha256:027c09ce5c00789e8c40e5153b835a019f2b685f48eccbf5aeadcc6b9db317e1",
+      "checks": [
+        {
+          "name": "linked-source-proof-scope",
+          "status": "partial"
+        }
+      ],
+      "current_phase": "validation",
       "custody": {
         "events": [
           {
@@ -733,10 +769,17 @@
             "intent_id": "intent:change_01M7E66T9HY96F199YWWHTADJ3",
             "kind": "trajectory_step_recorded",
             "sequence": 11
+          },
+          {
+            "detail": "trajectory:branch_01M7E66TFC22P91MMG3QEZ23JP",
+            "event_id": "event:12",
+            "intent_id": "intent:change_01M7E66T9HY96F199YWWHTADJ3",
+            "kind": "trajectory_step_recorded",
+            "sequence": 12
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 11,
+        "next_sequence": 12,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M7E66TFC22P91MMG3QEZ23JP": {
@@ -871,6 +914,23 @@
                 "validation_findings": [
                   "Implementation in progress; exact-candidate hosted checks pending; no local tests or Buildkite execution."
                 ]
+              },
+              {
+                "action": "validation",
+                "custody_event_id": "event:12",
+                "observations": [
+                  "https://github.com/DecapodLabs/decapod/actions/runs/43649604115"
+                ],
+                "proof_refs": [
+                  "linked-source-proof-scope"
+                ],
+                "scope": [
+                  "root"
+                ],
+                "sequence": 12,
+                "validation_findings": [
+                  "Linked execution belongs to d0b24f6f and separate6040f085, not this documentation candidate. Fresh hosted checks pending; no local tests or Buildkite evidence collection. Full native publication and the original end-to-end mission remain unproven."
+                ]
               }
             ]
           }
@@ -879,6 +939,7 @@
       "declared_commands": [],
       "destination": "pull request",
       "evidence": [
+        "https://github.com/DecapodLabs/decapod/actions/runs/43649604115",
         "https://github.com/DecapodLabs/decapod/issues/1069"
       ],
       "inspected_files": [],
@@ -903,7 +964,8 @@
       "task_id": "code_01m7e6518p19mwp8",
       "tool_calls": [],
       "unresolved_assumptions": [
-        "Implementation in progress; exact-candidate hosted checks pending; no local tests or Buildkite execution."
+        "Implementation in progress; exact-candidate hosted checks pending; no local tests or Buildkite execution.",
+        "Linked execution belongs to d0b24f6f and separate6040f085, not this documentation candidate. Fresh hosted checks pending; no local tests or Buildkite evidence collection. Full native publication and the original end-to-end mission remain unproven."
       ]
     }
   },
