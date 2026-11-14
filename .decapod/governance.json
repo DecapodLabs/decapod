@@ -621,6 +621,14 @@
       "proof_refs": [
         "https://github.com/DecapodLabs/decapod/pull/1682"
       ]
+    },
+    {
+      "id": "issue-1672-integrate-9767ae9a",
+      "summary": "Integrate accepted master 9767ae9a3ff1c7452101482218a17c55cf569b71 after accepted release v0.144.5 with issue1672. Preserve current task journal/checkpoints and authored specs from both branches; regenerate projections through the kernel. Previous candidate readiness does not apply; no local tests.",
+      "input_digest": "sha256:c84bc6dc4894d49ac6b9674bfb8808def6418b11ad134a22b81df29a57da099a",
+      "proof_refs": [
+        "https://github.com/DecapodLabs/decapod/pull/1685"
+      ]
     }
   ],
   "intents": {
@@ -661,22 +669,22 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Integrate accepted master fded2dd0b5f02f9c874301d4b98cfd59ad188357 after merged PR1682 native inventory evidence with issue1672. Preserve current task journal/checkpoints and authored specs from both branches; regenerate projections through the kernel. Previous candidate readiness does not apply; no local tests.",
-          "reviewed_code_fingerprint": "f8ec0373efe5666103f1a9f4840f5aa832b7a2d366d397de5bb434d33b659690",
+          "reason": "Integrate accepted master 9767ae9a3ff1c7452101482218a17c55cf569b71 after accepted release v0.144.5 with issue1672. Preserve current task journal/checkpoints and authored specs from both branches; regenerate projections through the kernel. Previous candidate readiness does not apply; no local tests.",
+          "reviewed_code_fingerprint": "d8a28e3ef1dc14965f4469841c8d043e42cbf2e6b4e1af1e30c52a76f158d299",
           "spec_material_hash": "1da8dd7ffc667cc2844a6399e06188ee5608fa786ff11e1f1d9befdddc781d9a"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Integrate accepted master fded2dd0b5f02f9c874301d4b98cfd59ad188357 after merged PR1682 native inventory evidence with issue1672. Preserve current task journal/checkpoints and authored specs from both branches; regenerate projections through the kernel. Previous candidate readiness does not apply; no local tests.",
-          "reviewed_code_fingerprint": "f8ec0373efe5666103f1a9f4840f5aa832b7a2d366d397de5bb434d33b659690",
+          "reason": "Integrate accepted master 9767ae9a3ff1c7452101482218a17c55cf569b71 after accepted release v0.144.5 with issue1672. Preserve current task journal/checkpoints and authored specs from both branches; regenerate projections through the kernel. Previous candidate readiness does not apply; no local tests.",
+          "reviewed_code_fingerprint": "d8a28e3ef1dc14965f4469841c8d043e42cbf2e6b4e1af1e30c52a76f158d299",
           "spec_material_hash": "273ce5f19bf1ca9e6794aeb0128755444edaf312ac6a39059259e764d9ded91b"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Integrate accepted master fded2dd0b5f02f9c874301d4b98cfd59ad188357 after merged PR1682 native inventory evidence with issue1672. Preserve current task journal/checkpoints and authored specs from both branches; regenerate projections through the kernel. Previous candidate readiness does not apply; no local tests.",
-          "reviewed_code_fingerprint": "f8ec0373efe5666103f1a9f4840f5aa832b7a2d366d397de5bb434d33b659690",
+          "reason": "Integrate accepted master 9767ae9a3ff1c7452101482218a17c55cf569b71 after accepted release v0.144.5 with issue1672. Preserve current task journal/checkpoints and authored specs from both branches; regenerate projections through the kernel. Previous candidate readiness does not apply; no local tests.",
+          "reviewed_code_fingerprint": "d8a28e3ef1dc14965f4469841c8d043e42cbf2e6b4e1af1e30c52a76f158d299",
           "spec_material_hash": "fa85ff736ae9bd16044a48bb34a30dd8fdbb8d7209b3dbf7642d1d94f38a9c96"
         }
       ],
@@ -690,13 +698,13 @@
         "Accepted controller must support the new finite shard graph before candidate workflows can use it."
       ],
       "unresolved_contradictions": [],
-      "updated_at": "1794623582Z"
+      "updated_at": "1794627763Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:c65950f1d16962d8dc5a47ef91d8c1412afc4b25bc1e01b655f30138b5efe504",
+      "artifact_hash": "sha256:84517661cd952ac4edd8606b875f4d3baa96ed1168be02028089028379cb1763",
       "checks": [],
       "current_phase": "implementation",
       "custody": {
@@ -782,10 +790,17 @@
             "intent_id": "intent:change_01M7BCG49JVT83YA5CJ6ZGTYFS",
             "kind": "trajectory_step_recorded",
             "sequence": 13
+          },
+          {
+            "detail": "trajectory:branch_01M7BCG4CA346XXGN460V3EX4S",
+            "event_id": "event:14",
+            "intent_id": "intent:change_01M7BCG49JVT83YA5CJ6ZGTYFS",
+            "kind": "trajectory_step_recorded",
+            "sequence": 14
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 13,
+        "next_sequence": 14,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M7BCG4CA346XXGN460V3EX4S": {
@@ -950,6 +965,21 @@
                 "validation_findings": [
                   "Integrate accepted master fded2dd0b5f02f9c874301d4b98cfd59ad188357 after merged PR1682 native inventory evidence with issue1672. Preserve current task journal/checkpoints and authored specs from both branches; regenerate projections through the kernel. Previous candidate readiness does not apply; no local tests."
                 ]
+              },
+              {
+                "action": "implementation",
+                "custody_event_id": "event:14",
+                "observations": [
+                  "https://github.com/DecapodLabs/decapod/pull/1685"
+                ],
+                "proof_refs": [],
+                "scope": [
+                  "issue-1672"
+                ],
+                "sequence": 14,
+                "validation_findings": [
+                  "Integrate accepted master 9767ae9a3ff1c7452101482218a17c55cf569b71 after accepted release v0.144.5 with issue1672. Preserve current task journal/checkpoints and authored specs from both branches; regenerate projections through the kernel. Previous candidate readiness does not apply; no local tests."
+                ]
               }
             ]
           }
@@ -960,7 +990,8 @@
       "evidence": [
         "https://github.com/DecapodLabs/decapod/issues/1672",
         "https://github.com/DecapodLabs/decapod/pull/1675",
-        "https://github.com/DecapodLabs/decapod/pull/1682"
+        "https://github.com/DecapodLabs/decapod/pull/1682",
+        "https://github.com/DecapodLabs/decapod/pull/1685"
       ],
       "inspected_files": [],
       "intent_id": "intent:change_01M7BCG49JVT83YA5CJ6ZGTYFS",
@@ -986,6 +1017,7 @@
       "tool_calls": [],
       "unresolved_assumptions": [
         "Hosted verification and exact-candidate publication readiness remain pending; no local tests run.",
+        "Integrate accepted master 9767ae9a3ff1c7452101482218a17c55cf569b71 after accepted release v0.144.5 with issue1672. Preserve current task journal/checkpoints and authored specs from both branches; regenerate projections through the kernel. Previous candidate readiness does not apply; no local tests.",
         "Integrate accepted master f779e39111ec8b3c8c41569f68a3a7604df167e7 and merged1675 accepted-policy hardening with issue1672. Preserve current task journal/checkpoints and authored specs from both branches; regenerate projections through the kernel. Previous candidate readiness does not apply; no local tests.",
         "Integrate accepted master fded2dd0b5f02f9c874301d4b98cfd59ad188357 after merged PR1682 native inventory evidence with issue1672. Preserve current task journal/checkpoints and authored specs from both branches; regenerate projections through the kernel. Previous candidate readiness does not apply; no local tests."
       ]
