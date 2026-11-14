@@ -1029,6 +1029,14 @@
       "proof_refs": [
         "https://github.com/DecapodLabs/decapod/issues/1660"
       ]
+    },
+    {
+      "id": "issue-1660-file-62",
+      "summary": "docs(governance): map acceptance paths and unresolved trust boundaries; file-by-file checkpoint, verification pending.",
+      "input_digest": "sha256:e98efb3550e764596b8eaf9bf019e47642712673bf64ed6cf7ed2fa77b4b29ac",
+      "proof_refs": [
+        "https://github.com/DecapodLabs/decapod/issues/1660"
+      ]
     }
   ],
   "intents": {
@@ -1069,21 +1077,21 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Hosted offline consumer exercises actual observed proof; correct genuine same-repository acceptance and reject subsequent artifact tampering.",
+          "reason": "Source-backed audit distinguishes accepted mechanisms, observed-workunit repair, override dependency and genuinely missing runtime/cloud/stress guarantees. Preserve explicit pending final-candidate hosted proof.",
           "reviewed_code_fingerprint": "89f4d6816397bb4fc3afc035d6e6124d87a51b062a12e0fb30ce3fa1bd75faab",
           "spec_material_hash": "e799665f0f6c5025ac094765c6f38097a6894c63fd4f08593900c2567475d6e9"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Hosted offline consumer exercises actual observed proof; correct genuine same-repository acceptance and reject subsequent artifact tampering.",
+          "reason": "Source-backed audit distinguishes accepted mechanisms, observed-workunit repair, override dependency and genuinely missing runtime/cloud/stress guarantees. Preserve explicit pending final-candidate hosted proof.",
           "reviewed_code_fingerprint": "89f4d6816397bb4fc3afc035d6e6124d87a51b062a12e0fb30ce3fa1bd75faab",
           "spec_material_hash": "10df59dc9f256a32e3851047d6d684158b0453828124370c3bb74edc6e74af49"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Hosted offline consumer exercises actual observed proof; correct genuine same-repository acceptance and reject subsequent artifact tampering.",
+          "reason": "Source-backed audit distinguishes accepted mechanisms, observed-workunit repair, override dependency and genuinely missing runtime/cloud/stress guarantees. Preserve explicit pending final-candidate hosted proof.",
           "reviewed_code_fingerprint": "89f4d6816397bb4fc3afc035d6e6124d87a51b062a12e0fb30ce3fa1bd75faab",
           "spec_material_hash": "366e74fb3bc9491cc900dbede2cffce06e3d8f7667d3d9b64641eb9bd9d7a695"
         }
@@ -1096,13 +1104,13 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1794620979Z"
+      "updated_at": "1794621903Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:f6896926d11e12a2d8c80389e872a3d5aee830f4336edbc4000bb108753ecd50",
+      "artifact_hash": "sha256:437105d666a1bf64e059927d42ff8df610a74d57b8f0f13ca653e32977800e9b",
       "checks": [],
       "current_phase": "implementation",
       "custody": {
@@ -1545,10 +1553,17 @@
             "intent_id": "intent:change_01M7BCFASGT4DQG4ZADT2BP5G0",
             "kind": "trajectory_step_recorded",
             "sequence": 64
+          },
+          {
+            "detail": "trajectory:branch_01M7BCFAWAYM3TXSVTHC1N7YZE",
+            "event_id": "event:65",
+            "intent_id": "intent:change_01M7BCFASGT4DQG4ZADT2BP5G0",
+            "kind": "trajectory_step_recorded",
+            "sequence": 65
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 64,
+        "next_sequence": 65,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M7BCFAWAYM3TXSVTHC1N7YZE": {
@@ -2530,6 +2545,22 @@
                 "validation_findings": [
                   "Hosted verification and exact-candidate publication readiness remain pending; no local tests run."
                 ]
+              },
+              {
+                "action": "implementation",
+                "custody_event_id": "event:65",
+                "observations": [
+                  "docs/architecture/continuous-governance-implementation-map.md",
+                  "https://github.com/DecapodLabs/decapod/issues/1660"
+                ],
+                "proof_refs": [],
+                "scope": [
+                  "issue-1660"
+                ],
+                "sequence": 65,
+                "validation_findings": [
+                  "Hosted verification and exact-candidate publication readiness remain pending; no local tests run."
+                ]
               }
             ]
           }
@@ -2549,6 +2580,7 @@
         ".decapod/managed/specs/INTERFACES.md",
         ".decapod/managed/specs/SECURITY.md",
         ".decapod/managed/specs/VALIDATION.md",
+        "docs/architecture/continuous-governance-implementation-map.md",
         "docs/architecture/workunit-observed-proof.md",
         "src/decapod/core/completion_evidence.rs",
         "src/decapod/core/native_proof.rs",
