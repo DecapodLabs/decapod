@@ -268,7 +268,7 @@ fn validate_terminates_with_typed_error_under_db_contention() {
     let start = Instant::now();
     let validate = run_decapod(
         &dir,
-        &["validate"],
+        &["govern", "project-check"],
         &[
             ("DECAPOD_AGENT_ID", "unknown"),
             ("DECAPOD_SESSION_PASSWORD", &password),
@@ -341,7 +341,7 @@ fn validate_terminates_with_typed_error_under_immediate_lock_contention() {
     let start = Instant::now();
     let validate = run_decapod(
         &dir,
-        &["validate"],
+        &["govern", "project-check"],
         &[
             ("DECAPOD_AGENT_ID", "unknown"),
             ("DECAPOD_SESSION_PASSWORD", &password),
@@ -380,7 +380,7 @@ fn validate_timeout_does_not_strand_db_for_followup_commands() {
 
     let validate = run_decapod(
         &dir,
-        &["validate"],
+        &["govern", "project-check"],
         &[
             ("DECAPOD_AGENT_ID", "unknown"),
             ("DECAPOD_SESSION_PASSWORD", &password),
@@ -597,16 +597,13 @@ fn validate_json_reports_self_heal_and_structured_summary() {
         !stale_validate.status.success(),
         "changed Dockerfile material cannot reuse the previous validation epoch"
     );
-    // Public full validation does not write methodology receipts. An earlier
-    // prerequisite receipt cannot satisfy the missing current readiness profile.
-    let public_refusal: Value =
-        serde_json::from_slice(&stale_validate.stdout).expect("public readiness refusal JSON");
-    assert_eq!(public_refusal["scope"], "publication_readiness");
-    assert_eq!(public_refusal["publication_ready"], false);
-    assert_eq!(public_refusal["readiness"]["ready"], false);
+    // Full readiness rejects the diagnostic override before it can inspect or
+    // rewrite an old prerequisite receipt. Staleness is exercised below through
+    // the explicit prerequisite interface; neither result grants publication.
+    let public_refusal = String::from_utf8_lossy(&stale_validate.stderr);
     assert!(
-        String::from_utf8_lossy(&stale_validate.stdout).contains("READINESS_PROFILE_REQUIRED"),
-        "expected full-proof refusal, got: {public_refusal}"
+        public_refusal.contains("READINESS_GATE_OVERRIDE_UNSUPPORTED"),
+        "expected early full-readiness override refusal, got: {public_refusal}"
     );
     assert_eq!(
         fs::read(&governance_path).expect("preserved governance"),
@@ -927,7 +924,7 @@ fn validate_parallel_contention_emits_typed_reasoned_diagnostics() {
     for _ in 0..4 {
         outputs.push(run_decapod(
             &dir,
-            &["validate"],
+            &["govern", "project-check"],
             &[
                 ("DECAPOD_AGENT_ID", "unknown"),
                 ("DECAPOD_SESSION_PASSWORD", &password),
@@ -1011,7 +1008,7 @@ fn validate_diagnostics_disabled_does_not_write_artifacts() {
 
     let output = run_decapod(
         &dir,
-        &["validate"],
+        &["govern", "project-check"],
         &[
             ("DECAPOD_AGENT_ID", "unknown"),
             ("DECAPOD_SESSION_PASSWORD", &password),
@@ -1072,7 +1069,7 @@ fn validate_diagnostics_payload_is_sanitized() {
 
     let output = run_decapod(
         &dir,
-        &["validate"],
+        &["govern", "project-check"],
         &[
             ("DECAPOD_AGENT_ID", "unknown"),
             ("DECAPOD_SESSION_PASSWORD", &password),

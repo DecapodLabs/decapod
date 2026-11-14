@@ -765,6 +765,14 @@
       "proof_refs": [
         "https://github.com/DecapodLabs/decapod/issues/1659"
       ]
+    },
+    {
+      "id": "issue-1659-file-29",
+      "summary": "test(validation): keep contention diagnostics in bounded prerequisite scope; file-by-file checkpoint, verification pending.",
+      "input_digest": "sha256:2b56e8743f057c4594cbb17927f6ed9859801b1c29d030fc463e4f5936be4ee1",
+      "proof_refs": [
+        "https://github.com/DecapodLabs/decapod/issues/1659"
+      ]
     }
   ],
   "intents": {
@@ -805,22 +813,22 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Hosted run 43530634580 exposed the previous edit hit the forwarding probe instead of the deny-list case. Restore the real diagnostic probe and scope arbitrary-control rejection to its exact test function.",
-          "reviewed_code_fingerprint": "f02924ab6ccbeabca590227b6b3e7522675e76078580d526fea8f578efe6f1b0",
+          "reason": "Hosted core failures are early full-readiness override refusals, not exercised lock diagnostics. Run actual prerequisite subprocesses for contention and preserve explicit full-readiness refusal before stale receipt mutation.",
+          "reviewed_code_fingerprint": "d6de15790cf0925a3d7f50d2478a1a261c0df1934dc3d4f70897b13464f267c9",
           "spec_material_hash": "7393e220900cbc6f4ddeb0bd9b9835305dbeaa3e21494a74edc55487949f8123"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Hosted run 43530634580 exposed the previous edit hit the forwarding probe instead of the deny-list case. Restore the real diagnostic probe and scope arbitrary-control rejection to its exact test function.",
-          "reviewed_code_fingerprint": "f02924ab6ccbeabca590227b6b3e7522675e76078580d526fea8f578efe6f1b0",
+          "reason": "Hosted core failures are early full-readiness override refusals, not exercised lock diagnostics. Run actual prerequisite subprocesses for contention and preserve explicit full-readiness refusal before stale receipt mutation.",
+          "reviewed_code_fingerprint": "d6de15790cf0925a3d7f50d2478a1a261c0df1934dc3d4f70897b13464f267c9",
           "spec_material_hash": "09829c5df95306633263d0edd36dd78fd07c643e6939781caa40f5e6568a8cd3"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Hosted run 43530634580 exposed the previous edit hit the forwarding probe instead of the deny-list case. Restore the real diagnostic probe and scope arbitrary-control rejection to its exact test function.",
-          "reviewed_code_fingerprint": "f02924ab6ccbeabca590227b6b3e7522675e76078580d526fea8f578efe6f1b0",
+          "reason": "Hosted core failures are early full-readiness override refusals, not exercised lock diagnostics. Run actual prerequisite subprocesses for contention and preserve explicit full-readiness refusal before stale receipt mutation.",
+          "reviewed_code_fingerprint": "d6de15790cf0925a3d7f50d2478a1a261c0df1934dc3d4f70897b13464f267c9",
           "spec_material_hash": "a19fd3a1497ea4b61d73ff910b7be5696baa3e2db029c515072d00eee838f4d0"
         }
       ],
@@ -832,13 +840,13 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1794615221Z"
+      "updated_at": "1794621129Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:87aa1b3a0f6b5778627cfb98a0515be05aaa044b07c6798b6696dc6b6cf30be3",
+      "artifact_hash": "sha256:251ea6dba0220b72730a214c736dcce0af224cdf89904ac7c292ac5574b78e00",
       "checks": [],
       "current_phase": "implementation",
       "custody": {
@@ -1057,10 +1065,17 @@
             "intent_id": "intent:change_01M7BCEHXJQR8HVADJF91PJKGD",
             "kind": "trajectory_step_recorded",
             "sequence": 32
+          },
+          {
+            "detail": "trajectory:branch_01M7BCEJ05EP527M18XXSF6GK6",
+            "event_id": "event:33",
+            "intent_id": "intent:change_01M7BCEHXJQR8HVADJF91PJKGD",
+            "kind": "trajectory_step_recorded",
+            "sequence": 33
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 32,
+        "next_sequence": 33,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M7BCEJ05EP527M18XXSF6GK6": {
@@ -1530,6 +1545,22 @@
                 "validation_findings": [
                   "Hosted verification and exact-candidate publication readiness remain pending; no local tests run."
                 ]
+              },
+              {
+                "action": "implementation",
+                "custody_event_id": "event:33",
+                "observations": [
+                  "tests/validate_termination.rs",
+                  "https://github.com/DecapodLabs/decapod/issues/1659"
+                ],
+                "proof_refs": [],
+                "scope": [
+                  "issue-1659"
+                ],
+                "sequence": 33,
+                "validation_findings": [
+                  "Hosted verification and exact-candidate publication readiness remain pending; no local tests run."
+                ]
               }
             ]
           }
@@ -1561,7 +1592,8 @@
         "tests/entrypoint_correctness.rs",
         "tests/gatling.rs",
         "tests/support/fresh_docs_readiness.rs",
-        "tests/unit/core/group_broker_tests.rs"
+        "tests/unit/core/group_broker_tests.rs",
+        "tests/validate_termination.rs"
       ],
       "next_transitions": [
         "Refine plan and declare falsifiable checks"
