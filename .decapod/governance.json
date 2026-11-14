@@ -1151,6 +1151,14 @@
       "proof_refs": [
         ".decapod/managed/specs/README.md"
       ]
+    },
+    {
+      "id": "convergence-final1455-securitymd",
+      "summary": "Refresh source projection after accepted v0.145.5 integration",
+      "input_digest": "sha256:e3a847920e0efe2b9caa9939562f2d17b498576b20d7fd7dacc98a8e1de7ce14",
+      "proof_refs": [
+        ".decapod/managed/specs/SECURITY.md"
+      ]
     }
   ],
   "intents": {
