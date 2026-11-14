@@ -1,5 +1,18 @@
 # Architecture
 
+## Core and CLI selection dependency closure (#1672)
+
+`assets/tools/source_ci_profile.rs::{core_test_inputs,cli_test_inputs}` composes
+the existing source selectors with their recipe test inputs. Shared consumer
+fixtures and Bazel target declarations select both existing lanes; named runtime
+fixtures select the full core recipe. CLI aggregate inputs select the unchanged
+three-target recipe. `selected`, `commands` and `inventory` remain the existing
+authority surfaces, covered together by
+`required_test_source_changes_retain_the_complete_owning_recipe`. This changes
+selection, not check IDs, execution commands, release-only disposition or the
+accepted controller's authority. Shard activation and performance evidence remain
+separate obligations under #1672.
+
 ## Checkout custody and non-Git diagnostics (#1661)
 
 `core::authoring` enforces one live checkout per task lease transactionally with
@@ -920,7 +933,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `f4e8df743eb7c2cb5701c3b274f1bd7077902fa546b5bb05a6f76d558417891e`
+- Repository signal fingerprint: `7cbf0a7a9cdc5bccac3773653b64c76afef63ad96740632ba683b9358ae9412f`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (234 files), `tests/` (233 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

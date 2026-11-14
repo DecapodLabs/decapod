@@ -440,7 +440,52 @@ pub fn find_check(id: &str) -> io::Result<&'static Check> {
         .ok_or_else(|| io::Error::other(format!("unknown source-CI check: {id}")))
 }
 
-/// Preserve the previous unanchored grep semantics, including nested fixtures.
+// Keep the existing finite recipes selected when their own test sources or
+// compile inputs change. Workflow partitioning must preserve this dependency
+// closure; a test-only repair cannot disappear behind a source-only selector.
+fn shared_test_inputs(path: &str) -> bool {
+    matches!(path, "BUILD.bazel" | ".config/build/decapod.BUILD.bzl")
+        || path.starts_with("tests/common/")
+}
+
+fn core_test_inputs(path: &str) -> bool {
+    shared_test_inputs(path)
+        || [
+            "todo_enforcement",
+            "validate_termination",
+            "workspace_interlock",
+            "spec_workspace_ownership",
+            "workspace_prune_regression",
+            "hermes_governance_substrate",
+            "group_broker",
+            "group_broker_strict",
+            "workunit_cli",
+            "context_capsule_cli",
+            "interop_conformance",
+        ]
+        .iter()
+        .any(|target| path == format!("tests/{target}.rs"))
+        || path == "tests/support/interop_harness.rs"
+}
+
+fn cli_test_inputs(path: &str) -> bool {
+    shared_test_inputs(path)
+        || matches!(
+            path,
+            "tests/cli_contract_enforcement.rs"
+                | "tests/entrypoint_correctness.rs"
+                | "tests/cli_contracts.rs"
+                | "tests/consumer_readiness.rs"
+                | "tests/init_ci_scaffolding.rs"
+                | "tests/init_config_behavior.rs"
+                | "tests/infer_precision.rs"
+                | "tests/sqlite_maintenance.rs"
+        )
+        || path.starts_with("tests/support/")
+        || path.starts_with("tests/fixtures/justfile_consumer/")
+}
+
+/// Preserve the previous unanchored source semantics and test dependencies.
 pub fn core_full(paths: &[String]) -> bool {
     const AREAS: &[&str] = &[
         "todo",
@@ -463,9 +508,10 @@ pub fn core_full(paths: &[String]) -> bool {
         "pool",
     ];
     paths.iter().any(|path| {
-        AREAS
-            .iter()
-            .any(|area| path.contains(&format!("src/decapod/core/{area}")))
+        core_test_inputs(path)
+            || AREAS
+                .iter()
+                .any(|area| path.contains(&format!("src/decapod/core/{area}")))
     })
 }
 
@@ -475,7 +521,9 @@ pub fn selected(check: &Check, paths: &[String], release_only: bool) -> bool {
     }
     match check.selection {
         Selection::Always => true,
-        Selection::Core => paths.iter().any(|p| p.contains("src/decapod/core/")),
+        Selection::Core => paths
+            .iter()
+            .any(|p| p.contains("src/decapod/core/") || core_test_inputs(p)),
         Selection::Plugins => paths
             .iter()
             .any(|p| p.contains("src/decapod/plugins/") || p.starts_with("tests/plugins/")),
@@ -483,9 +531,7 @@ pub fn selected(check: &Check, paths: &[String], release_only: bool) -> bool {
             ["src/decapod/cli", "src/decapod/lib", "src/main"]
                 .iter()
                 .any(|part| p.contains(part))
-                || p == "tests/cli_contracts.rs"
-                || p == "tests/support/justfile_inventory.rs"
-                || p.starts_with("tests/fixtures/justfile_consumer/")
+                || cli_test_inputs(p)
         }),
         Selection::Migration => migration_changed(paths),
         Selection::Docs => docs_sync_changed(paths),
