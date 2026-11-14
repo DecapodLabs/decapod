@@ -858,6 +858,47 @@ pub(crate) fn lookup_record(
     lookup_inner(root, store, sha, Some(record_id))
 }
 
+/// Fence the canonical task/custody and producer reference in the same
+/// transaction that accepts a VERIFIED workunit. No second connection, command
+/// execution or agent-supplied success is trusted at this commit boundary.
+pub(crate) fn check_workunit_append_on_conn(
+    conn: &Connection,
+    manifest: &super::workunit::WorkUnitManifest,
+) -> Result<(), DecapodError> {
+    let reference = manifest
+        .validation_record
+        .as_ref()
+        .ok_or_else(|| invalid("WORKUNIT_PROOF_UNVERIFIABLE: no canonical reference"))?;
+    require_sha(&reference.candidate_sha)?;
+    let event = events::query_subject_event_on_conn(
+        conn,
+        events::VERIFICATION,
+        "commit",
+        &reference.candidate_sha,
+        &reference.record_id,
+    )?
+    .ok_or_else(|| invalid("WORKUNIT_PROOF_UNVERIFIABLE: canonical record is missing"))?;
+    let record = decode(&event)?;
+    if record.record_digest != reference.record_digest
+        || record.candidate_sha != reference.candidate_sha
+        || record.task_binding.task_id != manifest.task_id
+        || record.actor != crate::current_agent_id()
+        || manifest.validation_epoch.as_ref() != Some(&record.validation_epoch)
+        || record.workunit_subject.as_ref().is_none_or(|subject| {
+            super::workunit::validation_contract_digest(manifest)
+                .ok()
+                .as_ref()
+                != Some(&subject.contract_digest)
+        })
+    {
+        return Err(invalid(
+            "WORKUNIT_PROOF_UNVERIFIABLE: canonical task or observation binding differs",
+        ));
+    }
+    todo::check_validation_binding_on_conn(conn, &record.task_binding, false)?;
+    todo::ensure_task_full_validation_plan_on_conn(conn, &manifest.task_id)
+}
+
 /// Current workunit applicability comes only from the canonical full producer.
 /// A reference selects a record; the caller cannot supply proof bytes or success.
 pub(crate) fn current_workunit_proof(
@@ -890,6 +931,7 @@ pub(crate) fn current_workunit_proof(
     } else {
         lookup(root, &store, &binding.candidate_sha)?
     };
+    todo::ensure_task_full_validation_plan(&store.root, &manifest.task_id)?;
     let record = &proof.record;
     if record.task_binding != binding.task
         || record.validation_epoch != binding.epoch
