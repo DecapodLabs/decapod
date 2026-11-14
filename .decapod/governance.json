@@ -877,6 +877,14 @@
       "proof_refs": [
         "https://github.com/DecapodLabs/decapod/issues/1660"
       ]
+    },
+    {
+      "id": "issue-1660-file-43",
+      "summary": "test(proof): resolve optional CLI fixture availability explicitly; file-by-file checkpoint, verification pending.",
+      "input_digest": "sha256:becd3562d4590ceca916f4042502d39e34d2e54457c999da4fdf62dca1f405e5",
+      "proof_refs": [
+        "https://github.com/DecapodLabs/decapod/issues/1660"
+      ]
     }
   ],
   "intents": {
@@ -917,22 +925,22 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Hosted CI proved actual entrypoint files remained on0.144.3 after agent.init metadata refresh. Regenerate through supported init refresh/proof on official0.144.4, preserve exact authored config/verification requirements, and collect fresh hosted proof. No local tests.",
-          "reviewed_code_fingerprint": "66a1488e8ab6c6e1896cf35f343d0b2fcd570a23ad4e0308a86a1d315badc508",
+          "reason": "Hosted Clippy rejects option_env unwrap. Explicit availability supports compilation inside the real library producer fixture while refusing CLI admission without an actual binary.",
+          "reviewed_code_fingerprint": "a113641796c1faad4f05b6bfcf47a0d2220da12500e644fa91ee4a1a509410dd",
           "spec_material_hash": "e799665f0f6c5025ac094765c6f38097a6894c63fd4f08593900c2567475d6e9"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Hosted CI proved actual entrypoint files remained on0.144.3 after agent.init metadata refresh. Regenerate through supported init refresh/proof on official0.144.4, preserve exact authored config/verification requirements, and collect fresh hosted proof. No local tests.",
-          "reviewed_code_fingerprint": "66a1488e8ab6c6e1896cf35f343d0b2fcd570a23ad4e0308a86a1d315badc508",
+          "reason": "Hosted Clippy rejects option_env unwrap. Explicit availability supports compilation inside the real library producer fixture while refusing CLI admission without an actual binary.",
+          "reviewed_code_fingerprint": "a113641796c1faad4f05b6bfcf47a0d2220da12500e644fa91ee4a1a509410dd",
           "spec_material_hash": "10df59dc9f256a32e3851047d6d684158b0453828124370c3bb74edc6e74af49"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Hosted CI proved actual entrypoint files remained on0.144.3 after agent.init metadata refresh. Regenerate through supported init refresh/proof on official0.144.4, preserve exact authored config/verification requirements, and collect fresh hosted proof. No local tests.",
-          "reviewed_code_fingerprint": "66a1488e8ab6c6e1896cf35f343d0b2fcd570a23ad4e0308a86a1d315badc508",
+          "reason": "Hosted Clippy rejects option_env unwrap. Explicit availability supports compilation inside the real library producer fixture while refusing CLI admission without an actual binary.",
+          "reviewed_code_fingerprint": "a113641796c1faad4f05b6bfcf47a0d2220da12500e644fa91ee4a1a509410dd",
           "spec_material_hash": "eaeef50281b687b740ee9cdc33c571d5d409b1869d8e28fdb292f09e76d562fb"
         }
       ],
@@ -944,13 +952,13 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1794615190Z"
+      "updated_at": "1794615479Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:c39f877572fac9b4d82ad69a329d910a3fc4c87bd1c36c56c28ccef388774398",
+      "artifact_hash": "sha256:bd55491180f56acacd6d7e74471ab73bb0448c6a946dd6260154a4e9e451293c",
       "checks": [],
       "current_phase": "implementation",
       "custody": {
@@ -1260,10 +1268,17 @@
             "intent_id": "intent:change_01M7BCFASGT4DQG4ZADT2BP5G0",
             "kind": "trajectory_step_recorded",
             "sequence": 45
+          },
+          {
+            "detail": "trajectory:branch_01M7BCFAWAYM3TXSVTHC1N7YZE",
+            "event_id": "event:46",
+            "intent_id": "intent:change_01M7BCFASGT4DQG4ZADT2BP5G0",
+            "kind": "trajectory_step_recorded",
+            "sequence": 46
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 45,
+        "next_sequence": 46,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M7BCFAWAYM3TXSVTHC1N7YZE": {
@@ -1938,6 +1953,22 @@
                   "issue-1660"
                 ],
                 "sequence": 45,
+                "validation_findings": [
+                  "Hosted verification and exact-candidate publication readiness remain pending; no local tests run."
+                ]
+              },
+              {
+                "action": "implementation",
+                "custody_event_id": "event:46",
+                "observations": [
+                  "tests/common/consumer_readiness_fixture.rs",
+                  "https://github.com/DecapodLabs/decapod/issues/1660"
+                ],
+                "proof_refs": [],
+                "scope": [
+                  "issue-1660"
+                ],
+                "sequence": 46,
                 "validation_findings": [
                   "Hosted verification and exact-candidate publication readiness remain pending; no local tests run."
                 ]
