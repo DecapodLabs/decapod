@@ -951,6 +951,14 @@ pub(crate) fn current_workunit_proof(
             "WORKUNIT_PROOF_STALE: workunit intent, scope, requirements or references changed",
         ));
     }
+    if manifest.status != super::workunit::WorkUnitStatus::Verified
+        && super::workunit::capture_validation_subject(root, &manifest.task_id)?.as_ref()
+            != Some(subject)
+    {
+        return Err(invalid(
+            "WORKUNIT_PROOF_STALE: workunit manifest or journal generation changed after observed validation; obtain fresh full validation before promotion",
+        ));
+    }
     let execution = super::trajectory::capture_execution_binding(root, &manifest.task_id)?;
     if execution.intent_id != manifest.intent_ref
         || execution.head_revision != record.candidate_sha

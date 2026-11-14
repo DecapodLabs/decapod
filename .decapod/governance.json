@@ -1053,6 +1053,14 @@
       "proof_refs": [
         "https://github.com/DecapodLabs/decapod/pull/1682"
       ]
+    },
+    {
+      "id": "issue-1660-file-65",
+      "summary": "fix(proof): bind promotion to the original observed workunit generation; file-by-file checkpoint, verification pending.",
+      "input_digest": "sha256:6dd7fbc5a838840d1aecb7b28bb6b90c8dca0c2105b043ee131fb56a1809c552",
+      "proof_refs": [
+        "https://github.com/DecapodLabs/decapod/issues/1660"
+      ]
     }
   ],
   "intents": {
@@ -1126,7 +1134,7 @@
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:c03c46368d8ff077c5eefe318f82a95f0e7117d1ff908c9097cb4a6dd56b6509",
+      "artifact_hash": "sha256:a6ca5050e5b51d79f44eab45ef7c0969425bbe313a4806fa684b1ff075aed731",
       "checks": [],
       "current_phase": "implementation",
       "custody": {
@@ -1590,10 +1598,17 @@
             "intent_id": "intent:change_01M7BCFASGT4DQG4ZADT2BP5G0",
             "kind": "trajectory_step_recorded",
             "sequence": 67
+          },
+          {
+            "detail": "trajectory:branch_01M7BCFAWAYM3TXSVTHC1N7YZE",
+            "event_id": "event:68",
+            "intent_id": "intent:change_01M7BCFASGT4DQG4ZADT2BP5G0",
+            "kind": "trajectory_step_recorded",
+            "sequence": 68
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 67,
+        "next_sequence": 68,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M7BCFAWAYM3TXSVTHC1N7YZE": {
@@ -2621,6 +2636,22 @@
                 "sequence": 67,
                 "validation_findings": [
                   "Integrate accepted master fded2dd0b5f02f9c874301d4b98cfd59ad188357 after merged PR1682 native inventory evidence with issue1660. Preserve current task journal/checkpoints and authored specs from both branches; regenerate projections through the kernel. Previous candidate readiness does not apply; no local tests."
+                ]
+              },
+              {
+                "action": "implementation",
+                "custody_event_id": "event:68",
+                "observations": [
+                  "src/decapod/core/validation_history.rs",
+                  "https://github.com/DecapodLabs/decapod/issues/1660"
+                ],
+                "proof_refs": [],
+                "scope": [
+                  "issue-1660"
+                ],
+                "sequence": 68,
+                "validation_findings": [
+                  "Hosted verification and exact-candidate publication readiness remain pending; no local tests run."
                 ]
               }
             ]
