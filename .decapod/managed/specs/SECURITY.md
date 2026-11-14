@@ -2,6 +2,11 @@
 
 ## Escalation admission preserves authority (#1690–#1692)
 
+Discovering an omitted operation or target cannot reset the reflection budget.
+Once established, a command and concrete target cannot be removed or replaced
+on a continuation. A policy-required human dependency takes priority over
+structural regression detection, and reflection never grants that authority.
+
 `core/mentor/reflection/escalation.rs` observes existing policy and approval
 state; it issues no grant, changes no role and never promotes inferred intent
 into authority. A source predicate proves only current bytes, not provenance,

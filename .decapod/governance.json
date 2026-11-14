@@ -1375,6 +1375,14 @@
       "proof_refs": [
         ".decapod/managed/specs/INTERFACES.md"
       ]
+    },
+    {
+      "id": "convergence-refinement-security",
+      "summary": "Bind discovered authority scope without requiring it to be known before the investigation challenge",
+      "input_digest": "sha256:7be3b701f19a5c6483f0919d7b2500f597362b0638bc2379f797b68fcc2dee96",
+      "proof_refs": [
+        ".decapod/managed/specs/SECURITY.md"
+      ]
     }
   ],
   "intents": {
