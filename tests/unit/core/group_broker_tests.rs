@@ -447,3 +447,26 @@ fn trickling_reply_cannot_extend_the_absolute_deadline() {
     drop(server);
     writer.join().unwrap();
 }
+
+#[test]
+fn oversized_native_deadline_is_rejected_before_durable_admission() {
+    let dir = tempfile::tempdir().unwrap();
+    let caller = caller_context("caller-a");
+    let argv = vec!["must-never-spawn".into()];
+    let request = super::BrokerRequest {
+        protocol_version: super::BROKER_PROTOCOL_DEFAULT,
+        request_id: "oversized-deadline".into(),
+        payload_hash: super::hash_payload(&argv, &caller),
+        argv,
+        caller,
+        deadline_ms: u64::MAX,
+    };
+    let result = super::execute_request(dir.path(), &request, false).unwrap();
+    assert_eq!(result.status, "NOT_COMMITTED");
+    assert_eq!(
+        result.result_envelope["error"],
+        "BROKER_REQUEST_BUDGET_INVALID"
+    );
+    assert!(result.commit_marker.is_none());
+    assert!(!super::dedupe_db_path(dir.path()).exists());
+}
