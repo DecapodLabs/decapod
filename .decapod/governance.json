@@ -1687,6 +1687,14 @@
       "proof_refs": [
         "tests/unit/core/reflection_tests.rs"
       ]
+    },
+    {
+      "id": "convergence-question-binding-architecturemd",
+      "summary": "Refresh source identity for complete canonical human-question matching",
+      "input_digest": "sha256:bd7f880486451125de701a90d4e8404a2f740019965a9a65841d550477478b9d",
+      "proof_refs": [
+        ".decapod/managed/specs/ARCHITECTURE.md"
+      ]
     }
   ],
   "intents": {
