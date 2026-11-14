@@ -603,6 +603,14 @@
       "proof_refs": [
         "https://github.com/DecapodLabs/decapod/issues/1626"
       ]
+    },
+    {
+      "id": "issue1626-release-file-8",
+      "summary": "docs(nix): specify validation release gate boundaries; implementation checkpoint, hosted verification pending.",
+      "input_digest": "sha256:575d12bddc5aa41e02e09f344a09c20c7335efa6a4f535b39758caf220b7b779",
+      "proof_refs": [
+        "https://github.com/DecapodLabs/decapod/issues/1626"
+      ]
     }
   ],
   "intents": {
@@ -653,7 +661,7 @@
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:ffb58b4667353ce19cc1108fe5630666690c9e34baa7a597477aec9e706ba5e0",
+      "artifact_hash": "sha256:aa27c9f7abbc1f6089d93f78ca3c012ea7f9628beb9dca8b7e6615924bbb5381",
       "checks": [],
       "current_phase": "implementation",
       "custody": {
@@ -718,10 +726,17 @@
             "intent_id": "intent:change_01M7E32W7EEDSJFJ6J3WPTZZBP",
             "kind": "trajectory_step_recorded",
             "sequence": 10
+          },
+          {
+            "detail": "trajectory:branch_01M7E32WAD102GEWSSGTDX5P73",
+            "event_id": "event:11",
+            "intent_id": "intent:change_01M7E32W7EEDSJFJ6J3WPTZZBP",
+            "kind": "trajectory_step_recorded",
+            "sequence": 11
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 10,
+        "next_sequence": 11,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M7E32WAD102GEWSSGTDX5P73": {
@@ -840,6 +855,22 @@
                 "validation_findings": [
                   "Implementation in progress; exact-candidate hosted checks pending; no local tests or Buildkite execution."
                 ]
+              },
+              {
+                "action": "implementation",
+                "custody_event_id": "event:11",
+                "observations": [
+                  ".decapod/managed/specs/VALIDATION.md",
+                  "https://github.com/DecapodLabs/decapod/issues/1626"
+                ],
+                "proof_refs": [],
+                "scope": [
+                  "root"
+                ],
+                "sequence": 11,
+                "validation_findings": [
+                  "Implementation in progress; exact-candidate hosted checks pending; no local tests or Buildkite execution."
+                ]
               }
             ]
           }
@@ -857,6 +888,7 @@
         ".decapod/managed/specs/INTENT.md",
         ".decapod/managed/specs/INTERFACES.md",
         ".decapod/managed/specs/SECURITY.md",
+        ".decapod/managed/specs/VALIDATION.md",
         ".github/workflows/nix-flake.yml",
         "tests/release_metadata_policy.rs"
       ],

@@ -2110,3 +2110,20 @@ prior documentation candidate `725b4114595bf17a36568afbe164ce5c9f7b9cf4` against
 GitHub Actions must evaluate this integrated candidate. No local tests run;
 Buildkite is excluded at the user's direction and full native publication
 readiness remains unproven.
+
+## Squash release packaging regression (#1626)
+
+`tests/release_metadata_policy.rs::nix_gates_recognize_squash_linear_and_ordinary_release_commits`
+extracts and executes both actual workflow scripts against real Git repositories.
+It creates a real squash merge, a linear release and an ordinary release merge;
+non-release, root and octopus histories remain ineligible. The owner performs its
+real depth-two fetch through a process-local URL rewrite to the fixture. Imported
+runner and PR/manual event cases stay denied; manual packaging stays supported.
+No Nix, Cachix credential or hosted publication call is simulated as success.
+
+Fresh GitHub Actions must verify the exact candidate; no local tests run.
+Buildkite remains excluded at the user's direction while its accepted policy
+requirement stays enabled, so full native publication readiness is unproven.
+The original missing v0.138.0 cache entry is historical and is not claimed filled
+by this code change. Actual protected-master packaging/publication must establish
+cache availability separately after acceptance.
