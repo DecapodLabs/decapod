@@ -646,8 +646,16 @@ fn nix_gates_recognize_squash_linear_and_ordinary_release_commits() {
         let repo = Repo::new();
         let base = repo.git(&["rev-parse", "HEAD"]);
         let head = match shape {
-            "squash" | "linear" => {
+            "linear" => {
                 repo.version("0.107.3");
+                repo.commit("chore: release v0.107.3 (#1624)")
+            }
+            "squash" => {
+                repo.git(&["checkout", "-q", "-b", "release-topic"]);
+                repo.version("0.107.3");
+                repo.commit("release branch version bump");
+                repo.git(&["checkout", "-q", "master"]);
+                repo.git(&["merge", "--squash", "-q", "release-topic"]);
                 repo.commit("chore: release v0.107.3 (#1624)")
             }
             "ordinary" => repo.commit("fix: ordinary candidate"),
@@ -694,6 +702,9 @@ fn nix_gates_recognize_squash_linear_and_ordinary_release_commits() {
             }
             _ => unreachable!(),
         };
+        // The native owner fetches the protected pushed tip, including root
+        // and octopus fixtures, rather than relying on dangling-object fetch.
+        repo.git(&["update-ref", "refs/heads/master", &head]);
         let expected = matches!(shape, "squash" | "linear" | "release-merge");
         assert_eq!(
             run_nix_gate(&repo, &head, true, "push", true),
