@@ -807,6 +807,14 @@
       "proof_refs": [
         ".decapod/config.toml"
       ]
+    },
+    {
+      "id": "convergence-refresh1454-architecturemd",
+      "summary": "Refresh supported ARCHITECTURE.md projection with the current source identity",
+      "input_digest": "sha256:df9c0f1e3acd580c921fb0ffab479bbd72269c102691e6145162dc43b6ca9f0f",
+      "proof_refs": [
+        ".decapod/managed/specs/ARCHITECTURE.md"
+      ]
     }
   ],
   "intents": {
