@@ -1359,6 +1359,14 @@
       "proof_refs": [
         "docs/agent/payload-examples.md"
       ]
+    },
+    {
+      "id": "convergence-authority-architecture",
+      "summary": "Describe useful authority investigation and admissible human dependency progress",
+      "input_digest": "sha256:354a2368f3fec4d0dafc475441f304b1a186077cffd15052f86ed77382150e7d",
+      "proof_refs": [
+        "docs/architecture/bounded-reflection.md"
+      ]
     }
   ],
   "intents": {

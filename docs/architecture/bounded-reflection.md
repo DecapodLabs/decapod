@@ -38,8 +38,12 @@ declared governing dependencies, not newly authenticated human statements.
 
 Convergence is reduced unresolved obligations relative to unchanged intent.
 Receipts distinguish initial state, reduced obligations, narrowed scope,
-stagnation and regression. A paraphrase cannot clear a gap; adding obligations
-regresses. A subject rename or omitted escalation cannot erase continuity.
+stagnation and regression. A newly admissible targeted human dependency is
+explicit progress; other added obligations regress. A paraphrase cannot clear
+a gap. A subject rename or omitted escalation cannot erase continuity. An
+unknown authority operation or target can be supplied through investigation;
+established command/target scope cannot be dropped or replaced, and discovering
+it consumes the same remaining rounds.
 Source, policy, kernel and custody changes invalidate conclusions without renewing
 the three-round budget. Exact retries do not write; stale/conflicting retries
 and failed observations preserve state. Hard policy-required approval goes to the
