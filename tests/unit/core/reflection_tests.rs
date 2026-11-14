@@ -784,6 +784,11 @@ fn explicit_business_dependency_allows_human_question_but_assertion_alone_does_n
 #[test]
 fn observed_authority_gate_preempts_reasoning_and_source_quotes_cannot_supply_approval() {
     let (temp, mut request) = escalation_fixture(escalation::Uncertainty::MissingAuthority);
+    fs::write(
+        temp.path().join(".decapod/config.toml"),
+        "[governance]\napproval_categories = [\"destructive_operations\"]\n",
+    )
+    .unwrap();
     crate::plugins::policy::initialize_policy_db(&temp.path().join(".decapod/data")).unwrap();
     request.escalation.as_mut().unwrap().authority = Some(escalation::AuthorityRequest {
         command: "todo.archive".into(),

@@ -767,6 +767,14 @@
       "proof_refs": [
         "src/decapod/core/mentor/reflection/escalation.rs"
       ]
+    },
+    {
+      "id": "convergence-policy-fixture",
+      "summary": "Configure the actual destructive-operation approval requirement in the disposable fixture",
+      "input_digest": "sha256:a782c7a653d955c3d17017858a3bf017ccb5f6ec445749379082474616817edf",
+      "proof_refs": [
+        "tests/unit/core/reflection_tests.rs"
+      ]
     }
   ],
   "intents": {
