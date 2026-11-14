@@ -839,6 +839,14 @@
       "proof_refs": [
         ".decapod/managed/specs/OPERATIONS.md"
       ]
+    },
+    {
+      "id": "convergence-refresh1454-readmemd",
+      "summary": "Refresh supported README.md projection with the current source identity",
+      "input_digest": "sha256:18b686d5d122cb2f006dbca1ce45e6648b856a03b3dbdde8f621f323d7fb5abb",
+      "proof_refs": [
+        ".decapod/managed/specs/README.md"
+      ]
     }
   ],
   "intents": {
