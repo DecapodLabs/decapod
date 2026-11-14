@@ -627,6 +627,14 @@
       "proof_refs": [
         "https://github.com/DecapodLabs/decapod/issues/1626"
       ]
+    },
+    {
+      "id": "issue1626-reviewed-squash-gates",
+      "summary": "Review protected native Nix gate fix and real Git regressions; hosted proof pending; full native publication readiness unproven.",
+      "input_digest": "sha256:139952e6fbf65f23ac19a3a197eea1696aa3cefc7d7adf601bfa0918370b48b7",
+      "proof_refs": [
+        "https://github.com/DecapodLabs/decapod/issues/1626"
+      ]
     }
   ],
   "intents": {
@@ -663,6 +671,29 @@
         "decapod validate"
       ],
       "schema_version": "1.1.0",
+      "spec_reviews": [
+        {
+          "disposition": "updated",
+          "path": ".decapod/managed/specs/ARCHITECTURE.md",
+          "reason": "Reviewed the two existing Nix gate scripts, preserved native protected-master publication and locked packaging dependencies, and actual Git regression fixtures. Fresh hosted proof pending; no cache backfill or full native publication claim.",
+          "reviewed_code_fingerprint": "0f0adda3a97ddfb42dc6d47ecd1c73b2108d8889d35ee34a74a581532cabc679",
+          "spec_material_hash": "1b9bbe1257318d4c5786e9f3566352dd00e0a85e418d0a6c2f5b1e44bc09bf02"
+        },
+        {
+          "disposition": "updated",
+          "path": ".decapod/managed/specs/INTERFACES.md",
+          "reason": "Reviewed the two existing Nix gate scripts, preserved native protected-master publication and locked packaging dependencies, and actual Git regression fixtures. Fresh hosted proof pending; no cache backfill or full native publication claim.",
+          "reviewed_code_fingerprint": "0f0adda3a97ddfb42dc6d47ecd1c73b2108d8889d35ee34a74a581532cabc679",
+          "spec_material_hash": "c8137944c916b4afc0e6cdefa5350d4b7b8a3acf576d2b517dfc44da8cf7e181"
+        },
+        {
+          "disposition": "updated",
+          "path": ".decapod/managed/specs/SECURITY.md",
+          "reason": "Reviewed the two existing Nix gate scripts, preserved native protected-master publication and locked packaging dependencies, and actual Git regression fixtures. Fresh hosted proof pending; no cache backfill or full native publication claim.",
+          "reviewed_code_fingerprint": "0f0adda3a97ddfb42dc6d47ecd1c73b2108d8889d35ee34a74a581532cabc679",
+          "spec_material_hash": "617e34aa14f95d0325ad2225cbaf0914c4ba717bebd9d384594b0e803e48c680"
+        }
+      ],
       "state": "DRAFT",
       "stop_conditions": [],
       "title": "Fix squash release detection in Nix publication (#1626)",
@@ -671,15 +702,20 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1794696085Z"
+      "updated_at": "1794696840Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:3a5ba266e8f7ec5fc9dc04a2d14aafc797ba68ccf9a26b2f599d5e8c0857b3b6",
-      "checks": [],
-      "current_phase": "implementation",
+      "artifact_hash": "sha256:f3f75fa3b13c814d40a458704c98e10f3f20bee89ed772a3fc7ad424eaae7737",
+      "checks": [
+        {
+          "name": "hosted-candidate",
+          "status": "partial"
+        }
+      ],
+      "current_phase": "validation",
       "custody": {
         "events": [
           {
@@ -763,10 +799,17 @@
             "intent_id": "intent:change_01M7E32W7EEDSJFJ6J3WPTZZBP",
             "kind": "trajectory_step_recorded",
             "sequence": 13
+          },
+          {
+            "detail": "trajectory:branch_01M7E32WAD102GEWSSGTDX5P73",
+            "event_id": "event:14",
+            "intent_id": "intent:change_01M7E32W7EEDSJFJ6J3WPTZZBP",
+            "kind": "trajectory_step_recorded",
+            "sequence": 14
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 13,
+        "next_sequence": 14,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M7E32WAD102GEWSSGTDX5P73": {
@@ -933,6 +976,23 @@
                 "validation_findings": [
                   "Implementation in progress; exact-candidate hosted checks pending; no local tests or Buildkite execution."
                 ]
+              },
+              {
+                "action": "validation",
+                "custody_event_id": "event:14",
+                "observations": [
+                  "https://github.com/DecapodLabs/decapod/issues/1626"
+                ],
+                "proof_refs": [
+                  "hosted-candidate"
+                ],
+                "scope": [
+                  "root"
+                ],
+                "sequence": 14,
+                "validation_findings": [
+                  "No local tests. Buildkite evidence is not collected. Accepted native/provider requirements stay enabled. Actual historical cache availability requires separate native packaging/publication evidence."
+                ]
               }
             ]
           }
@@ -968,7 +1028,8 @@
       "task_id": "bugs_01m7e318ksxx9w2j",
       "tool_calls": [],
       "unresolved_assumptions": [
-        "Implementation in progress; exact-candidate hosted checks pending; no local tests or Buildkite execution."
+        "Implementation in progress; exact-candidate hosted checks pending; no local tests or Buildkite execution.",
+        "No local tests. Buildkite evidence is not collected. Accepted native/provider requirements stay enabled. Actual historical cache availability requires separate native packaging/publication evidence."
       ]
     }
   },
