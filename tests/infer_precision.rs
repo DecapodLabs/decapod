@@ -323,7 +323,7 @@ fn deterministic_escalation_harness_investigates_before_asking_and_preserves_pub
         String::from_utf8_lossy(&readiness.stderr)
     );
     assert!(
-        diagnostic.contains("DIAGNOSTIC_OVERRIDES_ACTIVE"),
+        diagnostic.contains("READINESS_GATE_OVERRIDE_UNSUPPORTED"),
         "{diagnostic}"
     );
     assert!(

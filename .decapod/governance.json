@@ -1007,6 +1007,14 @@
       "proof_refs": [
         "tests/unit/core/reflection_tests.rs"
       ]
+    },
+    {
+      "id": "convergence-readiness-fixture-code",
+      "summary": "Assert the actual public readiness override rejection returned by the end-to-end harness",
+      "input_digest": "sha256:d695241613f9ba43a7cabae8c8a90cdec0ce03b780d6a8ee2f7951e2e57a76a3",
+      "proof_refs": [
+        "tests/infer_precision.rs"
+      ]
     }
   ],
   "intents": {
