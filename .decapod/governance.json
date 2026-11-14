@@ -613,6 +613,14 @@
       "proof_refs": [
         "https://github.com/DecapodLabs/decapod/issues/1573"
       ]
+    },
+    {
+      "id": "issue-1573-integrate-fded2dd0",
+      "summary": "Integrate accepted master fded2dd0b5f02f9c874301d4b98cfd59ad188357 after merged PR1682 native inventory evidence with issue1573. Preserve current task journal/checkpoints and authored specs from both branches; regenerate projections through the kernel. Previous candidate readiness does not apply; no local tests.",
+      "input_digest": "sha256:899a30a38447a6521b0ef4bf3593dd42947b0046f4a9585392edbffaf9070cf2",
+      "proof_refs": [
+        "https://github.com/DecapodLabs/decapod/pull/1682"
+      ]
     }
   ],
   "intents": {
@@ -653,21 +661,21 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Hosted CI proved actual entrypoint files remained on0.144.3 after agent.init metadata refresh. Regenerate through supported init refresh/proof on official0.144.4, preserve exact authored config/verification requirements, and collect fresh hosted proof. No local tests.",
+          "reason": "Integrate accepted master fded2dd0b5f02f9c874301d4b98cfd59ad188357 after merged PR1682 native inventory evidence with issue1573. Preserve current task journal/checkpoints and authored specs from both branches; regenerate projections through the kernel. Previous candidate readiness does not apply; no local tests.",
           "reviewed_code_fingerprint": "ba894b60287b8a2e77aefdc63e9c2500db01e809bd43d40de19cb32596270211",
           "spec_material_hash": "eace639381505e6def0a254fac6e2acd2d7f3175e13d498a8a76c84583c154c9"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Hosted CI proved actual entrypoint files remained on0.144.3 after agent.init metadata refresh. Regenerate through supported init refresh/proof on official0.144.4, preserve exact authored config/verification requirements, and collect fresh hosted proof. No local tests.",
+          "reason": "Integrate accepted master fded2dd0b5f02f9c874301d4b98cfd59ad188357 after merged PR1682 native inventory evidence with issue1573. Preserve current task journal/checkpoints and authored specs from both branches; regenerate projections through the kernel. Previous candidate readiness does not apply; no local tests.",
           "reviewed_code_fingerprint": "ba894b60287b8a2e77aefdc63e9c2500db01e809bd43d40de19cb32596270211",
           "spec_material_hash": "39b12d81de3fce2ec075e00288ad0168a747ccbc403bae0c9f7fb08e123ffaae"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Hosted CI proved actual entrypoint files remained on0.144.3 after agent.init metadata refresh. Regenerate through supported init refresh/proof on official0.144.4, preserve exact authored config/verification requirements, and collect fresh hosted proof. No local tests.",
+          "reason": "Integrate accepted master fded2dd0b5f02f9c874301d4b98cfd59ad188357 after merged PR1682 native inventory evidence with issue1573. Preserve current task journal/checkpoints and authored specs from both branches; regenerate projections through the kernel. Previous candidate readiness does not apply; no local tests.",
           "reviewed_code_fingerprint": "ba894b60287b8a2e77aefdc63e9c2500db01e809bd43d40de19cb32596270211",
           "spec_material_hash": "1d22ca331c3ede5a4add9e28bacfa070a32f7376b52e08ac7fbe3af720e7d586"
         }
@@ -680,13 +688,13 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1794612828Z"
+      "updated_at": "1794623586Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:1a55188b1593f863e75f5e662aca92205d6ef90f91ee3f7eb08c9f8ac517db4d",
+      "artifact_hash": "sha256:214fd8b31ee05d49ca74de0562cfb68a62572b9f6ac127c368e9ccc22c0924f2",
       "checks": [],
       "current_phase": "implementation",
       "custody": {
@@ -765,10 +773,17 @@
             "intent_id": "intent:change_01M7BCGX392JKZBS50NX3PPP8A",
             "kind": "trajectory_step_recorded",
             "sequence": 12
+          },
+          {
+            "detail": "trajectory:branch_01M7BCGX5QABS0MJP84D9PV95G",
+            "event_id": "event:13",
+            "intent_id": "intent:change_01M7BCGX392JKZBS50NX3PPP8A",
+            "kind": "trajectory_step_recorded",
+            "sequence": 13
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 12,
+        "next_sequence": 13,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M7BCGX5QABS0MJP84D9PV95G": {
@@ -918,6 +933,21 @@
                 "validation_findings": [
                   "Hosted verification and exact-candidate publication readiness remain pending; no local tests run."
                 ]
+              },
+              {
+                "action": "implementation",
+                "custody_event_id": "event:13",
+                "observations": [
+                  "https://github.com/DecapodLabs/decapod/pull/1682"
+                ],
+                "proof_refs": [],
+                "scope": [
+                  "issue-1573"
+                ],
+                "sequence": 13,
+                "validation_findings": [
+                  "Integrate accepted master fded2dd0b5f02f9c874301d4b98cfd59ad188357 after merged PR1682 native inventory evidence with issue1573. Preserve current task journal/checkpoints and authored specs from both branches; regenerate projections through the kernel. Previous candidate readiness does not apply; no local tests."
+                ]
               }
             ]
           }
@@ -927,7 +957,8 @@
       "destination": "pull request",
       "evidence": [
         "https://github.com/DecapodLabs/decapod/issues/1573",
-        "https://github.com/DecapodLabs/decapod/pull/1675"
+        "https://github.com/DecapodLabs/decapod/pull/1675",
+        "https://github.com/DecapodLabs/decapod/pull/1682"
       ],
       "inspected_files": [],
       "intent_id": "intent:change_01M7BCGX392JKZBS50NX3PPP8A",
@@ -952,7 +983,8 @@
       "tool_calls": [],
       "unresolved_assumptions": [
         "Hosted verification and exact-candidate publication readiness remain pending; no local tests run.",
-        "Integrate accepted master f779e39111ec8b3c8c41569f68a3a7604df167e7 and merged1675 accepted-policy hardening with issue1573. Preserve current task journal/checkpoints and authored specs from both branches; regenerate projections through the kernel. Previous candidate readiness does not apply; no local tests."
+        "Integrate accepted master f779e39111ec8b3c8c41569f68a3a7604df167e7 and merged1675 accepted-policy hardening with issue1573. Preserve current task journal/checkpoints and authored specs from both branches; regenerate projections through the kernel. Previous candidate readiness does not apply; no local tests.",
+        "Integrate accepted master fded2dd0b5f02f9c874301d4b98cfd59ad188357 after merged PR1682 native inventory evidence with issue1573. Preserve current task journal/checkpoints and authored specs from both branches; regenerate projections through the kernel. Previous candidate readiness does not apply; no local tests."
       ]
     }
   },
