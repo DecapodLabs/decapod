@@ -1695,6 +1695,14 @@
       "proof_refs": [
         ".decapod/managed/specs/ARCHITECTURE.md"
       ]
+    },
+    {
+      "id": "convergence-question-binding-intentmd",
+      "summary": "Refresh source identity for complete canonical human-question matching",
+      "input_digest": "sha256:b55d8ec5ca966c1ca0adcc1f1bb7dc672778378286d1ebb3e7663c229904d093",
+      "proof_refs": [
+        ".decapod/managed/specs/INTENT.md"
+      ]
     }
   ],
   "intents": {
