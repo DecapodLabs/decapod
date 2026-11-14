@@ -885,6 +885,14 @@
       "proof_refs": [
         "https://github.com/DecapodLabs/decapod/issues/1660"
       ]
+    },
+    {
+      "id": "issue-1660-file-44",
+      "summary": "test(proof): initialize the complete canonical admission configuration; file-by-file checkpoint, verification pending.",
+      "input_digest": "sha256:7132d8f7dba3e22b72247e7ab822781cf5a424767e44ad489d2a45e9007a73e6",
+      "proof_refs": [
+        "https://github.com/DecapodLabs/decapod/issues/1660"
+      ]
     }
   ],
   "intents": {
@@ -958,7 +966,7 @@
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:bd55491180f56acacd6d7e74471ab73bb0448c6a946dd6260154a4e9e451293c",
+      "artifact_hash": "sha256:aedc2bdca7a7c97f1208b71f255bf99173df79ca3b122145977bb4d883d5bc65",
       "checks": [],
       "current_phase": "implementation",
       "custody": {
@@ -1275,10 +1283,17 @@
             "intent_id": "intent:change_01M7BCFASGT4DQG4ZADT2BP5G0",
             "kind": "trajectory_step_recorded",
             "sequence": 46
+          },
+          {
+            "detail": "trajectory:branch_01M7BCFAWAYM3TXSVTHC1N7YZE",
+            "event_id": "event:47",
+            "intent_id": "intent:change_01M7BCFASGT4DQG4ZADT2BP5G0",
+            "kind": "trajectory_step_recorded",
+            "sequence": 47
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 46,
+        "next_sequence": 47,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M7BCFAWAYM3TXSVTHC1N7YZE": {
@@ -1969,6 +1984,22 @@
                   "issue-1660"
                 ],
                 "sequence": 46,
+                "validation_findings": [
+                  "Hosted verification and exact-candidate publication readiness remain pending; no local tests run."
+                ]
+              },
+              {
+                "action": "implementation",
+                "custody_event_id": "event:47",
+                "observations": [
+                  "tests/unit/core/validation_history_workunit_tests.rs",
+                  "https://github.com/DecapodLabs/decapod/issues/1660"
+                ],
+                "proof_refs": [],
+                "scope": [
+                  "issue-1660"
+                ],
+                "sequence": 47,
                 "validation_findings": [
                   "Hosted verification and exact-candidate publication readiness remain pending; no local tests run."
                 ]

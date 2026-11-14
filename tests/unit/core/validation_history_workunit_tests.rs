@@ -17,6 +17,17 @@ const INTENT: &str = "intent:observed-workunit";
 fn prepared() -> (consumer::Fixture, Store) {
     let mut fixture = consumer::Fixture::new();
     let root = &fixture.options.root;
+    // Unlike the adapter-only fixture, canonical admission reads the complete
+    // project schema and approval policy, not just its proof subsection.
+    let config = crate::cli::DecapodProjectConfig {
+        proof: fixture.proof.clone(),
+        ..Default::default()
+    };
+    fs::write(
+        root.join(consumer::CONFIG),
+        toml::to_string_pretty(&config).unwrap(),
+    )
+    .unwrap();
     fixture.options.git = crate::readiness_installed_tool(root, "git").unwrap();
     // Preserve real local target transport while giving the repository resolver
     // its canonical forge identity. No network or external proof is simulated.
