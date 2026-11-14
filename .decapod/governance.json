@@ -1063,6 +1063,14 @@
       "proof_refs": [
         ".decapod/managed/specs/SECURITY.md"
       ]
+    },
+    {
+      "id": "convergence-fixture-repair-attestation-semanticsmd",
+      "summary": "Refresh source binding after observed test fixture repairs",
+      "input_digest": "sha256:a727670b6cf6fcfa12fec0050b03c0d7de55fae4cc2dd92b3bb269593149d59a",
+      "proof_refs": [
+        ".decapod/managed/specs/SEMANTICS.md"
+      ]
     }
   ],
   "intents": {
