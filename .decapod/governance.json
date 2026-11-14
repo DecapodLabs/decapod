@@ -1479,6 +1479,14 @@
       "proof_refs": [
         "src/decapod/core/mentor/reflection/escalation.rs"
       ]
+    },
+    {
+      "id": "convergence-authority-scope-replay",
+      "summary": "Reject replay of a broader authority reply after target refinement while preserving exact current retries",
+      "input_digest": "sha256:44bf27a259557ff602ba529e4c8cc2e4407e54bff06ec50d0a0da7f47d7ee934",
+      "proof_refs": [
+        "tests/unit/core/reflection_tests.rs"
+      ]
     }
   ],
   "intents": {

@@ -949,6 +949,47 @@ fn investigation_can_supply_omitted_authority_without_resetting_the_three_round_
 }
 
 #[test]
+fn narrowing_authority_scope_invalidates_the_broader_historical_reply() {
+    let (temp, mut request) = escalation_fixture(escalation::Uncertainty::MissingAuthority);
+    let mut config = crate::cli::DecapodProjectConfig::default();
+    config.governance.approval_categories = vec!["destructive_operations".into()];
+    fs::write(
+        temp.path().join(".decapod/config.toml"),
+        toml::to_string(&config).unwrap(),
+    )
+    .unwrap();
+    crate::plugins::policy::initialize_policy_db(&temp.path().join(".decapod/data")).unwrap();
+    request.escalation.as_mut().unwrap().authority = Some(escalation::AuthorityRequest {
+        command: "todo.archive".into(),
+        target: None,
+    });
+    let first = submit(temp.path(), &request).unwrap();
+    assert_eq!(first.disposition, Disposition::HumanDecision);
+    let mut targeted = next(&request, &first, "specific-target");
+    targeted
+        .escalation
+        .as_mut()
+        .unwrap()
+        .authority
+        .as_mut()
+        .unwrap()
+        .target = Some(request.task_id.clone());
+    let second = submit(temp.path(), &targeted).unwrap();
+    assert_eq!(second.disposition, Disposition::HumanDecision);
+    assert_eq!(second.round, 2);
+    let before = bytes(temp.path());
+    assert!(
+        submit(temp.path(), &request)
+            .unwrap_err()
+            .to_string()
+            .contains("CONTEXT_CHANGED")
+    );
+    assert_eq!(before, bytes(temp.path()));
+    assert_eq!(submit(temp.path(), &targeted).unwrap(), second);
+    assert_eq!(before, bytes(temp.path()));
+}
+
+#[test]
 fn absent_policy_requirement_cannot_be_inferred_as_missing_authority() {
     let (temp, mut request) = escalation_fixture(escalation::Uncertainty::MissingAuthority);
     request.escalation.as_mut().unwrap().authority = Some(escalation::AuthorityRequest {
