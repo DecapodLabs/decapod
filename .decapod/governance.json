@@ -613,6 +613,14 @@
       "proof_refs": [
         "https://github.com/DecapodLabs/decapod/issues/1672"
       ]
+    },
+    {
+      "id": "issue-1672-integrate-fded2dd0",
+      "summary": "Integrate accepted master fded2dd0b5f02f9c874301d4b98cfd59ad188357 after merged PR1682 native inventory evidence with issue1672. Preserve current task journal/checkpoints and authored specs from both branches; regenerate projections through the kernel. Previous candidate readiness does not apply; no local tests.",
+      "input_digest": "sha256:878436bb42d7fa3dc0f9212cec7dbf070e31c4a06a2d37f1b42f2db70c882a18",
+      "proof_refs": [
+        "https://github.com/DecapodLabs/decapod/pull/1682"
+      ]
     }
   ],
   "intents": {
@@ -653,21 +661,21 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Rustfmt edits only; preserve the finite recipes and update their reviewed content identity. No local tests or changed assurance requirements.",
+          "reason": "Integrate accepted master fded2dd0b5f02f9c874301d4b98cfd59ad188357 after merged PR1682 native inventory evidence with issue1672. Preserve current task journal/checkpoints and authored specs from both branches; regenerate projections through the kernel. Previous candidate readiness does not apply; no local tests.",
           "reviewed_code_fingerprint": "f8ec0373efe5666103f1a9f4840f5aa832b7a2d366d397de5bb434d33b659690",
           "spec_material_hash": "1da8dd7ffc667cc2844a6399e06188ee5608fa786ff11e1f1d9befdddc781d9a"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Rustfmt edits only; preserve the finite recipes and update their reviewed content identity. No local tests or changed assurance requirements.",
+          "reason": "Integrate accepted master fded2dd0b5f02f9c874301d4b98cfd59ad188357 after merged PR1682 native inventory evidence with issue1672. Preserve current task journal/checkpoints and authored specs from both branches; regenerate projections through the kernel. Previous candidate readiness does not apply; no local tests.",
           "reviewed_code_fingerprint": "f8ec0373efe5666103f1a9f4840f5aa832b7a2d366d397de5bb434d33b659690",
           "spec_material_hash": "273ce5f19bf1ca9e6794aeb0128755444edaf312ac6a39059259e764d9ded91b"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Rustfmt edits only; preserve the finite recipes and update their reviewed content identity. No local tests or changed assurance requirements.",
+          "reason": "Integrate accepted master fded2dd0b5f02f9c874301d4b98cfd59ad188357 after merged PR1682 native inventory evidence with issue1672. Preserve current task journal/checkpoints and authored specs from both branches; regenerate projections through the kernel. Previous candidate readiness does not apply; no local tests.",
           "reviewed_code_fingerprint": "f8ec0373efe5666103f1a9f4840f5aa832b7a2d366d397de5bb434d33b659690",
           "spec_material_hash": "fa85ff736ae9bd16044a48bb34a30dd8fdbb8d7209b3dbf7642d1d94f38a9c96"
         }
@@ -682,13 +690,13 @@
         "Accepted controller must support the new finite shard graph before candidate workflows can use it."
       ],
       "unresolved_contradictions": [],
-      "updated_at": "1794621978Z"
+      "updated_at": "1794623582Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:b6f56649ac3195c8fdc7ba55f54255ee664cb30628f7927765edff427040a83b",
+      "artifact_hash": "sha256:c65950f1d16962d8dc5a47ef91d8c1412afc4b25bc1e01b655f30138b5efe504",
       "checks": [],
       "current_phase": "implementation",
       "custody": {
@@ -767,10 +775,17 @@
             "intent_id": "intent:change_01M7BCG49JVT83YA5CJ6ZGTYFS",
             "kind": "trajectory_step_recorded",
             "sequence": 12
+          },
+          {
+            "detail": "trajectory:branch_01M7BCG4CA346XXGN460V3EX4S",
+            "event_id": "event:13",
+            "intent_id": "intent:change_01M7BCG49JVT83YA5CJ6ZGTYFS",
+            "kind": "trajectory_step_recorded",
+            "sequence": 13
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 12,
+        "next_sequence": 13,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M7BCG4CA346XXGN460V3EX4S": {
@@ -920,6 +935,21 @@
                 "validation_findings": [
                   "Hosted verification and exact-candidate publication readiness remain pending; no local tests run."
                 ]
+              },
+              {
+                "action": "implementation",
+                "custody_event_id": "event:13",
+                "observations": [
+                  "https://github.com/DecapodLabs/decapod/pull/1682"
+                ],
+                "proof_refs": [],
+                "scope": [
+                  "issue-1672"
+                ],
+                "sequence": 13,
+                "validation_findings": [
+                  "Integrate accepted master fded2dd0b5f02f9c874301d4b98cfd59ad188357 after merged PR1682 native inventory evidence with issue1672. Preserve current task journal/checkpoints and authored specs from both branches; regenerate projections through the kernel. Previous candidate readiness does not apply; no local tests."
+                ]
               }
             ]
           }
@@ -929,7 +959,8 @@
       "destination": "pull request",
       "evidence": [
         "https://github.com/DecapodLabs/decapod/issues/1672",
-        "https://github.com/DecapodLabs/decapod/pull/1675"
+        "https://github.com/DecapodLabs/decapod/pull/1675",
+        "https://github.com/DecapodLabs/decapod/pull/1682"
       ],
       "inspected_files": [],
       "intent_id": "intent:change_01M7BCG49JVT83YA5CJ6ZGTYFS",
@@ -955,7 +986,8 @@
       "tool_calls": [],
       "unresolved_assumptions": [
         "Hosted verification and exact-candidate publication readiness remain pending; no local tests run.",
-        "Integrate accepted master f779e39111ec8b3c8c41569f68a3a7604df167e7 and merged1675 accepted-policy hardening with issue1672. Preserve current task journal/checkpoints and authored specs from both branches; regenerate projections through the kernel. Previous candidate readiness does not apply; no local tests."
+        "Integrate accepted master f779e39111ec8b3c8c41569f68a3a7604df167e7 and merged1675 accepted-policy hardening with issue1672. Preserve current task journal/checkpoints and authored specs from both branches; regenerate projections through the kernel. Previous candidate readiness does not apply; no local tests.",
+        "Integrate accepted master fded2dd0b5f02f9c874301d4b98cfd59ad188357 after merged PR1682 native inventory evidence with issue1672. Preserve current task journal/checkpoints and authored specs from both branches; regenerate projections through the kernel. Previous candidate readiness does not apply; no local tests."
       ]
     }
   },
