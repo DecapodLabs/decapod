@@ -587,6 +587,14 @@
       "proof_refs": [
         "https://github.com/DecapodLabs/decapod/issues/1069"
       ]
+    },
+    {
+      "id": "issue1069-map-file-6",
+      "summary": "docs(audit): bind the reviewed Nix regression to its actual hosted execution; implementation checkpoint, hosted verification pending.",
+      "input_digest": "sha256:525ad2eb3830b97350b9cd2b9983486f4b99f1ec1f7b6d2a9e3ff9f60a98195a",
+      "proof_refs": [
+        "https://github.com/DecapodLabs/decapod/issues/1069"
+      ]
     }
   ],
   "intents": {
@@ -637,7 +645,7 @@
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:aa754c6494328e5165afad8af05e4af1a1606721bff86ed1452ac656d742d603",
+      "artifact_hash": "sha256:395e6277a37259ca72ca7d719ab5291abd3483df4d7d9e606b25ba24674742b4",
       "checks": [],
       "current_phase": "implementation",
       "custody": {
@@ -688,10 +696,17 @@
             "intent_id": "intent:change_01M7E66T9HY96F199YWWHTADJ3",
             "kind": "trajectory_step_recorded",
             "sequence": 8
+          },
+          {
+            "detail": "trajectory:branch_01M7E66TFC22P91MMG3QEZ23JP",
+            "event_id": "event:9",
+            "intent_id": "intent:change_01M7E66T9HY96F199YWWHTADJ3",
+            "kind": "trajectory_step_recorded",
+            "sequence": 9
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 8,
+        "next_sequence": 9,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M7E66TFC22P91MMG3QEZ23JP": {
@@ -775,6 +790,22 @@
                   "root"
                 ],
                 "sequence": 8,
+                "validation_findings": [
+                  "Implementation in progress; exact-candidate hosted checks pending; no local tests or Buildkite execution."
+                ]
+              },
+              {
+                "action": "implementation",
+                "custody_event_id": "event:9",
+                "observations": [
+                  "docs/architecture/continuous-governance-implementation-map.md",
+                  "https://github.com/DecapodLabs/decapod/issues/1069"
+                ],
+                "proof_refs": [],
+                "scope": [
+                  "root"
+                ],
+                "sequence": 9,
                 "validation_findings": [
                   "Implementation in progress; exact-candidate hosted checks pending; no local tests or Buildkite execution."
                 ]

@@ -86,6 +86,15 @@ not receipts for this document's candidate, draft #1698 or an arbitrary later tr
   regression supports closing the bounded documentation issue #1164; it does not
   establish an unrelated runtime, cloud or publication guarantee.
 
+For draft #1698, source `6040f0853d028c538bb6f44e4e4aa0af7997f64e` against
+the same accepted base, [release-policy job 132624601734](https://github.com/DecapodLabs/decapod/actions/runs/43652192736/job/132624601734)
+actually passed `nix_gates_recognize_squash_linear_and_ordinary_release_commits`.
+The actual workflow scripts exercised real Git histories and a local shallow
+fetch, not Nix/Cachix publication. [Consumer job 132623199635](https://github.com/DecapodLabs/decapod/actions/runs/43652192736/job/132623199635)
+passed 1,759 library tests with eight explicitly ignored after the reviewed
+workflow pin was reconciled. Neither observation puts that pending workflow
+contract into the accepted baseline or supplies full native publication proof.
+
 The source-CI records explicitly report `authenticated=false` and
 `complete_pr_profile=false`. They must not become an authenticated full native
 receipt. Buildkite evidence is not collected for this delivery; its accepted
