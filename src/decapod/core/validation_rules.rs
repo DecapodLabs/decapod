@@ -1834,6 +1834,11 @@ fn evaluate_workunit_rule(_rule: &ResolvedRule, context: &RuleEvaluationContext)
     ) || terminal.proof.verify().is_err()
         || crate::core::validation_history::ensure_full_validation_plan(&manifest.proof_plan)
             .is_err()
+        || crate::core::todo::ensure_task_full_validation_plan(
+            &crate::core::store::find_governance_root(root).join(".decapod/data"),
+            &manifest.task_id,
+        )
+        .is_err()
         || crate::core::workunit::ensure_living_specs_bound_for_proof(root, manifest).is_err()
         || crate::core::workunit::verify_capsule_policy_lineage_for_task(root, manifest).is_err()
     {
