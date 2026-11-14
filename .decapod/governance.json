@@ -755,6 +755,14 @@
       "proof_refs": [
         "https://github.com/DecapodLabs/decapod/issues/1657"
       ]
+    },
+    {
+      "id": "issue1657-reconcile-file-26",
+      "summary": "fix(docs): generate the versioned legacy recovery contracts; implementation checkpoint, hosted verification pending.",
+      "input_digest": "sha256:0039224e711175bdc0acce565d4510a160b7dd52024d937a2ba727b4b70921df",
+      "proof_refs": [
+        "https://github.com/DecapodLabs/decapod/issues/1657"
+      ]
     }
   ],
   "intents": {
@@ -780,7 +788,7 @@
   "sections": {
     "plan": {
       "constraints": {
-        "file_touch_budget": 28,
+        "file_touch_budget": 29,
         "forbidden_paths": []
       },
       "deferred_questions": [],
@@ -791,29 +799,6 @@
         "decapod validate"
       ],
       "schema_version": "1.1.0",
-      "spec_reviews": [
-        {
-          "disposition": "updated",
-          "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Reviewed actual legacy_todo_recovery, typed bootstrap dispatch, canonical explicit permission and real CLI regressions. Physical retirement only; historical-row migration and independent same-UID security remain unresolved; hosted proof pending.",
-          "reviewed_code_fingerprint": "45b518960e74893c7fcd8b0e4024b721eb80ba17c2e22ebccebe95bc14b0d892",
-          "spec_material_hash": "2134e2aa3586618b0562190343f7ec79bc90f1f7187904be3ac9346dcefd320c"
-        },
-        {
-          "disposition": "updated",
-          "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Reviewed actual legacy_todo_recovery, typed bootstrap dispatch, canonical explicit permission and real CLI regressions. Physical retirement only; historical-row migration and independent same-UID security remain unresolved; hosted proof pending.",
-          "reviewed_code_fingerprint": "45b518960e74893c7fcd8b0e4024b721eb80ba17c2e22ebccebe95bc14b0d892",
-          "spec_material_hash": "64f6676fe47299663bcd4aec88430d7feb1ceb8859e25e05dd8fe7f299e1ea9e"
-        },
-        {
-          "disposition": "updated",
-          "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Reviewed actual legacy_todo_recovery, typed bootstrap dispatch, canonical explicit permission and real CLI regressions. Physical retirement only; historical-row migration and independent same-UID security remain unresolved; hosted proof pending.",
-          "reviewed_code_fingerprint": "45b518960e74893c7fcd8b0e4024b721eb80ba17c2e22ebccebe95bc14b0d892",
-          "spec_material_hash": "2d54b671d4b31bd9b29143de319a4cebeeff4379d3e7b3d165062fd7718206a2"
-        }
-      ],
       "state": "DRAFT",
       "stop_conditions": [],
       "title": "code: resolve #1657 Add explicit recovery for legacy TODO stores beside journaled canonical state",
@@ -822,20 +807,20 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1794695381Z"
+      "updated_at": "1794695684Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:7f7d7118b2c9b4ec7b49d1bd148eb901653dddf1fd8a26819228435e2ec58432",
+      "artifact_hash": "sha256:c1c6727c8af8bb047d05067a53a1a01cf1c8622686f47637251dfdc1c50f39f3",
       "checks": [
         {
           "name": "github-prior-compilation",
           "status": "failed"
         }
       ],
-      "current_phase": "validation",
+      "current_phase": "implementation",
       "custody": {
         "events": [
           {
@@ -1031,10 +1016,17 @@
             "intent_id": "intent:change_01M7DXW29MW090TM7TAHZF5JJK",
             "kind": "trajectory_step_recorded",
             "sequence": 29
+          },
+          {
+            "detail": "trajectory:branch_01M7DXW2DCAD18R4V58TWM41F2",
+            "event_id": "event:30",
+            "intent_id": "intent:change_01M7DXW29MW090TM7TAHZF5JJK",
+            "kind": "trajectory_step_recorded",
+            "sequence": 30
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 29,
+        "next_sequence": 30,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M7DXW2DCAD18R4V58TWM41F2": {
@@ -1458,6 +1450,22 @@
                 "validation_findings": [
                   "Prior hosted compilation rejected private test API references; repaired in source. Fresh exact-candidate GitHub proof pending. No local tests or Buildkite execution; full native publication remains unproven."
                 ]
+              },
+              {
+                "action": "implementation",
+                "custody_event_id": "event:30",
+                "observations": [
+                  "src/decapod/core/docs_cli.rs",
+                  "https://github.com/DecapodLabs/decapod/issues/1657"
+                ],
+                "proof_refs": [],
+                "scope": [
+                  "issue-1657"
+                ],
+                "sequence": 30,
+                "validation_findings": [
+                  "Implementation in progress; exact-candidate hosted checks pending; no local tests or Buildkite execution."
+                ]
               }
             ]
           }
@@ -1483,6 +1491,7 @@
         "docs/agent/error-recovery.md",
         "docs/architecture/legacy-todo-recovery.md",
         "src/decapod/cli.rs",
+        "src/decapod/core/docs_cli.rs",
         "src/decapod/core/legacy_todo_recovery.rs",
         "src/decapod/core/migration.rs",
         "src/decapod/core/todo.rs",
