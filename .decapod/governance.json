@@ -855,6 +855,14 @@
       "proof_refs": [
         ".decapod/managed/specs/SECURITY.md"
       ]
+    },
+    {
+      "id": "convergence-refresh1454-semanticsmd",
+      "summary": "Refresh supported SEMANTICS.md projection with the current source identity",
+      "input_digest": "sha256:2e1f4fcc58f3d9c94d230c755c067f5e4e248bd859b0ad065c0171dbcf23881a",
+      "proof_refs": [
+        ".decapod/managed/specs/SEMANTICS.md"
+      ]
     }
   ],
   "intents": {
