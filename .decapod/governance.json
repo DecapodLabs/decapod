@@ -1767,6 +1767,14 @@
       "proof_refs": [
         "tests/unit/core/reflection_tests.rs"
       ]
+    },
+    {
+      "id": "convergence-correctable-classification",
+      "summary": "Bind stable intent and missing obligation while allowing evidence-supported correction of a declared uncertainty class",
+      "input_digest": "sha256:39545c4a0444a36d89d6c1d2a9b3c1053c1b846fc46148c0ffef660e9deba85a",
+      "proof_refs": [
+        "src/decapod/core/mentor/reflection/escalation.rs"
+      ]
     }
   ],
   "intents": {

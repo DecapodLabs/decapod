@@ -231,10 +231,7 @@ pub(super) fn assess(
     if proposal.intent != plan.intent {
         return Err(invalid("ESCALATION_INTENT_MISMATCH"));
     }
-    let subject = digest(
-        &json!({"intent":proposal.intent, "missing":proposal.missing,
-        "uncertainty":proposal.uncertainty}),
-    )?;
+    let subject = digest(&json!({"intent":proposal.intent, "missing":proposal.missing}))?;
     if previous.is_some_and(|p| p.subject_digest != subject) {
         return Err(invalid(
             "ESCALATION_SUBJECT_CHANGED: preserve the original obligation",
