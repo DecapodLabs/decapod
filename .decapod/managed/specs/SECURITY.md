@@ -626,7 +626,7 @@ execution evidence remains required before publication readiness.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `4962ece0fc5b6eaf28001263c6761d8a8142bbe4750fee107fe41974ccd3d305`
+- Repository signal fingerprint: `13493688272495c41929214e768ea4473f3b7904d9979f4c24c9fb37489d0a6f`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (234 files), `tests/` (232 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
@@ -991,3 +991,13 @@ accepted local source-definition digest before selection. The failed observation
 remains historical; fresh hosted execution must establish the repair. This is a
 local-readiness finding, not evidence of bypassing an independent remote merge
 service or of OS isolation from an unrestricted producer.
+
+## Preserved uncertain legacy authority (#1657)
+
+A placeholder decision uses no content timestamps and follows no symlink. Any
+nonzero content, nonregular object, sidecar or unreadable/uncertain metadata is
+not proof of emptiness. Journaled canonical authority cannot implicitly import
+or delete that source. Real-journal regressions preserve logical digest/custody
+and original input bytes across repeated reconciliation. This is no OS-level
+filesystem isolation or permission to replay an unknown broker mutation; general
+nonempty recovery remains unresolved and hosted proof is pending.

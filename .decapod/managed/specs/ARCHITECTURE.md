@@ -920,7 +920,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `4962ece0fc5b6eaf28001263c6761d8a8142bbe4750fee107fe41974ccd3d305`
+- Repository signal fingerprint: `13493688272495c41929214e768ea4473f3b7904d9979f4c24c9fb37489d0a6f`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (234 files), `tests/` (232 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
@@ -1227,3 +1227,13 @@ choose the existing three-target recipe; no command or mandatory check is
 removed. The accepted target still controls source execution. This change
 repairs a coverage prerequisite; workflow partitioning, compile reuse and a
 measured five-minute job budget remain pending.
+
+## Legacy TODO bootstrap boundary (#1657)
+
+The existing migration owner classifies only a zero-byte regular TODO file with
+no WAL/SHM/rollback sidecar as inert. It never opens, imports or removes that
+placeholder, including when another subsystem triggers reconciliation. The
+classification is captured once for source import/cleanup. Every uncertain TODO
+artifact beside canonical task history remains guarded. General nonempty
+versioned reconciliation is still unresolved; no second journal authority or
+implicit projection rebuild is introduced.

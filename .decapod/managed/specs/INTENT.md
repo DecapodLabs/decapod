@@ -352,7 +352,7 @@ These declarations select authoring and proof obligations; they do not attest im
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `4962ece0fc5b6eaf28001263c6761d8a8142bbe4750fee107fe41974ccd3d305`
+- Repository signal fingerprint: `13493688272495c41929214e768ea4473f3b7904d9979f4c24c9fb37489d0a6f`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (234 files), `tests/` (232 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
@@ -568,6 +568,18 @@ coverage boundary before changing the finite controller graph. Accepted-target
 controllers remain authoritative, and a candidate cannot authorize its own new
 executor. Five-minute job timing, compilation reuse and activation of the shard
 graph require hosted evidence and are not established by this coverage change.
+
+## Mixed-store recovery (#1657)
+
+Provide explicit, versioned and idempotent recovery for a nonempty legacy TODO
+store beside valid canonical task-journal state. Reuse datastore lifecycle,
+maintenance authority and journal verification. Preserve original files, task
+identities, chronology, custody/proof bindings and unknown outcomes. Diagnose
+equivalence, divergence and corruption independently; do not implicitly merge
+contradictory state, delete legacy input, reconstruct missing proof, or replay an
+unknown mutation. Ordinary operation resumes only after an inspectable safe
+recovery result. The empty-stub path is a bounded first repair; general nonempty reconciliation
+remains unimplemented. Hosted regressions must exercise real store and recovery boundaries.
 
 ## Storage convergence follow-through (#1630)
 
