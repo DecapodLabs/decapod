@@ -1953,3 +1953,7 @@ contract blocker with zero selections/executions, while unchanged policy,
 additive commands, first adoption and separately accepted target-policy evolution
 still execute real proof. Current hosted revalidation remains pending; previous
 failed evidence is retained and no local tests or full PR readiness are claimed.
+
+## Accepted release projection refresh (v0.144.5)
+
+After integrating accepted master `9767ae9a3ff1c7452101482218a17c55cf569b71`, regenerate the agent entrypoints and managed release projections with the official v0.144.5 binary. Accepted verification requirements remain unchanged. Projection integrity is a prerequisite; fresh hosted GitHub Actions must evaluate this candidate. No local tests or full publication-readiness claim accompany this refresh.
