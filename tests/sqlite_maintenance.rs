@@ -769,19 +769,33 @@ fn legacy_recovery_fixture(granted: bool) -> (GovernedRepoFixture, ClaimedAgentW
     let fixture = GovernedRepoFixture::new();
     let agent = fixture.spawn_claimed_agent("operator", "legacy-recovery");
     let path = fixture.repo_root.join(".decapod/config.toml");
-    let mut config: decapod::cli::DecapodProjectConfig =
-        toml::from_str(&fs::read_to_string(&path).unwrap()).unwrap();
-    config
-        .governance
-        .rbac
-        .actor_roles
-        .insert("operator".into(), vec!["maintainer".into()]);
-    config.governance.rbac.journal_repair_roles = vec!["maintainer".into()];
-    config.governance.rbac.legacy_todo_reconcile_roles = if granted {
-        vec!["maintainer".into()]
-    } else {
-        vec![]
-    };
+    let mut config: toml::Table = toml::from_str(&fs::read_to_string(&path).unwrap()).unwrap();
+    let governance = config
+        .entry("governance")
+        .or_insert(toml::Value::Table(toml::Table::new()))
+        .as_table_mut()
+        .unwrap();
+    let rbac = governance
+        .entry("rbac")
+        .or_insert(toml::Value::Table(toml::Table::new()))
+        .as_table_mut()
+        .unwrap();
+    let actors = rbac
+        .entry("actor_roles")
+        .or_insert(toml::Value::Table(toml::Table::new()))
+        .as_table_mut()
+        .unwrap();
+    let maintainers = toml::Value::Array(vec![toml::Value::String("maintainer".into())]);
+    actors.insert("operator".into(), maintainers.clone());
+    rbac.insert("journal_repair_roles".into(), maintainers.clone());
+    rbac.insert(
+        "legacy_todo_reconcile_roles".into(),
+        if granted {
+            maintainers
+        } else {
+            toml::Value::Array(vec![])
+        },
+    );
     fs::write(&path, toml::to_string_pretty(&config).unwrap()).unwrap();
     let root = fixture.repo_root.join(".decapod/data");
     let canonical = root.join("decapod.db");
@@ -965,9 +979,19 @@ fn legacy_reconciliation_requires_its_own_grant_and_fresh_exact_inputs() {
     assert!(!denied_apply.status.success());
     assert!(String::from_utf8_lossy(&denied_apply.stderr).contains("RBAC_PERMISSION_DENIED"));
     let config_path = fixture.repo_root.join(".decapod/config.toml");
-    let mut config: decapod::cli::DecapodProjectConfig =
+    let mut config: toml::Table =
         toml::from_str(&fs::read_to_string(&config_path).unwrap()).unwrap();
-    config.governance.rbac.legacy_todo_reconcile_roles = vec!["maintainer".into()];
+    config
+        .get_mut("governance")
+        .unwrap()
+        .get_mut("rbac")
+        .unwrap()
+        .as_table_mut()
+        .unwrap()
+        .insert(
+            "legacy_todo_reconcile_roles".into(),
+            toml::Value::Array(vec![toml::Value::String("maintainer".into())]),
+        );
     fs::write(&config_path, toml::to_string_pretty(&config).unwrap()).unwrap();
     let review = legacy_recovery_report(&legacy_recovery_command(&fixture, &agent, &[]));
     let token = review["review_sha256"].as_str().unwrap();
@@ -1042,6 +1066,105 @@ fn legacy_reconciliation_rejects_corrupt_symlinked_or_reappeared_input() {
     );
     assert_eq!(legacy_recovery_report(&replay)["source_reappeared"], true);
     assert_eq!(fs::read(root.join("decapod.db")).unwrap(), before);
+}
+
+#[cfg(unix)]
+#[test]
+fn legacy_reconciliation_preserves_empty_input_and_rejects_wrong_session() {
+    let (fixture, agent, before) = legacy_recovery_fixture(true);
+    let root = fixture.repo_root.join(".decapod/data");
+    fs::write(root.join("todo.db"), []).unwrap();
+    let review = legacy_recovery_report(&legacy_recovery_command(&fixture, &agent, &[]));
+    assert_eq!(review["classification"], "empty");
+    let token = review["review_sha256"].as_str().unwrap();
+    let denied = fixture
+        .decapod_cmd(&agent.worktree_dir, &agent.agent_id, Some("wrong-password"))
+        .args([
+            "todo",
+            "journal",
+            "reconcile-legacy",
+            "--expected-review",
+            token,
+        ])
+        .output()
+        .unwrap();
+    assert!(!denied.status.success());
+    assert!(String::from_utf8_lossy(&denied.stderr).contains("AGENT_IDENTITY_FORGED"));
+    assert!(!root.join("legacy-todo-recovery-v1.json").exists());
+    let applied = legacy_recovery_command(&fixture, &agent, &["--expected-review", token]);
+    assert!(
+        applied.status.success(),
+        "{}",
+        String::from_utf8_lossy(&applied.stderr)
+    );
+    assert_eq!(
+        fs::metadata(root.join("todo.db.legacy-recovery-v1.archive"))
+            .unwrap()
+            .len(),
+        0
+    );
+    assert_eq!(fs::read(root.join("decapod.db")).unwrap(), before);
+}
+
+#[cfg(unix)]
+#[test]
+fn legacy_reconciliation_rejects_unmatched_history_sidecars_and_corrupt_receipt() {
+    let (fixture, agent, before) = legacy_recovery_fixture(true);
+    let root = fixture.repo_root.join(".decapod/data");
+    let legacy = root.join("todo.db");
+    fs::remove_file(&legacy).unwrap();
+    {
+        let db = open_local(&legacy, AccessMode::ReadWrite);
+        db.write("create table unknown_history (value text)", &[])
+            .unwrap();
+        db.write("insert into unknown_history values ('unproven')", &[])
+            .unwrap();
+    }
+    let source = fs::read(&legacy).unwrap();
+    let unmatched = legacy_recovery_command(&fixture, &agent, &[]);
+    assert!(!unmatched.status.success());
+    assert_eq!(
+        legacy_recovery_report(&unmatched)["classification"],
+        "unmatched"
+    );
+    assert_eq!(fs::read(&legacy).unwrap(), source);
+    fs::write(&legacy, &before).unwrap();
+    let sidecar = root.join("todo.db-wal");
+    fs::write(&sidecar, b"unknown live outcome").unwrap();
+    assert!(
+        !legacy_recovery_command(&fixture, &agent, &[])
+            .status
+            .success()
+    );
+    assert_eq!(fs::read(&sidecar).unwrap(), b"unknown live outcome");
+    fs::remove_file(&sidecar).unwrap();
+    let review = legacy_recovery_report(&legacy_recovery_command(&fixture, &agent, &[]));
+    let token = review["review_sha256"].as_str().unwrap();
+    let prepared = legacy_recovery_command(
+        &fixture,
+        &agent,
+        &["--expected-review", token, "--prepare-only"],
+    );
+    assert!(prepared.status.success());
+    let receipt = root.join("legacy-todo-recovery-v1.json");
+    let mut forged: serde_json::Value =
+        serde_json::from_slice(&fs::read(&receipt).unwrap()).unwrap();
+    forged["binding"]["source_sha256"] = serde_json::json!(format!("sha256:{}", "0".repeat(64)));
+    fs::write(&receipt, serde_json::to_vec(&forged).unwrap()).unwrap();
+    assert!(
+        !legacy_recovery_command(&fixture, &agent, &["--expected-review", token])
+            .status
+            .success()
+    );
+    let ordinary = fixture
+        .decapod_cmd(&agent.worktree_dir, &agent.agent_id, Some(&agent.password))
+        .args(["todo", "list"])
+        .output()
+        .unwrap();
+    assert!(!ordinary.status.success());
+    assert_eq!(fs::read(root.join("decapod.db")).unwrap(), before);
+    assert_eq!(fs::read(&legacy).unwrap(), before);
+    assert!(!root.join("todo.db.legacy-recovery-v1.archive").exists());
 }
 
 #[test]
