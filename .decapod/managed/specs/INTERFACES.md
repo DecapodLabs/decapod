@@ -1520,3 +1520,15 @@ changed inventoried check scripts, build/dependency definitions or provider
 inputs. Retain the accepted inventory or establish the reviewed revision on the
 target before revalidation. Additive commands under that inventory and first
 local adoption remain supported; no override or second policy store is added.
+
+## Canonical workunit validation contract (#1660)
+
+Existing workunit CLI operations remain the request surface. `record-proof`
+records a declaration; requesting VERIFIED requires a current canonical full
+observation for exactly one supported `validate_passes`/`validated_commit`
+obligation. The kernel derives the result, epoch and optional validation-record
+selector. Caller-supplied selectors cannot import producer success. File artifact
+paths retain byte-integrity semantics. Historical JSON omits the optional field;
+Rust manifest literals add `validation_record: None`, and verification consumers
+pass repository context to `validate_verified_manifest(root, manifest)`.
+Publication and human merge authorization remain independent operations.
