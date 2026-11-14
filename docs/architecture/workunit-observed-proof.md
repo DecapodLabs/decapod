@@ -71,6 +71,21 @@ legacy declaration. Proof consumers pass the repository root to
 masquerade as current verification. JSON CLI names and existing file artifacts
 are unchanged.
 
+New VERIFIED append and identical-operation replay also recheck canonical task
+checkpoint, current exclusive lease and additional task obligations on the same
+SQLite transaction connection as the workunit append. Normal linked workspaces
+using the canonical parent runtime retain that transaction domain. An explicitly
+separate initialized workspace database returns
+`WORKUNIT_PROOF_ATOMIC_DOMAIN_UNSUPPORTED`; this implementation does not pretend
+that two independent database transactions are atomic. Compatible migration or
+convergence for that split runtime remains unresolved, with history preserved.
+
+Historical non-workunit records omit the witness. Verifiers predating observed
+workunit support reject the new optional record fields as unverifiable; rolling
+back does not convert the observation into a legacy passing declaration. A safe
+reader/writer migration for independently initialized workspace runtimes is still
+required before claiming complete workunit convergence.
+
 The local trust root is the installed kernel, accepted policy, measured tools,
 and canonical local journals. Producer and agent sharing an unrestricted OS user
 are not independent security domains. Digests establish integrity and binding;
