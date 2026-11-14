@@ -1154,7 +1154,7 @@ field. Nothing in this operation authorizes a mutation, approval or completion.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `6805a09ab2ab803be72e3a343d55c2d8da78ca039455cc394daef724dc0f5219`
+- Repository signal fingerprint: `ba945b5c5952fa3044153d498bc24a7003fa19bbc9c34b35daa26b8a038a7598`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (234 files), `tests/` (232 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
@@ -1559,3 +1559,19 @@ prompt requirement. TASK_JOURNAL_MIGRATION_REQUIRED continues to block non-inert
 TODO inputs beside canonical journal state; an explicit versioned nonempty
 recovery command and compatible authority contract remain required. See
 `docs/architecture/legacy-todo-recovery.md`.
+
+## Scoped container-runtime recovery during prerequisites
+
+`src/decapod/plugins/container.rs::heal_container_runtime_override` first uses
+the existing disabled-runtime marker predicate. A missing or unrelated override
+returns unchanged without probing or starting a container engine. An existing
+disabled-runtime override retains the existing availability probe and scoped
+recovery behavior. Required validation checks and publication proof requirements
+remain independent of this optional preparation step.
+
+The isolated subprocess regression in `tests/unit/plugins/container_tests.rs`
+observes runtime invocations for missing, unrelated and disabled override cases,
+and checks preservation of unrelated content. It does not claim live container
+isolation or publication readiness. The actual CLI runtime probe retains its
+10-second per-call and 20-second aggregate requirements; fresh hosted execution
+must establish the resulting candidate's behavior and timing.

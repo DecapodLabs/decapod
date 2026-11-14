@@ -853,6 +853,14 @@
       "proof_refs": [
         "https://github.com/DecapodLabs/decapod/issues/1667"
       ]
+    },
+    {
+      "id": "issue-1667-file-40",
+      "summary": "docs(container): scope optional prerequisite recovery on the SDK integration; file-by-file checkpoint, verification pending.",
+      "input_digest": "sha256:577fde734a57e6b9a4a23d1aa0868ca3a5cd0938c320d5c37f601adc12c4e833",
+      "proof_refs": [
+        "https://github.com/DecapodLabs/decapod/issues/1667"
+      ]
     }
   ],
   "intents": {
@@ -893,22 +901,22 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Integrate accepted master e8f8848d19a02ad8e2a580cf7722fe4ff9342221 after merged bootstrap repair PR1683 with issue1667. Preserve current task journal/checkpoints and authored specs from both branches; regenerate projections through the kernel. Previous candidate readiness does not apply; no local tests.",
-          "reviewed_code_fingerprint": "6805a09ab2ab803be72e3a343d55c2d8da78ca039455cc394daef724dc0f5219",
+          "reason": "The SDK integration retains the same required proof and 10/20-second runtime bounds. Optional recovery probes only existing disabled-runtime overrides; actual hosted core revalidation is needed after job132367333351 failed at20.454 seconds. Unit transport observations do not prove real container isolation or publication readiness.",
+          "reviewed_code_fingerprint": "ba945b5c5952fa3044153d498bc24a7003fa19bbc9c34b35daa26b8a038a7598",
           "spec_material_hash": "3aeba00a479cd53f1202378520b186fe8ee4b79652ac6cfec470671eccf9c528"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Integrate accepted master e8f8848d19a02ad8e2a580cf7722fe4ff9342221 after merged bootstrap repair PR1683 with issue1667. Preserve current task journal/checkpoints and authored specs from both branches; regenerate projections through the kernel. Previous candidate readiness does not apply; no local tests.",
-          "reviewed_code_fingerprint": "6805a09ab2ab803be72e3a343d55c2d8da78ca039455cc394daef724dc0f5219",
-          "spec_material_hash": "be27db2dceaa2f7c2fdfa50b5c187e8388b755c78d7e46134f85ed4ff14300bb"
+          "reason": "The SDK integration retains the same required proof and 10/20-second runtime bounds. Optional recovery probes only existing disabled-runtime overrides; actual hosted core revalidation is needed after job132367333351 failed at20.454 seconds. Unit transport observations do not prove real container isolation or publication readiness.",
+          "reviewed_code_fingerprint": "ba945b5c5952fa3044153d498bc24a7003fa19bbc9c34b35daa26b8a038a7598",
+          "spec_material_hash": "d955792e88cfb971b70244613af33eb00753972b73d3ca1198529e589d660997"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Integrate accepted master e8f8848d19a02ad8e2a580cf7722fe4ff9342221 after merged bootstrap repair PR1683 with issue1667. Preserve current task journal/checkpoints and authored specs from both branches; regenerate projections through the kernel. Previous candidate readiness does not apply; no local tests.",
-          "reviewed_code_fingerprint": "6805a09ab2ab803be72e3a343d55c2d8da78ca039455cc394daef724dc0f5219",
+          "reason": "The SDK integration retains the same required proof and 10/20-second runtime bounds. Optional recovery probes only existing disabled-runtime overrides; actual hosted core revalidation is needed after job132367333351 failed at20.454 seconds. Unit transport observations do not prove real container isolation or publication readiness.",
+          "reviewed_code_fingerprint": "ba945b5c5952fa3044153d498bc24a7003fa19bbc9c34b35daa26b8a038a7598",
           "spec_material_hash": "8d3324c75b5544778861a99d656f23e500febb0d04269106c9f9562de4cde672"
         }
       ],
@@ -920,13 +928,13 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1794639086Z"
+      "updated_at": "1794642008Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:06c24c181cdc35b8d18f26b7566f13ab72c56a66c13ffc54f57fe13ffa3eaf1e",
+      "artifact_hash": "sha256:646934308b5bd8c223d27c304f93a0d80c47f1b7d0449e79f111cc992a50969e",
       "checks": [],
       "current_phase": "implementation",
       "custody": {
@@ -1215,10 +1223,17 @@
             "intent_id": "intent:change_01M7BCN0CS3Z8AJ7TZ491WJ7CJ",
             "kind": "trajectory_step_recorded",
             "sequence": 42
+          },
+          {
+            "detail": "trajectory:branch_01M7BCN0FD8AE623HXNGA0C8F9",
+            "event_id": "event:43",
+            "intent_id": "intent:change_01M7BCN0CS3Z8AJ7TZ491WJ7CJ",
+            "kind": "trajectory_step_recorded",
+            "sequence": 43
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 42,
+        "next_sequence": 43,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M7BCN0FD8AE623HXNGA0C8F9": {
@@ -1842,6 +1857,22 @@
                   "issue-1667"
                 ],
                 "sequence": 42,
+                "validation_findings": [
+                  "Hosted verification and exact-candidate publication readiness remain pending; no local tests run."
+                ]
+              },
+              {
+                "action": "implementation",
+                "custody_event_id": "event:43",
+                "observations": [
+                  ".decapod/managed/specs/INTERFACES.md",
+                  "https://github.com/DecapodLabs/decapod/issues/1667"
+                ],
+                "proof_refs": [],
+                "scope": [
+                  "issue-1667"
+                ],
+                "sequence": 43,
                 "validation_findings": [
                   "Hosted verification and exact-candidate publication readiness remain pending; no local tests run."
                 ]
