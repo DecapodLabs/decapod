@@ -352,7 +352,7 @@ These declarations select authoring and proof obligations; they do not attest im
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `b96bc08c4088f5c296dcb9c3c55e9b4b8800be9fb1ca71807dad991d821ec936`
+- Repository signal fingerprint: `ba894b60287b8a2e77aefdc63e9c2500db01e809bd43d40de19cb32596270211`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (234 files), `tests/` (232 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
@@ -557,6 +557,23 @@ Expose only project-opted local database maintenance capabilities to the agent. 
 ## PR1662 current-master preparation
 
 Preserve prepared PR1662 capability-scoped database maintenance before integrating accepted master3afa9df9 and the0.144.2 source release. Default-deny accepted policy, owner-only repair, bounded safe operations and non-destructive lock custody remain obligations. Hosted CI must establish the exact integrated candidate; no local tests are run.
+
+## Storage convergence follow-through (#1630)
+
+Audit the current merged compact journal/event/component and bounded inspection
+implementation before adding representation changes. Preserve canonical logical
+hashes, custody, snapshot-consistent continuation, historical oversized values
+and explicit physical-maintenance authority. Use supported native read-only
+inspection for the Decapod, Dactyl and Propodus dogfood stores. Publish aggregate
+measurements with binary/schema/codec identity and sampled/complete coverage;
+these observations are not before/after savings or hosted PostgreSQL proof.
+
+Hosted tests must cover any repaired inspection or reconstruction boundary.
+Existing historical fixture benchmarks retain their original release/environment
+scope. Cross-backend, scale, migration and deployment requirements remain open
+until supported executable evidence establishes them. No live store repair or
+physical compaction, policy weakening, local CI or payload publication is part of
+the measurement pass.
 
 ## Accepted local verification requirements (#1658)
 
