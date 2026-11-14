@@ -902,6 +902,7 @@ fn linked_git_worktree_uses_initialized_main_repo_runtime_and_rejects_uninitiali
 }
 
 #[test]
+#[cfg(any(target_os = "linux", target_os = "macos"))]
 fn verified_append_and_idempotent_replay_fence_changed_task_custody_in_transaction() {
     let (_temp, root, task) =
         crate::core::validation_history::workunit_observation_tests::verified_fixture();
@@ -947,6 +948,7 @@ fn verified_append_and_idempotent_replay_fence_changed_task_custody_in_transacti
 }
 
 #[test]
+#[cfg(any(target_os = "linux", target_os = "macos"))]
 fn separately_initialized_workspace_cannot_replay_main_store_verified_authority() {
     let (temp, root, task) =
         crate::core::validation_history::workunit_observation_tests::verified_fixture();
