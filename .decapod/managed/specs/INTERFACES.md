@@ -1520,3 +1520,12 @@ changed inventoried check scripts, build/dependency definitions or provider
 inputs. Retain the accepted inventory or establish the reviewed revision on the
 target before revalidation. Additive commands under that inventory and first
 local adoption remain supported; no override or second policy store is added.
+
+## Legacy input recovery scope (#1657)
+
+Normal supported startup/workspace/task interfaces reuse the existing migration
+owner's inert-placeholder handling. There is no new slash command or agent
+prompt requirement. TASK_JOURNAL_MIGRATION_REQUIRED continues to block non-inert
+TODO inputs beside canonical journal state; an explicit versioned nonempty
+recovery command and compatible authority contract remain required. See
+`docs/architecture/legacy-todo-recovery.md`.
