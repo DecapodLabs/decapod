@@ -95,11 +95,12 @@ fn local_sdk_budget_preserves_large_compatible_values_and_rejects_overflow_befor
     conn.execute_batch("CREATE TABLE legacy_values (id INTEGER PRIMARY KEY, body TEXT NOT NULL)")
         .unwrap();
     // A genuinely stored value above the new SDK default remains losslessly
-    // readable. This fixture does not bypass any production task/event schema.
-    let original = "x".repeat(5 * 1024 * 1024);
+    // readable at the full supported cell ceiling, including a bound key in
+    // the same parameter set. This does not bypass a production task/event schema.
+    let original = "x".repeat(8 * 1024 * 1024);
     conn.execute(
-        "INSERT INTO legacy_values(id,body) VALUES (1,?1)",
-        params![original.as_str()],
+        "INSERT INTO legacy_values(id,body) VALUES (?1,?2)",
+        params![1_i64, original.as_str()],
     )
     .unwrap();
     let actual: String = conn
