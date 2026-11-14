@@ -997,6 +997,14 @@
       "proof_refs": [
         "https://github.com/DecapodLabs/decapod/issues/1660"
       ]
+    },
+    {
+      "id": "issue-1660-file-58",
+      "summary": "docs(specs): retain atomic-domain and task-obligation proof limits; file-by-file checkpoint, verification pending.",
+      "input_digest": "sha256:21ddb30506a41eb04b0032566d6e4fa3f56962fbfe679b0106ee4d9e85680620",
+      "proof_refs": [
+        "https://github.com/DecapodLabs/decapod/issues/1660"
+      ]
     }
   ],
   "intents": {
@@ -1037,23 +1045,23 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "An actual complete local source suite cannot establish workunit readiness when the canonical task requires an unsupported extra obligation; no canonical success or VERIFIED result is minted.",
-          "reviewed_code_fingerprint": "e0bd9605408db7af91f50878edf59777bd9ff32b5dd9932cb2e5b5fdae7acfb9",
+          "reason": "Bind the security specification to the actual transactional fence, supported canonical-parent runtime and explicitly unresolved split-store compatibility path.",
+          "reviewed_code_fingerprint": "f86dd087ab36c3061572e792579e54bb43e93d283a94b6416420d32b0e65c8db",
           "spec_material_hash": "e799665f0f6c5025ac094765c6f38097a6894c63fd4f08593900c2567475d6e9"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "An actual complete local source suite cannot establish workunit readiness when the canonical task requires an unsupported extra obligation; no canonical success or VERIFIED result is minted.",
-          "reviewed_code_fingerprint": "e0bd9605408db7af91f50878edf59777bd9ff32b5dd9932cb2e5b5fdae7acfb9",
+          "reason": "Bind the security specification to the actual transactional fence, supported canonical-parent runtime and explicitly unresolved split-store compatibility path.",
+          "reviewed_code_fingerprint": "f86dd087ab36c3061572e792579e54bb43e93d283a94b6416420d32b0e65c8db",
           "spec_material_hash": "10df59dc9f256a32e3851047d6d684158b0453828124370c3bb74edc6e74af49"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "An actual complete local source suite cannot establish workunit readiness when the canonical task requires an unsupported extra obligation; no canonical success or VERIFIED result is minted.",
-          "reviewed_code_fingerprint": "e0bd9605408db7af91f50878edf59777bd9ff32b5dd9932cb2e5b5fdae7acfb9",
-          "spec_material_hash": "eaeef50281b687b740ee9cdc33c571d5d409b1869d8e28fdb292f09e76d562fb"
+          "reason": "Bind the security specification to the actual transactional fence, supported canonical-parent runtime and explicitly unresolved split-store compatibility path.",
+          "reviewed_code_fingerprint": "f86dd087ab36c3061572e792579e54bb43e93d283a94b6416420d32b0e65c8db",
+          "spec_material_hash": "366e74fb3bc9491cc900dbede2cffce06e3d8f7667d3d9b64641eb9bd9d7a695"
         }
       ],
       "state": "DRAFT",
@@ -1064,13 +1072,13 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1794616979Z"
+      "updated_at": "1794617399Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:880f8afca3a1d2634c7d076dd83fe6afd3097ebe495cb98513019e4896e805ef",
+      "artifact_hash": "sha256:523ba701054c4d054bf6bf522b915e043c962cadbd4b333699f7ae57b9a994e8",
       "checks": [],
       "current_phase": "implementation",
       "custody": {
@@ -1485,10 +1493,17 @@
             "intent_id": "intent:change_01M7BCFASGT4DQG4ZADT2BP5G0",
             "kind": "trajectory_step_recorded",
             "sequence": 60
+          },
+          {
+            "detail": "trajectory:branch_01M7BCFAWAYM3TXSVTHC1N7YZE",
+            "event_id": "event:61",
+            "intent_id": "intent:change_01M7BCFASGT4DQG4ZADT2BP5G0",
+            "kind": "trajectory_step_recorded",
+            "sequence": 61
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 60,
+        "next_sequence": 61,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M7BCFAWAYM3TXSVTHC1N7YZE": {
@@ -2403,6 +2418,22 @@
                   "issue-1660"
                 ],
                 "sequence": 60,
+                "validation_findings": [
+                  "Hosted verification and exact-candidate publication readiness remain pending; no local tests run."
+                ]
+              },
+              {
+                "action": "implementation",
+                "custody_event_id": "event:61",
+                "observations": [
+                  ".decapod/managed/specs/SECURITY.md",
+                  "https://github.com/DecapodLabs/decapod/issues/1660"
+                ],
+                "proof_refs": [],
+                "scope": [
+                  "issue-1660"
+                ],
+                "sequence": 61,
                 "validation_findings": [
                   "Hosted verification and exact-candidate publication readiness remain pending; no local tests run."
                 ]

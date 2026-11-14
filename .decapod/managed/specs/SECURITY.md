@@ -626,7 +626,7 @@ execution evidence remains required before publication readiness.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `e0bd9605408db7af91f50878edf59777bd9ff32b5dd9932cb2e5b5fdae7acfb9`
+- Repository signal fingerprint: `f86dd087ab36c3061572e792579e54bb43e93d283a94b6416420d32b0e65c8db`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (234 files), `tests/` (233 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
@@ -1003,3 +1003,12 @@ History is retained after invalidation. Local hashes and a shared-UID datastore
 are not an authenticated independent security domain; unrestricted direct SQL or
 filesystem mutation requires separate isolation/enforcement. No signature, cloud
 identity, arbitrary filesystem prevention or remote merge authority is asserted.
+
+VERIFIED append and idempotent replay fence the canonical task checkpoint and
+active lease on the same connection as workunit commit. A separately initialized
+workspace workunit database cannot claim atomic acceptance against the parent
+canonical task/proof store: WORKUNIT_PROOF_ATOMIC_DOMAIN_UNSUPPORTED blocks that
+path. Its compatible migration/convergence remains unresolved. Tests exercise
+the actual producer, owned task mutation and append boundary; hosted results
+remain pending. Canonical task obligations cannot be replaced by a weaker
+workunit declaration.
