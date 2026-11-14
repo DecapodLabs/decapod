@@ -1,5 +1,17 @@
 # Intent
 
+## Do What Must Be Done (#1690–#1692)
+
+Maximize useful autonomous engineering per human intervention. Agents must
+investigate discoverable information, make defensible engineering decisions and
+verify uncertainty before delegating cognitive work to the human. The existing
+orientation/mentor reflection protocol now accepts typed escalation proposals,
+observes source predicates and policy/approval state, and challenges inadequate
+proposals within its lifetime three-round budget. Human intent, explicit
+authorization and exceptional decisions retain authority. The kernel neither
+reasons as an LLM nor directly questions the human. Semantic exhaustion and
+completed engineering work remain unproven by deterministic reflection receipts.
+
 ## Concurrent custody and diagnostic scope (#1469, #1661)
 
 Independent tasks can author concurrently in distinct admitted worktrees. A task
