@@ -1520,3 +1520,15 @@ changed inventoried check scripts, build/dependency definitions or provider
 inputs. Retain the accepted inventory or establish the reviewed revision on the
 target before revalidation. Additive commands under that inventory and first
 local adoption remain supported; no override or second policy store is added.
+
+## Required source-CI selection inputs (#1672)
+
+The existing `selected`, `commands` and `inventory` interfaces in
+`assets/tools/source_ci_profile.rs` retain the same finite check IDs and direct
+argument recipes. Test files and shared fixtures are material selection inputs,
+including `tests/consumer_readiness.rs`, `tests/sqlite_maintenance.rs`,
+`tests/common/*`, the owning runtime tests and Bazel declarations. An unrelated
+document does not select these lanes, and genuine release-only changes preserve
+the accepted release dispositions. The existing source-profile regression suite
+checks selection, complete recipe equivalence and required inventory together.
+No new shard protocol, provider authority or performance judgment is declared.

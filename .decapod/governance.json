@@ -589,6 +589,14 @@
       "proof_refs": [
         "https://github.com/DecapodLabs/decapod/issues/1672"
       ]
+    },
+    {
+      "id": "issue-1672-file-7",
+      "summary": "docs(specs): describe dependency-aware required CI lane selection; file-by-file checkpoint, verification pending.",
+      "input_digest": "sha256:cf6c60f85b8486e9fd208bf5245e4fc64605db7f6563a628ce609b4030042b8b",
+      "proof_refs": [
+        "https://github.com/DecapodLabs/decapod/issues/1672"
+      ]
     }
   ],
   "intents": {
@@ -629,21 +637,21 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Hosted CI proved actual entrypoint files remained on0.144.3 after agent.init metadata refresh. Regenerate through supported init refresh/proof on official0.144.4, preserve exact authored config/verification requirements, and collect fresh hosted proof. No local tests.",
+          "reason": "Preserve exact required test selection before activating a new accepted controller graph. Hosted regression proof and five-minute performance acceptance remain pending.",
           "reviewed_code_fingerprint": "7c781bce47a287fed3dad066cef5dde0f9283eceda7b24860f3b632413819d7f",
-          "spec_material_hash": "6cada0b2ccd5556dd0f6251728fa0ee9b887aa06487a23b63b5f04c11874f6a4"
+          "spec_material_hash": "1da8dd7ffc667cc2844a6399e06188ee5608fa786ff11e1f1d9befdddc781d9a"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Hosted CI proved actual entrypoint files remained on0.144.3 after agent.init metadata refresh. Regenerate through supported init refresh/proof on official0.144.4, preserve exact authored config/verification requirements, and collect fresh hosted proof. No local tests.",
+          "reason": "Preserve exact required test selection before activating a new accepted controller graph. Hosted regression proof and five-minute performance acceptance remain pending.",
           "reviewed_code_fingerprint": "7c781bce47a287fed3dad066cef5dde0f9283eceda7b24860f3b632413819d7f",
-          "spec_material_hash": "81d9a5b3b8da4779f9f697a3272c967996f7f0f7db6aac740881b36798a66638"
+          "spec_material_hash": "273ce5f19bf1ca9e6794aeb0128755444edaf312ac6a39059259e764d9ded91b"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Hosted CI proved actual entrypoint files remained on0.144.3 after agent.init metadata refresh. Regenerate through supported init refresh/proof on official0.144.4, preserve exact authored config/verification requirements, and collect fresh hosted proof. No local tests.",
+          "reason": "Preserve exact required test selection before activating a new accepted controller graph. Hosted regression proof and five-minute performance acceptance remain pending.",
           "reviewed_code_fingerprint": "7c781bce47a287fed3dad066cef5dde0f9283eceda7b24860f3b632413819d7f",
           "spec_material_hash": "fa85ff736ae9bd16044a48bb34a30dd8fdbb8d7209b3dbf7642d1d94f38a9c96"
         }
@@ -658,13 +666,13 @@
         "Accepted controller must support the new finite shard graph before candidate workflows can use it."
       ],
       "unresolved_contradictions": [],
-      "updated_at": "1794621570Z"
+      "updated_at": "1794621645Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:213d9e1805bfc21f6fb78dc5a6845b2dd8656410987e2425854fa4dfbe95cab4",
+      "artifact_hash": "sha256:d62fcaaadc6556ddcdd0092152a9745c5e14920f6391eb01687a0a1143b15389",
       "checks": [],
       "current_phase": "implementation",
       "custody": {
@@ -722,10 +730,17 @@
             "intent_id": "intent:change_01M7BCG49JVT83YA5CJ6ZGTYFS",
             "kind": "trajectory_step_recorded",
             "sequence": 9
+          },
+          {
+            "detail": "trajectory:branch_01M7BCG4CA346XXGN460V3EX4S",
+            "event_id": "event:10",
+            "intent_id": "intent:change_01M7BCG49JVT83YA5CJ6ZGTYFS",
+            "kind": "trajectory_step_recorded",
+            "sequence": 10
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 9,
+        "next_sequence": 10,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M7BCG4CA346XXGN460V3EX4S": {
@@ -827,6 +842,22 @@
                 "validation_findings": [
                   "Hosted verification and exact-candidate publication readiness remain pending; no local tests run."
                 ]
+              },
+              {
+                "action": "implementation",
+                "custody_event_id": "event:10",
+                "observations": [
+                  ".decapod/managed/specs/INTERFACES.md",
+                  "https://github.com/DecapodLabs/decapod/issues/1672"
+                ],
+                "proof_refs": [],
+                "scope": [
+                  "issue-1672"
+                ],
+                "sequence": 10,
+                "validation_findings": [
+                  "Hosted verification and exact-candidate publication readiness remain pending; no local tests run."
+                ]
               }
             ]
           }
@@ -843,6 +874,7 @@
       "modified_files": [
         ".decapod/managed/specs/ARCHITECTURE.md",
         ".decapod/managed/specs/INTENT.md",
+        ".decapod/managed/specs/INTERFACES.md",
         ".decapod/managed/specs/VALIDATION.md",
         "assets/tools/source_ci_profile.rs",
         "tests/source_ci_profile_policy.rs"
