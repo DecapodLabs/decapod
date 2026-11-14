@@ -887,6 +887,14 @@
       "proof_refs": [
         "tests/infer_precision.rs"
       ]
+    },
+    {
+      "id": "convergence-no-inferred-authority",
+      "summary": "Absence of a configured approval requirement never supplies a declared missing authorization",
+      "input_digest": "sha256:6f7b0f3e096682b27daa293cefb4238f1f8eabebc45259fbe4ce7f4d4e3cb866",
+      "proof_refs": [
+        "src/decapod/core/mentor/reflection/escalation.rs"
+      ]
     }
   ],
   "intents": {
