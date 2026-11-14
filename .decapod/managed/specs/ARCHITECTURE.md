@@ -1216,3 +1216,14 @@ command. The existing discovered validation inventory is the boundary; it is not
 a claim to infer the semantic or transitive completeness of arbitrary commands.
 Ordinary subject changes still require fresh source-bound execution. Changes to
 inventoried validation definitions require a separately accepted policy revision.
+
+## Core and CLI coverage before partition activation (#1672)
+
+`assets/tools/source_ci_profile.rs` remains the finite source-check authority.
+Its core and CLI selectors now include the test sources executed by their
+existing recipes, shared consumer fixtures and Bazel target declarations. Core
+test changes choose the existing full runtime recipe, and CLI test changes
+choose the existing three-target recipe; no command or mandatory check is
+removed. The accepted target still controls source execution. This change
+repairs a coverage prerequisite; workflow partitioning, compile reuse and a
+measured five-minute job budget remain pending.
