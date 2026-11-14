@@ -589,6 +589,14 @@
       "proof_refs": [
         "https://github.com/DecapodLabs/decapod/issues/1657"
       ]
+    },
+    {
+      "id": "issue-1657-file-7",
+      "summary": "docs(specs): bind architecture to the legacy TODO input boundary; file-by-file checkpoint, verification pending.",
+      "input_digest": "sha256:a7bc0d9630ab84064904ab9195e4092176d91075b060b74306bece9e8411aca1",
+      "proof_refs": [
+        "https://github.com/DecapodLabs/decapod/issues/1657"
+      ]
     }
   ],
   "intents": {
@@ -662,7 +670,7 @@
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:c64af920e79bb19a37dd2d95a34c59c54ac7b4c5b0532f397e485d41c5eee9f4",
+      "artifact_hash": "sha256:35d6a4fcaef7393d6f6bcdf4a79a437997dc6d699ba057db08fff062197856a9",
       "checks": [],
       "current_phase": "implementation",
       "custody": {
@@ -720,10 +728,17 @@
             "intent_id": "intent:change_01M7BCHP65HZ6F2PKTZGVXHRDW",
             "kind": "trajectory_step_recorded",
             "sequence": 9
+          },
+          {
+            "detail": "trajectory:branch_01M7BCHP9CVSP7GQJ81EFVVC7P",
+            "event_id": "event:10",
+            "intent_id": "intent:change_01M7BCHP65HZ6F2PKTZGVXHRDW",
+            "kind": "trajectory_step_recorded",
+            "sequence": 10
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 9,
+        "next_sequence": 10,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M7BCHP9CVSP7GQJ81EFVVC7P": {
@@ -825,6 +840,22 @@
                 "validation_findings": [
                   "Hosted verification and exact-candidate publication readiness remain pending; no local tests run."
                 ]
+              },
+              {
+                "action": "implementation",
+                "custody_event_id": "event:10",
+                "observations": [
+                  ".decapod/managed/specs/ARCHITECTURE.md",
+                  "https://github.com/DecapodLabs/decapod/issues/1657"
+                ],
+                "proof_refs": [],
+                "scope": [
+                  "issue-1657"
+                ],
+                "sequence": 10,
+                "validation_findings": [
+                  "Hosted verification and exact-candidate publication readiness remain pending; no local tests run."
+                ]
               }
             ]
           }
@@ -839,6 +870,7 @@
       "inspected_files": [],
       "intent_id": "intent:change_01M7BCHP65HZ6F2PKTZGVXHRDW",
       "modified_files": [
+        ".decapod/managed/specs/ARCHITECTURE.md",
         ".decapod/managed/specs/INTENT.md",
         "docs/architecture/legacy-todo-recovery.md",
         "src/decapod/core/migration.rs",
