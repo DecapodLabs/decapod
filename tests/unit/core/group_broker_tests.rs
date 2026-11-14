@@ -470,3 +470,41 @@ fn oversized_native_deadline_is_rejected_before_durable_admission() {
     assert!(result.commit_marker.is_none());
     assert!(!super::dedupe_db_path(dir.path()).exists());
 }
+
+#[test]
+fn retry_deadline_cannot_replace_a_durable_outcome() {
+    for status in ["UNKNOWN", "COMMITTED"] {
+        let dir = tempfile::tempdir().unwrap();
+        let caller = caller_context("caller-a");
+        let argv = vec!["must-never-spawn".into()];
+        let mut request = super::BrokerRequest {
+            protocol_version: super::BROKER_PROTOCOL_DEFAULT,
+            request_id: "retained-outcome".into(),
+            payload_hash: super::hash_payload(&argv, &caller),
+            argv,
+            caller,
+            deadline_ms: super::epoch_ms() + 1000,
+        };
+        let recorded = super::BrokerResponse {
+            protocol_version: super::BROKER_PROTOCOL_DEFAULT,
+            status: status.into(),
+            commit_marker: (status == "COMMITTED").then(|| "original-commit".into()),
+            result_envelope: serde_json::json!({"original_outcome": status}),
+            retry_after_ms_hint: None,
+        };
+        super::dedupe_store(dir.path(), &request, &recorded).unwrap();
+        // Both an expired retry and an overlong native deadline must retrieve
+        // the original durable outcome without executing another mutation.
+        for deadline in [0, u64::MAX] {
+            request.deadline_ms = deadline;
+            let result = super::execute_request(dir.path(), &request, false).unwrap();
+            assert_eq!(result.status, recorded.status);
+            assert_eq!(result.commit_marker, recorded.commit_marker);
+            assert_eq!(result.result_envelope, recorded.result_envelope);
+            let retained = super::dedupe_lookup(dir.path(), &request).unwrap().unwrap();
+            assert_eq!(retained.status, recorded.status);
+            assert_eq!(retained.commit_marker, recorded.commit_marker);
+            assert_eq!(retained.result_envelope, recorded.result_envelope);
+        }
+    }
+}
