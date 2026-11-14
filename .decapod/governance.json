@@ -863,6 +863,14 @@
       "proof_refs": [
         ".decapod/managed/specs/SEMANTICS.md"
       ]
+    },
+    {
+      "id": "convergence-refresh1454-validationmd",
+      "summary": "Refresh supported VALIDATION.md projection with the current source identity",
+      "input_digest": "sha256:497b4afa76c93416394209838dca15921d5775bae061deadcf22c9e6e685caaf",
+      "proof_refs": [
+        ".decapod/managed/specs/VALIDATION.md"
+      ]
     }
   ],
   "intents": {
