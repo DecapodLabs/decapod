@@ -33,6 +33,9 @@ fn invalid(message: &str) -> DecapodError {
 struct FileIdentity {
     device: u64,
     inode: u64,
+    owner_uid: u32,
+    group_gid: u32,
+    mode: u32,
 }
 
 fn identity(metadata: &fs::Metadata) -> Result<FileIdentity, DecapodError> {
@@ -42,6 +45,9 @@ fn identity(metadata: &fs::Metadata) -> Result<FileIdentity, DecapodError> {
         Ok(FileIdentity {
             device: metadata.dev(),
             inode: metadata.ino(),
+            owner_uid: metadata.uid(),
+            group_gid: metadata.gid(),
+            mode: metadata.mode() & 0o7777,
         })
     }
     #[cfg(not(unix))]
@@ -281,7 +287,11 @@ fn review_locked(
     let authority = policy::authorize_rbac_exception(root, actor, "todo.legacy.reconcile");
     let authority_status = match &authority {
         Ok(_) => "authorized",
-        Err(error) if error.to_string().contains("RBAC_PERMISSION_DENIED") => "permission_denied",
+        Err(DecapodError::ValidationError(message))
+            if message.starts_with("RBAC_PERMISSION_DENIED:") =>
+        {
+            "permission_denied"
+        }
         Err(_) => "policy_unavailable",
     };
     let supported = matches!(classification, "empty" | "canonical_copy");
@@ -309,6 +319,8 @@ fn review_locked(
             "review_sha256": review, "source_sha256": source.digest,
             "canonical_sha256": canonical.digest, "source_bytes": source.bytes,
             "canonical_journal_verified": true, "source_preserved": true,
+        "canonical_journal_digest": journal["current_digest"],
+        "source_integrity": match classification { "empty" if source.bytes == 0 => "not_applicable", "corrupt" => "failed", "unverifiable" => "unknown", _ => "ok" },
             "can_reconcile": binding.is_some(), "required_permission": "todo.legacy.reconcile",
             "authority_status": authority_status,
             "identity_assurance": "cooperative_not_authenticated", "mutations_replayed": 0,
@@ -443,6 +455,7 @@ fn check_canonical(root: &Path, receipt: &Receipt) -> Result<(), DecapodError> {
             "canonical state changed after review; prepared outcome remains unresolved",
         ));
     }
+    Ok(())
 }
 
 fn committed_report(root: &Path, receipt: &Receipt) -> Result<Value, DecapodError> {
