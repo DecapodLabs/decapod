@@ -1175,6 +1175,14 @@
       "proof_refs": [
         ".decapod/managed/specs/VALIDATION.md"
       ]
+    },
+    {
+      "id": "convergence-final1455-manifestjson",
+      "summary": "Refresh source projection after accepted v0.145.5 integration",
+      "input_digest": "sha256:4a14e95566c864b38bdbdf6745f6daf5178f46d3a6518aecb82273209ea8c3d8",
+      "proof_refs": [
+        ".decapod/managed/specs/.manifest.json"
+      ]
     }
   ],
   "intents": {
