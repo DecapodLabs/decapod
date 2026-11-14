@@ -1015,6 +1015,14 @@
       "proof_refs": [
         "tests/infer_precision.rs"
       ]
+    },
+    {
+      "id": "convergence-fixture-repair-attestation-architecturemd",
+      "summary": "Refresh source binding after observed test fixture repairs",
+      "input_digest": "sha256:a6834d6613dceeefec93d8d8a75ff0727e59978e04883ef230774fff1f9589c2",
+      "proof_refs": [
+        ".decapod/managed/specs/ARCHITECTURE.md"
+      ]
     }
   ],
   "intents": {
