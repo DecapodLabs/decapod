@@ -1648,6 +1648,28 @@ must establish the resulting candidate's behavior and timing.
 Normal supported startup/workspace/task interfaces reuse the existing migration
 owner's inert-placeholder handling. There is no new slash command or agent
 prompt requirement. TASK_JOURNAL_MIGRATION_REQUIRED continues to block non-inert
-TODO inputs beside canonical journal state; an explicit versioned nonempty
-recovery command and compatible authority contract remain required. See
+TODO inputs beside canonical journal state. Explicit V1 recovery below covers
+only empty input or exact canonical copies; general historical reconciliation
+remains required. See
 `docs/architecture/legacy-todo-recovery.md`.
+
+## Versioned legacy retirement interface (#1657)
+
+`decapod todo journal reconcile-legacy` reviews the canonical main repository's
+local store before normal migration/session-presence writes. JSON distinguishes
+empty/canonical_copy/unmatched/corrupt/unverifiable inputs and returns a review
+SHA only for supported inputs under an explicit `todo.legacy.reconcile` grant.
+`--expected-review sha256:<digest>` requires an active local session password
+and rechecks exact identities, bytes and canonical policy. `--prepare-only`
+requires that review token, persists intent and preserves the source for
+interruption/recovery. The same apply request resumes a prepared operation.
+No arbitrary source path, destination or SQL input is accepted.
+
+`governance.rbac.legacy_todo_reconcile_roles` defaults to empty; neither journal
+repair nor ordinary maintenance grants this permission. The receipt records
+physical archival only: every response leaves `publication_ready=false` and
+`completion_proven=false`. A committed retry reports a historical outcome,
+without asserting current canonical validation; a reappeared legacy source
+blocks reuse. Unsupported nonmatching historical stores stay blocked. See
+`docs/architecture/legacy-todo-recovery.md` for the exact scope and recovery
+limits; this is not completion of all #1657 migration requirements.
