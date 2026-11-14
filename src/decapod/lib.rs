@@ -6,6 +6,10 @@
 //! Runtime operational contracts for agents are defined in repository entrypoint
 //! docs and constitution documents, not in Rust source comments.
 
+// Share genuine execution fixtures with integration tests without a second kernel.
+#[cfg(test)]
+extern crate self as decapod;
+
 pub(crate) mod cli;
 pub use cli::CloudRuntimeConfig;
 pub mod constitution;
