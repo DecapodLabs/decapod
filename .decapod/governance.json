@@ -660,6 +660,14 @@
       "proof_refs": [
         ".decapod/managed/specs/ARCHITECTURE.md"
       ]
+    },
+    {
+      "id": "convergence-contract-9",
+      "summary": "Integrate issue1691 escalation contract in .decapod/managed/specs/INTERFACES.md; distinguish agent investigation from human authority; validation pending",
+      "input_digest": "sha256:512fe4e2ba7235ac9a784258a2713693b0b307a5cab4084aad50865559d00fcd",
+      "proof_refs": [
+        ".decapod/managed/specs/INTERFACES.md"
+      ]
     }
   ],
   "intents": {

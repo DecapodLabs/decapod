@@ -1,5 +1,19 @@
 # Interfaces
 
+## Escalation admissibility (#1690–#1692)
+
+Orientation's existing `--reflection` input and `mentor.obligations.reflection`
+accept optional `escalation`: canonical plan intent, question, missing subject,
+uncertainty class, investigation, optional resolution with exact source facts,
+risks, constraints and optional authority command/target. Typed escalation uses
+`decapod.reflection.v2` with `decapod.escalation.v1`; ordinary reflection retains
+v1. Responses expose typed reasons, source identities, progress, targeted
+challenges, token and remaining rounds. `human_escalation_permitted` is distinct
+from a challenge and never supplies an approval. `completion_proven` and
+`semantic_exhaustion_proven` stay false. Native completion and publication still
+require independent current proof. `escalation_required` on an inference
+capability gap is accompanied by `escalation_target: agent`.
+
 ## Custody and prerequisite diagnostics (#1661)
 
 `workspace status` reports `can_work=false` when checkout custody is unproven.
