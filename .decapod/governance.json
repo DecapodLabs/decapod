@@ -1551,6 +1551,14 @@
       "proof_refs": [
         ".decapod/managed/specs/VALIDATION.md"
       ]
+    },
+    {
+      "id": "convergence-scope-freshness-manifestjson",
+      "summary": "Refresh current source identity after authority scope freshness repair",
+      "input_digest": "sha256:c86201dc71919b8d0802b9fba290c1fd6365ba73c84f208a2f1a1b95186030c2",
+      "proof_refs": [
+        ".decapod/managed/specs/.manifest.json"
+      ]
     }
   ],
   "intents": {
