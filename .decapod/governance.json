@@ -710,6 +710,14 @@
       "proof_refs": [
         "git:archive/pr1684-1452-validation-blocked"
       ]
+    },
+    {
+      "id": "pr1684-v1453-projection-0",
+      "summary": "Retain official 0.145.3 kernel refresh for .decapod/managed/specs/.manifest.json",
+      "input_digest": "sha256:b170c3cbc512a8e4ac7f8a11aec31cdfb53a61764f1fef6786ad7b7d2342d94b",
+      "proof_refs": [
+        "decapod:specs.refresh"
+      ]
     }
   ],
   "intents": {
@@ -738,12 +746,14 @@
         "file_touch_budget": 25,
         "forbidden_paths": []
       },
-      "deferred_questions": [],
+      "deferred_questions": [
+        "Issue #1672 shard graph activation and measured five-minute timing remain outside this coverage-only PR; require accepted-controller support and real hosted execution."
+      ],
       "human_questions": [],
-      "intent": "Resolve #1672 through accepted-controller-compatible coverage and shard preparation followed by hosted execution evidence. First preserve dependency-aware CLI/core coverage, then activate bounded shards without dropping accepted checks; five-minute timings remain an unproven acceptance requirement.",
+      "intent": "Deliver the coverage prerequisite for issue #1672: retain complete existing core/CLI recipes for test-only and shared-fixture changes. Integrate accepted master, refresh official release projections and establish exact-candidate readiness. Sharding and five-minute performance remain separately unresolved under #1672.",
       "phases": [],
       "proof_hooks": [
-        "Hosted source_ci_profile_policy and real core/CLI executions; no local tests."
+        "decapod validate"
       ],
       "schema_version": "1.1.0",
       "spec_reviews": [
@@ -771,15 +781,13 @@
       ],
       "state": "APPROVED",
       "stop_conditions": [],
-      "title": "code: resolve #1672 CI / Tests (cli) and CI / Tests (core) need to be split up",
+      "title": "Preserve required core and CLI test dependency coverage (#1684)",
       "todo_ids": [
         "cicd_01m7bcfgmh5ayhm2"
       ],
-      "unknowns": [
-        "Accepted controller must support the new finite shard graph before candidate workflows can use it."
-      ],
+      "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1794639022Z"
+      "updated_at": "1794661753Z"
     },
     "trajectory": {
       "active_boundaries": [
