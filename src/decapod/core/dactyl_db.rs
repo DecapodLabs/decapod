@@ -465,10 +465,13 @@ impl Connection {
         // journal/history readers support individual values through 8 MiB.
         // A maximum-size value must also fit alongside its key/metadata in a
         // bound statement. Aggregate parameter headroom is not a larger value
-        // admission limit. Keep result/row limits, cloud policy and semantic
-        // field/proof gates unchanged.
+        // admission limit. SDK v1 conservatively charges each BLOB byte as 32
+        // decoded bytes; retained raw journal components must still fit along
+        // with row metadata. This explicit local allowance is bounded, and
+        // does not change row counts, cloud budgets or semantic field/proof gates.
         let compatibility_bytes = 8 * 1024 * 1024;
         let parameter_bytes = 2 * compatibility_bytes;
+        let result_bytes = 32 * compatibility_bytes + parameter_bytes;
         let driver = dactyl_db::Connection::open_with_budget(
             DatastoreRoute::sqlite(path.as_ref().to_string_lossy().into_owned()),
             OpenOptions {
@@ -478,7 +481,8 @@ impl Connection {
             None,
             dactyl_db::ResourceBudget::v1()
                 .with_max_cell_bytes(compatibility_bytes)
-                .with_max_param_bytes(parameter_bytes),
+                .with_max_param_bytes(parameter_bytes)
+                .with_max_result_bytes(result_bytes),
         )?;
         #[cfg(unix)]
         if std::env::var("DECAPOD_STORAGE_OWNER_WORKER").as_deref() == Ok("1") {
