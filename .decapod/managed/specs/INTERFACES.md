@@ -2,6 +2,11 @@
 
 ## Escalation admissibility (#1690–#1692)
 
+Continuations may supply an omitted authority command and narrow an omitted
+target; established scope cannot be replaced or dropped. This uses the current
+token and budget. A newly admitted targeted human dependency reports
+`progress: human_dependency`; repeated admitted questions do not gain progress.
+
 Orientation's existing `--reflection` input and `mentor.obligations.reflection`
 accept optional `escalation`: canonical plan intent, question, missing subject,
 uncertainty class, investigation, optional resolution with exact source facts,
