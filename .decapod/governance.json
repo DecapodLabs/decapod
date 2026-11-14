@@ -1671,6 +1671,14 @@
       "proof_refs": [
         "tests/unit/core/reflection_tests.rs"
       ]
+    },
+    {
+      "id": "convergence-full-question-identity",
+      "summary": "Match complete canonical human dependency text rather than truncated challenge display text",
+      "input_digest": "sha256:6b778e95e45ba1aceb8b46bbe93fc76cd552f1f958ae78a7db30b8cff0b4d938",
+      "proof_refs": [
+        "src/decapod/core/mentor/reflection/escalation.rs"
+      ]
     }
   ],
   "intents": {

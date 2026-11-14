@@ -257,9 +257,11 @@ pub(super) fn assess(
         Uncertainty::MissingAuthority | Uncertainty::ExceptionalRisk
     ) && policy.get("approved").and_then(Value::as_bool) == Some(true);
     let existing_human = pending.iter().any(|c| c.trigger.starts_with("human_"));
-    let matches_human_question = pending
-        .iter()
-        .any(|c| c.trigger.starts_with("human_") && c.question == bounded(&proposal.question));
+    let matches_human_question = plan.human_questions.contains(&proposal.question)
+        || plan.spec_reviews.iter().any(|review| {
+            review.disposition == SpecReviewDisposition::RequiresDecision
+                && review.reason == proposal.question
+        });
     let mut observed_facts = 0;
     if let Some(resolution) = &proposal.resolution {
         for fact in &resolution.facts {
