@@ -480,20 +480,6 @@ fn execute_request(
             "BROKER_INVALID_PAYLOAD_HASH".into(),
         ));
     }
-    // Native peers cannot extend execution beyond the same public hard ceiling.
-    // Reject before durable admission; no unknown mutation needs to be inferred.
-    if request.deadline_ms.saturating_sub(epoch_ms()) > MAX_REQUEST_BUDGET.as_millis() as u64 {
-        return Ok(BrokerResponse {
-            protocol_version: server_protocol_version(),
-            status: "NOT_COMMITTED".into(),
-            commit_marker: None,
-            result_envelope: serde_json::json!({
-                "error": "BROKER_REQUEST_BUDGET_INVALID",
-                "request_id": request.request_id,
-            }),
-            retry_after_ms_hint: None,
-        });
-    }
     if let Some(existing) = dedupe_lookup(broker_root, request)? {
         if existing.payload_hash != request.payload_hash {
             return Ok(BrokerResponse {
@@ -517,6 +503,21 @@ fn execute_request(
         });
     }
 
+    // Native peers cannot extend execution beyond the same public hard ceiling.
+    // An existing durable outcome takes precedence over retry timing. Reject
+    // only new admission here; malformed retries cannot erase known uncertainty.
+    if request.deadline_ms.saturating_sub(epoch_ms()) > MAX_REQUEST_BUDGET.as_millis() as u64 {
+        return Ok(BrokerResponse {
+            protocol_version: server_protocol_version(),
+            status: "NOT_COMMITTED".into(),
+            commit_marker: None,
+            result_envelope: serde_json::json!({
+                "error": "BROKER_REQUEST_BUDGET_INVALID",
+                "request_id": request.request_id,
+            }),
+            retry_after_ms_hint: None,
+        });
+    }
     if epoch_ms() >= request.deadline_ms {
         return Ok(BrokerResponse {
             protocol_version: server_protocol_version(),
