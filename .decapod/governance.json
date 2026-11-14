@@ -1101,6 +1101,14 @@
       "proof_refs": [
         "https://github.com/DecapodLabs/decapod/issues/1660"
       ]
+    },
+    {
+      "id": "issue-1660-integrate-9767ae9a",
+      "summary": "Integrate accepted master 9767ae9a3ff1c7452101482218a17c55cf569b71 after accepted release v0.144.5 with issue1660. Preserve current task journal/checkpoints and authored specs from both branches; regenerate projections through the kernel. Previous candidate readiness does not apply; no local tests.",
+      "input_digest": "sha256:f587f61babde46f531d661254321f7d56cc7c78042f18d4706d5eaeca5e67896",
+      "proof_refs": [
+        "https://github.com/DecapodLabs/decapod/pull/1685"
+      ]
     }
   ],
   "intents": {
@@ -1141,22 +1149,22 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Document the narrow unsafe-compatibility change, typed repair path and unchanged historical encoding. Fresh GitHub Actions proof remains pending; no local tests.",
-          "reviewed_code_fingerprint": "e3764591a8ba43e8d5ec3b90b7265c16157c90c2aa201b03b6ff69af003369a1",
+          "reason": "Integrate accepted master 9767ae9a3ff1c7452101482218a17c55cf569b71 after accepted release v0.144.5 with issue1660. Preserve current task journal/checkpoints and authored specs from both branches; regenerate projections through the kernel. Previous candidate readiness does not apply; no local tests.",
+          "reviewed_code_fingerprint": "fd47f51ada7d7a78193b7357747ef267095212ffe9c838e261f7564eea7e828f",
           "spec_material_hash": "e799665f0f6c5025ac094765c6f38097a6894c63fd4f08593900c2567475d6e9"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Document the narrow unsafe-compatibility change, typed repair path and unchanged historical encoding. Fresh GitHub Actions proof remains pending; no local tests.",
-          "reviewed_code_fingerprint": "e3764591a8ba43e8d5ec3b90b7265c16157c90c2aa201b03b6ff69af003369a1",
+          "reason": "Integrate accepted master 9767ae9a3ff1c7452101482218a17c55cf569b71 after accepted release v0.144.5 with issue1660. Preserve current task journal/checkpoints and authored specs from both branches; regenerate projections through the kernel. Previous candidate readiness does not apply; no local tests.",
+          "reviewed_code_fingerprint": "fd47f51ada7d7a78193b7357747ef267095212ffe9c838e261f7564eea7e828f",
           "spec_material_hash": "10df59dc9f256a32e3851047d6d684158b0453828124370c3bb74edc6e74af49"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Document the narrow unsafe-compatibility change, typed repair path and unchanged historical encoding. Fresh GitHub Actions proof remains pending; no local tests.",
-          "reviewed_code_fingerprint": "e3764591a8ba43e8d5ec3b90b7265c16157c90c2aa201b03b6ff69af003369a1",
+          "reason": "Integrate accepted master 9767ae9a3ff1c7452101482218a17c55cf569b71 after accepted release v0.144.5 with issue1660. Preserve current task journal/checkpoints and authored specs from both branches; regenerate projections through the kernel. Previous candidate readiness does not apply; no local tests.",
+          "reviewed_code_fingerprint": "fd47f51ada7d7a78193b7357747ef267095212ffe9c838e261f7564eea7e828f",
           "spec_material_hash": "366e74fb3bc9491cc900dbede2cffce06e3d8f7667d3d9b64641eb9bd9d7a695"
         }
       ],
@@ -1168,13 +1176,13 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1794626674Z"
+      "updated_at": "1794627374Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:4783d32f53d3ad1242d5a6850775ded3f90a41d16371942c55ffdcc9a8c7c86e",
+      "artifact_hash": "sha256:88661c9620f4a4d04d84c58875ab063b375b2e6ace9848554ac4b8f6f5c9c70a",
       "checks": [],
       "current_phase": "implementation",
       "custody": {
@@ -1680,10 +1688,17 @@
             "intent_id": "intent:change_01M7BCFASGT4DQG4ZADT2BP5G0",
             "kind": "trajectory_step_recorded",
             "sequence": 73
+          },
+          {
+            "detail": "trajectory:branch_01M7BCFAWAYM3TXSVTHC1N7YZE",
+            "event_id": "event:74",
+            "intent_id": "intent:change_01M7BCFASGT4DQG4ZADT2BP5G0",
+            "kind": "trajectory_step_recorded",
+            "sequence": 74
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 73,
+        "next_sequence": 74,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M7BCFAWAYM3TXSVTHC1N7YZE": {
@@ -2808,6 +2823,21 @@
                 "validation_findings": [
                   "Hosted verification and exact-candidate publication readiness remain pending; no local tests run."
                 ]
+              },
+              {
+                "action": "implementation",
+                "custody_event_id": "event:74",
+                "observations": [
+                  "https://github.com/DecapodLabs/decapod/pull/1685"
+                ],
+                "proof_refs": [],
+                "scope": [
+                  "issue-1660"
+                ],
+                "sequence": 74,
+                "validation_findings": [
+                  "Integrate accepted master 9767ae9a3ff1c7452101482218a17c55cf569b71 after accepted release v0.144.5 with issue1660. Preserve current task journal/checkpoints and authored specs from both branches; regenerate projections through the kernel. Previous candidate readiness does not apply; no local tests."
+                ]
               }
             ]
           }
@@ -2818,7 +2848,8 @@
       "evidence": [
         "https://github.com/DecapodLabs/decapod/issues/1660",
         "https://github.com/DecapodLabs/decapod/pull/1675",
-        "https://github.com/DecapodLabs/decapod/pull/1682"
+        "https://github.com/DecapodLabs/decapod/pull/1682",
+        "https://github.com/DecapodLabs/decapod/pull/1685"
       ],
       "inspected_files": [],
       "intent_id": "intent:change_01M7BCFASGT4DQG4ZADT2BP5G0",
@@ -2865,6 +2896,7 @@
       "tool_calls": [],
       "unresolved_assumptions": [
         "Hosted verification and exact-candidate publication readiness remain pending; no local tests run.",
+        "Integrate accepted master 9767ae9a3ff1c7452101482218a17c55cf569b71 after accepted release v0.144.5 with issue1660. Preserve current task journal/checkpoints and authored specs from both branches; regenerate projections through the kernel. Previous candidate readiness does not apply; no local tests.",
         "Integrate accepted master f779e39111ec8b3c8c41569f68a3a7604df167e7 and merged1675 accepted-policy hardening with issue1660. Preserve current task journal/checkpoints and authored specs from both branches; regenerate projections through the kernel. Previous candidate readiness does not apply; no local tests.",
         "Integrate accepted master fded2dd0b5f02f9c874301d4b98cfd59ad188357 after merged PR1682 native inventory evidence with issue1660. Preserve current task journal/checkpoints and authored specs from both branches; regenerate projections through the kernel. Previous candidate readiness does not apply; no local tests."
       ]
