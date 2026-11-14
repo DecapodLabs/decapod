@@ -565,6 +565,14 @@
       "proof_refs": [
         "https://github.com/DecapodLabs/decapod/issues/1657"
       ]
+    },
+    {
+      "id": "issue-1657-file-4",
+      "summary": "test(migration): preserve real canonical journals across inert and uncertain legacy inputs; file-by-file checkpoint, verification pending.",
+      "input_digest": "sha256:243422405ec934a198a72cfa60e543d85c09ba26478a12ec26608272b14248a9",
+      "proof_refs": [
+        "https://github.com/DecapodLabs/decapod/issues/1657"
+      ]
     }
   ],
   "intents": {
@@ -638,7 +646,7 @@
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:f5881cff5c0313ea6e99ed01281edcdb8a95009c2aa8acf440dd09be11efe399",
+      "artifact_hash": "sha256:cc63dea879f7c9a275a32ff02407264beaddbd8628f28d4e2890720fa077e05d",
       "checks": [],
       "current_phase": "implementation",
       "custody": {
@@ -675,10 +683,17 @@
             "intent_id": "intent:change_01M7BCHP65HZ6F2PKTZGVXHRDW",
             "kind": "trajectory_step_recorded",
             "sequence": 6
+          },
+          {
+            "detail": "trajectory:branch_01M7BCHP9CVSP7GQJ81EFVVC7P",
+            "event_id": "event:7",
+            "intent_id": "intent:change_01M7BCHP65HZ6F2PKTZGVXHRDW",
+            "kind": "trajectory_step_recorded",
+            "sequence": 7
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 6,
+        "next_sequence": 7,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M7BCHP9CVSP7GQJ81EFVVC7P": {
@@ -732,6 +747,22 @@
                 "validation_findings": [
                   "Hosted verification and exact-candidate publication readiness remain pending; no local tests run."
                 ]
+              },
+              {
+                "action": "implementation",
+                "custody_event_id": "event:7",
+                "observations": [
+                  "tests/unit/core/migration_tests.rs",
+                  "https://github.com/DecapodLabs/decapod/issues/1657"
+                ],
+                "proof_refs": [],
+                "scope": [
+                  "issue-1657"
+                ],
+                "sequence": 7,
+                "validation_findings": [
+                  "Hosted verification and exact-candidate publication readiness remain pending; no local tests run."
+                ]
               }
             ]
           }
@@ -747,7 +778,8 @@
       "intent_id": "intent:change_01M7BCHP65HZ6F2PKTZGVXHRDW",
       "modified_files": [
         ".decapod/managed/specs/INTENT.md",
-        "src/decapod/core/migration.rs"
+        "src/decapod/core/migration.rs",
+        "tests/unit/core/migration_tests.rs"
       ],
       "next_transitions": [
         "Refine plan and declare falsifiable checks"
