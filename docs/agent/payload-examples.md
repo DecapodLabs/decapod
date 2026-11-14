@@ -75,6 +75,10 @@ Identical retries replay without writes; changed reuse and stale tokens fail.
 Omitting escalation on a continuation or renaming its missing subject cannot
 erase it or restart its budget. Continue within the same three-round journal.
 
+This adapter observes bounded literal repository paths and the canonical plan
+reference. External sources remain with the existing context/evidence owners;
+an agent-supplied URL or digest is not promoted into an observed native proof.
+
 ## Bounded reflection
 
 This illustrative exchange uses an already claimed task and a plan whose

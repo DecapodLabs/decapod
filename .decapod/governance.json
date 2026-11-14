@@ -735,6 +735,14 @@
       "proof_refs": [
         "docs/agent/api-index.md"
       ]
+    },
+    {
+      "id": "convergence-reviewed-7",
+      "summary": "Refine docs/agent/payload-examples.md after review: preserve actual authority, separate inference cues, observe fixtures and document proof limits",
+      "input_digest": "sha256:e779124844b67bcf13b55c69617b04a6006965dfb5772a84242d51b2534bf512",
+      "proof_refs": [
+        "docs/agent/payload-examples.md"
+      ]
     }
   ],
   "intents": {
