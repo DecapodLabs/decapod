@@ -577,7 +577,7 @@ impl CompletionRecord {
             };
             if subject.generation == 0
                 || !sha256(&subject.contract_digest)
-                || !sha256(&subject.manifest_digest)
+                || !sha256(&format!("sha256:{}", subject.manifest_digest))
             {
                 return Err(invalid(
                     "workunit observation has malformed identity or generation",
