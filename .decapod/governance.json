@@ -779,6 +779,14 @@
       "proof_refs": [
         "https://github.com/DecapodLabs/decapod/issues/1657"
       ]
+    },
+    {
+      "id": "issue1657-reviewed-v1-schema-sync",
+      "summary": "Conservative versioned physical retirement candidate; source-grounded specs and projections refreshed. Hosted verification pending; full native publication unproven.",
+      "input_digest": "sha256:0d6837aa67638ec85cdf5267ddf42c5d0edad370ebec4bfdd8cc742b78496b2d",
+      "proof_refs": [
+        "https://github.com/DecapodLabs/decapod/issues/1657"
+      ]
     }
   ],
   "intents": {
@@ -846,20 +854,20 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1794695799Z"
+      "updated_at": "1794696193Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:7ca5b32794f38d962574fc1ced5dc5b0c3c5d7812c5f924b49614d0356546f1f",
+      "artifact_hash": "sha256:ee54afad7489b6421b3098aaa15e78f66a483ae783f4c17231e9323688e1d06d",
       "checks": [
         {
           "name": "github-prior-compilation",
           "status": "failed"
         }
       ],
-      "current_phase": "implementation",
+      "current_phase": "validation",
       "custody": {
         "events": [
           {
@@ -1076,10 +1084,17 @@
             "intent_id": "intent:change_01M7DXW29MW090TM7TAHZF5JJK",
             "kind": "trajectory_step_recorded",
             "sequence": 32
+          },
+          {
+            "detail": "trajectory:branch_01M7DXW2DCAD18R4V58TWM41F2",
+            "event_id": "event:33",
+            "intent_id": "intent:change_01M7DXW29MW090TM7TAHZF5JJK",
+            "kind": "trajectory_step_recorded",
+            "sequence": 33
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 32,
+        "next_sequence": 33,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M7DXW2DCAD18R4V58TWM41F2": {
@@ -1551,6 +1566,23 @@
                 "sequence": 32,
                 "validation_findings": [
                   "Implementation in progress; exact-candidate hosted checks pending; no local tests or Buildkite execution."
+                ]
+              },
+              {
+                "action": "validation",
+                "custody_event_id": "event:33",
+                "observations": [
+                  "https://github.com/DecapodLabs/decapod/actions/runs/43647667684"
+                ],
+                "proof_refs": [
+                  "github-prior-compilation"
+                ],
+                "scope": [
+                  "issue-1657"
+                ],
+                "sequence": 33,
+                "validation_findings": [
+                  "Prior hosted compilation rejected private test API references; repaired in source. Fresh exact-candidate GitHub proof pending. No local tests or Buildkite execution; full native publication remains unproven."
                 ]
               }
             ]
