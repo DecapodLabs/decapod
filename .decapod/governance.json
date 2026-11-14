@@ -669,6 +669,14 @@
       "proof_refs": [
         "https://github.com/DecapodLabs/decapod/issues/1657"
       ]
+    },
+    {
+      "id": "issue-1657-file-17",
+      "summary": "docs(validation): delimit steady-state runtime measurement; file-by-file checkpoint, verification pending.",
+      "input_digest": "sha256:ce627d97ca6324cf3da0b57b02fdf36d45970277d6542e3b612ad7bfdb389d7b",
+      "proof_refs": [
+        "https://github.com/DecapodLabs/decapod/issues/1657"
+      ]
     }
   ],
   "intents": {
@@ -709,22 +717,22 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Integrate accepted master 9767ae9a3ff1c7452101482218a17c55cf569b71 after accepted release v0.144.5 with issue1657. Preserve current task journal/checkpoints and authored specs from both branches; regenerate projections through the kernel. Previous candidate readiness does not apply; no local tests.",
-          "reviewed_code_fingerprint": "6525bfe2cf3bfd456667552058c5f54103a3c7a340774e7a92b63a076d07aa57",
+          "reason": "Hosted GitHub Actions core job132301086296 failed the repeated-validation aggregate bound because the fixture re-enrolled an unknown identity for every iteration. Acquire named custody once before timing, assert session reuse, preserve all real checks and original10s/20s limits. No local tests.",
+          "reviewed_code_fingerprint": "0aa343d6ff5346e283cc22ec80974c060944c3009863701d40965a0b3023c8b5",
           "spec_material_hash": "d4d40d000610752ebaae7f3d6ea748a11df0094304dcb0b43f75f702fba5e44f"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Integrate accepted master 9767ae9a3ff1c7452101482218a17c55cf569b71 after accepted release v0.144.5 with issue1657. Preserve current task journal/checkpoints and authored specs from both branches; regenerate projections through the kernel. Previous candidate readiness does not apply; no local tests.",
-          "reviewed_code_fingerprint": "6525bfe2cf3bfd456667552058c5f54103a3c7a340774e7a92b63a076d07aa57",
+          "reason": "Hosted GitHub Actions core job132301086296 failed the repeated-validation aggregate bound because the fixture re-enrolled an unknown identity for every iteration. Acquire named custody once before timing, assert session reuse, preserve all real checks and original10s/20s limits. No local tests.",
+          "reviewed_code_fingerprint": "0aa343d6ff5346e283cc22ec80974c060944c3009863701d40965a0b3023c8b5",
           "spec_material_hash": "93fba7c3a13b58509ecb595a2889861cc89a73027a1d9a3ee35032397120be24"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Integrate accepted master 9767ae9a3ff1c7452101482218a17c55cf569b71 after accepted release v0.144.5 with issue1657. Preserve current task journal/checkpoints and authored specs from both branches; regenerate projections through the kernel. Previous candidate readiness does not apply; no local tests.",
-          "reviewed_code_fingerprint": "6525bfe2cf3bfd456667552058c5f54103a3c7a340774e7a92b63a076d07aa57",
+          "reason": "Hosted GitHub Actions core job132301086296 failed the repeated-validation aggregate bound because the fixture re-enrolled an unknown identity for every iteration. Acquire named custody once before timing, assert session reuse, preserve all real checks and original10s/20s limits. No local tests.",
+          "reviewed_code_fingerprint": "0aa343d6ff5346e283cc22ec80974c060944c3009863701d40965a0b3023c8b5",
           "spec_material_hash": "3a29b03266a725360b19c334671e75185f9042ba962cc86262f2ef803dff9368"
         }
       ],
@@ -736,13 +744,13 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1794627666Z"
+      "updated_at": "1794627801Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:766cce15e6eb69ff590c4abaa3dbdee017c2788ddd21da5aa6c229d81c85dfae",
+      "artifact_hash": "sha256:228ab17ee9cd2d9e47574eabc70edc68774af2c55cb9fe75833da10d7f7d551a",
       "checks": [],
       "current_phase": "implementation",
       "custody": {
@@ -870,10 +878,17 @@
             "intent_id": "intent:change_01M7BCHP65HZ6F2PKTZGVXHRDW",
             "kind": "trajectory_step_recorded",
             "sequence": 19
+          },
+          {
+            "detail": "trajectory:branch_01M7BCHP9CVSP7GQJ81EFVVC7P",
+            "event_id": "event:20",
+            "intent_id": "intent:change_01M7BCHP65HZ6F2PKTZGVXHRDW",
+            "kind": "trajectory_step_recorded",
+            "sequence": 20
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 19,
+        "next_sequence": 20,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M7BCHP9CVSP7GQJ81EFVVC7P": {
@@ -1130,6 +1145,22 @@
                   "issue-1657"
                 ],
                 "sequence": 19,
+                "validation_findings": [
+                  "Hosted verification and exact-candidate publication readiness remain pending; no local tests run."
+                ]
+              },
+              {
+                "action": "implementation",
+                "custody_event_id": "event:20",
+                "observations": [
+                  ".decapod/managed/specs/VALIDATION.md",
+                  "https://github.com/DecapodLabs/decapod/issues/1657"
+                ],
+                "proof_refs": [],
+                "scope": [
+                  "issue-1657"
+                ],
+                "sequence": 20,
                 "validation_findings": [
                   "Hosted verification and exact-candidate publication readiness remain pending; no local tests run."
                 ]
