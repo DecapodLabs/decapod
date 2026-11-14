@@ -1157,6 +1157,14 @@
       "proof_refs": [
         "https://github.com/DecapodLabs/decapod/issues/1660"
       ]
+    },
+    {
+      "id": "issue-1660-file-78",
+      "summary": "docs(spec): scope prerequisite runtime recovery to existing overrides; file-by-file checkpoint, verification pending.",
+      "input_digest": "sha256:035583da2a4d64bd62d6ec980752638e71abccc3df9527994b6e3daf748292ad",
+      "proof_refs": [
+        "https://github.com/DecapodLabs/decapod/issues/1660"
+      ]
     }
   ],
   "intents": {
@@ -1197,22 +1205,22 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Hosted GitHub Actions core jobs132330806628 (23.903s) and132301086296 exceeded the unchanged20s repeated-validation aggregate bound because the shared fixture re-enrolled an unknown identity for every iteration. Acquire named custody once before timing, assert session reuse, preserve all real checks and original10s/20s limits. No local tests.",
-          "reviewed_code_fingerprint": "668cf1f93ae9eb8b0d9e558b3a7ba87620de3cd53f7af978bf665db057b92a25",
+          "reason": "Document the real no-op guard and subprocess side-effect regression for GitHub runtime failure132344083373. Retain all required checks and10s/20s bounds. Runtime availability and full publication proof are separate; no local tests.",
+          "reviewed_code_fingerprint": "c16ddebe2aa8e28afc8d182d72b58814cc3036152acfce15e3fd73b9727a235f",
           "spec_material_hash": "e799665f0f6c5025ac094765c6f38097a6894c63fd4f08593900c2567475d6e9"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Hosted GitHub Actions core jobs132330806628 (23.903s) and132301086296 exceeded the unchanged20s repeated-validation aggregate bound because the shared fixture re-enrolled an unknown identity for every iteration. Acquire named custody once before timing, assert session reuse, preserve all real checks and original10s/20s limits. No local tests.",
-          "reviewed_code_fingerprint": "668cf1f93ae9eb8b0d9e558b3a7ba87620de3cd53f7af978bf665db057b92a25",
-          "spec_material_hash": "10df59dc9f256a32e3851047d6d684158b0453828124370c3bb74edc6e74af49"
+          "reason": "Document the real no-op guard and subprocess side-effect regression for GitHub runtime failure132344083373. Retain all required checks and10s/20s bounds. Runtime availability and full publication proof are separate; no local tests.",
+          "reviewed_code_fingerprint": "c16ddebe2aa8e28afc8d182d72b58814cc3036152acfce15e3fd73b9727a235f",
+          "spec_material_hash": "34ae7620bc7bf5ad635cb18bff3dae076dcb4cf719f210801517e6ebbff3e3f7"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Hosted GitHub Actions core jobs132330806628 (23.903s) and132301086296 exceeded the unchanged20s repeated-validation aggregate bound because the shared fixture re-enrolled an unknown identity for every iteration. Acquire named custody once before timing, assert session reuse, preserve all real checks and original10s/20s limits. No local tests.",
-          "reviewed_code_fingerprint": "668cf1f93ae9eb8b0d9e558b3a7ba87620de3cd53f7af978bf665db057b92a25",
+          "reason": "Document the real no-op guard and subprocess side-effect regression for GitHub runtime failure132344083373. Retain all required checks and10s/20s bounds. Runtime availability and full publication proof are separate; no local tests.",
+          "reviewed_code_fingerprint": "c16ddebe2aa8e28afc8d182d72b58814cc3036152acfce15e3fd73b9727a235f",
           "spec_material_hash": "366e74fb3bc9491cc900dbede2cffce06e3d8f7667d3d9b64641eb9bd9d7a695"
         }
       ],
@@ -1224,13 +1232,13 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1794633383Z"
+      "updated_at": "1794638219Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:e49aff6c3ba3759dd2a4594f7e05835d2ad9aa35499c45d6ae690881816cc689",
+      "artifact_hash": "sha256:12e42edb4709b23f50630d3070651a269550fa6ed7bba9232f6e61c67afd8abd",
       "checks": [],
       "current_phase": "implementation",
       "custody": {
@@ -1785,10 +1793,17 @@
             "intent_id": "intent:change_01M7BCFASGT4DQG4ZADT2BP5G0",
             "kind": "trajectory_step_recorded",
             "sequence": 80
+          },
+          {
+            "detail": "trajectory:branch_01M7BCFAWAYM3TXSVTHC1N7YZE",
+            "event_id": "event:81",
+            "intent_id": "intent:change_01M7BCFASGT4DQG4ZADT2BP5G0",
+            "kind": "trajectory_step_recorded",
+            "sequence": 81
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 80,
+        "next_sequence": 81,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M7BCFAWAYM3TXSVTHC1N7YZE": {
@@ -3021,6 +3036,22 @@
                   "issue-1660"
                 ],
                 "sequence": 80,
+                "validation_findings": [
+                  "Hosted verification and exact-candidate publication readiness remain pending; no local tests run."
+                ]
+              },
+              {
+                "action": "implementation",
+                "custody_event_id": "event:81",
+                "observations": [
+                  ".decapod/managed/specs/INTERFACES.md",
+                  "https://github.com/DecapodLabs/decapod/issues/1660"
+                ],
+                "proof_refs": [],
+                "scope": [
+                  "issue-1660"
+                ],
+                "sequence": 81,
                 "validation_findings": [
                   "Hosted verification and exact-candidate publication readiness remain pending; no local tests run."
                 ]

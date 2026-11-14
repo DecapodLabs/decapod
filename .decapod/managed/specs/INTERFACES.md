@@ -1154,7 +1154,7 @@ field. Nothing in this operation authorizes a mutation, approval or completion.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `668cf1f93ae9eb8b0d9e558b3a7ba87620de3cd53f7af978bf665db057b92a25`
+- Repository signal fingerprint: `c16ddebe2aa8e28afc8d182d72b58814cc3036152acfce15e3fd73b9727a235f`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (234 files), `tests/` (233 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
@@ -1532,3 +1532,19 @@ paths retain byte-integrity semantics. Historical JSON omits the optional field;
 Rust manifest literals add `validation_record: None`, and verification consumers
 pass repository context to `validate_verified_manifest(root, manifest)`.
 Publication and human merge authorization remain independent operations.
+
+## Scoped container-runtime recovery during prerequisites
+
+`src/decapod/plugins/container.rs::heal_container_runtime_override` first uses
+the existing disabled-runtime marker predicate. A missing or unrelated override
+returns unchanged without probing or starting a container engine. An existing
+disabled-runtime override retains the existing availability probe and scoped
+recovery behavior. Required validation checks and publication proof requirements
+remain independent of this optional preparation step.
+
+The isolated subprocess regression in `tests/unit/plugins/container_tests.rs`
+observes runtime invocations for missing, unrelated and disabled override cases,
+and checks preservation of unrelated content. It does not claim live container
+isolation or publication readiness. The actual CLI runtime probe retains its
+10-second per-call and 20-second aggregate requirements; fresh hosted execution
+must establish the resulting candidate's behavior and timing.
