@@ -734,6 +734,14 @@
       "proof_refs": [
         "decapod:specs.refresh"
       ]
+    },
+    {
+      "id": "pr1684-v1453-projection-3",
+      "summary": "Retain official 0.145.3 kernel refresh for .decapod/managed/specs/SECURITY.md",
+      "input_digest": "sha256:9d7ef853ce66f9dbf35a8e21b3e44b903771373c9db5d1124ab13e0b1934c282",
+      "proof_refs": [
+        "decapod:specs.refresh"
+      ]
     }
   ],
   "intents": {
