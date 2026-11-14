@@ -1103,6 +1103,14 @@
       "proof_refs": [
         "docs/architecture/public-proof-collection.md"
       ]
+    },
+    {
+      "id": "convergence-inventory1455",
+      "summary": "Reconcile the accepted v0.145.5 package identity; proof helper and required graph are unchanged",
+      "input_digest": "sha256:c64a586c229a96a0ea00a972a0d403fee6051e973d68e7f4fac0024f6f4a5acc",
+      "proof_refs": [
+        ".decapod/config.toml"
+      ]
     }
   ],
   "intents": {
