@@ -1799,6 +1799,14 @@
       "proof_refs": [
         "docs/agent/state-model.md"
       ]
+    },
+    {
+      "id": "convergence-classification-binding-architecturemd",
+      "summary": "Refresh source identity for evidence-supported classification correction with immutable governing obligations",
+      "input_digest": "sha256:6fe368a4d41cb65e0731bc482632449429dbd1feaaa657a3d1a71b47d409420b",
+      "proof_refs": [
+        ".decapod/managed/specs/ARCHITECTURE.md"
+      ]
     }
   ],
   "intents": {
