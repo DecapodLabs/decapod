@@ -815,6 +815,14 @@
       "proof_refs": [
         ".decapod/managed/specs/ARCHITECTURE.md"
       ]
+    },
+    {
+      "id": "convergence-refresh1454-intentmd",
+      "summary": "Refresh supported INTENT.md projection with the current source identity",
+      "input_digest": "sha256:114a71e411b5c89285f0ec38b7b1e3a97f6656c5cabfcabee0bdd1be5c2dccd0",
+      "proof_refs": [
+        ".decapod/managed/specs/INTENT.md"
+      ]
     }
   ],
   "intents": {
