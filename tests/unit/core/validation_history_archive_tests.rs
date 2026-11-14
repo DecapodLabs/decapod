@@ -250,6 +250,7 @@ fn native_and_provider_capture_archive_and_lookup_survive_evidence_directory_del
             &completed.expected_plan,
             &completed.suite,
             &completed.laya,
+            None,
         )
         .unwrap();
         let temporary_evidence = tempfile::tempdir().unwrap();

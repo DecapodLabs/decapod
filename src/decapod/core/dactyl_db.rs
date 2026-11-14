@@ -347,7 +347,7 @@ impl std::ops::BitOr for OpenFlags {
 }
 
 enum Driver {
-    Local(dactyl_db::Connection),
+    Local(Box<dactyl_db::Connection>),
     #[cfg(unix)]
     Owner(crate::core::storage_owner::Proxy),
 }
@@ -460,12 +460,29 @@ impl Connection {
         // read-write datastore so the Dactyl open remains the authority for
         // the actual connection and header validation.
         ensure_dactyl_create_target(path.as_ref(), access_mode).map_err(Error::Io)?;
-        let driver = dactyl_db::Connection::open_with_options(
+        // The SDK v1 default is 4 MiB per cell/parameter set. Decapod's
+        // existing transfer envelope exceeds that ceiling, and bounded legacy
+        // journal/history readers support individual values through 8 MiB.
+        // A maximum-size value must also fit alongside its key/metadata in a
+        // bound statement. Aggregate parameter headroom is not a larger value
+        // admission limit. SDK v1 conservatively charges each BLOB byte as 32
+        // decoded bytes; retained raw journal components must still fit along
+        // with row metadata. This explicit local allowance is bounded, and
+        // does not change row counts, cloud budgets or semantic field/proof gates.
+        let compatibility_bytes = 8 * 1024 * 1024;
+        let parameter_bytes = 2 * compatibility_bytes;
+        let result_bytes = 32 * compatibility_bytes + parameter_bytes;
+        let driver = dactyl_db::Connection::open_with_budget(
             DatastoreRoute::sqlite(path.as_ref().to_string_lossy().into_owned()),
             OpenOptions {
                 access_mode,
                 lock_timeout,
             },
+            None,
+            dactyl_db::ResourceBudget::v1()
+                .with_max_cell_bytes(compatibility_bytes)
+                .with_max_param_bytes(parameter_bytes)
+                .with_max_result_bytes(result_bytes),
         )?;
         #[cfg(unix)]
         if std::env::var("DECAPOD_STORAGE_OWNER_WORKER").as_deref() == Ok("1") {
@@ -473,7 +490,7 @@ impl Connection {
             crate::core::storage_owner::emit_open_hook();
         }
         Ok(Self {
-            driver: Rc::new(Driver::Local(driver)),
+            driver: Rc::new(Driver::Local(Box::new(driver))),
             transaction_state: Rc::new(Cell::new(false)),
             _storage_lock: storage_lock,
         })

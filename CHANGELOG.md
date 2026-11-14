@@ -7,6 +7,223 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.145.2](https://github.com/DecapodLabs/decapod/compare/v0.145.1...v0.145.2) - 2026-11-14
+
+### Fixed
+
+- *(container)* avoid runtime probes without a disabled override
+- *(governance)* regenerate actual 0.144.5 entrypoint templates
+- *(storage)* preserve bounded raw component reads under SDK accounting
+- *(storage)* reserve bounded parameter space for compatible row metadata
+- *(storage)* preserve bounded legacy and transfer values across the SDK upgrade
+- *(storage)* box the expanded local SDK connection variant
+- *(governance)* regenerate actual 0.144.4 entrypoint templates
+- *(bazel)* finalize SDK lock under normal generation environment
+
+### Other
+
+- integrate v0.145.1 into the Dactyl SDK upgrade
+- *(container)* scope optional prerequisite recovery on the SDK integration
+- *(container)* require a disabled marker before runtime recovery probes
+- integrate current accepted master for issue1667
+- integrate current accepted master for issue1667
+- *(specs)* record local BLOB accounting and retained component proof
+- *(storage)* reconstruct a full-size retained raw journal component
+- *(storage)* retain aggregate parameter refusal before mutation
+- *(specs)* distinguish cell compatibility from parameter headroom
+- *(storage)* round-trip the full compatible cell with a bound key
+- integrate current accepted master for issue1667
+- *(runtime)* measure repeated validation with established custody
+- *(storage)* cover large-value SDK compatibility and unpersisted quota rejection
+- *(events)* construct oversized stored payload past SDK parameter limits
+- *(governance)* refresh official Decapod 0.144.4 release surfaces
+- integrate accepted policy hardening for issue1667
+- *(specs)* declare exact published SDK compatibility evidence
+- *(proof)* bind published SDK dependency input closure
+- *(specs)* preserve SDK resource and authority boundaries
+- *(specs)* converge current SDK architecture and compatibility
+- *(specs)* converge current SDK architecture and compatibility
+- *(specs)* converge current SDK architecture and compatibility
+- *(cloud)* track published SDK and bounded transport compatibility
+- *(cloud)* track published SDK and bounded transport compatibility
+- *(cloud)* track published SDK and bounded transport compatibility
+- *(storage)* preserve oversized historical reader controls with SDK budgets
+- *(storage)* preserve oversized historical reader controls with SDK budgets
+- *(deps)* bind published SDK version and checksum
+- *(bazel)* retain accepted lockfile indentation
+- *(bazel)* regenerate registry SDK module inputs
+- *(deps)* lock the published Dactyl 0.16.1 artifact
+- *(deps)* adopt published Dactyl 0.16.1
+- *(specs)* bind latest published Dactyl adoption intent
+
+## [0.145.1](https://github.com/DecapodLabs/decapod/compare/v0.145.0...v0.145.1) - 2026-11-14
+
+### Fixed
+
+- *(broker)* preserve durable outcomes before retry deadline checks
+- *(broker)* admit explicit bounded request budgets
+- *(governance)* regenerate actual 0.144.5 entrypoint templates
+- *(governance)* regenerate actual 0.144.4 entrypoint templates
+- *(readiness)* query completion intent through todo boundary
+- *(todo)* expose scoped validated completion admission query
+- *(completion)* admit caller environment before broker handoff
+- *(broker)* preserve caller diagnostic scope across command execution
+- *(completion)* reject overrides before current and historical proof admission
+- *(publication)* reject diagnostic overrides before workspace publication
+- *(readiness)* enforce override boundary in CLI RPC and publication controller
+- *(readiness)* reject diagnostic gate overrides in shared runtime
+
+### Other
+
+- integrate v0.145.0 and canonical workunit proof into PR1677
+- *(broker)* specify durable outcome precedence for retry timing
+- *(broker)* retain unknown and committed outcomes on malformed retries
+- integrate current accepted master for issue1659
+- *(spec)* bind broker budget controls to native regressions
+- *(broker)* define bounded workload windows and unchanged proof gates
+- *(broker)* bind twenty-worker stress to its declared budget
+- *(broker)* reject oversized native deadlines before admission
+- *(validation)* delimit steady-state runtime measurement
+- *(runtime)* measure repeated validation with established custody
+- integrate current accepted master for issue1659
+- integrate current accepted master for issue1659
+- *(validation)* keep contention diagnostics in bounded prerequisite scope
+- *(entrypoints)* exercise tamper checks in prerequisite scope
+- *(broker)* repair diagnostic forwarding probe and scoped control assertion
+- *(broker)* distinguish scoped diagnostic flags from arbitrary controls
+- *(governance)* refresh official Decapod 0.144.4 release surfaces
+- integrate accepted policy hardening for issue1659
+- *(governance)* retain actual override and workspace rejection boundaries
+- *(cli)* separate diagnostic override and full profile admission controls
+- *(specs)* declare real override and broker acceptance controls
+- *(proof)* bind diagnostic override boundary source
+- *(readiness)* explain diagnostic skip recovery and assurance scope
+- *(specs)* deny override-based proof and broker scope confusion
+- *(specs)* define override blocker and diagnostic compatibility
+- *(specs)* centralize diagnostic override admission
+- *(readiness)* format lib override boundary
+- *(broker)* format diagnostic subprocess regression
+- *(broker)* exercise diagnostic scope capture and clearing in children
+- *(cli)* reject skipped full readiness publication and completion
+- *(readiness)* isolate override attacks in real runtime children
+- *(specs)* define diagnostic override readiness boundary
+
+## [0.145.0](https://github.com/DecapodLabs/decapod/compare/v0.144.6...v0.145.0) - 2026-11-14
+
+### Added
+
+- *(validation)* retain read-only inputs from the actual selected execution
+- *(proof)* bind observed workunit contracts to canonical validation history
+
+### Fixed
+
+- *(validate)* avoid runtime recovery when no override exists
+- *(test)* require the verified fixture journal generation
+- *(governance)* regenerate actual 0.144.5 entrypoint templates
+- *(workunit)* reserve verified status changes for owned transitions
+- *(proof)* bind promotion to the original observed workunit generation
+- *(proof)* report unsupported canonical task obligations before receipt lookup
+- *(workunit)* preserve unproven legacy imports and reject split atomic authority
+- *(validation)* keep unsupported task obligations unproven in first full workunit proof
+- *(workunit)* enforce canonical custody before atomic VERIFIED append
+- *(proof)* fence observed task custody in the workunit commit transaction
+- *(proof)* preserve canonical task obligations during workunit acceptance
+- *(governance)* regenerate actual 0.144.4 entrypoint templates
+- *(workunit)* classify absent custody before consulting canonical proof
+- *(proof)* honor canonical workunit hash encoding in subject checks
+- *(proof)* reject contradictory workunit provenance in canonical records
+- *(workunit)* require durable current custody at proof consumption
+- *(publication)* authenticate workunit proof before accepting VERIFIED status
+- *(completion)* require observed current workunit proof in record construction and verification
+- *(validate)* authenticate current VERIFIED workunit manifests
+- *(validation)* judge first workunit proof from current observed checks
+- *(proof)* recheck executable prerequisites during applicability reconstruction
+- *(workunit)* keep claimed status distinct from verified proof
+- *(workunit)* derive VERIFIED only from current canonical observed proof
+
+### Other
+
+- integrate current accepted master for issue1660
+- *(spec)* scope prerequisite runtime recovery to existing overrides
+- *(validate)* observe container recovery side effects in isolated processes
+- *(validation)* delimit steady-state runtime measurement
+- *(runtime)* measure repeated validation with established custody
+- integrate current accepted master for issue1660
+- *(workunit)* document migration to owned verified status transitions
+- *(workunit)* reject prepared status edits with retained real proof
+- *(proof)* explain generation-bound promotion and revalidation
+- *(proof)* reject old observations after workunit generation changes
+- integrate current accepted master for issue1660
+- *(proof)* preserve historical receiver decisions during stale rechecks
+- *(governance)* map acceptance paths and unresolved trust boundaries
+- *(proof)* verify portable import against current receiver custody
+- *(todo)* classify immutable task-plan inspection as a read operation
+- *(proof)* declare completion outputs and preserve source versus task verdicts
+- *(specs)* retain atomic-domain and task-obligation proof limits
+- *(proof)* state the atomic acceptance domain and unresolved split-store migration
+- *(proof)* match observed fixture compilation to supported native platforms
+- *(proof)* match observed fixture compilation to supported native platforms
+- *(proof)* retain independently declared task gates under real execution
+- *(proof)* fence custody races, receipt replay and split-store acceptance
+- *(todo)* expose owned task-plan checks at proof boundaries
+- *(recovery)* retain unproven claimed history without granting resumability
+- *(proof)* initialize the complete canonical admission configuration
+- *(proof)* resolve optional CLI fixture availability explicitly
+- *(specs)* bind validation to observed workunit proof
+- *(specs)* bind security to observed workunit proof
+- *(specs)* bind interfaces to observed workunit proof
+- *(specs)* bind architecture to observed workunit proof
+- *(proof)* define observed workunit authority, migration and assurance limits
+- *(validation)* evaluate first observed proof without self-issued VERIFIED rows
+- *(proof)* keep non-workunit archival fixtures explicitly unbound
+- *(proof)* keep non-workunit archival fixtures explicitly unbound
+- *(publication)* reject synthetic VERIFIED status and retain capsule boundary coverage
+- *(workunit)* separate resumable file custody from proven completion
+- *(completion)* export and replay genuine canonical local proof
+- *(proof)* expose shared observed fixture within the test crate
+- *(proof)* share genuine observed completion and verify declaration downgrades
+- *(proof)* register genuine workunit producer regressions in the required library suite
+- *(proof)* exercise actual local execution through canonical workunit acceptance
+- *(proof)* separate actual CLI admission from library execution fixtures
+- *(proof)* share the real runtime fixture with canonical producer tests
+- *(workunit)* reject legacy CLI pass declarations without observed custody
+- *(workunit)* retain legacy manifest decoding without canonical provenance
+- *(workunit)* retain legacy manifest decoding without canonical provenance
+- *(workunit)* retain legacy manifest decoding without canonical provenance
+- *(workunit)* retain legacy manifest decoding without canonical provenance
+- *(workunit)* retain legacy manifest decoding without canonical provenance
+- *(workunit)* preserve file artifacts with an explicit canonical proof reference
+- *(verify)* share canonical full-validation obligation admission
+- *(proof)* share exact identity reconstruction with read-only tool references
+- integrate accepted policy hardening for issue1660
+- *(specs)* bind observed workunit proof convergence
+
+## [0.144.6](https://github.com/DecapodLabs/decapod/compare/v0.144.5...v0.144.6) - 2026-11-14
+
+### Fixed
+
+- *(governance)* regenerate actual 0.144.5 entrypoint templates
+- *(migration)* refuse mixed journal authority before exclusive maintenance
+- *(migration)* guard uncertain TODO inputs before checkpoint preparation
+- *(governance)* regenerate actual 0.144.4 entrypoint templates
+- *(migration)* preserve inert TODO placeholders without opening or deleting them
+
+### Other
+
+- *(validation)* delimit steady-state runtime measurement
+- *(runtime)* measure repeated validation with established custody
+- integrate current accepted master for issue1657
+- integrate current accepted master for issue1657
+- *(migration)* traverse startup checkpoint and backup guards with real journals
+- *(specs)* bind security to the legacy TODO input boundary
+- *(specs)* bind interfaces to the legacy TODO input boundary
+- *(specs)* bind architecture to the legacy TODO input boundary
+- *(recovery)* define inert placeholders and retain nonempty cutover as unresolved
+- *(intent)* distinguish placeholder recovery from unresolved nonempty reconciliation
+- *(migration)* preserve real canonical journals across inert and uncertain legacy inputs
+- integrate accepted policy hardening for issue1657
+- *(intent)* govern explicit mixed TODO store recovery
+
 ## [0.144.5](https://github.com/DecapodLabs/decapod/compare/v0.144.4...v0.144.5) - 2026-11-14
 
 ### Fixed

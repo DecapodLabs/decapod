@@ -558,19 +558,22 @@ fn t051_todo_done_validated_requires_full_proof() {
     assert!(before["item"]["status"].is_string());
     assert!(before["item"]["revision"].is_number());
 
-    // This bootstrap fixture has no accepted full-readiness profile. A caller's
-    // --validated assertion cannot manufacture passing completion evidence.
+    // This bootstrap fixture uses diagnostic Git skips and has no full proof.
+    // A caller's --validated assertion cannot manufacture completion authority.
     let (ready, report) = run(&dir, &["validate", "--format", "json"]);
     assert!(!ready, "bare fixture unexpectedly has full proof: {report}");
-    assert!(report.contains("READINESS_PROFILE_REQUIRED"), "{report}");
+    assert!(
+        report.contains("READINESS_GATE_OVERRIDE_UNSUPPORTED"),
+        "{report}"
+    );
     let (success, output) = run(&dir, &["todo", "done", "--id", &id, "--validated"]);
     assert!(
         !success,
         "completion without full proof succeeded: {output}"
     );
     assert!(
-        output.contains("decapod validate did not pass"),
-        "expected actual validation rejection, not an unrelated failure: {output}"
+        output.contains("READINESS_GATE_OVERRIDE_UNSUPPORTED"),
+        "completion must reject diagnostic scope before proof or broker transport: {output}"
     );
     let after = host_output(&dir, &["todo", "--format", "json", "get", "--id", &id]);
     assert!(after.status.success());
@@ -613,7 +616,7 @@ fn t060_validate() {
     ok(&dir, &["govern", "project-check", "--format", "json"]);
     // T064: --format text
     ok(&dir, &["govern", "project-check", "--format", "text"]);
-    // T065: public validate and its alias both require a full proof profile.
+    // T065: public validate and its alias both require governed full admission.
     for command in ["validate", "v"] {
         let (success, output) = run(&dir, &[command]);
         assert!(
@@ -621,8 +624,26 @@ fn t060_validate() {
             "{command} must reject missing full proof: {output}"
         );
         assert!(
-            output.contains("READINESS_PROFILE_REQUIRED"),
-            "{command} must reach the same full-readiness boundary: {output}"
+            output.contains("READINESS_GATE_OVERRIDE_UNSUPPORTED"),
+            "{command} must reject the fixture diagnostic override: {output}"
+        );
+        // The no-override bootstrap control retains ordinary workspace protection.
+        // Scope changes belong to this child, never the parent provider/test.
+        let output = host_command(&dir, &[command])
+            .env_remove("DECAPOD_VALIDATE_SKIP_GIT_GATES")
+            .env_remove("DECAPOD_VALIDATE_SKIP_TOOLING_GATES")
+            .env_remove("DECAPOD_VALIDATE_SKIP_FINGERPRINT_GATES")
+            .output()
+            .expect("run full validation without diagnostic overrides");
+        assert!(!output.status.success());
+        let output = format!(
+            "{}\n{}",
+            String::from_utf8_lossy(&output.stdout),
+            String::from_utf8_lossy(&output.stderr)
+        );
+        assert!(
+            output.contains("workspace protection") && output.contains("protected branch"),
+            "{command} without overrides must enforce the bootstrap workspace boundary: {output}"
         );
     }
 }

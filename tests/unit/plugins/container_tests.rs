@@ -1877,3 +1877,85 @@ fn container_pr_rejects_changed_or_detached_head_before_publisher() {
         assert!(workspace.path.exists());
     }
 }
+
+#[cfg(unix)]
+#[test]
+fn override_healing_probes_a_runtime_only_for_a_disabled_marker() {
+    use crate::core::bounded_process::BoundedCommand;
+    use std::os::unix::fs::PermissionsExt;
+    const CHILD_ROOT: &str = "DECAPOD_TEST_CONTAINER_HEAL_SCOPE";
+    const PROBE_LOG: &str = "DECAPOD_TEST_CONTAINER_PROBE_LOG";
+    if let Some(root) = std::env::var_os(CHILD_ROOT) {
+        let root = PathBuf::from(root);
+        let disabled = container_runtime_disabled(&root).unwrap();
+        let result = heal_container_runtime_override(&root).unwrap();
+        if disabled {
+            assert!(matches!(result, ContainerRuntimeOverrideHeal::Cleared));
+            assert!(!container_runtime_disabled(&root).unwrap());
+        } else {
+            assert!(matches!(result, ContainerRuntimeOverrideHeal::Unchanged));
+        }
+        return;
+    }
+    let case = format!(
+        "{}::override_healing_probes_a_runtime_only_for_a_disabled_marker",
+        module_path!().split_once("::").unwrap().1
+    );
+    for scenario in ["missing", "unrelated", "disabled"] {
+        let temp = tempdir().unwrap();
+        let root = temp.path().join("repo");
+        let bin = temp.path().join("bin");
+        let log = temp.path().join("runtime-probes");
+        fs::create_dir_all(&root).unwrap();
+        fs::create_dir_all(&bin).unwrap();
+        let runtime = bin.join("podman");
+        fs::write(
+            &runtime,
+            r#"#!/bin/sh
+printf '%s\n' "$*" >> "$DECAPOD_TEST_CONTAINER_PROBE_LOG"
+exit 0
+"#,
+        )
+        .unwrap();
+        fs::set_permissions(&runtime, fs::Permissions::from_mode(0o755)).unwrap();
+        let path = override_file_path(&root);
+        if scenario != "missing" {
+            fs::create_dir_all(path.parent().unwrap()).unwrap();
+            fs::write(
+                &path,
+                "# Project override\n\n### unrelated\nretain this section\n",
+            )
+            .unwrap();
+        }
+        if scenario == "disabled" {
+            disable_container_runtime_override(&root, "test-reason", "test-remediation").unwrap();
+        }
+        let before = fs::read(&path).ok();
+        let output = Command::new(std::env::current_exe().unwrap())
+            .args(["--exact", &case, "--nocapture"])
+            .env(CHILD_ROOT, &root)
+            .env(PROBE_LOG, &log)
+            .env("PATH", &bin)
+            .bounded_output(std::time::Duration::from_secs(30))
+            .unwrap();
+        assert!(
+            output.status.success(),
+            "{scenario}: {} {}",
+            String::from_utf8_lossy(&output.stdout),
+            String::from_utf8_lossy(&output.stderr)
+        );
+        assert!(String::from_utf8_lossy(&output.stdout).contains("1 passed"));
+        if scenario == "disabled" {
+            assert_eq!(fs::read_to_string(&log).unwrap(), "info\n");
+            let after = fs::read_to_string(&path).unwrap();
+            assert!(after.contains("### unrelated\nretain this section\n"));
+            assert!(!after.contains(CONTAINER_DISABLE_MARKER));
+        } else {
+            assert!(
+                !log.exists(),
+                "{scenario} unexpectedly probed or started a runtime"
+            );
+            assert_eq!(fs::read(&path).ok(), before);
+        }
+    }
+}
