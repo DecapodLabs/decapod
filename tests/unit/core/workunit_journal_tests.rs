@@ -568,7 +568,7 @@ fn checkpoint_and_resume_retries_preserve_unknown_valid_projection() {
 }
 
 #[test]
-fn fresh_bound_proof_is_resumable_but_modified_artifacts_cannot_be_reanimated() {
+fn bound_declared_artifacts_are_resumable_without_granting_verified_status() {
     let root = accepted_execution_fixture();
     set_proof_plan(root.path(), "task_test", &["gate-a".into()]).unwrap();
     checkpoint_workunit(root.path(), "task_test", "checkpoint", Some(2)).unwrap();
@@ -584,7 +584,7 @@ fn fresh_bound_proof_is_resumable_but_modified_artifacts_cannot_be_reanimated() 
     .unwrap();
     transition_status(root.path(), "task_test", WorkUnitStatus::Executing).unwrap();
     transition_status(root.path(), "task_test", WorkUnitStatus::Claimed).unwrap();
-    transition_status(root.path(), "task_test", WorkUnitStatus::Verified).unwrap();
+    assert!(transition_status(root.path(), "task_test", WorkUnitStatus::Verified).is_err());
     assert!(
         workunit_journal_status(root.path(), "task_test")
             .unwrap()
@@ -603,7 +603,7 @@ fn fresh_bound_proof_is_resumable_but_modified_artifacts_cannot_be_reanimated() 
     assert!(resumed.resumable);
     assert_eq!(
         load_workunit(root.path(), "task_test").unwrap().status,
-        WorkUnitStatus::Verified
+        WorkUnitStatus::Claimed
     );
     fs::write(root.path().join(artifact), "altered proof").unwrap();
     assert!(
@@ -672,7 +672,7 @@ fn resume_fences_changed_authoritative_task_lease() {
 }
 
 #[test]
-fn newly_failed_proof_downgrades_verified_state() {
+fn newly_failed_declaration_stays_claimed_without_authoritative_proof() {
     let root = accepted_execution_fixture();
     set_proof_plan(root.path(), "task_test", &["gate-a".into()]).unwrap();
     checkpoint_workunit(root.path(), "task_test", "checkpoint", Some(2)).unwrap();
@@ -688,7 +688,7 @@ fn newly_failed_proof_downgrades_verified_state() {
     .unwrap();
     transition_status(root.path(), "task_test", WorkUnitStatus::Executing).unwrap();
     transition_status(root.path(), "task_test", WorkUnitStatus::Claimed).unwrap();
-    transition_status(root.path(), "task_test", WorkUnitStatus::Verified).unwrap();
+    assert!(transition_status(root.path(), "task_test", WorkUnitStatus::Verified).is_err());
     let failed = record_proof_result(root.path(), "task_test", "gate-a", "fail", None).unwrap();
     assert_eq!(failed.status, WorkUnitStatus::Claimed);
     assert!(transition_status(root.path(), "task_test", WorkUnitStatus::Verified).is_err());
@@ -800,7 +800,7 @@ fn bare_or_partial_runtime_is_rejected_before_creating_workunit_state() {
 }
 
 #[test]
-fn terminal_contract_uses_current_journal_epoch_and_preserves_explicit_proof_obligations() {
+fn terminal_journal_retains_declared_obligations_without_minting_verified_proof() {
     let root = accepted_execution_fixture();
     set_proof_plan(root.path(), "task_test", &["source-check".into()]).unwrap();
     checkpoint_workunit(root.path(), "task_test", "terminal-checkpoint", Some(2)).unwrap();
@@ -816,18 +816,18 @@ fn terminal_contract_uses_current_journal_epoch_and_preserves_explicit_proof_obl
     .unwrap();
     transition_status(root.path(), "task_test", WorkUnitStatus::Executing).unwrap();
     transition_status(root.path(), "task_test", WorkUnitStatus::Claimed).unwrap();
-    transition_status(root.path(), "task_test", WorkUnitStatus::Verified).unwrap();
+    assert!(transition_status(root.path(), "task_test", WorkUnitStatus::Verified).is_err());
     let observed = crate::core::validation_rules::load_terminal_workunit(root.path(), "task_test")
         .unwrap()
         .unwrap();
-    assert_eq!(observed.status, WorkUnitStatus::Verified);
+    assert_eq!(observed.status, WorkUnitStatus::Claimed);
     assert!(
         observed.validation_epoch.is_none(),
-        "supported journal binding owns the current epoch"
+        "an execution checkpoint alone cannot mint a validation epoch"
     );
     assert!(observed.proof_results[0].validation_epoch.is_none());
-    // Current source/epoch/artifact custody was positively rechecked. Mutation
-    // cannot reuse that declaration even though optional legacy fields are absent.
+    // Current execution and file custody can be resumed; the declaration is
+    // still unproven. Changed bytes cannot be resurrected by recovery.
     fs::write(root.path().join(artifact), "changed output").unwrap();
     assert!(
         crate::core::validation_rules::load_terminal_workunit(root.path(), "task_test").is_err()
