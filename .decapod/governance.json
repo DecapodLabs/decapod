@@ -1463,6 +1463,14 @@
       "proof_refs": [
         "tests/unit/core/reflection_tests.rs"
       ]
+    },
+    {
+      "id": "convergence-exact-final-proof",
+      "summary": "Preserve successful prior execution and its truthful source-change rejection before final exact-candidate proof",
+      "input_digest": "sha256:c89755d82a0ba3815c82ccf6a85d4e2c59bc18f3a26d5294275c69c711655acd",
+      "proof_refs": [
+        "https://buildkite.com/decapodlabs/decapod/builds/10661"
+      ]
     }
   ],
   "intents": {
@@ -1538,7 +1546,7 @@
       "active_boundaries": [
         "Keep approval, scope, custody, proof and publication authoritative; no transcripts, daemon or semantic-proof claims"
       ],
-      "artifact_hash": "sha256:1b52b8911e5a2f4f0682c42f2f28ed81d6d5a7eb5638e64967d9cb5b86c1df00",
+      "artifact_hash": "sha256:5f360d44d3ccf2e25201809915a0f2b7a4c5f123381e5741020487f5792e9e61",
       "checks": [
         {
           "name": "authority_refinement",
@@ -1551,6 +1559,10 @@
         {
           "name": "full_validation",
           "status": "failed"
+        },
+        {
+          "name": "prior_candidate_source_ci",
+          "status": "passed"
         },
         {
           "name": "repaired_candidate_preflight",
@@ -1638,10 +1650,17 @@
             "intent_id": "intent:convergence-1690",
             "kind": "trajectory_step_recorded",
             "sequence": 12
+          },
+          {
+            "detail": "trajectory:convergence-1690",
+            "event_id": "event:13",
+            "intent_id": "intent:convergence-1690",
+            "kind": "trajectory_step_recorded",
+            "sequence": 13
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 12,
+        "next_sequence": 13,
         "schema_version": "1.0.0",
         "trajectories": {
           "convergence-1690": {
@@ -1794,6 +1813,21 @@
                 ],
                 "sequence": 12,
                 "validation_findings": []
+              },
+              {
+                "action": "candidate-validation",
+                "custody_event_id": "event:13",
+                "observations": [
+                  "Buildkite10661 passed complete source workflow for candidate6db3c1f19b2d9adc592b5c476143bf3f244ca88d, including real SQLite recovery fixtures. Native validation correctly rejected SOURCE_CHANGED_DURING_SNAPSHOT_PROOF after the reviewed authority-continuation change; retained decapod-snapshot-IhdHfj. Prior green execution is not readiness for the new candidate."
+                ],
+                "proof_refs": [
+                  "prior_candidate_source_ci"
+                ],
+                "scope": [
+                  "src/decapod/core/mentor and canonical agent integration/tests"
+                ],
+                "sequence": 13,
+                "validation_findings": []
               }
             ]
           }
@@ -1805,6 +1839,7 @@
       "evidence": [
         "Actual deterministic comparison: baseline unnecessary questions 3, governed admitted questions 0, admissible decisions 3, total rounds 6, elapsed_us 1892663, governance_growth_bytes 20665. This does not measure LLM semantics or complete engineering tasks.",
         "Buildkite #10625 candidate 5ad1554990125c4b54aa6af857b2de8afd732a15: 1770 library tests passed, one new fixture failed due to incomplete TOML config; CLI aggregate 39 passed, one new fixture expected the wrong readiness error, four ignored. Both reported fixture defects repaired in dedicated commits.",
+        "Buildkite10661 passed complete source workflow for candidate6db3c1f19b2d9adc592b5c476143bf3f244ca88d, including real SQLite recovery fixtures. Native validation correctly rejected SOURCE_CHANGED_DURING_SNAPSHOT_PROOF after the reviewed authority-continuation change; retained decapod-snapshot-IhdHfj. Prior green execution is not readiness for the new candidate.",
         "Candidate 3dff4da9 stopped before provider execution: SNAPSHOT_UPLOAD_INCOMPLETE, local release tags lagged remote. Retained snapshot decapod-snapshot-nT3E6x; fetched published v0.145.4 tag without tag publication.",
         "Candidate d6bb48798b5477a5fb006cd6f559a21e3c809c3c was blocked by ACCEPTED_BASE_NOT_ANCESTOR after external PR1680/release1455 integration. Incorporated f5da0e61, retained both semantic spec scopes, regenerated canonical pins through official1455 session update, restored temporary config. Reclaimed genuinely unassigned task and rebound existing workspace after session cleanup.",
         "Draft extends existing three-round journal and orientation/mentor input with typed escalation proposals, observed source predicates and existing policy/approval reads. Concise source facts are not proof of execution or semantic exhaustion. Adversarial unit and CLI mock harness authored; not yet executed. Preserve per-file exact checkpoints and native publication gates.",
@@ -1835,7 +1870,8 @@
         "Run complete exact-candidate validation against accepted v0.145.5; no readiness receipt exists yet.",
         "Run complete native validation on the new exact candidate and current accepted target.",
         "Run full exact-candidate Decapod validation; repair reported source failures without substituting GitHub status for configured provider proof.",
-        "Run full exact-candidate validation including the new authority-discovery regression and guarded recovery fixtures."
+        "Run full exact-candidate validation including the new authority-discovery regression and guarded recovery fixtures.",
+        "Run full proof for the final authority-continuity candidate; leave source unchanged unless actual validation reports a repair."
       ],
       "repo_scope": [
         "src/decapod/core/mentor and canonical agent integration/tests"
