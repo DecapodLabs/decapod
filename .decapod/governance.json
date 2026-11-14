@@ -951,6 +951,14 @@
       "proof_refs": [
         ".decapod/managed/specs/OPERATIONS.md"
       ]
+    },
+    {
+      "id": "convergence-authority-attestation-readmemd",
+      "summary": "Refresh source binding after the authority regression fix",
+      "input_digest": "sha256:14de167335bd100aa96f0b31994f1f6ae275003b365cfa292d8fb4c48e44de19",
+      "proof_refs": [
+        ".decapod/managed/specs/README.md"
+      ]
     }
   ],
   "intents": {
