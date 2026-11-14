@@ -25,6 +25,30 @@ use std::time::{Duration, Instant};
 
 pub const READINESS_SCOPE: &str = "source_pr_readiness";
 
+/// Diagnostic gate overrides are not an accepted full verification contract.
+/// Partial prerequisite/CI-local callers retain their existing explicit scope.
+pub(crate) fn require_full_readiness_environment() -> io::Result<()> {
+    let mut active = Vec::new();
+    for name in [
+        "DECAPOD_VALIDATE_SKIP_GIT_GATES",
+        "DECAPOD_VALIDATE_SKIP_TOOLING_GATES",
+    ] {
+        if std::env::var_os(name).is_some() {
+            active.push(name);
+        }
+    }
+    if super::validate::skip_fingerprint_gates() {
+        active.push("DECAPOD_VALIDATE_SKIP_FINGERPRINT_GATES");
+    }
+    if !active.is_empty() {
+        return Err(invalid(format!(
+            "READINESS_GATE_OVERRIDE_UNSUPPORTED: {} disables accepted checks; remove these overrides and revalidate. Partial project-prerequisite and CI-local diagnostics cannot grant publication readiness.",
+            active.join(", ")
+        )));
+    }
+    Ok(())
+}
+
 const CONFIG: &str = ".decapod/config.toml";
 const GOVERNANCE: &str = ".decapod/governance.json";
 use super::readiness_profile::source;
@@ -1011,6 +1035,7 @@ fn run(
     cancel: &Cancellation,
     report: &mut ValidationReport,
 ) -> io::Result<()> {
+    require_full_readiness_environment()?;
     if options.timeout.is_zero()
         || options.timeout > Duration::from_secs(7200)
         || options.max_input_bytes == 0
@@ -1368,6 +1393,13 @@ fn run(
                 .laya_readiness
                 .as_ref()
                 .ok_or_else(|| invalid("successful readiness lacks a Laya disposition"))?,
+            Some(
+                super::validation_history::CurrentEvidenceInputs::capture(
+                    &project.identity_inputs,
+                    &selection,
+                )
+                .map_err(io::Error::other)?,
+            ),
         )
         .map_err(io::Error::other)?;
         let rules = within_terminal_budget(&budget, || {

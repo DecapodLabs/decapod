@@ -85,6 +85,32 @@ pub(crate) fn capture_validation_binding(
     )
 }
 
+pub(crate) fn ensure_task_full_validation_plan_on_conn(
+    conn: &Connection,
+    task_id: &str,
+) -> Result<(), error::DecapodError> {
+    task_journal::ensure_task_full_validation_plan(conn, task_id)
+}
+
+pub(crate) fn ensure_task_full_validation_plan(
+    store_root: &Path,
+    task_id: &str,
+) -> Result<(), error::DecapodError> {
+    let broker = DbBroker::new(store_root);
+    if broker.is_cloud() {
+        return Err(error::DecapodError::NotImplemented(
+            "VALIDATION_HISTORY_BACKEND_UNSUPPORTED: no local fallback for cloud task proof".into(),
+        ));
+    }
+    broker.with_conn(
+        &todo_db_path(store_root),
+        "decapod",
+        None,
+        "validation.workunit.task_plan.check",
+        |conn| ensure_task_full_validation_plan_on_conn(conn, task_id),
+    )
+}
+
 pub(crate) fn check_validation_binding_on_conn(
     conn: &Connection,
     binding: &HistoricalTaskBinding,
@@ -8683,6 +8709,17 @@ fn mark_todo_claimed_pending_proof(
                 },
             )
         },
+    )
+}
+
+/// Originating CLI admission inspects completion intent without exposing parser state.
+pub(crate) fn is_validated_completion(cli: &TodoCli) -> bool {
+    matches!(
+        cli.command,
+        TodoCommand::Done {
+            validated: true,
+            ..
+        }
     )
 }
 

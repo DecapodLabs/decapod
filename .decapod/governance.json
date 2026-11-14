@@ -661,6 +661,14 @@
       "proof_refs": [
         "https://github.com/DecapodLabs/decapod/pull/1683"
       ]
+    },
+    {
+      "id": "pr1680-integrate-5002f1db-v1454",
+      "summary": "Reviewed public-proof collection documentation against accepted v0.145.4, current quota code and separate historical/provider proof scope; no policy weakening; fresh GitHub verification pending and no local tests run.",
+      "input_digest": "sha256:d01753a3d441390fddf3fc480b533babce42621bdb466e21e24c6b383a0b3076",
+      "proof_refs": [
+        "https://github.com/DecapodLabs/decapod/pull/1694"
+      ]
     }
   ],
   "intents": {
@@ -701,23 +709,23 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Integrate accepted master e8f8848d19a02ad8e2a580cf7722fe4ff9342221 after merged bootstrap repair PR1683 with issue1573. Preserve current task journal/checkpoints and authored specs from both branches; regenerate projections through the kernel. Previous candidate readiness does not apply; no local tests.",
-          "reviewed_code_fingerprint": "0aa343d6ff5346e283cc22ec80974c060944c3009863701d40965a0b3023c8b5",
-          "spec_material_hash": "9456e5a2a100c81ec73b91a51702054e5008387a2a74a640c850d59aa6568683"
+          "reason": "Reviewed public-proof collection documentation against accepted v0.145.4, current quota code and separate historical/provider proof scope; no policy weakening; fresh GitHub verification pending and no local tests run.",
+          "reviewed_code_fingerprint": "e4a9eab6a572ab64287dd18c0d314fd69f2b6bc5a2f1e310a5d8c2afc5aa9f4e",
+          "spec_material_hash": "84717ed599e8714c13b8d90f7c49b1dfef5ce39fc06c35a6661dc86c374c70e7"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Integrate accepted master e8f8848d19a02ad8e2a580cf7722fe4ff9342221 after merged bootstrap repair PR1683 with issue1573. Preserve current task journal/checkpoints and authored specs from both branches; regenerate projections through the kernel. Previous candidate readiness does not apply; no local tests.",
-          "reviewed_code_fingerprint": "0aa343d6ff5346e283cc22ec80974c060944c3009863701d40965a0b3023c8b5",
-          "spec_material_hash": "6c305b32d966ba18506b820849ddc3874deac1ca34143028d9e12c6d3bfbb154"
+          "reason": "Reviewed public-proof collection documentation against accepted v0.145.4, current quota code and separate historical/provider proof scope; no policy weakening; fresh GitHub verification pending and no local tests run.",
+          "reviewed_code_fingerprint": "e4a9eab6a572ab64287dd18c0d314fd69f2b6bc5a2f1e310a5d8c2afc5aa9f4e",
+          "spec_material_hash": "e99186ab124d4316315c61e879dcb88a7c65ac7781ba24da31e5f00493c77cb5"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Integrate accepted master e8f8848d19a02ad8e2a580cf7722fe4ff9342221 after merged bootstrap repair PR1683 with issue1573. Preserve current task journal/checkpoints and authored specs from both branches; regenerate projections through the kernel. Previous candidate readiness does not apply; no local tests.",
-          "reviewed_code_fingerprint": "0aa343d6ff5346e283cc22ec80974c060944c3009863701d40965a0b3023c8b5",
-          "spec_material_hash": "68192af3f35c6f1dbeeb584155ff0a2f5b627e6e1ac61d16cacdb23d1a1718b4"
+          "reason": "Reviewed public-proof collection documentation against accepted v0.145.4, current quota code and separate historical/provider proof scope; no policy weakening; fresh GitHub verification pending and no local tests run.",
+          "reviewed_code_fingerprint": "e4a9eab6a572ab64287dd18c0d314fd69f2b6bc5a2f1e310a5d8c2afc5aa9f4e",
+          "spec_material_hash": "341bf0d375468eb00e1fdc39254d86421cf16396b246cd9585895b48d8be898b"
         }
       ],
       "state": "APPROVED",
@@ -728,13 +736,13 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1794639194Z"
+      "updated_at": "1794687221Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:b347dbc6f05dff719bf27abbc84591ed2c32ed9d05f2dadebbaa0e278e3bc0e0",
+      "artifact_hash": "sha256:7fcfc2fb7fc420ff81a15f48c05a4f816322584b297e3aa37d90b1d1eb3097ae",
       "checks": [],
       "current_phase": "implementation",
       "custody": {
@@ -855,10 +863,17 @@
             "intent_id": "intent:change_01M7BCGX392JKZBS50NX3PPP8A",
             "kind": "trajectory_step_recorded",
             "sequence": 18
+          },
+          {
+            "detail": "trajectory:branch_01M7BCGX5QABS0MJP84D9PV95G",
+            "event_id": "event:19",
+            "intent_id": "intent:change_01M7BCGX392JKZBS50NX3PPP8A",
+            "kind": "trajectory_step_recorded",
+            "sequence": 19
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 18,
+        "next_sequence": 19,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M7BCGX5QABS0MJP84D9PV95G": {
@@ -1101,6 +1116,22 @@
                 "validation_findings": [
                   "Integrate accepted master e8f8848d19a02ad8e2a580cf7722fe4ff9342221 after merged bootstrap repair PR1683 with issue1573. Preserve current task journal/checkpoints and authored specs from both branches; regenerate projections through the kernel. Previous candidate readiness does not apply; no local tests."
                 ]
+              },
+              {
+                "action": "implementation",
+                "custody_event_id": "event:19",
+                "observations": [
+                  ".decapod/managed/specs/VALIDATION.md",
+                  "https://github.com/DecapodLabs/decapod/pull/1694"
+                ],
+                "proof_refs": [],
+                "scope": [
+                  "issue-1573"
+                ],
+                "sequence": 19,
+                "validation_findings": [
+                  "Fresh exact-candidate GitHub Actions required; no local tests; Buildkite excluded by user and full native publication readiness unproven."
+                ]
               }
             ]
           }
@@ -1113,7 +1144,8 @@
         "https://github.com/DecapodLabs/decapod/pull/1675",
         "https://github.com/DecapodLabs/decapod/pull/1682",
         "https://github.com/DecapodLabs/decapod/pull/1683",
-        "https://github.com/DecapodLabs/decapod/pull/1685"
+        "https://github.com/DecapodLabs/decapod/pull/1685",
+        "https://github.com/DecapodLabs/decapod/pull/1694"
       ],
       "inspected_files": [],
       "intent_id": "intent:change_01M7BCGX392JKZBS50NX3PPP8A",
@@ -1138,6 +1170,7 @@
       "task_id": "cicd_01m7bcga6rkdryvj",
       "tool_calls": [],
       "unresolved_assumptions": [
+        "Fresh exact-candidate GitHub Actions required; no local tests; Buildkite excluded by user and full native publication readiness unproven.",
         "Hosted verification and exact-candidate publication readiness remain pending; no local tests run.",
         "Integrate accepted master 9767ae9a3ff1c7452101482218a17c55cf569b71 after accepted release v0.144.5 with issue1573. Preserve current task journal/checkpoints and authored specs from both branches; regenerate projections through the kernel. Previous candidate readiness does not apply; no local tests.",
         "Integrate accepted master e8f8848d19a02ad8e2a580cf7722fe4ff9342221 after merged bootstrap repair PR1683 with issue1573. Preserve current task journal/checkpoints and authored specs from both branches; regenerate projections through the kernel. Previous candidate readiness does not apply; no local tests.",

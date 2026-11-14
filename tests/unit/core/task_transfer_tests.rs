@@ -485,11 +485,13 @@ fn recovery_rejects_mismatched_durable_event_actor_and_oversized_record() {
     )
     .unwrap();
     assert!(recover_bundle(&root, &id, &bundle.transfer_id, SOURCE).is_err());
+    // Construct historical oversized data inside the disposable SQLite store;
+    // SDK parameter limits must not prevent exercising the kernel reader bound.
     conn.execute(
-        "UPDATE events SET actor=?1, payload=?2 WHERE stream=?3 AND event_id=?4",
+        "UPDATE events SET actor=?1, payload=replace(hex(zeroblob(?2)), '00', ' ') WHERE stream=?3 AND event_id=?4",
         params![
             SOURCE,
-            " ".repeat(8 * 1024 * 1024 + 1),
+            8 * 1024 * 1024 + 1,
             events::TODO,
             event_id
         ],

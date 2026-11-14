@@ -2282,6 +2282,7 @@ pub(crate) fn publish_workspace_with_readiness(
     description: Option<String>,
     readiness_invocation: &crate::ReadinessInvocation,
 ) -> Result<PublishResult, DecapodError> {
+    crate::core::validation_runtime::require_full_readiness_environment()?;
     readiness_invocation.validate()?;
     let status = get_workspace_status(repo_root)?;
 
@@ -2609,6 +2610,7 @@ pub fn verify_workunit_gate_for_publish(
                 task_id, manifest.status
             )));
         }
+        workunit::validate_verified_manifest(repo_root, &manifest)?;
         workunit::verify_capsule_policy_lineage_for_task(repo_root, &manifest)?;
     }
 

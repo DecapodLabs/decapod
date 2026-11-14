@@ -262,6 +262,7 @@ def decapod_targets():
             ] else [],
             srcs = [path] + [
                 "tests/consumer_readiness.rs",
+                "tests/sqlite_maintenance.rs",
                 "tests/common/consumer_readiness_fixture.rs",
                 "tests/init_ci_scaffolding.rs",
                 "tests/init_config_behavior.rs",

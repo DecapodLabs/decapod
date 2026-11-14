@@ -1,5 +1,16 @@
 # Intent
 
+## Required test dependency coverage (#1672, PR #1684)
+
+Test-only repairs must select the existing core or CLI lane that executes them.
+`assets/tools/source_ci_profile.rs` includes the runtime and CLI recipe inputs,
+shared consumer fixtures and Bazel declarations in that selection. An absent
+selection is not successful test execution. This delivery retains the accepted
+finite check IDs and complete recipes. Independently bounded shards, compilation
+reuse and the five-minute timing requirement remain open under #1672; this
+coverage prerequisite does not claim them. Exact-candidate validation remains
+required after integrating accepted v0.145.3 source.
+
 ## Concurrent custody and diagnostic scope (#1469, #1661)
 
 Independent tasks can author concurrently in distinct admitted worktrees. A task
@@ -24,7 +35,7 @@ See `core/mentor/reflection.rs` and `docs/architecture/bounded-reflection.md`.
 
 ## Published SDK adoption (#1638)
 
-The client pins the normally published registry `dactyl-db =0.14.0` release
+The client pins the normally published registry `dactyl-db =0.16.1` release
 without changing local/cloud composition, session custody, role authority or
 transport selection. Its patched `quinn-proto >=0.11.19` requirement must hold
 for every resolved lock entry, including inactive dependencies. This adoption
@@ -352,8 +363,8 @@ These declarations select authoring and proof obligations; they do not attest im
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `0aa343d6ff5346e283cc22ec80974c060944c3009863701d40965a0b3023c8b5`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (234 files), `tests/` (232 files)
+- Repository signal fingerprint: `e4a9eab6a572ab64287dd18c0d314fd69f2b6bc5a2f1e310a5d8c2afc5aa9f4e`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (234 files), `tests/` (233 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 
@@ -567,6 +578,64 @@ completed the complete1658 provider contract without identity substitution. This
 follow-up records the actual observation and separately validates its own task
 and current candidate; a prior task's proof never completes this task by itself.
 No new credential path, provider fallback, receipt authority or local tests.
+
+## Required maintenance evidence completion (#1568)
+
+The local-only capability engine merged in1662. Its standalone
+`tests/sqlite_maintenance.rs` target was not explicitly part of the existing
+required source recipe. Register those actual storage/CLI/RPC controls in the
+required CLI contract target without substituting an adapter mock or changing
+provider authority. Native SQLite absence must fail these required cases.
+Cloud policy/delegation remains separately enforced by Propodus; local opt-in
+and forged principal environment never establish authenticated cloud authority.
+Hosted execution and exact-candidate readiness remain pending.
+
+## Published SDK convergence (#1667)
+
+Adopt the current published `dactyl-db =0.16.1` registry artifact, preserving
+SQLite/Neon/default Supabase features and application-owned governance decisions.
+The official sparse index reports non-yanked checksum
+`1b41dde2e8be3fc986f7f5a7eb4e5bfb9af49d4c39dabe98fd74a0ccb4ad7ac6`;
+the downloaded crate matches it. The 0.16.1 patch has identical `src/*.rs` bytes
+to 0.16.0 and repairs upstream test compatibility. Version 0.15 adds bounded
+resource accounting and scans; 0.16 adds logical connectors/session transport.
+These additions do not confer application authority or independently prove a
+hosted deployment. Exact candidate compatibility remains a hosted verification
+obligation, with no local test execution.
+
+## Diagnostic overrides cannot authorize readiness (#1659)
+
+Git, tooling and fingerprint gate-skip variables support diagnostic fixtures;
+their presence must never authorize full readiness, publication or verified
+completion. The shared runtime must reject a full claim before prerequisites or
+provider selection, and CLI/RPC/publication paths must preserve that boundary.
+Existing CI-local and project-prerequisite diagnostics retain their explicit
+partial scope and `publication_ready=false` behavior.
+
+Use the existing judgment, validation-history and receipt owners. Keep historical
+observations intact and require a fresh applicable validation after removing an
+override. Real child-process regressions isolate environment changes and must
+verify both rejected full claims and truthful diagnostics. No local test result,
+current hosted success or completed repair is claimed by this plan.
+
+## Observed workunit proof convergence (#1660)
+
+The existing `record_proof_result` pass row is a declaration: it initializes both
+proof epochs to None, and `ensure_verified_ready` currently checks only pass rows.
+Durable execution binding and referenced-byte hashes preserve custody/integrity
+but do not authenticate who observed a successful check. Whole publication has
+additional gates, so misleading VERIFIED state is not by itself a proven forge
+merge bypass. Preserve that distinction in real binary adversarial controls.
+
+Converge VERIFIED with the existing canonical `validation_history` producer.
+A current canonical observation must bind this exact task, workunit contract,
+source, accepted target, policy and tool closure. Add only bounded references and
+read-only applicability inputs to existing proof records, not a second datastore
+or evaluator. Runtime terminal judgment must consume actual completed checks;
+opaque additional gates remain unproven. Legacy declarations retain history and
+require fresh observed proof, with explicit safe downgrade/recovery. No new
+cryptographic trust root or OS-isolation claim is inferred from shared UID access.
+No local tests run; supported real CLI/runtime and hosted proof remain required.
 
 ## Mixed-store recovery (#1657)
 

@@ -1486,6 +1486,7 @@ pub(crate) fn prepare_verified_completion(
     todo_id: &str,
     artifact_paths: Vec<String>,
 ) -> Result<PreparedTodoVerification, error::DecapodError> {
+    crate::core::validation_runtime::require_full_readiness_environment()?;
     prepare_verified_completion_with(store, repo_root, todo_id, artifact_paths, || {
         run_validate_and_hash(&store.root, repo_root, Some(todo_id))
     })
@@ -1502,12 +1503,7 @@ fn ensure_historical_proof_plan(plan: Option<&str>) -> Result<(), error::Decapod
             "VALIDATION_HISTORY_TASK_PROOF_UNSUPPORTED: malformed task proof plan".into(),
         )
     })?;
-    if gates.len() != 1 || !matches!(gates[0].as_str(), "validate_passes" | "validated_commit") {
-        return Err(error::DecapodError::ValidationError(
-            "VALIDATION_HISTORY_TASK_PROOF_UNSUPPORTED: recorded full validation cannot discharge additional or missing task proof obligations".into(),
-        ));
-    }
-    Ok(())
+    validation_history::ensure_full_validation_plan(&gates)
 }
 
 pub(crate) fn prepare_historical_completion(
@@ -1516,6 +1512,7 @@ pub(crate) fn prepare_historical_completion(
     todo_id: &str,
     candidate_sha: &str,
 ) -> Result<PreparedTodoVerification, error::DecapodError> {
+    crate::core::validation_runtime::require_full_readiness_environment()?;
     let targets = load_targets(store, Some(todo_id))?;
     let target = targets
         .into_iter()

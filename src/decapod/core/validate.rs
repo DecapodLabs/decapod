@@ -4018,7 +4018,7 @@ fn validate_workunit_manifests_if_present(
             ))
         })?;
         if parsed.status == WorkUnitStatus::Verified {
-            workunit::validate_verified_manifest(&parsed).map_err(|e| {
+            workunit::validate_verified_manifest(repo_root, &parsed).map_err(|e| {
                 error::DecapodError::ValidationError(format!(
                     "invalid VERIFIED workunit manifest: {} ({})",
                     e,

@@ -906,3 +906,8 @@ mod claim_boundaries {
         assert_eq!(get(root, root, &task)["item"]["assigned_to"], "primary");
     }
 }
+
+// The required CLI target must execute the real governed maintenance cases.
+// The standalone target remains available for focused reproduction.
+#[path = "sqlite_maintenance.rs"]
+mod sqlite_maintenance;

@@ -165,7 +165,7 @@ remain in [#1377](https://github.com/DecapodLabs/decapod/issues/1377),
 [Supabase consumer validation](supabase-validation.md) for protected service
 profiles and their explicit evidence requirements.
 
-Connector-enabled builds pin the published `dactyl-db 0.14.0` registry API,
+Connector-enabled builds pin the published `dactyl-db 0.16.1` registry API,
 including the patched `quinn-proto >= 0.11.19` floor tracked by
 [Decapod #1638](https://github.com/DecapodLabs/decapod/issues/1638). The SDK
 requires Rust 1.85; Decapod retains its existing Rust 1.96.1 toolchain. HTTP/3

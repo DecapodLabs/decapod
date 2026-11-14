@@ -1,7 +1,8 @@
 //! Integration tests for entrypoint correctness.
 //!
 //! These tests ensure that `decapod init` creates correct entrypoint files
-//! and that `decapod validate` enforces invariants and detects tampering.
+//! and that bounded project prerequisites detect tampering. Full validation
+//! separately requires an accepted readiness profile and disallows skip flags.
 
 use decapod::core::assets;
 use decapod::core::entrypoint_integrity;
@@ -410,21 +411,22 @@ fn test_agent_session_requires_password() {
 
     let (ok_good, out_good) = run_decapod_with_env(
         &temp_path,
-        &["validate"],
+        &["govern", "project-check"],
         &[
             ("DECAPOD_AGENT_ID", "agent-secure"),
             ("DECAPOD_SESSION_PASSWORD", &password),
             ("DECAPOD_VALIDATE_SKIP_GIT_GATES", "1"),
         ],
     );
-    // Correct authentication reaches readiness, but this fixture has no full proof profile.
+    // Correct authentication admits the diagnostic entrypoint check. This
+    // deliberately skipped Git check can never establish publication readiness.
     assert!(
-        !ok_good,
-        "authentication alone must not imply readiness: {out_good}"
+        ok_good,
+        "authenticated prerequisites should pass: {out_good}"
     );
     assert!(
-        out_good.contains("READINESS_PROFILE_REQUIRED"),
-        "correct agent+password must reach the typed readiness refusal: {out_good}"
+        out_good.contains("PR readiness has not been assessed"),
+        "prerequisites must retain their limited assurance scope: {out_good}"
     );
 }
 
@@ -641,7 +643,8 @@ fn test_validate_fails_on_missing_invariant() {
     fs::write(&agents_path, tampered).expect("Failed to write tampered AGENTS.md");
 
     // Run decapod validate (should fail)
-    let (success, output) = run_decapod(&temp_path, &["validate", "--format", "json"]);
+    let (success, output) =
+        run_decapod(&temp_path, &["govern", "project-check", "--format", "json"]);
     assert!(
         !success,
         "decapod validate should fail after tampering. Output:\n{output}"
@@ -671,7 +674,8 @@ fn test_validate_fails_on_bloated_entrypoint() {
     fs::write(&claude_path, bloated).expect("Failed to write bloated CLAUDE.md");
 
     // Run decapod validate (should fail)
-    let (success, output) = run_decapod(&temp_path, &["validate", "--format", "json"]);
+    let (success, output) =
+        run_decapod(&temp_path, &["govern", "project-check", "--format", "json"]);
     assert!(
         !success,
         "decapod validate should fail on bloated entrypoint. Output:\n{output}"
@@ -819,7 +823,8 @@ fn test_validate_reports_payload_modified_entrypoint() {
     content.push_str("\nuser payload tamper\n");
     fs::write(path, content).expect("tamper AGENTS.md");
 
-    let (success, output) = run_decapod(&temp_path, &["validate", "--format", "json"]);
+    let (success, output) =
+        run_decapod(&temp_path, &["govern", "project-check", "--format", "json"]);
     assert!(!success, "tampered entrypoint must fail validation");
     assert!(
         output.contains("Finding: entrypoint_payload_modified"),
@@ -841,7 +846,8 @@ fn test_validate_rejects_changes_to_every_root_markdown_entrypoint() {
         content.push_str("\nroot entrypoint payload tamper\n");
         fs::write(&path, content).expect("tamper entrypoint");
 
-        let (success, output) = run_decapod(&temp_path, &["validate", "--format", "json"]);
+        let (success, output) =
+            run_decapod(&temp_path, &["govern", "project-check", "--format", "json"]);
         assert!(!success, "changed {surface} must fail validation: {output}");
         assert!(
             output.contains("Finding: entrypoint_payload_modified"),
@@ -922,7 +928,8 @@ fn test_validate_rejects_tweaked_entrypoint_fingerprint() {
     );
     fs::write(&path, rewritten).expect("rewrite fingerprint");
 
-    let (success, output) = run_decapod(&temp_path, &["validate", "--format", "json"]);
+    let (success, output) =
+        run_decapod(&temp_path, &["govern", "project-check", "--format", "json"]);
     assert!(
         !success,
         "validate must reject a tweaked fingerprint: {output}"
@@ -947,7 +954,8 @@ fn test_validate_rejects_missing_entrypoint_metadata() {
     let content = fs::read_to_string(&path).expect("read GEMINI.md");
     let payload = content.lines().skip(2).collect::<Vec<_>>().join("\n");
     fs::write(path, payload).expect("remove entrypoint metadata");
-    let (success, output) = run_decapod(&temp_path, &["validate", "--format", "json"]);
+    let (success, output) =
+        run_decapod(&temp_path, &["govern", "project-check", "--format", "json"]);
     assert!(!success, "missing entrypoint metadata must fail validation");
     assert!(
         output.contains("Finding: entrypoint_metadata_missing"),
@@ -973,7 +981,8 @@ fn test_validate_rejects_malformed_entrypoint_metadata() {
         "<!-- decapod-fingerprint: -->",
     );
     fs::write(path, malformed).expect("malform entrypoint metadata");
-    let (success, output) = run_decapod(&temp_path, &["validate", "--format", "json"]);
+    let (success, output) =
+        run_decapod(&temp_path, &["govern", "project-check", "--format", "json"]);
     assert!(
         !success,
         "malformed entrypoint metadata must fail validation"
@@ -1004,7 +1013,8 @@ fn test_validate_does_not_overwrite_payload_tamper() {
     content.push_str("\nmodified\n");
     fs::write(&path, content).expect("tamper CODEX.md");
 
-    let (success, output) = run_decapod(&temp_path, &["validate", "--format", "json"]);
+    let (success, output) =
+        run_decapod(&temp_path, &["govern", "project-check", "--format", "json"]);
     assert!(
         !success,
         "validation must fail without overwriting payload tamper: {output}"
@@ -1015,7 +1025,7 @@ fn test_validate_does_not_overwrite_payload_tamper() {
         "explicit regeneration should restore entrypoint: {output}"
     );
     acquire_session(&temp_path);
-    // Regeneration repairs the entrypoint prerequisite only; the tamper refusal above stays public.
+    // Both tamper detection and explicit regeneration exercise prerequisites only.
     let (success, output) = run_decapod(&temp_path, &["govern", "project-check"]);
     assert!(
         success,
@@ -1037,7 +1047,8 @@ fn test_validate_rejects_entrypoint_symlink() {
     let path = temp_path.join("CODEX.md");
     fs::remove_file(&path).expect("remove CODEX.md");
     symlink(temp_path.join("AGENTS.md"), &path).expect("replace CODEX.md with symlink");
-    let (success, output) = run_decapod(&temp_path, &["validate", "--format", "json"]);
+    let (success, output) =
+        run_decapod(&temp_path, &["govern", "project-check", "--format", "json"]);
     assert!(!success, "entrypoint symlink must fail validation");
     assert!(
         output.contains("Finding: entrypoint_unsupported_file_type"),

@@ -204,6 +204,7 @@ fn legacy_baseline_is_explicit_and_does_not_reanimate_verified_proof() {
             validation_epoch: None,
         }],
         validation_epoch: None,
+        validation_record: None,
         status: WorkUnitStatus::Verified,
     };
     publish_projection(root.path(), &manifest).unwrap();
@@ -300,6 +301,7 @@ fn checkpoint_cannot_rebind_any_unbound_historical_pass_to_current_source() {
                 validation_epoch: None,
             }],
             validation_epoch: None,
+            validation_record: None,
             status,
         };
         fs::write(root.path().join("proof.txt"), "old proof bytes").unwrap();
@@ -566,7 +568,7 @@ fn checkpoint_and_resume_retries_preserve_unknown_valid_projection() {
 }
 
 #[test]
-fn fresh_bound_proof_is_resumable_but_modified_artifacts_cannot_be_reanimated() {
+fn bound_declared_artifacts_are_resumable_without_granting_verified_status() {
     let root = accepted_execution_fixture();
     set_proof_plan(root.path(), "task_test", &["gate-a".into()]).unwrap();
     checkpoint_workunit(root.path(), "task_test", "checkpoint", Some(2)).unwrap();
@@ -582,7 +584,7 @@ fn fresh_bound_proof_is_resumable_but_modified_artifacts_cannot_be_reanimated() 
     .unwrap();
     transition_status(root.path(), "task_test", WorkUnitStatus::Executing).unwrap();
     transition_status(root.path(), "task_test", WorkUnitStatus::Claimed).unwrap();
-    transition_status(root.path(), "task_test", WorkUnitStatus::Verified).unwrap();
+    assert!(transition_status(root.path(), "task_test", WorkUnitStatus::Verified).is_err());
     assert!(
         workunit_journal_status(root.path(), "task_test")
             .unwrap()
@@ -601,7 +603,7 @@ fn fresh_bound_proof_is_resumable_but_modified_artifacts_cannot_be_reanimated() 
     assert!(resumed.resumable);
     assert_eq!(
         load_workunit(root.path(), "task_test").unwrap().status,
-        WorkUnitStatus::Verified
+        WorkUnitStatus::Claimed
     );
     fs::write(root.path().join(artifact), "altered proof").unwrap();
     assert!(
@@ -611,13 +613,18 @@ fn fresh_bound_proof_is_resumable_but_modified_artifacts_cannot_be_reanimated() 
             .contains("WORKUNIT_PROOF_CHANGED")
     );
     fs::remove_file(workunit_path(root.path(), "task_test").unwrap()).unwrap();
+    let recovered = recover_workunit(root.path(), "task_test").unwrap();
+    assert!(!recovered.resumable);
     assert!(
-        recover_workunit(root.path(), "task_test")
-            .unwrap_err()
-            .to_string()
+        recovered
+            .resume_blocker
+            .as_deref()
+            .unwrap()
             .contains("WORKUNIT_PROOF_CHANGED")
     );
-    assert!(!workunit_path(root.path(), "task_test").unwrap().exists());
+    let manifest = load_workunit(root.path(), "task_test").unwrap();
+    assert_eq!(manifest.status, WorkUnitStatus::Claimed);
+    assert!(validate_verified_manifest(root.path(), &manifest).is_err());
 }
 
 #[test]
@@ -670,7 +677,7 @@ fn resume_fences_changed_authoritative_task_lease() {
 }
 
 #[test]
-fn newly_failed_proof_downgrades_verified_state() {
+fn newly_failed_declaration_stays_claimed_without_authoritative_proof() {
     let root = accepted_execution_fixture();
     set_proof_plan(root.path(), "task_test", &["gate-a".into()]).unwrap();
     checkpoint_workunit(root.path(), "task_test", "checkpoint", Some(2)).unwrap();
@@ -686,7 +693,7 @@ fn newly_failed_proof_downgrades_verified_state() {
     .unwrap();
     transition_status(root.path(), "task_test", WorkUnitStatus::Executing).unwrap();
     transition_status(root.path(), "task_test", WorkUnitStatus::Claimed).unwrap();
-    transition_status(root.path(), "task_test", WorkUnitStatus::Verified).unwrap();
+    assert!(transition_status(root.path(), "task_test", WorkUnitStatus::Verified).is_err());
     let failed = record_proof_result(root.path(), "task_test", "gate-a", "fail", None).unwrap();
     assert_eq!(failed.status, WorkUnitStatus::Claimed);
     assert!(transition_status(root.path(), "task_test", WorkUnitStatus::Verified).is_err());
@@ -798,7 +805,7 @@ fn bare_or_partial_runtime_is_rejected_before_creating_workunit_state() {
 }
 
 #[test]
-fn terminal_contract_uses_current_journal_epoch_and_preserves_explicit_proof_obligations() {
+fn terminal_journal_retains_declared_obligations_without_minting_verified_proof() {
     let root = accepted_execution_fixture();
     set_proof_plan(root.path(), "task_test", &["source-check".into()]).unwrap();
     checkpoint_workunit(root.path(), "task_test", "terminal-checkpoint", Some(2)).unwrap();
@@ -814,18 +821,18 @@ fn terminal_contract_uses_current_journal_epoch_and_preserves_explicit_proof_obl
     .unwrap();
     transition_status(root.path(), "task_test", WorkUnitStatus::Executing).unwrap();
     transition_status(root.path(), "task_test", WorkUnitStatus::Claimed).unwrap();
-    transition_status(root.path(), "task_test", WorkUnitStatus::Verified).unwrap();
+    assert!(transition_status(root.path(), "task_test", WorkUnitStatus::Verified).is_err());
     let observed = crate::core::validation_rules::load_terminal_workunit(root.path(), "task_test")
         .unwrap()
         .unwrap();
-    assert_eq!(observed.status, WorkUnitStatus::Verified);
+    assert_eq!(observed.status, WorkUnitStatus::Claimed);
     assert!(
         observed.validation_epoch.is_none(),
-        "supported journal binding owns the current epoch"
+        "an execution checkpoint alone cannot mint a validation epoch"
     );
     assert!(observed.proof_results[0].validation_epoch.is_none());
-    // Current source/epoch/artifact custody was positively rechecked. Mutation
-    // cannot reuse that declaration even though optional legacy fields are absent.
+    // Current execution and file custody can be resumed; the declaration is
+    // still unproven. Changed bytes cannot be resurrected by recovery.
     fs::write(root.path().join(artifact), "changed output").unwrap();
     assert!(
         crate::core::validation_rules::load_terminal_workunit(root.path(), "task_test").is_err()
@@ -892,4 +899,124 @@ fn linked_git_worktree_uses_initialized_main_repo_runtime_and_rejects_uninitiali
         !worktree.join(".decapod/data/decapod.db").exists(),
         "linked worktree must not create an events-only local decapod.db"
     );
+}
+
+#[test]
+#[cfg(any(target_os = "linux", target_os = "macos"))]
+fn verified_append_and_idempotent_replay_fence_changed_task_custody_in_transaction() {
+    let (_temp, root, task) =
+        crate::core::validation_history::workunit_observation_tests::verified_fixture();
+    let before = journal_records(&root, task).unwrap();
+    let previous = before.last().unwrap().clone();
+    let data = root.join(".decapod/data");
+    crate::core::todo::with_task_journal(
+        &crate::core::broker::DbBroker::new(&data),
+        &crate::core::todo::todo_db_path(&data),
+        &crate::current_agent_id(), Some(task), "test.transfer_custody",
+        crate::core::todo::TaskJournalSelection::Ids(vec![task.into()]),
+        |conn| {
+            conn.execute("UPDATE tasks SET lease_generation=lease_generation+1, revision=revision+1 WHERE id=?1", db::params![task])?;
+            Ok(())
+        },
+    ).unwrap();
+    for replay in [false, true] {
+        let error = append_snapshot(
+            &root,
+            &previous.manifest,
+            if replay {
+                &previous.operation_id
+            } else {
+                "after-custody-change"
+            },
+            &previous.kind,
+            if replay {
+                previous.generation - 1
+            } else {
+                previous.generation
+            },
+            previous.binding.clone(),
+            previous.proof_hashes.clone(),
+        )
+        .unwrap_err();
+        assert!(
+            error.to_string().contains("VALIDATION_HISTORY_TASK_STALE"),
+            "{error}"
+        );
+        assert_eq!(journal_records(&root, task).unwrap().len(), before.len());
+    }
+    assert!(validate_verified_manifest(&root, &previous.manifest).is_err());
+}
+
+#[test]
+#[cfg(any(target_os = "linux", target_os = "macos"))]
+fn separately_initialized_workspace_cannot_replay_main_store_verified_authority() {
+    let (temp, root, task) =
+        crate::core::validation_history::workunit_observation_tests::verified_fixture();
+    let previous = journal_records(&root, task).unwrap().pop().unwrap();
+    let workspace = temp.path().join("split-workspace");
+    let output = std::process::Command::new("git")
+        .current_dir(&root)
+        .args(["worktree", "add", "-b", "split-workunit-authority"])
+        .arg(&workspace)
+        .arg("HEAD")
+        .output()
+        .unwrap();
+    assert!(
+        output.status.success(),
+        "{}",
+        String::from_utf8_lossy(&output.stderr)
+    );
+    crate::core::todo::initialize_todo_db(&workspace.join(".decapod/data")).unwrap();
+    // Compatibility import preserves this claimed history; it grants no current
+    // custody or producer authority in the independently initialized runtime.
+    write_workunit(&workspace, &previous.manifest).unwrap();
+    assert!(!workunit_journal_status(&workspace, task).unwrap().resumable);
+    let local = journal_records(&workspace, task).unwrap().pop().unwrap();
+    let error = append_snapshot(
+        &workspace,
+        &previous.manifest,
+        "cross-store-verified",
+        "mutation",
+        local.generation,
+        previous.binding,
+        previous.proof_hashes,
+    )
+    .unwrap_err();
+    assert!(
+        error
+            .to_string()
+            .contains("WORKUNIT_PROOF_ATOMIC_DOMAIN_UNSUPPORTED"),
+        "{error}"
+    );
+    assert_eq!(journal_records(&workspace, task).unwrap().len(), 1);
+    assert!(validate_verified_manifest(&workspace, &previous.manifest).is_err());
+}
+
+#[test]
+#[cfg(any(target_os = "linux", target_os = "macos"))]
+fn prepared_snapshot_cannot_retain_verified_authority_across_a_downgrade() {
+    let (_temp, root, task) =
+        crate::core::validation_history::workunit_observation_tests::verified_fixture();
+    let before = workunit_journal_status(&root, task).unwrap();
+    let original = load_workunit(&root, task).unwrap();
+    assert!(original.validation_record.is_some());
+    let mut prepared = original.clone();
+    prepared.status = WorkUnitStatus::Claimed;
+    let error = write_workunit_checked(
+        &root,
+        &prepared,
+        "retain-proof-across-downgrade",
+        before
+            .generation
+            .expect("verified fixture journal generation"),
+    )
+    .expect_err("a prepared status edit must use the owned downgrade operation");
+    assert!(
+        error
+            .to_string()
+            .contains("WORKUNIT_DOMAIN_TRANSITION_REQUIRED"),
+        "{error}"
+    );
+    assert_eq!(workunit_journal_status(&root, task).unwrap(), before);
+    assert_eq!(load_workunit(&root, task).unwrap(), original);
 }

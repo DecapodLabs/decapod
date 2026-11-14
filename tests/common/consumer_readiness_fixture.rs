@@ -429,7 +429,10 @@ impl Host for LocalHost {
 // Only its existing Host target transport reads a real local bare upstream.
 #[cfg(unix)]
 pub(super) fn governed_command(root: &Path, storage: &Path, args: &[&str]) -> Command {
-    let binary = Path::new(env!("CARGO_BIN_EXE_decapod"))
+    let Some(binary) = option_env!("CARGO_BIN_EXE_decapod") else {
+        panic!("CLI admission requires the actual integration-test binary");
+    };
+    let binary = Path::new(binary)
         .canonicalize()
         .or_else(|_| {
             std::env::var_os("RUNFILES_DIR")
