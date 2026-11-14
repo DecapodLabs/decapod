@@ -743,6 +743,14 @@
       "proof_refs": [
         "docs/agent/payload-examples.md"
       ]
+    },
+    {
+      "id": "convergence-reviewed-8",
+      "summary": "Refine docs/architecture/bounded-reflection.md after review: preserve actual authority, separate inference cues, observe fixtures and document proof limits",
+      "input_digest": "sha256:152f6ae70739055d53388e6fa5c57b52de3d2cdaa7e0db2060934f031b11d4d4",
+      "proof_refs": [
+        "docs/architecture/bounded-reflection.md"
+      ]
     }
   ],
   "intents": {

@@ -21,8 +21,10 @@ irreducible ambiguity, authority and exceptional risk. Declarations do not grade
 themselves: exact source predicates are read and checked, existing policy and
 live approval state are observed through `plugins::policy`, and canonical
 plan/spec human dependencies retain their original authority. A task-title
-keyword is not missing authority in the typed protocol. Legacy reflection keeps
-its existing keyword contract. An unrelated open human question does not admit
+keyword is not missing authority. Orientation retains the stateless response
+shape and routes architecture keywords to agent investigation; this deliberately
+repairs the previous heuristic human gate. Existing explicit human dependencies
+remain binding. An unrelated open human question does not admit
 the proposed routine question; targeted questions must match the governing gate.
 
 An inspection predicate proves only that the cited current file contains the
@@ -50,6 +52,14 @@ An agent asks an admitted question through its normal user conversation. An
 external harness that never invokes this contract cannot be prevented from
 asking questions; generated integration instructions establish required behavior
 for cooperating agents, not OS-level control over arbitrary harnesses.
+
+The existing generated AGENTS/CODEX/CLAUDE/GEMINI entrypoints already mandate
+`docs ingest` and orientation. Their canonical corpus now carries the required
+escalation behavior and is embedded by `assets/build/compress_constitution.rs`.
+The integration test initializes all four through the real generator, checks
+their ingestion contract and reads the embedded escalation guidance. Project
+release projections are regenerated through the installed CLI; they are never
+hand-edited or confused with an unreleased source template.
 
 The adversarial library fixtures and real CLI/RPC deterministic harness cover
 discovery, engineering choices, observed improvement, paraphrase stagnation,
