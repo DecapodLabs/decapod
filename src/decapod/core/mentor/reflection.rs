@@ -17,6 +17,8 @@ const MAX_ADRS: usize = 32;
 const MAX_JOURNAL_BYTES: usize = 64 * 1024;
 const PLAN_REF: &str = ".decapod/governance.json#/sections/plan";
 
+pub mod escalation;
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct Request {
@@ -31,6 +33,8 @@ pub struct Request {
     pub rationale: String,
     #[serde(default)]
     pub evidence: Vec<SourceRef>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub escalation: Option<escalation::Proposal>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
@@ -49,6 +53,16 @@ pub enum Disposition {
     Reflect,
     HumanDecision,
     Blocked,
+}
+
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(rename_all = "snake_case")]
+pub enum Progress {
+    Initial,
+    ReducedObligations,
+    NarrowedScope,
+    Stagnant,
+    Regressed,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
@@ -77,6 +91,10 @@ pub struct Outcome {
     pub next_action: String,
     /// Always false: reflection is neither execution nor validation.
     pub completion_proven: bool,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub escalation: Option<escalation::Assessment>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub progress: Option<Progress>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
@@ -230,7 +248,13 @@ fn context(
     plan: &GovernedPlan,
     evidence: &[SourceRef],
 ) -> Result<String, DecapodError> {
-    context_with_adrs(root, plan, evidence, &adr_candidates(root)?)
+    context_with_adrs(
+        root,
+        plan,
+        evidence,
+        &adr_candidates(root)?,
+        escalation::authority(plan),
+    )
 }
 
 fn context_with_adrs(
@@ -238,6 +262,7 @@ fn context_with_adrs(
     plan: &GovernedPlan,
     evidence: &[SourceRef],
     adrs: &[CandidateSource],
+    authority: Option<&escalation::AuthorityRequest>,
 ) -> Result<String, DecapodError> {
     let mut sources = Vec::new();
     for path in ["AGENTS.md", ".decapod/config.toml", ".decapod/OVERRIDE.md"] {
@@ -268,6 +293,8 @@ fn context_with_adrs(
     sources.dedup();
     let document = governance_document::load(root)?;
     digest(&json!({"plan": plan_contract(plan)?, "sources": sources,
+        "kernel_version":env!("CARGO_PKG_VERSION"),
+        "authority": escalation::authority_snapshot(root, authority)?,
         "baseline": document.as_ref().map(|d| &d.baseline),
         "change": document.as_ref().and_then(|d| d.change.as_ref())}))
 }
@@ -403,6 +430,9 @@ fn custody(root: &Path, task_id: &str) -> Result<String, DecapodError> {
 }
 
 fn validate_request(root: &Path, request: &Request) -> Result<(), DecapodError> {
+    if let Some(proposal) = &request.escalation {
+        escalation::validate(proposal)?;
+    }
     for text in [&request.task_id, &request.submission_id, &request.op] {
         if text.trim().is_empty() || text.len() > 128 {
             return Err(invalid("INVALID_INPUT"));
@@ -425,7 +455,9 @@ fn validate_request(root: &Path, request: &Request) -> Result<(), DecapodError> 
     {
         return Err(invalid("INPUT_LIMIT"));
     }
-    if !matches!(request.op.as_str(), "change" | "modify" | "update") {
+    if !matches!(request.op.as_str(), "change" | "modify" | "update")
+        && !(request.op == "escalate" && request.escalation.is_some())
+    {
         return Err(invalid(
             "INVALID_OPERATION: reflection covers change, modify or update; use ordinary orientation for informational queries",
         ));
@@ -514,7 +546,7 @@ pub fn submit(root: &Path, request: &Request) -> Result<Outcome, DecapodError> {
         } else if request.expected_token.is_some() {
             return Err(invalid("STALE_TOKEN: no reflection exists"));
         }
-        let mut evidence = request.evidence.clone();
+        let mut evidence = escalation::sources(root, request);
         for reference in &mut evidence {
             let expected = if reference.ref_path == PLAN_REF {
                 digest(&plan_contract(&plan)?)?
@@ -529,7 +561,11 @@ pub fn submit(root: &Path, request: &Request) -> Result<Outcome, DecapodError> {
             reference.hash = expected;
         }
         let adrs = adr_candidates(root)?;
-        let context_digest = context_with_adrs(root, &plan, &evidence, &adrs)?;
+        let authority = request
+            .escalation
+            .as_ref()
+            .and_then(|p| p.authority.as_ref());
+        let context_digest = context_with_adrs(root, &plan, &evidence, &adrs, authority)?;
         let mut pending = challenges(root, &plan, request, &adrs)?;
         let database = todo::todo_db_path(&find_governance_root(root).join(".decapod/data"));
         let conn = crate::core::db::db_connect_for_validate(
@@ -541,11 +577,17 @@ pub fn submit(root: &Path, request: &Request) -> Result<Outcome, DecapodError> {
             |row| row.get(0),
         )?;
         drop(conn);
-        if crate::core::rpc::architectural_alignment_required(&title) {
+        // A keyword is an inference cue, not observed missing authority. The
+        // typed protocol binds canonical intent and preserves real plan/policy
+        // human gates above; legacy reflection keeps its established shape.
+        if request.escalation.is_none()
+            && crate::core::rpc::architectural_alignment_required(&title)
+        {
             pending.insert(0, challenge("human_orientation_alignment",
                 "Which architectural direction has the human accepted for this task? Preserve the existing orientation decision gate.".into(),
                 SourceRef { ref_path: PLAN_REF.into(), hash: digest(&plan_contract(&plan)?)? }, true)?);
         }
+        let escalation = escalation::assess(root, &plan, request, &evidence, &mut pending)?;
         let pending_ids: Vec<String> = pending.iter().map(|c| c.id.clone()).collect();
         if pending_ids.len() > 64 {
             return Err(invalid("STATE_LIMIT: too many applicable gaps"));
@@ -575,8 +617,7 @@ pub fn submit(root: &Path, request: &Request) -> Result<Outcome, DecapodError> {
         let addressed_source = last
             .and_then(|r| r.outcome.challenge.as_ref())
             .is_none_or(|c| {
-                request
-                    .evidence
+                evidence
                     .iter()
                     .any(|e| c.sources.iter().any(|s| s.ref_path == e.ref_path))
             });
@@ -587,6 +628,10 @@ pub fn submit(root: &Path, request: &Request) -> Result<Outcome, DecapodError> {
         let stagnant = last.is_some_and(|last| {
             !last.pending_ids.is_empty() && resolved_ids.is_empty() && !narrowed
         });
+        let regressed = last.is_some_and(|last| {
+            !last.pending_ids.is_empty()
+                && pending_ids.iter().any(|id| !last.pending_ids.contains(id))
+        });
         let (disposition, reason, terminal) = if round > ROUND_LIMIT {
             (Disposition::Blocked, "budget_exhausted", true)
         } else if human {
@@ -595,6 +640,8 @@ pub fn submit(root: &Path, request: &Request) -> Result<Outcome, DecapodError> {
                 "existing_human_gate",
                 round == ROUND_LIMIT,
             )
+        } else if regressed {
+            (Disposition::Blocked, "obligations_regressed", true)
         } else if stagnant {
             (Disposition::Blocked, "no_observable_progress", true)
         } else if last.is_some_and(|r| !r.pending_ids.is_empty()) && !addressed_source {
@@ -612,16 +659,22 @@ pub fn submit(root: &Path, request: &Request) -> Result<Outcome, DecapodError> {
         let token = digest(&json!({"task":request.task_id, "custody":custody_digest,
             "input":input_digest, "context":context_digest, "round":round}))?;
         let outcome = Outcome {
-            schema_version: "decapod.reflection.v1".into(), disposition, reason: reason.into(),
+            schema_version: if escalation.is_some() { "decapod.reflection.v2" } else { "decapod.reflection.v1" }.into(), disposition, reason: reason.into(),
             challenge: focus, token, round: round.min(ROUND_LIMIT),
             remaining_rounds: ROUND_LIMIT.saturating_sub(round), terminal, execution_blocked,
             context_digest, next_action: match disposition {
                 Disposition::Proceed => "Reflection has no current gap. Check existing plan approval, custody, scope and execution gates; implement and independently validate before claiming completion.",
                 Disposition::Reflect => "Investigate the single challenge. Submit a current source reference and an observably revised action using expected_token; changing wording cannot establish progress.",
-                Disposition::HumanDecision => "Obtain the human decision through the existing authority surface. Reflection cannot supply or invent approval.",
+                Disposition::HumanDecision if escalation.as_ref().is_some_and(|e| !e.human_escalation_permitted) => "The submitted human question does not match the existing governing dependency. Use the cited gate's targeted question in the next proposal; do not delegate the submitted routine question to the human.",
+                Disposition::HumanDecision => "The agent must obtain the targeted human decision through the existing authority surface. Decapod never interrogates the human, and this response supplies no approval.",
                 Disposition::Blocked => "Stop this reflection. Preserve its blocker and receipts; do not reset its budget, assert success or execute a blocked action.",
             }.into(),
             completion_proven: false,
+            escalation,
+            progress: Some(if last.is_none() { Progress::Initial }
+                else if regressed { Progress::Regressed }
+                else if !resolved_ids.is_empty() { Progress::ReducedObligations }
+                else if narrowed { Progress::NarrowedScope } else { Progress::Stagnant }),
         };
         let receipt = Receipt {
             submission_id: request.submission_id.clone(),
