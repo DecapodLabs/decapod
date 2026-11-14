@@ -1133,6 +1133,14 @@
       "proof_refs": [
         "https://github.com/DecapodLabs/decapod/issues/1660"
       ]
+    },
+    {
+      "id": "issue-1660-file-75",
+      "summary": "docs(validation): delimit steady-state runtime measurement; file-by-file checkpoint, verification pending.",
+      "input_digest": "sha256:29f1fb4f7bc9a386d56f261c70390abaa470b5ddeed7f3fe0caa89e52dab9d09",
+      "proof_refs": [
+        "https://github.com/DecapodLabs/decapod/issues/1660"
+      ]
     }
   ],
   "intents": {
@@ -1173,22 +1181,22 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "GitHub clippy132318080840 and library132318080766 report E0308 because journal status exposes Option<u64>. Assert the genuine verified fixture has a generation before calling the checked writer. Preserve production proof rules and negative denial assertions; no local tests.",
-          "reviewed_code_fingerprint": "9caa609b3bff85ee4f6999020af5cae8c6b90c2b45e22e9f7a15be94166a2454",
+          "reason": "Hosted GitHub Actions core jobs132330806628 (23.903s) and132301086296 exceeded the unchanged20s repeated-validation aggregate bound because the shared fixture re-enrolled an unknown identity for every iteration. Acquire named custody once before timing, assert session reuse, preserve all real checks and original10s/20s limits. No local tests.",
+          "reviewed_code_fingerprint": "668cf1f93ae9eb8b0d9e558b3a7ba87620de3cd53f7af978bf665db057b92a25",
           "spec_material_hash": "e799665f0f6c5025ac094765c6f38097a6894c63fd4f08593900c2567475d6e9"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "GitHub clippy132318080840 and library132318080766 report E0308 because journal status exposes Option<u64>. Assert the genuine verified fixture has a generation before calling the checked writer. Preserve production proof rules and negative denial assertions; no local tests.",
-          "reviewed_code_fingerprint": "9caa609b3bff85ee4f6999020af5cae8c6b90c2b45e22e9f7a15be94166a2454",
+          "reason": "Hosted GitHub Actions core jobs132330806628 (23.903s) and132301086296 exceeded the unchanged20s repeated-validation aggregate bound because the shared fixture re-enrolled an unknown identity for every iteration. Acquire named custody once before timing, assert session reuse, preserve all real checks and original10s/20s limits. No local tests.",
+          "reviewed_code_fingerprint": "668cf1f93ae9eb8b0d9e558b3a7ba87620de3cd53f7af978bf665db057b92a25",
           "spec_material_hash": "10df59dc9f256a32e3851047d6d684158b0453828124370c3bb74edc6e74af49"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "GitHub clippy132318080840 and library132318080766 report E0308 because journal status exposes Option<u64>. Assert the genuine verified fixture has a generation before calling the checked writer. Preserve production proof rules and negative denial assertions; no local tests.",
-          "reviewed_code_fingerprint": "9caa609b3bff85ee4f6999020af5cae8c6b90c2b45e22e9f7a15be94166a2454",
+          "reason": "Hosted GitHub Actions core jobs132330806628 (23.903s) and132301086296 exceeded the unchanged20s repeated-validation aggregate bound because the shared fixture re-enrolled an unknown identity for every iteration. Acquire named custody once before timing, assert session reuse, preserve all real checks and original10s/20s limits. No local tests.",
+          "reviewed_code_fingerprint": "668cf1f93ae9eb8b0d9e558b3a7ba87620de3cd53f7af978bf665db057b92a25",
           "spec_material_hash": "366e74fb3bc9491cc900dbede2cffce06e3d8f7667d3d9b64641eb9bd9d7a695"
         }
       ],
@@ -1200,13 +1208,13 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1794630041Z"
+      "updated_at": "1794633383Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:7f51c1c0974a2bbf25fc9d93c18229595a077d609b695b120b418f780bf0b60c",
+      "artifact_hash": "sha256:b7abed846350dabc2a39e45a14209e4fe1783bd76dfeeb7f4747d724ad78c60b",
       "checks": [],
       "current_phase": "implementation",
       "custody": {
@@ -1740,10 +1748,17 @@
             "intent_id": "intent:change_01M7BCFASGT4DQG4ZADT2BP5G0",
             "kind": "trajectory_step_recorded",
             "sequence": 77
+          },
+          {
+            "detail": "trajectory:branch_01M7BCFAWAYM3TXSVTHC1N7YZE",
+            "event_id": "event:78",
+            "intent_id": "intent:change_01M7BCFASGT4DQG4ZADT2BP5G0",
+            "kind": "trajectory_step_recorded",
+            "sequence": 78
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 77,
+        "next_sequence": 78,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M7BCFAWAYM3TXSVTHC1N7YZE": {
@@ -2928,6 +2943,22 @@
                   "issue-1660"
                 ],
                 "sequence": 77,
+                "validation_findings": [
+                  "Hosted verification and exact-candidate publication readiness remain pending; no local tests run."
+                ]
+              },
+              {
+                "action": "implementation",
+                "custody_event_id": "event:78",
+                "observations": [
+                  ".decapod/managed/specs/VALIDATION.md",
+                  "https://github.com/DecapodLabs/decapod/issues/1660"
+                ],
+                "proof_refs": [],
+                "scope": [
+                  "issue-1660"
+                ],
+                "sequence": 78,
                 "validation_findings": [
                   "Hosted verification and exact-candidate publication readiness remain pending; no local tests run."
                 ]
