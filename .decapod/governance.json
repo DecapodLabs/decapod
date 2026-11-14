@@ -1279,6 +1279,14 @@
       "proof_refs": [
         ".decapod/managed/specs/README.md"
       ]
+    },
+    {
+      "id": "recovery1696-projection-securitymd",
+      "summary": "Bind current source projection to the shared recovery fixture repair",
+      "input_digest": "sha256:fe42c3284e9b45a650fc2f2c9e797e8eb0d0d0d534d157de6ab4860496df4475",
+      "proof_refs": [
+        ".decapod/managed/specs/SECURITY.md"
+      ]
     }
   ],
   "intents": {
