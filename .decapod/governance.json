@@ -604,6 +604,14 @@
       "proof_refs": [
         "tests/infer_precision.rs"
       ]
+    },
+    {
+      "id": "convergence-contract-2",
+      "summary": "Integrate issue1691 escalation contract in docs/agent/api-index.md; distinguish agent investigation from human authority; validation pending",
+      "input_digest": "sha256:e4d54ceda02637d4b69174caceed44451901356650f5da4003c81ab54802f943",
+      "proof_refs": [
+        "docs/agent/api-index.md"
+      ]
     }
   ],
   "intents": {

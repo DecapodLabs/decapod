@@ -55,6 +55,52 @@ unsatisfied execution or publication gates still require resolution.
 
 ### Challenge a Proposed Action
 
+**Do What Must Be Done:** exhaust reasonable investigation, inference and
+verification before requesting additional human intelligence. The human supplies
+intent and authority; the agent reasons, decides, executes and verifies; Decapod
+evaluates admissibility. Decapod returns challenges to the agent and never
+interrogates the human.
+
+Before asking a human an unresolved question, submit an escalation proposal in
+the existing `reflection.escalation` input to `infer orientation --task-id <id>`
+or `mentor.obligations`. Identify the canonical plan intent, proposed question,
+specific missing information or authority, source references, concise prior
+investigation, best supported resolution, risks and constraints. These are
+decision justifications and observable facts, never private reasoning transcripts.
+See [the escalation exchange](payload-examples.md#escalation-admissibility).
+
+Follow the typed disposition and `escalation.human_escalation_permitted` together.
+`reflect` requires the cited investigation; `blocked` is a truthful terminal stop,
+not permission to ask the submitted question or execute past a binding gate.
+Rephrasing a question or declaring investigation complete cannot reduce an
+obligation. Source predicates establish only inspected bytes; a quoted test pass
+does not establish test execution. Verification and publication retain their
+native proof owners.
+
+Discoverable information requires inspection; inferable choices require a
+defensible decision; verifiable uncertainty requires inspection, experiments or
+the existing proof hooks. An alleged irreducible requirement must correspond to
+an explicit canonical plan/spec human dependency. A proposed question must match
+that dependency; an unrelated human gate cannot justify a routine question.
+For missing authority or exceptional risk, name the exact operation and target in
+`authority`. Existing policy and live approval state are observed immediately.
+Do not spend reasoning rounds trying to infer approval. Preserve explicit grants
+already present in the user's request through the existing authority surface;
+do not ask for them again merely because a machine receipt is missing.
+
+Legacy architecture keywords and `escalation_required` identify inference
+pressure, not automatic operator intervention. Inference capability gaps now
+identify `escalation_target: agent`. Typed escalation binds canonical intent and
+preserves actual plan/spec and policy human gates; it does not infer human need
+from a task-title keyword.
+
+The three-round lifetime budget, continuation token, source freshness, custody
+and compact journal are shared with ordinary reflection. Follow the challenge
+with material evidence or a narrower admissible action; preserve terminal
+blockers. No new slash command, conversation UI, scheduler or model is involved.
+The contract governs invoked and reported decisions. An arbitrary external
+harness can still ask a question if it never invokes the protocol.
+
 At a consequential decision boundary, optionally pass `--reflection '<request-json>'`
 to `infer orientation --task-id <id>`, or the same request as `reflection` in
 `mentor.obligations`. This composes existing mentor potential conflicts, governed
