@@ -29,6 +29,13 @@ fn prepared() -> (consumer::Fixture, Store) {
     )
     .unwrap();
     fixture.options.git = crate::readiness_installed_tool(root, "git").unwrap();
+    // Declare the narrow kernel-generated output before source capture. The
+    // production verifier must still reject undeclared untracked inputs.
+    let ignore = root.join(".gitignore");
+    let mut ignored = fs::read_to_string(&ignore).unwrap();
+    ignored.push_str(".decapod/managed/artifacts/provenance/completion_evidence/\n");
+    fs::write(ignore, ignored).unwrap();
+
     // Preserve real local target transport while giving the repository resolver
     // its canonical forge identity. No network or external proof is simulated.
     consumer::git(
@@ -193,9 +200,9 @@ fn actual_local_execution_establishes_current_workunit_proof_and_recovers() {
     workunit::resume_workunit(root, TASK, "after-interruption", recovered.generation).unwrap();
     workunit::validate_verified_manifest(root, &workunit::load_workunit(root, TASK).unwrap())
         .unwrap();
-    eprintln!(
-        "observed-workunit: record_bytes={record_bytes}, witness_growth_bytes={witness_growth}, execution={execution_elapsed:?}, reconstruction={reconstruction_elapsed:?}"
-    );
+    // Bypass successful libtest capture so hosted logs retain actual costs.
+    use std::io::Write;
+    let _ = std::io::stderr().write_all(format!("observed-workunit: record_bytes={record_bytes}, witness_growth_bytes={witness_growth}, execution={execution_elapsed:?}, reconstruction={reconstruction_elapsed:?}\n").as_bytes());
 }
 
 #[test]
@@ -376,7 +383,14 @@ fn weaker_workunit_cannot_discharge_additional_canonical_task_obligations() {
         host.execution_attempts, 1,
         "real source checks must have executed"
     );
-    assert!(!report.ready && !report.proof_ready, "{report:?}");
+    assert!(
+        !report.ready,
+        "extra task obligations must block readiness: {report:?}"
+    );
+    assert!(
+        report.proof_ready,
+        "the executed source suite independently passed: {report:?}"
+    );
     assert!(
         report
             .blockers
