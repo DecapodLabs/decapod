@@ -1287,3 +1287,18 @@ classification is captured once for source import/cleanup. Every uncertain TODO
 artifact beside canonical task history remains guarded. General nonempty
 versioned reconciliation is still unresolved; no second journal authority or
 implicit projection rebuild is introduced.
+
+## Nix release eligibility (#1626)
+
+The existing `.github/workflows/nix-flake.yml` owner and packaging gates inspect
+immutable Git parents and subjects. A one-parent squash/linear release uses its
+own subject; a two-parent release merge uses parent two's subject. Both retain
+the existing release prefix and reject root/octopus or non-release histories.
+This is packaging eligibility under the accepted workflow, not a replacement for
+kernel validation or an independently authenticated completion judgment.
+
+The credential-free publication owner still requires a native GitHub-hosted
+protected-master push. Nix checks the locked toolchain, builds and smoke-checks
+both supported native systems, with an additional Linux reproducibility check.
+Only the separate authenticated publisher can write Cachix after those jobs
+succeed. No new runtime, service, policy interpreter or release authority exists.
