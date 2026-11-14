@@ -999,6 +999,14 @@
       "proof_refs": [
         "tests/unit/core/reflection_tests.rs"
       ]
+    },
+    {
+      "id": "convergence-complete-policy-config",
+      "summary": "Repair observed fixture failure by serializing the complete supported project configuration",
+      "input_digest": "sha256:b7a9de5182ac827c8dc3ae2448b0500f617c4f90fc7fa9ecd9db12010af332e2",
+      "proof_refs": [
+        "tests/unit/core/reflection_tests.rs"
+      ]
     }
   ],
   "intents": {
