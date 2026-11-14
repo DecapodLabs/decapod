@@ -620,6 +620,14 @@
       "proof_refs": [
         "docs/agent/payload-examples.md"
       ]
+    },
+    {
+      "id": "convergence-contract-4",
+      "summary": "Integrate issue1691 escalation contract in docs/agent/state-model.md; distinguish agent investigation from human authority; validation pending",
+      "input_digest": "sha256:78eb721dc355a46dc12cd3cf72a3eaa7ceb536243a7818a7012cc0617bf269d8",
+      "proof_refs": [
+        "docs/agent/state-model.md"
+      ]
     }
   ],
   "intents": {
