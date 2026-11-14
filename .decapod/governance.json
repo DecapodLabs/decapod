@@ -1351,6 +1351,14 @@
       "proof_refs": [
         "docs/agent/state-model.md"
       ]
+    },
+    {
+      "id": "convergence-refined-authority-payload",
+      "summary": "Explain how to answer the actual missing-operation challenge without resetting or changing established authority",
+      "input_digest": "sha256:1cef370aa8a2fb2e7b1cde75240104e8274199e4c504b6552c97f2b61b11e6e0",
+      "proof_refs": [
+        "docs/agent/payload-examples.md"
+      ]
     }
   ],
   "intents": {

@@ -71,6 +71,13 @@ The response never issues approval. For a business dependency, the proposed
 question must match the current canonical plan/spec challenge. Plain assertions
 of ambiguity or exhaustion do not establish that dependency.
 
+If the first proposal omitted `authority`, the agent may add the investigated
+operation on a continuation. An omitted target may then be narrowed. Established
+commands and concrete targets cannot be switched or dropped. Each refinement
+uses the same token chain and remaining rounds. A newly admitted targeted human
+dependency reports `progress: "human_dependency"`; repeated questions do not
+establish further progress.
+
 Identical retries replay without writes; changed reuse and stale tokens fail.
 Omitting escalation on a continuation or renaming its missing subject cannot
 erase it or restart its budget. Continue within the same three-round journal.
