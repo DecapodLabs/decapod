@@ -1831,6 +1831,14 @@
       "proof_refs": [
         ".decapod/managed/specs/OPERATIONS.md"
       ]
+    },
+    {
+      "id": "convergence-classification-binding-readmemd",
+      "summary": "Refresh source identity for evidence-supported classification correction with immutable governing obligations",
+      "input_digest": "sha256:f8d29b751b1f5d86f20e7e26627e5e5c3f7ec0ef16ddaf46c47104baf5a28aaf",
+      "proof_refs": [
+        ".decapod/managed/specs/README.md"
+      ]
     }
   ],
   "intents": {
