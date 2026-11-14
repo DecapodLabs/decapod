@@ -351,6 +351,12 @@ fn new_declaration_downgrades_actual_verified_proof_and_preserves_history() {
         assert!(claimed.validation_record.is_none());
         assert!(claimed.validation_epoch.is_none());
         assert!(workunit::validate_verified_manifest(&root, &claimed).is_err());
+        let error = workunit::transition_status(&root, task, workunit::WorkUnitStatus::Verified)
+            .expect_err("a later declaration requires a new observed subject");
+        assert!(
+            error.to_string().contains("WORKUNIT_PROOF_STALE"),
+            "{error}"
+        );
     }
     assert_eq!(
         lookup_record(
@@ -403,5 +409,44 @@ fn weaker_workunit_cannot_discharge_additional_canonical_task_obligations() {
     assert_eq!(
         workunit::load_workunit(root, TASK).unwrap().status,
         workunit::WorkUnitStatus::Claimed
+    );
+}
+
+#[test]
+fn identical_claim_after_downgrade_requires_fresh_observation_of_its_generation() {
+    let (fixture, store) = prepared();
+    let root = &fixture.options.root;
+    let original = workunit::load_workunit(root, TASK).unwrap();
+    let first = observe(&fixture, &store);
+    workunit::transition_status(root, TASK, workunit::WorkUnitStatus::Verified).unwrap();
+    let downgraded =
+        workunit::transition_status(root, TASK, workunit::WorkUnitStatus::Claimed).unwrap();
+    assert_eq!(
+        downgraded.canonical_hash_hex().unwrap(),
+        original.canonical_hash_hex().unwrap(),
+        "the generation fence must work even when manifest bytes are identical"
+    );
+    workunit::checkpoint_workunit(root, TASK, "after-explicit-downgrade", None).unwrap();
+    let error = workunit::transition_status(root, TASK, workunit::WorkUnitStatus::Verified)
+        .expect_err("old observed generation cannot authorize this new claim");
+    assert!(
+        error.to_string().contains("WORKUNIT_PROOF_STALE"),
+        "{error}"
+    );
+    assert_eq!(
+        lookup_record(root, &store, first.candidate_sha(), first.record_id())
+            .unwrap()
+            .record_digest(),
+        first.record_digest(),
+        "refusal must preserve the original successful observation"
+    );
+    // Genuine checks execute again through the same sealed native runtime.
+    let fresh = observe(&fixture, &store);
+    assert_ne!(fresh.record_id(), first.record_id());
+    let verified =
+        workunit::transition_status(root, TASK, workunit::WorkUnitStatus::Verified).unwrap();
+    assert_eq!(
+        verified.validation_record.unwrap().record_id,
+        fresh.record_id()
     );
 }
