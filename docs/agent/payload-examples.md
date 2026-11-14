@@ -36,8 +36,8 @@ outer `--task-id`. The response uses `decapod.reflection.v2` and an
 returns `reflect`, a source-bound challenge, `human_escalation_permitted: false`,
 a token and the remaining two rounds. Ordinary reflection retains v1.
 
-The agent inspects the cited source, preserves the task, intent, missing subject
-and classification, uses a new submission ID and the returned `expected_token`,
+The agent inspects the cited source, preserves the task, intent and missing
+subject, uses a new submission ID and the returned `expected_token`,
 and adds a supported resolution:
 
 ```json
@@ -65,6 +65,8 @@ cannot clear the parent reflection gate.
 The uncertainty values are `discoverable_information`, `inferable_decision`,
 `verifiable_uncertainty`, `irreducible_ambiguity`, `missing_authority`, and
 `exceptional_risk`. They are declarations; observed policy/gates take precedence.
+Investigation may correct a classification within the same continuation.
+Relabeling alone is not progress and cannot waive observed authority.
 For a proposed governed operation include, for example:
 
 ```json

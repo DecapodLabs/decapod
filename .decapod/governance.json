@@ -1783,6 +1783,14 @@
       "proof_refs": [
         "tests/unit/core/reflection_tests.rs"
       ]
+    },
+    {
+      "id": "convergence-classification-contract",
+      "summary": "Document evidence-supported correction of declarations without changing intent or resetting the budget",
+      "input_digest": "sha256:ea2b736fa7b58344ccf0ae9f400fb697f394c81d508e36dfc77b168169468127",
+      "proof_refs": [
+        "docs/agent/payload-examples.md"
+      ]
     }
   ],
   "intents": {
