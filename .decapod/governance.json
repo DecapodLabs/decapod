@@ -795,6 +795,14 @@
       "proof_refs": [
         "https://github.com/DecapodLabs/decapod/commit/7606c63838099378a2101ffd13a4e9dec680a25e"
       ]
+    },
+    {
+      "id": "issue1657-integrate-1456-8e435969",
+      "summary": "Integrate exact accepted release8e435969 using official0.145.6 projections; preserve required policy and authored source; new target-bound hosted proof pending.",
+      "input_digest": "sha256:07e9147ec17831a47e993bcfb7c1d3cf11ce7349fd53c10e3d729298931f6964",
+      "proof_refs": [
+        "https://github.com/DecapodLabs/decapod/commit/8e435969a8c21269aa277301b3e6492d780a9bdb"
+      ]
     }
   ],
   "intents": {
@@ -835,22 +843,22 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Integrated accepted master7606c638 after human merge of PR1698. Preserved both authored contracts, current finite Nix pin, canonical required policy and this task journal; regenerated owned projections. Earlier f5da0e61-bound proof is historical; new exact-candidate GitHub verification pending.",
-          "reviewed_code_fingerprint": "8ca86ce519b149d555cb62934adafc43a5038dd11af0cf3073de599995842f04",
+          "reason": "Integrated accepted release master8e435969 with official installed0.145.6. Canonical policy and both task/Nix authored contracts preserved. Prior proof targets older accepted state; exact new GitHub execution pending. No full native publication or automatic merge claim.",
+          "reviewed_code_fingerprint": "0f7e971dba08af78fba6a909ca3a7d91461d8b85efc3431604ab9295f52a5ff7",
           "spec_material_hash": "6ed06b8c65851d9478126f7072286554142ea6ac1d76ba83afcc0d7cceac7976"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Integrated accepted master7606c638 after human merge of PR1698. Preserved both authored contracts, current finite Nix pin, canonical required policy and this task journal; regenerated owned projections. Earlier f5da0e61-bound proof is historical; new exact-candidate GitHub verification pending.",
-          "reviewed_code_fingerprint": "8ca86ce519b149d555cb62934adafc43a5038dd11af0cf3073de599995842f04",
+          "reason": "Integrated accepted release master8e435969 with official installed0.145.6. Canonical policy and both task/Nix authored contracts preserved. Prior proof targets older accepted state; exact new GitHub execution pending. No full native publication or automatic merge claim.",
+          "reviewed_code_fingerprint": "0f7e971dba08af78fba6a909ca3a7d91461d8b85efc3431604ab9295f52a5ff7",
           "spec_material_hash": "b4ca0a66f6e686023e909ea0b1e130aa371e035c59d0caead12540176be1ed98"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Integrated accepted master7606c638 after human merge of PR1698. Preserved both authored contracts, current finite Nix pin, canonical required policy and this task journal; regenerated owned projections. Earlier f5da0e61-bound proof is historical; new exact-candidate GitHub verification pending.",
-          "reviewed_code_fingerprint": "8ca86ce519b149d555cb62934adafc43a5038dd11af0cf3073de599995842f04",
+          "reason": "Integrated accepted release master8e435969 with official installed0.145.6. Canonical policy and both task/Nix authored contracts preserved. Prior proof targets older accepted state; exact new GitHub execution pending. No full native publication or automatic merge claim.",
+          "reviewed_code_fingerprint": "0f7e971dba08af78fba6a909ca3a7d91461d8b85efc3431604ab9295f52a5ff7",
           "spec_material_hash": "839e6469c48d263e7582b8381d4e139615e8978d3d354e0a8d0c2f67648d7fd9"
         }
       ],
@@ -862,14 +870,18 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1794701377Z"
+      "updated_at": "1794702313Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:8624c04896877e10ea8eca76fd1a2a42e73a548c7405499b4680f2d1c2be2d06",
+      "artifact_hash": "sha256:411dd9b60ceaa2b68a1663aaec124945ad79796801bc515620cc47ba671f5a23",
       "checks": [
+        {
+          "name": "accepted-release-integration",
+          "status": "partial"
+        },
         {
           "name": "accepted-target-integration",
           "status": "partial"
@@ -1110,10 +1122,17 @@
             "intent_id": "intent:change_01M7DXW29MW090TM7TAHZF5JJK",
             "kind": "trajectory_step_recorded",
             "sequence": 34
+          },
+          {
+            "detail": "trajectory:branch_01M7DXW2DCAD18R4V58TWM41F2",
+            "event_id": "event:35",
+            "intent_id": "intent:change_01M7DXW29MW090TM7TAHZF5JJK",
+            "kind": "trajectory_step_recorded",
+            "sequence": 35
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 34,
+        "next_sequence": 35,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M7DXW2DCAD18R4V58TWM41F2": {
@@ -1620,6 +1639,23 @@
                 "validation_findings": [
                   "Prior source proof targets f5da0e61 and cannot authorize the new integration. No local tests or Buildkite collection. Fresh GitHub checks required; full native publication remains unproven."
                 ]
+              },
+              {
+                "action": "implementation",
+                "custody_event_id": "event:35",
+                "observations": [
+                  "https://github.com/DecapodLabs/decapod/commit/8e435969a8c21269aa277301b3e6492d780a9bdb"
+                ],
+                "proof_refs": [
+                  "accepted-release-integration"
+                ],
+                "scope": [
+                  "issue-1657"
+                ],
+                "sequence": 35,
+                "validation_findings": [
+                  "Prior CI rejected stale ordered base/head after master advanced during scheduling. Preserve that fail-closed boundary. Fresh source/tree/target checks pending; no local tests or Buildkite evidence collection."
+                ]
               }
             ]
           }
@@ -1630,6 +1666,7 @@
       "evidence": [
         "https://github.com/DecapodLabs/decapod/actions/runs/43647667684",
         "https://github.com/DecapodLabs/decapod/commit/7606c63838099378a2101ffd13a4e9dec680a25e",
+        "https://github.com/DecapodLabs/decapod/commit/8e435969a8c21269aa277301b3e6492d780a9bdb",
         "https://github.com/DecapodLabs/decapod/issues/1657"
       ],
       "inspected_files": [],
@@ -1668,6 +1705,7 @@
       "tool_calls": [],
       "unresolved_assumptions": [
         "Implementation in progress; exact-candidate hosted checks pending; no local tests or Buildkite execution.",
+        "Prior CI rejected stale ordered base/head after master advanced during scheduling. Preserve that fail-closed boundary. Fresh source/tree/target checks pending; no local tests or Buildkite evidence collection.",
         "Prior hosted compilation rejected private test API references; repaired in source. Fresh exact-candidate GitHub proof pending. No local tests or Buildkite execution; full native publication remains unproven.",
         "Prior source proof targets f5da0e61 and cannot authorize the new integration. No local tests or Buildkite collection. Fresh GitHub checks required; full native publication remains unproven."
       ]
