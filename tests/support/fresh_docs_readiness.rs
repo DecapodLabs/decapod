@@ -566,6 +566,23 @@ fn prove_canonical_local_cli(
     }
     assert_eq!(git(workspace, &["rev-parse", "HEAD"]), head);
     assert!(git(workspace, &["status", "--porcelain"]).is_empty());
+    governed_ok(workspace, storage, &["qa", "verify", "commit", head]);
+    let bytes = retained_bytes(&evidence);
+    let repeat = std::time::Instant::now();
+    let again = governed_command(workspace, storage, &["validate", "--format", "json"])
+        .bounded_output(Duration::from_secs(300))
+        .unwrap();
+    let again_json: serde_json::Value = serde_json::from_slice(&again.stdout).unwrap();
+    assert!(
+        again.status.success(),
+        "unchanged validation: {again_json} {}",
+        String::from_utf8_lossy(&again.stderr)
+    );
+    assert_eq!(again_json["readiness"]["ready"], true);
+    let _ = io::Write::write_all(&mut io::stderr(), format!(
+        "canonical-local metrics: first_and_inspection_ms={} unchanged_validation_ms={} retained_evidence_bytes={}\n",
+        start.elapsed().as_millis(), repeat.elapsed().as_millis(), bytes,
+    ).as_bytes());
     // Material mutation cannot reuse the original successful observation.
     fs::write(workspace.join("payload.txt"), "changed after validation\n").unwrap();
     rejected_local_claim(
@@ -586,7 +603,9 @@ fn prove_canonical_local_cli(
     // Local proof cannot be spent at the supported forge publication boundary,
     // even if an unrestricted shell could independently configure/push a remote.
     rejected_local_claim(workspace, storage, &["workspace", "publish"]);
-    // A manual success artifact is not a kernel-issued canonical completion.
+    // A manually edited success artifact cannot establish proof for altered
+    // source. Authentic canonical history remains a historical observation.
+    fs::write(workspace.join("payload.txt"), "forged candidate input\n").unwrap();
     let observations_path = evidence.join("observations.json");
     fs::write(&observations_path, br#"{"passed":true,"ready":true}"#).unwrap();
     rejected_local_claim(
@@ -602,6 +621,7 @@ fn prove_canonical_local_cli(
             head,
         ],
     );
+    fs::write(workspace.join("payload.txt"), "ready\n").unwrap();
     // The accepted branch advances independently while the worker retains its
     // old origin/main. Current validation must observe the canonical branch.
     fs::write(root.join("second.txt"), "accepted target moved\n").unwrap();
@@ -644,4 +664,22 @@ fn rejected_local_claim(workspace: &Path, storage: &Path, args: &[&str]) {
     );
     assert_ne!(response["publication_ready"], true);
     assert_ne!(response["readiness"]["ready"], true);
+}
+
+#[cfg(unix)]
+fn retained_bytes(path: &Path) -> u64 {
+    fs::read_dir(path)
+        .unwrap()
+        .map(|entry| {
+            let entry = entry.unwrap();
+            let metadata = fs::symlink_metadata(entry.path()).unwrap();
+            if metadata.is_file() {
+                metadata.len()
+            } else if metadata.is_dir() {
+                retained_bytes(&entry.path())
+            } else {
+                0
+            }
+        })
+        .sum()
 }
