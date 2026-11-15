@@ -20,6 +20,11 @@
   <a href="https://decapodlabs.github.io/accountable-agentic-execution/"><img alt="Research" src="https://img.shields.io/badge/Research-Accountable%20Agentic%20Execution-blueviolet"></a>
 </p>
 
+<p align="center">
+  <a href="assets/showcase/generated/decapod-showcase.mp4"><img src="assets/showcase/generated/decapod-showcase.gif" alt="Decapod: claim, isolate, govern, reflect, verify, recover — 6.58-second animated feature reel" width="760"></a><br>
+  <sub><a href="assets/showcase/README.md">6.58-second showcase · source and reproducible renderer</a></sub>
+</p>
+
 Decapod gives coding agents a persistent way to check their work against the project's intent. Requirements, decisions, task ownership, and validation evidence stay with the repository across agents and sessions.
 
 An agent plans and implements a change. Decapod keeps track of what that change must satisfy and the evidence required to call it complete. Failed checks and unmet requirements remain visible for the next iteration or handoff.
