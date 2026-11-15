@@ -59,6 +59,7 @@ fn contract(coverage: Vec<SourceCoverage>) -> RepositoryContract {
     let mut executions = BTreeMap::new();
     executions.insert("lint".to_string(), execution());
     let mut contract = RepositoryContract {
+        canonical_local_target: false,
         reviewed_commands_digest: String::new(),
         source_coverage: coverage,
         executions,
@@ -349,4 +350,34 @@ fn reviewed_commands_digest_pins_the_ci_only_reason() {
         error.to_string().contains("STALE_COMMAND_CONTRACT"),
         "unexpected error: {error}"
     );
+}
+
+#[test]
+fn canonical_local_target_is_review_bound_and_cannot_replace_accepted_authority() {
+    let commands = commands();
+    let accepted = contract(mapped_coverage());
+    let legacy = crate::core::readiness_evidence::digest(&(
+        REQUIRED_PROFILE,
+        &commands,
+        &accepted.source_coverage,
+        &accepted.executions,
+    ))
+    .unwrap();
+    assert_eq!(accepted.reviewed_commands_digest, legacy);
+    assert!(
+        serde_json::to_value(&accepted)
+            .unwrap()
+            .get("canonical_local_target")
+            .is_none()
+    );
+    let mut local = accepted.clone();
+    local.canonical_local_target = true;
+    local.reviewed_commands_digest = command_contract_digest(&commands, &local).unwrap();
+    assert_ne!(
+        local.reviewed_commands_digest,
+        accepted.reviewed_commands_digest
+    );
+    assert!(preserve_accepted(&commands, Some(&local), &commands, Some(&accepted)).is_err());
+    assert!(preserve_accepted(&commands, Some(&accepted), &commands, Some(&local)).is_err());
+    preserve_accepted(&commands, Some(&local), &commands, Some(&local)).unwrap();
 }
