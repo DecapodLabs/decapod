@@ -443,3 +443,17 @@ paths; they exclude conflicting resource claims (`predicate=resource_reservation
 and gate shared mutations (`release lineage-sync` on `resource:release`; `workspace publish`
 on `resource:integration` / `resource:integration:<base_branch>`) with `SHARED_RESOURCE_OCCUPIED`
 while leaving isolated worktree authoring and local validation unblocked.
+
+## `decapod todo journal reconcile-legacy`
+
+Review the canonical main repository's quiesced local legacy TODO input before
+normal startup. Only empty/no-schema input and a byte-identical canonical copy
+are supported; other layouts remain blocked. The returned review digest binds
+source/canonical bytes, Unix identities/modes, policy and actor. Apply using
+`--expected-review sha256:<digest>` under an active local session and the explicit
+canonical `todo.legacy.reconcile` grant. `--prepare-only` requires that token and
+persists an unresolved operation while preserving the source. Resume with the
+same apply command after interruption; never edit its receipt to assert success.
+There is no arbitrary source/destination or task-import surface. Responses keep
+`publication_ready=false` and `completion_proven=false`, including committed
+replays. See `docs/architecture/legacy-todo-recovery.md` for bounds and limits.

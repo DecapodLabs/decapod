@@ -948,8 +948,8 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `57dcf55ce7cbe8cdc6312ed4f941e05e5190dd90ad47a4b748413e1114049b42`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (235 files), `tests/` (234 files)
+- Repository signal fingerprint: `1b375d7f3c9123a62080607f08f5ff99afd0ae172234bf841c5a481e198e2051`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (236 files), `tests/` (234 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 
@@ -1302,6 +1302,26 @@ classification is captured once for source import/cleanup. Every uncertain TODO
 artifact beside canonical task history remains guarded. General nonempty
 versioned reconciliation is still unresolved; no second journal authority or
 implicit projection rebuild is introduced.
+
+## Explicit physical legacy reconciliation (#1657)
+
+`core/todo.rs` exposes the versioned `journal reconcile-legacy` CLI contract;
+`core/legacy_todo_recovery.rs` owns bounded review and physical archival. The
+pre-migration dispatcher in `lib.rs` makes recovery reachable while normal
+startup remains guarded. V1 accepts only an empty input or a byte-identical
+complete canonical datastore copy, after verifying the copied canonical task
+journal. It never imports rows, rebuilds task projections, replays mutations or
+changes canonical SQLite bytes. Other historical layouts remain unresolved.
+
+One bounded `legacy-todo-recovery-v1.json` record tracks prepared/committed
+physical retirement, with a preserved `todo.db.legacy-recovery-v1.archive`.
+This operation record is not a second task authority or completion receipt.
+The review binds actual content, Unix file identities and modes, canonical
+policy fingerprint and actor. Supported storage locks exclude cooperating
+writers; SQLite sidecars require quiescence. Prepared recovery fences ordinary
+startup even after the legacy filename disappears. Resume remeasures the same
+inputs; changed policy or canonical bytes leave preparation unresolved rather
+than guessing an outcome. Only one retirement per store is supported in V1.
 
 ## Nix release eligibility (#1626)
 

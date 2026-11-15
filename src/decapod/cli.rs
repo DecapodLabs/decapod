@@ -563,6 +563,10 @@ pub struct GovernanceRbac {
     /// Role names allowed to accept reviewed task-journal gaps.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub journal_repair_roles: Vec<String>,
+    /// Explicit roles allowed to retire already-canonical legacy TODO input.
+    /// Journal-gap repair and ordinary maintenance do not imply this grant.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub legacy_todo_reconcile_roles: Vec<String>,
     /// Role names allowed to explicitly decline local validation.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub validation_bypass_roles: Vec<String>,
@@ -572,6 +576,7 @@ impl GovernanceRbac {
     pub fn is_default(&self) -> bool {
         self.actor_roles.is_empty()
             && self.journal_repair_roles.is_empty()
+            && self.legacy_todo_reconcile_roles.is_empty()
             && self.validation_bypass_roles.is_empty()
     }
 
@@ -581,6 +586,7 @@ impl GovernanceRbac {
         }
         let required = match permission {
             "todo.journal.repair" => &self.journal_repair_roles,
+            "todo.legacy.reconcile" => &self.legacy_todo_reconcile_roles,
             "validate.bypass" => &self.validation_bypass_roles,
             _ => return false,
         };

@@ -644,8 +644,8 @@ execution evidence remains required before publication readiness.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `57dcf55ce7cbe8cdc6312ed4f941e05e5190dd90ad47a4b748413e1114049b42`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (235 files), `tests/` (234 files)
+- Repository signal fingerprint: `1b375d7f3c9123a62080607f08f5ff99afd0ae172234bf841c5a481e198e2051`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (236 files), `tests/` (234 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 
@@ -1086,6 +1086,26 @@ or delete that source. Real-journal regressions preserve logical digest/custody
 and original input bytes across repeated reconciliation. This is no OS-level
 filesystem isolation or permission to replay an unknown broker mutation; general
 nonempty recovery remains unresolved and hosted proof is pending.
+
+## Explicit legacy retirement trust boundary (#1657)
+
+`legacy_todo_recovery::run` rejects cloud authority instead of falling back to
+local recovery. Apply uses the existing strict local session verifier and the
+canonical main-repository RBAC reader's distinct default-deny permission.
+Candidate-worktree policy cannot grant physical retirement. Bounded no-follow
+file reads bind SHA-256, device/inode, owner/group and mode; unknown links,
+nonregular objects, unsafe ancestry and live SQLite sidecars block recovery.
+Only the receipt-bound source/archive pair may temporarily have two hard links;
+the shared state-file safety policy is unchanged.
+
+A kernel-produced preparation is durable before archival; archive content and
+identity are rechecked before unlink, then canonical bytes are checked again.
+Corrupt or substituted receipts cannot supply missing task proof. Hashes detect
+binding mismatch but do not authenticate local history. An unrestricted same-UID
+agent or host administrator can still edit local files/session/policy; this
+protocol provides no independent OS isolation or remote publication authority.
+Stale prepared inputs require operator investigation; V1 has no automatic abort,
+policy supersession or generalized historical-row reconciliation path.
 
 ## Nix publication ownership after squash releases (#1626)
 

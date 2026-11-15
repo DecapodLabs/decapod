@@ -375,8 +375,8 @@ These declarations select authoring and proof obligations; they do not attest im
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `57dcf55ce7cbe8cdc6312ed4f941e05e5190dd90ad47a4b748413e1114049b42`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (235 files), `tests/` (234 files)
+- Repository signal fingerprint: `1b375d7f3c9123a62080607f08f5ff99afd0ae172234bf841c5a481e198e2051`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (236 files), `tests/` (234 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 
@@ -694,6 +694,23 @@ Initial adoption remains supported. Requirement replacement needs a separately
 accepted target-policy transition; this work introduces no candidate-side override
 or new authority store. Hosted tests and exact-candidate validation remain pending
 until their actual observations are collected; no local test result is claimed.
+
+## Versioned mixed TODO-store recovery (#1657)
+
+Add a supported explicit review/reconciliation path that can run despite the
+mixed-store migration guard. Preserve canonical journal, both source histories,
+ownership, proof bindings and unknown operation outcomes. Retire legacy input
+only when the kernel independently proves that its authority is already present
+in canonical state. Never replay a guessed task mutation or manufacture missing
+history. Corrupt, changed, unsupported or contradictory inputs remain blocked.
+
+Use existing physical coordination, task-journal verification, bounded evidence
+and authoritative project policy. Local cooperative role labels remain distinct
+from authenticated cloud authority and OS isolation. Recovery must be versioned,
+inspectable and safely resumable after interruption. This work does not grant
+historical exceptions, cloud maintenance rights or verified task completion.
+Hosted checks provide execution evidence; no local tests or Buildkite runs are
+part of authoring, and full native publication readiness remains unproven.
 
 ## Nix publication after squash releases (#1626)
 

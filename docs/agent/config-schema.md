@@ -379,3 +379,14 @@ The test emits bounded timing and retained-evidence-size observations. No new
 journal/table or duplicate source snapshot store is introduced; existing evidence
 retention and validation history apply. Full ten-worker A–H proof and independent
 remote publication remain separate unresolved requirements.
+
+## Explicit legacy TODO retirement permission
+
+`governance.rbac.legacy_todo_reconcile_roles = ["maintainer"]` grants only
+`todo.legacy.reconcile` to actors holding that role in the canonical main
+repository's `actor_roles`. It defaults to empty and is separate from journal
+repair, maintenance and validation bypass. Worktree-only edits cannot grant it.
+The versioned physical recovery command supports empty input/exact canonical
+copies only, requires an active local session for apply, and never establishes
+task completion or publication readiness. Actor labels and policy files remain
+in the local host's trust domain; protect them independently when needed.
