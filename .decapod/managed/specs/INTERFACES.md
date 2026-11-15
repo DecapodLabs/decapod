@@ -1185,8 +1185,8 @@ field. Nothing in this operation authorizes a mutation, approval or completion.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `f1ae96d31675512ff8a04b9facdb94c0d649562292863ca2cfb647e270347723`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (235 files), `tests/` (234 files)
+- Repository signal fingerprint: `687b3317a9e134b8593b6f8f2a3bced63068e347d3555778596b8545b6ba59e1`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (236 files), `tests/` (234 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 
@@ -1667,8 +1667,9 @@ must establish the resulting candidate's behavior and timing.
 Normal supported startup/workspace/task interfaces reuse the existing migration
 owner's inert-placeholder handling. There is no new slash command or agent
 prompt requirement. TASK_JOURNAL_MIGRATION_REQUIRED continues to block non-inert
-TODO inputs beside canonical journal state; an explicit versioned nonempty
-recovery command and compatible authority contract remain required. See
+TODO inputs beside canonical journal state. Explicit V1 recovery below covers
+only empty input or exact canonical copies; general historical reconciliation
+remains required. See
 `docs/architecture/legacy-todo-recovery.md`.
 
 ## Audit evidence and invocation scope (#1069)
@@ -1684,6 +1685,27 @@ physical recovery from task completion and publication eligibility from merge
 authority. It preserves the pending native reference integration and independent
 service/forge enforcement boundaries. Source-bound diagnostic links do not waive
 any required command, provider, custody or current-target requirement.
+
+## Versioned legacy retirement interface (#1657)
+
+`decapod todo journal reconcile-legacy` reviews the canonical main repository's
+local store before normal migration/session-presence writes. JSON distinguishes
+empty/canonical_copy/unmatched/corrupt/unverifiable inputs and returns a review
+SHA only for supported inputs under an explicit `todo.legacy.reconcile` grant.
+`--expected-review sha256:<digest>` requires an active local session password
+and rechecks exact identities, bytes and canonical policy. `--prepare-only`
+requires that review token, persists intent and preserves the source for
+interruption/recovery. The same apply request resumes a prepared operation.
+No arbitrary source path, destination or SQL input is accepted.
+
+`governance.rbac.legacy_todo_reconcile_roles` defaults to empty; neither journal
+repair nor ordinary maintenance grants this permission. The receipt records
+physical archival only: every response leaves `publication_ready=false` and
+`completion_proven=false`. A committed retry reports a historical outcome,
+without asserting current canonical validation; a reappeared legacy source
+blocks reuse. Unsupported nonmatching historical stores stay blocked. See
+`docs/architecture/legacy-todo-recovery.md` for the exact scope and recovery
+limits; this is not completion of all #1657 migration requirements.
 
 ## Nix release gate outputs (#1626)
 
