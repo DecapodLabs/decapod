@@ -4,11 +4,11 @@
 
 [Watch MP4 with original music](generated/decapod-showcase.mp4) · [Poster](generated/decapod-showcase-poster.png)
 
-A 198-frame, 30-fps, **6.600-second**, **1920 × 1080** feature film for Decapod.
+A 198-frame, 30-fps, **6.600-second**, **1920 × 1080** brand film for an AI-native governance kernel. Eight standalone cuts; no persistent UI or timeline.
 
 The editorial direction is deliberately sparse: white canvas, high-contrast black editorial typography, coral crab, individual single-message scenes, no timeline or persistent UI. The crab hops between cuts. Original stereo synthesizer music is synchronized to scene arrivals. The GIF is silent because GitHub Markdown has no native autoplay video/sound support. Click the animated GIF in the root README to view the MP4 with music.
 
-The scenes introduce the shipped capabilities of Decapod: persistent task ownership, parallel isolated work, bounded evidence-grounded reflection, proof tied to source commits, and history that survives recovery and handoff. These are motion-graphics explanations, **not fabricated CLI recordings or attestations of successful hosted-cloud validation**.
+The opening shows the intended operating model: **a human has an idea, tells their coding agent, and the agent calls Decapod**. The viewer operates through the agent; Decapod runs behind the scenes. The remaining cuts introduce the agent's governance substrate: context and boundaries, parallel coordination, proof for the exact commit, and history that survives interruptions and handoffs. The closing card says **Built for AI agents**. This is motion-graphics explanation, not an execution recording or an attestation of hosted-cloud readiness.
 
 ## Render
 
