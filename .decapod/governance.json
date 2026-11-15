@@ -559,6 +559,16 @@
     "base_commit": "e9c40e929ee33aa5443c38b57276f96111db0b92",
     "target_base": "origin/master"
   },
+  "claims": {
+    "pr1697-current-exact-source": {
+      "statement": "Current implementation preserves its stated accepted policy and boundaries on the recorded source/base; new source-CI execution is required before merge.",
+      "falsifier": "A changed source, stale accepted target, missing proof or unsupported authority can be accepted as current success.",
+      "status": "open",
+      "proof_refs": [
+        "https://github.com/DecapodLabs/decapod/pull/1697"
+      ]
+    }
+  },
   "checkpoints": [
     {
       "id": "pr1697-1460-replay-01",
@@ -703,6 +713,14 @@
       "proof_refs": [
         "git:archive/pr1697-before-1460-rebase-4afbf4a7@4afbf4a73cd037da22575a902513a9f2e5996c3d"
       ]
+    },
+    {
+      "id": "pr1697-v1460-final-checkpoint",
+      "summary": "Finalize freshly governed v0.146.0 rebase, source-bound spec reviews and preserved required policy; exact-candidate GitHub proof pending.",
+      "input_digest": "sha256:f6546439401f38cb1bf89763b5bf6656c3930508f15f3312c9259f6e62213311",
+      "proof_refs": [
+        "https://github.com/DecapodLabs/decapod/pull/1697"
+      ]
     }
   ],
   "intents": {
@@ -740,7 +758,30 @@
         "Current source/base/tree/tool/policy and governed task binding"
       ],
       "schema_version": "1.1.0",
-      "state": "DRAFT",
+      "spec_reviews": [
+        {
+          "disposition": "updated",
+          "path": ".decapod/managed/specs/ARCHITECTURE.md",
+          "reason": "Reviewed PR1697 freshly replayed on exact v0.146.0 accepted master. Native metadata regenerated; original source tips and receipts remain historical. Preserve current escalation, Nix and filesystem contracts and all required providers/checks. Current-candidate GitHub verification pending; no local tests or Buildkite collection.",
+          "reviewed_code_fingerprint": "687b3317a9e134b8593b6f8f2a3bced63068e347d3555778596b8545b6ba59e1",
+          "spec_material_hash": "c7d5aa42aeaf6cec44edc5c7d60a9ef17309b15ffd9293493a2f3f764877bcf1"
+        },
+        {
+          "disposition": "updated",
+          "path": ".decapod/managed/specs/INTERFACES.md",
+          "reason": "Reviewed PR1697 freshly replayed on exact v0.146.0 accepted master. Native metadata regenerated; original source tips and receipts remain historical. Preserve current escalation, Nix and filesystem contracts and all required providers/checks. Current-candidate GitHub verification pending; no local tests or Buildkite collection.",
+          "reviewed_code_fingerprint": "687b3317a9e134b8593b6f8f2a3bced63068e347d3555778596b8545b6ba59e1",
+          "spec_material_hash": "4e1bb99a6219045699515e213c46ab10665e4de2f27a1f552f37c4408ac26d44"
+        },
+        {
+          "disposition": "updated",
+          "path": ".decapod/managed/specs/SECURITY.md",
+          "reason": "Reviewed PR1697 freshly replayed on exact v0.146.0 accepted master. Native metadata regenerated; original source tips and receipts remain historical. Preserve current escalation, Nix and filesystem contracts and all required providers/checks. Current-candidate GitHub verification pending; no local tests or Buildkite collection.",
+          "reviewed_code_fingerprint": "687b3317a9e134b8593b6f8f2a3bced63068e347d3555778596b8545b6ba59e1",
+          "spec_material_hash": "ca5ff8ea5ef908e223df62240f42ade3fc57db69b1890734ee6918c359b4868d"
+        }
+      ],
+      "state": "APPROVED",
       "stop_conditions": [],
       "title": "PR1697: current-master delivery",
       "todo_ids": [
@@ -750,15 +791,20 @@
         "Buildkite collection excluded by user; no full native publication receipt is claimed"
       ],
       "unresolved_contradictions": [],
-      "updated_at": "1794714378Z"
+      "updated_at": "1794715665Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Old branch tips and receipts remain historical; fresh checkpoints bind every newly authored material tree; no local tests/builds or Buildkite collection; preserve required provider and publication gates"
       ],
-      "artifact_hash": "sha256:b4d9848609c949025ba981f67302df396ef5fa33bb52df7dc564e4826b34b99a",
-      "checks": [],
-      "current_phase": "implementation",
+      "artifact_hash": "sha256:817c1aae5e7f47d42d893c457d9d5bccec222d42ee4de8626f9be65913b87cc6",
+      "checks": [
+        {
+          "name": "fresh-rebase-verification",
+          "status": "partial"
+        }
+      ],
+      "current_phase": "validation",
       "custody": {
         "events": [
           {
@@ -898,10 +944,17 @@
             "intent_id": "intent:pr1697-v1460-rebase",
             "kind": "trajectory_step_recorded",
             "sequence": 21
+          },
+          {
+            "detail": "trajectory:pr1697-v1460-rebase",
+            "event_id": "event:22",
+            "intent_id": "intent:pr1697-v1460-rebase",
+            "kind": "trajectory_step_recorded",
+            "sequence": 22
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 21,
+        "next_sequence": 22,
         "schema_version": "1.0.0",
         "trajectories": {
           "pr1697-v1460-rebase": {
@@ -1196,6 +1249,23 @@
                 "validation_findings": [
                   "Fresh material replay on accepted0.146.0 master; old checkpoint observations remain archived on the old Git tip and do not prove this tree. Required new GitHub execution pending; no local tests/builds or Buildkite collection."
                 ]
+              },
+              {
+                "action": "validation",
+                "custody_event_id": "event:22",
+                "observations": [
+                  "git:archive/pr1697-before-1460-rebase-4afbf4a7@4afbf4a73cd037da22575a902513a9f2e5996c3d"
+                ],
+                "proof_refs": [
+                  "fresh-rebase-verification"
+                ],
+                "scope": [
+                  "<external-path>"
+                ],
+                "sequence": 22,
+                "validation_findings": [
+                  "Old tip archived before authorized rebase; every replayed material tree received a new native checkpoint. Source CI for this exact head/base remains pending. No local tests/builds or Buildkite evidence collection; full native publication proof is not claimed."
+                ]
               }
             ]
           }
@@ -1203,6 +1273,7 @@
       },
       "declared_commands": [],
       "evidence": [
+        "git:archive/pr1697-before-1460-rebase-4afbf4a7@4afbf4a73cd037da22575a902513a9f2e5996c3d",
         "https://github.com/DecapodLabs/decapod/pull/1697"
       ],
       "inspected_files": [],
@@ -1236,7 +1307,8 @@
       "task_id": "feat_01m7bch2ry0p5aqa",
       "tool_calls": [],
       "unresolved_assumptions": [
-        "Fresh material replay on accepted0.146.0 master; old checkpoint observations remain archived on the old Git tip and do not prove this tree. Required new GitHub execution pending; no local tests/builds or Buildkite collection."
+        "Fresh material replay on accepted0.146.0 master; old checkpoint observations remain archived on the old Git tip and do not prove this tree. Required new GitHub execution pending; no local tests/builds or Buildkite collection.",
+        "Old tip archived before authorized rebase; every replayed material tree received a new native checkpoint. Source CI for this exact head/base remains pending. No local tests/builds or Buildkite evidence collection; full native publication proof is not claimed."
       ]
     }
   },
