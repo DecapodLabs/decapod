@@ -1,7 +1,7 @@
 # Continuous governance implementation map
 
-The accepted baseline is `7ada4f0755b7d0b63b835c25280dd36f6bbfc525`
-(0.146.0 release plus accepted #1697; installed governance tool 0.146.0). This map describes that code, identifies pending changes
+The accepted baseline is `26196764ec1dfa95ce366c08fc3e104b8a5bfec1`
+(accepted 0.147.0 release including #1697; installed governance tool 0.147.0). This map describes that code, identifies pending changes
 separately, and cites executed observations by their actual source identities.
 A merged PR, documented rule or agent declaration cannot supply missing proof.
 The complete autonomous-engineering mission remains unresolved.
