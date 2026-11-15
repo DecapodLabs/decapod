@@ -607,6 +607,14 @@
       "proof_refs": [
         "git:archive/pr1700-before-1460-rebase-46a9750d@46a9750d2684745cc9a9f6aec2a4a3350d654aa4"
       ]
+    },
+    {
+      "id": "pr1700-1460-replay-07",
+      "summary": "docs(specs): reconcile intent with accepted v0.146.0 scope; new tree observed during current rebase, GitHub proof pending.",
+      "input_digest": "sha256:cd9b7a14c25e6ce33af91a1cadc3499eaa544f01f7a9ed110a0acdc111652da2",
+      "proof_refs": [
+        "git:archive/pr1700-before-1460-rebase-46a9750d@46a9750d2684745cc9a9f6aec2a4a3350d654aa4"
+      ]
     }
   ],
   "intents": {
@@ -660,7 +668,7 @@
       "active_boundaries": [
         "Old branch tips and receipts remain historical; fresh checkpoints bind every newly authored material tree; no local tests/builds or Buildkite collection; preserve required provider and publication gates"
       ],
-      "artifact_hash": "sha256:eae473b4af66b3a94bef199f33fb78ae76339620cf0c4074477c9a35a98f0311",
+      "artifact_hash": "sha256:015ce4199a3cd1be3f78bc4745a933f0f2f1e2c3512bfd8d9f1a371628917afd",
       "checks": [],
       "current_phase": "implementation",
       "custody": {
@@ -718,10 +726,17 @@
             "intent_id": "intent:pr1700-v1460-rebase",
             "kind": "trajectory_step_recorded",
             "sequence": 9
+          },
+          {
+            "detail": "trajectory:pr1700-v1460-rebase",
+            "event_id": "event:10",
+            "intent_id": "intent:pr1700-v1460-rebase",
+            "kind": "trajectory_step_recorded",
+            "sequence": 10
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 9,
+        "next_sequence": 10,
         "schema_version": "1.0.0",
         "trajectories": {
           "pr1700-v1460-rebase": {
@@ -821,6 +836,22 @@
                   "<external-path>"
                 ],
                 "sequence": 9,
+                "validation_findings": [
+                  "Fresh material replay on accepted0.146.0 master; old checkpoint observations remain archived on the old Git tip and do not prove this tree. Required new GitHub execution pending; no local tests/builds or Buildkite collection."
+                ]
+              },
+              {
+                "action": "implementation",
+                "custody_event_id": "event:10",
+                "observations": [
+                  ".decapod/managed/specs/INTENT.md",
+                  "https://github.com/DecapodLabs/decapod/pull/1700"
+                ],
+                "proof_refs": [],
+                "scope": [
+                  "<external-path>"
+                ],
+                "sequence": 10,
                 "validation_findings": [
                   "Fresh material replay on accepted0.146.0 master; old checkpoint observations remain archived on the old Git tip and do not prove this tree. Required new GitHub execution pending; no local tests/builds or Buildkite collection."
                 ]
