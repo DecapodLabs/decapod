@@ -695,6 +695,23 @@ accepted target-policy transition; this work introduces no candidate-side overri
 or new authority store. Hosted tests and exact-candidate validation remain pending
 until their actual observations are collected; no local test result is claimed.
 
+## Versioned mixed TODO-store recovery (#1657)
+
+Add a supported explicit review/reconciliation path that can run despite the
+mixed-store migration guard. Preserve canonical journal, both source histories,
+ownership, proof bindings and unknown operation outcomes. Retire legacy input
+only when the kernel independently proves that its authority is already present
+in canonical state. Never replay a guessed task mutation or manufacture missing
+history. Corrupt, changed, unsupported or contradictory inputs remain blocked.
+
+Use existing physical coordination, task-journal verification, bounded evidence
+and authoritative project policy. Local cooperative role labels remain distinct
+from authenticated cloud authority and OS isolation. Recovery must be versioned,
+inspectable and safely resumable after interruption. This work does not grant
+historical exceptions, cloud maintenance rights or verified task completion.
+Hosted checks provide execution evidence; no local tests or Buildkite runs are
+part of authoring, and full native publication readiness remains unproven.
+
 ## Nix publication after squash releases (#1626)
 
 Preserve Decapod's governed engineering and independent publication boundaries
