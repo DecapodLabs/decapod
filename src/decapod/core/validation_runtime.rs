@@ -1388,6 +1388,10 @@ fn run(
         decision.mode,
         decision.decision,
     );
+    if report.ready && report.scope == super::repository_profile::LOCAL_GIT_READINESS_SCOPE {
+        report.agent_guidance.next_action = "inspect_local_merge_readiness";
+        report.agent_guidance.instruction = "The reviewed local contract passed for this exact candidate and canonical local target. Inspect its native proof and retain human integration authority. Forge publication remains unsupported until target equivalence and independent publication authority are established.";
+    }
     report.laya_readiness = Some(decision);
     if let Err(error) = final_proof {
         return Err(invalid(format!(
