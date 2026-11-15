@@ -1,7 +1,7 @@
 # Continuous governance implementation map
 
-The accepted baseline is `e9c40e929ee33aa5443c38b57276f96111db0b92`
-(accepted 0.146.0 release source; installed governance tool 0.146.0). This map describes that code, identifies pending changes
+The accepted baseline is `7ada4f0755b7d0b63b835c25280dd36f6bbfc525`
+(0.146.0 release plus accepted #1697; installed governance tool 0.146.0). This map describes that code, identifies pending changes
 separately, and cites executed observations by their actual source identities.
 A merged PR, documented rule or agent declaration cannot supply missing proof.
 The complete autonomous-engineering mission remains unresolved.
@@ -23,7 +23,8 @@ boundary against an unrestricted producer sharing the verifier's OS account.
 | Already enforced | Task journal, exclusive leases, authoring bindings, resource reservations and broker request deduplication govern supported transitions. SQLite maintenance is default-deny under canonical opt-in and task/workspace custody. | PR #1662's local engine and #1679's required SQLite coverage are merged. Cloud owner authority and unrestricted filesystem prevention are separate; local opt-in never grants them. |
 | Partially enforced | Workunit journals retain generations and uncertainty, but a separately initialized workspace DB cannot atomically accept parent task proof. | `WORKUNIT_PROOF_ATOMIC_DOMAIN_UNSUPPORTED` remains fail-closed. Compatible explicit convergence/migration is still missing (#1660); copying history must not grant new authority. |
 | Partially enforced | Full readiness freezes source and independently checks accepted target/integration through its supported provider. Workunit consumption remeasures local applicability. | An unfetched ref cannot reveal remote movement. Local workunit validity is a prerequisite, not a replacement for publication's fresh target observation. |
-| Partially enforced | Accepted migration code preserves inert zero-byte TODO placeholders and blocks uncertain nonempty sources. Draft #1697 adds explicit bounded retirement of empty inputs or exact canonical copies. | #1697 is not in this accepted baseline. General legacy-row reconciliation and changed prepared-input supersession remain missing (#1657); physical archival never proves task completion. |
+| Already enforced | Accepted #1697 adds `legacy_todo_recovery.rs` and the pre-bootstrap `todo journal reconcile-legacy` boundary, default-deny canonical RBAC, bounded byte/inode/policy-bound prepared/committed receipts, and exact interrupted recovery. The six actual-binary cases in `tests/sqlite_maintenance.rs` belong to the required CLI target. | Supports empty inputs or byte-identical whole canonical copies only; no logical import or task/proof replay. Physical archival never proves task completion or publication. Same-user filesystem/policy access is not an independent security boundary. |
+| Missing | General legacy-row reconciliation and changed prepared-input supersession remain outside bounded physical retirement. | #1657 remains unresolved for those cases; contradictory or changed source evidence stays blocked. |
 | Partially enforced | Merged #1684 preserves owning-test/fixture selection in the finite source-CI recipes. | Core/CLI partitioning and the measured five-minute requirement are unresolved (#1672). An accepted controller must support the new graph before activation; skipped selection is not timing proof. |
 | Already enforced | `mentor/reflection.rs`, `mentor/reflection/escalation.rs` and the existing orientation/mentor RPC extension grade invoked escalation proposals under a shared three-round journal. `reflection_tests` covers observed authority, exact canonical human dependencies, stale/forged claims, target narrowing, retry continuity and exhausted budgets. Merged #1699 is in this baseline. | Literal source inspection is not semantic correctness, authorization, test execution or task completion. An external harness must invoke the protocol; the kernel cannot intercept arbitrary conversation. |
 | Advisory | `AGENTS.md`, orientation, capsule retrieval and hooks discover/invoke existing kernel decisions. | An unrestricted shell can bypass hooks and directly mutate files or call Git/forge APIs. No arbitrary OS mutation prevention is asserted. |
@@ -63,6 +64,8 @@ Current workbranch pushes are iteration; accepted completion remains separately
 judged. No new daemon or parallel policy interpreter is needed for these limits.
 
 ## Real executed observations and their limits
+
+For accepted #1697, [CLI execution 132695687228](https://github.com/DecapodLabs/decapod/actions/runs/43675804957/job/132695687228) passed the actual three-target recipe for source `74935ba3191959f5d5c6fc89acc0353d3150352a` against `e9c40e929ee33aa5443c38b57276f96111db0b92`, in 975,748 ms. Human merge `7ada4f0755b7d0b63b835c25280dd36f6bbfc525` has those ordered parents and exactly the tested candidate tree `b01bcae33936da579995b6a33922d63349999d35`. The merge happened while other checks were still running. This is exact scoped source execution and integration-tree identity, not a complete native publication receipt or proof for this map's candidate.
 
 For `d0b24f6f926583047be0fbe3f51f5686247d1de2` against predecessor
 `f5da0e6183bf31cfbef3d5a53c52553ee8b6fbb5`,

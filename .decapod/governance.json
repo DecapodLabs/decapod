@@ -665,6 +665,14 @@
       "proof_refs": [
         "https://github.com/DecapodLabs/decapod/pull/1700"
       ]
+    },
+    {
+      "id": "pr1700-1460-replay-11",
+      "summary": "docs(audit): include accepted bounded recovery and exact integration identity; new tree observed during current rebase, GitHub proof pending.",
+      "input_digest": "sha256:b838b12e5305d914dedd0ad94aa33c010a4751dfcfce1fb4f778ddc043a513dd",
+      "proof_refs": [
+        "git:archive/pr1700-before-1460-rebase-46a9750d@46a9750d2684745cc9a9f6aec2a4a3350d654aa4"
+      ]
     }
   ],
   "intents": {
@@ -741,7 +749,7 @@
       "active_boundaries": [
         "Old branch tips and receipts remain historical; fresh checkpoints bind every newly authored material tree; no local tests/builds or Buildkite collection; preserve required provider and publication gates"
       ],
-      "artifact_hash": "sha256:dc25fecb022d707243cbc7ae0c7ea9fba4ca41a759b078c23a2265478256b5c9",
+      "artifact_hash": "sha256:02c70ee0eb6ce0243a90fdb0a98bb0244562adc0e4e9919b5cb7b8b7a407b0b6",
       "checks": [
         {
           "name": "accepted-target-integration",
@@ -752,7 +760,7 @@
           "status": "partial"
         }
       ],
-      "current_phase": "validation",
+      "current_phase": "implementation",
       "custody": {
         "events": [
           {
@@ -857,10 +865,17 @@
             "intent_id": "intent:pr1700-v1460-rebase",
             "kind": "trajectory_step_recorded",
             "sequence": 16
+          },
+          {
+            "detail": "trajectory:pr1700-v1460-rebase",
+            "event_id": "event:17",
+            "intent_id": "intent:pr1700-v1460-rebase",
+            "kind": "trajectory_step_recorded",
+            "sequence": 17
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 16,
+        "next_sequence": 17,
         "schema_version": "1.0.0",
         "trajectories": {
           "pr1700-v1460-rebase": {
@@ -1077,6 +1092,22 @@
                 "sequence": 16,
                 "validation_findings": [
                   "Old tip archived before authorized rebase; every replayed material tree received a new native checkpoint. Source CI for this exact head/base remains pending. No local tests/builds or Buildkite evidence collection; full native publication proof is not claimed."
+                ]
+              },
+              {
+                "action": "implementation",
+                "custody_event_id": "event:17",
+                "observations": [
+                  "docs/architecture/continuous-governance-implementation-map.md",
+                  "https://github.com/DecapodLabs/decapod/pull/1700"
+                ],
+                "proof_refs": [],
+                "scope": [
+                  "<external-path>"
+                ],
+                "sequence": 17,
+                "validation_findings": [
+                  "Fresh material replay on accepted0.146.0 master; old checkpoint observations remain archived on the old Git tip and do not prove this tree. Required new GitHub execution pending; no local tests/builds or Buildkite collection."
                 ]
               }
             ]
