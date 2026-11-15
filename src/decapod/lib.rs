@@ -6653,7 +6653,7 @@ fn run_validate_command_remote(
             serde_json::to_string_pretty(&serde_json::json!({
                 "status": if readiness.ready { "pass" } else { "fail" },
                 "scope": scope.label(),
-                "publication_ready": readiness.ready,
+                "publication_ready": readiness.publication_ready(),
                 "local_project_checks": "not_run_provider_owned",
                 "report": serde_json::Value::Null,
                 "self_heal": [],
@@ -6873,7 +6873,7 @@ fn run_validate_command_local(
             serde_json::to_string_pretty(&serde_json::json!({
                 "status": report.status,
                 "scope": scope.label(),
-                "publication_ready": readiness.as_ref().is_some_and(|r| r.ready),
+                "publication_ready": readiness.as_ref().is_some_and(|r| r.publication_ready()),
                 "agent_guidance": scope.requires_publication_proof().then_some(guidance),
                 "readiness": readiness,
                 "self_heal": heal_actions,
@@ -6971,7 +6971,7 @@ fn readiness_environment(
 ) -> Result<
     (
         core::validation_runtime::Options,
-        core::repo_identity::RepositoryIdentity,
+        core::workspace::ReadinessRepository,
     ),
     error::DecapodError,
 > {
@@ -7317,12 +7317,21 @@ fn run_current_workbranch_readiness_with(
             .as_ref()
             .is_some_and(|profile| profile.id == core::repository_profile::REQUIRED_PROFILE)
         {
-            let mut host = runtime::repository_host::RepositoryHost::new(
-                options.clone(),
-                repository.remote_url,
-                prerequisite,
-                authorize,
-            )?;
+            let mut host = if let Some(root) = repository.local_target_root {
+                runtime::repository_host::RepositoryHost::canonical_local(
+                    options.clone(),
+                    root,
+                    prerequisite,
+                    authorize,
+                )?
+            } else {
+                runtime::repository_host::RepositoryHost::new(
+                    options.clone(),
+                    repository.remote_url,
+                    prerequisite,
+                    authorize,
+                )?
+            };
             let mut report = runtime::validate(&options, &mut host, &cancellation);
             signal_guard.restore()?;
             archive_workbranch_readiness(
@@ -7446,8 +7455,16 @@ pub(crate) fn enforce_workbranch_readiness_before_push(
             return Err(error::DecapodError::ValidationError("PUBLICATION_NOT_READY: project prerequisite checks failed; continue working on the branch".into()));
         }
     }
+    if core::workspace::resolve_readiness_repository(workspace_root)?
+        .local_target_root
+        .is_some()
+    {
+        return Err(error::DecapodError::ValidationError(
+            "LOCAL_TARGET_PUBLICATION_UNSUPPORTED: local merge readiness does not prove the forge target; establish independently verified target equivalence and publication authority".into(),
+        ));
+    }
     let readiness = run_current_workbranch_readiness_with(workspace_root, invocation);
-    if !readiness.ready {
+    if !readiness.publication_ready() {
         return Err(error::DecapodError::ValidationError(format!(
             "PUBLICATION_NOT_READY: {}",
             serde_json::to_string(&readiness)
@@ -12251,7 +12268,7 @@ mod rpc_handlers {
             "success": readiness.ready,
             "report": if readiness.ready { "Complete Buildkite source proof passed" } else { "Buildkite source proof is not ready" },
             "scope": super::ValidationScope::PublicationReadiness.label(),
-            "publication_ready": readiness.ready,
+            "publication_ready": readiness.publication_ready(),
             "local_project_checks": "not_run_provider_owned",
             "checks": serde_json::Value::Null,
             "readiness": readiness,
@@ -12390,7 +12407,7 @@ mod rpc_handlers {
                     success: true,
                     report: "All validation gates passed".to_string(),
                     scope: scope.label().into(),
-                    publication_ready: true,
+                    publication_ready: readiness.publication_ready(),
                 };
                 Ok(success_response(
                     ctx.request.id.clone(),
