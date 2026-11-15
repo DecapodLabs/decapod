@@ -70,7 +70,8 @@ pub struct DecisionOption {
     pub impact: String,
 }
 
-/// Shared legacy orientation gate; reflection cannot override its human boundary.
+/// Architectural inference pressure. A keyword never establishes missing human
+/// authority; the existing reflection protocol evaluates real dependencies.
 pub fn architectural_alignment_required(goal: &str) -> bool {
     let goal = goal.to_lowercase();
     ["refactor", "architecture", "interface"]

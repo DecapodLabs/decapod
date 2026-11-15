@@ -269,6 +269,7 @@ def decapod_targets():
                 "tests/support/cli_workunit_recovery.rs",
                 "tests/support/justfile_inventory.rs",
                 "tests/support/storage_inventory.rs",
+                "tests/support/recovery_filesystem.rs",
                 "tests/fixtures/justfile_consumer/src/lib.rs",
                 "tests/fixtures/justfile_consumer/src/distance.rs",
                 "tests/fixtures/justfile_consumer/src/temperature.rs",
@@ -278,6 +279,9 @@ def decapod_targets():
                 "tests/support/fresh_docs_readiness.rs",
                 "tests/infer_precision.rs",
             ] if path == "tests/entrypoint_correctness.rs" else [
+                path,
+                "tests/support/recovery_filesystem.rs",
+            ] if path == "tests/sqlite_maintenance.rs" else [
                 path,
                 "tests/common/consumer_readiness_fixture.rs",
             ] if path == "tests/consumer_readiness.rs" else [path] + [

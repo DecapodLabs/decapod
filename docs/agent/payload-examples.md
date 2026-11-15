@@ -1,5 +1,99 @@
 # Payload Examples
 
+## Escalation admissibility
+
+Use the current claimed task and the exact intent returned by `govern plan
+status`. This example assumes `README.md` actually contains the quoted text;
+invented bytes, stale identities and self-declared passes cannot substitute.
+The executable counterpart is
+`deterministic_escalation_harness_investigates_before_asking_and_preserves_publication_gate`.
+
+```json
+{
+  "reflection": {
+    "task_id": "<claimed-task>",
+    "submission_id": "read-question",
+    "op": "escalate",
+    "touched_paths": [],
+    "evidence": [{"ref_path": "README.md"}],
+    "escalation": {
+      "intent": "<exact current plan intent>",
+      "question": "Which read convention should I choose?",
+      "missing": "Choose the repository read convention",
+      "uncertainty": "inferable_decision",
+      "investigation": [],
+      "risks": [],
+      "constraints": []
+    }
+  }
+}
+```
+
+Send this object as `mentor.obligations` RPC params, or its inner `reflection`
+object through orientation's existing `--reflection` argument with the matching
+outer `--task-id`. The response uses `decapod.reflection.v2` and an
+`escalation` assessment with schema `decapod.escalation.v1`. A routine question
+returns `reflect`, a source-bound challenge, `human_escalation_permitted: false`,
+a token and the remaining two rounds. Ordinary reflection retains v1.
+
+The agent inspects the cited source, preserves the task, intent and missing
+subject, uses a new submission ID and the returned `expected_token`,
+and adds a supported resolution:
+
+```json
+{
+  "decision": "Retain the established fresh-read convention",
+  "facts": [{
+    "source": {"ref_path": "README.md"},
+    "literal": "The existing adapter uses fresh reads."
+  }]
+}
+```
+
+Place this object in `escalation.resolution`. Decapod observes the exact source
+predicate and may return `proceed` / `reduced_obligations` when no other challenge
+remains. `semantic_exhaustion_proven` and `completion_proven` remain false. A
+literal is a byte-inspection observation, even when its text mentions tests or
+approval. It never becomes a native execution receipt or an approval grant.
+
+Keep the current challenge's source citations in `evidence`. Facts may come
+from other bounded repository paths discovered during investigation; those
+paths are captured with current identities. A new citation without an observed
+fact or admissible decision is not progress. Omitting the governing citation
+cannot clear the parent reflection gate.
+
+The uncertainty values are `discoverable_information`, `inferable_decision`,
+`verifiable_uncertainty`, `irreducible_ambiguity`, `missing_authority`, and
+`exceptional_risk`. They are declarations; observed policy/gates take precedence.
+Investigation may correct a classification within the same continuation.
+Relabeling alone is not progress and cannot waive observed authority.
+For a proposed governed operation include, for example:
+
+```json
+{"authority": {"command": "todo.archive", "target": "<exact-task>"}}
+```
+
+This object belongs in `escalation`. A missing policy-required approval returns
+`human_decision` immediately; already observed authority can clear that gap.
+The response never issues approval. For a business dependency, the proposed
+question must match the current canonical plan/spec challenge. Plain assertions
+of ambiguity or exhaustion do not establish that dependency.
+
+If the first proposal omitted `authority`, the agent may add the investigated
+operation on a continuation. An omitted target may then be narrowed. Established
+commands and concrete targets cannot be switched or dropped. Each refinement
+uses the same token chain and remaining rounds. A newly admitted targeted human
+dependency reports `progress: "human_dependency"`; repeated questions do not
+establish further progress.
+
+Identical retries replay without writes; changed reuse and stale tokens fail.
+Omitting escalation on a continuation or renaming its missing subject cannot
+erase it or restart its budget. Continue within the same three-round journal.
+
+This adapter observes bounded literal repository paths and the canonical plan
+reference. External sources remain with the existing context/evidence owners;
+an agent-supplied URL or digest is not promoted into an observed native proof.
+
 ## Bounded reflection
 
 This illustrative exchange uses an already claimed task and a plan whose

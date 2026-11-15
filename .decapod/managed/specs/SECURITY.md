@@ -1,5 +1,23 @@
 # Security
 
+## Escalation admission preserves authority (#1690–#1692)
+
+Discovering an omitted operation or target cannot reset the reflection budget.
+Once established, a command and concrete target cannot be removed or replaced
+on a continuation. A policy-required human dependency takes priority over
+structural regression detection, and reflection never grants that authority.
+
+`core/mentor/reflection/escalation.rs` observes existing policy and approval
+state; it issues no grant, changes no role and never promotes inferred intent
+into authority. A source predicate proves only current bytes, not provenance,
+semantic truth, test execution or authorization. Unrelated approvals and human
+questions cannot resolve another missing requirement. Task/custody bindings,
+source freshness, continuation tokens, immutable subjects and the existing
+three-round/64 KiB journal bounds protect the invoked protocol. Proposed question,
+investigation, decision and quote bodies remain transient, with digests retained
+for retry integrity; no private reasoning transcript is requested or stored.
+Actual mutation, verifier, validation and publication guards remain independent.
+
 Absence of `.git` does not establish checkout admission, including outside
 `.decapod/workspaces`. `init --no-git` enables prerequisite diagnostics only.
 The partial project-check route handles that compatibility explicitly; workspace
@@ -626,8 +644,8 @@ execution evidence remains required before publication readiness.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `472f3a60d05913e607d14d9bc06e1171d8db1ef6341884d57bd05d3fff11006d`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (234 files), `tests/` (233 files)
+- Repository signal fingerprint: `8a25453767aee715d3f4d27fd1ca1c2d77d9080c89f8917410a69e532e1d6281`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (235 files), `tests/` (234 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 

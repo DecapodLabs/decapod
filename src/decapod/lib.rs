@@ -12673,11 +12673,15 @@ mod rpc_handlers {
                     resolve_hint: outcome.next_action.clone(),
                 });
             }
-            response.allowed_next_ops = vec![AllowedOp {
-                op: "mentor.obligations".into(),
-                reason: outcome.next_action.clone(),
-                required_params: vec!["reflection".into()],
-            }];
+            response.allowed_next_ops = if outcome.terminal {
+                vec![]
+            } else {
+                vec![AllowedOp {
+                    op: "mentor.obligations".into(),
+                    reason: outcome.next_action.clone(),
+                    required_params: vec!["reflection".into()],
+                }]
+            };
         }
 
         Ok(response)
@@ -13978,7 +13982,7 @@ fn run_infer_orientation(
     cli: InferOrientationCli,
     project_root: &Path,
 ) -> Result<(), error::DecapodError> {
-    use crate::core::rpc::{DecisionGate, DecisionOption, OrientationPacket};
+    use crate::core::rpc::OrientationPacket;
 
     let mut packet = OrientationPacket {
         user_goal: cli.intent.clone().unwrap_or_else(|| "Unknown".to_string()),
@@ -14059,25 +14063,11 @@ fn run_infer_orientation(
     }
 
     if crate::core::rpc::architectural_alignment_required(&packet.user_goal) {
-        packet.decision_gates.push(DecisionGate {
-            decision: "Architectural alignment".to_string(),
-            rationale: "Changes to core structures or interfaces require human alignment on long-term maintainability.".to_string(),
-            options: vec![
-                DecisionOption {
-                    label: "Conservative (wrapper/adapter)".to_string(),
-                    impact: "Minimizes immediate breakage".to_string(),
-                },
-                DecisionOption {
-                    label: "Aggressive (breaking change)".to_string(),
-                    impact: "Cleaner long-term architecture, requires migration".to_string(),
-                },
-            ],
-            recommendation: "Prefer conservative adaptation unless the current interface is fundamentally broken.".to_string(),
-            validation_proof: "Contract conformance tests and migration guide".to_string(),
-        });
-        packet.next_action =
-            "STOP: A decision gate is active. Present options to the human before proceeding."
-                .to_string();
+        // Keywords establish inference pressure, never missing human authority.
+        // Explicit plan/spec and policy dependencies are judged by reflection.
+        packet.constraints.push(
+            "Inspect governing intent and existing architecture before choosing a compatible design; submit an escalation proposal before requesting a human decision.".into(),
+        );
     }
 
     if intent_lower.contains("test") {

@@ -1,5 +1,33 @@
 # Validation
 
+## Real recovery fixture prerequisites (#1696)
+
+`tests/support/recovery_filesystem.rs` owns the existing private filesystem
+probe shared by unit filesystem regressions and `tests/sqlite_maintenance.rs`.
+It checks device identity, ownership, space and atomic no-clobber rename support
+before running recovery success assertions. Linux may select the preexisting
+`/dev/shm` candidate when the default temporary filesystem is incompatible;
+unavailable candidates produce explicit diagnostics and exhaustion fails.
+Production Dactyl guards and unsupported-path refusal tests remain authoritative.
+The standalone and aggregate Bazel targets declare this helper as a real input.
+
+## Autonomous convergence protocol fixtures (#1690–#1692)
+
+`tests/unit/core/reflection_tests.rs` exercises source discovery, engineering
+choices, inspected predicates, stagnation, regression, exhaustion, canonical
+business dependencies, actual policy approvals, forged/stale observations,
+idempotent retry and concurrent task isolation. Its deterministic comparison
+executes a baseline mock that delegates every proposed question and compares
+actual governed outcomes, rounds and retained bytes. It does not evaluate an
+LLM or claim improved semantic reasoning or completed engineering tasks.
+`tests/infer_precision.rs` exercises the real orientation-to-mentor continuation,
+preserves the native diagnostic/publication guard, verifies all four generated
+entrypoints route to the embedded contract, and checks that architecture words
+do not manufacture missing human authority. Existing native proof remains
+authoritative; source-CI observations cannot substitute for the required full
+exact-candidate validation receipt. Fixture output supplies actual measurements
+only when its owning test lane executes successfully.
+
 ## PR1661 repair evidence contract
 
 The non-Git entrypoint regression must demonstrate successful prerequisite-only
@@ -1341,8 +1369,8 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `472f3a60d05913e607d14d9bc06e1171d8db1ef6341884d57bd05d3fff11006d`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (234 files), `tests/` (233 files)
+- Repository signal fingerprint: `8a25453767aee715d3f4d27fd1ca1c2d77d9080c89f8917410a69e532e1d6281`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (235 files), `tests/` (234 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 
@@ -2127,3 +2155,7 @@ requirement stays enabled, so full native publication readiness is unproven.
 The original missing v0.138.0 cache entry is historical and is not claimed filled
 by this code change. Actual protected-master packaging/publication must establish
 cache availability separately after acceptance.
+
+## PR #1699 accepted-target integration
+
+The escalation branch now integrates accepted master `8e435969a8c21269aa277301b3e6492d780a9bdb` with installed Decapod 0.145.6. Preserve both the escalation contract and the accepted Nix release-gate/finite-adapter changes, including both owning Bazel fixtures. The earlier full native observation for `d52943740cac03fa45046317ea4af090f919fec6` against `f5da0e6183bf31cfbef3d5a53c52553ee8b6fbb5` remains historical and cannot authorize a new integration. Fresh checks must bind the new source/tree/target and custody generation. This integration uses GitHub verification without local test/build execution or Buildkite evidence collection; accepted strict provider requirements remain enabled, and no automatic merge authority is introduced.

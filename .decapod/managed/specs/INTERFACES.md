@@ -1,5 +1,24 @@
 # Interfaces
 
+## Escalation admissibility (#1690–#1692)
+
+Continuations may supply an omitted authority command and narrow an omitted
+target; established scope cannot be replaced or dropped. This uses the current
+token and budget. A newly admitted targeted human dependency reports
+`progress: human_dependency`; repeated admitted questions do not gain progress.
+
+Orientation's existing `--reflection` input and `mentor.obligations.reflection`
+accept optional `escalation`: canonical plan intent, question, missing subject,
+uncertainty class, investigation, optional resolution with exact source facts,
+risks, constraints and optional authority command/target. Typed escalation uses
+`decapod.reflection.v2` with `decapod.escalation.v1`; ordinary reflection retains
+v1. Responses expose typed reasons, source identities, progress, targeted
+challenges, token and remaining rounds. `human_escalation_permitted` is distinct
+from a challenge and never supplies an approval. `completion_proven` and
+`semantic_exhaustion_proven` stay false. Native completion and publication still
+require independent current proof. `escalation_required` on an inference
+capability gap is accompanied by `escalation_target: agent`.
+
 ## Required source-CI test selection (#1672)
 
 `assets/tools/source_ci_profile.rs::{selected,commands,inventory}` includes
@@ -1166,8 +1185,8 @@ field. Nothing in this operation authorizes a mutation, approval or completion.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `472f3a60d05913e607d14d9bc06e1171d8db1ef6341884d57bd05d3fff11006d`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (234 files), `tests/` (233 files)
+- Repository signal fingerprint: `8a25453767aee715d3f4d27fd1ca1c2d77d9080c89f8917410a69e532e1d6281`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (235 files), `tests/` (234 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 

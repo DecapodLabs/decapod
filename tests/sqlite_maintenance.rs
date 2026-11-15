@@ -11,6 +11,9 @@ use std::path::{Path, PathBuf};
 use std::process::Command;
 use tempfile::{TempDir, tempdir};
 
+#[path = "support/recovery_filesystem.rs"]
+mod recovery_filesystem;
+
 // Resolve the runfiles/Cargo binary before changing into a disposable repo.
 fn resolve_decapod_bin() -> PathBuf {
     let binary = Path::new(env!("CARGO_BIN_EXE_decapod"));
@@ -36,7 +39,7 @@ fn resolve_decapod_bin() -> PathBuf {
 // Private fixtures cover default storage. Shared recovery is exercised separately;
 // production recovery never chmods an existing installation to proceed.
 fn private_recovery_directory() -> TempDir {
-    let directory = tempdir().expect("temporary recovery directory");
+    let directory = recovery_filesystem::recovery_fixture_directory();
     #[cfg(unix)]
     {
         use std::os::unix::fs::PermissionsExt;
@@ -314,7 +317,7 @@ fn sidecar(path: &Path, suffix: &str) -> PathBuf {
 
 #[test]
 fn operator_cli_exposes_verify_backup_and_recovery_without_automatic_repair() {
-    let tmp = TempDir::new().expect("temporary project");
+    let tmp = private_recovery_directory();
     let project = tmp.path();
     let executable = resolve_decapod_bin();
     let init = Command::new(&executable)

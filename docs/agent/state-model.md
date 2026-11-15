@@ -178,6 +178,44 @@ checks do not establish publication readiness.
 
 ### Bounded reflection continuity
 
+Escalation admissibility is an extension of this same journal, not a separate
+conversation or datastore. `reflection.escalation` identifies canonical intent,
+the proposed human question, the missing subject, declared uncertainty, source
+references, concise investigation, an optional supported resolution, risks,
+constraints and an optional exact authority operation. The input is transient;
+receipts retain digests, observed source identities, typed assessments and
+dispositions. Proposed questions, investigation prose and quoted source bodies
+are not copied into the journal.
+
+`progress` distinguishes `initial`, `reduced_obligations`, `narrowed_scope`,
+`human_dependency`, `stagnant` and `regressed`. A newly admissible targeted
+human dependency is progress; repeating an admitted question is not. Other
+added obligations are regression; paraphrases and
+unobserved self-assessments stagnate. Source/hash failures leave the journal
+unchanged. The current kernel version and relevant source/policy observations
+bind conclusions without resetting the lifetime three-round budget. Ordinary
+checkpoint commits and phase progress do not manufacture additional rounds.
+
+An escalation's subject cannot be renamed or omitted during continuation.
+Its uncertainty class is a revisable agent declaration. Correcting that label
+requires observable progress; it cannot waive an observed policy gate or a
+canonical human dependency and never renews the budget.
+An omitted authority operation may be supplied after investigation, and its
+omitted target may be narrowed. Once supplied, the command and concrete target
+cannot be replaced or dropped. These refinements consume the existing rounds.
+Existing policy/approval requirements and canonical human dependencies take
+priority over reflection. The proposed human question must match a governing
+dependency, or the protocol redirects it. Missing approval returns the human
+disposition immediately rather than demanding cognitive work to infer a grant.
+Only the agent carries an admitted targeted question to the human.
+
+Exact source predicates are observations of bytes, including for uncertainty
+that can be checked by inspection. They do not authenticate who wrote the source,
+prove that a test ran, establish semantic relevance or exhaustive investigation,
+or satisfy validation/publication. `semantic_exhaustion_proven` and
+`completion_proven` remain false. An explicit plan question is an existing
+governing dependency, not newly authenticated evidence of human identity.
+
 Successful RPC envelopes may omit `blocked_by` when it is empty; consumers must
 accept omission or an empty array. Reflection still does not grant global
 execution or completion permission.

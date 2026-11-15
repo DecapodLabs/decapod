@@ -1,5 +1,80 @@
 # Bounded reflection before execution
 
+## Do What Must Be Done: escalation admissibility
+
+The architecture is Human ↔ Agent ↔ Decapod. Humans supply intent, authority and
+exceptional decisions. Agents investigate, infer, execute and verify. Decapod
+evaluates admissibility against observed governing state and returns challenges
+to the agent. It is not an intelligence provider or a human interview service.
+
+`core/mentor/reflection/escalation.rs` extends the existing optional reflection
+input on orientation and `mentor.obligations`. A proposal supplies canonical plan
+intent, the human question, specific missing information/authority, source
+references, concise investigation, a supported resolution, risks and constraints.
+The response preserves `proceed`, `reflect`, `human_decision` and `blocked`, with
+typed escalation reason codes, source references, an actionable challenge, token
+and remaining lifetime budget. No new operation, datastore, scheduler, model or
+transcript collector is introduced.
+
+The six uncertainty classes distinguish discovery, inference, verification,
+irreducible ambiguity, authority and exceptional risk. Declarations do not grade
+themselves: exact source predicates are read and checked, existing policy and
+live approval state are observed through `plugins::policy`, and canonical
+plan/spec human dependencies retain their original authority. A task-title
+keyword is not missing authority. Orientation retains the stateless response
+shape and routes architecture keywords to agent investigation; this deliberately
+repairs the previous heuristic human gate. Existing explicit human dependencies
+remain binding. An unrelated open human question does not admit
+the proposed routine question; targeted questions must match the governing gate.
+
+An inspection predicate proves only that the cited current file contains the
+exact bytes. It cannot prove semantic relevance, that every reasonable avenue
+was exhausted, that the source's author is authentic, or that a quoted test pass
+was executed. Native proof, scope, lease, approval, verifier and publication owners
+still judge those claims. `semantic_exhaustion_proven` and `completion_proven`
+remain false. This explicit semantic limitation avoids upgrading an agent's
+self-assessment into governing evidence. Existing plan questions likewise remain
+declared governing dependencies, not newly authenticated human statements.
+
+Convergence is reduced unresolved obligations relative to unchanged intent.
+Receipts distinguish initial state, reduced obligations, narrowed scope,
+stagnation and regression. A newly admissible targeted human dependency is
+explicit progress; other added obligations regress. A paraphrase cannot clear
+a gap. A subject rename or omitted escalation cannot erase continuity. An
+unknown authority operation or target can be supplied through investigation;
+established command/target scope cannot be dropped or replaced, and discovering
+it consumes the same remaining rounds.
+Source, policy, kernel and custody changes invalidate conclusions without renewing
+the three-round budget. Exact retries do not write; stale/conflicting retries
+and failed observations preserve state. Hard policy-required approval goes to the
+human disposition immediately. Terminal outcomes retain unresolved challenges
+and cannot silently become permission to proceed or ask the submitted question.
+
+The bounded journal retains typed receipts and digests, not proposed questions,
+agent investigation prose, decisions, quotes or private reasoning transcripts.
+An agent asks an admitted question through its normal user conversation. An
+external harness that never invokes this contract cannot be prevented from
+asking questions; generated integration instructions establish required behavior
+for cooperating agents, not OS-level control over arbitrary harnesses.
+
+The existing generated AGENTS/CODEX/CLAUDE/GEMINI entrypoints already mandate
+`docs ingest` and orientation. Their canonical corpus now carries the required
+escalation behavior and is embedded by `assets/build/compress_constitution.rs`.
+The integration test initializes all four through the real generator, checks
+their ingestion contract and reads the embedded escalation guidance. Project
+release projections are regenerated through the installed CLI; they are never
+hand-edited or confused with an unreleased source template.
+
+The adversarial library fixtures and real CLI/RPC deterministic harness cover
+discovery, engineering choices, observed improvement, paraphrase stagnation,
+bounded failure, business dependencies, policy/approval gates, stale/forged
+evidence, interruption/retries, task isolation, ordinary work and publication.
+They emit fixture-level intervention counts, rounds, runtime and compact storage
+measurements when executed. These are protocol measurements, not evidence of
+improved LLM semantic reasoning or production intervention rates. Historical
+measurements later in this document describe the earlier accepted reflection
+slice and must not be relabeled as measurements of this extension.
+
 ## Source audit and implementation boundary
 
 Audit base: `19acd21f7ff50656323d037915273f03cdedc04e` (origin/master).

@@ -1,5 +1,17 @@
 # Intent
 
+## Do What Must Be Done (#1690–#1692)
+
+Maximize useful autonomous engineering per human intervention. Agents must
+investigate discoverable information, make defensible engineering decisions and
+verify uncertainty before delegating cognitive work to the human. The existing
+orientation/mentor reflection protocol now accepts typed escalation proposals,
+observes source predicates and policy/approval state, and challenges inadequate
+proposals within its lifetime three-round budget. Human intent, explicit
+authorization and exceptional decisions retain authority. The kernel neither
+reasons as an LLM nor directly questions the human. Semantic exhaustion and
+completed engineering work remain unproven by deterministic reflection receipts.
+
 ## Required test dependency coverage (#1672, PR #1684)
 
 Test-only repairs must select the existing core or CLI lane that executes them.
@@ -363,8 +375,8 @@ These declarations select authoring and proof obligations; they do not attest im
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `472f3a60d05913e607d14d9bc06e1171d8db1ef6341884d57bd05d3fff11006d`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (234 files), `tests/` (233 files)
+- Repository signal fingerprint: `8a25453767aee715d3f4d27fd1ca1c2d77d9080c89f8917410a69e532e1d6281`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (235 files), `tests/` (234 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 
