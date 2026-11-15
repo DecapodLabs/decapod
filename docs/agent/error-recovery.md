@@ -332,3 +332,17 @@ options are omitted, including with `--force`. Explicit flags can change those
 settings. Dry-run distinguishes config.toml from scaffold documentation. Generated
 GitHub validation uses full checkout history and immutable event/base/head context;
 never replace those revisions with mutable branch names or omit them in CI.
+
+### `LEGACY_TODO_RECOVERY_PENDING` / `LEGACY_TODO_RECONCILIATION`
+
+A versioned physical retirement is prepared but not committed, or its required
+source, archive, canonical state, policy or integrity cannot be established.
+Preserve all inputs. Inspect `decapod todo journal reconcile-legacy` and resume
+with the original `--expected-review` token only while the independently
+remeasured bindings and explicit canonical grant remain valid. A missing legacy
+filename alone does not prove completion. Changed canonical inputs/policy,
+unknown archives, sidecars, corrupt receipts or unmatched historical layouts
+block automatic recovery. V1 supports only empty input or exact canonical copies
+and has no automatic cancellation/supersession path. Do not remove files,
+rewrite receipt phases, replay unknown task mutations or invent a completion
+claim. A committed physical retirement still requires ordinary task validation.
