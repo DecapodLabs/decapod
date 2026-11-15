@@ -8,7 +8,13 @@ A 198-frame, 30-fps, **6.600-second**, **1920 × 1080** brand film for an AI-nat
 
 The editorial direction is deliberately sparse: white canvas, high-contrast black editorial typography, coral crab, individual single-message scenes, no timeline or persistent UI. The crab hops between cuts. Original stereo synthesizer music is synchronized to scene arrivals. The GIF is silent because GitHub Markdown has no native autoplay video/sound support. Click the animated GIF in the root README to view the MP4 with music.
 
-The opening shows the intended operating model: **a human has an idea, tells their coding agent, and the agent calls Decapod**. The viewer operates through the agent; Decapod runs behind the scenes. The remaining cuts introduce the agent's governance substrate: context and boundaries, parallel coordination, proof for the exact commit, and history that survives interruptions and handoffs. The closing card says **Built for AI agents**. This is motion-graphics explanation, not an execution recording or an attestation of hosted-cloud readiness.
+The creative hook comes from the [**Do what must be done**](https://news.ycombinator.com/item?id=50496383) thesis: an agent should investigate ordinary uncertainty before returning the reasoning burden to the human. The human supplies the objective and authorizes genuinely consequential decisions; the AI agent operates Decapod. This is the agent's behind-the-scenes governance kernel, invoked on demand throughout the job.
+
+The eight screens trace that experience: **Tired of babysitting your agents? → Tell your agent → It calls Decapod → Metacognition → Persistent state → Bounded parallel work → Commit-bound proof → Decapod: Do what must be done.**
+
+**Metacognition** means Decapod helps the agent inspect project context, challenge assumptions and investigate missing information through bounded evidence-grounded reflection before proceeding or requiring a human decision. Decapod does not provide a model's intelligence. **Persistent state** means repository-owned intent, living specifications, plans, task custody, unresolved obligations, event history and validation evidence survive process, agent and harness changes. Local state uses SQLite and tracked governance material; optional cloud shared authority has its own acceptance contract. **Proof** refers to specific source candidates, required checks and currently applicable policy, never generalized correctness by assertion.
+
+This film depicts the product's released and documented operating model. It is designed as original motion graphics, not fabricated CLI output or an attestation of unexecuted hosted-cloud, OS-isolation or independent-verifier guarantees.
 
 ## Render
 

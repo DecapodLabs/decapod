@@ -38,18 +38,18 @@ for required in (FONT_HEAVY, FONT_REG, FONT_MED):
     if not required.is_file():
         raise SystemExit(f"Required font missing: {required}; install fonts-lato")
 
-# The human supplies the idea; the AI agent invokes Decapod throughout the work.
-# Eight high-contrast beats, each with one message and no persistent UI.
-# Every cut has a corresponding note in the original score below.
+# Attention: human delegates an idea; agent gets governed reasoning and durable context.
+# The eight independent cuts are paced to the original score, with no persistent UI.
+# This is illustrated product storytelling, never simulated terminal/verification success.
 SCENES = [
-    {"start": 0,   "end": 25,  "lines": ("YOU HAVE", "AN IDEA."),     "align": "left",  "crab": (1530, 760)},
-    {"start": 25,  "end": 49,  "lines": ("TELL YOUR", "AGENT."),     "align": "right", "crab": (380, 760)},
-    {"start": 49,  "end": 73,  "lines": ("IT CALLS", "DECAPOD."),     "align": "left",  "crab": (1530, 760)},
-    {"start": 73,  "end": 97,  "lines": ("CONTEXT.", "BOUNDARIES."), "align": "right", "crab": (380, 760)},
-    {"start": 97,  "end": 121, "lines": ("AGENTS IN", "PARALLEL."),  "align": "left",  "crab": (1530, 760)},
-    {"start": 121, "end": 145, "lines": ("PROVE THE", "COMMIT."),   "align": "right", "crab": (380, 760)},
-    {"start": 145, "end": 169, "lines": ("HISTORY", "SURVIVES."),  "align": "left",  "crab": (1530, 760)},
-    {"start": 169, "end": 198, "kind": "outro", "crab": (1530, 760)},
+    {"start": 0,   "end": 37,  "lines": ("TIRED OF", "BABYSITTING", "YOUR AGENTS?"), "align": "left",  "crab": (1530, 760)},
+    {"start": 37,  "end": 60,  "lines": ("TELL YOUR", "AGENT."),     "align": "right", "crab": (380, 760)},
+    {"start": 60,  "end": 83,  "lines": ("IT CALLS", "DECAPOD."),    "align": "left",  "crab": (1530, 760)},
+    {"start": 83,  "end": 105, "lines": ("METACOGNITION.",),      "align": "center", "crab": (380, 760)},
+    {"start": 105, "end": 127, "lines": ("PERSISTENT", "STATE."), "align": "left", "crab": (1530, 760)},
+    {"start": 127, "end": 149, "lines": ("BOUNDED", "PARALLEL WORK."), "align": "right", "crab": (380, 760)},
+    {"start": 149, "end": 171, "lines": ("COMMIT-BOUND", "PROOF."), "align": "left", "crab": (1530, 760)},
+    {"start": 171, "end": 198, "kind": "outro", "crab": (1530, 760)},
 ]
 
 
@@ -177,7 +177,7 @@ def layer_text(im: Image.Image, scene: dict, frame: int):
         tw = box[2]-box[0]
         y = (342 if is_outro else 358) + yshift
         draw.text(((WIDTH-tw)/2,y),title,font=f,fill=ink,anchor="lt")
-        cap = "BUILT FOR AI AGENTS." if is_outro else "A GOVERNANCE KERNEL FOR AI AGENTS"
+        cap = "DO WHAT MUST BE DONE." if is_outro else "A GOVERNANCE KERNEL FOR AI AGENTS"
         ff = font(FONT_MED, 39)
         width = sum(draw.textlength(ch,font=ff)+5 for ch in cap)
         tracking(draw,(WIDTH-width)/2,608+yshift,cap,ff,(*GRAY,opacity),5)
@@ -191,8 +191,8 @@ def layer_text(im: Image.Image, scene: dict, frame: int):
         side=scene["align"]
         # Fit a consistent editorial column without cropping or intruding
         # into the crab's clear space. All text stays inside 1920x1080.
-        xs = 170 if side == "left" else 765
-        max_width = 1110 if side == "left" else 1005
+        xs = 170 if side in ("left", "center") else 765
+        max_width = 1530 if side == "center" else (1110 if side == "left" else 1005)
         size = 182
         while size > 110:
             candidate = font(FONT_HEAVY, size)
@@ -249,7 +249,7 @@ def synth_audio(path: Path):
         noise=rng.standard_normal(int(.055*sr))
         env=np.exp(-np.arange(len(noise))/sr*85)
         add(noise*env*vol,start,.6)
-    # The motif lands exactly on each of the eight visual transitions.
+    # Exactly one original musical accent per scene arrival.
     cue=[s["start"]/FPS for s in SCENES]
     melody=[659.25,783.99,987.77,880.00,1174.66,987.77,1174.66,1318.51]
     for i,(at,freq) in enumerate(zip(cue,melody)):
