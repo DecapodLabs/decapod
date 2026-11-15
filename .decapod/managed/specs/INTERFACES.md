@@ -1671,6 +1671,20 @@ TODO inputs beside canonical journal state; an explicit versioned nonempty
 recovery command and compatible authority contract remain required. See
 `docs/architecture/legacy-todo-recovery.md`.
 
+## Audit evidence and invocation scope (#1069)
+
+The refreshed implementation map changes no CLI/RPC interface. Existing native
+context, scope/admission, observed state, validation and publication surfaces
+remain the integration contract. A runtime must invoke them; instruction files
+and hooks cannot intercept arbitrary conversation or shell mutation.
+
+The map distinguishes actual CLI prerequisite admission from complete runtime
+proof in a fixture transport, source-CI execution from a full native receipt,
+physical recovery from task completion and publication eligibility from merge
+authority. It preserves the pending native reference integration and independent
+service/forge enforcement boundaries. Source-bound diagnostic links do not waive
+any required command, provider, custody or current-target requirement.
+
 ## Nix release gate outputs (#1626)
 
 `Select Cachix publisher` retains `publish=true|false`; packaging retains
