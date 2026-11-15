@@ -31,8 +31,13 @@ jobs:
       - name: Install render dependencies
         run: |
           python3 -m pip install 'Pillow==11.3.0'
+          if ! command -v ffmpeg >/dev/null || ! command -v ffprobe >/dev/null; then
+            sudo apt-get update -q
+            sudo apt-get install -y ffmpeg fonts-dejavu-core
+          fi
           command -v ffmpeg
           command -v ffprobe
+          test -f /usr/share/fonts/truetype/dejavu/DejaVuSans.ttf
 
       - name: Render MP4, GIF and poster
         run: python3 assets/showcase/render.py
