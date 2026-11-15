@@ -712,6 +712,14 @@
       "proof_refs": [
         "https://github.com/DecapodLabs/decapod/issues/1069"
       ]
+    },
+    {
+      "id": "issue1069-local-target-file-20",
+      "summary": "docs(readiness): define accepted offline local proof and publication limits; implementation checkpoint, hosted verification pending.",
+      "input_digest": "sha256:14f8c5547a9f5a37b25cf9ce0817b4ad3b8b5ed861af56f05b424522befe0cde",
+      "proof_refs": [
+        "https://github.com/DecapodLabs/decapod/issues/1069"
+      ]
     }
   ],
   "intents": {
@@ -765,7 +773,7 @@
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:f936bf88382e3ab29e96a3a67bfc840ceff52761cd4a42956e94d37109bc3f10",
+      "artifact_hash": "sha256:bd09856a98191ba32bc2c0274ddb874c5df16afa7a82f34e0b638f16c362f0f9",
       "checks": [],
       "current_phase": "implementation",
       "custody": {
@@ -914,10 +922,17 @@
             "intent_id": "intent:change_01M7E8A3MZHNBWBX2KNXENQ0TY",
             "kind": "trajectory_step_recorded",
             "sequence": 22
+          },
+          {
+            "detail": "trajectory:branch_01M7E8A3T2VGHEEF4YEY3B0TD8",
+            "event_id": "event:23",
+            "intent_id": "intent:change_01M7E8A3MZHNBWBX2KNXENQ0TY",
+            "kind": "trajectory_step_recorded",
+            "sequence": 23
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 22,
+        "next_sequence": 23,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M7E8A3T2VGHEEF4YEY3B0TD8": {
@@ -1228,6 +1243,22 @@
                 "validation_findings": [
                   "Implementation in progress; exact-candidate hosted checks pending; no local tests or Buildkite evidence collection."
                 ]
+              },
+              {
+                "action": "implementation",
+                "custody_event_id": "event:23",
+                "observations": [
+                  "docs/agent/repository-readiness.md",
+                  "https://github.com/DecapodLabs/decapod/issues/1069"
+                ],
+                "proof_refs": [],
+                "scope": [
+                  "root"
+                ],
+                "sequence": 23,
+                "validation_findings": [
+                  "Implementation in progress; exact-candidate hosted checks pending; no local tests or Buildkite evidence collection."
+                ]
               }
             ]
           }
@@ -1242,6 +1273,7 @@
       "intent_id": "intent:change_01M7E8A3MZHNBWBX2KNXENQ0TY",
       "modified_files": [
         ".decapod/managed/specs/INTENT.md",
+        "docs/agent/repository-readiness.md",
         "src/decapod/core/repository_profile.rs",
         "src/decapod/core/validation_history.rs",
         "src/decapod/core/validation_runtime.rs",
