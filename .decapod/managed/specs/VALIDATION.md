@@ -2139,6 +2139,26 @@ GitHub Actions must evaluate this integrated candidate. No local tests run;
 Buildkite is excluded at the user's direction and full native publication
 readiness remains unproven.
 
+## Versioned physical legacy recovery coverage (#1657)
+
+`tests/sqlite_maintenance.rs` exercises the actual Decapod binary with isolated
+repositories, canonical policy and claimed workspaces. Regressions cover exact
+canonical-copy archival, unchanged canonical bytes, bounded receipt size,
+idempotent replay, prepared-state startup fencing, resumption after physical
+archival, separate-grant denial, stale source bytes/modes, corrupt input,
+symlinks and reappeared source. The existing reconstructed verification consumer
+must reject the operation report as task completion proof. Interrupted physical
+states are deterministic fixtures built from a real kernel-issued preparation,
+not ten native agents or proof of a killed process at every instruction.
+
+`tests/unit/cli_tests.rs` checks typed command parsing and permission separation.
+Required CLI aggregate already includes SQLite maintenance tests. Hosted execution
+for this candidate remains pending; no local tests run. Buildkite is excluded at
+the user's direction while its accepted requirement remains enabled, so full
+native publication readiness is unproven. Empty/exact-copy retirement is a
+bounded #1657 slice: unmatched legacy schemas, arbitrary historical equivalence,
+cloud owner repair and independent security isolation remain unresolved.
+
 ## Squash release packaging regression (#1626)
 
 `tests/release_metadata_policy.rs::nix_gates_recognize_squash_linear_and_ordinary_release_commits`
