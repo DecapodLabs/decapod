@@ -363,7 +363,7 @@ These declarations select authoring and proof obligations; they do not attest im
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `472f3a60d05913e607d14d9bc06e1171d8db1ef6341884d57bd05d3fff11006d`
+- Repository signal fingerprint: `e95f6e1caf246b9ee6c3bfb8edf4272c2a059370ea382d277527a1b7567d5036`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (234 files), `tests/` (233 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
@@ -685,7 +685,7 @@ until their actual observations are collected; no local test result is claimed.
 
 ## Current continuous-governance audit (#1069)
 
-Refresh the existing implementation map against accepted Decapod0.145.5 master
+Refresh the existing implementation map against accepted Decapod0.145.6 master
 without changing the kernel, validation policy or publication authority. Separate
 accepted code from pending PRs, and source-bound executed observations from
 unexecuted requirements. Cover exact proof, observed workunit acceptance,

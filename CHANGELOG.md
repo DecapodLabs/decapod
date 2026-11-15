@@ -7,6 +7,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.145.6](https://github.com/DecapodLabs/decapod/compare/v0.145.5...v0.145.6) - 2026-11-15
+
+### Fixed
+
+- *(proof)* reconcile the reviewed Nix workflow contract without relaxing checks
+- *(bazel)* retain the Nix workflow input for release gate regressions
+- *(nix)* recognize squash and linear release commits in both gates
+
+### Other
+
+- *(governance)* reconcile the reviewed Nix adapter projections
+- *(proof)* retain the independently accepted controller boundary for Nix edits
+- *(governance)* refresh reviewed Nix release gate projections
+- *(proof)* reconcile the Nix gates and retained Bazel test input
+- *(nix)* specify validation release gate boundaries
+- *(nix)* specify security release gate boundaries
+- *(nix)* specify interfaces release gate boundaries
+- *(nix)* specify architecture release gate boundaries
+- *(nix)* model a real squash merge and advertised protected tips
+- *(nix)* execute both release gates against real shallow Git histories
+- *(specs)* scope squash release packaging eligibility
+
 ## [0.145.5](https://github.com/DecapodLabs/decapod/compare/v0.145.4...v0.145.5) - 2026-11-14
 
 ### Fixed
