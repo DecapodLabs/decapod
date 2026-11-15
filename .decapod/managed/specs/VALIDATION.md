@@ -2156,6 +2156,10 @@ The original missing v0.138.0 cache entry is historical and is not claimed fille
 by this code change. Actual protected-master packaging/publication must establish
 cache availability separately after acceptance.
 
+## Canonical local Git proof (#1069)
+
+The new required actual-binary entrypoint regression creates an operator-reviewed canonical local contract, claims a task, creates its governed workspace and invokes ordinary full validation with provider environment removed. It checks real executed observations, durable history inspection, unchanged repeat execution, source changes, forged diagnostic claims for altered source, accepted-base movement, authority revocation and forge publication refusal. Existing strict/external and adversarial suites remain required. GitHub Actions runs the checks; no local tests/builds or Buildkite evidence collection. Exact hosted observations are pending and the complete ten-worker A–H/native-runtime mission remains unproven.
+
 ## PR #1699 accepted-target integration
 
 The escalation branch now integrates accepted master `8e435969a8c21269aa277301b3e6492d780a9bdb` with installed Decapod 0.145.6. Preserve both the escalation contract and the accepted Nix release-gate/finite-adapter changes, including both owning Bazel fixtures. The earlier full native observation for `d52943740cac03fa45046317ea4af090f919fec6` against `f5da0e6183bf31cfbef3d5a53c52553ee8b6fbb5` remains historical and cannot authorize a new integration. Fresh checks must bind the new source/tree/target and custody generation. This integration uses GitHub verification without local test/build execution or Buildkite evidence collection; accepted strict provider requirements remain enabled, and no automatic merge authority is introduced.
