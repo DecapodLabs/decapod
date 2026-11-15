@@ -7,6 +7,183 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.146.0](https://github.com/DecapodLabs/decapod/compare/v0.145.6...v0.146.0) - 2026-11-15
+
+### Added
+
+- *(convergence)* identify inference escalation as agent-directed
+- *(convergence)* reuse bounded reflection for escalation decisions
+- *(convergence)* define typed escalation admissibility observations
+
+### Fixed
+
+- permit investigated uncertainty reclassification without resetting budget
+- match full canonical human question identity
+- admit investigated source facts through the existing citation guard
+- bind authority scope into reflection freshness context
+- identify admissible human dependency as convergence progress
+- permit monotonic authority refinement during investigation
+- keep unresolved authority explicit in reason codes
+- never infer authority from an absent policy gate
+- *(convergence)* route architecture investigation and terminate finished exchanges
+- *(convergence)* classify architecture words as inference pressure
+- *(convergence)* use canonical dependencies instead of title-based human gates
+- *(convergence)* keep unrelated approvals from resolving information gaps
+- *(convergence)* separate typed escalation from legacy keyword hints
+
+### Other
+
+- integrate master and Decapod v0.145.6 for PR1699
+- bind complete convergence behavior for validation
+- refresh .manifest.json after classification continuity repair
+- refresh VALIDATION.md after classification continuity repair
+- refresh SEMANTICS.md after classification continuity repair
+- refresh SECURITY.md after classification continuity repair
+- refresh README.md after classification continuity repair
+- refresh OPERATIONS.md after classification continuity repair
+- refresh INTERFACES.md after classification continuity repair
+- refresh INTENT.md after classification continuity repair
+- refresh ARCHITECTURE.md after classification continuity repair
+- distinguish uncertainty declarations from governing authority
+- permit investigated classification correction
+- require real progress after uncertainty reclassification
+- bind audited convergence protocol for complete validation
+- refresh .manifest.json after canonical question hardening
+- refresh VALIDATION.md after canonical question hardening
+- refresh SEMANTICS.md after canonical question hardening
+- refresh SECURITY.md after canonical question hardening
+- refresh README.md after canonical question hardening
+- refresh OPERATIONS.md after canonical question hardening
+- refresh INTERFACES.md after canonical question hardening
+- refresh INTENT.md after canonical question hardening
+- refresh ARCHITECTURE.md after canonical question hardening
+- reject human question display-prefix collisions
+- bind complete convergence protocol for full proof
+- refresh .manifest.json after investigation continuity repair
+- refresh VALIDATION.md after investigation continuity repair
+- refresh SEMANTICS.md after investigation continuity repair
+- refresh SECURITY.md after investigation continuity repair
+- refresh README.md after investigation continuity repair
+- refresh OPERATIONS.md after investigation continuity repair
+- refresh INTERFACES.md after investigation continuity repair
+- refresh INTENT.md after investigation continuity repair
+- refresh ARCHITECTURE.md after investigation continuity repair
+- explain investigation beyond the initial source citation
+- cover discovered evidence and governing citation continuity
+- bind scope freshness candidate for complete proof
+- refresh .manifest.json after authority freshness repair
+- refresh VALIDATION.md after authority freshness repair
+- refresh SEMANTICS.md after authority freshness repair
+- refresh SECURITY.md after authority freshness repair
+- refresh README.md after authority freshness repair
+- refresh OPERATIONS.md after authority freshness repair
+- refresh INTERFACES.md after authority freshness repair
+- refresh INTENT.md after authority freshness repair
+- refresh ARCHITECTURE.md after authority freshness repair
+- reject broader authority replay after target refinement
+- record successful fixtures and enforce fresh candidate proof
+- bind final authority continuity candidate
+- refresh .manifest.json after authority refinement
+- refresh VALIDATION.md after authority refinement
+- refresh SEMANTICS.md after authority refinement
+- refresh SECURITY.md after authority refinement
+- refresh README.md after authority refinement
+- refresh OPERATIONS.md after authority refinement
+- refresh INTERFACES.md after authority refinement
+- refresh INTENT.md after authority refinement
+- refresh ARCHITECTURE.md after authority refinement
+- preserve established authority scope during refinement
+- specify authority refinement continuity
+- align reflection architecture with authority discovery
+- explain authority discovery continuations
+- define bounded authority refinement and human dependency progress
+- cover authority discovery and immutable established scope
+- bind recovery fixture repair for complete validation
+- refresh .manifest.json after recovery fixture repair
+- refresh VALIDATION.md after recovery fixture repair
+- refresh SEMANTICS.md after recovery fixture repair
+- refresh SECURITY.md after recovery fixture repair
+- refresh README.md after recovery fixture repair
+- refresh OPERATIONS.md after recovery fixture repair
+- refresh INTERFACES.md after recovery fixture repair
+- refresh INTENT.md after recovery fixture repair
+- refresh ARCHITECTURE.md after recovery fixture repair
+- reconcile recovery fixture build inputs ([#1696](https://github.com/DecapodLabs/decapod/pull/1696))
+- specify shared recovery fixture prerequisites ([#1696](https://github.com/DecapodLabs/decapod/pull/1696))
+- declare shared recovery fixture inputs ([#1696](https://github.com/DecapodLabs/decapod/pull/1696))
+- select supported storage for CLI recovery success fixtures ([#1696](https://github.com/DecapodLabs/decapod/pull/1696))
+- reuse shared recovery probe in filesystem regressions ([#1696](https://github.com/DecapodLabs/decapod/pull/1696))
+- share the existing recovery filesystem probe ([#1696](https://github.com/DecapodLabs/decapod/pull/1696))
+- bind integrated convergence candidate for validation
+- refresh .manifest.json after v0.145.5 integration
+- refresh VALIDATION.md after v0.145.5 integration
+- refresh SEMANTICS.md after v0.145.5 integration
+- refresh SECURITY.md after v0.145.5 integration
+- refresh README.md after v0.145.5 integration
+- refresh OPERATIONS.md after v0.145.5 integration
+- refresh INTERFACES.md after v0.145.5 integration
+- refresh INTENT.md after v0.145.5 integration
+- refresh ARCHITECTURE.md after v0.145.5 integration
+- reconcile accepted v0.145.5 proof inventory
+- integrate accepted v0.145.5 and canonical release projections
+- preserve first execution and fixture repair evidence
+- bind .manifest.json to fixture repairs
+- bind VALIDATION.md to fixture repairs
+- bind SEMANTICS.md to fixture repairs
+- bind SECURITY.md to fixture repairs
+- bind README.md to fixture repairs
+- bind OPERATIONS.md to fixture repairs
+- bind INTERFACES.md to fixture repairs
+- bind INTENT.md to fixture repairs
+- bind ARCHITECTURE.md to fixture repairs
+- assert the public readiness override rejection
+- serialize complete approval-policy fixture configuration
+- record authority repair and validation retry
+- bind .manifest.json to the authority repair
+- bind VALIDATION.md to the authority repair
+- bind SEMANTICS.md to the authority repair
+- bind SECURITY.md to the authority repair
+- bind README.md to the authority repair
+- bind OPERATIONS.md to the authority repair
+- bind INTERFACES.md to the authority repair
+- bind INTENT.md to the authority repair
+- bind ARCHITECTURE.md to the authority repair
+- assert unresolved authorization diagnosis
+- reject inferred authorization for unconfigured operations
+- record convergence candidate and spec reviews
+- refresh .manifest.json source attestation
+- refresh VALIDATION.md source attestation
+- refresh SEMANTICS.md source attestation
+- refresh SECURITY.md source attestation
+- refresh README.md source attestation
+- refresh OPERATIONS.md source attestation
+- refresh INTERFACES.md source attestation
+- refresh INTENT.md source attestation
+- refresh ARCHITECTURE.md source attestation
+- reconcile accepted v0.145.4 proof inventory
+- specify escalation validation boundaries
+- specify escalation security boundaries
+- clarify supported reflection operations
+- observe configured policy in escalation authority fixture
+- simplify escalation input guards
+- integrate accepted v0.145.4 source and canonical projections
+- *(convergence)* document generated integration and keyword-gate repair
+- *(convergence)* state supported source-observation boundaries
+- *(convergence)* align inference guidance with observed authority
+- *(convergence)* measure deterministic fixture decisions and isolation
+- *(convergence)* verify generated agent integration and true human dependencies
+- *(convergence)* specify escalation compatibility and continuation fields
+- *(convergence)* describe the existing-journal escalation architecture
+- *(convergence)* state autonomous convergence intent and authority
+- *(convergence)* distinguish inference escalation from human decisions
+- *(convergence)* record escalation architecture and measured-proof boundaries
+- *(convergence)* define bounded escalation continuity and proof limits
+- *(convergence)* document typed escalation requests and source predicates
+- *(convergence)* require investigation before human escalation
+- *(convergence)* cover architectural choices without routine human interruption
+- *(convergence)* simulate the orientation-to-mentor escalation loop
+- *(convergence)* exercise adversarial convergence and authority fixtures
+
 ## [0.145.6](https://github.com/DecapodLabs/decapod/compare/v0.145.5...v0.145.6) - 2026-11-15
 
 ### Fixed
