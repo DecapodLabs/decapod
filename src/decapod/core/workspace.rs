@@ -2253,7 +2253,7 @@ fn canonical_local_readiness_repository(
     }
     let canonical = crate::cli::DecapodProjectConfig::load(&root)?;
     let local_profile = |config: &crate::cli::DecapodProjectConfig| {
-        config.repo.backend == "local"
+        config.repo.backend == Some(crate::cli::BackendType::Local)
             && !config.proof.validation_buildkite_preflights
             && config
                 .proof
