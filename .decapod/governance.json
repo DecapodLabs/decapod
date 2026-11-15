@@ -599,6 +599,14 @@
       "proof_refs": [
         "git:archive/pr1697-before-1460-rebase-4afbf4a7@4afbf4a73cd037da22575a902513a9f2e5996c3d"
       ]
+    },
+    {
+      "id": "pr1697-1460-replay-06",
+      "summary": "feat: rebase PR1697 todo.rs on v0.146.0; new tree observed during current rebase, GitHub proof pending.",
+      "input_digest": "sha256:ebef68fc4bac86130b3ad22d552da1e71e3d77a902d8e854bb697d3aa1f4d6a1",
+      "proof_refs": [
+        "git:archive/pr1697-before-1460-rebase-4afbf4a7@4afbf4a73cd037da22575a902513a9f2e5996c3d"
+      ]
     }
   ],
   "intents": {
@@ -652,7 +660,7 @@
       "active_boundaries": [
         "Old branch tips and receipts remain historical; fresh checkpoints bind every newly authored material tree; no local tests/builds or Buildkite collection; preserve required provider and publication gates"
       ],
-      "artifact_hash": "sha256:69a1af4c8bf091d6b8593e2d2d70461431cdb36ad402f28ac39ea3ada23bcdb6",
+      "artifact_hash": "sha256:f17f085fffa847933ed1eb4562ef54787907fa951c76ec7a545ff38aa114db29",
       "checks": [],
       "current_phase": "implementation",
       "custody": {
@@ -703,10 +711,17 @@
             "intent_id": "intent:pr1697-v1460-rebase",
             "kind": "trajectory_step_recorded",
             "sequence": 8
+          },
+          {
+            "detail": "trajectory:pr1697-v1460-rebase",
+            "event_id": "event:9",
+            "intent_id": "intent:pr1697-v1460-rebase",
+            "kind": "trajectory_step_recorded",
+            "sequence": 9
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 8,
+        "next_sequence": 9,
         "schema_version": "1.0.0",
         "trajectories": {
           "pr1697-v1460-rebase": {
@@ -793,6 +808,22 @@
                 "validation_findings": [
                   "Fresh material replay on accepted0.146.0 master; old checkpoint observations remain archived on the old Git tip and do not prove this tree. Required new GitHub execution pending; no local tests/builds or Buildkite collection."
                 ]
+              },
+              {
+                "action": "implementation",
+                "custody_event_id": "event:9",
+                "observations": [
+                  "src/decapod/core/todo.rs",
+                  "https://github.com/DecapodLabs/decapod/pull/1697"
+                ],
+                "proof_refs": [],
+                "scope": [
+                  "<external-path>"
+                ],
+                "sequence": 9,
+                "validation_findings": [
+                  "Fresh material replay on accepted0.146.0 master; old checkpoint observations remain archived on the old Git tip and do not prove this tree. Required new GitHub execution pending; no local tests/builds or Buildkite collection."
+                ]
               }
             ]
           }
@@ -809,7 +840,8 @@
         "src/decapod/cli.rs",
         "src/decapod/core/docs_cli.rs",
         "src/decapod/core/legacy_todo_recovery.rs",
-        "src/decapod/core/migration.rs"
+        "src/decapod/core/migration.rs",
+        "src/decapod/core/todo.rs"
       ],
       "repo_scope": [
         "<external-path>"
