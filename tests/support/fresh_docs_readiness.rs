@@ -525,6 +525,8 @@ fn prove_canonical_local_cli(
     head: &str,
 ) {
     let start = std::time::Instant::now();
+    let store_path = root.join(".decapod/data");
+    let store_before = retained_bytes(&store_path);
     let output = governed_command(workspace, storage, &["validate", "--format", "json"])
         .bounded_output(Duration::from_secs(300))
         .unwrap();
@@ -566,7 +568,12 @@ fn prove_canonical_local_cli(
     }
     assert_eq!(git(workspace, &["rev-parse", "HEAD"]), head);
     assert!(git(workspace, &["status", "--porcelain"]).is_empty());
-    governed_ok(workspace, storage, &["qa", "verify", "commit", head]);
+    let validation_ms = start.elapsed().as_millis();
+    let inspection = std::time::Instant::now();
+    let historical = governed_ok(workspace, storage, &["qa", "verify", "commit", head]);
+    assert_eq!(historical["status"], "passed");
+    assert_eq!(historical["publication_ready"], false);
+    let inspection_ms = inspection.elapsed().as_millis();
     let bytes = retained_bytes(&evidence);
     let repeat = std::time::Instant::now();
     let again = governed_command(workspace, storage, &["validate", "--format", "json"])
@@ -580,8 +587,8 @@ fn prove_canonical_local_cli(
     );
     assert_eq!(again_json["readiness"]["ready"], true);
     let _ = io::Write::write_all(&mut io::stderr(), format!(
-        "canonical-local metrics: first_and_inspection_ms={} unchanged_validation_ms={} retained_evidence_bytes={}\n",
-        start.elapsed().as_millis(), repeat.elapsed().as_millis(), bytes,
+        "canonical-local metrics: validation_ms={} inspection_ms={} unchanged_validation_ms={} retained_evidence_bytes={} canonical_store_growth_bytes={}\n",
+        validation_ms, inspection_ms, repeat.elapsed().as_millis(), bytes, retained_bytes(&store_path).saturating_sub(store_before),
     ).as_bytes());
     // Material mutation cannot reuse the original successful observation.
     fs::write(workspace.join("payload.txt"), "changed after validation\n").unwrap();
@@ -630,7 +637,8 @@ fn prove_canonical_local_cli(
         root,
         &["commit", "-m", "advance independent accepted local target"],
     );
-    rejected_local_claim(workspace, storage, &["validate", "--format", "json"]);
+    let stale = rejected_local_claim(workspace, storage, &["validate", "--format", "json"]);
+    assert!(stale.contains("STALE_ACCEPTED_BASE"), "{stale}");
     // Revoking local authority on the canonical target cannot be repaired by a
     // candidate still declaring that authority or by a provider fallback.
     let config_path = root.join(CONFIG);
@@ -643,7 +651,11 @@ fn prove_canonical_local_cli(
         root,
         &["commit", "-m", "revoke canonical local target authority"],
     );
-    rejected_local_claim(workspace, storage, &["validate", "--format", "json"]);
+    let revoked = rejected_local_claim(workspace, storage, &["validate", "--format", "json"]);
+    assert!(
+        revoked.contains("LOCAL_TARGET_POLICY_UNACCEPTED"),
+        "{revoked}"
+    );
     eprintln!(
         "Actual offline CLI local proof and stale/forged/revoked authority cases: {:?}",
         start.elapsed()
@@ -651,7 +663,7 @@ fn prove_canonical_local_cli(
 }
 
 #[cfg(unix)]
-fn rejected_local_claim(workspace: &Path, storage: &Path, args: &[&str]) {
+fn rejected_local_claim(workspace: &Path, storage: &Path, args: &[&str]) -> String {
     let output = governed_command(workspace, storage, args)
         .bounded_output(Duration::from_secs(300))
         .unwrap();
@@ -664,6 +676,7 @@ fn rejected_local_claim(workspace: &Path, storage: &Path, args: &[&str]) {
     );
     assert_ne!(response["publication_ready"], true);
     assert_ne!(response["readiness"]["ready"], true);
+    format!("{response} {}", String::from_utf8_lossy(&output.stderr))
 }
 
 #[cfg(unix)]
