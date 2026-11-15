@@ -710,3 +710,7 @@ Hosted-only verification is required; no local tests, Buildkite queries or
 automatic merging. This change does not claim that a historical missing Nix cache
 entry has been populated: actual native packaging and authenticated publication
 remain separate observations after acceptance.
+
+## Canonical local-target proof (#1069)
+
+Extend the existing repository-local verifier so an explicitly accepted local contract can read the canonical repository's accepted Git branch without a forge. The normal CLI must execute its reviewed checks through the sealed host and preserve exact source, accepted base, integration, tools, policy, and task custody. Candidate-only target opt-in and strict-profile or cloud fallback must fail closed. Local shared-user authority and separate remote publication remain explicit limits; the complete ten-worker A–H demonstration is still unproven. Hosted regression execution, rather than local test runs, will establish this slice's evidence.
