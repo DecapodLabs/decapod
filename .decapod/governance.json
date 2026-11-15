@@ -800,6 +800,14 @@
       "proof_refs": [
         "https://github.com/DecapodLabs/decapod/issues/1069"
       ]
+    },
+    {
+      "id": "issue1069-local-target-review-v1",
+      "summary": "Review local-target proof contract and official0.145.6 governed projections; exact-candidate GitHub verification pending; no full native publication claim.",
+      "input_digest": "sha256:81a79672ca4029286505ed56ec2cc20d34fbadc525e5d90d4f3fa3f3a54170bc",
+      "proof_refs": [
+        "https://github.com/DecapodLabs/decapod/issues/1069"
+      ]
     }
   ],
   "intents": {
@@ -837,7 +845,30 @@
         "Preserve strict source profile and authenticated cloud authority; no Buildkite evidence collection"
       ],
       "schema_version": "1.1.0",
-      "state": "DRAFT",
+      "spec_reviews": [
+        {
+          "disposition": "updated",
+          "path": ".decapod/managed/specs/ARCHITECTURE.md",
+          "reason": "Reviewed explicit accepted canonical local authority, sealed execution, exact source/base/integration, separate forge publication and shared-UID limits; actual-binary GitHub regression pending. No local tests or Buildkite evidence collection; native full publication remains unproven.",
+          "reviewed_code_fingerprint": "f53b2bcd772ac07ba0e38c1f84a394664e7ec701316ac73553b11c64748d6c6e",
+          "spec_material_hash": "445637f5391bf876dbae8a04f61837fca698e0c66cd153e8c69d8469757c3084"
+        },
+        {
+          "disposition": "updated",
+          "path": ".decapod/managed/specs/INTERFACES.md",
+          "reason": "Reviewed explicit accepted canonical local authority, sealed execution, exact source/base/integration, separate forge publication and shared-UID limits; actual-binary GitHub regression pending. No local tests or Buildkite evidence collection; native full publication remains unproven.",
+          "reviewed_code_fingerprint": "f53b2bcd772ac07ba0e38c1f84a394664e7ec701316ac73553b11c64748d6c6e",
+          "spec_material_hash": "981c21e82f2eab0937ac2cf0b53ae1520acd953078cf717a79c9ffeb68e5e647"
+        },
+        {
+          "disposition": "updated",
+          "path": ".decapod/managed/specs/SECURITY.md",
+          "reason": "Reviewed explicit accepted canonical local authority, sealed execution, exact source/base/integration, separate forge publication and shared-UID limits; actual-binary GitHub regression pending. No local tests or Buildkite evidence collection; native full publication remains unproven.",
+          "reviewed_code_fingerprint": "f53b2bcd772ac07ba0e38c1f84a394664e7ec701316ac73553b11c64748d6c6e",
+          "spec_material_hash": "62fa2bf2599ba98b6bb19992cee9f70e8d03e761e660f0d8bca3867540249f34"
+        }
+      ],
+      "state": "APPROVED",
       "stop_conditions": [],
       "title": "Source-bound canonical local Git readiness",
       "todo_ids": [
@@ -847,15 +878,20 @@
         "Full A-H ten-worker delivery and independent remote publication remain separate unresolved obligations"
       ],
       "unresolved_contradictions": [],
-      "updated_at": "1794703296Z"
+      "updated_at": "1794704718Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:307d1b55475be8fb63e9c65ad2948f95b16dbd82ac4a6477564af95b46897fa4",
-      "checks": [],
-      "current_phase": "implementation",
+      "artifact_hash": "sha256:df3b6d944fa0500065cbea14d3bb2245718299d55acdc266c3ed70bdd563333a",
+      "checks": [
+        {
+          "name": "hosted-source-proof",
+          "status": "partial"
+        }
+      ],
+      "current_phase": "validation",
       "custody": {
         "events": [
           {
@@ -1079,10 +1115,17 @@
             "intent_id": "intent:change_01M7E8A3MZHNBWBX2KNXENQ0TY",
             "kind": "trajectory_step_recorded",
             "sequence": 33
+          },
+          {
+            "detail": "trajectory:branch_01M7E8A3T2VGHEEF4YEY3B0TD8",
+            "event_id": "event:34",
+            "intent_id": "intent:change_01M7E8A3MZHNBWBX2KNXENQ0TY",
+            "kind": "trajectory_step_recorded",
+            "sequence": 34
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 33,
+        "next_sequence": 34,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M7E8A3T2VGHEEF4YEY3B0TD8": {
@@ -1569,6 +1612,23 @@
                 "validation_findings": [
                   "Implementation in progress; exact-candidate hosted checks pending; no local tests or Buildkite evidence collection."
                 ]
+              },
+              {
+                "action": "validation",
+                "custody_event_id": "event:34",
+                "observations": [
+                  "https://github.com/DecapodLabs/decapod/actions/runs/43660287872"
+                ],
+                "proof_refs": [
+                  "hosted-source-proof"
+                ],
+                "scope": [
+                  "root"
+                ],
+                "sequence": 34,
+                "validation_findings": [
+                  "Earlier source compiled successfully on GitHub. Its governance job rejected missing current spec review and health rejected stale generated projections; current review/refresh repairs those exact blockers. Actual new CLI acceptance and current final candidate checks remain pending. Native full strict publication is unproven; draft review publication is authorized by the user. No local tests or Buildkite evidence collection."
+                ]
               }
             ]
           }
@@ -1577,6 +1637,7 @@
       "declared_commands": [],
       "destination": "pull request",
       "evidence": [
+        "https://github.com/DecapodLabs/decapod/actions/runs/43660287872",
         "https://github.com/DecapodLabs/decapod/issues/1069"
       ],
       "inspected_files": [],
@@ -1615,6 +1676,7 @@
       "task_id": "code_01m7e88jr715z5sp",
       "tool_calls": [],
       "unresolved_assumptions": [
+        "Earlier source compiled successfully on GitHub. Its governance job rejected missing current spec review and health rejected stale generated projections; current review/refresh repairs those exact blockers. Actual new CLI acceptance and current final candidate checks remain pending. Native full strict publication is unproven; draft review publication is authorized by the user. No local tests or Buildkite evidence collection.",
         "Implementation in progress; exact-candidate hosted checks pending; no local tests or Buildkite evidence collection."
       ]
     }
