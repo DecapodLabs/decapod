@@ -63,6 +63,10 @@ pub struct RepositoryExecution {
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 #[serde(deny_unknown_fields)]
 pub struct RepositoryContract {
+    /// Explicit local authority; must already be accepted on the canonical
+    /// repository target. Absence preserves the existing GitHub transport.
+    #[serde(default, skip_serializing_if = "is_false")]
+    pub canonical_local_target: bool,
     pub reviewed_commands_digest: String,
     pub source_coverage: Vec<SourceCoverage>,
     pub executions: BTreeMap<String, RepositoryExecution>,
@@ -74,12 +78,18 @@ pub fn command_contract_digest(
     commands: &[ProofDef],
     contract: &RepositoryContract,
 ) -> Result<String, PlanningFailure> {
-    super::readiness_evidence::digest(&(
+    let original = (
         REQUIRED_PROFILE,
         commands,
         &contract.source_coverage,
         &contract.executions,
-    ))
+    );
+    // Preserve all pre-local-target review digests byte for byte.
+    if contract.canonical_local_target {
+        super::readiness_evidence::digest(&(original, "canonical_local_git.v1"))
+    } else {
+        super::readiness_evidence::digest(&original)
+    }
     .map_err(|_| PlanningFailure::Serialization)
 }
 
@@ -103,7 +113,8 @@ pub(crate) fn preserve_accepted(
     };
     let accepted = accepted_contract.ok_or_else(changed)?;
     let candidate = contract.ok_or_else(changed)?;
-    if accepted_commands.is_empty()
+    if accepted.canonical_local_target != candidate.canonical_local_target
+        || accepted_commands.is_empty()
         || command_contract_digest(accepted_commands, accepted)?
             != accepted.reviewed_commands_digest
     {
