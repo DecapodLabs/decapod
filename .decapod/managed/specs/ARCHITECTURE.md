@@ -1303,6 +1303,23 @@ artifact beside canonical task history remains guarded. General nonempty
 versioned reconciliation is still unresolved; no second journal authority or
 implicit projection rebuild is introduced.
 
+## Source-grounded current enforcement map (#1069)
+
+`docs/architecture/continuous-governance-implementation-map.md` now distinguishes
+the accepted0.145.6 kernel from pending recovery and separately accepted Nix
+source, and binds hosted
+observations to their actual head, accepted base and declared scope. Canonical
+validation, observed workunit proof, request-local diagnostic denial, task custody
+and historical completion remain existing authority owners. The map introduces
+no new engine, store, daemon or authority interpreter.
+
+The complete native runtime integration, ten-worker A-H demonstration,
+independently authenticated exception/cloud authority and compatible split-store
+workunit convergence remain missing. Native GitHub source diagnostics cannot
+replace configured provider proof or authorize a different candidate. Existing
+SQLite semantics remain the foundation; a facade or registry upgrade does not
+satisfy an older no-SQLite-engine proposal by assertion.
+
 ## Nix release eligibility (#1626)
 
 The existing `.github/workflows/nix-flake.yml` owner and packaging gates inspect
