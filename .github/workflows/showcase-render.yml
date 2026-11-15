@@ -30,7 +30,9 @@ jobs:
 
       - name: Install render dependencies
         run: |
-          python3 -m pip install 'Pillow==11.3.0'
+          python3 -m pip install 'Pillow==11.3.0' 'numpy==2.3.4'
+          sudo apt-get update -q
+          sudo apt-get install -y fonts-lato
           if ! command -v ffmpeg >/dev/null || ! command -v ffprobe >/dev/null; then
             sudo apt-get update -q
             sudo apt-get install -y ffmpeg fonts-dejavu-core
@@ -60,11 +62,19 @@ jobs:
           ], text=True))
           duration = float(info["format"]["duration"])
           assert 6.0 <= duration < 7.0, f"video duration={duration}"
+          streams = json.loads(subprocess.check_output([
+              "ffprobe", "-v", "error", "-show_entries", "stream=codec_type,codec_name",
+              "-of", "json", str(mp4)
+          ], text=True))["streams"]
+          stream_types = {s["codec_type"] for s in streams}
+          assert stream_types == {"audio", "video"}, stream_types
+          assert any(s["codec_name"] == "aac" for s in streams), streams
+          assert any(s["codec_name"] == "h264" for s in streams), streams
           for path in (mp4, gif, poster):
               assert path.is_file() and path.stat().st_size > 1000, str(path)
           with Image.open(gif) as im:
-              assert im.n_frames >= 60, im.n_frames
-          print(f"Verified: {duration:.4f}s, {mp4.stat().st_size:,} MP4 bytes")
+              assert im.n_frames >= 80, im.n_frames
+          print(f"Verified: {duration:.4f}s, H264/AAC, {mp4.stat().st_size:,} MP4 bytes")
           PY
 
       - uses: actions/upload-artifact@v4
@@ -80,6 +90,6 @@ jobs:
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add assets/showcase/generated/
           if ! git diff --cached --quiet; then
-            git commit -m "docs(showcase): check in verified 6.583-second animated media"
+            git commit -m "docs(showcase): check in verified 6.600-second brand film with soundtrack"
             git push origin "HEAD:${GITHUB_REF_NAME}"
           fi
