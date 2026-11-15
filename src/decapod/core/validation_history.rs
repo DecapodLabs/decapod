@@ -122,9 +122,7 @@ fn ambient_git_override(name: &OsStr, value: &OsStr) -> bool {
     OVERRIDES.contains(&name.as_ref()) || name.starts_with("GIT_CONFIG_")
 }
 
-fn repository_identity(
-    root: &Path,
-) -> Result<super::repo_identity::RepositoryIdentity, DecapodError> {
+fn repository_identity(root: &Path) -> Result<workspace::ReadinessRepository, DecapodError> {
     // The shared remote resolver predates the bounded Git reader. Reject
     // ambient redirects before calling it, so its repository and our immutable
     // object observations cannot silently describe different checkouts.
@@ -1020,7 +1018,16 @@ impl HistoricalValidationProof {
             "validation.history.integration",
             &program.to_string_lossy(),
         )?;
-        let remote = accepted_target(&program, &repository.remote_url, &branch_ref)?;
+        let remote = if let Some(root) = repository.local_target_root {
+            let oid = workspace::read_canonical_local_git(
+                &root,
+                &program,
+                &["rev-parse", "--verify", &format!("{branch_ref}^{{commit}}")],
+            )?;
+            format!("{oid}\t{branch_ref}")
+        } else {
+            accepted_target(&program, &repository.remote_url, &branch_ref)?
+        };
         let lines: Vec<_> = remote.lines().collect();
         let (accepted_sha, returned_ref) = lines
             .first()
