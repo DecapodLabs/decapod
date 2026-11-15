@@ -1683,3 +1683,7 @@ pushed SHA at depth two, sufficient for the selected commit/parent subject.
 Manual `workflow_dispatch` still requests packaging proof only. The native-owner
 conditions and publisher dependency/ref/event restrictions remain unchanged;
 manual or imported/self-hosted execution cannot grant Cachix publication.
+
+## Canonical local Git proof (#1069)
+
+An accepted `proof.repository_contract.canonical_local_target = true` uses ordinary CLI/RPC validation against the canonical local branch. `readiness.ready` refers to that exact local subject with `scope=repository_local_git_readiness`; `publication_ready` stays false. `qa verify commit` inspects canonical historical proof. `workspace publish` and the independent final PR gate reject local-only target authority before remote publication. Omitted/false mode retains existing digests and GitHub behavior. Candidate-only mode, changed branch, strict profile and cloud selection cannot activate the local host.
