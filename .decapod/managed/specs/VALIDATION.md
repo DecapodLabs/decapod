@@ -1369,8 +1369,8 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `8a25453767aee715d3f4d27fd1ca1c2d77d9080c89f8917410a69e532e1d6281`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (235 files), `tests/` (234 files)
+- Repository signal fingerprint: `687b3317a9e134b8593b6f8f2a3bced63068e347d3555778596b8545b6ba59e1`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (236 files), `tests/` (234 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 
@@ -2138,6 +2138,26 @@ prior documentation candidate `725b4114595bf17a36568afbe164ce5c9f7b9cf4` against
 GitHub Actions must evaluate this integrated candidate. No local tests run;
 Buildkite is excluded at the user's direction and full native publication
 readiness remains unproven.
+
+## Versioned physical legacy recovery coverage (#1657)
+
+`tests/sqlite_maintenance.rs` exercises the actual Decapod binary with isolated
+repositories, canonical policy and claimed workspaces. Regressions cover exact
+canonical-copy archival, unchanged canonical bytes, bounded receipt size,
+idempotent replay, prepared-state startup fencing, resumption after physical
+archival, separate-grant denial, stale source bytes/modes, corrupt input,
+symlinks and reappeared source. The existing reconstructed verification consumer
+must reject the operation report as task completion proof. Interrupted physical
+states are deterministic fixtures built from a real kernel-issued preparation,
+not ten native agents or proof of a killed process at every instruction.
+
+`tests/unit/cli_tests.rs` checks typed command parsing and permission separation.
+Required CLI aggregate already includes SQLite maintenance tests. Hosted execution
+for this candidate remains pending; no local tests run. Buildkite is excluded at
+the user's direction while its accepted requirement remains enabled, so full
+native publication readiness is unproven. Empty/exact-copy retirement is a
+bounded #1657 slice: unmatched legacy schemas, arbitrary historical equivalence,
+cloud owner repair and independent security isolation remain unresolved.
 
 ## Squash release packaging regression (#1626)
 

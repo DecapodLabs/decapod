@@ -663,6 +663,9 @@ fn inert_database_placeholder(data_root: &Path, name: &str) -> bool {
 // Check before opening any legacy source for checkpoint/backup preparation.
 // A read-only canonical peek cannot turn uncertain legacy input into authority.
 fn guard_legacy_todo_before_checkpointing(data_root: &Path) -> Result<(), error::DecapodError> {
+    // Archival may have completed immediately before interruption. Absence of
+    // todo.db alone cannot admit ordinary startup while its receipt is pending.
+    crate::core::todo::guard_pending_legacy_reconciliation(data_root)?;
     if !legacy_database_artifact_exists(data_root, schemas::TODO_DB_NAME) {
         return Ok(());
     }

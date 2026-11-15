@@ -347,6 +347,10 @@ fn exceptional_rbac_grants_are_explicit_per_actor_and_permission() {
         .insert("operator".into(), vec!["maintainer".into()]);
     rbac.journal_repair_roles.push("maintainer".into());
     assert!(rbac.allows("operator", "todo.journal.repair"));
+    assert!(!rbac.allows("operator", "todo.legacy.reconcile"));
+    rbac.legacy_todo_reconcile_roles.push("maintainer".into());
+    assert!(rbac.allows("operator", "todo.legacy.reconcile"));
+    assert!(!rbac.allows("different-agent", "todo.legacy.reconcile"));
     assert!(!rbac.allows("operator", "validate.bypass"));
     assert!(!rbac.allows("different-agent", "todo.journal.repair"));
     assert!(!rbac.allows("operator", "unrecognized.operation"));
@@ -355,6 +359,35 @@ fn exceptional_rbac_grants_are_explicit_per_actor_and_permission() {
     let encoded = toml::to_string(&rbac).unwrap();
     let restored: super::GovernanceRbac = toml::from_str(&encoded).unwrap();
     assert!(restored.allows("operator", "validate.bypass"));
+    assert!(restored.allows("operator", "todo.legacy.reconcile"));
+}
+
+#[test]
+fn legacy_reconciliation_cli_requires_exact_review_before_preparation() {
+    use super::Cli;
+    use clap::Parser;
+    assert!(Cli::try_parse_from(["decapod", "todo", "journal", "reconcile-legacy"]).is_ok());
+    assert!(
+        Cli::try_parse_from([
+            "decapod",
+            "todo",
+            "journal",
+            "reconcile-legacy",
+            "--prepare-only"
+        ])
+        .is_err()
+    );
+    assert!(
+        Cli::try_parse_from([
+            "decapod",
+            "todo",
+            "journal",
+            "reconcile-legacy",
+            "--source",
+            "/tmp/arbitrary.db"
+        ])
+        .is_err()
+    );
 }
 
 #[test]
