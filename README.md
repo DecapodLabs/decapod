@@ -21,7 +21,7 @@
 </p>
 
 <p align="center">
-  <a href="assets/showcase/generated/decapod-showcase.mp4"><img src="assets/showcase/generated/decapod-showcase.gif" alt="Decapod: claim, isolate, govern, reflect, verify, recover — 6.60-second brand film with music" width="760"></a><br>
+  <a href="assets/showcase/generated/decapod-showcase.mp4"><img src="assets/showcase/generated/decapod-showcase.gif" alt="Decapod: a human shares an idea, the AI agent calls Decapod, and governed work carries context, boundaries, parallelism and commit-bound proof" width="760"></a><br>
   <sub><a href="assets/showcase/README.md">6.60-second showcase · original score · reproducible renderer</a></sub>
 </p>
 

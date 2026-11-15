@@ -38,15 +38,18 @@ for required in (FONT_HEAVY, FONT_REG, FONT_MED):
     if not required.is_file():
         raise SystemExit(f"Required font missing: {required}; install fonts-lato")
 
-# On purpose: each shot gets its own empty white canvas and one readable idea.
+# The human supplies the idea; the AI agent invokes Decapod throughout the work.
+# Eight high-contrast beats, each with one message and no persistent UI.
+# Every cut has a corresponding note in the original score below.
 SCENES = [
-    {"start": 0,   "end": 25,  "kind": "brand", "crab": (1490, 750)},
-    {"start": 25,  "end": 52,  "lines": ("CLAIM THE", "WORK."),       "sub": "PERSISTENT TASK OWNERSHIP",      "align": "left",  "crab": (1530, 760)},
-    {"start": 52,  "end": 79,  "lines": ("BUILD IN", "PARALLEL."),   "sub": "ISOLATED. COORDINATED.",        "align": "right", "crab": (385, 760)},
-    {"start": 79,  "end": 106, "lines": ("THINK.", "VERIFY.", "REPEAT."), "sub": "EVIDENCE-GROUNDED REFLECTION", "align": "left",  "crab": (1540, 760)},
-    {"start": 106, "end": 133, "lines": ("PROVE THE", "COMMIT."),   "sub": "EVIDENCE BOUND TO SOURCE",     "align": "right", "crab": (380, 760)},
-    {"start": 133, "end": 160, "lines": ("KEEP THE", "HISTORY."),   "sub": "RECOVER. HAND OFF. CONTINUE.", "align": "left",  "crab": (1540, 760)},
-    {"start": 160, "end": 198, "kind": "outro", "crab": (1540, 760)},
+    {"start": 0,   "end": 25,  "lines": ("YOU HAVE", "AN IDEA."),     "align": "left",  "crab": (1530, 760)},
+    {"start": 25,  "end": 49,  "lines": ("TELL YOUR", "AGENT."),     "align": "right", "crab": (380, 760)},
+    {"start": 49,  "end": 73,  "lines": ("IT CALLS", "DECAPOD."),     "align": "left",  "crab": (1530, 760)},
+    {"start": 73,  "end": 97,  "lines": ("CONTEXT.", "BOUNDARIES."), "align": "right", "crab": (380, 760)},
+    {"start": 97,  "end": 121, "lines": ("AGENTS IN", "PARALLEL."),  "align": "left",  "crab": (1530, 760)},
+    {"start": 121, "end": 145, "lines": ("PROVE THE", "COMMIT."),   "align": "right", "crab": (380, 760)},
+    {"start": 145, "end": 169, "lines": ("HISTORY", "SURVIVES."),  "align": "left",  "crab": (1530, 760)},
+    {"start": 169, "end": 198, "kind": "outro", "crab": (1530, 760)},
 ]
 
 
@@ -174,7 +177,7 @@ def layer_text(im: Image.Image, scene: dict, frame: int):
         tw = box[2]-box[0]
         y = (342 if is_outro else 358) + yshift
         draw.text(((WIDTH-tw)/2,y),title,font=f,fill=ink,anchor="lt")
-        cap = "GOVERN THE WORK." if is_outro else "A GOVERNANCE KERNEL FOR AI AGENTS"
+        cap = "BUILT FOR AI AGENTS." if is_outro else "A GOVERNANCE KERNEL FOR AI AGENTS"
         ff = font(FONT_MED, 39)
         width = sum(draw.textlength(ch,font=ff)+5 for ch in cap)
         tracking(draw,(WIDTH-width)/2,608+yshift,cap,ff,(*GRAY,opacity),5)
@@ -186,15 +189,23 @@ def layer_text(im: Image.Image, scene: dict, frame: int):
     else:
         lines=scene["lines"]
         side=scene["align"]
-        if len(lines)==3:
-            size,gap,first=153,155,250
-        else:
-            size,gap,first=182,185,316
-        f=font(FONT_HEAVY,size)
-        xs=192 if side=="left" else 765
+        # Fit a consistent editorial column without cropping or intruding
+        # into the crab's clear space. All text stays inside 1920x1080.
+        xs = 170 if side == "left" else 765
+        max_width = 1110 if side == "left" else 1005
+        size = 182
+        while size > 110:
+            candidate = font(FONT_HEAVY, size)
+            if all(draw.textlength(line, font=candidate) <= max_width for line in lines):
+                break
+            size -= 2
+        f = font(FONT_HEAVY, size)
+        gap = int(size * 1.04)
+        total = (len(lines)-1)*gap + size
+        first = int(520 - total/2)
         for i,line in enumerate(lines):
-            draw.text((xs,first+i*gap+yshift),line,font=f,fill=ink,anchor="lt")
-        # Feature panels carry one message only; no microtext or persistent HUD.
+            draw.text((xs, first+i*gap+yshift), line, font=f, fill=ink, anchor="lt")
+        # Each cut is its own screen: one statement, zero secondary UI.
     im.alpha_composite(layer)
 
 
@@ -207,7 +218,7 @@ def frame_image(frame: int) -> Image.Image:
 
 
 def synth_audio(path: Path):
-    """Original seven-note synth theme, written procedurally; no licensed samples."""
+    """Original eight-note synth theme, written procedurally; no licensed samples."""
     sr=44100
     n=round(DURATION*sr)
     mix=np.zeros((n,2),dtype=np.float64)
@@ -238,9 +249,9 @@ def synth_audio(path: Path):
         noise=rng.standard_normal(int(.055*sr))
         env=np.exp(-np.arange(len(noise))/sr*85)
         add(noise*env*vol,start,.6)
-    # Seven synchronized scene arrivals form the melodic signature.
-    cue=[0,.833,1.733,2.633,3.533,4.433,5.333]
-    melody=[659.25,783.99,987.77,880,1174.66,987.77,1318.5]
+    # The motif lands exactly on each of the eight visual transitions.
+    cue=[s["start"]/FPS for s in SCENES]
+    melody=[659.25,783.99,987.77,880.00,1174.66,987.77,1174.66,1318.51]
     for i,(at,freq) in enumerate(zip(cue,melody)):
         pluck(freq,at+.06,vol=.145 if i<6 else .20,pan=(-.24 if i%2 else .26))
         pluck(freq/2,at+.062,vol=.082,pan=.0)
