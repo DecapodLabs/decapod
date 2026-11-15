@@ -1329,3 +1329,7 @@ readiness. Existing accepted-executor tamper tests remain unchanged. The initial
 hosted consumer run rejected eleven fixture setups at the old Nix pin, rather
 than establishing the later admission assertions; fresh execution must verify
 the reconciled candidate.
+
+## Canonical local Git proof (#1069)
+
+The existing `repository_profile::RepositoryContract` review digest optionally binds canonical local Git target authority. `workspace::resolve_readiness_repository` keeps that identity distinct from cloud GitHub identity, requiring a reviewed local contract already committed on the canonical accepted branch. `RepositoryHost::canonical_local` reuses the sealed snapshot verifier and fresh ref observations; no daemon, parallel policy engine or datastore is added. `validation_history` preserves exact local scope and checks target movement. Native strict source proof and provider requirements remain intact.
