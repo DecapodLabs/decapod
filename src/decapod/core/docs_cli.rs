@@ -690,6 +690,7 @@ fn build_docs(touched: Vec<PathBuf>) -> Result<(), error::DecapodError> {
         writeln!(file, "\n{}", governance_artifacts_contract().trim_end())?;
         writeln!(file, "\n{}", todo_handoff_contract().trim_end())?;
         writeln!(file, "\n{}", claim_scope_contract().trim_end())?;
+        writeln!(file, "\n{}", legacy_todo_recovery_contract().trim_end())?;
     }
 
     if update_schema {
@@ -708,6 +709,11 @@ fn build_docs(touched: Vec<PathBuf>) -> Result<(), error::DecapodError> {
         writeln!(file, "\n{}", shared_claim_config_contract())?;
         writeln!(file, "\n{}", readiness_config_contract())?;
         writeln!(file, "\n{}", repository_readiness_contract().trim_end())?;
+        writeln!(
+            file,
+            "\n{}",
+            legacy_todo_recovery_config_contract().trim_end()
+        )?;
     }
 
     Ok(())
@@ -724,8 +730,9 @@ fn db_maintenance_command_contract() -> &'static str {
 fn shared_claim_config_contract() -> &'static str {
     r#"## RBAC exceptions and Laya
 
-`[governance.rbac]` declares `actor_roles`, `journal_repair_roles`
-and `validation_bypass_roles`, all empty/denied by default. The main
+`[governance.rbac]` declares `actor_roles`, `journal_repair_roles`,
+`legacy_todo_reconcile_roles` and `validation_bypass_roles`, all empty/denied by
+default. The main
 repository config is the sole source for a bounded policy read. Journal
 repair requires an explicitly granted role and records the policy fingerprint
 with the reviewed repairs. `validate --bypass-validation --bypass-reason`
@@ -1121,4 +1128,33 @@ mod validation_contract_tests {
             assert!(body.contains("No automatic controller replacement is performed"));
         }
     }
+}
+
+fn legacy_todo_recovery_contract() -> &'static str {
+    r#"## `decapod todo journal reconcile-legacy`
+
+Review the canonical main repository's quiesced local legacy TODO input before
+normal startup. Only empty/no-schema input and a byte-identical canonical copy
+are supported; other layouts remain blocked. The returned review digest binds
+source/canonical bytes, Unix identities/modes, policy and actor. Apply using
+`--expected-review sha256:<digest>` under an active local session and the explicit
+canonical `todo.legacy.reconcile` grant. `--prepare-only` requires that token and
+persists an unresolved operation while preserving the source. Resume with the
+same apply command after interruption; never edit its receipt to assert success.
+There is no arbitrary source/destination or task-import surface. Responses keep
+`publication_ready=false` and `completion_proven=false`, including committed
+replays. See `docs/architecture/legacy-todo-recovery.md` for bounds and limits."#
+}
+
+fn legacy_todo_recovery_config_contract() -> &'static str {
+    r#"## Explicit legacy TODO retirement permission
+
+`governance.rbac.legacy_todo_reconcile_roles = ["maintainer"]` grants only
+`todo.legacy.reconcile` to actors holding that role in the canonical main
+repository's `actor_roles`. It defaults to empty and is separate from journal
+repair, maintenance and validation bypass. Worktree-only edits cannot grant it.
+The versioned physical recovery command supports empty input/exact canonical
+copies only, requires an active local session for apply, and never establishes
+task completion or publication readiness. Actor labels and policy files remain
+in the local host's trust domain; protect them independently when needed."#
 }
