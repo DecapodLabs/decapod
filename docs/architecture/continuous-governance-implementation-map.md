@@ -1,7 +1,7 @@
 # Continuous governance implementation map
 
-The accepted baseline is `8e435969a8c21269aa277301b3e6492d780a9bdb`
-(accepted 0.145.6 release source; installed governance tool 0.145.6). This map describes that code, identifies pending changes
+The accepted baseline is `e9c40e929ee33aa5443c38b57276f96111db0b92`
+(accepted 0.146.0 release source; installed governance tool 0.146.0). This map describes that code, identifies pending changes
 separately, and cites executed observations by their actual source identities.
 A merged PR, documented rule or agent declaration cannot supply missing proof.
 The complete autonomous-engineering mission remains unresolved.
@@ -25,8 +25,9 @@ boundary against an unrestricted producer sharing the verifier's OS account.
 | Partially enforced | Full readiness freezes source and independently checks accepted target/integration through its supported provider. Workunit consumption remeasures local applicability. | An unfetched ref cannot reveal remote movement. Local workunit validity is a prerequisite, not a replacement for publication's fresh target observation. |
 | Partially enforced | Accepted migration code preserves inert zero-byte TODO placeholders and blocks uncertain nonempty sources. Draft #1697 adds explicit bounded retirement of empty inputs or exact canonical copies. | #1697 is not in this accepted baseline. General legacy-row reconciliation and changed prepared-input supersession remain missing (#1657); physical archival never proves task completion. |
 | Partially enforced | Merged #1684 preserves owning-test/fixture selection in the finite source-CI recipes. | Core/CLI partitioning and the measured five-minute requirement are unresolved (#1672). An accepted controller must support the new graph before activation; skipped selection is not timing proof. |
+| Already enforced | `mentor/reflection.rs`, `mentor/reflection/escalation.rs` and the existing orientation/mentor RPC extension grade invoked escalation proposals under a shared three-round journal. `reflection_tests` covers observed authority, exact canonical human dependencies, stale/forged claims, target narrowing, retry continuity and exhausted budgets. Merged #1699 is in this baseline. | Literal source inspection is not semantic correctness, authorization, test execution or task completion. An external harness must invoke the protocol; the kernel cannot intercept arbitrary conversation. |
 | Advisory | `AGENTS.md`, orientation, capsule retrieval and hooks discover/invoke existing kernel decisions. | An unrestricted shell can bypass hooks and directly mutate files or call Git/forge APIs. No arbitrary OS mutation prevention is asserted. |
-| Missing | Prompt-independent native runtime reference integration, the complete ten-worker convergence harness and final A-H binary-level acceptance proof. | Existing CLI/RPC interfaces, actual child-process fixtures and concurrent deterministic workers are groundwork, not these complete demonstrations or ten real LLM agents. |
+| Partially enforced | #1699 adds an actual-binary CLI/RPC deterministic escalation reference through existing interfaces, including generated-entrypoint coverage. | Complete external native-runtime adoption, the ten-worker convergence harness and final A–H acceptance remain missing. This reference is not ten real LLM agents or full governed engineering from intent to integration. |
 | Missing | Independently authenticated exception authority and complete Decapod repository read/write/owner-repair consumption (#1569, #1590). | Propodus server groundwork and Dactyl #123 do not prove deployed authority or released Decapod client behavior. #1667 now requests SDK 0.17.0; the accepted baseline pins published 0.16.1. Never substitute local labels after cloud denial. |
 
 ## Success-producing paths and remaining bypasses
@@ -98,6 +99,27 @@ workflow pin was reconciled. Those observations alone did not accept the workflo
 separately accepted that source by merging #1698 into `7606c638`; neither result
 supplies full native publication proof for a later integration.
 
+For accepted #1699, source `85733bc08f2609d8635ed84e5939f0ab6a660002`
+against `8e435969a8c21269aa277301b3e6492d780a9bdb` has completed
+[consumer/library execution](https://github.com/DecapodLabs/decapod/actions/runs/43662306585/job/132654364504),
+[CLI execution](https://github.com/DecapodLabs/decapod/actions/runs/43662306585/job/132654364660)
+and [core execution](https://github.com/DecapodLabs/decapod/actions/runs/43662306585/job/132654364606).
+The library suite passed 1,776 tests with eight ignored. Its paired deterministic
+comparison admitted three fixture decisions in six rounds, reducing routine
+question attempts from three to zero; observed time was 6,824,766 microseconds
+including setup and retained governance growth was 20,665 bytes. This measures
+fixture decisions, not real LLM reasoning or completed tasks. CLI source execution
+was 1,506,453 ms; core was 1,836,147 ms across three invocations. These do not meet
+or replace the five-minute objective.
+
+The human merge `359b990613a40852feee3dbe16d9cf70686a0d6c` has ordered parents
+of that accepted target and candidate and exactly the tested candidate tree
+`3e8d95324e9cbfe413e7e85674769021d7603371`. The subsequent 0.146.0 release
+changes package metadata. The linked source observations remain bound to their
+original identities; they do not become proof for this map or the release tree.
+Some checks completed after the human merge. No complete current native
+publication receipt is inferred from that chronology or the GitHub merge.
+
 The source-CI records explicitly report `authenticated=false` and
 `complete_pr_profile=false`. They must not become an authenticated full native
 receipt. Buildkite evidence is not collected for this delivery; its accepted
@@ -123,6 +145,18 @@ upstream and the reviewed GitHub adapter. A standalone bare/local upstream is
 not admitted by that full CLI discovery path. This is a concrete remaining
 implementation boundary for an offline representative-repository demonstration;
 a fixture transport must not be substituted for that supported acceptance path.
+
+Accepted #1699 now provides a bounded escalation reference through actual
+orientation/mentor CLI/RPC calls. It observes source bytes and existing authority
+rather than accepting the agent's question/exhaustion assertion as proof. Its
+public continuation contract does not make arbitrary external tool use
+unavoidable or complete the A–H scenario.
+
+PR #1702 separately proposes a canonical local Git host for full plain-CLI local
+proof. Its earlier exact-source run reached a genuine ready judgment but exposed
+a wrong test status expectation and an admission-order regression. Corrected
+source still requires its own complete applicable checks and review. This
+proposal is outside the accepted baseline; it cannot fill the gap by declaration.
 
 A supported runtime can call existing context, scope/admission, execution-state,
 validation and publication interfaces. It must actually invoke them. The kernel
