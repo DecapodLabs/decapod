@@ -208,6 +208,25 @@ impl CurrentEvidenceInputs {
                 "current proof input identity or bounds are invalid",
             ));
         }
+        if expected.repository.starts_with("local-git:") {
+            let repository = repository_identity(root)?;
+            let target = repository
+                .local_target_root
+                .ok_or_else(|| invalid("local target authority changed"))?;
+            let reference = format!("refs/heads/{}^{{commit}}", expected.base_branch);
+            let current = workspace::read_canonical_local_git(
+                &target,
+                &self.inputs.git_program,
+                &["rev-parse", "--verify", &reference],
+            )?;
+            if repository.canonical_name != expected.repository
+                || current != expected.accepted_base_revision
+            {
+                return Err(invalid(
+                    "WORKUNIT_PROOF_STALE: canonical local accepted target changed; revalidate the resulting integration",
+                ));
+            }
+        }
         for (reference, tools) in &self.toolchains {
             if digest(tools)? != *reference {
                 return Err(invalid("canonical tool references changed"));
@@ -397,7 +416,9 @@ impl CompletedReadinessEvidence {
             .checks
             .iter()
             .any(|check| check.kind == evidence::CheckKind::RepositoryLocal);
-        let scope = if local {
+        let scope = if local && self.material.repository.starts_with("local-git:sha256:") {
+            super::repository_profile::LOCAL_GIT_READINESS_SCOPE
+        } else if local {
             super::repository_profile::READINESS_SCOPE
         } else {
             validation_runtime::READINESS_SCOPE
