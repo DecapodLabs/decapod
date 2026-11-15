@@ -1,0 +1,80 @@
+name: Render Decapod showcase
+
+on:
+  push:
+    branches:
+      - demo/showcase-7s
+    paths:
+      - assets/showcase/render.py
+      - assets/showcase/README.md
+      - .github/workflows/showcase-render.yml
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: showcase-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  render:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install render dependencies
+        run: |
+          python3 -m pip install 'Pillow==11.3.0'
+          command -v ffmpeg
+          command -v ffprobe
+
+      - name: Render MP4, GIF and poster
+        run: python3 assets/showcase/render.py
+
+      - name: Verify duration and artifact presence
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          import json
+          import pathlib
+          import subprocess
+          from PIL import Image
+          folder = pathlib.Path("assets/showcase/generated")
+          mp4 = folder / "decapod-showcase.mp4"
+          gif = folder / "decapod-showcase.gif"
+          poster = folder / "decapod-showcase-poster.png"
+          info = json.loads(subprocess.check_output([
+              "ffprobe", "-v", "error", "-show_entries", "format=duration",
+              "-of", "json", str(mp4)
+          ], text=True))
+          duration = float(info["format"]["duration"])
+          assert 6.0 <= duration < 7.0, f"video duration={duration}"
+          for path in (mp4, gif, poster):
+              assert path.is_file() and path.stat().st_size > 1000, str(path)
+          with Image.open(gif) as im:
+              assert im.n_frames >= 60, im.n_frames
+          print(f"Verified: {duration:.4f}s, {mp4.stat().st_size:,} MP4 bytes")
+          PY
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: decapod-showcase
+          path: assets/showcase/generated/
+          if-no-files-found: error
+
+      - name: Commit rendered media to the showcase branch
+        if: github.event_name == 'push' && github.ref == 'refs/heads/demo/showcase-7s'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add assets/showcase/generated/
+          if ! git diff --cached --quiet; then
+            git commit -m "docs(showcase): check in verified 6.583-second animated media"
+            git push origin "HEAD:${GITHUB_REF_NAME}"
+          fi
