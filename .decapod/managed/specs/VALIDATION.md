@@ -1341,7 +1341,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `d62e03a1249b75ddd01f080a201d32aa316dd48bc33fd80b59ba9b55b4249bc0`
+- Repository signal fingerprint: `8ca86ce519b149d555cb62934adafc43a5038dd11af0cf3073de599995842f04`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (235 files), `tests/` (233 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
@@ -2130,3 +2130,20 @@ the user's direction while its accepted requirement remains enabled, so full
 native publication readiness is unproven. Empty/exact-copy retirement is a
 bounded #1657 slice: unmatched legacy schemas, arbitrary historical equivalence,
 cloud owner repair and independent security isolation remain unresolved.
+
+## Squash release packaging regression (#1626)
+
+`tests/release_metadata_policy.rs::nix_gates_recognize_squash_linear_and_ordinary_release_commits`
+extracts and executes both actual workflow scripts against real Git repositories.
+It creates a real squash merge, a linear release and an ordinary release merge;
+non-release, root and octopus histories remain ineligible. The owner performs its
+real depth-two fetch through a process-local URL rewrite to the fixture. Imported
+runner and PR/manual event cases stay denied; manual packaging stays supported.
+No Nix, Cachix credential or hosted publication call is simulated as success.
+
+Fresh GitHub Actions must verify the exact candidate; no local tests run.
+Buildkite remains excluded at the user's direction while its accepted policy
+requirement stays enabled, so full native publication readiness is unproven.
+The original missing v0.138.0 cache entry is historical and is not claimed filled
+by this code change. Actual protected-master packaging/publication must establish
+cache availability separately after acceptance.

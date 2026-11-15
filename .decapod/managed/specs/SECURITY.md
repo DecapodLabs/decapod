@@ -626,7 +626,7 @@ execution evidence remains required before publication readiness.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `d62e03a1249b75ddd01f080a201d32aa316dd48bc33fd80b59ba9b55b4249bc0`
+- Repository signal fingerprint: `8ca86ce519b149d555cb62934adafc43a5038dd11af0cf3073de599995842f04`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (235 files), `tests/` (233 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
@@ -1088,3 +1088,17 @@ agent or host administrator can still edit local files/session/policy; this
 protocol provides no independent OS isolation or remote publication authority.
 Stale prepared inputs require operator investigation; V1 has no automatic abort,
 policy supersession or generalized historical-row reconciliation path.
+
+## Nix publication ownership after squash releases (#1626)
+
+Release subjects request packaging only within the existing accepted protected
+workflow. Squash/linear support does not turn a PR title, candidate report or
+local result into publication authority. The owner keeps empty token permissions,
+anonymous exact-SHA fetch, native GitHub-hosted runner and protected-master push
+requirements. Imported/self-hosted runners, PR/manual events, non-release
+subjects and unsupported parent shapes cannot make that owner publish.
+
+Cachix credentials remain scoped to the separate publisher after successful
+locked packaging and smoke/reproducibility checks. Fixture URL rewrites apply
+only to test child processes and contact a local Git repository. They neither
+exercise real secrets nor prove actual native cache publication.

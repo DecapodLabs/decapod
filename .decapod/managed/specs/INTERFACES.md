@@ -1166,7 +1166,7 @@ field. Nothing in this operation authorizes a mutation, approval or completion.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `d62e03a1249b75ddd01f080a201d32aa316dd48bc33fd80b59ba9b55b4249bc0`
+- Repository signal fingerprint: `8ca86ce519b149d555cb62934adafc43a5038dd11af0cf3073de599995842f04`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (235 files), `tests/` (233 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
@@ -1673,3 +1673,16 @@ without asserting current canonical validation; a reappeared legacy source
 blocks reuse. Unsupported nonmatching historical stores stay blocked. See
 `docs/architecture/legacy-todo-recovery.md` for the exact scope and recovery
 limits; this is not completion of all #1657 migration requirements.
+
+## Nix release gate outputs (#1626)
+
+`Select Cachix publisher` retains `publish=true|false`; packaging retains
+`run=true|false`. Both recognize ordinary two-parent release merges and
+one-parent release commits such as `chore: release v0.138.0 (#1624)`. Parent
+shape must be supported and the selected subject must retain the existing
+`chore: release v` prefix. The credential-free owner fetches the exact protected
+pushed SHA at depth two, sufficient for the selected commit/parent subject.
+
+Manual `workflow_dispatch` still requests packaging proof only. The native-owner
+conditions and publisher dependency/ref/event restrictions remain unchanged;
+manual or imported/self-hosted execution cannot grant Cachix publication.

@@ -787,6 +787,14 @@
       "proof_refs": [
         "https://github.com/DecapodLabs/decapod/issues/1657"
       ]
+    },
+    {
+      "id": "issue1657-integrate-7606c638",
+      "summary": "Integrate accepted master7606c638, retain both authored specifications and task-owned governance; fresh exact-candidate hosted proof pending.",
+      "input_digest": "sha256:8bcbe0c7c9f9236f6f91c6925d6480d99d05fb15b03006a658d7fe2d1e1f90d2",
+      "proof_refs": [
+        "https://github.com/DecapodLabs/decapod/commit/7606c63838099378a2101ffd13a4e9dec680a25e"
+      ]
     }
   ],
   "intents": {
@@ -827,23 +835,23 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Reviewed actual legacy_todo_recovery, typed bootstrap dispatch, canonical explicit permission and real CLI regressions. Physical retirement only; historical-row migration and independent same-UID security remain unresolved; hosted proof pending.",
-          "reviewed_code_fingerprint": "d62e03a1249b75ddd01f080a201d32aa316dd48bc33fd80b59ba9b55b4249bc0",
-          "spec_material_hash": "2134e2aa3586618b0562190343f7ec79bc90f1f7187904be3ac9346dcefd320c"
+          "reason": "Integrated accepted master7606c638 after human merge of PR1698. Preserved both authored contracts, current finite Nix pin, canonical required policy and this task journal; regenerated owned projections. Earlier f5da0e61-bound proof is historical; new exact-candidate GitHub verification pending.",
+          "reviewed_code_fingerprint": "8ca86ce519b149d555cb62934adafc43a5038dd11af0cf3073de599995842f04",
+          "spec_material_hash": "6ed06b8c65851d9478126f7072286554142ea6ac1d76ba83afcc0d7cceac7976"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Reviewed actual legacy_todo_recovery, typed bootstrap dispatch, canonical explicit permission and real CLI regressions. Physical retirement only; historical-row migration and independent same-UID security remain unresolved; hosted proof pending.",
-          "reviewed_code_fingerprint": "d62e03a1249b75ddd01f080a201d32aa316dd48bc33fd80b59ba9b55b4249bc0",
-          "spec_material_hash": "64f6676fe47299663bcd4aec88430d7feb1ceb8859e25e05dd8fe7f299e1ea9e"
+          "reason": "Integrated accepted master7606c638 after human merge of PR1698. Preserved both authored contracts, current finite Nix pin, canonical required policy and this task journal; regenerated owned projections. Earlier f5da0e61-bound proof is historical; new exact-candidate GitHub verification pending.",
+          "reviewed_code_fingerprint": "8ca86ce519b149d555cb62934adafc43a5038dd11af0cf3073de599995842f04",
+          "spec_material_hash": "b4ca0a66f6e686023e909ea0b1e130aa371e035c59d0caead12540176be1ed98"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Reviewed actual legacy_todo_recovery, typed bootstrap dispatch, canonical explicit permission and real CLI regressions. Physical retirement only; historical-row migration and independent same-UID security remain unresolved; hosted proof pending.",
-          "reviewed_code_fingerprint": "d62e03a1249b75ddd01f080a201d32aa316dd48bc33fd80b59ba9b55b4249bc0",
-          "spec_material_hash": "2d54b671d4b31bd9b29143de319a4cebeeff4379d3e7b3d165062fd7718206a2"
+          "reason": "Integrated accepted master7606c638 after human merge of PR1698. Preserved both authored contracts, current finite Nix pin, canonical required policy and this task journal; regenerated owned projections. Earlier f5da0e61-bound proof is historical; new exact-candidate GitHub verification pending.",
+          "reviewed_code_fingerprint": "8ca86ce519b149d555cb62934adafc43a5038dd11af0cf3073de599995842f04",
+          "spec_material_hash": "839e6469c48d263e7582b8381d4e139615e8978d3d354e0a8d0c2f67648d7fd9"
         }
       ],
       "state": "DRAFT",
@@ -854,20 +862,24 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1794696193Z"
+      "updated_at": "1794701377Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:ee54afad7489b6421b3098aaa15e78f66a483ae783f4c17231e9323688e1d06d",
+      "artifact_hash": "sha256:8624c04896877e10ea8eca76fd1a2a42e73a548c7405499b4680f2d1c2be2d06",
       "checks": [
+        {
+          "name": "accepted-target-integration",
+          "status": "partial"
+        },
         {
           "name": "github-prior-compilation",
           "status": "failed"
         }
       ],
-      "current_phase": "validation",
+      "current_phase": "implementation",
       "custody": {
         "events": [
           {
@@ -1091,10 +1103,17 @@
             "intent_id": "intent:change_01M7DXW29MW090TM7TAHZF5JJK",
             "kind": "trajectory_step_recorded",
             "sequence": 33
+          },
+          {
+            "detail": "trajectory:branch_01M7DXW2DCAD18R4V58TWM41F2",
+            "event_id": "event:34",
+            "intent_id": "intent:change_01M7DXW29MW090TM7TAHZF5JJK",
+            "kind": "trajectory_step_recorded",
+            "sequence": 34
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 33,
+        "next_sequence": 34,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M7DXW2DCAD18R4V58TWM41F2": {
@@ -1584,6 +1603,23 @@
                 "validation_findings": [
                   "Prior hosted compilation rejected private test API references; repaired in source. Fresh exact-candidate GitHub proof pending. No local tests or Buildkite execution; full native publication remains unproven."
                 ]
+              },
+              {
+                "action": "implementation",
+                "custody_event_id": "event:34",
+                "observations": [
+                  "https://github.com/DecapodLabs/decapod/commit/7606c63838099378a2101ffd13a4e9dec680a25e"
+                ],
+                "proof_refs": [
+                  "accepted-target-integration"
+                ],
+                "scope": [
+                  "issue-1657"
+                ],
+                "sequence": 34,
+                "validation_findings": [
+                  "Prior source proof targets f5da0e61 and cannot authorize the new integration. No local tests or Buildkite collection. Fresh GitHub checks required; full native publication remains unproven."
+                ]
               }
             ]
           }
@@ -1593,6 +1629,7 @@
       "destination": "pull request",
       "evidence": [
         "https://github.com/DecapodLabs/decapod/actions/runs/43647667684",
+        "https://github.com/DecapodLabs/decapod/commit/7606c63838099378a2101ffd13a4e9dec680a25e",
         "https://github.com/DecapodLabs/decapod/issues/1657"
       ],
       "inspected_files": [],
@@ -1631,7 +1668,8 @@
       "tool_calls": [],
       "unresolved_assumptions": [
         "Implementation in progress; exact-candidate hosted checks pending; no local tests or Buildkite execution.",
-        "Prior hosted compilation rejected private test API references; repaired in source. Fresh exact-candidate GitHub proof pending. No local tests or Buildkite execution; full native publication remains unproven."
+        "Prior hosted compilation rejected private test API references; repaired in source. Fresh exact-candidate GitHub proof pending. No local tests or Buildkite execution; full native publication remains unproven.",
+        "Prior source proof targets f5da0e61 and cannot authorize the new integration. No local tests or Buildkite collection. Fresh GitHub checks required; full native publication remains unproven."
       ]
     }
   },
