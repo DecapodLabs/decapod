@@ -7,6 +7,33 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.147.0](https://github.com/DecapodLabs/decapod/compare/v0.146.0...v0.147.0) - 2026-11-15
+
+### Added
+
+- rebase PR1697 policy.rs on v0.146.0
+- rebase PR1697 lib.rs on v0.146.0
+- rebase PR1697 todo.rs on v0.146.0
+- rebase PR1697 migration.rs on v0.146.0
+- rebase PR1697 legacy_todo_recovery.rs on v0.146.0
+- rebase PR1697 docs_cli.rs on v0.146.0
+- rebase PR1697 cli.rs on v0.146.0
+
+### Other
+
+- *(governance)* finalize PR1697 on Decapod v0.146.0
+- rebase PR1697 VALIDATION.md on v0.146.0
+- rebase PR1697 SECURITY.md on v0.146.0
+- rebase PR1697 INTERFACES.md on v0.146.0
+- rebase PR1697 ARCHITECTURE.md on v0.146.0
+- rebase PR1697 legacy-todo-recovery.md on v0.146.0
+- rebase PR1697 error-recovery.md on v0.146.0
+- rebase PR1697 config-schema.md on v0.146.0
+- rebase PR1697 command-contracts.md on v0.146.0
+- rebase PR1697 cli_tests.rs on v0.146.0
+- rebase PR1697 sqlite_maintenance.rs on v0.146.0
+- rebase PR1697 INTENT.md on v0.146.0
+
 ## [0.146.0](https://github.com/DecapodLabs/decapod/compare/v0.145.6...v0.146.0) - 2026-11-15
 
 ### Added
