@@ -933,7 +933,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `acc382d4543f13beeecc330661ce3de7cd003629902459930d94fd32903e044f`
+- Repository signal fingerprint: `472f3a60d05913e607d14d9bc06e1171d8db1ef6341884d57bd05d3fff11006d`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (234 files), `tests/` (233 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
@@ -1291,7 +1291,8 @@ implicit projection rebuild is introduced.
 ## Source-grounded current enforcement map (#1069)
 
 `docs/architecture/continuous-governance-implementation-map.md` now distinguishes
-the accepted0.145.5 kernel from pending recovery/Nix candidates and binds hosted
+the accepted0.145.5 kernel from pending recovery and separately accepted Nix
+source, and binds hosted
 observations to their actual head, accepted base and declared scope. Canonical
 validation, observed workunit proof, request-local diagnostic denial, task custody
 and historical completion remain existing authority owners. The map introduces
@@ -1303,3 +1304,30 @@ workunit convergence remain missing. Native GitHub source diagnostics cannot
 replace configured provider proof or authorize a different candidate. Existing
 SQLite semantics remain the foundation; a facade or registry upgrade does not
 satisfy an older no-SQLite-engine proposal by assertion.
+
+## Nix release eligibility (#1626)
+
+The existing `.github/workflows/nix-flake.yml` owner and packaging gates inspect
+immutable Git parents and subjects. A one-parent squash/linear release uses its
+own subject; a two-parent release merge uses parent two's subject. Both retain
+the existing release prefix and reject root/octopus or non-release histories.
+This is packaging eligibility under the accepted workflow, not a replacement for
+kernel validation or an independently authenticated completion judgment.
+
+The credential-free publication owner still requires a native GitHub-hosted
+protected-master push. Nix checks the locked toolchain, builds and smoke-checks
+both supported native systems, with an additional Linux reproducibility check.
+Only the separate authenticated publisher can write Cachix after those jobs
+succeed. No new runtime, service, policy interpreter or release authority exists.
+
+The finite adapter in `core/readiness_profile.rs::reviewed_workflow_digests`
+explicitly pins the reviewed Nix workflow bytes. The squash-gate change updates
+that single compiled pin after reviewing triggers, jobs, matrices, actions and
+source predicates; no required job or provider is removed. A declaration digest
+cannot override the compiled contract. An older installed controller that does
+not support these bytes cannot gain authority merely from candidate repinning;
+independently accepted controller support is still required for full native
+readiness. Existing accepted-executor tamper tests remain unchanged. The initial
+hosted consumer run rejected eleven fixture setups at the old Nix pin, rather
+than establishing the later admission assertions; fresh execution must verify
+the reconciled candidate.

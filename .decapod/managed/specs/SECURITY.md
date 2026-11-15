@@ -626,7 +626,7 @@ execution evidence remains required before publication readiness.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `acc382d4543f13beeecc330661ce3de7cd003629902459930d94fd32903e044f`
+- Repository signal fingerprint: `472f3a60d05913e607d14d9bc06e1171d8db1ef6341884d57bd05d3fff11006d`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (234 files), `tests/` (233 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
@@ -1068,3 +1068,17 @@ or delete that source. Real-journal regressions preserve logical digest/custody
 and original input bytes across repeated reconciliation. This is no OS-level
 filesystem isolation or permission to replay an unknown broker mutation; general
 nonempty recovery remains unresolved and hosted proof is pending.
+
+## Nix publication ownership after squash releases (#1626)
+
+Release subjects request packaging only within the existing accepted protected
+workflow. Squash/linear support does not turn a PR title, candidate report or
+local result into publication authority. The owner keeps empty token permissions,
+anonymous exact-SHA fetch, native GitHub-hosted runner and protected-master push
+requirements. Imported/self-hosted runners, PR/manual events, non-release
+subjects and unsupported parent shapes cannot make that owner publish.
+
+Cachix credentials remain scoped to the separate publisher after successful
+locked packaging and smoke/reproducibility checks. Fixture URL rewrites apply
+only to test child processes and contact a local Git repository. They neither
+exercise real secrets nor prove actual native cache publication.

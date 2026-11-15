@@ -1,7 +1,7 @@
 # Continuous governance implementation map
 
-The accepted baseline is `f5da0e6183bf31cfbef3d5a53c52553ee8b6fbb5`
-(Decapod 0.145.5). This map describes that code, identifies pending changes
+The accepted baseline is `7606c63838099378a2101ffd13a4e9dec680a25e`
+(post-#1698 source; installed governance tool 0.145.5). This map describes that code, identifies pending changes
 separately, and cites executed observations by their actual source identities.
 A merged PR, documented rule or agent declaration cannot supply missing proof.
 The complete autonomous-engineering mission remains unresolved.
@@ -63,11 +63,13 @@ judged. No new daemon or parallel policy interpreter is needed for these limits.
 
 ## Real executed observations and their limits
 
-For `d0b24f6f926583047be0fbe3f51f5686247d1de2` against the accepted baseline,
+For `d0b24f6f926583047be0fbe3f51f5686247d1de2` against predecessor
+`f5da0e6183bf31cfbef3d5a53c52553ee8b6fbb5`,
 [GitHub push execution 43649604115](https://github.com/DecapodLabs/decapod/actions/runs/43649604115)
 and [PR execution 43649753627](https://github.com/DecapodLabs/decapod/actions/runs/43649753627)
-passed their applicable native checks. These are observations for draft #1697,
-not receipts for this document's candidate, draft #1698 or an arbitrary later tree.
+passed their applicable native checks. These are observations for an earlier #1697 candidate,
+not receipts for this document's candidate, a different #1698 source or any later
+integration. Integrating the newly accepted master requires fresh proof.
 
 - [CLI job 132615175223](https://github.com/DecapodLabs/decapod/actions/runs/43649604115/job/132615175223)
   executed the three-target accepted recipe, including `cli_contracts` with the
@@ -86,14 +88,15 @@ not receipts for this document's candidate, draft #1698 or an arbitrary later tr
   regression supports closing the bounded documentation issue #1164; it does not
   establish an unrelated runtime, cloud or publication guarantee.
 
-For draft #1698, source `6040f0853d028c538bb6f44e4e4aa0af7997f64e` against
-the same accepted base, [release-policy job 132624601734](https://github.com/DecapodLabs/decapod/actions/runs/43652192736/job/132624601734)
+For merged #1698, source `6040f0853d028c538bb6f44e4e4aa0af7997f64e` against
+the same predecessor, [release-policy job 132624601734](https://github.com/DecapodLabs/decapod/actions/runs/43652192736/job/132624601734)
 actually passed `nix_gates_recognize_squash_linear_and_ordinary_release_commits`.
 The actual workflow scripts exercised real Git histories and a local shallow
 fetch, not Nix/Cachix publication. [Consumer job 132623199635](https://github.com/DecapodLabs/decapod/actions/runs/43652192736/job/132623199635)
 passed 1,759 library tests with eight explicitly ignored after the reviewed
-workflow pin was reconciled. Neither observation puts that pending workflow
-contract into the accepted baseline or supplies full native publication proof.
+workflow pin was reconciled. Those observations alone did not accept the workflow contract. The maintainer
+separately accepted that source by merging #1698 into `7606c638`; neither result
+supplies full native publication proof for a later integration.
 
 The source-CI records explicitly report `authenticated=false` and
 `complete_pr_profile=false`. They must not become an authenticated full native
@@ -149,8 +152,10 @@ native integration remain explicit work. Reconstruction/invalidation microbenchm
 full storage growth and unchanged-input reuse measurements are incomplete; the
 aggregate execution times and bounded receipt assertion above do not fill them.
 Older finite controllers cannot learn changed workflow support from a candidate
-review digest alone. Draft #1698's reviewed Nix pin and future shard activation
-require independent accepted-controller support before full native readiness.
+review digest alone. Merged #1698 supplies the reviewed Nix pin in accepted source;
+installed-controller compatibility must still be established independently. Future
+shard activation likewise requires accepted-controller support before full native
+readiness. A package version string alone does not establish binary identity.
 
 [Discussion #1556](https://github.com/DecapodLabs/decapod/discussions/1556)
 requires runtime-native governance rather than more prompt text.

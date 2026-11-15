@@ -1341,7 +1341,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `acc382d4543f13beeecc330661ce3de7cd003629902459930d94fd32903e044f`
+- Repository signal fingerprint: `472f3a60d05913e607d14d9bc06e1171d8db1ef6341884d57bd05d3fff11006d`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (234 files), `tests/` (233 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
@@ -2128,3 +2128,20 @@ No local tests or Buildkite evidence collection is performed. Accepted required
 checks and provider policy remain enabled; full native publication readiness is
 unproven. The complete original mission remains open rather than being closed
 by a documentation update.
+
+## Squash release packaging regression (#1626)
+
+`tests/release_metadata_policy.rs::nix_gates_recognize_squash_linear_and_ordinary_release_commits`
+extracts and executes both actual workflow scripts against real Git repositories.
+It creates a real squash merge, a linear release and an ordinary release merge;
+non-release, root and octopus histories remain ineligible. The owner performs its
+real depth-two fetch through a process-local URL rewrite to the fixture. Imported
+runner and PR/manual event cases stay denied; manual packaging stays supported.
+No Nix, Cachix credential or hosted publication call is simulated as success.
+
+Fresh GitHub Actions must verify the exact candidate; no local tests run.
+Buildkite remains excluded at the user's direction while its accepted policy
+requirement stays enabled, so full native publication readiness is unproven.
+The original missing v0.138.0 cache entry is historical and is not claimed filled
+by this code change. Actual protected-master packaging/publication must establish
+cache availability separately after acceptance.
