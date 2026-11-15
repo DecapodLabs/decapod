@@ -2205,3 +2205,7 @@ This map now uses accepted master `e9c40e929ee33aa5443c38b57276f96111db0b92` and
 ## Accepted bounded recovery audit update
 
 The current map baseline advances to human merge `7ada4f0755b7d0b63b835c25280dd36f6bbfc525` of #1697. Its exact candidate/base/tree CLI observation is linked and stays scoped to that source; it does not prove this updated map. Bounded physical retirement is implemented, while general row migration, prepared-input supersession and full native publication proof remain unresolved. Earlier baseline paragraphs are historical. This integration preserves both authored spec sets and requires new exact-candidate GitHub verification.
+
+## v0.147.0 map baseline
+
+The current audit baseline is accepted release master `26196764ec1dfa95ce366c08fc3e104b8a5bfec1`, authored under installed v0.147.0. Earlier baseline statements and executed observations are historical. The accepted recovery mechanism, pending canonical-local target proposal and remaining whole-mission requirements stay distinct. The release changes package identity; all 105 discovered verification inputs match this accepted target, and only the stale reviewed inventory pin is reconciled. Strict requirements and provider policy remain enabled; fresh exact-candidate GitHub proof is required. No local project tests or Buildkite collection establish publication readiness here.
