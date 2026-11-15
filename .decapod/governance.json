@@ -592,6 +592,14 @@
       "proof_refs": [
         "https://github.com/DecapodLabs/decapod/issues/1069"
       ]
+    },
+    {
+      "id": "issue1069-local-target-file-5",
+      "summary": "feat(validation): reuse the sealed proof host for canonical local Git targets; implementation checkpoint, hosted verification pending.",
+      "input_digest": "sha256:2461722aede330b6983928b9126536e217bb3feadf260592ee777f983ef71578",
+      "proof_refs": [
+        "https://github.com/DecapodLabs/decapod/issues/1069"
+      ]
     }
   ],
   "intents": {
@@ -645,7 +653,7 @@
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:de13bf73ac8444eab1610188b6dc3a991e83028994a0bdc8e5b86a83f6c135d1",
+      "artifact_hash": "sha256:c54f818ff1d035fe6fa21cfffd8df3563de5eaf146ad0042d94b78c60e483073",
       "checks": [],
       "current_phase": "implementation",
       "custody": {
@@ -689,10 +697,17 @@
             "intent_id": "intent:change_01M7E8A3MZHNBWBX2KNXENQ0TY",
             "kind": "trajectory_step_recorded",
             "sequence": 7
+          },
+          {
+            "detail": "trajectory:branch_01M7E8A3T2VGHEEF4YEY3B0TD8",
+            "event_id": "event:8",
+            "intent_id": "intent:change_01M7E8A3MZHNBWBX2KNXENQ0TY",
+            "kind": "trajectory_step_recorded",
+            "sequence": 8
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 7,
+        "next_sequence": 8,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M7E8A3T2VGHEEF4YEY3B0TD8": {
@@ -763,6 +778,22 @@
                 "validation_findings": [
                   "Implementation in progress; exact-candidate hosted checks pending; no local tests or Buildkite evidence collection."
                 ]
+              },
+              {
+                "action": "implementation",
+                "custody_event_id": "event:8",
+                "observations": [
+                  "src/decapod/core/validation_runtime/repository_host.rs",
+                  "https://github.com/DecapodLabs/decapod/issues/1069"
+                ],
+                "proof_refs": [],
+                "scope": [
+                  "root"
+                ],
+                "sequence": 8,
+                "validation_findings": [
+                  "Implementation in progress; exact-candidate hosted checks pending; no local tests or Buildkite evidence collection."
+                ]
               }
             ]
           }
@@ -778,6 +809,7 @@
       "modified_files": [
         ".decapod/managed/specs/INTENT.md",
         "src/decapod/core/repository_profile.rs",
+        "src/decapod/core/validation_runtime/repository_host.rs",
         "src/decapod/core/workspace.rs"
       ],
       "next_transitions": [

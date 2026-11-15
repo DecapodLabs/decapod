@@ -10,7 +10,8 @@ use crate::core::{proof::ProofDef, repository_profile};
 
 pub struct RepositoryHost<'a> {
     options: Options,
-    repository: snapshot_provider::Repository,
+    repository: Option<snapshot_provider::Repository>,
+    local_target_root: Option<PathBuf>,
     remote_url: String,
     project_check: PrerequisiteCallback<'a>,
     authorize: NativeAuthorizer<'a>,
@@ -116,8 +117,39 @@ impl<'a> RepositoryHost<'a> {
         }
         Ok(Self {
             options,
-            repository,
+            repository: Some(repository),
+            local_target_root: None,
             remote_url,
+            project_check: Box::new(project_check),
+            authorize: Box::new(authorize),
+            authorized_commands: BTreeMap::new(),
+        })
+    }
+
+    /// Local authority is selected by the accepted canonical resolver, never by
+    /// a URL argument or provider failure. The proof runner remains unchanged.
+    pub(crate) fn canonical_local<P, A>(
+        options: Options,
+        root: PathBuf,
+        project_check: P,
+        authorize: A,
+    ) -> io::Result<Self>
+    where
+        P: FnMut(&RuntimeBudget<'_>) -> io::Result<ProjectPrerequisites> + 'a,
+        A: FnMut(NativeAction<'_>) -> io::Result<()> + 'a,
+    {
+        let resolved = crate::core::workspace::resolve_readiness_repository(&options.root)
+            .map_err(io::Error::other)?;
+        if resolved.local_target_root.as_ref() != Some(&root)
+            || resolved.canonical_name != options.repository
+        {
+            return Err(invalid("LOCAL_TARGET_IDENTITY_CHANGED"));
+        }
+        Ok(Self {
+            options,
+            repository: None,
+            remote_url: root.to_string_lossy().into_owned(),
+            local_target_root: Some(root),
             project_check: Box::new(project_check),
             authorize: Box::new(authorize),
             authorized_commands: BTreeMap::new(),
@@ -142,6 +174,30 @@ impl<'a> RepositoryHost<'a> {
             remote_url: &self.remote_url,
             full_ref: &reference,
         })?;
+        if let Some(root) = &self.local_target_root {
+            // Re-resolve the accepted authority at every target observation.
+            // An authority/branch/path change never switches to another host.
+            let current = crate::core::workspace::resolve_readiness_repository(&self.options.root)
+                .map_err(io::Error::other)?;
+            if current.local_target_root.as_ref() != Some(root)
+                || current.canonical_name != repository
+            {
+                return Err(invalid("LOCAL_TARGET_IDENTITY_CHANGED"));
+            }
+            let oid = crate::core::workspace::read_canonical_local_git(
+                root,
+                &self.options.git,
+                &["rev-parse", "--verify", &format!("{reference}^{{commit}}")],
+            )
+            .map_err(io::Error::other)?;
+            budget.remaining()?;
+            if !matches!(oid.len(), 40 | 64) || !oid.bytes().all(|b| b.is_ascii_hexdigit()) {
+                return Err(invalid(
+                    "LOCAL_TARGET_INVALID: expected exact commit identity",
+                ));
+            }
+            return Ok(oid);
+        }
         // The operation above authorizes this exact read. Reuse the existing
         // transport's configured authentication and URL-rewrite guard; do not
         // inspect credentials, change configuration or try an auth fallback.
@@ -155,7 +211,9 @@ impl<'a> RepositoryHost<'a> {
         snapshot_provider::snapshot::accepted_target(
             &mut runner,
             &self.options.root,
-            &self.repository,
+            self.repository
+                .as_ref()
+                .ok_or_else(|| invalid("GitHub target identity missing"))?,
             &reference,
             &query_budget,
         )?
@@ -183,6 +241,18 @@ impl Host for RepositoryHost<'_> {
         budget: &RuntimeBudget<'_>,
     ) -> Result<ExecutionSelection, Vec<Blocker>> {
         self.authorized_commands.clear();
+        if project
+            .configuration
+            .repository_contract
+            .as_ref()
+            .is_some_and(|contract| contract.canonical_local_target)
+            != self.local_target_root.is_some()
+        {
+            return Err(vec![Blocker::new(
+                "LOCAL_TARGET_HOST_MISMATCH",
+                "accepted target authority differs from the selected sealed host",
+            )]);
+        }
         let selection = select_commands(project, budget)?;
         let sources = project
             .sources
@@ -733,6 +803,7 @@ mod tests {
             required: true,
         }];
         let mut contract = repository_profile::RepositoryContract {
+            canonical_local_target: false,
             reviewed_commands_digest: String::new(),
             source_coverage: Vec::new(),
             executions: BTreeMap::from([(
