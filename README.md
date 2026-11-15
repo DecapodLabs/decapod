@@ -21,8 +21,8 @@
 </p>
 
 <p align="center">
-  <a href="assets/showcase/generated/decapod-showcase.mp4"><img src="assets/showcase/generated/decapod-showcase.gif" alt="Decapod: claim, isolate, govern, reflect, verify, recover — 6.58-second animated feature reel" width="760"></a><br>
-  <sub><a href="assets/showcase/README.md">6.58-second showcase · source and reproducible renderer</a></sub>
+  <a href="assets/showcase/generated/decapod-showcase.mp4"><img src="assets/showcase/generated/decapod-showcase.gif" alt="Decapod: claim, isolate, govern, reflect, verify, recover — 6.60-second brand film with music" width="760"></a><br>
+  <sub><a href="assets/showcase/README.md">6.60-second showcase · original score · reproducible renderer</a></sub>
 </p>
 
 Decapod gives coding agents a persistent way to check their work against the project's intent. Requirements, decisions, task ownership, and validation evidence stay with the repository across agents and sessions.
