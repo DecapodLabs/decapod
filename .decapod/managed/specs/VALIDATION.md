@@ -1369,7 +1369,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `687b3317a9e134b8593b6f8f2a3bced63068e347d3555778596b8545b6ba59e1`
+- Repository signal fingerprint: `5530249d38a42ab9c966b27787ccd6952ce1c69a63ab1a2414a9960c1e542984`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (236 files), `tests/` (234 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
@@ -2175,6 +2175,25 @@ requirement stays enabled, so full native publication readiness is unproven.
 The original missing v0.138.0 cache entry is historical and is not claimed filled
 by this code change. Actual protected-master packaging/publication must establish
 cache availability separately after acceptance.
+
+## Canonical local Git proof (#1069)
+
+The new required actual-binary entrypoint regression creates an operator-reviewed canonical local contract, claims a task, creates its governed workspace and invokes ordinary full validation with provider environment removed. It checks real executed observations, durable history inspection, unchanged repeat execution, source changes, forged diagnostic claims for altered source, accepted-base movement, authority revocation and forge publication refusal. Existing strict/external and adversarial suites remain required. GitHub Actions runs the checks; no local tests/builds or Buildkite evidence collection. Exact hosted observations are pending and the complete ten-worker A–H/native-runtime mission remains unproven.
+
+### v0.147.0 acceptance target
+
+PR #1702 now integrates accepted release master
+`26196764ec1dfa95ce366c08fc3e104b8a5bfec1`, including #1697's bounded physical
+recovery. Final authoring projections and checkpoint observations must use the
+installed v0.147.0 kernel. The release changes Cargo package identity, so review
+the measured verification inventory against that exact accepted source before
+reconciling its pin; preserve all required commands and strict provider policy.
+Earlier v0.146.0 source observations stay historical. Queued checks that reject
+a moved target before execution establish no test result. Fresh GitHub checks
+must evaluate this combined candidate, including normal local CLI proof and
+the unchanged common publication-admission denials. No local project test/build
+execution or Buildkite collection is authorized by this toolchain transition;
+full native publication proof remains unclaimed.
 
 ## PR #1699 accepted-target integration
 

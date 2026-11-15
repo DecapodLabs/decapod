@@ -39,6 +39,16 @@ fn governed_ok(root: &Path, storage: &Path, args: &[&str]) -> serde_json::Value 
 // Keep shared support free of test cases so API regressions execute once.
 #[cfg(unix)]
 pub fn fresh_governed_docs_cli_admission_then_runtime_executes_first_proof() {
+    governed_docs_proof(false);
+}
+
+#[cfg(unix)]
+pub fn canonical_local_cli_proves_and_rejects_stale_authority() {
+    governed_docs_proof(true);
+}
+
+#[cfg(unix)]
+fn governed_docs_proof(local_target: bool) {
     use decapod::core::governance_document;
     let started = std::time::Instant::now();
     let mut fixture = Fixture::new();
@@ -80,8 +90,18 @@ pub fn fresh_governed_docs_cli_admission_then_runtime_executes_first_proof() {
     // workspace-specific execution environment is authored only after the
     // workspace exists; do not pretend that later policy was accepted on main.
     // Separate consumer tests preserve and execute an already accepted contract.
-    config["proof"] =
-        toml::Value::try_from(decapod::core::proof::ProjectProofConfig::default()).unwrap();
+    config["proof"] = if local_target {
+        fixture
+            .proof
+            .repository_contract
+            .as_mut()
+            .unwrap()
+            .canonical_local_target = true;
+        fixture.review_commands();
+        toml::Value::try_from(&fixture.proof).unwrap()
+    } else {
+        toml::Value::try_from(decapod::core::proof::ProjectProofConfig::default()).unwrap()
+    };
     config["repo"]["base_branch"] = "main".into();
     fs::write(root.join(CONFIG), toml::to_string_pretty(&config).unwrap()).unwrap();
     // Init seeds the accepted baseline. Authoring refresh belongs in the
@@ -96,15 +116,18 @@ pub fn fresh_governed_docs_cli_admission_then_runtime_executes_first_proof() {
         ],
     );
     git(&root, &["push", "origin", "main"]);
-    git(
-        &root,
-        &[
-            "remote",
-            "set-url",
-            "origin",
-            "https://github.com/consumer/project.git",
-        ],
-    );
+    if !local_target {
+        git(
+            &root,
+            &[
+                "remote",
+                "set-url",
+                "origin",
+                "https://github.com/consumer/project.git",
+            ],
+        );
+    }
+
     let task = governed_ok(
         &root,
         &storage,
@@ -140,7 +163,7 @@ pub fn fresh_governed_docs_cli_admission_then_runtime_executes_first_proof() {
     fs::write(intent, format!("{prose}\n## Reviewed documentation proof\n\nThe docs task validates both committed payload files through the required real Python commands. A failed assertion must prevent readiness and receipt issuance.\n")).unwrap();
     fixture.options.root = workspace.clone();
     let contract = fixture.proof.repository_contract.as_mut().unwrap();
-    for execution in contract.executions.values_mut() {
+    for execution in contract.executions.values_mut().filter(|_| !local_target) {
         execution.environment.insert(
             "FIXTURE_WORKTREE".into(),
             workspace.to_string_lossy().into_owned(),
@@ -303,6 +326,10 @@ pub fn fresh_governed_docs_cli_admission_then_runtime_executes_first_proof() {
     assert!(pre_proof_task["item"]["completed_at"].is_null());
     assert_eq!(git(&workspace, &["rev-parse", "HEAD"]), head);
     assert!(git(&workspace, &["status", "--porcelain"]).is_empty());
+    if local_target {
+        prove_canonical_local_cli(&workspace, &root, &storage, id, &head);
+        return;
+    }
     let mut host = fixture.host();
     let admission_observation = std::rc::Rc::new(std::cell::RefCell::new(None));
     host.governed_admission = Some(GovernedAdmission {
@@ -485,4 +512,188 @@ pub fn fresh_governed_docs_cli_admission_then_runtime_executes_first_proof() {
         )
         .as_bytes(),
     );
+}
+
+/// Uses the actual unmodified CLI boundary, with provider environment removed by
+/// governed_command. No Host substitution, fake Git result or success receipt.
+#[cfg(unix)]
+fn prove_canonical_local_cli(
+    workspace: &Path,
+    root: &Path,
+    storage: &Path,
+    task: &str,
+    head: &str,
+) {
+    let start = std::time::Instant::now();
+    let store_path = root.join(".decapod/data");
+    let store_before = retained_bytes(&store_path);
+    let output = governed_command(workspace, storage, &["validate", "--format", "json"])
+        .bounded_output(Duration::from_secs(300))
+        .unwrap();
+    let diagnostic = String::from_utf8_lossy(&output.stderr);
+    let result: serde_json::Value = serde_json::from_slice(&output.stdout).unwrap_or_else(|_| {
+        panic!(
+            "actual local validate: {} {diagnostic}",
+            String::from_utf8_lossy(&output.stdout)
+        )
+    });
+    assert!(output.status.success(), "{result} {diagnostic}");
+    // Preserve the established native validator status; readiness is a separate judgment.
+    assert_eq!(result["status"], "ok", "{result}");
+    assert_eq!(
+        result["publication_ready"], false,
+        "forge target is not proven"
+    );
+    assert_eq!(result["readiness"]["ready"], true, "{result}");
+    assert_eq!(result["readiness"]["proof_ready"], true);
+    assert_eq!(
+        result["readiness"]["scope"],
+        "repository_local_git_readiness"
+    );
+    let evidence = PathBuf::from(result["readiness"]["evidence_path"].as_str().unwrap());
+    let observations: SuiteEvidence =
+        serde_json::from_slice(&fs::read(evidence.join("observations.json")).unwrap()).unwrap();
+    assert_eq!(observations.results.len(), 2);
+    assert!(
+        observations
+            .results
+            .iter()
+            .all(|row| matches!(row.observation, Observation::Executed { .. }))
+    );
+    for path in [
+        "completion/native-readiness-receipt.json",
+        "completion/verdict.json",
+        "historical-proof.json",
+    ] {
+        assert!(evidence.join(path).is_file(), "{path}");
+    }
+    assert_eq!(git(workspace, &["rev-parse", "HEAD"]), head);
+    assert!(git(workspace, &["status", "--porcelain"]).is_empty());
+    let validation_ms = start.elapsed().as_millis();
+    let inspection = std::time::Instant::now();
+    let historical = governed_ok(workspace, storage, &["qa", "verify", "commit", head]);
+    assert_eq!(historical["status"], "passed");
+    assert_eq!(historical["publication_ready"], false);
+    let inspection_ms = inspection.elapsed().as_millis();
+    let bytes = retained_bytes(&evidence);
+    let repeat = std::time::Instant::now();
+    let again = governed_command(workspace, storage, &["validate", "--format", "json"])
+        .bounded_output(Duration::from_secs(300))
+        .unwrap();
+    let again_json: serde_json::Value = serde_json::from_slice(&again.stdout).unwrap();
+    assert!(
+        again.status.success(),
+        "unchanged validation: {again_json} {}",
+        String::from_utf8_lossy(&again.stderr)
+    );
+    assert_eq!(again_json["readiness"]["ready"], true);
+    let _ = io::Write::write_all(&mut io::stderr(), format!(
+        "canonical-local metrics: validation_ms={} inspection_ms={} unchanged_validation_ms={} retained_evidence_bytes={} canonical_store_growth_bytes={}\n",
+        validation_ms, inspection_ms, repeat.elapsed().as_millis(), bytes, retained_bytes(&store_path).saturating_sub(store_before),
+    ).as_bytes());
+    // Material mutation cannot reuse the original successful observation.
+    fs::write(workspace.join("payload.txt"), "changed after validation\n").unwrap();
+    rejected_local_claim(
+        workspace,
+        storage,
+        &[
+            "todo",
+            "done",
+            "--id",
+            task,
+            "--validated",
+            "--commit",
+            head,
+        ],
+    );
+    rejected_local_claim(workspace, storage, &["validate", "--format", "json"]);
+    fs::write(workspace.join("payload.txt"), "ready\n").unwrap();
+    // Local proof cannot be spent at the supported forge publication boundary,
+    // even if an unrestricted shell could independently configure/push a remote.
+    rejected_local_claim(workspace, storage, &["workspace", "publish"]);
+    // A manually edited success artifact cannot establish proof for altered
+    // source. Authentic canonical history remains a historical observation.
+    fs::write(workspace.join("payload.txt"), "forged candidate input\n").unwrap();
+    let observations_path = evidence.join("observations.json");
+    fs::write(&observations_path, br#"{"passed":true,"ready":true}"#).unwrap();
+    rejected_local_claim(
+        workspace,
+        storage,
+        &[
+            "todo",
+            "done",
+            "--id",
+            task,
+            "--validated",
+            "--commit",
+            head,
+        ],
+    );
+    fs::write(workspace.join("payload.txt"), "ready\n").unwrap();
+    // The accepted branch advances independently while the worker retains its
+    // old origin/main. Current validation must observe the canonical branch.
+    fs::write(root.join("second.txt"), "accepted target moved\n").unwrap();
+    git(root, &["add", "second.txt"]);
+    git(
+        root,
+        &["commit", "-m", "advance independent accepted local target"],
+    );
+    let stale = rejected_local_claim(workspace, storage, &["validate", "--format", "json"]);
+    assert!(stale.contains("STALE_ACCEPTED_BASE"), "{stale}");
+    // Revoking local authority on the canonical target cannot be repaired by a
+    // candidate still declaring that authority or by a provider fallback.
+    let config_path = root.join(CONFIG);
+    let mut config: toml::Value =
+        toml::from_str(&fs::read_to_string(&config_path).unwrap()).unwrap();
+    config["proof"]["repository_contract"]["canonical_local_target"] = false.into();
+    fs::write(config_path, toml::to_string_pretty(&config).unwrap()).unwrap();
+    git(root, &["add", CONFIG]);
+    git(
+        root,
+        &["commit", "-m", "revoke canonical local target authority"],
+    );
+    let revoked = rejected_local_claim(workspace, storage, &["validate", "--format", "json"]);
+    assert!(
+        revoked.contains("LOCAL_TARGET_POLICY_UNACCEPTED"),
+        "{revoked}"
+    );
+    eprintln!(
+        "Actual offline CLI local proof and stale/forged/revoked authority cases: {:?}",
+        start.elapsed()
+    );
+}
+
+#[cfg(unix)]
+fn rejected_local_claim(workspace: &Path, storage: &Path, args: &[&str]) -> String {
+    let output = governed_command(workspace, storage, args)
+        .bounded_output(Duration::from_secs(300))
+        .unwrap();
+    let response = serde_json::from_slice::<serde_json::Value>(&output.stdout)
+        .unwrap_or(serde_json::Value::Null);
+    assert!(
+        !output.status.success() || response["success"] == false || response["status"] == "fail",
+        "unsupported claim succeeded: {args:?}: {response} {}",
+        String::from_utf8_lossy(&output.stderr)
+    );
+    assert_ne!(response["publication_ready"], true);
+    assert_ne!(response["readiness"]["ready"], true);
+    format!("{response} {}", String::from_utf8_lossy(&output.stderr))
+}
+
+#[cfg(unix)]
+fn retained_bytes(path: &Path) -> u64 {
+    fs::read_dir(path)
+        .unwrap()
+        .map(|entry| {
+            let entry = entry.unwrap();
+            let metadata = fs::symlink_metadata(entry.path()).unwrap();
+            if metadata.is_file() {
+                metadata.len()
+            } else if metadata.is_dir() {
+                retained_bytes(&entry.path())
+            } else {
+                0
+            }
+        })
+        .sum()
 }

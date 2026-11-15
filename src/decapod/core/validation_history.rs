@@ -122,9 +122,7 @@ fn ambient_git_override(name: &OsStr, value: &OsStr) -> bool {
     OVERRIDES.contains(&name.as_ref()) || name.starts_with("GIT_CONFIG_")
 }
 
-fn repository_identity(
-    root: &Path,
-) -> Result<super::repo_identity::RepositoryIdentity, DecapodError> {
+fn repository_identity(root: &Path) -> Result<workspace::ReadinessRepository, DecapodError> {
     // The shared remote resolver predates the bounded Git reader. Reject
     // ambient redirects before calling it, so its repository and our immutable
     // object observations cannot silently describe different checkouts.
@@ -209,6 +207,25 @@ impl CurrentEvidenceInputs {
             return Err(invalid(
                 "current proof input identity or bounds are invalid",
             ));
+        }
+        if expected.repository.starts_with("local-git:") {
+            let repository = repository_identity(root)?;
+            let target = repository
+                .local_target_root
+                .ok_or_else(|| invalid("local target authority changed"))?;
+            let reference = format!("refs/heads/{}^{{commit}}", expected.base_branch);
+            let current = workspace::read_canonical_local_git(
+                &target,
+                &self.inputs.git_program,
+                &["rev-parse", "--verify", &reference],
+            )?;
+            if repository.canonical_name != expected.repository
+                || current != expected.accepted_base_revision
+            {
+                return Err(invalid(
+                    "WORKUNIT_PROOF_STALE: canonical local accepted target changed; revalidate the resulting integration",
+                ));
+            }
         }
         for (reference, tools) in &self.toolchains {
             if digest(tools)? != *reference {
@@ -399,7 +416,9 @@ impl CompletedReadinessEvidence {
             .checks
             .iter()
             .any(|check| check.kind == evidence::CheckKind::RepositoryLocal);
-        let scope = if local {
+        let scope = if local && self.material.repository.starts_with("local-git:sha256:") {
+            super::repository_profile::LOCAL_GIT_READINESS_SCOPE
+        } else if local {
             super::repository_profile::READINESS_SCOPE
         } else {
             validation_runtime::READINESS_SCOPE
@@ -1020,7 +1039,16 @@ impl HistoricalValidationProof {
             "validation.history.integration",
             &program.to_string_lossy(),
         )?;
-        let remote = accepted_target(&program, &repository.remote_url, &branch_ref)?;
+        let remote = if let Some(root) = repository.local_target_root {
+            let oid = workspace::read_canonical_local_git(
+                &root,
+                &program,
+                &["rev-parse", "--verify", &format!("{branch_ref}^{{commit}}")],
+            )?;
+            format!("{oid}\t{branch_ref}")
+        } else {
+            accepted_target(&program, &repository.remote_url, &branch_ref)?
+        };
         let lines: Vec<_> = remote.lines().collect();
         let (accepted_sha, returned_ref) = lines
             .first()

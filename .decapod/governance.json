@@ -555,176 +555,208 @@
     }
   },
   "change": {
-    "id": "pr1697-v1460-rebase",
+    "id": "pr1702-v1460-rebase",
     "base_commit": "e9c40e929ee33aa5443c38b57276f96111db0b92",
     "target_base": "origin/master"
   },
   "claims": {
-    "pr1697-current-exact-source": {
+    "pr1702-current-exact-source": {
       "statement": "Current implementation preserves its stated accepted policy and boundaries on the recorded source/base; new source-CI execution is required before merge.",
       "falsifier": "A changed source, stale accepted target, missing proof or unsupported authority can be accepted as current success.",
       "status": "open",
       "proof_refs": [
-        "https://github.com/DecapodLabs/decapod/pull/1697"
+        "https://github.com/DecapodLabs/decapod/pull/1702"
       ]
     }
   },
   "checkpoints": [
     {
-      "id": "pr1697-1460-replay-01",
-      "summary": "docs: rebase PR1697 INTENT.md on v0.146.0; new tree observed during current rebase, GitHub proof pending.",
-      "input_digest": "sha256:ed30f9a78298f9a745e95d7cd6f7ff7f523c8d5b0ce47ae9c0cc65788791c702",
+      "id": "pr1702-1460-replay-01",
+      "summary": "docs: rebase PR1702 INTENT.md on v0.146.0; new tree observed during current rebase, GitHub proof pending.",
+      "input_digest": "sha256:785cd3363a6467bd78d613f4d5bc33c00846b9c26c924fd32004df89c2454019",
       "proof_refs": [
-        "git:archive/pr1697-before-1460-rebase-4afbf4a7@4afbf4a73cd037da22575a902513a9f2e5996c3d"
+        "git:archive/pr1702-before-1460-rebase-f1c34e86@f1c34e86ca35fd095a8c9e7ef71d7fdd73b5c7e4"
       ]
     },
     {
-      "id": "pr1697-1460-replay-02",
-      "summary": "feat: rebase PR1697 cli.rs on v0.146.0; new tree observed during current rebase, GitHub proof pending.",
-      "input_digest": "sha256:f4b65be493833116d9e4e8b48c0f5a07fb60a910af63a8dcaadb26f2e574f2d2",
+      "id": "pr1702-1460-replay-02",
+      "summary": "feat: rebase PR1702 docs_cli.rs on v0.146.0; new tree observed during current rebase, GitHub proof pending.",
+      "input_digest": "sha256:4fa977bf9ba57a9da123f2162bee87c526d3ba59e218989e566b6269f1890247",
       "proof_refs": [
-        "git:archive/pr1697-before-1460-rebase-4afbf4a7@4afbf4a73cd037da22575a902513a9f2e5996c3d"
+        "git:archive/pr1702-before-1460-rebase-f1c34e86@f1c34e86ca35fd095a8c9e7ef71d7fdd73b5c7e4"
       ]
     },
     {
-      "id": "pr1697-1460-replay-03",
-      "summary": "feat: rebase PR1697 docs_cli.rs on v0.146.0; new tree observed during current rebase, GitHub proof pending.",
-      "input_digest": "sha256:845a85fdd04b9a92baa451bd8e8fd220a86ff323ccf3ca43c34873ee62795ef1",
+      "id": "pr1702-1460-replay-03",
+      "summary": "feat: rebase PR1702 repository_profile.rs on v0.146.0; new tree observed during current rebase, GitHub proof pending.",
+      "input_digest": "sha256:0623d0d0c55005a15d7bfc1667dd78c81482344ef4043cfa098af6ea8089b328",
       "proof_refs": [
-        "git:archive/pr1697-before-1460-rebase-4afbf4a7@4afbf4a73cd037da22575a902513a9f2e5996c3d"
+        "git:archive/pr1702-before-1460-rebase-f1c34e86@f1c34e86ca35fd095a8c9e7ef71d7fdd73b5c7e4"
       ]
     },
     {
-      "id": "pr1697-1460-replay-04",
-      "summary": "feat: rebase PR1697 legacy_todo_recovery.rs on v0.146.0; new tree observed during current rebase, GitHub proof pending.",
-      "input_digest": "sha256:11e4377ab77458a45d69befcfb15ca73f5d150c0c0207801fee151241a260e10",
+      "id": "pr1702-1460-replay-04",
+      "summary": "feat: rebase PR1702 validation_history.rs on v0.146.0; new tree observed during current rebase, GitHub proof pending.",
+      "input_digest": "sha256:20ea6b7d58b1e2fabc9a6186b467cb62e8d9d3ead0339ab5d7018cef06dde3b9",
       "proof_refs": [
-        "git:archive/pr1697-before-1460-rebase-4afbf4a7@4afbf4a73cd037da22575a902513a9f2e5996c3d"
+        "git:archive/pr1702-before-1460-rebase-f1c34e86@f1c34e86ca35fd095a8c9e7ef71d7fdd73b5c7e4"
       ]
     },
     {
-      "id": "pr1697-1460-replay-05",
-      "summary": "feat: rebase PR1697 migration.rs on v0.146.0; new tree observed during current rebase, GitHub proof pending.",
-      "input_digest": "sha256:d41ec43071d874464b13f5bb6a34f5e5bb0bad4ded5a735d39a9769a5a9891f5",
+      "id": "pr1702-1460-replay-05",
+      "summary": "feat: rebase PR1702 validation_runtime.rs on v0.146.0; new tree observed during current rebase, GitHub proof pending.",
+      "input_digest": "sha256:f75c2cf9d912107cbc8df53ea5d7b455ac22b68f39c4915bb6f73bccf9d72251",
       "proof_refs": [
-        "git:archive/pr1697-before-1460-rebase-4afbf4a7@4afbf4a73cd037da22575a902513a9f2e5996c3d"
+        "git:archive/pr1702-before-1460-rebase-f1c34e86@f1c34e86ca35fd095a8c9e7ef71d7fdd73b5c7e4"
       ]
     },
     {
-      "id": "pr1697-1460-replay-06",
-      "summary": "feat: rebase PR1697 todo.rs on v0.146.0; new tree observed during current rebase, GitHub proof pending.",
-      "input_digest": "sha256:ebef68fc4bac86130b3ad22d552da1e71e3d77a902d8e854bb697d3aa1f4d6a1",
+      "id": "pr1702-1460-replay-06",
+      "summary": "feat: rebase PR1702 repository_host.rs on v0.146.0; new tree observed during current rebase, GitHub proof pending.",
+      "input_digest": "sha256:05516f1b24ff5b8d1f1ec55fbda762f79e03e319eea8525ac18b82f9b3169293",
       "proof_refs": [
-        "git:archive/pr1697-before-1460-rebase-4afbf4a7@4afbf4a73cd037da22575a902513a9f2e5996c3d"
+        "git:archive/pr1702-before-1460-rebase-f1c34e86@f1c34e86ca35fd095a8c9e7ef71d7fdd73b5c7e4"
       ]
     },
     {
-      "id": "pr1697-1460-replay-07",
-      "summary": "feat: rebase PR1697 lib.rs on v0.146.0; new tree observed during current rebase, GitHub proof pending.",
-      "input_digest": "sha256:2a1ff61bdd1f8380c63f9131525c984d043f05a706859a229d6baf2d3279d65d",
+      "id": "pr1702-1460-replay-07",
+      "summary": "feat: rebase PR1702 workspace.rs on v0.146.0; new tree observed during current rebase, GitHub proof pending.",
+      "input_digest": "sha256:7a3654d41145bbe08bd0ebf07613f004e77f6b703e8cc9e2f449dc7e1961bcb0",
       "proof_refs": [
-        "git:archive/pr1697-before-1460-rebase-4afbf4a7@4afbf4a73cd037da22575a902513a9f2e5996c3d"
+        "git:archive/pr1702-before-1460-rebase-f1c34e86@f1c34e86ca35fd095a8c9e7ef71d7fdd73b5c7e4"
       ]
     },
     {
-      "id": "pr1697-1460-replay-08",
-      "summary": "feat: rebase PR1697 policy.rs on v0.146.0; new tree observed during current rebase, GitHub proof pending.",
-      "input_digest": "sha256:966ec35ce06f28f7e4c12fb849a7ef5ab4a19cd168fd4632fede6753d4225f5e",
+      "id": "pr1702-1460-replay-08",
+      "summary": "feat: rebase PR1702 lib.rs on v0.146.0; new tree observed during current rebase, GitHub proof pending.",
+      "input_digest": "sha256:52bce639df2ca88786ef6324096d0f60566fcf3a80d1bd1c17b6573efbc4a75f",
       "proof_refs": [
-        "git:archive/pr1697-before-1460-rebase-4afbf4a7@4afbf4a73cd037da22575a902513a9f2e5996c3d"
+        "git:archive/pr1702-before-1460-rebase-f1c34e86@f1c34e86ca35fd095a8c9e7ef71d7fdd73b5c7e4"
       ]
     },
     {
-      "id": "pr1697-1460-replay-09",
-      "summary": "test: rebase PR1697 sqlite_maintenance.rs on v0.146.0; new tree observed during current rebase, GitHub proof pending.",
-      "input_digest": "sha256:21ca62b04209dc7a4f910f6ab7e3416c5cd355a82793dfa7a44b9357e65936c6",
+      "id": "pr1702-1460-replay-09",
+      "summary": "test: rebase PR1702 consumer_readiness_fixture.rs on v0.146.0; new tree observed during current rebase, GitHub proof pending.",
+      "input_digest": "sha256:dd9b3b43f0e04c57d454decfcff83f3ea88e7091415cb877175e5ed683856532",
       "proof_refs": [
-        "git:archive/pr1697-before-1460-rebase-4afbf4a7@4afbf4a73cd037da22575a902513a9f2e5996c3d"
+        "git:archive/pr1702-before-1460-rebase-f1c34e86@f1c34e86ca35fd095a8c9e7ef71d7fdd73b5c7e4"
       ]
     },
     {
-      "id": "pr1697-1460-replay-10",
-      "summary": "test: rebase PR1697 cli_tests.rs on v0.146.0; new tree observed during current rebase, GitHub proof pending.",
-      "input_digest": "sha256:7215a0d9f0a7536897d8b22cefedee5b167730d1035a7604264ca2751f357c43",
+      "id": "pr1702-1460-replay-10",
+      "summary": "test: rebase PR1702 entrypoint_correctness.rs on v0.146.0; new tree observed during current rebase, GitHub proof pending.",
+      "input_digest": "sha256:9cc5da454f41c5caffdfd56f9533f8e2e034501d7e2ab0ba3f6f8e3ebaeb3ae3",
       "proof_refs": [
-        "git:archive/pr1697-before-1460-rebase-4afbf4a7@4afbf4a73cd037da22575a902513a9f2e5996c3d"
+        "git:archive/pr1702-before-1460-rebase-f1c34e86@f1c34e86ca35fd095a8c9e7ef71d7fdd73b5c7e4"
       ]
     },
     {
-      "id": "pr1697-1460-replay-11",
-      "summary": "docs: rebase PR1697 command-contracts.md on v0.146.0; new tree observed during current rebase, GitHub proof pending.",
-      "input_digest": "sha256:63437f953668ab493e2e6751ffc0b69d495c9ca48b964f99993b5b91e7bc2987",
+      "id": "pr1702-1460-replay-11",
+      "summary": "test: rebase PR1702 fresh_docs_readiness.rs on v0.146.0; new tree observed during current rebase, GitHub proof pending.",
+      "input_digest": "sha256:98b5ab51b6afa6688d3f82b27de4c0ac2887a173cab0f5ede2561c54285156ac",
       "proof_refs": [
-        "git:archive/pr1697-before-1460-rebase-4afbf4a7@4afbf4a73cd037da22575a902513a9f2e5996c3d"
+        "git:archive/pr1702-before-1460-rebase-f1c34e86@f1c34e86ca35fd095a8c9e7ef71d7fdd73b5c7e4"
       ]
     },
     {
-      "id": "pr1697-1460-replay-12",
-      "summary": "docs: rebase PR1697 config-schema.md on v0.146.0; new tree observed during current rebase, GitHub proof pending.",
-      "input_digest": "sha256:0bb3c2ef8128401ca3768d9e8107a90c2f47a9b89fa440e4083e5b9e48734d8c",
+      "id": "pr1702-1460-replay-12",
+      "summary": "test: rebase PR1702 repository_profile_tests.rs on v0.146.0; new tree observed during current rebase, GitHub proof pending.",
+      "input_digest": "sha256:9f8a8664f20f99dd33b5f3ea75c5235f2ddf8def5e2f6e9a5cb38ddd68bedb7b",
       "proof_refs": [
-        "git:archive/pr1697-before-1460-rebase-4afbf4a7@4afbf4a73cd037da22575a902513a9f2e5996c3d"
+        "git:archive/pr1702-before-1460-rebase-f1c34e86@f1c34e86ca35fd095a8c9e7ef71d7fdd73b5c7e4"
       ]
     },
     {
-      "id": "pr1697-1460-replay-13",
-      "summary": "docs: rebase PR1697 error-recovery.md on v0.146.0; new tree observed during current rebase, GitHub proof pending.",
-      "input_digest": "sha256:b075c40db0f37e1ee1f1afd02fd6d96ac7832d0891dd58120584922a53f22204",
+      "id": "pr1702-1460-replay-13",
+      "summary": "test: rebase PR1702 lib_init_prompt_tests.rs on v0.146.0; new tree observed during current rebase, GitHub proof pending.",
+      "input_digest": "sha256:32527b71cb75c0ab27d8d605778ac3434cd607dc42b39fc634007d3e24aa82ad",
       "proof_refs": [
-        "git:archive/pr1697-before-1460-rebase-4afbf4a7@4afbf4a73cd037da22575a902513a9f2e5996c3d"
+        "git:archive/pr1702-before-1460-rebase-f1c34e86@f1c34e86ca35fd095a8c9e7ef71d7fdd73b5c7e4"
       ]
     },
     {
-      "id": "pr1697-1460-replay-14",
-      "summary": "docs: rebase PR1697 legacy-todo-recovery.md on v0.146.0; new tree observed during current rebase, GitHub proof pending.",
-      "input_digest": "sha256:c721523674f19f2c9a1103b97befa3ebeaec4c5cf4a900a50664896ed6c4aa66",
+      "id": "pr1702-1460-replay-14",
+      "summary": "docs: rebase PR1702 command-contracts.md on v0.146.0; new tree observed during current rebase, GitHub proof pending.",
+      "input_digest": "sha256:d2f43ac46be441d8a5a60f745398516b94e8c52eeec4e27ded954872950787c8",
       "proof_refs": [
-        "git:archive/pr1697-before-1460-rebase-4afbf4a7@4afbf4a73cd037da22575a902513a9f2e5996c3d"
+        "git:archive/pr1702-before-1460-rebase-f1c34e86@f1c34e86ca35fd095a8c9e7ef71d7fdd73b5c7e4"
       ]
     },
     {
-      "id": "pr1697-1460-replay-15",
-      "summary": "docs: rebase PR1697 ARCHITECTURE.md on v0.146.0; new tree observed during current rebase, GitHub proof pending.",
-      "input_digest": "sha256:e238803f60a1eaaf312486af73f420c83a2b782070f8437839927fa0fb0b0bb7",
+      "id": "pr1702-1460-replay-15",
+      "summary": "docs: rebase PR1702 config-schema.md on v0.146.0; new tree observed during current rebase, GitHub proof pending.",
+      "input_digest": "sha256:f599e9966d24c7cfbe41d20746c1dc38e4d2a0c40189619caacff2ef4fa36a0d",
       "proof_refs": [
-        "git:archive/pr1697-before-1460-rebase-4afbf4a7@4afbf4a73cd037da22575a902513a9f2e5996c3d"
+        "git:archive/pr1702-before-1460-rebase-f1c34e86@f1c34e86ca35fd095a8c9e7ef71d7fdd73b5c7e4"
       ]
     },
     {
-      "id": "pr1697-1460-replay-16",
-      "summary": "docs: rebase PR1697 INTERFACES.md on v0.146.0; new tree observed during current rebase, GitHub proof pending.",
-      "input_digest": "sha256:7e2f41e8ee0b9baf711d0b2e8cf08b6bb2d6c3f7995eeaa902c06b63dbe01ee6",
+      "id": "pr1702-1460-replay-16",
+      "summary": "docs: rebase PR1702 repository-readiness.md on v0.146.0; new tree observed during current rebase, GitHub proof pending.",
+      "input_digest": "sha256:2d1322e0c6b5c0673046a65648afc5731e737d7bd21db7307f915775293fe949",
       "proof_refs": [
-        "git:archive/pr1697-before-1460-rebase-4afbf4a7@4afbf4a73cd037da22575a902513a9f2e5996c3d"
+        "git:archive/pr1702-before-1460-rebase-f1c34e86@f1c34e86ca35fd095a8c9e7ef71d7fdd73b5c7e4"
       ]
     },
     {
-      "id": "pr1697-1460-replay-17",
-      "summary": "docs: rebase PR1697 SECURITY.md on v0.146.0; new tree observed during current rebase, GitHub proof pending.",
-      "input_digest": "sha256:f9be4275822426c85b942948344be2e0c62570ba9d7c946c909f993d25835392",
+      "id": "pr1702-1460-replay-17",
+      "summary": "docs: rebase PR1702 ARCHITECTURE.md on v0.146.0; new tree observed during current rebase, GitHub proof pending.",
+      "input_digest": "sha256:996307635f257ac943137b37cb006a7eb4d5b303242a996572238a5a9498834c",
       "proof_refs": [
-        "git:archive/pr1697-before-1460-rebase-4afbf4a7@4afbf4a73cd037da22575a902513a9f2e5996c3d"
+        "git:archive/pr1702-before-1460-rebase-f1c34e86@f1c34e86ca35fd095a8c9e7ef71d7fdd73b5c7e4"
       ]
     },
     {
-      "id": "pr1697-1460-replay-18",
-      "summary": "docs: rebase PR1697 VALIDATION.md on v0.146.0; new tree observed during current rebase, GitHub proof pending.",
-      "input_digest": "sha256:22dd0e36c1114459a208d831d2be6fa2d00cc85cd1cb6b2cc00ca577ef85fc98",
+      "id": "pr1702-1460-replay-18",
+      "summary": "docs: rebase PR1702 INTERFACES.md on v0.146.0; new tree observed during current rebase, GitHub proof pending.",
+      "input_digest": "sha256:2b144e2169fe2df2ba014dab3532e60feb00b3e5953589f9adf649d71f92338e",
       "proof_refs": [
-        "git:archive/pr1697-before-1460-rebase-4afbf4a7@4afbf4a73cd037da22575a902513a9f2e5996c3d"
+        "git:archive/pr1702-before-1460-rebase-f1c34e86@f1c34e86ca35fd095a8c9e7ef71d7fdd73b5c7e4"
       ]
     },
     {
-      "id": "pr1697-v1460-final-checkpoint",
+      "id": "pr1702-1460-replay-19",
+      "summary": "docs: rebase PR1702 SECURITY.md on v0.146.0; new tree observed during current rebase, GitHub proof pending.",
+      "input_digest": "sha256:92fe012420e83b5d9977e9bd832683df834ea79d65abd7252d9bd14518845b09",
+      "proof_refs": [
+        "git:archive/pr1702-before-1460-rebase-f1c34e86@f1c34e86ca35fd095a8c9e7ef71d7fdd73b5c7e4"
+      ]
+    },
+    {
+      "id": "pr1702-1460-replay-20",
+      "summary": "docs: rebase PR1702 VALIDATION.md on v0.146.0; new tree observed during current rebase, GitHub proof pending.",
+      "input_digest": "sha256:77a18e3a868132e9158ff358aae5ecfa72b8213669aaa6beec33c69fc709409c",
+      "proof_refs": [
+        "git:archive/pr1702-before-1460-rebase-f1c34e86@f1c34e86ca35fd095a8c9e7ef71d7fdd73b5c7e4"
+      ]
+    },
+    {
+      "id": "pr1702-v1460-final-checkpoint",
       "summary": "Finalize freshly governed v0.146.0 rebase, source-bound spec reviews and preserved required policy; exact-candidate GitHub proof pending.",
-      "input_digest": "sha256:f6546439401f38cb1bf89763b5bf6656c3930508f15f3312c9259f6e62213311",
+      "input_digest": "sha256:492fd8bdcd6387464762e859d0fea4d6406dbf6d42d322d8e05a404d46679054",
       "proof_refs": [
-        "https://github.com/DecapodLabs/decapod/pull/1697"
+        "https://github.com/DecapodLabs/decapod/pull/1702"
+      ]
+    },
+    {
+      "id": "pr1702-v1460-final-46a26e3a275b",
+      "summary": "Finalize freshly governed v0.146.0 rebase, source-bound spec reviews and preserved required policy; exact-candidate GitHub proof pending.",
+      "input_digest": "sha256:17aba508ab680ee48ee9680823d4d43053bf61e6385a033aba03ce39e2ac78c9",
+      "proof_refs": [
+        "https://github.com/DecapodLabs/decapod/pull/1702"
+      ]
+    },
+    {
+      "id": "pr1702-v1470-final-2452fa5a84ee",
+      "summary": "Finalize governed v0.147.0 accepted-target integration, source-bound spec reviews and preserved required policy; exact-candidate GitHub proof pending.",
+      "input_digest": "sha256:19ef91a6d985b19676779b1070f4c841aeacf90df5a52ee8bdcf450e1f2da82b",
+      "proof_refs": [
+        "https://github.com/DecapodLabs/decapod/pull/1702"
       ]
     }
   ],
   "intents": {
-    "intent:pr1697-v1460-rebase": {
+    "intent:pr1702-v1460-rebase": {
       "acceptance_criteria": [],
       "assumptions": [],
       "boundaries": [
@@ -734,11 +766,11 @@
         "<external-path>"
       ],
       "created_sequence": 1,
-      "id": "intent:pr1697-v1460-rebase",
+      "id": "intent:pr1702-v1460-rebase",
       "out_of_scope": [],
       "proof_requirements": [],
       "raw_intent": "User explicitly requests enhancement, rebase on origin/master v0.146.0, GitHub-only verification and merge of PRs1697/1700/1702",
-      "refined_intent": "Deliver bounded default-deny physical legacy TODO recovery on accepted master while preserving canonical journal, policy, session and archive integrity",
+      "refined_intent": "Deliver accepted canonical local Git readiness through the real CLI; preserve exact source/target/policy/custody, fix actual GitHub failures, and keep forge/cloud authority separate",
       "status": "refined",
       "updated_sequence": 3
     }
@@ -751,7 +783,7 @@
       },
       "deferred_questions": [],
       "human_questions": [],
-      "intent": "Deliver bounded default-deny physical legacy TODO recovery on accepted master while preserving canonical journal, policy, session and archive integrity",
+      "intent": "Deliver accepted canonical local Git readiness through the real CLI; preserve exact source/target/policy/custody, fix actual GitHub failures, and keep forge/cloud authority separate",
       "phases": [],
       "proof_hooks": [
         "Exact-candidate required GitHub source-CI checks",
@@ -762,43 +794,47 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Reviewed PR1697 freshly replayed on exact v0.146.0 accepted master. Native metadata regenerated; original source tips and receipts remain historical. Preserve current escalation, Nix and filesystem contracts and all required providers/checks. Current-candidate GitHub verification pending; no local tests or Buildkite collection.",
-          "reviewed_code_fingerprint": "687b3317a9e134b8593b6f8f2a3bced63068e347d3555778596b8545b6ba59e1",
-          "spec_material_hash": "c7d5aa42aeaf6cec44edc5c7d60a9ef17309b15ffd9293493a2f3f764877bcf1"
+          "reason": "Reviewed PR1702 integrated with exact v0.147.0 accepted master. Native metadata regenerated; original source tips and receipts remain historical. Preserve current escalation, Nix and filesystem contracts and all required providers/checks. Current-candidate GitHub verification pending; no local tests or Buildkite collection.",
+          "reviewed_code_fingerprint": "5530249d38a42ab9c966b27787ccd6952ce1c69a63ab1a2414a9960c1e542984",
+          "spec_material_hash": "3c15bc18e7c256e17433d21c314b9758c7073ab0bcde948640f32d1da429b06d"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Reviewed PR1697 freshly replayed on exact v0.146.0 accepted master. Native metadata regenerated; original source tips and receipts remain historical. Preserve current escalation, Nix and filesystem contracts and all required providers/checks. Current-candidate GitHub verification pending; no local tests or Buildkite collection.",
-          "reviewed_code_fingerprint": "687b3317a9e134b8593b6f8f2a3bced63068e347d3555778596b8545b6ba59e1",
-          "spec_material_hash": "4e1bb99a6219045699515e213c46ab10665e4de2f27a1f552f37c4408ac26d44"
+          "reason": "Reviewed PR1702 integrated with exact v0.147.0 accepted master. Native metadata regenerated; original source tips and receipts remain historical. Preserve current escalation, Nix and filesystem contracts and all required providers/checks. Current-candidate GitHub verification pending; no local tests or Buildkite collection.",
+          "reviewed_code_fingerprint": "5530249d38a42ab9c966b27787ccd6952ce1c69a63ab1a2414a9960c1e542984",
+          "spec_material_hash": "3d3f508ccd26fa95dc5a9ed669e341bed2f6115ba5fe797a40f69c85e89e3871"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Reviewed PR1697 freshly replayed on exact v0.146.0 accepted master. Native metadata regenerated; original source tips and receipts remain historical. Preserve current escalation, Nix and filesystem contracts and all required providers/checks. Current-candidate GitHub verification pending; no local tests or Buildkite collection.",
-          "reviewed_code_fingerprint": "687b3317a9e134b8593b6f8f2a3bced63068e347d3555778596b8545b6ba59e1",
-          "spec_material_hash": "ca5ff8ea5ef908e223df62240f42ade3fc57db69b1890734ee6918c359b4868d"
+          "reason": "Reviewed PR1702 integrated with exact v0.147.0 accepted master. Native metadata regenerated; original source tips and receipts remain historical. Preserve current escalation, Nix and filesystem contracts and all required providers/checks. Current-candidate GitHub verification pending; no local tests or Buildkite collection.",
+          "reviewed_code_fingerprint": "5530249d38a42ab9c966b27787ccd6952ce1c69a63ab1a2414a9960c1e542984",
+          "spec_material_hash": "a5e8fa6d423d3980cabe7d2d7d122c436ffd95450106674250127cf2c4893747"
         }
       ],
       "state": "APPROVED",
       "stop_conditions": [],
-      "title": "PR1697: current-master delivery",
+      "title": "PR1702: current-master delivery",
       "todo_ids": [
-        "feat_01m7bch2ry0p5aqa"
+        "code_01m7e88jr715z5sp"
       ],
       "unknowns": [
         "Buildkite collection excluded by user; no full native publication receipt is claimed"
       ],
       "unresolved_contradictions": [],
-      "updated_at": "1794715665Z"
+      "updated_at": "1794718241Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Old branch tips and receipts remain historical; fresh checkpoints bind every newly authored material tree; no local tests/builds or Buildkite collection; preserve required provider and publication gates"
       ],
-      "artifact_hash": "sha256:817c1aae5e7f47d42d893c457d9d5bccec222d42ee4de8626f9be65913b87cc6",
+      "artifact_hash": "sha256:e7eadf094fa1d24d36f7ddd0bcf4176e2b347cc1c83b276f01275b332fe1db35",
       "checks": [
+        {
+          "name": "accepted-target-integration",
+          "status": "partial"
+        },
         {
           "name": "fresh-rebase-verification",
           "status": "partial"
@@ -809,165 +845,200 @@
         "events": [
           {
             "event_id": "event:2",
-            "intent_id": "intent:pr1697-v1460-rebase",
+            "intent_id": "intent:pr1702-v1460-rebase",
             "kind": "created",
             "sequence": 2
           },
           {
             "event_id": "event:3",
-            "intent_id": "intent:pr1697-v1460-rebase",
+            "intent_id": "intent:pr1702-v1460-rebase",
             "kind": "refined",
             "sequence": 3
           },
           {
-            "detail": "trajectory:pr1697-v1460-rebase",
+            "detail": "trajectory:pr1702-v1460-rebase",
             "event_id": "event:4",
-            "intent_id": "intent:pr1697-v1460-rebase",
+            "intent_id": "intent:pr1702-v1460-rebase",
             "kind": "trajectory_step_recorded",
             "sequence": 4
           },
           {
-            "detail": "trajectory:pr1697-v1460-rebase",
+            "detail": "trajectory:pr1702-v1460-rebase",
             "event_id": "event:5",
-            "intent_id": "intent:pr1697-v1460-rebase",
+            "intent_id": "intent:pr1702-v1460-rebase",
             "kind": "trajectory_step_recorded",
             "sequence": 5
           },
           {
-            "detail": "trajectory:pr1697-v1460-rebase",
+            "detail": "trajectory:pr1702-v1460-rebase",
             "event_id": "event:6",
-            "intent_id": "intent:pr1697-v1460-rebase",
+            "intent_id": "intent:pr1702-v1460-rebase",
             "kind": "trajectory_step_recorded",
             "sequence": 6
           },
           {
-            "detail": "trajectory:pr1697-v1460-rebase",
+            "detail": "trajectory:pr1702-v1460-rebase",
             "event_id": "event:7",
-            "intent_id": "intent:pr1697-v1460-rebase",
+            "intent_id": "intent:pr1702-v1460-rebase",
             "kind": "trajectory_step_recorded",
             "sequence": 7
           },
           {
-            "detail": "trajectory:pr1697-v1460-rebase",
+            "detail": "trajectory:pr1702-v1460-rebase",
             "event_id": "event:8",
-            "intent_id": "intent:pr1697-v1460-rebase",
+            "intent_id": "intent:pr1702-v1460-rebase",
             "kind": "trajectory_step_recorded",
             "sequence": 8
           },
           {
-            "detail": "trajectory:pr1697-v1460-rebase",
+            "detail": "trajectory:pr1702-v1460-rebase",
             "event_id": "event:9",
-            "intent_id": "intent:pr1697-v1460-rebase",
+            "intent_id": "intent:pr1702-v1460-rebase",
             "kind": "trajectory_step_recorded",
             "sequence": 9
           },
           {
-            "detail": "trajectory:pr1697-v1460-rebase",
+            "detail": "trajectory:pr1702-v1460-rebase",
             "event_id": "event:10",
-            "intent_id": "intent:pr1697-v1460-rebase",
+            "intent_id": "intent:pr1702-v1460-rebase",
             "kind": "trajectory_step_recorded",
             "sequence": 10
           },
           {
-            "detail": "trajectory:pr1697-v1460-rebase",
+            "detail": "trajectory:pr1702-v1460-rebase",
             "event_id": "event:11",
-            "intent_id": "intent:pr1697-v1460-rebase",
+            "intent_id": "intent:pr1702-v1460-rebase",
             "kind": "trajectory_step_recorded",
             "sequence": 11
           },
           {
-            "detail": "trajectory:pr1697-v1460-rebase",
+            "detail": "trajectory:pr1702-v1460-rebase",
             "event_id": "event:12",
-            "intent_id": "intent:pr1697-v1460-rebase",
+            "intent_id": "intent:pr1702-v1460-rebase",
             "kind": "trajectory_step_recorded",
             "sequence": 12
           },
           {
-            "detail": "trajectory:pr1697-v1460-rebase",
+            "detail": "trajectory:pr1702-v1460-rebase",
             "event_id": "event:13",
-            "intent_id": "intent:pr1697-v1460-rebase",
+            "intent_id": "intent:pr1702-v1460-rebase",
             "kind": "trajectory_step_recorded",
             "sequence": 13
           },
           {
-            "detail": "trajectory:pr1697-v1460-rebase",
+            "detail": "trajectory:pr1702-v1460-rebase",
             "event_id": "event:14",
-            "intent_id": "intent:pr1697-v1460-rebase",
+            "intent_id": "intent:pr1702-v1460-rebase",
             "kind": "trajectory_step_recorded",
             "sequence": 14
           },
           {
-            "detail": "trajectory:pr1697-v1460-rebase",
+            "detail": "trajectory:pr1702-v1460-rebase",
             "event_id": "event:15",
-            "intent_id": "intent:pr1697-v1460-rebase",
+            "intent_id": "intent:pr1702-v1460-rebase",
             "kind": "trajectory_step_recorded",
             "sequence": 15
           },
           {
-            "detail": "trajectory:pr1697-v1460-rebase",
+            "detail": "trajectory:pr1702-v1460-rebase",
             "event_id": "event:16",
-            "intent_id": "intent:pr1697-v1460-rebase",
+            "intent_id": "intent:pr1702-v1460-rebase",
             "kind": "trajectory_step_recorded",
             "sequence": 16
           },
           {
-            "detail": "trajectory:pr1697-v1460-rebase",
+            "detail": "trajectory:pr1702-v1460-rebase",
             "event_id": "event:17",
-            "intent_id": "intent:pr1697-v1460-rebase",
+            "intent_id": "intent:pr1702-v1460-rebase",
             "kind": "trajectory_step_recorded",
             "sequence": 17
           },
           {
-            "detail": "trajectory:pr1697-v1460-rebase",
+            "detail": "trajectory:pr1702-v1460-rebase",
             "event_id": "event:18",
-            "intent_id": "intent:pr1697-v1460-rebase",
+            "intent_id": "intent:pr1702-v1460-rebase",
             "kind": "trajectory_step_recorded",
             "sequence": 18
           },
           {
-            "detail": "trajectory:pr1697-v1460-rebase",
+            "detail": "trajectory:pr1702-v1460-rebase",
             "event_id": "event:19",
-            "intent_id": "intent:pr1697-v1460-rebase",
+            "intent_id": "intent:pr1702-v1460-rebase",
             "kind": "trajectory_step_recorded",
             "sequence": 19
           },
           {
-            "detail": "trajectory:pr1697-v1460-rebase",
+            "detail": "trajectory:pr1702-v1460-rebase",
             "event_id": "event:20",
-            "intent_id": "intent:pr1697-v1460-rebase",
+            "intent_id": "intent:pr1702-v1460-rebase",
             "kind": "trajectory_step_recorded",
             "sequence": 20
           },
           {
-            "detail": "trajectory:pr1697-v1460-rebase",
+            "detail": "trajectory:pr1702-v1460-rebase",
             "event_id": "event:21",
-            "intent_id": "intent:pr1697-v1460-rebase",
+            "intent_id": "intent:pr1702-v1460-rebase",
             "kind": "trajectory_step_recorded",
             "sequence": 21
           },
           {
-            "detail": "trajectory:pr1697-v1460-rebase",
+            "detail": "trajectory:pr1702-v1460-rebase",
             "event_id": "event:22",
-            "intent_id": "intent:pr1697-v1460-rebase",
+            "intent_id": "intent:pr1702-v1460-rebase",
             "kind": "trajectory_step_recorded",
             "sequence": 22
+          },
+          {
+            "detail": "trajectory:pr1702-v1460-rebase",
+            "event_id": "event:23",
+            "intent_id": "intent:pr1702-v1460-rebase",
+            "kind": "trajectory_step_recorded",
+            "sequence": 23
+          },
+          {
+            "detail": "trajectory:pr1702-v1460-rebase",
+            "event_id": "event:24",
+            "intent_id": "intent:pr1702-v1460-rebase",
+            "kind": "trajectory_step_recorded",
+            "sequence": 24
+          },
+          {
+            "detail": "trajectory:pr1702-v1460-rebase",
+            "event_id": "event:25",
+            "intent_id": "intent:pr1702-v1460-rebase",
+            "kind": "trajectory_step_recorded",
+            "sequence": 25
+          },
+          {
+            "detail": "trajectory:pr1702-v1460-rebase",
+            "event_id": "event:26",
+            "intent_id": "intent:pr1702-v1460-rebase",
+            "kind": "trajectory_step_recorded",
+            "sequence": 26
+          },
+          {
+            "detail": "trajectory:pr1702-v1460-rebase",
+            "event_id": "event:27",
+            "intent_id": "intent:pr1702-v1460-rebase",
+            "kind": "trajectory_step_recorded",
+            "sequence": 27
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 22,
+        "next_sequence": 27,
         "schema_version": "1.0.0",
         "trajectories": {
-          "pr1697-v1460-rebase": {
+          "pr1702-v1460-rebase": {
             "evidence_only": true,
-            "id": "pr1697-v1460-rebase",
-            "intent_id": "intent:pr1697-v1460-rebase",
+            "id": "pr1702-v1460-rebase",
+            "intent_id": "intent:pr1702-v1460-rebase",
             "steps": [
               {
                 "action": "implementation",
                 "custody_event_id": "event:4",
                 "observations": [
                   ".decapod/managed/specs/INTENT.md",
-                  "https://github.com/DecapodLabs/decapod/pull/1697"
+                  "https://github.com/DecapodLabs/decapod/pull/1702"
                 ],
                 "proof_refs": [],
                 "scope": [
@@ -982,8 +1053,8 @@
                 "action": "implementation",
                 "custody_event_id": "event:5",
                 "observations": [
-                  "src/decapod/cli.rs",
-                  "https://github.com/DecapodLabs/decapod/pull/1697"
+                  "src/decapod/core/docs_cli.rs",
+                  "https://github.com/DecapodLabs/decapod/pull/1702"
                 ],
                 "proof_refs": [],
                 "scope": [
@@ -998,8 +1069,8 @@
                 "action": "implementation",
                 "custody_event_id": "event:6",
                 "observations": [
-                  "src/decapod/core/docs_cli.rs",
-                  "https://github.com/DecapodLabs/decapod/pull/1697"
+                  "src/decapod/core/repository_profile.rs",
+                  "https://github.com/DecapodLabs/decapod/pull/1702"
                 ],
                 "proof_refs": [],
                 "scope": [
@@ -1014,8 +1085,8 @@
                 "action": "implementation",
                 "custody_event_id": "event:7",
                 "observations": [
-                  "src/decapod/core/legacy_todo_recovery.rs",
-                  "https://github.com/DecapodLabs/decapod/pull/1697"
+                  "src/decapod/core/validation_history.rs",
+                  "https://github.com/DecapodLabs/decapod/pull/1702"
                 ],
                 "proof_refs": [],
                 "scope": [
@@ -1030,8 +1101,8 @@
                 "action": "implementation",
                 "custody_event_id": "event:8",
                 "observations": [
-                  "src/decapod/core/migration.rs",
-                  "https://github.com/DecapodLabs/decapod/pull/1697"
+                  "src/decapod/core/validation_runtime.rs",
+                  "https://github.com/DecapodLabs/decapod/pull/1702"
                 ],
                 "proof_refs": [],
                 "scope": [
@@ -1046,8 +1117,8 @@
                 "action": "implementation",
                 "custody_event_id": "event:9",
                 "observations": [
-                  "src/decapod/core/todo.rs",
-                  "https://github.com/DecapodLabs/decapod/pull/1697"
+                  "src/decapod/core/validation_runtime/repository_host.rs",
+                  "https://github.com/DecapodLabs/decapod/pull/1702"
                 ],
                 "proof_refs": [],
                 "scope": [
@@ -1062,8 +1133,8 @@
                 "action": "implementation",
                 "custody_event_id": "event:10",
                 "observations": [
-                  "src/decapod/lib.rs",
-                  "https://github.com/DecapodLabs/decapod/pull/1697"
+                  "src/decapod/core/workspace.rs",
+                  "https://github.com/DecapodLabs/decapod/pull/1702"
                 ],
                 "proof_refs": [],
                 "scope": [
@@ -1078,8 +1149,8 @@
                 "action": "implementation",
                 "custody_event_id": "event:11",
                 "observations": [
-                  "src/decapod/plugins/policy.rs",
-                  "https://github.com/DecapodLabs/decapod/pull/1697"
+                  "src/decapod/lib.rs",
+                  "https://github.com/DecapodLabs/decapod/pull/1702"
                 ],
                 "proof_refs": [],
                 "scope": [
@@ -1094,8 +1165,8 @@
                 "action": "implementation",
                 "custody_event_id": "event:12",
                 "observations": [
-                  "tests/sqlite_maintenance.rs",
-                  "https://github.com/DecapodLabs/decapod/pull/1697"
+                  "tests/common/consumer_readiness_fixture.rs",
+                  "https://github.com/DecapodLabs/decapod/pull/1702"
                 ],
                 "proof_refs": [],
                 "scope": [
@@ -1110,8 +1181,8 @@
                 "action": "implementation",
                 "custody_event_id": "event:13",
                 "observations": [
-                  "tests/unit/cli_tests.rs",
-                  "https://github.com/DecapodLabs/decapod/pull/1697"
+                  "tests/entrypoint_correctness.rs",
+                  "https://github.com/DecapodLabs/decapod/pull/1702"
                 ],
                 "proof_refs": [],
                 "scope": [
@@ -1126,8 +1197,8 @@
                 "action": "implementation",
                 "custody_event_id": "event:14",
                 "observations": [
-                  "docs/agent/command-contracts.md",
-                  "https://github.com/DecapodLabs/decapod/pull/1697"
+                  "tests/support/fresh_docs_readiness.rs",
+                  "https://github.com/DecapodLabs/decapod/pull/1702"
                 ],
                 "proof_refs": [],
                 "scope": [
@@ -1142,8 +1213,8 @@
                 "action": "implementation",
                 "custody_event_id": "event:15",
                 "observations": [
-                  "docs/agent/config-schema.md",
-                  "https://github.com/DecapodLabs/decapod/pull/1697"
+                  "tests/unit/core/repository_profile_tests.rs",
+                  "https://github.com/DecapodLabs/decapod/pull/1702"
                 ],
                 "proof_refs": [],
                 "scope": [
@@ -1158,8 +1229,8 @@
                 "action": "implementation",
                 "custody_event_id": "event:16",
                 "observations": [
-                  "docs/agent/error-recovery.md",
-                  "https://github.com/DecapodLabs/decapod/pull/1697"
+                  "tests/unit/lib_init_prompt_tests.rs",
+                  "https://github.com/DecapodLabs/decapod/pull/1702"
                 ],
                 "proof_refs": [],
                 "scope": [
@@ -1174,8 +1245,8 @@
                 "action": "implementation",
                 "custody_event_id": "event:17",
                 "observations": [
-                  "docs/architecture/legacy-todo-recovery.md",
-                  "https://github.com/DecapodLabs/decapod/pull/1697"
+                  "docs/agent/command-contracts.md",
+                  "https://github.com/DecapodLabs/decapod/pull/1702"
                 ],
                 "proof_refs": [],
                 "scope": [
@@ -1190,8 +1261,8 @@
                 "action": "implementation",
                 "custody_event_id": "event:18",
                 "observations": [
-                  ".decapod/managed/specs/ARCHITECTURE.md",
-                  "https://github.com/DecapodLabs/decapod/pull/1697"
+                  "docs/agent/config-schema.md",
+                  "https://github.com/DecapodLabs/decapod/pull/1702"
                 ],
                 "proof_refs": [],
                 "scope": [
@@ -1206,8 +1277,8 @@
                 "action": "implementation",
                 "custody_event_id": "event:19",
                 "observations": [
-                  ".decapod/managed/specs/INTERFACES.md",
-                  "https://github.com/DecapodLabs/decapod/pull/1697"
+                  "docs/agent/repository-readiness.md",
+                  "https://github.com/DecapodLabs/decapod/pull/1702"
                 ],
                 "proof_refs": [],
                 "scope": [
@@ -1222,8 +1293,8 @@
                 "action": "implementation",
                 "custody_event_id": "event:20",
                 "observations": [
-                  ".decapod/managed/specs/SECURITY.md",
-                  "https://github.com/DecapodLabs/decapod/pull/1697"
+                  ".decapod/managed/specs/ARCHITECTURE.md",
+                  "https://github.com/DecapodLabs/decapod/pull/1702"
                 ],
                 "proof_refs": [],
                 "scope": [
@@ -1238,8 +1309,8 @@
                 "action": "implementation",
                 "custody_event_id": "event:21",
                 "observations": [
-                  ".decapod/managed/specs/VALIDATION.md",
-                  "https://github.com/DecapodLabs/decapod/pull/1697"
+                  ".decapod/managed/specs/INTERFACES.md",
+                  "https://github.com/DecapodLabs/decapod/pull/1702"
                 ],
                 "proof_refs": [],
                 "scope": [
@@ -1251,10 +1322,42 @@
                 ]
               },
               {
-                "action": "validation",
+                "action": "implementation",
                 "custody_event_id": "event:22",
                 "observations": [
-                  "git:archive/pr1697-before-1460-rebase-4afbf4a7@4afbf4a73cd037da22575a902513a9f2e5996c3d"
+                  ".decapod/managed/specs/SECURITY.md",
+                  "https://github.com/DecapodLabs/decapod/pull/1702"
+                ],
+                "proof_refs": [],
+                "scope": [
+                  "<external-path>"
+                ],
+                "sequence": 22,
+                "validation_findings": [
+                  "Fresh material replay on accepted0.146.0 master; old checkpoint observations remain archived on the old Git tip and do not prove this tree. Required new GitHub execution pending; no local tests/builds or Buildkite collection."
+                ]
+              },
+              {
+                "action": "implementation",
+                "custody_event_id": "event:23",
+                "observations": [
+                  ".decapod/managed/specs/VALIDATION.md",
+                  "https://github.com/DecapodLabs/decapod/pull/1702"
+                ],
+                "proof_refs": [],
+                "scope": [
+                  "<external-path>"
+                ],
+                "sequence": 23,
+                "validation_findings": [
+                  "Fresh material replay on accepted0.146.0 master; old checkpoint observations remain archived on the old Git tip and do not prove this tree. Required new GitHub execution pending; no local tests/builds or Buildkite collection."
+                ]
+              },
+              {
+                "action": "validation",
+                "custody_event_id": "event:24",
+                "observations": [
+                  "git:archive/pr1702-before-1460-rebase-f1c34e86@f1c34e86ca35fd095a8c9e7ef71d7fdd73b5c7e4"
                 ],
                 "proof_refs": [
                   "fresh-rebase-verification"
@@ -1262,7 +1365,58 @@
                 "scope": [
                   "<external-path>"
                 ],
-                "sequence": 22,
+                "sequence": 24,
+                "validation_findings": [
+                  "Old tip archived before authorized rebase; every replayed material tree received a new native checkpoint. Source CI for this exact head/base remains pending. No local tests/builds or Buildkite evidence collection; full native publication proof is not claimed."
+                ]
+              },
+              {
+                "action": "implementation",
+                "custody_event_id": "event:25",
+                "observations": [
+                  "https://github.com/DecapodLabs/decapod/commit/7ada4f0755b7d0b63b835c25280dd36f6bbfc525"
+                ],
+                "proof_refs": [
+                  "accepted-target-integration"
+                ],
+                "scope": [
+                  "<external-path>"
+                ],
+                "sequence": 25,
+                "validation_findings": [
+                  "Accepted target advanced through human merge #1697. Canonical Git merge preserves both reviewed feature sets; previous source evidence remains historical. New exact-source GitHub checks required; no local tests/builds or Buildkite collection."
+                ]
+              },
+              {
+                "action": "validation",
+                "custody_event_id": "event:26",
+                "observations": [
+                  "git:archive/pr1702-before-1460-rebase-f1c34e86@f1c34e86ca35fd095a8c9e7ef71d7fdd73b5c7e4"
+                ],
+                "proof_refs": [
+                  "fresh-rebase-verification"
+                ],
+                "scope": [
+                  "<external-path>"
+                ],
+                "sequence": 26,
+                "validation_findings": [
+                  "Old tip archived before authorized rebase; every replayed material tree received a new native checkpoint. Source CI for this exact head/base remains pending. No local tests/builds or Buildkite evidence collection; full native publication proof is not claimed."
+                ]
+              },
+              {
+                "action": "validation",
+                "custody_event_id": "event:27",
+                "observations": [
+                  "git:archive/pr1702-before-1460-rebase-f1c34e86@f1c34e86ca35fd095a8c9e7ef71d7fdd73b5c7e4"
+                ],
+                "proof_refs": [
+                  "fresh-rebase-verification"
+                ],
+                "scope": [
+                  "<external-path>"
+                ],
+                "sequence": 27,
                 "validation_findings": [
                   "Old tip archived before authorized rebase; every replayed material tree received a new native checkpoint. Source CI for this exact head/base remains pending. No local tests/builds or Buildkite evidence collection; full native publication proof is not claimed."
                 ]
@@ -1273,11 +1427,12 @@
       },
       "declared_commands": [],
       "evidence": [
-        "git:archive/pr1697-before-1460-rebase-4afbf4a7@4afbf4a73cd037da22575a902513a9f2e5996c3d",
-        "https://github.com/DecapodLabs/decapod/pull/1697"
+        "git:archive/pr1702-before-1460-rebase-f1c34e86@f1c34e86ca35fd095a8c9e7ef71d7fdd73b5c7e4",
+        "https://github.com/DecapodLabs/decapod/commit/7ada4f0755b7d0b63b835c25280dd36f6bbfc525",
+        "https://github.com/DecapodLabs/decapod/pull/1702"
       ],
       "inspected_files": [],
-      "intent_id": "intent:pr1697-v1460-rebase",
+      "intent_id": "intent:pr1702-v1460-rebase",
       "modified_files": [
         ".decapod/managed/specs/ARCHITECTURE.md",
         ".decapod/managed/specs/INTENT.md",
@@ -1286,27 +1441,30 @@
         ".decapod/managed/specs/VALIDATION.md",
         "docs/agent/command-contracts.md",
         "docs/agent/config-schema.md",
-        "docs/agent/error-recovery.md",
-        "docs/architecture/legacy-todo-recovery.md",
-        "src/decapod/cli.rs",
+        "docs/agent/repository-readiness.md",
         "src/decapod/core/docs_cli.rs",
-        "src/decapod/core/legacy_todo_recovery.rs",
-        "src/decapod/core/migration.rs",
-        "src/decapod/core/todo.rs",
+        "src/decapod/core/repository_profile.rs",
+        "src/decapod/core/validation_history.rs",
+        "src/decapod/core/validation_runtime.rs",
+        "src/decapod/core/validation_runtime/repository_host.rs",
+        "src/decapod/core/workspace.rs",
         "src/decapod/lib.rs",
-        "src/decapod/plugins/policy.rs",
-        "tests/sqlite_maintenance.rs",
-        "tests/unit/cli_tests.rs"
+        "tests/common/consumer_readiness_fixture.rs",
+        "tests/entrypoint_correctness.rs",
+        "tests/support/fresh_docs_readiness.rs",
+        "tests/unit/core/repository_profile_tests.rs",
+        "tests/unit/lib_init_prompt_tests.rs"
       ],
       "repo_scope": [
         "<external-path>"
       ],
-      "run_id": "pr1697-v1460-rebase",
+      "run_id": "pr1702-v1460-rebase",
       "schema_version": "1.1.0",
       "shortcut_risk_signals": [],
-      "task_id": "feat_01m7bch2ry0p5aqa",
+      "task_id": "code_01m7e88jr715z5sp",
       "tool_calls": [],
       "unresolved_assumptions": [
+        "Accepted target advanced through human merge #1697. Canonical Git merge preserves both reviewed feature sets; previous source evidence remains historical. New exact-source GitHub checks required; no local tests/builds or Buildkite collection.",
         "Fresh material replay on accepted0.146.0 master; old checkpoint observations remain archived on the old Git tip and do not prove this tree. Required new GitHub execution pending; no local tests/builds or Buildkite collection.",
         "Old tip archived before authorized rebase; every replayed material tree received a new native checkpoint. Source CI for this exact head/base remains pending. No local tests/builds or Buildkite evidence collection; full native publication proof is not claimed."
       ]
