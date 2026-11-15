@@ -2321,14 +2321,23 @@ fn resolve_base_branch_from_config(config: &crate::cli::DecapodProjectConfig) ->
 pub(crate) fn resolve_readiness_repository(
     repo_root: &Path,
 ) -> Result<ReadinessRepository, DecapodError> {
-    if let Ok(config) = crate::cli::DecapodProjectConfig::load(repo_root)
-        && config
-            .proof
-            .repository_contract
-            .as_ref()
-            .is_some_and(|contract| contract.canonical_local_target)
-    {
-        return canonical_local_readiness_repository(repo_root, &config);
+    if let Ok(config) = crate::cli::DecapodProjectConfig::load(repo_root) {
+        let requests_local = |config: &crate::cli::DecapodProjectConfig| {
+            config
+                .proof
+                .repository_contract
+                .as_ref()
+                .is_some_and(|contract| contract.canonical_local_target)
+        };
+        let canonical_requests_local = get_main_repo_root(repo_root)
+            .ok()
+            .and_then(|root| crate::cli::DecapodProjectConfig::load(&root).ok())
+            .is_some_and(|canonical| requests_local(&canonical));
+        if requests_local(&config) || canonical_requests_local {
+            // Removing the candidate flag cannot switch an accepted local
+            // authority to a candidate-selected network remote.
+            return canonical_local_readiness_repository(repo_root, &config);
+        }
     }
     let mut candidates = collect_network_remotes(repo_root)?;
     if candidates.is_empty() {
