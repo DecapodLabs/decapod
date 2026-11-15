@@ -2139,6 +2139,24 @@ GitHub Actions must evaluate this integrated candidate. No local tests run;
 Buildkite is excluded at the user's direction and full native publication
 readiness remains unproven.
 
+## Current audit verification scope (#1069)
+
+This candidate changes documentation and release-bound governance projections.
+The implementation map cites actual #1697 source executions at
+`d0b24f6f926583047be0fbe3f51f5686247d1de2` against
+`f5da0e6183bf31cfbef3d5a53c52553ee8b6fbb5`; they are not this document candidate's
+receipt. Native source-CI records retain their incomplete-profile and
+unauthenticated scope fields. Aggregate CLI/core timing and a bounded physical
+receipt assertion do not establish reconstruction microbenchmarks, five-minute
+sharding or complete storage-growth proof.
+
+Fresh hosted checks must judge this candidate's own applicable scope. Conditional
+or not-applicable jobs cannot be counted as executed tests or performance proof.
+No local tests or Buildkite evidence collection is performed. Accepted required
+checks and provider policy remain enabled; full native publication readiness is
+unproven. The complete original mission remains open rather than being closed
+by a documentation update.
+
 ## Squash release packaging regression (#1626)
 
 `tests/release_metadata_policy.rs::nix_gates_recognize_squash_linear_and_ordinary_release_commits`
