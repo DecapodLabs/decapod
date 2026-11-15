@@ -351,3 +351,33 @@ fn reviewed_commands_digest_pins_the_ci_only_reason() {
         "unexpected error: {error}"
     );
 }
+
+#[test]
+fn canonical_local_target_is_review_bound_and_cannot_replace_accepted_authority() {
+    let commands = commands();
+    let accepted = contract(mapped_coverage());
+    let legacy = crate::core::readiness_evidence::digest(&(
+        REQUIRED_PROFILE,
+        &commands,
+        &accepted.source_coverage,
+        &accepted.executions,
+    ))
+    .unwrap();
+    assert_eq!(accepted.reviewed_commands_digest, legacy);
+    assert!(
+        serde_json::to_value(&accepted)
+            .unwrap()
+            .get("canonical_local_target")
+            .is_none()
+    );
+    let mut local = accepted.clone();
+    local.canonical_local_target = true;
+    local.reviewed_commands_digest = command_contract_digest(&commands, &local).unwrap();
+    assert_ne!(
+        local.reviewed_commands_digest,
+        accepted.reviewed_commands_digest
+    );
+    assert!(preserve_accepted(&commands, Some(&local), &commands, Some(&accepted)).is_err());
+    assert!(preserve_accepted(&commands, Some(&accepted), &commands, Some(&local)).is_err());
+    preserve_accepted(&commands, Some(&local), &commands, Some(&local)).unwrap();
+}
