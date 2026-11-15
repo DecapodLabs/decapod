@@ -2716,6 +2716,51 @@ pub fn run() -> Result<(), error::DecapodError> {
     // worktree maintenance. Decode stdin RPC before that path as well, so HTTP
     // RPC (which uses the stdin carrier) has the same read-only guarantee.
     let command = match command {
+        Command::Todo(todo_cli) if todo_cli.legacy_reconciliation_request().is_some() => {
+            let request = todo_cli.legacy_reconciliation_request().ok_or_else(|| {
+                error::DecapodError::ValidationError("LEGACY_TODO_DISPATCH_INVALID".into())
+            })?;
+            if request.has_operation_id {
+                return Err(error::DecapodError::ValidationError(
+                    "--operation-id is only supported for cloud todo add".into(),
+                ));
+            }
+            let workspace_root = find_decapod_project_root(&std::env::current_dir()?)?;
+            let main_root = find_governance_root(&workspace_root);
+            let actor = current_agent_id();
+            if request.expected_review.is_some() {
+                let password = std::env::var("DECAPOD_SESSION_PASSWORD").map_err(|_| {
+                    error::DecapodError::ValidationError(
+                        "AGENT_IDENTITY_UNAUTHENTICATED: recovery apply requires an active local session password".into(),
+                    )
+                })?;
+                let _ = verify_strict_local_agent_session(
+                    &workspace_root,
+                    &main_root,
+                    &actor,
+                    &password,
+                )
+                .map_err(|(code, message)| {
+                    error::DecapodError::ValidationError(format!("{code}: {message}"))
+                })?;
+            }
+            let report = todo::reconcile_legacy_todo(
+                &main_root.join(".decapod/data"),
+                &actor,
+                request.expected_review,
+                request.prepare_only,
+            )?;
+            println!(
+                "{}",
+                serde_json::to_string_pretty(&report).map_err(io::Error::other)?
+            );
+            if report["status"] != "ok" {
+                return Err(error::DecapodError::ValidationError(
+                    "LEGACY_TODO_RECONCILIATION_BLOCKED: inspect the versioned report; no successful recovery was established".into(),
+                ));
+            }
+            return Ok(());
+        }
         Command::Data(DataCli {
             command:
                 DataCommand::Database(DatabaseCli {
@@ -3137,6 +3182,11 @@ pub fn run() -> Result<(), error::DecapodError> {
             if local_storage_startup {
                 core::fs_permissions::ensure_storage_dir(&store_root)
                     .map_err(error::DecapodError::IoError)?;
+            }
+            if local_storage_startup && !is_storage_independent_command(&cli.command) {
+                // A missing legacy path after interrupted archival is not a
+                // completed recovery. Fence normal work before broker routing.
+                todo::guard_pending_legacy_reconciliation(&store_root)?;
             }
 
             let project_store = Store {
