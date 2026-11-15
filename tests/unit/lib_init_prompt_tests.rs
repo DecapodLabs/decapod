@@ -388,6 +388,7 @@ fn structured_init_proof_config() -> DecapodProjectConfig {
         reviewed_sources_digest: format!("sha256:{}", "0".repeat(64)),
     });
     config.proof.repository_contract = Some(core::repository_profile::RepositoryContract {
+        canonical_local_target: false,
         reviewed_commands_digest: format!("sha256:{}", "1".repeat(64)),
         source_coverage: vec![core::repository_profile::SourceCoverage {
             source: ".github/workflows/consumer.yml".into(),
