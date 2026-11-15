@@ -2127,3 +2127,7 @@ requirement stays enabled, so full native publication readiness is unproven.
 The original missing v0.138.0 cache entry is historical and is not claimed filled
 by this code change. Actual protected-master packaging/publication must establish
 cache availability separately after acceptance.
+
+## Canonical local Git proof (#1069)
+
+The new required actual-binary entrypoint regression creates an operator-reviewed canonical local contract, claims a task, creates its governed workspace and invokes ordinary full validation with provider environment removed. It checks real executed observations, durable history inspection, unchanged repeat execution, source changes, forged diagnostic claims for altered source, accepted-base movement, authority revocation and forge publication refusal. Existing strict/external and adversarial suites remain required. GitHub Actions runs the checks; no local tests/builds or Buildkite evidence collection. Exact hosted observations are pending and the complete ten-worker A–H/native-runtime mission remains unproven.
