@@ -1082,3 +1082,7 @@ Cachix credentials remain scoped to the separate publisher after successful
 locked packaging and smoke/reproducibility checks. Fixture URL rewrites apply
 only to test child processes and contact a local Git repository. They neither
 exercise real secrets nor prove actual native cache publication.
+
+## Canonical local Git proof (#1069)
+
+Canonical local proof shares the OS user trust domain with source, policy, tools and SQLite; it is not cryptographic authentication or OS isolation. The local authority is accepted on canonical Git rather than supplied by a candidate report, and cannot act as cloud/forge identity. Target reads disable ambient Git redirects, transport and replacement objects. Material/policy/target changes invalidate applicability without rewriting historical success. Supported forge publication rejects local-only authority; unrestricted shell/Git remains outside that enforcement boundary. No keys, credentials or machine-local logs belong in tracked state.
