@@ -59,6 +59,7 @@ fn contract(coverage: Vec<SourceCoverage>) -> RepositoryContract {
     let mut executions = BTreeMap::new();
     executions.insert("lint".to_string(), execution());
     let mut contract = RepositoryContract {
+        canonical_local_target: false,
         reviewed_commands_digest: String::new(),
         source_coverage: coverage,
         executions,
