@@ -212,6 +212,11 @@ pub struct ValidationReport {
     pub(crate) completed_evidence: Option<super::validation_history::CompletedReadinessEvidence>,
 }
 impl ValidationReport {
+    /// Local Git proof has no independently established forge-target identity.
+    pub fn publication_ready(&self) -> bool {
+        self.ready && self.scope != super::repository_profile::LOCAL_GIT_READINESS_SCOPE
+    }
+
     pub fn exit_code(&self) -> i32 {
         if self.ready { 0 } else { 1 }
     }
@@ -1072,7 +1077,16 @@ fn run(
         .as_ref()
         .is_some_and(|p| p.id == super::repository_profile::REQUIRED_PROFILE)
     {
-        report.scope = super::repository_profile::READINESS_SCOPE;
+        report.scope = if project
+            .configuration
+            .repository_contract
+            .as_ref()
+            .is_some_and(|contract| contract.canonical_local_target)
+        {
+            super::repository_profile::LOCAL_GIT_READINESS_SCOPE
+        } else {
+            super::repository_profile::READINESS_SCOPE
+        };
     }
     report.stage_dispositions = project.catalog.stage_dispositions().to_vec();
     if let Some(configuration) = &project.configuration.rust_workers {
