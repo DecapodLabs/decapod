@@ -2188,9 +2188,148 @@ pub(crate) fn inherit_network_remotes_from_parent(
 /// Resolve the same repository identity as publication without adding remotes,
 /// fetching, pushing, or changing the original work branch. A local-clone
 /// workspace may inspect its known parent remote but cannot silently rewrite it.
+/// Readiness identity is deliberately separate from authenticated cloud/forge
+/// identity. A local proof cannot be presented as a GitHub repository judgment.
+pub(crate) struct ReadinessRepository {
+    pub canonical_name: String,
+    pub owner: String,
+    pub repository: String,
+    pub remote_url: String,
+    pub local_target_root: Option<PathBuf>,
+}
+
+/// Pure, bounded local object/ref reads. No transport, URL rewrite, shell,
+/// credentials, hooks, ambient Git redirects or replacement objects participate.
+pub(crate) fn read_canonical_local_git(
+    root: &Path,
+    program: &Path,
+    args: &[&str],
+) -> Result<String, DecapodError> {
+    let output = Command::new(program)
+        .current_dir(root)
+        .env_clear()
+        .env("GIT_CONFIG_NOSYSTEM", "1")
+        .env("GIT_CONFIG_GLOBAL", "/dev/null")
+        .env("GIT_CONFIG_COUNT", "0")
+        .env("GIT_NO_REPLACE_OBJECTS", "1")
+        .env("GIT_GRAFT_FILE", "/dev/null")
+        .args(["--no-replace-objects", "-c", "protocol.allow=never"])
+        .args(args)
+        .bounded_capture(
+            crate::core::bounded_process::ProcessLimits {
+                timeout: std::time::Duration::from_secs(30),
+                max_output_bytes: 1024 * 1024,
+            },
+            &crate::core::bounded_process::Cancellation::default(),
+        )?;
+    if output.termination != crate::core::bounded_process::Termination::Exited
+        || !output.output.status.success()
+    {
+        return Err(DecapodError::ValidationError(
+            "LOCAL_TARGET_UNAVAILABLE: canonical local Git read failed".into(),
+        ));
+    }
+    String::from_utf8(output.output.stdout)
+        .map(|text| text.trim().to_owned())
+        .map_err(|_| {
+            DecapodError::ValidationError("LOCAL_TARGET_INVALID: non-UTF8 Git output".into())
+        })
+}
+
+fn canonical_local_readiness_repository(
+    repo_root: &Path,
+    candidate: &crate::cli::DecapodProjectConfig,
+) -> Result<ReadinessRepository, DecapodError> {
+    let denied = || {
+        DecapodError::ValidationError(
+        "LOCAL_TARGET_POLICY_UNACCEPTED: canonical local Git authority requires an already accepted repository-local contract, local backend, and unchanged target branch; no cloud or forge fallback is permitted".into(),
+    )
+    };
+    let root = get_main_repo_root(repo_root)?.canonicalize()?;
+    let git_dir = root.join(".git");
+    let metadata = std::fs::symlink_metadata(&git_dir)?;
+    if metadata.file_type().is_symlink() || !metadata.is_dir() {
+        return Err(denied());
+    }
+    let canonical = crate::cli::DecapodProjectConfig::load(&root)?;
+    let local_profile = |config: &crate::cli::DecapodProjectConfig| {
+        config.repo.backend == "local"
+            && !config.proof.validation_buildkite_preflights
+            && config
+                .proof
+                .required_profile
+                .as_ref()
+                .is_some_and(|profile| {
+                    profile.id == crate::core::repository_profile::REQUIRED_PROFILE
+                })
+            && config
+                .proof
+                .repository_contract
+                .as_ref()
+                .is_some_and(|contract| contract.canonical_local_target)
+    };
+    let branch = resolve_base_branch(&root, None);
+    let reference = format!("refs/heads/{branch}");
+    if !local_profile(candidate)
+        || !local_profile(&canonical)
+        || resolve_base_branch(repo_root, None) != branch
+        || !crate::core::snapshot_provider::branch(&reference)
+    {
+        return Err(denied());
+    }
+    let git = crate::readiness_installed_tool(repo_root, "git")?;
+    let bytes = read_canonical_local_git(
+        &root,
+        &git,
+        &["show", &format!("{reference}:.decapod/config.toml")],
+    )?;
+    let accepted: crate::cli::DecapodProjectConfig =
+        toml::from_str(&bytes).map_err(|_| denied())?;
+    if !local_profile(&accepted)
+        || resolve_base_branch_from_config(&accepted) != Some(branch.as_str())
+    {
+        return Err(denied());
+    }
+    crate::core::repository_profile::preserve_accepted(
+        &candidate.proof.commands,
+        candidate.proof.repository_contract.as_ref(),
+        &accepted.proof.commands,
+        accepted.proof.repository_contract.as_ref(),
+    )
+    .map_err(|_| denied())?;
+    // A location-bound local identity is intentionally nonportable. Moving the
+    // canonical repository or replacing its target requires fresh validation.
+    let identity = crate::core::readiness_evidence::digest(&(
+        "canonical_local_git.v1",
+        &root,
+        git_dir.canonicalize()?,
+    ))
+    .map_err(|_| denied())?;
+    Ok(ReadinessRepository {
+        canonical_name: format!("local-git:{identity}"),
+        owner: String::new(),
+        repository: String::new(),
+        remote_url: root.to_string_lossy().into_owned(),
+        local_target_root: Some(root),
+    })
+}
+
+fn resolve_base_branch_from_config(config: &crate::cli::DecapodProjectConfig) -> Option<&str> {
+    config.repo.base_branch.as_deref()
+}
+
 pub(crate) fn resolve_readiness_repository(
     repo_root: &Path,
-) -> Result<crate::core::repo_identity::RepositoryIdentity, DecapodError> {
+) -> Result<ReadinessRepository, DecapodError> {
+    if let Ok(config) = crate::cli::DecapodProjectConfig::load(repo_root)
+        && config
+            .proof
+            .repository_contract
+            .as_ref()
+            .is_some_and(|contract| contract.canonical_local_target)
+    {
+        return canonical_local_readiness_repository(repo_root, &config);
+    }
     let mut candidates = collect_network_remotes(repo_root)?;
     if candidates.is_empty() {
         let mut parents = local_remote_paths(repo_root)?;
@@ -2215,9 +2354,16 @@ pub(crate) fn resolve_readiness_repository(
                     .into(),
             )
         })?;
-    crate::core::repo_identity::resolve_repository_identity_from_remote(&format!(
+    let identity = crate::core::repo_identity::resolve_repository_identity_from_remote(&format!(
         "https://github.com/{canonical}.git"
-    ))
+    ))?;
+    Ok(ReadinessRepository {
+        canonical_name: identity.canonical_name,
+        owner: identity.owner,
+        repository: identity.repository,
+        remote_url: identity.remote_url,
+        local_target_root: None,
+    })
 }
 
 fn resolve_publish_remote(repo_root: &Path) -> Result<PublishRemote, DecapodError> {
