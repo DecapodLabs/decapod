@@ -7,6 +7,37 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.148.0](https://github.com/DecapodLabs/decapod/compare/v0.147.0...v0.148.0) - 2026-11-15
+
+### Added
+
+- rebase PR1702 lib.rs on v0.146.0
+- rebase PR1702 workspace.rs on v0.146.0
+- rebase PR1702 repository_host.rs on v0.146.0
+- rebase PR1702 validation_runtime.rs on v0.146.0
+- rebase PR1702 validation_history.rs on v0.146.0
+- rebase PR1702 repository_profile.rs on v0.146.0
+- rebase PR1702 docs_cli.rs on v0.146.0
+
+### Other
+
+- *(governance)* integrate current master for PR1702 with Decapod v0.147.0
+- *(governance)* finalize PR1702 on Decapod v0.146.0 (46a26e3a275b)
+- *(governance)* finalize PR1702 on Decapod v0.146.0
+- rebase PR1702 VALIDATION.md on v0.146.0
+- rebase PR1702 SECURITY.md on v0.146.0
+- rebase PR1702 INTERFACES.md on v0.146.0
+- rebase PR1702 ARCHITECTURE.md on v0.146.0
+- rebase PR1702 repository-readiness.md on v0.146.0
+- rebase PR1702 config-schema.md on v0.146.0
+- rebase PR1702 command-contracts.md on v0.146.0
+- rebase PR1702 lib_init_prompt_tests.rs on v0.146.0
+- rebase PR1702 repository_profile_tests.rs on v0.146.0
+- rebase PR1702 fresh_docs_readiness.rs on v0.146.0
+- rebase PR1702 entrypoint_correctness.rs on v0.146.0
+- rebase PR1702 consumer_readiness_fixture.rs on v0.146.0
+- rebase PR1702 INTENT.md on v0.146.0
+
 ## [0.147.0](https://github.com/DecapodLabs/decapod/compare/v0.146.0...v0.147.0) - 2026-11-15
 
 ### Added
