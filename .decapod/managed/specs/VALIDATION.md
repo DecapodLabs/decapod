@@ -1369,7 +1369,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `dd1fe9332107e8059778728cb392cc3d009c72a0d8e705455150439fbf239595`
+- Repository signal fingerprint: `8a25453767aee715d3f4d27fd1ca1c2d77d9080c89f8917410a69e532e1d6281`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (235 files), `tests/` (234 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
@@ -2138,3 +2138,24 @@ prior documentation candidate `725b4114595bf17a36568afbe164ce5c9f7b9cf4` against
 GitHub Actions must evaluate this integrated candidate. No local tests run;
 Buildkite is excluded at the user's direction and full native publication
 readiness remains unproven.
+
+## Squash release packaging regression (#1626)
+
+`tests/release_metadata_policy.rs::nix_gates_recognize_squash_linear_and_ordinary_release_commits`
+extracts and executes both actual workflow scripts against real Git repositories.
+It creates a real squash merge, a linear release and an ordinary release merge;
+non-release, root and octopus histories remain ineligible. The owner performs its
+real depth-two fetch through a process-local URL rewrite to the fixture. Imported
+runner and PR/manual event cases stay denied; manual packaging stays supported.
+No Nix, Cachix credential or hosted publication call is simulated as success.
+
+Fresh GitHub Actions must verify the exact candidate; no local tests run.
+Buildkite remains excluded at the user's direction while its accepted policy
+requirement stays enabled, so full native publication readiness is unproven.
+The original missing v0.138.0 cache entry is historical and is not claimed filled
+by this code change. Actual protected-master packaging/publication must establish
+cache availability separately after acceptance.
+
+## PR #1699 accepted-target integration
+
+The escalation branch now integrates accepted master `8e435969a8c21269aa277301b3e6492d780a9bdb` with installed Decapod 0.145.6. Preserve both the escalation contract and the accepted Nix release-gate/finite-adapter changes, including both owning Bazel fixtures. The earlier full native observation for `d52943740cac03fa45046317ea4af090f919fec6` against `f5da0e6183bf31cfbef3d5a53c52553ee8b6fbb5` remains historical and cannot authorize a new integration. Fresh checks must bind the new source/tree/target and custody generation. This integration uses GitHub verification without local test/build execution or Buildkite evidence collection; accepted strict provider requirements remain enabled, and no automatic merge authority is introduced.

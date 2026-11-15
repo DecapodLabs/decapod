@@ -1879,6 +1879,14 @@
       "proof_refs": [
         "tests/unit/core/reflection_tests.rs"
       ]
+    },
+    {
+      "id": "pr1699-master-8e435969-v1456",
+      "summary": "Integrate exact accepted master8e435969 and official0.145.6 projections; preserve escalation/Nix contracts and reviewed combined inventory; new exact-candidate GitHub checks pending.",
+      "input_digest": "sha256:d7120d70dad2ee0eae770d0ea913eeff173bbdcc9f7f199d2ee903b772b38ca9",
+      "proof_refs": [
+        "https://github.com/DecapodLabs/decapod/pull/1699"
+      ]
     }
   ],
   "intents": {
@@ -1919,23 +1927,23 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Reviewed revisable uncertainty declarations with stable intent/missing subject, observed authority priority, exact canonical questions, source/custody continuity and unchanged proof boundaries.",
-          "reviewed_code_fingerprint": "dd1fe9332107e8059778728cb392cc3d009c72a0d8e705455150439fbf239595",
-          "spec_material_hash": "df7a941f9d82a6095083540e5c69d3c27ca2a8aae3d7d909673794bd2eaf261e"
+          "reason": "Reviewed combined escalation contract and accepted master8e435969/Nix release adapter with installed0.145.6. Preserved both authored spec sets, required checks, provider policy and both owning Bazel fixture sources. Old d5294374/f5 proof is historical; new target/custody3 proof is required. No local tests or Buildkite collection.",
+          "reviewed_code_fingerprint": "8a25453767aee715d3f4d27fd1ca1c2d77d9080c89f8917410a69e532e1d6281",
+          "spec_material_hash": "d3faef916a3755c668ced8121f2b65d992d5417c8c32bd4cb0cfc78d3413619a"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Reviewed revisable uncertainty declarations with stable intent/missing subject, observed authority priority, exact canonical questions, source/custody continuity and unchanged proof boundaries.",
-          "reviewed_code_fingerprint": "dd1fe9332107e8059778728cb392cc3d009c72a0d8e705455150439fbf239595",
-          "spec_material_hash": "4f2025b9b1385b0be839d8080d4e38686b29b5c5ea41ec90d4c1e35e6115683d"
+          "reason": "Reviewed combined escalation contract and accepted master8e435969/Nix release adapter with installed0.145.6. Preserved both authored spec sets, required checks, provider policy and both owning Bazel fixture sources. Old d5294374/f5 proof is historical; new target/custody3 proof is required. No local tests or Buildkite collection.",
+          "reviewed_code_fingerprint": "8a25453767aee715d3f4d27fd1ca1c2d77d9080c89f8917410a69e532e1d6281",
+          "spec_material_hash": "9cff8ed1c2534494dee818a6a9e8a86a3c9f8273abaf904b38ff036e4be64d12"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Reviewed revisable uncertainty declarations with stable intent/missing subject, observed authority priority, exact canonical questions, source/custody continuity and unchanged proof boundaries.",
-          "reviewed_code_fingerprint": "dd1fe9332107e8059778728cb392cc3d009c72a0d8e705455150439fbf239595",
-          "spec_material_hash": "fd3211c63495669c2998feee5675bdd3e167b0dc4ed0fff15b04c6853f489af3"
+          "reason": "Reviewed combined escalation contract and accepted master8e435969/Nix release adapter with installed0.145.6. Preserved both authored spec sets, required checks, provider policy and both owning Bazel fixture sources. Old d5294374/f5 proof is historical; new target/custody3 proof is required. No local tests or Buildkite collection.",
+          "reviewed_code_fingerprint": "8a25453767aee715d3f4d27fd1ca1c2d77d9080c89f8917410a69e532e1d6281",
+          "spec_material_hash": "441c426622bebf45d32a4de66393041372684b532c8942594fc272b4e4b25d75"
         }
       ],
       "state": "APPROVED",
@@ -1948,14 +1956,18 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1794696651Z"
+      "updated_at": "1794705364Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Keep approval, scope, custody, proof and publication authoritative; no transcripts, daemon or semantic-proof claims"
       ],
-      "artifact_hash": "sha256:571b04f76493d59d2acdddc47303333801e6bf04ce78d282c670603499abf005",
+      "artifact_hash": "sha256:9bb6e00edf511c6adccb14cde98311554643cbb5c22e02434acce89a4932cb5e",
       "checks": [
+        {
+          "name": "accepted-master-integration",
+          "status": "partial"
+        },
         {
           "name": "authority_refinement",
           "status": "partial"
@@ -1997,7 +2009,7 @@
           "status": "partial"
         }
       ],
-      "current_phase": "candidate-validation",
+      "current_phase": "implementation",
       "custody": {
         "events": [
           {
@@ -2109,10 +2121,17 @@
             "intent_id": "intent:convergence-1690",
             "kind": "trajectory_step_recorded",
             "sequence": 17
+          },
+          {
+            "detail": "trajectory:convergence-1690",
+            "event_id": "event:18",
+            "intent_id": "intent:convergence-1690",
+            "kind": "trajectory_step_recorded",
+            "sequence": 18
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 17,
+        "next_sequence": 18,
         "schema_version": "1.0.0",
         "trajectories": {
           "convergence-1690": {
@@ -2344,6 +2363,25 @@
                 ],
                 "sequence": 17,
                 "validation_findings": []
+              },
+              {
+                "action": "implementation",
+                "custody_event_id": "event:18",
+                "observations": [
+                  ".config/build/decapod.BUILD.bzl",
+                  ".decapod/managed/specs/VALIDATION.md",
+                  "https://github.com/DecapodLabs/decapod/commit/8e435969a8c21269aa277301b3e6492d780a9bdb"
+                ],
+                "proof_refs": [
+                  "accepted-master-integration"
+                ],
+                "scope": [
+                  "src/decapod/core/mentor and canonical agent integration/tests"
+                ],
+                "sequence": 18,
+                "validation_findings": [
+                  "User requested current-master merge readiness with installed0.145.6. Reclaimed expired task through native exclusive custody generation3 and rebound its existing dedicated worktree; no actor impersonation. Prior native proof cannot authorize the new integration. Fresh GitHub checks pending; no local tests/builds or Buildkite evidence collection."
+                ]
               }
             ]
           }
@@ -2376,9 +2414,11 @@
         "Session refresh released the original feature assignment through session.release. Reclaimed the same unassigned task and re-admitted its original worktree through workspace ensure before resuming governed writes; no prior full-validation proof existed. Typed orientation now removes only legacy title-keyword hints after the canonical escalation outcome, retaining actual plan/policy gates.",
         "Targeted rustfmt and git diff --check exited zero; no compilation or tests have executed for this feature candidate yet.",
         "Uncertainty classes are agent declarations, not governing authority. Investigation may correct a class without changing intent/missing subject or resetting rounds. Added evidence-supported correction, relabel-only stagnation and observed-approval preservation cases. Execution for this revision is pending.",
-        "Verbatim mission safety evaluation returned allow, hash cb81d3717c7173a902fc5ba6b7004f6b654147cbc14fadfd088880b6f472cffa (15195 bytes). Initial evaluation had condensed the mission, so this preserves the corrected complete-input check rather than claiming it preceded earlier inspection. PR1684 merged externally as aedbc856; its full configured Buildkite attempt failed at build10583 with evidence decapod-snapshot-HcwP1O. Local bk is unauthenticated; GitHub success is not substituted for required producer proof."
+        "Verbatim mission safety evaluation returned allow, hash cb81d3717c7173a902fc5ba6b7004f6b654147cbc14fadfd088880b6f472cffa (15195 bytes). Initial evaluation had condensed the mission, so this preserves the corrected complete-input check rather than claiming it preceded earlier inspection. PR1684 merged externally as aedbc856; its full configured Buildkite attempt failed at build10583 with evidence decapod-snapshot-HcwP1O. Local bk is unauthenticated; GitHub success is not substituted for required producer proof.",
+        "https://github.com/DecapodLabs/decapod/commit/8e435969a8c21269aa277301b3e6492d780a9bdb"
       ],
       "inspected_files": [
+        ".config/build/decapod.BUILD.bzl",
         "src/decapod/core/governed_transition.rs",
         "src/decapod/core/mentor/reflection.rs",
         "src/decapod/plan_governance.rs",
@@ -2386,6 +2426,7 @@
       ],
       "intent_id": "intent:convergence-1690",
       "modified_files": [
+        ".decapod/managed/specs/VALIDATION.md",
         "src/decapod/core/mentor/reflection/escalation.rs",
         "tests/unit/core/reflection_tests.rs"
       ],
@@ -2410,7 +2451,8 @@
       "task_id": "feat_01m7d1cszv68qp3k",
       "tool_calls": [],
       "unresolved_assumptions": [
-        "Mock fixture counters are not LLM semantic reasoning measurements."
+        "Mock fixture counters are not LLM semantic reasoning measurements.",
+        "User requested current-master merge readiness with installed0.145.6. Reclaimed expired task through native exclusive custody generation3 and rebound its existing dedicated worktree; no actor impersonation. Prior native proof cannot authorize the new integration. Fresh GitHub checks pending; no local tests/builds or Buildkite evidence collection."
       ]
     }
   },

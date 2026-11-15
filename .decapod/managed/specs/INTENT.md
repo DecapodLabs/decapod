@@ -375,7 +375,7 @@ These declarations select authoring and proof obligations; they do not attest im
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `dd1fe9332107e8059778728cb392cc3d009c72a0d8e705455150439fbf239595`
+- Repository signal fingerprint: `8a25453767aee715d3f4d27fd1ca1c2d77d9080c89f8917410a69e532e1d6281`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (235 files), `tests/` (234 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
@@ -694,3 +694,19 @@ Initial adoption remains supported. Requirement replacement needs a separately
 accepted target-policy transition; this work introduces no candidate-side override
 or new authority store. Hosted tests and exact-candidate validation remain pending
 until their actual observations are collected; no local test result is claimed.
+
+## Nix publication after squash releases (#1626)
+
+Preserve Decapod's governed engineering and independent publication boundaries
+while repairing Nix packaging eligibility. Both existing Nix gates must recognize
+protected-master squash/linear release commits by their own release subject and
+ordinary two-parent release merges by the second parent's release subject.
+Unknown/root/octopus shapes and non-release subjects must not publish. Keep the
+native GitHub-hosted ownership, protected ref/event restrictions, credential-free
+selector, locked packaging proof and separate Cachix publisher unchanged.
+
+Use actual Git histories to test the workflow scripts through Rust policy tests.
+Hosted-only verification is required; no local tests, Buildkite queries or
+automatic merging. This change does not claim that a historical missing Nix cache
+entry has been populated: actual native packaging and authenticated publication
+remain separate observations after acceptance.
