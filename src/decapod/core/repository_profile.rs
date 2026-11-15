@@ -16,6 +16,7 @@ use std::path::{Component, Path};
 
 pub const REQUIRED_PROFILE: &str = "repo.pr-readiness.v1";
 pub const READINESS_SCOPE: &str = "repository_local_readiness";
+pub const LOCAL_GIT_READINESS_SCOPE: &str = "repository_local_git_readiness";
 
 fn is_false(value: &bool) -> bool {
     !*value
