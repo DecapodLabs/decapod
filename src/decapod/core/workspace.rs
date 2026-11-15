@@ -2430,6 +2430,16 @@ pub(crate) fn publish_workspace_with_readiness(
 ) -> Result<PublishResult, DecapodError> {
     crate::core::validation_runtime::require_full_readiness_environment()?;
     readiness_invocation.validate()?;
+    if crate::cli::DecapodProjectConfig::load(repo_root)?
+        .proof
+        .repository_contract
+        .as_ref()
+        .is_some_and(|contract| contract.canonical_local_target)
+    {
+        return Err(DecapodError::ValidationError(
+            "LOCAL_TARGET_PUBLICATION_UNSUPPORTED: canonical local Git proof cannot authorize forge publication; establish target equivalence and independent publication authority".into(),
+        ));
+    }
     let status = get_workspace_status(repo_root)?;
 
     // 1. Must be in a worktree on an unprotected branch
