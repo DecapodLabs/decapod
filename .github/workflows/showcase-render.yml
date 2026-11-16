@@ -57,6 +57,7 @@ jobs:
           mp4 = folder / "decapod-showcase.mp4"
           gif = folder / "decapod-showcase.gif"
           poster = folder / "decapod-showcase-poster.png"
+          mascot = pathlib.Path("assets/showcase/mascot.png")
           info = json.loads(subprocess.check_output([
               "ffprobe", "-v", "error", "-show_entries", "format=duration",
               "-of", "json", str(mp4)
@@ -71,8 +72,11 @@ jobs:
           assert stream_types == {"audio", "video"}, stream_types
           assert any(s["codec_name"] == "aac" for s in streams), streams
           assert any(s["codec_name"] == "h264" for s in streams), streams
-          for path in (mp4, gif, poster):
+          for path in (mp4, gif, poster, mascot):
               assert path.is_file() and path.stat().st_size > 1000, str(path)
+          with Image.open(mascot) as im:
+              assert im.mode == 'RGBA' and im.size == (1040, 880)
+              assert im.getchannel('A').getextrema() == (0, 255)
           with Image.open(gif) as im:
               assert im.n_frames >= 80, im.n_frames
           print(f"Verified: {duration:.4f}s, H264/AAC, {mp4.stat().st_size:,} MP4 bytes")
@@ -81,7 +85,9 @@ jobs:
       - uses: actions/upload-artifact@v4
         with:
           name: decapod-showcase
-          path: assets/showcase/generated/
+          path: |
+            assets/showcase/generated/
+            assets/showcase/mascot.png
           if-no-files-found: error
 
       - name: Commit rendered media to the showcase branch
@@ -89,8 +95,8 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add assets/showcase/generated/
+          git add assets/showcase/generated/ assets/showcase/mascot.png
           if ! git diff --cached --quiet; then
-            git commit -m "docs(showcase): check in verified 6.600-second brand film with soundtrack"
+            git commit -m "docs(showcase): publish verified 6.900-second brand film and mascot PNG"
             git push origin "HEAD:${GITHUB_REF_NAME}"
           fi

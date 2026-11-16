@@ -22,7 +22,7 @@ from PIL import Image, ImageDraw, ImageFilter, ImageFont
 
 ROOT = Path(__file__).resolve().parent
 OUT = ROOT / "generated"
-WIDTH, HEIGHT, FPS, FRAMES = 1920, 1080, 30, 198
+WIDTH, HEIGHT, FPS, FRAMES = 1920, 1080, 30, 207
 DURATION = FRAMES / FPS
 WHITE = (255, 255, 255)
 INK = (20, 23, 25)
@@ -49,7 +49,7 @@ SCENES = [
     {"start": 101, "end": 123, "lines": ("ENFORCED", "BOUNDARIES."), "accent": "ENFORCED", "align": "right", "crab": (370, 760)},
     {"start": 123, "end": 145, "lines": ("COMMIT-BOUND", "PROOF."), "accent": "PROOF.", "align": "left", "crab": (1530, 760)},
     {"start": 145, "end": 176, "lines": ("INIT ONCE", "PER PROJECT.", "KEEP USING", "YOUR AGENTS."), "accent": "KEEP USING", "align": "right", "crab": (370, 760)},
-    {"start": 176, "end": 198, "kind": "outro", "crab": (1530, 760)},
+    {"start": 176, "end": 207, "kind": "outro", "crab": (1530, 760)},
 ]
 
 
@@ -131,8 +131,11 @@ def put_crab(im: Image.Image, scene: dict, frame: int):
 
 def text_fade(frame: int, scene: dict) -> tuple[float,int]:
     age = frame - scene["start"]
-    remaining = scene["end"] - frame
     enter = ease(age/5.0)
+    if scene.get("kind") == "outro":
+        # Hold final brand and URL fully visible after the mascot exits.
+        return enter, int((1-enter)*59)
+    remaining = scene["end"] - frame
     exit = smooth(remaining/3.5)
     return min(enter,exit), int((1-enter)*59 - (1-exit)*34)
 
@@ -152,16 +155,16 @@ def layer_text(im: Image.Image, scene: dict, frame: int):
         box = draw.textbbox((0,0),title,font=f,anchor="lt")
         tw = box[2]-box[0]
         y = (342 if is_outro else 358) + yshift
-        draw.text(((WIDTH-tw)/2,y),title,font=f,fill=(*CORAL, opacity) if is_outro else ink,anchor="lt")
-        cap = "BUILT FOR AI AGENTS." if is_outro else "A GOVERNANCE KERNEL FOR AI AGENTS"
+        draw.text(((WIDTH-tw)/2,y),title,font=f,fill=ink,anchor="lt")
+        cap = "HARNESS AI" if is_outro else "A GOVERNANCE KERNEL FOR AI AGENTS"
         ff = font(FONT_MED, 39)
         width = sum(draw.textlength(ch,font=ff)+5 for ch in cap)
-        tracking(draw,(WIDTH-width)/2,608+yshift,cap,ff,(*GRAY,opacity),5)
+        tracking(draw,(WIDTH-width)/2,608+yshift,cap,ff,(*CORAL,opacity) if is_outro else (*GRAY,opacity),5)
         if is_outro:
             cmd = "github.com/DecapodLabs/decapod"
             small=font(FONT_REG,38)
             cbox = draw.textbbox((0,0),cmd,font=small,anchor="lt")
-            draw.text(((WIDTH-(cbox[2]-cbox[0]))/2,792+yshift),cmd,font=small,fill=(*GRAY,opacity),anchor="lt")
+            draw.text(((WIDTH-(cbox[2]-cbox[0]))/2,792+yshift),cmd,font=small,fill=(*CORAL,opacity),anchor="lt")
     else:
         lines=scene["lines"]
         side=scene["align"]
@@ -255,7 +258,10 @@ def run():
     parser.add_argument("--preview",action="store_true",help="render only poster/storyboard frames")
     args=parser.parse_args()
     OUT.mkdir(parents=True,exist_ok=True)
-    poster=frame_image(181)
+    # Render a matching high-resolution transparent PNG from the authored SVG.
+    _MASCOT.save(ROOT / "mascot.png", optimize=True)
+    # Poster is the exact stationary final frame after the mascot has exited.
+    poster=frame_image(FRAMES-1)
     poster.save(OUT/"decapod-showcase-poster.png",optimize=True)
     if args.preview:
         thumbs=[]
