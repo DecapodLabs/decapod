@@ -40,17 +40,16 @@ for required in (FONT_HEAVY, FONT_REG, FONT_MED):
     if not required.is_file():
         raise SystemExit(f"Required font missing: {required}; install fonts-lato")
 
-# Human intent, agent operation, governance-kernel introduction, then brand reveal.
-# The eight independent cuts are paced to the original score, with no persistent UI.
-# This is illustrated product storytelling, never simulated terminal/verification success.
+# Human problem first. Then the agent-native answer. Explain the kernel before the brand.
+# Seven scenes, seven notes, a single clean statement per screen.
 SCENES = [
-    {"start": 0,   "end": 40,  "lines": ("TIRED OF", "BABYSITTING", "YOUR AGENTS?"), "align": "left", "crab": (1530, 760)},
-    {"start": 40,  "end": 87,  "lines": ("GIVE IT A", "METACOGNITIVE", "GOVERNANCE KERNEL."), "align": "right", "crab": (370, 760)},
-    {"start": 87,  "end": 109, "lines": ("REFLECT.", "REFINE."), "align": "left", "crab": (1530, 760)},
-    {"start": 109, "end": 131, "lines": ("PERSISTENT", "STATE."), "align": "right", "crab": (370, 760)},
-    {"start": 131, "end": 153, "lines": ("COORDINATED", "AGENTS."), "align": "left", "crab": (1530, 760)},
-    {"start": 153, "end": 173, "lines": ("PROVE EACH", "COMMIT."), "align": "right", "crab": (370, 760)},
-    {"start": 173, "end": 198, "kind": "outro", "crab": (1530, 760)},
+    {"start": 0,   "end": 36,  "lines": ("TIRED OF", "BABYSITTING", "YOUR AGENTS?"), "accent": "BABYSITTING", "align": "left", "crab": (1530, 760)},
+    {"start": 36,  "end": 79,  "lines": ("GIVE IT A", "METACOGNITIVE", "GOVERNANCE KERNEL."), "accent": "METACOGNITIVE", "align": "right", "crab": (370, 760)},
+    {"start": 79,  "end": 101, "lines": ("PERSISTENT", "STATE."), "accent": "PERSISTENT", "align": "left", "crab": (1530, 760)},
+    {"start": 101, "end": 123, "lines": ("ENFORCED", "BOUNDARIES."), "accent": "ENFORCED", "align": "right", "crab": (370, 760)},
+    {"start": 123, "end": 145, "lines": ("COMMIT-BOUND", "PROOF."), "accent": "PROOF.", "align": "left", "crab": (1530, 760)},
+    {"start": 145, "end": 176, "lines": ("INIT ONCE", "PER PROJECT.", "KEEP USING", "YOUR AGENTS."), "accent": "KEEP USING", "align": "right", "crab": (370, 760)},
+    {"start": 176, "end": 198, "kind": "outro", "crab": (1530, 760)},
 ]
 
 
@@ -81,7 +80,7 @@ _MASCOT = Image.open(BytesIO(cairosvg.svg2png(
 
 
 def crab_sprite(frame: int, scale: float, tilt: float = 0) -> Image.Image:
-    # The authored mascot is a vector asset; render once, then animate frames.
+    # Render the original vector asset once. Affine transforms are deterministic.
     bob = math.sin((frame / FPS) * 10.8)
     rolled = _MASCOT.rotate(tilt + 1.5 * bob, Image.Resampling.BICUBIC, expand=True)
     target = (max(1, int(rolled.width * scale)), max(1, int(rolled.height * scale)))
@@ -93,24 +92,34 @@ def scene_for_frame(frame: int):
 
 
 def crab_position(frame: int, scene: dict):
-    # Cut to the new side, then bounce in place. Never cross the headline.
+    # Character blocking is independent from typography: clean entry/exit lanes.
     start = scene["start"]
     base_x, base_y = scene["crab"]
     age = frame - start
-    if age < 11:
+    if start == 0 and age < 22:
+        # First scene: clatter in from the right, overshoot and settle.
+        p = min(1.0, age / 21.0)
+        x = base_x + 600 * (1-p)**2 - 38 * math.sin(2.7 * math.pi * p) * (1-p)
+        y = base_y - 100 * max(0.0, math.sin(2.0 * math.pi*p))
+        tilt = 12 * (1-p) * math.sin(4.5 * math.pi * p)
+        return x, y, tilt, 1.0 + 0.08 * math.sin(2*math.pi*p)
+    if scene.get("kind") == "outro" and age >= 14:
+        # The URL appears before the crab exits along its nearest (right) edge.
+        p = smooth((age - 14) / 7.0)
+        return base_x + 630*p, base_y - 30*math.sin(math.pi*p), 14*p, 1.0
+    if age < 11 and start != 0:
         p = smooth(age / 10.0)
-        return (base_x,
-                base_y - 82 * math.sin(math.pi * p),
+        return (base_x, base_y - 82 * math.sin(math.pi * p),
                 (1-p) * 7.0 * math.sin(math.pi*p),
-                1.0 + 0.08 * math.sin(math.pi*p))
-    tt = (age-11) / FPS
+                1.0 + 0.08 * math.sin(2*math.pi*p))
+    tt = (age-11 if start else age-22) / FPS
     y = base_y - 9 * max(0.0, math.sin(2*math.pi*1.6*tt))
     return base_x, y, 2.2*math.sin(2*math.pi*1.4*tt), 1.0
 
 
 def put_crab(im: Image.Image, scene: dict, frame: int):
     x,y,rot,sc = crab_position(frame, scene)
-    # Anchored soft contact shadow, widening as crab approaches the landing plane.
+    # Floor-contact shadow follows the mascot through entry and exit.
     shadow = Image.new("RGBA", (480, 110), (0,0,0,0))
     sd = ImageDraw.Draw(shadow)
     sd.ellipse((60, 36, 420, 81), fill=(14, 17, 20, 35))
@@ -143,8 +152,8 @@ def layer_text(im: Image.Image, scene: dict, frame: int):
         box = draw.textbbox((0,0),title,font=f,anchor="lt")
         tw = box[2]-box[0]
         y = (342 if is_outro else 358) + yshift
-        draw.text(((WIDTH-tw)/2,y),title,font=f,fill=ink,anchor="lt")
-        cap = "METACOGNITION FOR AI AGENTS." if is_outro else "A GOVERNANCE KERNEL FOR AI AGENTS"
+        draw.text(((WIDTH-tw)/2,y),title,font=f,fill=(*CORAL, opacity) if is_outro else ink,anchor="lt")
+        cap = "BUILT FOR AI AGENTS." if is_outro else "A GOVERNANCE KERNEL FOR AI AGENTS"
         ff = font(FONT_MED, 39)
         width = sum(draw.textlength(ch,font=ff)+5 for ch in cap)
         tracking(draw,(WIDTH-width)/2,608+yshift,cap,ff,(*GRAY,opacity),5)
@@ -152,11 +161,11 @@ def layer_text(im: Image.Image, scene: dict, frame: int):
             cmd = "github.com/DecapodLabs/decapod"
             small=font(FONT_REG,38)
             cbox = draw.textbbox((0,0),cmd,font=small,anchor="lt")
-            draw.text(((WIDTH-(cbox[2]-cbox[0]))/2,792+yshift),cmd,font=small,fill=(*CORAL,opacity),anchor="lt")
+            draw.text(((WIDTH-(cbox[2]-cbox[0]))/2,792+yshift),cmd,font=small,fill=(*GRAY,opacity),anchor="lt")
     else:
         lines=scene["lines"]
         side=scene["align"]
-        # One idea per cut, fitted to a consistent editorial column.
+        # One idea per cut, sized to a strict editorial column with generous margins.
         xs = 172 if side == "left" else 768
         max_width = 1130 if side == "left" else 990
         size = 185
@@ -169,9 +178,9 @@ def layer_text(im: Image.Image, scene: dict, frame: int):
         gap = int(size * 1.12)
         first = int(500 - (len(lines)-1)*gap/2 - size/2)
         for i,line in enumerate(lines):
-            fill = (*CORAL, opacity) if ("METACOGNITIVE" in line or "PERSISTENT" in line) else ink
+            fill = (*CORAL, opacity) if line == scene.get("accent") else ink
             draw.text((xs, first+i*gap+yshift), line, font=f, fill=fill, anchor="lt")
-        # One headline per screen, no timeline or secondary UI.
+        # The mascot animates separately and every screen remains self-contained.
     im.alpha_composite(layer)
 
 
@@ -215,7 +224,7 @@ def synth_audio(path: Path):
         noise=rng.standard_normal(int(.055*sr))
         env=np.exp(-np.arange(len(noise))/sr*85)
         add(noise*env*vol,start,.6)
-    # Exactly one original musical accent per scene arrival.
+    # Seven scene arrivals, seven synchronized musical accents.
     cue=[s["start"]/FPS for s in SCENES]
     melody=[659.25,783.99,987.77,880.00,1174.66,987.77,1318.51]
     for i,(at,freq) in enumerate(zip(cue,melody)):
