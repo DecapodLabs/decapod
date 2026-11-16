@@ -42,6 +42,6 @@ The duration comes from exactly **198 frames at 30 fps**. The script checks the 
 
 [Showcase render workflow](../../.github/workflows/showcase-render.yml) renders and validates generated media on the dedicated showcase branch and commits outputs with GitHub Actions. The workflow does not update protected `master`. Contributors can change scenes, motion, lettering, colors, and score in the source script, review visual output, and produce an identical scripted sequence.
 
-The renderer uses Pillow, NumPy and FFmpeg for frame-accurate motion and soundtrack synthesis. [VHS](https://github.com/charmbracelet/vhs) is useful for authentic terminal capture; this opening film is designed as motion graphics.
+The renderer uses Pillow, NumPy and FFmpeg for frame-accurate motion and soundtrack synthesis. The GIF uses FFmpeg at 15fps from the same rendered video; this avoids a Pillow shared-palette bug on Ubuntu that collapsed the animation into one frame and prevented the workflow from committing new assets. [VHS](https://github.com/charmbracelet/vhs) is useful for authentic terminal capture; this opening film is designed as motion graphics.
 
 Current source and release details: [README](../../README.md) and [CHANGELOG](../../CHANGELOG.md). Historical receipts are bound to the exact subjects and assurance scopes they were produced for; the film does not imply universal forge or hosted independent-verifier enforcement.
