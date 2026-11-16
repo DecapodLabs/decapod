@@ -1369,7 +1369,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `5530249d38a42ab9c966b27787ccd6952ce1c69a63ab1a2414a9960c1e542984`
+- Repository signal fingerprint: `50ddaf2303419b3a3c0addaab248d5525233337f28716ba570d1bce15558e0c5`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (236 files), `tests/` (234 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
@@ -2199,7 +2199,6 @@ full native publication proof remains unclaimed.
 
 The escalation branch now integrates accepted master `8e435969a8c21269aa277301b3e6492d780a9bdb` with installed Decapod 0.145.6. Preserve both the escalation contract and the accepted Nix release-gate/finite-adapter changes, including both owning Bazel fixtures. The earlier full native observation for `d52943740cac03fa45046317ea4af090f919fec6` against `f5da0e6183bf31cfbef3d5a53c52553ee8b6fbb5` remains historical and cannot authorize a new integration. Fresh checks must bind the new source/tree/target and custody generation. This integration uses GitHub verification without local test/build execution or Buildkite evidence collection; accepted strict provider requirements remain enabled, and no automatic merge authority is introduced.
 
-
 ## Documentation brand and media acceptance (#1707)
 
 Publication of the Decapod mdBook brand refresh requires source-bound
@@ -2218,3 +2217,31 @@ The showcase kernel PR must not introduce a new GitHub Actions workflow, shadow
 the website's renderer or suppress the existing living-spec material gate.
 Independent native source validation and complete candidate readiness remain
 necessary before merging.
+
+## GitHub Actions failure recovery and acceptance (2026-11-16)
+
+The source CI and independent Decapod Validate workflows must evaluate the same
+immutable change range and retain the living-spec material gate, per-commit
+custody, tracked projection discipline and release-only exact-projection proof.
+A red check cannot be made green by ignoring an exit code, treating generated
+fingerprints as authored prose, or granting a release exception from a branch
+name. Release metadata classification does not establish that a generated
+projection is current; the pinned binary must verify exact generated output.
+
+The scheduled Docs Auto-Sync publisher is a narrowly scoped write operation:
+its job needs repository contents write access to push a generated docs branch
+and pull-request write access to open the review. Those permissions belong to
+that specific workflow and must not expand the source-validation jobs' read-only
+GitHub authorization. Publication is separately verified by the resulting PR.
+
+Daily Cargo security auditing continues to fail closed on actionable RustSec
+advisories. `quinn-udp` 0.5.14 (RUSTSEC-2026-0538) and `rustix` 1.1.4
+(RUSTSEC-2026-0486) require published patched lockfile releases; upgrading to
+0.5.16 and 1.1.6, respectively, must preserve `cargo --locked` dependency
+resolution and execute the original build and audit checks. A clean advisory
+scan is an observed result, never inferred from changing the lockfile text.
+
+Both failing master validation consumers and their scheduled publisher/auditor
+require independent GitHub Actions evidence on the final candidate. A passing
+source classification, local file diff, or workflow permission declaration alone
+does not close those checks.

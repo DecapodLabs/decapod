@@ -25,6 +25,21 @@ jobs:
           toolchain: 1.96.1
       - name: Build and check independent private source validation
         run: '"$RUNNER_TEMP/source-ci-profile" run-ci --check standalone-validation'
+      # Failure-only diagnostics inspect the job's private, isolated checkout.
+      # They never mutate the candidate or convert an unsuccessful gate to green.
+      - name: Diagnose generated projection drift
+        if: failure()
+        run: |
+          set -euo pipefail
+          shopt -s nullglob
+          for checkout in "$RUNNER_TEMP"/decapod-ci-validation.*; do
+            test -f "$checkout/.git/HEAD" || continue
+            echo "::group::Generated projections changed in private validation checkout"
+            git -C "$checkout" diff --no-ext-diff -- \
+              .decapod/managed/specs .decapod/managed/Dockerfile.decapod \
+              AGENTS.md CLAUDE.md CODEX.md GEMINI.md
+            echo "::endgroup::"
+          done
       - name: Upload measured source-CI custody
         if: always() && env.SOURCE_CI_CUSTODY_ARTIFACT != ''
         uses: actions/upload-artifact@v4

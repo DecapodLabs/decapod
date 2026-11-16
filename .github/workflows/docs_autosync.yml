@@ -5,6 +5,11 @@ on:
     - cron: '0 0 * * *' # Daily at midnight
   workflow_dispatch: # Manual trigger
 
+# The scheduled docs refresh opens a branch and PR; the default token is read-only.
+permissions:
+  contents: write
+  pull-requests: write
+
 jobs:
   autosync:
     runs-on: ubuntu-latest
