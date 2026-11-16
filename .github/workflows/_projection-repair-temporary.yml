@@ -1,0 +1,52 @@
+name: Temporary release projection regeneration
+
+on:
+  push:
+    branches:
+      - fix/master-actions-2026-11-16
+    paths:
+      - '.decapod/managed/specs/SECURITY.md'
+
+permissions:
+  contents: write
+
+jobs:
+  regenerate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: 1.96.1
+      - name: Regenerate bounded Decapod-owned projections
+        run: |
+          set -euo pipefail
+          cargo build --locked --quiet --features build-tools --bin decapod
+          export DECAPOD_VALIDATE_SKIP_GIT_GATES=1
+          export CHANGE_EVENT=push
+          export CHANGE_BASE="$(git rev-parse origin/master)"
+          export CHANGE_HEAD="$(git rev-parse HEAD)"
+          export DECAPOD_VALIDATE_REQUIRE_CHANGE_CONTEXT=1
+          set +e
+          ./target/debug/decapod govern project-check --refresh-specs
+          status=$?
+          set -e
+          git diff --stat
+          echo "project-check exit status: $status"
+          if [ "$status" -ne 0 ]; then
+            echo "::error::Projection regeneration did not pass native project-check; preserving evidence, no commit"
+            exit "$status"
+          fi
+          git add -u -- AGENTS.md CLAUDE.md CODEX.md GEMINI.md \
+            .decapod/managed/Dockerfile.decapod .decapod/managed/specs
+          if git diff --cached --quiet; then
+            echo 'No release-bound projection drift to commit'
+            exit 0
+          fi
+          git diff --cached --stat
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git commit -m 'chore(governance): synchronize release-bound projections'
+          git push origin HEAD:refs/heads/fix/master-actions-2026-11-16
