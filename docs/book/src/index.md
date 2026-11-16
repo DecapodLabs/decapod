@@ -1,59 +1,50 @@
-# Decapod Documentation
+<div class="decapod-docs-brand">
+  <a href="https://decapodlabs.github.io/" aria-label="Decapod Labs company homepage"><span>decapod</span><b>labs</b></a>
+  <span class="decapod-docs-label">DOCUMENTATION</span>
+</div>
 
-**Decapod** is a daemonless, repo-native governance kernel for AI coding agents. It turns human intent into bounded, durable, and proof-backed agent work.
+<div class="decapod-docs-hero">
+  <div class="decapod-docs-hero-copy">
+    <div class="decapod-docs-kicker">THE GOVERNANCE KERNEL FOR AI AGENTS</div>
+    <h1>HARNESS <em>AI.</em></h1>
+    <p>Decapod gives coding agents persistent project state, enforceable boundaries, and proof tied to the work they deliver.</p>
+    <div class="decapod-docs-actions">
+      <a class="decapod-docs-btn primary" href="quickstart.html">Get started <span aria-hidden="true">↗</span></a>
+      <a class="decapod-docs-btn secondary" href="introduction.html">Understand Decapod <span aria-hidden="true">↗</span></a>
+    </div>
+  </div>
+  <img class="decapod-docs-mascot" src="https://decapodlabs.github.io/assets/mascot.svg" width="520" height="440" alt="The original coral-orange kawaii Decapod crab mascot" loading="eager">
+</div>
 
-This book explains the product, its execution model, and the repository contracts used by humans, agents, and reviewers.
+<div class="decapod-docs-video">
+  <video controls autoplay muted loop playsinline preload="metadata" poster="https://decapodlabs.github.io/assets/decapod-poster.png" aria-label="Decapod product introduction, including persistent state, enforced boundaries, and commit-bound proof">
+    <source src="https://decapodlabs.github.io/assets/decapod-showcase.mp4" type="video/mp4">
+    <p><a href="https://decapodlabs.github.io/assets/decapod-showcase.mp4">View the Decapod introduction.</a></p>
+  </video>
+</div>
 
----
+<div class="decapod-docs-grid">
+  <a class="decapod-docs-tile tile-orange" href="mental-model.html"><span class="tile-mark">✳</span><strong>Persistent state</strong><span>Keep context across sessions.</span></a>
+  <a class="decapod-docs-tile tile-cream" href="workflows/workspace-isolation.html"><span class="tile-mark">⬡</span><strong>Enforced boundaries</strong><span>Work within accepted scope.</span></a>
+  <a class="decapod-docs-tile tile-ink" href="concepts/proof.html"><span class="tile-mark">✓</span><strong>Commit-bound proof</strong><span>Know what was actually checked.</span></a>
+</div>
 
-## 🚀 Getting Started
+## Start with your existing agents
 
-*   **[Introduction](introduction.md)**: What is Decapod? Learn about the governance gap and the core pillars of repo-native agent control.
-*   **[Quickstart](quickstart.md)**: Install, initialize, and run your first agent handshake and validation in under five minutes.
-*   **[Mental Model](mental-model.md)**: Understand how agents, tasks, sessions, and workspaces interact.
-*   **[Configuration](configuration.md)**: Structure your repository config, enable cloud backends, and configure containerization.
+Install and initialize in your project:
 
----
+```sh
+cargo binstall decapod && decapod init
+```
 
-## 🔄 Governed Workflows
+Then keep using Codex, Claude Code, Cursor, or your preferred coding agent. Decapod operates through the agent, retaining context, custody and evidence in the repository.
 
-Learn how agents move through the lifecycle of planning, execution, validation, and completion.
+[Quickstart](quickstart.md) · [Agent-first architecture](concepts/agent-first.md) · [Configuration](configuration.md) · [CLI reference](reference/cli.md) · [Project source](https://github.com/DecapodLabs/decapod)
 
-*   **[Single-Agent Workflows](workflows/single-agent.md)**: The lifecycle of an agent claim, ensure, validate, and finish loop.
-*   **[Multi-Agent Workflows](workflows/multi-agent.md)**: Handling concurrent agents, task claiming, and locking database state.
-*   **[Workspace Isolation](workflows/workspace-isolation.md)**: Setting up isolated Git worktrees and Docker containers to run tasks securely.
-*   **[External Trackers](workflows/external-trackers.md)**: Integrating Decapod with Jira, Linear, or GitHub Issues.
+## Explore
 
----
-
-## 💡 Core Concepts
-
-Deep dive into the architecture and mechanisms that make Decapod unique.
-
-*   **[Agent-First Architecture](concepts/agent-first.md)**: Why Decapod is designed to be called directly at agent "inference pressure points".
-*   **[Explicit Intent](concepts/intent.md)**: Converting ambiguous prompts into concrete, versioned specifications.
-*   **[Workspace Sandboxing](concepts/workspaces.md)**: How isolated execution layers keep your primary branches clean and safe.
-*   **[Proof & Validation](concepts/proof.md)**: Verifying correctness programmatically through policy evaluation instead of agent self-reporting.
-*   **[Common Questions](concepts/faq.md)**: Short architectural answers about agents, specifications, daemonless execution, trackers, and proof-backed completion.
-*   **[Repository Constitution](concepts/constitution.md)**: Setting the global guidelines that steer agent behavior.
-*   **[Config Overrides](concepts/overrides.md)**: Project-specific adjustments to constitutional guidelines.
-*   **[Model Context Protocol (MCP)](concepts/mcp.md)**: Navigating Decapod tools through structured agent protocols.
-
----
-
-## 📖 Reference Manual
-
-Hard specifications, command lists, configuration schemas, and error codes.
-
-*   **[Config Specification (config.toml)](reference/config-toml.md)**: Key-value reference for repo-level policy control.
-*   **[CLI Reference](reference/cli.md)**: Detailed breakdown of commands and options (init, validate, session, todo, decide).
-*   **[Error Reference](reference/errors.md)**: Decapod exit codes, validator failures, and self-healing instructions.
-*   **[Artifact Reference](reference/artifacts.md)**: Layout and schema of generated intent, handshake, and validation specs.
-
----
-
-## 🛠️ Developer Resources
-
-To contribute or integrate Decapod into your platform:
-*   Read the **[Contributing Guidelines](contributing.md)**.
-*   Visit the main GitHub Repository: [DecapodLabs/decapod](https://github.com/DecapodLabs/decapod)
+- **[Intent and decisions](concepts/intent.md)** — Understand how a human request becomes reviewable agent understanding.
+- **[Agent workflows](workflows/single-agent.md)** — Follow an accepted change from planning to validation.
+- **[Concurrent work](workflows/multi-agent.md)** — Keep ownership explicit when agents work in parallel.
+- **[Proof and recovery](concepts/proof.md)** — Distinguish verified work from unsupported completion claims.
+- **[Constitution and overrides](concepts/constitution.md)** — Establish policy that stays with the project.

@@ -2198,3 +2198,23 @@ full native publication proof remains unclaimed.
 ## PR #1699 accepted-target integration
 
 The escalation branch now integrates accepted master `8e435969a8c21269aa277301b3e6492d780a9bdb` with installed Decapod 0.145.6. Preserve both the escalation contract and the accepted Nix release-gate/finite-adapter changes, including both owning Bazel fixtures. The earlier full native observation for `d52943740cac03fa45046317ea4af090f919fec6` against `f5da0e6183bf31cfbef3d5a53c52553ee8b6fbb5` remains historical and cannot authorize a new integration. Fresh checks must bind the new source/tree/target and custody generation. This integration uses GitHub verification without local test/build execution or Buildkite evidence collection; accepted strict provider requirements remain enabled, and no automatic merge authority is introduced.
+
+
+## Documentation brand and media acceptance (#1707)
+
+Publication of the Decapod mdBook brand refresh requires source-bound
+verification that the book still builds with its existing mdBook source-CI
+profile and unmodified workflow inventory. The first book page must show
+the Decapod Labs identity and mascot, embed the website-owned video above
+the documentation navigation, and link to the accepted quickstart and source.
+
+The shared stylesheet must retain readable, distinguishable light and dark
+themes, keyboard-focus affordances, responsive layouts and legible code blocks.
+Media URLs must resolve from the separately published Decapod Labs website.
+A docs build alone is not proof of a successful public GitHub Pages deployment;
+runtime domain availability remains a separate observation.
+
+The showcase kernel PR must not introduce a new GitHub Actions workflow, shadow
+the website's renderer or suppress the existing living-spec material gate.
+Independent native source validation and complete candidate readiness remain
+necessary before merging.

@@ -731,3 +731,22 @@ remain separate observations after acceptance.
 ## Canonical local-target proof (#1069)
 
 Extend the existing repository-local verifier so an explicitly accepted local contract can read the canonical repository's accepted Git branch without a forge. The normal CLI must execute its reviewed checks through the sealed host and preserve exact source, accepted base, integration, tools, policy, and task custody. Candidate-only target opt-in and strict-profile or cloud fallback must fail closed. Local shared-user authority and separate remote publication remain explicit limits; the complete ten-worker A–H demonstration is still unproven. Hosted regression execution, rather than local test runs, will establish this slice's evidence.
+
+## Decapod Labs media and documentation stewardship (#1707)
+
+The independent Decapod Labs website owns the canonical visual identity and
+original website marketing-media renderer. The Decapod kernel repository carries
+only reviewed, generated copies of the approved mascot (SVG/PNG), animated
+README GIF, product MP4 and poster. It must not add a marketing rendering
+workflow to the kernel's source-CI workflow inventory.
+
+The kernel's mdBook documentation is a separate technical product surface,
+published at `https://decapodlabs.github.io/decapod/`. Its landing page uses
+the approved Decapod Labs wordmark, official kawaii mascot, coral/cream visual
+palette and the existing product video, with a direct link to the company
+homepage. The technical manuals remain technical and preserve precise
+definitions of scope, authority, proof and unsupported guarantees.
+
+The landing page must not claim an unconditional sandbox, semantic correctness
+oracle or hosted-cloud acceptance. No docs theme change, image, video or
+successful media build satisfies Decapod's native validation/readiness gates.
