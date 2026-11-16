@@ -6,6 +6,7 @@ on:
       - demo/showcase-7s
     paths:
       - assets/showcase/render.py
+      - assets/showcase/mascot.svg
       - assets/showcase/README.md
       - .github/workflows/showcase-render.yml
   workflow_dispatch:
@@ -30,9 +31,9 @@ jobs:
 
       - name: Install render dependencies
         run: |
-          python3 -m pip install 'Pillow==11.3.0' 'numpy==2.3.4'
+          python3 -m pip install 'Pillow==11.3.0' 'numpy==2.3.4' 'CairoSVG==2.7.1'
           sudo apt-get update -q
-          sudo apt-get install -y fonts-lato
+          sudo apt-get install -y fonts-lato libcairo2
           if ! command -v ffmpeg >/dev/null || ! command -v ffprobe >/dev/null; then
             sudo apt-get update -q
             sudo apt-get install -y ffmpeg fonts-dejavu-core

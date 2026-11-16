@@ -10,6 +10,8 @@ import json
 import math
 import os
 from pathlib import Path
+from io import BytesIO
+import cairosvg
 import shutil
 import subprocess
 import tempfile
@@ -42,14 +44,13 @@ for required in (FONT_HEAVY, FONT_REG, FONT_MED):
 # The eight independent cuts are paced to the original score, with no persistent UI.
 # This is illustrated product storytelling, never simulated terminal/verification success.
 SCENES = [
-    {"start": 0,   "end": 36,  "lines": ("TIRED OF", "BABYSITTING", "YOUR AGENTS?"), "align": "left",  "crab": (1530, 760)},
-    {"start": 36,  "end": 57,  "lines": ("TELL YOUR", "AGENT."),       "align": "right", "crab": (380, 760)},
-    {"start": 57,  "end": 87,  "lines": ("YOUR AGENT", "USES A", "GOVERNANCE KERNEL."), "align": "left", "crab": (1530, 760)},
-    {"start": 87,  "end": 108, "lines": ("METACOGNITION.",),       "align": "center", "crab": (380, 760)},
-    {"start": 108, "end": 129, "lines": ("PERSISTENT", "STATE."),  "align": "left", "crab": (1530, 760)},
-    {"start": 129, "end": 150, "lines": ("BOUNDED", "PARALLEL WORK."), "align": "right", "crab": (380, 760)},
-    {"start": 150, "end": 171, "lines": ("COMMIT-BOUND", "PROOF."), "align": "left", "crab": (1530, 760)},
-    {"start": 171, "end": 198, "kind": "outro", "crab": (1530, 760)},
+    {"start": 0,   "end": 40,  "lines": ("TIRED OF", "BABYSITTING", "YOUR AGENTS?"), "align": "left", "crab": (1530, 760)},
+    {"start": 40,  "end": 87,  "lines": ("GIVE IT A", "METACOGNITIVE", "GOVERNANCE KERNEL."), "align": "right", "crab": (370, 760)},
+    {"start": 87,  "end": 109, "lines": ("REFLECT.", "REFINE."), "align": "left", "crab": (1530, 760)},
+    {"start": 109, "end": 131, "lines": ("PERSISTENT", "STATE."), "align": "right", "crab": (370, 760)},
+    {"start": 131, "end": 153, "lines": ("COORDINATED", "AGENTS."), "align": "left", "crab": (1530, 760)},
+    {"start": 153, "end": 173, "lines": ("PROVE EACH", "COMMIT."), "align": "right", "crab": (370, 760)},
+    {"start": 173, "end": 198, "kind": "outro", "crab": (1530, 760)},
 ]
 
 
@@ -74,49 +75,17 @@ def tracking(draw: ImageDraw.ImageDraw, x: float, y: float, message: str, fnt: I
         xx += draw.textlength(ch, font=fnt) + spacing
 
 
+_MASCOT = Image.open(BytesIO(cairosvg.svg2png(
+    url=str(ROOT / "mascot.svg"), output_width=1040, output_height=880
+))).convert("RGBA")
+
+
 def crab_sprite(frame: int, scale: float, tilt: float = 0) -> Image.Image:
-    """Original, compact vector-shaped mark with independently animated claws/legs."""
-    k = 2
-    img = Image.new("RGBA", (390 * k, 315 * k), (0, 0, 0, 0))
-    d = ImageDraw.Draw(img)
-    def ellipse(b, color): d.ellipse(tuple(int(c*k) for c in b), fill=color)
-    def line(points, color, width): d.line([(int(x*k), int(y*k)) for x,y in points], fill=color, width=int(width*k), joint="curve")
-    def poly(points, color): d.polygon([(int(x*k), int(y*k)) for x,y in points], fill=color)
-    phase = frame / FPS
-    wave_arm = math.sin(phase * 13) * 5.0
-    leg_kick = math.sin(phase * 17) * 4
-    # Legs and claws are behind the shell. Rounded bends give them a continuous silhouette.
-    for mirror in (-1, 1):
-        cx = 195
-        for dy, ex in ((185, 24), (216, 8), (243, 18)):
-            pts = [(cx + mirror * 84, dy - 8), (cx + mirror * 120, dy + 2), (cx + mirror * (143 + ex/2), dy + 20 + mirror*leg_kick), (cx + mirror * (158 + ex/3), dy + 29)]
-            line(pts, CORAL_SHADE, 15)
-            ellipse((pts[-1][0]-8, pts[-1][1]-8, pts[-1][0]+8, pts[-1][1]+8), CORAL_SHADE)
-        # arms upraised, claws are simple sculpted crescents
-        line([(cx+mirror*83,164),(cx+mirror*124,137),(cx+mirror*147,105+wave_arm)], CORAL_SHADE, 22)
-        ellipse((cx+mirror*165-32, 75+wave_arm, cx+mirror*165+32, 145+wave_arm), CORAL)
-        # white mouth of the claw, using a white cutout, separates pincers.
-        poly([(cx+mirror*167,103+wave_arm),(cx+mirror*190,84+wave_arm),(cx+mirror*192,122+wave_arm)], WHITE)
-        ellipse((cx+mirror*193-9, 77+wave_arm, cx+mirror*193+9, 101+wave_arm), CORAL)
-    # Eye stalks and two eyes with restrained details.
-    line([(172,130),(167,75)], CORAL_SHADE, 14)
-    line([(218,130),(223,75)], CORAL_SHADE, 14)
-    ellipse((142,49,191,97), CORAL)
-    ellipse((200,49,249,97), CORAL)
-    ellipse((153,60,182,89), WHITE)
-    ellipse((211,60,240,89), WHITE)
-    ellipse((164,68,178,82), INK)
-    ellipse((222,68,236,82), INK)
-    # Flat shell with lighter convex crown, tapered bottom.
-    ellipse((91,107,299,261), CORAL_SHADE)
-    ellipse((89,97,301,245), CORAL)
-    ellipse((113,107,264,150), CORAL_LIGHT)
-    ellipse((112,123,279,249), CORAL)
-    # A subtle confident smile, deliberately less cartoonish than generic emoji.
-    d.arc((174*k,179*k,218*k,214*k), 8, 172, fill=CORAL_SHADE, width=3*k)
-    rot = img.rotate(tilt, Image.Resampling.BICUBIC, expand=True)
-    target = (int(rot.width * scale / k), int(rot.height * scale / k))
-    return rot.resize(target, Image.Resampling.LANCZOS)
+    # The authored mascot is a vector asset; render once, then animate frames.
+    bob = math.sin((frame / FPS) * 10.8)
+    rolled = _MASCOT.rotate(tilt + 1.5 * bob, Image.Resampling.BICUBIC, expand=True)
+    target = (max(1, int(rolled.width * scale)), max(1, int(rolled.height * scale)))
+    return rolled.resize(target, Image.Resampling.LANCZOS)
 
 
 def scene_for_frame(frame: int):
@@ -124,21 +93,19 @@ def scene_for_frame(frame: int):
 
 
 def crab_position(frame: int, scene: dict):
-    idx = SCENES.index(scene)
-    start, end = scene["start"], scene["end"]
+    # Cut to the new side, then bounce in place. Never cross the headline.
+    start = scene["start"]
     base_x, base_y = scene["crab"]
-    if idx and frame < start + 10:
-        from_x, from_y = SCENES[idx-1]["crab"]
-        p = smooth((frame-start+3) / 13)
-        x = from_x + (base_x-from_x)*p
-        y = from_y + (base_y-from_y)*p + 195*math.sin(math.pi*p)
-        tilt = 13 * math.sin(math.pi*p) * (1 if base_x > from_x else -1)
-        return x, y, tilt, 1 + 0.065*math.sin(math.pi*p)
-    # Small bob every beat; pauses between hops make the shape feel intentional.
-    tt = (frame-start) / FPS
-    y = base_y - 12*max(0.0, math.sin(2*math.pi*2.0*tt))
-    tilt = 2.4*math.sin(2*math.pi*1.7*tt)
-    return base_x, y, tilt, 1.0
+    age = frame - start
+    if age < 11:
+        p = smooth(age / 10.0)
+        return (base_x,
+                base_y - 82 * math.sin(math.pi * p),
+                (1-p) * 7.0 * math.sin(math.pi*p),
+                1.0 + 0.08 * math.sin(math.pi*p))
+    tt = (age-11) / FPS
+    y = base_y - 9 * max(0.0, math.sin(2*math.pi*1.6*tt))
+    return base_x, y, 2.2*math.sin(2*math.pi*1.4*tt), 1.0
 
 
 def put_crab(im: Image.Image, scene: dict, frame: int):
@@ -149,7 +116,7 @@ def put_crab(im: Image.Image, scene: dict, frame: int):
     sd.ellipse((60, 36, 420, 81), fill=(14, 17, 20, 35))
     shadow = shadow.filter(ImageFilter.GaussianBlur(25))
     im.paste(shadow, (int(x-240), 846), shadow)
-    sprite = crab_sprite(frame, 0.86*sc if scene.get("kind") != "brand" else 0.93*sc, rot)
+    sprite = crab_sprite(frame, 0.43*sc if scene.get("kind") != "outro" else 0.39*sc, rot)
     im.paste(sprite, (int(x-sprite.width/2), int(y-sprite.height/2)), sprite)
 
 
@@ -189,23 +156,22 @@ def layer_text(im: Image.Image, scene: dict, frame: int):
     else:
         lines=scene["lines"]
         side=scene["align"]
-        # Fit a consistent editorial column without cropping or intruding
-        # into the crab's clear space. All text stays inside 1920x1080.
-        xs = 170 if side in ("left", "center") else 765
-        max_width = 1530 if side == "center" else (1110 if side == "left" else 1005)
-        size = 182
-        while size > 110:
+        # One idea per cut, fitted to a consistent editorial column.
+        xs = 172 if side == "left" else 768
+        max_width = 1130 if side == "left" else 990
+        size = 185
+        while size > 85:
             candidate = font(FONT_HEAVY, size)
             if all(draw.textlength(line, font=candidate) <= max_width for line in lines):
                 break
             size -= 2
         f = font(FONT_HEAVY, size)
-        gap = int(size * 1.04)
-        total = (len(lines)-1)*gap + size
-        first = int(520 - total/2)
+        gap = int(size * 1.12)
+        first = int(500 - (len(lines)-1)*gap/2 - size/2)
         for i,line in enumerate(lines):
-            draw.text((xs, first+i*gap+yshift), line, font=f, fill=ink, anchor="lt")
-        # Each cut is its own screen: one statement, zero secondary UI.
+            fill = (*CORAL, opacity) if ("METACOGNITIVE" in line or "PERSISTENT" in line) else ink
+            draw.text((xs, first+i*gap+yshift), line, font=f, fill=fill, anchor="lt")
+        # One headline per screen, no timeline or secondary UI.
     im.alpha_composite(layer)
 
 
@@ -218,7 +184,7 @@ def frame_image(frame: int) -> Image.Image:
 
 
 def synth_audio(path: Path):
-    """Original eight-note synth theme, written procedurally; no licensed samples."""
+    """Original seven-note synth theme, written procedurally; no licensed samples."""
     sr=44100
     n=round(DURATION*sr)
     mix=np.zeros((n,2),dtype=np.float64)
@@ -251,7 +217,7 @@ def synth_audio(path: Path):
         add(noise*env*vol,start,.6)
     # Exactly one original musical accent per scene arrival.
     cue=[s["start"]/FPS for s in SCENES]
-    melody=[659.25,783.99,987.77,880.00,1174.66,987.77,1174.66,1318.51]
+    melody=[659.25,783.99,987.77,880.00,1174.66,987.77,1318.51]
     for i,(at,freq) in enumerate(zip(cue,melody)):
         pluck(freq,at+.06,vol=.145 if i<6 else .20,pan=(-.24 if i%2 else .26))
         pluck(freq/2,at+.062,vol=.082,pan=.0)
