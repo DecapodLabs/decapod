@@ -7,6 +7,42 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.148.1](https://github.com/DecapodLabs/decapod/compare/v0.148.0...v0.148.1) - 2026-11-16
+
+### Added
+
+- *(docs)* adopt Decapod Labs theme and hero video; move media source to website
+- *(showcase)* export circle-safe GitHub organization avatar from mascot SVG
+- *(showcase)* hold Harness AI end card and export mascot PNG
+- *(showcase)* emphasize init-once agent continuity and four governed capabilities
+- *(showcase)* answer the agent problem with a metacognitive kernel and original kawaii mascot
+- *(showcase)* introduce agent governance kernel before brand reveal
+- *(showcase)* foreground metacognition, persistent state, and agent autonomy
+- *(showcase)* show how agents invoke Decapod behind human ideas
+- *(showcase)* 6.6s minimal brand film with original score and automated render
+- *(showcase)* add reproducible 6.58-second animated agent-governance reel renderer
+
+### Fixed
+
+- *(showcase)* render animated GIF with ffmpeg to publish updated assets
+- *(showcase)* provision FFmpeg and DejaVu on GitHub runner
+
+### Other
+
+- *(readme)* center the official Decapod kawaii crab mascot
+- *(showcase)* publish verified 6.900-second film and avatar PNG
+- *(showcase)* publish verified 6.900-second brand film and mascot PNG
+- *(showcase)* check in verified 6.600-second brand film with soundtrack
+- *(showcase)* check in verified 6.600-second brand film with soundtrack
+- *(showcase)* check in verified 6.600-second brand film with soundtrack
+- *(showcase)* check in verified 6.600-second brand film with soundtrack
+- *(showcase)* check in verified 6.600-second brand film with soundtrack
+- *(showcase)* check in verified 6.600-second brand film with soundtrack
+- *(readme)* embed the checked-in six-second Decapod feature reel
+- *(showcase)* check in verified 6.583-second animated media
+- *(showcase)* render 6.58-second reel and commit generated assets to dedicated branch
+- *(showcase)* specify product truth, assets, duration gate and reproducible render
+
 ## [0.148.0](https://github.com/DecapodLabs/decapod/compare/v0.147.0...v0.148.0) - 2026-11-15
 
 ### Added
