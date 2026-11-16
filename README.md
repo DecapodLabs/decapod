@@ -1,4 +1,6 @@
-<p align="center">🦀</p>
+<p align="center">
+  <img src="assets/showcase/mascot.svg" alt="Decapod kawaii crab mascot" width="136" />
+</p>
 
 <h1 align="center">Decapod</h1>
 
