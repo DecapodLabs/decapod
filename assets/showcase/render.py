@@ -38,17 +38,17 @@ for required in (FONT_HEAVY, FONT_REG, FONT_MED):
     if not required.is_file():
         raise SystemExit(f"Required font missing: {required}; install fonts-lato")
 
-# Attention: human delegates an idea; agent gets governed reasoning and durable context.
+# Human intent, agent operation, governance-kernel introduction, then brand reveal.
 # The eight independent cuts are paced to the original score, with no persistent UI.
 # This is illustrated product storytelling, never simulated terminal/verification success.
 SCENES = [
-    {"start": 0,   "end": 37,  "lines": ("TIRED OF", "BABYSITTING", "YOUR AGENTS?"), "align": "left",  "crab": (1530, 760)},
-    {"start": 37,  "end": 60,  "lines": ("TELL YOUR", "AGENT."),     "align": "right", "crab": (380, 760)},
-    {"start": 60,  "end": 83,  "lines": ("IT CALLS", "DECAPOD."),    "align": "left",  "crab": (1530, 760)},
-    {"start": 83,  "end": 105, "lines": ("METACOGNITION.",),      "align": "center", "crab": (380, 760)},
-    {"start": 105, "end": 127, "lines": ("PERSISTENT", "STATE."), "align": "left", "crab": (1530, 760)},
-    {"start": 127, "end": 149, "lines": ("BOUNDED", "PARALLEL WORK."), "align": "right", "crab": (380, 760)},
-    {"start": 149, "end": 171, "lines": ("COMMIT-BOUND", "PROOF."), "align": "left", "crab": (1530, 760)},
+    {"start": 0,   "end": 36,  "lines": ("TIRED OF", "BABYSITTING", "YOUR AGENTS?"), "align": "left",  "crab": (1530, 760)},
+    {"start": 36,  "end": 57,  "lines": ("TELL YOUR", "AGENT."),       "align": "right", "crab": (380, 760)},
+    {"start": 57,  "end": 87,  "lines": ("YOUR AGENT", "USES A", "GOVERNANCE KERNEL."), "align": "left", "crab": (1530, 760)},
+    {"start": 87,  "end": 108, "lines": ("METACOGNITION.",),       "align": "center", "crab": (380, 760)},
+    {"start": 108, "end": 129, "lines": ("PERSISTENT", "STATE."),  "align": "left", "crab": (1530, 760)},
+    {"start": 129, "end": 150, "lines": ("BOUNDED", "PARALLEL WORK."), "align": "right", "crab": (380, 760)},
+    {"start": 150, "end": 171, "lines": ("COMMIT-BOUND", "PROOF."), "align": "left", "crab": (1530, 760)},
     {"start": 171, "end": 198, "kind": "outro", "crab": (1530, 760)},
 ]
 
@@ -177,7 +177,7 @@ def layer_text(im: Image.Image, scene: dict, frame: int):
         tw = box[2]-box[0]
         y = (342 if is_outro else 358) + yshift
         draw.text(((WIDTH-tw)/2,y),title,font=f,fill=ink,anchor="lt")
-        cap = "DO WHAT MUST BE DONE." if is_outro else "A GOVERNANCE KERNEL FOR AI AGENTS"
+        cap = "METACOGNITION FOR AI AGENTS." if is_outro else "A GOVERNANCE KERNEL FOR AI AGENTS"
         ff = font(FONT_MED, 39)
         width = sum(draw.textlength(ch,font=ff)+5 for ch in cap)
         tracking(draw,(WIDTH-width)/2,608+yshift,cap,ff,(*GRAY,opacity),5)
