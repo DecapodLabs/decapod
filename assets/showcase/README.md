@@ -14,7 +14,7 @@ The seven independent screens are: **Tired of babysitting your agents? → Give 
 
 The four practical outcomes are durable context and continuity, enforced limits on agent authority, proof tied to the actual commit, and unchanged human coding workflow after one-time project initialization. Metacognition is established in the opening and intentionally not repeated in the closing title. **Color grammar:** black carries the message; coral marks one chosen semantic anchor per screen and the final brand. The wordmark finishes in black, with coral **HARNESS AI** and a coral GitHub URL held without fading. The standalone kawaii crab clatters in from offscreen right, lands between independent scenes, and exits off the nearest edge after the URL is visible. The final end card holds without fading through the last encoded frame. All movements are deterministic and contained in the renderer.
 
-The source [mascot.svg](mascot.svg) remains an editable transparent vector; the renderer also exports [mascot.png](mascot.png), a 1040 × 880 RGBA asset with transparency for reuse in marketing.
+The source [mascot.svg](mascot.svg) remains an editable transparent vector. The renderer exports both [mascot.png](mascot.png), a full-size 1040 × 880 transparent RGBA image, and [mascot-github-avatar.png](mascot-github-avatar.png), a 1024 × 1024 transparent PNG centered and inset for GitHub's circular organization avatar crop. Use the square export for the organization's profile photo; the original art stays unchanged.
 
 **Metacognition** means Decapod helps the agent inspect project context, challenge assumptions and investigate missing information through bounded evidence-grounded reflection before proceeding or requiring a human decision. Decapod does not provide a model's intelligence. **Persistent state** means repository-owned intent, living specifications, plans, task custody, unresolved obligations, event history and validation evidence survive process, agent and harness changes. Local state uses SQLite and tracked governance material; optional cloud shared authority has its own acceptance contract. **Proof** refers to specific source candidates, required checks and currently applicable policy, never generalized correctness by assertion.
 
@@ -37,7 +37,8 @@ The renderer emits these tracked assets:
 - `generated/decapod-showcase.mp4`: 1080p H.264 + AAC stereo, 30 fps, 6.900 seconds
 - `generated/decapod-showcase.gif`: 960 × 540, ~15 fps, silent, loops in GitHub README
 - `generated/decapod-showcase-poster.png`: exact stationary final frame at 1920 × 1080
-- `mascot.png`: transparent 1040 × 880 PNG from the source `mascot.svg`
+- `mascot.png`: original full-size transparent 1040 × 880 PNG from `mascot.svg`
+- `mascot-github-avatar.png`: transparent 1024 × 1024 PNG with circle-safe margins, suitable for a GitHub organization profile
 
 The duration comes from exactly **207 frames at 30 fps**. The script checks the encoded output with ffprobe; GitHub Actions checks duration, audio/video streams, GIF frames, and artifacts. Source and generated files live together in this repository.
 

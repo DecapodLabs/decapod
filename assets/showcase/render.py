@@ -260,6 +260,22 @@ def run():
     OUT.mkdir(parents=True,exist_ok=True)
     # Render a matching high-resolution transparent PNG from the authored SVG.
     _MASCOT.save(ROOT / "mascot.png", optimize=True)
+    # Separate social avatar: square transparent canvas with safe circular
+    # margins for GitHub organization avatars. Preserve the complete SVG and
+    # full-res mascot PNG as the canonical illustration.
+    bounds = _MASCOT.getchannel("A").getbbox()
+    if bounds is None:
+        raise RuntimeError("mascot.svg rendered no visible pixels")
+    cropped = _MASCOT.crop(bounds)
+    avatar_width = 748
+    avatar_height = round(cropped.height * avatar_width / cropped.width)
+    scaled = cropped.resize((avatar_width, avatar_height), Image.Resampling.LANCZOS)
+    avatar = Image.new("RGBA", (1024, 1024), (0, 0, 0, 0))
+    avatar.alpha_composite(scaled, (
+        (1024-avatar_width)//2,
+        (1024-avatar_height)//2,
+    ))
+    avatar.save(ROOT / "mascot-github-avatar.png", optimize=True)
     # Poster is the exact stationary final frame after the mascot has exited.
     poster=frame_image(FRAMES-1)
     poster.save(OUT/"decapod-showcase-poster.png",optimize=True)
