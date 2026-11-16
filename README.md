@@ -21,7 +21,7 @@
 </p>
 
 <p align="center">
-  <a href="assets/showcase/generated/decapod-showcase.mp4"><img src="assets/showcase/generated/decapod-showcase.gif" alt="Decapod: tired of babysitting your agents? Your agent uses a governance kernel for metacognition, persistent state, bounded parallel work and commit-bound proof" width="760"></a><br>
+  <a href="assets/showcase/generated/decapod-showcase.mp4"><img src="assets/showcase/generated/decapod-showcase.gif" alt="Decapod: Tired of babysitting your agents? Give it a metacognitive governance kernel. Persistent state, coordinated agents and proof for each commit." width="760"></a><br>
   <sub><a href="assets/showcase/README.md">6.60-second showcase · original score · reproducible renderer</a></sub>
 </p>
 

@@ -1,0 +1,52 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="720" height="600" viewBox="0 0 520 440">
+  <defs>
+    <linearGradient id="shell" x1="0.15" y1="0" x2="0.78" y2="1"><stop stop-color="#FFB47D"/><stop offset=".49" stop-color="#FF7B53"/><stop offset="1" stop-color="#EA5E44"/></linearGradient>
+    <linearGradient id="claw" x1="0" y1="0" x2="0.8" y2="1"><stop stop-color="#FFC398"/><stop offset=".43" stop-color="#FF8A5D"/><stop offset="1" stop-color="#F0674B"/></linearGradient>
+    <linearGradient id="face" x1="0.28" y1="0" x2="0.5" y2="1"><stop stop-color="#FFF5E8"/><stop offset="1" stop-color="#FFE2CC"/></linearGradient>
+    <radialGradient id="eye" cx="0.4" cy="0.26" r="0.8"><stop stop-color="#774A52"/><stop offset=".58" stop-color="#3B2532"/><stop offset="1" stop-color="#271C2A"/></radialGradient>
+    <radialGradient id="cheek"><stop stop-color="#FF8797" stop-opacity=".55"/><stop offset="1" stop-color="#FC7993" stop-opacity="0"/></radialGradient>
+  </defs>
+  <!-- Original kawaii crab mascot: compact silhouette, expressive eyes, warm coral palette. -->
+  <g stroke="#B34C3A" stroke-width="9" stroke-linejoin="round" stroke-linecap="round">
+    <g fill="#F27854">
+      <path d="M148 280 Q92 268 75 294 Q63 315 48 339 Q85 341 107 316 L166 307Z"/>
+      <path d="M142 321 Q88 323 74 351 Q63 373 59 388 Q98 389 117 359 L164 350Z"/>
+      <path d="M177 338 Q139 361 128 396 Q168 394 193 365Z"/>
+      <path d="M372 280 Q428 268 445 294 Q457 315 472 339 Q435 341 413 316 L354 307Z"/>
+      <path d="M378 321 Q432 323 446 351 Q457 373 461 388 Q422 389 403 359 L356 350Z"/>
+      <path d="M343 338 Q381 361 392 396 Q352 394 327 365Z"/>
+    </g>
+    <path fill="#F57950" d="M145 275 Q113 228 89 213 Q79 193 95 176 Q109 168 122 185 Q149 202 170 239Z"/>
+    <path fill="#F57950" d="M375 275 Q407 228 431 213 Q441 193 425 176 Q411 168 398 185 Q371 202 350 239Z"/>
+    <g fill="url(#claw)">
+      <path d="M102 165 Q57 170 42 133 Q23 89 52 57 Q80 29 115 48 Q143 66 132 100 Q116 122 101 116 Q89 107 94 94 Q79 95 75 109 Q75 127 102 132 Q130 125 145 140 Q160 160 138 179 Q120 192 102 165Z"/>
+      <path d="M418 165 Q463 170 478 133 Q497 89 468 57 Q440 29 405 48 Q377 66 388 100 Q404 122 419 116 Q431 107 426 94 Q441 95 445 109 Q445 127 418 132 Q390 125 375 140 Q360 160 382 179 Q400 192 418 165Z"/>
+    </g>
+    <path fill="url(#shell)" d="M259 105 C171 102 118 142 110 218 C96 300 141 363 258 368 C377 366 423 301 409 218 C399 143 344 105 259 105Z"/>
+    <path fill="url(#face)" stroke="#C85F45" stroke-width="7" d="M143 232 C161 191 205 179 260 179 C318 179 362 191 378 232 C392 286 340 333 260 335 C180 333 130 286 143 232Z"/>
+  </g>
+  <path d="M159 172 C195 128 296 126 342 162" fill="none" stroke="#FFD1A1" stroke-width="20" stroke-linecap="round" opacity=".58"/>
+  <path d="M155 190 C163 176 171 170 185 160" fill="none" stroke="#FFF2D9" stroke-width="8" stroke-linecap="round" opacity=".75"/>
+  <path d="M379 222 Q386 255 369 282" fill="none" stroke="#D95443" stroke-width="8" opacity=".4" stroke-linecap="round"/>
+  <g>
+    <ellipse cx="204" cy="250" rx="30" ry="39" fill="url(#eye)"/>
+    <ellipse cx="316" cy="250" rx="30" ry="39" fill="url(#eye)"/>
+    <ellipse cx="193" cy="234" rx="13" ry="15" fill="white"/>
+    <ellipse cx="306" cy="234" rx="13" ry="15" fill="white"/>
+    <circle cx="214" cy="264" r="6" fill="#FFC1AE" opacity=".95"/>
+    <circle cx="326" cy="264" r="6" fill="#FFC1AE" opacity=".95"/>
+    <path d="M222 222 l4 -8 l4 8 l8 4 l-8 4 l-4 8 l-4 -8 l-8 -4Z" fill="white" opacity=".8" transform="scale(.7) translate(98 102)"/>
+  </g>
+  <ellipse cx="161" cy="288" rx="38" ry="25" fill="url(#cheek)"/>
+  <ellipse cx="360" cy="288" rx="38" ry="25" fill="url(#cheek)"/>
+  <g stroke="#E97B78" stroke-width="3.5" opacity=".65" stroke-linecap="round">
+    <path d="M150 288 l-4 7 M161 287 l-3 8 M172 288 l-3 7"/>
+    <path d="M347 288 l4 7 M358 287 l3 8 M369 288 l3 7"/>
+  </g>
+  <path d="M245 282 Q260 293 275 282 Q279 304 260 310 Q244 307 245 282Z" fill="#6A3946"/>
+  <path d="M251 299 Q260 293 270 301 Q262 307 260 307 Q256 307 251 299Z" fill="#FF9B9D"/>
+  <path d="M249 281 Q260 291 271 281" fill="none" stroke="#6A3946" stroke-width="4" stroke-linecap="round"/>
+  <path d="M253 144 Q260 137 267 144 Q274 151 260 160 Q246 151 253 144Z" fill="#FFE6C3" opacity=".95"/>
+  <path d="M62 66 Q84 47 101 67" stroke="#FFF4DF" stroke-width="10" opacity=".75" fill="none" stroke-linecap="round"/>
+  <path d="M458 66 Q436 47 419 67" stroke="#FFF4DF" stroke-width="10" opacity=".75" fill="none" stroke-linecap="round"/>
+</svg>
