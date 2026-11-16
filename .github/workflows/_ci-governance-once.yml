@@ -33,9 +33,9 @@ jobs:
           test "$(git cat-file -t "$APPROVED_SOURCE")" = commit
           test "$(git rev-parse "$APPROVED_SOURCE^")" = "$ACCEPTED_BASE"
           test "$(git rev-parse "$APPROVED_SOURCE^{tree}")" != "$(git rev-parse "$ACCEPTED_BASE^{tree}")"
-          final="$RUNNER_TEMP/decapod-governed-final"
+          final="$GITHUB_WORKSPACE/.decapod/workspaces/ci-master-actions-governed-final"
           git worktree add --detach "$final" "$ACCEPTED_BASE"
-          git -C "$final" switch -c agent/chatgpt-ci-repair-governed-final
+          git -C "$final" switch -c agent/chatgpt/ci-master-actions-governed-final
           if ! git -C "$final" show-ref --verify --quiet refs/heads/master; then
             git -C "$final" branch master "$ACCEPTED_BASE"
           fi
