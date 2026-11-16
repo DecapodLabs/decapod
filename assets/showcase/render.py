@@ -276,22 +276,24 @@ def run():
         synth_audio(a)
         cmd=["ffmpeg","-hide_banner","-loglevel","error","-y","-f","rawvideo","-pix_fmt","rgb24","-s",f"{WIDTH}x{HEIGHT}","-r",str(FPS),"-i","-","-an","-c:v","libx264","-preset","medium","-crf","17","-pix_fmt","yuv420p","-movflags","+faststart",str(v)]
         proc=subprocess.Popen(cmd,stdin=subprocess.PIPE)
-        gif_frames=[]
         try:
             for i in range(FRAMES):
                 im=frame_image(i)
                 proc.stdin.write(im.tobytes())
-                if i%2==0:
-                    gif_frames.append(im.resize((960,540),Image.Resampling.LANCZOS))
         finally:
             proc.stdin.close()
         if proc.wait()!=0:raise RuntimeError("ffmpeg video encoding failed")
         outfile=OUT/"decapod-showcase.mp4"
         subprocess.run(["ffmpeg","-hide_banner","-loglevel","error","-y","-i",str(v),"-i",str(a),"-c:v","copy","-c:a","aac","-b:a","192k","-t",f"{DURATION:.4f}","-movflags","+faststart",str(outfile)],check=True)
-        # GitHub README GIF: same frames without sound, no separate animation source.
-        palette=gif_frames[0].quantize(colors=80,method=Image.Quantize.MEDIANCUT)
-        indices=[f.quantize(palette=palette) for f in gif_frames]
-        indices[0].save(OUT/"decapod-showcase.gif",save_all=True,append_images=indices[1:],duration=round(2000/FPS),loop=0,optimize=True,disposal=2)
+        # Generate GIF from the same encoded video used for the MP4.
+        # Pillow 11.3.0 collapsed shared-palette frames to one still on Ubuntu,
+        # preventing artifacts from reaching the branch. FFmpeg retains motion.
+        subprocess.run([
+            "ffmpeg", "-hide_banner", "-loglevel", "error", "-y",
+            "-i", str(v), "-an",
+            "-vf", "fps=15,scale=960:-1:flags=lanczos",
+            "-loop", "0", str(OUT/"decapod-showcase.gif")
+        ], check=True)
     data=json.loads(subprocess.check_output(["ffprobe","-v","error","-show_entries","format=duration:stream=codec_type,codec_name","-of","json",str(outfile)],text=True))
     duration=float(data["format"]["duration"])
     assert 6.0 <= duration < 7.0,duration
