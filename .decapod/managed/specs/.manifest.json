@@ -17,7 +17,7 @@
   ],
   "capability_definition_version": "1.0.0",
   "config_input_hash": "4dc52823edabb83ac8c01f1646b9a521e7e90ea68bd64c1d7c02ddd812a07c01",
-  "spec_input_hash": "ea39d1ae14b7808240e21f7eaf1f282895fb0fa5eb81605471f1addaa9e7ebc8",
+  "spec_input_hash": "6a351f552708e1ecead74b8e81399079f05377fa6bc9d1820572abfe87c6d192",
   "decapod_release": "0.148.0",
   "entrypoints": [
     {
@@ -73,7 +73,7 @@
     {
       "path": ".decapod/managed/specs/VALIDATION.md",
       "template_hash": "517a57be410d28c2a061bcb46e1d223fb7fe8d18ec4909d6cba6a65c366bb8fd",
-      "content_hash": "38c018f3c0f7f545577d3845f2e93538eac9cd614bc1eed99f6a668d2994eb6d",
+      "content_hash": "a1c8484b0024739fbfb1a5f943855bd0e26e210353e900218f3e8a19b127b881",
       "fingerprint": ""
     },
     {
