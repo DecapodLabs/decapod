@@ -1369,7 +1369,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `5530249d38a42ab9c966b27787ccd6952ce1c69a63ab1a2414a9960c1e542984`
+- Repository signal fingerprint: `e76f407d78009f018254a59580ae38975b19353801044282a17910dcfb979f5c`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (236 files), `tests/` (234 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
@@ -2198,7 +2198,6 @@ full native publication proof remains unclaimed.
 ## PR #1699 accepted-target integration
 
 The escalation branch now integrates accepted master `8e435969a8c21269aa277301b3e6492d780a9bdb` with installed Decapod 0.145.6. Preserve both the escalation contract and the accepted Nix release-gate/finite-adapter changes, including both owning Bazel fixtures. The earlier full native observation for `d52943740cac03fa45046317ea4af090f919fec6` against `f5da0e6183bf31cfbef3d5a53c52553ee8b6fbb5` remains historical and cannot authorize a new integration. Fresh checks must bind the new source/tree/target and custody generation. This integration uses GitHub verification without local test/build execution or Buildkite evidence collection; accepted strict provider requirements remain enabled, and no automatic merge authority is introduced.
-
 
 ## Documentation brand and media acceptance (#1707)
 
