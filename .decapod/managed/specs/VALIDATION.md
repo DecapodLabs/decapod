@@ -4,12 +4,15 @@
 
 The companion docs change preserves every accepted proof command, workflow,
 helper, tool declaration and provider. Source-grounded inventory review found
-that the accepted0.148.8 release changed only the version fields in Cargo.toml
+that the accepted0.148.8 and0.148.9 releases changed only the version fields in Cargo.toml
 and Cargo.lock after the prior reviewed inventory commit edbfc00d. No inventoried
-definition differs between this candidate and accepted master18cbb30c. Refresh
+definition differs between this candidate and accepted master6ab6de31. Refresh
 the consistency digest to the observed accepted source inventory; this is not a
 check replacement, graph reduction, provider switch or proof of passing CI.
 Full exact-candidate source-CI validation remains mandatory before PR creation.
+The candidate-built source-CI validator evaluates release0.148.9; commit its
+generated Docker pin and spec manifest together. Earlier source-CI failures
+at11774 and11868 remain failures and cannot establish current readiness.
 
 ## Current report validation scope
 
