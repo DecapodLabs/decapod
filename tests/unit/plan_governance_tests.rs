@@ -243,7 +243,9 @@ fn contradictory_prompts_block_approved_plan_before_task_projection_lookup() {
         serde_json::from_str(message.split_once("payload=").unwrap().1).unwrap();
     assert_eq!(
         payload["questions"],
-        json!([format!("Resolve conflicting requests before execution: {conflict}")])
+        json!([format!(
+            "Resolve conflicting requests before execution: {conflict}"
+        )])
     );
     assert_eq!(before, fs::read(plan_path(dir.path())).unwrap());
 

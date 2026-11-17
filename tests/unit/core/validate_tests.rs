@@ -44,7 +44,9 @@ fn validated_intent_readiness_includes_recorded_contradictions() {
     assert!(plan_governance::has_unresolved_intent_requirements(&plan));
     plan_governance::save_plan(dir.path(), &plan).unwrap();
     let reloaded = plan_governance::load_plan(dir.path()).unwrap().unwrap();
-    assert!(plan_governance::has_unresolved_intent_requirements(&reloaded));
+    assert!(plan_governance::has_unresolved_intent_requirements(
+        &reloaded
+    ));
     assert_eq!(reloaded.state, PlanState::Approved);
 }
 
