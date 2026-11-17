@@ -774,3 +774,39 @@ Acceptance requires inspecting the generated sidebar and landing page in both
 light and dark palettes, confirming the correct asset references and accessible
 names, and independently checking the publicly served Pages result. Passing a
 source build alone does not establish that the public deployment occurred.
+
+## Public documentation presentation migration — Starlight
+
+Replace the published human-facing mdBook presentation at
+`https://decapodlabs.github.io/decapod/` with a GitHub Pages-compatible
+static Astro Starlight site. The canonical human documentation content remains
+`docs/book/src/**/*.md`; Starlight copies and renders this content
+without silently changing normative technical assertions. The `/decapod/`
+base path, public entry point, navigation, search, and existing
+`*.html` deep links must remain usable after the transition.
+
+The visual identity is a plushy but legible Decapod Labs documentation
+environment: warm vanilla backgrounds, apricot coral `#F19C76`,
+the stronger brand orange `#F05B37`, restrained dark plum, rounded
+surfaces, the approved crab mascot, and approved
+website-owned `logo-a.png`, `logo-b.png` and `logo-c.png` wordmarks.
+Light navigation uses logo A next to the mascot, dark navigation uses
+logo C and the mascot, and the dark footer uses logo B. Branding and
+decorative effects must not impair reference code, keyboard access,
+mobile navigation, contrast, or performance.
+
+The public site is discoverable to browsers and external agents as
+ordinary static HTML; it is explanatory material for people and
+researchers. Agent-facing operational command contracts, admitted
+actions, governance and recovery procedures remain embedded and
+version-bound in the Rust Decapod binary. No public Starlight page,
+search index, or optional AI-readable export changes that authority
+boundary or becomes a runtime prerequisite.
+
+Acceptance requires a successful isolated Starlight build, an inventory
+of every existing human Markdown page, working static search,
+legacy path aliases, accessible brand elements, and an independently
+observed deployment to the stable Pages URL. The existing kernel
+source validation and governed delivery gates remain binding; merely
+rendering or deploying technical documentation never proves governed
+completion of the kernel's engineering work.
