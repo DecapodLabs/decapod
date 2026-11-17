@@ -913,7 +913,10 @@ mod plan_governed_execution {
         assert!(stderr.contains("NEEDS_HUMAN_INPUT"), "{stderr}");
         assert!(stderr.contains("conflicting requests"), "{stderr}");
 
-        let corrected = run_decapod(&dir, &["govern", "plan", "update", "--clear-contradictions"]);
+        let corrected = run_decapod(
+            &dir,
+            &["govern", "plan", "update", "--clear-contradictions"],
+        );
         assert!(corrected.status.success(), "{:?}", corrected);
         let stale = run_decapod(
             &dir,

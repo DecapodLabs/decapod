@@ -867,13 +867,21 @@ fn resolve_objective(
         .or_else(|| selected_trajectory.map(|trajectory| trajectory.original_intent.clone()))
         .unwrap_or_else(|| "Not established".to_string());
     let derived_intent = recorded
-        .and_then(|record| record.get("refined_intent").and_then(|value| value.as_str()))
+        .and_then(|record| {
+            record
+                .get("refined_intent")
+                .and_then(|value| value.as_str())
+        })
         .map(ToOwned::to_owned)
         .or_else(|| selected_trajectory.map(|trajectory| trajectory.derived_intent.clone()));
     // Validation obligations, execution boundaries and forbidden paths are
     // different concepts. Do not recast scope limits as acceptance criteria.
     let acceptance_criteria = recorded
-        .and_then(|record| record.get("acceptance_criteria").and_then(|value| value.as_array()))
+        .and_then(|record| {
+            record
+                .get("acceptance_criteria")
+                .and_then(|value| value.as_array())
+        })
         .map(|values| {
             values
                 .iter()

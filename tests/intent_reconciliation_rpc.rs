@@ -126,7 +126,10 @@ fn intent_reconcile_rpc_immutable_base_reports_code_change_as_unproven() {
         "pub fn api_version() -> u8 { 2 }\n#[test]\nfn agent_written_check() { assert_eq!(api_version(), 2); }\n",
     )
     .unwrap();
-    let probe = root.join(format!("self_authored_probe{}", std::env::consts::EXE_SUFFIX));
+    let probe = root.join(format!(
+        "self_authored_probe{}",
+        std::env::consts::EXE_SUFFIX
+    ));
     let compile = Command::new("rustc")
         .current_dir(root)
         .args(["--test", "src/intent_impact.rs", "-o"])

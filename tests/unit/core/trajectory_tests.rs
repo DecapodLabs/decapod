@@ -126,7 +126,10 @@ fn a_reused_intent_id_cannot_rewrite_the_original_prompt() {
         .unwrap_err()
         .to_string();
     assert!(blocked.contains("INTENT_ORIGIN_CONFLICT"), "{blocked}");
-    assert_eq!(fs::read(trajectory_cookie_path(temp.path())).unwrap(), before);
+    assert_eq!(
+        fs::read(trajectory_cookie_path(temp.path())).unwrap(),
+        before
+    );
 
     let mut next = replacement_init("new_request");
     next.intent_id = Some("intent:later-instruction".into());
