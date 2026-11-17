@@ -588,6 +588,11 @@
       "proof_refs": [
         "git:edbfc00ddfd4c24458a2277176762c6924de13cc..6ab6de3134286a790d78d370ca3fb43c0d92f834"
       ]
+    },
+    {
+      "id": "inventory-count-correction",
+      "summary": "Preserve measured review-count correction before exact-candidate validation; no source or required check change.",
+      "input_digest": "sha256:76b42bd6f3f595a839a6a8205be209f23fd1fa0d1a020826f1e55fe8c76a131d"
     }
   ],
   "intents": {
@@ -641,7 +646,7 @@
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:335aae5787849d05eb5f464f61777a8213d4239cddaaf4e5efba30f4e325b86c",
+      "artifact_hash": "sha256:ad06eb1c5da3f720e45a4cc53fde6ee045dd01511c449f0f5639bc88804b5357",
       "checks": [
         {
           "name": "candidate_regressions",
@@ -695,10 +700,17 @@
             "intent_id": "intent:change_01M7NQXTQ8MSHMYM11DJ5YRWJJ",
             "kind": "trajectory_step_recorded",
             "sequence": 6
+          },
+          {
+            "detail": "trajectory:branch_01M7NQXTTWEEHK0YNBJBBX8ERJ",
+            "event_id": "event:7",
+            "intent_id": "intent:change_01M7NQXTQ8MSHMYM11DJ5YRWJJ",
+            "kind": "trajectory_step_recorded",
+            "sequence": 7
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 6,
+        "next_sequence": 7,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M7NQXTTWEEHK0YNBJBBX8ERJ": {
@@ -764,6 +776,19 @@
                 ],
                 "sequence": 6,
                 "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:7",
+                "observations": [
+                  "Correction to inventory count: 105 inventoried paths were compared, not 107. Exact version-only delta and digest remain as observed."
+                ],
+                "proof_refs": [],
+                "scope": [
+                  "constitution-context-1772-1774-657-880-1095-879"
+                ],
+                "sequence": 7,
+                "validation_findings": []
               }
             ]
           }
@@ -775,6 +800,7 @@
       ],
       "destination": "pull request",
       "evidence": [
+        "Correction to inventory count: 105 inventoried paths were compared, not 107. Exact version-only delta and digest remain as observed.",
         "PROOF_PROFILE_RECONCILIATION_REQUIRED; complete 107-source inventory matches accepted master; since edbfc00 only Cargo package/lock version 0.148.7 to 0.148.9 differs, and accepted tag v0.148.9 tree equals 6ab6de3.",
         "Pre-change actual-binary negative receipt 01M7NR06P8P78Q7NMJJV44T4HH; post-change suite pending configured full validation.",
         "receipt:01M7NR06P8P78Q7NMJJV44T4HH; capsule:9636e0e74c098cb8647bdbdd0f536d08e320ba170598a95999e2530911328434"
