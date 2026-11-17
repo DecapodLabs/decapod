@@ -817,10 +817,11 @@ mod plan_governed_execution {
         );
 
         let approve = run_decapod(&dir, &["govern", "plan", "approve"]);
-        assert!(!approve.status.success(), "unresolved questions cannot approve");
         assert!(
-            String::from_utf8_lossy(&approve.stderr).contains("NEEDS_HUMAN_INPUT")
+            !approve.status.success(),
+            "unresolved questions cannot approve"
         );
+        assert!(String::from_utf8_lossy(&approve.stderr).contains("NEEDS_HUMAN_INPUT"));
 
         let blocked = run_decapod(
             &dir,
@@ -901,7 +902,10 @@ mod plan_governed_execution {
             String::from_utf8_lossy(&init.stderr)
         );
         let rejected = run_decapod(&dir, &["govern", "plan", "approve"]);
-        assert!(!rejected.status.success(), "contradicted plan cannot approve");
+        assert!(
+            !rejected.status.success(),
+            "contradicted plan cannot approve"
+        );
         assert!(String::from_utf8_lossy(&rejected.stderr).contains("NEEDS_HUMAN_INPUT"));
 
         let blocked = run_decapod(

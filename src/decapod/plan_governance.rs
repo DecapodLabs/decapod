@@ -629,7 +629,10 @@ pub fn ensure_execute_ready(
         ));
     }
 
-    if !matches!(plan.state, PlanState::Approved | PlanState::Executing | PlanState::Done) {
+    if !matches!(
+        plan.state,
+        PlanState::Approved | PlanState::Executing | PlanState::Done
+    ) {
         return Err(marker_error(
             "NEEDS_PLAN_APPROVAL",
             "Execution blocked: plan state must be APPROVED.",
@@ -741,7 +744,10 @@ pub fn ensure_execute_ready(
 /// loads old state. Shared by explicit transitions, execution and publication.
 pub fn validate_plan_progress(plan: &GovernedPlan) -> Result<(), error::DecapodError> {
     validate_phase_contract(&plan.phases)?;
-    if matches!(plan.state, PlanState::Approved | PlanState::Executing | PlanState::Done) {
+    if matches!(
+        plan.state,
+        PlanState::Approved | PlanState::Executing | PlanState::Done
+    ) {
         let questions = unresolved_instruction_questions(plan);
         if !questions.is_empty() {
             return Err(marker_error(
