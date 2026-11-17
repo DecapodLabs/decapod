@@ -26,7 +26,7 @@ fn persisted_timestamp_preserves_utc_string_and_fractional_precision() {
             expected
         );
         assert_eq!(
-            format_utc(decoded.timestamp, false, false),
+            format_utc(decoded.timestamp, false, false).unwrap(),
             expected.replace('Z', "+00:00")
         );
     }
@@ -35,6 +35,7 @@ fn persisted_timestamp_preserves_utc_string_and_fractional_precision() {
         "2026-11-17 01:04:05",
         "2026-02-30T01:04:05Z",
         "invalid",
+        "9999-12-31T23:59:59-23:59",
     ] {
         assert!(
             serde_json::from_value::<PersistedTimestamp>(serde_json::json!({"timestamp":invalid}))
@@ -47,15 +48,15 @@ fn persisted_timestamp_preserves_utc_string_and_fractional_precision() {
 fn event_timestamp_retains_nine_digits_and_exact_instant() {
     let instant = parse_rfc3339("2026-11-17T03:04:05.12+02:00").unwrap();
     assert_eq!(
-        format_rfc3339_nanos(instant),
+        format_rfc3339_nanos(instant).unwrap(),
         "2026-11-17T01:04:05.120000000Z"
     );
     assert_eq!(
-        parse_rfc3339(&format_rfc3339_nanos(instant)).unwrap(),
+        parse_rfc3339(&format_rfc3339_nanos(instant).unwrap()).unwrap(),
         instant
     );
     assert_eq!(
-        format_rfc3339_nanos(OffsetDateTime::UNIX_EPOCH),
+        format_rfc3339_nanos(OffsetDateTime::UNIX_EPOCH).unwrap(),
         "1970-01-01T00:00:00.000000000Z"
     );
 }
@@ -97,4 +98,12 @@ fn test_command_envelope_with_extra() {
     let envelope = command_envelope("test", "ok", extra);
     assert_eq!(envelope["key"], "value");
     assert_eq!(envelope["count"], 42);
+}
+
+#[test]
+fn out_of_range_utc_conversion_is_rejected_without_panicking() {
+    let value = OffsetDateTime::parse("9999-12-31T23:59:59-23:59", &Rfc3339).unwrap();
+    assert!(parse_rfc3339("9999-12-31T23:59:59-23:59").is_err());
+    assert!(format_rfc3339_nanos(value).is_err());
+    assert!(serde_json::to_value(PersistedTimestamp { timestamp: value }).is_err());
 }

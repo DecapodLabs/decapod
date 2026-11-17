@@ -329,7 +329,7 @@ pub fn cloud_session_needs_refresh(credential: &CloudCredential) -> bool {
         .map(|value| {
             value
                 <= OffsetDateTime::now_utc()
-                    + time::Duration::seconds(CLOUD_SESSION_REFRESH_LEAD_SECS)
+                    + time::SignedDuration::seconds(CLOUD_SESSION_REFRESH_LEAD_SECS)
         })
         .unwrap_or(true)
 }

@@ -18,7 +18,7 @@ use std::sync::{Arc, Mutex};
 use std::thread::JoinHandle;
 use std::time::Duration;
 use tempfile::TempDir;
-use time::{Duration, OffsetDateTime, format_description::well_known::Rfc3339};
+use time::{OffsetDateTime, SignedDuration, format_description::well_known::Rfc3339};
 
 const CONFIG: &str = "/functions/v1/propodus-onboarding/config";
 const START: &str = "/functions/v1/propodus-onboarding/start";
@@ -250,7 +250,7 @@ impl Fixture {
         let requests = Arc::new(Mutex::new(Vec::new()));
         let service = Arc::new(Mutex::new(Service {
             repository: repository.to_owned(),
-            expiry: (OffsetDateTime::now_utc() + Duration::minutes(10))
+            expiry: (OffsetDateTime::now_utc() + SignedDuration::minutes(10))
                 .replace_nanosecond(0)
                 .unwrap()
                 .format(&Rfc3339)

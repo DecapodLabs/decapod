@@ -15,6 +15,7 @@ fn cloud_session_expiry_and_refresh_preserve_fail_closed_boundaries() {
         "invalid",
         "1794913254Z",
         "2026-02-30T00:00:00Z",
+        "9999-12-31T23:59:59-23:59",
         "2000-01-01T03:00:00+03:00",
     ] {
         credential.expires_at = Some(invalid_or_expired.to_string());
@@ -27,9 +28,10 @@ fn cloud_session_expiry_and_refresh_preserve_fail_closed_boundaries() {
         (60, false, true),
         (CLOUD_SESSION_REFRESH_LEAD_SECS + 60, false, false),
     ] {
-        credential.expires_at = Some(crate::core::time::format_rfc3339_nanos(
-            now + time::Duration::seconds(seconds),
-        ));
+        credential.expires_at = Some(
+            crate::core::time::format_rfc3339_nanos(now + time::SignedDuration::seconds(seconds))
+                .unwrap(),
+        );
         assert_eq!(cloud_session_is_expired(&credential), expired);
         assert_eq!(cloud_session_needs_refresh(&credential), refresh);
     }

@@ -1,5 +1,12 @@
 # Security
 
+## Timestamp conversion boundary (#1755)
+
+Untrusted RFC3339 offset normalization uses checked UTC conversion. A timestamp
+beyond the supported UTC range returns an error, including during storage JSON
+serialization, instead of panicking or accepting an expiry. Regression controls
+exercise this boundary alongside invalid dates and expired/refreshing sessions.
+
 ## Escalation admission preserves authority (#1690–#1692)
 
 Discovering an omitted operation or target cannot reset the reflection budget.
@@ -644,7 +651,7 @@ execution evidence remains required before publication readiness.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `83b1c8c031815388ba98c60cc6e73b88556767d102c969086d21acef34a06c98`
+- Repository signal fingerprint: `4199a52f9bb5e0235dc82f716c5e33c1d3503a4c8450f29171e5c5c38ba6cd75`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (236 files), `tests/` (235 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

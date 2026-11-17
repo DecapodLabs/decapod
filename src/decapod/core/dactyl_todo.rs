@@ -12,7 +12,7 @@ use crate::core::storage::{Task, TodoStore};
 use ::dactyl_db::{AtomicResult, Operation, Parameter, Rows};
 use anyhow::{Result, anyhow};
 use async_trait::async_trait;
-use time::{OffsetDateTime, PrimitiveDateTime};
+use time::{OffsetDateTime, PlainDateTime};
 
 const TASK_COLUMNS: &str = "repo_id, id, hash, title, description, status, assigned_to AS assignee, scope, dir_path, priority, category, tags, created_at, updated_at, version";
 
@@ -152,6 +152,7 @@ impl DactylTodoStore {
         // mutation to observe the winning mutation's marker after Dactyl's
         // positional SQLite binding was tightened in v0.10.0.
         crate::core::time::format_rfc3339_nanos(OffsetDateTime::now_utc())
+            .expect("system UTC timestamp is formattable")
     }
 
     fn task_from_rows(&self, rows: Rows) -> Result<Task> {
@@ -574,14 +575,14 @@ fn task_from_row(row: &dactyl_db::Row, repository: &str) -> Result<Task> {
 fn parse_timestamp(value: Option<&str>) -> Option<OffsetDateTime> {
     value.and_then(|value| {
         crate::core::time::parse_rfc3339(value).ok().or_else(|| {
-            PrimitiveDateTime::parse(
+            PlainDateTime::parse(
                 value,
                 time::macros::format_description!(
                     "[year]-[month]-[day] [hour]:[minute]:[second][optional [.[subsecond]]]"
                 ),
             )
             .ok()
-            .map(PrimitiveDateTime::assume_utc)
+            .map(PlainDateTime::assume_utc)
         })
     })
 }

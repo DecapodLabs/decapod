@@ -670,6 +670,11 @@
       "id": "timestamp-source-review-1755",
       "summary": "Review exactly three changed inventoried dependency inputs after chrono removal, retain all accepted workflows, executor helpers, command coverage and requiredness, and reconcile only the source inventory digest; initial validation rejection preserved",
       "input_digest": "sha256:7504367a0795056b9b0cc7f17e9a7a34fb9f2ceb17dd0ed003abecc181011124"
+    },
+    {
+      "id": "timestamp-checked-utc-1755",
+      "summary": "Reject out-of-range UTC conversion through parse and serde errors instead of panic; exercise extreme offset failure in storage and credential tests; preserve current dependency policy and require fresh exact-candidate proof",
+      "input_digest": "sha256:027376959c696fcd67f2496fe9c6195f1a8380bc50fd36d07e0ea75a82e83313"
     }
   ],
   "intents": {
@@ -710,23 +715,23 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Reviewed final time migration including UTC formatter, Dactyl SQL fallback, explicit storage string serde and committed native/Bazel dependency inputs",
-          "reviewed_code_fingerprint": "83b1c8c031815388ba98c60cc6e73b88556767d102c969086d21acef34a06c98",
+          "reason": "Reviewed final timestamp migration and checked UTC conversion including serialization errors; use current time type names",
+          "reviewed_code_fingerprint": "4199a52f9bb5e0235dc82f716c5e33c1d3503a4c8450f29171e5c5c38ba6cd75",
           "spec_material_hash": "741dab3fb84475ba7e527d91c15ed778ed9681fb96dab4dec3109a9399078aa1"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Reviewed final UTC normalized RFC3339 strings, auto fractions and fixed nine-digit Dactyl markers plus expiry compatibility tests",
-          "reviewed_code_fingerprint": "83b1c8c031815388ba98c60cc6e73b88556767d102c969086d21acef34a06c98",
+          "reason": "Preserve RFC3339 storage strings and existing envelope/expiry shapes; out-of-range conversions return errors",
+          "reviewed_code_fingerprint": "4199a52f9bb5e0235dc82f716c5e33c1d3503a4c8450f29171e5c5c38ba6cd75",
           "spec_material_hash": "aea9e898f79c94c1d684baa64da199e433dc0c7a74f388e904d17eaeaafd3a7e"
         },
         {
-          "disposition": "unchanged_with_reason",
+          "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "No advisory waiver, invalid expiry fails closed, exact-artifact admission and independent current checks remain required",
-          "reviewed_code_fingerprint": "83b1c8c031815388ba98c60cc6e73b88556767d102c969086d21acef34a06c98",
-          "spec_material_hash": "a5e8fa6d423d3980cabe7d2d7d122c436ffd95450106674250127cf2c4893747"
+          "reason": "Checked UTC conversion rejects extreme untrusted offsets without panic; invalid expiry remains fail closed",
+          "reviewed_code_fingerprint": "4199a52f9bb5e0235dc82f716c5e33c1d3503a4c8450f29171e5c5c38ba6cd75",
+          "spec_material_hash": "b52643bf3fd690b7e15dca0b8852a5e98d28ad52c12833a58c111ca837d0d49f"
         }
       ],
       "state": "APPROVED",
@@ -737,7 +742,7 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1794913630Z"
+      "updated_at": "1794914075Z"
     },
     "trajectory": {
       "active_boundaries": [

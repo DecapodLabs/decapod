@@ -4,19 +4,25 @@ use serde_json::Value as JsonValue;
 use time::{OffsetDateTime, UtcOffset, format_description::well_known::Rfc3339};
 
 /// Parse external timestamps into the UTC storage domain.
-pub fn parse_rfc3339(value: &str) -> Result<OffsetDateTime, time::error::Parse> {
-    OffsetDateTime::parse(value, &Rfc3339).map(|value| value.to_offset(UtcOffset::UTC))
+pub fn parse_rfc3339(value: &str) -> Result<OffsetDateTime, time::Error> {
+    OffsetDateTime::parse(value, &Rfc3339)?
+        .checked_to_offset(UtcOffset::UTC)
+        .ok_or(time::error::ConversionRange.into())
 }
 
 // Preserve the established 0/3/6/9 fractional digits and UTC spellings. The
 // default serializer for OffsetDateTime is a tuple, not our existing wire format.
-fn format_utc(value: OffsetDateTime, fixed_nanos: bool, use_z: bool) -> String {
-    let value = value.to_offset(UtcOffset::UTC);
-    let mut result = value
-        .format(time::macros::format_description!(
-            "[year]-[month]-[day]T[hour]:[minute]:[second]"
-        ))
-        .expect("UTC date and time components are formattable");
+fn format_utc(
+    value: OffsetDateTime,
+    fixed_nanos: bool,
+    use_z: bool,
+) -> Result<String, time::Error> {
+    let value = value
+        .checked_to_offset(UtcOffset::UTC)
+        .ok_or(time::error::ConversionRange)?;
+    let mut result = value.format(time::macros::format_description!(
+        "[year]-[month]-[day]T[hour]:[minute]:[second]"
+    ))?;
     let nanos = value.nanosecond();
     let width = if fixed_nanos || !nanos.is_multiple_of(1_000) {
         9
@@ -33,15 +39,16 @@ fn format_utc(value: OffsetDateTime, fixed_nanos: bool, use_z: bool) -> String {
         result.push_str(&fraction[..width]);
     }
     result.push_str(if use_z { "Z" } else { "+00:00" });
-    result
+    Ok(result)
 }
 
 pub fn now_rfc3339() -> String {
     format_utc(OffsetDateTime::now_utc(), false, false)
+        .expect("system UTC timestamp is formattable")
 }
 
 /// Fixed-width Dactyl event timestamps remain lexically ordered.
-pub fn format_rfc3339_nanos(value: OffsetDateTime) -> String {
+pub fn format_rfc3339_nanos(value: OffsetDateTime) -> Result<String, time::Error> {
     format_utc(value, true, true)
 }
 
@@ -54,7 +61,8 @@ pub mod serde_utc {
         value: &OffsetDateTime,
         serializer: S,
     ) -> Result<S::Ok, S::Error> {
-        serializer.serialize_str(&format_utc(*value, false, true))
+        serializer
+            .serialize_str(&format_utc(*value, false, true).map_err(serde::ser::Error::custom)?)
     }
 
     pub fn deserialize<'de, D: Deserializer<'de>>(
