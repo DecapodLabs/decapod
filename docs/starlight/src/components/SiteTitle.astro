@@ -4,9 +4,9 @@ const { siteTitleHref = '/decapod/' } = Astro.props as Props;
 ---
 <a class="decapod-site-title" href={siteTitleHref} aria-label="Decapod documentation home">
   <img class="decapod-site-mascot" src="https://decapodlabs.github.io/assets/mascot.svg" width="52" height="46" alt="" />
-  <picture class="decapod-site-wordmark">
-    <source srcset="https://decapodlabs.github.io/assets/logo-c.png" media="(prefers-color-scheme: dark)" />
-    <img src="https://decapodlabs.github.io/assets/logo-a.png" alt="Decapod Labs" width="420" height="140" />
-  </picture>
+  <span class="decapod-site-wordmark">
+    <img class="decapod-logo-light" src="https://decapodlabs.github.io/assets/logo-a.png" alt="Decapod Labs" width="420" height="140" />
+    <img class="decapod-logo-dark" src="https://decapodlabs.github.io/assets/logo-c.png" alt="" width="420" height="140" />
+  </span>
   <span class="decapod-site-label">DOCS</span>
 </a>

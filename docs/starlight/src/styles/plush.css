@@ -48,8 +48,9 @@ header.header { border-bottom: 1px solid var(--sl-color-hairline); }
 .decapod-site-wordmark img { display:block; width:100%; height:auto; }
 .decapod-site-label { font-size:.65rem; font-weight:900; letter-spacing:.14em; border:1px solid #f05b3766; color:var(--sl-color-accent); border-radius:999px; padding:.35rem .48rem; }
 @media(max-width:560px) { .decapod-site-wordmark{width:7rem}.decapod-site-label{display:none}.decapod-site-mascot{width:2.35rem} }
-:root[data-theme='dark'] .decapod-site-wordmark img { content:url('https://decapodlabs.github.io/assets/logo-c.png'); }
-:root[data-theme='light'] .decapod-site-wordmark img { content:url('https://decapodlabs.github.io/assets/logo-a.png'); }
+.decapod-site-wordmark .decapod-logo-dark {display:none}
+:root[data-theme='dark'] .decapod-site-wordmark .decapod-logo-light {display:none}
+:root[data-theme='dark'] .decapod-site-wordmark .decapod-logo-dark {display:block}
 .sidebar-pane { border-right:1px solid var(--sl-color-hairline); }
 .sidebar-content a[aria-current='page'] { background:#f05b371c; border-radius:.85rem; }
 .sl-markdown-content blockquote, .sl-markdown-content table,

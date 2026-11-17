@@ -39,22 +39,21 @@ jobs:
         id: context
         uses: ./.github/actions/ci-context
 
-      - name: Install mdBook
-        run: |
-          mkdir -p $HOME/mdbook
-          curl -sSL https://github.com/rust-lang/mdBook/releases/download/v0.4.40/mdbook-v0.4.40-x86_64-unknown-linux-gnu.tar.gz | tar -xz -C $HOME/mdbook
-          echo "${HOME}/mdbook" >> $GITHUB_PATH
-
-      - name: Prepare shared source-CI profile
-        uses: ./.github/actions/source-ci-profile
-
-      - name: Build with mdBook
-        run: '"$RUNNER_TEMP/source-ci-profile" run-ci --check docs-build'
+      - name: Install Node.js for static docs rendering
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install Starlight dependencies
+        working-directory: docs/starlight
+        run: npm install --no-audit --no-fund
+      - name: Build and independently check Starlight pages
+        working-directory: docs/starlight
+        run: npm run build
       - name: Upload artifact (GitHub Pages)
         if: github.ref == 'refs/heads/master' && steps.owner.outputs.native_owner == 'true'
         uses: actions/upload-pages-artifact@v3
         with:
-          path: docs/book/book
+          path: docs/starlight/dist
 
       # Preserve the built site with the supported generic artifact action so
       # the build remains useful while Pages deployment is unavailable there.
@@ -63,7 +62,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: docs-site
-          path: docs/book/book
+          path: docs/starlight/dist
 
       - name: Upload measured source-CI custody
         if: always() && env.SOURCE_CI_CUSTODY_ARTIFACT != ''
