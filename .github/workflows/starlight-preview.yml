@@ -24,11 +24,9 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
-          cache: npm
-          cache-dependency-path: docs/starlight/package-lock.json
       - name: Install pinned documentation dependencies
         working-directory: docs/starlight
-        run: npm ci
+        run: npm install --no-audit --no-fund
       - name: Build and verify all pages, legacy routes, search and branding
         working-directory: docs/starlight
         run: npm run build
