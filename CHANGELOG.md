@@ -7,6 +7,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.148.7](https://github.com/DecapodLabs/decapod/compare/v0.148.6...v0.148.7) - 2026-11-17
+
+### Fixed
+
+- *(time)* reject out-of-range UTC conversions without panic
+- *(proof)* reconcile reviewed timestamp dependency inputs
+- *(deps)* replace unmaintained chrono with maintained time
+- *(tests)* share proof fixtures and correct live runtime declaration
+- *(proof)* retain mandatory library executor contract
+- *(proof)* reconcile development controller and source checks
+- *(admission)* gate source version policy and real forge proof
+- *(publication)* retain live proof through PR admission
+
+### Other
+
+- *(admission)* record strict live enforcement after dependency repair
+- *(admission)* require source rejection instead of incidental failure
+- *(admission)* publish reproducible real GitHub enforcement evidence
+- *(admission)* read advanced target independently of PR metadata
+- *(admission)* revalidate governed recovery after source mutation
+- incorporate accepted release 0.148.6
+- incorporate current accepted publication target
+
 ## [0.148.6](https://github.com/DecapodLabs/decapod/compare/v0.148.5...v0.148.6) - 2026-11-17
 
 ### Other
