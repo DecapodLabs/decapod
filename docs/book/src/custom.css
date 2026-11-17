@@ -183,3 +183,8 @@ button,input,a{font-family:inherit}
 }
 @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}*,*::before,*::after{transition:none!important;animation:none!important}}
 @media print{#sidebar,#menu-bar,.decapod-reading-rail,.decapod-sidebar-head,.decapod-page-footer{display:none!important}#page-wrapper,.page-wrapper{margin:0!important;transform:none!important}#content main{width:100%;max-width:none;padding:0}body{background:#fff}}
+
+/* Theme-aware landing identity, no browser JavaScript required. */
+.decapod-docs-brand .logo-c{display:none}
+.navy .decapod-docs-brand .logo-a,.coal .decapod-docs-brand .logo-a,.ayu .decapod-docs-brand .logo-a{display:none}
+.navy .decapod-docs-brand .logo-c,.coal .decapod-docs-brand .logo-c,.ayu .decapod-docs-brand .logo-c{display:block}
