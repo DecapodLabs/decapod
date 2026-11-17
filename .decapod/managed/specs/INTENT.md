@@ -400,6 +400,10 @@ fail explicitly rather than silently discarding a required check.
 
 ## Continuous Intent Traceability
 
+## Real-agent acceptance and release-bound projections
+
+The issue1758 Pi experiment is actual inference, not a deterministic repair imitation. The read-only observer must preserve its real required-check failure, new model-requested repair after returned feedback, fresh exact-subject native proof and independent GitHub readback. Subsequent source/base controls retain historical admission while clearing current applicability. Operator probes, PR creation, observed admission and merge authorization remain distinct. Source implementation readiness is separately required; a successful fixture export cannot excuse a stale managed container pin or failed source CI. Regenerate release-bound surfaces through native Decapod, checkpoint and rerun full configured validation after release movement.
+
 <!-- decapod:requirement REQ-INTENT-TRACEABILITY -->
 The agent must preserve the human-originated change intent while proposing
 updates to living specifications and implementation. Explicit requirement

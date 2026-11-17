@@ -601,6 +601,11 @@
       "id": "observer-release9",
       "summary": "Merge accepted release9; review version-only Cargo source inventory and refresh native projections; preserve failed11777 evidence",
       "input_digest": "sha256:a4538db65f53cc407271008d49829398fb8f5776fc8ebbf6441fe866881ae443"
+    },
+    {
+      "id": "observer-live-proof-pin9",
+      "summary": "Record actual Pi acceptance separately from source readiness; native regeneration fixes CI-observed release9 container pin drift",
+      "input_digest": "sha256:6018a9700dedd95f580c49be161d5c5d3b3d90763a56317d80d0992dd1f9b270"
     }
   ],
   "intents": {
@@ -674,8 +679,12 @@
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:e1d4b08574b05ea9a63a6f8db9aa44bbb57291c465b70e535ff44832dbe157c4",
+      "artifact_hash": "sha256:ca892d5e249ebcda16e19ff2b518e72b2297defbe7d653850214922bbc7c2047",
       "checks": [
+        {
+          "name": "actual-observer-export",
+          "status": "passed"
+        },
         {
           "name": "autonomous_acceptance",
           "status": "unavailable"
@@ -707,6 +716,10 @@
         {
           "name": "release_input_review",
           "status": "passed"
+        },
+        {
+          "name": "source-validation-release9",
+          "status": "failed"
         },
         {
           "name": "source_audit",
@@ -755,10 +768,17 @@
             "intent_id": "intent:change_01M7NKA4FSD1G656VQZ9VQQF46",
             "kind": "trajectory_step_recorded",
             "sequence": 7
+          },
+          {
+            "detail": "trajectory:branch_01M7NKA4JJAP7XX9QCY1NHG3AH",
+            "event_id": "event:8",
+            "intent_id": "intent:change_01M7NKA4FSD1G656VQZ9VQQF46",
+            "kind": "trajectory_step_recorded",
+            "sequence": 8
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 7,
+        "next_sequence": 8,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M7NKA4JJAP7XX9QCY1NHG3AH": {
@@ -837,6 +857,22 @@
                 ],
                 "sequence": 7,
                 "validation_findings": []
+              },
+              {
+                "action": "verification",
+                "custody_event_id": "event:8",
+                "observations": [
+                  "Source Buildkite11883 rejected stale managed container8 pin after accepted package9 merge. Native project-check refresh repaired pin9; bounded host check reports container custody unavailable, so it is not final proof. Actual165/167-event Pi exports passed, historical autonomy true/current applicability false after real target advance."
+                ],
+                "proof_refs": [
+                  "source-validation-release9",
+                  "actual-observer-export"
+                ],
+                "scope": [
+                  "src/decapod/core"
+                ],
+                "sequence": 8,
+                "validation_findings": []
               }
             ]
           }
@@ -846,6 +882,7 @@
       "destination": "pull request",
       "evidence": [
         "Buildkite11777 exposed task-branch false-positive redaction; corrected without relaxing credential filtering. Merged accepted master release9 and reviewed version-only Cargo inventory changes. Real Pi independently published fixture PR2; detailed observer correlation pending.",
+        "Source Buildkite11883 rejected stale managed container8 pin after accepted package9 merge. Native project-check refresh repaired pin9; bounded host check reports container custody unavailable, so it is not final proof. Actual165/167-event Pi exports passed, historical autonomy true/current applicability false after real target advance.",
         "https://buildkite.com/decapodlabs/decapod/builds/11777",
         "kernel:SNAPSHOT_NOT_READY:CI-operation-cancelled-after-superseded-candidate",
         "observed:Pi-0.73.1:openai-codex:gpt-6.1-sol:actual-composite-tool-id",

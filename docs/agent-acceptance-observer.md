@@ -87,3 +87,37 @@ Decapod #1757/#1758. Original archive
 Real-agent acceptance, public scene selection and film publication require the
 actual observed run; this implementation document makes no claim that it has
 already passed. Website issue #9 owns all rendering, assets and presentation.
+
+## Actual headless Pi acceptance (2026-11-17)
+
+Pi0.73.1 with the existing authorized openai-codex gpt-6.1-sol provider received
+one ordinary objective: implement the README repository-scoped read authorization
+and publish a verified PR. The disclosed seeded baseline required a real failed
+check before repair. The host observed42 tool calls in458.276 seconds, with no
+post-objective input or controller-written repair. Kernel0.148.8 remained
+byte-pinned while the separate implementation workspace updated to0.148.9.
+
+At bb1563c98fa8fb8845a24d76d9c722e9e4078659 the accepted authorization
+command actually executed and failed with exit1: a member without a repository
+grant was incorrectly allowed access. New model-requested tools inspected the
+returned failure and repaired src/access.cjs. Fresh execution passed all ten
+fixed assertions plus the independent source guard. Governed publication and
+independent GitHub head/live-target readback correlated
+[real PR2](https://github.com/alexhraber/decapod-admission-acceptance-20261117-1747-06/pull/2),
+head f3a7a160946b42fed7eefa3898362f0dbb122fd0, accepted base
+4b7f3b05637120a2ac6d638c46a13288fa6d74ce.
+
+The actual CLI export passed its opt-in acceptance test. The final167-event
+export retains observed_autonomous_admission=true while current applicability
+is false after an independently observed target advance. Separately labelled
+operator controls created real PR3, provoked PR_CREATED_NOT_ADMITTED with
+WORKUNIT_PROOF_STALE, independently confirmed draft quarantine, and verified
+source and repeated STALE_ACCEPTED_BASE rejection. Neither probe repairs nor
+controller activity is attributed to Pi. PR2 is now draft with unchanged head.
+
+Source labels remain trusted-host assertions and the model ID remains a provider
+alias; no universal OS interception, immutable model weights, hosted CI proof,
+Cloud activation or merge authorization is inferred. The fixture evidence and
+portable reproduction carriers are owned by#1757/#1758; the website#9 owns the
+actual evidence-backed film and its safe public presentation. Required Decapod
+source validation remains separate from fixture admission and observer export.
