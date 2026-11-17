@@ -67,7 +67,7 @@ pub fn reviewed_workflow_digests() -> &'static [(&'static str, &'static str)] {
         ),
         (
             ".github/workflows/docs.yml",
-            "sha256:8f3b4dac84e0181499335ae5960b7e98c7a26be2afd9e7260a3591e08a1dc6a3",
+            "sha256:cc2c7addf25aa3b364ff4fabd4a316b3e9fe278f991b4a026ca6c8b903d6a82b",
         ),
         (
             ".github/workflows/docs_autosync.yml",

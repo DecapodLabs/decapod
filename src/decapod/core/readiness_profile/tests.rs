@@ -1276,3 +1276,23 @@ fn controller_mismatch_is_distinct_only_after_complete_inventory_review() {
         ));
     }
 }
+
+#[test]
+fn reviewed_starlight_docs_workflow_is_exact_and_remains_native_owner_gated() {
+    // A reviewed workflow transition changes the compiled approval digest.
+    // Candidate content alone cannot authorize a different accepted executor.
+    let docs = include_bytes!("../../../../.github/workflows/docs.yml");
+    let expected = reviewed_workflow_digests()
+        .iter()
+        .find(|(path, _)| *path == ".github/workflows/docs.yml")
+        .expect("docs workflow must remain in the finite reviewed inventory")
+        .1;
+    assert_eq!(expected, bytes_digest(docs));
+    let source = std::str::from_utf8(docs).unwrap();
+    assert!(source.contains("run-ci --check docs-build"));
+    assert!(source.contains("run: npm run build"));
+    assert!(source.contains("path: docs/starlight/dist"));
+    assert!(source.contains("native-owner: ${{ steps.owner.outputs.native_owner }}"));
+    assert!(source.contains("needs.build.outputs.native-owner == 'true'"));
+    assert!(source.contains("uses: actions/deploy-pages@v4"));
+}
