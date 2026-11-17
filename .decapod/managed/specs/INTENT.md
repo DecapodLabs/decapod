@@ -774,3 +774,32 @@ Acceptance requires inspecting the generated sidebar and landing page in both
 light and dark palettes, confirming the correct asset references and accessible
 names, and independently checking the publicly served Pages result. Passing a
 source build alone does not establish that the public deployment occurred.
+
+## Rust-native public documentation shell redesign
+
+The public documentation remains generated with the reviewed mdBook v0.4.40
+Rust binary and the canonical Markdown in `docs/book/src/`. Replace the default
+mdBook visual shell through its supported `docs/book/theme/index.hbs` template
+and project CSS without introducing an Astro, Node, npm, or external application
+build system. Preserve the existing chapter filenames, document links,
+search implementation, theme selection, print output and keyboard navigation.
+
+Create a distinct Decapod Labs interface with a full-height navigational
+chapter rail, branded sticky top navigation, roomy editorial reading surface,
+contextual quick-reference rail at wide viewports, and a contrasting company
+footer. The official mascot appears in the sidebar and reading rail. The
+approved `logo-a.png` serves light navigation, `logo-c.png` serves dark
+navigation, and `logo-b.png` serves the dark footer. Warm cream, the light
+coral `#F19C76`, vivid orange `#F05B37`, restrained plum, generous rounded
+surfaces and tactile card treatment form the visual identity. Maintain proper
+focus indicators, legible code and tables, narrow-screen sidebar behavior,
+contrast and reduced-motion preferences. The original product film remains
+on the landing page without introducing autoplay with audible sound.
+
+The browser presentation is explanatory documentation for humans and external
+readers; the installed Rust binary retains authority over agent-facing,
+versioned operational instructions. Theme assets and layout never authorize
+changes to scope, governance policy, completion or evidence. Success requires
+an actual mdBook build, structural checks on the rendered navigation and links,
+responsive review and independent observation of the published Pages site. A
+source build alone does not establish publication.
