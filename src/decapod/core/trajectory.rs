@@ -14,6 +14,7 @@ use std::path::{Path, PathBuf};
 
 mod execution;
 pub mod instruction_source;
+pub mod path;
 pub use execution::{
     ExecutionApprovalBinding, ExecutionCheckpoint, ExecutionStateBinding,
     capture_execution_binding, checkpoint_execution, verify_execution_binding,

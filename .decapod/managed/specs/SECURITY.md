@@ -1,5 +1,24 @@
 # Security
 
+## Observed native path and truthful coverage
+
+Only actual native adapter authorization and terminal runner results construct
+owned path evidence. An agent cannot upgrade a reported loop, proof-ref string,
+JSON judgment, claimed signer or source digest into that capability. Required
+scope is taken from independently accepted target policy. A fresh runtime nonce,
+original task/run and instruction revision, current plan/policy, actor/lease and
+head/base prevent old or cross-scope observations from establishing currentness.
+Failed and unknown outcomes remain separate; ordered hash checks alone are only
+structural integrity. Existing validation/workunit journals retain actual history.
+
+This trust boundary is the existing compiled kernel/native-runner process, not
+cryptographic attestation of a hostile same-user machine or independent full-host
+observation. Unrestricted shell/forge effects and unobserved source-edit paths stay
+unproven. Unsupported required scopes refuse rather than claiming host parity;
+optional unknown coverage does not block ordinary accepted checks. Required-path
+admission and real external-agent applicability still require executed acceptance
+evidence before #1767 can close.
+
 ## Instruction source integrity and trust classes
 
 Recorded origin and ordered revisions are immutable through governed writers.
@@ -14,7 +33,7 @@ no caller-settable authenticated flag. Readback classifies these as agent-report
 and independently unverifiable. Missing legacy origin provenance remains unknown.
 No test or CLI plan approval authenticates a human principal. The separate GitHub
 comment ingress constructs an owned observation only after a bounded sealed GET
-through the existing installed official-client authority, checks exact repository,
+through the existing official-client or preselected anonymous-HTTPS authority, checks exact repository,
 object/account and expected body identity, and retains historical provider evidence.
 It exposes no caller-settable trust switch and no response-file importer. Account
 observation is not human authentication, authorization, policy acceptance or proof
@@ -713,8 +732,8 @@ execution evidence remains required before publication readiness.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `6c6dd64234d4082c9b168f974e566ba86e47d70f64f0e074ae2e08a6e06dc312`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (238 files), `tests/` (235 files)
+- Repository signal fingerprint: `06244de7858eb13ee70407277326b6bc7d02f7d891a61bcd9557a6640f36fa4f`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (239 files), `tests/` (235 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 

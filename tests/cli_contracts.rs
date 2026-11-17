@@ -213,6 +213,12 @@ fn selected_roots_require_current_mapping_and_real_combined_behavior() {
     consumer_readiness::selected_roots_reject_omission_and_require_executed_repair();
 }
 
+#[test]
+fn required_path_cannot_be_supplied_by_unmediated_green_artifact_evidence() {
+    consumer_readiness::accepted_required_path_rejects_unmediated_green_and_keeps_optional_unknown(
+    );
+}
+
 #[cfg(any(target_os = "linux", target_os = "macos"))]
 #[test]
 fn global_triangle_requires_independently_accepted_repair_and_current_proof() {

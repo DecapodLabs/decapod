@@ -1,5 +1,5 @@
 //! Bounded provider read for recorded instructions, not an approval authority.
-//! Only a fresh official-client GET can construct ObservedInstruction. Persisted
+//! Only a fresh sealed provider GET can construct ObservedInstruction. Persisted
 //! metadata remains a historical observation: local bytes do not authenticate
 //! their writer, establish that an account is human, or grant any operation.
 use crate::core::{custody::ReportedInstructionSource, snapshot_provider as provider};
@@ -56,11 +56,11 @@ struct Comment {
 
 /// Repository and object identities are checked against the provider response.
 /// The expected body digest pins a mutable comment before any journal mutation.
-/// Runner is the existing installed official-client adapter, never an imported
+/// Runner is the existing official-client or anonymous-HTTPS adapter, never an imported
 /// response, alternate URL, shell command or candidate-selected executable.
 pub(crate) fn observe_github_comment(
     root: &Path,
-    runner: &mut provider::OfficialCli,
+    runner: &mut impl provider::Runner,
     repository: &provider::Repository,
     comment_id: u64,
     expected_body_digest: &str,

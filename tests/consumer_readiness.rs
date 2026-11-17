@@ -13,6 +13,25 @@ mod consumer_readiness_fixture;
 use consumer_readiness_fixture::{Fixture, LocalHost, WORKFLOW, git};
 
 impl Fixture {
+    /// These consumer cases use real broker/CLI calls; earlier narrow runner
+    /// cases intentionally exercise first adoption with a minimal proof table.
+    fn governed_config(&self) {
+        let mut config: toml::Value = toml::from_str("schema_version = '1.0.0'\n[init]\nspecs = false\nci = false\ndiagram_style = 'ascii'\nentrypoints = []\n[repo]\nbase_branch = 'main'\ncontainer_workspaces = false\nbackend = 'local'\n").unwrap();
+        config
+            .as_table_mut()
+            .unwrap()
+            .insert("proof".into(), toml::Value::try_from(&self.proof).unwrap());
+        fs::write(
+            self.options.root.join(consumer_readiness_fixture::CONFIG),
+            toml::to_string_pretty(&config).unwrap(),
+        )
+        .unwrap();
+    }
+    /// Scripted acceptance in the separate local fixture upstream.
+    fn accept_upstream(&self) {
+        git(&self.options.root, &["push", "origin", "HEAD:main"]);
+        git(&self.options.root, &["fetch", "origin", "main"]);
+    }
     fn with_accepted_profile(id: &str) -> Self {
         Self::with_accepted_config(Some(&format!(
             "[proof.required_profile]\nid = {id:?}\nreviewed_sources_digest = {:?}\n",
@@ -1322,6 +1341,70 @@ fn proof_authorization_denial_stops_before_native_execution() {
     let directory = report.evidence_path.unwrap();
     assert!(!directory.join("observations.json").exists());
     assert!(!directory.join("native-0.stdout").exists());
+}
+
+/// Scripted real native execution, not a model-selected or whole-host trace.
+/// Green artifact evidence alone cannot mint an owned mediated-path witness.
+pub fn accepted_required_path_rejects_unmediated_green_and_keeps_optional_unknown() {
+    let mut fixture = Fixture::new();
+    let first = fixture.validate(&mut fixture.host());
+    assert!(first.ready, "{first:?}");
+    assert_eq!(
+        first.observed_path.process_conformance,
+        decapod::core::validation_rules::RuleVerdict::Unverifiable
+    );
+    fixture.proof.observed_path = Some(decapod::core::trajectory::path::Policy {
+        schema_version: "1.0.0".into(),
+        scope: "native_proof_calls".into(),
+        required: true,
+    });
+    fixture.save_config();
+    fixture.commit("candidate proposes a required native path policy");
+    blocked(
+        &fixture.validate(&mut fixture.host()),
+        "OBSERVED_PATH_POLICY_NOT_ACCEPTED",
+    );
+    fixture.accept_upstream();
+    let mut host = fixture.host();
+    host.unobserved_execution = true;
+    let missing = fixture.validate(&mut host);
+    assert!(!missing.ready, "{missing:?}");
+    assert!(
+        missing.proof_ready,
+        "actual artifact suite is green: {missing:?}"
+    );
+    assert!(missing.observed_path.required);
+    assert_eq!(
+        missing.observed_path.process_conformance,
+        decapod::core::validation_rules::RuleVerdict::Unverifiable
+    );
+    let directory = missing.evidence_path.unwrap();
+    assert!(directory.join("observations.json").is_file());
+    assert!(
+        !directory
+            .join("completion/native-readiness-receipt.json")
+            .exists()
+    );
+    // Separate scripted acceptance of optional observation; the old required
+    // result remains negative and cannot be reinterpreted as the new decision.
+    fixture.proof.observed_path.as_mut().unwrap().required = false;
+    fixture.save_config();
+    fixture.commit("target proposes optional native observation coverage");
+    blocked(
+        &fixture.validate(&mut fixture.host()),
+        "OBSERVED_PATH_POLICY_NOT_ACCEPTED",
+    );
+    fixture.accept_upstream();
+    let mut host = fixture.host();
+    host.unobserved_execution = true;
+    let optional = fixture.validate(&mut host);
+    assert!(optional.ready, "{optional:?}");
+    assert!(!optional.observed_path.required);
+    assert_eq!(
+        optional.observed_path.process_conformance,
+        decapod::core::validation_rules::RuleVerdict::Unverifiable
+    );
+    assert!(directory.join("observed-path.json").is_file());
 }
 
 #[test]

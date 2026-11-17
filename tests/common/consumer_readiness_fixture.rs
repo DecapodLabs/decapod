@@ -206,6 +206,7 @@ impl Fixture {
         let sources =
             runtime::discover_source_inventory(&options, &Cancellation::default()).unwrap();
         let proof = ProjectProofConfig {
+            observed_path: None,
             selected_work: None,
             validation_buildkite_preflights: false,
             required_profile: Some(ProfileDeclaration {
@@ -233,19 +234,10 @@ impl Fixture {
             .ok()
             .and_then(|body| toml::from_str(&body).ok())
             .unwrap_or_else(|| toml::Value::Table(Default::default()));
-        config["proof"] = toml::Value::try_from(&self.proof).unwrap();
-        fs::write(
-            self.options.root.join(CONFIG),
-            toml::to_string_pretty(&config).unwrap(),
-        )
-        .unwrap();
-    }
-
-    /// Real broker/CLI calls need the full project configuration, while older
-    /// narrow native-runner cases intentionally exercise first adoption.
-    pub(super) fn governed_config(&self) {
-        let mut config: toml::Value = toml::from_str("schema_version = '1.0.0'\n[init]\nspecs = false\nci = false\ndiagram_style = 'ascii'\nentrypoints = []\n[repo]\nbase_branch = 'main'\ncontainer_workspaces = false\nbackend = 'local'\n").unwrap();
-        config["proof"] = toml::Value::try_from(&self.proof).unwrap();
+        config
+            .as_table_mut()
+            .unwrap()
+            .insert("proof".into(), toml::Value::try_from(&self.proof).unwrap());
         fs::write(
             self.options.root.join(CONFIG),
             toml::to_string_pretty(&config).unwrap(),
@@ -288,6 +280,7 @@ pub(super) struct LocalHost {
     pub(super) move_target_after_execution: bool,
     pub(super) change_config_after_execution: bool,
     pub(super) force_strict_capability: bool,
+    pub(super) unobserved_execution: bool,
     pub(super) governed_admission: Option<GovernedAdmission>,
 }
 
@@ -327,6 +320,7 @@ impl LocalHost {
             move_target_after_execution: false,
             change_config_after_execution: false,
             force_strict_capability: false,
+            unobserved_execution: false,
             governed_admission: None,
         }
     }
@@ -423,7 +417,7 @@ impl Host for LocalHost {
         self.execution_attempts += 1;
         // This one negative case targets the legacy runner capability directly;
         // production host seals correctly reject invocation mutation even earlier.
-        let result = if self.force_strict_capability {
+        let result = if self.force_strict_capability || self.unobserved_execution {
             runtime::execute_native(project, selection, plan, identity, directory, budget)?
         } else {
             self.runner

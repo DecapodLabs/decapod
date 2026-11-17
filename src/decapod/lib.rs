@@ -1641,6 +1641,7 @@ fn init_with_from_config(
         existing_required_profile: config.proof.required_profile.clone(),
         existing_repository_contract: config.proof.repository_contract.clone(),
         existing_selected_work: config.proof.selected_work.clone(),
+        existing_observed_path: config.proof.observed_path.clone(),
         existing_rust_workers: config.proof.rust_workers.clone(),
         existing_ci_attested: config.proof.ci_attested.clone(),
         existing_allow_basic_shared_claims: config.governance.allow_basic_shared_claims,
@@ -1756,6 +1757,7 @@ fn preserve_unspecified_init_options(
     init.existing_rust_workers = existing.existing_rust_workers;
     init.existing_repository_contract = existing.existing_repository_contract;
     init.existing_selected_work = existing.existing_selected_work;
+    init.existing_observed_path = existing.existing_observed_path;
     init.existing_ci_attested = existing.existing_ci_attested;
     init.existing_allow_basic_shared_claims = existing.existing_allow_basic_shared_claims;
     init.existing_rbac = existing.existing_rbac;
@@ -1849,6 +1851,7 @@ fn config_from_init_with(init: &InitWithCli, repo: RepoContext) -> DecapodProjec
         },
         proof: proof::ProjectProofConfig {
             selected_work: init.existing_selected_work.clone(),
+            observed_path: init.existing_observed_path.clone(),
             validation_buildkite_preflights: init.validation_buildkite_preflights.unwrap_or(false),
             required_profile: init.existing_required_profile.clone(),
             repository_contract: init.existing_repository_contract.clone(),
@@ -2885,6 +2888,7 @@ pub fn run() -> Result<(), error::DecapodError> {
                             existing_required_profile: None,
                             existing_repository_contract: None,
                             existing_selected_work: None,
+                            existing_observed_path: None,
                             existing_rust_workers: None,
                             existing_ci_attested: None,
                             existing_allow_basic_shared_claims: false,
@@ -7300,6 +7304,10 @@ fn run_current_workbranch_readiness_with(
                 )?;
                 signal_guard.restore()?;
                 return Ok(runtime::ValidationReport {
+                    observed_path: core::trajectory::path::Judgment::unavailable(
+                        false,
+                        "No path observation was completed",
+                    ),
                     completed_evidence: None,
                     ready: false,
                     proof_ready: false,
@@ -7435,6 +7443,10 @@ fn run_current_workbranch_readiness_with(
         Ok(report)
     })();
     result.unwrap_or_else(|error| runtime::ValidationReport {
+        observed_path: core::trajectory::path::Judgment::unavailable(
+            false,
+            "No path observation was completed",
+        ),
         completed_evidence: None,
         ready: false,
         proof_ready: false,
@@ -8872,6 +8884,7 @@ fn run_trajectory_command(
             repository,
             comment_id,
             expected_body_digest,
+            public,
             kind,
             supersedes,
             derived_intent,
@@ -8884,14 +8897,36 @@ fn run_trajectory_command(
             })?;
             let repository = Repository::new(owner, name)?;
             let store = find_governance_root(workspace_root).join(".decapod/data");
-            let mut runner = OfficialCli::new(
+            let authority_store = store.clone();
+            let official = OfficialCli::git_only(
                 readiness_installed_tool(workspace_root, "git")?,
-                readiness_installed_tool(workspace_root, "gh")?,
-                None,
                 move |spec, executable| {
-                    authorize_readiness_snapshot_command(&store, spec, executable)
+                    authorize_readiness_snapshot_command(&authority_store, spec, executable)
                 },
             )?;
+            let mut runner = if public {
+                ReadinessSnapshotRunner::Public(core::snapshot_provider::PublicGithubReads::new(
+                    readiness_installed_tool(workspace_root, "curl")?,
+                    repository.clone(),
+                    official,
+                    move |spec, executable| {
+                        let request = spec.authorize_provider_read()?;
+                        core::external_action::authorize_public_github_json_read(
+                            &store, executable, &request,
+                        )
+                        .map_err(std::io::Error::other)
+                    },
+                )?)
+            } else {
+                ReadinessSnapshotRunner::Configured(OfficialCli::new(
+                    readiness_installed_tool(workspace_root, "git")?,
+                    readiness_installed_tool(workspace_root, "gh")?,
+                    None,
+                    move |spec, executable| {
+                        authorize_readiness_snapshot_command(&store, spec, executable)
+                    },
+                )?)
+            };
             let cancellation = core::bounded_process::Cancellation::default();
             let budget = Budget::new(std::time::Duration::from_secs(30), 64 * 1024, &cancellation)?;
             let observed = core::trajectory::instruction_source::observe_github_comment(

@@ -1,5 +1,24 @@
 # Interfaces
 
+## Native-path policy and result
+
+`proof.observed_path` takes `schema_version="1.0.0"`,
+`scope="native_proof_calls"` and `required`. The declaration must match the
+independently captured accepted target; candidate repinning returns
+`OBSERVED_PATH_POLICY_NOT_ACCEPTED`. Init preserves it without authorizing it.
+Full validation reports versioned `observed_path` alongside artifact readiness,
+using current rule authority/severity/phase/remediation. Missing coverage is
+`unverifiable`, actual failure is `fail`, and relevant binding movement is `stale`.
+Required non-pass blocks readiness; optional unknown remains nonblocking. The
+observer authority is kernel-mediated native execution. Full-host coverage stays
+unverifiable.
+
+Private `observed-path.json` retains ordered event IDs and references to actual
+native suite rows, binding runtime invocation, task/run, instruction/proof-plan
+revision, actor/lease and subject/head/base/policy. The live result has no
+Deserialize or public constructor; serialized judgments are readback, not import
+capabilities. Existing current-proof and custody owners still control publication.
+
 ## Recorded clarification and lineage readback
 
 `decapod govern trajectory clarify` appends a revision to the current run/intent
@@ -12,8 +31,10 @@ distinct reported claims; a later supersession claim does not silently clear
 earlier plan contradictions or constitute an authenticated authority decision.
 
 `govern trajectory clarify-github-comment` instead reads one exact comment using
-the installed official GitHub client and existing sealed GET/external-action
-adapter. It takes repository/comment identity and an expected original body SHA256,
+the installed official GitHub client, or explicitly selected `--public` anonymous
+HTTPS adapter, through existing sealed GET/external-action authority. An auth
+failure never selects another transport. It takes repository/comment identity and
+an expected original body SHA256,
 alongside the same revision/CAS/kind parameters. It refuses source identity/content
 movement before mutation. The journal retains provider-observed numeric account,
 object, issue, source-update and body identities, with bounded/redacted text.
@@ -1287,8 +1308,8 @@ field. Nothing in this operation authorizes a mutation, approval or completion.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `6c6dd64234d4082c9b168f974e566ba86e47d70f64f0e074ae2e08a6e06dc312`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (238 files), `tests/` (235 files)
+- Repository signal fingerprint: `06244de7858eb13ee70407277326b6bc7d02f7d891a61bcd9557a6640f36fa4f`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (239 files), `tests/` (235 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 

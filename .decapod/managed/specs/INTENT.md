@@ -1,5 +1,24 @@
 # Intent
 
+## Preserve recorded authority and prove current combined work (#1761–#1770)
+
+This continuation preserves draft PR1766 and its source ancestry while completing
+the explicitly requested instruction, blocker, selected-root, typed-consistency,
+behavioral-proof and observed-path contracts. Original requests, agent
+interpretations, source-account observations and actual grants remain separate.
+Accepted roots cannot disappear before DB mapping; explicit equality/inequality
+relations must be jointly consistent; real accepted negative and integration checks
+must execute on the combined source. Canonical blockers persist across consequential
+phases. Current source/base/policy/task/lease and owned native observations govern
+applicable proof, while unobserved host activity and unexpressed meaning stay unknown.
+
+Ordinary unambiguous work remains autonomous under its accepted gates. Required
+evidence cannot be replaced by a reported pass, byte hash, draft PR or partial
+suite. No new grant service, transcript database or universal shell interceptor
+is introduced. Full required validation and independently reviewable negative,
+repair and current-subject evidence must precede any issue closure. The user did
+not authorize merging, force pushes, protected-main changes or gate waivers.
+
 ## Complete scoped source currency (#1753)
 
 The current follow-up also repairs the source-version policy's currency boundary.
@@ -14,7 +33,7 @@ The implementation was accepted externally in merge 41e7e152 with the exact
 c35eb608 Git tree, then released as 0.148.7 at 9d1aed27. That forge transition
 does not turn the stale prior native validation into admission. The current
 proposal must validate its own head against the newly accepted base;
-runtime changes are limited to the scoped currency correction above; required
+that earlier runtime follow-up was limited to the scoped currency correction; required
 checks remain enforced. Strict live
 acceptance 07 additionally repeats the complete sequence on evaluating release
 0.148.7; its receipts retain their own exact controller and fixture subjects. The release-only Cargo.toml/Cargo.lock version changes require a
@@ -430,8 +449,8 @@ These declarations select authoring and proof obligations; they do not attest im
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `6c6dd64234d4082c9b168f974e566ba86e47d70f64f0e074ae2e08a6e06dc312`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (238 files), `tests/` (235 files)
+- Repository signal fingerprint: `06244de7858eb13ee70407277326b6bc7d02f7d891a61bcd9557a6640f36fa4f`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (239 files), `tests/` (235 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 

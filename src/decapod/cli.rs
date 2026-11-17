@@ -424,6 +424,8 @@ pub(crate) struct InitWithCli {
     #[clap(skip)]
     pub existing_selected_work: Option<crate::core::intent_reconcile::selected::SelectedWork>,
     #[clap(skip)]
+    pub existing_observed_path: Option<crate::core::trajectory::path::Policy>,
+    #[clap(skip)]
     pub existing_rust_workers: Option<crate::core::validation_runtime::rust_worker::Configuration>,
     #[clap(skip)]
     pub existing_ci_attested: Option<crate::core::validation_runtime::CiAttestedPolicy>,
@@ -1371,6 +1373,9 @@ pub(crate) enum TrajectoryCommand {
         comment_id: u64,
         #[clap(long)]
         expected_body_digest: String,
+        /// Select anonymous HTTPS reads before execution; never an auth-error fallback
+        #[clap(long)]
+        public: bool,
         #[clap(long, value_enum, default_value = "clarification")]
         kind: crate::core::custody::RecordedInstructionKind,
         #[clap(long = "supersedes")]

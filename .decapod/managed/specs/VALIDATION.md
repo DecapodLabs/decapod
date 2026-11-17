@@ -1,5 +1,36 @@
 # Validation
 
+## Native path conformance qualification
+
+Scripted native consumer cases distinguish a genuinely executed green artifact
+suite without an owned mediated-path observation from an accepted required path.
+The former cannot authorize the latter; candidate policy edits cannot remove that
+obligation. A separately accepted optional policy permits truthful unknown coverage.
+Unit trust-seam controls cover missing authorization, attempt-only/failed results,
+fresh repair, event omission/reordering, changed source/base/instructions/plan/policy,
+actor/lease/producer and harness invocation. Synthetic unit bindings are explicitly
+not host attestation. Live required-path positive/repair and provider-ingress CLI
+acceptance remain pending and must precede closure.
+
+Candidate27798279 compiled the provider ingress and passed documentation sync, but
+Clippy rejected a consumer-only fixture method in the shared entrypoint target.
+That method now lives in the consumer test extension, retaining strict lint policy.
+Its library lane executed1797 passing tests and17 failures, all at the same
+new fixture table assignment: TOML IndexMut cannot insert an absent proof table.
+Both fixture writers now use table insertion while preserving unrelated sections.
+The actual CLI lane also identified the same table panic and an unborn-HEAD
+fixture: independent state resolution needs an actual Git revision. The new
+lineage case now establishes empty fixture ancestry before setup, without adding
+credentials or machine state to Git. The added native-path slice is new
+material and needs its own checkpoint and exact-candidate full validation.
+
+Independent #1757/#1758 evidence is archived at fixture commit
+3c6c373ea703144a2a096e7c3ad6b17c45fcdc38. It records one real Pi denial, repair,
+complete native proof and PR admission, plus later actual stale-source/base and
+created-not-admitted controls. That is historical external evidence, not an
+importable current authorization or completion of the separate path-sensitive
+cases. Its raw captures and fixture ownership remain outside this worktree.
+
 ## Candidate 97ef93f6 repair boundary
 
 Full native validation failed on required Buildkite documentation-sync build11920;
@@ -1603,8 +1634,8 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `6c6dd64234d4082c9b168f974e566ba86e47d70f64f0e074ae2e08a6e06dc312`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (238 files), `tests/` (235 files)
+- Repository signal fingerprint: `06244de7858eb13ee70407277326b6bc7d02f7d891a61bcd9557a6640f36fa4f`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (239 files), `tests/` (235 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 

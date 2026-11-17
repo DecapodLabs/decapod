@@ -209,6 +209,22 @@ fn fresh_process_reconstructs_same_lineage_and_does_not_authenticate_reported_so
     let dir = tempdir().unwrap();
     let root = dir.path();
     init_git_repo(root);
+    assert!(
+        Command::new("git")
+            .current_dir(root)
+            .args([
+                "-c",
+                "commit.gpgsign=false",
+                "commit",
+                "--allow-empty",
+                "-m",
+                "fixture ancestry for independent state readback"
+            ])
+            .output()
+            .unwrap()
+            .status
+            .success()
+    );
     assert!(run_cmd(root, &["init", "--force"]).status.success());
     assert!(run_cmd(root, &["session", "acquire"]).status.success());
     let added = run_cmd(root, &["todo", "add", "Preserve the recorded v1 contract"]);

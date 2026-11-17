@@ -36,6 +36,8 @@ pub struct ProofDef {
 #[derive(Debug, Clone, Deserialize, Serialize, Default)]
 #[serde(deny_unknown_fields)]
 pub struct ProjectProofConfig {
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub observed_path: Option<crate::core::trajectory::path::Policy>,
     /// Bounded explicit roots/relations; authoritative only after independent
     /// acceptance on the canonical target. Candidate review is not acceptance.
     #[serde(default, skip_serializing_if = "Option::is_none")]

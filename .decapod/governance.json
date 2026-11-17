@@ -653,6 +653,11 @@
       "id": "provider-source-and-pr-continuation-20261117",
       "summary": "Preserve PR1766 Constitution ancestry; repair release9 generated docs and callback lint; add bounded official GitHub comment observation through existing custody CAS without human-consent claims. Required path conformance and complete acceptance remain open.",
       "input_digest": "sha256:3c9d5ccce2f42fe97ddc973c3f05ab47b7100dc23fe54eb603263e647c9730ca"
+    },
+    {
+      "id": "owned-native-path-and-fixture-repair-20261117",
+      "summary": "Separate actual owned native-path conformance from artifact and unknown host coverage; enforce only accepted required observation policy; bind current invocation, plan, instructions, lease and source/base; repair TOML fixture insertion and unborn ancestry. All new material requires full current proof.",
+      "input_digest": "sha256:c53b3047285db8528e264eed64099b386e28f8c30a59ac0c7032b7f9d777a5a7"
     }
   ],
   "intents": {
@@ -697,23 +702,23 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Document bounded official-client comment observation reusing custody CAS and canonical readiness; distinguish observed account metadata from human identity, policy acceptance and live proof.",
-          "reviewed_code_fingerprint": "6c6dd64234d4082c9b168f974e566ba86e47d70f64f0e074ae2e08a6e06dc312",
-          "spec_material_hash": "a194bd29ef38c2398e821c87382f096834aa147c6c80e23f729b67dcd6108c55"
+          "reason": "Review current native-path adapters, owned evidence, invocation/plan/source/custody binding and canonical completed-proof retention; scope is native proof calls, not whole-host or human authority.",
+          "reviewed_code_fingerprint": "06244de7858eb13ee70407277326b6bc7d02f7d891a61bcd9557a6640f36fa4f",
+          "spec_material_hash": "92fb0017a849356459362e2ae2468d557830e2e01bc2b132e62a1cc89db2098f"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Clarify-github-comment pins exact remote source/account and original body via sealed GET; recorded provenance remains separate from authenticated human consent and current proof.",
-          "reviewed_code_fingerprint": "6c6dd64234d4082c9b168f974e566ba86e47d70f64f0e074ae2e08a6e06dc312",
-          "spec_material_hash": "f98eb5807586d33503060a986ef263666511ad3588a460dfa81b163ac1bdd43b"
+          "reason": "Document accepted native observation policy, typed current judgments, opaque live evidence versus serialized readback, and explicit anonymous source reads selected before auth errors.",
+          "reviewed_code_fingerprint": "06244de7858eb13ee70407277326b6bc7d02f7d891a61bcd9557a6640f36fa4f",
+          "spec_material_hash": "c35563bd5d42bc92de2ede3ee57d8a3088b9b9f7f07075293c499cd82c68e55d"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Provider observation is historical account/source evidence only; deny caller trust flags and JSON witness imports, preserve bounded redaction and existing external-action authority.",
-          "reviewed_code_fingerprint": "6c6dd64234d4082c9b168f974e566ba86e47d70f64f0e074ae2e08a6e06dc312",
-          "spec_material_hash": "672cb21991ace2bba6eb9ff2fd9d4330f9d7e3d7f0a12d1deaa01f59feeabb7e"
+          "reason": "Review observed-native trust domain, no JSON witness constructor, strict required scope, bounded replay checks and unknown full-host/human authority; retain independent acceptance requirements.",
+          "reviewed_code_fingerprint": "06244de7858eb13ee70407277326b6bc7d02f7d891a61bcd9557a6640f36fa4f",
+          "spec_material_hash": "b56b277f45086b5f2cf92d7fe4ae618f98d52ef0db2f432c432e18adbbe5bd94"
         }
       ],
       "state": "APPROVED",
@@ -724,21 +729,29 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1794957516Z"
+      "updated_at": "1794959380Z"
     },
     "trajectory": {
       "active_boundaries": [
         "No protected root edits, force push, merge, gate waiver or fabricated evidence"
       ],
-      "artifact_hash": "sha256:8e7c88811f5f3a663e5d304914ea3b04fa1dec3014a0e53621b6b90987c88dec",
+      "artifact_hash": "sha256:1a4d9881fb98cdae49830c9eba72bb28e24755f234e99d24d7fa96aaed46e806",
       "checks": [
         {
           "name": "candidate_986_cli_compile",
           "status": "failed"
         },
         {
+          "name": "cli_27798279",
+          "status": "failed"
+        },
+        {
           "name": "clippy_97ef93f6",
           "status": "failed"
+        },
+        {
+          "name": "docs_sync_github_27798279",
+          "status": "passed"
         },
         {
           "name": "e3_dactyl_readonly_snapshot",
@@ -763,6 +776,10 @@
         {
           "name": "formatting",
           "status": "passed"
+        },
+        {
+          "name": "library_27798279",
+          "status": "failed"
         },
         {
           "name": "native_97ef93f6",
@@ -832,10 +849,17 @@
             "intent_id": "intent:todo:bugs_01m7nm3pnpc3be76",
             "kind": "trajectory_step_recorded",
             "sequence": 10
+          },
+          {
+            "detail": "trajectory:issues-1761-1770-20261117",
+            "event_id": "event:11",
+            "intent_id": "intent:todo:bugs_01m7nm3pnpc3be76",
+            "kind": "trajectory_step_recorded",
+            "sequence": 11
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 10,
+        "next_sequence": 11,
         "schema_version": "1.0.0",
         "trajectories": {
           "issues-1761-1770-20261117": {
@@ -1025,6 +1049,35 @@
                 "validation_findings": [
                   "Provider-observed account metadata does not authenticate a human or grant operation authority; current ingress and phase repairs require actual source execution."
                 ]
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:11",
+                "observations": [
+                  "src/decapod/core/trajectory/path.rs",
+                  "src/decapod/core/validation_runtime.rs",
+                  "src/decapod/core/validation_history.rs",
+                  "tests/common/consumer_readiness_fixture.rs",
+                  "tests/infer_precision.rs",
+                  "https://github.com/DecapodLabs/decapod/actions/runs/44198555328/job/134447435222",
+                  "https://github.com/DecapodLabs/decapod/actions/runs/44198555328/job/134447435393"
+                ],
+                "proof_refs": [
+                  "library_27798279",
+                  "cli_27798279",
+                  "docs_sync_github_27798279"
+                ],
+                "scope": [
+                  ".decapod/managed/specs",
+                  "README.md",
+                  "docs",
+                  "src/decapod",
+                  "tests"
+                ],
+                "sequence": 11,
+                "validation_findings": [
+                  "Owned native proof-call observations are scoped kernel evidence, not independent whole-host or human attestation. Native ARM candidate artifact startup is a prerequisite, not successful acceptance. New path code and fixture repairs remain unverified."
+                ]
               }
             ]
           }
@@ -1043,7 +1096,9 @@
         "https://github.com/DecapodLabs/decapod/actions/runs/44177760790/job/134374440067",
         "https://github.com/DecapodLabs/decapod/actions/runs/44186574654/job/134406250320",
         "https://github.com/DecapodLabs/decapod/actions/runs/44186574654/job/134406250356",
-        "https://github.com/DecapodLabs/decapod/actions/runs/44196295665/job/134439168067"
+        "https://github.com/DecapodLabs/decapod/actions/runs/44196295665/job/134439168067",
+        "https://github.com/DecapodLabs/decapod/actions/runs/44198555328/job/134447435222",
+        "https://github.com/DecapodLabs/decapod/actions/runs/44198555328/job/134447435393"
       ],
       "inspected_files": [
         "src/decapod/core/governance_document.rs",
@@ -1071,11 +1126,15 @@
         "src/decapod/core/state.rs",
         "src/decapod/core/trajectory/execution.rs",
         "src/decapod/core/trajectory/instruction_source.rs",
+        "src/decapod/core/trajectory/path.rs",
         "src/decapod/core/validate.rs",
+        "src/decapod/core/validation_history.rs",
+        "src/decapod/core/validation_runtime.rs",
         "src/decapod/core/workspace.rs",
         "src/decapod/lib.rs",
         "src/decapod/plan_governance.rs",
         "tests/cli_contracts.rs",
+        "tests/common/consumer_readiness_fixture.rs",
         "tests/consumer_readiness.rs",
         "tests/infer_precision.rs"
       ],
@@ -1095,6 +1154,7 @@
         "Accepted master advanced to ab4abe0593ddd8fd15186001558b79addd08aebc during provider wait; old proof is not current.",
         "Installed registry controller is now0.148.9; supported init refreshed release projections. Prior isolated-binary exception request is obsolete. Same-lineage source remains caller-reported, not authenticated human or host witness.",
         "Instruction origin authentication, accepted root coverage, typed global consistency, independent behavior controls and genuine path observation remain open acceptance obligations.",
+        "Owned native proof-call observations are scoped kernel evidence, not independent whole-host or human attestation. Native ARM candidate artifact startup is a prerequisite, not successful acceptance. New path code and fixture repairs remain unverified.",
         "Provider-observed account metadata does not authenticate a human or grant operation authority; current ingress and phase repairs require actual source execution.",
         "Selected-root/typed-relation fixtures are scripted local-policy/native controls and remain unverified until source CI executes them. No authenticated prompt capture or external witness is claimed."
       ]

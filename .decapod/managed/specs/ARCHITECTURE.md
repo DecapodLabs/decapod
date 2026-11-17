@@ -1,5 +1,31 @@
 # Architecture
 
+## Bounded native-path observation (#1767)
+
+`core/trajectory/path.rs` extends existing execution bindings and native validation
+adapters. An independently accepted `proof.observed_path` policy may require
+schema1.0.0 `native_proof_calls`; candidate changes cannot first accept, remove or
+loosen it. Other observation scopes remain explicitly unsupported. The actual
+native/repository adapters capture instruction/task/plan, actor/lease, source/base,
+policy and producer context around existing authorization and runner execution.
+Ordered event hashes bind this context and a fresh runtime observation ID. They
+are integrity checks, not independent identity signatures.
+
+Only live adapters construct opaque `OwnedObservation`; recorded loops, source
+hashes and JSON captures cannot construct it. Validation separately reports
+artifact proof, process conformance and observation coverage. Missing required
+native observation refuses readiness even when actual artifact checks are green;
+optional unknown coverage permits ordinary accepted proof. Attempt-only evidence,
+failed outcomes and changed invocation/subject/instructions/plan/policy/custody
+or producer remain distinct. Reordered or omitted events cannot establish coverage.
+
+Successful owned path evidence binds into the existing completed-readiness journal
+with nested proof schema `decapod.validation-history-proof.v1.1`. Legacy proofs
+retain their schema and claim no observed path. Existing current task/epoch/proof
+and publication readback owners govern reuse. No new event database, grant engine
+or shell interceptor is introduced. This observes native proof calls only, not
+independent full-host, remote harness, human identity or source-edit authorization.
+
 ## Selected accepted roots and typed relations (#1768, #1770)
 
 `core/intent_reconcile/selected.rs` reads the explicitly selected
@@ -1078,8 +1104,8 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `6c6dd64234d4082c9b168f974e566ba86e47d70f64f0e074ae2e08a6e06dc312`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (238 files), `tests/` (235 files)
+- Repository signal fingerprint: `06244de7858eb13ee70407277326b6bc7d02f7d891a61bcd9557a6640f36fa4f`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (239 files), `tests/` (235 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 
