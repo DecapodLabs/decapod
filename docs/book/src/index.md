@@ -5,9 +5,9 @@
 
 <div class="decapod-docs-hero">
   <div class="decapod-docs-hero-copy">
-    <div class="decapod-docs-kicker">THE METACOGNITION GOVERNANCE KERNEL FOR AI AGENTS</div>
+    <div class="decapod-docs-kicker">CLOSED-LOOP METACOGNITIVE AGENT GOVERNANCE</div>
     <h1>HARNESS AI <em class="decapod-docs-metacognition">METACOGNITION.</em></h1>
-    <p>AI coding agents invoke Decapod to govern tasks, consult the Constitution, preserve project state, work within boundaries, and prove what they deliver.</p>
+    <p>Agents work toward your intent through a governed feedback loop. They respond to corrective guidance and design falsifiable proofs. Decapod validates the outcome against the accepted requirements and exact repository state.</p>
     <div class="decapod-docs-actions">
       <a class="decapod-docs-btn primary" href="quickstart.html">Get started <span aria-hidden="true">↗</span></a>
       <a class="decapod-docs-btn secondary" href="introduction.html">Understand Decapod <span aria-hidden="true">↗</span></a>
@@ -22,6 +22,21 @@
     <p><a href="https://decapodlabs.github.io/assets/decapod-showcase.mp4">View the Decapod introduction.</a></p>
   </video>
 </div>
+
+<div class="decapod-docs-loop" aria-label="Closed-loop metacognitive governance and validation">
+  <div class="decapod-docs-loop-stage">
+    <span class="decapod-docs-loop-label">01 / INSIDE THE LOOP</span>
+    <strong>Intent → action → feedback → correction</strong>
+    <p>Your agent interprets the original and subsequent requests, follows Decapod's governance feedback, and refines both implementation and proof obligations.</p>
+  </div>
+  <div class="decapod-docs-loop-stage decapod-docs-loop-verify">
+    <span class="decapod-docs-loop-label">02 / THE VALIDATION BOUNDARY</span>
+    <strong>Execute the proofs. Earn acceptance.</strong>
+    <p>Required gates run the checks against the resulting artifact. Evidence determines whether the accepted intent has been demonstrated; the agent cannot self-approve.</p>
+  </div>
+</div>
+
+[Explore the closed-loop architecture](concepts/convergence.md) · [Understand proof-backed validation](concepts/proof.md)
 
 <div class="decapod-docs-grid">
   <a class="decapod-docs-tile tile-orange" href="mental-model.html"><span class="tile-mark">✳</span><strong>Persistent state</strong><span>Keep context across sessions.</span></a>

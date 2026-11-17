@@ -13,6 +13,14 @@ In an operating system, the kernel manages hardware resources and provides a sta
 - **Isolation:** Decapod ensures that processes (agents) don't interfere with each other or the system's "main memory" (the root repository branch).
 - **State:** Decapod records the governed trail of the work in the repository so another agent, reviewer, or CI run can resume or audit without depending on the original transcript.
 
+## Closed-loop metacognitive governance
+
+The agent repeatedly compares its interpretation and actions with the original request, accepted subsequent prompts, repository constraints, and Decapod's feedback. Decapod provides the governance contract and reports unmet requirements or rejected transitions; the agent decides how to remedy supported failures. This loop is how work converges rather than merely accumulating activity.
+
+The agent also designs falsifiable proof obligations as part of fulfilling the request. **Validation is a separate adjudication boundary:** the configured gates execute the required proofs against a specific artifact and its governing state. The agent can iterate after a failed verdict; it cannot manufacture a passing verdict by asserting that the work is done.
+
+[Closed-loop governance and proof design](concepts/convergence.md) explains the two mechanisms in detail.
+
 ## The governed execution loop
 
 Decapod is not called for every mechanical step (see the [Single-Agent Workflow](workflows/single-agent.md)). Agents invoke it at decision and state-transition boundaries:

@@ -6,6 +6,14 @@ message on stderr and exits unsuccessfully. The error variant is useful for
 the message and recovery guidance; it does not currently select a distinct
 process exit status.
 
+## Governance feedback and corrective execution
+
+Decapod's errors carry two responsibilities. They report a failed operation or unsatisfied requirement to the caller, and, where supported, describe what the agent must address before attempting the next governed transition. An agent uses this feedback to revise implementation, evidence, or scope and then retries.
+
+This is part of the **closed-loop metacognitive execution model**. It is not an automatic exemption from policy: the requested correction must be performed, and later validation must execute the required proof obligations for the exact candidate. The detailed [convergence model](../concepts/convergence.md) distinguishes iterative feedback from the validation boundary.
+
+Not every CLI error is a stable machine-readable payload. The CLI prints descriptive errors on stderr; structured command surfaces should be used when integrations need fields rather than prose. A nonzero status never constitutes acceptance.
+
 ## Process Exit Status
 
 | Status | Meaning | Description |

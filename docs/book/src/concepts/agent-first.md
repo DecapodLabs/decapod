@@ -2,6 +2,14 @@
 
 Decapod exposes a machine-facing governance contract for agents. The human expresses intent and applies judgment; the agent calls the kernel while performing the work.
 
+## Closed-loop execution, proof-backed acceptance
+
+Decapod's agent-facing API turns a rejected boundary or missing obligation into usable feedback for the next iteration. The agent preserves the accepted intent from the original request and subsequent instructions, updates its work, and designs the evidence needed to substantiate the result. This is **closed-loop metacognitive agent governance**.
+
+Validation has a separate role. Required gates execute the agent-developed proof plan under Decapod's governance expectations, bind results to the candidate state, and determine whether the required evidence exists. A well-formed plan or an agent's confidence cannot substitute for executed proof.
+
+[Closed-loop model](convergence.md) · [Error and recovery contract](../reference/errors.md) · [Proof](proof.md)
+
 ## The Agentic Lifecycle
 
 Decapod structures agent work into a predictable, machine-readable lifecycle:
