@@ -596,25 +596,36 @@
         "https://github.com/DecapodLabs/decapod/actions/runs/44163787850/job/134324583729",
         "https://github.com/DecapodLabs/decapod/actions/runs/44163787850/job/134324583919"
       ]
+    },
+    {
+      "id": "issues-1764-custody-20261117-02",
+      "summary": "Bind the current user request, distinct interpretation and task to a fresh trajectory after archiving inherited governance in36ede3fd. Preserve original PR source and current open acceptance obligations; no execution or publication proof claimed.",
+      "input_digest": "sha256:47bf3bfb2f1b89d5a45afe20ef99d541884a71d2adcc005bcb5766504f54eab9",
+      "proof_refs": [
+        "36ede3fd"
+      ]
     }
   ],
   "intents": {
-    "intent:admission-postmerge-proof": {
+    "intent:todo:bugs_01m7nm3pnpc3be76": {
       "acceptance_criteria": [],
       "assumptions": [],
       "boundaries": [
-        "No merge or release; historical proof never authorizes another present artifact; do not weaken required checks"
+        "No protected root edits, force push, merge, gate waiver or fabricated evidence"
       ],
       "constraints": [
+        "src/decapod",
+        "tests",
+        "README.md",
         "docs",
         ".decapod/managed/specs"
       ],
       "created_sequence": 1,
-      "id": "intent:admission-postmerge-proof",
+      "id": "intent:todo:bugs_01m7nm3pnpc3be76",
       "out_of_scope": [],
       "proof_requirements": [],
-      "raw_intent": "Prove exact-evidence PR admission, finish implementation and close relevant issues only with reproducible enforcement evidence",
-      "refined_intent": "Preserve strict real GitHub acceptance and externally merged implementation, record stale-target rejection of the prior source candidate, and earn fresh exact-head/base admission for the final verification report on accepted 0.148.7",
+      "raw_intent": "Go solve DecapodLabs/decapod issues #1761, #1762, #1763, #1764, #1767, #1768, and #1770. Follow their execution contracts, coordinate dependencies, preserve existing PR #1766, and close issues only with independently verifiable acceptance evidence. Do what must be done.",
+      "refined_intent": "Preserve PR1766 and its history; repair the canonical cross-phase recorded instruction gate first, then source revision, coverage, typed relations, required behavioral controls and witnessed paths with exact-candidate proof. No merge or false closure.",
       "status": "refined",
       "updated_sequence": 3
     }
@@ -668,146 +679,118 @@
     },
     "trajectory": {
       "active_boundaries": [
-        "No merge or release; historical proof never authorizes another present artifact; do not weaken required checks"
+        "No protected root edits, force push, merge, gate waiver or fabricated evidence"
       ],
-      "artifact_hash": "sha256:b7deab4b6b0ae9e654139a51f2bc9afbad439fe5a8260ef037559adabc40ab95",
+      "artifact_hash": "sha256:eaceae52acf0ee3f345363acd473876fbb4222d3726a32c086a26d3ca2f6fbac",
       "checks": [
         {
-          "name": "live_1487_acceptance",
-          "status": "passed"
-        },
-        {
-          "name": "prior_source_admission",
-          "status": "failed"
-        },
-        {
-          "name": "scoped_currency_regression",
-          "status": "partial"
-        },
-        {
-          "name": "strict_live_acceptance",
+          "name": "formatting",
           "status": "passed"
         }
       ],
+      "current_phase": "implementation",
       "custody": {
         "events": [
           {
             "event_id": "event:2",
-            "intent_id": "intent:admission-postmerge-proof",
+            "intent_id": "intent:todo:bugs_01m7nm3pnpc3be76",
             "kind": "created",
             "sequence": 2
           },
           {
             "event_id": "event:3",
-            "intent_id": "intent:admission-postmerge-proof",
+            "intent_id": "intent:todo:bugs_01m7nm3pnpc3be76",
             "kind": "refined",
             "sequence": 3
           },
           {
-            "detail": "trajectory:admission-postmerge-proof",
+            "detail": "trajectory:issues-1761-1770-20261117",
             "event_id": "event:4",
-            "intent_id": "intent:admission-postmerge-proof",
+            "intent_id": "intent:todo:bugs_01m7nm3pnpc3be76",
             "kind": "trajectory_step_recorded",
             "sequence": 4
-          },
-          {
-            "detail": "trajectory:admission-postmerge-proof",
-            "event_id": "event:5",
-            "intent_id": "intent:admission-postmerge-proof",
-            "kind": "trajectory_step_recorded",
-            "sequence": 5
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 5,
+        "next_sequence": 4,
         "schema_version": "1.0.0",
         "trajectories": {
-          "admission-postmerge-proof": {
+          "issues-1761-1770-20261117": {
             "evidence_only": true,
-            "id": "admission-postmerge-proof",
-            "intent_id": "intent:admission-postmerge-proof",
+            "id": "issues-1761-1770-20261117",
+            "intent_id": "intent:todo:bugs_01m7nm3pnpc3be76",
             "steps": [
               {
                 "action": "trajectory.record",
+                "command": "cargo fmt --all",
                 "custody_event_id": "event:4",
                 "observations": [
-                  "docs/publication-admission-acceptance.md",
-                  "docs/publication-admission-acceptance.md",
-                  ".decapod/managed/specs/INTENT.md",
-                  ".decapod/managed/specs/VALIDATION.md",
-                  "Strict actual GitHub acceptance 06 passed for controller fc52356f; immutable archive ae15eeffd6812002fbda2a2adaca23b006de0ba6 independently compared by tree IDs and downloaded contents; source c35 admission remained non-ready after independent master integration",
-                  "GitHub records alexhraber merge 41e7e152 at 12:03:09 UTC, exact tree equality with c35; release 9d1aed27 advances source package only; stale source Buildkite 11596 rejected comparison before required test lanes. Focused issues auto-closed by the external merge. Fresh current report proof remains required."
+                  "src/decapod/plan_governance.rs",
+                  "src/decapod/core/governance_document.rs",
+                  "src/decapod/core/obligation.rs",
+                  "src/decapod/core/intent_reconcile.rs",
+                  "src/decapod/plan_governance.rs",
+                  "src/decapod/lib.rs",
+                  "src/decapod/core/trajectory/execution.rs",
+                  "src/decapod/core/validate.rs",
+                  "src/decapod/core/workspace.rs",
+                  "Preserved PR1766 original head12d403ac and base18cbb30c. Actual CI44163787850 rejects obsolete checkpoint test and missing README constitution reference. Repaired source36ede3fd; tests authored, execution pending official validation. Strict historical checkpoint inspection reports original unproven/invalid lineage; current continuation cannot be described as historical proof."
                 ],
                 "proof_refs": [
-                  "strict_live_acceptance",
-                  "prior_source_admission"
+                  "formatting"
                 ],
                 "scope": [
                   ".decapod/managed/specs",
-                  "docs"
+                  "README.md",
+                  "docs",
+                  "src/decapod",
+                  "tests"
                 ],
                 "sequence": 4,
-                "validation_findings": []
-              },
-              {
-                "action": "trajectory.record",
-                "custody_event_id": "event:5",
-                "observations": [
-                  "src/decapod/core/validate.rs",
-                  "src/decapod/core/validate.rs",
-                  "src/decapod/core/entrypoint_integrity.rs",
-                  "tests/unit/core/validate_tests.rs",
-                  "Reopened 1753 after actual PUBLICATION_BUNDLE_CURRENCY conflict. Central scoped validation now feeds currency; generated-manifest provenance replaces old source-header release only under the existing exact source policy. Real Git fixture covers canonical preservation, default/disabled/fork/ambiguity/tamper, missing artifacts and generator upgrades. New tests require first configured execution.",
-                  "Strict live 07 passed 1/0 in 317.35s on edbfc00d evaluating 0.148.7; all nine archive contents independently compared with GitHub native bytes at 63c75155ad087bbbf786680b729621debd8f3dd8. This is its scoped fixture evidence, not authority for the current source changes."
-                ],
-                "proof_refs": [
-                  "scoped_currency_regression",
-                  "live_1487_acceptance"
-                ],
-                "scope": [
-                  ".decapod/managed/specs",
-                  "docs"
-                ],
-                "sequence": 5,
-                "validation_findings": []
+                "validation_findings": [
+                  "Instruction origin authentication, accepted root coverage, typed global consistency, independent behavior controls and genuine path observation remain open acceptance obligations."
+                ]
               }
             ]
           }
         }
       },
-      "declared_commands": [],
+      "declared_commands": [
+        "cargo fmt --all"
+      ],
+      "destination": "Existing PR1766",
       "evidence": [
-        "GitHub records alexhraber merge 41e7e152 at 12:03:09 UTC, exact tree equality with c35; release 9d1aed27 advances source package only; stale source Buildkite 11596 rejected comparison before required test lanes. Focused issues auto-closed by the external merge. Fresh current report proof remains required.",
-        "Reopened 1753 after actual PUBLICATION_BUNDLE_CURRENCY conflict. Central scoped validation now feeds currency; generated-manifest provenance replaces old source-header release only under the existing exact source policy. Real Git fixture covers canonical preservation, default/disabled/fork/ambiguity/tamper, missing artifacts and generator upgrades. New tests require first configured execution.",
-        "Strict actual GitHub acceptance 06 passed for controller fc52356f; immutable archive ae15eeffd6812002fbda2a2adaca23b006de0ba6 independently compared by tree IDs and downloaded contents; source c35 admission remained non-ready after independent master integration",
-        "Strict live 07 passed 1/0 in 317.35s on edbfc00d evaluating 0.148.7; all nine archive contents independently compared with GitHub native bytes at 63c75155ad087bbbf786680b729621debd8f3dd8. This is its scoped fixture evidence, not authority for the current source changes."
+        "Preserved PR1766 original head12d403ac and base18cbb30c. Actual CI44163787850 rejects obsolete checkpoint test and missing README constitution reference. Repaired source36ede3fd; tests authored, execution pending official validation. Strict historical checkpoint inspection reports original unproven/invalid lineage; current continuation cannot be described as historical proof."
       ],
       "inspected_files": [
-        "docs/publication-admission-acceptance.md",
-        "src/decapod/core/validate.rs"
+        "src/decapod/core/governance_document.rs",
+        "src/decapod/core/intent_reconcile.rs",
+        "src/decapod/core/obligation.rs",
+        "src/decapod/plan_governance.rs"
       ],
-      "intent_id": "intent:admission-postmerge-proof",
+      "intent_id": "intent:todo:bugs_01m7nm3pnpc3be76",
       "modified_files": [
-        ".decapod/managed/specs/INTENT.md",
-        ".decapod/managed/specs/VALIDATION.md",
-        "docs/publication-admission-acceptance.md",
-        "src/decapod/core/entrypoint_integrity.rs",
+        "src/decapod/core/trajectory/execution.rs",
         "src/decapod/core/validate.rs",
-        "tests/unit/core/validate_tests.rs"
+        "src/decapod/core/workspace.rs",
+        "src/decapod/lib.rs",
+        "src/decapod/plan_governance.rs"
       ],
       "repo_scope": [
-        ".decapod/config.toml",
         ".decapod/managed/specs",
+        "README.md",
         "docs",
-        "src/decapod/core",
-        "tests/unit/core"
+        "src/decapod",
+        "tests"
       ],
-      "run_id": "admission-postmerge-proof",
+      "run_id": "issues-1761-1770-20261117",
       "schema_version": "1.1.0",
       "shortcut_risk_signals": [],
-      "task_id": "feat_01m7m3mmz5mejx0g",
+      "task_id": "bugs_01m7nm3pnpc3be76",
       "tool_calls": [],
-      "unresolved_assumptions": []
+      "unresolved_assumptions": [
+        "Instruction origin authentication, accepted root coverage, typed global consistency, independent behavior controls and genuine path observation remain open acceptance obligations."
+      ]
     }
   },
   "legacy_digests": {
