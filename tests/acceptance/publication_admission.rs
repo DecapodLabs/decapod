@@ -570,12 +570,17 @@ fn real_forge_reject_repair_admit_and_invalidate() {
         "{repeated_base}"
     );
     let current_pr = demo.gh(&root, &["api", &pr_endpoint]);
+    // PR base metadata can retain the admission-era SHA after the branch moves.
+    // Read the actual branch ref independently; stale PR metadata cannot prove
+    // current target applicability.
+    let current_target = demo.gh(&root, &["api", &format!("{endpoint}/git/ref/heads/main")]);
+    let advanced_base = current_target["object"]["sha"].as_str().unwrap();
     assert_eq!(current_pr["head"]["sha"], head);
-    assert_ne!(current_pr["base"]["sha"], base);
+    assert_ne!(advanced_base, base);
     assert_eq!(demo.git(&source_root, &["rev-parse", "HEAD"]), source_head);
     let summary = json!({"schema":"decapod.real-forge-acceptance.v1", "repository":demo.repository,
         "pr_url":observed["html_url"], "validated_head":head, "validated_base":base,
-        "current_head":current_pr["head"]["sha"], "advanced_base":current_pr["base"]["sha"],
+        "current_head":current_pr["head"]["sha"], "advanced_base":advanced_base, "pr_base_after_target_advance":current_pr["base"]["sha"],
         "controller_sha256":binary_digest, "controller_source_head":source_head, "first_admitted_head":first_admitted_head,
         "admission_observed":true, "current_admission_applicable":false, "merge_authorized":false,
         "negative_controls":{"invalid_source":codes(&invalid),"invalid_publication":codes(&invalid_publish),"created_not_admitted":codes(&interrupted_reason),"stale_source":codes(&stale_source),"stale_base":codes(&stale_base),"repeated_stale_base":codes(&repeated_base)},

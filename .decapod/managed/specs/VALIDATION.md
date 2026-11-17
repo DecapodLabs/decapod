@@ -22,6 +22,12 @@ refusing a missing authoring checkpoint. Recovery must refresh through the
 governed owner, checkpoint a new commit and earn new proof/admission; it must
 not hand-restore machine-owned state or reuse the older artifact's success.
 The harness now performs that recovery before its target-advancement controls.
+The third real-forge run rejected both publication and repeated validation after
+the remote target advanced. GitHub's PR response retained its older base SHA;
+the acceptance therefore reads the actual `git/ref/heads/main` independently
+and records the PR metadata separately. Current target identity cannot be
+inferred from that historical PR field. The publisher already verifies exact
+remote branch refs before and after readback, independently of PR metadata.
 
 The first actual CI library run executed all seven live-proof publication
 regressions and the three source-development policy controls successfully;
@@ -1421,7 +1427,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `5d0fd240d534069ddf8ca0b6f7f161d2b87eef23a3ffea5cbeabbbec9ee65ac2`
+- Repository signal fingerprint: `7ddf26dce57cb1624c61cf39233f20874b9599b2571a7b0105df99550c35cf1c`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (236 files), `tests/` (235 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

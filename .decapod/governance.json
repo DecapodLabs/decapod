@@ -642,6 +642,14 @@
         "live-attempt-02:rejection-quarantine-admission-observed",
         "source-validation-7:passed-e81b89b3"
       ]
+    },
+    {
+      "id": "independent-live-target-ref",
+      "summary": "Bind target-advancement acceptance to actual remote ref and retain separate historical PR metadata",
+      "input_digest": "sha256:d58721ed134b55ce171c9a5d866cecce68cdd5023cb831b2b18a75d0ddafbf16",
+      "proof_refs": [
+        "live-attempt-03:stale-base-rejections-observed"
+      ]
     }
   ],
   "intents": {
@@ -682,22 +690,22 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Live proof and source-only policy remain exact; acceptance repairs generated source projections through current governed owner and validates new head",
-          "reviewed_code_fingerprint": "5d0fd240d534069ddf8ca0b6f7f161d2b87eef23a3ffea5cbeabbbec9ee65ac2",
+          "reason": "Actual remote refs establish target freshness independently of potentially historical PR base metadata",
+          "reviewed_code_fingerprint": "7ddf26dce57cb1624c61cf39233f20874b9599b2571a7b0105df99550c35cf1c",
           "spec_material_hash": "9714311171611b8bab923b9b390f4dffaa49e2ceffee22dc9077ab99ec9ba762"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Live evidence retains failed observations and native rejection without treating old admission as present authority",
-          "reviewed_code_fingerprint": "5d0fd240d534069ddf8ca0b6f7f161d2b87eef23a3ffea5cbeabbbec9ee65ac2",
+          "reason": "Acceptance records admission base, actual advanced target and PR reported base separately",
+          "reviewed_code_fingerprint": "7ddf26dce57cb1624c61cf39233f20874b9599b2571a7b0105df99550c35cf1c",
           "spec_material_hash": "e0e25276b67edad1b3ea8633c56d258cf94fc4d759915f6cd1a09ccc26129998"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "No bypass of authoring checkpoint or fresh proof during live source repair; raw credentials and transcripts stay private",
-          "reviewed_code_fingerprint": "5d0fd240d534069ddf8ca0b6f7f161d2b87eef23a3ffea5cbeabbbec9ee65ac2",
+          "reason": "The existing independent remote-ref check remains mandatory; stale PR metadata cannot supply current authorization",
+          "reviewed_code_fingerprint": "7ddf26dce57cb1624c61cf39233f20874b9599b2571a7b0105df99550c35cf1c",
           "spec_material_hash": "a5e8fa6d423d3980cabe7d2d7d122c436ffd95450106674250127cf2c4893747"
         }
       ],
@@ -709,7 +717,7 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1794908266Z"
+      "updated_at": "1794908744Z"
     },
     "trajectory": {
       "active_boundaries": [
