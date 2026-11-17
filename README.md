@@ -8,7 +8,7 @@
 
 <p align="center">
   <strong>Closed-loop metacognitive agent governance.</strong><br />
-  A repo-native kernel that keeps your coding agents in bounds, converging on intent, and able to prove their work.
+  A repo-native kernel for governed agent work, corrective feedback, and commit-bound receipts.
 </p>
 
 <p align="center">
@@ -35,7 +35,7 @@ cargo binstall decapod && decapod init
 
 Keep using Codex, Claude Code, Cursor, Pi, or your existing coding agent. Decapod works locally, without a resident daemon or a new interface to babysit.
 
-**Your agent executes. Decapod keeps the work accountable.** The agent responds to governance feedback as it refines its work against your original request and subsequent instructions. It develops falsifiable proof obligations under Decapod's expectations. Validation runs the required checks against the resulting repository state and preserves evidence tied to the artifact. An unsupported completion claim stays unresolved.
+**Your agent works. Decapod closes the loop.** Governance feedback drives correction; the agent proposes falsifiable checks; validation executes the required gates against exact repository state. Claims without applicable evidence stay unproven.
 
 **[See the closed-loop model →](https://decapodlabs.github.io/decapod/concepts/convergence.html)** · **[Explore the full product →](https://decapodlabs.github.io/)**
 
