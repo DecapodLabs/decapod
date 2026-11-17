@@ -374,6 +374,11 @@ fn real_forge_reject_repair_admit_and_invalidate() {
     let failed_evidence: SuiteEvidence =
         serde_json::from_slice(&fs::read(failed_directory.join("observations.json")).unwrap())
             .unwrap();
+    fs::copy(
+        failed_directory.join("observations.json"),
+        directory.join("invalid-source-observations.json"),
+    )
+    .unwrap();
     assert!(
         failed_evidence
             .results
@@ -466,6 +471,15 @@ fn real_forge_reject_repair_admit_and_invalidate() {
         !interrupted.status.success() && interrupted_reason.contains("PR_CREATED_NOT_ADMITTED"),
         "{interrupted_reason}"
     );
+    let rejection_path = interrupted_reason
+        .lines()
+        .find_map(|line| line.strip_prefix("Rejection evidence: "))
+        .expect("post-creation rejection must retain its native evidence");
+    fs::copy(
+        rejection_path,
+        directory.join("created-not-admitted-rejection.json"),
+    )
+    .unwrap();
     let pr_endpoint = format!("{endpoint}/pulls/{number}");
     let quarantined = demo.gh(&root, &["api", &pr_endpoint]);
     assert_eq!(quarantined["draft"], true);
@@ -509,7 +523,29 @@ fn real_forge_reject_repair_admit_and_invalidate() {
     // The publisher stages authored changes before checking their checkpoint.
     // Restore only this fixture-owned path in both worktree and index.
     demo.git(&workspace, &["add", "src/payload.txt"]);
-    assert!(demo.git(&workspace, &["status", "--porcelain"]).is_empty());
+    // The entrypoint also regenerated specs for the temporarily changed source.
+    // Repair through the governed owner and obtain proof for the resulting new
+    // commit; an earlier admission cannot authorize this changed artifact.
+    let first_admitted_head = head;
+    demo.checkpoint(&workspace, "repair-stale-source-projections");
+    let head = demo.git(&workspace, &["rev-parse", "HEAD"]);
+    assert_ne!(head, first_admitted_head);
+    let revalidated = demo.cli(&workspace, &["validate", "--format", "json"]);
+    let revalidated_receipt = demo.receipt(&revalidated, "fresh-after-stale-source");
+    assert_eq!(revalidated_receipt["material"]["head_revision"], head);
+    let readmitted = demo.cli(
+        &workspace,
+        &[
+            "workspace",
+            "publish",
+            "--title",
+            "Acceptance source repair",
+        ],
+    );
+    assert_eq!(readmitted["pr_verified"], true);
+    let observed = demo.gh(&root, &["api", &pr_endpoint]);
+    assert_eq!(observed["head"]["sha"], head);
+    assert_eq!(observed["base"]["sha"], base);
     // Advance only the disposable remote target, under explicit acceptance authority.
     demo.gh(
         &root,
@@ -540,10 +576,10 @@ fn real_forge_reject_repair_admit_and_invalidate() {
     let summary = json!({"schema":"decapod.real-forge-acceptance.v1", "repository":demo.repository,
         "pr_url":observed["html_url"], "validated_head":head, "validated_base":base,
         "current_head":current_pr["head"]["sha"], "advanced_base":current_pr["base"]["sha"],
-        "controller_sha256":binary_digest, "controller_source_head":source_head,
+        "controller_sha256":binary_digest, "controller_source_head":source_head, "first_admitted_head":first_admitted_head,
         "admission_observed":true, "current_admission_applicable":false, "merge_authorized":false,
         "negative_controls":{"invalid_source":codes(&invalid),"invalid_publication":codes(&invalid_publish),"created_not_admitted":codes(&interrupted_reason),"stale_source":codes(&stale_source),"stale_base":codes(&stale_base),"repeated_stale_base":codes(&repeated_base)},
-        "receipts":["repaired-receipt.json","fresh-after-quarantine-receipt.json"], "quarantine_confirmed":true});
+        "receipts":["repaired-receipt.json","fresh-after-quarantine-receipt.json","fresh-after-stale-source-receipt.json"], "quarantine_confirmed":true});
     fs::write(
         directory.join("acceptance.json"),
         serde_json::to_vec_pretty(&summary).unwrap(),
@@ -554,10 +590,14 @@ fn real_forge_reject_repair_admit_and_invalidate() {
     let mut entries = Vec::new();
     for file in [
         "acceptance.json",
+        "invalid-source-observations.json",
+        "created-not-admitted-rejection.json",
         "repaired-receipt.json",
         "repaired-observations.json",
         "fresh-after-quarantine-receipt.json",
         "fresh-after-quarantine-observations.json",
+        "fresh-after-stale-source-receipt.json",
+        "fresh-after-stale-source-observations.json",
     ] {
         let content = fs::read_to_string(directory.join(file)).unwrap();
         assert!(!content.contains(directory.to_str().unwrap()));

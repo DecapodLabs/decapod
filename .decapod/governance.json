@@ -633,6 +633,15 @@
         "ci:11532-clippy-duplicate-mod",
         "live-attempt-01:adapter-rejection"
       ]
+    },
+    {
+      "id": "governed-stale-source-demo-recovery",
+      "summary": "Preserve actual enforcement and repair live demo through a newly checkpointed and revalidated artifact",
+      "input_digest": "sha256:7f5c1aed24a5a2ba73bcd030f69ee19ee3c41a38076f468a180aaa0112f88155",
+      "proof_refs": [
+        "live-attempt-02:rejection-quarantine-admission-observed",
+        "source-validation-7:passed-e81b89b3"
+      ]
     }
   ],
   "intents": {
@@ -673,22 +682,22 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Shared native proof fixtures have one library-test owner; publication proof and development config policies unchanged",
-          "reviewed_code_fingerprint": "62ec4ee04ff737bfb4059cf570bec27a800737ad9b75ee9f50b15a6a239ab85b",
+          "reason": "Live proof and source-only policy remain exact; acceptance repairs generated source projections through current governed owner and validates new head",
+          "reviewed_code_fingerprint": "5d0fd240d534069ddf8ca0b6f7f161d2b87eef23a3ffea5cbeabbbec9ee65ac2",
           "spec_material_hash": "9714311171611b8bab923b9b390f4dffaa49e2ceffee22dc9077ab99ec9ba762"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Real acceptance declares an actual runtime closure without claiming ownership of reserved program identity",
-          "reviewed_code_fingerprint": "62ec4ee04ff737bfb4059cf570bec27a800737ad9b75ee9f50b15a6a239ab85b",
+          "reason": "Live evidence retains failed observations and native rejection without treating old admission as present authority",
+          "reviewed_code_fingerprint": "5d0fd240d534069ddf8ca0b6f7f161d2b87eef23a3ffea5cbeabbbec9ee65ac2",
           "spec_material_hash": "e0e25276b67edad1b3ea8633c56d258cf94fc4d759915f6cd1a09ccc26129998"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Native authorization and evidence remain mandatory; no error or unexecuted source check is represented as a pass",
-          "reviewed_code_fingerprint": "62ec4ee04ff737bfb4059cf570bec27a800737ad9b75ee9f50b15a6a239ab85b",
+          "reason": "No bypass of authoring checkpoint or fresh proof during live source repair; raw credentials and transcripts stay private",
+          "reviewed_code_fingerprint": "5d0fd240d534069ddf8ca0b6f7f161d2b87eef23a3ffea5cbeabbbec9ee65ac2",
           "spec_material_hash": "a5e8fa6d423d3980cabe7d2d7d122c436ffd95450106674250127cf2c4893747"
         }
       ],
@@ -700,7 +709,7 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1794904807Z"
+      "updated_at": "1794908266Z"
     },
     "trajectory": {
       "active_boundaries": [

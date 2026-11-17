@@ -12,6 +12,17 @@ does not establish readiness or replace complete validation and live acceptance.
 
 ## Required publication regression coverage (#1747, #1748)
 
+Full Buildkite validation passed for source candidate
+`e81b89b36d330e36ab06a74b4eae409117e1facd` against accepted
+`e7b54246d5c4cc325883ea1281aea039a0ad064f`. The second real-forge attempt
+rejected invalid source, admitted only its repaired head, confirmed draft
+quarantine after a real post-creation mutation, and rejected a later source
+mutation. That last operation regenerated and staged managed specs before
+refusing a missing authoring checkpoint. Recovery must refresh through the
+governed owner, checkpoint a new commit and earn new proof/admission; it must
+not hand-restore machine-owned state or reuse the older artifact's success.
+The harness now performs that recovery before its target-advancement controls.
+
 The first actual CI library run executed all seven live-proof publication
 regressions and the three source-development policy controls successfully;
 its new config-preservation fixture failed on inserting an absent TOML key.
@@ -1410,7 +1421,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `62ec4ee04ff737bfb4059cf570bec27a800737ad9b75ee9f50b15a6a239ab85b`
+- Repository signal fingerprint: `5d0fd240d534069ddf8ca0b6f7f161d2b87eef23a3ffea5cbeabbbec9ee65ac2`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (236 files), `tests/` (235 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
