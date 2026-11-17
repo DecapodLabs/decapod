@@ -838,3 +838,30 @@ changes to scope, governance policy, completion or evidence. Success requires
 an actual mdBook build, structural checks on the rendered navigation and links,
 responsive review and independent observation of the published Pages site. A
 source build alone does not establish publication.
+
+## Closed-loop metacognitive governance in public documentation (November 2026)
+
+The public README must make Decapod immediately comprehensible and usable:
+preserve the official mascot and product film, link prominently to the Decapod
+Labs homepage, and place the local install command before explanatory detail.
+The README is a concise adoption surface; the website and technical manual
+carry the deeper explanation. Keep agent and human documentation separate.
+
+Explain two separate but coupled mechanisms without exaggerating the kernel's
+authority. Within a closed-loop metacognitive execution cycle, coding agents
+preserve the original prompt and accepted subsequent instructions, interpret
+intent, implement changes, react to Decapod's actionable governance feedback,
+and correct their trajectory. As a governed part of fulfilling that intent,
+the agent designs falsifiable proof obligations under the project's explicit
+expectations. The validation layer executes required gates against the actual
+artifact and retains the exact candidate's evidence; it is separate from the
+agent's self-assessment. Failure returns to iteration without constituting
+acceptance. No marketing prose may claim that Decapod inspects every internal
+model reasoning step, perfectly judges semantic intent, or admits a change
+without the configured proofs.
+
+Technical content must preserve the accepted mdBook shell, current links,
+accessible responsive layout, Rust-first source ownership, and existing
+Constitution/tasks/workspace/proof explanations. Acceptance requires a
+rendered documentation build, navigable convergence reference, preserved
+README install path, and observed proof from the source-validation gates.
