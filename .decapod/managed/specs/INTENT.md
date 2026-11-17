@@ -750,3 +750,27 @@ definitions of scope, authority, proof and unsupported guarantees.
 The landing page must not claim an unconditional sandbox, semantic correctness
 oracle or hosted-cloud acceptance. No docs theme change, image, video or
 successful media build satisfies Decapod's native validation/readiness gates.
+
+## Documentation identity across the technical manual (PR #1741)
+
+The documentation shell must present the canonical Decapod Labs identity on
+all mdBook pages, in addition to the existing introduction content. The
+persistent sidebar brand area uses the website-owned `assets/logo-a.png`
+wordmark (dark Decapod text with strong-orange Labs text) beside the official
+crab mascot when the light theme is selected. Dark mdBook themes substitute
+the website-owned `assets/logo-c.png` wordmark for contrast, retaining the
+same mascot. The landing-page company link uses `logo-c.png` and remains
+accessible by its Decapod Labs name. The docs favicon remains the reviewed
+mascot icon.
+
+The public asset paths belong to `DecapodLabs/decapodlabs.github.io` and are
+referenced by the technical book without duplicating or regenerating brand
+artwork inside the kernel. Both palette variants must remain visually legible
+at narrow viewport widths. A missing remote image must not prevent access to
+the manual, its links, search, or code examples. Branding changes do not modify
+authority, readiness, proof guarantees, or the scope of documented commands.
+
+Acceptance requires inspecting the generated sidebar and landing page in both
+light and dark palettes, confirming the correct asset references and accessible
+names, and independently checking the publicly served Pages result. Passing a
+source build alone does not establish that the public deployment occurred.
