@@ -162,18 +162,15 @@ fn configure_accepted_fixture(root: &Path, output: &Path, repository: &str) {
     };
     let execution = RepositoryExecution {
         program: program.to_str().unwrap().into(),
-        toolchain_files: BTreeMap::from([
-            ("program".into(), program.to_str().unwrap().into()),
-            (
-                "declared-loader".into(),
-                Path::new(loader)
-                    .canonicalize()
-                    .unwrap()
-                    .to_str()
-                    .unwrap()
-                    .into(),
-            ),
-        ]),
+        toolchain_files: BTreeMap::from([(
+            "declared-loader".into(),
+            Path::new(loader)
+                .canonicalize()
+                .unwrap()
+                .to_str()
+                .unwrap()
+                .into(),
+        )]),
         environment: BTreeMap::from([("LC_ALL".into(), "C".into())]),
         directory: ".".into(),
         timeout_seconds: 10,

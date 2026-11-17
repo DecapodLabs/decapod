@@ -79,6 +79,10 @@ authority; do not describe that as unconditionally enforced against admins.
 
 Disposable repository:
 [alexhraber/decapod-admission-acceptance-20261116-1747](https://github.com/alexhraber/decapod-admission-acceptance-20261116-1747).
+This first attempt retained a declaration error before source execution; its
+negative result was not accepted as the required failing-agent demonstration.
+The next fresh attempt uses
+[alexhraber/decapod-admission-acceptance-20261117-1747-02](https://github.com/alexhraber/decapod-admission-acceptance-20261117-1747-02).
 The complete live run, exact binary/head/base identities, receipts, rejection
 reasons and reproduction sequence are pending execution. No live-forge passing
 claim is established by the authored harness or by repository creation.

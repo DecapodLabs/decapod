@@ -2,9 +2,7 @@ use super::*;
 use tempfile::TempDir;
 
 #[cfg(any(target_os = "linux", target_os = "macos"))]
-#[allow(dead_code)]
-#[path = "../../common/consumer_readiness_fixture.rs"]
-mod consumer_readiness_fixture;
+use crate::consumer_readiness_fixture;
 
 fn git(repo: &Path, args: &[&str]) -> String {
     text(run(repo, "git", args, "test git").unwrap())

@@ -14446,6 +14446,11 @@ fn run_demo_command(cli: DemoCli, project_root: &Path) -> Result<(), error::Deca
 #[path = "../../tests/unit/lib_init_prompt_tests.rs"]
 mod init_prompt_tests;
 
+#[cfg(all(test, any(target_os = "linux", target_os = "macos")))]
+#[allow(dead_code)]
+#[path = "../../tests/common/consumer_readiness_fixture.rs"]
+mod consumer_readiness_fixture;
+
 #[cfg(test)]
 #[path = "../../tests/unit/lib_ci_scope_tests.rs"]
 mod ci_scope_tests;

@@ -12,6 +12,16 @@ does not establish readiness or replace complete validation and live acceptance.
 
 ## Required publication regression coverage (#1747, #1748)
 
+The first actual CI library run executed all seven live-proof publication
+regressions and the three source-development policy controls successfully;
+its new config-preservation fixture failed on inserting an absent TOML key.
+That fixture is repaired. The next Clippy run identified duplicated inclusion
+of the shared consumer fixture, now consolidated at the library test root.
+The first live GitHub attempt failed before source execution because its
+declaration used the reserved `program` toolchain label. Its assertion refused
+to treat that adapter failure as actual failed-source execution. The attempt
+and disposable repository are preserved; fresh acceptance remains required.
+
 `tests/unit/core/workspace_publication_tests.rs::live_admission` executes real
 required source commands and real Git commits/remote readback, then exercises
 the publisher's admission boundary with deterministic forge responses. It covers
@@ -1400,7 +1410,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `99acc585364d86859d7a7a4ff344c892bd2a4f0b7a427a14797ea652089093b9`
+- Repository signal fingerprint: `62ec4ee04ff737bfb4059cf570bec27a800737ad9b75ee9f50b15a6a239ab85b`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (236 files), `tests/` (235 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
