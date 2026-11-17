@@ -339,9 +339,9 @@ fn correlate(capture: &Capture, documents: &BTreeMap<String, Value>) -> io::Resu
                     {
                         return Err(invalid("duplicate or invalid host tool identity"));
                     }
-                    if !model_tools
+                    if model_tools
                         .get(id)
-                        .is_some_and(|(requested, _)| requested == name)
+                        .is_none_or(|(requested, _)| requested != name)
                     {
                         findings.insert("HOST_TOOL_NOT_MODEL_REQUESTED");
                     }
@@ -453,7 +453,7 @@ fn correlate(capture: &Capture, documents: &BTreeMap<String, Value>) -> io::Resu
                 if matches!(
                     operation,
                     "context" | "claim" | "workspace" | "validate" | "publish"
-                ) && !agent_tool.is_some_and(|(name, _)| name == "bash")
+                ) && agent_tool.is_none_or(|(name, _)| name != "bash")
                 {
                     findings.insert("KERNEL_ACTION_NOT_ATTRIBUTED_TO_AGENT");
                 }

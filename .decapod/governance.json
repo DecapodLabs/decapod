@@ -606,6 +606,11 @@
       "id": "observer-live-proof-pin9",
       "summary": "Record actual Pi acceptance separately from source readiness; native regeneration fixes CI-observed release9 container pin drift",
       "input_digest": "sha256:6018a9700dedd95f580c49be161d5c5d3b3d90763a56317d80d0992dd1f9b270"
+    },
+    {
+      "id": "observer-clippy-closed-attribution",
+      "summary": "Fix required Clippy attribution expressions while preserving missing-input rejection and passing actual core regression behavior",
+      "input_digest": "sha256:c8b365eabdae9b09350204ea958b5bde52ad6f6a5859cd03d55aef44e3a47df9"
     }
   ],
   "intents": {
@@ -660,9 +665,9 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Private operational captures and allowlisted public facts, conservative secrets, no imported authority; version9 fingerprint reviewed.",
-          "reviewed_code_fingerprint": "57239bffe75010ac8e32bb59d3f056adc98f2d68871ce03972dc80b9dde8a33b",
-          "spec_material_hash": "d3500590e30216b65c54dcd873397b0a7258badfb1f1a8cca61545687dd67d8a"
+          "reason": "Maintain fail-closed absent model request and absent in-flight bash attribution; simplify equivalent booleans required by actual Clippy failure without waiver",
+          "reviewed_code_fingerprint": "a269664c29b640341bbf72fde90903eec511a3efe0a64c145f38b33b4b8c1e52",
+          "spec_material_hash": "10419fe1e75d99f1a1fdd9bcd4f406d874c168e8e31288143f62aa79d338d3fe"
         }
       ],
       "state": "APPROVED",
@@ -673,13 +678,13 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1794952567Z"
+      "updated_at": "1794956996Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:ca892d5e249ebcda16e19ff2b518e72b2297defbe7d653850214922bbc7c2047",
+      "artifact_hash": "sha256:5c618aaf710498a87343a4b208c60a72fec52032fbb7425484c73adf3ea3a3ce",
       "checks": [
         {
           "name": "actual-observer-export",
@@ -688,6 +693,18 @@
         {
           "name": "autonomous_acceptance",
           "status": "unavailable"
+        },
+        {
+          "name": "clippy11881",
+          "status": "failed"
+        },
+        {
+          "name": "full-library-owner-regressions",
+          "status": "passed"
+        },
+        {
+          "name": "mandatory-core-regressions",
+          "status": "passed"
         },
         {
           "name": "observer-initial-library",
@@ -775,10 +792,17 @@
             "intent_id": "intent:change_01M7NKA4FSD1G656VQZ9VQQF46",
             "kind": "trajectory_step_recorded",
             "sequence": 8
+          },
+          {
+            "detail": "trajectory:branch_01M7NKA4JJAP7XX9QCY1NHG3AH",
+            "event_id": "event:9",
+            "intent_id": "intent:change_01M7NKA4FSD1G656VQZ9VQQF46",
+            "kind": "trajectory_step_recorded",
+            "sequence": 9
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 8,
+        "next_sequence": 9,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M7NKA4JJAP7XX9QCY1NHG3AH": {
@@ -873,6 +897,23 @@
                 ],
                 "sequence": 8,
                 "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:9",
+                "observations": [
+                  "Actual Buildkite11881 core and full-library owner passed; Clippy found two nonminimal booleans in fail-closed observer attribution. Replaced with equivalent is_none_or predicates; no allow attributes. This candidate supersedes still-pending16bb CI."
+                ],
+                "proof_refs": [
+                  "mandatory-core-regressions",
+                  "full-library-owner-regressions",
+                  "clippy11881"
+                ],
+                "scope": [
+                  "src/decapod/core"
+                ],
+                "sequence": 9,
+                "validation_findings": []
               }
             ]
           }
@@ -881,6 +922,7 @@
       "declared_commands": [],
       "destination": "pull request",
       "evidence": [
+        "Actual Buildkite11881 core and full-library owner passed; Clippy found two nonminimal booleans in fail-closed observer attribution. Replaced with equivalent is_none_or predicates; no allow attributes. This candidate supersedes still-pending16bb CI.",
         "Buildkite11777 exposed task-branch false-positive redaction; corrected without relaxing credential filtering. Merged accepted master release9 and reviewed version-only Cargo inventory changes. Real Pi independently published fixture PR2; detailed observer correlation pending.",
         "Source Buildkite11883 rejected stale managed container8 pin after accepted package9 merge. Native project-check refresh repaired pin9; bounded host check reports container custody unavailable, so it is not final proof. Actual165/167-event Pi exports passed, historical autonomy true/current applicability false after real target advance.",
         "https://buildkite.com/decapodlabs/decapod/builds/11777",
