@@ -598,6 +598,14 @@
         "issue:1748",
         "issue:1753"
       ]
+    },
+    {
+      "id": "accepted-target-1486",
+      "summary": "Incorporate accepted release 0.148.6 after CI correctly rejected stale target ancestry",
+      "input_digest": "sha256:b9cbeda7585518523e57c4a651dcd6b54ff737fd1e1a2be9e1fe9fbe76c79b5f",
+      "proof_refs": [
+        "ci:11522-target-ancestry-rejection"
+      ]
     }
   ],
   "intents": {

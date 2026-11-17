@@ -7,7 +7,7 @@
   <div class="decapod-docs-hero-copy">
     <div class="decapod-docs-kicker">THE METACOGNITION GOVERNANCE KERNEL FOR AI AGENTS</div>
     <h1>HARNESS AI <em class="decapod-docs-metacognition">METACOGNITION.</em></h1>
-    <p>Decapod gives coding agents persistent project state, enforceable boundaries, and proof tied to the work they deliver.</p>
+    <p>AI coding agents invoke Decapod to govern tasks, consult the Constitution, preserve project state, work within boundaries, and prove what they deliver.</p>
     <div class="decapod-docs-actions">
       <a class="decapod-docs-btn primary" href="quickstart.html">Get started <span aria-hidden="true">↗</span></a>
       <a class="decapod-docs-btn secondary" href="introduction.html">Understand Decapod <span aria-hidden="true">↗</span></a>
