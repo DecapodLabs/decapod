@@ -177,7 +177,7 @@ fn accepted_plan(
     root: &Path,
     task_id: &str,
 ) -> Result<crate::plan_governance::GovernedPlan, DecapodError> {
-    use crate::plan_governance::{self, PlanState, SpecReviewDisposition};
+    use crate::plan_governance::{self, PlanState};
     let plan = plan_governance::load_plan(root)?.ok_or_else(|| {
         blocked(
             "NEEDS_PLAN_APPROVAL",
@@ -192,15 +192,7 @@ fn accepted_plan(
             "current task must belong to an approved or executing plan",
         ));
     }
-    if plan.intent.trim().is_empty()
-        || !plan.unknowns.is_empty()
-        || !plan.human_questions.is_empty()
-        || !plan.unresolved_contradictions.is_empty()
-        || plan
-            .spec_reviews
-            .iter()
-            .any(|review| review.disposition == SpecReviewDisposition::RequiresDecision)
-    {
+    if plan_governance::has_unresolved_intent_requirements(&plan) {
         return Err(blocked(
             "EXECUTION_DECISION_REQUIRED",
             "resolve the current plan's human decision gates before resuming",

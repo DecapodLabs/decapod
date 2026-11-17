@@ -840,52 +840,53 @@ fn resolve_objective(
     project_root: &Path,
     identity: &StateIdentity,
 ) -> Result<ObjectiveInfo, error::DecapodError> {
-    let mut acceptance_criteria = Vec::new();
-    let mut derived_intent = None;
-
-    // Try trajectory first
-    if let Ok(Some(trajectory_artifact)) = trajectory::load_trajectory_cookie(project_root)
-        && (identity.intent_ref.as_deref() == trajectory_artifact.intent_id.as_deref()
-            || identity.task_id.as_deref() == trajectory_artifact.task_id.as_deref())
-    {
-        derived_intent = Some(trajectory_artifact.derived_intent.clone());
-        acceptance_criteria.extend(trajectory_artifact.active_boundaries.clone());
-    }
-
-    // Try workunit
-    if let Some(task_id) = &identity.task_id
-        && let Ok(manifest) = workunit::load_workunit(project_root, task_id)
-    {
-        let intent_id = &manifest.intent_ref;
-        // Load from governance document intents
-        if let Ok(Some(doc)) = governance_document::load(project_root)
-            && let Some(intent_value) = doc.intents.get(intent_id)
-            && let Some(criteria) = intent_value
-                .get("acceptance_criteria")
-                .and_then(|v| v.as_array())
-        {
-            for c in criteria {
-                if let Some(s) = c.as_str() {
-                    acceptance_criteria.push(s.to_string());
-                }
-            }
+    // The canonical Git-owned custody record distinguishes original request
+    // from its agent-authored refinement. Never substitute one for the other.
+    let trajectory = trajectory::load_trajectory_cookie(project_root)?;
+    let selected_trajectory = trajectory.as_ref().filter(|trajectory| {
+        if let Some(intent_id) = identity.intent_ref.as_deref() {
+            trajectory.intent_id.as_deref() == Some(intent_id)
+        } else {
+            identity
+                .task_id
+                .as_deref()
+                .is_some_and(|task_id| trajectory.task_id.as_deref() == Some(task_id))
         }
-    }
-
-    // Try plan governance
-    if let Ok(Some(plan)) = plan_governance::load_plan(project_root) {
-        acceptance_criteria.extend(plan.constraints.forbidden_paths.clone());
-    }
-
-    // Try config.toml for done criteria
+    });
+    let document = governance_document::load(project_root)?;
+    let intent_id = identity
+        .intent_ref
+        .as_deref()
+        .or_else(|| selected_trajectory.and_then(|trajectory| trajectory.intent_id.as_deref()));
+    let recorded = document
+        .as_ref()
+        .and_then(|document| intent_id.and_then(|id| document.intents.get(id)));
+    let original_intent = recorded
+        .and_then(|record| record.get("raw_intent").and_then(|value| value.as_str()))
+        .map(ToOwned::to_owned)
+        .or_else(|| selected_trajectory.map(|trajectory| trajectory.original_intent.clone()))
+        .unwrap_or_else(|| "Not established".to_string());
+    let derived_intent = recorded
+        .and_then(|record| record.get("refined_intent").and_then(|value| value.as_str()))
+        .map(ToOwned::to_owned)
+        .or_else(|| selected_trajectory.map(|trajectory| trajectory.derived_intent.clone()));
+    // Validation obligations, execution boundaries and forbidden paths are
+    // different concepts. Do not recast scope limits as acceptance criteria.
+    let acceptance_criteria = recorded
+        .and_then(|record| record.get("acceptance_criteria").and_then(|value| value.as_array()))
+        .map(|values| {
+            values
+                .iter()
+                .filter_map(|value| value.as_str().map(ToOwned::to_owned))
+                .collect()
+        })
+        .unwrap_or_default();
     let done_criteria = crate::cli::DecapodProjectConfig::load(project_root)
         .ok()
-        .and_then(|c| c.repo.done_criteria);
+        .and_then(|config| config.repo.done_criteria);
 
     Ok(ObjectiveInfo {
-        original_intent: derived_intent
-            .clone()
-            .unwrap_or_else(|| "Not established".to_string()),
+        original_intent,
         derived_intent,
         acceptance_criteria,
         done_criteria,

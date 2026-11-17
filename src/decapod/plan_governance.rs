@@ -581,6 +581,10 @@ pub(crate) fn has_unresolved_intent_requirements(plan: &GovernedPlan) -> bool {
         || !plan.unknowns.is_empty()
         || !plan.human_questions.is_empty()
         || !plan.unresolved_contradictions.is_empty()
+        || plan
+            .spec_reviews
+            .iter()
+            .any(|review| review.disposition == SpecReviewDisposition::RequiresDecision)
 }
 
 pub fn ensure_execute_ready(
@@ -618,6 +622,14 @@ pub fn ensure_execute_ready(
             questions.push(format!(
                 "Resolve conflicting requests before execution: {contradiction}"
             ));
+        }
+        for review in &plan.spec_reviews {
+            if review.disposition == SpecReviewDisposition::RequiresDecision {
+                questions.push(format!(
+                    "Resolve pending human spec review before execution: {}",
+                    review.path
+                ));
+            }
         }
         return Err(marker_error(
             "NEEDS_HUMAN_INPUT",

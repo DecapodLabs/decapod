@@ -427,6 +427,15 @@ fn set_section(
             .pointer_mut("/custody/intents")
             .and_then(Value::as_object_mut)
         {
+            for (id, candidate) in intents.iter() {
+                if let Some(existing) = document.intents.get(id)
+                    && existing.get("raw_intent") != candidate.get("raw_intent")
+                {
+                    return Err(invalid(format!(
+                        "INTENT_ORIGIN_CONFLICT: original request for {id} changed; use a distinct intent identity and retain the existing Git history"
+                    )));
+                }
+            }
             document.intents = std::mem::take(intents).into_iter().collect();
         }
         let intent = value
@@ -434,6 +443,14 @@ fn set_section(
             .and_then(Value::as_str)
             .and_then(|id| document.intents.get(id));
         if let Some(intent) = intent {
+            if value
+                .get("original_intent")
+                .is_some_and(|original| Some(original) != intent.get("raw_intent"))
+            {
+                return Err(invalid(
+                    "INTENT_ORIGIN_CONFLICT: trajectory original_intent contradicts canonical custody; the original request cannot be reinterpreted in place",
+                ));
+            }
             for (outer, inner) in [
                 ("original_intent", "raw_intent"),
                 ("derived_intent", "refined_intent"),

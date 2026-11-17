@@ -272,6 +272,27 @@ fn contradictory_prompts_block_approved_plan_before_task_projection_lookup() {
 }
 
 #[test]
+fn pending_spec_decision_blocks_execution_before_missing_task_lookup() {
+    let (dir, store) = execution_fixture();
+    let mut plan = load_plan(dir.path()).unwrap().unwrap();
+    plan.spec_reviews.push(SpecReview {
+        path: ".decapod/managed/specs/INTERFACES.md".into(),
+        spec_material_hash: "material".into(),
+        reviewed_code_fingerprint: "current".into(),
+        disposition: SpecReviewDisposition::RequiresDecision,
+        reason: "Human choice needed for compatibility".into(),
+        decision_ref: None,
+    });
+    save_plan(dir.path(), &plan).unwrap();
+    let blocked = execute_check(dir.path(), &store, None)
+        .unwrap_err()
+        .to_string();
+    assert!(blocked.contains("NEEDS_HUMAN_INPUT"), "{blocked}");
+    assert!(blocked.contains("pending human spec review"), "{blocked}");
+    assert!(!blocked.contains("TODO_PROJECTION_MISSING"), "{blocked}");
+}
+
+#[test]
 fn missing_projection_does_not_waive_plan_approval_or_phase_gates() {
     let (dir, store) = execution_fixture();
     patch_plan(

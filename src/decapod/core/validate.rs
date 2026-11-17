@@ -6555,7 +6555,7 @@ fn validate_plan_governed_execution_gate(
 
         if plan_governance::has_unresolved_intent_requirements(&plan) {
             fail(
-                "NEEDS_HUMAN_INPUT: governed plan has unresolved intent/unknowns/questions/contradictions",
+                "NEEDS_HUMAN_INPUT: governed plan has unresolved intent/unknowns/questions/contradictions/spec reviews",
                 ctx,
             );
         } else {

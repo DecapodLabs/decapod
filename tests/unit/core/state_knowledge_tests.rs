@@ -152,3 +152,51 @@ fn lifecycle_precedes_tags_and_inferences_remain_proposals_with_provenance() {
     assert_eq!(provenance.confidence, "human_confirmed");
     assert_eq!(provenance.actor, "owner");
 }
+
+#[test]
+fn objective_uses_recorded_request_not_the_agents_refinement() {
+    let root = tempfile::tempdir().unwrap();
+    let request = "Preserve version one API compatibility";
+    let interpretation = "Implement a new version two API";
+    let trajectory = crate::core::trajectory::init_trajectory(
+        root.path(),
+        crate::core::trajectory::TrajectoryInit {
+            run_id: "intent_projection".into(),
+            task_id: Some("task-current".into()),
+            intent_id: Some("intent:original".into()),
+            original_intent: request.into(),
+            derived_intent: interpretation.into(),
+            active_boundaries: vec!["src/api/**".into()],
+            repo_scope: vec!["src/api/**".into()],
+            destination: None,
+            current_phase: None,
+            next_transitions: vec![],
+            blockers: vec![],
+        },
+    )
+    .unwrap();
+    let identity = StateIdentity {
+        kind: StateIdentityKind::Intent,
+        id: "intent:original".into(),
+        intent_ref: trajectory.intent_id.clone(),
+        task_id: Some("task-current".into()),
+    };
+    let objective = resolve_objective(root.path(), &identity).unwrap();
+    let custody = resolve_custody(root.path(), &identity).unwrap();
+    assert_eq!(objective.original_intent, request);
+    assert_eq!(objective.derived_intent.as_deref(), Some(interpretation));
+    assert_eq!(custody.raw_intent, request);
+    assert_eq!(custody.refined_intent.as_deref(), Some(interpretation));
+    assert!(objective.acceptance_criteria.is_empty());
+
+    // An unrelated intent cannot inherit the current agent's trajectory.
+    let unrelated = StateIdentity {
+        kind: StateIdentityKind::Intent,
+        id: "intent:unrelated".into(),
+        intent_ref: Some("intent:unrelated".into()),
+        task_id: None,
+    };
+    let unknown = resolve_objective(root.path(), &unrelated).unwrap();
+    assert_eq!(unknown.original_intent, "Not established");
+    assert_eq!(unknown.derived_intent, None);
+}

@@ -110,6 +110,35 @@ fn new_run_replaces_the_cookie_and_git_preserves_prior_history() {
 }
 
 #[test]
+fn a_reused_intent_id_cannot_rewrite_the_original_prompt() {
+    let temp = tempdir().unwrap();
+    let mut first = replacement_init("original_run");
+    first.intent_id = Some("intent:human-request".into());
+    first.original_intent = "Keep compatibility with v1".into();
+    init_trajectory(temp.path(), first).unwrap();
+    commit_trajectory_journal(temp.path());
+    let before = fs::read(trajectory_cookie_path(temp.path())).unwrap();
+
+    let mut overwritten = replacement_init("replacement_run");
+    overwritten.intent_id = Some("intent:human-request".into());
+    overwritten.original_intent = "Break compatibility with v1".into();
+    let blocked = init_trajectory(temp.path(), overwritten)
+        .unwrap_err()
+        .to_string();
+    assert!(blocked.contains("INTENT_ORIGIN_CONFLICT"), "{blocked}");
+    assert_eq!(fs::read(trajectory_cookie_path(temp.path())).unwrap(), before);
+
+    let mut next = replacement_init("new_request");
+    next.intent_id = Some("intent:later-instruction".into());
+    next.original_intent = "A new human instruction".into();
+    init_trajectory(temp.path(), next).unwrap();
+    assert_eq!(
+        trajectory_git(temp.path(), &["show", "HEAD:.decapod/governance.json"]),
+        before
+    );
+}
+
+#[test]
 fn new_run_preserves_uncommitted_failures_blockers_custody_and_jev() {
     let temp = tempdir().unwrap();
     init_trajectory(temp.path(), replacement_init("run_old")).unwrap();
