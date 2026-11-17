@@ -12,6 +12,14 @@ The agent can author a test and run it, but cannot turn a test description, a gr
 
 See [Closed-loop metacognitive governance](convergence.md).
 
+## Validation is a governed decision
+
+`decapod validate` evaluates the required, applicable repository contract. That can include rule authority and scope, plan/intent readiness, Constitution and project overrides, source history, worktree custody, actual build/test/security execution, validation epoch integrity, and evidence freshness for the exact candidate. A green unit-test suite is one possible input to this broader determination.
+
+Rules use independent dimensions: **authority** (constitutional, project, task, non-waivable kernel), **lifecycle phase** (pre-execution, during execution, validation, publication), **severity** (advisory through critical), and **verdict** (pass, fail, unverifiable, stale). Remediation describes the supported action and whether autonomous repair or human authorization is required. The kernel does not turn an unresolved question or an unknown proof into a successful result.
+
+The approved plan is an execution-contract state. Recorded human questions, contradictions, unknown requirements, and unresolved human spec decisions remain blockers at preparation, execution, validation, and publication. Passing a test cannot waive those obligations.
+
 ## Verification Gates
 
 A "Gate" is a discrete check that must pass for a task to be considered valid. Common gates include:

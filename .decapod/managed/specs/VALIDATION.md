@@ -2318,3 +2318,25 @@ current validation and publication proof surfaces, including exact subject
 freshness. These tests establish only deterministic enforcement of **recorded**
 contradictions, not model discovery of every semantic conflict. Independent
 fidelity testing remains open under #1761/#1762.
+
+## Request-origin and cross-phase acceptance regressions
+
+Source regression must prove `state.resolve` returns the custody-recorded
+original request independently of the agent's refined plan, and excludes
+an unrelated active trajectory. Attempts to regenerate an existing
+`intent_id` with different `raw_intent` must fail atomically; a new
+explicit identity can start after the predecessor was safely archived.
+
+At preparation, approved/executing/done plan transitions cannot accept
+known unresolved questions, unknowns, contradictions or pending spec
+decisions; execution and validation must apply the same shared conditions.
+Changing recorded instructions revokes the prior plan acceptance.
+An absent task projection is distinct from and never substitutes for a
+known instruction blocker. Include actual CLI cases and a source-level
+negative fixture.
+
+Required validation remains a policy, provenance, source, environment,
+scope, custody, proof and publication decision in addition to executing
+configured tests. The current tests only demonstrate consistency for
+recorded conditions. No asserted semantic correctness beyond accepted
+evidence, nor authenticated human approval, follows from these tests.

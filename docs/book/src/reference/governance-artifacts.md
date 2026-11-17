@@ -11,6 +11,10 @@ unresolved obligations, and normalized logical sections:
 | Trajectory | `decapod govern trajectory` | Intent custody, scope, actions, assumptions, checks, and evidence |
 | Validation | `decapod validate` | Receipt bound to current repository inputs and trajectory |
 
+The same tracked document also has a canonical top-level `intents` map. It preserves recorded `raw_intent` separately from its agent-authored `refined_intent`, with custody events and trajectory identifiers. A change of recorded origin under an existing intent ID is rejected; an actual new instruction needs separate provenance and an auditable transition. These records are recoverable from Git, which verifies authored history without authenticating the human speaker. The `state.resolve` projection reads original and derived intent separately.
+
+The plan/trajectory/validation surfaces all consume the same unresolved instruction conditions: ambiguity, unknowns, contradictions, and pending spec-review decisions. Plan acceptance cannot silently clear them. The gate taxonomy already distinguishes authority, phase, severity and verdict. See [closed-loop governance](../concepts/convergence.md).
+
 Health Engine claims remain in `.decapod/data/decapod.db`, and runtime workunit
 manifests in `.decapod/data/workunits/`. Neither is a second tracked research ledger.
 See the [governed execution model](../../../architecture/governed-execution.md).

@@ -19,6 +19,14 @@ Agents often dive into implementation before fully understanding the human opera
 
 Because Decapod is repo-native, your specifications are versioned alongside your code. This creates a permanent, auditable link between a feature's requirements and its implementation, which is invaluable for long-term maintenance and multi-agent handover.
 
+## Canonical instruction custody
+
+Decapod already stores durable intent custody in `.decapod/governance.json`. Its `intents` map keeps the recorded original request (`raw_intent`) distinct from the agent's working interpretation (`refined_intent`). The same document carries the current plan, trajectory, claims, and validation receipts; there is no second human-intent store.
+
+An original request must not be silently rewritten by an updated plan or a new model's interpretation. The same intent identity preserves its original recorded text. Materially new human instructions use separate identity and explicit provenance; existing Git history remains recoverable. The kernel can preserve recorded bytes and enforce stated requirements, but an agent-supplied assertion about who said something is not authenticated human consent.
+
+The governed plan's instruction blockers have one meaning across preparation, implementation, validation and publication: missing intent, unknowns, unresolved human questions or contradictory instructions, and pending human spec-review decisions are not approval. Correct the plan, explicitly reaccept the revised execution contract, and revalidate affected evidence.
+
 ## Continuous Intent Reconciliation
 
 The governed plan records the request **as captured or interpreted by the agent**; agent-authored project specifications express its current understanding. This is not independent proof of the original human words or their meaning. Changes to source code cannot silently authorize a change to that recorded intent, and the kernel does not infer a missing human approval from an agent statement. The authoritative request/clarification lineage and contradictory-prompt arbitration are tracked in [#1761](https://github.com/DecapodLabs/decapod/issues/1761). The coding harness generates code and proposed spec

@@ -69,6 +69,19 @@ control Git commands issued directly by an agent or its harness.
 
 GitHub Issues, Jira, Linear, Beads, or another service may remain the organizational system of record. Decapod governs the accepted task at the repository execution layer.
 
+## Instruction and gate consistency
+
+The existing `governance.json` intent map and custody model retain the agent-recorded original and refined interpretations separately. The read-only `state.resolve` projection must show those independently: an agent-authored refinement cannot be emitted as `original_intent`. Reusing a canonical intent ID with different raw text is a custody conflict and does not overwrite the prior record.
+
+A shared plan instruction predicate covers preparation/acceptance, execution checks, execution checkpointing, validation and publication. Missing intent, unknowns, pending human questions, contradictions and unresolved spec-review decisions block the applicable transition. A known unresolved instruction may be captured in a draft, but that draft cannot become an approved execution contract or pass downstream validation. Later accepted changes must invalidate affected earlier approval and proof.
+
+The existing `validation_rules` model supplies orthogonal governance dimensions:
+`RuleAuthority` (Constitution, project override, task constraints, kernel invariant),
+`EvaluationPhase` (pre-execution, during-execution, validation, publication),
+`RuleSeverity` (advisory, warning, error, critical), and
+`RuleVerdict` (pass, fail, unverifiable, stale).
+Required validation also examines the source and policy closure, worktree, task ownership, real configured checks, and exact evidence applicability. It cannot be reduced to the result of a test runner.
+
 ## Accepted repository-local proof
 
 Accepted local proof requirements constrain candidate configuration through

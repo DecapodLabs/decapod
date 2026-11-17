@@ -887,3 +887,27 @@ enforcement and approval authority). Never claim that code/spec hashes, the
 Constitution, agent-authored tests, or an existing PR independently prove the
 human's unexpressed wants. This docs/source change is a bounded consistency
 repair, not fulfillment of the larger semantic-intent authority programme.
+
+## Canonical intent custody and lifecycle gate parity (November 17, 2026)
+
+Reuse the already tracked `.decapod/governance.json` top-level intents,
+plan, trajectory, claims, validation and checkpoint records. Do not add a
+parallel prompt ledger. The original `raw_intent` and its agent-derived
+`refined_intent` are distinct. `state.resolve` must preserve this
+distinction and may never copy a refinement into the origin field. Reusing
+the same intent identifier with different recorded original text must
+fail without altering governance state; a distinct later instruction
+has its own identity and Git-preserved provenance.
+
+Use a shared instruction-obligation function for preparation, plan
+acceptance, execution, checkpoint, validation and publication. Drafts may
+record ambiguity; an approved or executing plan must resolve recorded
+unknowns, human questions, contradictions, missing intent and pending
+human spec review before proceeding. A later plan revision invalidates
+acceptance and applicable proof.
+
+Continue using existing `validation_rules` authority/phase/severity/verdict
+taxonomies. Avoid any new prompt runtime, duplicate state database or
+claim of authenticated human identity from agent-entered text. Validation
+is broader than test completion, and semantic coverage remains bounded
+by accepted requirements and observed evidence.
