@@ -89,7 +89,6 @@ fn test_infer_orientation_simple_task() {
 
 #[test]
 fn preparation_reports_pending_spec_decisions_and_empty_intent_without_blocking_deferrals() {
-    use decapod::plan_governance::{self, PlanPatch, SpecReviewDisposition};
     let dir = tempdir().unwrap();
     let root = dir.path();
     init_git_repo(root);
@@ -111,14 +110,20 @@ fn preparation_reports_pending_spec_decisions_and_empty_intent_without_blocking_
         .status
         .success()
     );
-    plan_governance::patch_plan(
-        root,
-        PlanPatch {
-            deferred_questions: Some(vec!["Unrelated future feature".into()]),
-            ..Default::default()
-        },
-    )
-    .unwrap();
+    assert!(
+        run_cmd(
+            root,
+            &[
+                "govern",
+                "plan",
+                "update",
+                "--deferred-question",
+                "Unrelated future feature"
+            ],
+        )
+        .status
+        .success()
+    );
     let inspect = || {
         let output = run_cmd(
             root,
@@ -132,36 +137,67 @@ fn preparation_reports_pending_spec_decisions_and_empty_intent_without_blocking_
             ],
         );
         assert!(output.status.success());
-        extract_json(&output)["governed_plan"]["unresolved_items"].clone()
+        let plan = extract_json(&output)["governed_plan"].clone();
+        assert_eq!(
+            plan["unresolved_items"],
+            plan["instruction_readiness"]["questions"]
+        );
+        assert_eq!(
+            plan["instruction_readiness"]["rule_id"],
+            "recorded_instruction_readiness"
+        );
+        assert!(
+            plan["instruction_readiness"]["source_revision"]
+                .as_str()
+                .unwrap()
+                .starts_with("sha256:")
+        );
+        plan
     };
-    assert_eq!(inspect(), serde_json::json!([]));
-    plan_governance::review_spec(
-        root,
-        ".decapod/managed/specs/INTERFACES.md",
-        SpecReviewDisposition::RequiresDecision,
-        "Choose accepted compatibility policy",
-    )
-    .unwrap();
+    assert_eq!(inspect()["unresolved_items"], serde_json::json!([]));
+    assert!(
+        run_cmd(
+            root,
+            &[
+                "govern",
+                "plan",
+                "review-spec",
+                "--path",
+                ".decapod/managed/specs/INTERFACES.md",
+                "--disposition",
+                "requires-decision",
+                "--reason",
+                "Choose accepted compatibility policy"
+            ],
+        )
+        .status
+        .success()
+    );
     let pending = inspect();
     assert!(
-        pending[0]
+        pending["unresolved_items"][0]
             .as_str()
             .unwrap()
             .contains("pending human spec review"),
         "{pending}"
     );
-    plan_governance::patch_plan(
-        root,
-        PlanPatch {
-            intent: Some(String::new()),
-            ..Default::default()
-        },
-    )
-    .unwrap();
-    let empty = inspect();
-    assert_eq!(empty.as_array().unwrap().len(), 2);
     assert!(
-        empty[0]
+        run_cmd(root, &["govern", "plan", "update", "--intent", ""],)
+            .status
+            .success()
+    );
+    let empty = inspect();
+    assert_eq!(empty["unresolved_items"].as_array().unwrap().len(), 2);
+    assert_ne!(
+        empty["instruction_readiness"]["source_revision"],
+        pending["instruction_readiness"]["source_revision"]
+    );
+    assert_eq!(
+        empty["instruction_readiness"]["blockers"][1]["id"],
+        pending["instruction_readiness"]["blockers"][0]["id"]
+    );
+    assert!(
+        empty["unresolved_items"][0]
             .as_str()
             .unwrap()
             .contains("single-sentence intent")

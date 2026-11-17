@@ -691,7 +691,11 @@ pub(crate) fn ensure_instruction_ready(
     }
     Err(marker_error(
         marker,
-        "NEEDS_HUMAN_INPUT: recorded instructions require resolution.",
+        if marker == "NEEDS_HUMAN_INPUT" {
+            "Recorded instructions require resolution."
+        } else {
+            "NEEDS_HUMAN_INPUT: recorded instructions require resolution."
+        },
         Some(
             serde_json::to_value(readiness)
                 .map_err(|e| error::DecapodError::ValidationError(e.to_string()))?,

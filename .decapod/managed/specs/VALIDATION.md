@@ -8,6 +8,13 @@ recorded instruction behavior, not principal authentication, global constraint
 satisfiability, root requirement completeness or independent path observation.
 Full exact-candidate validation remains mandatory before any closure claim.
 
+Preparation exposes the complete typed readiness report, including stable blocker
+IDs, source revision and remediation, alongside the legacy question strings.
+The actual CLI fixture creates pending spec decisions and an empty intent using
+supported commands; it does not import private library implementation modules.
+The first candidate's compile denial is retained as failed evidence. Phase-entry
+regressions expect the current instruction blocker before approval-state repair.
+
 The reviewed source inventory advances from the last accepted review at
 `edbfc00ddfd4c24458a2277176762c6924de13cc` solely for the accepted package-version
 change from 0.148.7 to 0.148.8 in `Cargo.toml` and `Cargo.lock`. The 105-input
@@ -1501,7 +1508,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `b0ca049f08f2e7dce8f7f25b0647158687361677a392fd7e6c2459275ec51d99`
+- Repository signal fingerprint: `d18cfa10ec5942fc7b7e0c8c3c40760941b9877bc4b3fb255a57fc229629b5a1`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (236 files), `tests/` (235 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

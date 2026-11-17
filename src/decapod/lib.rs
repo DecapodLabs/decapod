@@ -14240,10 +14240,15 @@ fn governed_plan_context(
             forbidden_paths: vec![],
             file_touch_budget: None,
             task_binding: "not_available".to_string(),
+            instruction_readiness: None,
         });
     };
 
-    let unresolved_items = plan_governance::unresolved_instruction_questions(&plan);
+    let instruction_readiness = plan_governance::instruction_readiness(
+        &plan,
+        core::validation_rules::EvaluationPhase::PreExecution,
+    );
+    let unresolved_items = instruction_readiness.questions.clone();
 
     let task_binding = match task_id {
         Some(id) if plan.todo_ids.iter().any(|candidate| candidate == id) => "bound",
@@ -14263,6 +14268,7 @@ fn governed_plan_context(
         forbidden_paths: plan.constraints.forbidden_paths,
         file_touch_budget: plan.constraints.file_touch_budget,
         task_binding: task_binding.to_string(),
+        instruction_readiness: Some(instruction_readiness),
     })
 }
 

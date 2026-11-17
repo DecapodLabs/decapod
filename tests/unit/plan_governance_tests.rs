@@ -688,13 +688,13 @@ fn contract_edits_revoke_every_accepted_state_and_all_phase_evidence() {
                 enter_phase(dir.path(), &changed.phases[0].id)
                     .unwrap_err()
                     .to_string()
-                    .contains("NEEDS_PLAN_APPROVAL")
+                    .contains(expected)
             );
             assert!(
                 complete_phase(dir.path(), &changed.phases[0].id)
                     .unwrap_err()
                     .to_string()
-                    .contains("NEEDS_PLAN_APPROVAL")
+                    .contains(expected)
             );
         }
     }
