@@ -21,6 +21,103 @@ impl Fixture {
     }
 }
 
+/// Scripted accepted-policy fixture, not authenticated human authorship or a
+/// real-model observation. The negative criterion is fixed on the independently
+/// read upstream before the candidate introduces its cross-tenant defect.
+pub fn accepted_tenant_negative_control_rejects_green_positives_and_proves_repair() {
+    let mut fixture = Fixture::new();
+    let root = &fixture.options.root;
+    let valid = "ROWS = {'a': ('tenant-a', 'A'), 'b': ('tenant-b', 'B')}\ndef read_record(tenant, key):\n    owner, value = ROWS[key]\n    return value if owner == tenant else None\nif __name__ == '__main__':\n    assert read_record('tenant-a', 'a') == 'A'\n    assert read_record('tenant-b', 'b') == 'B'\n    print('agent-positive-tests-passed')\n";
+    let vulnerable = valid.replace("return value if owner == tenant else None", "return value");
+    fs::write(root.join("tenant_app.py"), valid).unwrap();
+    let check = root.join("scripts/check_source.py");
+    let ordinary = fs::read_to_string(&check).unwrap();
+    fs::write(&check, format!("{ordinary}\nns = {{'__name__': '__main__'}}\nexec(compile(open('tenant_app.py').read(), 'tenant_app.py', 'exec'), ns)\nassert ns['read_record']('tenant-a', 'b') is None, 'REQ-TENANT-ISOLATION: tenant A read tenant B record'\nprint('accepted-tenant-negative-passed')\n")).unwrap();
+    fixture
+        .proof
+        .required_profile
+        .as_mut()
+        .unwrap()
+        .reviewed_sources_digest =
+        runtime::discover_source_inventory(&fixture.options, &Cancellation::default())
+            .unwrap()
+            .digest()
+            .unwrap();
+    fixture.save_config();
+    fixture.commit("accept tenant isolation negative criterion before candidate work");
+    git(root, &["push", "origin", "HEAD:main"]);
+    git(root, &["fetch", "origin", "main"]);
+    let accepted_base = git(root, &["rev-parse", "origin/main"]);
+    let accepted_control = fs::read(&check).unwrap();
+    let accepted_config = fs::read(root.join(consumer_readiness_fixture::CONFIG)).unwrap();
+
+    fs::write(root.join("tenant_app.py"), vulnerable).unwrap();
+    fixture.commit("cross-tenant vulnerability with green candidate positive tests");
+    let bad_head = git(root, &["rev-parse", "HEAD"]);
+    let mut host = fixture.host();
+    let failed = fixture.validate(&mut host);
+    assert!(!failed.ready, "{failed:?}");
+    assert_eq!(
+        host.execution_attempts, 1,
+        "the accepted control must actually execute"
+    );
+    let failed_dir = failed.evidence_path.as_ref().unwrap();
+    let stdout = [0, 1]
+        .map(|index| fs::read_to_string(failed_dir.join(format!("native-{index}.stdout"))).unwrap())
+        .join("\n");
+    let stderr = [0, 1]
+        .map(|index| fs::read_to_string(failed_dir.join(format!("native-{index}.stderr"))).unwrap())
+        .join("\n");
+    assert!(stdout.contains("agent-positive-tests-passed"), "{stdout}");
+    assert!(stderr.contains("REQ-TENANT-ISOLATION"), "{stderr}");
+    let evidence: SuiteEvidence =
+        serde_json::from_slice(&fs::read(failed_dir.join("observations.json")).unwrap()).unwrap();
+    assert_eq!(evidence.before.head_revision, bad_head);
+    assert_eq!(evidence.before.accepted_base_revision, accepted_base);
+    assert!(evidence.results.iter().any(|result| matches!(
+        result.observation,
+        Observation::Executed {
+            conclusion: Conclusion::Failure,
+            ..
+        }
+    )));
+    assert!(
+        !failed_dir
+            .join("completion/native-readiness-receipt.json")
+            .exists()
+    );
+
+    fs::write(root.join("tenant_app.py"), valid).unwrap();
+    fixture.commit("restore tenant authorization and rerun the same accepted control");
+    let repaired_head = git(root, &["rev-parse", "HEAD"]);
+    let repaired = fixture.validate(&mut fixture.host());
+    assert!(repaired.ready, "{repaired:?}");
+    assert_ne!(bad_head, repaired_head);
+    assert_ne!(failed.evidence_path, repaired.evidence_path);
+    assert_eq!(fs::read(&check).unwrap(), accepted_control);
+    assert_eq!(
+        fs::read(root.join(consumer_readiness_fixture::CONFIG)).unwrap(),
+        accepted_config
+    );
+    let receipt: serde_json::Value = serde_json::from_slice(
+        &fs::read(
+            repaired
+                .evidence_path
+                .as_ref()
+                .unwrap()
+                .join("completion/native-readiness-receipt.json"),
+        )
+        .unwrap(),
+    )
+    .unwrap();
+    assert_eq!(receipt["material"]["head_revision"], repaired_head);
+    assert_eq!(receipt["material"]["accepted_base_revision"], accepted_base);
+    assert!(
+        stderr.contains("REQ-TENANT-ISOLATION"),
+        "the old failure stays observable"
+    );
+}
+
 fn blocked(report: &ValidationReport, expected: &str) {
     assert!(!report.ready, "unexpected readiness: {report:?}");
     assert_eq!(report.exit_code(), 1);
@@ -860,6 +957,16 @@ fn two_isolated_worktrees_require_combined_candidate_validation_and_target_fresh
     let mut fixture = Fixture::new();
     let main_repo = fixture.options.root.clone();
 
+    // A second, executable interface invariant shares the same accepted check
+    // and combined-worktree setup: positional-only producer and keyword caller
+    // changes each work with the baseline, but are incompatible together.
+    fs::write(
+        main_repo.join("producer.py"),
+        "def identity(value):\n    return value\n",
+    )
+    .unwrap();
+    fs::write(main_repo.join("consumer.py"), "assert identity(7) == 7\n").unwrap();
+
     // Establish a shared semantic invariant across two regions of `shared_contract.py`:
     // LEFT_DELTA + RIGHT_DELTA <= 1. Each isolated agent edit satisfies the invariant
     // on its own branch, while a clean textual merge violates it until reconciled.
@@ -870,7 +977,7 @@ fn two_isolated_worktrees_require_combined_candidate_validation_and_target_fresh
     .unwrap();
     fs::write(
         main_repo.join("scripts/check_source.py"),
-        "import os\nassert not os.path.exists('Cargo.toml')\nassert open('payload.txt').read() == 'ready\\n', 'consumer source is invalid'\nns = {}\nexec(open('shared_contract.py').read(), ns)\nassert ns['LEFT_DELTA'] + ns['RIGHT_DELTA'] <= 1, 'combined concurrency budget exceeded'\nassert not os.path.realpath(os.getcwd()).startswith(os.path.realpath(os.environ['FIXTURE_WORKTREE'])), 'proof used mutable worktree'\nassert os.environ['DECAPOD_NATIVE_PROOF_ACTIVE'] == '1'\nassert os.path.isdir(os.environ['HOME'])\nprint('consumer-source-inspected')\n",
+        "import os\nassert not os.path.exists('Cargo.toml')\nassert open('payload.txt').read() == 'ready\\n', 'consumer source is invalid'\nns = {}\nexec(open('shared_contract.py').read(), ns)\nassert ns['LEFT_DELTA'] + ns['RIGHT_DELTA'] <= 1, 'combined concurrency budget exceeded'\nexec(compile(open('producer.py').read(), 'producer.py', 'exec'), ns)\nexec(compile(open('consumer.py').read(), 'consumer.py', 'exec'), ns)\nassert not os.path.realpath(os.getcwd()).startswith(os.path.realpath(os.environ['FIXTURE_WORKTREE'])), 'proof used mutable worktree'\nassert os.environ['DECAPOD_NATIVE_PROOF_ACTIVE'] == '1'\nassert os.path.isdir(os.environ['HOME'])\nprint('consumer-source-inspected')\n",
     )
     .unwrap();
 
@@ -917,7 +1024,7 @@ fn two_isolated_worktrees_require_combined_candidate_validation_and_target_fresh
             owner: String::new(),
             due: None,
             r#ref: String::new(),
-            scope: r#"paths:["shared_contract.py"]"#.to_string(),
+            scope: r#"paths:["shared_contract.py","producer.py","consumer.py"]"#.to_string(),
             dir: Some(main_repo.to_string_lossy().to_string()),
             priority: "medium".to_string(),
             depends_on: String::new(),
@@ -997,7 +1104,12 @@ fn two_isolated_worktrees_require_combined_candidate_validation_and_target_fresh
         "LEFT_DELTA = 1\n\n\nRIGHT_DELTA = 0\n",
     )
     .unwrap();
-    git(&wt_alpha, &["add", "shared_contract.py"]);
+    fs::write(
+        wt_alpha.join("producer.py"),
+        "def identity(value, /):\n    return value\n",
+    )
+    .unwrap();
+    git(&wt_alpha, &["add", "shared_contract.py", "producer.py"]);
     git(&wt_alpha, &["commit", "-m", "alpha isolated change"]);
     let (_, alpha_fixture) = make_wt_options(&wt_alpha, "alpha-1");
     let mut alpha_host = LocalHost::new(&alpha_fixture, false);
@@ -1009,7 +1121,12 @@ fn two_isolated_worktrees_require_combined_candidate_validation_and_target_fresh
         "LEFT_DELTA = 0\n\n\nRIGHT_DELTA = 1\n",
     )
     .unwrap();
-    git(&wt_beta, &["add", "shared_contract.py"]);
+    fs::write(
+        wt_beta.join("consumer.py"),
+        "assert identity(value=7) == 7\n",
+    )
+    .unwrap();
+    git(&wt_beta, &["add", "shared_contract.py", "consumer.py"]);
     git(&wt_beta, &["commit", "-m", "beta isolated change"]);
     let (_, beta_fixture) = make_wt_options(&wt_beta, "beta-1");
     let mut beta_host = LocalHost::new(&beta_fixture, false);
@@ -1034,7 +1151,7 @@ fn two_isolated_worktrees_require_combined_candidate_validation_and_target_fresh
         "failed combined candidate must not emit a readiness receipt"
     );
 
-    // 3. Reconciling the combined candidate restores readiness (`ready == true`).
+    // 3. Repairing the numeric invariant cannot hide the incompatible interface.
     fs::write(
         wt_alpha.join("shared_contract.py"),
         "LEFT_DELTA = 1\n\n\nRIGHT_DELTA = 0\n",
@@ -1044,6 +1161,35 @@ fn two_isolated_worktrees_require_combined_candidate_validation_and_target_fresh
     git(
         &wt_alpha,
         &["commit", "-m", "reconcile combined candidate invariant"],
+    );
+    let (_, incompatible_fixture) = make_wt_options(&wt_alpha, "alpha-interface-mismatch");
+    let incompatible = incompatible_fixture.validate(&mut incompatible_fixture.host());
+    assert!(!incompatible.ready, "{incompatible:?}");
+    let mismatch_dir = incompatible.evidence_path.as_ref().unwrap();
+    let stderr = [0, 1]
+        .map(|index| {
+            fs::read_to_string(mismatch_dir.join(format!("native-{index}.stderr"))).unwrap()
+        })
+        .join("\n");
+    assert!(stderr.contains("positional-only"), "{stderr}");
+    assert!(
+        !mismatch_dir
+            .join("completion/native-readiness-receipt.json")
+            .exists()
+    );
+    fs::write(
+        wt_alpha.join("producer.py"),
+        "def identity(value):\n    return value\n",
+    )
+    .unwrap();
+    git(&wt_alpha, &["add", "producer.py"]);
+    git(
+        &wt_alpha,
+        &[
+            "commit",
+            "-m",
+            "restore accepted producer-consumer compatibility",
+        ],
     );
     let (_, reconciled_fixture) = make_wt_options(&wt_alpha, "alpha-reconciled");
     let mut reconciled_host = LocalHost::new(&reconciled_fixture, false);

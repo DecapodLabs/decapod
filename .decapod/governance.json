@@ -613,6 +613,16 @@
         "18cbb30ca4d16a80810d8f3c0cecfc4073a83cbc",
         "edbfc00ddfd4c24458a2277176762c6924de13cc"
       ]
+    },
+    {
+      "id": "issues-1762-negative-controls-20261117-04",
+      "summary": "Add required-lane accepted tenant isolation negative-and-repair fixture and actual producer-consumer signature mismatch on independently passing worktrees; regenerate stale Docker and release headers using supported init and refresh specs. Preserve provider-branch mismatch denial. Fixtures authored; next official exact-candidate execution is pending.",
+      "input_digest": "sha256:ae5622ec80dc66243f36cf555b1bb7006a62fda6672ae6feefadb19ebb32545a",
+      "proof_refs": [
+        "https://buildkite.com/decapodlabs/decapod/builds/11782",
+        "https://buildkite.com/decapodlabs/decapod/builds/11787",
+        "https://github.com/DecapodLabs/decapod/actions/runs/44175234588/job/134364708406"
+      ]
     }
   ],
   "intents": {
@@ -657,22 +667,22 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Reviewed the common plan-owned blocker derivation and legacy phase/checkpoint refusal on the current source; no second ledger.",
-          "reviewed_code_fingerprint": "1e37be9d4172b390669bf384abc7e881373a4b1f5b6d3315579ab2ecbf799334",
+          "reason": "Current source uses one plan-owned readiness projection and existing native consumer fixture; independent accepted negatives and merged signature checks reuse its evidence engine.",
+          "reviewed_code_fingerprint": "b0ca049f08f2e7dce8f7f25b0647158687361677a392fd7e6c2459275ec51d99",
           "spec_material_hash": "50d21dc1f07d5736ab197256c009c2fab5617f402a42a4e9971d62aa5c6a2114"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Reviewed current shared recorded instruction readiness payload and preparation semantics; source revision identifies plan bytes rather than authenticated human meaning.",
-          "reviewed_code_fingerprint": "1e37be9d4172b390669bf384abc7e881373a4b1f5b6d3315579ab2ecbf799334",
+          "reason": "Current source-backed recorded blockers retain existing operation markers and preparation semantics; behavioral fixture additions do not add a protocol or acceptance authority.",
+          "reviewed_code_fingerprint": "b0ca049f08f2e7dce8f7f25b0647158687361677a392fd7e6c2459275ec51d99",
           "spec_material_hash": "4efe6ce31db9247d52ed8c947448ba1843d0d8cac2e3a885fbfdafa82756af6d"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Reviewed current trust limits and separate open provenance, coverage, global consistency and host-observation obligations; release inventory update changes no required check.",
-          "reviewed_code_fingerprint": "1e37be9d4172b390669bf384abc7e881373a4b1f5b6d3315579ab2ecbf799334",
+          "reason": "Current trust limits distinguish recorded instructions, fixture-accepted tenant criterion, real source execution and unobserved external agents; no claim of principal authentication or full path coverage.",
+          "reviewed_code_fingerprint": "b0ca049f08f2e7dce8f7f25b0647158687361677a392fd7e6c2459275ec51d99",
           "spec_material_hash": "527cc749c06f943ddb878264fa30e76918f5f2d794ee2473348779a91d363d8d"
         }
       ],
@@ -684,13 +694,13 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1794949147Z"
+      "updated_at": "1794949994Z"
     },
     "trajectory": {
       "active_boundaries": [
         "No protected root edits, force push, merge, gate waiver or fabricated evidence"
       ],
-      "artifact_hash": "sha256:70d513f05721e07eb26e271616336c591b88c33de09fd7586d446913ae5c0b39",
+      "artifact_hash": "sha256:ed6d5f182586377efc6a591bbae09711ce6e7b9cdee79f71d62aa2b18bf891ac",
       "checks": [
         {
           "name": "exact_candidate_validation",
@@ -729,10 +739,17 @@
             "intent_id": "intent:todo:bugs_01m7nm3pnpc3be76",
             "kind": "trajectory_step_recorded",
             "sequence": 5
+          },
+          {
+            "detail": "trajectory:issues-1761-1770-20261117",
+            "event_id": "event:6",
+            "intent_id": "intent:todo:bugs_01m7nm3pnpc3be76",
+            "kind": "trajectory_step_recorded",
+            "sequence": 6
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 5,
+        "next_sequence": 6,
         "schema_version": "1.0.0",
         "trajectories": {
           "issues-1761-1770-20261117": {
@@ -791,6 +808,32 @@
                 ],
                 "sequence": 5,
                 "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:6",
+                "observations": [
+                  "tests/cli_contracts.rs",
+                  "tests/consumer_readiness.rs",
+                  ".decapod/managed/Dockerfile.decapod",
+                  "AGENTS.md",
+                  "CLAUDE.md",
+                  "CODEX.md",
+                  "GEMINI.md",
+                  "Official validate on a55c1de8 ended SNAPSHOT_NOT_READY public build identity mismatch after308039ms provider wait. Public envelopes11782(task branch) and11787(original PR branch) share sourceSHA but differ in branch authority. Preserve denial and full evidence at private snapshot9TwHAM. Actual CI standalone job134364708406 exposed only stale managed Docker0.148.7 pin; installed CLI init --proof regenerated release-bound projections without changing config, workflows or authored specs. Added accepted tenant negative+repair and actual producer/consumer signature-mismatch fixtures; new tests unexecuted until next exact-candidate validation."
+                ],
+                "proof_refs": [
+                  "exact_candidate_validation"
+                ],
+                "scope": [
+                  ".decapod/managed/specs",
+                  "README.md",
+                  "docs",
+                  "src/decapod",
+                  "tests"
+                ],
+                "sequence": 6,
+                "validation_findings": []
               }
             ]
           }
@@ -801,6 +844,7 @@
       ],
       "destination": "Existing PR1766",
       "evidence": [
+        "Official validate on a55c1de8 ended SNAPSHOT_NOT_READY public build identity mismatch after308039ms provider wait. Public envelopes11782(task branch) and11787(original PR branch) share sourceSHA but differ in branch authority. Preserve denial and full evidence at private snapshot9TwHAM. Actual CI standalone job134364708406 exposed only stale managed Docker0.148.7 pin; installed CLI init --proof regenerated release-bound projections without changing config, workflows or authored specs. Added accepted tenant negative+repair and actual producer/consumer signature-mismatch fixtures; new tests unexecuted until next exact-candidate validation.",
         "Official0.148.8 validate on0a8350c9 stopped before test execution with PROOF_PROFILE_RECONCILIATION_REQUIRED. Read-only agent.init reports inventory sha256:b929199963bc910eb5f099a92ec5d152d6e78d7b6608f0bdf74c22eeda13fdc8 and only STALE_SOURCE_INVENTORY plus REQUIRED_PROOF_NOT_RUN. Compared every discovery input from last accepted config review edbfc00d: only Cargo.toml and Cargo.lock package version0.148.7 to0.148.8 differ. Backed up config privately; reviewed digest update preserves all workflow/helper/check/toolchain contracts.",
         "Preserved PR1766 original head12d403ac and base18cbb30c. Actual CI44163787850 rejects obsolete checkpoint test and missing README constitution reference. Repaired source36ede3fd; tests authored, execution pending official validation. Strict historical checkpoint inspection reports original unproven/invalid lineage; current continuation cannot be described as historical proof."
       ],
@@ -813,12 +857,19 @@
       "intent_id": "intent:todo:bugs_01m7nm3pnpc3be76",
       "modified_files": [
         ".decapod/config.toml",
+        ".decapod/managed/Dockerfile.decapod",
         ".decapod/managed/specs/VALIDATION.md",
+        "AGENTS.md",
+        "CLAUDE.md",
+        "CODEX.md",
+        "GEMINI.md",
         "src/decapod/core/trajectory/execution.rs",
         "src/decapod/core/validate.rs",
         "src/decapod/core/workspace.rs",
         "src/decapod/lib.rs",
-        "src/decapod/plan_governance.rs"
+        "src/decapod/plan_governance.rs",
+        "tests/cli_contracts.rs",
+        "tests/consumer_readiness.rs"
       ],
       "repo_scope": [
         ".decapod/managed/specs",

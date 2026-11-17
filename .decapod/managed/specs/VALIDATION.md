@@ -16,6 +16,30 @@ toolchain substitution is authorized. A matching inventory digest is review
 consistency, not executed proof. Historical checkpoint inspection of PR #1766
 remains distinct from current continuation material and is not relabelled green.
 
+## Accepted behavioral negatives (#1762)
+
+`tests/cli_contracts.rs` registers the tenant-isolation control from the existing
+`tests/consumer_readiness.rs` native fixture. The controller fixes its negative
+criterion and reviewed execution contract on a local accepted Git upstream
+before candidate code introduces a cross-tenant read. Candidate positive tests
+execute and pass, while the accepted negative fails without a readiness receipt.
+Repair reruns the identical accepted check and requires a fresh candidate-bound
+receipt. This is scripted fixture-policy acceptance, not authenticated human
+authorship, a live service test or real-model observation.
+
+The existing two-worktree integration fixture also executes producer and consumer
+source: a positional-only producer and keyword caller each work with the accepted
+baseline but fail together after a clean merge. Repairing the separate numeric
+invariant cannot hide that signature mismatch; the combined candidate needs fresh
+executed proof after interface repair. Local green receipts do not compose.
+
+The official continuation run on `a55c1de8` rejected provider identity after that
+same SHA was pushed onto both the task branch and original PR branch. Public
+Buildkite envelopes 11782 and 11787 identify those different branches. Preserve
+the rejection; do not rebind one branch's run as another's proof. Validate a new
+candidate before its next review-branch update. Initialization through the
+installed CLI regenerates the stale managed Docker release pin found by actual CI.
+
 ## Current report validation scope
 
 The current verification boundary begins at accepted release commit 9d1aed27.
@@ -1477,7 +1501,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `1e37be9d4172b390669bf384abc7e881373a4b1f5b6d3315579ab2ecbf799334`
+- Repository signal fingerprint: `b0ca049f08f2e7dce8f7f25b0647158687361677a392fd7e6c2459275ec51d99`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (236 files), `tests/` (235 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

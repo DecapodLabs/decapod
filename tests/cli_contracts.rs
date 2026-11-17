@@ -200,6 +200,13 @@ fn accepted_local_check_script_cannot_be_replaced_by_candidate_repinning() {
     consumer_readiness::candidate_cannot_repin_a_rewritten_accepted_check_script();
 }
 
+#[cfg(any(target_os = "linux", target_os = "macos"))]
+#[test]
+fn accepted_tenant_control_rejects_green_positive_tests_and_requires_fresh_repair_proof() {
+    consumer_readiness::accepted_tenant_negative_control_rejects_green_positives_and_proves_repair(
+    );
+}
+
 mod init_ci_scaffolding;
 mod init_config_behavior;
 
