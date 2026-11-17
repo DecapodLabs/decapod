@@ -1,5 +1,15 @@
 # Interfaces
 
+## Public documentation offering navigation
+
+The documentation landing page links to the company-owned static comparison at
+https://decapodlabs.github.io/offerings.html through a highlighted Local + Cloud
+entry. Local remains free without signup. Cloud benefits are a Coming soon
+preview, with no public price or active purchasing route. Get started retains
+the existing quickstart.html destination. This navigation adds no account,
+payment, entitlement, cloud backend selection or governance authority. Existing
+mdBook navigation, themes, search, media and reduced-motion behavior remain.
+
 ## Internal source currency agreement (#1753)
 
 The existing private config-only source policy now also governs version-only
@@ -1218,7 +1228,7 @@ field. Nothing in this operation authorizes a mutation, approval or completion.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `59302b283273f65193215ee22c7b207943d8077e5105c464f9f5a2e7ac6faa43`
+- Repository signal fingerprint: `0cb026d672bba4f4a4eb74451d2633fa1fcfabc3ecb29385b87564e76f201e56`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (236 files), `tests/` (235 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

@@ -11,6 +11,7 @@
     <div class="decapod-docs-actions">
       <a class="decapod-docs-btn primary" href="quickstart.html">Get started <span aria-hidden="true">↗</span></a>
       <a class="decapod-docs-btn secondary" href="introduction.html">Understand Decapod <span aria-hidden="true">↗</span></a>
+      <a class="decapod-docs-btn offerings" href="https://decapodlabs.github.io/offerings.html">Explore Local + Cloud <span aria-hidden="true">↗</span></a>
     </div>
   </div>
   <img class="decapod-docs-mascot" src="https://decapodlabs.github.io/assets/mascot.svg" width="520" height="440" alt="The original coral-orange kawaii Decapod crab mascot" loading="eager">
@@ -30,6 +31,8 @@
 </div>
 
 ## Start with your existing agents
+
+**Local is free. No signup.** Explore [Local + Cloud](https://decapodlabs.github.io/offerings.html) for the planned hosted repository database and team access benefits. **Cloud is coming soon**; purchasing is not open yet.
 
 Install and initialize in your project:
 
