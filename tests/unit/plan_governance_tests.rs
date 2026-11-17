@@ -219,6 +219,57 @@ fn actual_intent_ambiguity_still_requires_human_input_before_projection_lookup()
 }
 
 #[test]
+fn contradictory_prompts_block_approved_plan_before_task_projection_lookup() {
+    let (dir, store) = execution_fixture();
+    let conflict = "Prompt six requires removing the API that prompt two preserves";
+    patch_plan(
+        dir.path(),
+        PlanPatch {
+            unresolved_contradictions: Some(vec![conflict.to_string()]),
+            ..Default::default()
+        },
+    )
+    .unwrap();
+    approve_plan(dir.path());
+    let before = fs::read(plan_path(dir.path())).unwrap();
+
+    let message = execute_check(dir.path(), &store, None)
+        .unwrap_err()
+        .to_string();
+    assert!(message.contains("NEEDS_HUMAN_INPUT"), "{message}");
+    assert!(message.contains("Resolve conflicting requests before execution"));
+    assert!(!message.contains("TODO_PROJECTION_MISSING"));
+    let payload: serde_json::Value =
+        serde_json::from_str(message.split_once("payload=").unwrap().1).unwrap();
+    assert_eq!(
+        payload["questions"],
+        json!([format!("Resolve conflicting requests before execution: {conflict}")])
+    );
+    assert_eq!(before, fs::read(plan_path(dir.path())).unwrap());
+
+    // A correction reopens plan acceptance; previous approval cannot carry
+    // forward to the revised intent contract.
+    let revised = patch_plan(
+        dir.path(),
+        PlanPatch {
+            unresolved_contradictions: Some(vec![]),
+            ..Default::default()
+        },
+    )
+    .unwrap();
+    assert_eq!(revised.state, PlanState::Draft);
+    let not_approved = execute_check(dir.path(), &store, None)
+        .unwrap_err()
+        .to_string();
+    assert!(not_approved.contains("NEEDS_PLAN_APPROVAL"));
+    approve_plan(dir.path());
+    let absent_projection = execute_check(dir.path(), &store, None)
+        .unwrap_err()
+        .to_string();
+    assert!(absent_projection.contains("TODO_PROJECTION_MISSING"));
+}
+
+#[test]
 fn missing_projection_does_not_waive_plan_approval_or_phase_gates() {
     let (dir, store) = execution_fixture();
     patch_plan(

@@ -2300,3 +2300,21 @@ The showcase kernel PR must not introduce a new GitHub Actions workflow, shadow
 the website's renderer or suppress the existing living-spec material gate.
 Independent native source validation and complete candidate readiness remain
 necessary before merging.
+
+## Contradictory human requests must remain blocked (#1764)
+
+The plan-derived execution and source validation gates must reject any nonempty
+unresolved_contradictions regardless of an APPROVED plan state. A deterministic
+negative fixture has a valid recorded plan, original prompt and incompatible
+later prompt, but the task projection is missing: execution reports unresolved
+human input rather than a missing task. After a supported plan update clears the
+conflict, prior plan acceptance is invalidated. The subsequent check may report
+the genuinely missing task, and must not invent a new intent concern.
+
+The source validation gate must use the same unresolved-plan predicate so
+a later PR admission cannot rely on a passed plan-intent gate while a conflict
+remains. Test the predicate directly and the execution command; preserve the
+current validation and publication proof surfaces, including exact subject
+freshness. These tests establish only deterministic enforcement of **recorded**
+contradictions, not model discovery of every semantic conflict. Independent
+fidelity testing remains open under #1761/#1762.

@@ -19,7 +19,7 @@ publication requirements converge.
 
 | Participant | Responsibility |
 | --- | --- |
-| Human | Expresses intent, provides judgment, and approves meaningful outcomes. |
+| Human | Expresses intent and retains ultimate judgment over meaningful outcomes; human approval is established only where a trusted external authorization mechanism actually records it. |
 | Agent | Interprets the request and repository, decomposes and performs the work, authors living specifications, updates governed state through Decapod, follows validation feedback, and gathers evidence. |
 | Decapod | Makes accepted intent and boundaries explicit, maintains governance state, validates invariants, refreshes supported projections, exposes contradictions, and blocks publication while required conditions are unsatisfied. |
 | Repository | Preserves governed state, custody, history, specifications, evidence, and receipts across processes, models, harnesses, and Decapod invocations. |
@@ -54,6 +54,12 @@ Publication is a governed state transition. An agent's statement that the work i
 | Projection | Decapod refreshes it from supported authoritative inputs | Generated, non-authoritative view | Makes selected state consumable without becoming a second source of truth. |
 | Custody | Decapod updates sessions, claims, workspaces, and recorded history | Authoritative coordination state plus evidence | Identifies who accepted the work and where it may proceed without collision. |
 | Publication state | Decapod updates it through governed completion and workspace publication paths | Authoritative transition state | Prevents incomplete or contradictory work from being represented as published completion. |
+
+### Authority and semantic scope
+
+`govern plan approve` is an explicit **plan-state transition**, callable by the authorized invoker; it is not independent authentication of a human's agreement. Approval-like strings or decision references in an agent-authored artifact cannot grant that authority. Actual deployment, admission and merge are separate transitions subject to their own configured evidence and provider controls. An autonomous run can be useful without human intervention at every step while still recording where human meaning was *not independently verified*.
+
+An agent can write both a flawed specification and tests that pass against it. Decapod's traceability, current check receipts and immutable source bindings make that interpretation reviewable; they do not create an oracle for the human's unexpressed intent. `intent.reconcile` currently reports `semantic_alignment: not_proven`. See [#1761](https://github.com/DecapodLabs/decapod/issues/1761) and [#1762](https://github.com/DecapodLabs/decapod/issues/1762) for independently sourced intent and falsifier contracts.
 
 Workspace promotion uses a normal fast-forward push. Decapod does not force-push
 managed branches. A non-fast-forward rejection remains a publication blocker;

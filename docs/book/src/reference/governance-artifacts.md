@@ -146,8 +146,11 @@ decapod govern plan resolve-spec-review \
   --reason "The human accepted the documented contract and its stated tradeoff"
 ```
 
-This uses the same declared-approval authority as `govern plan approve`; the
+This uses the same **declared-approval** authority as `govern plan approve`; the
 reference preserves provenance and is not cryptographic human authentication.
+`APPROVED` means that the caller advanced the governed execution-contract state;
+it does not certify the agent correctly interpreted the human request, establish
+independent human identity, or substitute for any separately required approval.
 The original question remains in the review record. A decision about stale code
 or stale spec content is rejected. Never invent a decision reference or infer
 approval. Existing 1.0 plans remain readable; recording reviews writes plan 1.1.

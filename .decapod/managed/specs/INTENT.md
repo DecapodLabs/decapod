@@ -865,3 +865,25 @@ accessible responsive layout, Rust-first source ownership, and existing
 Constitution/tasks/workspace/proof explanations. Acceptance requires a
 rendered documentation build, navigable convergence reference, preserved
 README install path, and observed proof from the source-validation gates.
+
+## Recorded intent authority and bounded assurance (issues #1761–#1764)
+
+Human input supplies the requested outcome, and the agent records an interpretation
+in a plan and living specs. The current repo state proves the recorded interpretation,
+not independent human-authenticated authorship or complete understanding. A plan
+state of APPROVED is a separate, caller-driven governed transition. Neither the
+plan nor a green check may be represented as independently human-approved meaning.
+
+For the bounded first hardening slice, treat nonempty governed plan
+unresolved_contradictions as an execution blocker across the CLI execution gate
+and source validation path. This must reject an auto-approved conflicting plan
+before accidentally reporting a missing task projection as the root failure.
+Correcting the contradiction revokes prior plan acceptance, and a new plan
+transition is required; it cannot make earlier proof or acceptance current.
+
+Follow-on acceptance belongs to #1761 (human request provenance and changes),
+#1762 (independent semantic falsifiers), and #1763 (host versus kernel
+enforcement and approval authority). Never claim that code/spec hashes, the
+Constitution, agent-authored tests, or an existing PR independently prove the
+human's unexpressed wants. This docs/source change is a bounded consistency
+repair, not fulfillment of the larger semantic-intent authority programme.

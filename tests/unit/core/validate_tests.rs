@@ -18,6 +18,37 @@ use std::sync::atomic::Ordering;
 use tempfile::tempdir;
 
 #[test]
+fn validated_intent_readiness_includes_recorded_contradictions() {
+    let dir = tempdir().unwrap();
+    let mut plan = GovernedPlan {
+        schema_version: "1.1.0".to_string(),
+        title: "Contradictory prompt fixture".to_string(),
+        intent: "Preserve API compatibility".to_string(),
+        state: PlanState::Approved,
+        todo_ids: vec![],
+        proof_hooks: vec![],
+        unknowns: vec![],
+        human_questions: vec![],
+        stop_conditions: vec![],
+        unresolved_contradictions: vec![],
+        deferred_questions: vec![],
+        constraints: ScopeConstraints::default(),
+        phases: vec![],
+        updated_at: "fixture".to_string(),
+        spec_reviews: vec![],
+        reflection: None,
+    };
+    assert!(!plan_governance::has_unresolved_intent_requirements(&plan));
+    plan.unresolved_contradictions
+        .push("Later prompt contradicts the earlier accepted requirement".to_string());
+    assert!(plan_governance::has_unresolved_intent_requirements(&plan));
+    plan_governance::save_plan(dir.path(), &plan).unwrap();
+    let reloaded = plan_governance::load_plan(dir.path()).unwrap().unwrap();
+    assert!(plan_governance::has_unresolved_intent_requirements(&reloaded));
+    assert_eq!(reloaded.state, PlanState::Approved);
+}
+
+#[test]
 fn branch_file_validation_dispatch_uses_working_root() {
     // Check the dispatcher as well as each gate's behavior below: a gate can
     // work correctly in isolation while its caller supplies the host store root.

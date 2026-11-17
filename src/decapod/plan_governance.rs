@@ -574,6 +574,15 @@ pub fn update_gate(
     })
 }
 
+/// An agent-approved plan does not resolve a contradictory or unknown request.
+/// Keep this predicate shared by the execution and validation entrypoints.
+pub(crate) fn has_unresolved_intent_requirements(plan: &GovernedPlan) -> bool {
+    plan.intent.trim().is_empty()
+        || !plan.unknowns.is_empty()
+        || !plan.human_questions.is_empty()
+        || !plan.unresolved_contradictions.is_empty()
+}
+
 pub fn ensure_execute_ready(
     input: ExecuteCheckInput<'_>,
 ) -> Result<GovernedPlan, error::DecapodError> {
@@ -596,10 +605,7 @@ pub fn ensure_execute_ready(
         ));
     }
 
-    if plan.intent.trim().is_empty()
-        || !plan.unknowns.is_empty()
-        || !plan.human_questions.is_empty()
-    {
+    if has_unresolved_intent_requirements(&plan) {
         let mut questions = Vec::new();
         if plan.intent.trim().is_empty() {
             questions.push("What is the single-sentence intent for this change?".to_string());
@@ -608,9 +614,14 @@ pub fn ensure_execute_ready(
         for unknown in &plan.unknowns {
             questions.push(format!("Resolve unknown before execution: {unknown}"));
         }
+        for contradiction in &plan.unresolved_contradictions {
+            questions.push(format!(
+                "Resolve conflicting requests before execution: {contradiction}"
+            ));
+        }
         return Err(marker_error(
             "NEEDS_HUMAN_INPUT",
-            "Execution blocked: unresolved intent or unknowns.",
+            "Execution blocked: unresolved intent, unknowns, human questions or contradictions.",
             Some(json!({ "questions": questions })),
         ));
     }
