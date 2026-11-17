@@ -121,6 +121,8 @@ button,input,a{font-family:inherit}
 .decapod-docs-kicker{font-weight:900;letter-spacing:.13em;color:#a13d2c;font-size:10px}
 #content main .decapod-docs-hero h1{font-family:'Outfit',system-ui,sans-serif;font-weight:900;font-size:clamp(46px,5.5vw,75px);letter-spacing:-.085em;line-height:.96;white-space:normal;color:#291b28;margin:22px 0}
 .decapod-docs-hero h1 em{font-style:normal;color:var(--decapod-orange)}
+#content main .decapod-docs-hero h1 .decapod-docs-metacognition{display:block;font-size:.56em;line-height:1.1;letter-spacing:-.055em;white-space:normal;overflow-wrap:anywhere}
+
 .decapod-docs-hero-copy>p{color:#4b3b41;max-width:480px;font-size:16px;line-height:1.55}
 .decapod-docs-mascot{display:block;width:100%;max-width:290px;height:auto;justify-self:center;filter:drop-shadow(0 20px 17px #ad53422f)}
 .decapod-docs-actions{display:flex;flex-wrap:wrap;gap:10px;margin-top:25px}
