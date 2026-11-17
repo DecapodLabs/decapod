@@ -1,5 +1,88 @@
 # Validation
 
+## Live rejection specificity (#1748)
+
+The disposable GitHub acceptance requires the invalid payload's actual failure,
+the independent guard's executed success, and PUBLICATION_NOT_READY with
+READINESS_BLOCKED at publication. A timeout, lock or transport failure cannot
+satisfy that negative control. A previously permissive run remains partial
+evidence even when its test process reported success; fresh execution must prove
+the stricter assertion on the corrected controller.
+
+The admission repair incorporates accepted target
+`e7b54246d5c4cc325883ea1281aea039a0ad064f` after validation and the first
+branch-push CI refused moved targets and required target ancestry. The source
+inventory review is renewed for accepted release 0.148.6. Earlier tag inventory,
+stale-base and entrypoint-alignment failures remain failed attempts, with no
+executed required suite or publication authority inferred from them. A separate
+development-controller build is necessary to exercise the explicitly authorized
+source configuration policy absent from installed 0.148.0; compilation alone
+does not establish readiness or replace complete validation and live acceptance.
+
+## Required publication regression coverage (#1747, #1748)
+
+The complete fourth real-forge acceptance passed: one test, zero failures,
+311.75 seconds on macOS, using source controller
+`99a6f59f5252ce37845b47b2d9673b169d3df509`. The actual GitHub PR is
+`alexhraber/decapod-admission-acceptance-20261117-1747-04#1`; immutable evidence
+commit `1c21226bc3c5c65afb504a37bbe00829e308c593` retains three native receipts,
+their observations, failed-source observations and post-creation rejection.
+Every archived byte was checked against its Git blob identity. The final
+validated head is `cd938efe2d50c59676212ea9a747617f227c106a`, bound to base
+`0e36f8e4b336985fbe0a3b4d92fbd48f43b4027b`. Advancing the target to
+`2a5b1f276093139d160c85d72af5b4253b0ecfc0` invalidated applicability: both
+publication and repeated validation rejected with `STALE_ACCEPTED_BASE`.
+The draft PR remains historical admission, never authorization to merge.
+`docs/publication-admission-acceptance.md` records the reproducible command,
+all exact subjects, receipt hashes, rejected controls and assurance limits.
+
+Full Buildkite validation passed for source candidate
+`e81b89b36d330e36ab06a74b4eae409117e1facd` against accepted
+`e7b54246d5c4cc325883ea1281aea039a0ad064f`. The second real-forge attempt
+rejected invalid source, admitted only its repaired head, confirmed draft
+quarantine after a real post-creation mutation, and rejected a later source
+mutation. That last operation regenerated and staged managed specs before
+refusing a missing authoring checkpoint. Recovery must refresh through the
+governed owner, checkpoint a new commit and earn new proof/admission; it must
+not hand-restore machine-owned state or reuse the older artifact's success.
+The harness now performs that recovery before its target-advancement controls.
+The third real-forge run rejected both publication and repeated validation after
+the remote target advanced. GitHub's PR response retained its older base SHA;
+the acceptance therefore reads the actual `git/ref/heads/main` independently
+and records the PR metadata separately. Current target identity cannot be
+inferred from that historical PR field. The publisher already verifies exact
+remote branch refs before and after readback, independently of PR metadata.
+
+The first actual CI library run executed all seven live-proof publication
+regressions and the three source-development policy controls successfully;
+its new config-preservation fixture failed on inserting an absent TOML key.
+That fixture is repaired. The next Clippy run identified duplicated inclusion
+of the shared consumer fixture, now consolidated at the library test root.
+The first live GitHub attempt failed before source execution because its
+declaration used the reserved `program` toolchain label. Its assertion refused
+to treat that adapter failure as actual failed-source execution. The attempt
+and disposable repository are preserved. Their failures were not relabeled as
+success; the separate fourth run supplies the complete passing acceptance.
+
+`tests/unit/core/workspace_publication_tests.rs::live_admission` executes real
+required source commands and real Git commits/remote readback, then exercises
+the publisher's admission boundary with deterministic forge responses. It covers
+failure, repair, fresh proof, changed same-path bytes/head, target movement,
+missing/skipped/failed required observations, source/policy/governance/tool drift,
+and post-creation rejection. Additional quarantine tests cover lost replies,
+permission denial and unrelated PR protection. These fixtures do not establish
+real GitHub publication. The separately documented disposable-repository
+acceptance records actual CLI/forge evidence and its limitations.
+The existing always-selected `supabase-consumer` recipe owns these library
+tests, including test-only changes; `tests/source_ci_profile_policy.rs` protects
+that full-suite obligation without changing the accepted executor. GitHub
+ruleset 12701816 requires Buildkite's
+`CI / test (target="core") (push)` from App 805657 and strict target freshness;
+`CI / supabase-consumer (push)` from the same App is also required: its actual
+`cargo test --lib` recipe owns the library-unit publication regressions. The
+core integration recipe alone does not execute those unit tests. The existing
+OrganizationAdmin bypass remains a separate explicit authority.
+
 ## Real recovery fixture prerequisites (#1696)
 
 `tests/support/recovery_filesystem.rs` owns the existing private filesystem
@@ -1369,8 +1452,8 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `28060df26a4bc2173c9505f4d306b11ce4e1eb9f87d740a483de7f543fdf7e19`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (236 files), `tests/` (234 files)
+- Repository signal fingerprint: `939915b935953c7ae56af42d7bbea5a14b3ee19bcc785bcafeffd46bc1fc1468`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (236 files), `tests/` (235 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 

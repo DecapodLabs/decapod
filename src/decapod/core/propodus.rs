@@ -15,13 +15,13 @@ use crate::core::error::{CloudAuthDiagnostic, CloudAuthStatus};
 use crate::core::repo_identity::RepositoryIdentity;
 use crate::core::storage::{Task as StorageTask, TodoStore};
 use async_trait::async_trait;
-use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use std::fmt;
 use std::io::IsTerminal;
 use std::process::Command;
 use std::thread;
 use std::time::{Duration, Instant};
+use time::OffsetDateTime;
 
 pub const PROPODUS_CONTRACT_ID: &str = "decapod.propodus.todo";
 pub const PROPODUS_CONTRACT_VERSION: &str = "v1";
@@ -1158,7 +1158,7 @@ impl<T: PropodusTransport> TodoStore for PropodusTodoStore<T> {
 }
 
 fn to_storage_task(todo: PropodusTodo) -> StorageTask {
-    let now = Utc::now();
+    let now = OffsetDateTime::now_utc();
     StorageTask {
         id: todo.id.clone(),
         repo_id: todo.repo_id,
@@ -1178,10 +1178,8 @@ fn to_storage_task(todo: PropodusTodo) -> StorageTask {
     }
 }
 
-fn parse_timestamp(value: Option<&str>) -> Option<DateTime<Utc>> {
-    value
-        .and_then(|value| DateTime::parse_from_rfc3339(value).ok())
-        .map(|value| value.with_timezone(&Utc))
+fn parse_timestamp(value: Option<&str>) -> Option<OffsetDateTime> {
+    value.and_then(|value| crate::core::time::parse_rfc3339(value).ok())
 }
 
 fn decode_json<T: for<'de> Deserialize<'de>>(body: &[u8]) -> Result<T, PropodusClientError> {

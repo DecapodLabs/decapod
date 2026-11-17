@@ -1,5 +1,40 @@
 # Intent
 
+## Current dependency policy (#1755)
+
+A current required dependency failure reopens delivery even after historical
+readiness passed. Decapod replaces the unmaintained `chrono` dependency with
+`time`, without an advisory exception. Fresh source and live-forge proof must
+cover this candidate before delivery issues are closed. The reviewed source
+inventory changes only for Cargo.toml, Cargo.lock and MODULE.bazel.lock; accepted
+commands, workflow adapters, requiredness and coverage remain intact.
+
+During development of Decapod itself, an explicitly configured internal policy
+can separate entrypoint release-version churn from the source package version.
+Its scope is the exact canonical Decapod repository and source lineage; valid
+canonical template bytes and fingerprints remain mandatory. It does not renew
+historical execution evidence or weaken exact-artifact publication proof.
+
+## Measured strict live acceptance
+
+The current real GitHub acceptance uses the repaired timestamp dependency and
+requires actual source-policy rejection, excluding a timeout as proof. Its
+immutable receipts, exact source/head/base identities, quarantine and stale-target
+controls are recorded in docs/publication-admission-acceptance.md. The final
+source delivery independently requires fresh full exact-candidate validation.
+Historical controller and fixture successes do not authorize a later artifact.
+
+## Evidence-bound PR admission (#1747, #1748)
+
+An agent earns PR admission only through complete live proof for the actual
+candidate, accepted target and required policy. `PublicationReadiness` carries
+that existing proof through the publisher; a saved historical success cannot
+authorize a different present artifact. A target advance or changed source,
+governance, execution tools or task custody requires fresh applicable proof.
+PR admission is an observation for exact head/base identities, not authorization
+to merge later. Failed post-creation admission preserves a separate rejection
+and verifies that the matching PR is quarantined as a draft or already closed.
+
 ## Do What Must Be Done (#1690–#1692)
 
 Maximize useful autonomous engineering per human intervention. Agents must
@@ -375,8 +410,8 @@ These declarations select authoring and proof obligations; they do not attest im
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `28060df26a4bc2173c9505f4d306b11ce4e1eb9f87d740a483de7f543fdf7e19`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (236 files), `tests/` (234 files)
+- Repository signal fingerprint: `939915b935953c7ae56af42d7bbea5a14b3ee19bcc785bcafeffd46bc1fc1468`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (236 files), `tests/` (235 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 

@@ -72,7 +72,7 @@ fn command_with_optional_datastore(
             decapod::core::cloud_session::Session {
                 access_token: token.into(),
                 refresh_token: Some(managed::REFRESH.into()),
-                expires_at: chrono::Utc::now().timestamp() + 900,
+                expires_at: time::OffsetDateTime::now_utc().unix_timestamp() + 900,
             },
         );
     }
@@ -465,7 +465,7 @@ mod enabled {
             decapod::core::cloud_session::Session {
                 access_token: managed::ACCESS.into(),
                 refresh_token: Some(managed::REFRESH.into()),
-                expires_at: chrono::Utc::now().timestamp() + 900,
+                expires_at: time::OffsetDateTime::now_utc().unix_timestamp() + 900,
             },
         );
         assert_eq!(status(&endpoint)["credential_present"], true);
@@ -563,7 +563,11 @@ mod enabled {
                 assert_eq!(event_params[3], event);
                 assert_eq!(event_params[5], "supabase-proof");
                 let timestamp = &event_params[1];
-                chrono::DateTime::parse_from_rfc3339(timestamp.as_str().unwrap()).unwrap();
+                time::OffsetDateTime::parse(
+                    timestamp.as_str().unwrap(),
+                    &time::format_description::well_known::Rfc3339,
+                )
+                .unwrap();
                 let payload: Value =
                     serde_json::from_str(event_params[4].as_str().unwrap()).unwrap();
                 let params = operations[0]["params"].as_array().unwrap();

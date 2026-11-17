@@ -1,5 +1,35 @@
 # Architecture
 
+## UTC timestamp dependency (#1755)
+
+`core/time.rs` owns UTC RFC3339 parsing and established output precision using
+`time::OffsetDateTime`. Storage models use explicit string serde; Dactyl retains
+nine-digit transaction markers and accepts legacy SQL UTC timestamps. Cloud
+session and policy expiry still fail closed on invalid input. Epoch-Z command
+envelopes retain their separate existing representation. Cargo and Bazel resolve
+the same maintained dependency, without disabling dependency-policy checks.
+
+An explicitly configured internal Decapod-development policy can tolerate
+entrypoint release/package version drift only for the exact canonical Decapod
+repository identity and verified source lineage. It still reconstructs each
+immutable commit's source template and validates its release-bound fingerprint.
+Consumer repositories retain strict alignment. This policy does not waive
+execution, custody, source, target or publication evidence and is omitted from
+normal generated configuration and agent discovery.
+
+## Publication proof continuity (#1747, #1748)
+
+`core::validation_history::PublicationReadiness` owns the runtime's opaque
+completed evidence, original task binding and external evidence directory. It
+is constructed from the live result, never from an agent-supplied receipt.
+Publication reuses `CurrentEvidenceInputs` to measure source/history, policy and
+native tool inputs, and rechecks the existing task/workunit/epoch binding.
+`workspace_publication` compares remote repository, branch, head and base to
+that same proof before creation and during final readback. Its final callback
+owns the failure/quarantine boundary, preventing a later unchecked error path
+from returning admission. The existing provider and native proof engines remain
+the authority; no additional proof store or reusable admission token is added.
+
 ## Agent-facing escalation convergence (#1690–#1692)
 
 `core/mentor/reflection/escalation.rs` composes source observations with the
@@ -948,8 +978,8 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `28060df26a4bc2173c9505f4d306b11ce4e1eb9f87d740a483de7f543fdf7e19`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (236 files), `tests/` (234 files)
+- Repository signal fingerprint: `939915b935953c7ae56af42d7bbea5a14b3ee19bcc785bcafeffd46bc1fc1468`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (236 files), `tests/` (235 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 

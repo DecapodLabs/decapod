@@ -1027,7 +1027,7 @@ fn prepare_inner<'a>(
             consumed_registry_crate,
         ))?),
         registry_identity: "https://index.crates.io/".into(),
-        registry_observed_at: chrono::Utc::now().to_rfc3339(),
+        registry_observed_at: crate::core::time::now_rfc3339(),
         registry_version: baseline.version,
         registry_crate_sha256: baseline.checksum,
         configuration_sha256: profile.configuration_digest.clone(),

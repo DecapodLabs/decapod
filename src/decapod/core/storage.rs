@@ -1,7 +1,7 @@
 use anyhow::{Result, anyhow};
 use async_trait::async_trait;
-use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
+use time::OffsetDateTime;
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct Task {
@@ -17,8 +17,10 @@ pub struct Task {
     pub priority: String,
     pub category: String,
     pub tags: Vec<String>,
-    pub created_at: DateTime<Utc>,
-    pub updated_at: DateTime<Utc>,
+    #[serde(with = "crate::core::time::serde_utc")]
+    pub created_at: OffsetDateTime,
+    #[serde(with = "crate::core::time::serde_utc")]
+    pub updated_at: OffsetDateTime,
     pub version: i32,
 }
 
@@ -32,8 +34,10 @@ pub struct KnowledgeEntry {
     pub scope: String,
     pub dir_path: String,
     pub tags: Vec<String>,
-    pub created_at: DateTime<Utc>,
-    pub updated_at: DateTime<Utc>,
+    #[serde(with = "crate::core::time::serde_utc")]
+    pub created_at: OffsetDateTime,
+    #[serde(with = "crate::core::time::serde_utc")]
+    pub updated_at: OffsetDateTime,
     pub version: i32,
 }
 
@@ -46,7 +50,8 @@ pub struct Decision {
     pub chosen_value: String,
     pub rationale: String,
     pub actor: String,
-    pub created_at: DateTime<Utc>,
+    #[serde(with = "crate::core::time::serde_utc")]
+    pub created_at: OffsetDateTime,
     pub version: i32,
 }
 

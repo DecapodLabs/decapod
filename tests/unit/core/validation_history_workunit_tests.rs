@@ -7,9 +7,7 @@ use crate::core::{context_capsule, trajectory, workunit};
 use crate::plan_governance::{self, InitPlanInput, PlanPatch, PlanState, ScopeConstraints};
 use std::fs;
 
-#[allow(dead_code)]
-#[path = "../../common/consumer_readiness_fixture.rs"]
-mod consumer;
+use crate::consumer_readiness_fixture as consumer;
 
 const TASK: &str = "code_observed_workunit";
 const INTENT: &str = "intent:observed-workunit";

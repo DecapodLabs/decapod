@@ -175,6 +175,165 @@ fn self_asserted_hash_or_wrong_version_does_not_authorize_old_body() {
     );
 }
 
+fn enable_development_scope(fixture: &Fixture, slug: &str) {
+    fs::create_dir_all(fixture.root().join(".decapod")).unwrap();
+    fs::write(
+        fixture.root().join(".decapod/config.toml"),
+        "[repo]\n_allow_entrypoint_version_drift = true\n",
+    )
+    .unwrap();
+    command(
+        fixture.root(),
+        &[
+            "remote",
+            "add",
+            "origin",
+            &format!("git@github.com:{slug}.git"),
+        ],
+    );
+}
+
+#[test]
+fn private_development_config_requires_exclusive_slug_and_real_source_lineage() {
+    assert!(
+        !serde_json::to_string(&crate::cli::DecapodProjectConfig::default())
+            .unwrap()
+            .contains(DEVELOPMENT_VERSION_KEY)
+    );
+    let source = include_str!("../../assets.rs");
+    for (lineage, slug, permitted) in [
+        (true, "DecapodLabs/decapod", true),
+        (true, "someone/decapod", false),
+        (true, "DecapodLabs/other", false),
+        (true, "decapodlabs/decapod", false),
+        (false, "DecapodLabs/decapod", false),
+    ] {
+        let fixture = Fixture::new(lineage, source);
+        enable_development_scope(&fixture, slug);
+        let entrypoint = rendered(source, "AGENTS.md", "0.107.4");
+        fs::write(fixture.root().join("AGENTS.md"), &entrypoint).unwrap();
+        assert_eq!(
+            development_template(fixture.root(), "AGENTS.md")
+                .unwrap()
+                .is_some(),
+            permitted,
+            "{slug} lineage={lineage}"
+        );
+        assert_eq!(
+            super::super::validate_entrypoint(fixture.root(), "AGENTS.md").is_ok(),
+            permitted
+        );
+        if permitted {
+            assert_eq!(
+                super::super::refresh_entrypoint_metadata(fixture.root()).unwrap(),
+                0
+            );
+            assert_eq!(
+                fs::read_to_string(fixture.root().join("AGENTS.md")).unwrap(),
+                entrypoint
+            );
+        }
+    }
+}
+
+#[test]
+fn development_version_exception_rejects_multiple_push_destinations() {
+    let fixture = Fixture::new(true, include_str!("../../assets.rs"));
+    enable_development_scope(&fixture, "DecapodLabs/decapod");
+    for url in [
+        "git@github.com:DecapodLabs/decapod.git",
+        "git@github.com:someone/decapod.git",
+    ] {
+        command(
+            fixture.root(),
+            &["remote", "set-url", "--add", "--push", "origin", url],
+        );
+    }
+    assert!(
+        development_template(fixture.root(), "AGENTS.md")
+            .unwrap()
+            .is_none()
+    );
+}
+
+#[test]
+fn development_version_exception_keeps_template_and_fingerprint_checks() {
+    let source = include_str!("../../assets.rs");
+    let fixture = Fixture::new(true, source);
+    enable_development_scope(&fixture, "DecapodLabs/decapod");
+    let canonical = rendered(source, "AGENTS.md", "0.107.4");
+    for content in [
+        canonical.replace("Universal Agent Contract", "Agent-supplied contract"),
+        rendered(
+            &source.replace("Universal Agent Contract", "Agent-supplied contract"),
+            "AGENTS.md",
+            "0.107.4",
+        ),
+        canonical.replace("<!-- decapod-fingerprint:", "<!-- invalid-fingerprint:"),
+        canonical.replace("0.107.4", "arbitrary-release"),
+    ] {
+        fs::write(fixture.root().join("AGENTS.md"), content).unwrap();
+        assert!(super::super::validate_entrypoint(fixture.root(), "AGENTS.md").is_err());
+    }
+    fs::write(fixture.root().join("AGENTS.md"), canonical).unwrap();
+    for config in [
+        "[repo]\n",
+        "[repo]\n_allow_entrypoint_version_drift = false\n",
+        "[repo]\n_allow_entrypoint_version_drift = 'true'\n",
+    ] {
+        fs::write(fixture.root().join(".decapod/config.toml"), config).unwrap();
+        assert!(
+            development_template(fixture.root(), "AGENTS.md")
+                .unwrap()
+                .is_none()
+        );
+        assert!(super::super::validate_entrypoint(fixture.root(), "AGENTS.md").is_err());
+    }
+}
+
+#[test]
+fn configured_source_history_accepts_only_version_drift_and_retains_default_rejection() {
+    let source = include_str!("../../assets.rs");
+    let fixture = Fixture::new(true, source);
+    enable_development_scope(&fixture, "DecapodLabs/decapod");
+    for surface in super::super::ENTRYPOINT_FILES {
+        fs::write(
+            fixture.root().join(surface),
+            rendered(source, surface, "0.107.4"),
+        )
+        .unwrap();
+    }
+    let drift = fixture.commit();
+    fixture.advance();
+    let head = command(fixture.root(), &["rev-parse", "HEAD"]);
+    assert!(validate_committed_history(fixture.root(), &fixture.historical, &head).is_ok());
+    fs::write(
+        fixture.root().join(".decapod/config.toml"),
+        "[repo]\n_allow_entrypoint_version_drift = false\n",
+    )
+    .unwrap();
+    let rejected =
+        validate_committed_history(fixture.root(), &fixture.historical, &head).unwrap_err();
+    assert!(rejected.contains(&drift), "{rejected}");
+    fs::write(
+        fixture.root().join(".decapod/config.toml"),
+        "[repo]\n_allow_entrypoint_version_drift = true\n",
+    )
+    .unwrap();
+    let altered = source.replace("Universal Agent Contract", "Forged generated contract");
+    fs::write(
+        fixture.root().join("AGENTS.md"),
+        rendered(&altered, "AGENTS.md", "0.107.4"),
+    )
+    .unwrap();
+    let tampered = fixture.commit();
+    fixture.advance();
+    let head = command(fixture.root(), &["rev-parse", "HEAD"]);
+    let rejected =
+        validate_committed_history(fixture.root(), &fixture.historical, &head).unwrap_err();
+    assert!(rejected.contains(&tampered), "{rejected}");
+}
+
 #[test]
 fn missing_invalid_or_conditional_historical_source_fails_closed() {
     for kind in [

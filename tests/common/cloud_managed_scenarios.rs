@@ -5,7 +5,6 @@
 
 use super::managed;
 
-use chrono::{Duration as ChronoDuration, SecondsFormat, Utc};
 use decapod::core::cloud_session::Session;
 use serde_json::{Value, json};
 use sha2::{Digest, Sha256};
@@ -19,6 +18,7 @@ use std::sync::{Arc, Mutex};
 use std::thread::JoinHandle;
 use std::time::Duration;
 use tempfile::TempDir;
+use time::{OffsetDateTime, SignedDuration, format_description::well_known::Rfc3339};
 
 const CONFIG: &str = "/functions/v1/propodus-onboarding/config";
 const START: &str = "/functions/v1/propodus-onboarding/start";
@@ -250,8 +250,11 @@ impl Fixture {
         let requests = Arc::new(Mutex::new(Vec::new()));
         let service = Arc::new(Mutex::new(Service {
             repository: repository.to_owned(),
-            expiry: (Utc::now() + ChronoDuration::minutes(10))
-                .to_rfc3339_opts(SecondsFormat::Secs, true),
+            expiry: (OffsetDateTime::now_utc() + SignedDuration::minutes(10))
+                .replace_nanosecond(0)
+                .unwrap()
+                .format(&Rfc3339)
+                .unwrap(),
             authentication_status: "ready",
             lose_response: None,
             complete_error: None,
@@ -355,7 +358,8 @@ impl Fixture {
             Session {
                 access_token: managed::ACCESS.into(),
                 refresh_token: Some(managed::REFRESH.into()),
-                expires_at: Utc::now().timestamp() + if expired { -10 } else { 900 },
+                expires_at: OffsetDateTime::now_utc().unix_timestamp()
+                    + if expired { -10 } else { 900 },
             },
         );
     }

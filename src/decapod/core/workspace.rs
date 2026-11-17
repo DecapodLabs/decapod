@@ -2008,7 +2008,8 @@ pub struct PublishResult {
     /// Exact pushed commit and final remote diff were read back.
     #[serde(default)]
     pub remote_verified: bool,
-    /// A matching open PR and its complete diff were verified.
+    /// A matching open PR and its complete diff were verified at admission.
+    /// This observation does not authorize a later merge or survive head/base drift.
     #[serde(default)]
     pub pr_verified: bool,
     /// Non-blocking publication limitations; never substitutes for failed proof.
@@ -2548,8 +2549,10 @@ pub(crate) fn publish_workspace_with_readiness(
     // Auto-commit above changes HEAD. Evaluate the current committed work
     // branch now, immediately before its first publication, through the same
     // full binary readiness contract as CLI/RPC validate.
-    let snapshot_handoff =
+    let readiness =
         crate::enforce_workbranch_readiness_before_push(repo_root, readiness_invocation)?;
+
+    publication::verify_committed_bundle(repo_root, &commit_hash)?;
 
     // 3. Push branch to the selected network remote.
     let push_output = Command::new("git")
@@ -2589,31 +2592,26 @@ pub(crate) fn publish_workspace_with_readiness(
     {
         let url = publication::ensure_and_verify_pr(
             repo_root,
+            &publish_remote.url,
             &slug,
             &status.git.current_branch,
             &base_branch,
             &proof,
+            &readiness,
             title.as_deref().unwrap_or(&status.git.current_branch),
             description.as_deref().unwrap_or(""),
         )
         .map_err(publication::after_push)?;
-        // Detect a branch/base movement while GitHub was serving the PR pages.
-        publication::verify_remote_unchanged(
-            repo_root,
-            &publish_remote.url,
-            &status.git.current_branch,
-            &base_branch,
-            &proof,
-        )
-        .map_err(publication::after_push)?;
-        (Some(url), Vec::new())
+        // The publisher's final admission callback rechecks remote and local
+        // proof; failures there quarantine the existing PR before returning.
+        (Some(url), vec!["PR admission applies to the observed head and base only. It does not authorize merge; subsequent head, base or required-context changes require fresh applicable proof and merge checks.".into()])
     } else {
         (None, vec!["Branch verified remotely; PR verification is unavailable for this non-GitHub remote. This is not a publish-ready PR.".to_string()])
     };
 
     if pr_url.is_some()
-        && let Some(handoff) = snapshot_handoff
-        && let Err(error) = crate::cleanup_published_readiness_snapshot(repo_root, &handoff)
+        && let Some(handoff) = readiness.snapshot_handoff()
+        && let Err(error) = crate::cleanup_published_readiness_snapshot(repo_root, handoff)
     {
         warnings.push(format!("Publication is verified; temporary snapshot cleanup needs recovery: {error}. Preserve handoff {}", handoff.display()));
     }

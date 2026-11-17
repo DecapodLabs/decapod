@@ -3,13 +3,14 @@
 //! `AGENTS.md`, `CLAUDE.md`, `GEMINI.md`, and `CODEX.md` are Decapod-owned
 //! templates. Agents and humans must not hand-edit them. The only permitted
 //! on-disk form is the exact template body plus release/fingerprint headers
-//! for the evaluating Decapod binary. Feature-branch commits that touch these
-//! files for any other reason (payload edits, fingerprint tweaks, mode-only
-//! changes) fail validation via the entrypoint commit-discipline gate.
+//! for the evaluating Decapod binary under the normal release policy. Source
+//! development policy can permit version drift while retaining exact committed
+//! source templates and version-bound fingerprints. Payload edits and mode-only
+//! changes fail validation via the entrypoint commit-discipline gate.
 //!
 //! The expected fingerprints in this module are release artifact data. They
-//! are deliberately not derived from the files being validated or from the
-//! repository at runtime.
+//! are deliberately not derived from the entrypoint files being validated.
+//! Source templates use the bounded immutable reader in `history`.
 
 #[path = "entrypoint_integrity/history.rs"]
 mod history;
@@ -31,6 +32,42 @@ const RELEASE_MARKER: &str = "<!-- decapod-release:";
 const FINGERPRINT_MARKER: &str = "<!-- decapod-fingerprint:";
 const LEGACY_BINARY_MARKER: &str = "<!-- decapod-binary-sha256:";
 const FINGERPRINT_PLACEHOLDER: &str = "<fingerprint>";
+
+// Private development policy: no CLI flag, generated default, schema or agent
+// guidance advertises it. Configuration is still part of exact proof material.
+fn development_alignment(
+    root: &Path,
+    surface: &str,
+    content: &str,
+) -> Result<Option<bool>, String> {
+    history::development_template(root, surface)
+        .map(|body| body.map(|body| valid_versioned_source_entrypoint(surface, content, &body)))
+}
+
+fn valid_versioned_source_entrypoint(surface: &str, content: &str, body: &str) -> bool {
+    let Some(first) = content.lines().next() else {
+        return false;
+    };
+    let Some(Ok(release)) = marker_value(first, RELEASE_MARKER) else {
+        return false;
+    };
+    let parts: Vec<_> = release.split('.').collect();
+    if parts.len() != 3
+        || parts.iter().any(|part| {
+            part.is_empty()
+                || (part.len() > 1 && part.starts_with('0'))
+                || !part.bytes().all(|byte| byte.is_ascii_digit())
+                || part.parse::<u64>().is_err()
+        })
+    {
+        return false;
+    }
+    let hash = fingerprint_for_payload(surface, &release, body);
+    content
+        == format!(
+            "<!-- decapod-release: {release} -->\n<!-- decapod-fingerprint: {hash} -->\n{body}"
+        )
+}
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct EntrypointExpectation {
@@ -215,6 +252,12 @@ pub fn refresh_entrypoint_metadata(project_root: &Path) -> Result<usize, error::
         }
 
         let existing = fs::read_to_string(&path).map_err(error::DecapodError::IoError)?;
+        if matches!(
+            development_alignment(project_root, surface, &existing),
+            Ok(Some(true))
+        ) {
+            continue;
+        }
         let Some(rendered) = render_entrypoint(surface) else {
             continue;
         };
@@ -279,7 +322,7 @@ pub fn refresh_entrypoint_metadata(project_root: &Path) -> Result<usize, error::
 /// Classify on-disk entrypoint alignment with the evaluating binary.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum EntrypointAlignment {
-    /// Byte-identical to [`render_entrypoint`] for [`RELEASE_VERSION`].
+    /// Meets the evaluating binary's entrypoint alignment policy.
     MatchesEvaluatingRelease,
     /// Canonical body but stale release pin and/or fingerprint (heal will bump).
     StalePin,
@@ -303,6 +346,11 @@ pub fn classify_entrypoint_alignment(
     let Some(rendered) = render_entrypoint(surface) else {
         return Ok(EntrypointAlignment::Divergent);
     };
+    match development_alignment(project_root, surface, &existing) {
+        Ok(Some(true)) => return Ok(EntrypointAlignment::MatchesEvaluatingRelease),
+        Ok(Some(false)) | Err(_) => return Ok(EntrypointAlignment::Divergent),
+        Ok(None) => (),
+    }
     if existing == rendered {
         return Ok(EntrypointAlignment::MatchesEvaluatingRelease);
     }
@@ -388,6 +436,13 @@ pub fn validate_entrypoint(project_root: &Path, surface: &str) -> Result<(), Box
         .map_err(|_| finding(surface, FindingKind::UnsupportedFileType, None, None))?;
     let content = String::from_utf8(bytes)
         .map_err(|_| finding(surface, FindingKind::PayloadModified, None, None))?;
+    match development_alignment(project_root, surface, &content) {
+        Ok(Some(true)) => return Ok(()),
+        Ok(Some(false)) | Err(_) => {
+            return Err(finding(surface, FindingKind::PayloadModified, None, None));
+        }
+        Ok(None) => (),
+    }
     let mut lines = content.split_inclusive('\n');
     let first = lines.next().unwrap_or("");
     let second = lines.next().unwrap_or("");

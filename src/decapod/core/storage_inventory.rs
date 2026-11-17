@@ -479,7 +479,7 @@ pub fn inspect(
     let path = data_root.join(schemas::LOCAL_DB_NAME);
     let mut report = json!({"schema":"decapod.storage-inventory.v1", "scope":scope,
         "application_version":env!("CARGO_PKG_VERSION"), "application_binary_sha256":binary_digest(),
-        "observation_time":chrono::Utc::now().to_rfc3339(),
+        "observation_time":crate::core::time::now_rfc3339(),
     "options":options, "status":"unavailable", "coverage":"unavailable",
     "consistency":"one Dactyl deferred read transaction; filesystem stats observed separately before/after",
     "files_before":files(&path), "tables":[], "component_classes":{}, "physical":null,

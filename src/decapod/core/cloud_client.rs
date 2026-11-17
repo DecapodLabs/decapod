@@ -176,7 +176,7 @@ fn one_time_error(error: dactyl_db::DactylError) -> DecapodError {
 
 #[cfg(feature = "supabase-cloud")]
 fn now() -> i64 {
-    chrono::Utc::now().timestamp()
+    time::OffsetDateTime::now_utc().unix_timestamp()
 }
 
 #[cfg(feature = "supabase-cloud")]
@@ -204,7 +204,7 @@ fn managed_session(session: dactyl_db::UserSession) -> Result<Session, DecapodEr
 
 #[cfg(feature = "supabase-cloud")]
 fn handoff_expiry(value: &str) -> Result<i64, DecapodError> {
-    let expiry = chrono::DateTime::parse_from_rfc3339(value)
+    let expiry = crate::core::time::parse_rfc3339(value)
         .map_err(|_| {
             diagnostic(
                 CloudAuthStatus::ProviderUnavailable,
@@ -212,7 +212,7 @@ fn handoff_expiry(value: &str) -> Result<i64, DecapodError> {
                 RESTART,
             )
         })?
-        .timestamp();
+        .unix_timestamp();
     if expiry <= now() || expiry > now().saturating_add(30 * 60) {
         return Err(diagnostic(
             CloudAuthStatus::Expired,

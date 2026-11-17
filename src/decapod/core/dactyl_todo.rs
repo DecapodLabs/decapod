@@ -12,7 +12,7 @@ use crate::core::storage::{Task, TodoStore};
 use ::dactyl_db::{AtomicResult, Operation, Parameter, Rows};
 use anyhow::{Result, anyhow};
 use async_trait::async_trait;
-use chrono::{DateTime, NaiveDateTime, SecondsFormat, Utc};
+use time::{OffsetDateTime, PlainDateTime};
 
 const TASK_COLUMNS: &str = "repo_id, id, hash, title, description, status, assigned_to AS assignee, scope, dir_path, priority, category, tags, created_at, updated_at, version";
 
@@ -151,7 +151,8 @@ impl DactylTodoStore {
         // state-plus-event batch. Millisecond precision allowed a fast stale
         // mutation to observe the winning mutation's marker after Dactyl's
         // positional SQLite binding was tightened in v0.10.0.
-        Utc::now().to_rfc3339_opts(SecondsFormat::Nanos, true)
+        crate::core::time::format_rfc3339_nanos(OffsetDateTime::now_utc())
+            .expect("system UTC timestamp is formattable")
     }
 
     fn task_from_rows(&self, rows: Rows) -> Result<Task> {
@@ -565,22 +566,24 @@ fn task_from_row(row: &dactyl_db::Row, repository: &str) -> Result<Task> {
         priority: row.get("priority")?,
         category: row.get("category")?,
         tags,
-        created_at: created_at.unwrap_or_else(Utc::now),
-        updated_at: updated_at.unwrap_or_else(Utc::now),
+        created_at: created_at.unwrap_or_else(OffsetDateTime::now_utc),
+        updated_at: updated_at.unwrap_or_else(OffsetDateTime::now_utc),
         version: row.get::<_, Option<i64>>("version")?.unwrap_or(1) as i32,
     })
 }
 
-fn parse_timestamp(value: Option<&str>) -> Option<DateTime<Utc>> {
+fn parse_timestamp(value: Option<&str>) -> Option<OffsetDateTime> {
     value.and_then(|value| {
-        DateTime::parse_from_rfc3339(value)
-            .map(|value| value.with_timezone(&Utc))
+        crate::core::time::parse_rfc3339(value).ok().or_else(|| {
+            PlainDateTime::parse(
+                value,
+                time::macros::format_description!(
+                    "[year]-[month]-[day] [hour]:[minute]:[second][optional [.[subsecond]]]"
+                ),
+            )
             .ok()
-            .or_else(|| {
-                NaiveDateTime::parse_from_str(value, "%Y-%m-%d %H:%M:%S%.f")
-                    .ok()
-                    .map(|value| DateTime::from_naive_utc_and_offset(value, Utc))
-            })
+            .map(PlainDateTime::assume_utc)
+        })
     })
 }
 

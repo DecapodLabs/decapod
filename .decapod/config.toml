@@ -12,6 +12,7 @@ entrypoints = [
 ]
 
 [repo]
+_allow_entrypoint_version_drift = true
 product_name = "decapod"
 product_summary = "Decapod is the daemonless, local-first governance kernel behind AI coding agents. Agents call it on demand to converge on human intent, shape context before inference, enforce boundaries, and deliver proof-backed completion across concurrent multi-agent work."
 architecture_direction = "cli"
@@ -76,7 +77,7 @@ commands = []
 
 [proof.required_profile]
 id = "decapod.pr-readiness.v1"
-reviewed_sources_digest = "sha256:98e90b1b9b23da564bf87992256ca456378cdea397dab21d141cf1b3741b0e82"
+reviewed_sources_digest = "sha256:a3531073b845190b81c7fd9698c7c69779360a436ed70b139d49faef96314294"
 
 [custody]
 isolation = "container"

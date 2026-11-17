@@ -1120,14 +1120,15 @@ fn parse_expiry(value: &str) -> Option<i64> {
     {
         return Some(seconds);
     }
-    chrono::DateTime::parse_from_rfc3339(value)
+    crate::core::time::parse_rfc3339(value)
         .ok()
-        .map(|timestamp| timestamp.timestamp())
+        .map(|timestamp| timestamp.unix_timestamp())
 }
 
 pub(crate) fn approval_expiry_is_live(expiry: Option<&str>) -> bool {
     expiry.is_none_or(|expiry| {
-        parse_expiry(expiry).is_some_and(|seconds| seconds > chrono::Utc::now().timestamp())
+        parse_expiry(expiry)
+            .is_some_and(|seconds| seconds > time::OffsetDateTime::now_utc().unix_timestamp())
     })
 }
 
