@@ -7,7 +7,8 @@ c35eb608 Git tree, then released as 0.148.7 at 9d1aed27. That forge transition
 does not turn the stale prior native validation into admission. The current
 report-only proposal must validate its own head against the newly accepted base;
 all runtime behavior, required checks and strict live experiment receipts remain
-unchanged. See docs/publication-admission-acceptance.md for exact identities.
+unchanged. The release-only Cargo.toml/Cargo.lock version changes require a
+reviewed source-inventory update; no workflow, command or coverage is removed. See docs/publication-admission-acceptance.md for exact identities.
 
 ## Current dependency policy (#1755)
 

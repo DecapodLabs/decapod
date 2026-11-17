@@ -227,3 +227,11 @@ cannot transfer historical proof to another artifact. The strict experiment's
 receipts above remain bound to their recorded controller, fixture commits and
 accepted native contract. Final source/report readiness and publication receipts
 are attached separately to the delivery PRs and closed tracking issues.
+
+
+The release-only Cargo.toml/Cargo.lock input changes were independently reviewed
+before reconciling the report's source inventory to
+`sha256:93783fdc02b765b089b6772b92efc51ddc16ef3d14d1c873b5589eb8de8ebd07`.
+Workflow adapters, accepted executor helpers, required commands and coverage
+remain unchanged. The source-only entrypoint version option does not waive this
+review or any execution requirement.

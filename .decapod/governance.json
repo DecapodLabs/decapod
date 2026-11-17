@@ -577,6 +577,11 @@
       "id": "admission-postmerge-record",
       "summary": "Record externally accepted source tree and release 0.148.7, preserve actual stale-target CI rejection and all immutable live evidence, distinguish native admission from human forge integration, and require fresh exact-report head/base validation without runtime or check-policy changes",
       "input_digest": "sha256:1a915f556f29fdda21f7dd819a38400c10e72131164a84deac747626338a3f43"
+    },
+    {
+      "id": "admission-postmerge-source-review",
+      "summary": "Re-review the two accepted 0.148.7 Cargo package-version inputs, reconcile source inventory only, preserve complete check graph and executor definitions, and require fresh exact-subject validation for the final report",
+      "input_digest": "sha256:1bbc48e66d4fe797c9d47c9a5857ee3730938f50113de3216dfabf7c0c68c051"
     }
   ],
   "intents": {
@@ -618,21 +623,21 @@
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Runtime source is already accepted with exact tree equality to c35; this report-only boundary preserves opaque proof continuity, quarantine and timestamp behavior while requiring fresh current proof",
+          "reason": "Reviewed only two release-version inventory changes; runtime architecture and all accepted workflow/executor/check definitions remain unchanged",
           "reviewed_code_fingerprint": "9d4eb244c511cef4be9a3240c4d88244af02947256efe7b9a1f5c105cce63f7c",
           "spec_material_hash": "741dab3fb84475ba7e527d91c15ed778ed9681fb96dab4dec3109a9399078aa1"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "No CLI, publication or timestamp wire changes; final source report distinguishes external merge, historical receipts and new exact-candidate admission",
+          "reason": "Report-only follow-up and reviewed inventory digest change no publication, timestamp or CLI interface",
           "reviewed_code_fingerprint": "9d4eb244c511cef4be9a3240c4d88244af02947256efe7b9a1f5c105cce63f7c",
           "spec_material_hash": "aea9e898f79c94c1d684baa64da199e433dc0c7a74f388e904d17eaeaafd3a7e"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Accepted admin bypass remains independent authority; stale target is never waived, existing native receipts retain exact subjects, and the current report must earn fresh full proof",
+          "reason": "Required source review and all execution remain enforced; current target and exact source/report identity must be proven afresh",
           "reviewed_code_fingerprint": "9d4eb244c511cef4be9a3240c4d88244af02947256efe7b9a1f5c105cce63f7c",
           "spec_material_hash": "b52643bf3fd690b7e15dca0b8852a5e98d28ad52c12833a58c111ca837d0d49f"
         }
@@ -645,7 +650,7 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1794918180Z"
+      "updated_at": "1794918449Z"
     },
     "trajectory": {
       "active_boundaries": [
