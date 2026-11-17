@@ -206,6 +206,7 @@ impl Fixture {
         let sources =
             runtime::discover_source_inventory(&options, &Cancellation::default()).unwrap();
         let proof = ProjectProofConfig {
+            selected_work: None,
             validation_buildkite_preflights: false,
             required_profile: Some(ProfileDeclaration {
                 id: repository_profile::REQUIRED_PROFILE.into(),

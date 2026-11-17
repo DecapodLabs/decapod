@@ -207,6 +207,18 @@ fn accepted_tenant_control_rejects_green_positive_tests_and_requires_fresh_repai
     );
 }
 
+#[cfg(any(target_os = "linux", target_os = "macos"))]
+#[test]
+fn selected_roots_require_current_mapping_and_real_combined_behavior() {
+    consumer_readiness::selected_roots_reject_omission_and_require_executed_repair();
+}
+
+#[cfg(any(target_os = "linux", target_os = "macos"))]
+#[test]
+fn global_triangle_requires_independently_accepted_repair_and_current_proof() {
+    consumer_readiness::accepted_global_triangle_requires_policy_repair_and_fresh_mapping();
+}
+
 mod init_ci_scaffolding;
 mod init_config_behavior;
 

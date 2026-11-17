@@ -97,10 +97,12 @@ pub fn obligation_db_path(root: &Path) -> PathBuf {
 
 pub fn initialize_obligation_db(root: &Path) -> Result<(), error::DecapodError> {
     let broker = DbBroker::new(root);
+    let local = !broker.is_cloud();
     let db_path = obligation_db_path(root);
 
     broker.with_conn(&db_path, "decapod", None, "obligation.init", |conn| {
         conn.execute(schemas::GOVERNANCE_DB_SCHEMA_OBLIGATIONS, [])?;
+        if local { conn.execute("CREATE INDEX IF NOT EXISTS obligation_intent_ref_v1 ON obligations(intent_ref, id)", [])?; }
         conn.execute(schemas::GOVERNANCE_DB_SCHEMA_OBLIGATION_EDGES, [])?;
         // Obligation writes pass through the shared broker policy gate, which
         // reads risk_zones from the canonical datastore. Keep this table
@@ -336,6 +338,54 @@ pub fn list_obligations(store: &Store) -> Result<Vec<ObligationNode>, error::Dec
         "obligation.list",
         read_obligations,
     )
+}
+
+/// Read only source-selected roots in one canonical DB snapshot. Unrelated
+/// backlog is neither parsed nor admitted, and mapping never asserts proof.
+pub(crate) fn read_selected_requirement_mappings(
+    store: &Store,
+    references: &[String],
+) -> Result<std::collections::BTreeMap<String, Vec<(String, Vec<String>)>>, error::DecapodError> {
+    if references.len() > 128 {
+        return Err(error::DecapodError::ValidationError(
+            "Selected requirement bound exceeded".into(),
+        ));
+    }
+    if DbBroker::new(&store.root).is_cloud() {
+        return Err(error::DecapodError::NotImplemented("SELECTED_REQUIREMENTS_BACKEND_UNSUPPORTED: selected DB joins support the local broker only; no shadow fallback".into()));
+    }
+    if !obligation_db_path(&store.root).exists() {
+        return Ok(Default::default());
+    }
+    DbBroker::new(&store.root).with_conn(&obligation_db_path(&store.root), "decapod", None, "obligation.check", |conn| {
+        let owns_snapshot = conn.is_autocommit();
+        if owns_snapshot { conn.execute_batch("BEGIN DEFERRED")?; }
+        let result = (|| {
+        let exists: bool = conn.query_row("SELECT EXISTS(SELECT 1 FROM sqlite_master WHERE type='table' AND name='obligations')", [], |row| row.get(0))?;
+        if !exists { return Ok(Default::default()); }
+        let indexed: bool = conn.query_row("SELECT EXISTS(SELECT 1 FROM sqlite_master WHERE type='index' AND name='obligation_intent_ref_v1')", [], |row| row.get(0))?;
+        if !indexed { return Err(error::DecapodError::ValidationError("SELECTED_REQUIREMENT_INDEX_REQUIRED: run decapod obligation list to initialize the canonical bounded lookup index, then revalidate".into())); }
+        let mut result = std::collections::BTreeMap::new();
+        let mut stmt = conn.prepare("SELECT substr(id,1,129), substr(required_proofs,1,65537) FROM obligations INDEXED BY obligation_intent_ref_v1 WHERE intent_ref=?1 ORDER BY id LIMIT 2")?;
+        for reference in references {
+            let rows = stmt.query_map([reference], |row| Ok((row.get::<_, String>(0)?, row.get::<_, String>(1)?)))?;
+            let mut mappings = Vec::new();
+            for row in rows {
+                let (id, proofs) = row?;
+                if id.len() > 128 { return Err(error::DecapodError::ValidationError("Selected obligation ID exceeds bound".into())); }
+                if proofs.len() > 65536 { return Err(error::DecapodError::ValidationError("Selected proof declaration exceeds bound".into())); }
+                mappings.push((id, serde_json::from_str(&proofs).map_err(|e| error::DecapodError::ValidationError(e.to_string()))?));
+            }
+            result.insert(reference.clone(), mappings);
+        }
+        Ok(result)
+        })();
+        if owns_snapshot {
+            let end = conn.execute_batch("ROLLBACK");
+            if result.is_ok() { end?; }
+        }
+        result
+    })
 }
 
 pub fn get_obligation(store: &Store, id: &str) -> Result<ObligationNode, error::DecapodError> {

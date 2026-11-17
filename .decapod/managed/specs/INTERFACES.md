@@ -1,5 +1,30 @@
 # Interfaces
 
+## Explicit selected-work policy and readback
+
+`proof.selected_work` schema 1.0.0 names an ID, intent ID, recorded instruction
+revision, explicit roots with
+existing required command names, and optional typed relations (`eq`/`ne`, ID,
+participating root, left and right terms). It becomes governing policy only
+through separate acceptance on the canonical Git target. Init preserves it;
+candidate review digests cannot approve it. Current native support is limited
+to `repo.pr-readiness.v1` with the local DB broker.
+
+`intent.reconcile` with an immutable `base_commit` returns the selected-work
+read model when that requested revision declares it (report schema 1.2.0).
+Its `source_authority=requested_immutable_revision` explicitly does not establish
+independent acceptance or admission. Full validation independently captures its
+accepted target and enforces `SELECTED_POLICY_NOT_ACCEPTED`, selected intent,
+mandatory check coverage, root coverage and typed consistency. The report keeps
+coverage, consistency and behavior-proof verdicts separate, gives source/revision
+and exact conflicting relation IDs, and supplies legal recovery instructions.
+
+For a retained integration obligation, use `decapod obligation add --intent`
+with the returned `obligation_ref`, and `--proofs` with its accepted check names.
+A declaration cannot mark behavior proven. An older local DB can initialize the
+lookup index through `decapod obligation list`; reads do not silently migrate it.
+Existing checkpoint, lease and publication requirements continue to apply.
+
 ## Recorded instruction readiness (#1764)
 
 Preparation's `governed_plan.unresolved_items` uses the same recorded blockers as
@@ -1230,8 +1255,8 @@ field. Nothing in this operation authorizes a mutation, approval or completion.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `8312d1b3e6aeb12a26c53462e1eb0905982f29160a82fd0271bab00edc9d0236`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (236 files), `tests/` (235 files)
+- Repository signal fingerprint: `92ea1cb6c006108a737615667e8f15544342654a20aeb4c6a2d63dc2b5a95c10`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (237 files), `tests/` (235 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 

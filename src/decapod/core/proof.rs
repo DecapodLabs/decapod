@@ -36,6 +36,10 @@ pub struct ProofDef {
 #[derive(Debug, Clone, Deserialize, Serialize, Default)]
 #[serde(deny_unknown_fields)]
 pub struct ProjectProofConfig {
+    /// Bounded explicit roots/relations; authoritative only after independent
+    /// acceptance on the canonical target. Candidate review is not acceptance.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub selected_work: Option<crate::core::intent_reconcile::selected::SelectedWork>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub ci_attested: Option<crate::core::validation_runtime::CiAttestedPolicy>,
     /// Select Buildkite temporary-snapshot validation instead of native Decapod

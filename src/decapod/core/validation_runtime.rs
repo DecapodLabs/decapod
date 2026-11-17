@@ -56,6 +56,8 @@ use super::readiness_profile::source;
 #[derive(Debug, Clone, Deserialize, Default, PartialEq, Eq)]
 pub struct ProofConfiguration {
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub selected_work: Option<super::intent_reconcile::selected::SelectedWork>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
     pub ci_attested: Option<CiAttestedPolicy>,
     #[serde(default)]
     pub validation_buildkite_preflights: bool,
@@ -659,6 +661,15 @@ fn load_project(options: &Options, budget: &mut RuntimeBudget<'_>) -> io::Result
         configuration.rust_workers.as_ref(),
         accepted.rust_workers.as_ref(),
     )?;
+    super::intent_reconcile::selected::admission(
+        &options.root,
+        &base,
+        &configuration,
+        &accepted,
+        &governance,
+        super::validation_rules::EvaluationPhase::Validation,
+    )
+    .map_err(io::Error::other)?;
     if configuration.rust_workers.is_some()
         && configuration
             .required_profile

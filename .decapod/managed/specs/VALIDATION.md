@@ -1,5 +1,44 @@
 # Validation
 
+## Selected roots and global relation falsifiers
+
+The required CLI suite registers actual native fixtures for omitted R3 audit
+coverage and a contradictory accepted triangle. The audit fixture reads the same
+selected roots through a fresh CLI/RPC process, observes omission before execution,
+then maps R3 and requires an actual accepted negative to fail against the exact
+candidate. Source repair reruns the same check and obtains its own head/base
+receipt; a later duplicate DB mapping invalidates readiness. Mapping is never
+reported as executed proof. The triangle fixture rejects the full present set,
+candidate self-repinning, and stale mappings after a separately scripted accepted
+policy repair, then requires new actual execution. Unit controls cover every
+standalone/pair projection, a satisfiable equality cycle, a satisfiable three-way
+inequality set and unsupported relation kinds.
+
+These tests use an isolated local accepted Git upstream and scripted policy
+acceptance. They do not authenticate human speakers or substitute for #1757/#1758
+external observer evidence. All new fixtures remain unverified until the exact
+candidate's required pipeline actually executes them. Plan/phase recorded blocker
+reports now include existing typed severity and RuleRemediation fields; their
+source revision still derives from recorded governing content rather than a
+caller-supplied approval assertion.
+
+## Current phase and enforcement ownership (#1763)
+
+| Boundary | Authority / severity | Result and controlling owner |
+| --- | --- | --- |
+| Preparation | Recorded task constraints / error on required transition | Canonical readiness is reported; preparing a draft is allowed. |
+| Plan acceptance | Task constraints / error | Kernel refuses unresolved instructions and pending spec decisions with the current source-backed remedy; approval is an execution-contract transition. |
+| Phase entry/exit and execution checkpoint/resume | Task constraints / error; kernel custody invariants remain critical | Kernel refuses its mediated transition on current blockers, missing acceptance or stale scope/custody. It does not intercept external shell operations. |
+| Full validation | Current task, accepted project policy and kernel invariants | Kernel requires current combined-candidate proof. The selected local adapter separately checks coverage and typed consistency; accepted native checks prove their executed behavior only. |
+| Governed publication | Current task/custody and current required proof / blocking | Kernel rechecks publication ownership, recorded readiness, exact artifact/base/policy and receipt applicability. A matching PR is reused; its existence is not current admission or merge. |
+| External shell, Git or forge operation | Host/OS or remote policy | Enforcement belongs to that host or service. Unobserved bypass is not a kernel refusal or a trusted execution witness. |
+
+This matrix describes supported current boundaries, not universal interception.
+Selected-model cross-phase instruction feedback, authenticated instruction ingress
+and policy-required observed-path integration still need their own acceptance
+evidence. No successful source slice, agent-authored witness, created PR or logical
+model result substitutes for those separate judgments.
+
 ## Issue-contract continuation and source review (#1764)
 
 The preparation/checkpoint regressions and source-backed blocker consistency
@@ -1520,8 +1559,8 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `8312d1b3e6aeb12a26c53462e1eb0905982f29160a82fd0271bab00edc9d0236`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (236 files), `tests/` (235 files)
+- Repository signal fingerprint: `92ea1cb6c006108a737615667e8f15544342654a20aeb4c6a2d63dc2b5a95c10`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (237 files), `tests/` (235 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 

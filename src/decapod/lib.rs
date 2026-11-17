@@ -1640,6 +1640,7 @@ fn init_with_from_config(
         existing_proof_commands: config.proof.commands.clone(),
         existing_required_profile: config.proof.required_profile.clone(),
         existing_repository_contract: config.proof.repository_contract.clone(),
+        existing_selected_work: config.proof.selected_work.clone(),
         existing_rust_workers: config.proof.rust_workers.clone(),
         existing_ci_attested: config.proof.ci_attested.clone(),
         existing_allow_basic_shared_claims: config.governance.allow_basic_shared_claims,
@@ -1754,6 +1755,7 @@ fn preserve_unspecified_init_options(
     init.existing_required_profile = existing.existing_required_profile;
     init.existing_rust_workers = existing.existing_rust_workers;
     init.existing_repository_contract = existing.existing_repository_contract;
+    init.existing_selected_work = existing.existing_selected_work;
     init.existing_ci_attested = existing.existing_ci_attested;
     init.existing_allow_basic_shared_claims = existing.existing_allow_basic_shared_claims;
     init.existing_rbac = existing.existing_rbac;
@@ -1846,6 +1848,7 @@ fn config_from_init_with(init: &InitWithCli, repo: RepoContext) -> DecapodProjec
             db_maintenance: init.existing_db_maintenance.clone(),
         },
         proof: proof::ProjectProofConfig {
+            selected_work: init.existing_selected_work.clone(),
             validation_buildkite_preflights: init.validation_buildkite_preflights.unwrap_or(false),
             required_profile: init.existing_required_profile.clone(),
             repository_contract: init.existing_repository_contract.clone(),
@@ -2881,6 +2884,7 @@ pub fn run() -> Result<(), error::DecapodError> {
                             existing_proof_commands: Vec::new(),
                             existing_required_profile: None,
                             existing_repository_contract: None,
+                            existing_selected_work: None,
                             existing_rust_workers: None,
                             existing_ci_attested: None,
                             existing_allow_basic_shared_claims: false,

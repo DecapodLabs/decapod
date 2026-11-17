@@ -1,5 +1,23 @@
 # Security
 
+## Selected requirement trust boundary
+
+Only independently captured accepted-target policy governs the selected native
+requirement model. Candidate deletion, replacement or self-repinning is refused.
+Neither a declared source label, a mapping nor a satisfiable relation graph
+authenticates a principal or proves application behavior. A read-only requested
+Git revision is labelled requested, not accepted. The native before/after
+identity binds the selected SQLite join and plan context in addition to existing
+source/base/policy/toolchain identity. Changed assignments and duplicate mappings
+cannot reuse current readiness. Canonical DB snapshots and Git pins provide
+freshness checks, not atomic distributed transactions or host-wide observation.
+
+This initial extension supports local canonical DB reads and existing native
+repository commands only. It refuses unsupported hosted/cloud joins and arbitrary
+relation semantics. It adds no `covers` dependency edges, implicit natural-language
+solver, universal semantic judge or witness-import authority. Observer custody
+and authenticated instruction ingress remain separate dependencies.
+
 ## Recorded blockers and evidence limits (#1764)
 
 Instruction readiness hashes identify recorded plan content and source locations.
@@ -673,8 +691,8 @@ execution evidence remains required before publication readiness.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `8312d1b3e6aeb12a26c53462e1eb0905982f29160a82fd0271bab00edc9d0236`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (236 files), `tests/` (235 files)
+- Repository signal fingerprint: `92ea1cb6c006108a737615667e8f15544342654a20aeb4c6a2d63dc2b5a95c10`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (237 files), `tests/` (235 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 

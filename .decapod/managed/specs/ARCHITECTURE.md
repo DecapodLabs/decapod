@@ -1,5 +1,35 @@
 # Architecture
 
+## Selected accepted roots and typed relations (#1768, #1770)
+
+`core/intent_reconcile/selected.rs` reads the explicitly selected
+`proof.selected_work` policy from the independently captured accepted Git target.
+Candidate edits cannot remove, replace or first accept this policy. The initial
+adapter supports repository-local native proof; hosted and cloud joins return
+unsupported instead of claiming equivalent authority. Accepted Git policy is
+distinct from authenticated human authorship.
+The selected policy pins the origin/recorded-instruction content revision; an
+agent refinement is a different field. Changed recorded instructions revoke
+selected-policy applicability rather than silently inheriting the previous roots.
+
+Each root retains one integration obligation in canonical `decapod.db`, using
+the reported source-revision-bound `obligation_ref` as its existing `intent_ref`.
+Its proof labels must include the named accepted required native commands.
+Coverage is a mapping judgment, never observed behavior. The existing native
+runner must still execute every accepted check on the integrated candidate.
+No new obligation edge kind, completion cache, database or admission engine is
+introduced. Unrelated unattempted backlog remains outside this selection.
+
+The supported relation domain is equality/inequality over uninterpreted values.
+A bounded equality-path traversal witnesses a conflicting inequality; three
+inequalities can be satisfiable and dependency cycles have no relation semantics.
+Unsupported kinds remain unverifiable. Limits are 128 roots, 32 checks per root,
+256 relations and 128-byte identifiers. Selected DB lookups use an additive local
+index and at most two rows per root, within one deferred read snapshot. Git and
+SQLite remain separate domains: native identity recaptures the selected join,
+plan context and accepted base before/after execution and receipt readback.
+This does not implement authenticated instruction revisions or host witnesses.
+
 ## One recorded instruction projection (#1764)
 
 `plan_governance::instruction_readiness` derives the selected plan's recorded
@@ -1000,8 +1030,8 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `8312d1b3e6aeb12a26c53462e1eb0905982f29160a82fd0271bab00edc9d0236`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (236 files), `tests/` (235 files)
+- Repository signal fingerprint: `92ea1cb6c006108a737615667e8f15544342654a20aeb4c6a2d63dc2b5a95c10`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (237 files), `tests/` (235 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 

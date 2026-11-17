@@ -638,6 +638,11 @@
       "id": "accepted-release9-proof-boundary",
       "summary": "Bind current candidate to accepted6ab6de31 release9 source inventory; preserve failed earlier provider attempts",
       "input_digest": "sha256:fbbe0aa26d3b4c05a52cd6c70d18dce19f35cdf3484c22f6db779fbd572a8b34"
+    },
+    {
+      "id": "selected-root-global-relation-controls",
+      "summary": "Add source-accepted selected root conservation, bounded eq/ne consistency, native identity joins and scripted negative/repair fixtures; no closure or host-authentication claim",
+      "input_digest": "sha256:c7f88ae5e14005fafc2120357baa8c6f3f6ba9a89ff8b5db97c48902f5dc4bb5"
     }
   ],
   "intents": {
@@ -682,23 +687,23 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Accepted target and release9 inventory reviewed; recorded instruction readiness and application negatives retain their stated trust limits.",
-          "reviewed_code_fingerprint": "8312d1b3e6aeb12a26c53462e1eb0905982f29160a82fd0271bab00edc9d0236",
-          "spec_material_hash": "50d21dc1f07d5736ab197256c009c2fab5617f402a42a4e9971d62aa5c6a2114"
+          "reason": "Review explicit accepted selected roots and bounded eq/ne model; local-only native/DB join, source-instruction revision binding and separate proof/authority limits are documented.",
+          "reviewed_code_fingerprint": "92ea1cb6c006108a737615667e8f15544342654a20aeb4c6a2d63dc2b5a95c10",
+          "spec_material_hash": "0599401b4ae9236914c23b9d93052f1f7ab9f43777fd1f95eeb5603ad85d176a"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Accepted target and release9 inventory reviewed; recorded instruction readiness and application negatives retain their stated trust limits.",
-          "reviewed_code_fingerprint": "8312d1b3e6aeb12a26c53462e1eb0905982f29160a82fd0271bab00edc9d0236",
-          "spec_material_hash": "4efe6ce31db9247d52ed8c947448ba1843d0d8cac2e3a885fbfdafa82756af6d"
+          "reason": "Review explicit accepted selected roots and bounded eq/ne model; local-only native/DB join, source-instruction revision binding and separate proof/authority limits are documented.",
+          "reviewed_code_fingerprint": "92ea1cb6c006108a737615667e8f15544342654a20aeb4c6a2d63dc2b5a95c10",
+          "spec_material_hash": "e5361f5b9bfa35974033d9bd4e9c0b2cb5d25296e687b36ba271d1be39d4ec0d"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Accepted target and release9 inventory reviewed; recorded instruction readiness and application negatives retain their stated trust limits.",
-          "reviewed_code_fingerprint": "8312d1b3e6aeb12a26c53462e1eb0905982f29160a82fd0271bab00edc9d0236",
-          "spec_material_hash": "527cc749c06f943ddb878264fa30e76918f5f2d794ee2473348779a91d363d8d"
+          "reason": "Review explicit accepted selected roots and bounded eq/ne model; local-only native/DB join, source-instruction revision binding and separate proof/authority limits are documented.",
+          "reviewed_code_fingerprint": "92ea1cb6c006108a737615667e8f15544342654a20aeb4c6a2d63dc2b5a95c10",
+          "spec_material_hash": "fbc11c5f35ac4394381a30b7b88c1a7893b05491005db49e3dbf453c05df8b6f"
         }
       ],
       "state": "APPROVED",
@@ -709,13 +714,13 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1794951667Z"
+      "updated_at": "1794953103Z"
     },
     "trajectory": {
       "active_boundaries": [
         "No protected root edits, force push, merge, gate waiver or fabricated evidence"
       ],
-      "artifact_hash": "sha256:bf78d4448e64e3445818ca548c408212514440aac18591c45d2e09097014e658",
+      "artifact_hash": "sha256:41adfba91a6402dbba566efd1f07d43008993c2fa65a7ba8cbaa81d9d41b3a6a",
       "checks": [
         {
           "name": "candidate_986_cli_compile",
@@ -723,6 +728,10 @@
         },
         {
           "name": "exact_candidate_validation",
+          "status": "failed"
+        },
+        {
+          "name": "fb20_standalone_release_projection",
           "status": "failed"
         },
         {
@@ -772,10 +781,17 @@
             "intent_id": "intent:todo:bugs_01m7nm3pnpc3be76",
             "kind": "trajectory_step_recorded",
             "sequence": 7
+          },
+          {
+            "detail": "trajectory:issues-1761-1770-20261117",
+            "event_id": "event:8",
+            "intent_id": "intent:todo:bugs_01m7nm3pnpc3be76",
+            "kind": "trajectory_step_recorded",
+            "sequence": 8
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 7,
+        "next_sequence": 8,
         "schema_version": "1.0.0",
         "trajectories": {
           "issues-1761-1770-20261117": {
@@ -885,6 +901,31 @@
                 "validation_findings": [
                   "Accepted master advanced to ab4abe0593ddd8fd15186001558b79addd08aebc during provider wait; old proof is not current."
                 ]
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:8",
+                "observations": [
+                  "src/decapod/core/intent_reconcile/selected.rs",
+                  "src/decapod/core/obligation.rs",
+                  "src/decapod/core/native_proof.rs",
+                  "tests/consumer_readiness.rs",
+                  "https://buildkite.com/decapodlabs/decapod/builds/11873"
+                ],
+                "proof_refs": [
+                  "fb20_standalone_release_projection"
+                ],
+                "scope": [
+                  ".decapod/managed/specs",
+                  "README.md",
+                  "docs",
+                  "src/decapod",
+                  "tests"
+                ],
+                "sequence": 8,
+                "validation_findings": [
+                  "Selected-root/typed-relation fixtures are scripted local-policy/native controls and remain unverified until source CI executes them. No authenticated prompt capture or external witness is claimed."
+                ]
               }
             ]
           }
@@ -898,6 +939,7 @@
         "Official validate on a55c1de8 ended SNAPSHOT_NOT_READY public build identity mismatch after308039ms provider wait. Public envelopes11782(task branch) and11787(original PR branch) share sourceSHA but differ in branch authority. Preserve denial and full evidence at private snapshot9TwHAM. Actual CI standalone job134364708406 exposed only stale managed Docker0.148.7 pin; installed CLI init --proof regenerated release-bound projections without changing config, workflows or authored specs. Added accepted tenant negative+repair and actual producer/consumer signature-mismatch fixtures; new tests unexecuted until next exact-candidate validation.",
         "Official0.148.8 validate on0a8350c9 stopped before test execution with PROOF_PROFILE_RECONCILIATION_REQUIRED. Read-only agent.init reports inventory sha256:b929199963bc910eb5f099a92ec5d152d6e78d7b6608f0bdf74c22eeda13fdc8 and only STALE_SOURCE_INVENTORY plus REQUIRED_PROOF_NOT_RUN. Compared every discovery input from last accepted config review edbfc00d: only Cargo.toml and Cargo.lock package version0.148.7 to0.148.8 differ. Backed up config privately; reviewed digest update preserves all workflow/helper/check/toolchain contracts.",
         "Preserved PR1766 original head12d403ac and base18cbb30c. Actual CI44163787850 rejects obsolete checkpoint test and missing README constitution reference. Repaired source36ede3fd; tests authored, execution pending official validation. Strict historical checkpoint inspection reports original unproven/invalid lineage; current continuation cannot be described as historical proof.",
+        "https://buildkite.com/decapodlabs/decapod/builds/11873",
         "https://github.com/DecapodLabs/decapod/actions/runs/44177760790/job/134374440067"
       ],
       "inspected_files": [
@@ -916,6 +958,9 @@
         "CLAUDE.md",
         "CODEX.md",
         "GEMINI.md",
+        "src/decapod/core/intent_reconcile/selected.rs",
+        "src/decapod/core/native_proof.rs",
+        "src/decapod/core/obligation.rs",
         "src/decapod/core/rpc.rs",
         "src/decapod/core/trajectory/execution.rs",
         "src/decapod/core/validate.rs",
@@ -940,7 +985,8 @@
       "tool_calls": [],
       "unresolved_assumptions": [
         "Accepted master advanced to ab4abe0593ddd8fd15186001558b79addd08aebc during provider wait; old proof is not current.",
-        "Instruction origin authentication, accepted root coverage, typed global consistency, independent behavior controls and genuine path observation remain open acceptance obligations."
+        "Instruction origin authentication, accepted root coverage, typed global consistency, independent behavior controls and genuine path observation remain open acceptance obligations.",
+        "Selected-root/typed-relation fixtures are scripted local-policy/native controls and remain unverified until source CI executes them. No authenticated prompt capture or external witness is claimed."
       ]
     }
   },

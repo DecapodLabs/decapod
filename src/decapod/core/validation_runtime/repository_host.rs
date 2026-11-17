@@ -844,6 +844,7 @@ mod tests {
         .unwrap();
         let mut project = CurrentProject {
             configuration: ProofConfiguration {
+                selected_work: None,
                 validation_buildkite_preflights: false,
                 required_profile: Some(declaration),
                 commands,

@@ -596,19 +596,23 @@ pub struct InstructionReadiness {
     pub schema_version: String,
     pub rule_id: String,
     pub authority: crate::core::validation_rules::RuleAuthority,
+    pub severity: crate::core::validation_rules::RuleSeverity,
     pub phase: crate::core::validation_rules::EvaluationPhase,
     pub verdict: crate::core::validation_rules::RuleVerdict,
     pub source_revision: String,
     pub blockers: Vec<InstructionBlocker>,
     pub questions: Vec<String>,
     pub remediation: String,
+    pub rule_remediation: crate::core::validation_rules::RuleRemediation,
 }
 
 pub fn instruction_readiness(
     plan: &GovernedPlan,
     phase: crate::core::validation_rules::EvaluationPhase,
 ) -> InstructionReadiness {
-    use crate::core::validation_rules::{RuleAuthority, RuleVerdict};
+    use crate::core::validation_rules::{
+        RuleAuthority, RuleRemediation, RuleSeverity, RuleVerdict,
+    };
     let mut blockers = Vec::new();
     let mut add = |field: &str, question: String| {
         let source = format!("{PLAN_PATH}#/sections/plan/{field}");
@@ -659,16 +663,35 @@ pub fn instruction_readiness(
         "unresolved_contradictions": plan.unresolved_contradictions,
         "spec_reviews": plan.spec_reviews,
     });
+    let human_required = !plan.human_questions.is_empty()
+        || plan
+            .spec_reviews
+            .iter()
+            .any(|r| r.disposition == SpecReviewDisposition::RequiresDecision);
+    let rule_remediation = RuleRemediation {
+        error_code: "NEEDS_HUMAN_INPUT".into(),
+        violation_description: "Recorded instructions have unresolved obligations".into(),
+        expected_condition: "No current required instruction blocker".into(),
+        observed_condition: format!("{} recorded blockers", blockers.len()),
+        affected_paths: blockers.iter().map(|b| b.source.clone()).collect(),
+        required_steps: vec!["Consult the recorded governing sources and resolve their obligations through supported plan/review operations".into(), "Separately reaccept the revised execution contract and rerun affected proof".into()],
+        autonomous_remediation_permitted: !human_required,
+        human_authorization_required: human_required,
+        evidence_for_revalidation: vec!["Current plan/review source revision and fresh applicable proof".into()],
+        related_rules: vec![],
+    };
     InstructionReadiness {
-        schema_version: "1.0.0".into(),
+        schema_version: "1.1.0".into(),
         rule_id: "recorded_instruction_readiness".into(),
         authority: RuleAuthority::TaskConstraints,
+        severity: RuleSeverity::Error,
         phase,
         verdict: if blockers.is_empty() { RuleVerdict::Pass } else { RuleVerdict::Fail },
         source_revision: format!("sha256:{:x}", Sha256::digest(source.to_string())),
         questions: blockers.iter().map(|blocker| blocker.question.clone()).collect(),
         blockers,
         remediation: "Resolve recorded obligations and separately reaccept the revised plan; rerun affected proof.".into(),
+        rule_remediation,
     }
 }
 
