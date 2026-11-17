@@ -606,6 +606,15 @@
       "proof_refs": [
         "ci:11522-target-ancestry-rejection"
       ]
+    },
+    {
+      "id": "development-controller-projections-1486",
+      "summary": "Refresh supported 0.148.6 projections, renew exact source review, and repair actual Clippy feedback",
+      "input_digest": "sha256:4494bd133c6530c1b4b3eb695eb134a45b38bb813180a556260f7c2d6989049b",
+      "proof_refs": [
+        "build:development-controller-compiled",
+        "ci:11527-clippy-needless-borrow"
+      ]
     }
   ],
   "intents": {
@@ -646,22 +655,22 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Reviewed exact live proof, current required decision-runtime pins, created-but-not-admitted draft quarantine and user-authorized source-only configuration policy; exact slug lineage template and fingerprint guards remain binding",
-          "reviewed_code_fingerprint": "3e2c83cfddf77c92cebd80fce79a277e0e2a33eadd52c15d5c040bd021cd074b",
+          "reason": "Review source-only version policy and live proof custody after incorporating accepted 0.148.6",
+          "reviewed_code_fingerprint": "3c785283baab59d5b29af2f9b162fcebfccc56a15871f2de53a94f49f43eed82",
           "spec_material_hash": "9714311171611b8bab923b9b390f4dffaa49e2ceffee22dc9077ab99ec9ba762"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Reviewed exact-subject publication errors and created-but-not-admitted quarantine, unchanged publication wire shape and configuration-only internal source policy; no agent-facing flag or entrypoint edit instruction is introduced",
-          "reviewed_code_fingerprint": "3e2c83cfddf77c92cebd80fce79a277e0e2a33eadd52c15d5c040bd021cd074b",
+          "reason": "Review preserved private configuration and exact admission behavior; no new public option",
+          "reviewed_code_fingerprint": "3c785283baab59d5b29af2f9b162fcebfccc56a15871f2de53a94f49f43eed82",
           "spec_material_hash": "e0e25276b67edad1b3ea8633c56d258cf94fc4d759915f6cd1a09ccc26129998"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Reviewed exclusive canonical slug plus immutable source lineage for the internal config-only version policy; template bytes fingerprints actual execution policy custody and PR head/base binding stay enforced. Draft quarantine is limited to the matching PR, records denial and never claims a merged PR was quarantined.",
-          "reviewed_code_fingerprint": "3e2c83cfddf77c92cebd80fce79a277e0e2a33eadd52c15d5c040bd021cd074b",
+          "reason": "Canonical template, exact source slug and lineage, credentials, and complete proof boundaries retained",
+          "reviewed_code_fingerprint": "3c785283baab59d5b29af2f9b162fcebfccc56a15871f2de53a94f49f43eed82",
           "spec_material_hash": "a5e8fa6d423d3980cabe7d2d7d122c436ffd95450106674250127cf2c4893747"
         }
       ],
@@ -673,14 +682,14 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1794903010Z"
+      "updated_at": "1794903938Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch",
         "User-authorized version exception is config-only, exact DecapodLabs/decapod slug plus source lineage; no hand editing of generated agent entrypoints and no skipped execution proof"
       ],
-      "artifact_hash": "sha256:dcf43a86976983fbef67b8c0d77c8a453c6918de10d93a5621774c677413ee22",
+      "artifact_hash": "sha256:5aca5b734f0f59f14b44ff56303167eb98eca0af19c9e31f0a9eef33f74fd7ad",
       "checks": [
         {
           "name": "configured_validation",
@@ -726,10 +735,17 @@
             "intent_id": "intent:change_01M7M3P63MYW2A9SP5C97N0JS4",
             "kind": "trajectory_step_recorded",
             "sequence": 6
+          },
+          {
+            "detail": "trajectory:branch_01M7M3P675P50R9B9XSTNJRCNE",
+            "event_id": "event:7",
+            "intent_id": "intent:change_01M7M3P63MYW2A9SP5C97N0JS4",
+            "kind": "trajectory_step_recorded",
+            "sequence": 7
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 6,
+        "next_sequence": 7,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M7M3P675P50R9B9XSTNJRCNE": {
@@ -794,6 +810,27 @@
                 ],
                 "sequence": 6,
                 "validation_findings": []
+              },
+              {
+                "action": "validation",
+                "custody_event_id": "event:7",
+                "observations": [
+                  "First branch CI correctly rejected because accepted target advanced to e7b54246; merged it without rewriting history. Building a separate development controller is necessary to exercise user-authorized private config policy absent from installed 0.148.0; this build grants no readiness and does not replace installed binary."
+                ],
+                "proof_refs": [
+                  "configured_validation"
+                ],
+                "scope": [
+                  ".config",
+                  ".decapod/managed/specs",
+                  "assets",
+                  "docs",
+                  "src",
+                  "src/decapod/core",
+                  "tests"
+                ],
+                "sequence": 7,
+                "validation_findings": []
               }
             ]
           }
@@ -803,6 +840,7 @@
       "destination": "pull request",
       "evidence": [
         "Active master ruleset 12701816 now requires Buildkite App 805657 core and supabase-consumer checks with strict target freshness, preserving existing protections and OrganizationAdmin bypass.",
+        "First branch CI correctly rejected because accepted target advanced to e7b54246; merged it without rewriting history. Building a separate development controller is necessary to exercise user-authorized private config policy absent from installed 0.148.0; this build grants no readiness and does not replace installed binary.",
         "Four full validation attempts were rejected for tag inventory, accepted-target movement/ancestry and historical entrypoint alignment; no required execution success was claimed. User then explicitly authorized the narrow source-version configuration policy tracked in #1753. Actual GitHub acceptance is authored and remains unexecuted.",
         "GitHub audit: reviewed open and closed issue searches and #1052 #1069 #1070 #1658 #1659 #1660 #1692 #1726 #1730 #1731; created #1747 and #1748 for publication subject continuity and lifecycle proof",
         "Implemented live proof continuity and draft quarantine with append-only rejection records; deterministic coverage is authored but not yet executed. Real disposable GitHub repository created under explicit user acceptance request.",

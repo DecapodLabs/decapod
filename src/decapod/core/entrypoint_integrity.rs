@@ -3,13 +3,14 @@
 //! `AGENTS.md`, `CLAUDE.md`, `GEMINI.md`, and `CODEX.md` are Decapod-owned
 //! templates. Agents and humans must not hand-edit them. The only permitted
 //! on-disk form is the exact template body plus release/fingerprint headers
-//! for the evaluating Decapod binary. Feature-branch commits that touch these
-//! files for any other reason (payload edits, fingerprint tweaks, mode-only
-//! changes) fail validation via the entrypoint commit-discipline gate.
+//! for the evaluating Decapod binary under the normal release policy. Source
+//! development policy can permit version drift while retaining exact committed
+//! source templates and version-bound fingerprints. Payload edits and mode-only
+//! changes fail validation via the entrypoint commit-discipline gate.
 //!
 //! The expected fingerprints in this module are release artifact data. They
-//! are deliberately not derived from the files being validated or from the
-//! repository at runtime.
+//! are deliberately not derived from the entrypoint files being validated.
+//! Source templates use the bounded immutable reader in `history`.
 
 #[path = "entrypoint_integrity/history.rs"]
 mod history;

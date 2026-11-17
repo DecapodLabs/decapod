@@ -1,10 +1,14 @@
 # Validation
 
 The admission repair incorporates accepted target
-`b2e1dfab6560b09d544cabbf0316b18f1c374342` after validation refused a moved
-target and then correctly required that target to be an ancestor. Earlier tag
-inventory and stale-base failures remain failed attempts, with no executed
-required suite or publication authority inferred from them.
+`e7b54246d5c4cc325883ea1281aea039a0ad064f` after validation and the first
+branch-push CI refused moved targets and required target ancestry. The source
+inventory review is renewed for accepted release 0.148.6. Earlier tag inventory,
+stale-base and entrypoint-alignment failures remain failed attempts, with no
+executed required suite or publication authority inferred from them. A separate
+development-controller build is necessary to exercise the explicitly authorized
+source configuration policy absent from installed 0.148.0; compilation alone
+does not establish readiness or replace complete validation and live acceptance.
 
 ## Required publication regression coverage (#1747, #1748)
 
@@ -1394,7 +1398,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `3e2c83cfddf77c92cebd80fce79a277e0e2a33eadd52c15d5c040bd021cd074b`
+- Repository signal fingerprint: `3c785283baab59d5b29af2f9b162fcebfccc56a15871f2de53a94f49f43eed82`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (236 files), `tests/` (235 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

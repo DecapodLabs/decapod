@@ -2611,7 +2611,7 @@ pub(crate) fn publish_workspace_with_readiness(
 
     if pr_url.is_some()
         && let Some(handoff) = readiness.snapshot_handoff()
-        && let Err(error) = crate::cleanup_published_readiness_snapshot(repo_root, &handoff)
+        && let Err(error) = crate::cleanup_published_readiness_snapshot(repo_root, handoff)
     {
         warnings.push(format!("Publication is verified; temporary snapshot cleanup needs recovery: {error}. Preserve handoff {}", handoff.display()));
     }
