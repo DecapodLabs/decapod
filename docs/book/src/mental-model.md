@@ -2,7 +2,7 @@
 
 Decapod is a governance kernel, not a prompt framework, model router, swarm manager, or wrapper. Humans usually express intent through an agent. The agent invokes Decapod through its CLI or structured RPC interface.
 
-Each invocation is ephemeral. Decapod deliberately runs without a daemon. The repository is the durable execution surface: `.decapod/` preserves the intent, selected context, workspace custody, boundaries, validation evidence, and publication state that should not live only in a chat transcript. One agent task may span many invocations, processes, models, or harnesses.
+Each invocation is ephemeral. Decapod deliberately runs without a daemon. The repository is the durable execution surface: `.decapod/` preserves the recorded intent, selected context, workspace custody, boundaries, previous attempts, validation evidence, and publication state that should not live only in a chat transcript. One agent task may span many invocations, processes, models, or harnesses. Durability is necessary for continuation; a fresh agent still has to retrieve and act on the applicable records.
 
 ## The Kernel Analogy
 

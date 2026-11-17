@@ -199,3 +199,11 @@ button,input,a{font-family:inherit}
 .decapod-docs-loop-stage strong{font-family:'Outfit',system-ui,sans-serif;font-size:clamp(20px,2.5vw,27px);line-height:1.1;letter-spacing:-.045em;color:var(--shell-strong)}
 .decapod-docs-loop-stage p{font-size:14px;line-height:1.58;color:var(--shell-muted);margin:0}
 @media(max-width:740px){.decapod-docs-loop{grid-template-columns:1fr}.decapod-docs-loop-stage{padding:21px}}
+
+/* Three-part metacognitive model: retained state, correction, validation. */
+.decapod-docs-loop{grid-template-columns:repeat(3,minmax(0,1fr))}
+.decapod-docs-loop-stage{padding:22px 20px}
+.decapod-docs-loop-stage.decapod-docs-loop-feedback{background:var(--shell-soft)}
+.decapod-docs-loop-stage strong{font-size:clamp(19px,2.1vw,25px)}
+@media(max-width:1050px){.decapod-docs-loop{grid-template-columns:1fr}.decapod-docs-loop-stage{min-height:0;padding:23px}}
+@media(max-width:650px){.decapod-docs-loop-stage{padding:19px}.decapod-docs-loop-stage strong{font-size:22px}}

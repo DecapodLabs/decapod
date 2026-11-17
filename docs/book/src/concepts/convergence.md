@@ -67,6 +67,30 @@ Decapod can refuse a **Decapod-mediated** operation or publication transition wh
 
 An `APPROVED` plan is a declared execution-contract state, and the CLI alone does not authenticate a human approver. The required distinction is between agent/caller plan acceptance, genuine human decision evidence when policy demands it, executed validation, PR publication, and remote admission/merge. A PR's existence is not proof of admission, much less semantic correctness. See [enforcement boundary hardening](https://github.com/DecapodLabs/decapod/issues/1763).
 
+## Cold-context continuation
+
+Consider the user instruction **“Continue PR #1234.”** It is a product-level acceptance test for Decapod's durable state model, not a special syntax that the kernel currently guarantees.
+
+An agent with no access to the earlier chat should be able to consult the repository and actual Git/forge state to reconstruct the **recorded** original and later instructions, task ownership, permitted scope, plan, workunit/trajectory, earlier failed checks and attempted corrections, outstanding proof obligations, and current PR head/base. It must verify what remains applicable *now*, select a permissible repair, and execute fresh validation before claiming the PR is ready. Merely retrieving a summary or repeating the previous agent's “done” claim would fail that test.
+
+This design unites three existing concerns:
+
+1. **Durability:** Request, custody, trajectory, rules, and evidence survive outside the model context in established canonical storage.
+2. **Corrective feedback:** A rejected Decapod-mediated transition should identify the specific applicable obligation and supported next action so the agent can repair rather than repeat an equivalent failed attempt.
+3. **Adjudication:** Required validation and publication checks judge the exact candidate against the current governing conditions. An agent cannot turn previous good intentions into fresh proof.
+
+The kernel supplies durable records and source-backed guidance at supported boundaries. It does not automatically intercept every inference call, direct shell command, or private model thought. A new agent cannot recover information that was never recorded. The end-to-end cold-agent PR continuation is being tested under [#1367](https://github.com/DecapodLabs/decapod/issues/1367) and [#1758](https://github.com/DecapodLabs/decapod/issues/1758); do not label that complete until an independently observed real-agent run succeeds.
+
+## Assurance and claim discipline
+
+| Claim | Evidence required |
+| --- | --- |
+| **Proven** | Accepted implementation, reproducible negative and positive checks, and evidence bound to the actual candidate |
+| **Partial** | Working mechanism with a named unverified seam, missing external observation, or bounded coverage |
+| **Target** | A desired autonomous workflow or integration awaiting falsifiable end-to-end evidence |
+
+A check may prove an operation executed without proving a human's unexpressed intention. A valid repository journal may preserve recorded context without establishing that a new agent used it correctly. An actual admitted PR is a stronger result than an agent's completion message.
+
 ## Why the sequence matters
 
 An agent can take several individually authorized steps and still produce an unsatisfactory result. A trustworthy outcome needs more than isolated permission checks: it needs a recorded trajectory from intent to implementation, clear proof expectations, and validation of the final candidate.

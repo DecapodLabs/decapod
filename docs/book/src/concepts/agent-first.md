@@ -10,6 +10,12 @@ Validation has a separate role. Required gates execute the agent-developed proof
 
 [Closed-loop model](convergence.md) · [Error and recovery contract](../reference/errors.md) · [Proof](proof.md)
 
+## From one agent to the next
+
+Decapod keeps the governing record outside the transient model context. An interrupted or replaced agent can inspect the recorded intent, task and workspace custody, prior checks, failed attempts, and remaining obligations. The agent must re-evaluate freshness and authority rather than blindly replaying old operations.
+
+**“Continue PR #1234”** names the [cold-context continuation experiment](convergence.md#cold-context-continuation): a new agent reconstructs the work from recorded state, corrects a genuine failure, obtains fresh exact-candidate proof, and updates the same PR without a transcript handoff. The underlying custody and recovery primitives exist; independent end-to-end demonstration is still being established.
+
 ## The Agentic Lifecycle
 
 Decapod structures agent work into a predictable, machine-readable lifecycle:

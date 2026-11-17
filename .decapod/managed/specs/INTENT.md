@@ -911,3 +911,24 @@ taxonomies. Avoid any new prompt runtime, duplicate state database or
 claim of authenticated human identity from agent-entered text. Validation
 is broader than test completion, and semantic coverage remains bounded
 by accepted requirements and observed evidence.
+
+## Durable execution context and corrective feedback documentation (November 17, 2026)
+
+Keep the marketing/docs split coherent. Public copy emphasizes the useful
+capability: durable governing context across agent sessions, source-backed
+corrective feedback at supported Decapod-mediated boundaries, and independent
+proof adjudication on the exact candidate. Do not collapse memory into proof
+or equate failed validation with an automatically completed repair.
+
+The documentation can use the user intent "Continue PR #1234" as a
+falsifiable **target** for cold-context handoff, not a universally shipped
+API command. Real validation requires a fresh agent with no old transcript,
+current repo and Git/forge state, previous failed/attempted corrective work,
+a new source change, current proof and an independently verified update of
+the *same* PR. See #1367 and #1758, and reuse #1083/#1084. No new runtime,
+generic summarizer, secondary ledger, or false claim of hidden-model access.
+
+The docs landing page mirrors the three-part homepage model, remains
+responsive and accessible under mdBook, and retains the approved branding,
+film, mascot, working links, and original install command. README stays
+concise and unchanged by this deeper technical explanation.

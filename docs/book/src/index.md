@@ -7,7 +7,7 @@
   <div class="decapod-docs-hero-copy">
     <div class="decapod-docs-kicker">CLOSED-LOOP METACOGNITIVE AGENT GOVERNANCE</div>
     <h1>HARNESS AI <em class="decapod-docs-metacognition">METACOGNITION.</em></h1>
-    <p>Agents work toward your intent through a governed feedback loop. They respond to corrective guidance and design falsifiable proofs. Decapod validates the outcome against the accepted requirements and exact repository state.</p>
+    <p>A capable model needs a dependable execution loop. Decapod keeps recorded intent, ownership, and proof obligations accessible across sessions; feedback helps agents repair governed failures, and validation evaluates the actual work.</p>
     <div class="decapod-docs-actions">
       <a class="decapod-docs-btn primary" href="quickstart.html">Get started <span aria-hidden="true">↗</span></a>
       <a class="decapod-docs-btn secondary" href="introduction.html">Understand Decapod <span aria-hidden="true">↗</span></a>
@@ -23,16 +23,21 @@
   </video>
 </div>
 
-<div class="decapod-docs-loop" aria-label="Closed-loop metacognitive governance and validation">
+<div class="decapod-docs-loop" aria-label="Durable state, agent feedback, and independent validation">
   <div class="decapod-docs-loop-stage">
-    <span class="decapod-docs-loop-label">01 / INSIDE THE LOOP</span>
-    <strong>Intent → action → feedback → correction</strong>
-    <p>Your agent interprets the original and subsequent requests, follows Decapod's governance feedback, and refines both implementation and proof obligations.</p>
+    <span class="decapod-docs-loop-label">01 / DURABLE STATE</span>
+    <strong>Keep the governing thread.</strong>
+    <p>Recorded intent, scoped tasks, decisions, attempted corrections, and proof obligations remain inspectable when an agent session ends.</p>
+  </div>
+  <div class="decapod-docs-loop-stage decapod-docs-loop-feedback">
+    <span class="decapod-docs-loop-label">02 / CORRECTIVE LOOP</span>
+    <strong>Make failures actionable.</strong>
+    <p>At supported governed boundaries, rejections expose the unsatisfied condition and available remediation. The agent revises, retries, and preserves what it learned.</p>
   </div>
   <div class="decapod-docs-loop-stage decapod-docs-loop-verify">
-    <span class="decapod-docs-loop-label">02 / THE VALIDATION BOUNDARY</span>
-    <strong>Execute the proofs. Earn acceptance.</strong>
-    <p>Required gates run the checks against the resulting artifact. Evidence determines whether the accepted intent has been demonstrated; the agent cannot self-approve.</p>
+    <span class="decapod-docs-loop-label">03 / VALIDATION</span>
+    <strong>Prove the candidate.</strong>
+    <p>Required gates execute on the actual repository state. Evidence determines which obligations passed, failed, became stale, or remain unproven.</p>
   </div>
 </div>
 
@@ -62,4 +67,5 @@ Then keep using Codex, Claude Code, Cursor, or your preferred coding agent. Deca
 - **[Agent workflows](workflows/single-agent.md)** — Follow an accepted change from planning to validation.
 - **[Concurrent work](workflows/multi-agent.md)** — Keep ownership explicit when agents work in parallel.
 - **[Proof and recovery](concepts/proof.md)** — Distinguish verified work from unsupported completion claims.
+- **[Cold-context continuation](concepts/convergence.md#cold-context-continuation)** — What the next agent needs to resume work safely.
 - **[Constitution and overrides](concepts/constitution.md)** — Establish policy that stays with the project.
