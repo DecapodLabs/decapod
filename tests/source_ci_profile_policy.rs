@@ -44,15 +44,15 @@ fn docs_deployment_requires_positive_native_owner_before_job_scheduling() {
     assert!(build.contains("node-version: '22'"));
     assert!(build.contains("working-directory: docs/starlight"));
     assert!(build.contains("run: npm install --no-audit --no-fund"));
+    assert!(build.contains("run: npm run build"));
     assert!(build.contains("path: docs/starlight/dist"));
-    assert!(!build.contains("mdbook"));
+    assert!(build.contains("mdbook-v0.4.40-x86_64-unknown-linux-gnu.tar.gz"));
     let docs = find_check("docs-build").unwrap();
-    assert_eq!(docs.capabilities, ["npm", "node:22"]);
+    assert_eq!(docs.capabilities, ["mdbook", "mdbook:0.4.40"]);
     let recipe = commands(docs, &[]).unwrap();
     assert_eq!(recipe.len(), 1);
-    assert_eq!(recipe[0].program, "npm");
-    assert_eq!(recipe[0].args, ["run", "build"]);
-    assert_eq!(recipe[0].cwd, "docs/starlight");
+    assert_eq!(recipe[0].program, "mdbook");
+    assert_eq!(recipe[0].args, ["build", "docs/book"]);
     assert!(build.contains(
         "if: github.ref == 'refs/heads/master' && steps.owner.outputs.native_owner == 'true'"
     ));

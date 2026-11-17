@@ -46,11 +46,23 @@ jobs:
       - name: Install Starlight dependencies
         working-directory: docs/starlight
         run: npm install --no-audit --no-fund
+      # The accepted source-CI profile still owns mdBook validation.
+      # Preserve that independently measured check while the new Pages
+      # presentation is accepted as a separately built Starlight artifact.
+      - name: Install accepted mdBook 0.4.40 source-CI toolchain
+        run: |
+          mkdir -p "$HOME/mdbook"
+          curl --fail --location --silent --show-error \
+            https://github.com/rust-lang/mdBook/releases/download/v0.4.40/mdbook-v0.4.40-x86_64-unknown-linux-gnu.tar.gz \
+            | tar -xz -C "$HOME/mdbook"
+          echo "${HOME}/mdbook" >> "$GITHUB_PATH"
       - name: Prepare shared source-CI profile
         uses: ./.github/actions/source-ci-profile
-
-      - name: Build and verify Starlight with audited source-CI recipe
+      - name: Validate canonical Markdown with accepted source-CI recipe
         run: '"$RUNNER_TEMP/source-ci-profile" run-ci --check docs-build'
+      - name: Build and independently verify Starlight Pages output
+        working-directory: docs/starlight
+        run: npm run build
       - name: Upload artifact (GitHub Pages)
         if: github.ref == 'refs/heads/master' && steps.owner.outputs.native_owner == 'true'
         uses: actions/upload-pages-artifact@v3

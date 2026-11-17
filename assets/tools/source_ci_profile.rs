@@ -230,7 +230,7 @@ pub const CHECKS: &[Check] = &[
     Check {
         workflow: "docs.yml",
         skipped_for_release_only: false,
-        ..check!("docs-build", "build", &["npm", "node:22"])
+        ..check!("docs-build", "build", &["mdbook", "mdbook:0.4.40"])
     },
     Check {
         workflow: "constitution-sync.yml",
@@ -751,7 +751,7 @@ pub fn commands(check: &Check, paths: &[String]) -> io::Result<Vec<Invocation>> 
             Invocation::new("git", &["commit", "-m", "fixture commit"]).at("tests/fixtures/state_commit_repo"),
             Invocation::new("./target/release/golden_vectors", &["--check"]).at("tests/golden_vectors"),
         ],
-        "docs-build" => vec![Invocation::new("npm", &["run", "build"]).at("docs/starlight")],
+        "docs-build" => vec![Invocation::new("mdbook", &["build", "docs/book"])],
         "constitution-schema" => vec![Invocation::new("ajv", &["validate", "-s", "assets/schemas/constitution.schema.json", "-d", "assets/constitution.json", "--strict=false"])],
         _ => return Err(io::Error::other("check lacks an implementation")),
     }
@@ -857,7 +857,6 @@ fn preflight(check: &Check) -> io::Result<()> {
     for (requirement, program, argument, expected) in [
         ("mdbook:0.4.40", "mdbook", "--version", "mdbook v0.4.40"),
         ("node:20", "node", "--version", "v20."),
-        ("node:22", "node", "--version", "v22."),
         (
             "cross-rev:74e99b2223de06166f8cdcc1af7f1308ec52baf4",
             "cross",
