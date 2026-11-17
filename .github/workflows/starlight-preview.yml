@@ -1,6 +1,8 @@
 name: Starlight Documentation Preview
 
 on:
+  push:
+    branches: ['docs/starlight-cutover-20261116']
   pull_request:
     branches: [master]
     paths:
