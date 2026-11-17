@@ -52,24 +52,20 @@ html,body {font-family:'DM Sans',-apple-system,BlinkMacSystemFont,system-ui,sans
 .navy #menu-bar,.coal #menu-bar,.ayu #menu-bar{background:rgba(28,23,32,.94)!important}
 #sidebar{border-right:1px solid rgba(240,91,55,.18)}
 #sidebar .sidebar-scrollbox::before {
-    content:"DECAPOD  /  DOCS";
-    display:flex;
-    align-items:center;
-    min-height:88px;
-    box-sizing:border-box;
-    padding:18px 16px 18px 84px;
-    background-image:url("https://decapodlabs.github.io/assets/mascot.svg");
-    background-position:14px center;
-    background-repeat:no-repeat;
-    background-size:58px 53px;
-    border-bottom:1px solid rgba(240,91,55,.20);
-    color:var(--fg);
-    font-family:'Outfit',system-ui,sans-serif;
-    font-size:15px;
-    font-weight:800;
-    letter-spacing:-.03em;
-    margin-bottom:12px;
+    content: "";
+    display: block;
+    min-height: 83px;
+    box-sizing: border-box;
+    background-image:
+        url("https://decapodlabs.github.io/assets/logo-c.png"),
+        url("https://decapodlabs.github.io/assets/mascot.svg");
+    background-position: 10px center, calc(100% - 12px) center;
+    background-repeat: no-repeat;
+    background-size: 215px auto, 41px 38px;
+    border-bottom: 1px solid rgba(240,91,55,.20);
+    margin-bottom: 12px;
 }
+
 .chapter-item a{border-radius:9px;margin:2px 6px;padding:7px 11px;transition:background-color .18s,color .18s}
 .chapter-item a:hover{background:rgba(240,91,55,.09);text-decoration:none!important}
 .chapter-item a.active{background:rgba(240,91,55,.13)!important;color:var(--sidebar-active)!important;font-weight:800}
@@ -119,3 +115,7 @@ main tr:nth-child(even){background:var(--table-alternate-bg)}
 @media(max-width:740px){.decapod-docs-hero{grid-template-columns:1fr;padding:25px}.decapod-docs-mascot{max-width:230px}.decapod-docs-grid{grid-template-columns:1fr}.decapod-docs-tile{min-height:125px}.decapod-docs-brand a{font-size:23px}}
 @media(max-width:420px){#content main{padding:1.1rem .8rem 3rem}.decapod-docs-hero{padding:19px}.decapod-docs-hero h1{font-size:49px!important;white-space:normal!important}.decapod-docs-mascot{max-width:185px}.decapod-docs-actions{flex-direction:column}.decapod-docs-btn{justify-content:center}}
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{scroll-behavior:auto!important;transition:none!important}}
+
+/* The shared logo-c wordmark appears in every docs sidebar and on the landing page. */
+.decapod-docs-brand .decapod-docs-wordmark{display:block;width:236px;max-width:100%;height:auto;object-fit:contain}
+@media(max-width:420px){.decapod-docs-brand .decapod-docs-wordmark{width:190px}}
