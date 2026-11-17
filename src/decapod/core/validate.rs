@@ -6562,7 +6562,8 @@ fn validate_plan_governed_execution_gate(
 
     let plan = plan_governance::load_plan(main_root)?;
     if let Some(plan) = plan {
-        match plan_governance::validate_plan_progress_at(
+        match plan_governance::validate_plan_progress_at_root(
+            main_root,
             &plan,
             crate::core::validation_rules::EvaluationPhase::Validation,
         ) {
@@ -6589,15 +6590,6 @@ fn validate_plan_governed_execution_gate(
             );
         } else {
             pass("Plan artifact state allows governed execution", ctx);
-        }
-
-        match plan_governance::ensure_instruction_ready(
-            &plan,
-            crate::core::validation_rules::EvaluationPhase::Validation,
-            "NEEDS_HUMAN_INPUT",
-        ) {
-            Err(error) => fail(&error.to_string(), ctx),
-            Ok(()) => pass("Plan intent, unknowns and contradictions are resolved", ctx),
         }
     } else {
         let done_count = plan_governance::count_done_todos(&store.root)?;

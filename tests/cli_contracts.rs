@@ -219,6 +219,12 @@ fn global_triangle_requires_independently_accepted_repair_and_current_proof() {
     consumer_readiness::accepted_global_triangle_requires_policy_repair_and_fresh_mapping();
 }
 
+#[cfg(any(target_os = "linux", target_os = "macos"))]
+#[test]
+fn counterfeit_origin_hash_cannot_replace_retained_source_and_repair_stays_possible() {
+    consumer_readiness::source_history_refuses_counterfeit_origin_then_accepts_restored_fresh_source();
+}
+
 mod init_ci_scaffolding;
 mod init_config_behavior;
 

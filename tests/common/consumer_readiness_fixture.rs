@@ -229,7 +229,23 @@ impl Fixture {
     }
 
     pub(super) fn save_config(&self) {
-        let config = toml::Value::try_from(serde_json::json!({"proof": self.proof})).unwrap();
+        let mut config: toml::Value = fs::read_to_string(self.options.root.join(CONFIG))
+            .ok()
+            .and_then(|body| toml::from_str(&body).ok())
+            .unwrap_or_else(|| toml::Value::Table(Default::default()));
+        config["proof"] = toml::Value::try_from(&self.proof).unwrap();
+        fs::write(
+            self.options.root.join(CONFIG),
+            toml::to_string_pretty(&config).unwrap(),
+        )
+        .unwrap();
+    }
+
+    /// Real broker/CLI calls need the full project configuration, while older
+    /// narrow native-runner cases intentionally exercise first adoption.
+    pub(super) fn governed_config(&self) {
+        let mut config: toml::Value = toml::from_str("schema_version = '1.0.0'\n[init]\nspecs = false\nci = false\ndiagram_style = 'ascii'\nentrypoints = []\n[repo]\nbase_branch = 'main'\ncontainer_workspaces = false\nbackend = 'local'\n").unwrap();
+        config["proof"] = toml::Value::try_from(&self.proof).unwrap();
         fs::write(
             self.options.root.join(CONFIG),
             toml::to_string_pretty(&config).unwrap(),

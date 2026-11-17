@@ -184,7 +184,8 @@ fn accepted_plan(
             "execution checkpoint requires an accepted plan",
         )
     })?;
-    plan_governance::ensure_instruction_ready(
+    plan_governance::ensure_instruction_ready_at(
+        root,
         &plan,
         crate::core::validation_rules::EvaluationPhase::DuringExecution,
         "EXECUTION_DECISION_REQUIRED",

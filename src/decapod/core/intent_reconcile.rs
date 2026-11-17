@@ -54,6 +54,8 @@ pub struct ReconciliationReport {
     pub intent_hash: Option<String>,
     pub plan_state: Option<String>,
     pub unresolved_questions: Vec<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub instruction_readiness: Option<crate::plan_governance::InstructionReadiness>,
     pub repo_signal_fingerprint: String,
     pub last_refresh_fingerprint: Option<String>,
     pub code_changed_since_refresh: Option<bool>,
@@ -513,20 +515,33 @@ pub fn reconcile_with_base(
     let fingerprint = project_specs::repo_signal_fingerprint(project_root)?;
     let manifest = project_specs::read_specs_manifest(project_root)?;
     let plan = plan_governance::load_plan(project_root)?;
+    let instruction_readiness = plan
+        .as_ref()
+        .map(|plan| {
+            plan_governance::instruction_readiness_at(
+                project_root,
+                plan,
+                crate::core::validation_rules::EvaluationPhase::PreExecution,
+            )
+        })
+        .transpose()?;
     let current_spec_input_hash = project_specs::spec_input_hash(project_root)?;
 
     let mut findings = Vec::new();
     let mut unresolved = Vec::new();
     let (intent_source, intent_hash, plan_state) = match plan.as_ref() {
         Some(plan) => {
-            unresolved.extend(plan.unknowns.iter().cloned());
-            unresolved.extend(plan.human_questions.iter().cloned());
-            unresolved.extend(plan.unresolved_contradictions.iter().cloned());
+            unresolved.extend(
+                instruction_readiness
+                    .as_ref()
+                    .map(|report| report.questions.clone())
+                    .unwrap_or_default(),
+            );
             if plan.intent.trim().is_empty() {
                 findings.push(finding(
                     "missing_active_intent",
                     ".decapod/governance.json",
-                    "The governed plan has no human-originated change intent",
+                    "The governed plan has no recorded change intent",
                 ));
             }
             if !unresolved.is_empty() {
@@ -749,6 +764,7 @@ pub fn reconcile_with_base(
         intent_hash,
         plan_state,
         unresolved_questions: unresolved,
+        instruction_readiness,
         repo_signal_fingerprint: fingerprint.clone(),
         last_refresh_fingerprint: manifest.as_ref().map(|m| m.repo_signal_fingerprint.clone()),
         code_changed_since_refresh: manifest

@@ -643,6 +643,11 @@
       "id": "selected-root-global-relation-controls",
       "summary": "Add source-accepted selected root conservation, bounded eq/ne consistency, native identity joins and scripted negative/repair fixtures; no closure or host-authentication claim",
       "input_digest": "sha256:c7f88ae5e14005fafc2120357baa8c6f3f6ba9a89ff8b5db97c48902f5dc4bb5"
+    },
+    {
+      "id": "instruction-lineage-selected-readiness-20261117",
+      "summary": "Preserve original recorded source and ordered clarification CAS, invalidate stale plan/checkpoints, expose canonical phase feedback and selected consistency, repair Dactyl readonly lookup and fixture configuration. Acceptance remains unproven pending exact-candidate validation.",
+      "input_digest": "sha256:361e241c9997f51e9ba93a3cb6870ae5df1fb6fd4df40db8d59bd1534da5200b"
     }
   ],
   "intents": {
@@ -687,23 +692,23 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Review explicit accepted selected roots and bounded eq/ne model; local-only native/DB join, source-instruction revision binding and separate proof/authority limits are documented.",
-          "reviewed_code_fingerprint": "92ea1cb6c006108a737615667e8f15544342654a20aeb4c6a2d63dc2b5a95c10",
-          "spec_material_hash": "0599401b4ae9236914c23b9d93052f1f7ab9f43777fd1f95eeb5603ad85d176a"
+          "reason": "Recorded instruction revisions, bounded selected roots, canonical phase feedback, and native historical-source replay are documented with explicit trust limits.",
+          "reviewed_code_fingerprint": "8d750912ac3b2f4bc89f2c10118aa6455a5ae84f2ebf66f4b74ba707380e5944",
+          "spec_material_hash": "cc5a9347b5de765292a6f704e0e34548d31d9e62c166a5a21535c95567b96a02"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Review explicit accepted selected roots and bounded eq/ne model; local-only native/DB join, source-instruction revision binding and separate proof/authority limits are documented.",
-          "reviewed_code_fingerprint": "92ea1cb6c006108a737615667e8f15544342654a20aeb4c6a2d63dc2b5a95c10",
-          "spec_material_hash": "e5361f5b9bfa35974033d9bd4e9c0b2cb5d25296e687b36ba271d1be39d4ec0d"
+          "reason": "CLI clarification CAS, selected instruction lineage/readiness projections and bounded eq/ne judgments match current source; caller-reported provenance remains explicitly unauthenticated.",
+          "reviewed_code_fingerprint": "8d750912ac3b2f4bc89f2c10118aa6455a5ae84f2ebf66f4b74ba707380e5944",
+          "spec_material_hash": "255581842becb47d9bc5f818e10299fd47b6a0f65823b67d8cf07467ae606171"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Review explicit accepted selected roots and bounded eq/ne model; local-only native/DB join, source-instruction revision binding and separate proof/authority limits are documented.",
-          "reviewed_code_fingerprint": "92ea1cb6c006108a737615667e8f15544342654a20aeb4c6a2d63dc2b5a95c10",
-          "spec_material_hash": "fbc11c5f35ac4394381a30b7b88c1a7893b05491005db49e3dbf453c05df8b6f"
+          "reason": "Source origin immutability, append-only revision CAS, replay rejection and source-history recovery are explicit; no agent label or hash grants authenticated principal or host witness authority.",
+          "reviewed_code_fingerprint": "8d750912ac3b2f4bc89f2c10118aa6455a5ae84f2ebf66f4b74ba707380e5944",
+          "spec_material_hash": "eb6010fb64088b97cff85021dcc169fbdbb0c621aa9698755adbda87b8de7098"
         }
       ],
       "state": "APPROVED",
@@ -714,17 +719,29 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1794953103Z"
+      "updated_at": "1794956692Z"
     },
     "trajectory": {
       "active_boundaries": [
         "No protected root edits, force push, merge, gate waiver or fabricated evidence"
       ],
-      "artifact_hash": "sha256:41adfba91a6402dbba566efd1f07d43008993c2fa65a7ba8cbaa81d9d41b3a6a",
+      "artifact_hash": "sha256:b081ff79d78bfb26c9b718077df0cf5cc057d552574feb36b688925a508da62e",
       "checks": [
         {
           "name": "candidate_986_cli_compile",
           "status": "failed"
+        },
+        {
+          "name": "e3_dactyl_readonly_snapshot",
+          "status": "failed"
+        },
+        {
+          "name": "e3_selected_root_fixture",
+          "status": "failed"
+        },
+        {
+          "name": "e3_tenant_and_combined_interface",
+          "status": "passed"
         },
         {
           "name": "exact_candidate_validation",
@@ -788,10 +805,17 @@
             "intent_id": "intent:todo:bugs_01m7nm3pnpc3be76",
             "kind": "trajectory_step_recorded",
             "sequence": 8
+          },
+          {
+            "detail": "trajectory:issues-1761-1770-20261117",
+            "event_id": "event:9",
+            "intent_id": "intent:todo:bugs_01m7nm3pnpc3be76",
+            "kind": "trajectory_step_recorded",
+            "sequence": 9
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 8,
+        "next_sequence": 9,
         "schema_version": "1.0.0",
         "trajectories": {
           "issues-1761-1770-20261117": {
@@ -926,6 +950,34 @@
                 "validation_findings": [
                   "Selected-root/typed-relation fixtures are scripted local-policy/native controls and remain unverified until source CI executes them. No authenticated prompt capture or external witness is claimed."
                 ]
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:9",
+                "observations": [
+                  "src/decapod/core/custody_model.rs",
+                  "src/decapod/core/governance_document.rs",
+                  "src/decapod/core/state.rs",
+                  "src/decapod/core/obligation.rs",
+                  "https://github.com/DecapodLabs/decapod/actions/runs/44186574654/job/134406250320",
+                  "https://github.com/DecapodLabs/decapod/actions/runs/44186574654/job/134406250356"
+                ],
+                "proof_refs": [
+                  "e3_tenant_and_combined_interface",
+                  "e3_selected_root_fixture",
+                  "e3_dactyl_readonly_snapshot"
+                ],
+                "scope": [
+                  ".decapod/managed/specs",
+                  "README.md",
+                  "docs",
+                  "src/decapod",
+                  "tests"
+                ],
+                "sequence": 9,
+                "validation_findings": [
+                  "Installed registry controller is now0.148.9; supported init refreshed release projections. Prior isolated-binary exception request is obsolete. Same-lineage source remains caller-reported, not authenticated human or host witness."
+                ]
               }
             ]
           }
@@ -940,7 +992,9 @@
         "Official0.148.8 validate on0a8350c9 stopped before test execution with PROOF_PROFILE_RECONCILIATION_REQUIRED. Read-only agent.init reports inventory sha256:b929199963bc910eb5f099a92ec5d152d6e78d7b6608f0bdf74c22eeda13fdc8 and only STALE_SOURCE_INVENTORY plus REQUIRED_PROOF_NOT_RUN. Compared every discovery input from last accepted config review edbfc00d: only Cargo.toml and Cargo.lock package version0.148.7 to0.148.8 differ. Backed up config privately; reviewed digest update preserves all workflow/helper/check/toolchain contracts.",
         "Preserved PR1766 original head12d403ac and base18cbb30c. Actual CI44163787850 rejects obsolete checkpoint test and missing README constitution reference. Repaired source36ede3fd; tests authored, execution pending official validation. Strict historical checkpoint inspection reports original unproven/invalid lineage; current continuation cannot be described as historical proof.",
         "https://buildkite.com/decapodlabs/decapod/builds/11873",
-        "https://github.com/DecapodLabs/decapod/actions/runs/44177760790/job/134374440067"
+        "https://github.com/DecapodLabs/decapod/actions/runs/44177760790/job/134374440067",
+        "https://github.com/DecapodLabs/decapod/actions/runs/44186574654/job/134406250320",
+        "https://github.com/DecapodLabs/decapod/actions/runs/44186574654/job/134406250356"
       ],
       "inspected_files": [
         "src/decapod/core/governance_document.rs",
@@ -958,10 +1012,13 @@
         "CLAUDE.md",
         "CODEX.md",
         "GEMINI.md",
+        "src/decapod/core/custody_model.rs",
+        "src/decapod/core/governance_document.rs",
         "src/decapod/core/intent_reconcile/selected.rs",
         "src/decapod/core/native_proof.rs",
         "src/decapod/core/obligation.rs",
         "src/decapod/core/rpc.rs",
+        "src/decapod/core/state.rs",
         "src/decapod/core/trajectory/execution.rs",
         "src/decapod/core/validate.rs",
         "src/decapod/core/workspace.rs",
@@ -985,6 +1042,7 @@
       "tool_calls": [],
       "unresolved_assumptions": [
         "Accepted master advanced to ab4abe0593ddd8fd15186001558b79addd08aebc during provider wait; old proof is not current.",
+        "Installed registry controller is now0.148.9; supported init refreshed release projections. Prior isolated-binary exception request is obsolete. Same-lineage source remains caller-reported, not authenticated human or host witness.",
         "Instruction origin authentication, accepted root coverage, typed global consistency, independent behavior controls and genuine path observation remain open acceptance obligations.",
         "Selected-root/typed-relation fixtures are scripted local-policy/native controls and remain unverified until source CI executes them. No authenticated prompt capture or external witness is claimed."
       ]

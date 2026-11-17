@@ -31,6 +31,7 @@ pub fn selected_roots_reject_omission_and_require_executed_repair() {
         trajectory,
     };
     let mut fixture = Fixture::new();
+    fixture.governed_config();
     let root = fixture.options.root.clone();
     let mut work = SelectedWork {
         schema_version: "1.0.0".into(),
@@ -238,6 +239,7 @@ pub fn accepted_global_triangle_requires_policy_repair_and_fresh_mapping() {
         trajectory,
     };
     let mut fixture = Fixture::new();
+    fixture.governed_config();
     let root = fixture.options.root.clone();
     let mut work = SelectedWork {
         schema_version: "1.0.0".into(),
@@ -387,6 +389,93 @@ pub fn accepted_global_triangle_requires_policy_repair_and_fresh_mapping() {
     );
     assert_eq!(receipt["material"]["accepted_base_revision"], repaired_base);
     assert!(!conflict.ready && !proposal.ready && !stale_mapping.ready);
+}
+
+pub fn source_history_refuses_counterfeit_origin_then_accepts_restored_fresh_source() {
+    use decapod::core::{governance_document, trajectory};
+    let fixture = Fixture::new();
+    fixture.governed_config();
+    let root = &fixture.options.root;
+    trajectory::init_trajectory(
+        root,
+        trajectory::TrajectoryInit {
+            run_id: "source-history".into(),
+            task_id: None,
+            intent_id: Some("intent:source-history".into()),
+            original_intent: "A: preserve the original recorded request".into(),
+            derived_intent: "B: implement the recorded contract".into(),
+            active_boundaries: vec![],
+            repo_scope: vec![],
+            destination: None,
+            current_phase: None,
+            next_transitions: vec![],
+            blockers: vec![],
+        },
+    )
+    .unwrap();
+    fixture.commit("freeze original recorded source before counterfeit candidate");
+    git(root, &["push", "origin", "HEAD:main"]);
+    git(root, &["fetch", "origin", "main"]);
+    let base = git(root, &["rev-parse", "origin/main"]);
+    let path = root.join(governance_document::GOVERNANCE_PATH);
+    let original = fs::read(&path).unwrap();
+    let original_application = fs::read(root.join("payload.txt")).unwrap();
+    let mut document = governance_document::load(root).unwrap().unwrap();
+    let mut artifact = trajectory::load_trajectory(root, "source-history").unwrap();
+    artifact.original_intent = "counterfeit replacement request".into();
+    artifact
+        .custody
+        .intents
+        .get_mut("intent:source-history")
+        .unwrap()
+        .raw_intent = artifact.original_intent.clone();
+    artifact = artifact.with_recomputed_hash().unwrap();
+    document.intents.insert(
+        "intent:source-history".into(),
+        serde_json::to_value(&artifact.custody.intents["intent:source-history"]).unwrap(),
+    );
+    document.sections.insert(
+        "trajectory".into(),
+        serde_json::to_value(&artifact).unwrap(),
+    );
+    // Deliberate out-of-kernel adversarial write. Rehashing caller-owned bytes
+    // must not make the independently pinned original disappear.
+    fs::write(&path, serde_json::to_vec_pretty(&document).unwrap()).unwrap();
+    fixture.commit("counterfeit same-ID original with structurally consistent hashes");
+    let bad_head = git(root, &["rev-parse", "HEAD"]);
+    let mut host = fixture.host();
+    let refused = fixture.validate(&mut host);
+    blocked(&refused, "INSTRUCTION_HISTORY_CONFLICT");
+    assert_eq!(host.execution_attempts, 0);
+    assert_eq!(
+        original_application,
+        fs::read(root.join("payload.txt")).unwrap()
+    );
+    fs::write(&path, original).unwrap();
+    fixture.commit("restore canonical origin while retaining the rejected Git observation");
+    let repaired_head = git(root, &["rev-parse", "HEAD"]);
+    assert_ne!(bad_head, repaired_head);
+    let mut host = fixture.host();
+    let repaired = fixture.validate(&mut host);
+    assert!(repaired.ready, "{repaired:?}");
+    assert_eq!(host.execution_attempts, 1);
+    assert_eq!(
+        git(root, &["rev-parse", &format!("{bad_head}^{{commit}}")]),
+        bad_head
+    );
+    let receipt: serde_json::Value = serde_json::from_slice(
+        &fs::read(
+            repaired
+                .evidence_path
+                .as_ref()
+                .unwrap()
+                .join("completion/native-readiness-receipt.json"),
+        )
+        .unwrap(),
+    )
+    .unwrap();
+    assert_eq!(receipt["material"]["head_revision"], repaired_head);
+    assert_eq!(receipt["material"]["accepted_base_revision"], base);
 }
 
 /// Scripted accepted-policy fixture, not authenticated human authorship or a

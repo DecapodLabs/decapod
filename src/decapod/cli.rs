@@ -1356,6 +1356,28 @@ pub(crate) struct TrajectoryCli {
 
 #[derive(Subcommand, Debug)]
 pub(crate) enum TrajectoryCommand {
+    /// Record a same-lineage instruction revision; source/principal are unverified claims
+    Clarify {
+        #[clap(long)]
+        run_id: String,
+        #[clap(long)]
+        revision_id: String,
+        #[clap(long)]
+        expected_revision: String,
+        /// Bounded recorded instruction, redacted before persistence
+        #[clap(long)]
+        instruction: String,
+        #[clap(long)]
+        source_ref: String,
+        #[clap(long)]
+        principal_claim: Option<String>,
+        #[clap(long, value_enum, default_value = "clarification")]
+        kind: crate::core::custody::RecordedInstructionKind,
+        #[clap(long = "supersedes")]
+        supersedes: Vec<String>,
+        #[clap(long)]
+        derived_intent: Option<String>,
+    },
     /// Bind an execution checkpoint to current source, intent and authority
     Checkpoint {
         #[clap(long)]

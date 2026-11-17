@@ -46,6 +46,7 @@ pub struct RootCoverage {
     pub requirement: String,
     pub obligation_ref: String,
     pub obligations: Vec<String>,
+    pub mapping_revision: String,
     pub checks: Vec<String>,
     pub verdict: RuleVerdict,
     /// A mapping is never an execution observation.
@@ -70,6 +71,126 @@ pub struct SelectedJudgment {
     pub conflicting_relations: Vec<String>,
     pub unsupported_relations: Vec<String>,
     pub remediation: String,
+}
+
+#[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Eq)]
+pub struct ConstraintJudgment {
+    pub source_commit: String,
+    pub source_revision: String,
+    pub instruction_revision: String,
+    pub source_authority: String,
+    pub verdict: RuleVerdict,
+    pub conflicting_relations: Vec<String>,
+    pub unsupported_relations: Vec<String>,
+}
+
+pub(crate) struct CachedSelection {
+    pub work: SelectedWork,
+    pub source_commit: String,
+    pub candidate_matches: bool,
+}
+
+/// Preparation can inspect a cached target ref offline. This is explicitly not
+/// the provider freshness check required by full validation/publication.
+pub(crate) fn cached_selection(
+    root: &std::path::Path,
+) -> Result<Option<CachedSelection>, DecapodError> {
+    if !root.join(".decapod/config.toml").exists() {
+        return Ok(None);
+    }
+    use std::io::Read;
+    let path = root.join(".decapod/config.toml");
+    if std::fs::symlink_metadata(&path)?.file_type().is_symlink() {
+        return Err(invalid("selected source config must not be an alias"));
+    }
+    let mut bytes = Vec::new();
+    std::fs::File::open(path)?
+        .take(65537)
+        .read_to_end(&mut bytes)?;
+    if bytes.len() > 65536 {
+        return Err(invalid("selected current config exceeds input bound"));
+    }
+    let value: toml::Value =
+        toml::from_str(std::str::from_utf8(&bytes).map_err(|e| invalid(e.to_string()))?)
+            .map_err(|e| invalid(e.to_string()))?;
+    let config = crate::core::validation_runtime::proof_configuration(&bytes)
+        .map_err(DecapodError::IoError)?;
+    let current = config.selected_work.as_ref();
+    let Some(branch) = value
+        .get("repo")
+        .and_then(|v| v.get("base_branch"))
+        .and_then(toml::Value::as_str)
+    else {
+        return if current.is_none() {
+            Ok(None)
+        } else {
+            Err(invalid(
+                "SELECTED_SOURCE_UNAVAILABLE: set the explicit accepted base branch and fetch it before selecting policy",
+            ))
+        };
+    };
+    let local = config
+        .repository_contract
+        .as_ref()
+        .is_some_and(|c| c.canonical_local_target);
+    let reference = if local {
+        format!("refs/heads/{branch}")
+    } else {
+        format!("refs/remotes/origin/{branch}")
+    };
+    let tip = match super::git_output(
+        root,
+        &["rev-parse", "--verify", &format!("{reference}^{{commit}}")],
+    ) {
+        Ok(bytes) => String::from_utf8(bytes)
+            .map_err(|e| invalid(e.to_string()))?
+            .trim()
+            .to_owned(),
+        Err(_) if current.is_none() => return Ok(None),
+        Err(_) => {
+            return Err(invalid(
+                "SELECTED_SOURCE_UNAVAILABLE: fetch the configured accepted target; no candidate policy was accepted",
+            ));
+        }
+    };
+    if !super::immutable_oid(&tip) {
+        return Err(invalid("selected cached target is not an immutable commit"));
+    }
+    let entry = super::git_output(root, &["ls-tree", "-z", &tip, "--", ".decapod/config.toml"])?;
+    if entry.is_empty() {
+        return if current.is_none() {
+            Ok(None)
+        } else {
+            Err(invalid(
+                "SELECTED_POLICY_NOT_ACCEPTED: selected_work is absent from the cached accepted target",
+            ))
+        };
+    }
+    if !entry.starts_with(b"100644 blob ") {
+        return Err(invalid(
+            "selected cached policy is not a regular tracked blob",
+        ));
+    }
+    let bytes = super::git_output(root, &["show", &format!("{tip}:.decapod/config.toml")])?;
+    if bytes.len() > 65536 {
+        return Err(invalid("selected cached policy exceeds input bound"));
+    }
+    let accepted = configuration(&bytes).map_err(DecapodError::IoError)?;
+    match accepted.selected_work {
+        Some(work) => {
+            work.validate()?;
+            let candidate_matches = current == Some(&work);
+            Ok(Some(CachedSelection {
+                work,
+                source_commit: tip,
+                candidate_matches,
+            }))
+        }
+        None if current.is_none() => Ok(None),
+        None => Err(invalid(
+            "SELECTED_POLICY_NOT_ACCEPTED: a candidate cannot first accept its own selected roots",
+        )),
+    }
 }
 
 fn invalid(message: impl Into<String>) -> DecapodError {
@@ -250,12 +371,21 @@ pub fn evaluate(
         .zip(refs)
         .map(|(root, reference)| {
             let nodes = mappings.get(&reference).cloned().unwrap_or_default();
-            let covered =
-                nodes.len() == 1 && root.checks.iter().all(|name| nodes[0].1.contains(name));
-            RootCoverage {
+            let covered = nodes.len() == 1
+                && root
+                    .checks
+                    .iter()
+                    .all(|name| nodes[0].declared_checks.contains(name));
+            Ok(RootCoverage {
                 requirement: root.id.clone(),
                 obligation_ref: reference,
-                obligations: nodes.iter().map(|(id, _)| id.clone()).collect(),
+                obligations: nodes
+                    .iter()
+                    .map(|mapping| mapping.obligation_id.clone())
+                    .collect(),
+                mapping_revision: crate::core::governance_document::digest(
+                    &serde_json::to_value(&nodes).map_err(|e| invalid(e.to_string()))?,
+                )?,
                 checks: root.checks.clone(),
                 verdict: if covered {
                     RuleVerdict::Pass
@@ -263,9 +393,9 @@ pub fn evaluate(
                     RuleVerdict::Fail
                 },
                 behavior_proof: RuleVerdict::Unverifiable,
-            }
+            })
         })
-        .collect();
+        .collect::<Result<Vec<_>, DecapodError>>()?;
     let (consistency, conflicting_relations, unsupported_relations) = consistency(work)?;
     Ok(SelectedJudgment {
         schema_version: "1.0.0".into(), rule_id: "selected_accepted_requirements".into(),

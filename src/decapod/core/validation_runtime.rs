@@ -639,6 +639,13 @@ fn load_project(options: &Options, budget: &mut RuntimeBudget<'_>) -> io::Result
         crate::plan_governance::enforce_scope_paths(&constraints, &facts.changed_paths)
             .map_err(io::Error::other)?;
     }
+    super::governance_document::verify_instruction_history_with(
+        &base,
+        &head,
+        &governance,
+        &mut |args| git(options, budget, args).map_err(super::error::DecapodError::IoError),
+    )
+    .map_err(io::Error::other)?;
     crate::core::entrypoint_integrity::validate_committed_history_with(
         &options.root,
         &base,

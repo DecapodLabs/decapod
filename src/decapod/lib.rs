@@ -8865,6 +8865,35 @@ fn run_trajectory_command(
     workspace_root: &Path,
 ) -> Result<(), error::DecapodError> {
     match trajectory_cli.command {
+        TrajectoryCommand::Clarify {
+            run_id,
+            revision_id,
+            expected_revision,
+            instruction,
+            source_ref,
+            principal_claim,
+            kind,
+            supersedes,
+            derived_intent,
+        } => {
+            let artifact = core::trajectory::append_instruction(
+                workspace_root,
+                &run_id,
+                core::custody::InstructionRevisionInput {
+                    revision_id,
+                    expected_revision,
+                    instruction,
+                    source_claim: core::custody::ReportedInstructionSource {
+                        source_ref,
+                        principal_claim,
+                    },
+                    kind,
+                    supersedes,
+                    derived_intent,
+                },
+            )?;
+            println!("{}", serde_json::to_string_pretty(&artifact).unwrap());
+        }
         TrajectoryCommand::Checkpoint {
             run_id,
             checkpoint_id,
@@ -14245,13 +14274,28 @@ fn governed_plan_context(
             file_touch_budget: None,
             task_binding: "not_available".to_string(),
             instruction_readiness: None,
+            instruction_lineage: None,
         });
     };
 
-    let instruction_readiness = plan_governance::instruction_readiness(
-        &plan,
-        core::validation_rules::EvaluationPhase::PreExecution,
-    );
+    let selected = task_id.is_none_or(|id| plan.todo_ids.iter().any(|candidate| candidate == id));
+    let instruction_readiness = if selected {
+        plan_governance::instruction_readiness_at(
+            project_root,
+            &plan,
+            core::validation_rules::EvaluationPhase::PreExecution,
+        )?
+    } else {
+        plan_governance::instruction_readiness(
+            &plan,
+            core::validation_rules::EvaluationPhase::PreExecution,
+        )
+    };
+    let instruction_lineage = if selected {
+        plan_governance::instruction_lineage_for_plan(project_root, &plan)?
+    } else {
+        None
+    };
     let unresolved_items = instruction_readiness.questions.clone();
 
     let task_binding = match task_id {
@@ -14273,6 +14317,7 @@ fn governed_plan_context(
         file_touch_budget: plan.constraints.file_touch_budget,
         task_binding: task_binding.to_string(),
         instruction_readiness: Some(instruction_readiness),
+        instruction_lineage,
     })
 }
 

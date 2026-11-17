@@ -2,6 +2,75 @@ use super::*;
 use crate::plugins::{federation, federation_ext};
 
 #[test]
+fn recorded_lineage_is_selected_by_identity_without_inheriting_another_task() {
+    let temp = tempfile::tempdir().unwrap();
+    let root = temp.path();
+    let artifact = trajectory::init_trajectory(
+        root,
+        trajectory::TrajectoryInit {
+            run_id: "lineage".into(),
+            task_id: Some("task:selected".into()),
+            intent_id: Some("intent:selected".into()),
+            original_intent: "A".into(),
+            derived_intent: "B".into(),
+            active_boundaries: vec!["selected-only boundary".into()],
+            repo_scope: vec!["src/selected".into()],
+            destination: None,
+            current_phase: None,
+            next_transitions: vec![],
+            blockers: vec!["selected-only recorded conflict".into()],
+        },
+    )
+    .unwrap();
+    let selected = StateIdentity {
+        kind: StateIdentityKind::Intent,
+        id: "intent:selected".into(),
+        intent_ref: artifact.intent_id,
+        task_id: None,
+    };
+    let lineage = resolve_instruction_lineage(root, &selected)
+        .unwrap()
+        .unwrap();
+    assert_eq!(lineage.original_intent, "A");
+    assert_eq!(lineage.refined_intent.as_deref(), Some("B"));
+    assert_eq!(lineage.origin_confidence, "agent_reported");
+    assert_eq!(
+        lineage.independent_authority,
+        crate::core::validation_rules::RuleVerdict::Unverifiable
+    );
+    let unrelated = StateIdentity {
+        kind: StateIdentityKind::Intent,
+        id: "other".into(),
+        intent_ref: Some("other".into()),
+        task_id: None,
+    };
+    assert!(
+        resolve_instruction_lineage(root, &unrelated)
+            .unwrap()
+            .is_none()
+    );
+    assert!(
+        resolve_scope_constraints(root, &unrelated)
+            .unwrap()
+            .0
+            .active_boundaries
+            .is_empty()
+    );
+    assert!(
+        resolve_custody(root, &unrelated)
+            .unwrap()
+            .blockers
+            .is_empty()
+    );
+    assert!(
+        resolve_blockers(root, &unrelated)
+            .unwrap()
+            .iter()
+            .all(|b| !b.description.contains("selected-only"))
+    );
+}
+
+#[test]
 fn lifecycle_precedes_tags_and_inferences_remain_proposals_with_provenance() {
     let temp = tempfile::tempdir().unwrap();
     let store = Store {

@@ -1,5 +1,32 @@
 # Validation
 
+## Lineage, replay and native source repair controls
+
+New actual CLI/RPC fixtures reconstruct original A, preceding misinterpretation B
+and recorded clarification C in a fresh process, with explicit reported confidence.
+They compare preparation/state revision identity, refuse acceptance while C needs
+resolution, and check identical retries before and after reacceptance. Unit controls
+cover changed retry IDs/payloads, stale parents, rejected spoofed provenance and
+revision truncation, plus stale execution checkpoints and fresh resumed repair.
+An actual native fixture edits and rehashes a counterfeit same-ID origin outside
+the kernel, requires a source-history refusal, restores the canonical source while
+retaining the rejected commit, and requires a new exact-head/base receipt.
+
+The selected-root slice's real source-CI run on `e3a06926` passed the tenant-isolation
+negative/repair and clean-merge interface fixture. Its complete CLI lane failed
+because the new governed DB fixtures used an intentionally minimal native config;
+they now use the complete supported project schema and preserve its sections.
+The full-library Supabase fixture exposed a read-only Dactyl rejection of explicit
+SQL transaction commands; the selected join now uses one bounded read statement.
+Clippy's complex tuple signature is replaced by a named mapping type. None of
+these repairs is counted as executed proof until the new exact candidate runs.
+
+After restart, the normal installed registry controller reports 0.148.9. Supported
+initialization refreshes all release-bound entrypoints, Docker pin and manifest;
+tracked historical backup files are retained. The temporary-binary exception
+request is obsolete. Required Buildkite proof, current accepted target and all
+other gates remain mandatory; GHA subsets cannot establish that profile.
+
 ## Selected roots and global relation falsifiers
 
 The required CLI suite registers actual native fixtures for omitted R3 audit
@@ -1559,7 +1586,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `92ea1cb6c006108a737615667e8f15544342654a20aeb4c6a2d63dc2b5a95c10`
+- Repository signal fingerprint: `8d750912ac3b2f4bc89f2c10118aa6455a5ae84f2ebf66f4b74ba707380e5944`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (237 files), `tests/` (235 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

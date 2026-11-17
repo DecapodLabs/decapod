@@ -1,5 +1,21 @@
 # Security
 
+## Instruction source integrity and trust classes
+
+Recorded origin and ordered revisions are immutable through governed writers.
+Native validation also checks retained source history, so an out-of-kernel edit
+and rehash cannot change the same lineage's origin or remove an accepted recorded
+prefix. Historical source rewrites remain inspectable when a corrected current
+candidate earns fresh proof. Neither the source guard nor a custody hash claims
+to observe or intercept arbitrary shell/forge actions.
+
+The new clarification API accepts reported source/principal claims only; it has
+no caller-settable authenticated flag. Readback classifies these as agent-reported
+and independently unverifiable. Missing legacy origin provenance remains unknown.
+No test or CLI plan approval authenticates a human principal. Real host-sourced
+ingress and policy-required witnessed process conformance still require their
+independent observer/controller contracts; they cannot be supplied by narration.
+
 ## Selected requirement trust boundary
 
 Only independently captured accepted-target policy governs the selected native
@@ -691,7 +707,7 @@ execution evidence remains required before publication readiness.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `92ea1cb6c006108a737615667e8f15544342654a20aeb4c6a2d63dc2b5a95c10`
+- Repository signal fingerprint: `8d750912ac3b2f4bc89f2c10118aa6455a5ae84f2ebf66f4b74ba707380e5944`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (237 files), `tests/` (235 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

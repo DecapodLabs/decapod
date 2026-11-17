@@ -435,6 +435,36 @@ fn set_section(
                         "INTENT_ORIGIN_CONFLICT: original request for {id} changed; use a distinct intent identity and retain the existing Git history"
                     )));
                 }
+                if let Some(existing) = document.intents.get(id) {
+                    if existing.get("instruction_origin") != candidate.get("instruction_origin") {
+                        return Err(invalid(
+                            "INTENT_ORIGIN_CONFLICT: recorded origin provenance cannot be replaced in place",
+                        ));
+                    }
+                    let prior = existing
+                        .get("instruction_revisions")
+                        .and_then(Value::as_array)
+                        .map(Vec::as_slice)
+                        .unwrap_or(&[]);
+                    let next = candidate
+                        .get("instruction_revisions")
+                        .and_then(Value::as_array)
+                        .map(Vec::as_slice)
+                        .unwrap_or(&[]);
+                    if !next.starts_with(prior) {
+                        return Err(invalid(
+                            "INSTRUCTION_HISTORY_CONFLICT: recorded revisions may only append; prior source and ordering must remain intact",
+                        ));
+                    }
+                    if next.len() == prior.len()
+                        && existing.get("refined_intent").is_some_and(|v| !v.is_null())
+                        && existing.get("refined_intent") != candidate.get("refined_intent")
+                    {
+                        return Err(invalid(
+                            "INSTRUCTION_INTERPRETATION_CONFLICT: append a revision before replacing the recorded interpretation",
+                        ));
+                    }
+                }
             }
             document.intents = std::mem::take(intents).into_iter().collect();
         }
@@ -964,6 +994,132 @@ pub fn validation_context_hash(root: &Path) -> Result<String, DecapodError> {
         "resolutions": document.resolutions,
         "recursive_passes": document.recursive_passes,
     }))
+}
+
+/// Compare the selected lineage with its retained first-parent source history.
+/// Bad intermediate source rewrites remain Git observations; restoring the
+/// canonical source permits fresh proof. This is not a host-operation witness.
+pub(crate) fn verify_instruction_history_with(
+    base: &str,
+    head: &str,
+    current: &Value,
+    read: &mut dyn FnMut(&[&str]) -> Result<Vec<u8>, DecapodError>,
+) -> Result<Vec<String>, DecapodError> {
+    let Some(intent_id) = current
+        .pointer("/sections/trajectory/intent_id")
+        .and_then(Value::as_str)
+    else {
+        return Ok(vec![]);
+    };
+    let Some(final_record) = current.get("intents").and_then(|v| v.get(intent_id)) else {
+        return Err(invalid(
+            "INSTRUCTION_ORIGIN_MISSING: current trajectory must retain its selected source",
+        ));
+    };
+    let revisions = |record: &Value| {
+        record
+            .get("instruction_revisions")
+            .and_then(Value::as_array)
+            .cloned()
+            .unwrap_or_default()
+    };
+    let same_origin = |left: &Value, right: &Value| {
+        left.get("raw_intent") == right.get("raw_intent")
+            && left.get("instruction_origin") == right.get("instruction_origin")
+    };
+    let mut canonical: Option<Value> = None;
+    let entry = read(&["ls-tree", "-z", base, "--", GOVERNANCE_PATH])?;
+    if !entry.is_empty() {
+        if !entry.starts_with(b"100644 blob ") {
+            return Err(invalid(
+                "INSTRUCTION_SOURCE_UNSUPPORTED: accepted governance must be a regular blob",
+            ));
+        }
+        let bytes = read(&["show", &format!("{base}:{GOVERNANCE_PATH}")])?;
+        if bytes.len() > MAX_GOVERNANCE_BYTES {
+            return Err(invalid(
+                "INSTRUCTION_HISTORY_LIMIT: governance source exceeds bound",
+            ));
+        }
+        let document: Value = serde_json::from_slice(&bytes).map_err(|e| invalid(e.to_string()))?;
+        canonical = document
+            .get("intents")
+            .and_then(|v| v.get(intent_id))
+            .cloned();
+    }
+    let range = format!("{base}..{head}");
+    let commits = read(&[
+        "rev-list",
+        "--first-parent",
+        "--reverse",
+        "--max-count=257",
+        &range,
+        "--",
+        GOVERNANCE_PATH,
+    ])?;
+    let commits = std::str::from_utf8(&commits)
+        .map_err(|e| invalid(e.to_string()))?
+        .lines()
+        .filter(|s| !s.is_empty())
+        .collect::<Vec<_>>();
+    if commits.len() > 256 {
+        return Err(invalid(
+            "INSTRUCTION_HISTORY_LIMIT: preserve the source history and use a supported bounded continuation; no uninspected history can grant source authority",
+        ));
+    }
+    let mut historical_rewrites = Vec::new();
+    for commit in commits {
+        if !matches!(commit.len(), 40 | 64) || !commit.bytes().all(|b| b.is_ascii_hexdigit()) {
+            return Err(invalid(
+                "INSTRUCTION_HISTORY_INVALID: commit identity is not immutable",
+            ));
+        }
+        let entry = read(&["ls-tree", "-z", commit, "--", GOVERNANCE_PATH])?;
+        if entry.is_empty() {
+            continue;
+        }
+        if !entry.starts_with(b"100644 blob ") {
+            return Err(invalid(
+                "INSTRUCTION_SOURCE_UNSUPPORTED: governance history must contain regular blobs",
+            ));
+        }
+        let bytes = read(&["show", &format!("{commit}:{GOVERNANCE_PATH}")])?;
+        if bytes.len() > MAX_GOVERNANCE_BYTES {
+            return Err(invalid(
+                "INSTRUCTION_HISTORY_LIMIT: governance source exceeds bound",
+            ));
+        }
+        let document: Value = serde_json::from_slice(&bytes).map_err(|e| invalid(e.to_string()))?;
+        let Some(record) = document.get("intents").and_then(|v| v.get(intent_id)) else {
+            continue;
+        };
+        let valid = canonical.as_ref().is_none_or(|prior| {
+            same_origin(prior, record)
+                && revisions(record).starts_with(&revisions(prior))
+                && (revisions(record).len() > revisions(prior).len()
+                    || prior.get("refined_intent").is_none_or(Value::is_null)
+                    || prior.get("refined_intent") == record.get("refined_intent"))
+        });
+        if valid {
+            canonical = Some(record.clone());
+        } else {
+            historical_rewrites.push(commit.to_owned());
+        }
+    }
+    let Some(canonical) = canonical else {
+        return Err(invalid(
+            "INSTRUCTION_ORIGIN_MISSING: commit the selected recorded source before validation",
+        ));
+    };
+    if !same_origin(&canonical, final_record)
+        || revisions(&canonical) != revisions(final_record)
+        || canonical.get("refined_intent") != final_record.get("refined_intent")
+    {
+        return Err(invalid(format!(
+            "INSTRUCTION_HISTORY_CONFLICT: current {intent_id} rewrites or drops its recorded origin, interpretation or revisions. Restore the retained source, append legitimate corrections in the same lineage, reaccept the plan and rerun fresh proof. Historical source observations remain in Git."
+        )));
+    }
+    Ok(historical_rewrites)
 }
 
 fn imported_from_git(

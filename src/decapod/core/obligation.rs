@@ -342,14 +342,23 @@ pub fn list_obligations(store: &Store) -> Result<Vec<ObligationNode>, error::Dec
 
 /// Read only source-selected roots in one canonical DB snapshot. Unrelated
 /// backlog is neither parsed nor admitted, and mapping never asserts proof.
+#[derive(Debug, Clone, Serialize)]
+pub(crate) struct RequirementMapping {
+    pub obligation_id: String,
+    pub declared_checks: Vec<String>,
+}
+
 pub(crate) fn read_selected_requirement_mappings(
     store: &Store,
     references: &[String],
-) -> Result<std::collections::BTreeMap<String, Vec<(String, Vec<String>)>>, error::DecapodError> {
+) -> Result<std::collections::BTreeMap<String, Vec<RequirementMapping>>, error::DecapodError> {
     if references.len() > 128 {
         return Err(error::DecapodError::ValidationError(
             "Selected requirement bound exceeded".into(),
         ));
+    }
+    if references.is_empty() {
+        return Ok(Default::default());
     }
     if DbBroker::new(&store.root).is_cloud() {
         return Err(error::DecapodError::NotImplemented("SELECTED_REQUIREMENTS_BACKEND_UNSUPPORTED: selected DB joins support the local broker only; no shadow fallback".into()));
@@ -358,33 +367,26 @@ pub(crate) fn read_selected_requirement_mappings(
         return Ok(Default::default());
     }
     DbBroker::new(&store.root).with_conn(&obligation_db_path(&store.root), "decapod", None, "obligation.check", |conn| {
-        let owns_snapshot = conn.is_autocommit();
-        if owns_snapshot { conn.execute_batch("BEGIN DEFERRED")?; }
-        let result = (|| {
         let exists: bool = conn.query_row("SELECT EXISTS(SELECT 1 FROM sqlite_master WHERE type='table' AND name='obligations')", [], |row| row.get(0))?;
         if !exists { return Ok(Default::default()); }
         let indexed: bool = conn.query_row("SELECT EXISTS(SELECT 1 FROM sqlite_master WHERE type='index' AND name='obligation_intent_ref_v1')", [], |row| row.get(0))?;
         if !indexed { return Err(error::DecapodError::ValidationError("SELECTED_REQUIREMENT_INDEX_REQUIRED: run decapod obligation list to initialize the canonical bounded lookup index, then revalidate".into())); }
-        let mut result = std::collections::BTreeMap::new();
-        let mut stmt = conn.prepare("SELECT substr(id,1,129), substr(required_proofs,1,65537) FROM obligations INDEXED BY obligation_intent_ref_v1 WHERE intent_ref=?1 ORDER BY id LIMIT 2")?;
-        for reference in references {
-            let rows = stmt.query_map([reference], |row| Ok((row.get::<_, String>(0)?, row.get::<_, String>(1)?)))?;
-            let mut mappings = Vec::new();
-            for row in rows {
-                let (id, proofs) = row?;
-                if id.len() > 128 { return Err(error::DecapodError::ValidationError("Selected obligation ID exceeds bound".into())); }
-                if proofs.len() > 65536 { return Err(error::DecapodError::ValidationError("Selected proof declaration exceeds bound".into())); }
-                mappings.push((id, serde_json::from_str(&proofs).map_err(|e| error::DecapodError::ValidationError(e.to_string()))?));
-            }
-            result.insert(reference.clone(), mappings);
+        // One supported read statement owns one SQLite snapshot, including
+        // through Dactyl's read-only route. No write-routed BEGIN/ROLLBACK and
+        // no mixed per-root snapshots are needed. Each indexed branch is capped.
+        let sql = references.iter().enumerate().map(|(index, _)| {
+            let parameter = index + 1;
+            format!("SELECT ?{parameter} AS root_ref, substr(id,1,129) AS obligation_id, substr(required_proofs,1,65537) AS checks FROM (SELECT id,required_proofs FROM obligations INDEXED BY obligation_intent_ref_v1 WHERE intent_ref=?{parameter} ORDER BY id LIMIT 2)")
+        }).collect::<Vec<_>>().join(" UNION ALL ") + " ORDER BY root_ref, obligation_id";
+        let mut result: std::collections::BTreeMap<String, Vec<RequirementMapping>> = references.iter().map(|reference| (reference.clone(), vec![])).collect();
+        let mut stmt = conn.prepare(&sql)?;
+        let rows = stmt.query_map(db::params_from_iter(references.iter()), |row| Ok((row.get::<_, String>(0)?, row.get::<_, String>(1)?, row.get::<_, String>(2)?)))?;
+        for row in rows {
+            let (reference, id, proofs) = row?;
+            if id.len() > 128 || proofs.len() > 65536 { return Err(error::DecapodError::ValidationError("Selected obligation declaration exceeds bound".into())); }
+            result.entry(reference).or_default().push(RequirementMapping { obligation_id: id, declared_checks: serde_json::from_str(&proofs).map_err(|e| error::DecapodError::ValidationError(e.to_string()))? });
         }
         Ok(result)
-        })();
-        if owns_snapshot {
-            let end = conn.execute_batch("ROLLBACK");
-            if result.is_ok() { end?; }
-        }
-        result
     })
 }
 

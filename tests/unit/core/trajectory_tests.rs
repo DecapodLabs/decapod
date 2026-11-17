@@ -2,6 +2,89 @@
 use super::*;
 use tempfile::tempdir;
 
+#[test]
+fn same_lineage_append_is_atomic_and_prior_source_cannot_be_rewritten() {
+    use crate::core::custody::{
+        InstructionRevisionInput, RecordedInstructionKind, ReportedInstructionSource,
+    };
+    use crate::plan_governance::{self, InitPlanInput};
+    let temp = tempdir().unwrap();
+    let root = temp.path();
+    plan_governance::init_plan(
+        root,
+        InitPlanInput {
+            title: "Lineage".into(),
+            intent: "Preserve origin".into(),
+            todo_ids: vec![],
+            proof_hooks: vec![],
+            unknowns: vec![],
+            human_questions: vec![],
+            stop_conditions: vec![],
+            unresolved_contradictions: vec![],
+            deferred_questions: vec![],
+            constraints: Default::default(),
+            phases: vec![],
+        },
+    )
+    .unwrap();
+    let mut init = replacement_init("lineage");
+    init.intent_id = Some("intent:lineage".into());
+    let artifact = init_trajectory(root, init).unwrap();
+    let before = artifact.custody.intents["intent:lineage"]
+        .instruction_revision()
+        .unwrap();
+    let input = InstructionRevisionInput {
+        revision_id: "C".into(),
+        expected_revision: before,
+        instruction: "A reported clarification".into(),
+        source_claim: ReportedInstructionSource {
+            source_ref: "fixture:C".into(),
+            principal_claim: Some("principal-A".into()),
+        },
+        kind: RecordedInstructionKind::Clarification,
+        supersedes: vec![],
+        derived_intent: Some("A corrected interpretation".into()),
+    };
+    let appended = append_instruction(root, "lineage", input).unwrap();
+    let stored = fs::read(root.join(TRAJECTORY_PATH)).unwrap();
+    let mut truncated = appended.clone();
+    truncated
+        .custody
+        .intents
+        .get_mut("intent:lineage")
+        .unwrap()
+        .instruction_revisions
+        .clear();
+    let truncated = truncated.with_recomputed_hash().unwrap();
+    assert!(write_trajectory(root, &truncated).is_err());
+    let mut rewritten = appended.clone();
+    rewritten
+        .custody
+        .intents
+        .get_mut("intent:lineage")
+        .unwrap()
+        .instruction_revisions[0]
+        .instruction = "forged source".into();
+    assert!(write_trajectory(root, &rewritten.with_recomputed_hash().unwrap()).is_err());
+    let mut spoofed = appended;
+    spoofed
+        .custody
+        .intents
+        .get_mut("intent:lineage")
+        .unwrap()
+        .instruction_origin
+        .as_mut()
+        .unwrap()
+        .principal_claim = Some("authenticated-human-claim".into());
+    assert!(
+        write_trajectory(root, &spoofed.with_recomputed_hash().unwrap())
+            .unwrap_err()
+            .to_string()
+            .contains("INTENT_ORIGIN_CONFLICT")
+    );
+    assert_eq!(stored, fs::read(root.join(TRAJECTORY_PATH)).unwrap());
+}
+
 fn trajectory_git(root: &Path, args: &[&str]) -> Vec<u8> {
     let output = std::process::Command::new("git")
         .current_dir(root)

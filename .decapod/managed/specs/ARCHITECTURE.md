@@ -25,10 +25,51 @@ A bounded equality-path traversal witnesses a conflicting inequality; three
 inequalities can be satisfiable and dependency cycles have no relation semantics.
 Unsupported kinds remain unverifiable. Limits are 128 roots, 32 checks per root,
 256 relations and 128-byte identifiers. Selected DB lookups use an additive local
-index and at most two rows per root, within one deferred read snapshot. Git and
+index and at most two rows per root, within one read statement snapshot. Git and
 SQLite remain separate domains: native identity recaptures the selected join,
 plan context and accepted base before/after execution and receipt readback.
 This does not implement authenticated instruction revisions or host witnesses.
+
+## Recorded instruction lineage and current phase feedback
+
+Custody schema 1.1.0 adds bounded, append-only recorded instruction revisions to
+the existing `IntentRecord`. The original request, its reported source, preceding
+agent interpretation, source claims, revision order and supersession claims remain
+distinct. Revision IDs are idempotent only for identical payloads; stale parents,
+rewritten origin/provenance and truncated or changed revision prefixes are refused.
+The source digest covers origin and recorded instructions, not execution status.
+Caller-reported source/principal labels never authenticate a human or trusted host.
+
+`trajectory::append_instruction` updates the trajectory and revokes plan acceptance
+and phase progress in one governance-document transaction. Existing execution
+checkpoints remain as history; changed source/plan/custody makes them stale. An
+identical retry after reacceptance cannot revoke that acceptance a second time.
+Same-lineage new runs preserve custody, and a checkpointed run must use resume
+instead of discarding its required approval references through reinitialization.
+
+The root-aware readiness projection exposes the same instruction revision in
+preparation, state, acceptance, execution and validation/publication. A separate
+accepted typed model contributes policy blockers to that same projection through
+an explicitly cached-target view. Native validation independently obtains the
+current accepted target and checks exact model/instruction applicability, root
+coverage and actual required execution. An offline cached consistency result is
+not final provider freshness, behavior proof or observed-path authority.
+
+The native source-history guard compares the selected lineage with bounded
+first-parent Git history (at most 256 inspected governance-changing commits).
+Counterfeit source plus recomputed hashes cannot replace the retained origin or
+drop recorded revisions. Invalid intermediate rewrites remain source observations
+in Git; restoring the canonical source permits fresh proof without laundering the
+old failure or permanently poisoning legitimate repair. This is source integrity,
+not independent observation that a particular host operation occurred.
+
+The selected DB read uses one bounded, indexed compound SELECT through Dactyl's
+read-only route. Each root contributes at most two rows in that single statement;
+it does not issue write-routed transaction commands. The mapping revision binds
+the complete selected check declaration, including changes beyond mere presence.
+Git and SQLite remain separate domains: native identity recaptures the selected join,
+plan context and accepted base before/after execution and receipt readback.
+Authenticated ingress and trusted host-witness consumption remain separate work.
 
 ## One recorded instruction projection (#1764)
 
@@ -40,7 +81,8 @@ instructions; accepted transitions refuse them. Legacy accepted-but-unresolved
 documents are checked again at resume. Content correction changes the readiness
 source revision and normal plan mutation revokes acceptance and phase progress;
 reacceptance does not restore old execution proof. This is recorded instruction
-enforcement, not global relation solving, root coverage or host observation.
+enforcement; global relation consistency and root coverage are separate selected
+policy judgments, and none of these establishes host observation.
 
 ## Source-policy currency continuity (#1753)
 
@@ -1030,7 +1072,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `92ea1cb6c006108a737615667e8f15544342654a20aeb4c6a2d63dc2b5a95c10`
+- Repository signal fingerprint: `8d750912ac3b2f4bc89f2c10118aa6455a5ae84f2ebf66f4b74ba707380e5944`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (237 files), `tests/` (235 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

@@ -381,6 +381,17 @@ pub fn patch_plan(
         if let Some(state) = patch.state {
             plan.state = state;
         }
+        if matches!(
+            plan.state,
+            PlanState::Approved | PlanState::Executing | PlanState::Done
+        ) {
+            ensure_instruction_ready_at(
+                project_root,
+                &plan,
+                crate::core::validation_rules::EvaluationPhase::PreExecution,
+                "NEEDS_HUMAN_INPUT",
+            )?;
+        }
         validate_plan_progress(&plan)?;
         plan.updated_at = crate::core::time::now_epoch_z();
         save_plan(project_root, &plan)?;
@@ -404,8 +415,9 @@ pub(crate) fn invalidate_plan_acceptance(plan: &mut GovernedPlan) {
     }
 }
 
-fn require_phase_acceptance(plan: &GovernedPlan) -> Result<(), error::DecapodError> {
-    ensure_instruction_ready(
+fn require_phase_acceptance(root: &Path, plan: &GovernedPlan) -> Result<(), error::DecapodError> {
+    ensure_instruction_ready_at(
+        root,
         plan,
         crate::core::validation_rules::EvaluationPhase::DuringExecution,
         "NEEDS_HUMAN_INPUT",
@@ -587,6 +599,7 @@ pub struct InstructionBlocker {
     pub id: String,
     pub source: String,
     pub question: String,
+    pub authority: crate::core::validation_rules::RuleAuthority,
 }
 
 /// Recorded plan readiness only. Neither the source digest nor an accepted plan
@@ -600,6 +613,10 @@ pub struct InstructionReadiness {
     pub phase: crate::core::validation_rules::EvaluationPhase,
     pub verdict: crate::core::validation_rules::RuleVerdict,
     pub source_revision: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub instruction_revision: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub global_consistency: Option<crate::core::intent_reconcile::selected::ConstraintJudgment>,
     pub blockers: Vec<InstructionBlocker>,
     pub questions: Vec<String>,
     pub remediation: String,
@@ -621,6 +638,7 @@ pub fn instruction_readiness(
             id: format!("instruction:{:x}", Sha256::digest(identity.to_string())),
             source,
             question,
+            authority: RuleAuthority::TaskConstraints,
         });
     };
     if plan.intent.trim().is_empty() {
@@ -688,6 +706,8 @@ pub fn instruction_readiness(
         phase,
         verdict: if blockers.is_empty() { RuleVerdict::Pass } else { RuleVerdict::Fail },
         source_revision: format!("sha256:{:x}", Sha256::digest(source.to_string())),
+        instruction_revision: None,
+        global_consistency: None,
         questions: blockers.iter().map(|blocker| blocker.question.clone()).collect(),
         blockers,
         remediation: "Resolve recorded obligations and separately reaccept the revised plan; rerun affected proof.".into(),
@@ -709,6 +729,143 @@ pub(crate) fn ensure_instruction_ready(
     marker: &str,
 ) -> Result<(), error::DecapodError> {
     let readiness = instruction_readiness(plan, phase);
+    ensure_instruction_report_ready(readiness, marker)
+}
+
+pub fn instruction_lineage_for_plan(
+    root: &Path,
+    plan: &GovernedPlan,
+) -> Result<Option<crate::core::custody::InstructionLineage>, error::DecapodError> {
+    let Some(artifact) = crate::core::trajectory::load_trajectory_cookie(root)? else {
+        return Ok(None);
+    };
+    if artifact
+        .task_id
+        .as_ref()
+        .is_none_or(|task| !plan.todo_ids.contains(task))
+    {
+        return Ok(None);
+    }
+    artifact
+        .intent_id
+        .as_deref()
+        .and_then(|id| artifact.custody.intents.get(id))
+        .map(|record| {
+            record
+                .instruction_lineage()
+                .map_err(|e| error::DecapodError::ValidationError(e.to_string()))
+        })
+        .transpose()
+}
+
+pub fn instruction_readiness_at(
+    root: &Path,
+    plan: &GovernedPlan,
+    phase: crate::core::validation_rules::EvaluationPhase,
+) -> Result<InstructionReadiness, error::DecapodError> {
+    let mut report = instruction_readiness(plan, phase);
+    if let Some(lineage) = instruction_lineage_for_plan(root, plan)? {
+        report.schema_version = "1.2.0".into();
+        report.source_revision = format!(
+            "sha256:{:x}",
+            Sha256::digest(
+                json!([report.source_revision, lineage.intent_id, lineage.revision]).to_string()
+            )
+        );
+        report.instruction_revision = Some(lineage.revision);
+    }
+    use crate::core::{
+        intent_reconcile::selected,
+        validation_rules::{RuleAuthority, RuleVerdict},
+    };
+    let mut selected_blocker = None;
+    match selected::cached_selection(root) {
+        Ok(Some(selection)) => {
+            let model = &selection.work;
+            let revision = model.source_revision()?;
+            let (verdict, conflicts, unsupported) = selected::consistency(model)?;
+            let source = format!(
+                "{}:.decapod/config.toml#/proof/selected_work",
+                selection.source_commit
+            );
+            report.source_revision = format!(
+                "sha256:{:x}",
+                Sha256::digest(
+                    json!([report.source_revision, selection.source_commit, revision]).to_string()
+                )
+            );
+            if !selection.candidate_matches {
+                selected_blocker = Some((source, "Preserve the exact accepted selected-work policy; a candidate rewrite is not acceptance".into(), false));
+            } else if report.instruction_revision.as_deref()
+                != Some(model.instruction_revision.as_str())
+            {
+                selected_blocker = Some((source, "Reconcile the selected recorded instruction revision with independently accepted roots before execution".into(), false));
+            } else if verdict != RuleVerdict::Pass {
+                selected_blocker = Some((
+                    source,
+                    format!(
+                        "Resolve accepted global relations through an authority decision: conflicting={conflicts:?}, unsupported={unsupported:?}"
+                    ),
+                    true,
+                ));
+            }
+            report.global_consistency = Some(selected::ConstraintJudgment {
+                source_commit: selection.source_commit,
+                source_revision: revision,
+                instruction_revision: model.instruction_revision.clone(),
+                source_authority: "cached_target_ref".into(),
+                verdict,
+                conflicting_relations: conflicts,
+                unsupported_relations: unsupported,
+            });
+            report.schema_version = "1.3.0".into();
+        }
+        Ok(None) => {}
+        Err(error) => {
+            selected_blocker = Some((
+                ".decapod/config.toml#/proof/selected_work".into(),
+                error.to_string(),
+                false,
+            ))
+        }
+    }
+    if let Some((source, question, requires_authority)) = selected_blocker {
+        let id = format!(
+            "instruction:{:x}",
+            Sha256::digest(json!([plan.todo_ids, source, question]).to_string())
+        );
+        report.blockers.push(InstructionBlocker {
+            id,
+            source: source.clone(),
+            question: question.clone(),
+            authority: RuleAuthority::ProjectOverride,
+        });
+        report.questions.push(question);
+        report.verdict = RuleVerdict::Fail;
+        report.rule_remediation.affected_paths.push(source);
+        report.rule_remediation.observed_condition =
+            format!("{} recorded blockers", report.blockers.len());
+        report.rule_remediation.human_authorization_required |= requires_authority;
+        report.rule_remediation.autonomous_remediation_permitted =
+            !report.rule_remediation.human_authorization_required;
+        report.rule_remediation.required_steps.push("Repair the source binding through supported operations. Genuine policy conflicts require the existing authority path; then separately reaccept the plan and obtain fresh proof".into());
+    }
+    Ok(report)
+}
+
+pub(crate) fn ensure_instruction_ready_at(
+    root: &Path,
+    plan: &GovernedPlan,
+    phase: crate::core::validation_rules::EvaluationPhase,
+    marker: &str,
+) -> Result<(), error::DecapodError> {
+    ensure_instruction_report_ready(instruction_readiness_at(root, plan, phase)?, marker)
+}
+
+fn ensure_instruction_report_ready(
+    readiness: InstructionReadiness,
+    marker: &str,
+) -> Result<(), error::DecapodError> {
     if readiness.blockers.is_empty() {
         return Ok(());
     }
@@ -741,7 +898,8 @@ pub fn ensure_execute_ready(
         )
     })?;
 
-    ensure_instruction_ready(
+    ensure_instruction_ready_at(
+        input.project_root,
         &plan,
         crate::core::validation_rules::EvaluationPhase::DuringExecution,
         "NEEDS_HUMAN_INPUT",
@@ -903,6 +1061,15 @@ pub(crate) fn validate_plan_progress_at(
     Ok(())
 }
 
+pub(crate) fn validate_plan_progress_at_root(
+    root: &Path,
+    plan: &GovernedPlan,
+    phase: crate::core::validation_rules::EvaluationPhase,
+) -> Result<(), error::DecapodError> {
+    ensure_instruction_ready_at(root, plan, phase.clone(), "NEEDS_HUMAN_INPUT")?;
+    validate_plan_progress_at(plan, phase)
+}
+
 fn validate_phase_contract(phases: &[Phase]) -> Result<(), error::DecapodError> {
     let mut ids = std::collections::BTreeSet::new();
     for phase in phases {
@@ -944,7 +1111,7 @@ pub fn enter_phase(
             )
         })?;
 
-        require_phase_acceptance(&plan)?;
+        require_phase_acceptance(project_root, &plan)?;
 
         // Find the phase
         let phase_index = plan
@@ -1035,7 +1202,7 @@ pub fn complete_phase(
             )
         })?;
 
-        require_phase_acceptance(&plan)?;
+        require_phase_acceptance(project_root, &plan)?;
 
         // Find the phase
         let phase_index = plan

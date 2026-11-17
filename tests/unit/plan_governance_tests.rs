@@ -2,6 +2,208 @@
 use super::*;
 
 #[test]
+fn accepted_global_conflict_has_one_source_backed_blocker_across_all_phases() {
+    use crate::core::{
+        custody, governance_document,
+        intent_reconcile::selected::{Relation, RootRequirement, SelectedWork},
+        repository_profile::RepositoryContract,
+        trajectory::{self, TrajectoryInit},
+        validation_rules::{EvaluationPhase, RuleVerdict},
+    };
+    let temp = tempfile::tempdir().unwrap();
+    let root = temp.path();
+    let plan = init_plan(
+        root,
+        InitPlanInput {
+            title: "Global model".into(),
+            intent: "Apply every accepted relation".into(),
+            todo_ids: vec!["task:global".into()],
+            proof_hooks: vec![],
+            unknowns: vec![],
+            human_questions: vec![],
+            stop_conditions: vec![],
+            unresolved_contradictions: vec![],
+            deferred_questions: vec![],
+            constraints: Default::default(),
+            phases: vec![],
+        },
+    )
+    .unwrap();
+    trajectory::init_trajectory(
+        root,
+        TrajectoryInit {
+            run_id: "global".into(),
+            task_id: Some("task:global".into()),
+            intent_id: Some("intent:global".into()),
+            original_intent: "Use the complete accepted relation set".into(),
+            derived_intent: "Evaluate joint consistency".into(),
+            active_boundaries: vec![],
+            repo_scope: vec![],
+            destination: None,
+            current_phase: None,
+            next_transitions: vec![],
+            blockers: vec![],
+        },
+    )
+    .unwrap();
+    let document = governance_document::load(root).unwrap().unwrap();
+    let record: custody::IntentRecord =
+        serde_json::from_value(document.intents["intent:global"].clone()).unwrap();
+    let mut work = SelectedWork {
+        schema_version: "1.0.0".into(),
+        id: "global".into(),
+        intent_id: record.id.clone(),
+        instruction_revision: record.instruction_revision().unwrap(),
+        roots: ["R1", "R2", "R3"]
+            .into_iter()
+            .map(|id| RootRequirement {
+                id: id.into(),
+                checks: vec!["check".into()],
+            })
+            .collect(),
+        relations: [
+            ("R1", "A", "B", "eq"),
+            ("R2", "B", "C", "eq"),
+            ("R3", "A", "C", "ne"),
+        ]
+        .into_iter()
+        .map(|(id, left, right, kind)| Relation {
+            id: id.into(),
+            requirement: id.into(),
+            left: left.into(),
+            right: right.into(),
+            kind: kind.into(),
+        })
+        .collect(),
+    };
+    let mut config = crate::cli::DecapodProjectConfig::default();
+    config.repo.base_branch = Some("main".into());
+    config.proof.repository_contract = Some(RepositoryContract {
+        canonical_local_target: true,
+        reviewed_commands_digest: String::new(),
+        source_coverage: vec![],
+        executions: Default::default(),
+    });
+    config.proof.selected_work = Some(work.clone());
+    fs::write(
+        root.join(".decapod/config.toml"),
+        toml::to_string(&config).unwrap(),
+    )
+    .unwrap();
+    let git = |args: &[&str]| {
+        let out = std::process::Command::new("git")
+            .current_dir(root)
+            .args(args)
+            .env("GIT_AUTHOR_NAME", "Model Fixture")
+            .env("GIT_AUTHOR_EMAIL", "model@example.invalid")
+            .env("GIT_COMMITTER_NAME", "Model Fixture")
+            .env("GIT_COMMITTER_EMAIL", "model@example.invalid")
+            .output()
+            .unwrap();
+        assert!(
+            out.status.success(),
+            "{}",
+            String::from_utf8_lossy(&out.stderr)
+        );
+        String::from_utf8(out.stdout).unwrap().trim().to_owned()
+    };
+    git(&["init", "-b", "main"]);
+    git(&["add", ".decapod/config.toml", ".decapod/governance.json"]);
+    git(&[
+        "-c",
+        "commit.gpgsign=false",
+        "commit",
+        "-m",
+        "scripted accepted model",
+    ]);
+    let base = git(&["rev-parse", "HEAD"]);
+    git(&["checkout", "-b", "work"]);
+    let initial = instruction_readiness_at(root, &plan, EvaluationPhase::PreExecution).unwrap();
+    assert_eq!(
+        initial.global_consistency.as_ref().unwrap().verdict,
+        RuleVerdict::Fail
+    );
+    assert_eq!(
+        initial
+            .global_consistency
+            .as_ref()
+            .unwrap()
+            .conflicting_relations,
+        ["R1", "R2", "R3"]
+    );
+    for phase in [
+        EvaluationPhase::PreExecution,
+        EvaluationPhase::DuringExecution,
+        EvaluationPhase::Validation,
+        EvaluationPhase::Publication,
+    ] {
+        let report = instruction_readiness_at(root, &plan, phase.clone()).unwrap();
+        assert_eq!(report.source_revision, initial.source_revision);
+        assert_eq!(report.blockers, initial.blockers);
+        assert_eq!(report.rule_remediation, initial.rule_remediation);
+        assert!(ensure_instruction_ready_at(root, &plan, phase, "NEEDS_HUMAN_INPUT").is_err());
+    }
+    assert!(
+        patch_plan(
+            root,
+            PlanPatch {
+                state: Some(PlanState::Approved),
+                ..Default::default()
+            }
+        )
+        .is_err()
+    );
+    let mut legacy = plan.clone();
+    legacy.state = PlanState::Approved;
+    save_plan(root, &legacy).unwrap();
+    let missing_store = root.join(".decapod/data");
+    assert!(
+        ensure_execute_ready(ExecuteCheckInput {
+            project_root: root,
+            store_root: &missing_store,
+            todo_id: Some("task:global")
+        })
+        .unwrap_err()
+        .to_string()
+        .contains("NEEDS_HUMAN_INPUT"),
+        "missing TODO projection must not hide the actual conflict"
+    );
+    work.relations[2].kind = "eq".into();
+    config.proof.selected_work = Some(work);
+    fs::write(
+        root.join(".decapod/config.toml"),
+        toml::to_string(&config).unwrap(),
+    )
+    .unwrap();
+    assert_eq!(
+        instruction_readiness_at(root, &legacy, EvaluationPhase::PreExecution)
+            .unwrap()
+            .verdict,
+        RuleVerdict::Fail,
+        "proposal is not acceptance"
+    );
+    git(&["add", ".decapod/config.toml"]);
+    git(&[
+        "-c",
+        "commit.gpgsign=false",
+        "commit",
+        "-m",
+        "separately accept satisfiable model",
+    ]);
+    let repaired = git(&["rev-parse", "HEAD"]);
+    git(&["merge-base", "--is-ancestor", &base, &repaired]);
+    git(&["update-ref", "refs/heads/main", &repaired, &base]);
+    let current = instruction_readiness_at(root, &legacy, EvaluationPhase::PreExecution).unwrap();
+    assert_eq!(current.verdict, RuleVerdict::Pass);
+    assert_ne!(current.source_revision, initial.source_revision);
+    assert_eq!(
+        initial.verdict,
+        RuleVerdict::Fail,
+        "repair cannot erase the retained negative observation"
+    );
+}
+
+#[test]
 fn human_input_gate_blocks_empty_intent() {
     let dir = tempfile::tempdir().unwrap();
     let plan = init_plan(

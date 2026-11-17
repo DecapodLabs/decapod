@@ -205,6 +205,211 @@ fn preparation_reports_pending_spec_decisions_and_empty_intent_without_blocking_
 }
 
 #[test]
+fn fresh_process_reconstructs_same_lineage_and_does_not_authenticate_reported_sources() {
+    let dir = tempdir().unwrap();
+    let root = dir.path();
+    init_git_repo(root);
+    assert!(run_cmd(root, &["init", "--force"]).status.success());
+    assert!(run_cmd(root, &["session", "acquire"]).status.success());
+    let added = run_cmd(root, &["todo", "add", "Preserve the recorded v1 contract"]);
+    assert!(added.status.success());
+    let task = extract_json(&added)["id"].as_str().unwrap().to_owned();
+    assert!(
+        run_cmd(
+            root,
+            &[
+                "govern",
+                "plan",
+                "init",
+                "--title",
+                "Lineage",
+                "--intent",
+                "Preserve v1",
+                "--todo-id",
+                &task
+            ]
+        )
+        .status
+        .success()
+    );
+    assert!(
+        run_cmd(
+            root,
+            &[
+                "govern",
+                "trajectory",
+                "init",
+                "--run-id",
+                "lineage-run",
+                "--task-id",
+                &task,
+                "--intent-id",
+                "intent:lineage",
+                "--original-intent",
+                "A: preserve v1",
+                "--derived-intent",
+                "B: replace v1 with v2"
+            ]
+        )
+        .status
+        .success()
+    );
+    assert!(
+        run_cmd(root, &["govern", "plan", "approve"])
+            .status
+            .success()
+    );
+    let read = || {
+        let output = run_cmd(
+            root,
+            &[
+                "rpc",
+                "--op",
+                "state.resolve",
+                "--params",
+                "{\"intent_id\":\"intent:lineage\"}",
+            ],
+        );
+        assert!(
+            output.status.success(),
+            "{}",
+            String::from_utf8_lossy(&output.stderr)
+        );
+        extract_json(&output)["result"]["resolution"].clone()
+    };
+    let state = read();
+    let original_revision = state["instruction_lineage"]["revision"]
+        .as_str()
+        .unwrap()
+        .to_owned();
+    let args = [
+        "govern",
+        "trajectory",
+        "clarify",
+        "--run-id",
+        "lineage-run",
+        "--revision-id",
+        "clarification-C",
+        "--expected-revision",
+        &original_revision,
+        "--instruction",
+        "C: keep v1 compatibility",
+        "--source-ref",
+        "fixture:principal-C-message",
+        "--principal-claim",
+        "principal-C",
+        "--derived-intent",
+        "Preserve v1 compatibility",
+    ];
+    let appended = run_cmd(root, &args);
+    assert!(appended.status.success());
+    let current = read();
+    let lineage = &current["instruction_lineage"];
+    assert_eq!(lineage["original_intent"], "A: preserve v1");
+    assert_eq!(
+        lineage["revisions"][0]["preceding_refinement"],
+        "B: replace v1 with v2"
+    );
+    assert_eq!(
+        lineage["revisions"][0]["instruction"],
+        "C: keep v1 compatibility"
+    );
+    assert_eq!(lineage["revision_source_confidence"], "agent_reported");
+    assert_eq!(lineage["independent_authority"], "unverifiable");
+    assert_ne!(lineage["revision"], original_revision);
+    assert_eq!(
+        current["instruction_readiness"]["instruction_revision"],
+        lineage["revision"]
+    );
+    assert_eq!(current["publication"]["eligible"], false);
+    assert!(
+        current["blockers"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .any(|blocker| blocker["id"] == current["instruction_readiness"]["blockers"][0]["id"])
+    );
+    assert!(
+        current["admissible_actions"]["forbidden"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .any(|action| action["action"] == "execute governed plan")
+    );
+    let prepared = run_cmd(
+        root,
+        &[
+            "infer",
+            "orientation",
+            "--task-id",
+            &task,
+            "--intent",
+            "Continue the existing lineage",
+            "--format",
+            "json",
+        ],
+    );
+    assert!(prepared.status.success());
+    let prepared = extract_json(&prepared);
+    assert_eq!(prepared["governed_plan"]["instruction_lineage"], *lineage);
+    assert_eq!(
+        prepared["governed_plan"]["instruction_readiness"],
+        current["instruction_readiness"]
+    );
+    let rejected = run_cmd(root, &["govern", "plan", "approve"]);
+    assert!(!rejected.status.success());
+    assert!(String::from_utf8_lossy(&rejected.stderr).contains("NEEDS_HUMAN_INPUT"));
+    let duplicate = run_cmd(root, &args);
+    assert!(duplicate.status.success());
+    assert_eq!(
+        extract_json(&duplicate)["custody"]["events"],
+        extract_json(&appended)["custody"]["events"]
+    );
+    assert!(
+        run_cmd(
+            root,
+            &[
+                "govern",
+                "plan",
+                "update",
+                "--intent",
+                "Preserve v1 compatibility",
+                "--clear-unknowns"
+            ]
+        )
+        .status
+        .success()
+    );
+    assert!(
+        run_cmd(root, &["govern", "plan", "approve"])
+            .status
+            .success()
+    );
+    let retry = run_cmd(root, &args);
+    assert!(retry.status.success());
+    let plan = run_cmd(root, &["govern", "plan", "status"]);
+    assert!(plan.status.success());
+    assert_eq!(extract_json(&plan)["plan"]["state"], "APPROVED");
+    let mut forged = args;
+    forged[10] = "reused ID with different instruction";
+    let denied = run_cmd(root, &forged);
+    assert!(!denied.status.success());
+    let unknown = run_cmd(
+        root,
+        &[
+            "rpc",
+            "--op",
+            "state.resolve",
+            "--params",
+            "{\"intent_id\":\"intent:unrelated\"}",
+        ],
+    );
+    assert!(unknown.status.success());
+    let unknown = extract_json(&unknown);
+    assert!(unknown["result"]["resolution"]["instruction_lineage"].is_null());
+}
+
+#[test]
 fn test_orientation_and_mentor_share_the_reflection_continuation() {
     let dir = tempdir().unwrap();
     let root = dir.path();

@@ -123,6 +123,81 @@ fn execution_checkpoint_commit_resume_is_deterministic_and_read_only() {
 }
 
 #[test]
+fn recorded_clarification_revokes_old_checkpoint_then_allows_fresh_authorized_repair() {
+    use crate::core::custody::{
+        InstructionRevisionInput, RecordedInstructionKind, ReportedInstructionSource,
+    };
+    let temp = fixture();
+    let root = temp.path();
+    let old = checkpoint_execution(root, "run_execution", "before-C", &[]).unwrap();
+    commit(root);
+    let artifact = load_trajectory(root, "run_execution").unwrap();
+    let source_revision = artifact.custody.intents["intent_execution"]
+        .instruction_revision()
+        .unwrap();
+    trajectory::append_instruction(
+        root,
+        "run_execution",
+        InstructionRevisionInput {
+            revision_id: "C".into(),
+            expected_revision: source_revision,
+            instruction: "Preserve the same scope with an explicit clarification".into(),
+            source_claim: ReportedInstructionSource {
+                source_ref: "fixture:clarification".into(),
+                principal_claim: Some("principal".into()),
+            },
+            kind: RecordedInstructionKind::Clarification,
+            supersedes: vec![],
+            derived_intent: None,
+        },
+    )
+    .unwrap();
+    assert!(
+        verify_execution_resume(root, "run_execution", "before-C")
+            .unwrap_err()
+            .to_string()
+            .contains("EXECUTION_DECISION_REQUIRED")
+    );
+    plan_governance::patch_plan(
+        root,
+        PlanPatch {
+            unknowns: Some(vec![]),
+            ..Default::default()
+        },
+    )
+    .unwrap();
+    plan_governance::patch_plan(
+        root,
+        PlanPatch {
+            state: Some(PlanState::Approved),
+            ..Default::default()
+        },
+    )
+    .unwrap();
+    commit(root);
+    assert!(
+        verify_execution_resume(root, "run_execution", "before-C")
+            .unwrap_err()
+            .to_string()
+            .contains("EXECUTION_STATE_CHANGED")
+    );
+    let fresh = checkpoint_execution(root, "run_execution", "after-C", &[]).unwrap();
+    commit(root);
+    assert_eq!(
+        verify_execution_resume(root, "run_execution", "after-C").unwrap(),
+        fresh
+    );
+    let preserved = load_trajectory(root, "run_execution").unwrap();
+    assert_eq!(preserved.execution_checkpoints[0], old);
+    assert_eq!(
+        preserved.custody.intents["intent_execution"]
+            .instruction_revisions
+            .len(),
+        1
+    );
+}
+
+#[test]
 fn execution_resume_refuses_dirty_and_committed_source_changes() {
     let temp = fixture();
     let root = temp.path();

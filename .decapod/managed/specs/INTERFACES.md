@@ -1,5 +1,26 @@
 # Interfaces
 
+## Recorded clarification and lineage readback
+
+`decapod govern trajectory clarify` appends a revision to the current run/intent
+with `--revision-id`, `--expected-revision`, bounded `--instruction`, and a
+credential-free `--source-ref`. `--principal-claim`, `--kind` (clarification,
+contradiction, supersession), `--supersedes` and `--derived-intent` record explicit
+claims. They grant no human authority or automatic precedence. Secret-pattern
+redaction applies before persistence. Distinct conflicting principals remain
+distinct reported claims; a later supersession claim does not silently clear
+earlier plan contradictions or constitute an authenticated authority decision.
+
+`state.resolve` and preparation expose the same selected `instruction_lineage`:
+original request/source confidence, preceding and current interpretation, ordered
+revisions, current revision digest and independently unverified authority. They
+do not inherit another task's trajectory boundaries, blockers or instruction
+revision. The state schema advances to 1.1.0. Recorded readiness includes the
+current instruction revision and, when selected, a separate global-consistency
+judgment whose `source_authority=cached_target_ref` distinguishes offline planning
+from full validation's independently captured accepted target. CLI stderr remains
+diagnostic text, not a stable structured transport schema.
+
 ## Explicit selected-work policy and readback
 
 `proof.selected_work` schema 1.0.0 names an ID, intent ID, recorded instruction
@@ -1255,7 +1276,7 @@ field. Nothing in this operation authorizes a mutation, approval or completion.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `92ea1cb6c006108a737615667e8f15544342654a20aeb4c6a2d63dc2b5a95c10`
+- Repository signal fingerprint: `8d750912ac3b2f4bc89f2c10118aa6455a5ae84f2ebf66f4b74ba707380e5944`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (237 files), `tests/` (235 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
