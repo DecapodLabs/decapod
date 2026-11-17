@@ -1,0 +1,19 @@
+{
+  "name": "decapod-documentation",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "sync-content": "node scripts/sync-mdbook.mjs",
+    "prebuild": "npm run sync-content",
+    "build": "astro build && node scripts/check-site.mjs",
+    "dev": "npm run sync-content && astro dev",
+    "preview": "astro preview"
+  },
+  "dependencies": {
+    "@astrojs/starlight": "0.43.1",
+    "astro": "^7.2.10"
+  },
+  "engines": {
+    "node": ">=22"
+  }
+}
