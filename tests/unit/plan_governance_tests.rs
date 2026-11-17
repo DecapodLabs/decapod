@@ -597,12 +597,15 @@ fn contract_edits_revoke_every_accepted_state_and_all_phase_evidence() {
             let (dir, store) = progressed_plan(state.clone());
             let changed = patch_plan(dir.path(), patch.clone()).unwrap();
             assert_acceptance_invalidated(&changed);
-            assert!(
-                execute_check(dir.path(), &store, None)
-                    .unwrap_err()
-                    .to_string()
-                    .contains("NEEDS_PLAN_APPROVAL")
-            );
+            let blocked = execute_check(dir.path(), &store, None)
+                .unwrap_err()
+                .to_string();
+            let expected = if has_unresolved_intent_requirements(&changed) {
+                "NEEDS_HUMAN_INPUT"
+            } else {
+                "NEEDS_PLAN_APPROVAL"
+            };
+            assert!(blocked.contains(expected), "{blocked}");
             assert!(
                 enter_phase(dir.path(), &changed.phases[0].id)
                     .unwrap_err()
