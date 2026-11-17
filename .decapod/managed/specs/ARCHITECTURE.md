@@ -1,5 +1,17 @@
 # Architecture
 
+## Read-only acceptance correlation (#1757)
+
+`core::flight_recorder::acceptance` extends the current flight recorder rather
+than adding a governor or agent runtime. Bounded sibling-file reads verify
+artifact digests and event ordering. Source-specific reducers correlate actual
+Pi calls, native plan/observations/receipt material, task/workspace custody and
+separate Git/GitHub subject snapshots. The existing readiness-evidence verifier
+checks captured suite consistency. Trusted host provenance remains explicit;
+source labels and hashes do not authenticate a producer. New validation clears
+prior publisher applicability; later source/base movement preserves history
+while requiring new applicable publication evidence. Output grants no authority.
+
 ## Source-policy currency continuity (#1753)
 
 `entrypoint_integrity::preserves_source_entrypoint_versions` reuses the existing
@@ -988,8 +1000,8 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `59302b283273f65193215ee22c7b207943d8077e5105c464f9f5a2e7ac6faa43`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (236 files), `tests/` (235 files)
+- Repository signal fingerprint: `1e5ee4b1c0bd2fd58048fd36be6b8bde7f159c01f9db696980042e45bdb0c08a`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (237 files), `tests/` (236 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 

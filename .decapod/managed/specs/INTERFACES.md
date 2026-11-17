@@ -1,5 +1,16 @@
 # Interfaces
 
+## Acceptance observation export (#1757)
+
+`decapod trace flight-recorder acceptance --capture <private-index>` reads
+`decapod.agent-acceptance.v1` capture data and prints a redacted, versioned event
+manifest. It reports observed autonomous admission, historical PR identity,
+current applicability, interventions, source classes and unresolved findings.
+Both publication_ready and merge_authorized are always false. Captured original
+objective identity, executable/repository binding and evidence hashes are
+mandatory; agent declarations cannot stand in for tool/kernel observations.
+Consumers must preserve private-capture and cooperative-host assurance limits.
+
 ## Internal source currency agreement (#1753)
 
 The existing private config-only source policy now also governs version-only
@@ -1218,8 +1229,8 @@ field. Nothing in this operation authorizes a mutation, approval or completion.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `59302b283273f65193215ee22c7b207943d8077e5105c464f9f5a2e7ac6faa43`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (236 files), `tests/` (235 files)
+- Repository signal fingerprint: `1e5ee4b1c0bd2fd58048fd36be6b8bde7f159c01f9db696980042e45bdb0c08a`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (237 files), `tests/` (236 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 

@@ -1,5 +1,16 @@
 # Security
 
+## Acceptance presentation boundary (#1757)
+
+The read-only flight-recorder acceptance exporter neither executes agent work
+nor modifies kernel verdicts. It rejects sibling-file escapes, symlinks, altered
+digests and unsafe public text. Raw tool arguments, reasoning, local paths,
+credentials and environment stay private. Only reviewed objective text and
+allowlisted facts are emitted. Host source labels are assertions, not producer
+authentication; uncaptured unrestricted shell/forge activity remains unknown.
+Wrong subjects, incomplete checks, missing custody, controller-only repair,
+interventions and created-but-not-admitted PRs cannot become autonomous success.
+
 ## Scoped currency authorization (#1753)
 
 Currency preservation requires the same explicit config, sole exact canonical
@@ -661,8 +672,8 @@ execution evidence remains required before publication readiness.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `59302b283273f65193215ee22c7b207943d8077e5105c464f9f5a2e7ac6faa43`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (236 files), `tests/` (235 files)
+- Repository signal fingerprint: `1e5ee4b1c0bd2fd58048fd36be6b8bde7f159c01f9db696980042e45bdb0c08a`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (237 files), `tests/` (236 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 
