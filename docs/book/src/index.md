@@ -1,5 +1,5 @@
 <div class="decapod-docs-brand">
-  <a href="https://decapodlabs.github.io/" aria-label="Decapod Labs company homepage"><span>decapod</span><b>labs</b></a>
+  <a href="https://decapodlabs.github.io/" aria-label="Decapod Labs company homepage"><img class="decapod-docs-wordmark" src="https://decapodlabs.github.io/assets/logo-c.png" alt="Decapod Labs" width="420" height="140" loading="eager"></a>
   <span class="decapod-docs-label">DOCUMENTATION</span>
 </div>
 
