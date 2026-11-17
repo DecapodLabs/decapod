@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.148.5](https://github.com/DecapodLabs/decapod/compare/v0.148.4...v0.148.5) - 2026-11-17
+
+### Other
+
+- *(docs)* fit metacognition hero at mobile and desktop widths
+- align hero and kicker with AI metacognition positioning
+
 ## [0.148.4](https://github.com/DecapodLabs/decapod/compare/v0.148.3...v0.148.4) - 2026-11-17
 
 ### Other
