@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.148.6](https://github.com/DecapodLabs/decapod/compare/v0.148.5...v0.148.6) - 2026-11-17
+
+### Other
+
+- describe agent-invoked tasks, Constitution and proof on landing
+- position kernel as agent-invoked instead of a command center
+
 ## [0.148.5](https://github.com/DecapodLabs/decapod/compare/v0.148.4...v0.148.5) - 2026-11-17
 
 ### Other
