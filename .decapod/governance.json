@@ -650,6 +650,16 @@
       "proof_refs": [
         "live-attempt-03:stale-base-rejections-observed"
       ]
+    },
+    {
+      "id": "live-forge-acceptance-complete",
+      "summary": "Record independently reproducible real GitHub enforcement, native receipts, exact subjects and required regression rules",
+      "input_digest": "sha256:fe06bc0a4e45b4524309e0e5d397748a63c9ffefa509fe19432944a355b94c59",
+      "proof_refs": [
+        "github:DecapodLabs/decapod/issues/1747#issuecomment-6944676823",
+        "github:DecapodLabs/decapod/issues/1748#issuecomment-6944677325",
+        "live-archive:1c21226bc3c5c65afb504a37bbe00829e308c593"
+      ]
     }
   ],
   "intents": {
@@ -690,21 +700,21 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Actual remote refs establish target freshness independently of potentially historical PR base metadata",
+          "reason": "Final review confirms live proof ownership, exact remote refs and canonical source-only version policy; real GitHub acceptance now recorded",
           "reviewed_code_fingerprint": "7ddf26dce57cb1624c61cf39233f20874b9599b2571a7b0105df99550c35cf1c",
           "spec_material_hash": "9714311171611b8bab923b9b390f4dffaa49e2ceffee22dc9077ab99ec9ba762"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Acceptance records admission base, actual advanced target and PR reported base separately",
+          "reason": "Final public result distinguishes created, admitted and merge authorization; final report links exact receipts, SHAs and reproduction",
           "reviewed_code_fingerprint": "7ddf26dce57cb1624c61cf39233f20874b9599b2571a7b0105df99550c35cf1c",
           "spec_material_hash": "e0e25276b67edad1b3ea8633c56d258cf94fc4d759915f6cd1a09ccc26129998"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "The existing independent remote-ref check remains mandatory; stale PR metadata cannot supply current authorization",
+          "reason": "Exact source, policy, context and live completion checks remain; native evidence is archived without private transcripts or credentials",
           "reviewed_code_fingerprint": "7ddf26dce57cb1624c61cf39233f20874b9599b2571a7b0105df99550c35cf1c",
           "spec_material_hash": "a5e8fa6d423d3980cabe7d2d7d122c436ffd95450106674250127cf2c4893747"
         }
@@ -717,14 +727,14 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1794908744Z"
+      "updated_at": "1794909409Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch",
         "User-authorized version exception is config-only, exact DecapodLabs/decapod slug plus source lineage; no hand editing of generated agent entrypoints and no skipped execution proof"
       ],
-      "artifact_hash": "sha256:5aca5b734f0f59f14b44ff56303167eb98eca0af19c9e31f0a9eef33f74fd7ad",
+      "artifact_hash": "sha256:0cf6581fa85e48d35832bf6ebf10692eec5c3f57e2f9ae114015fc379a590f27",
       "checks": [
         {
           "name": "configured_validation",
@@ -732,6 +742,14 @@
         },
         {
           "name": "formatting",
+          "status": "passed"
+        },
+        {
+          "name": "prior_source_full_validation",
+          "status": "passed"
+        },
+        {
+          "name": "real_forge_acceptance",
           "status": "passed"
         }
       ],
@@ -777,10 +795,17 @@
             "intent_id": "intent:change_01M7M3P63MYW2A9SP5C97N0JS4",
             "kind": "trajectory_step_recorded",
             "sequence": 7
+          },
+          {
+            "detail": "trajectory:branch_01M7M3P675P50R9B9XSTNJRCNE",
+            "event_id": "event:8",
+            "intent_id": "intent:change_01M7M3P63MYW2A9SP5C97N0JS4",
+            "kind": "trajectory_step_recorded",
+            "sequence": 8
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 7,
+        "next_sequence": 8,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M7M3P675P50R9B9XSTNJRCNE": {
@@ -866,6 +891,30 @@
                 ],
                 "sequence": 7,
                 "validation_findings": []
+              },
+              {
+                "action": "validation",
+                "custody_event_id": "event:8",
+                "observations": [
+                  "Actual GitHub acceptance: 1 passed, 0 failed, source 99a6f59f; immutable 9-file archive 1c21226bc3c5c65afb504a37bbe00829e308c593 under alexhraber/decapod-admission-acceptance-20261117-1747-04; head cd938efe/base 0e36f8e4. Postcreation mutation quarantined draft, later source and advanced actual target rejected. Current admission applicability false; merge unauthorized.",
+                  "Evidence and reproduction attached to issues 1747 and 1748; private config-only exact-slug policy test/source evidence attached to 1753. Full source proof on final report commit remains required; prior e81 proof does not authorize later edits."
+                ],
+                "proof_refs": [
+                  "real_forge_acceptance",
+                  "prior_source_full_validation",
+                  "formatting"
+                ],
+                "scope": [
+                  ".config",
+                  ".decapod/managed/specs",
+                  "assets",
+                  "docs",
+                  "src",
+                  "src/decapod/core",
+                  "tests"
+                ],
+                "sequence": 8,
+                "validation_findings": []
               }
             ]
           }
@@ -875,6 +924,8 @@
       "destination": "pull request",
       "evidence": [
         "Active master ruleset 12701816 now requires Buildkite App 805657 core and supabase-consumer checks with strict target freshness, preserving existing protections and OrganizationAdmin bypass.",
+        "Actual GitHub acceptance: 1 passed, 0 failed, source 99a6f59f; immutable 9-file archive 1c21226bc3c5c65afb504a37bbe00829e308c593 under alexhraber/decapod-admission-acceptance-20261117-1747-04; head cd938efe/base 0e36f8e4. Postcreation mutation quarantined draft, later source and advanced actual target rejected. Current admission applicability false; merge unauthorized.",
+        "Evidence and reproduction attached to issues 1747 and 1748; private config-only exact-slug policy test/source evidence attached to 1753. Full source proof on final report commit remains required; prior e81 proof does not authorize later edits.",
         "First branch CI correctly rejected because accepted target advanced to e7b54246; merged it without rewriting history. Building a separate development controller is necessary to exercise user-authorized private config policy absent from installed 0.148.0; this build grants no readiness and does not replace installed binary.",
         "Four full validation attempts were rejected for tag inventory, accepted-target movement/ancestry and historical entrypoint alignment; no required execution success was claimed. User then explicitly authorized the narrow source-version configuration policy tracked in #1753. Actual GitHub acceptance is authored and remains unexecuted.",
         "GitHub audit: reviewed open and closed issue searches and #1052 #1069 #1070 #1658 #1659 #1660 #1692 #1726 #1730 #1731; created #1747 and #1748 for publication subject continuity and lifecycle proof",

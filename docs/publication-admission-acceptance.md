@@ -45,7 +45,8 @@ It neither reloads success from a file nor reruns a narrower substitute suite.
 If a PR exists when admission fails, `PR_CREATED_NOT_ADMITTED` reports its URL.
 The publisher verifies the matching same-repository PR is a draft or closed,
 demoting it to draft when needed. Failed or ambiguous quarantine remains an
-explicit rejection; it is never a successful publication. An external
+explicit rejection; an already-merged PR cannot be reported as quarantined.
+It is never a successful publication. An external
 `publication-rejection-*.json` preserves the reason and original proof subject
 without changing successful historical evidence. An unrestricted user can
 still act outside the cooperative gate; independent forge authority is separate.
@@ -77,47 +78,81 @@ authority; do not describe that as unconditionally enforced against admins.
 
 ## Real-forge acceptance
 
-Disposable repository:
-[alexhraber/decapod-admission-acceptance-20261116-1747](https://github.com/alexhraber/decapod-admission-acceptance-20261116-1747).
-This first attempt retained a declaration error before source execution; its
-negative result was not accepted as the required failing-agent demonstration.
-The next fresh attempt uses
-[alexhraber/decapod-admission-acceptance-20261117-1747-02](https://github.com/alexhraber/decapod-admission-acceptance-20261117-1747-02).
-That attempt reached actual failed-source rejection, repair, post-creation
-quarantine and exact-head admission, then retained a harness cleanup failure.
-A fresh complete attempt uses
-[alexhraber/decapod-admission-acceptance-20261117-1747-03](https://github.com/alexhraber/decapod-admission-acceptance-20261117-1747-03).
-The complete live run, exact binary/head/base identities, receipts, rejection
-reasons and reproduction sequence are pending execution. No live-forge passing
-claim is established by the authored harness or by repository creation.
+The real-forge test passed on macOS: **1 passed, 0 failed**, 311.75 seconds.
+It used real CLI calls, required native commands, Git commits, remote refs and
+GitHub publication/readback. No forge response or proof runner was replaced.
 
-The acceptance must observe invalid-work rejection, actual source repair, fresh
-complete checks, exact-head PR admission, stale source rejection, independently
-advanced target rejection and final GitHub head/base readback. It must also
-preserve failed post-creation admission as a rejection, distinguish creation from
-admission, and leave merge authority unclaimed. Retain raw machine transcripts
-and credentials outside Git; publish only reviewed reproducible evidence.
+- Live PR: [acceptance #1](https://github.com/alexhraber/decapod-admission-acceptance-20261117-1747-04/pull/1).
+- Immutable [nine-file evidence archive](https://github.com/alexhraber/decapod-admission-acceptance-20261117-1747-04/tree/1c21226bc3c5c65afb504a37bbe00829e308c593).
+- Machine-readable [acceptance report](https://github.com/alexhraber/decapod-admission-acceptance-20261117-1747-04/blob/1c21226bc3c5c65afb504a37bbe00829e308c593/acceptance.json).
 
-The opt-in real-forge test is compiled by the existing entrypoint target and is
-ignored in ordinary CI because it requires explicit authority over an empty
-disposable GitHub repository. After full candidate validation, run it against
-the actual candidate binary with:
+Every archived file was independently checked against its Git blob identity and
+is byte-identical to the retained native evidence. Raw transcripts, credentials
+and machine state remain outside Git.
+
+| Observed subject | Exact identity |
+| --- | --- |
+| Invalid source commit | `eb86a5e294fa9d4e49c2b748b50772d80f35a92e` |
+| First repaired/admitted head | `6b5777ea4ab4ff1d897cd2975f76d9dd3474b126` |
+| Final revalidated/admitted head | `cd938efe2d50c59676212ea9a747617f227c106a` |
+| Validated `main` base | `0e36f8e4b336985fbe0a3b4d92fbd48f43b4027b` |
+| Independently advanced `main` target | `2a5b1f276093139d160c85d72af5b4253b0ecfc0` |
+| Controller source | `99a6f59f5252ce37845b47b2d9673b169d3df509` |
+| Controller SHA-256 | `549e78539cf893abb120c551c49c5b5d402720fec9ed19b3d474e661fb36969d` |
+
+| Adversarial control | Observed enforcement |
+| --- | --- |
+| Actual invalid agent source | `payload-contract` executed and failed with exit 1; independent `guard-contract` executed and passed. Validation was blocked; publication returned `PUBLICATION_NOT_READY` and no PR existed. |
+| Agent repairs the source | Both required commands executed successfully; fresh receipts identify the repaired head and exact accepted base. |
+| Source mutation after real GitHub creation | `PR_CREATED_NOT_ADMITTED`, `WORKUNIT_PROOF_STALE`, `quarantine=draft_confirmed`; no successful publication was returned. A separate native rejection preserves the original proof subject. |
+| Fresh proof after quarantine | New execution evidence admitted the matching exact-head PR. |
+| Source mutation after admission | `GOVERNANCE_CHECKPOINT_MISSING`; no commit was created and prior success could not authorize publication. Governed projection repair created a new checkpoint/commit, requiring fresh execution and admission for the new head. |
+| Independently advance the target | Publication rejected with `STALE_ACCEPTED_BASE`; repeated full validation rejected the same changed target. |
+| Final readback | PR head remains the exact validated head. The actual `main` ref advanced; the PR response retained its historical base. Current applicability is false and merge authorization is false. |
+
+The final PR is deliberately left open as a draft after the target-advancement
+control. Its earlier admission is historical. PR creation, observed admission
+and permission to merge remain separate outcomes. The real target-ref check is
+independent of potentially historical PR base metadata.
+
+The unchanged native receipts, their observations and the full post-creation
+rejection are in the archive. Each successful receipt records
+`scope=repository_local_readiness` and both actual required assertions. This
+fixture establishes real GitHub publication with its accepted native source
+contract; it does not attest a hosted CI matrix, release packaging or deployment.
+The Decapod source candidate separately requires full Buildkite validation.
+
+| Receipt | Proven head | File SHA-256 |
+| --- | --- | --- |
+| [Repaired source](https://github.com/alexhraber/decapod-admission-acceptance-20261117-1747-04/blob/1c21226bc3c5c65afb504a37bbe00829e308c593/repaired-receipt.json) | `6b5777ea4ab4ff1d897cd2975f76d9dd3474b126` | `5a188d2a036a667aa3a87eae48b4bbbd21b58f017220d1addf3bdcfbc5ec4639` |
+| [Fresh after quarantine](https://github.com/alexhraber/decapod-admission-acceptance-20261117-1747-04/blob/1c21226bc3c5c65afb504a37bbe00829e308c593/fresh-after-quarantine-receipt.json) | `6b5777ea4ab4ff1d897cd2975f76d9dd3474b126` | `79a71107662f8f39f4f25757ab951b15bc68d46f17c8103f28049d166eef34a8` |
+| [Fresh after stale-source repair](https://github.com/alexhraber/decapod-admission-acceptance-20261117-1747-04/blob/1c21226bc3c5c65afb504a37bbe00829e308c593/fresh-after-stale-source-receipt.json) | `cd938efe2d50c59676212ea9a747617f227c106a` | `ca39591237076fe05b13a447239e4db869a342a176d844f58718ec04b4f3a306` |
+
+[Failed native observations](https://github.com/alexhraber/decapod-admission-acceptance-20261117-1747-04/blob/1c21226bc3c5c65afb504a37bbe00829e308c593/invalid-source-observations.json)
+and the [native post-creation rejection](https://github.com/alexhraber/decapod-admission-acceptance-20261117-1747-04/blob/1c21226bc3c5c65afb504a37bbe00829e308c593/created-not-admitted-rejection.json)
+retain the negative evidence separately from successful historical receipts.
+
+To reproduce the entire sequence, use an authenticated GitHub CLI, working Git
+SSH access, Rust 1.96.1 and macOS (the platform used for this run). Supply a new
+empty disposable repository and a new private output directory each time:
 
 ```sh
+gh repo create OWNER/decapod-admission-acceptance-UNIQUE --public
+git clone https://github.com/DecapodLabs/decapod.git decapod-admission-repro
+cd decapod-admission-repro
+git checkout --detach 99a6f59f5252ce37845b47b2d9673b169d3df509
 DECAPOD_ACCEPTANCE_REPOSITORY=OWNER/decapod-admission-acceptance-UNIQUE \
 DECAPOD_ACCEPTANCE_OUTPUT=/absolute/new/private/evidence-directory \
-cargo test-main --test entrypoint_correctness \
+cargo test-main --locked --test entrypoint_correctness \
   publication_admission::real_forge_reject_repair_admit_and_invalidate \
   -- --ignored --exact --nocapture --test-threads=1
 ```
 
-`tests/acceptance/publication_admission.rs` preserves private transcripts and
-emits `acceptance.json` only after every assertion completes. It bootstraps an
-explicit accepted two-command source contract on the disposable target, drives
-real CLI task/worktree/plan/checkpoint operations, tests source failure and
-repair, observes real GitHub creation before deliberately changing local source,
-requires created-but-not-admitted quarantine, then restores the source and earns
-fresh admission on the same PR. Subsequent source and independently advanced
-target controls must reject publication. The target is advanced only under this
-explicit fixture authority. The test neither merges nor deletes repositories.
-Its required deterministic counterparts remain ordinary mandatory library tests.
+The harness bootstraps its accepted contract before agent work, then performs
+all task/worktree/plan/checkpoint, failure, repair, publication, readback and
+target-advancement operations. It emits `acceptance.json` only after all
+assertions complete and archives reviewed evidence on an independent branch.
+It neither merges nor deletes repositories. Earlier unsuccessful attempts
+remain preserved; their partial results were not reported as a passing run.
+The required deterministic counterparts remain ordinary full-library tests;
+the opt-in live harness is also compiled by the existing CLI test target.

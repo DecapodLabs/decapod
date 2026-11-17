@@ -12,6 +12,21 @@ does not establish readiness or replace complete validation and live acceptance.
 
 ## Required publication regression coverage (#1747, #1748)
 
+The complete fourth real-forge acceptance passed: one test, zero failures,
+311.75 seconds on macOS, using source controller
+`99a6f59f5252ce37845b47b2d9673b169d3df509`. The actual GitHub PR is
+`alexhraber/decapod-admission-acceptance-20261117-1747-04#1`; immutable evidence
+commit `1c21226bc3c5c65afb504a37bbe00829e308c593` retains three native receipts,
+their observations, failed-source observations and post-creation rejection.
+Every archived byte was checked against its Git blob identity. The final
+validated head is `cd938efe2d50c59676212ea9a747617f227c106a`, bound to base
+`0e36f8e4b336985fbe0a3b4d92fbd48f43b4027b`. Advancing the target to
+`2a5b1f276093139d160c85d72af5b4253b0ecfc0` invalidated applicability: both
+publication and repeated validation rejected with `STALE_ACCEPTED_BASE`.
+The draft PR remains historical admission, never authorization to merge.
+`docs/publication-admission-acceptance.md` records the reproducible command,
+all exact subjects, receipt hashes, rejected controls and assurance limits.
+
 Full Buildkite validation passed for source candidate
 `e81b89b36d330e36ab06a74b4eae409117e1facd` against accepted
 `e7b54246d5c4cc325883ea1281aea039a0ad064f`. The second real-forge attempt
@@ -37,7 +52,8 @@ of the shared consumer fixture, now consolidated at the library test root.
 The first live GitHub attempt failed before source execution because its
 declaration used the reserved `program` toolchain label. Its assertion refused
 to treat that adapter failure as actual failed-source execution. The attempt
-and disposable repository are preserved; fresh acceptance remains required.
+and disposable repository are preserved. Their failures were not relabeled as
+success; the separate fourth run supplies the complete passing acceptance.
 
 `tests/unit/core/workspace_publication_tests.rs::live_admission` executes real
 required source commands and real Git commits/remote readback, then exercises
