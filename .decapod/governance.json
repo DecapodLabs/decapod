@@ -613,6 +613,22 @@
       "proof_refs": [
         "tests/context_capsule_rpc.rs"
       ]
+    },
+    {
+      "id": "bounded-metadata-review",
+      "summary": "Bound query metadata and topic envelopes; preserve deterministic selection; record actual current-content spec review and eight passing resolver regressions",
+      "input_digest": "sha256:569b88347b1258b11eb8f0b9ceeec9aa35ce00f91cf5108b5a61352e6d91c2ee",
+      "proof_refs": [
+        "tests/unit/core/docs_tests.rs"
+      ]
+    },
+    {
+      "id": "bounded-metadata-review-final",
+      "summary": "Capture completed spec reviews, deterministic metadata/topic limits and eight passing resolver regressions",
+      "input_digest": "sha256:569b88347b1258b11eb8f0b9ceeec9aa35ce00f91cf5108b5a61352e6d91c2ee",
+      "proof_refs": [
+        "tests/unit/core/docs_tests.rs"
+      ]
     }
   ],
   "intents": {
@@ -650,6 +666,22 @@
         "decapod validate"
       ],
       "schema_version": "1.1.0",
+      "spec_reviews": [
+        {
+          "disposition": "unchanged_with_reason",
+          "path": ".decapod/managed/specs/ARCHITECTURE.md",
+          "reason": "Reviewed current context owner and callers. Existing bounded-projection section correctly describes the common resolver, durable audit versus operative context and legacy wrapper; the added reason/topic limits refine the interface without changing architecture.",
+          "reviewed_code_fingerprint": "e452a9a4aeb507f2c05d1a8c363cb279534c8c37811a0b3e4c065ad7f0177aaf",
+          "spec_material_hash": "3f980e69215f687fc85b0378720299c0df7dcfdd5bd2e31ef29da19a64be614f"
+        },
+        {
+          "disposition": "updated",
+          "path": ".decapod/managed/specs/INTERFACES.md",
+          "reason": "Reviewed current resolver, capsule canonicalization and RPC callers: explicit bindings precede unique-term coverage; no-match suppresses filler; optional selection preserves old canonical hashes; excerpt, reason-term and topic bounds are documented. Retrieval is advisory and does not authenticate human intent or host delivery.",
+          "reviewed_code_fingerprint": "e452a9a4aeb507f2c05d1a8c363cb279534c8c37811a0b3e4c065ad7f0177aaf",
+          "spec_material_hash": "e9dd9cc35868a64d05db7b7e58799ea59524144c684d6bbf035684fdf86f037e"
+        }
+      ],
       "state": "APPROVED",
       "stop_conditions": [
         "Unresolved independent controller support, explicit access denial or a real human decision blocks only the dependent transition; preserve exact evidence."
@@ -660,14 +692,18 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1794952416Z"
+      "updated_at": "1794957890Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:79d038f8e6f9ae3acb7345d5592d2951f9bf06c35c3a47a3e48156111200b53b",
+      "artifact_hash": "sha256:87a3e43065bc08610b1d95cc29c291013373c175852ae59b2314d6725f9ec948",
       "checks": [
+        {
+          "name": "bounded-selection-metadata",
+          "status": "passed"
+        },
         {
           "name": "candidate_regressions",
           "status": "unavailable"
@@ -691,6 +727,10 @@
         {
           "name": "full_validation_attempt_2",
           "status": "unavailable"
+        },
+        {
+          "name": "native-ci",
+          "status": "partial"
         },
         {
           "name": "no_match_negative",
@@ -754,10 +794,17 @@
             "intent_id": "intent:change_01M7NQXTQ8MSHMYM11DJ5YRWJJ",
             "kind": "trajectory_step_recorded",
             "sequence": 8
+          },
+          {
+            "detail": "trajectory:branch_01M7NQXTTWEEHK0YNBJBBX8ERJ",
+            "event_id": "event:9",
+            "intent_id": "intent:change_01M7NQXTQ8MSHMYM11DJ5YRWJJ",
+            "kind": "trajectory_step_recorded",
+            "sequence": 9
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 8,
+        "next_sequence": 9,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M7NQXTTWEEHK0YNBJBBX8ERJ": {
@@ -856,6 +903,23 @@
                 ],
                 "sequence": 8,
                 "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:9",
+                "observations": [
+                  "cargo test --lib core::docs::tests: eight tests passed on updated reason/topic limits; corpus-sized adversarial query metadata below 48 KiB; repeated output identical",
+                  "Buildkite Decapod Validate #11903 succeeded for c82cdf5d; full native collector interrupted for current-content review repair; GitHub governance-artifacts failed SPEC_REVIEW_REQUIRED for INTERFACES.md, now explicitly reviewed; no publication readiness asserted."
+                ],
+                "proof_refs": [
+                  "bounded-selection-metadata",
+                  "native-ci"
+                ],
+                "scope": [
+                  "constitution-context-1772-1774-657-880-1095-879"
+                ],
+                "sequence": 9,
+                "validation_findings": []
               }
             ]
           }
@@ -867,10 +931,12 @@
       ],
       "destination": "pull request",
       "evidence": [
+        "Buildkite Decapod Validate #11903 succeeded for c82cdf5d; full native collector interrupted for current-content review repair; GitHub governance-artifacts failed SPEC_REVIEW_REQUIRED for INTERFACES.md, now explicitly reviewed; no publication readiness asserted.",
         "Correction to inventory count: 105 inventoried paths were compared, not 107. Exact version-only delta and digest remain as observed.",
         "PROOF_PROFILE_RECONCILIATION_REQUIRED; complete 107-source inventory matches accepted master; since edbfc00 only Cargo package/lock version 0.148.7 to 0.148.9 differs, and accepted tag v0.148.9 tree equals 6ab6de3.",
         "Pre-change actual-binary negative receipt 01M7NR06P8P78Q7NMJJV44T4HH; post-change suite pending configured full validation.",
         "cargo test --lib core::docs::tests: 7 passed; context_capsule_cli: 5 passed; repaired context_capsule_rpc: 5 passed; context_capsule_schema: 5 passed. Earlier RPC setup: 5 failures due unknown actor, repaired with explicit isolated fixture identity. Full validation collector first hit HTTP403 public quota, then was interrupted before mutation for fixture repair; no full readiness receipt exists.",
+        "cargo test --lib core::docs::tests: eight tests passed on updated reason/topic limits; corpus-sized adversarial query metadata below 48 KiB; repeated output identical",
         "receipt:01M7NR06P8P78Q7NMJJV44T4HH; capsule:9636e0e74c098cb8647bdbdd0f536d08e320ba170598a95999e2530911328434"
       ],
       "inspected_files": [

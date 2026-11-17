@@ -165,6 +165,8 @@ pub fn resolve_scoped_context(
         .map(tokenize)
         .unwrap_or_default()
         .into_iter()
+        .filter(|term| term.len() <= 64)
+        .take(32)
         .collect::<Vec<_>>();
 
     let mut candidate_paths = BTreeSet::new();

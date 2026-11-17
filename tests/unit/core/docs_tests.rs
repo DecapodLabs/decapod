@@ -2,6 +2,48 @@
 use super::*;
 
 #[test]
+fn selection_metadata_remains_bounded_for_a_corpus_sized_query() {
+    let root = tempfile::tempdir().unwrap();
+    let query = assets::list_docs()
+        .into_iter()
+        .filter_map(|path| assets::get_doc(&path))
+        .collect::<Vec<_>>()
+        .join(" ");
+    let first = resolve_scoped_context(
+        root.path(),
+        Some(&query),
+        Some("workspace.ensure"),
+        &[],
+        &[],
+        usize::MAX,
+        None,
+    );
+    let second = resolve_scoped_context(
+        root.path(),
+        Some(&query),
+        Some("workspace.ensure"),
+        &[],
+        &[],
+        usize::MAX,
+        None,
+    );
+    let bytes = serde_json::to_vec(&first.selection).unwrap();
+    assert!(
+        bytes.len() < 48 * 1024,
+        "metadata budget exceeded: {}",
+        bytes.len()
+    );
+    assert_eq!(bytes, serde_json::to_vec(&second.selection).unwrap());
+    assert!(first.selection.context_bytes <= MAX_CONTEXT_BYTES);
+    assert!(
+        first.selection.selected[0]
+            .reasons
+            .iter()
+            .any(|reason| reason == "operation:workspace.ensure")
+    );
+}
+
+#[test]
 fn truncate_chars_respects_char_boundaries() {
     let input = "alpha — beta";
     assert_eq!(truncate_chars(input, 7), "alpha —...");

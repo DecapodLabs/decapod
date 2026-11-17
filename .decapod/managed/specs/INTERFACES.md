@@ -17,6 +17,8 @@ into their canonical hash. Legacy capsules omit it and preserve their canonical
 serialization. The resolver caps selected text at 8,192 UTF-8 bytes and twelve
 fragments; `context_bytes` counts excerpt bytes, excluding envelope and metadata.
 Unmatched exclusions are aggregated without injecting the excluded source text.
+Selection reasons consider at most 32 unique query terms of at most 64 bytes;
+capsule topics accept at most 4,096 bytes, bounding the echoed query envelope.
 Authorized directive overrides replace embedded text in the operative projection;
 the embedded source and override remain separately inspectable. Invalid override
 structure fails the fallible CLI/RPC owner. Retrieval supplies context, never an
@@ -1240,7 +1242,7 @@ field. Nothing in this operation authorizes a mutation, approval or completion.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `e6568771aecc389d10d29d061ad95d18e898d19fab9b2e136321b3ebb534b34a`
+- Repository signal fingerprint: `e452a9a4aeb507f2c05d1a8c363cb279534c8c37811a0b3e4c065ad7f0177aaf`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (236 files), `tests/` (235 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

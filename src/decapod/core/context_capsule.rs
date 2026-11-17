@@ -151,9 +151,9 @@ pub fn query_embedded_capsule_governed(
     policy: CapsulePolicyBinding,
 ) -> Result<DeterministicContextCapsule, error::DecapodError> {
     validate_scope(scope)?;
-    if topic.trim().is_empty() {
+    if topic.trim().is_empty() || topic.len() > 4096 {
         return Err(error::DecapodError::ValidationError(
-            "topic cannot be empty".to_string(),
+            "topic must contain 1..=4096 UTF-8 bytes".to_string(),
         ));
     }
     let resolved_authority = assets::resolved_override_evidence(repo_root)?;
