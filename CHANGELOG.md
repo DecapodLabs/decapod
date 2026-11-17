@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.148.3](https://github.com/DecapodLabs/decapod/compare/v0.148.2...v0.148.3) - 2026-11-17
+
+### Other
+
+- *(specs)* commit Decapod-generated projections from CI validation
+- *(spec)* define documentation wordmark identity and acceptance
+- use logo-a beside mascot in light sidebar
+- replace landing page text wordmark with logo-c
+- brand shared sidebar with logo-c and mascot
+
 ## [0.148.2](https://github.com/DecapodLabs/decapod/compare/v0.148.1...v0.148.2) - 2026-11-16
 
 ### Other
