@@ -401,6 +401,25 @@ fn real_forge_reject_repair_admit_and_invalidate() {
             "Acceptance source repair",
         ],
     );
+    assert!(failed_evidence.results.iter().any(|row| {
+        row.key.job == "guard-contract"
+            && matches!(
+                row.observation,
+                Observation::Executed {
+                    conclusion: Conclusion::Success,
+                    exit_code: Some(0),
+                    ..
+                }
+            )
+    }));
+    // A timeout, lock or transport failure proves no source-policy enforcement.
+    // Require the actual readiness rejection before repairing the work.
+    assert!(
+        invalid_publish.contains("PUBLICATION_NOT_READY")
+            && invalid_publish.contains("READINESS_BLOCKED")
+            && !invalid_publish.contains("VALIDATE_TIMEOUT_OR_LOCK"),
+        "invalid work must be rejected by the source-proof gate: {invalid_publish}"
+    );
     assert!(
         demo.gh(&root, &["api", &format!("{endpoint}/pulls")])
             .as_array()

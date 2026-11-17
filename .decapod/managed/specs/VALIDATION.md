@@ -1,5 +1,14 @@
 # Validation
 
+## Live rejection specificity (#1748)
+
+The disposable GitHub acceptance requires the invalid payload's actual failure,
+the independent guard's executed success, and PUBLICATION_NOT_READY with
+READINESS_BLOCKED at publication. A timeout, lock or transport failure cannot
+satisfy that negative control. A previously permissive run remains partial
+evidence even when its test process reported success; fresh execution must prove
+the stricter assertion on the corrected controller.
+
 The admission repair incorporates accepted target
 `e7b54246d5c4cc325883ea1281aea039a0ad064f` after validation and the first
 branch-push CI refused moved targets and required target ancestry. The source
@@ -1443,7 +1452,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `4199a52f9bb5e0235dc82f716c5e33c1d3503a4c8450f29171e5c5c38ba6cd75`
+- Repository signal fingerprint: `939915b935953c7ae56af42d7bbea5a14b3ee19bcc785bcafeffd46bc1fc1468`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (236 files), `tests/` (235 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

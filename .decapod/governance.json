@@ -675,6 +675,11 @@
       "id": "timestamp-checked-utc-1755",
       "summary": "Reject out-of-range UTC conversion through parse and serde errors instead of panic; exercise extreme offset failure in storage and credential tests; preserve current dependency policy and require fresh exact-candidate proof",
       "input_digest": "sha256:027376959c696fcd67f2496fe9c6195f1a8380bc50fd36d07e0ea75a82e83313"
+    },
+    {
+      "id": "strict-live-rejection-1748",
+      "summary": "Require actual invalid-payload failure, independent guard success, and source-readiness publication rejection; timeout/lock is partial evidence, never a passing adversarial control; preserve attempt 05 and rerun fresh",
+      "input_digest": "sha256:98b96bc340b9118bb74b0748aed8cf1c22d73d30d445eb812e58c5f4dd65d8fc"
     }
   ],
   "intents": {
@@ -713,24 +718,24 @@
       "schema_version": "1.1.0",
       "spec_reviews": [
         {
-          "disposition": "updated",
+          "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Reviewed final timestamp migration and checked UTC conversion including serialization errors; use current time type names",
-          "reviewed_code_fingerprint": "4199a52f9bb5e0235dc82f716c5e33c1d3503a4c8450f29171e5c5c38ba6cd75",
+          "reason": "Production proof continuity and timestamp boundaries unchanged; live acceptance now rejects an unrelated timeout as evidence of source-policy enforcement",
+          "reviewed_code_fingerprint": "939915b935953c7ae56af42d7bbea5a14b3ee19bcc785bcafeffd46bc1fc1468",
           "spec_material_hash": "741dab3fb84475ba7e527d91c15ed778ed9681fb96dab4dec3109a9399078aa1"
         },
         {
-          "disposition": "updated",
+          "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Preserve RFC3339 storage strings and existing envelope/expiry shapes; out-of-range conversions return errors",
-          "reviewed_code_fingerprint": "4199a52f9bb5e0235dc82f716c5e33c1d3503a4c8450f29171e5c5c38ba6cd75",
+          "reason": "No wire change; strict harness requires existing PUBLICATION_NOT_READY and READINESS_BLOCKED codes rather than any nonzero exit",
+          "reviewed_code_fingerprint": "939915b935953c7ae56af42d7bbea5a14b3ee19bcc785bcafeffd46bc1fc1468",
           "spec_material_hash": "aea9e898f79c94c1d684baa64da199e433dc0c7a74f388e904d17eaeaafd3a7e"
         },
         {
-          "disposition": "updated",
+          "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Checked UTC conversion rejects extreme untrusted offsets without panic; invalid expiry remains fail closed",
-          "reviewed_code_fingerprint": "4199a52f9bb5e0235dc82f716c5e33c1d3503a4c8450f29171e5c5c38ba6cd75",
+          "reason": "Preserve exact subject proof, fail-closed quarantine and checked UTC conversion; stronger acceptance cannot count environmental failure as policy enforcement",
+          "reviewed_code_fingerprint": "939915b935953c7ae56af42d7bbea5a14b3ee19bcc785bcafeffd46bc1fc1468",
           "spec_material_hash": "b52643bf3fd690b7e15dca0b8852a5e98d28ad52c12833a58c111ca837d0d49f"
         }
       ],
@@ -742,7 +747,7 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1794914075Z"
+      "updated_at": "1794914891Z"
     },
     "trajectory": {
       "active_boundaries": [
