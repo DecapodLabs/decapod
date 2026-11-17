@@ -577,6 +577,11 @@
       "id": "cloud-routing-worktree1777",
       "summary": "Honor invoking worktree backend through task runtime and managed session; prevent cloud local-journal dispatch; add actual CLI mixed-backend regression cases; reconcile identical accepted proof definitions.",
       "input_digest": "sha256:825b6c1b639da9e03cf59fbae16b45c4de4507d6767a92b49900f515a507ab5c"
+    },
+    {
+      "id": "cloud-routing-broker1777",
+      "summary": "Repair source-CI reverse-direction failure in shared broker with same-repository workspace selection; retain all mixed-backend cases and add foreign-broker regression.",
+      "input_digest": "sha256:9cb5a884c0bdeb81930c7878b3c37d965801724b2be40cd4d1b132e68b3e38a6"
     }
   ],
   "intents": {
@@ -617,23 +622,23 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Separate invoking workspace project root from canonical local storage. Existing public factory wrapper remains compatible; cloud dispatch precedes local journal and transfer branches.",
-          "reviewed_code_fingerprint": "ed527f6ab6e07e2495b9726359b4be0c1b0f4678ea8a0222e930963c9b71ccac",
-          "spec_material_hash": "e3a53e8cd17a1addc363debd8159c3e170b344714069463b425b80e2e42d124f"
+          "reason": "Carry workspace root through task runtime and make the shared broker honor same-repository workspace backend. Preserve foreign datastore context and canonical local storage.",
+          "reviewed_code_fingerprint": "217233926c120609d3ae8b2891a91237573c615e37ae5143b09e2ae91538481d",
+          "spec_material_hash": "dda04e9b8e182d90123ffae3e832a4cc6facad9815a1204963547d32f8f3170a"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Existing backend selector and Dactyl wire protocol retained. Both mixed-backend directions follow workspace configuration; unsupported cloud task commands fail before local access.",
-          "reviewed_code_fingerprint": "ed527f6ab6e07e2495b9726359b4be0c1b0f4678ea8a0222e930963c9b71ccac",
+          "reason": "Existing CLI/wire contracts preserved. Local workspace under canonical cloud must remain offline; cloud workspace uses Dactyl and rejects unsupported commands before local journal access.",
+          "reviewed_code_fingerprint": "217233926c120609d3ae8b2891a91237573c615e37ae5143b09e2ae91538481d",
           "spec_material_hash": "c1b9e9b17b2f7f36cefee23b674d7c435d485bba1bdc0f45ac853fe49b8f5451"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Actual CLI fixture regressions cover remote read/claim, unchanged sentinel SQLite, missing session, denied/outage requests and unsupported journal. Full parity and real hosted proof remain independent.",
-          "reviewed_code_fingerprint": "ed527f6ab6e07e2495b9726359b4be0c1b0f4678ea8a0222e930963c9b71ccac",
-          "spec_material_hash": "9f8eb2bef4fffab422bc6fdb574bdb6b6a9005dfcf780d1ec94a8008163f99fe"
+          "reason": "Repair the failing local-worktree regression and add an isolated child-process test that foreign broker configuration cannot inherit an ambient workspace. Other45 cloud fixture cases passed.",
+          "reviewed_code_fingerprint": "217233926c120609d3ae8b2891a91237573c615e37ae5143b09e2ae91538481d",
+          "spec_material_hash": "ba08fd4cd996c01c9943b9c905b0dec40d5ec8043321020ba40fc1c937b431c6"
         }
       ],
       "state": "APPROVED",
@@ -644,15 +649,21 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1794952606Z"
+      "updated_at": "1794956085Z"
     },
     "trajectory": {
       "active_boundaries": [
-        "Current claimed task and isolated work branch"
+        "Current claimed task and isolated work branch",
+        "Repair actual reverse-direction failure; no test removed or graph weakened. Prior controller also hit public GitHub rate limit; retry2 superseded after source repair."
       ],
-      "artifact_hash": "sha256:a6e1e5450128e58082cc333170c9c618b91a3f50f24bff6ce0dcea189136b98d",
-      "checks": [],
-      "current_phase": "intent",
+      "artifact_hash": "sha256:5759fcac85970f42d06fcd5b101685ee01ab54a990f5f4ace506554c32b91640",
+      "checks": [
+        {
+          "name": "mixed_backend_regressions",
+          "status": "failed"
+        }
+      ],
+      "current_phase": "implementation",
       "custody": {
         "events": [
           {
@@ -666,19 +677,56 @@
             "intent_id": "intent:change_01M7NQSVX34CFHERDSDZX7YW2C",
             "kind": "refined",
             "sequence": 3
+          },
+          {
+            "detail": "trajectory:branch_01M7NQSW04T98220QJKKWWG9W7",
+            "event_id": "event:4",
+            "intent_id": "intent:change_01M7NQSVX34CFHERDSDZX7YW2C",
+            "kind": "trajectory_step_recorded",
+            "sequence": 4
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 3,
+        "next_sequence": 4,
         "schema_version": "1.0.0",
-        "trajectories": {}
+        "trajectories": {
+          "branch_01M7NQSW04T98220QJKKWWG9W7": {
+            "evidence_only": true,
+            "id": "branch_01M7NQSW04T98220QJKKWWG9W7",
+            "intent_id": "intent:change_01M7NQSVX34CFHERDSDZX7YW2C",
+            "steps": [
+              {
+                "action": "implementation",
+                "custody_event_id": "event:4",
+                "observations": [
+                  "src/decapod/core/broker.rs",
+                  "tests/cloud_supabase_boundary.rs",
+                  "https://github.com/DecapodLabs/decapod/actions/runs/44185166816/job/134400076087"
+                ],
+                "proof_refs": [
+                  "mixed_backend_regressions"
+                ],
+                "scope": [
+                  "root"
+                ],
+                "sequence": 4,
+                "validation_findings": []
+              }
+            ]
+          }
+        }
       },
       "declared_commands": [],
       "destination": "pull request",
-      "evidence": [],
+      "evidence": [
+        "https://github.com/DecapodLabs/decapod/actions/runs/44185166816/job/134400076087"
+      ],
       "inspected_files": [],
       "intent_id": "intent:change_01M7NQSVX34CFHERDSDZX7YW2C",
-      "modified_files": [],
+      "modified_files": [
+        "src/decapod/core/broker.rs",
+        "tests/cloud_supabase_boundary.rs"
+      ],
       "next_transitions": [
         "Refine plan and declare falsifiable checks"
       ],

@@ -205,6 +205,33 @@ fn local_worktree_uses_shared_local_tasks_when_canonical_checkout_selects_cloud(
 }
 
 #[test]
+fn broker_for_another_repository_does_not_inherit_local_worktree_configuration() {
+    const ROOT: &str = "DECAPOD_TEST_FOREIGN_BROKER_ROOT";
+    if let Ok(root) = std::env::var(ROOT) {
+        assert!(decapod::core::broker::DbBroker::new(Path::new(&root)).is_cloud());
+        return;
+    }
+    let (_root, workspace) = mixed_backend_worktree("cloud", "local");
+    let foreign = project();
+    let output = Command::new(std::env::current_exe().unwrap())
+        .args([
+            "--exact",
+            "broker_for_another_repository_does_not_inherit_local_worktree_configuration",
+            "--test-threads=1",
+        ])
+        .current_dir(workspace)
+        .env(ROOT, foreign.path().join(".decapod/data"))
+        .output()
+        .unwrap();
+    assert!(
+        output.status.success(),
+        "{}{}",
+        String::from_utf8_lossy(&output.stdout),
+        String::from_utf8_lossy(&output.stderr)
+    );
+}
+
+#[test]
 fn cloud_worktree_unsupported_local_journal_never_opens_canonical_sqlite() {
     let (root, workspace) = mixed_backend_worktree("local", "cloud");
     let output = command_with_optional_datastore(

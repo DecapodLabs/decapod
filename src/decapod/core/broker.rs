@@ -98,8 +98,20 @@ impl DbBroker {
     }
 
     pub fn is_cloud(&self) -> bool {
-        let project_root =
+        let mut project_root =
             find_decapod_project_root(&self.root).unwrap_or_else(|_| self.root.clone());
+        // Shared local storage belongs to the canonical checkout, while the
+        // invoking worktree owns its backend selection. Never apply an ambient
+        // checkout's configuration to a broker for another repository.
+        if let Ok(current_dir) = env::current_dir()
+            && let Ok(workspace_root) = find_decapod_project_root(&current_dir)
+            && workspace_root != project_root
+            && let Ok(canonical_root) = std::fs::canonicalize(&project_root)
+            && crate::core::workspace::get_main_repo_root(&workspace_root)
+                .is_ok_and(|main| main == canonical_root)
+        {
+            project_root = workspace_root;
+        }
         if let Ok(config) = crate::cli::DecapodProjectConfig::load(&project_root) {
             return config.repo.effective_backend().is_cloud();
         }

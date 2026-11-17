@@ -5,7 +5,10 @@
 The canonical checkout's local backend cannot override a cloud workspace after
 startup has selected cloud. Its SQLite tasks and credentials are never a recovery
 route after remote denial, missing managed credentials or transport failure.
-Conversely a local workspace must not inherit canonical cloud routing. CLI tests
+Conversely a local workspace must not inherit canonical cloud routing. The shared
+broker checks repository identity before using invoking-worktree configuration;
+a child-process regression proves a foreign broker keeps its own backend.
+The CLI tests
 exercise both directions, remote reads and atomic claims, authorization denial,
 outage and unsupported journal verification. A sentinel canonical database stays
 byte-identical during cloud success; empty local paths stay absent on denial.
@@ -673,7 +676,7 @@ execution evidence remains required before publication readiness.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `ed527f6ab6e07e2495b9726359b4be0c1b0f4678ea8a0222e930963c9b71ccac`
+- Repository signal fingerprint: `217233926c120609d3ae8b2891a91237573c615e37ae5143b09e2ae91538481d`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (236 files), `tests/` (235 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
