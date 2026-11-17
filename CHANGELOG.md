@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.148.4](https://github.com/DecapodLabs/decapod/compare/v0.148.3...v0.148.4) - 2026-11-17
+
+### Other
+
+- *(specs)* commit exact Decapod-generated mdBook shell projections
+- *(spec)* bind Rust-native plush shell, responsive identity and acceptance
+- rebuild mdBook shell with plush Decapod Labs navigation and layout
+
 ## [0.148.3](https://github.com/DecapodLabs/decapod/compare/v0.148.2...v0.148.3) - 2026-11-17
 
 ### Other
