@@ -16,7 +16,6 @@ use crate::core::trajectory;
 use crate::core::validate;
 use crate::core::validation_epoch;
 use crate::core::workunit;
-use crate::plan_governance;
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
 use std::collections::BTreeMap;
