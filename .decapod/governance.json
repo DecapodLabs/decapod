@@ -792,24 +792,24 @@
       "schema_version": "1.1.0",
       "spec_reviews": [
         {
-          "disposition": "updated",
+          "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Reviewed PR1702 integrated with exact v0.147.0 accepted master. Native metadata regenerated; original source tips and receipts remain historical. Preserve current escalation, Nix and filesystem contracts and all required providers/checks. Current-candidate GitHub verification pending; no local tests or Buildkite collection.",
-          "reviewed_code_fingerprint": "5530249d38a42ab9c966b27787ccd6952ce1c69a63ab1a2414a9960c1e542984",
+          "reason": "Reviewed the Starlight presentation migration and existing architectural contract against the current code. The public static documentation renderer and GitHub Pages artifact path change; the Rust governance kernel, runtime authority, state ownership, and binary-embedded agent documentation architecture are unchanged. Human-facing docs continue to derive from canonical Markdown, and no architecture spec prose change is warranted.",
+          "reviewed_code_fingerprint": "1eded6a0c85580f7f533feddc15447ce56bc71bc47593eb90b7659c7decb346f",
           "spec_material_hash": "3c15bc18e7c256e17433d21c314b9758c7073ab0bcde948640f32d1da429b06d"
         },
         {
-          "disposition": "updated",
+          "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Reviewed PR1702 integrated with exact v0.147.0 accepted master. Native metadata regenerated; original source tips and receipts remain historical. Preserve current escalation, Nix and filesystem contracts and all required providers/checks. Current-candidate GitHub verification pending; no local tests or Buildkite collection.",
-          "reviewed_code_fingerprint": "5530249d38a42ab9c966b27787ccd6952ce1c69a63ab1a2414a9960c1e542984",
+          "reason": "Reviewed the Starlight website and its GitHub Actions build against the current interfaces. The change affects static public HTML, CSS, routing, and the Pages publishing artifact; it does not introduce or modify Decapod CLI, RPC, library, protocol, or agent-facing binary command contracts. Therefore this interfaces spec is unchanged in substance.",
+          "reviewed_code_fingerprint": "1eded6a0c85580f7f533feddc15447ce56bc71bc47593eb90b7659c7decb346f",
           "spec_material_hash": "3d3f508ccd26fa95dc5a9ed669e341bed2f6115ba5fe797a40f69c85e89e3871"
         },
         {
-          "disposition": "updated",
+          "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Reviewed PR1702 integrated with exact v0.147.0 accepted master. Native metadata regenerated; original source tips and receipts remain historical. Preserve current escalation, Nix and filesystem contracts and all required providers/checks. Current-candidate GitHub verification pending; no local tests or Buildkite collection.",
-          "reviewed_code_fingerprint": "5530249d38a42ab9c966b27787ccd6952ce1c69a63ab1a2414a9960c1e542984",
+          "reason": "Reviewed deployment ownership, the accepted source-CI docs-build recipe, theme assets and external static documentation references. Pages publication remains restricted to the existing GitHub-hosted native owner and commit-bound checks. No new authorization, credential, data-custody, sandbox or trust boundary is introduced into the kernel; the existing security specification is unchanged.",
+          "reviewed_code_fingerprint": "1eded6a0c85580f7f533feddc15447ce56bc71bc47593eb90b7659c7decb346f",
           "spec_material_hash": "a5e8fa6d423d3980cabe7d2d7d122c436ffd95450106674250127cf2c4893747"
         }
       ],
