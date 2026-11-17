@@ -574,17 +574,35 @@ pub fn update_gate(
     })
 }
 
-/// An agent-approved plan does not resolve a contradictory or unknown request.
-/// Keep this predicate shared by the execution and validation entrypoints.
+/// Reuse the same recorded instruction obligations at every governed boundary.
+/// Preparation is allowed to collect open questions, never to approve them.
+pub(crate) fn unresolved_instruction_questions(plan: &GovernedPlan) -> Vec<String> {
+    let mut questions = Vec::new();
+    if plan.intent.trim().is_empty() {
+        questions.push("What is the single-sentence intent for this change?".to_string());
+    }
+    questions.extend(plan.human_questions.clone());
+    for unknown in &plan.unknowns {
+        questions.push(format!("Resolve unknown before execution: {unknown}"));
+    }
+    for contradiction in &plan.unresolved_contradictions {
+        questions.push(format!(
+            "Resolve conflicting requests before execution: {contradiction}"
+        ));
+    }
+    for review in &plan.spec_reviews {
+        if review.disposition == SpecReviewDisposition::RequiresDecision {
+            questions.push(format!(
+                "Resolve pending human spec review before execution: {}",
+                review.path
+            ));
+        }
+    }
+    questions
+}
+
 pub(crate) fn has_unresolved_intent_requirements(plan: &GovernedPlan) -> bool {
-    plan.intent.trim().is_empty()
-        || !plan.unknowns.is_empty()
-        || !plan.human_questions.is_empty()
-        || !plan.unresolved_contradictions.is_empty()
-        || plan
-            .spec_reviews
-            .iter()
-            .any(|review| review.disposition == SpecReviewDisposition::RequiresDecision)
+    !unresolved_instruction_questions(plan).is_empty()
 }
 
 pub fn ensure_execute_ready(
@@ -598,43 +616,24 @@ pub fn ensure_execute_ready(
         )
     })?;
 
-    if plan.state != PlanState::Approved
-        && plan.state != PlanState::Executing
-        && plan.state != PlanState::Done
-    {
+    let questions = unresolved_instruction_questions(&plan);
+    if !questions.is_empty() {
+        return Err(marker_error(
+            "NEEDS_HUMAN_INPUT",
+            "Execution blocked: recorded instructions require resolution.",
+            Some(json!({
+                "questions": questions,
+                "phase": "during_execution",
+                "remediation": "Resolve recorded obligations and separately reaccept the revised plan."
+            })),
+        ));
+    }
+
+    if !matches!(plan.state, PlanState::Approved | PlanState::Executing | PlanState::Done) {
         return Err(marker_error(
             "NEEDS_PLAN_APPROVAL",
             "Execution blocked: plan state must be APPROVED.",
             Some(json!({ "current_state": format!("{:?}", plan.state).to_uppercase() })),
-        ));
-    }
-
-    if has_unresolved_intent_requirements(&plan) {
-        let mut questions = Vec::new();
-        if plan.intent.trim().is_empty() {
-            questions.push("What is the single-sentence intent for this change?".to_string());
-        }
-        questions.extend(plan.human_questions.clone());
-        for unknown in &plan.unknowns {
-            questions.push(format!("Resolve unknown before execution: {unknown}"));
-        }
-        for contradiction in &plan.unresolved_contradictions {
-            questions.push(format!(
-                "Resolve conflicting requests before execution: {contradiction}"
-            ));
-        }
-        for review in &plan.spec_reviews {
-            if review.disposition == SpecReviewDisposition::RequiresDecision {
-                questions.push(format!(
-                    "Resolve pending human spec review before execution: {}",
-                    review.path
-                ));
-            }
-        }
-        return Err(marker_error(
-            "NEEDS_HUMAN_INPUT",
-            "Execution blocked: unresolved intent, unknowns, human questions or contradictions.",
-            Some(json!({ "questions": questions })),
         ));
     }
 
@@ -742,6 +741,20 @@ pub fn ensure_execute_ready(
 /// loads old state. Shared by explicit transitions, execution and publication.
 pub fn validate_plan_progress(plan: &GovernedPlan) -> Result<(), error::DecapodError> {
     validate_phase_contract(&plan.phases)?;
+    if matches!(plan.state, PlanState::Approved | PlanState::Executing | PlanState::Done) {
+        let questions = unresolved_instruction_questions(plan);
+        if !questions.is_empty() {
+            return Err(marker_error(
+                "NEEDS_HUMAN_INPUT",
+                "Plan cannot be accepted while recorded instructions are unresolved.",
+                Some(json!({
+                    "questions": questions,
+                    "phase": "pre_execution",
+                    "remediation": "Resolve recorded obligations before accepting the execution contract."
+                })),
+            ));
+        }
+    }
     if plan.state == PlanState::Done && plan.phases.iter().any(|phase| !phase.completed) {
         return Err(marker_error(
             "PHASES_INCOMPLETE",
