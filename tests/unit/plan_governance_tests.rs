@@ -209,7 +209,16 @@ fn actual_intent_ambiguity_still_requires_human_input_before_projection_lookup()
         },
     ] {
         patch_plan(dir.path(), patch).unwrap();
-        approve_plan(dir.path());
+        let rejected = patch_plan(
+            dir.path(),
+            PlanPatch {
+                state: Some(PlanState::Approved),
+                ..Default::default()
+            },
+        )
+        .unwrap_err()
+        .to_string();
+        assert!(rejected.contains("NEEDS_HUMAN_INPUT"), "{rejected}");
         let message = execute_check(dir.path(), &store, None)
             .unwrap_err()
             .to_string();
@@ -230,7 +239,16 @@ fn contradictory_prompts_block_approved_plan_before_task_projection_lookup() {
         },
     )
     .unwrap();
-    approve_plan(dir.path());
+    let denied = patch_plan(
+        dir.path(),
+        PlanPatch {
+            state: Some(PlanState::Approved),
+            ..Default::default()
+        },
+    )
+    .unwrap_err()
+    .to_string();
+    assert!(denied.contains("NEEDS_HUMAN_INPUT"), "{denied}");
     let before = fs::read(plan_path(dir.path())).unwrap();
 
     let message = execute_check(dir.path(), &store, None)
