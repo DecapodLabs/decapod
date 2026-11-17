@@ -596,6 +596,11 @@
       "proof_refs": [
         "https://buildkite.com/decapodlabs/decapod/builds/11777"
       ]
+    },
+    {
+      "id": "observer-release9",
+      "summary": "Merge accepted release9; review version-only Cargo source inventory and refresh native projections; preserve failed11777 evidence",
+      "input_digest": "sha256:a4538db65f53cc407271008d49829398fb8f5776fc8ebbf6441fe866881ae443"
     }
   ],
   "intents": {
@@ -636,22 +641,22 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Reviewed repaired redaction and actual Pi composite tool identities, provider-request/host/kernel attribution, and post-rejection model/tool ordering. Current source preserves offline mandatory controls and grants no authority.",
-          "reviewed_code_fingerprint": "078a0976d8241f16e084c5086fe599d92355613bb8a70867b5ba40aef5618e9e",
+          "reason": "Read-only trusted-host observer preserves native authority and distinguishes source provenance; release9 fingerprint reviewed.",
+          "reviewed_code_fingerprint": "57239bffe75010ac8e32bb59d3f056adc98f2d68871ce03972dc80b9dde8a33b",
           "spec_material_hash": "ee51ab44d2b4722b6a57c79cf3c5167270ff908803bc3377630386e4f7de6341"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Reviewed repaired redaction and actual Pi composite tool identities, provider-request/host/kernel attribution, and post-rejection model/tool ordering. Current source preserves offline mandatory controls and grants no authority.",
-          "reviewed_code_fingerprint": "078a0976d8241f16e084c5086fe599d92355613bb8a70867b5ba40aef5618e9e",
+          "reason": "Versioned capture contract with model-requested tool IDs and feedback boundaries; generated release9 projection reviewed.",
+          "reviewed_code_fingerprint": "57239bffe75010ac8e32bb59d3f056adc98f2d68871ce03972dc80b9dde8a33b",
           "spec_material_hash": "7bfbbf44436b18dfb78b943a8a994fed517bf14e615dec530945abf70dbdfd23"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Reviewed repaired redaction and actual Pi composite tool identities, provider-request/host/kernel attribution, and post-rejection model/tool ordering. Current source preserves offline mandatory controls and grants no authority.",
-          "reviewed_code_fingerprint": "078a0976d8241f16e084c5086fe599d92355613bb8a70867b5ba40aef5618e9e",
+          "reason": "Private operational captures and allowlisted public facts, conservative secrets, no imported authority; version9 fingerprint reviewed.",
+          "reviewed_code_fingerprint": "57239bffe75010ac8e32bb59d3f056adc98f2d68871ce03972dc80b9dde8a33b",
           "spec_material_hash": "d3500590e30216b65c54dcd873397b0a7258badfb1f1a8cca61545687dd67d8a"
         }
       ],
@@ -663,17 +668,21 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1794951516Z"
+      "updated_at": "1794952567Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:c1d7f70011c96c5bc034c8f6b9253889e033bd81a7c304aef3e5111f105d79a4",
+      "artifact_hash": "sha256:e1d4b08574b05ea9a63a6f8db9aa44bbb57291c465b70e535ff44832dbe157c4",
       "checks": [
         {
           "name": "autonomous_acceptance",
           "status": "unavailable"
+        },
+        {
+          "name": "observer-initial-library",
+          "status": "failed"
         },
         {
           "name": "observer_first_required_ci",
@@ -685,6 +694,10 @@
         },
         {
           "name": "pi_provider_setup",
+          "status": "partial"
+        },
+        {
+          "name": "real-pi-run",
           "status": "partial"
         },
         {
@@ -700,7 +713,7 @@
           "status": "passed"
         }
       ],
-      "current_phase": "intent",
+      "current_phase": "verification",
       "custody": {
         "events": [
           {
@@ -735,10 +748,17 @@
             "intent_id": "intent:change_01M7NKA4FSD1G656VQZ9VQQF46",
             "kind": "trajectory_step_recorded",
             "sequence": 6
+          },
+          {
+            "detail": "trajectory:branch_01M7NKA4JJAP7XX9QCY1NHG3AH",
+            "event_id": "event:7",
+            "intent_id": "intent:change_01M7NKA4FSD1G656VQZ9VQQF46",
+            "kind": "trajectory_step_recorded",
+            "sequence": 7
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 6,
+        "next_sequence": 7,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M7NKA4JJAP7XX9QCY1NHG3AH": {
@@ -801,6 +821,22 @@
                 ],
                 "sequence": 6,
                 "validation_findings": []
+              },
+              {
+                "action": "verification",
+                "custody_event_id": "event:7",
+                "observations": [
+                  "Buildkite11777 exposed task-branch false-positive redaction; corrected without relaxing credential filtering. Merged accepted master release9 and reviewed version-only Cargo inventory changes. Real Pi independently published fixture PR2; detailed observer correlation pending."
+                ],
+                "proof_refs": [
+                  "observer-initial-library",
+                  "real-pi-run"
+                ],
+                "scope": [
+                  "src/decapod/core"
+                ],
+                "sequence": 7,
+                "validation_findings": []
               }
             ]
           }
@@ -809,6 +845,7 @@
       "declared_commands": [],
       "destination": "pull request",
       "evidence": [
+        "Buildkite11777 exposed task-branch false-positive redaction; corrected without relaxing credential filtering. Merged accepted master release9 and reviewed version-only Cargo inventory changes. Real Pi independently published fixture PR2; detailed observer correlation pending.",
         "https://buildkite.com/decapodlabs/decapod/builds/11777",
         "kernel:SNAPSHOT_NOT_READY:CI-operation-cancelled-after-superseded-candidate",
         "observed:Pi-0.73.1:openai-codex:gpt-6.1-sol:actual-composite-tool-id",
