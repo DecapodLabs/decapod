@@ -629,6 +629,11 @@
       "proof_refs": [
         "tests/unit/core/docs_tests.rs"
       ]
+    },
+    {
+      "id": "security-review-current",
+      "summary": "Record current-content security review required by publication admission; no kernel gate changes",
+      "input_digest": "sha256:92df67e2e1ae23d4e3ad4e4eaeb685154908b5b198e5d9c0f267a611a251cd0c"
     }
   ],
   "intents": {
@@ -680,6 +685,13 @@
           "reason": "Reviewed current resolver, capsule canonicalization and RPC callers: explicit bindings precede unique-term coverage; no-match suppresses filler; optional selection preserves old canonical hashes; excerpt, reason-term and topic bounds are documented. Retrieval is advisory and does not authenticate human intent or host delivery.",
           "reviewed_code_fingerprint": "e452a9a4aeb507f2c05d1a8c363cb279534c8c37811a0b3e4c065ad7f0177aaf",
           "spec_material_hash": "e9dd9cc35868a64d05db7b7e58799ea59524144c684d6bbf035684fdf86f037e"
+        },
+        {
+          "disposition": "unchanged_with_reason",
+          "path": ".decapod/managed/specs/SECURITY.md",
+          "reason": "Reviewed override failure, authority metadata, RPC mandates and corpus provenance: selected text does not confer execution permission; invalid overrides fail at fallible callers; kernel gates and independent proof remain unchanged. Existing security prose remains accurate.",
+          "reviewed_code_fingerprint": "e452a9a4aeb507f2c05d1a8c363cb279534c8c37811a0b3e4c065ad7f0177aaf",
+          "spec_material_hash": "0c791a6100ed5aec7fe4cedfa16680988dd1e48d50d00af272ef9dff372c3d4d"
         }
       ],
       "state": "APPROVED",
@@ -692,7 +704,7 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1794957890Z"
+      "updated_at": "1794958026Z"
     },
     "trajectory": {
       "active_boundaries": [
