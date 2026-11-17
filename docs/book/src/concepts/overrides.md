@@ -4,7 +4,7 @@ Overrides are the primary mechanism for customizing Decapod's behavior for a spe
 
 ## The `OVERRIDE.md` Substrate
 
-The `.decapod/OVERRIDE.md` file is a human-authored Markdown document where you can redefine specific constitution directives (see [Repository Constitution](constitution.md)). Each generated directive subsection owns a four-backtick source block. Find the appropriate subsection and replace the visible instruction inside that block with Markdown or whatever documentation style best expresses the policy.
+The `.decapod/OVERRIDE.md` file is a human-authored Markdown document where you can redefine specific constitution directives (see [Decapod Constitution](constitution.md)). Each generated directive subsection owns a four-backtick source block. Find the appropriate subsection and replace the visible instruction inside that block with Markdown or whatever documentation style best expresses the policy.
 
 The outer fence prevents headings in the policy from rendering as structure in `OVERRIDE.md`. Decapod removes that wrapper and loads its contents as binding authority. Four backticks allow ordinary triple-backtick examples inside the body. A duplicate registered directive, an unclosed body fence, or an unknown ID in a Decapod namespace outside a body block is ambiguous and fails closed; Decapod never applies only part of an ambiguous override file.
 
@@ -13,7 +13,7 @@ Decapod derives the machine evidence. Resolved context reports the directive ID,
 
 ### Example Override
 
-If the global constitution mandates "100% test coverage" but your project allows for "80%", you can override the specific directive:
+If a registered testing directive defines a different coverage expectation than your repository has accepted, capture the reviewed variation explicitly:
 
 `````markdown
 ### methodology/TESTING
