@@ -5,7 +5,9 @@
 A current required dependency failure reopens delivery even after historical
 readiness passed. Decapod replaces the unmaintained `chrono` dependency with
 `time`, without an advisory exception. Fresh source and live-forge proof must
-cover this candidate before delivery issues are closed.
+cover this candidate before delivery issues are closed. The reviewed source
+inventory changes only for Cargo.toml, Cargo.lock and MODULE.bazel.lock; accepted
+commands, workflow adapters, requiredness and coverage remain intact.
 
 During development of Decapod itself, an explicitly configured internal policy
 can separate entrypoint release-version churn from the source package version.

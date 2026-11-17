@@ -665,6 +665,11 @@
       "id": "timestamp-dependency-1755",
       "summary": "Remove unmaintained chrono without advisory waiver; preserve RFC3339 storage strings, UTC offsets, fractional precision, Dactyl SQL fallback and fail-closed expiry with regression tests; refresh both dependency graphs and require new exact-subject validation",
       "input_digest": "sha256:cf0603dcfa1ccce1ad0bf3a1ad46e2674b78aa2d3694a129e85143add0740e16"
+    },
+    {
+      "id": "timestamp-source-review-1755",
+      "summary": "Review exactly three changed inventoried dependency inputs after chrono removal, retain all accepted workflows, executor helpers, command coverage and requiredness, and reconcile only the source inventory digest; initial validation rejection preserved",
+      "input_digest": "sha256:7504367a0795056b9b0cc7f17e9a7a34fb9f2ceb17dd0ed003abecc181011124"
     }
   ],
   "intents": {
