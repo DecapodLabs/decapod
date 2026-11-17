@@ -4,63 +4,48 @@ import { fileURLToPath } from 'node:url';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const source = path.resolve(here, '../../../docs/book/src');
-const destination = path.resolve(here, '../src/content/docs');
-const toPosix = (p) => p.split(path.sep).join('/');
-const errors = [];
+const dest = path.resolve(here, '../src/content/docs');
+const inventory = path.resolve(here, '../content-inventory.json');
+const toSlash = p => p.split(path.sep).join('/');
+const list = dir => fs.readdirSync(dir, {withFileTypes: true}).flatMap(e => {
+  const file = path.join(dir,e.name);
+  return e.isDirectory() ? list(file) : [file];
+});
+const originals = list(source).filter(p=>p.endsWith('.md') && path.basename(p)!=='SUMMARY.md');
+const pages = new Set(originals.map(p=>toSlash(path.relative(source,p))));
+const slug = relative => relative.replace(/\.md$/,'').replace(/^index$/,'');
+const errors=[];
 
-function collect(dir) {
-  return fs.readdirSync(dir, { withFileTypes: true }).flatMap(entry => {
-    const absolute = path.join(dir, entry.name);
-    return entry.isDirectory() ? collect(absolute) : [absolute];
-  });
-}
-
-const contentFiles = collect(source)
-  .filter(p => p.endsWith('.md') && path.basename(p) !== 'SUMMARY.md');
-const sourcePages = new Set(contentFiles.map(p => toPosix(path.relative(source, p))));
-const targetSlug = (relative) => {
-  const withoutExtension = relative.replace(/\.md$/, '');
-  return withoutExtension === 'index' ? '' : withoutExtension;
-};
-
-function resolveLink(from, original) {
-  if (/^(?:[a-z][a-z\d+.-]*:|\/|#)/i.test(original)) return original;
-  const [pathname, fragment = ''] = original.split('#', 2);
-  const file = pathname.split('?')[0];
-  if (!/\.(?:md|html)$/.test(file)) return original;
-  const relative = toPosix(path.posix.normalize(path.posix.join(
-    path.posix.dirname(from), file.replace(/\.html$/, '.md')
-  )));
-  if (!sourcePages.has(relative)) {
-    errors.push(from + ': unresolved documentation link ' + original);
-    return original;
+function href(from,value) {
+  if (/^(?:[a-z][\w+.-]*:|\/|#)/i.test(value)) return value;
+  const match = value.match(/^([^?#]*)(\?[^#]*)?(#.*)?$/);
+  if (!match) return value;
+  const [,pathname,query='',hash=''] = match;
+  if (!/\.(?:html|md)$/i.test(pathname)) return value;
+  const resolved = toSlash(path.posix.normalize(path.posix.join(path.posix.dirname(from),pathname.replace(/\.html$/i,'.md'))));
+  if (!pages.has(resolved)) {
+    // Non-book relative references are unchanged, but visible for auditing.
+    if(!resolved.startsWith('../')) errors.push(from+' -> '+value);
+    return value;
   }
-  return '/decapod/' + (targetSlug(relative) ? targetSlug(relative) + '/' : '') +
-    (fragment ? '#' + fragment : '');
+  return '/decapod/'+(slug(resolved) ? slug(resolved)+'/' : '')+query+hash;
 }
 
-fs.rmSync(destination, { recursive: true, force: true });
-fs.mkdirSync(destination, { recursive: true });
-
-for (const absolute of contentFiles) {
-  const relative = toPosix(path.relative(source, absolute));
-  const contents = fs.readFileSync(absolute, 'utf8');
-  const heading = contents.match(/^#\s+(.+)$/m);
-  const title = heading ? heading[1].replace(/[*_`]/g, '') :
-    path.basename(relative, '.md').replace(/-/g, ' ');
-  const converted = contents
-    .replace(/(\[[^\]]*\]\()([^\s)]+)(\))/g,
-      (whole, open, href, close) => open + resolveLink(relative, href) + close)
-    .replace(/(href=\")([^\"]+)(\")/g,
-      (whole, open, href, close) => open + resolveLink(relative, href) + close);
-  const header = '---\ntitle: ' + JSON.stringify(title) + '\n' +
-    (relative === 'index.md' ? 'template: splash\n' : '') + '---\n\n';
-  const target = path.join(destination, relative);
-  fs.mkdirSync(path.dirname(target), { recursive: true });
-  fs.writeFileSync(target, header + converted);
+fs.rmSync(dest,{recursive:true,force:true});
+fs.mkdirSync(dest,{recursive:true});
+const manifest=[];
+for(const file of originals) {
+  const relative = toSlash(path.relative(source,file));
+  let markdown=fs.readFileSync(file,'utf8');
+  const title=(markdown.match(/^#\s+(.+)$/m)||[])[1]?.replace(/[*_`]/g,'')||path.basename(relative,'.md').replace(/-/g,' ');
+  markdown=markdown.replace(/(\[[^\]]*\]\()([^\s)]+)(\))/g,(_,a,url,b)=>a+href(relative,url)+b);
+  markdown=markdown.replace(/(href=")([^"]+)(")/g,(_,a,url,b)=>a+href(relative,url)+b);
+  const header='---\ntitle: '+JSON.stringify(title)+'\n'+(relative==='index.md'?'template: splash\n':'')+'---\n\n';
+  const target=path.join(dest,relative);
+  fs.mkdirSync(path.dirname(target),{recursive:true});
+  fs.writeFileSync(target,header+markdown);
+  manifest.push({source:relative,slug:slug(relative),title});
 }
-if (errors.length) {
-  for (const e of errors) console.error(e);
-  process.exitCode = 1;
-}
-console.log('Prepared ' + contentFiles.length + ' Markdown pages from canonical mdBook source.');
+fs.writeFileSync(inventory,JSON.stringify({pages:manifest},null,2)+'\n');
+if(errors.length) throw Error('Missing target documentation pages:\n'+errors.join('\n'));
+console.log('Synced '+manifest.length+' canonical Markdown documentation pages.');
