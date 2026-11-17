@@ -197,3 +197,33 @@ VALIDATE_TIMEOUT_OR_LOCK, and requires the independent guard's executed success.
 The strict attempt 06 above passed those assertions with the repaired controller.
 Earlier failed and superseded source/provider runs remain failures or historical
 observations; no green result is transferred to another artifact.
+
+
+## Accepted integration and renewed verification boundary
+
+GitHub records `alexhraber` merging [#1754](https://github.com/DecapodLabs/decapod/pull/1754)
+at **2026-11-17 12:03:09 UTC**. This independently authorized forge action
+closed #1747, #1748, #1753 and #1755 automatically. The agent did not execute that
+merge. Source head `c35eb608d0e84773c3edb74b76e0340af2be588d` and accepted merge
+`41e7e152ebee500dccd0be69c364175438d71b6f` have the identical Git tree
+`58fd1e39f0960cb9415e42a6662142c6b1155e25`. Release
+`9d1aed2795dae5b9345d9ec3ad1d3fcfe1d770d8` then changed only CHANGELOG.md and
+the root package version in Cargo.toml/Cargo.lock to 0.148.7.
+
+The pending [source validation 11596](https://buildkite.com/decapodlabs/decapod/builds/11596)
+did **not** complete successfully for the old head/base pair. After the accepted
+target advanced, later source jobs rejected their context with
+`CI event context rejected: Git merge-base verification failed`. The native
+controller returned SNAPSHOT_NOT_READY rather than admitting the stale subject.
+No complete final Decapod admission for c35eb608 against the former e7b54246 base
+is claimed. An administrator's forge merge is distinct from native admission or
+native authorization to merge, as the preserved ruleset bypass already states.
+
+This verification-report follow-up starts from accepted
+`9d1aed2795dae5b9345d9ec3ad1d3fcfe1d770d8` without changing runtime behavior,
+required checks or the immutable experiment archive. Its own exact candidate
+must earn fresh configured validation and publisher readback. That new result
+cannot transfer historical proof to another artifact. The strict experiment's
+receipts above remain bound to their recorded controller, fixture commits and
+accepted native contract. Final source/report readiness and publication receipts
+are attached separately to the delivery PRs and closed tracking issues.

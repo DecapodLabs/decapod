@@ -1,5 +1,14 @@
 # Intent
 
+## Post-integration proof boundary
+
+The implementation was accepted externally in merge 41e7e152 with the exact
+c35eb608 Git tree, then released as 0.148.7 at 9d1aed27. That forge transition
+does not turn the stale prior native validation into admission. The current
+report-only proposal must validate its own head against the newly accepted base;
+all runtime behavior, required checks and strict live experiment receipts remain
+unchanged. See docs/publication-admission-acceptance.md for exact identities.
+
 ## Current dependency policy (#1755)
 
 A current required dependency failure reopens delivery even after historical
@@ -410,7 +419,7 @@ These declarations select authoring and proof obligations; they do not attest im
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `939915b935953c7ae56af42d7bbea5a14b3ee19bcc785bcafeffd46bc1fc1468`
+- Repository signal fingerprint: `9d4eb244c511cef4be9a3240c4d88244af02947256efe7b9a1f5c105cce63f7c`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (236 files), `tests/` (235 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

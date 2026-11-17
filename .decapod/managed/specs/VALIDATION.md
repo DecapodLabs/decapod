@@ -1,5 +1,14 @@
 # Validation
 
+## Current report validation scope
+
+The current verification boundary begins at accepted release commit 9d1aed27.
+A source pipeline rejected the previous candidate's comparison after external
+integration advanced master. Preserve that rejection as non-ready evidence;
+independently require complete applicable checks, current source/policy and
+exact publisher readback for this report's actual head/base. The required
+full-library owner remains mandatory, including the publication regressions.
+
 ## Live rejection specificity (#1748)
 
 The disposable GitHub acceptance requires the invalid payload's actual failure,
@@ -1452,7 +1461,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `939915b935953c7ae56af42d7bbea5a14b3ee19bcc785bcafeffd46bc1fc1468`
+- Repository signal fingerprint: `9d4eb244c511cef4be9a3240c4d88244af02947256efe7b9a1f5c105cce63f7c`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (236 files), `tests/` (235 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
