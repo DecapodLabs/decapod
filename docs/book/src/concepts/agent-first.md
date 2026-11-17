@@ -20,7 +20,7 @@ Decapod keeps the governing record outside the transient model context. An inter
 
 Decapod structures agent work into a predictable, machine-readable lifecycle:
 
-1.  **Ingestion & Orientation:** The agent reads `docs/agent/` and queries the `constitution` (see [Repository Constitution](constitution.md)) to understand the repo's rules and available tools.
+1.  **Ingestion & Orientation:** The agent reads `docs/agent/` and queries the shared [Decapod Constitution](constitution.md) for relevant engineering practice and research, then resolves the repository's own rules and available tools.
 2.  **Task Claiming:** The agent claims a `todo` to establish exclusive custody and prevent collisions (see [Single-Agent Workflow](../workflows/single-agent.md)).
 3.  **Context Resolution:** The agent uses `rpc --op context.resolve` or `infer orientation` to gather the precise context needed for the specific task.
 4.  **Implementation:** The agent works in an isolated `workspace` (see [Workspace Sandboxing](workspaces.md)).

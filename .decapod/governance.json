@@ -628,6 +628,11 @@
       "id": "readiness-projection-cli-repair",
       "summary": "Expose canonical typed preparation readiness and repair actual CLI regression access without widening private APIs",
       "input_digest": "sha256:2d33064d66ad0b4fb4af3db08663306f2e481b519adf58b5784cd400082c7256"
+    },
+    {
+      "id": "accepted-target-ab4abe05",
+      "summary": "Integrate accepted Constitution documentation without dropping PR1766 continuation copy; invalidate earlier target readiness",
+      "input_digest": "sha256:d335539947e31795df5e23a4a303df7d29af3a69b1203fc5f71e8116e903bbc5"
     }
   ],
   "intents": {

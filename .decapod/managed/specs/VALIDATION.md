@@ -15,6 +15,12 @@ supported commands; it does not import private library implementation modules.
 The first candidate's compile denial is retained as failed evidence. Phase-entry
 regressions expect the current instruction blocker before approval-state repair.
 
+The continuation incorporates accepted target `ab4abe05` after the Constitution
+documentation update. The index retains both the existing closed-loop explanation
+and the accepted distinction between global engineering doctrine and repository
+policy. Checks captured against the earlier `18cbb30c` target cannot establish
+readiness for this integration; target ancestry and all current proof are renewed.
+
 The reviewed source inventory advances from the last accepted review at
 `edbfc00ddfd4c24458a2277176762c6924de13cc` solely for the accepted package-version
 change from 0.148.7 to 0.148.8 in `Cargo.toml` and `Cargo.lock`. The 105-input

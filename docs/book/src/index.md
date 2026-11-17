@@ -7,7 +7,7 @@
   <div class="decapod-docs-hero-copy">
     <div class="decapod-docs-kicker">CLOSED-LOOP METACOGNITIVE AGENT GOVERNANCE</div>
     <h1>HARNESS AI <em class="decapod-docs-metacognition">METACOGNITION.</em></h1>
-    <p>A capable model needs a dependable execution loop. Decapod keeps recorded intent, ownership, and proof obligations accessible across sessions; feedback helps agents repair governed failures, and validation evaluates the actual work.</p>
+    <p>A capable model needs a dependable execution loop. Agents invoke Decapod to query a shared Constitution of engineering golden paths, research, and software-business knowledge; retain recorded intent, ownership, and proof obligations across sessions; repair governed failures; and validate the actual work.</p>
     <div class="decapod-docs-actions">
       <a class="decapod-docs-btn primary" href="quickstart.html">Get started <span aria-hidden="true">↗</span></a>
       <a class="decapod-docs-btn secondary" href="introduction.html">Understand Decapod <span aria-hidden="true">↗</span></a>
@@ -68,4 +68,4 @@ Then keep using Codex, Claude Code, Cursor, or your preferred coding agent. Deca
 - **[Concurrent work](workflows/multi-agent.md)** — Keep ownership explicit when agents work in parallel.
 - **[Proof and recovery](concepts/proof.md)** — Distinguish verified work from unsupported completion claims.
 - **[Cold-context continuation](concepts/convergence.md#cold-context-continuation)** — What the next agent needs to resume work safely.
-- **[Constitution and overrides](concepts/constitution.md)** — Establish policy that stays with the project.
+- **[Global Constitution and project overrides](concepts/constitution.md)** — Query shared engineering doctrine and research, then apply explicit repository-specific policy.
