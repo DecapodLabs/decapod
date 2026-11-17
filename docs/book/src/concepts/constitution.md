@@ -1,29 +1,44 @@
 # Constitution
 
-The **Constitution** is the foundational set of rules and engineering standards that govern all behavior within a Decapod-managed repository.
+The **Decapod Constitution** is a shared, curated reference for the disciplines required to **build, ship, and operate software products**. It gives coding agents on-demand access to engineering golden paths, architecture and design tradeoffs, implementation methodology, research, security and operations, and the product and business context that shapes software delivery.
 
-## Authority Layers
+It is **global across Decapod-managed repositories**. A project contributes its own requirements and conventions through separate repository policies, specifications, and scoped overrides. Every project can draw from the same underlying body of knowledge without recreating it in a giant agent instruction file.
 
-Decapod's authority model is hierarchical:
+## A software-factory knowledge base
 
-1.  **Global Constitution:** Over 100 normative documents embedded in the Decapod binary. These cover universal engineering standards (e.g., "Always write tests", "Minimize breaking changes").
-2.  **Project Overrides (`.decapod/OVERRIDE.md`):** Repo-local rules that extend or supersede the global constitution. This is where you define team-specific conventions (see [Overrides](overrides.md) and [Configuration](../configuration.md)).
-3.  **Task Policy:** Temporary rules or constraints defined for a specific work unit.
+The Constitution is organized for agent retrieval, not for a human to read end to end. Its discoverable doctrine covers software architecture, interfaces, data, methodology, specifications, documentation, and technical research. Research entries capture questions, contributions, engineering implications, limitations, and related work so an agent can investigate the reasoning behind a pattern instead of merely imitating it.
 
-## Selective Context
+The scope is intentional: **software engineering and the business of bringing software to market**. Technical choices, reliable delivery, product decisions, and go-to-market considerations belong when they materially inform that work. Unrelated encyclopedic subjects do not.
 
-Agents do not ingest the entire constitution. Instead, Decapod provides a **Context Capsule** interface (see [Agent-First Architecture](agent-first.md)). Agents perform targeted queries (see [CLI Reference](../reference/cli.md)) to retrieve only the directives relevant to their current task.
+Think of it as an agent-queryable engineering canon: a common source of proven paths, cited research and decision context that becomes useful when a real task calls for it.
 
-```bash
+## Agents query; humans define intent
+
+An agent can discover relevant Constitution material through Decapod's own CLI or structured RPC interface. Context resolution can select applicable fragments alongside the specific repository's state and requirements. This is more precise than pasting tens of thousands of lines into `AGENTS.md`, and does not require a human to select knowledge entries with slash commands.
+
+For example:
+
+```sh
+decapod constitution get core/DECAPOD
 decapod rpc --op constitution.get --params '{"section":"core/DECAPOD"}'
 ```
 
-This high-signal, low-noise approach ensures that agents remain oriented without being overwhelmed by irrelevant documentation.
+The agent still needs to actually invoke the supported interface; installing Decapod is not proof that an arbitrary harness has used the Constitution. See [Agent-First Architecture](agent-first.md) and the [CLI Reference](../reference/cli.md).
 
-Resolved context and capsules include derived proof for each applied project
-override. The human contract is documentation authored inside each generated fenced source block; Decapod owns exact-ID
-boundary recognition, fail-closed ambiguity handling, hashing, and precedence.
+## How knowledge becomes authority
 
-## Enforcement
+The Constitution has a **global baseline**, with local policy applied through separate layers:
 
-The constitution is not merely "guidance"—it is enforced. `decapod validate` checks the repository state against the normative claims made in the constitution. If a change violates a constitutional rule, it cannot be promoted to `main` (see [Proof & Validation](proof.md)).
+1. **Shared Constitution.** The versioned common corpus supplies engineering doctrine, reference material, decision context, and directives with explicit authority and binding classifications.
+2. **Repository overrides.** A team's `.decapod/OVERRIDE.md` can refine registered directives for its repository. Exact directive IDs, precedence, and source provenance are part of the governed context. See [Overrides](overrides.md).
+3. **Task-specific constraints.** Accepted objectives, specifications, custody, and applicable work-unit policies further constrain the current operation.
+
+**Knowledge is not proof.** Research findings, examples, and advisory recommendations inform decisions; they are not themselves executable validation results. Decapod enforces applicable binding requirements at supported governance boundaries, and required validation must execute against the actual candidate and accepted context before admission. No agent statement or retrieved page is sufficient evidence of correctness.
+
+## Contribute to the common canon
+
+The Constitution is open to improvements through **reviewed GitHub pull requests** to [Decapod](https://github.com/DecapodLabs/decapod). See [Contributing](https://github.com/DecapodLabs/decapod/blob/master/CONTRIBUTING.md) for the repository's review and proof expectations.
+
+Useful contributions strengthen a software-engineering or software-business golden path, document a relevant research result and its limitations, clarify an architectural tradeoff, or improve how agents find applicable knowledge. Include sources and explain what decisions the material should improve. Changes affecting binding behavior also need appropriate compatibility and validation evidence.
+
+The focus stays on **building and operating software businesses**. A bigger corpus is valuable only when it makes the next engineering decision clearer, safer, or more verifiable.
