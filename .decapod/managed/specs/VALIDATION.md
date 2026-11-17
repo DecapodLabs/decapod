@@ -1,5 +1,21 @@
 # Validation
 
+## Issue-contract continuation and source review (#1764)
+
+The preparation/checkpoint regressions and source-backed blocker consistency
+tests run in the existing Rust and actual-binary test lanes. They establish only
+recorded instruction behavior, not principal authentication, global constraint
+satisfiability, root requirement completeness or independent path observation.
+Full exact-candidate validation remains mandatory before any closure claim.
+
+The reviewed source inventory advances from the last accepted review at
+`edbfc00ddfd4c24458a2277176762c6924de13cc` solely for the accepted package-version
+change from 0.148.7 to 0.148.8 in `Cargo.toml` and `Cargo.lock`. The 105-input
+inventory is otherwise unchanged: no workflow, helper, command, requiredness or
+toolchain substitution is authorized. A matching inventory digest is review
+consistency, not executed proof. Historical checkpoint inspection of PR #1766
+remains distinct from current continuation material and is not relabelled green.
+
 ## Current report validation scope
 
 The current verification boundary begins at accepted release commit 9d1aed27.

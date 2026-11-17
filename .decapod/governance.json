@@ -604,6 +604,15 @@
       "proof_refs": [
         "36ede3fd"
       ]
+    },
+    {
+      "id": "issues-1764-inventory-20261117-03",
+      "summary": "Review accepted0.148.8 package-version-only inventory delta from edbfc00d; preserve all105 sources and unchanged proof recipes, refresh specs and retain failed validation evidence. This is contract reconciliation, not passing proof.",
+      "input_digest": "sha256:8dcaf0467cf88c0fb67531da1c72c983ed6b15cf522b0d3eb0238653e57eb2f1",
+      "proof_refs": [
+        "18cbb30ca4d16a80810d8f3c0cecfc4073a83cbc",
+        "edbfc00ddfd4c24458a2277176762c6924de13cc"
+      ]
     }
   ],
   "intents": {
@@ -648,21 +657,21 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Document the existing plan-owned readiness projection, legacy accepted-state refusal, and correction invalidation without adding a ledger or proof engine.",
+          "reason": "Reviewed the common plan-owned blocker derivation and legacy phase/checkpoint refusal on the current source; no second ledger.",
           "reviewed_code_fingerprint": "1e37be9d4172b390669bf384abc7e881373a4b1f5b6d3315579ab2ecbf799334",
           "spec_material_hash": "50d21dc1f07d5736ab197256c009c2fab5617f402a42a4e9971d62aa5c6a2114"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Recorded instruction readiness shares one source-backed blocker contract and preserves existing operation markers. Authored interface prose now describes preparation, checkpoint, validation and publication limits.",
+          "reason": "Reviewed current shared recorded instruction readiness payload and preparation semantics; source revision identifies plan bytes rather than authenticated human meaning.",
           "reviewed_code_fingerprint": "1e37be9d4172b390669bf384abc7e881373a4b1f5b6d3315579ab2ecbf799334",
           "spec_material_hash": "4efe6ce31db9247d52ed8c947448ba1843d0d8cac2e3a885fbfdafa82756af6d"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Document that source hashes and plan acceptance do not authenticate principals or witness external actions; preserve separate unmet lineage, coverage, consistency and path obligations.",
+          "reason": "Reviewed current trust limits and separate open provenance, coverage, global consistency and host-observation obligations; release inventory update changes no required check.",
           "reviewed_code_fingerprint": "1e37be9d4172b390669bf384abc7e881373a4b1f5b6d3315579ab2ecbf799334",
           "spec_material_hash": "527cc749c06f943ddb878264fa30e76918f5f2d794ee2473348779a91d363d8d"
         }
@@ -675,14 +684,18 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1794948915Z"
+      "updated_at": "1794949147Z"
     },
     "trajectory": {
       "active_boundaries": [
         "No protected root edits, force push, merge, gate waiver or fabricated evidence"
       ],
-      "artifact_hash": "sha256:eaceae52acf0ee3f345363acd473876fbb4222d3726a32c086a26d3ca2f6fbac",
+      "artifact_hash": "sha256:70d513f05721e07eb26e271616336c591b88c33de09fd7586d446913ae5c0b39",
       "checks": [
+        {
+          "name": "exact_candidate_validation",
+          "status": "failed"
+        },
         {
           "name": "formatting",
           "status": "passed"
@@ -709,10 +722,17 @@
             "intent_id": "intent:todo:bugs_01m7nm3pnpc3be76",
             "kind": "trajectory_step_recorded",
             "sequence": 4
+          },
+          {
+            "detail": "trajectory:issues-1761-1770-20261117",
+            "event_id": "event:5",
+            "intent_id": "intent:todo:bugs_01m7nm3pnpc3be76",
+            "kind": "trajectory_step_recorded",
+            "sequence": 5
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 4,
+        "next_sequence": 5,
         "schema_version": "1.0.0",
         "trajectories": {
           "issues-1761-1770-20261117": {
@@ -750,6 +770,27 @@
                 "validation_findings": [
                   "Instruction origin authentication, accepted root coverage, typed global consistency, independent behavior controls and genuine path observation remain open acceptance obligations."
                 ]
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:5",
+                "observations": [
+                  ".decapod/config.toml",
+                  ".decapod/managed/specs/VALIDATION.md",
+                  "Official0.148.8 validate on0a8350c9 stopped before test execution with PROOF_PROFILE_RECONCILIATION_REQUIRED. Read-only agent.init reports inventory sha256:b929199963bc910eb5f099a92ec5d152d6e78d7b6608f0bdf74c22eeda13fdc8 and only STALE_SOURCE_INVENTORY plus REQUIRED_PROOF_NOT_RUN. Compared every discovery input from last accepted config review edbfc00d: only Cargo.toml and Cargo.lock package version0.148.7 to0.148.8 differ. Backed up config privately; reviewed digest update preserves all workflow/helper/check/toolchain contracts."
+                ],
+                "proof_refs": [
+                  "exact_candidate_validation"
+                ],
+                "scope": [
+                  ".decapod/managed/specs",
+                  "README.md",
+                  "docs",
+                  "src/decapod",
+                  "tests"
+                ],
+                "sequence": 5,
+                "validation_findings": []
               }
             ]
           }
@@ -760,6 +801,7 @@
       ],
       "destination": "Existing PR1766",
       "evidence": [
+        "Official0.148.8 validate on0a8350c9 stopped before test execution with PROOF_PROFILE_RECONCILIATION_REQUIRED. Read-only agent.init reports inventory sha256:b929199963bc910eb5f099a92ec5d152d6e78d7b6608f0bdf74c22eeda13fdc8 and only STALE_SOURCE_INVENTORY plus REQUIRED_PROOF_NOT_RUN. Compared every discovery input from last accepted config review edbfc00d: only Cargo.toml and Cargo.lock package version0.148.7 to0.148.8 differ. Backed up config privately; reviewed digest update preserves all workflow/helper/check/toolchain contracts.",
         "Preserved PR1766 original head12d403ac and base18cbb30c. Actual CI44163787850 rejects obsolete checkpoint test and missing README constitution reference. Repaired source36ede3fd; tests authored, execution pending official validation. Strict historical checkpoint inspection reports original unproven/invalid lineage; current continuation cannot be described as historical proof."
       ],
       "inspected_files": [
@@ -770,6 +812,8 @@
       ],
       "intent_id": "intent:todo:bugs_01m7nm3pnpc3be76",
       "modified_files": [
+        ".decapod/config.toml",
+        ".decapod/managed/specs/VALIDATION.md",
         "src/decapod/core/trajectory/execution.rs",
         "src/decapod/core/validate.rs",
         "src/decapod/core/workspace.rs",
