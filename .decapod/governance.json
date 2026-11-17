@@ -580,6 +580,14 @@
       "proof_refs": [
         "receipt:01M7NR06P8P78Q7NMJJV44T4HH"
       ]
+    },
+    {
+      "id": "inventory-release-1489",
+      "summary": "Review complete proof inventory: only accepted Cargo package/lock release-version changes since prior review; preserve every required workflow and recipe.",
+      "input_digest": "sha256:dcd0cdba927c48cb276c03b00754e58be9b07507630fed2bb39ef3a64608dd2a",
+      "proof_refs": [
+        "git:edbfc00ddfd4c24458a2277176762c6924de13cc..6ab6de3134286a790d78d370ca3fb43c0d92f834"
+      ]
     }
   ],
   "intents": {
@@ -633,15 +641,23 @@
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:d12d676323d0aa3851130d1e2498599a5c4a64407c2c5ef8bc92e8e351decec7",
+      "artifact_hash": "sha256:335aae5787849d05eb5f464f61777a8213d4239cddaaf4e5efba30f4e325b86c",
       "checks": [
         {
           "name": "candidate_regressions",
           "status": "unavailable"
         },
         {
+          "name": "full_validation_attempt_1",
+          "status": "failed"
+        },
+        {
           "name": "no_match_negative",
           "status": "failed"
+        },
+        {
+          "name": "proof_inventory_review",
+          "status": "passed"
         }
       ],
       "current_phase": "implementation",
@@ -672,10 +688,17 @@
             "intent_id": "intent:change_01M7NQXTQ8MSHMYM11DJ5YRWJJ",
             "kind": "trajectory_step_recorded",
             "sequence": 5
+          },
+          {
+            "detail": "trajectory:branch_01M7NQXTTWEEHK0YNBJBBX8ERJ",
+            "event_id": "event:6",
+            "intent_id": "intent:change_01M7NQXTQ8MSHMYM11DJ5YRWJJ",
+            "kind": "trajectory_step_recorded",
+            "sequence": 6
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 5,
+        "next_sequence": 6,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M7NQXTTWEEHK0YNBJBBX8ERJ": {
@@ -723,16 +746,36 @@
                 ],
                 "sequence": 5,
                 "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "command": "git diff edbfc00 HEAD -- complete discovered inventory",
+                "custody_event_id": "event:6",
+                "observations": [
+                  ".decapod/config.toml",
+                  "PROOF_PROFILE_RECONCILIATION_REQUIRED; complete 107-source inventory matches accepted master; since edbfc00 only Cargo package/lock version 0.148.7 to 0.148.9 differs, and accepted tag v0.148.9 tree equals 6ab6de3."
+                ],
+                "proof_refs": [
+                  "full_validation_attempt_1",
+                  "proof_inventory_review"
+                ],
+                "scope": [
+                  "constitution-context-1772-1774-657-880-1095-879"
+                ],
+                "sequence": 6,
+                "validation_findings": []
               }
             ]
           }
         }
       },
       "declared_commands": [
-        "decapod rpc --op context.capsule.query: unrelated zxqvquasarunrelated1772 returned 2 alphabetical interface nodes on accepted 6ab6de3"
+        "decapod rpc --op context.capsule.query: unrelated zxqvquasarunrelated1772 returned 2 alphabetical interface nodes on accepted 6ab6de3",
+        "git diff edbfc00 HEAD -- complete discovered inventory"
       ],
       "destination": "pull request",
       "evidence": [
+        "PROOF_PROFILE_RECONCILIATION_REQUIRED; complete 107-source inventory matches accepted master; since edbfc00 only Cargo package/lock version 0.148.7 to 0.148.9 differs, and accepted tag v0.148.9 tree equals 6ab6de3.",
         "Pre-change actual-binary negative receipt 01M7NR06P8P78Q7NMJJV44T4HH; post-change suite pending configured full validation.",
         "receipt:01M7NR06P8P78Q7NMJJV44T4HH; capsule:9636e0e74c098cb8647bdbdd0f536d08e320ba170598a95999e2530911328434"
       ],
@@ -743,6 +786,7 @@
       ],
       "intent_id": "intent:change_01M7NQXTQ8MSHMYM11DJ5YRWJJ",
       "modified_files": [
+        ".decapod/config.toml",
         "src/decapod/core/context_capsule.rs",
         "src/decapod/core/docs.rs",
         "src/decapod/lib.rs",
