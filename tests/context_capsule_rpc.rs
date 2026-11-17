@@ -7,6 +7,8 @@ use tempfile::TempDir;
 fn run_decapod(dir: &Path, args: &[&str]) -> std::process::Output {
     Command::new(env!("CARGO_BIN_EXE_decapod"))
         .current_dir(dir)
+        .env("DECAPOD_AGENT_ID", "context-capsule-rpc-fixture")
+        .env("DECAPOD_CLAIM_AUTORUN", "0")
         .args(args)
         .output()
         .expect("run decapod")
@@ -14,7 +16,10 @@ fn run_decapod(dir: &Path, args: &[&str]) -> std::process::Output {
 
 fn run_decapod_with_env(dir: &Path, args: &[&str], envs: &[(&str, &str)]) -> std::process::Output {
     let mut cmd = Command::new(env!("CARGO_BIN_EXE_decapod"));
-    cmd.current_dir(dir).args(args);
+    cmd.current_dir(dir)
+        .env("DECAPOD_AGENT_ID", "context-capsule-rpc-fixture")
+        .env("DECAPOD_CLAIM_AUTORUN", "0")
+        .args(args);
     for (k, v) in envs {
         cmd.env(k, v);
     }

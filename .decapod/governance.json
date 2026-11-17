@@ -572,6 +572,18 @@
     "base_commit": "6ab6de3134286a790d78d370ca3fb43c0d92f834",
     "target_base": "origin/master"
   },
+  "claims": {
+    "bounded-constitution-projection": {
+      "statement": "Scoped context ranks explicit bindings before unique lexical coverage, removes no-match filler, retains override identity and preserves legacy capsule hashes.",
+      "falsifier": "Repeated lower-trust terms displace an explicit applicable binding; a no-match query injects arbitrary text; malformed override is accepted; identical declared inputs differ; or legacy omission changes canonical bytes.",
+      "status": "supported",
+      "proof_refs": [
+        "tests/context_capsule_rpc.rs",
+        "tests/context_capsule_schema.rs",
+        "tests/unit/core/docs_tests.rs"
+      ]
+    }
+  },
   "checkpoints": [
     {
       "id": "retrieval-1772",
@@ -593,6 +605,14 @@
       "id": "inventory-count-correction",
       "summary": "Preserve measured review-count correction before exact-candidate validation; no source or required check change.",
       "input_digest": "sha256:76b42bd6f3f595a839a6a8205be209f23fd1fa0d1a020826f1e55fe8c76a131d"
+    },
+    {
+      "id": "rpc-fixture-custody",
+      "summary": "Fix actual RPC fixture refusal by assigning explicit actor; record 22 passing focused resolver and capsule tests, preserving failed controls and unavailable full proof.",
+      "input_digest": "sha256:3fe2d8c35162b1ee990c1039f5b6ebe38ebaf755e67f09b7d9294c7974ebdcde",
+      "proof_refs": [
+        "tests/context_capsule_rpc.rs"
+      ]
     }
   ],
   "intents": {
@@ -646,15 +666,31 @@
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:ad06eb1c5da3f720e45a4cc53fde6ee045dd01511c449f0f5639bc88804b5357",
+      "artifact_hash": "sha256:79d038f8e6f9ae3acb7345d5592d2951f9bf06c35c3a47a3e48156111200b53b",
       "checks": [
         {
           "name": "candidate_regressions",
           "status": "unavailable"
         },
         {
+          "name": "capsule_cli_regressions",
+          "status": "passed"
+        },
+        {
+          "name": "capsule_rpc_regressions",
+          "status": "passed"
+        },
+        {
+          "name": "capsule_schema_regressions",
+          "status": "passed"
+        },
+        {
           "name": "full_validation_attempt_1",
           "status": "failed"
+        },
+        {
+          "name": "full_validation_attempt_2",
+          "status": "unavailable"
         },
         {
           "name": "no_match_negative",
@@ -662,6 +698,10 @@
         },
         {
           "name": "proof_inventory_review",
+          "status": "passed"
+        },
+        {
+          "name": "resolver_unit_regressions",
           "status": "passed"
         }
       ],
@@ -707,10 +747,17 @@
             "intent_id": "intent:change_01M7NQXTQ8MSHMYM11DJ5YRWJJ",
             "kind": "trajectory_step_recorded",
             "sequence": 7
+          },
+          {
+            "detail": "trajectory:branch_01M7NQXTTWEEHK0YNBJBBX8ERJ",
+            "event_id": "event:8",
+            "intent_id": "intent:change_01M7NQXTQ8MSHMYM11DJ5YRWJJ",
+            "kind": "trajectory_step_recorded",
+            "sequence": 8
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 7,
+        "next_sequence": 8,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M7NQXTTWEEHK0YNBJBBX8ERJ": {
@@ -789,6 +836,26 @@
                 ],
                 "sequence": 7,
                 "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:8",
+                "observations": [
+                  "tests/context_capsule_rpc.rs",
+                  "cargo test --lib core::docs::tests: 7 passed; context_capsule_cli: 5 passed; repaired context_capsule_rpc: 5 passed; context_capsule_schema: 5 passed. Earlier RPC setup: 5 failures due unknown actor, repaired with explicit isolated fixture identity. Full validation collector first hit HTTP403 public quota, then was interrupted before mutation for fixture repair; no full readiness receipt exists."
+                ],
+                "proof_refs": [
+                  "resolver_unit_regressions",
+                  "capsule_cli_regressions",
+                  "capsule_rpc_regressions",
+                  "capsule_schema_regressions",
+                  "full_validation_attempt_2"
+                ],
+                "scope": [
+                  "constitution-context-1772-1774-657-880-1095-879"
+                ],
+                "sequence": 8,
+                "validation_findings": []
               }
             ]
           }
@@ -803,6 +870,7 @@
         "Correction to inventory count: 105 inventoried paths were compared, not 107. Exact version-only delta and digest remain as observed.",
         "PROOF_PROFILE_RECONCILIATION_REQUIRED; complete 107-source inventory matches accepted master; since edbfc00 only Cargo package/lock version 0.148.7 to 0.148.9 differs, and accepted tag v0.148.9 tree equals 6ab6de3.",
         "Pre-change actual-binary negative receipt 01M7NR06P8P78Q7NMJJV44T4HH; post-change suite pending configured full validation.",
+        "cargo test --lib core::docs::tests: 7 passed; context_capsule_cli: 5 passed; repaired context_capsule_rpc: 5 passed; context_capsule_schema: 5 passed. Earlier RPC setup: 5 failures due unknown actor, repaired with explicit isolated fixture identity. Full validation collector first hit HTTP403 public quota, then was interrupted before mutation for fixture repair; no full readiness receipt exists.",
         "receipt:01M7NR06P8P78Q7NMJJV44T4HH; capsule:9636e0e74c098cb8647bdbdd0f536d08e320ba170598a95999e2530911328434"
       ],
       "inspected_files": [
@@ -816,6 +884,7 @@
         "src/decapod/core/context_capsule.rs",
         "src/decapod/core/docs.rs",
         "src/decapod/lib.rs",
+        "tests/context_capsule_rpc.rs",
         "tests/context_capsule_schema.rs",
         "tests/unit/core/docs_tests.rs"
       ],
