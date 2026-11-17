@@ -2289,6 +2289,34 @@ fn nix_cachix_publication_has_native_owner_and_isolated_secret() {
 }
 
 #[test]
+fn publication_regressions_are_always_owned_by_the_full_library_recipe() {
+    let check = find_check("supabase-consumer").unwrap();
+    for path in [
+        "src/decapod/core/workspace_publication.rs",
+        "tests/unit/core/workspace_publication_tests.rs",
+        "src/decapod/core/entrypoint_integrity/history/tests.rs",
+    ] {
+        let changed = paths(&[path]);
+        assert!(selected(check, &changed, false), "{path}");
+        assert!(
+            commands(check, &changed).unwrap().iter().any(|command| {
+                command.program == "cargo"
+                    && command.args.first() == Some(&"test")
+                    && command.args.contains(&"--lib")
+                    && !command.args.contains(&"--")
+            }),
+            "the required lane must execute the full library suite for {path}"
+        );
+        assert!(
+            inventory(&changed, false)
+                .iter()
+                .any(|job| { job.applicable && job.checks.contains(&check.id) }),
+            "library proof must remain in the required plan for {path}"
+        );
+    }
+}
+
+#[test]
 fn required_test_source_changes_retain_the_complete_owning_recipe() {
     let core = find_check("selective-core").unwrap();
     let cli = find_check("selective-cli").unwrap();
@@ -2300,7 +2328,6 @@ fn required_test_source_changes_retain_the_complete_owning_recipe() {
             &core_recipe,
             vec![
                 "tests/todo_enforcement.rs",
-                "tests/unit/core/workspace_publication_tests.rs",
                 "tests/validate_termination.rs",
                 "tests/workspace_interlock.rs",
                 "tests/spec_workspace_ownership.rs",
@@ -2320,7 +2347,6 @@ fn required_test_source_changes_retain_the_complete_owning_recipe() {
             vec![
                 "tests/cli_contract_enforcement.rs",
                 "tests/entrypoint_correctness.rs",
-                "tests/acceptance/publication_admission.rs",
                 "tests/cli_contracts.rs",
                 "tests/consumer_readiness.rs",
                 "tests/init_ci_scaffolding.rs",

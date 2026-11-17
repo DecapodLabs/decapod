@@ -237,6 +237,26 @@ fn private_development_config_requires_exclusive_slug_and_real_source_lineage() 
 }
 
 #[test]
+fn development_version_exception_rejects_multiple_push_destinations() {
+    let fixture = Fixture::new(true, include_str!("../../assets.rs"));
+    enable_development_scope(&fixture, "DecapodLabs/decapod");
+    for url in [
+        "git@github.com:DecapodLabs/decapod.git",
+        "git@github.com:someone/decapod.git",
+    ] {
+        command(
+            fixture.root(),
+            &["remote", "set-url", "--add", "--push", "origin", url],
+        );
+    }
+    assert!(
+        development_template(fixture.root(), "AGENTS.md")
+            .unwrap()
+            .is_none()
+    );
+}
+
+#[test]
 fn development_version_exception_keeps_template_and_fingerprint_checks() {
     let source = include_str!("../../assets.rs");
     let fixture = Fixture::new(true, source);

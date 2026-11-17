@@ -21,8 +21,10 @@ and post-creation rejection. Additional quarantine tests cover lost replies,
 permission denial and unrelated PR protection. These fixtures do not establish
 real GitHub publication. The separately documented disposable-repository
 acceptance records actual CLI/forge evidence and its limitations.
-`assets/tools/source_ci_profile.rs::core_test_inputs` selects the owning core
-recipe for unit-test changes. GitHub ruleset 12701816 requires Buildkite's
+The existing always-selected `supabase-consumer` recipe owns these library
+tests, including test-only changes; `tests/source_ci_profile_policy.rs` protects
+that full-suite obligation without changing the accepted executor. GitHub
+ruleset 12701816 requires Buildkite's
 `CI / test (target="core") (push)` from App 805657 and strict target freshness;
 `CI / supabase-consumer (push)` from the same App is also required: its actual
 `cargo test --lib` recipe owns the library-unit publication regressions. The
@@ -1398,7 +1400,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `3c785283baab59d5b29af2f9b162fcebfccc56a15871f2de53a94f49f43eed82`
+- Repository signal fingerprint: `99acc585364d86859d7a7a4ff344c892bd2a4f0b7a427a14797ea652089093b9`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (236 files), `tests/` (235 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

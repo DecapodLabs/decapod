@@ -615,6 +615,15 @@
         "build:development-controller-compiled",
         "ci:11527-clippy-needless-borrow"
       ]
+    },
+    {
+      "id": "mandatory-accepted-library-owner",
+      "summary": "Retain accepted executor and require its complete library recipe; reject ambiguous development push targets; repair fixture feedback",
+      "input_digest": "sha256:eb11e9fa37fbc723b9da9d79422756f2128ee95a9c8fe2d1bd6d16430868570b",
+      "proof_refs": [
+        "ci:11527-1790-library-tests-passed-1-fixture-failed",
+        "issue:1753"
+      ]
     }
   ],
   "intents": {
@@ -655,22 +664,22 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Review source-only version policy and live proof custody after incorporating accepted 0.148.6",
-          "reviewed_code_fingerprint": "3c785283baab59d5b29af2f9b162fcebfccc56a15871f2de53a94f49f43eed82",
+          "reason": "Exact live proof custody and source-only config policy retain accepted executor; all push destinations must identify only DecapodLabs/decapod",
+          "reviewed_code_fingerprint": "99acc585364d86859d7a7a4ff344c892bd2a4f0b7a427a14797ea652089093b9",
           "spec_material_hash": "9714311171611b8bab923b9b390f4dffaa49e2ceffee22dc9077ab99ec9ba762"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Review preserved private configuration and exact admission behavior; no new public option",
-          "reviewed_code_fingerprint": "3c785283baab59d5b29af2f9b162fcebfccc56a15871f2de53a94f49f43eed82",
+          "reason": "Private option retains no public CLI/schema advertising; publication distinguishes creation, admission and merge authority",
+          "reviewed_code_fingerprint": "99acc585364d86859d7a7a4ff344c892bd2a4f0b7a427a14797ea652089093b9",
           "spec_material_hash": "e0e25276b67edad1b3ea8633c56d258cf94fc4d759915f6cd1a09ccc26129998"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Canonical template, exact source slug and lineage, credentials, and complete proof boundaries retained",
-          "reviewed_code_fingerprint": "3c785283baab59d5b29af2f9b162fcebfccc56a15871f2de53a94f49f43eed82",
+          "reason": "Retained independent accepted executor, full library proof, exact canonical template and version-bound fingerprint checks",
+          "reviewed_code_fingerprint": "99acc585364d86859d7a7a4ff344c892bd2a4f0b7a427a14797ea652089093b9",
           "spec_material_hash": "a5e8fa6d423d3980cabe7d2d7d122c436ffd95450106674250127cf2c4893747"
         }
       ],
@@ -682,7 +691,7 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1794903938Z"
+      "updated_at": "1794904358Z"
     },
     "trajectory": {
       "active_boundaries": [

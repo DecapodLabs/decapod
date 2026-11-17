@@ -503,11 +503,16 @@ fn real_forge_reject_repair_admit_and_invalidate() {
     )
     .unwrap();
     let stale_source = demo.reject(&workspace, &["workspace", "publish"]);
+    assert_eq!(demo.git(&workspace, &["rev-parse", "HEAD"]), head);
     assert_eq!(
         fs::read_to_string(workspace.join("src/payload.txt")).unwrap(),
         "changed after admission\n"
     );
     fs::write(workspace.join("src/payload.txt"), "ready\n").unwrap();
+    // The publisher stages authored changes before checking their checkpoint.
+    // Restore only this fixture-owned path in both worktree and index.
+    demo.git(&workspace, &["add", "src/payload.txt"]);
+    assert!(demo.git(&workspace, &["status", "--porcelain"]).is_empty());
     // Advance only the disposable remote target, under explicit acceptance authority.
     demo.gh(
         &root,

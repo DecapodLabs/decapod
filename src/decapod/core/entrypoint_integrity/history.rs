@@ -48,13 +48,14 @@ fn development_scope(repo: &Path, run_git: &mut GitRunner<'_>) -> Result<bool, S
     {
         return Ok(false);
     }
-    let origin = run_git(&["remote", "get-url", "--push", "origin"])?;
+    let origin = run_git(&["remote", "get-url", "--push", "--all", "origin"])?;
+    let urls = String::from_utf8_lossy(&origin.stdout);
+    let mut urls = urls.lines();
     if !origin.status.success()
-        || crate::core::repo_identity::parse_github_repository(
-            String::from_utf8_lossy(&origin.stdout).trim(),
-        )
-        .as_deref()
+        || crate::core::repo_identity::parse_github_repository(urls.next().unwrap_or_default())
+            .as_deref()
             != Some("DecapodLabs/decapod")
+        || urls.next().is_some()
     {
         return Ok(false);
     }

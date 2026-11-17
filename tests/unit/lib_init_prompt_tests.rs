@@ -7,7 +7,12 @@ fn hidden_source_development_policy_is_preserved_without_generated_advertising()
     std::fs::create_dir(directory.path().join(".decapod")).unwrap();
     let config = DecapodProjectConfig::default();
     let mut authored = toml::Value::try_from(&config).unwrap();
-    authored["repo"]["_allow_entrypoint_version_drift"] = true.into();
+    authored
+        .get_mut("repo")
+        .unwrap()
+        .as_table_mut()
+        .unwrap()
+        .insert("_allow_entrypoint_version_drift".into(), true.into());
     let path = directory.path().join(".decapod/config.toml");
     std::fs::write(&path, toml::to_string_pretty(&authored).unwrap()).unwrap();
     write_project_config(directory.path(), &config, false).unwrap();

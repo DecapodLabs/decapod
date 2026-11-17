@@ -450,7 +450,6 @@ fn shared_test_inputs(path: &str) -> bool {
 
 fn core_test_inputs(path: &str) -> bool {
     shared_test_inputs(path)
-        || path.starts_with("tests/unit/core/")
         || [
             "todo_enforcement",
             "validate_termination",
@@ -475,7 +474,6 @@ fn cli_test_inputs(path: &str) -> bool {
             path,
             "tests/cli_contract_enforcement.rs"
                 | "tests/entrypoint_correctness.rs"
-                | "tests/acceptance/publication_admission.rs"
                 | "tests/cli_contracts.rs"
                 | "tests/consumer_readiness.rs"
                 | "tests/init_ci_scaffolding.rs"
