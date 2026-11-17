@@ -8865,6 +8865,67 @@ fn run_trajectory_command(
     workspace_root: &Path,
 ) -> Result<(), error::DecapodError> {
     match trajectory_cli.command {
+        TrajectoryCommand::ClarifyGithubComment {
+            run_id,
+            revision_id,
+            expected_revision,
+            repository,
+            comment_id,
+            expected_body_digest,
+            kind,
+            supersedes,
+            derived_intent,
+        } => {
+            use core::snapshot_provider::{Budget, OfficialCli, Repository};
+            let (owner, name) = repository.split_once('/').ok_or_else(|| {
+                error::DecapodError::ValidationError(
+                    "INSTRUCTION_SOURCE_INVALID: use owner/repository".into(),
+                )
+            })?;
+            let repository = Repository::new(owner, name)?;
+            let store = find_governance_root(workspace_root).join(".decapod/data");
+            let mut runner = OfficialCli::new(
+                readiness_installed_tool(workspace_root, "git")?,
+                readiness_installed_tool(workspace_root, "gh")?,
+                None,
+                move |spec, executable| {
+                    authorize_readiness_snapshot_command(&store, spec, executable)
+                },
+            )?;
+            let cancellation = core::bounded_process::Cancellation::default();
+            let budget = Budget::new(std::time::Duration::from_secs(30), 64 * 1024, &cancellation)?;
+            let observed = core::trajectory::instruction_source::observe_github_comment(
+                workspace_root,
+                &mut runner,
+                &repository,
+                comment_id,
+                &expected_body_digest,
+                &budget,
+            )?;
+            let input = core::custody::InstructionRevisionInput {
+                revision_id,
+                expected_revision,
+                instruction: String::new(),
+                source_claim: core::custody::ReportedInstructionSource {
+                    source_ref: String::new(),
+                    principal_claim: None,
+                },
+                kind,
+                supersedes,
+                derived_intent,
+            };
+            let artifact = core::trajectory::append_observed_instruction(
+                workspace_root,
+                &run_id,
+                input,
+                observed,
+            )?;
+            println!(
+                "{}",
+                serde_json::to_string_pretty(&artifact)
+                    .map_err(|e| error::DecapodError::ValidationError(e.to_string()))?
+            );
+        }
         TrajectoryCommand::Clarify {
             run_id,
             revision_id,

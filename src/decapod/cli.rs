@@ -1356,6 +1356,28 @@ pub(crate) struct TrajectoryCli {
 
 #[derive(Subcommand, Debug)]
 pub(crate) enum TrajectoryCommand {
+    /// Observe an exact GitHub comment through the official client and append it;
+    /// an observed account is not authenticated human consent
+    ClarifyGithubComment {
+        #[clap(long)]
+        run_id: String,
+        #[clap(long)]
+        revision_id: String,
+        #[clap(long)]
+        expected_revision: String,
+        #[clap(long)]
+        repository: String,
+        #[clap(long)]
+        comment_id: u64,
+        #[clap(long)]
+        expected_body_digest: String,
+        #[clap(long, value_enum, default_value = "clarification")]
+        kind: crate::core::custody::RecordedInstructionKind,
+        #[clap(long = "supersedes")]
+        supersedes: Vec<String>,
+        #[clap(long)]
+        derived_intent: Option<String>,
+    },
     /// Record a same-lineage instruction revision; source/principal are unverified claims
     Clarify {
         #[clap(long)]

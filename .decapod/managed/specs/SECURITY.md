@@ -9,12 +9,18 @@ prefix. Historical source rewrites remain inspectable when a corrected current
 candidate earns fresh proof. Neither the source guard nor a custody hash claims
 to observe or intercept arbitrary shell/forge actions.
 
-The new clarification API accepts reported source/principal claims only; it has
+The ordinary clarification API accepts reported source/principal claims only; it has
 no caller-settable authenticated flag. Readback classifies these as agent-reported
 and independently unverifiable. Missing legacy origin provenance remains unknown.
-No test or CLI plan approval authenticates a human principal. Real host-sourced
-ingress and policy-required witnessed process conformance still require their
-independent observer/controller contracts; they cannot be supplied by narration.
+No test or CLI plan approval authenticates a human principal. The separate GitHub
+comment ingress constructs an owned observation only after a bounded sealed GET
+through the existing installed official-client authority, checks exact repository,
+object/account and expected body identity, and retains historical provider evidence.
+It exposes no caller-settable trust switch and no response-file importer. Account
+observation is not human authentication, authorization, policy acceptance or proof
+that mutable remote content is still current. Same-user filesystem compromise is
+outside this local trust boundary. Policy-required witnessed process conformance
+still needs its independent observer/controller contract.
 
 ## Selected requirement trust boundary
 
@@ -707,8 +713,8 @@ execution evidence remains required before publication readiness.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `8d750912ac3b2f4bc89f2c10118aa6455a5ae84f2ebf66f4b74ba707380e5944`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (237 files), `tests/` (235 files)
+- Repository signal fingerprint: `6c6dd64234d4082c9b168f974e566ba86e47d70f64f0e074ae2e08a6e06dc312`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (238 files), `tests/` (235 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 

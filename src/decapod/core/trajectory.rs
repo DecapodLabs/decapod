@@ -13,6 +13,7 @@ use std::fs;
 use std::path::{Path, PathBuf};
 
 mod execution;
+pub mod instruction_source;
 pub use execution::{
     ExecutionApprovalBinding, ExecutionCheckpoint, ExecutionStateBinding,
     capture_execution_binding, checkpoint_execution, verify_execution_binding,
@@ -802,6 +803,24 @@ pub fn append_instruction(
     run_id: &str,
     input: crate::core::custody::InstructionRevisionInput,
 ) -> Result<TrajectoryArtifact, error::DecapodError> {
+    append_instruction_from_source(root, run_id, input, None)
+}
+
+pub(crate) fn append_observed_instruction(
+    root: &Path,
+    run_id: &str,
+    input: crate::core::custody::InstructionRevisionInput,
+    observed: instruction_source::ObservedInstruction,
+) -> Result<TrajectoryArtifact, error::DecapodError> {
+    append_instruction_from_source(root, run_id, input, Some(observed))
+}
+
+fn append_instruction_from_source(
+    root: &Path,
+    run_id: &str,
+    input: crate::core::custody::InstructionRevisionInput,
+    observed: Option<instruction_source::ObservedInstruction>,
+) -> Result<TrajectoryArtifact, error::DecapodError> {
     use crate::core::{
         custody::{Custody, RecordedInstructionKind},
         governance_document,
@@ -821,9 +840,11 @@ pub fn append_instruction(
             .instruction_revision()
             .map_err(|e| error::DecapodError::ValidationError(e.to_string()))?;
         let mut custody = Custody::from_state(artifact.custody.clone());
-        let revision = custody
-            .append_instruction(&intent_id, input)
-            .map_err(|e| error::DecapodError::ValidationError(e.to_string()))?;
+        let revision = match observed {
+            Some(source) => custody.append_observed_instruction(&intent_id, input, source),
+            None => custody.append_instruction(&intent_id, input),
+        }
+        .map_err(|e| error::DecapodError::ValidationError(e.to_string()))?;
         let after = custody.state().intents[&intent_id]
             .instruction_revision()
             .map_err(|e| error::DecapodError::ValidationError(e.to_string()))?;
@@ -843,8 +864,14 @@ pub fn append_instruction(
         }
         crate::plan_governance::invalidate_plan_acceptance(&mut plan);
         let review = format!(
-            "Review recorded instruction {} from {} ({after}); source and principal remain agent-reported",
-            revision.revision_id, revision.source_claim.source_ref
+            "Review recorded instruction {} from {} ({after}); provenance={}, human authorization remains unproven",
+            revision.revision_id,
+            revision.source_claim.source_ref,
+            if revision.source_observation.is_some() {
+                "provider_observed_record"
+            } else {
+                "agent_reported"
+            }
         );
         if revision.kind == RecordedInstructionKind::Contradiction {
             plan.unresolved_contradictions.push(review);

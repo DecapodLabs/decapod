@@ -1,5 +1,22 @@
 # Validation
 
+## Candidate 97ef93f6 repair boundary
+
+Full native validation failed on required Buildkite documentation-sync build11920;
+the actual source job is GitHub job134438521463. Supported `decapod docs build`
+repairs the omitted release9 RBAC schema paragraph. The source generator matches
+the accepted/installed release; no manual build or changed check is used. Clippy
+job134439168067 rejected a complex callback trait-object signature; the source
+history reader now uses the equivalent generic callback. These fixes need fresh
+exact-candidate execution. PR1766's concurrent Constitution commit0f2e520d is
+preserved in merge ancestry, with its content already supplied by accepted master.
+
+Provider-source decoder tests are scripted controls, not live human approval.
+They pin comment repository/ID/body/account, reject changed source and caller
+imported observation metadata, and retain A/B/C with idempotent retries. Live CLI
+provider ingress and the remaining path-observation cases still require actual
+acceptance evidence; no source claim alone closes #1761 or #1767.
+
 ## Lineage, replay and native source repair controls
 
 New actual CLI/RPC fixtures reconstruct original A, preceding misinterpretation B
@@ -1586,8 +1603,8 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `8d750912ac3b2f4bc89f2c10118aa6455a5ae84f2ebf66f4b74ba707380e5944`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (237 files), `tests/` (235 files)
+- Repository signal fingerprint: `6c6dd64234d4082c9b168f974e566ba86e47d70f64f0e074ae2e08a6e06dc312`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (238 files), `tests/` (235 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 

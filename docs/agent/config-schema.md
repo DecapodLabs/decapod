@@ -25,8 +25,9 @@ pub struct DecapodProjectConfig {
 
 ## RBAC exceptions and Laya
 
-`[governance.rbac]` declares `actor_roles`, `journal_repair_roles`
-and `validation_bypass_roles`, all empty/denied by default. The main
+`[governance.rbac]` declares `actor_roles`, `journal_repair_roles`,
+`legacy_todo_reconcile_roles` and `validation_bypass_roles`, all empty/denied by
+default. The main
 repository config is the sole source for a bounded policy read. Journal
 repair requires an explicitly granted role and records the policy fingerprint
 with the reviewed repairs. `validate --bypass-validation --bypass-reason`

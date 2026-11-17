@@ -107,6 +107,9 @@ pub struct InstructionRevision {
     pub supersedes: Vec<String>,
     pub preceding_refinement: Option<String>,
     pub derived_intent: Option<String>,
+    /// Historical provider observation, not a human grant or a current network read.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub source_observation: Option<crate::core::trajectory::instruction_source::SourceObservation>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
@@ -166,7 +169,16 @@ impl IntentRecord {
             .into(),
             refined_intent: self.refined_intent.clone(),
             revisions: self.instruction_revisions.clone(),
-            revision_source_confidence: "agent_reported".into(),
+            revision_source_confidence: if self
+                .instruction_revisions
+                .iter()
+                .any(|r| r.source_observation.is_some())
+            {
+                "per_revision_observed_or_reported"
+            } else {
+                "agent_reported"
+            }
+            .into(),
             independent_authority: crate::core::validation_rules::RuleVerdict::Unverifiable,
         })
     }
@@ -496,7 +508,31 @@ impl<S: CustodyStore> Custody<S> {
     pub fn append_instruction(
         &mut self,
         id: &str,
+        input: InstructionRevisionInput,
+    ) -> Result<InstructionRevision, CustodyError> {
+        self.append_instruction_from_source(id, input, None)
+    }
+
+    pub(crate) fn append_observed_instruction(
+        &mut self,
+        id: &str,
+        input: InstructionRevisionInput,
+        observed: crate::core::trajectory::instruction_source::ObservedInstruction,
+    ) -> Result<InstructionRevision, CustodyError> {
+        let (instruction, source, observation) = observed.into_parts();
+        let input = InstructionRevisionInput {
+            instruction,
+            source_claim: source,
+            ..input
+        };
+        self.append_instruction_from_source(id, input, Some(observation))
+    }
+
+    fn append_instruction_from_source(
+        &mut self,
+        id: &str,
         mut input: InstructionRevisionInput,
+        observation: Option<crate::core::trajectory::instruction_source::SourceObservation>,
     ) -> Result<InstructionRevision, CustodyError> {
         let conflict = |message: &str| CustodyError::InstructionConflict(message.into());
         let identifier = |value: &str| {
@@ -563,6 +599,7 @@ impl<S: CustodyStore> Custody<S> {
                 && previous.kind == input.kind
                 && previous.supersedes == input.supersedes
                 && previous.derived_intent == input.derived_intent
+                && previous.source_observation == observation
             {
                 return Ok(previous.clone());
             }
@@ -603,6 +640,7 @@ impl<S: CustodyStore> Custody<S> {
             supersedes: input.supersedes,
             preceding_refinement: record.refined_intent.clone(),
             derived_intent: input.derived_intent,
+            source_observation: observation,
         };
         let sequence = self.next_sequence();
         let record = self
@@ -625,7 +663,7 @@ impl<S: CustodyStore> Custody<S> {
         self.store.state_mut().schema_version = CUSTODY_SCHEMA_VERSION.into();
         self.store.state_mut().summaries.remove(id);
         self.event_with_sequence(sequence, id, IntentEventKind::InstructionRecorded,
-            serde_json::json!({"revision_id":revision.revision_id,"instruction_revision":current,"source_confidence":"agent_reported"}).to_string(), self.event_id(sequence));
+            serde_json::json!({"revision_id":revision.revision_id,"instruction_revision":current,"source_confidence": if revision.source_observation.is_some() { "provider_observed_record" } else { "agent_reported" }}).to_string(), self.event_id(sequence));
         Ok(revision)
     }
 

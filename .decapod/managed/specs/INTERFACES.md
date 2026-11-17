@@ -11,6 +11,17 @@ redaction applies before persistence. Distinct conflicting principals remain
 distinct reported claims; a later supersession claim does not silently clear
 earlier plan contradictions or constitute an authenticated authority decision.
 
+`govern trajectory clarify-github-comment` instead reads one exact comment using
+the installed official GitHub client and existing sealed GET/external-action
+adapter. It takes repository/comment identity and an expected original body SHA256,
+alongside the same revision/CAS/kind parameters. It refuses source identity/content
+movement before mutation. The journal retains provider-observed numeric account,
+object, issue, source-update and body identities, with bounded/redacted text.
+This is historical account observation, not proof the account is human, a grant,
+or a current remote recheck. Public JSON cannot construct the owned observation;
+offline readback preserves its declared trust limit and never authenticates local
+bytes. Normal `clarify` still reports caller provenance as unverified.
+
 `state.resolve` and preparation expose the same selected `instruction_lineage`:
 original request/source confidence, preceding and current interpretation, ordered
 revisions, current revision digest and independently unverified authority. They
@@ -1276,8 +1287,8 @@ field. Nothing in this operation authorizes a mutation, approval or completion.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `8d750912ac3b2f4bc89f2c10118aa6455a5ae84f2ebf66f4b74ba707380e5944`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (237 files), `tests/` (235 files)
+- Repository signal fingerprint: `6c6dd64234d4082c9b168f974e566ba86e47d70f64f0e074ae2e08a6e06dc312`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (238 files), `tests/` (235 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 

@@ -39,6 +39,12 @@ distinct. Revision IDs are idempotent only for identical payloads; stale parents
 rewritten origin/provenance and truncated or changed revision prefixes are refused.
 The source digest covers origin and recorded instructions, not execution status.
 Caller-reported source/principal labels never authenticate a human or trusted host.
+`trajectory/instruction_source.rs` additionally owns bounded official GitHub comment
+observation. Only its fresh sealed adapter read constructs the non-deserializable
+source value; the normal custody revision writer records it and performs the same
+CAS/invalidation transaction. Numeric account identity and exact source body hash
+remain separate from human identity and grants. Source metadata is historical,
+not new proof authority or a second instruction store.
 
 `trajectory::append_instruction` updates the trajectory and revokes plan acceptance
 and phase progress in one governance-document transaction. Existing execution
@@ -1072,8 +1078,8 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `8d750912ac3b2f4bc89f2c10118aa6455a5ae84f2ebf66f4b74ba707380e5944`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (237 files), `tests/` (235 files)
+- Repository signal fingerprint: `6c6dd64234d4082c9b168f974e566ba86e47d70f64f0e074ae2e08a6e06dc312`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (238 files), `tests/` (235 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 

@@ -316,6 +316,10 @@ fn fresh_process_reconstructs_same_lineage_and_does_not_authenticate_reported_so
     );
     assert_eq!(lineage["revision_source_confidence"], "agent_reported");
     assert_eq!(lineage["independent_authority"], "unverifiable");
+    let mut counterfeit = args.to_vec();
+    counterfeit.extend(["--authenticated", "true"]);
+    assert!(!run_cmd(root, &counterfeit).status.success());
+    assert_eq!(read()["instruction_lineage"], *lineage);
     assert_ne!(lineage["revision"], original_revision);
     assert_eq!(
         current["instruction_readiness"]["instruction_revision"],

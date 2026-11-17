@@ -1003,7 +1003,7 @@ pub(crate) fn verify_instruction_history_with(
     base: &str,
     head: &str,
     current: &Value,
-    read: &mut dyn FnMut(&[&str]) -> Result<Vec<u8>, DecapodError>,
+    read: &mut impl FnMut(&[&str]) -> Result<Vec<u8>, DecapodError>,
 ) -> Result<Vec<String>, DecapodError> {
     let Some(intent_id) = current
         .pointer("/sections/trajectory/intent_id")

@@ -648,6 +648,11 @@
       "id": "instruction-lineage-selected-readiness-20261117",
       "summary": "Preserve original recorded source and ordered clarification CAS, invalidate stale plan/checkpoints, expose canonical phase feedback and selected consistency, repair Dactyl readonly lookup and fixture configuration. Acceptance remains unproven pending exact-candidate validation.",
       "input_digest": "sha256:361e241c9997f51e9ba93a3cb6870ae5df1fb6fd4df40db8d59bd1534da5200b"
+    },
+    {
+      "id": "provider-source-and-pr-continuation-20261117",
+      "summary": "Preserve PR1766 Constitution ancestry; repair release9 generated docs and callback lint; add bounded official GitHub comment observation through existing custody CAS without human-consent claims. Required path conformance and complete acceptance remain open.",
+      "input_digest": "sha256:3c9d5ccce2f42fe97ddc973c3f05ab47b7100dc23fe54eb603263e647c9730ca"
     }
   ],
   "intents": {
@@ -692,23 +697,23 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Recorded instruction revisions, bounded selected roots, canonical phase feedback, and native historical-source replay are documented with explicit trust limits.",
-          "reviewed_code_fingerprint": "8d750912ac3b2f4bc89f2c10118aa6455a5ae84f2ebf66f4b74ba707380e5944",
-          "spec_material_hash": "cc5a9347b5de765292a6f704e0e34548d31d9e62c166a5a21535c95567b96a02"
+          "reason": "Document bounded official-client comment observation reusing custody CAS and canonical readiness; distinguish observed account metadata from human identity, policy acceptance and live proof.",
+          "reviewed_code_fingerprint": "6c6dd64234d4082c9b168f974e566ba86e47d70f64f0e074ae2e08a6e06dc312",
+          "spec_material_hash": "a194bd29ef38c2398e821c87382f096834aa147c6c80e23f729b67dcd6108c55"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "CLI clarification CAS, selected instruction lineage/readiness projections and bounded eq/ne judgments match current source; caller-reported provenance remains explicitly unauthenticated.",
-          "reviewed_code_fingerprint": "8d750912ac3b2f4bc89f2c10118aa6455a5ae84f2ebf66f4b74ba707380e5944",
-          "spec_material_hash": "255581842becb47d9bc5f818e10299fd47b6a0f65823b67d8cf07467ae606171"
+          "reason": "Clarify-github-comment pins exact remote source/account and original body via sealed GET; recorded provenance remains separate from authenticated human consent and current proof.",
+          "reviewed_code_fingerprint": "6c6dd64234d4082c9b168f974e566ba86e47d70f64f0e074ae2e08a6e06dc312",
+          "spec_material_hash": "f98eb5807586d33503060a986ef263666511ad3588a460dfa81b163ac1bdd43b"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Source origin immutability, append-only revision CAS, replay rejection and source-history recovery are explicit; no agent label or hash grants authenticated principal or host witness authority.",
-          "reviewed_code_fingerprint": "8d750912ac3b2f4bc89f2c10118aa6455a5ae84f2ebf66f4b74ba707380e5944",
-          "spec_material_hash": "eb6010fb64088b97cff85021dcc169fbdbb0c621aa9698755adbda87b8de7098"
+          "reason": "Provider observation is historical account/source evidence only; deny caller trust flags and JSON witness imports, preserve bounded redaction and existing external-action authority.",
+          "reviewed_code_fingerprint": "6c6dd64234d4082c9b168f974e566ba86e47d70f64f0e074ae2e08a6e06dc312",
+          "spec_material_hash": "672cb21991ace2bba6eb9ff2fd9d4330f9d7e3d7f0a12d1deaa01f59feeabb7e"
         }
       ],
       "state": "APPROVED",
@@ -719,16 +724,20 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1794956692Z"
+      "updated_at": "1794957516Z"
     },
     "trajectory": {
       "active_boundaries": [
         "No protected root edits, force push, merge, gate waiver or fabricated evidence"
       ],
-      "artifact_hash": "sha256:b081ff79d78bfb26c9b718077df0cf5cc057d552574feb36b688925a508da62e",
+      "artifact_hash": "sha256:8e7c88811f5f3a663e5d304914ea3b04fa1dec3014a0e53621b6b90987c88dec",
       "checks": [
         {
           "name": "candidate_986_cli_compile",
+          "status": "failed"
+        },
+        {
+          "name": "clippy_97ef93f6",
           "status": "failed"
         },
         {
@@ -754,6 +763,10 @@
         {
           "name": "formatting",
           "status": "passed"
+        },
+        {
+          "name": "native_97ef93f6",
+          "status": "failed"
         }
       ],
       "current_phase": "implementation",
@@ -812,10 +825,17 @@
             "intent_id": "intent:todo:bugs_01m7nm3pnpc3be76",
             "kind": "trajectory_step_recorded",
             "sequence": 9
+          },
+          {
+            "detail": "trajectory:issues-1761-1770-20261117",
+            "event_id": "event:10",
+            "intent_id": "intent:todo:bugs_01m7nm3pnpc3be76",
+            "kind": "trajectory_step_recorded",
+            "sequence": 10
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 9,
+        "next_sequence": 10,
         "schema_version": "1.0.0",
         "trajectories": {
           "issues-1761-1770-20261117": {
@@ -978,6 +998,33 @@
                 "validation_findings": [
                   "Installed registry controller is now0.148.9; supported init refreshed release projections. Prior isolated-binary exception request is obsolete. Same-lineage source remains caller-reported, not authenticated human or host witness."
                 ]
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:10",
+                "observations": [
+                  "src/decapod/core/trajectory/instruction_source.rs",
+                  "src/decapod/core/custody_model.rs",
+                  "src/decapod/core/governance_document.rs",
+                  "docs/agent/config-schema.md",
+                  "https://buildkite.com/decapodlabs/decapod/builds/11920",
+                  "https://github.com/DecapodLabs/decapod/actions/runs/44196295665/job/134439168067"
+                ],
+                "proof_refs": [
+                  "native_97ef93f6",
+                  "clippy_97ef93f6"
+                ],
+                "scope": [
+                  ".decapod/managed/specs",
+                  "README.md",
+                  "docs",
+                  "src/decapod",
+                  "tests"
+                ],
+                "sequence": 10,
+                "validation_findings": [
+                  "Provider-observed account metadata does not authenticate a human or grant operation authority; current ingress and phase repairs require actual source execution."
+                ]
               }
             ]
           }
@@ -992,9 +1039,11 @@
         "Official0.148.8 validate on0a8350c9 stopped before test execution with PROOF_PROFILE_RECONCILIATION_REQUIRED. Read-only agent.init reports inventory sha256:b929199963bc910eb5f099a92ec5d152d6e78d7b6608f0bdf74c22eeda13fdc8 and only STALE_SOURCE_INVENTORY plus REQUIRED_PROOF_NOT_RUN. Compared every discovery input from last accepted config review edbfc00d: only Cargo.toml and Cargo.lock package version0.148.7 to0.148.8 differ. Backed up config privately; reviewed digest update preserves all workflow/helper/check/toolchain contracts.",
         "Preserved PR1766 original head12d403ac and base18cbb30c. Actual CI44163787850 rejects obsolete checkpoint test and missing README constitution reference. Repaired source36ede3fd; tests authored, execution pending official validation. Strict historical checkpoint inspection reports original unproven/invalid lineage; current continuation cannot be described as historical proof.",
         "https://buildkite.com/decapodlabs/decapod/builds/11873",
+        "https://buildkite.com/decapodlabs/decapod/builds/11920",
         "https://github.com/DecapodLabs/decapod/actions/runs/44177760790/job/134374440067",
         "https://github.com/DecapodLabs/decapod/actions/runs/44186574654/job/134406250320",
-        "https://github.com/DecapodLabs/decapod/actions/runs/44186574654/job/134406250356"
+        "https://github.com/DecapodLabs/decapod/actions/runs/44186574654/job/134406250356",
+        "https://github.com/DecapodLabs/decapod/actions/runs/44196295665/job/134439168067"
       ],
       "inspected_files": [
         "src/decapod/core/governance_document.rs",
@@ -1012,6 +1061,7 @@
         "CLAUDE.md",
         "CODEX.md",
         "GEMINI.md",
+        "docs/agent/config-schema.md",
         "src/decapod/core/custody_model.rs",
         "src/decapod/core/governance_document.rs",
         "src/decapod/core/intent_reconcile/selected.rs",
@@ -1020,6 +1070,7 @@
         "src/decapod/core/rpc.rs",
         "src/decapod/core/state.rs",
         "src/decapod/core/trajectory/execution.rs",
+        "src/decapod/core/trajectory/instruction_source.rs",
         "src/decapod/core/validate.rs",
         "src/decapod/core/workspace.rs",
         "src/decapod/lib.rs",
@@ -1044,6 +1095,7 @@
         "Accepted master advanced to ab4abe0593ddd8fd15186001558b79addd08aebc during provider wait; old proof is not current.",
         "Installed registry controller is now0.148.9; supported init refreshed release projections. Prior isolated-binary exception request is obsolete. Same-lineage source remains caller-reported, not authenticated human or host witness.",
         "Instruction origin authentication, accepted root coverage, typed global consistency, independent behavior controls and genuine path observation remain open acceptance obligations.",
+        "Provider-observed account metadata does not authenticate a human or grant operation authority; current ingress and phase repairs require actual source execution.",
         "Selected-root/typed-relation fixtures are scripted local-policy/native controls and remain unverified until source CI executes them. No authenticated prompt capture or external witness is claimed."
       ]
     }
