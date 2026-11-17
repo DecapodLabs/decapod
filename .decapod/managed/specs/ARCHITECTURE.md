@@ -1,5 +1,17 @@
 # Architecture
 
+## One recorded instruction projection (#1764)
+
+`plan_governance::instruction_readiness` derives the selected plan's recorded
+blockers without another ledger. `governed_plan_context` uses that projection
+before inference, while existing execution, trajectory, validation and workspace
+publication boundaries consume its decisions. Drafts may retain unresolved
+instructions; accepted transitions refuse them. Legacy accepted-but-unresolved
+documents are checked again at resume. Content correction changes the readiness
+source revision and normal plan mutation revokes acceptance and phase progress;
+reacceptance does not restore old execution proof. This is recorded instruction
+enforcement, not global relation solving, root coverage or host observation.
+
 ## Source-policy currency continuity (#1753)
 
 `entrypoint_integrity::preserves_source_entrypoint_versions` reuses the existing
@@ -988,7 +1000,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `59302b283273f65193215ee22c7b207943d8077e5105c464f9f5a2e7ac6faa43`
+- Repository signal fingerprint: `1e37be9d4172b390669bf384abc7e881373a4b1f5b6d3315579ab2ecbf799334`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (236 files), `tests/` (235 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

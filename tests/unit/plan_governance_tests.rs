@@ -311,6 +311,84 @@ fn pending_spec_decision_blocks_execution_before_missing_task_lookup() {
 }
 
 #[test]
+fn instruction_blockers_keep_source_revision_and_remedy_across_phases() {
+    use crate::core::validation_rules::{EvaluationPhase, RuleVerdict};
+    let (dir, _store) = execution_fixture();
+    let mut plan = load_plan(dir.path()).unwrap().unwrap();
+    plan.unresolved_contradictions
+        .push("Keep v1; remove v1".into());
+    let expected = instruction_readiness(&plan, EvaluationPhase::PreExecution);
+    assert_eq!(expected.verdict, RuleVerdict::Fail);
+    assert_eq!(expected.blockers.len(), 1);
+    assert_eq!(
+        expected.blockers[0].source,
+        format!("{PLAN_PATH}#/sections/plan/unresolved_contradictions/0")
+    );
+    for phase in [
+        EvaluationPhase::DuringExecution,
+        EvaluationPhase::Validation,
+        EvaluationPhase::Publication,
+    ] {
+        let error = ensure_instruction_ready(&plan, phase.clone(), "NEEDS_HUMAN_INPUT")
+            .unwrap_err()
+            .to_string();
+        let payload: InstructionReadiness =
+            serde_json::from_str(error.split_once("payload=").unwrap().1).unwrap();
+        assert_eq!(payload.phase, phase);
+        assert_eq!(payload.blockers, expected.blockers);
+        assert_eq!(payload.source_revision, expected.source_revision);
+        assert_eq!(payload.remediation, expected.remediation);
+    }
+    plan.state = PlanState::Draft;
+    plan.updated_at = "later".into();
+    let draft = instruction_readiness(&plan, EvaluationPhase::PreExecution);
+    assert_eq!(draft.source_revision, expected.source_revision);
+    plan.unresolved_contradictions.clear();
+    let repaired = instruction_readiness(&plan, EvaluationPhase::PreExecution);
+    assert_eq!(repaired.verdict, RuleVerdict::Pass);
+    assert_ne!(repaired.source_revision, expected.source_revision);
+    assert!(
+        expected.blockers.len() == 1,
+        "the prior observation remains a failure"
+    );
+}
+
+#[test]
+fn legacy_approved_conflict_cannot_enter_a_phase() {
+    let (dir, _store) = execution_fixture();
+    add_phase(dir.path(), phase("build")).unwrap();
+    let mut plan = load_plan(dir.path()).unwrap().unwrap();
+    plan.state = PlanState::Approved;
+    plan.unresolved_contradictions
+        .push("Keep v1; remove v1".into());
+    save_plan(dir.path(), &plan).unwrap();
+    let before = fs::read(plan_path(dir.path())).unwrap();
+    let rejected = enter_phase(dir.path(), "build").unwrap_err().to_string();
+    assert!(rejected.contains("NEEDS_HUMAN_INPUT"), "{rejected}");
+    assert!(rejected.contains("during_execution"), "{rejected}");
+    assert_eq!(fs::read(plan_path(dir.path())).unwrap(), before);
+    let mut repaired = patch_plan(
+        dir.path(),
+        PlanPatch {
+            unresolved_contradictions: Some(vec![]),
+            ..Default::default()
+        },
+    )
+    .unwrap();
+    assert_eq!(repaired.state, PlanState::Draft);
+    repaired = patch_plan(
+        dir.path(),
+        PlanPatch {
+            state: Some(PlanState::Approved),
+            ..Default::default()
+        },
+    )
+    .unwrap();
+    assert!(repaired.unresolved_contradictions.is_empty());
+    enter_phase(dir.path(), "build").unwrap();
+}
+
+#[test]
 fn missing_projection_does_not_waive_plan_approval_or_phase_gates() {
     let (dir, store) = execution_fixture();
     patch_plan(

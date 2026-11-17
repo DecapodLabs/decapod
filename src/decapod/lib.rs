@@ -14243,23 +14243,7 @@ fn governed_plan_context(
         });
     };
 
-    let mut unresolved_items = Vec::new();
-    unresolved_items.extend(plan.unknowns.iter().map(|item| format!("unknown: {item}")));
-    unresolved_items.extend(
-        plan.human_questions
-            .iter()
-            .map(|item| format!("human_question: {item}")),
-    );
-    unresolved_items.extend(
-        plan.unresolved_contradictions
-            .iter()
-            .map(|item| format!("contradiction: {item}")),
-    );
-    unresolved_items.extend(
-        plan.deferred_questions
-            .iter()
-            .map(|item| format!("deferred_question: {item}")),
-    );
+    let unresolved_items = plan_governance::unresolved_instruction_questions(&plan);
 
     let task_binding = match task_id {
         Some(id) if plan.todo_ids.iter().any(|candidate| candidate == id) => "bound",

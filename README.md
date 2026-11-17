@@ -39,4 +39,6 @@ Keep using Codex, Claude Code, Cursor, Pi, or your existing coding agent. Decapo
 
 **[See the closed-loop model →](https://decapodlabs.github.io/decapod/concepts/convergence.html)** · **[Explore the full product →](https://decapodlabs.github.io/)**
 
+The embedded constitution in [assets/constitution.json](assets/constitution.json) starts at `core/DECAPOD`; agents query it through `decapod constitution get core/DECAPOD`.
+
 [Get started](https://decapodlabs.github.io/decapod/quickstart.html) · [Contribute](CONTRIBUTING.md) · [Security](SECURITY.md)

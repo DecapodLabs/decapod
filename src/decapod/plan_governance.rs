@@ -2,6 +2,7 @@ use crate::core::db::OptionalExtension;
 use crate::core::error;
 use serde::{Deserialize, Serialize};
 use serde_json::json;
+use sha2::{Digest, Sha256};
 use std::fs;
 use std::path::{Path, PathBuf};
 use std::process::Command;
@@ -404,6 +405,11 @@ pub(crate) fn invalidate_plan_acceptance(plan: &mut GovernedPlan) {
 }
 
 fn require_phase_acceptance(plan: &GovernedPlan) -> Result<(), error::DecapodError> {
+    ensure_instruction_ready(
+        plan,
+        crate::core::validation_rules::EvaluationPhase::DuringExecution,
+        "NEEDS_HUMAN_INPUT",
+    )?;
     if !matches!(plan.state, PlanState::Approved | PlanState::Executing) {
         return Err(marker_error(
             "NEEDS_PLAN_APPROVAL",
@@ -576,29 +582,121 @@ pub fn update_gate(
 
 /// Reuse the same recorded instruction obligations at every governed boundary.
 /// Preparation is allowed to collect open questions, never to approve them.
-pub(crate) fn unresolved_instruction_questions(plan: &GovernedPlan) -> Vec<String> {
-    let mut questions = Vec::new();
+#[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Eq)]
+pub struct InstructionBlocker {
+    pub id: String,
+    pub source: String,
+    pub question: String,
+}
+
+/// Recorded plan readiness only. Neither the source digest nor an accepted plan
+/// authenticates a human principal or proves unexpressed semantic requirements.
+#[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Eq)]
+pub struct InstructionReadiness {
+    pub schema_version: String,
+    pub rule_id: String,
+    pub authority: crate::core::validation_rules::RuleAuthority,
+    pub phase: crate::core::validation_rules::EvaluationPhase,
+    pub verdict: crate::core::validation_rules::RuleVerdict,
+    pub source_revision: String,
+    pub blockers: Vec<InstructionBlocker>,
+    pub questions: Vec<String>,
+    pub remediation: String,
+}
+
+pub fn instruction_readiness(
+    plan: &GovernedPlan,
+    phase: crate::core::validation_rules::EvaluationPhase,
+) -> InstructionReadiness {
+    use crate::core::validation_rules::{RuleAuthority, RuleVerdict};
+    let mut blockers = Vec::new();
+    let mut add = |field: &str, question: String| {
+        let source = format!("{PLAN_PATH}#/sections/plan/{field}");
+        let identity = json!([plan.todo_ids, source, question]);
+        blockers.push(InstructionBlocker {
+            id: format!("instruction:{:x}", Sha256::digest(identity.to_string())),
+            source,
+            question,
+        });
+    };
     if plan.intent.trim().is_empty() {
-        questions.push("What is the single-sentence intent for this change?".to_string());
+        add(
+            "intent",
+            "What is the single-sentence intent for this change?".into(),
+        );
     }
-    questions.extend(plan.human_questions.clone());
-    for unknown in &plan.unknowns {
-        questions.push(format!("Resolve unknown before execution: {unknown}"));
+    for (index, question) in plan.human_questions.iter().enumerate() {
+        add(&format!("human_questions/{index}"), question.clone());
     }
-    for contradiction in &plan.unresolved_contradictions {
-        questions.push(format!(
-            "Resolve conflicting requests before execution: {contradiction}"
-        ));
+    for (index, unknown) in plan.unknowns.iter().enumerate() {
+        add(
+            &format!("unknowns/{index}"),
+            format!("Resolve unknown before execution: {unknown}"),
+        );
     }
-    for review in &plan.spec_reviews {
+    for (index, contradiction) in plan.unresolved_contradictions.iter().enumerate() {
+        add(
+            &format!("unresolved_contradictions/{index}"),
+            format!("Resolve conflicting requests before execution: {contradiction}"),
+        );
+    }
+    for (index, review) in plan.spec_reviews.iter().enumerate() {
         if review.disposition == SpecReviewDisposition::RequiresDecision {
-            questions.push(format!(
-                "Resolve pending human spec review before execution: {}",
-                review.path
-            ));
+            add(
+                &format!("spec_reviews/{index}"),
+                format!(
+                    "Resolve pending human spec review before execution: {}",
+                    review.path
+                ),
+            );
         }
     }
-    questions
+    // Acceptance and measured progress do not alter instruction identity.
+    // Content and task changes do, including pending review source changes.
+    let source = json!({
+        "intent": plan.intent, "todo_ids": plan.todo_ids,
+        "unknowns": plan.unknowns, "human_questions": plan.human_questions,
+        "unresolved_contradictions": plan.unresolved_contradictions,
+        "spec_reviews": plan.spec_reviews,
+    });
+    InstructionReadiness {
+        schema_version: "1.0.0".into(),
+        rule_id: "recorded_instruction_readiness".into(),
+        authority: RuleAuthority::TaskConstraints,
+        phase,
+        verdict: if blockers.is_empty() { RuleVerdict::Pass } else { RuleVerdict::Fail },
+        source_revision: format!("sha256:{:x}", Sha256::digest(source.to_string())),
+        questions: blockers.iter().map(|blocker| blocker.question.clone()).collect(),
+        blockers,
+        remediation: "Resolve recorded obligations and separately reaccept the revised plan; rerun affected proof.".into(),
+    }
+}
+
+pub(crate) fn unresolved_instruction_questions(plan: &GovernedPlan) -> Vec<String> {
+    instruction_readiness(
+        plan,
+        crate::core::validation_rules::EvaluationPhase::PreExecution,
+    )
+    .questions
+}
+
+pub(crate) fn ensure_instruction_ready(
+    plan: &GovernedPlan,
+    phase: crate::core::validation_rules::EvaluationPhase,
+    marker: &str,
+) -> Result<(), error::DecapodError> {
+    let readiness = instruction_readiness(plan, phase);
+    if readiness.blockers.is_empty() {
+        return Ok(());
+    }
+    Err(marker_error(
+        marker,
+        "NEEDS_HUMAN_INPUT: recorded instructions require resolution.",
+        Some(
+            serde_json::to_value(readiness)
+                .map_err(|e| error::DecapodError::ValidationError(e.to_string()))?,
+        ),
+    ))
 }
 
 pub(crate) fn has_unresolved_intent_requirements(plan: &GovernedPlan) -> bool {
@@ -616,18 +714,11 @@ pub fn ensure_execute_ready(
         )
     })?;
 
-    let questions = unresolved_instruction_questions(&plan);
-    if !questions.is_empty() {
-        return Err(marker_error(
-            "NEEDS_HUMAN_INPUT",
-            "Execution blocked: recorded instructions require resolution.",
-            Some(json!({
-                "questions": questions,
-                "phase": "during_execution",
-                "remediation": "Resolve recorded obligations and separately reaccept the revised plan."
-            })),
-        ));
-    }
+    ensure_instruction_ready(
+        &plan,
+        crate::core::validation_rules::EvaluationPhase::DuringExecution,
+        "NEEDS_HUMAN_INPUT",
+    )?;
 
     if !matches!(
         plan.state,
@@ -743,23 +834,23 @@ pub fn ensure_execute_ready(
 /// Structural progress must agree with the current contract even when a caller
 /// loads old state. Shared by explicit transitions, execution and publication.
 pub fn validate_plan_progress(plan: &GovernedPlan) -> Result<(), error::DecapodError> {
+    validate_plan_progress_at(
+        plan,
+        crate::core::validation_rules::EvaluationPhase::PreExecution,
+    )
+}
+
+pub(crate) fn validate_plan_progress_at(
+    plan: &GovernedPlan,
+    phase: crate::core::validation_rules::EvaluationPhase,
+) -> Result<(), error::DecapodError> {
     validate_phase_contract(&plan.phases)?;
     if matches!(
         plan.state,
         PlanState::Approved | PlanState::Executing | PlanState::Done
-    ) {
-        let questions = unresolved_instruction_questions(plan);
-        if !questions.is_empty() {
-            return Err(marker_error(
-                "NEEDS_HUMAN_INPUT",
-                "Plan cannot be accepted while recorded instructions are unresolved.",
-                Some(json!({
-                    "questions": questions,
-                    "phase": "pre_execution",
-                    "remediation": "Resolve recorded obligations before accepting the execution contract."
-                })),
-            ));
-        }
+    ) && has_unresolved_intent_requirements(plan)
+    {
+        ensure_instruction_ready(plan, phase, "NEEDS_HUMAN_INPUT")?;
     }
     if plan.state == PlanState::Done && plan.phases.iter().any(|phase| !phase.completed) {
         return Err(marker_error(

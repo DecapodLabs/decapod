@@ -587,6 +587,15 @@
       "id": "source-currency-1753-complete",
       "summary": "Complete config-only exact-source version policy through publication currency without changing agent entrypoints; preserve generated-pin upgrade requirements and all integrity/execution checks; add real-Git cross-boundary regressions; record strict live 07 receipts and CLI-generated evaluating-0.148.7 metadata. Tests require configured execution.",
       "input_digest": "sha256:7a0c8bec403859b8453c3de5f382628b2414a87dbf55e7c26b71724dffbf2c29"
+    },
+    {
+      "id": "issues-1764-readiness-20261117-01",
+      "summary": "Unify preparation and phase-specific recorded instruction blockers; reject legacy phase entry; repair current PR execution-checkpoint and README regressions; author specs and refresh projections. Tests authored; exact-candidate validation pending. Prior strict historical checkpoint inspection remains invalid and is not relabelled as proof.",
+      "input_digest": "sha256:b67930d575483c8c2513a3e5af8d5a56ae88f3a9945216b8bb9ea1dbdb135746",
+      "proof_refs": [
+        "https://github.com/DecapodLabs/decapod/actions/runs/44163787850/job/134324583729",
+        "https://github.com/DecapodLabs/decapod/actions/runs/44163787850/job/134324583919"
+      ]
     }
   ],
   "intents": {
@@ -618,7 +627,7 @@
       },
       "deferred_questions": [],
       "human_questions": [],
-      "intent": "Finish the original exact-proof admission deliverable after externally accepted integration. Complete issue 1753 by honoring the existing config-only, exact canonical source-repository version policy in publication currency without rewriting valid historical agent entrypoints; preserve Docker and manifest provenance, file presence, body/fingerprint checks, immutable ancestry and all required execution. Retain actual strict live acceptance 07 on 0.148.7 and every historical failure. Add meaningful real-Git currency regressions to the required library lane, regenerate only managed projections through the evaluating CLI, then require fresh full exact-head/base validation and governed publication before closing 1753 and finalizing the task. No merge, release or general bypass is authorized.",
+      "intent": "Complete issues 1761, 1762, 1763, 1764, 1767, 1768 and 1770 on PR 1766; preserve existing source and history, coordinate selected instruction revisions, coverage, typed consistency, behavioral proof and witnessed path authority. Begin with actual negatives, repair minimally, validate exact candidate and accepted base under current policy and required CI, close only with independently verifiable acceptance. No merge, force push, gate waiver or fabricated proof.",
       "phases": [],
       "proof_hooks": [
         "decapod validate"
@@ -628,34 +637,34 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Currency reuses existing scoped source-body authorization and generated-manifest provenance; all four headers must remain valid and Docker/manifest upgrade requirements remain",
-          "reviewed_code_fingerprint": "59302b283273f65193215ee22c7b207943d8077e5105c464f9f5a2e7ac6faa43",
-          "spec_material_hash": "0b7738e450b1038116cd3fce2e9660a615fbea502d988760d54dbf8c314f9146"
+          "reason": "Document the existing plan-owned readiness projection, legacy accepted-state refusal, and correction invalidation without adding a ledger or proof engine.",
+          "reviewed_code_fingerprint": "1e37be9d4172b390669bf384abc7e881373a4b1f5b6d3315579ab2ecbf799334",
+          "spec_material_hash": "50d21dc1f07d5736ab197256c009c2fab5617f402a42a4e9971d62aa5c6a2114"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "No new public option; only configured canonical source can preserve historical header versions through currency; default and foreign rules remain strict",
-          "reviewed_code_fingerprint": "59302b283273f65193215ee22c7b207943d8077e5105c464f9f5a2e7ac6faa43",
-          "spec_material_hash": "4d418dbaac3da584c5524670003c9fbd33db02090e4d402c3b390502ec8bd5fa"
+          "reason": "Recorded instruction readiness shares one source-backed blocker contract and preserves existing operation markers. Authored interface prose now describes preparation, checkpoint, validation and publication limits.",
+          "reviewed_code_fingerprint": "1e37be9d4172b390669bf384abc7e881373a4b1f5b6d3315579ab2ecbf799334",
+          "spec_material_hash": "4efe6ce31db9247d52ed8c947448ba1843d0d8cac2e3a885fbfdafa82756af6d"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Bounded regular files, all canonical bodies/fingerprints, exact sole push slug and immutable ungrafted ancestry gate preservation; malformed provenance falls back conservatively and other checks remain",
-          "reviewed_code_fingerprint": "59302b283273f65193215ee22c7b207943d8077e5105c464f9f5a2e7ac6faa43",
-          "spec_material_hash": "0c791a6100ed5aec7fe4cedfa16680988dd1e48d50d00af272ef9dff372c3d4d"
+          "reason": "Document that source hashes and plan acceptance do not authenticate principals or witness external actions; preserve separate unmet lineage, coverage, consistency and path obligations.",
+          "reviewed_code_fingerprint": "1e37be9d4172b390669bf384abc7e881373a4b1f5b6d3315579ab2ecbf799334",
+          "spec_material_hash": "527cc749c06f943ddb878264fa30e76918f5f2d794ee2473348779a91d363d8d"
         }
       ],
       "state": "APPROVED",
       "stop_conditions": [],
-      "title": "Finish admission proof after accepted integration",
+      "title": "Complete issue contracts on preserved PR 1766",
       "todo_ids": [
-        "feat_01m7m3mmz5mejx0g"
+        "bugs_01m7nm3pnpc3be76"
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1794922423Z"
+      "updated_at": "1794948915Z"
     },
     "trajectory": {
       "active_boundaries": [

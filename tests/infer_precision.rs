@@ -88,6 +88,87 @@ fn test_infer_orientation_simple_task() {
 }
 
 #[test]
+fn preparation_reports_pending_spec_decisions_and_empty_intent_without_blocking_deferrals() {
+    use decapod::plan_governance::{self, PlanPatch, SpecReviewDisposition};
+    let dir = tempdir().unwrap();
+    let root = dir.path();
+    init_git_repo(root);
+    assert!(run_cmd(root, &["init", "--force"]).status.success());
+    assert!(run_cmd(root, &["session", "acquire"]).status.success());
+    assert!(
+        run_cmd(
+            root,
+            &[
+                "govern",
+                "plan",
+                "init",
+                "--title",
+                "Readiness parity",
+                "--intent",
+                "Preserve compatibility"
+            ]
+        )
+        .status
+        .success()
+    );
+    plan_governance::patch_plan(
+        root,
+        PlanPatch {
+            deferred_questions: Some(vec!["Unrelated future feature".into()]),
+            ..Default::default()
+        },
+    )
+    .unwrap();
+    let inspect = || {
+        let output = run_cmd(
+            root,
+            &[
+                "infer",
+                "orientation",
+                "--intent",
+                "Inspect current recorded instructions",
+                "--format",
+                "json",
+            ],
+        );
+        assert!(output.status.success());
+        extract_json(&output)["governed_plan"]["unresolved_items"].clone()
+    };
+    assert_eq!(inspect(), serde_json::json!([]));
+    plan_governance::review_spec(
+        root,
+        ".decapod/managed/specs/INTERFACES.md",
+        SpecReviewDisposition::RequiresDecision,
+        "Choose accepted compatibility policy",
+    )
+    .unwrap();
+    let pending = inspect();
+    assert!(
+        pending[0]
+            .as_str()
+            .unwrap()
+            .contains("pending human spec review"),
+        "{pending}"
+    );
+    plan_governance::patch_plan(
+        root,
+        PlanPatch {
+            intent: Some(String::new()),
+            ..Default::default()
+        },
+    )
+    .unwrap();
+    let empty = inspect();
+    assert_eq!(empty.as_array().unwrap().len(), 2);
+    assert!(
+        empty[0]
+            .as_str()
+            .unwrap()
+            .contains("single-sentence intent")
+    );
+}
+
+#[test]
 fn test_orientation_and_mentor_share_the_reflection_continuation() {
     let dir = tempdir().unwrap();
     let root = dir.path();

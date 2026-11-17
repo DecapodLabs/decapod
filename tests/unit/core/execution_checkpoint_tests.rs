@@ -182,14 +182,21 @@ fn execution_resume_rechecks_plan_acceptance_and_human_decisions() {
     )
     .unwrap();
     assert!(verify_execution_binding(root, "task_execution", &binding).is_err());
-    plan_governance::patch_plan(
+    let rejected = plan_governance::patch_plan(
         root,
         PlanPatch {
             state: Some(PlanState::Approved),
             ..Default::default()
         },
     )
-    .unwrap();
+    .unwrap_err()
+    .to_string();
+    assert!(rejected.contains("NEEDS_HUMAN_INPUT"), "{rejected}");
+    // Legacy documents can contain accepted-but-unresolved state even though
+    // the current transition refuses it. Resume must reject those bytes too.
+    let mut legacy = plan_governance::load_plan(root).unwrap().unwrap();
+    legacy.state = PlanState::Approved;
+    plan_governance::save_plan(root, &legacy).unwrap();
     assert!(
         verify_execution_binding(root, "task_execution", &binding)
             .unwrap_err()

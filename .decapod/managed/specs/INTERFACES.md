@@ -1,5 +1,17 @@
 # Interfaces
 
+## Recorded instruction readiness (#1764)
+
+Preparation's `governed_plan.unresolved_items` uses the same recorded blockers as
+plan acceptance, execution, checkpoint/resume, validation and publication. Empty
+intent and pending spec decisions are included; deferred questions alone do not
+block current work. `plan_governance::InstructionReadiness` exposes rule authority,
+phase, verdict, source revision, source-linked blocker IDs and a common remedy in
+existing decision-marker payloads. Existing operation-specific checkpoint and
+publication markers remain. CLI stderr is a diagnostic, not an RPC wire schema.
+Approval state and timestamps cannot change blocker identity. This projection
+does not authenticate the author of an instruction or establish human consent.
+
 ## Internal source currency agreement (#1753)
 
 The existing private config-only source policy now also governs version-only
@@ -1218,7 +1230,7 @@ field. Nothing in this operation authorizes a mutation, approval or completion.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `59302b283273f65193215ee22c7b207943d8077e5105c464f9f5a2e7ac6faa43`
+- Repository signal fingerprint: `1e37be9d4172b390669bf384abc7e881373a4b1f5b6d3315579ab2ecbf799334`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (236 files), `tests/` (235 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

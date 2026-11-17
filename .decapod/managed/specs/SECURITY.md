@@ -1,5 +1,17 @@
 # Security
 
+## Recorded blockers and evidence limits (#1764)
+
+Instruction readiness hashes identify recorded plan content and source locations.
+They do not authenticate a human, independently accept a behavioral oracle, or
+observe an external shell action. Pending human spec decisions remain blocking
+at preparation and checkpoint boundaries even for a legacy approved plan. A
+deferred future question alone does not create a current authority requirement.
+The existing external validation and publication owners still require current
+candidate, accepted target, policy and custody evidence. Unimplemented instruction
+provenance, root coverage, typed relation consistency and witnessed-path contracts
+remain separate open obligations under #1761, #1768, #1770 and #1767.
+
 ## Scoped currency authorization (#1753)
 
 Currency preservation requires the same explicit config, sole exact canonical
@@ -661,7 +673,7 @@ execution evidence remains required before publication readiness.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `59302b283273f65193215ee22c7b207943d8077e5105c464f9f5a2e7ac6faa43`
+- Repository signal fingerprint: `1e37be9d4172b390669bf384abc7e881373a4b1f5b6d3315579ab2ecbf799334`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (236 files), `tests/` (235 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

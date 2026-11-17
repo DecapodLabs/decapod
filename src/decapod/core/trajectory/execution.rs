@@ -184,18 +184,17 @@ fn accepted_plan(
             "execution checkpoint requires an accepted plan",
         )
     })?;
+    plan_governance::ensure_instruction_ready(
+        &plan,
+        crate::core::validation_rules::EvaluationPhase::DuringExecution,
+        "EXECUTION_DECISION_REQUIRED",
+    )?;
     if !matches!(plan.state, PlanState::Approved | PlanState::Executing)
         || !plan.todo_ids.iter().any(|id| id == task_id)
     {
         return Err(blocked(
             "NEEDS_PLAN_APPROVAL",
             "current task must belong to an approved or executing plan",
-        ));
-    }
-    if plan_governance::has_unresolved_intent_requirements(&plan) {
-        return Err(blocked(
-            "EXECUTION_DECISION_REQUIRED",
-            "resolve the current plan's human decision gates before resuming",
         ));
     }
     plan_governance::validate_plan_progress(&plan)?;

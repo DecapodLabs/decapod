@@ -6562,7 +6562,10 @@ fn validate_plan_governed_execution_gate(
 
     let plan = plan_governance::load_plan(main_root)?;
     if let Some(plan) = plan {
-        match plan_governance::validate_plan_progress(&plan) {
+        match plan_governance::validate_plan_progress_at(
+            &plan,
+            crate::core::validation_rules::EvaluationPhase::Validation,
+        ) {
             Ok(()) => pass("Plan phase progress matches its current contract", ctx),
             Err(error) => fail(&error.to_string(), ctx),
         }
@@ -6588,13 +6591,13 @@ fn validate_plan_governed_execution_gate(
             pass("Plan artifact state allows governed execution", ctx);
         }
 
-        if plan_governance::has_unresolved_intent_requirements(&plan) {
-            fail(
-                "NEEDS_HUMAN_INPUT: governed plan has unresolved intent/unknowns/questions/contradictions/spec reviews",
-                ctx,
-            );
-        } else {
-            pass("Plan intent, unknowns and contradictions are resolved", ctx);
+        match plan_governance::ensure_instruction_ready(
+            &plan,
+            crate::core::validation_rules::EvaluationPhase::Validation,
+            "NEEDS_HUMAN_INPUT",
+        ) {
+            Err(error) => fail(&error.to_string(), ctx),
+            Ok(()) => pass("Plan intent, unknowns and contradictions are resolved", ctx),
         }
     } else {
         let done_count = plan_governance::count_done_todos(&store.root)?;

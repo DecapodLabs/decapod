@@ -2939,9 +2939,11 @@ fn verify_current_governance_ownership(
     {
         return Err(DecapodError::ValidationError("STALE_PUBLICATION_TASK: plan and trajectory must bind the same current todo. Update the governed plan and rerun validation.".into()));
     }
-    if plan_governance::has_unresolved_intent_requirements(&plan) {
-        return Err(DecapodError::ValidationError("PUBLICATION_DECISION_REQUIRED: resolve recorded intent ambiguity, unknowns, contradictions and pending spec-review decisions before publication; do not infer approval.".into()));
-    }
+    plan_governance::ensure_instruction_ready(
+        &plan,
+        crate::core::validation_rules::EvaluationPhase::Publication,
+        "PUBLICATION_DECISION_REQUIRED",
+    )?;
     Ok(trajectory)
 }
 
