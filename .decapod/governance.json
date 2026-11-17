@@ -680,6 +680,11 @@
       "id": "strict-live-rejection-1748",
       "summary": "Require actual invalid-payload failure, independent guard success, and source-readiness publication rejection; timeout/lock is partial evidence, never a passing adversarial control; preserve attempt 05 and rerun fresh",
       "input_digest": "sha256:98b96bc340b9118bb74b0748aed8cf1c22d73d30d445eb812e58c5f4dd65d8fc"
+    },
+    {
+      "id": "strict-live-final-report",
+      "summary": "Publish independently verified strict real GitHub acceptance 06 archive ae15eeffd6812002fbda2a2adaca23b006de0ba6, exact head/base/controller and receipt hashes, all rejection reasons and reproduction; preserve attempt 05 as partial because timeout was not proof; require fresh full final-source validation before issue closure",
+      "input_digest": "sha256:6019f89de3555446bbd9fda9c0acfc8f1a7ac36ccd976863e78324a3f7443b64"
     }
   ],
   "intents": {
@@ -720,21 +725,21 @@
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Production proof continuity and timestamp boundaries unchanged; live acceptance now rejects an unrelated timeout as evidence of source-policy enforcement",
+          "reason": "Final report records strict live enforcement for the timestamp-repaired controller; live proof ownership and exact remote refs remain the reviewed architecture",
           "reviewed_code_fingerprint": "939915b935953c7ae56af42d7bbea5a14b3ee19bcc785bcafeffd46bc1fc1468",
           "spec_material_hash": "741dab3fb84475ba7e527d91c15ed778ed9681fb96dab4dec3109a9399078aa1"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "No wire change; strict harness requires existing PUBLICATION_NOT_READY and READINESS_BLOCKED codes rather than any nonzero exit",
+          "reason": "Final report documents exact native receipts and rejection codes; strict harness changes no publication wire or timestamp compatibility contract",
           "reviewed_code_fingerprint": "939915b935953c7ae56af42d7bbea5a14b3ee19bcc785bcafeffd46bc1fc1468",
           "spec_material_hash": "aea9e898f79c94c1d684baa64da199e433dc0c7a74f388e904d17eaeaafd3a7e"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Preserve exact subject proof, fail-closed quarantine and checked UTC conversion; stronger acceptance cannot count environmental failure as policy enforcement",
+          "reason": "Exact artifact and policy binding, confirmed quarantine and checked expiry remain; independent blob verification preserves native evidence and excludes credentials, logs and machine state",
           "reviewed_code_fingerprint": "939915b935953c7ae56af42d7bbea5a14b3ee19bcc785bcafeffd46bc1fc1468",
           "spec_material_hash": "b52643bf3fd690b7e15dca0b8852a5e98d28ad52c12833a58c111ca837d0d49f"
         }
@@ -747,7 +752,7 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1794914891Z"
+      "updated_at": "1794915368Z"
     },
     "trajectory": {
       "active_boundaries": [

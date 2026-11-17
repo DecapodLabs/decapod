@@ -15,6 +15,15 @@ Its scope is the exact canonical Decapod repository and source lineage; valid
 canonical template bytes and fingerprints remain mandatory. It does not renew
 historical execution evidence or weaken exact-artifact publication proof.
 
+## Measured strict live acceptance
+
+The current real GitHub acceptance uses the repaired timestamp dependency and
+requires actual source-policy rejection, excluding a timeout as proof. Its
+immutable receipts, exact source/head/base identities, quarantine and stale-target
+controls are recorded in docs/publication-admission-acceptance.md. The final
+source delivery independently requires fresh full exact-candidate validation.
+Historical controller and fixture successes do not authorize a later artifact.
+
 ## Evidence-bound PR admission (#1747, #1748)
 
 An agent earns PR admission only through complete live proof for the actual

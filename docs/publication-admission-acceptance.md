@@ -78,13 +78,15 @@ authority; do not describe that as unconditionally enforced against admins.
 
 ## Real-forge acceptance
 
-The real-forge test passed on macOS: **1 passed, 0 failed**, 311.75 seconds.
+The strict real-forge test passed on macOS after the timestamp dependency repair: **1 passed, 0 failed**, 305.54 seconds.
 It used real CLI calls, required native commands, Git commits, remote refs and
 GitHub publication/readback. No forge response or proof runner was replaced.
+The invalid-publication assertion requires the source-readiness rejection itself;
+a timeout, lock or transport failure cannot satisfy that adversarial control.
 
-- Live PR: [acceptance #1](https://github.com/alexhraber/decapod-admission-acceptance-20261117-1747-04/pull/1).
-- Immutable [nine-file evidence archive](https://github.com/alexhraber/decapod-admission-acceptance-20261117-1747-04/tree/1c21226bc3c5c65afb504a37bbe00829e308c593).
-- Machine-readable [acceptance report](https://github.com/alexhraber/decapod-admission-acceptance-20261117-1747-04/blob/1c21226bc3c5c65afb504a37bbe00829e308c593/acceptance.json).
+- Live PR: [acceptance #1](https://github.com/alexhraber/decapod-admission-acceptance-20261117-1747-06/pull/1).
+- Immutable [nine-file evidence archive](https://github.com/alexhraber/decapod-admission-acceptance-20261117-1747-06/tree/ae15eeffd6812002fbda2a2adaca23b006de0ba6).
+- Machine-readable [acceptance report](https://github.com/alexhraber/decapod-admission-acceptance-20261117-1747-06/blob/ae15eeffd6812002fbda2a2adaca23b006de0ba6/acceptance.json).
 
 Every archived file was independently checked against its Git blob identity and
 is byte-identical to the retained native evidence. Raw transcripts, credentials
@@ -92,13 +94,13 @@ and machine state remain outside Git.
 
 | Observed subject | Exact identity |
 | --- | --- |
-| Invalid source commit | `eb86a5e294fa9d4e49c2b748b50772d80f35a92e` |
-| First repaired/admitted head | `6b5777ea4ab4ff1d897cd2975f76d9dd3474b126` |
-| Final revalidated/admitted head | `cd938efe2d50c59676212ea9a747617f227c106a` |
-| Validated `main` base | `0e36f8e4b336985fbe0a3b4d92fbd48f43b4027b` |
-| Independently advanced `main` target | `2a5b1f276093139d160c85d72af5b4253b0ecfc0` |
-| Controller source | `99a6f59f5252ce37845b47b2d9673b169d3df509` |
-| Controller SHA-256 | `549e78539cf893abb120c551c49c5b5d402720fec9ed19b3d474e661fb36969d` |
+| Invalid source commit | `9c6f2066b33952cdeed941184f3c9723c6192a63` |
+| First repaired/admitted head | `b386cdce5485a75e7760d4490c1f7e21db1816ca` |
+| Final revalidated/admitted head | `ccbc08207c8c592824c4b3fc75a8541da22bff8e` |
+| Validated `main` base | `3a18ec7e802ddba8c9b36d6e6eb4adaf8aa607b1` |
+| Independently advanced `main` target | `e36fd2979d57ea1892d70a532d568b087e294fac` |
+| Controller source | `fc52356fbce48f504026100c70980353548d0bcd` |
+| Controller SHA-256 | `29edb514f927ecd43461847412ad476ec673b8e2cbaf8059b712d130348d6435` |
 
 | Adversarial control | Observed enforcement |
 | --- | --- |
@@ -124,12 +126,12 @@ The Decapod source candidate separately requires full Buildkite validation.
 
 | Receipt | Proven head | File SHA-256 |
 | --- | --- | --- |
-| [Repaired source](https://github.com/alexhraber/decapod-admission-acceptance-20261117-1747-04/blob/1c21226bc3c5c65afb504a37bbe00829e308c593/repaired-receipt.json) | `6b5777ea4ab4ff1d897cd2975f76d9dd3474b126` | `5a188d2a036a667aa3a87eae48b4bbbd21b58f017220d1addf3bdcfbc5ec4639` |
-| [Fresh after quarantine](https://github.com/alexhraber/decapod-admission-acceptance-20261117-1747-04/blob/1c21226bc3c5c65afb504a37bbe00829e308c593/fresh-after-quarantine-receipt.json) | `6b5777ea4ab4ff1d897cd2975f76d9dd3474b126` | `79a71107662f8f39f4f25757ab951b15bc68d46f17c8103f28049d166eef34a8` |
-| [Fresh after stale-source repair](https://github.com/alexhraber/decapod-admission-acceptance-20261117-1747-04/blob/1c21226bc3c5c65afb504a37bbe00829e308c593/fresh-after-stale-source-receipt.json) | `cd938efe2d50c59676212ea9a747617f227c106a` | `ca39591237076fe05b13a447239e4db869a342a176d844f58718ec04b4f3a306` |
+| [Repaired source](https://github.com/alexhraber/decapod-admission-acceptance-20261117-1747-06/blob/ae15eeffd6812002fbda2a2adaca23b006de0ba6/repaired-receipt.json) | `b386cdce5485a75e7760d4490c1f7e21db1816ca` | `4341add017bc6391511ee2f2a5ab82d791e5344d789ea4f8a708a1130cc2ee8f` |
+| [Fresh after quarantine](https://github.com/alexhraber/decapod-admission-acceptance-20261117-1747-06/blob/ae15eeffd6812002fbda2a2adaca23b006de0ba6/fresh-after-quarantine-receipt.json) | `b386cdce5485a75e7760d4490c1f7e21db1816ca` | `d4c5eec4936fe38a0d6ec52392c8d23e027940de6de902e61a854082082a361d` |
+| [Fresh after stale-source repair](https://github.com/alexhraber/decapod-admission-acceptance-20261117-1747-06/blob/ae15eeffd6812002fbda2a2adaca23b006de0ba6/fresh-after-stale-source-receipt.json) | `ccbc08207c8c592824c4b3fc75a8541da22bff8e` | `b1071c5ce84511bb7fdba5e6fc0c254b513e97ea9b5ab91f709559c1309e0529` |
 
-[Failed native observations](https://github.com/alexhraber/decapod-admission-acceptance-20261117-1747-04/blob/1c21226bc3c5c65afb504a37bbe00829e308c593/invalid-source-observations.json)
-and the [native post-creation rejection](https://github.com/alexhraber/decapod-admission-acceptance-20261117-1747-04/blob/1c21226bc3c5c65afb504a37bbe00829e308c593/created-not-admitted-rejection.json)
+[Failed native observations](https://github.com/alexhraber/decapod-admission-acceptance-20261117-1747-06/blob/ae15eeffd6812002fbda2a2adaca23b006de0ba6/invalid-source-observations.json)
+and the [native post-creation rejection](https://github.com/alexhraber/decapod-admission-acceptance-20261117-1747-06/blob/ae15eeffd6812002fbda2a2adaca23b006de0ba6/created-not-admitted-rejection.json)
 retain the negative evidence separately from successful historical receipts.
 
 To reproduce the entire sequence, use an authenticated GitHub CLI, working Git
@@ -140,7 +142,7 @@ empty disposable repository and a new private output directory each time:
 gh repo create OWNER/decapod-admission-acceptance-UNIQUE --public
 git clone https://github.com/DecapodLabs/decapod.git decapod-admission-repro
 cd decapod-admission-repro
-git checkout --detach 99a6f59f5252ce37845b47b2d9673b169d3df509
+git checkout --detach fc52356fbce48f504026100c70980353548d0bcd
 DECAPOD_ACCEPTANCE_REPOSITORY=OWNER/decapod-admission-acceptance-UNIQUE \
 DECAPOD_ACCEPTANCE_OUTPUT=/absolute/new/private/evidence-directory \
 cargo test-main --locked --test entrypoint_correctness \
@@ -156,3 +158,42 @@ It neither merges nor deletes repositories. Earlier unsuccessful attempts
 remain preserved; their partial results were not reported as a passing run.
 The required deterministic counterparts remain ordinary full-library tests;
 the opt-in live harness is also compiled by the existing CLI test target.
+
+
+## Current dependency policy and acceptance integrity (#1755)
+
+The delivery PR is [#1754](https://github.com/DecapodLabs/decapod/pull/1754).
+Historical push validation of `b79a28fdbd45a9f608c8f063eca04368937a6fe5`
+passed in Buildkite 11552. Its later [PR dependency check](https://buildkite.com/decapodlabs/decapod/builds/11557#01a1e907-4684-47d4-84a1-7f33b7381377)
+rejected `chrono` under [RUSTSEC-2026-0543](https://github.com/RustSec/advisory-db/blob/main/crates/chrono/RUSTSEC-2026-0543.md).
+That earlier success did not authorize delivery of the failing present artifact.
+
+Decapod now uses [time 0.3.55](https://docs.rs/time/0.3.55/time/) and removes
+chrono from both resolved Cargo and Bazel graphs. No advisory exception or
+required-check reduction was introduced. Explicit UTC string serde preserves
+persisted Task/KnowledgeEntry/Decision JSON, automatic 0/3/6/9 fractional digits,
+observation +00:00 offsets and nine-digit Z Dactyl transaction markers. Dactyl
+still reads legacy SQL UTC timestamps. Invalid expiry and out-of-range UTC
+conversion return errors instead of admitting credentials or panicking.
+
+The [full library lane on the repaired implementation](https://buildkite.com/decapodlabs/decapod/builds/11579#01a1e93a-2a53-4ef4-a660-8cdec1460936)
+ran **1,797 passed, 0 failed, 8 ignored** on
+`72e2c7e248d6805a14700f21a5189fb9f90c2d6c`, including timestamp wire, SQL,
+expiry and extreme-offset controls and all publication regressions. This is
+implementation execution evidence for that exact commit, not authorization for
+later report or harness changes. Source delivery still requires full current
+Buildkite proof and governed publication for the exact final source head/base;
+its delivery receipt and provider links are attached to #1754 and the focused
+issues. PR admission does not grant merge authorization.
+
+The earlier [complete acceptance archive](https://github.com/alexhraber/decapod-admission-acceptance-20261117-1747-04/tree/1c21226bc3c5c65afb504a37bbe00829e308c593)
+remains historical for its recorded controller and fixture identities.
+[Attempt 05](https://github.com/alexhraber/decapod-admission-acceptance-20261117-1747-05/tree/68fddc9b49d3ad6446c8f0c841320e26ff45dca7)
+is partial evidence: its permissive test process returned success, but the
+invalid-publication invocation timed out in the machine-contract gate. That
+result does not prove the intended publication rejection. The permanent harness
+now requires PUBLICATION_NOT_READY with READINESS_BLOCKED, excludes
+VALIDATE_TIMEOUT_OR_LOCK, and requires the independent guard's executed success.
+The strict attempt 06 above passed those assertions with the repaired controller.
+Earlier failed and superseded source/provider runs remain failures or historical
+observations; no green result is transferred to another artifact.
