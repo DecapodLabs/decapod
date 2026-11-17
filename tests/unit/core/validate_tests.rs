@@ -820,6 +820,189 @@ fn publication_bundle_currency_fails_when_release_advanced_without_refresh() {
     );
 }
 
+#[test]
+fn scoped_source_currency_preserves_headers_without_waiving_other_bundle_checks() {
+    for defect in [
+        "none",
+        "missing_config",
+        "disabled",
+        "fork",
+        "multiple_pushes",
+        "tamper",
+        "missing_docker",
+        "missing_manifest",
+        "invalid_base_manifest",
+    ] {
+        let fixture = crate::core::entrypoint_integrity::development_source_fixture();
+        let dir = fixture.path();
+        seed_publication_bundle(dir);
+        for surface in crate::core::entrypoint_integrity::ENTRYPOINT_FILES {
+            fs::write(
+                dir.join(surface),
+                crate::core::entrypoint_integrity::render_entrypoint_for_release(
+                    surface, "0.107.4",
+                )
+                .unwrap(),
+            )
+            .unwrap();
+        }
+        let manifest = dir.join(".decapod/managed/specs/.manifest.json");
+        fs::write(
+            &manifest,
+            serde_json::json!({"decapod_release": env!("CARGO_PKG_VERSION")}).to_string(),
+        )
+        .unwrap();
+        match defect {
+            "missing_config" => fs::remove_file(dir.join(".decapod/config.toml")).unwrap(),
+            "disabled" => fs::write(
+                dir.join(".decapod/config.toml"),
+                "[repo]\n_allow_entrypoint_version_drift = false\n",
+            )
+            .unwrap(),
+            "fork" => git(
+                dir,
+                &[
+                    "remote",
+                    "set-url",
+                    "origin",
+                    "https://github.com/elsewhere/decapod.git",
+                ],
+            ),
+            "multiple_pushes" => {
+                git(
+                    dir,
+                    &[
+                        "remote",
+                        "set-url",
+                        "--add",
+                        "--push",
+                        "origin",
+                        "https://github.com/DecapodLabs/decapod.git",
+                    ],
+                );
+                git(
+                    dir,
+                    &[
+                        "remote",
+                        "set-url",
+                        "--add",
+                        "--push",
+                        "origin",
+                        "https://github.com/elsewhere/decapod.git",
+                    ],
+                );
+            }
+            "tamper" => fs::write(dir.join("CODEX.md"), "changed contract\n").unwrap(),
+            "invalid_base_manifest" => fs::write(&manifest, "not json").unwrap(),
+            _ => {}
+        }
+        git(dir, &["add", "-A"]);
+        git(dir, &["commit", "-qm", "accepted source bundle"]);
+        git(dir, &["branch", "master"]);
+        let before = fs::read(dir.join("AGENTS.md")).unwrap();
+        fs::write(dir.join("feature.txt"), "source work\n").unwrap();
+        fs::write(
+            dir.join(".decapod/managed/specs/INTENT.md"),
+            "# Intent\n\nReviewed source work.\n",
+        )
+        .unwrap();
+        if defect == "missing_docker" {
+            fs::remove_file(dir.join(".decapod/managed/Dockerfile.decapod")).unwrap();
+        } else if defect == "missing_manifest" {
+            fs::remove_file(&manifest).unwrap();
+        }
+        git(dir, &["add", "-A"]);
+        git(dir, &["commit", "-qm", "current source work"]);
+        let ctx = ValidationContext::new();
+        validate_publication_bundle_currency(&ctx, dir).unwrap();
+        let failures = ctx.fails.lock().unwrap();
+        if defect == "none" {
+            assert!(failures.is_empty(), "{failures:?}");
+            assert!(ctx.pass_count.load(Ordering::Relaxed) > 0);
+        } else {
+            assert!(!failures.is_empty(), "{defect} must fail closed");
+            let detail = failures.join("\n");
+            let expected = match defect {
+                "missing_docker" => "missing .decapod/managed/Dockerfile.decapod",
+                "missing_manifest" => "missing .decapod/managed/specs/.manifest.json",
+                "invalid_base_manifest" => "specs manifest",
+                _ => "AGENTS.md",
+            };
+            assert!(detail.contains(expected), "{defect}: {detail}");
+        }
+        assert_eq!(fs::read(dir.join("AGENTS.md")).unwrap(), before);
+    }
+}
+
+#[test]
+fn source_currency_refreshes_only_generated_pins_when_evaluating_release_changes() {
+    let fixture = crate::core::entrypoint_integrity::development_source_fixture();
+    let dir = fixture.path();
+    seed_publication_bundle(dir);
+    for surface in crate::core::entrypoint_integrity::ENTRYPOINT_FILES {
+        fs::write(
+            dir.join(surface),
+            crate::core::entrypoint_integrity::render_entrypoint_for_release(surface, "0.107.4")
+                .unwrap(),
+        )
+        .unwrap();
+    }
+    let manifest = dir.join(".decapod/managed/specs/.manifest.json");
+    let docker = dir.join(".decapod/managed/Dockerfile.decapod");
+    fs::write(&manifest, "{\"decapod_release\":\"0.0.0\"}").unwrap();
+    fs::write(&docker, "ARG DECAPOD_VERSION=0.0.0\n").unwrap();
+    git(dir, &["add", "-A"]);
+    git(dir, &["commit", "-qm", "previous evaluating release"]);
+    git(dir, &["branch", "master"]);
+    fs::write(dir.join("feature.txt"), "new source work\n").unwrap();
+    git(dir, &["add", "-A"]);
+    git(dir, &["commit", "-qm", "source without projection refresh"]);
+    let stale = ValidationContext::new();
+    validate_publication_bundle_currency(&stale, dir).unwrap();
+    let failures = stale.fails.lock().unwrap().join("\n");
+    assert!(
+        failures.contains("Dockerfile.decapod") && failures.contains("specs/.manifest.json"),
+        "{failures}"
+    );
+    assert!(
+        !failures.contains("missing from base...HEAD: AGENTS.md"),
+        "{failures}"
+    );
+
+    fs::write(
+        &manifest,
+        serde_json::json!({"decapod_release":env!("CARGO_PKG_VERSION")}).to_string(),
+    )
+    .unwrap();
+    fs::write(
+        &docker,
+        format!("ARG DECAPOD_VERSION={}\n", env!("CARGO_PKG_VERSION")),
+    )
+    .unwrap();
+    git(dir, &["add", "-A"]);
+    git(dir, &["commit", "-qm", "refresh generated evaluating pins"]);
+    let current = ValidationContext::new();
+    validate_publication_bundle_currency(&current, dir).unwrap();
+    assert_eq!(
+        current.fail_count.load(Ordering::Relaxed),
+        0,
+        "{:?}",
+        current.fails.lock().unwrap()
+    );
+    let diff = std::process::Command::new("git")
+        .current_dir(dir)
+        .args(["diff", "--name-only", "master...HEAD"])
+        .output()
+        .unwrap();
+    let names = String::from_utf8(diff.stdout).unwrap();
+    assert!(
+        !names
+            .lines()
+            .any(|name| crate::core::entrypoint_integrity::ENTRYPOINT_FILES.contains(&name)),
+        "{names}"
+    );
+}
+
 /// Missing loadable governance at HEAD fails the gate even if files are
 /// "inherited" from nowhere — presence/load is required.
 #[test]

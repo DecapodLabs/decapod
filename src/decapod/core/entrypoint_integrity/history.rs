@@ -680,6 +680,8 @@ fn commit_path_violation(repo: &Path, commit: &str, status: char, surface: &str)
 #[cfg(test)]
 #[path = "history/tests.rs"]
 mod tests;
+#[cfg(test)]
+pub(crate) use tests::development_source_fixture;
 
 #[cfg(test)]
 mod safety_transition_tests {
