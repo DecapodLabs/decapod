@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.148.9](https://github.com/DecapodLabs/decapod/compare/v0.148.8...v0.148.9) - 2026-11-17
+
+### Other
+
+- *(constitution)* clarify global engineering canon and local authority
+- *(constitution)* clarify global engineering canon and local authority
+- *(constitution)* clarify global engineering canon and local authority
+- *(constitution)* clarify global engineering canon and local authority
+
 ## [0.148.8](https://github.com/DecapodLabs/decapod/compare/v0.148.7...v0.148.8) - 2026-11-17
 
 ### Fixed
