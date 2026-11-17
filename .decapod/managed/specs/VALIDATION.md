@@ -1,5 +1,11 @@
 # Validation
 
+The admission repair incorporates accepted target
+`b2e1dfab6560b09d544cabbf0316b18f1c374342` after validation refused a moved
+target and then correctly required that target to be an ancestor. Earlier tag
+inventory and stale-base failures remain failed attempts, with no executed
+required suite or publication authority inferred from them.
+
 ## Required publication regression coverage (#1747, #1748)
 
 `tests/unit/core/workspace_publication_tests.rs::live_admission` executes real

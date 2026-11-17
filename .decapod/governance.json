@@ -579,6 +579,14 @@
       "proof_refs": [
         "docs/publication-admission-acceptance.md"
       ]
+    },
+    {
+      "id": "incorporate-accepted-target",
+      "summary": "Incorporate accepted b2e1dfab after tag-inventory stale-target and ancestor rejections; preserve prior failed attempts",
+      "input_digest": "sha256:b2ade7e45d6e5d975c89e7fcc63d2e814c1b1521273276235ab5008bf2914b9e",
+      "proof_refs": [
+        "docs/publication-admission-acceptance.md"
+      ]
     }
   ],
   "intents": {
