@@ -89,7 +89,7 @@ fn identifier(value: &str) -> bool {
         && value.len() <= 200
         && value
             .bytes()
-            .all(|c| c.is_ascii_alphanumeric() || b"-_.:/()= \"".contains(&c))
+            .all(|c| c.is_ascii_alphanumeric() || b"-_.:/()=| \"".contains(&c))
         && !sensitive(value)
 }
 
@@ -97,10 +97,6 @@ fn sensitive(value: &str) -> bool {
     let lower = value.to_ascii_lowercase();
     [
         "bearer ",
-        "sk-",
-        "ghp_",
-        "gho_",
-        "github_pat_",
         "access_token",
         "refresh_token",
         "session_password",
@@ -112,6 +108,13 @@ fn sensitive(value: &str) -> bool {
     ]
     .iter()
     .any(|needle| lower.contains(needle))
+        || lower
+            .split(|c: char| !c.is_ascii_alphanumeric() && c != '-' && c != '_')
+            .any(|word| {
+                ["sk-", "ghp_", "gho_", "github_pat_"]
+                    .iter()
+                    .any(|prefix| word.starts_with(prefix))
+            })
         || value
             .split(|c: char| c.is_whitespace() || c == '"')
             .any(|part| {
@@ -223,6 +226,7 @@ fn correlate(capture: &Capture, documents: &BTreeMap<String, Value>) -> io::Resu
     let mut elapsed = 0;
     let mut tools = BTreeMap::new();
     let mut completed_tools = BTreeMap::new();
+    let mut model_tools = BTreeMap::new();
     let mut models = BTreeSet::new();
     let mut context = false;
     let mut claim = false;
@@ -232,7 +236,8 @@ fn correlate(capture: &Capture, documents: &BTreeMap<String, Value>) -> io::Resu
     let mut failed = false;
     let mut repair = false;
     let mut failure_head = None;
-    let mut failure_sequence = 0;
+    let mut failure_feedback_sequence = 0;
+    let mut failure_tool: Option<String> = None;
     let mut ready: Option<Value> = None;
     let mut publication: Option<Value> = None;
     let mut admitted: Option<Value> = None;
@@ -259,6 +264,7 @@ fn correlate(capture: &Capture, documents: &BTreeMap<String, Value>) -> io::Resu
             .ok_or_else(|| invalid("missing captured event"))?;
         let mut kind = "observation";
         let mut facts = json!({});
+        let mut host_tool_call_id = None;
         match artifact.source {
             Source::AgentDeclaration => {
                 kind = "agent_declaration";
@@ -303,6 +309,18 @@ fn correlate(capture: &Capture, documents: &BTreeMap<String, Value>) -> io::Resu
                         models.insert((provider.to_owned(), model.to_owned()));
                         kind = "model_observed";
                         facts = json!({"provider":provider,"model":model});
+                        if let Some(parts) = value["message"]["content"].as_array() {
+                            for call in parts.iter().filter(|part| part["type"] == "toolCall") {
+                                if let (Some(id), Some(name)) =
+                                    (call["id"].as_str(), call["name"].as_str())
+                                    && identifier(id)
+                                    && identifier(name)
+                                {
+                                    model_tools
+                                        .insert(id.to_owned(), (name.to_owned(), event.sequence));
+                                }
+                            }
+                        }
                     }
                 }
                 Some("tool_execution_start") => {
@@ -315,9 +333,17 @@ fn correlate(capture: &Capture, documents: &BTreeMap<String, Value>) -> io::Resu
                     if !identifier(id)
                         || !identifier(name)
                         || completed_tools.contains_key(id)
-                        || tools.insert(id.to_owned(), name.to_owned()).is_some()
+                        || tools
+                            .insert(id.to_owned(), (name.to_owned(), event.sequence))
+                            .is_some()
                     {
                         return Err(invalid("duplicate or invalid host tool identity"));
+                    }
+                    if !model_tools
+                        .get(id)
+                        .is_some_and(|(requested, _)| requested == name)
+                    {
+                        findings.insert("HOST_TOOL_NOT_MODEL_REQUESTED");
                     }
                     kind = "agent_tool_started";
                     facts = json!({"tool_call_id":id,"tool":name});
@@ -327,10 +353,19 @@ fn correlate(capture: &Capture, documents: &BTreeMap<String, Value>) -> io::Resu
                         .as_str()
                         .ok_or_else(|| invalid("tool lacks identity"))?;
                     let name = value["toolName"].as_str().unwrap_or("");
-                    if tools.remove(id).as_deref() != Some(name) {
+                    let Some((started_name, started_sequence)) = tools.remove(id) else {
+                        return Err(invalid("unmatched host tool result"));
+                    };
+                    if started_name != name {
                         return Err(invalid("unmatched host tool result"));
                     }
-                    completed_tools.insert(id.to_owned(), (name.to_owned(), event.sequence));
+                    completed_tools.insert(
+                        id.to_owned(),
+                        (name.to_owned(), started_sequence, event.sequence),
+                    );
+                    if failure_tool.as_deref() == Some(id) {
+                        failure_feedback_sequence = event.sequence;
+                    }
                     kind = "agent_tool_completed";
                     facts = json!({"tool_call_id":id,"tool":name,"is_error":value["isError"].as_bool()});
                 }
@@ -367,10 +402,15 @@ fn correlate(capture: &Capture, documents: &BTreeMap<String, Value>) -> io::Resu
                     .and_then(|id| completed_tools.get(id));
                 if failed
                     && failure_head.as_deref().is_some_and(|old| old != head)
-                    && agent_tool.is_some_and(|(tool, sequence)| {
-                        *sequence > failure_sequence
+                    && failure_feedback_sequence > 0
+                    && agent_tool.is_some_and(|(tool, started, _)| {
+                        *started > failure_feedback_sequence
                             && matches!(tool.as_str(), "write" | "edit" | "bash")
                     })
+                    && value["tool_call_id"]
+                        .as_str()
+                        .and_then(|id| model_tools.get(id))
+                        .is_some_and(|(_, proposed)| *proposed > failure_feedback_sequence)
                 {
                     repair = true;
                     kind = "agent_changed_failed_source";
@@ -404,6 +444,19 @@ fn correlate(capture: &Capture, documents: &BTreeMap<String, Value>) -> io::Resu
                 let code = value["exit_code"]
                     .as_i64()
                     .ok_or_else(|| invalid("kernel capture lacks exit status"))?;
+                host_tool_call_id = value["host_tool_call_id"]
+                    .as_str()
+                    .filter(|id| identifier(id));
+                let agent_tool = value["host_tool_call_id"]
+                    .as_str()
+                    .and_then(|id| tools.get(id));
+                if matches!(
+                    operation,
+                    "context" | "claim" | "workspace" | "validate" | "publish"
+                ) && !agent_tool.is_some_and(|(name, _)| name == "bash")
+                {
+                    findings.insert("KERNEL_ACTION_NOT_ATTRIBUTED_TO_AGENT");
+                }
                 let output = &value["output"];
                 if code == 0 {
                     match operation {
@@ -527,7 +580,8 @@ fn correlate(capture: &Capture, documents: &BTreeMap<String, Value>) -> io::Resu
                                 && matches!(r.observation, Observation::Executed {conclusion: readiness_evidence::Conclusion::Failure, exit_code: Some(n), ..} if n != 0))
                     {
                         failed = true;
-                        failure_sequence = event.sequence;
+                        failure_feedback_sequence=0;
+                        failure_tool=host_tool_call_id.map(str::to_owned);
                         failure_head = Some(suite.before.head_revision);
                         kind = "required_check_failed";
                     }
@@ -581,7 +635,7 @@ fn correlate(capture: &Capture, documents: &BTreeMap<String, Value>) -> io::Resu
             )
             .as_bytes(),
         );
-        events.push(json!({"id":id,"sequence":event.sequence,"elapsed_ms":event.elapsed_ms,"kind":kind,"source":artifact.source,"evidence":{"sha256":artifact.sha256,"pointer":event.pointer,"public_uri":artifact.public_uri},"facts":facts}));
+        events.push(json!({"id":id,"sequence":event.sequence,"elapsed_ms":event.elapsed_ms,"kind":kind,"source":artifact.source,"evidence":{"sha256":artifact.sha256,"pointer":event.pointer,"public_uri":artifact.public_uri,"host_tool_call_id":host_tool_call_id},"facts":facts}));
     }
     if !tools.is_empty() {
         findings.insert("INCOMPLETE_HOST_TOOL_CAPTURE");
@@ -614,6 +668,9 @@ fn correlate(capture: &Capture, documents: &BTreeMap<String, Value>) -> io::Resu
         && interventions == 0
         && !bypass
         && !findings.contains("SCRIPTED_IS_NOT_REAL_AGENT");
+    let autonomous = autonomous
+        && !findings.contains("KERNEL_ACTION_NOT_ATTRIBUTED_TO_AGENT")
+        && !findings.contains("HOST_TOOL_NOT_MODEL_REQUESTED");
     Ok(json!({
         "schema":SCHEMA,"run_id":capture.run_id,"owner_issue":format!("https://github.com/DecapodLabs/decapod/issues/{}",capture.owner_issue),
         "repository":capture.repository,"objective":{"revision":capture.objective_revision,"text":capture.objective},

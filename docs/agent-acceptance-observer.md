@@ -31,7 +31,11 @@ retain raw operational records privately. Uncaptured direct shell activity is
 unknown; no universal host interception or OS sandbox is claimed.
 
 Kernel envelopes retain the actual operation, exit status, measured executable
-digest and repository identity. Validation envelopes reference the kernel's
+digest and repository identity. Essential kernel actions must join an actual
+in-flight Pi bash tool call through host_tool_call_id; otherwise native admission
+can be observed but cannot be attributed to autonomous agent operation. The
+capturing host must observe the actual child invocation and causal tool interval,
+not infer this join from a model's proposed command. Validation envelopes reference the kernel's
 independently compiled expected plan, actual observations and native completion
 receipt. The existing evidence verifier checks that historical suite rather
 than a new proof interpreter. This correlation still does not authenticate a
@@ -48,6 +52,11 @@ successful governed publication and separate matching GitHub readback. A source
 change performed by the operator is not agent repair. Additional input and
 observed bypasses prevent a zero-intervention autonomous result. Timeouts and
 transport failures do not substitute for an executed engineering rejection.
+
+Actual tool IDs must appear in observed provider tool requests. A repair must be
+requested by a new model response and started after the failing tool's feedback
+has returned. A prewritten repair in the same failing shell call cannot prove
+response to governed feedback. Composite Codex tool IDs retain their exact join.
 
 The exact published head, accepted target, work branch and repository must match
 the receipt. A PR-created-but-not-admitted result cannot become success from a

@@ -87,6 +87,9 @@ fn push(
 ) {
     if source == Source::Kernel {
         value["binary_sha256"] = capture.kernel_sha256.clone().into();
+        if value["host_tool_call_id"].is_null() {
+            value["host_tool_call_id"] = "governance-1".into();
+        }
     }
     if matches!(source, Source::Kernel | Source::Git) {
         value["repository"] = capture.repository.clone().into();
@@ -111,6 +114,26 @@ fn push(
     docs.insert(name, value);
 }
 
+fn model_call(id: &str, name: &str) -> Value {
+    json!({"type":"message_end","message":{"role":"assistant","provider":"openai-codex","model":"pinned-test-model","stopReason":"toolUse","content":[{"type":"toolCall","id":id,"name":name,"arguments":{}}]}})
+}
+fn named(
+    c: &mut Capture,
+    d: &mut BTreeMap<String, Value>,
+    name: &str,
+    source: Source,
+    value: Value,
+) {
+    push(c, d, source, value);
+    let event = c.events.last_mut().unwrap();
+    let old = event.artifact.clone();
+    event.artifact = name.into();
+    let value = d.remove(&old).unwrap();
+    d.insert(name.into(), value);
+    let mut artifact = c.artifacts.remove(&old).unwrap();
+    artifact.file = format!("{name}.json");
+    c.artifacts.insert(name.into(), artifact);
+}
 fn fixture() -> (Capture, BTreeMap<String, Value>) {
     let objective = "Repair repository-scoped access checks and publish a verified PR.";
     let mut c = Capture {
@@ -129,47 +152,84 @@ fn fixture() -> (Capture, BTreeMap<String, Value>) {
         events: vec![],
     };
     let mut d = BTreeMap::new();
-    let mut add = |source, value| push(&mut c, &mut d, source, value);
+    let mut add = |name, source, value| named(&mut c, &mut d, name, source, value);
     add(
+        "objective",
         Source::Host,
         json!({"type":"message_end","message":{"role":"user","content":[{"type":"text","text":objective}]}}),
     );
     add(
+        "initial-model",
         Source::Host,
-        json!({"type":"message_end","message":{"role":"assistant","provider":"openai-codex","model":"pinned-test-model","stopReason":"toolUse"}}),
+        model_call("governance-1", "bash"),
     );
-    for (operation, output) in [
-        ("context", json!({})),
-        ("claim", json!({"status":"ok","id":"task"})),
-        (
-            "workspace",
-            json!({"can_work":true,"branch":"agent/task-repair"}),
-        ),
-    ] {
-        add(
-            Source::Kernel,
-            json!({"operation":operation,"exit_code":0,"output":output}),
-        );
-    }
-    add(Source::Kernel, proof("a", false));
     add(
+        "governance-start",
+        Source::Host,
+        json!({"type":"tool_execution_start","toolCallId":"governance-1","toolName":"bash","args":{}}),
+    );
+    add(
+        "context",
+        Source::Kernel,
+        json!({"operation":"context","exit_code":0,"output":{}}),
+    );
+    add(
+        "claim",
+        Source::Kernel,
+        json!({"operation":"claim","exit_code":0,"output":{"status":"ok","id":"task"}}),
+    );
+    add(
+        "workspace",
+        Source::Kernel,
+        json!({"operation":"workspace","exit_code":0,"output":{"can_work":true,"branch":"agent/task-repair"}}),
+    );
+    add("failed", Source::Kernel, proof("a", false));
+    add(
+        "governance-end",
+        Source::Host,
+        json!({"type":"tool_execution_end","toolCallId":"governance-1","toolName":"bash","isError":true}),
+    );
+    add("repair-model", Source::Host, model_call("repair-1", "edit"));
+    add(
+        "repair-start",
         Source::Host,
         json!({"type":"tool_execution_start","toolCallId":"repair-1","toolName":"edit","args":{}}),
     );
     add(
+        "repair-end",
         Source::Host,
         json!({"type":"tool_execution_end","toolCallId":"repair-1","toolName":"edit","isError":false}),
     );
     add(
+        "source",
         Source::Git,
         json!({"head":"c".repeat(40),"base":"b".repeat(40),"clean":true,"tool_call_id":"repair-1"}),
     );
-    add(Source::Kernel, proof("c", true));
     add(
-        Source::Kernel,
-        json!({"operation":"publish","exit_code":0,"output":{"status":"ok","commit_hash":"c".repeat(40),"branch":"agent/task-repair","pr_verified":true,"remote_verified":true,"pr_url":"https://github.com/owner/fixture/pull/2"}}),
+        "proof-model",
+        Source::Host,
+        model_call("governance-2", "bash"),
     );
     add(
+        "proof-start",
+        Source::Host,
+        json!({"type":"tool_execution_start","toolCallId":"governance-2","toolName":"bash","args":{}}),
+    );
+    let mut fresh = proof("c", true);
+    fresh["host_tool_call_id"] = "governance-2".into();
+    add("fresh", Source::Kernel, fresh);
+    add(
+        "publish",
+        Source::Kernel,
+        json!({"host_tool_call_id":"governance-2","operation":"publish","exit_code":0,"output":{"status":"ok","commit_hash":"c".repeat(40),"branch":"agent/task-repair","pr_verified":true,"remote_verified":true,"pr_url":"https://github.com/owner/fixture/pull/2"}}),
+    );
+    add(
+        "proof-end",
+        Source::Host,
+        json!({"type":"tool_execution_end","toolCallId":"governance-2","toolName":"bash","isError":false}),
+    );
+    add(
+        "forge",
         Source::Github,
         json!({"head":"c".repeat(40),"base":"b".repeat(40),"branch":"agent/task-repair","base_branch":"main","url":"https://github.com/owner/fixture/pull/2","merged":false}),
     );
@@ -180,11 +240,28 @@ fn fixture() -> (Capture, BTreeMap<String, Value>) {
 fn trusted_capture_correlates_historical_admission_but_never_grants_authority() {
     let (c, d) = fixture();
     let result = correlate(&c, &d).unwrap();
-    assert_eq!(result["observed_autonomous_admission"], true);
+    assert_eq!(result["observed_autonomous_admission"], true, "{result:#}");
     assert_eq!(result["current_admission_applicable"], true);
     assert_eq!(result["publication_ready"], false);
     assert_eq!(result["merge_authorized"], false);
     assert_eq!(result, correlate(&c, &d).unwrap());
+}
+
+#[test]
+fn observed_pi_codex_composite_tool_ids_preserve_the_actual_join() {
+    let (c, mut d) = fixture();
+    for value in d.values_mut() {
+        let text = serde_json::to_string(value)
+            .unwrap()
+            .replace("governance-1", "call_context|fc_context")
+            .replace("repair-1", "call_repair|fc_repair")
+            .replace("governance-2", "call_proof|fc_proof");
+        *value = serde_json::from_str(&text).unwrap();
+    }
+    assert_eq!(
+        correlate(&c, &d).unwrap()["observed_autonomous_admission"],
+        true
+    );
 }
 
 #[test]
@@ -196,6 +273,7 @@ fn narration_scripted_events_missing_context_and_controller_repair_cannot_pass()
         "controller",
         "objective",
         "tool-result",
+        "attribution",
     ] {
         let (mut c, mut d) = fixture();
         match control {
@@ -212,21 +290,28 @@ fn narration_scripted_events_missing_context_and_controller_repair_cannot_pass()
                 }
             }
             "context" => {
-                d.get_mut("event-3").unwrap()["operation"] = "not-context".into();
+                d.get_mut("context").unwrap()["operation"] = "not-context".into();
+            }
+            "attribution" => {
+                d.get_mut("fresh")
+                    .unwrap()
+                    .as_object_mut()
+                    .unwrap()
+                    .remove("host_tool_call_id");
             }
             "controller" => {
-                d.get_mut("event-9")
+                d.get_mut("source")
                     .unwrap()
                     .as_object_mut()
                     .unwrap()
                     .remove("tool_call_id");
             }
             "objective" => {
-                d.get_mut("event-1").unwrap()["message"]["content"][0]["text"] =
+                d.get_mut("objective").unwrap()["message"]["content"][0]["text"] =
                     "A different objective".into();
             }
             "tool-result" => {
-                c.events.retain(|e| e.artifact != "event-8");
+                c.events.retain(|e| e.artifact != "repair-end");
             }
             _ => unreachable!(),
         }
@@ -249,14 +334,14 @@ fn missing_checks_old_receipts_wrong_forge_subject_and_created_not_admitted_fail
     ] {
         let (c, mut d) = fixture();
         match control {
-            "missing" => d.get_mut("event-10").unwrap()["observations"]["results"] = json!([]),
+            "missing" => d.get_mut("fresh").unwrap()["observations"]["results"] = json!([]),
             "stale-receipt" => {
-                d.get_mut("event-10").unwrap()["receipt"] = proof("a", true)["receipt"].clone()
+                d.get_mut("fresh").unwrap()["receipt"] = proof("a", true)["receipt"].clone()
             }
-            "wrong-head" => d.get_mut("event-12").unwrap()["head"] = "d".repeat(40).into(),
-            "wrong-base" => d.get_mut("event-12").unwrap()["base"] = "d".repeat(40).into(),
+            "wrong-head" => d.get_mut("forge").unwrap()["head"] = "d".repeat(40).into(),
+            "wrong-base" => d.get_mut("forge").unwrap()["base"] = "d".repeat(40).into(),
             "created-only" => {
-                *d.get_mut("event-11").unwrap() = json!({"operation":"publish","repository":c.repository,"binary_sha256":c.kernel_sha256,"exit_code":1,"reason_codes":["PR_CREATED_NOT_ADMITTED","WORKUNIT_PROOF_STALE"]})
+                *d.get_mut("publish").unwrap() = json!({"operation":"publish","repository":c.repository,"binary_sha256":c.kernel_sha256,"exit_code":1,"reason_codes":["PR_CREATED_NOT_ADMITTED","WORKUNIT_PROOF_STALE"]})
             }
             _ => unreachable!(),
         }
@@ -310,7 +395,7 @@ fn post_objective_input_and_observed_host_bypass_cannot_be_zero_intervention_suc
 #[test]
 fn secrets_are_not_exported_and_unsafe_public_text_is_rejected() {
     let (mut c, mut d) = fixture();
-    d.get_mut("event-2").unwrap()["message"]["content"] = json!([{"type":"thinking","thinking":"private reasoning Bearer secret"},{"type":"text","text":"Password: private"}]);
+    d.get_mut("initial-model").unwrap()["message"]["content"] = json!([{"type":"thinking","thinking":"private reasoning Bearer secret"},{"type":"text","text":"Password: private"}]);
     let text = serde_json::to_string(&correlate(&c, &d).unwrap()).unwrap();
     assert!(
         !text.contains("private reasoning")
@@ -318,6 +403,9 @@ fn secrets_are_not_exported_and_unsafe_public_text_is_rejected() {
             && !text.contains("Bearer secret")
     );
     c.objective = "Bearer secret".into();
+    c.approved_objective_sha256 = digest(c.objective.as_bytes());
+    assert!(correlate(&c, &d).is_err());
+    c.objective = "API key=sk-private-example".into();
     c.approved_objective_sha256 = digest(c.objective.as_bytes());
     assert!(correlate(&c, &d).is_err());
 }
@@ -339,9 +427,9 @@ fn missing_or_modified_capture_bytes_cannot_export_a_presentation() {
         export(&index).unwrap()["observed_autonomous_admission"],
         true
     );
-    fs::write(dir.path().join("event-10.json"), b"{}").unwrap();
+    fs::write(dir.path().join("fresh.json"), b"{}").unwrap();
     assert!(export(&index).is_err());
-    fs::remove_file(dir.path().join("event-10.json")).unwrap();
+    fs::remove_file(dir.path().join("fresh.json")).unwrap();
     assert!(export(&index).is_err());
 }
 
@@ -355,7 +443,7 @@ fn event_replay_nonmonotone_order_and_path_escape_are_rejected() {
     assert!(correlate(&c, &d).is_err());
     let dir = tempfile::tempdir().unwrap();
     let (mut c, _) = fixture();
-    c.artifacts.get_mut("event-1").unwrap().file = "../outside.json".into();
+    c.artifacts.get_mut("objective").unwrap().file = "../outside.json".into();
     let index = dir.path().join("capture.json");
     fs::write(&index, serde_json::to_vec(&c).unwrap()).unwrap();
     assert!(export(&index).is_err());
@@ -363,13 +451,13 @@ fn event_replay_nonmonotone_order_and_path_escape_are_rejected() {
 
 #[test]
 fn an_agent_tool_before_the_failure_cannot_explain_an_operator_repair_afterward() {
-    let (mut c, d) = fixture();
-    let failure = c.events.remove(5);
-    c.events.insert(7, failure);
-    for (index, event) in c.events.iter_mut().enumerate() {
-        event.sequence = index as u64 + 1;
-        event.elapsed_ms = event.sequence;
-    }
+    let (mut c, mut d) = fixture();
+    let proposal = d["repair-model"]["message"]["content"][0].clone();
+    d.get_mut("initial-model").unwrap()["message"]["content"]
+        .as_array_mut()
+        .unwrap()
+        .push(proposal);
+    c.events.retain(|e| e.artifact != "repair-model");
     assert_eq!(
         correlate(&c, &d).unwrap()["observed_autonomous_admission"],
         false
@@ -379,7 +467,27 @@ fn an_agent_tool_before_the_failure_cannot_explain_an_operator_repair_afterward(
 #[test]
 fn fresh_validation_does_not_reuse_an_old_publisher_response() {
     let (mut c, mut d) = fixture();
-    push(&mut c, &mut d, Source::Kernel, proof("c", true));
+    push(
+        &mut c,
+        &mut d,
+        Source::Host,
+        model_call("governance-3", "bash"),
+    );
+    push(
+        &mut c,
+        &mut d,
+        Source::Host,
+        json!({"type":"tool_execution_start","toolCallId":"governance-3","toolName":"bash","args":{}}),
+    );
+    let mut fresh = proof("c", true);
+    fresh["host_tool_call_id"] = "governance-3".into();
+    push(&mut c, &mut d, Source::Kernel, fresh);
+    push(
+        &mut c,
+        &mut d,
+        Source::Host,
+        json!({"type":"tool_execution_end","toolCallId":"governance-3","toolName":"bash","isError":false}),
+    );
     push(
         &mut c,
         &mut d,
@@ -395,7 +503,7 @@ fn fresh_validation_does_not_reuse_an_old_publisher_response() {
 fn foreign_kernel_repository_or_binary_cannot_join_this_run() {
     for field in ["repository", "binary_sha256"] {
         let (c, mut d) = fixture();
-        d.get_mut("event-10").unwrap()[field] = "different".into();
+        d.get_mut("fresh").unwrap()[field] = "different".into();
         assert!(correlate(&c, &d).is_err());
     }
 }
@@ -408,7 +516,7 @@ fn symlink_capture_is_not_followed() {
     let index = dir.path().join("capture.json");
     fs::write(&index, serde_json::to_vec(&c).unwrap()).unwrap();
     let outside = tempfile::NamedTempFile::new().unwrap();
-    fs::write(outside.path(), serde_json::to_vec(&d["event-1"]).unwrap()).unwrap();
-    std::os::unix::fs::symlink(outside.path(), dir.path().join("event-1.json")).unwrap();
+    fs::write(outside.path(), serde_json::to_vec(&d["objective"]).unwrap()).unwrap();
+    std::os::unix::fs::symlink(outside.path(), dir.path().join("objective.json")).unwrap();
     assert!(export(&index).is_err());
 }

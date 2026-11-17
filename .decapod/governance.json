@@ -588,6 +588,14 @@
       "proof_refs": [
         "review:observer-current-source"
       ]
+    },
+    {
+      "id": "observer-1757-attribution-repair",
+      "summary": "Repair required-CI positive-path redaction failure; bind essential native actions and corrective source changes to actual provider-requested Pi tools after failed feedback; preserve failed attempt and explicit assurance limits.",
+      "input_digest": "sha256:1bc8e17a8e69618504c9eea2b55c86843dcf6ce74f03410fdcbfc1871b2a1de5",
+      "proof_refs": [
+        "https://buildkite.com/decapodlabs/decapod/builds/11777"
+      ]
     }
   ],
   "intents": {
@@ -628,22 +636,22 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Final staged observer source binds objective, actual post-failure tool repair, kernel binary/repository/task/branch and native plan/receipt to independent forge readback; redacted correlation grants no authority.",
-          "reviewed_code_fingerprint": "1e5ee4b1c0bd2fd58048fd36be6b8bde7f159c01f9db696980042e45bdb0c08a",
-          "spec_material_hash": "3a7cc19c0e818a537ca934b5905f7c1a1a61c464d3bc39d074a4faeb533905b0"
+          "reason": "Reviewed repaired redaction and actual Pi composite tool identities, provider-request/host/kernel attribution, and post-rejection model/tool ordering. Current source preserves offline mandatory controls and grants no authority.",
+          "reviewed_code_fingerprint": "078a0976d8241f16e084c5086fe599d92355613bb8a70867b5ba40aef5618e9e",
+          "spec_material_hash": "ee51ab44d2b4722b6a57c79cf3c5167270ff908803bc3377630386e4f7de6341"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Final staged observer source binds objective, actual post-failure tool repair, kernel binary/repository/task/branch and native plan/receipt to independent forge readback; redacted correlation grants no authority.",
-          "reviewed_code_fingerprint": "1e5ee4b1c0bd2fd58048fd36be6b8bde7f159c01f9db696980042e45bdb0c08a",
+          "reason": "Reviewed repaired redaction and actual Pi composite tool identities, provider-request/host/kernel attribution, and post-rejection model/tool ordering. Current source preserves offline mandatory controls and grants no authority.",
+          "reviewed_code_fingerprint": "078a0976d8241f16e084c5086fe599d92355613bb8a70867b5ba40aef5618e9e",
           "spec_material_hash": "7bfbbf44436b18dfb78b943a8a994fed517bf14e615dec530945abf70dbdfd23"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Final staged observer source binds objective, actual post-failure tool repair, kernel binary/repository/task/branch and native plan/receipt to independent forge readback; redacted correlation grants no authority.",
-          "reviewed_code_fingerprint": "1e5ee4b1c0bd2fd58048fd36be6b8bde7f159c01f9db696980042e45bdb0c08a",
+          "reason": "Reviewed repaired redaction and actual Pi composite tool identities, provider-request/host/kernel attribution, and post-rejection model/tool ordering. Current source preserves offline mandatory controls and grants no authority.",
+          "reviewed_code_fingerprint": "078a0976d8241f16e084c5086fe599d92355613bb8a70867b5ba40aef5618e9e",
           "spec_material_hash": "d3500590e30216b65c54dcd873397b0a7258badfb1f1a8cca61545687dd67d8a"
         }
       ],
@@ -655,14 +663,22 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1794949178Z"
+      "updated_at": "1794951516Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:d5513f0eb051ec2384e11b581e4b6315b010902c924d1bc3f11268dc6b9f8bc4",
+      "artifact_hash": "sha256:c1d7f70011c96c5bc034c8f6b9253889e033bd81a7c304aef3e5111f105d79a4",
       "checks": [
+        {
+          "name": "autonomous_acceptance",
+          "status": "unavailable"
+        },
+        {
+          "name": "observer_first_required_ci",
+          "status": "failed"
+        },
         {
           "name": "observer_required_execution",
           "status": "partial"
@@ -670,6 +686,10 @@
         {
           "name": "pi_provider_setup",
           "status": "partial"
+        },
+        {
+          "name": "real_pi_tool_protocol_probe",
+          "status": "passed"
         },
         {
           "name": "release_input_review",
@@ -708,10 +728,17 @@
             "intent_id": "intent:change_01M7NKA4FSD1G656VQZ9VQQF46",
             "kind": "trajectory_step_recorded",
             "sequence": 5
+          },
+          {
+            "detail": "trajectory:branch_01M7NKA4JJAP7XX9QCY1NHG3AH",
+            "event_id": "event:6",
+            "intent_id": "intent:change_01M7NKA4FSD1G656VQZ9VQQF46",
+            "kind": "trajectory_step_recorded",
+            "sequence": 6
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 5,
+        "next_sequence": 6,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M7NKA4JJAP7XX9QCY1NHG3AH": {
@@ -755,6 +782,25 @@
                 ],
                 "sequence": 5,
                 "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:6",
+                "observations": [
+                  "https://buildkite.com/decapodlabs/decapod/builds/11777",
+                  "kernel:SNAPSHOT_NOT_READY:CI-operation-cancelled-after-superseded-candidate",
+                  "observed:Pi-0.73.1:openai-codex:gpt-6.1-sol:actual-composite-tool-id"
+                ],
+                "proof_refs": [
+                  "observer_first_required_ci",
+                  "real_pi_tool_protocol_probe",
+                  "autonomous_acceptance"
+                ],
+                "scope": [
+                  "src/decapod/core"
+                ],
+                "sequence": 6,
+                "validation_findings": []
               }
             ]
           }
@@ -763,6 +809,9 @@
       "declared_commands": [],
       "destination": "pull request",
       "evidence": [
+        "https://buildkite.com/decapodlabs/decapod/builds/11777",
+        "kernel:SNAPSHOT_NOT_READY:CI-operation-cancelled-after-superseded-candidate",
+        "observed:Pi-0.73.1:openai-codex:gpt-6.1-sol:actual-composite-tool-id",
         "source:9d1aed2795dae5b9345d9ec3ad1d3fcfe1d770d8..18cbb30ca4d16a80810d8f3c0cecfc4073a83cbc:Cargo-version-only"
       ],
       "inspected_files": [

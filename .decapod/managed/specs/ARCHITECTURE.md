@@ -8,7 +8,11 @@ artifact digests and event ordering. Source-specific reducers correlate actual
 Pi calls, native plan/observations/receipt material, task/workspace custody and
 separate Git/GitHub subject snapshots. The existing readiness-evidence verifier
 checks captured suite consistency. Trusted host provenance remains explicit;
-source labels and hashes do not authenticate a producer. New validation clears
+source labels and hashes do not authenticate a producer.
+Essential kernel calls join actual in-flight Pi bash calls, and actual tool IDs
+must match provider tool requests. Repair requires a new model request and tool
+start after the failed tool's feedback returned; controller work and prewritten
+same-call repair cannot establish autonomous correction. New validation clears
 prior publisher applicability; later source/base movement preserves history
 while requiring new applicable publication evidence. Output grants no authority.
 
@@ -1000,7 +1004,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `1e5ee4b1c0bd2fd58048fd36be6b8bde7f159c01f9db696980042e45bdb0c08a`
+- Repository signal fingerprint: `078a0976d8241f16e084c5086fe599d92355613bb8a70867b5ba40aef5618e9e`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (237 files), `tests/` (236 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
