@@ -7,7 +7,7 @@
   <div class="decapod-docs-hero-copy">
     <div class="decapod-docs-kicker">THE METACOGNITION GOVERNANCE KERNEL FOR AI AGENTS</div>
     <h1>HARNESS AI <em class="decapod-docs-metacognition">METACOGNITION.</em></h1>
-    <p>AI coding agents invoke Decapod to govern tasks, consult the Constitution, preserve project state, work within boundaries, and prove what they deliver.</p>
+    <p>AI coding agents invoke Decapod to query a shared Constitution of engineering golden paths, research, and software-business knowledge; govern tasks and workspaces; retain repository context; and prove what they deliver.</p>
     <div class="decapod-docs-actions">
       <a class="decapod-docs-btn primary" href="quickstart.html">Get started <span aria-hidden="true">↗</span></a>
       <a class="decapod-docs-btn secondary" href="introduction.html">Understand Decapod <span aria-hidden="true">↗</span></a>
@@ -50,4 +50,4 @@ Then keep using Codex, Claude Code, Cursor, or your preferred coding agent. Deca
 - **[Agent workflows](workflows/single-agent.md)** — Follow an accepted change from planning to validation.
 - **[Concurrent work](workflows/multi-agent.md)** — Keep ownership explicit when agents work in parallel.
 - **[Proof and recovery](concepts/proof.md)** — Distinguish verified work from unsupported completion claims.
-- **[Constitution and overrides](concepts/constitution.md)** — Establish policy that stays with the project.
+- **[Global Constitution and project overrides](concepts/constitution.md)** — Query shared engineering doctrine and research, then apply explicit repository-specific policy.
