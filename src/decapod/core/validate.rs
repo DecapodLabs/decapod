@@ -3296,8 +3296,16 @@ fn validate_publication_bundle_currency(
     // (fingerprint/provenance still validates ⇒ unchanged inheritance is fine).
     // When the base pin is older than the evaluating release, inheritance is
     // not enough: the branch must carry refreshed release-bound surfaces.
+    let preserve_source_versions =
+        crate::core::entrypoint_integrity::preserves_source_entrypoint_versions(repo_root);
+    let base_release = if preserve_source_versions {
+        git_blob_generation_release(repo_root, &base_ref)
+            .or_else(|| git_blob_release_marker(repo_root, &base_ref, "AGENTS.md"))
+    } else {
+        git_blob_release_marker(repo_root, &base_ref, "AGENTS.md")
+    };
     if !skip_fingerprint_gates()
-        && let Some(base_release) = git_blob_release_marker(repo_root, &base_ref, "AGENTS.md")
+        && let Some(base_release) = base_release
         && base_release != crate::core::entrypoint_integrity::RELEASE_VERSION
     {
         let running = crate::core::entrypoint_integrity::RELEASE_VERSION;
@@ -3311,11 +3319,24 @@ fn validate_publication_bundle_currency(
             ".decapod/managed/Dockerfile.decapod",
             ".decapod/managed/specs/.manifest.json",
         ];
+        // Authorized source headers can retain their own valid versions. The
+        // generated manifest records the evaluating release instead; its pin
+        // and the Docker pin still refresh when that release advances.
+        let required_refresh = if preserve_source_versions {
+            &required_refresh[4..]
+        } else {
+            &required_refresh[..]
+        };
         let missing_refresh =
-            release_bound_paths_missing_vs_base(repo_root, &base_ref, &required_refresh)?;
+            release_bound_paths_missing_vs_base(repo_root, &base_ref, required_refresh)?;
         if !missing_refresh.is_empty() {
+            let remediation = if preserve_source_versions {
+                "Refresh the managed Dockerfile pin and specs manifest through the evaluating Decapod; canonical source entrypoint versions remain valid."
+            } else {
+                "First PR for a new installed Decapod must bump all four entrypoint fingerprints, Dockerfile pin, and specs manifest."
+            };
             failures.push(format!(
-                "Decapod release advanced from base '{base_release}' to running '{running}' but release-bound surfaces were not fully refreshed on this branch (missing from base...HEAD: {}). First PR for a new installed Decapod must bump all four entrypoint fingerprints, Dockerfile pin, and specs manifest.",
+                "Decapod release advanced from base '{base_release}' to running '{running}' but release-bound surfaces were not fully refreshed on this branch (missing from base...HEAD: {}). {remediation}",
                 missing_refresh.join(", ")
             ));
         }
@@ -3380,6 +3401,20 @@ fn load_validation_receipt_for_currency(repo_root: &Path) -> Result<(), String> 
     };
     let _: ValidationReceipt = serde_json::from_value(value).map_err(|e| e.to_string())?;
     Ok(())
+}
+
+/// The generated manifest's release is provenance for preserved source headers.
+fn git_blob_generation_release(repo_root: &Path, reference: &str) -> Option<String> {
+    let spec = format!("{reference}:.decapod/managed/specs/.manifest.json");
+    let output = crate::core::entrypoint_integrity::history_git(repo_root, &["show", &spec])?;
+    if !output.status.success() {
+        return None;
+    }
+    serde_json::from_slice::<serde_json::Value>(&output.stdout)
+        .ok()?
+        .get("decapod_release")?
+        .as_str()
+        .map(str::to_owned)
 }
 
 /// Read the `<!-- decapod-release: ... -->` marker from a blob at `reference:path`.

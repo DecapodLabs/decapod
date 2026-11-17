@@ -1,5 +1,15 @@
 # Architecture
 
+## Source-policy currency continuity (#1753)
+
+`entrypoint_integrity::preserves_source_entrypoint_versions` reuses the existing
+bounded source-policy reader and requires all four regular entrypoints to match
+the committed canonical bodies and version fingerprints. Publication currency
+uses generated-manifest release provenance only under that authorization, with
+conservative fallback to the base header when provenance is missing/invalid.
+Evaluating-release upgrades still refresh Docker and manifest pins. The ordinary
+repository rule, required-file checks and sibling integrity gates remain intact.
+
 ## UTC timestamp dependency (#1755)
 
 `core/time.rs` owns UTC RFC3339 parsing and established output precision using
@@ -978,7 +988,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `939915b935953c7ae56af42d7bbea5a14b3ee19bcc785bcafeffd46bc1fc1468`
+- Repository signal fingerprint: `59302b283273f65193215ee22c7b207943d8077e5105c464f9f5a2e7ac6faa43`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (236 files), `tests/` (235 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

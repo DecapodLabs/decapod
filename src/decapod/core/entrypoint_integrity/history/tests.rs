@@ -193,6 +193,15 @@ fn enable_development_scope(fixture: &Fixture, slug: &str) {
     );
 }
 
+// Reuse the exact published root object and real Git ancestry in cross-boundary
+// currency tests, without depending on a developer checkout's object database.
+pub(crate) fn development_source_fixture() -> TempDir {
+    let fixture = Fixture::new(true, include_str!("../../assets.rs"));
+    enable_development_scope(&fixture, "DecapodLabs/decapod");
+    fixture.commit();
+    fixture.temp
+}
+
 #[test]
 fn private_development_config_requires_exclusive_slug_and_real_source_lineage() {
     assert!(

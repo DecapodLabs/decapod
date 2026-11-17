@@ -1,7 +1,7 @@
 {
   "schema_version": "1.0.0",
   "baseline": {
-    "accepted_commit": "99ec8c2f677a8f21ac2ce6d511d19dcf917c4886",
+    "accepted_commit": "9d1aed2795dae5b9345d9ec3ad1d3fcfe1d770d8",
     "policy": {
       "change_control": {
         "requires_human_review": true,
@@ -527,6 +527,7 @@
       "trajectory:8a7663240329d9ea": "Before any numerical observations: independent reference supports only dense single text prompts up to512tokens, rawblocks13/19 without finalnorm. Provisional component tolerance0.005+0.001abs(reference) and normalizedRMS<=0.002 for raw samples and real pooled features; existing conditional-engine/calibration tolerances unchanged. Report all errors and unsupported long/chunked/multimodal cases; no threshold adjustment after outputs without recorded rationale/revalidation.",
       "trajectory:8a97ab0f9510847b": "Author shared projection seam and regression coverage; preserve all scientific failures and production authority. User requires complete functional integration, rejects prior inactive-stage proposal. Public related execution/release issues are consumed boundaries, not automatically closure scope.",
       "trajectory:92d20e7a29fe6436": "CompilerreportedoneResulttypeerrorinnewproductioncollector; use?andOk tocoerceIOerrorintoBoxerror. Source39and1463librarytests didpass304; no nativeunit/modeltest ran because separate worker compilationfailed. Preserve allfailedreports, no manualCargo workerbuild/test, noauthfallback, nosciencecriterionwaiver. Same originalclaimedtask/branch; checkpointthenrerunfullvalidate. No newprerequisite or PR.",
+      "trajectory:9941075e2bf888c0": "Use existing deterministic runtime and publisher; local-only proof cannot authorize a forge target",
       "trajectory:9cae7985f5372144": "50dfe init/cli_contracts target passed217.4s, but sibling enforcement timed out300s at real validate; same enforcement succeeded standalone247.6s. Isolate enforcement from sibling Bazel tests without changing commands/coverage/budgets; reviewed inventory781faa8360d5ca7701b61a3941ae6994681c7e98b229289a90bcb740e3236f97. New shared model pin/local runtime registration, native format/hash checks, bounded private records, frozen custody before proof and stale binding/model/runtime rejection before acceptance are authored not executed. Explicit registration does not run worker or certify provenance. Current worker still Metal-only; CPU/CUDA/fallback and genuine native/reference/holdout evidence remain mandatory gaps.",
       "trajectory:9ccc878a4150c313": "Native snapshot now succeeds, but dependency compilation failed before any worker tests or model/probe/reference/evaluation. Repair is compatible upstream runtime pin update on same feature branch; all new actual execution still pending.",
       "trajectory:9ec958ffca8a0a63": "Independent scalar reference repair only; own block19 floor-bucket accumulation and analytic anchors do not call candidate pooling. New tests and nonempty chunk comparisons unexecuted until next fullvalidate. Model/runtime/calibration/holdout/tolerances fixed; partial model-judgment failures and long-reference/productionfallback/independentlabel gaps still block publication.",
@@ -567,142 +568,44 @@
     }
   },
   "change": {
-    "id": "change_01M7M3P63MYW2A9SP5C97N0JS4",
-    "base_commit": "99ec8c2f677a8f21ac2ce6d511d19dcf917c4886",
+    "id": "admission-postmerge-proof",
+    "base_commit": "9d1aed2795dae5b9345d9ec3ad1d3fcfe1d770d8",
     "target_base": "origin/master"
   },
   "checkpoints": [
     {
-      "id": "admission-proof-continuity",
-      "summary": "Implement #1747 and #1748 live proof continuity, quarantine and required deterministic regression coverage; verification pending full configured validation",
-      "input_digest": "sha256:c5a63d9a03ba961e6e4880ce91fffb10dfd83be17ad0b2cd7b76b20d726aeb99",
-      "proof_refs": [
-        "docs/publication-admission-acceptance.md"
-      ]
+      "id": "admission-postmerge-record",
+      "summary": "Record externally accepted source tree and release 0.148.7, preserve actual stale-target CI rejection and all immutable live evidence, distinguish native admission from human forge integration, and require fresh exact-report head/base validation without runtime or check-policy changes",
+      "input_digest": "sha256:1a915f556f29fdda21f7dd819a38400c10e72131164a84deac747626338a3f43"
     },
     {
-      "id": "incorporate-accepted-target",
-      "summary": "Incorporate accepted b2e1dfab after tag-inventory stale-target and ancestor rejections; preserve prior failed attempts",
-      "input_digest": "sha256:b2ade7e45d6e5d975c89e7fcc63d2e814c1b1521273276235ab5008bf2914b9e",
-      "proof_refs": [
-        "docs/publication-admission-acceptance.md"
-      ]
+      "id": "admission-postmerge-source-review",
+      "summary": "Re-review the two accepted 0.148.7 Cargo package-version inputs, reconcile source inventory only, preserve complete check graph and executor definitions, and require fresh exact-subject validation for the final report",
+      "input_digest": "sha256:1bbc48e66d4fe797c9d47c9a5857ee3730938f50113de3216dfabf7c0c68c051"
     },
     {
-      "id": "publication-live-config-1753",
-      "summary": "Carry exact proof through publication and require private config plus exclusive source slug for release drift",
-      "input_digest": "sha256:12f348566edeb9210efb455071e6f103a669859621c416423720431b8fa710eb",
-      "proof_refs": [
-        "formatting:passed",
-        "issue:1747",
-        "issue:1748",
-        "issue:1753"
-      ]
-    },
-    {
-      "id": "accepted-target-1486",
-      "summary": "Incorporate accepted release 0.148.6 after CI correctly rejected stale target ancestry",
-      "input_digest": "sha256:b9cbeda7585518523e57c4a651dcd6b54ff737fd1e1a2be9e1fe9fbe76c79b5f",
-      "proof_refs": [
-        "ci:11522-target-ancestry-rejection"
-      ]
-    },
-    {
-      "id": "development-controller-projections-1486",
-      "summary": "Refresh supported 0.148.6 projections, renew exact source review, and repair actual Clippy feedback",
-      "input_digest": "sha256:4494bd133c6530c1b4b3eb695eb134a45b38bb813180a556260f7c2d6989049b",
-      "proof_refs": [
-        "build:development-controller-compiled",
-        "ci:11527-clippy-needless-borrow"
-      ]
-    },
-    {
-      "id": "mandatory-accepted-library-owner",
-      "summary": "Retain accepted executor and require its complete library recipe; reject ambiguous development push targets; repair fixture feedback",
-      "input_digest": "sha256:eb11e9fa37fbc723b9da9d79422756f2128ee95a9c8fe2d1bd6d16430868570b",
-      "proof_refs": [
-        "ci:11527-1790-library-tests-passed-1-fixture-failed",
-        "issue:1753"
-      ]
-    },
-    {
-      "id": "real-fixture-control-repairs",
-      "summary": "Repair actual Clippy duplicate-module and live acceptance toolchain-declaration feedback without weakening assertions",
-      "input_digest": "sha256:25db7b33526ece653df73a17eaf69891bf5bcd15d3aca8086a95e3fe323aeda7",
-      "proof_refs": [
-        "ci:11532-clippy-duplicate-mod",
-        "live-attempt-01:adapter-rejection"
-      ]
-    },
-    {
-      "id": "governed-stale-source-demo-recovery",
-      "summary": "Preserve actual enforcement and repair live demo through a newly checkpointed and revalidated artifact",
-      "input_digest": "sha256:7f5c1aed24a5a2ba73bcd030f69ee19ee3c41a38076f468a180aaa0112f88155",
-      "proof_refs": [
-        "live-attempt-02:rejection-quarantine-admission-observed",
-        "source-validation-7:passed-e81b89b3"
-      ]
-    },
-    {
-      "id": "independent-live-target-ref",
-      "summary": "Bind target-advancement acceptance to actual remote ref and retain separate historical PR metadata",
-      "input_digest": "sha256:d58721ed134b55ce171c9a5d866cecce68cdd5023cb831b2b18a75d0ddafbf16",
-      "proof_refs": [
-        "live-attempt-03:stale-base-rejections-observed"
-      ]
-    },
-    {
-      "id": "live-forge-acceptance-complete",
-      "summary": "Record independently reproducible real GitHub enforcement, native receipts, exact subjects and required regression rules",
-      "input_digest": "sha256:fe06bc0a4e45b4524309e0e5d397748a63c9ffefa509fe19432944a355b94c59",
-      "proof_refs": [
-        "github:DecapodLabs/decapod/issues/1747#issuecomment-6944676823",
-        "github:DecapodLabs/decapod/issues/1748#issuecomment-6944677325",
-        "live-archive:1c21226bc3c5c65afb504a37bbe00829e308c593"
-      ]
-    },
-    {
-      "id": "timestamp-dependency-1755",
-      "summary": "Remove unmaintained chrono without advisory waiver; preserve RFC3339 storage strings, UTC offsets, fractional precision, Dactyl SQL fallback and fail-closed expiry with regression tests; refresh both dependency graphs and require new exact-subject validation",
-      "input_digest": "sha256:cf0603dcfa1ccce1ad0bf3a1ad46e2674b78aa2d3694a129e85143add0740e16"
-    },
-    {
-      "id": "timestamp-source-review-1755",
-      "summary": "Review exactly three changed inventoried dependency inputs after chrono removal, retain all accepted workflows, executor helpers, command coverage and requiredness, and reconcile only the source inventory digest; initial validation rejection preserved",
-      "input_digest": "sha256:7504367a0795056b9b0cc7f17e9a7a34fb9f2ceb17dd0ed003abecc181011124"
-    },
-    {
-      "id": "timestamp-checked-utc-1755",
-      "summary": "Reject out-of-range UTC conversion through parse and serde errors instead of panic; exercise extreme offset failure in storage and credential tests; preserve current dependency policy and require fresh exact-candidate proof",
-      "input_digest": "sha256:027376959c696fcd67f2496fe9c6195f1a8380bc50fd36d07e0ea75a82e83313"
-    },
-    {
-      "id": "strict-live-rejection-1748",
-      "summary": "Require actual invalid-payload failure, independent guard success, and source-readiness publication rejection; timeout/lock is partial evidence, never a passing adversarial control; preserve attempt 05 and rerun fresh",
-      "input_digest": "sha256:98b96bc340b9118bb74b0748aed8cf1c22d73d30d445eb812e58c5f4dd65d8fc"
-    },
-    {
-      "id": "strict-live-final-report",
-      "summary": "Publish independently verified strict real GitHub acceptance 06 archive ae15eeffd6812002fbda2a2adaca23b006de0ba6, exact head/base/controller and receipt hashes, all rejection reasons and reproduction; preserve attempt 05 as partial because timeout was not proof; require fresh full final-source validation before issue closure",
-      "input_digest": "sha256:6019f89de3555446bbd9fda9c0acfc8f1a7ac36ccd976863e78324a3f7443b64"
+      "id": "source-currency-1753-complete",
+      "summary": "Complete config-only exact-source version policy through publication currency without changing agent entrypoints; preserve generated-pin upgrade requirements and all integrity/execution checks; add real-Git cross-boundary regressions; record strict live 07 receipts and CLI-generated evaluating-0.148.7 metadata. Tests require configured execution.",
+      "input_digest": "sha256:7a0c8bec403859b8453c3de5f382628b2414a87dbf55e7c26b71724dffbf2c29"
     }
   ],
   "intents": {
-    "intent:change_01M7M3P63MYW2A9SP5C97N0JS4": {
+    "intent:admission-postmerge-proof": {
       "acceptance_criteria": [],
       "assumptions": [],
       "boundaries": [
-        "Current claimed task and isolated work branch"
+        "No merge or release; historical proof never authorizes another present artifact; do not weaken required checks"
       ],
       "constraints": [
-        "src/decapod/core"
+        "docs",
+        ".decapod/managed/specs"
       ],
       "created_sequence": 1,
-      "id": "intent:change_01M7M3P63MYW2A9SP5C97N0JS4",
+      "id": "intent:admission-postmerge-proof",
       "out_of_scope": [],
       "proof_requirements": [],
-      "raw_intent": "Implement exact-change PR admission demonstration\n\nAudit related source and issue history; create focused issues; implement rejection, correction, stale evidence and actual-change PR binding. Startup task code_01m7m3gs12q2f46f remains under unknown and grants no authority to this actor.",
-      "refined_intent": "Implement exact-change PR admission demonstration\n\nAudit related source and issue history; create focused issues; implement rejection, correction, stale evidence and actual-change PR binding. Startup task code_01m7m3gs12q2f46f remains under unknown and grants no authority to this actor.",
+      "raw_intent": "Prove exact-evidence PR admission, finish implementation and close relevant issues only with reproducible enforcement evidence",
+      "refined_intent": "Preserve strict real GitHub acceptance and externally merged implementation, record stale-target rejection of the prior source candidate, and earn fresh exact-head/base admission for the final verification report on accepted 0.148.7",
       "status": "refined",
       "updated_sequence": 3
     }
@@ -715,7 +618,7 @@
       },
       "deferred_questions": [],
       "human_questions": [],
-      "intent": "Complete evidence-bound PR admission and real-forge failure/repair acceptance for 1747 and 1748, retain the hidden exact-source-only configuration policy in 1753, and replace chrono rejected by current required dependency checks in 1755 while preserving timestamp, wire and expiry contracts. Fresh exact-head/base validation is required before issue closure; no merge or advisory waiver is authorized.",
+      "intent": "Finish the original exact-proof admission deliverable after externally accepted integration. Complete issue 1753 by honoring the existing config-only, exact canonical source-repository version policy in publication currency without rewriting valid historical agent entrypoints; preserve Docker and manifest provenance, file presence, body/fingerprint checks, immutable ancestry and all required execution. Retain actual strict live acceptance 07 on 0.148.7 and every historical failure. Add meaningful real-Git currency regressions to the required library lane, regenerate only managed projections through the evaluating CLI, then require fresh full exact-head/base validation and governed publication before closing 1753 and finalizing the task. No merge, release or general bypass is authorized.",
       "phases": [],
       "proof_hooks": [
         "decapod validate"
@@ -723,257 +626,140 @@
       "schema_version": "1.1.0",
       "spec_reviews": [
         {
-          "disposition": "unchanged_with_reason",
+          "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Final report records strict live enforcement for the timestamp-repaired controller; live proof ownership and exact remote refs remain the reviewed architecture",
-          "reviewed_code_fingerprint": "939915b935953c7ae56af42d7bbea5a14b3ee19bcc785bcafeffd46bc1fc1468",
-          "spec_material_hash": "741dab3fb84475ba7e527d91c15ed778ed9681fb96dab4dec3109a9399078aa1"
+          "reason": "Currency reuses existing scoped source-body authorization and generated-manifest provenance; all four headers must remain valid and Docker/manifest upgrade requirements remain",
+          "reviewed_code_fingerprint": "59302b283273f65193215ee22c7b207943d8077e5105c464f9f5a2e7ac6faa43",
+          "spec_material_hash": "0b7738e450b1038116cd3fce2e9660a615fbea502d988760d54dbf8c314f9146"
         },
         {
-          "disposition": "unchanged_with_reason",
+          "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Final report documents exact native receipts and rejection codes; strict harness changes no publication wire or timestamp compatibility contract",
-          "reviewed_code_fingerprint": "939915b935953c7ae56af42d7bbea5a14b3ee19bcc785bcafeffd46bc1fc1468",
-          "spec_material_hash": "aea9e898f79c94c1d684baa64da199e433dc0c7a74f388e904d17eaeaafd3a7e"
+          "reason": "No new public option; only configured canonical source can preserve historical header versions through currency; default and foreign rules remain strict",
+          "reviewed_code_fingerprint": "59302b283273f65193215ee22c7b207943d8077e5105c464f9f5a2e7ac6faa43",
+          "spec_material_hash": "4d418dbaac3da584c5524670003c9fbd33db02090e4d402c3b390502ec8bd5fa"
         },
         {
-          "disposition": "unchanged_with_reason",
+          "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Exact artifact and policy binding, confirmed quarantine and checked expiry remain; independent blob verification preserves native evidence and excludes credentials, logs and machine state",
-          "reviewed_code_fingerprint": "939915b935953c7ae56af42d7bbea5a14b3ee19bcc785bcafeffd46bc1fc1468",
-          "spec_material_hash": "b52643bf3fd690b7e15dca0b8852a5e98d28ad52c12833a58c111ca837d0d49f"
+          "reason": "Bounded regular files, all canonical bodies/fingerprints, exact sole push slug and immutable ungrafted ancestry gate preservation; malformed provenance falls back conservatively and other checks remain",
+          "reviewed_code_fingerprint": "59302b283273f65193215ee22c7b207943d8077e5105c464f9f5a2e7ac6faa43",
+          "spec_material_hash": "0c791a6100ed5aec7fe4cedfa16680988dd1e48d50d00af272ef9dff372c3d4d"
         }
       ],
       "state": "APPROVED",
       "stop_conditions": [],
-      "title": "Exact-proof PR admission and rejection-repair demonstration (#1747 #1748)",
+      "title": "Finish admission proof after accepted integration",
       "todo_ids": [
         "feat_01m7m3mmz5mejx0g"
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1794915368Z"
+      "updated_at": "1794922423Z"
     },
     "trajectory": {
       "active_boundaries": [
-        "Current claimed task and isolated work branch",
-        "No advisory waiver, no weakened checks, no merge",
-        "User-authorized version exception is config-only, exact DecapodLabs/decapod slug plus source lineage; no hand editing of generated agent entrypoints and no skipped execution proof"
+        "No merge or release; historical proof never authorizes another present artifact; do not weaken required checks"
       ],
-      "artifact_hash": "sha256:73a3cad38e049a32c01fd44958271a94278d464ec855d1ad778ad226ab2f4f0e",
+      "artifact_hash": "sha256:b7deab4b6b0ae9e654139a51f2bc9afbad439fe5a8260ef037559adabc40ab95",
       "checks": [
         {
-          "name": "configured_validation",
-          "status": "failed"
-        },
-        {
-          "name": "formatting",
+          "name": "live_1487_acceptance",
           "status": "passed"
         },
         {
-          "name": "pr-deps-lint",
+          "name": "prior_source_admission",
           "status": "failed"
         },
         {
-          "name": "prior_source_full_validation",
-          "status": "passed"
+          "name": "scoped_currency_regression",
+          "status": "partial"
         },
         {
-          "name": "real_forge_acceptance",
+          "name": "strict_live_acceptance",
           "status": "passed"
         }
       ],
-      "current_phase": "validation",
       "custody": {
         "events": [
           {
             "event_id": "event:2",
-            "intent_id": "intent:change_01M7M3P63MYW2A9SP5C97N0JS4",
+            "intent_id": "intent:admission-postmerge-proof",
             "kind": "created",
             "sequence": 2
           },
           {
             "event_id": "event:3",
-            "intent_id": "intent:change_01M7M3P63MYW2A9SP5C97N0JS4",
+            "intent_id": "intent:admission-postmerge-proof",
             "kind": "refined",
             "sequence": 3
           },
           {
-            "detail": "trajectory:branch_01M7M3P675P50R9B9XSTNJRCNE",
+            "detail": "trajectory:admission-postmerge-proof",
             "event_id": "event:4",
-            "intent_id": "intent:change_01M7M3P63MYW2A9SP5C97N0JS4",
+            "intent_id": "intent:admission-postmerge-proof",
             "kind": "trajectory_step_recorded",
             "sequence": 4
           },
           {
-            "detail": "trajectory:branch_01M7M3P675P50R9B9XSTNJRCNE",
+            "detail": "trajectory:admission-postmerge-proof",
             "event_id": "event:5",
-            "intent_id": "intent:change_01M7M3P63MYW2A9SP5C97N0JS4",
+            "intent_id": "intent:admission-postmerge-proof",
             "kind": "trajectory_step_recorded",
             "sequence": 5
-          },
-          {
-            "detail": "trajectory:branch_01M7M3P675P50R9B9XSTNJRCNE",
-            "event_id": "event:6",
-            "intent_id": "intent:change_01M7M3P63MYW2A9SP5C97N0JS4",
-            "kind": "trajectory_step_recorded",
-            "sequence": 6
-          },
-          {
-            "detail": "trajectory:branch_01M7M3P675P50R9B9XSTNJRCNE",
-            "event_id": "event:7",
-            "intent_id": "intent:change_01M7M3P63MYW2A9SP5C97N0JS4",
-            "kind": "trajectory_step_recorded",
-            "sequence": 7
-          },
-          {
-            "detail": "trajectory:branch_01M7M3P675P50R9B9XSTNJRCNE",
-            "event_id": "event:8",
-            "intent_id": "intent:change_01M7M3P63MYW2A9SP5C97N0JS4",
-            "kind": "trajectory_step_recorded",
-            "sequence": 8
-          },
-          {
-            "detail": "trajectory:branch_01M7M3P675P50R9B9XSTNJRCNE",
-            "event_id": "event:9",
-            "intent_id": "intent:change_01M7M3P63MYW2A9SP5C97N0JS4",
-            "kind": "trajectory_step_recorded",
-            "sequence": 9
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 9,
+        "next_sequence": 5,
         "schema_version": "1.0.0",
         "trajectories": {
-          "branch_01M7M3P675P50R9B9XSTNJRCNE": {
+          "admission-postmerge-proof": {
             "evidence_only": true,
-            "id": "branch_01M7M3P675P50R9B9XSTNJRCNE",
-            "intent_id": "intent:change_01M7M3P63MYW2A9SP5C97N0JS4",
+            "id": "admission-postmerge-proof",
+            "intent_id": "intent:admission-postmerge-proof",
             "steps": [
               {
                 "action": "trajectory.record",
                 "custody_event_id": "event:4",
                 "observations": [
-                  "src/decapod/core/workspace.rs",
-                  "src/decapod/core/workspace_publication.rs",
-                  "src/decapod/core/validation_runtime.rs",
-                  "src/decapod/core/validation_history.rs",
-                  "GitHub audit: reviewed open and closed issue searches and #1052 #1069 #1070 #1658 #1659 #1660 #1692 #1726 #1730 #1731; created #1747 and #1748 for publication subject continuity and lifecycle proof"
+                  "docs/publication-admission-acceptance.md",
+                  "docs/publication-admission-acceptance.md",
+                  ".decapod/managed/specs/INTENT.md",
+                  ".decapod/managed/specs/VALIDATION.md",
+                  "Strict actual GitHub acceptance 06 passed for controller fc52356f; immutable archive ae15eeffd6812002fbda2a2adaca23b006de0ba6 independently compared by tree IDs and downloaded contents; source c35 admission remained non-ready after independent master integration",
+                  "GitHub records alexhraber merge 41e7e152 at 12:03:09 UTC, exact tree equality with c35; release 9d1aed27 advances source package only; stale source Buildkite 11596 rejected comparison before required test lanes. Focused issues auto-closed by the external merge. Fresh current report proof remains required."
                 ],
-                "proof_refs": [],
+                "proof_refs": [
+                  "strict_live_acceptance",
+                  "prior_source_admission"
+                ],
                 "scope": [
-                  "src/decapod/core"
+                  ".decapod/managed/specs",
+                  "docs"
                 ],
                 "sequence": 4,
-                "validation_findings": [
-                  "Use existing deterministic runtime and publisher; local-only proof cannot authorize a forge target"
-                ]
+                "validation_findings": []
               },
               {
                 "action": "trajectory.record",
                 "custody_event_id": "event:5",
                 "observations": [
-                  "src/decapod/lib.rs",
-                  "src/decapod/core/validation_history.rs",
-                  "src/decapod/core/workspace.rs",
-                  "src/decapod/core/workspace_publication.rs",
-                  "tests/unit/core/workspace_publication_tests.rs",
-                  "Implemented live proof continuity and draft quarantine with append-only rejection records; deterministic coverage is authored but not yet executed. Real disposable GitHub repository created under explicit user acceptance request.",
-                  "Ruleset 12701816 is active but currently has no required_status_checks rule; observed Buildkite app 805657 emits CI / test (target=\"core\") (push). Existing organization admin bypass remains an independent authority."
+                  "src/decapod/core/validate.rs",
+                  "src/decapod/core/validate.rs",
+                  "src/decapod/core/entrypoint_integrity.rs",
+                  "tests/unit/core/validate_tests.rs",
+                  "Reopened 1753 after actual PUBLICATION_BUNDLE_CURRENCY conflict. Central scoped validation now feeds currency; generated-manifest provenance replaces old source-header release only under the existing exact source policy. Real Git fixture covers canonical preservation, default/disabled/fork/ambiguity/tamper, missing artifacts and generator upgrades. New tests require first configured execution.",
+                  "Strict live 07 passed 1/0 in 317.35s on edbfc00d evaluating 0.148.7; all nine archive contents independently compared with GitHub native bytes at 63c75155ad087bbbf786680b729621debd8f3dd8. This is its scoped fixture evidence, not authority for the current source changes."
                 ],
-                "proof_refs": [],
+                "proof_refs": [
+                  "scoped_currency_regression",
+                  "live_1487_acceptance"
+                ],
                 "scope": [
-                  "src/decapod/core"
+                  ".decapod/managed/specs",
+                  "docs"
                 ],
                 "sequence": 5,
-                "validation_findings": []
-              },
-              {
-                "action": "validation",
-                "custody_event_id": "event:6",
-                "observations": [
-                  "src/decapod/core/entrypoint_integrity.rs",
-                  "src/decapod/core/entrypoint_integrity/history.rs",
-                  "tests/acceptance/publication_admission.rs",
-                  "Four full validation attempts were rejected for tag inventory, accepted-target movement/ancestry and historical entrypoint alignment; no required execution success was claimed. User then explicitly authorized the narrow source-version configuration policy tracked in #1753. Actual GitHub acceptance is authored and remains unexecuted.",
-                  "Active master ruleset 12701816 now requires Buildkite App 805657 core and supabase-consumer checks with strict target freshness, preserving existing protections and OrganizationAdmin bypass."
-                ],
-                "proof_refs": [
-                  "configured_validation",
-                  "formatting"
-                ],
-                "scope": [
-                  "src/decapod/core"
-                ],
-                "sequence": 6,
-                "validation_findings": []
-              },
-              {
-                "action": "validation",
-                "custody_event_id": "event:7",
-                "observations": [
-                  "First branch CI correctly rejected because accepted target advanced to e7b54246; merged it without rewriting history. Building a separate development controller is necessary to exercise user-authorized private config policy absent from installed 0.148.0; this build grants no readiness and does not replace installed binary."
-                ],
-                "proof_refs": [
-                  "configured_validation"
-                ],
-                "scope": [
-                  ".config",
-                  ".decapod/managed/specs",
-                  "assets",
-                  "docs",
-                  "src",
-                  "src/decapod/core",
-                  "tests"
-                ],
-                "sequence": 7,
-                "validation_findings": []
-              },
-              {
-                "action": "validation",
-                "custody_event_id": "event:8",
-                "observations": [
-                  "Actual GitHub acceptance: 1 passed, 0 failed, source 99a6f59f; immutable 9-file archive 1c21226bc3c5c65afb504a37bbe00829e308c593 under alexhraber/decapod-admission-acceptance-20261117-1747-04; head cd938efe/base 0e36f8e4. Postcreation mutation quarantined draft, later source and advanced actual target rejected. Current admission applicability false; merge unauthorized.",
-                  "Evidence and reproduction attached to issues 1747 and 1748; private config-only exact-slug policy test/source evidence attached to 1753. Full source proof on final report commit remains required; prior e81 proof does not authorize later edits."
-                ],
-                "proof_refs": [
-                  "real_forge_acceptance",
-                  "prior_source_full_validation",
-                  "formatting"
-                ],
-                "scope": [
-                  ".config",
-                  ".decapod/managed/specs",
-                  "assets",
-                  "docs",
-                  "src",
-                  "src/decapod/core",
-                  "tests"
-                ],
-                "sequence": 8,
-                "validation_findings": []
-              },
-              {
-                "action": "trajectory.record",
-                "custody_event_id": "event:9",
-                "observations": [
-                  "Cargo.toml",
-                  "src/decapod/core/auth.rs",
-                  "Buildkite 11557 deps-lint rejects chrono: RUSTSEC-2026-0543; tracked in GitHub issue 1755"
-                ],
-                "proof_refs": [
-                  "pr-deps-lint"
-                ],
-                "scope": [
-                  ".config",
-                  ".decapod/managed/specs",
-                  "assets",
-                  "docs",
-                  "src",
-                  "src/decapod/core",
-                  "tests"
-                ],
-                "sequence": 9,
                 "validation_findings": []
               }
             ]
@@ -981,57 +767,38 @@
         }
       },
       "declared_commands": [],
-      "destination": "pull request",
       "evidence": [
-        "Active master ruleset 12701816 now requires Buildkite App 805657 core and supabase-consumer checks with strict target freshness, preserving existing protections and OrganizationAdmin bypass.",
-        "Actual GitHub acceptance: 1 passed, 0 failed, source 99a6f59f; immutable 9-file archive 1c21226bc3c5c65afb504a37bbe00829e308c593 under alexhraber/decapod-admission-acceptance-20261117-1747-04; head cd938efe/base 0e36f8e4. Postcreation mutation quarantined draft, later source and advanced actual target rejected. Current admission applicability false; merge unauthorized.",
-        "Buildkite 11557 deps-lint rejects chrono: RUSTSEC-2026-0543; tracked in GitHub issue 1755",
-        "Evidence and reproduction attached to issues 1747 and 1748; private config-only exact-slug policy test/source evidence attached to 1753. Full source proof on final report commit remains required; prior e81 proof does not authorize later edits.",
-        "First branch CI correctly rejected because accepted target advanced to e7b54246; merged it without rewriting history. Building a separate development controller is necessary to exercise user-authorized private config policy absent from installed 0.148.0; this build grants no readiness and does not replace installed binary.",
-        "Four full validation attempts were rejected for tag inventory, accepted-target movement/ancestry and historical entrypoint alignment; no required execution success was claimed. User then explicitly authorized the narrow source-version configuration policy tracked in #1753. Actual GitHub acceptance is authored and remains unexecuted.",
-        "GitHub audit: reviewed open and closed issue searches and #1052 #1069 #1070 #1658 #1659 #1660 #1692 #1726 #1730 #1731; created #1747 and #1748 for publication subject continuity and lifecycle proof",
-        "Implemented live proof continuity and draft quarantine with append-only rejection records; deterministic coverage is authored but not yet executed. Real disposable GitHub repository created under explicit user acceptance request.",
-        "Ruleset 12701816 is active but currently has no required_status_checks rule; observed Buildkite app 805657 emits CI / test (target=\"core\") (push). Existing organization admin bypass remains an independent authority."
+        "GitHub records alexhraber merge 41e7e152 at 12:03:09 UTC, exact tree equality with c35; release 9d1aed27 advances source package only; stale source Buildkite 11596 rejected comparison before required test lanes. Focused issues auto-closed by the external merge. Fresh current report proof remains required.",
+        "Reopened 1753 after actual PUBLICATION_BUNDLE_CURRENCY conflict. Central scoped validation now feeds currency; generated-manifest provenance replaces old source-header release only under the existing exact source policy. Real Git fixture covers canonical preservation, default/disabled/fork/ambiguity/tamper, missing artifacts and generator upgrades. New tests require first configured execution.",
+        "Strict actual GitHub acceptance 06 passed for controller fc52356f; immutable archive ae15eeffd6812002fbda2a2adaca23b006de0ba6 independently compared by tree IDs and downloaded contents; source c35 admission remained non-ready after independent master integration",
+        "Strict live 07 passed 1/0 in 317.35s on edbfc00d evaluating 0.148.7; all nine archive contents independently compared with GitHub native bytes at 63c75155ad087bbbf786680b729621debd8f3dd8. This is its scoped fixture evidence, not authority for the current source changes."
       ],
       "inspected_files": [
-        "Cargo.toml",
-        "src/decapod/core/auth.rs",
-        "src/decapod/core/validation_history.rs",
-        "src/decapod/core/validation_runtime.rs",
-        "src/decapod/core/workspace.rs",
-        "src/decapod/core/workspace_publication.rs"
+        "docs/publication-admission-acceptance.md",
+        "src/decapod/core/validate.rs"
       ],
-      "intent_id": "intent:change_01M7M3P63MYW2A9SP5C97N0JS4",
+      "intent_id": "intent:admission-postmerge-proof",
       "modified_files": [
+        ".decapod/managed/specs/INTENT.md",
+        ".decapod/managed/specs/VALIDATION.md",
+        "docs/publication-admission-acceptance.md",
         "src/decapod/core/entrypoint_integrity.rs",
-        "src/decapod/core/entrypoint_integrity/history.rs",
-        "src/decapod/core/validation_history.rs",
-        "src/decapod/core/workspace.rs",
-        "src/decapod/core/workspace_publication.rs",
-        "src/decapod/lib.rs",
-        "tests/acceptance/publication_admission.rs",
-        "tests/unit/core/workspace_publication_tests.rs"
-      ],
-      "next_transitions": [
-        "Refine plan and declare falsifiable checks"
+        "src/decapod/core/validate.rs",
+        "tests/unit/core/validate_tests.rs"
       ],
       "repo_scope": [
-        ".config",
+        ".decapod/config.toml",
         ".decapod/managed/specs",
-        "assets",
         "docs",
-        "src",
         "src/decapod/core",
-        "tests"
+        "tests/unit/core"
       ],
-      "run_id": "branch_01M7M3P675P50R9B9XSTNJRCNE",
+      "run_id": "admission-postmerge-proof",
       "schema_version": "1.1.0",
       "shortcut_risk_signals": [],
       "task_id": "feat_01m7m3mmz5mejx0g",
       "tool_calls": [],
-      "unresolved_assumptions": [
-        "Use existing deterministic runtime and publisher; local-only proof cannot authorize a forge target"
-      ]
+      "unresolved_assumptions": []
     }
   },
   "legacy_digests": {
