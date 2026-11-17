@@ -1,5 +1,12 @@
 # Intent
 
+## Current dependency policy (#1755)
+
+A current required dependency failure reopens delivery even after historical
+readiness passed. Decapod replaces the unmaintained `chrono` dependency with
+`time`, without an advisory exception. Fresh source and live-forge proof must
+cover this candidate before delivery issues are closed.
+
 During development of Decapod itself, an explicitly configured internal policy
 can separate entrypoint release-version churn from the source package version.
 Its scope is the exact canonical Decapod repository and source lineage; valid
@@ -392,7 +399,7 @@ These declarations select authoring and proof obligations; they do not attest im
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `7ddf26dce57cb1624c61cf39233f20874b9599b2571a7b0105df99550c35cf1c`
+- Repository signal fingerprint: `83b1c8c031815388ba98c60cc6e73b88556767d102c969086d21acef34a06c98`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (236 files), `tests/` (235 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

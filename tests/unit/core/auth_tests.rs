@@ -1,6 +1,41 @@
 use super::*;
 
 #[test]
+fn cloud_session_expiry_and_refresh_preserve_fail_closed_boundaries() {
+    let mut credential = CloudCredential {
+        token: "synthetic-token".to_string(),
+        source: CredentialSource::MachineFile,
+        refresh_token: None,
+        session_id: None,
+        expires_at: None,
+    };
+    assert!(!cloud_session_is_expired(&credential));
+    assert!(!cloud_session_needs_refresh(&credential));
+    for invalid_or_expired in [
+        "invalid",
+        "1794913254Z",
+        "2026-02-30T00:00:00Z",
+        "2000-01-01T03:00:00+03:00",
+    ] {
+        credential.expires_at = Some(invalid_or_expired.to_string());
+        assert!(cloud_session_is_expired(&credential));
+        assert!(cloud_session_needs_refresh(&credential));
+    }
+    let now = OffsetDateTime::now_utc();
+    for (seconds, expired, refresh) in [
+        (-60, true, true),
+        (60, false, true),
+        (CLOUD_SESSION_REFRESH_LEAD_SECS + 60, false, false),
+    ] {
+        credential.expires_at = Some(crate::core::time::format_rfc3339_nanos(
+            now + time::Duration::seconds(seconds),
+        ));
+        assert_eq!(cloud_session_is_expired(&credential), expired);
+        assert_eq!(cloud_session_needs_refresh(&credential), refresh);
+    }
+}
+
+#[test]
 fn scoped_machine_sessions_never_reuse_legacy_or_other_service_credentials() {
     let directory = tempfile::tempdir().unwrap();
     let legacy = directory.path().join("session_token.json");

@@ -1,5 +1,15 @@
 # Interfaces
 
+## Timestamp compatibility (#1755)
+
+Task, KnowledgeEntry and Decision timestamps remain RFC3339 strings normalized
+to UTC with Z and 0/3/6/9 fractional digits. Explicit observation timestamps keep
++00:00; Dactyl operation markers keep nine fractional digits and Z. Legacy SQL
+UTC timestamps remain accepted at the Dactyl read boundary only. Expiry inputs
+remain RFC3339 and invalid values still expire or require refresh; the separate
+policy epoch-Z compatibility and command envelope wire format are retained.
+The internal Rust model type is now `time::OffsetDateTime`.
+
 ## Admission and quarantine (#1747, #1748)
 
 `workspace publish` and RPC publication carry completed live validation through
@@ -1199,7 +1209,7 @@ field. Nothing in this operation authorizes a mutation, approval or completion.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `7ddf26dce57cb1624c61cf39233f20874b9599b2571a7b0105df99550c35cf1c`
+- Repository signal fingerprint: `83b1c8c031815388ba98c60cc6e73b88556767d102c969086d21acef34a06c98`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (236 files), `tests/` (235 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

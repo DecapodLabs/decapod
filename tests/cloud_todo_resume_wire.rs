@@ -66,7 +66,7 @@ fn accept(listener: &TcpListener) -> TcpStream {
     }
 }
 fn task() -> Task {
-    let now = chrono::Utc::now();
+    let now = time::OffsetDateTime::now_utc();
     Task {
         id: "todo_wire_resume".into(),
         repo_id: "example/repo".into(),

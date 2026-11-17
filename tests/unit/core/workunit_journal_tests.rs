@@ -507,7 +507,7 @@ pub(crate) fn accepted_execution_fixture() -> tempfile::TempDir {
     crate::core::todo::initialize_todo_db(&store).unwrap();
     let conn = db::db_connect(&crate::core::todo::todo_db_path(&store).to_string_lossy()).unwrap();
     conn.execute("INSERT INTO tasks(id,hash,title,status,created_at,updated_at,dir_path,scope,assigned_to,lease_expires_at,lease_generation,lease_lifecycle,intent_anchor,revision) VALUES(?1,'fixture','Execution','open','1Z','1Z',?2,'repo',?3,?4,1,'claimed','intent:test',1)",
-        db::params!["task_test", root.path().to_string_lossy().as_ref(), crate::current_agent_id(), format!("{}Z", chrono::Utc::now().timestamp()+3600)]).unwrap();
+        db::params!["task_test", root.path().to_string_lossy().as_ref(), crate::current_agent_id(), format!("{}Z", time::OffsetDateTime::now_utc().unix_timestamp()+3600)]).unwrap();
     drop(conn);
     git(&["add", "."]);
     git(&[

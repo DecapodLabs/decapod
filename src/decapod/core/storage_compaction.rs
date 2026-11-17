@@ -814,7 +814,7 @@ pub fn apply_v2_compaction_migration(
         let summary_str = serde_json::to_string(&summary_json)
             .map_err(|e| unsafe_schema(&format!("manifest serialization failed: {e}")))?;
         let manifest_sha256 = format!("{:x}", Sha256::digest(summary_str.as_bytes()));
-        let applied_at = chrono::Utc::now().to_rfc3339();
+        let applied_at = crate::core::time::now_rfc3339();
 
         conn.execute(
             "INSERT INTO storage_migration_manifests(

@@ -1,5 +1,14 @@
 # Architecture
 
+## UTC timestamp dependency (#1755)
+
+`core/time.rs` owns UTC RFC3339 parsing and established output precision using
+`time::OffsetDateTime`. Storage models use explicit string serde; Dactyl retains
+nine-digit transaction markers and accepts legacy SQL UTC timestamps. Cloud
+session and policy expiry still fail closed on invalid input. Epoch-Z command
+envelopes retain their separate existing representation. Cargo and Bazel resolve
+the same maintained dependency, without disabling dependency-policy checks.
+
 An explicitly configured internal Decapod-development policy can tolerate
 entrypoint release/package version drift only for the exact canonical Decapod
 repository identity and verified source lineage. It still reconstructs each
@@ -969,7 +978,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `7ddf26dce57cb1624c61cf39233f20874b9599b2571a7b0105df99550c35cf1c`
+- Repository signal fingerprint: `83b1c8c031815388ba98c60cc6e73b88556767d102c969086d21acef34a06c98`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (236 files), `tests/` (235 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

@@ -7614,7 +7614,7 @@ fn cloud_task_from_command(
     dir: Option<&String>,
     repo_id: &str,
 ) -> StorageTask {
-    let now = chrono::Utc::now();
+    let now = time::OffsetDateTime::now_utc();
     let id = make_task_id("todo");
     StorageTask {
         hash: task_hash_from_id(&id),

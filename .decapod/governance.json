@@ -660,6 +660,11 @@
         "github:DecapodLabs/decapod/issues/1748#issuecomment-6944677325",
         "live-archive:1c21226bc3c5c65afb504a37bbe00829e308c593"
       ]
+    },
+    {
+      "id": "timestamp-dependency-1755",
+      "summary": "Remove unmaintained chrono without advisory waiver; preserve RFC3339 storage strings, UTC offsets, fractional precision, Dactyl SQL fallback and fail-closed expiry with regression tests; refresh both dependency graphs and require new exact-subject validation",
+      "input_digest": "sha256:cf0603dcfa1ccce1ad0bf3a1ad46e2674b78aa2d3694a129e85143add0740e16"
     }
   ],
   "intents": {
@@ -690,7 +695,7 @@
       },
       "deferred_questions": [],
       "human_questions": [],
-      "intent": "Implement #1747 #1748 exact-proof PR admission and real-forge acceptance; implement user-authorized #1753 hidden config-only source entrypoint version exception exclusively for DecapodLabs/decapod with immutable source lineage, canonical bodies and valid fingerprints. Preserve all required source/build/test proof, exact material/policy/base binding and merge-authority separation.",
+      "intent": "Complete evidence-bound PR admission and real-forge failure/repair acceptance for 1747 and 1748, retain the hidden exact-source-only configuration policy in 1753, and replace chrono rejected by current required dependency checks in 1755 while preserving timestamp, wire and expiry contracts. Fresh exact-head/base validation is required before issue closure; no merge or advisory waiver is authorized.",
       "phases": [],
       "proof_hooks": [
         "decapod validate"
@@ -700,22 +705,22 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Final review confirms live proof ownership, exact remote refs and canonical source-only version policy; real GitHub acceptance now recorded",
-          "reviewed_code_fingerprint": "7ddf26dce57cb1624c61cf39233f20874b9599b2571a7b0105df99550c35cf1c",
-          "spec_material_hash": "9714311171611b8bab923b9b390f4dffaa49e2ceffee22dc9077ab99ec9ba762"
+          "reason": "Reviewed final time migration including UTC formatter, Dactyl SQL fallback, explicit storage string serde and committed native/Bazel dependency inputs",
+          "reviewed_code_fingerprint": "83b1c8c031815388ba98c60cc6e73b88556767d102c969086d21acef34a06c98",
+          "spec_material_hash": "741dab3fb84475ba7e527d91c15ed778ed9681fb96dab4dec3109a9399078aa1"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Final public result distinguishes created, admitted and merge authorization; final report links exact receipts, SHAs and reproduction",
-          "reviewed_code_fingerprint": "7ddf26dce57cb1624c61cf39233f20874b9599b2571a7b0105df99550c35cf1c",
-          "spec_material_hash": "e0e25276b67edad1b3ea8633c56d258cf94fc4d759915f6cd1a09ccc26129998"
+          "reason": "Reviewed final UTC normalized RFC3339 strings, auto fractions and fixed nine-digit Dactyl markers plus expiry compatibility tests",
+          "reviewed_code_fingerprint": "83b1c8c031815388ba98c60cc6e73b88556767d102c969086d21acef34a06c98",
+          "spec_material_hash": "aea9e898f79c94c1d684baa64da199e433dc0c7a74f388e904d17eaeaafd3a7e"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Exact source, policy, context and live completion checks remain; native evidence is archived without private transcripts or credentials",
-          "reviewed_code_fingerprint": "7ddf26dce57cb1624c61cf39233f20874b9599b2571a7b0105df99550c35cf1c",
+          "reason": "No advisory waiver, invalid expiry fails closed, exact-artifact admission and independent current checks remain required",
+          "reviewed_code_fingerprint": "83b1c8c031815388ba98c60cc6e73b88556767d102c969086d21acef34a06c98",
           "spec_material_hash": "a5e8fa6d423d3980cabe7d2d7d122c436ffd95450106674250127cf2c4893747"
         }
       ],
@@ -727,14 +732,15 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1794909409Z"
+      "updated_at": "1794913630Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch",
+        "No advisory waiver, no weakened checks, no merge",
         "User-authorized version exception is config-only, exact DecapodLabs/decapod slug plus source lineage; no hand editing of generated agent entrypoints and no skipped execution proof"
       ],
-      "artifact_hash": "sha256:0cf6581fa85e48d35832bf6ebf10692eec5c3f57e2f9ae114015fc379a590f27",
+      "artifact_hash": "sha256:73a3cad38e049a32c01fd44958271a94278d464ec855d1ad778ad226ab2f4f0e",
       "checks": [
         {
           "name": "configured_validation",
@@ -743,6 +749,10 @@
         {
           "name": "formatting",
           "status": "passed"
+        },
+        {
+          "name": "pr-deps-lint",
+          "status": "failed"
         },
         {
           "name": "prior_source_full_validation",
@@ -802,10 +812,17 @@
             "intent_id": "intent:change_01M7M3P63MYW2A9SP5C97N0JS4",
             "kind": "trajectory_step_recorded",
             "sequence": 8
+          },
+          {
+            "detail": "trajectory:branch_01M7M3P675P50R9B9XSTNJRCNE",
+            "event_id": "event:9",
+            "intent_id": "intent:change_01M7M3P63MYW2A9SP5C97N0JS4",
+            "kind": "trajectory_step_recorded",
+            "sequence": 9
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 8,
+        "next_sequence": 9,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M7M3P675P50R9B9XSTNJRCNE": {
@@ -915,6 +932,29 @@
                 ],
                 "sequence": 8,
                 "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:9",
+                "observations": [
+                  "Cargo.toml",
+                  "src/decapod/core/auth.rs",
+                  "Buildkite 11557 deps-lint rejects chrono: RUSTSEC-2026-0543; tracked in GitHub issue 1755"
+                ],
+                "proof_refs": [
+                  "pr-deps-lint"
+                ],
+                "scope": [
+                  ".config",
+                  ".decapod/managed/specs",
+                  "assets",
+                  "docs",
+                  "src",
+                  "src/decapod/core",
+                  "tests"
+                ],
+                "sequence": 9,
+                "validation_findings": []
               }
             ]
           }
@@ -925,6 +965,7 @@
       "evidence": [
         "Active master ruleset 12701816 now requires Buildkite App 805657 core and supabase-consumer checks with strict target freshness, preserving existing protections and OrganizationAdmin bypass.",
         "Actual GitHub acceptance: 1 passed, 0 failed, source 99a6f59f; immutable 9-file archive 1c21226bc3c5c65afb504a37bbe00829e308c593 under alexhraber/decapod-admission-acceptance-20261117-1747-04; head cd938efe/base 0e36f8e4. Postcreation mutation quarantined draft, later source and advanced actual target rejected. Current admission applicability false; merge unauthorized.",
+        "Buildkite 11557 deps-lint rejects chrono: RUSTSEC-2026-0543; tracked in GitHub issue 1755",
         "Evidence and reproduction attached to issues 1747 and 1748; private config-only exact-slug policy test/source evidence attached to 1753. Full source proof on final report commit remains required; prior e81 proof does not authorize later edits.",
         "First branch CI correctly rejected because accepted target advanced to e7b54246; merged it without rewriting history. Building a separate development controller is necessary to exercise user-authorized private config policy absent from installed 0.148.0; this build grants no readiness and does not replace installed binary.",
         "Four full validation attempts were rejected for tag inventory, accepted-target movement/ancestry and historical entrypoint alignment; no required execution success was claimed. User then explicitly authorized the narrow source-version configuration policy tracked in #1753. Actual GitHub acceptance is authored and remains unexecuted.",
@@ -933,6 +974,8 @@
         "Ruleset 12701816 is active but currently has no required_status_checks rule; observed Buildkite app 805657 emits CI / test (target=\"core\") (push). Existing organization admin bypass remains an independent authority."
       ],
       "inspected_files": [
+        "Cargo.toml",
+        "src/decapod/core/auth.rs",
         "src/decapod/core/validation_history.rs",
         "src/decapod/core/validation_runtime.rs",
         "src/decapod/core/workspace.rs",
