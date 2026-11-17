@@ -279,7 +279,7 @@ pub(crate) fn ensure_full_validation_plan(gates: &[String]) -> Result<(), Decapo
 }
 
 /// Captured before any validation execution, not reconstructed from its result.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub(crate) struct ValidationBinding {
     repository: String,
     candidate_sha: String,
@@ -289,6 +289,146 @@ pub(crate) struct ValidationBinding {
     task: HistoricalTaskBinding,
     epoch: ValidationEpochMetadata,
     workunit_subject: Option<super::workunit::WorkUnitValidationSubject>,
+}
+
+/// A live validation result carried to publication, never loaded from a receipt.
+/// Retains the existing proof and custody owners across push and forge I/O.
+pub(crate) struct PublicationReadiness {
+    proof: CompletedReadinessEvidence,
+    binding: Option<ValidationBinding>,
+    evidence_path: PathBuf,
+    snapshot_handoff: Option<PathBuf>,
+}
+
+impl PublicationReadiness {
+    pub(crate) fn from_report(
+        mut report: ValidationReport,
+        binding: Option<ValidationBinding>,
+    ) -> Result<Self, DecapodError> {
+        if !report.publication_ready() || !report.proof_ready || !report.blockers.is_empty() {
+            return Err(invalid(
+                "PUBLICATION_NOT_READY: complete live proof is required",
+            ));
+        }
+        let proof = report.completed_evidence.take().ok_or_else(|| {
+            invalid("PUBLICATION_PROOF_MISSING: a receipt or successful report alone cannot authorize a PR")
+        })?;
+        proof.verify()?;
+        if proof.scope != report.scope
+            || digest(&report.laya_readiness)? != digest(&Some(&proof.laya))?
+            || proof.current_inputs.is_none()
+            || binding.as_ref().is_some_and(|binding| {
+                binding.repository != proof.material.repository
+                    || binding.candidate_sha != proof.material.head_revision
+                    || binding.governance_digest != proof.governance_digest
+                    || binding.trajectory_digest != proof.trajectory_digest
+            })
+        {
+            return Err(invalid(
+                "PUBLICATION_PROOF_MISMATCH: live validation subject differs",
+            ));
+        }
+        let evidence_path = report
+            .evidence_path
+            .ok_or_else(|| invalid("PUBLICATION_PROOF_MISSING: live evidence directory is absent"))?
+            .canonicalize()?;
+        let snapshot_handoff =
+            Some(evidence_path.join("snapshot-handoff.json")).filter(|path| path.is_file());
+        Ok(Self {
+            proof,
+            binding,
+            evidence_path,
+            snapshot_handoff,
+        })
+    }
+
+    pub(crate) fn verify_subject(
+        &self,
+        repository: &str,
+        branch: &str,
+        head: &str,
+        base_branch: &str,
+        base: &str,
+    ) -> Result<(), DecapodError> {
+        let material = &self.proof.material;
+        if !material.repository.eq_ignore_ascii_case(repository)
+            || material.work_branch != branch
+            || material.head_revision != head
+            || material.base_branch != base_branch
+            || material.accepted_base_revision != base
+        {
+            return Err(invalid(
+                "PUBLICATION_PROOF_SUBJECT_CHANGED: repository, branch, head or accepted base differs from successful validation; reconcile and revalidate",
+            ));
+        }
+        Ok(())
+    }
+
+    pub(crate) fn verify_current(&self, root: &Path) -> Result<(), DecapodError> {
+        validation_runtime::require_full_readiness_environment()?;
+        let (governance, trajectory, _) = governance(root)?;
+        self.proof
+            .verify_current(&self.proof.material, &governance, &trajectory)?;
+        self.proof
+            .current_inputs
+            .as_ref()
+            .ok_or_else(|| invalid("PUBLICATION_PROOF_MISSING: current input witness is absent"))?
+            .verify_current(root, &self.proof.material)?;
+        if let Some(binding) = &self.binding {
+            let store = Store {
+                kind: super::store::StoreKind::Repo,
+                root: super::store::find_governance_root(root).join(".decapod/data"),
+            };
+            if capture_task_binding(&store, root)?.as_ref() != Some(binding) {
+                return Err(invalid(
+                    "PUBLICATION_CUSTODY_CHANGED: task, lease, epoch or workunit changed after validation; revalidate",
+                ));
+            }
+        }
+        Ok(())
+    }
+
+    pub(crate) fn snapshot_handoff(&self) -> Option<&Path> {
+        self.snapshot_handoff.as_deref()
+    }
+
+    pub(crate) fn record_publication_rejection(
+        &self,
+        reason: &str,
+    ) -> Result<PathBuf, DecapodError> {
+        // Append a separate rejection; never rewrite successful historical proof.
+        let metadata = std::fs::symlink_metadata(&self.evidence_path)?;
+        if !metadata.is_dir()
+            || metadata.file_type().is_symlink()
+            || self.evidence_path.canonicalize()? != self.evidence_path
+        {
+            return Err(invalid("publication evidence directory changed"));
+        }
+        let path = self.evidence_path.join(format!(
+            "publication-rejection-{}.json",
+            super::ulid::new_ulid()
+        ));
+        let value = serde_json::json!({
+            "schema": "decapod.publication-rejection.v1",
+            "admitted": false,
+            "merge_authorized": false,
+            "material": self.proof.material,
+            "proof_plan_digest": self.proof.expected_plan.digest().map_err(invalid)?,
+            "reason": reason.chars().take(16_384).collect::<String>(),
+        });
+        use std::io::Write;
+        let mut options = std::fs::OpenOptions::new();
+        options.write(true).create_new(true);
+        #[cfg(unix)]
+        {
+            use std::os::unix::fs::OpenOptionsExt;
+            options.mode(0o600);
+        }
+        let mut file = options.open(&path)?;
+        file.write_all(&serde_json::to_vec_pretty(&value).map_err(invalid)?)?;
+        file.sync_all()?;
+        Ok(path)
+    }
 }
 
 pub(crate) fn capture_task_binding(

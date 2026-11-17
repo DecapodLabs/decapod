@@ -1,5 +1,18 @@
 # Architecture
 
+## Publication proof continuity (#1747, #1748)
+
+`core::validation_history::PublicationReadiness` owns the runtime's opaque
+completed evidence, original task binding and external evidence directory. It
+is constructed from the live result, never from an agent-supplied receipt.
+Publication reuses `CurrentEvidenceInputs` to measure source/history, policy and
+native tool inputs, and rechecks the existing task/workunit/epoch binding.
+`workspace_publication` compares remote repository, branch, head and base to
+that same proof before creation and during final readback. Its final callback
+owns the failure/quarantine boundary, preventing a later unchecked error path
+from returning admission. The existing provider and native proof engines remain
+the authority; no additional proof store or reusable admission token is added.
+
 ## Agent-facing escalation convergence (#1690–#1692)
 
 `core/mentor/reflection/escalation.rs` composes source observations with the
@@ -948,7 +961,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `28060df26a4bc2173c9505f4d306b11ce4e1eb9f87d740a483de7f543fdf7e19`
+- Repository signal fingerprint: `de988240024100ea371ea3823ab7b65d211fb300e58b80751a9db9b5041be8b2`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (236 files), `tests/` (234 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

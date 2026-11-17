@@ -2300,6 +2300,7 @@ fn required_test_source_changes_retain_the_complete_owning_recipe() {
             &core_recipe,
             vec![
                 "tests/todo_enforcement.rs",
+                "tests/unit/core/workspace_publication_tests.rs",
                 "tests/validate_termination.rs",
                 "tests/workspace_interlock.rs",
                 "tests/spec_workspace_ownership.rs",

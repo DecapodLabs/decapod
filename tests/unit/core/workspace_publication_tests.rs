@@ -1,6 +1,11 @@
 use super::*;
 use tempfile::TempDir;
 
+#[cfg(any(target_os = "linux", target_os = "macos"))]
+#[allow(dead_code)]
+#[path = "../../common/consumer_readiness_fixture.rs"]
+mod consumer_readiness_fixture;
+
 fn git(repo: &Path, args: &[&str]) -> String {
     text(run(repo, "git", args, "test git").unwrap())
         .unwrap()
@@ -55,7 +60,7 @@ fn proof() -> RemoteProof {
     }
 }
 fn pr(proof: &RemoteProof) -> serde_json::Value {
-    serde_json::json!({"number":7,"html_url":"https://github.com/owner/repo/pull/7","state":"open",
+    serde_json::json!({"number":7,"html_url":"https://github.com/owner/repo/pull/7","state":"open","draft":true,
         "head":{"ref":"feature","sha":proof.head,"repo":{"full_name":"owner/repo"}},
         "base":{"ref":"master","sha":proof.base,"repo":{"full_name":"owner/repo"}},
         "changed_files":proof.paths.len()})
@@ -69,6 +74,468 @@ fn files(proof: &RemoteProof) -> serde_json::Value {
         .iter()
         .map(|p| serde_json::json!({"filename":p,"status":"modified"}))
         .collect::<Vec<_>>()])
+}
+
+#[cfg(any(target_os = "linux", target_os = "macos"))]
+mod live_admission {
+    use super::*;
+    use crate::core::readiness_evidence::{Conclusion, Observation, SuiteEvidence};
+    use crate::core::validation_history::PublicationReadiness;
+    use crate::core::validation_runtime::ValidationReport;
+    use consumer_readiness_fixture::Fixture;
+
+    fn fixture() -> Fixture {
+        let fixture = Fixture::new();
+        let root = &fixture.options.root;
+        write(
+            root,
+            ".decapod/managed/specs/INTENT.md",
+            "# Consumer\nBoth source assertions must pass before PR admission.\n",
+        );
+        crate::core::trajectory::init_trajectory(
+            root,
+            crate::core::trajectory::TrajectoryInit {
+                run_id: "publication-repair".into(),
+                task_id: Some("consumer-source-repair".into()),
+                intent_id: None,
+                original_intent: "Repair the source and admit only matching complete proof".into(),
+                derived_intent: "Keep both real source assertions required".into(),
+                active_boundaries: vec!["payload.txt".into()],
+                repo_scope: vec!["payload.txt".into()],
+                destination: None,
+                current_phase: Some("validation".into()),
+                next_transitions: vec![],
+                blockers: vec![],
+            },
+        )
+        .unwrap();
+        fixture.commit("record publication intent and material specification");
+        fixture
+    }
+
+    fn remote(fixture: &Fixture) -> RemoteProof {
+        let root = &fixture.options.root;
+        // The transport and immutable objects are real; no head/base is invented.
+        git(root, &["push", "origin", "consumer-work"]);
+        let (head, base) = remote_heads(
+            root,
+            fixture.upstream.to_str().unwrap(),
+            "consumer-work",
+            "main",
+        )
+        .unwrap();
+        RemoteProof {
+            paths: changed_paths(root, &base, &head).unwrap(),
+            head,
+            base,
+        }
+    }
+
+    fn pr_value(proof: &RemoteProof) -> serde_json::Value {
+        serde_json::json!({"number":7,"html_url":"https://github.com/consumer/project/pull/7","state":"open","draft":true,
+            "head":{"ref":"consumer-work","sha":proof.head,"repo":{"full_name":"consumer/project"}},
+            "base":{"ref":"main","sha":proof.base,"repo":{"full_name":"consumer/project"}},
+            "changed_files":proof.paths.len()})
+    }
+
+    fn check(
+        fixture: &Fixture,
+        readiness: &PublicationReadiness,
+        proof: &RemoteProof,
+    ) -> Result<(), DecapodError> {
+        readiness.verify_subject(
+            "consumer/project",
+            "consumer-work",
+            &proof.head,
+            "main",
+            &proof.base,
+        )?;
+        readiness.verify_current(&fixture.options.root)?;
+        verify_committed_bundle(&fixture.options.root, &proof.head)?;
+        verify_remote_unchanged(
+            &fixture.options.root,
+            fixture.upstream.to_str().unwrap(),
+            "consumer-work",
+            "main",
+            proof,
+        )
+    }
+
+    // Only forge I/O is simulated. These are the publisher's actual admission,
+    // creation and readback functions, driven by live real-execution proof.
+    fn publish(
+        fixture: &Fixture,
+        report: ValidationReport,
+        proof: &RemoteProof,
+        mutate_at: usize,
+        creates: &std::cell::Cell<usize>,
+    ) -> Result<String, DecapodError> {
+        let readiness = PublicationReadiness::from_report(report, None)?;
+        let mut replies = vec![
+            bytes(serde_json::json!([[]])),
+            b"created".to_vec(),
+            bytes(serde_json::json!([[{"number":7}]])),
+            bytes(pr_value(proof)),
+            bytes(files(proof)),
+            bytes(pr_value(proof)),
+            bytes(pr_value(proof)),
+            bytes(pr_value(proof)),
+        ]
+        .into_iter();
+        let mut calls = 0;
+        ensure_and_verify_pr_with(
+            &mut |args| {
+                calls += 1;
+                if args.starts_with(&["pr", "create"]) {
+                    creates.set(creates.get() + 1);
+                }
+                if calls == mutate_at {
+                    write(
+                        &fixture.options.root,
+                        "payload.txt",
+                        "changed during forge readback\n",
+                    );
+                }
+                Ok(replies.next().expect("bounded forge protocol"))
+            },
+            "consumer/project",
+            "consumer-work",
+            "main",
+            proof,
+            &mut || check(fixture, &readiness, proof),
+            "repair",
+            "real source proof",
+        )
+    }
+
+    #[test]
+    fn failing_agent_repairs_source_and_only_fresh_exact_proof_admits_pr() {
+        let fixture = fixture();
+        write(&fixture.options.root, "payload.txt", "broken\n");
+        fixture.commit("agent introduces actual source defect");
+        let failed_head = git(&fixture.options.root, &["rev-parse", "HEAD"]);
+        let failed = fixture.validate(&mut fixture.host());
+        assert!(!failed.ready && !failed.proof_ready, "{failed:?}");
+        let failed_path = failed.evidence_path.clone().unwrap();
+        let failed_bytes = std::fs::read(failed_path.join("observations.json")).unwrap();
+        let observations: SuiteEvidence = serde_json::from_slice(&failed_bytes).unwrap();
+        assert_eq!(observations.results.len(), 2);
+        assert!(observations.results.iter().any(|row| matches!(
+            row.observation,
+            Observation::Executed {
+                conclusion: Conclusion::Failure,
+                ..
+            }
+        )));
+        assert!(!failed_path.join("completion").exists());
+        let creates = std::cell::Cell::new(0);
+        assert!(publish(&fixture, failed, &remote(&fixture), 0, &creates).is_err());
+        assert_eq!(creates.get(), 0);
+
+        write(&fixture.options.root, "payload.txt", "ready\n");
+        fixture.commit("agent repairs source after failed evidence");
+        let repaired = fixture.validate(&mut fixture.host());
+        assert!(repaired.ready && repaired.proof_ready, "{repaired:?}");
+        assert_ne!(repaired.evidence_path.as_ref(), Some(&failed_path));
+        let evidence: SuiteEvidence = serde_json::from_slice(
+            &std::fs::read(
+                repaired
+                    .evidence_path
+                    .as_ref()
+                    .unwrap()
+                    .join("observations.json"),
+            )
+            .unwrap(),
+        )
+        .unwrap();
+        assert_eq!(evidence.results.len(), 2);
+        assert!(evidence.results.iter().all(|row| matches!(
+            row.observation,
+            Observation::Executed {
+                conclusion: Conclusion::Success,
+                exit_code: Some(0),
+                ..
+            }
+        )));
+        let proof = remote(&fixture);
+        assert_ne!(proof.head, failed_head);
+        assert_eq!(evidence.before.head_revision, proof.head);
+        assert_eq!(evidence.before.accepted_base_revision, proof.base);
+        assert_eq!(
+            publish(&fixture, repaired, &proof, 0, &creates).unwrap(),
+            "https://github.com/consumer/project/pull/7"
+        );
+        assert_eq!(creates.get(), 1);
+        assert_eq!(
+            std::fs::read(failed_path.join("observations.json")).unwrap(),
+            failed_bytes
+        );
+
+        // An old genuine success cannot cover different bytes at the same path.
+        let old = fixture.validate(&mut fixture.host());
+        write(
+            &fixture.options.root,
+            "payload.txt",
+            "new defect at the same path\n",
+        );
+        fixture.commit("agent changes actual source after successful checks");
+        let changed = remote(&fixture);
+        let rejected = std::cell::Cell::new(0);
+        let error = publish(&fixture, old, &changed, 0, &rejected)
+            .unwrap_err()
+            .to_string();
+        assert!(
+            error.contains("PUBLICATION_PROOF_SUBJECT_CHANGED"),
+            "{error}"
+        );
+        assert_eq!(rejected.get(), 0);
+        let new_failure = fixture.validate(&mut fixture.host());
+        assert!(
+            !new_failure.ready,
+            "old proof must not conceal the new real failure"
+        );
+        write(&fixture.options.root, "payload.txt", "ready\n");
+        fixture.commit("repair the new defect and obtain new proof");
+        let fresh = fixture.validate(&mut fixture.host());
+        assert!(fresh.ready, "{fresh:?}");
+        assert!(publish(&fixture, fresh, &remote(&fixture), 0, &rejected).is_ok());
+        assert_eq!(rejected.get(), 1);
+    }
+
+    #[test]
+    fn accepted_base_movement_after_success_cannot_admit_a_pr() {
+        let fixture = fixture();
+        let report = fixture.validate(&mut fixture.host());
+        assert!(report.ready, "{report:?}");
+        // This advance occurs after validation's final target read, the window
+        // that a stability check against only the new remote base would miss.
+        git(
+            &fixture.options.root,
+            &["push", "origin", "HEAD:refs/heads/main"],
+        );
+        let proof = remote(&fixture);
+        let creates = std::cell::Cell::new(0);
+        let error = publish(&fixture, report, &proof, 0, &creates)
+            .unwrap_err()
+            .to_string();
+        assert!(
+            error.contains("PUBLICATION_PROOF_SUBJECT_CHANGED"),
+            "{error}"
+        );
+        assert_eq!(creates.get(), 0);
+    }
+
+    #[test]
+    fn local_changes_during_lookup_or_final_readback_never_report_admission() {
+        for mutate_at in [1, 6] {
+            let fixture = fixture();
+            let report = fixture.validate(&mut fixture.host());
+            assert!(report.ready, "{report:?}");
+            let creates = std::cell::Cell::new(0);
+            let error = publish(&fixture, report, &remote(&fixture), mutate_at, &creates)
+                .unwrap_err()
+                .to_string();
+            if mutate_at == 6 {
+                assert!(error.contains("PR_CREATED_NOT_ADMITTED"), "{error}");
+                assert!(error.contains("draft_confirmed"), "{error}");
+            }
+            assert_eq!(creates.get(), usize::from(mutate_at == 6));
+        }
+    }
+
+    #[test]
+    fn successful_report_or_receipt_without_live_completion_cannot_admit_pr() {
+        let fixture = fixture();
+        let mut report = fixture.validate(&mut fixture.host());
+        assert!(report.ready, "{report:?}");
+        report.completed_evidence = None;
+        let creates = std::cell::Cell::new(0);
+        let error = publish(&fixture, report, &remote(&fixture), 0, &creates)
+            .unwrap_err()
+            .to_string();
+        assert!(error.contains("PUBLICATION_PROOF_MISSING"), "{error}");
+        assert_eq!(creates.get(), 0);
+    }
+
+    #[test]
+    fn omitted_skipped_or_failed_required_observation_cannot_authorize_creation() {
+        for defect in ["missing", "skipped", "failure"] {
+            let fixture = fixture();
+            let mut report = fixture.validate(&mut fixture.host());
+            assert!(report.ready, "{report:?}");
+            let mut proof =
+                serde_json::to_value(report.completed_evidence.take().unwrap()).unwrap();
+            if defect == "missing" {
+                proof["suite"]["results"].as_array_mut().unwrap().pop();
+            } else {
+                proof["suite"]["results"][0]["observation"]["conclusion"] = defect.into();
+            }
+            // Negative control: recomposing an agent's success report does not
+            // make its incomplete/unsuccessful required evidence admissible.
+            report.completed_evidence = Some(serde_json::from_value(proof).unwrap());
+            let creates = std::cell::Cell::new(0);
+            assert!(
+                publish(&fixture, report, &remote(&fixture), 0, &creates).is_err(),
+                "{defect}"
+            );
+            assert_eq!(creates.get(), 0);
+        }
+    }
+
+    #[test]
+    fn current_source_governance_policy_and_measured_tools_must_still_match() {
+        for defect in ["source", "governance", "policy", "tool"] {
+            let mut fixture = fixture();
+            // Use an owned closure file; never alter the installed interpreter.
+            let closure = fixture._storage.path().join("runtime-closure");
+            std::fs::write(&closure, "reviewed auxiliary runtime bytes\n").unwrap();
+            for execution in fixture
+                .proof
+                .repository_contract
+                .as_mut()
+                .unwrap()
+                .executions
+                .values_mut()
+            {
+                execution.toolchain_files.insert(
+                    "owned-test-closure".into(),
+                    closure.to_str().unwrap().into(),
+                );
+            }
+            fixture.review_commands();
+            fixture.save_config();
+            fixture.commit("review measured execution closure");
+            let report = fixture.validate(&mut fixture.host());
+            assert!(report.ready, "{report:?}");
+            let proof = remote(&fixture);
+            match defect {
+                "source" => write(
+                    &fixture.options.root,
+                    "payload.txt",
+                    "changed uncommitted bytes\n",
+                ),
+                "governance" => {
+                    crate::core::trajectory::record_trajectory(
+                        &fixture.options.root,
+                        "publication-repair",
+                        crate::core::trajectory::TrajectoryUpdate {
+                            tool_calls: vec!["new work after successful validation".into()],
+                            ..Default::default()
+                        },
+                    )
+                    .unwrap();
+                }
+                "policy" => {
+                    let path = fixture
+                        .options
+                        .root
+                        .join(consumer_readiness_fixture::CONFIG);
+                    let mut content = std::fs::read_to_string(&path).unwrap();
+                    content.push_str("\n# changed after successful validation\n");
+                    std::fs::write(path, content).unwrap();
+                }
+                _ => std::fs::write(&closure, "different runtime bytes\n").unwrap(),
+            }
+            let creates = std::cell::Cell::new(0);
+            assert!(
+                publish(&fixture, report, &proof, 0, &creates).is_err(),
+                "{defect}"
+            );
+            assert_eq!(creates.get(), 0, "{defect}");
+        }
+    }
+
+    #[test]
+    fn rejection_is_appended_without_rewriting_successful_historical_proof() {
+        let fixture = fixture();
+        let report = fixture.validate(&mut fixture.host());
+        assert!(report.ready, "{report:?}");
+        let directory = report.evidence_path.clone().unwrap();
+        let original = std::fs::read(directory.join("historical-proof.json")).unwrap();
+        let readiness = PublicationReadiness::from_report(report, None).unwrap();
+        let reason = "PR_CREATED_NOT_ADMITTED: exact subject changed; quarantine=draft_confirmed";
+        let path = readiness.record_publication_rejection(reason).unwrap();
+        let record: serde_json::Value =
+            serde_json::from_slice(&std::fs::read(path).unwrap()).unwrap();
+        assert_eq!(record["admitted"], false);
+        assert_eq!(record["merge_authorized"], false);
+        assert_eq!(record["reason"], reason);
+        assert_eq!(
+            record["material"]["head_revision"],
+            git(&fixture.options.root, &["rev-parse", "HEAD"])
+        );
+        assert_eq!(
+            std::fs::read(directory.join("historical-proof.json")).unwrap(),
+            original
+        );
+    }
+}
+
+#[test]
+fn failed_admission_demotes_only_the_matching_pr_and_confirms_quarantine() {
+    let p = proof();
+    let mut ready = pr(&p);
+    ready["draft"] = false.into();
+    let mut calls = Vec::new();
+    let mut replies = vec![
+        Ok(bytes(ready)),
+        Err(failure("lost acknowledgement")),
+        Ok(bytes(pr(&p))),
+    ]
+    .into_iter();
+    let state = quarantine_pr(
+        &mut |args| {
+            calls.push(args.join(" "));
+            replies.next().unwrap()
+        },
+        "owner/repo",
+        "feature",
+        "master",
+        7,
+    )
+    .unwrap();
+    assert_eq!(state, "draft_confirmed");
+    assert_eq!(calls[1], "pr ready 7 --undo --repo owner/repo");
+    let mut unrelated = pr(&p);
+    unrelated["head"]["ref"] = "another-agent".into();
+    let mut count = 0;
+    assert!(
+        quarantine_pr(
+            &mut |_| {
+                count += 1;
+                Ok(bytes(unrelated.clone()))
+            },
+            "owner/repo",
+            "feature",
+            "master",
+            7
+        )
+        .is_err()
+    );
+    assert_eq!(count, 1, "never mutate an unrelated PR");
+}
+
+#[test]
+fn denied_or_unconfirmed_quarantine_never_becomes_success() {
+    let p = proof();
+    let mut ready = pr(&p);
+    ready["draft"] = false.into();
+    let mut replies = vec![
+        Ok(bytes(ready.clone())),
+        Err(failure("permission denied")),
+        Ok(bytes(ready)),
+    ]
+    .into_iter();
+    let error = quarantine_pr(
+        &mut |_| replies.next().unwrap(),
+        "owner/repo",
+        "feature",
+        "master",
+        7,
+    )
+    .unwrap_err()
+    .to_string();
+    assert!(error.contains("PR_QUARANTINE_UNCONFIRMED"), "{error}");
 }
 
 #[test]
@@ -196,6 +663,7 @@ fn existing_pr_is_reused_and_full_remote_diff_checked() {
         "feature",
         "master",
         &p,
+        &mut || Ok(()),
         "title",
         "body",
     )
@@ -228,6 +696,7 @@ fn new_pr_created_as_draft_and_read_back_after_create() {
         "feature",
         "master",
         &p,
+        &mut || Ok(()),
         "title",
         "body",
     )
@@ -256,6 +725,7 @@ fn pr_create_failure_is_actionable_partial_publication() {
         "feature",
         "master",
         &p,
+        &mut || Ok(()),
         "title",
         "body",
     )
@@ -284,6 +754,7 @@ fn lost_create_response_is_recovered_by_exact_pr_readback() {
         "feature",
         "master",
         &p,
+        &mut || Ok(()),
         "title",
         "body",
     )
@@ -323,6 +794,8 @@ fn missing_remote_artifact_and_truncated_pr_diff_fail() {
         bytes(serde_json::json!([[{"number":7}]])),
         bytes(pr(&p)),
         bytes(f),
+        bytes(pr(&p)),
+        bytes(pr(&p)),
     ]
     .into_iter();
     let error = ensure_and_verify_pr_with(
@@ -331,6 +804,7 @@ fn missing_remote_artifact_and_truncated_pr_diff_fail() {
         "feature",
         "master",
         &p,
+        &mut || Ok(()),
         "title",
         "body",
     )
@@ -348,6 +822,8 @@ fn pr_race_after_diff_readback_fails() {
         bytes(pr(&p)),
         bytes(files(&p)),
         bytes(changed),
+        bytes(pr(&p)),
+        bytes(pr(&p)),
     ]
     .into_iter();
     assert!(
@@ -357,6 +833,7 @@ fn pr_race_after_diff_readback_fails() {
             "feature",
             "master",
             &p,
+            &mut || Ok(()),
             "title",
             "body"
         )

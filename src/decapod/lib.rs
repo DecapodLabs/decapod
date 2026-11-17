@@ -7475,7 +7475,7 @@ fn archive_workbranch_readiness(
 pub(crate) fn enforce_workbranch_readiness_before_push(
     workspace_root: &Path,
     invocation: &ReadinessInvocation,
-) -> Result<Option<std::path::PathBuf>, error::DecapodError> {
+) -> Result<core::validation_history::PublicationReadiness, error::DecapodError> {
     invocation.validate()?;
     if invocation.snapshot_prepare || invocation.snapshot_adopt.is_some() {
         return Err(error::DecapodError::ValidationError(
@@ -7513,6 +7513,11 @@ pub(crate) fn enforce_workbranch_readiness_before_push(
             "LOCAL_TARGET_PUBLICATION_UNSUPPORTED: local merge readiness does not prove the forge target; establish independently verified target equivalence and publication authority".into(),
         ));
     }
+    let store = Store {
+        kind: StoreKind::Repo,
+        root: find_governance_root(workspace_root).join(".decapod/data"),
+    };
+    let binding = core::validation_history::capture_task_binding(&store, workspace_root)?;
     let readiness = run_current_workbranch_readiness_with(workspace_root, invocation);
     if !readiness.publication_ready() {
         return Err(error::DecapodError::ValidationError(format!(
@@ -7521,10 +7526,10 @@ pub(crate) fn enforce_workbranch_readiness_before_push(
                 .map_err(|e| error::DecapodError::ValidationError(e.to_string()))?,
         )));
     }
-    Ok(readiness
-        .evidence_path
-        .map(|path| path.join("snapshot-handoff.json"))
-        .filter(|path| path.is_file()))
+    let readiness =
+        core::validation_history::PublicationReadiness::from_report(readiness, binding)?;
+    readiness.verify_current(workspace_root)?;
+    Ok(readiness)
 }
 
 /// Called only after source publication and PR identity have been verified.

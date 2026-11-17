@@ -1,5 +1,16 @@
 # Intent
 
+## Evidence-bound PR admission (#1747, #1748)
+
+An agent earns PR admission only through complete live proof for the actual
+candidate, accepted target and required policy. `PublicationReadiness` carries
+that existing proof through the publisher; a saved historical success cannot
+authorize a different present artifact. A target advance or changed source,
+governance, execution tools or task custody requires fresh applicable proof.
+PR admission is an observation for exact head/base identities, not authorization
+to merge later. Failed post-creation admission preserves a separate rejection
+and verifies that the matching PR is quarantined as a draft or already closed.
+
 ## Do What Must Be Done (#1690–#1692)
 
 Maximize useful autonomous engineering per human intervention. Agents must
@@ -375,7 +386,7 @@ These declarations select authoring and proof obligations; they do not attest im
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `28060df26a4bc2173c9505f4d306b11ce4e1eb9f87d740a483de7f543fdf7e19`
+- Repository signal fingerprint: `de988240024100ea371ea3823ab7b65d211fb300e58b80751a9db9b5041be8b2`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (236 files), `tests/` (234 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

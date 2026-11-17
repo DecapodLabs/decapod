@@ -1,5 +1,24 @@
 # Validation
 
+## Required publication regression coverage (#1747, #1748)
+
+`tests/unit/core/workspace_publication_tests.rs::live_admission` executes real
+required source commands and real Git commits/remote readback, then exercises
+the publisher's admission boundary with deterministic forge responses. It covers
+failure, repair, fresh proof, changed same-path bytes/head, target movement,
+missing/skipped/failed required observations, source/policy/governance/tool drift,
+and post-creation rejection. Additional quarantine tests cover lost replies,
+permission denial and unrelated PR protection. These fixtures do not establish
+real GitHub publication. The separately documented disposable-repository
+acceptance records actual CLI/forge evidence and its limitations.
+`assets/tools/source_ci_profile.rs::core_test_inputs` selects the owning core
+recipe for unit-test changes. GitHub ruleset 12701816 requires Buildkite's
+`CI / test (target="core") (push)` from App 805657 and strict target freshness;
+`CI / supabase-consumer (push)` from the same App is also required: its actual
+`cargo test --lib` recipe owns the library-unit publication regressions. The
+core integration recipe alone does not execute those unit tests. The existing
+OrganizationAdmin bypass remains a separate explicit authority.
+
 ## Real recovery fixture prerequisites (#1696)
 
 `tests/support/recovery_filesystem.rs` owns the existing private filesystem
@@ -1369,7 +1388,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `28060df26a4bc2173c9505f4d306b11ce4e1eb9f87d740a483de7f543fdf7e19`
+- Repository signal fingerprint: `de988240024100ea371ea3823ab7b65d211fb300e58b80751a9db9b5041be8b2`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (236 files), `tests/` (234 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

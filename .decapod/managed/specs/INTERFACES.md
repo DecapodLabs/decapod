@@ -1,5 +1,19 @@
 # Interfaces
 
+## Admission and quarantine (#1747, #1748)
+
+`workspace publish` and RPC publication carry completed live validation through
+their existing readiness boundary. `PUBLICATION_PROOF_SUBJECT_CHANGED` rejects
+a different repository, work branch, candidate or accepted base. Missing live
+completion is `PUBLICATION_PROOF_MISSING`; changed current inputs or custody
+remain blocking. A PR observed after creation can still fail admission:
+`PR_CREATED_NOT_ADMITTED` identifies its URL and confirmed draft/closed quarantine
+or an explicit unconfirmed quarantine. The publisher never reports successful
+publication on this path. Rejection JSON is appended to the live external
+evidence directory without rewriting historical successful proof. An admitted
+result's existing warnings field states that admission does not authorize merge.
+The wire shape of the existing publication result is unchanged.
+
 ## Escalation admissibility (#1690–#1692)
 
 Continuations may supply an omitted authority command and narrow an omitted
@@ -1185,7 +1199,7 @@ field. Nothing in this operation authorizes a mutation, approval or completion.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `28060df26a4bc2173c9505f4d306b11ce4e1eb9f87d740a483de7f543fdf7e19`
+- Repository signal fingerprint: `de988240024100ea371ea3823ab7b65d211fb300e58b80751a9db9b5041be8b2`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (236 files), `tests/` (234 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

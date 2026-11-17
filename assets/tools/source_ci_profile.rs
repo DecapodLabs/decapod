@@ -450,6 +450,7 @@ fn shared_test_inputs(path: &str) -> bool {
 
 fn core_test_inputs(path: &str) -> bool {
     shared_test_inputs(path)
+        || path.starts_with("tests/unit/core/")
         || [
             "todo_enforcement",
             "validate_termination",
