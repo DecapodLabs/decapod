@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.148.8](https://github.com/DecapodLabs/decapod/compare/v0.148.7...v0.148.8) - 2026-11-17
+
+### Fixed
+
+- *(entrypoints)* honor scoped source version policy in currency
+
+### Other
+
+- *(proof)* reconcile reviewed release inputs for final evidence
+- *(admission)* record accepted integration and renewed proof boundary
+
 ## [0.148.7](https://github.com/DecapodLabs/decapod/compare/v0.148.6...v0.148.7) - 2026-11-17
 
 ### Fixed
