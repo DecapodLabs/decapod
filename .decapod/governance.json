@@ -598,6 +598,14 @@
       "proof_refs": [
         "/private/tmp/decapod-boundary-red-c30w2kjb/evidence"
       ]
+    },
+    {
+      "id": "reviewed-release-inventory-03",
+      "summary": "Review proof inventory against edbfc00d: only package versions in Cargo.toml and Cargo.lock advanced 0.148.7 to 0.148.9; preserve complete required profile, commands, workflows and provider.",
+      "input_digest": "sha256:7e632c55c8968879b71f4485a15e1d21de070a0cc472e86ce6338e98e3c15913",
+      "proof_refs": [
+        "/private/tmp/decapod-boundary-red-c30w2kjb/evidence/candidate-init-reconciliation.json"
+      ]
     }
   ],
   "intents": {
@@ -671,10 +679,14 @@
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:c6ad7cbfa754d1178475cbd1db89916d3eedd6982dd8c2fe445d100edea70fdb",
+      "artifact_hash": "sha256:c196394459fb5bc41ed5f982bf410c368c831e98cc53b1ea7af970ae11105e15",
       "checks": [
         {
           "name": "config_version_actual_binary",
+          "status": "failed"
+        },
+        {
+          "name": "full_validation_d6fa03bc",
           "status": "failed"
         },
         {
@@ -714,10 +726,17 @@
             "intent_id": "intent:change_01M7NR0Z9M2Q4AQQFBP1ZPD07Q",
             "kind": "trajectory_step_recorded",
             "sequence": 5
+          },
+          {
+            "detail": "trajectory:branch_01M7NR0ZCNHC7YZKZ9SYWWDDVJ",
+            "event_id": "event:6",
+            "intent_id": "intent:change_01M7NR0Z9M2Q4AQQFBP1ZPD07Q",
+            "kind": "trajectory_step_recorded",
+            "sequence": 6
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 5,
+        "next_sequence": 6,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M7NR0ZCNHC7YZKZ9SYWWDDVJ": {
@@ -765,6 +784,24 @@
                 ],
                 "sequence": 5,
                 "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:6",
+                "observations": [
+                  "Cargo.toml",
+                  "Cargo.lock",
+                  ".decapod/config.toml",
+                  "/private/tmp/decapod-boundary-red-c30w2kjb/evidence/candidate-init-reconciliation.json"
+                ],
+                "proof_refs": [
+                  "full_validation_d6fa03bc"
+                ],
+                "scope": [
+                  "root"
+                ],
+                "sequence": 6,
+                "validation_findings": []
               }
             ]
           }
@@ -774,9 +811,12 @@
       "destination": "pull request",
       "evidence": [
         "/private/tmp/decapod-boundary-red-c30w2kjb/evidence",
+        "/private/tmp/decapod-boundary-red-c30w2kjb/evidence/candidate-init-reconciliation.json",
         "/private/tmp/decapod-boundary-red-c30w2kjb/evidence/rbac-main-unaccepted.json"
       ],
       "inspected_files": [
+        "Cargo.lock",
+        "Cargo.toml",
         "src/decapod/cli.rs",
         "src/decapod/core/db_maintenance.rs",
         "src/decapod/lib.rs",
@@ -784,6 +824,7 @@
       ],
       "intent_id": "intent:change_01M7NR0Z9M2Q4AQQFBP1ZPD07Q",
       "modified_files": [
+        ".decapod/config.toml",
         "src/decapod/cli.rs",
         "src/decapod/core/db_maintenance.rs",
         "src/decapod/lib.rs",

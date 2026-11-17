@@ -12,6 +12,12 @@ confirmation. Real-host activation (#880), unified diagnostic (#1071), and
 real-forge current admission (#1763) remain separate executable acceptance
 obligations; parser/RBAC regression results cannot stand in for those results.
 
+The proof-source inventory is reconciled against its last reviewed source
+`edbfc00d`: only the package version in `Cargo.toml` and `Cargo.lock` advanced
+from 0.148.7 to 0.148.9. The candidate preserves every workflow, command,
+coverage obligation and configured execution provider while acknowledging
+those release metadata bytes. Reconciliation does not establish test success.
+
 ## Complete scoped source currency (#1753)
 
 The current follow-up also repairs the source-version policy's currency boundary.
