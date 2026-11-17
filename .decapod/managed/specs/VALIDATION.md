@@ -1,5 +1,20 @@
 # Validation
 
+## Documentation offering entry and history recovery
+
+This fresh candidate reauthors the static docs entry from accepted6ab6de31.
+Prior source0d8e934b is preserved; its merge797f009a lacked a required checkpoint,
+as observed by actual source-CI job134406562537. The current history-recovery
+record preserves that failure without creating past proof. Every new authored
+commit must have its own staged-material checkpoint before commit.
+
+The accepted required source inventory differs from its older93783fdc review
+only through accepted Cargo version changes to0.148.9. This candidate changes
+no inventoried definition or check/executor requirement. Its consistency digest
+is reconciled to the exact accepted definitions, and release9 Docker/manifest
+projections come from the matching managed controller. Full exact-candidate
+source-CI and the existing mdBook build remain mandatory before PR publication.
+
 ## Current report validation scope
 
 The current verification boundary begins at accepted release commit 9d1aed27.
@@ -1461,7 +1476,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `59302b283273f65193215ee22c7b207943d8077e5105c464f9f5a2e7ac6faa43`
+- Repository signal fingerprint: `281f7d1bd3cdb33b2a6393b6086f0adac571bb507ff67b08daa7316ccb1e5e5c`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (236 files), `tests/` (235 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

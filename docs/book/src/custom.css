@@ -130,6 +130,9 @@ button,input,a{font-family:inherit}
 .decapod-docs-btn:hover{transform:translateY(-2px)}
 .decapod-docs-btn.primary{background:#271c2c;color:#fff!important;box-shadow:0 6px 0 #110b14}
 .decapod-docs-btn.secondary{background:#fffbf4;border:2px solid #2d2131;color:#281c29!important;padding:11px 14px}
+.decapod-docs-btn.offerings{background:linear-gradient(115deg,#ffc65b,#ffad79 52%,#ffbed0);border:1px solid #c8865f;color:#281c29!important;box-shadow:0 4px 0 #bc745e33}
+.decapod-docs-btn.offerings:hover{box-shadow:0 6px 0 #bc745e44,0 0 20px #f05b3720}
+.decapod-docs-btn.offerings:focus-visible{outline:3px solid var(--decapod-orange);outline-offset:4px}
 .decapod-docs-video{background:#241b2b;margin:35px 0 26px;padding:7px;border-radius:25px;box-shadow:0 16px 32px #21152222}
 .decapod-docs-video video{display:block;aspect-ratio:16/9;object-fit:cover;background:#fff;width:100%;border-radius:19px}
 .decapod-docs-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;margin:30px 0 40px}
