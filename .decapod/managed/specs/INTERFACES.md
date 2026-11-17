@@ -1,5 +1,17 @@
 # Interfaces
 
+## Config repair and accepted authority (#1771, #1776)
+
+Configuration errors use `INVALID_CONFIG_SCHEMA` with the original parser
+location/type/expected-value diagnostic and embedded repair commands. Supported
+schema version is 1.0.0; root extension compatibility remains unchanged.
+`data schema` and `rpc --op schema.get` expose their existing schemas without
+config parsing or datastore/session mutation, including on malformed projects.
+Ordinary mutations resume after a valid correction. Valid syntax alone never
+grants exceptional permission. RBAC bypass keeps `proof_ready=false` and
+`publication_ready=false`; unaccepted root policy proposals return
+`RBAC_PERMISSION_DENIED`, and unresolved accepted sources fail closed.
+
 ## Internal source currency agreement (#1753)
 
 The existing private config-only source policy now also governs version-only
@@ -1218,7 +1230,7 @@ field. Nothing in this operation authorizes a mutation, approval or completion.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `59302b283273f65193215ee22c7b207943d8077e5105c464f9f5a2e7ac6faa43`
+- Repository signal fingerprint: `35e382f0466ac77fba889e68f37b0d5d29cb65d938cb538c973d8b96cb162535`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (236 files), `tests/` (235 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

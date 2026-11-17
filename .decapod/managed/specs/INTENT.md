@@ -1,5 +1,17 @@
 # Intent
 
+## Autonomous safe config recovery and privilege custody (#1771, #1776)
+
+Agents must be able to discover the embedded configuration contract even when
+their proposal is malformed, repair it in governed isolation, and resume
+ordinary work. They cannot use schema validity, a repinned candidate policy,
+or a changed base selector to acquire new exceptional authority. This change
+reuses existing parser, branch-safe maintenance policy and publication owners.
+It preserves accepted-policy rotation and revocation without repetitive human
+confirmation. Real-host activation (#880), unified diagnostic (#1071), and
+real-forge current admission (#1763) remain separate executable acceptance
+obligations; parser/RBAC regression results cannot stand in for those results.
+
 ## Complete scoped source currency (#1753)
 
 The current follow-up also repairs the source-version policy's currency boundary.
@@ -430,7 +442,7 @@ These declarations select authoring and proof obligations; they do not attest im
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `59302b283273f65193215ee22c7b207943d8077e5105c464f9f5a2e7ac6faa43`
+- Repository signal fingerprint: `35e382f0466ac77fba889e68f37b0d5d29cb65d938cb538c973d8b96cb162535`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (236 files), `tests/` (235 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
