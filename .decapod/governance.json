@@ -633,6 +633,11 @@
       "id": "accepted-target-ab4abe05",
       "summary": "Integrate accepted Constitution documentation without dropping PR1766 continuation copy; invalidate earlier target readiness",
       "input_digest": "sha256:d335539947e31795df5e23a4a303df7d29af3a69b1203fc5f71e8116e903bbc5"
+    },
+    {
+      "id": "accepted-release9-proof-boundary",
+      "summary": "Bind current candidate to accepted6ab6de31 release9 source inventory; preserve failed earlier provider attempts",
+      "input_digest": "sha256:fbbe0aa26d3b4c05a52cd6c70d18dce19f35cdf3484c22f6db779fbd572a8b34"
     }
   ],
   "intents": {
@@ -677,22 +682,22 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Current recorded-readiness projection and adversarial CLI corrections reviewed; no principal or semantic authority inferred.",
-          "reviewed_code_fingerprint": "d18cfa10ec5942fc7b7e0c8c3c40760941b9877bc4b3fb255a57fc229629b5a1",
+          "reason": "Accepted target and release9 inventory reviewed; recorded instruction readiness and application negatives retain their stated trust limits.",
+          "reviewed_code_fingerprint": "8312d1b3e6aeb12a26c53462e1eb0905982f29160a82fd0271bab00edc9d0236",
           "spec_material_hash": "50d21dc1f07d5736ab197256c009c2fab5617f402a42a4e9971d62aa5c6a2114"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Current recorded-readiness projection and adversarial CLI corrections reviewed; no principal or semantic authority inferred.",
-          "reviewed_code_fingerprint": "d18cfa10ec5942fc7b7e0c8c3c40760941b9877bc4b3fb255a57fc229629b5a1",
+          "reason": "Accepted target and release9 inventory reviewed; recorded instruction readiness and application negatives retain their stated trust limits.",
+          "reviewed_code_fingerprint": "8312d1b3e6aeb12a26c53462e1eb0905982f29160a82fd0271bab00edc9d0236",
           "spec_material_hash": "4efe6ce31db9247d52ed8c947448ba1843d0d8cac2e3a885fbfdafa82756af6d"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Current recorded-readiness projection and adversarial CLI corrections reviewed; no principal or semantic authority inferred.",
-          "reviewed_code_fingerprint": "d18cfa10ec5942fc7b7e0c8c3c40760941b9877bc4b3fb255a57fc229629b5a1",
+          "reason": "Accepted target and release9 inventory reviewed; recorded instruction readiness and application negatives retain their stated trust limits.",
+          "reviewed_code_fingerprint": "8312d1b3e6aeb12a26c53462e1eb0905982f29160a82fd0271bab00edc9d0236",
           "spec_material_hash": "527cc749c06f943ddb878264fa30e76918f5f2d794ee2473348779a91d363d8d"
         }
       ],
@@ -704,7 +709,7 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1794951181Z"
+      "updated_at": "1794951667Z"
     },
     "trajectory": {
       "active_boundaries": [

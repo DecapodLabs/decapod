@@ -20,6 +20,12 @@ documentation update. The index retains both the existing closed-loop explanatio
 and the accepted distinction between global engineering doctrine and repository
 policy. Checks captured against the earlier `18cbb30c` target cannot establish
 readiness for this integration; target ancestry and all current proof are renewed.
+The subsequent accepted release `6ab6de31` changes only the package version to
+0.148.9, its lockfile entry and release notes. Review of the same 105 proof inputs
+therefore updates the source inventory digest for these two version lines only;
+no execution command, check requirement, toolchain or helper is replaced. The
+installed controller remains 0.148.8 under the existing scoped source-version
+policy. The prior run failed Buildkite docs-sync build 11813 and grants no proof.
 
 The reviewed source inventory advances from the last accepted review at
 `edbfc00ddfd4c24458a2277176762c6924de13cc` solely for the accepted package-version
@@ -1514,7 +1520,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `d18cfa10ec5942fc7b7e0c8c3c40760941b9877bc4b3fb255a57fc229629b5a1`
+- Repository signal fingerprint: `8312d1b3e6aeb12a26c53462e1eb0905982f29160a82fd0271bab00edc9d0236`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (236 files), `tests/` (235 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
