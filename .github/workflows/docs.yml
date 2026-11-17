@@ -46,9 +46,11 @@ jobs:
       - name: Install Starlight dependencies
         working-directory: docs/starlight
         run: npm install --no-audit --no-fund
-      - name: Build and independently check Starlight pages
-        working-directory: docs/starlight
-        run: npm run build
+      - name: Prepare shared source-CI profile
+        uses: ./.github/actions/source-ci-profile
+
+      - name: Build and verify Starlight with audited source-CI recipe
+        run: '"$RUNNER_TEMP/source-ci-profile" run-ci --check docs-build'
       - name: Upload artifact (GitHub Pages)
         if: github.ref == 'refs/heads/master' && steps.owner.outputs.native_owner == 'true'
         uses: actions/upload-pages-artifact@v3
