@@ -14,6 +14,8 @@
 
 #[path = "entrypoint_integrity/history.rs"]
 mod history;
+#[cfg(test)]
+pub(crate) use history::development_source_fixture;
 pub(crate) use history::{
     ensure_ungrafted, git as history_git, validate_committed_history,
     validate_committed_history_with,
@@ -42,6 +44,32 @@ fn development_alignment(
 ) -> Result<Option<bool>, String> {
     history::development_template(root, surface)
         .map(|body| body.map(|body| valid_versioned_source_entrypoint(surface, content, &body)))
+}
+
+/// Internal currency decision; this grants no exception to body or fingerprint
+/// integrity. Every surface must satisfy the same scoped source policy.
+pub(crate) fn preserves_source_entrypoint_versions(root: &Path) -> bool {
+    use std::io::Read;
+    ENTRYPOINT_FILES.iter().all(|surface| {
+        let path = root.join(surface);
+        if !fs::symlink_metadata(&path)
+            .is_ok_and(|metadata| metadata.is_file() && !metadata.file_type().is_symlink())
+        {
+            return false;
+        }
+        let Ok(file) = fs::File::open(path) else {
+            return false;
+        };
+        let mut content = String::new();
+        file.take(1024 * 1024 + 1)
+            .read_to_string(&mut content)
+            .is_ok()
+            && content.len() <= 1024 * 1024
+            && matches!(
+                development_alignment(root, surface, &content),
+                Ok(Some(true))
+            )
+    })
 }
 
 fn valid_versioned_source_entrypoint(surface: &str, content: &str, body: &str) -> bool {

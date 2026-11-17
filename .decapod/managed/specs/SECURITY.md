@@ -1,5 +1,15 @@
 # Security
 
+## Scoped currency authorization (#1753)
+
+Currency preservation requires the same explicit config, sole exact canonical
+push slug, ungrafted immutable source ancestry and committed template identity,
+plus valid bodies/fingerprints for all four current regular bounded entrypoints.
+A failed inspection grants no exception. Generated-release provenance is read
+from the accepted Git blob, not an agent-supplied verdict. Missing/invalid data
+retains the conservative refresh condition. Docker/manifest provenance, required
+artifact presence and every execution obligation remain separate enforced gates.
+
 ## Timestamp conversion boundary (#1755)
 
 Untrusted RFC3339 offset normalization uses checked UTC conversion. A timestamp
@@ -651,7 +661,7 @@ execution evidence remains required before publication readiness.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `9d4eb244c511cef4be9a3240c4d88244af02947256efe7b9a1f5c105cce63f7c`
+- Repository signal fingerprint: `59302b283273f65193215ee22c7b207943d8077e5105c464f9f5a2e7ac6faa43`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (236 files), `tests/` (235 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

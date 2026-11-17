@@ -1,5 +1,14 @@
 # Interfaces
 
+## Internal source currency agreement (#1753)
+
+The existing private config-only source policy now also governs version-only
+entrypoint participation in the publication diff. No new option or public wire
+field is introduced. Authorized canonical source headers remain unchanged when
+generated metadata is already current. A generator upgrade still requires Docker
+and manifest updates; disabled, foreign, ambiguous or invalid source policy keeps
+the ordinary release-bound refresh rule and blocking diagnostics.
+
 ## Timestamp compatibility (#1755)
 
 Task, KnowledgeEntry and Decision timestamps remain RFC3339 strings normalized
@@ -1209,7 +1218,7 @@ field. Nothing in this operation authorizes a mutation, approval or completion.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `9d4eb244c511cef4be9a3240c4d88244af02947256efe7b9a1f5c105cce63f7c`
+- Repository signal fingerprint: `59302b283273f65193215ee22c7b207943d8077e5105c464f9f5a2e7ac6faa43`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (236 files), `tests/` (235 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
