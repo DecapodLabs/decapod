@@ -117,6 +117,120 @@ fn assert_no_fallback(root: &Path) {
     assert!(!root.join(".decapod/data/todo.db").exists());
 }
 
+fn mixed_backend_worktree(
+    root_backend: &str,
+    workspace_backend: &str,
+) -> (TempDir, std::path::PathBuf) {
+    let root = project();
+    let config = root.path().join(".decapod/config.toml");
+    let source = std::fs::read_to_string(&config).unwrap();
+    std::fs::write(
+        &config,
+        source.replace(
+            "backend = \"cloud\"",
+            &format!("backend = \"{root_backend}\""),
+        ),
+    )
+    .unwrap();
+    for args in [
+        vec!["add", ".decapod/config.toml"],
+        vec![
+            "-c",
+            "user.name=Fixture",
+            "-c",
+            "user.email=fixture@example.invalid",
+            "commit",
+            "--no-gpg-sign",
+            "-qm",
+            "fixture",
+        ],
+    ] {
+        let result = Command::new("git")
+            .args(args)
+            .current_dir(root.path())
+            .output()
+            .unwrap();
+        assert!(
+            result.status.success(),
+            "{}",
+            String::from_utf8_lossy(&result.stderr)
+        );
+    }
+    let workspace = root
+        .path()
+        .join(".decapod/workspaces/agent-supabase-proof-bugs_fixture_backend");
+    let result = Command::new("git")
+        .args([
+            "worktree",
+            "add",
+            "-b",
+            "agent/supabase-proof/bugs_fixture_backend",
+        ])
+        .arg(&workspace)
+        .current_dir(root.path())
+        .output()
+        .unwrap();
+    assert!(
+        result.status.success(),
+        "{}",
+        String::from_utf8_lossy(&result.stderr)
+    );
+    std::fs::write(
+        workspace.join(".decapod/config.toml"),
+        source.replace(
+            "backend = \"cloud\"",
+            &format!("backend = \"{workspace_backend}\""),
+        ),
+    )
+    .unwrap();
+    (root, workspace)
+}
+
+#[test]
+fn local_worktree_uses_shared_local_tasks_when_canonical_checkout_selects_cloud() {
+    let (root, workspace) = mixed_backend_worktree("cloud", "local");
+    let output =
+        command_with_optional_datastore(&workspace, None, "http://127.0.0.1:1", None, &["list"]);
+    assert!(
+        output.status.success(),
+        "{}{}",
+        String::from_utf8_lossy(&output.stdout),
+        String::from_utf8_lossy(&output.stderr)
+    );
+    let result: serde_json::Value = serde_json::from_slice(&output.stdout).unwrap();
+    assert_eq!(result["cmd"], "todo.list");
+    assert!(result.get("backend").is_none());
+    assert!(root.path().join(".decapod/data/decapod.db").exists());
+    assert_no_fallback(&workspace);
+}
+
+#[test]
+fn cloud_worktree_unsupported_local_journal_never_opens_canonical_sqlite() {
+    let (root, workspace) = mixed_backend_worktree("local", "cloud");
+    let output = command_with_optional_datastore(
+        &workspace,
+        None,
+        "http://127.0.0.1:1",
+        None,
+        &["journal", "verify"],
+    );
+    assert!(!output.status.success());
+    assert!(String::from_utf8_lossy(&output.stderr).contains("cloud Dactyl contract"));
+    assert_no_fallback(root.path());
+    assert_no_fallback(&workspace);
+}
+
+#[test]
+fn cloud_worktree_without_managed_session_never_reads_canonical_local_tasks() {
+    let (root, workspace) = mixed_backend_worktree("local", "cloud");
+    let output =
+        command_with_optional_datastore(&workspace, None, "http://127.0.0.1:1", None, &["list"]);
+    assert!(!output.status.success());
+    assert!(!String::from_utf8_lossy(&output.stdout).contains("\"items\""));
+    assert_no_fallback(root.path());
+    assert_no_fallback(&workspace);
+}
+
 #[test]
 fn legacy_physical_selector_does_not_override_the_logical_cloud_connector() {
     let root = project();
@@ -504,6 +618,75 @@ mod enabled {
         let request = server.join().unwrap();
         assert_context(&request);
         assert_no_fallback(root.path());
+    }
+
+    #[test]
+    fn cloud_worktree_reads_and_mutates_remote_tasks_without_opening_local_root_database() {
+        for mutation in [false, true] {
+            let (root, workspace) = mixed_backend_worktree("local", "cloud");
+            let sentinel = b"canonical local database must remain untouched";
+            let database = root.path().join(".decapod/data/decapod.db");
+            std::fs::write(&database, sentinel).unwrap();
+            let (endpoint, server) = request_server(
+                if mutation { "/batch" } else { "/query" },
+                200,
+                move |request| {
+                    assert_context(request);
+                    if mutation {
+                        assert_eq!(request["operations"][0]["params"][2], "todo_proof1");
+                        batch_result(task_row("todo_proof1", "in_progress", 2), 1, 1)
+                    } else {
+                        task_rows(task_row("todo_proof1", "open", 1))
+                    }
+                },
+            );
+            let args = if mutation {
+                vec!["claim", "--id", "todo_proof1"]
+            } else {
+                vec!["list"]
+            };
+            let output = command_with_optional_datastore(
+                &workspace,
+                None,
+                &endpoint,
+                Some("synthetic-bearer-secret"),
+                &args,
+            );
+            assert!(
+                output.status.success(),
+                "{}{}",
+                String::from_utf8_lossy(&output.stdout),
+                String::from_utf8_lossy(&output.stderr)
+            );
+            server.join().unwrap();
+            let result: Value = serde_json::from_slice(&output.stdout).unwrap();
+            assert_eq!(result["backend"], "dactyl");
+            assert_eq!(std::fs::read(database).unwrap(), sentinel);
+            assert_no_fallback(&workspace);
+        }
+    }
+
+    #[test]
+    fn cloud_worktree_authorization_denial_and_outage_never_read_local_tasks() {
+        for status in [403, 503] {
+            let (root, workspace) = mixed_backend_worktree("local", "cloud");
+            let (endpoint, server) = server(
+                status,
+                json!({"error":{"code":"authorization_denied","message":"denied"}}),
+            );
+            let output = command_with_optional_datastore(
+                &workspace,
+                None,
+                &endpoint,
+                Some("synthetic-bearer-secret"),
+                &["list"],
+            );
+            assert!(!output.status.success());
+            server.join().unwrap();
+            assert!(!String::from_utf8_lossy(&output.stdout).contains("\"items\""));
+            assert_no_fallback(root.path());
+            assert_no_fallback(&workspace);
+        }
     }
 
     #[test]

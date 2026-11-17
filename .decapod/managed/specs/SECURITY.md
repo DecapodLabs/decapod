@@ -1,5 +1,17 @@
 # Security
 
+## Mixed-backend worktree isolation (#1777)
+
+The canonical checkout's local backend cannot override a cloud workspace after
+startup has selected cloud. Its SQLite tasks and credentials are never a recovery
+route after remote denial, missing managed credentials or transport failure.
+Conversely a local workspace must not inherit canonical cloud routing. CLI tests
+exercise both directions, remote reads and atomic claims, authorization denial,
+outage and unsupported journal verification. A sentinel canonical database stays
+byte-identical during cloud success; empty local paths stay absent on denial.
+These HTTP fixtures prove client composition, not deployed service authorization.
+Real Supabase acceptance and current custody/proof parity remain separate gates.
+
 ## Scoped currency authorization (#1753)
 
 Currency preservation requires the same explicit config, sole exact canonical
@@ -661,7 +673,7 @@ execution evidence remains required before publication readiness.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `59302b283273f65193215ee22c7b207943d8077e5105c464f9f5a2e7ac6faa43`
+- Repository signal fingerprint: `ed527f6ab6e07e2495b9726359b4be0c1b0f4678ea8a0222e930963c9b71ccac`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (236 files), `tests/` (235 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

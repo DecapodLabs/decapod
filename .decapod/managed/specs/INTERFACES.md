@@ -1,5 +1,18 @@
 # Interfaces
 
+## Invoking-worktree task routing (#1777)
+
+`repo.backend` in the invoking checkout controls the existing `decapod todo`
+contract even when its canonical checkout selects a different backend. A cloud
+worktree uses Dactyl and its privately scoped managed session for list, add,
+get/show, claim, release and ordinary completion. Local worktrees retain shared
+canonical local task storage. Cloud journal verification and other unsupported
+task commands return an explicit unsupported-operation error without local
+database access. Machine-private `todo operations` inspection remains available.
+Existing wire requests, repository identity, exact revisions, event atomicity,
+operation IDs and proof restrictions are unchanged; this routing fix does not
+establish complete hosted control-plane parity or authorize verified completion.
+
 ## Internal source currency agreement (#1753)
 
 The existing private config-only source policy now also governs version-only
@@ -1218,7 +1231,7 @@ field. Nothing in this operation authorizes a mutation, approval or completion.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `59302b283273f65193215ee22c7b207943d8077e5105c464f9f5a2e7ac6faa43`
+- Repository signal fingerprint: `ed527f6ab6e07e2495b9726359b4be0c1b0f4678ea8a0222e930963c9b71ccac`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (236 files), `tests/` (235 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

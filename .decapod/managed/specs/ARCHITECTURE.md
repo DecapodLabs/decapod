@@ -1,5 +1,16 @@
 # Architecture
 
+## Worktree task backend selection (#1777)
+
+`lib.rs` passes the invoking workspace root to
+`todo::run_todo_cli_for_project`, separately from the canonical local `Store`.
+Task configuration, repository identity and the Dactyl managed session factory
+use that workspace root consistently. Only an explicitly local workspace reaches
+the shared canonical SQLite path. Existing direct Rust entrypoints retain their
+store-relative behavior for compatibility. Cloud task dispatch precedes local
+journal/transfer paths; unsupported cloud operations fail before connector or
+SQLite work. No dual write, fallback, new backend or token issuer is introduced.
+
 ## Source-policy currency continuity (#1753)
 
 `entrypoint_integrity::preserves_source_entrypoint_versions` reuses the existing
@@ -988,7 +999,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `59302b283273f65193215ee22c7b207943d8077e5105c464f9f5a2e7ac6faa43`
+- Repository signal fingerprint: `ed527f6ab6e07e2495b9726359b4be0c1b0f4678ea8a0222e930963c9b71ccac`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (236 files), `tests/` (235 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

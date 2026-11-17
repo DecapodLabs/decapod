@@ -7479,18 +7479,9 @@ pub fn finish_broker_claim_response(
 }
 
 fn cloud_runtime(
-    root: &Path,
+    project_root: &Path,
 ) -> Result<Option<(CloudRuntimeConfig, RepositoryIdentity)>, error::DecapodError> {
-    let project_root = root
-        .parent()
-        .and_then(Path::parent)
-        .map(Path::to_path_buf)
-        .ok_or_else(|| {
-            error::DecapodError::Config(
-                "unable to resolve the project root for cloud todo configuration".to_string(),
-            )
-        })?;
-    let selection = BackendSelection::from_project(&project_root)?;
+    let selection = BackendSelection::from_project(project_root)?;
     if !selection.backend().is_cloud() {
         return Ok(None);
     }
@@ -7681,6 +7672,20 @@ fn cloud_add_request(command: &TodoCommand) -> Option<JsonValue> {
 }
 
 fn check_cloud_proof_support(command: &TodoCommand) -> Result<(), error::DecapodError> {
+    if !matches!(
+        command,
+        TodoCommand::List { .. }
+            | TodoCommand::Add { .. }
+            | TodoCommand::Get { .. }
+            | TodoCommand::Show { .. }
+            | TodoCommand::Claim { .. }
+            | TodoCommand::Release { .. }
+            | TodoCommand::Done { .. }
+    ) {
+        return Err(error::DecapodError::NotImplemented(
+            "this todo operation is not in the cloud Dactyl contract; the cloud backend never falls back to local SQLite".into(),
+        ));
+    }
     if matches!(
         command,
         TodoCommand::Done {
@@ -7990,23 +7995,30 @@ async fn cloud_get_task(
 }
 
 pub fn run_todo_cli(store: &Store, cli: TodoCli) -> Result<(), error::DecapodError> {
-    let project_root = store
-        .root
-        .parent()
-        .and_then(Path::parent)
-        .ok_or_else(|| {
-            error::DecapodError::Config(
-                "Cannot resolve the repository for the cloud session".into(),
-            )
-        })?
-        .to_path_buf();
-    run_todo_cli_with_cloud_factory(
+    run_todo_cli_for_project(store, cli, todo_project_root(store)?)
+}
+
+fn todo_project_root(store: &Store) -> Result<&Path, error::DecapodError> {
+    store.root.parent().and_then(Path::parent).ok_or_else(|| {
+        error::DecapodError::Config("Cannot resolve the repository for the cloud session".into())
+    })
+}
+
+/// Keep the invoking checkout's backend separate from shared local governance
+/// storage. In a worktree these roots deliberately need not be the same.
+pub fn run_todo_cli_for_project(
+    store: &Store,
+    cli: TodoCli,
+    project_root: &Path,
+) -> Result<(), error::DecapodError> {
+    run_todo_cli_with_cloud_factory_for_project(
         store,
         cli,
         &DactylCloudTodoStoreFactory {
-            project_root,
+            project_root: project_root.to_path_buf(),
             authenticated_context: std::cell::RefCell::new(None),
         },
+        project_root,
     )
 }
 
@@ -8015,33 +8027,16 @@ pub fn run_todo_cli_with_cloud_factory<F: CloudTodoStoreFactory>(
     cli: TodoCli,
     factory: &F,
 ) -> Result<(), error::DecapodError> {
+    run_todo_cli_with_cloud_factory_for_project(store, cli, factory, todo_project_root(store)?)
+}
+
+fn run_todo_cli_with_cloud_factory_for_project<F: CloudTodoStoreFactory>(
+    store: &Store,
+    cli: TodoCli,
+    factory: &F,
+    project_root: &Path,
+) -> Result<(), error::DecapodError> {
     let root = &store.root;
-    if let TodoCommand::Transfer { command } = &cli.command {
-        let out = task_journal::transfer::run(root, command, &mutation_actor(None))?;
-        println!(
-            "{}",
-            serde_json::to_string_pretty(&out)
-                .map_err(|e| error::DecapodError::ValidationError(e.to_string()))?
-        );
-        return Ok(());
-    }
-    if matches!(
-        cli.command,
-        TodoCommand::Journal {
-            command: TodoJournalCommand::Verify
-        }
-    ) {
-        let out = task_journal_verify(root)?;
-        println!(
-            "{}",
-            serde_json::to_string_pretty(&out)
-                .map_err(|e| error::DecapodError::ValidationError(e.to_string()))?
-        );
-        if out["status"] != "ok" {
-            return Err(error::DecapodError::ValidationError("TASK_JOURNAL_CONFLICT: inspect the emitted projection differences; verification did not pass".into()));
-        }
-        return Ok(());
-    }
     if matches!(cli.command, TodoCommand::Operations) {
         let records = CloudTodoJournal::machine()?.list()?;
         println!(
@@ -8058,7 +8053,7 @@ pub fn run_todo_cli_with_cloud_factory<F: CloudTodoStoreFactory>(
             "--operation-id is only supported for cloud todo add".into(),
         ));
     }
-    if let Some((cloud, identity)) = cloud_runtime(root)? {
+    if let Some((cloud, identity)) = cloud_runtime(project_root)? {
         let journal = matches!(cli.command, TodoCommand::Add { .. })
             .then(CloudTodoJournal::machine)
             .transpose()?;
@@ -8137,6 +8132,32 @@ pub fn run_todo_cli_with_cloud_factory<F: CloudTodoStoreFactory>(
         return Err(error::DecapodError::ValidationError(
             "--operation-id requires the cloud backend; no local todo state was changed".into(),
         ));
+    }
+    if let TodoCommand::Transfer { command } = &cli.command {
+        let out = task_journal::transfer::run(root, command, &mutation_actor(None))?;
+        println!(
+            "{}",
+            serde_json::to_string_pretty(&out)
+                .map_err(|e| error::DecapodError::ValidationError(e.to_string()))?
+        );
+        return Ok(());
+    }
+    if matches!(
+        cli.command,
+        TodoCommand::Journal {
+            command: TodoJournalCommand::Verify
+        }
+    ) {
+        let out = task_journal_verify(root)?;
+        println!(
+            "{}",
+            serde_json::to_string_pretty(&out)
+                .map_err(|e| error::DecapodError::ValidationError(e.to_string()))?
+        );
+        if out["status"] != "ok" {
+            return Err(error::DecapodError::ValidationError("TASK_JOURNAL_CONFLICT: inspect the emitted projection differences; verification did not pass".into()));
+        }
+        return Ok(());
     }
     let out = match &cli.command {
         TodoCommand::Operations => unreachable!("handled without a task store"),

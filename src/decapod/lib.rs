@@ -3303,7 +3303,9 @@ pub fn run() -> Result<(), error::DecapodError> {
                         mark_core_constitution_ingested(&governance_root, "docs.ingest")?;
                     }
                 }
-                Command::Todo(todo_cli) => todo::run_todo_cli(&project_store, todo_cli)?,
+                Command::Todo(todo_cli) => {
+                    todo::run_todo_cli_for_project(&project_store, todo_cli, &workspace_root)?
+                }
                 Command::Obligation(obligation_cli) => {
                     obligation::run_obligation_cli(&project_store, obligation_cli)?
                 }
