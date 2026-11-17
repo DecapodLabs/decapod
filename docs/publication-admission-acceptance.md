@@ -89,3 +89,27 @@ advanced target rejection and final GitHub head/base readback. It must also
 preserve failed post-creation admission as a rejection, distinguish creation from
 admission, and leave merge authority unclaimed. Retain raw machine transcripts
 and credentials outside Git; publish only reviewed reproducible evidence.
+
+The opt-in real-forge test is compiled by the existing entrypoint target and is
+ignored in ordinary CI because it requires explicit authority over an empty
+disposable GitHub repository. After full candidate validation, run it against
+the actual candidate binary with:
+
+```sh
+DECAPOD_ACCEPTANCE_REPOSITORY=OWNER/decapod-admission-acceptance-UNIQUE \
+DECAPOD_ACCEPTANCE_OUTPUT=/absolute/new/private/evidence-directory \
+cargo test-main --test entrypoint_correctness \
+  publication_admission::real_forge_reject_repair_admit_and_invalidate \
+  -- --ignored --exact --nocapture --test-threads=1
+```
+
+`tests/acceptance/publication_admission.rs` preserves private transcripts and
+emits `acceptance.json` only after every assertion completes. It bootstraps an
+explicit accepted two-command source contract on the disposable target, drives
+real CLI task/worktree/plan/checkpoint operations, tests source failure and
+repair, observes real GitHub creation before deliberately changing local source,
+requires created-but-not-admitted quarantine, then restores the source and earns
+fresh admission on the same PR. Subsequent source and independently advanced
+target controls must reject publication. The target is advanced only under this
+explicit fixture authority. The test neither merges nor deletes repositories.
+Its required deterministic counterparts remain ordinary mandatory library tests.

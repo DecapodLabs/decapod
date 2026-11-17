@@ -2320,6 +2320,7 @@ fn required_test_source_changes_retain_the_complete_owning_recipe() {
             vec![
                 "tests/cli_contract_enforcement.rs",
                 "tests/entrypoint_correctness.rs",
+                "tests/acceptance/publication_admission.rs",
                 "tests/cli_contracts.rs",
                 "tests/consumer_readiness.rs",
                 "tests/init_ci_scaffolding.rs",

@@ -1453,3 +1453,7 @@ fn fresh_docs_cli_admission_then_complete_runtime_proves_current_source() {
 fn canonical_local_target_cli_readiness_is_source_bound() {
     fresh_docs_readiness::canonical_local_cli_proves_and_rejects_stale_authority();
 }
+
+#[cfg(any(target_os = "linux", target_os = "macos"))]
+#[path = "acceptance/publication_admission.rs"]
+mod publication_admission;

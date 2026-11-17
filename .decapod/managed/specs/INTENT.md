@@ -1,5 +1,11 @@
 # Intent
 
+During development of Decapod itself, an explicitly configured internal policy
+can separate entrypoint release-version churn from the source package version.
+Its scope is the exact canonical Decapod repository and source lineage; valid
+canonical template bytes and fingerprints remain mandatory. It does not renew
+historical execution evidence or weaken exact-artifact publication proof.
+
 ## Evidence-bound PR admission (#1747, #1748)
 
 An agent earns PR admission only through complete live proof for the actual
@@ -386,8 +392,8 @@ These declarations select authoring and proof obligations; they do not attest im
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `de988240024100ea371ea3823ab7b65d211fb300e58b80751a9db9b5041be8b2`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (236 files), `tests/` (234 files)
+- Repository signal fingerprint: `3e2c83cfddf77c92cebd80fce79a277e0e2a33eadd52c15d5c040bd021cd074b`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (236 files), `tests/` (235 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 

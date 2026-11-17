@@ -1,5 +1,13 @@
 # Architecture
 
+An explicitly configured internal Decapod-development policy can tolerate
+entrypoint release/package version drift only for the exact canonical Decapod
+repository identity and verified source lineage. It still reconstructs each
+immutable commit's source template and validates its release-bound fingerprint.
+Consumer repositories retain strict alignment. This policy does not waive
+execution, custody, source, target or publication evidence and is omitted from
+normal generated configuration and agent discovery.
+
 ## Publication proof continuity (#1747, #1748)
 
 `core::validation_history::PublicationReadiness` owns the runtime's opaque
@@ -961,8 +969,8 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `de988240024100ea371ea3823ab7b65d211fb300e58b80751a9db9b5041be8b2`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (236 files), `tests/` (234 files)
+- Repository signal fingerprint: `3e2c83cfddf77c92cebd80fce79a277e0e2a33eadd52c15d5c040bd021cd074b`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (236 files), `tests/` (235 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 

@@ -85,7 +85,9 @@ mod live_admission {
     use consumer_readiness_fixture::Fixture;
 
     fn fixture() -> Fixture {
-        let fixture = Fixture::new();
+        let mut fixture = Fixture::new();
+        fixture.options.git =
+            crate::readiness_installed_tool(&fixture.options.root, "git").unwrap();
         let root = &fixture.options.root;
         write(
             root,
@@ -536,6 +538,22 @@ fn denied_or_unconfirmed_quarantine_never_becomes_success() {
     .unwrap_err()
     .to_string();
     assert!(error.contains("PR_QUARANTINE_UNCONFIRMED"), "{error}");
+    let mut merged = pr(&p);
+    merged["state"] = "closed".into();
+    merged["merged"] = true.into();
+    let error = quarantine_pr(
+        &mut |_| Ok(bytes(merged.clone())),
+        "owner/repo",
+        "feature",
+        "master",
+        7,
+    )
+    .unwrap_err()
+    .to_string();
+    assert!(
+        error.contains("PR_QUARANTINE_UNAVAILABLE_ALREADY_MERGED"),
+        "{error}"
+    );
 }
 
 #[test]

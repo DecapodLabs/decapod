@@ -277,6 +277,7 @@ def decapod_targets():
                 path,
                 "tests/common/consumer_readiness_fixture.rs",
                 "tests/support/fresh_docs_readiness.rs",
+                "tests/acceptance/publication_admission.rs",
                 "tests/infer_precision.rs",
             ] if path == "tests/entrypoint_correctness.rs" else [
                 path,

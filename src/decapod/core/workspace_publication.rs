@@ -323,6 +323,8 @@ struct PullRequest {
     state: String,
     #[serde(default)]
     draft: bool,
+    #[serde(default)]
+    merged: bool,
     head: PrRef,
     base: PrRef,
     changed_files: usize,
@@ -431,6 +433,11 @@ fn quarantine_pr(
     if !matches(&pr) {
         return Err(failure("PR_QUARANTINE_TARGET_UNVERIFIED"));
     }
+    if pr.merged {
+        return Err(failure(
+            "PR_QUARANTINE_UNAVAILABLE_ALREADY_MERGED: admission failed after an external merge; no quarantine or merge authorization is claimed",
+        ));
+    }
     if pr.state == "closed" {
         return Ok("closed_confirmed");
     }
@@ -443,6 +450,7 @@ fn quarantine_pr(
     }
     let observed: PullRequest = json(&call(&["api", &endpoint])?)?;
     if matches(&observed)
+        && !observed.merged
         && (observed.state == "closed" || (observed.state == "open" && observed.draft))
     {
         Ok(if observed.state == "closed" {
@@ -537,6 +545,11 @@ fn ensure_and_verify_pr_with(
     let endpoint = format!("repos/{slug}/pulls/{number}");
     let result = (|| {
         let pr: PullRequest = json(&call(&["api", &endpoint])?)?;
+        if pr.number != number {
+            return Err(failure(
+                "PR_NUMBER_MISMATCH: readback identified another PR",
+            ));
+        }
         check_pr(&pr, slug, branch, base, proof)?;
         let pages: Vec<Vec<serde_json::Value>> = json(&call(&[
             "api",
@@ -568,6 +581,11 @@ fn ensure_and_verify_pr_with(
         }
         require_bundle_paths(&paths)?;
         let final_pr: PullRequest = json(&call(&["api", &endpoint])?)?;
+        if final_pr.number != number {
+            return Err(failure(
+                "PR_NUMBER_MISMATCH: final readback identified another PR",
+            ));
+        }
         check_pr(&final_pr, slug, branch, base, proof)?;
         if final_pr.changed_files != pr.changed_files {
             return Err(failure(

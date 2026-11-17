@@ -374,6 +374,42 @@ impl PublicationReadiness {
             .as_ref()
             .ok_or_else(|| invalid("PUBLICATION_PROOF_MISSING: current input witness is absent"))?
             .verify_current(root, &self.proof.material)?;
+        let laya = laya_readiness::configuration(root)?;
+        if laya.mode != self.proof.laya.mode
+            || digest(&laya)? != self.proof.laya.binding.configuration_digest
+        {
+            return Err(invalid(
+                "PUBLICATION_LAYA_CHANGED: readiness decision policy changed; revalidate",
+            ));
+        }
+        if laya.mode == laya_readiness::Mode::Required {
+            let captured = laya_readiness::capture_installation(&laya);
+            let installation = captured
+                .as_ref()
+                .map_err(invalid)?
+                .as_ref()
+                .ok_or_else(|| {
+                    invalid("PUBLICATION_LAYA_CHANGED: required installation is absent")
+                })?;
+            let runtime = self.proof.laya.runtime_sha256.as_deref();
+            if runtime != Some(installation.runtime_sha256.as_str())
+                && runtime
+                    != installation
+                        .cpu_runtime
+                        .as_ref()
+                        .map(|cpu| cpu.runtime_sha256.as_str())
+            {
+                return Err(invalid(
+                    "PUBLICATION_LAYA_CHANGED: actual decision runtime differs from successful proof; revalidate",
+                ));
+            }
+            laya_readiness::verify_installation_snapshot(
+                &laya,
+                &captured,
+                std::time::Instant::now() + Duration::from_secs(30),
+                &Cancellation::default(),
+            )?;
+        }
         if let Some(binding) = &self.binding {
             let store = Store {
                 kind: super::store::StoreKind::Repo,
