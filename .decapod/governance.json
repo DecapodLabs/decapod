@@ -1,7 +1,7 @@
 {
   "schema_version": "1.0.0",
   "baseline": {
-    "accepted_commit": "9d1aed2795dae5b9345d9ec3ad1d3fcfe1d770d8",
+    "accepted_commit": "6ab6de3134286a790d78d370ca3fb43c0d92f834",
     "policy": {
       "change_control": {
         "requires_human_review": true,
@@ -568,44 +568,36 @@
     }
   },
   "change": {
-    "id": "admission-postmerge-proof",
-    "base_commit": "9d1aed2795dae5b9345d9ec3ad1d3fcfe1d770d8",
+    "id": "change_01M7NQXTQ8MSHMYM11DJ5YRWJJ",
+    "base_commit": "6ab6de3134286a790d78d370ca3fb43c0d92f834",
     "target_base": "origin/master"
   },
   "checkpoints": [
     {
-      "id": "admission-postmerge-record",
-      "summary": "Record externally accepted source tree and release 0.148.7, preserve actual stale-target CI rejection and all immutable live evidence, distinguish native admission from human forge integration, and require fresh exact-report head/base validation without runtime or check-policy changes",
-      "input_digest": "sha256:1a915f556f29fdda21f7dd819a38400c10e72131164a84deac747626338a3f43"
-    },
-    {
-      "id": "admission-postmerge-source-review",
-      "summary": "Re-review the two accepted 0.148.7 Cargo package-version inputs, reconcile source inventory only, preserve complete check graph and executor definitions, and require fresh exact-subject validation for the final report",
-      "input_digest": "sha256:1bbc48e66d4fe797c9d47c9a5857ee3730938f50113de3216dfabf7c0c68c051"
-    },
-    {
-      "id": "source-currency-1753-complete",
-      "summary": "Complete config-only exact-source version policy through publication currency without changing agent entrypoints; preserve generated-pin upgrade requirements and all integrity/execution checks; add real-Git cross-boundary regressions; record strict live 07 receipts and CLI-generated evaluating-0.148.7 metadata. Tests require configured execution.",
-      "input_digest": "sha256:7a0c8bec403859b8453c3de5f382628b2414a87dbf55e7c26b71724dffbf2c29"
+      "id": "retrieval-1772",
+      "summary": "Correct no-match capsules and frequency-biased selection; preserve explicit bindings, source evidence and legacy hash compatibility. Native regression execution pending.",
+      "input_digest": "sha256:341f727f9a757cfe4ee4fa2696b2cfae24c408e20d44aee04776fa11cff6c877",
+      "proof_refs": [
+        "receipt:01M7NR06P8P78Q7NMJJV44T4HH"
+      ]
     }
   ],
   "intents": {
-    "intent:admission-postmerge-proof": {
+    "intent:change_01M7NQXTQ8MSHMYM11DJ5YRWJJ": {
       "acceptance_criteria": [],
       "assumptions": [],
       "boundaries": [
-        "No merge or release; historical proof never authorizes another present artifact; do not weaken required checks"
+        "Current claimed task and isolated work branch"
       ],
       "constraints": [
-        "docs",
-        ".decapod/managed/specs"
+        "constitution-context-1772-1774-657-880-1095-879"
       ],
       "created_sequence": 1,
-      "id": "intent:admission-postmerge-proof",
+      "id": "intent:change_01M7NQXTQ8MSHMYM11DJ5YRWJJ",
       "out_of_scope": [],
       "proof_requirements": [],
-      "raw_intent": "Prove exact-evidence PR admission, finish implementation and close relevant issues only with reproducible enforcement evidence",
-      "refined_intent": "Preserve strict real GitHub acceptance and externally merged implementation, record stale-target rejection of the prior source candidate, and earn fresh exact-head/base admission for the final verification report on accepted 0.148.7",
+      "raw_intent": "Complete Constitution context and evidence contracts (#1772 #1774 #657 #880 #1095 #879)\n\nUser authorizes implementation, full native validation, CI repair, governed publication and merge only on verified completion. Read complete issues and dependencies, preserve active PR custody and honest real-host/effect limits.",
+      "refined_intent": "Complete Constitution context and evidence contracts (#1772 #1774 #657 #880 #1095 #879)\n\nUser authorizes implementation, full native validation, CI repair, governed publication and merge only on verified completion. Read complete issues and dependencies, preserve active PR custody and honest real-host/effect limits.",
       "status": "refined",
       "updated_sequence": 3
     }
@@ -618,93 +610,66 @@
       },
       "deferred_questions": [],
       "human_questions": [],
-      "intent": "Finish the original exact-proof admission deliverable after externally accepted integration. Complete issue 1753 by honoring the existing config-only, exact canonical source-repository version policy in publication currency without rewriting valid historical agent entrypoints; preserve Docker and manifest provenance, file presence, body/fingerprint checks, immutable ancestry and all required execution. Retain actual strict live acceptance 07 on 0.148.7 and every historical failure. Add meaningful real-Git currency regressions to the required library lane, regenerate only managed projections through the evaluating CLI, then require fresh full exact-head/base validation and governed publication before closing 1753 and finalizing the task. No merge, release or general bypass is authorized.",
+      "intent": "Complete DecapodLabs/decapod #1772, #1774, #657, #880, #1095 and #879 under their full engineering contracts. Correct bounded Constitution selection without authority promotion; enforce contribution admission in existing schema/build/CI; recover current scoped knowledge with audit history; reuse thin host and independent observer owners for actual three-host activation and controlled outcome comparisons; produce reproducible historical chronology with testimony separated. Publish and merge only genuinely admitted exact-candidate PRs and close only own fulfilled acceptance. No second runtime, policy engine, transcript store or default telemetry. Preserve root checkout and concurrent work.",
       "phases": [],
       "proof_hooks": [
+        "negative-first retrieval/admission/knowledge regressions",
         "decapod validate"
       ],
       "schema_version": "1.1.0",
-      "spec_reviews": [
-        {
-          "disposition": "updated",
-          "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Currency reuses existing scoped source-body authorization and generated-manifest provenance; all four headers must remain valid and Docker/manifest upgrade requirements remain",
-          "reviewed_code_fingerprint": "59302b283273f65193215ee22c7b207943d8077e5105c464f9f5a2e7ac6faa43",
-          "spec_material_hash": "0b7738e450b1038116cd3fce2e9660a615fbea502d988760d54dbf8c314f9146"
-        },
-        {
-          "disposition": "updated",
-          "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "No new public option; only configured canonical source can preserve historical header versions through currency; default and foreign rules remain strict",
-          "reviewed_code_fingerprint": "59302b283273f65193215ee22c7b207943d8077e5105c464f9f5a2e7ac6faa43",
-          "spec_material_hash": "4d418dbaac3da584c5524670003c9fbd33db02090e4d402c3b390502ec8bd5fa"
-        },
-        {
-          "disposition": "updated",
-          "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Bounded regular files, all canonical bodies/fingerprints, exact sole push slug and immutable ungrafted ancestry gate preservation; malformed provenance falls back conservatively and other checks remain",
-          "reviewed_code_fingerprint": "59302b283273f65193215ee22c7b207943d8077e5105c464f9f5a2e7ac6faa43",
-          "spec_material_hash": "0c791a6100ed5aec7fe4cedfa16680988dd1e48d50d00af272ef9dff372c3d4d"
-        }
-      ],
       "state": "APPROVED",
-      "stop_conditions": [],
-      "title": "Finish admission proof after accepted integration",
+      "stop_conditions": [
+        "Unresolved independent controller support, explicit access denial or a real human decision blocks only the dependent transition; preserve exact evidence."
+      ],
+      "title": "Complete Constitution context and evidence contracts (#1772 #1774 #657 #880 #1095 #879)",
       "todo_ids": [
-        "feat_01m7m3mmz5mejx0g"
+        "code_01m7nqv50nd6wx02"
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1794922423Z"
+      "updated_at": "1794952416Z"
     },
     "trajectory": {
       "active_boundaries": [
-        "No merge or release; historical proof never authorizes another present artifact; do not weaken required checks"
+        "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:b7deab4b6b0ae9e654139a51f2bc9afbad439fe5a8260ef037559adabc40ab95",
+      "artifact_hash": "sha256:d12d676323d0aa3851130d1e2498599a5c4a64407c2c5ef8bc92e8e351decec7",
       "checks": [
         {
-          "name": "live_1487_acceptance",
-          "status": "passed"
+          "name": "candidate_regressions",
+          "status": "unavailable"
         },
         {
-          "name": "prior_source_admission",
+          "name": "no_match_negative",
           "status": "failed"
-        },
-        {
-          "name": "scoped_currency_regression",
-          "status": "partial"
-        },
-        {
-          "name": "strict_live_acceptance",
-          "status": "passed"
         }
       ],
+      "current_phase": "implementation",
       "custody": {
         "events": [
           {
             "event_id": "event:2",
-            "intent_id": "intent:admission-postmerge-proof",
+            "intent_id": "intent:change_01M7NQXTQ8MSHMYM11DJ5YRWJJ",
             "kind": "created",
             "sequence": 2
           },
           {
             "event_id": "event:3",
-            "intent_id": "intent:admission-postmerge-proof",
+            "intent_id": "intent:change_01M7NQXTQ8MSHMYM11DJ5YRWJJ",
             "kind": "refined",
             "sequence": 3
           },
           {
-            "detail": "trajectory:admission-postmerge-proof",
+            "detail": "trajectory:branch_01M7NQXTTWEEHK0YNBJBBX8ERJ",
             "event_id": "event:4",
-            "intent_id": "intent:admission-postmerge-proof",
+            "intent_id": "intent:change_01M7NQXTQ8MSHMYM11DJ5YRWJJ",
             "kind": "trajectory_step_recorded",
             "sequence": 4
           },
           {
-            "detail": "trajectory:admission-postmerge-proof",
+            "detail": "trajectory:branch_01M7NQXTTWEEHK0YNBJBBX8ERJ",
             "event_id": "event:5",
-            "intent_id": "intent:admission-postmerge-proof",
+            "intent_id": "intent:change_01M7NQXTQ8MSHMYM11DJ5YRWJJ",
             "kind": "trajectory_step_recorded",
             "sequence": 5
           }
@@ -713,51 +678,48 @@
         "next_sequence": 5,
         "schema_version": "1.0.0",
         "trajectories": {
-          "admission-postmerge-proof": {
+          "branch_01M7NQXTTWEEHK0YNBJBBX8ERJ": {
             "evidence_only": true,
-            "id": "admission-postmerge-proof",
-            "intent_id": "intent:admission-postmerge-proof",
+            "id": "branch_01M7NQXTTWEEHK0YNBJBBX8ERJ",
+            "intent_id": "intent:change_01M7NQXTQ8MSHMYM11DJ5YRWJJ",
             "steps": [
               {
                 "action": "trajectory.record",
+                "command": "decapod rpc --op context.capsule.query: unrelated zxqvquasarunrelated1772 returned 2 alphabetical interface nodes on accepted 6ab6de3",
                 "custody_event_id": "event:4",
                 "observations": [
-                  "docs/publication-admission-acceptance.md",
-                  "docs/publication-admission-acceptance.md",
-                  ".decapod/managed/specs/INTENT.md",
-                  ".decapod/managed/specs/VALIDATION.md",
-                  "Strict actual GitHub acceptance 06 passed for controller fc52356f; immutable archive ae15eeffd6812002fbda2a2adaca23b006de0ba6 independently compared by tree IDs and downloaded contents; source c35 admission remained non-ready after independent master integration",
-                  "GitHub records alexhraber merge 41e7e152 at 12:03:09 UTC, exact tree equality with c35; release 9d1aed27 advances source package only; stale source Buildkite 11596 rejected comparison before required test lanes. Focused issues auto-closed by the external merge. Fresh current report proof remains required."
+                  "src/decapod/core/docs.rs",
+                  "src/decapod/core/context_capsule.rs",
+                  "tests/constitution_claims.rs",
+                  "receipt:01M7NR06P8P78Q7NMJJV44T4HH; capsule:9636e0e74c098cb8647bdbdd0f536d08e320ba170598a95999e2530911328434"
                 ],
                 "proof_refs": [
-                  "strict_live_acceptance",
-                  "prior_source_admission"
+                  "no_match_negative"
                 ],
                 "scope": [
-                  ".decapod/managed/specs",
-                  "docs"
+                  "constitution-context-1772-1774-657-880-1095-879"
                 ],
                 "sequence": 4,
-                "validation_findings": []
+                "validation_findings": [
+                  "No performance or three-host activation claim follows from deterministic tests."
+                ]
               },
               {
-                "action": "trajectory.record",
+                "action": "implementation",
                 "custody_event_id": "event:5",
                 "observations": [
-                  "src/decapod/core/validate.rs",
-                  "src/decapod/core/validate.rs",
-                  "src/decapod/core/entrypoint_integrity.rs",
-                  "tests/unit/core/validate_tests.rs",
-                  "Reopened 1753 after actual PUBLICATION_BUNDLE_CURRENCY conflict. Central scoped validation now feeds currency; generated-manifest provenance replaces old source-header release only under the existing exact source policy. Real Git fixture covers canonical preservation, default/disabled/fork/ambiguity/tamper, missing artifacts and generator upgrades. New tests require first configured execution.",
-                  "Strict live 07 passed 1/0 in 317.35s on edbfc00d evaluating 0.148.7; all nine archive contents independently compared with GitHub native bytes at 63c75155ad087bbbf786680b729621debd8f3dd8. This is its scoped fixture evidence, not authority for the current source changes."
+                  "src/decapod/core/docs.rs",
+                  "src/decapod/core/context_capsule.rs",
+                  "src/decapod/lib.rs",
+                  "tests/unit/core/docs_tests.rs",
+                  "tests/context_capsule_schema.rs",
+                  "Pre-change actual-binary negative receipt 01M7NR06P8P78Q7NMJJV44T4HH; post-change suite pending configured full validation."
                 ],
                 "proof_refs": [
-                  "scoped_currency_regression",
-                  "live_1487_acceptance"
+                  "candidate_regressions"
                 ],
                 "scope": [
-                  ".decapod/managed/specs",
-                  "docs"
+                  "constitution-context-1772-1774-657-880-1095-879"
                 ],
                 "sequence": 5,
                 "validation_findings": []
@@ -766,39 +728,41 @@
           }
         }
       },
-      "declared_commands": [],
+      "declared_commands": [
+        "decapod rpc --op context.capsule.query: unrelated zxqvquasarunrelated1772 returned 2 alphabetical interface nodes on accepted 6ab6de3"
+      ],
+      "destination": "pull request",
       "evidence": [
-        "GitHub records alexhraber merge 41e7e152 at 12:03:09 UTC, exact tree equality with c35; release 9d1aed27 advances source package only; stale source Buildkite 11596 rejected comparison before required test lanes. Focused issues auto-closed by the external merge. Fresh current report proof remains required.",
-        "Reopened 1753 after actual PUBLICATION_BUNDLE_CURRENCY conflict. Central scoped validation now feeds currency; generated-manifest provenance replaces old source-header release only under the existing exact source policy. Real Git fixture covers canonical preservation, default/disabled/fork/ambiguity/tamper, missing artifacts and generator upgrades. New tests require first configured execution.",
-        "Strict actual GitHub acceptance 06 passed for controller fc52356f; immutable archive ae15eeffd6812002fbda2a2adaca23b006de0ba6 independently compared by tree IDs and downloaded contents; source c35 admission remained non-ready after independent master integration",
-        "Strict live 07 passed 1/0 in 317.35s on edbfc00d evaluating 0.148.7; all nine archive contents independently compared with GitHub native bytes at 63c75155ad087bbbf786680b729621debd8f3dd8. This is its scoped fixture evidence, not authority for the current source changes."
+        "Pre-change actual-binary negative receipt 01M7NR06P8P78Q7NMJJV44T4HH; post-change suite pending configured full validation.",
+        "receipt:01M7NR06P8P78Q7NMJJV44T4HH; capsule:9636e0e74c098cb8647bdbdd0f536d08e320ba170598a95999e2530911328434"
       ],
       "inspected_files": [
-        "docs/publication-admission-acceptance.md",
-        "src/decapod/core/validate.rs"
+        "src/decapod/core/context_capsule.rs",
+        "src/decapod/core/docs.rs",
+        "tests/constitution_claims.rs"
       ],
-      "intent_id": "intent:admission-postmerge-proof",
+      "intent_id": "intent:change_01M7NQXTQ8MSHMYM11DJ5YRWJJ",
       "modified_files": [
-        ".decapod/managed/specs/INTENT.md",
-        ".decapod/managed/specs/VALIDATION.md",
-        "docs/publication-admission-acceptance.md",
-        "src/decapod/core/entrypoint_integrity.rs",
-        "src/decapod/core/validate.rs",
-        "tests/unit/core/validate_tests.rs"
+        "src/decapod/core/context_capsule.rs",
+        "src/decapod/core/docs.rs",
+        "src/decapod/lib.rs",
+        "tests/context_capsule_schema.rs",
+        "tests/unit/core/docs_tests.rs"
+      ],
+      "next_transitions": [
+        "Refine plan and declare falsifiable checks"
       ],
       "repo_scope": [
-        ".decapod/config.toml",
-        ".decapod/managed/specs",
-        "docs",
-        "src/decapod/core",
-        "tests/unit/core"
+        "constitution-context-1772-1774-657-880-1095-879"
       ],
-      "run_id": "admission-postmerge-proof",
+      "run_id": "branch_01M7NQXTTWEEHK0YNBJBBX8ERJ",
       "schema_version": "1.1.0",
       "shortcut_risk_signals": [],
-      "task_id": "feat_01m7m3mmz5mejx0g",
+      "task_id": "code_01m7nqv50nd6wx02",
       "tool_calls": [],
-      "unresolved_assumptions": []
+      "unresolved_assumptions": [
+        "No performance or three-host activation claim follows from deterministic tests."
+      ]
     }
   },
   "legacy_digests": {

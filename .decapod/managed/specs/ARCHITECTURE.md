@@ -1,5 +1,17 @@
 # Architecture
 
+## Constitution selection owner (#1772)
+
+`core::docs::resolve_scoped_context` is the shared selector for legacy fragments,
+CLI/RPC context resolution and scoped capsules. It ranks explicit bindings before
+unique lexical coverage, filters namespaces before truncation, and records source
+identity beside the stable fragment contract. `context_capsule` no longer fills
+an empty result from sorted corpus paths. Existing override parsing remains the
+authority owner; malformed overlays are not treated as missing. The selector is
+deterministic for fixed source/override/query inputs and keeps the global corpus
+durable without publishing all of it as active context. Knowledge correction,
+host delivery and independent outcome measurement retain their separate owners.
+
 ## Source-policy currency continuity (#1753)
 
 `entrypoint_integrity::preserves_source_entrypoint_versions` reuses the existing
@@ -988,7 +1000,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `59302b283273f65193215ee22c7b207943d8077e5105c464f9f5a2e7ac6faa43`
+- Repository signal fingerprint: `d3be4b16271b375a0de3eed31a4e8c1db6259f84a20e41cdccef68eb42696c95`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (236 files), `tests/` (235 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

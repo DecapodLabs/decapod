@@ -42,6 +42,9 @@ pub struct DeterministicContextCapsule {
     pub config_input_hash: String,
     #[serde(default)]
     pub spec_input_hash: String,
+    /// Absent in legacy v1.2 capsules; omission preserves their canonical hash.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub selection: Option<docs::ContextSelection>,
 }
 
 impl DeterministicContextCapsule {
@@ -71,6 +74,7 @@ impl DeterministicContextCapsule {
             policy: self.policy.clone(),
             config_input_hash: self.config_input_hash.clone(),
             spec_input_hash: self.spec_input_hash.clone(),
+            selection: self.selection.clone(),
         }
     }
 
@@ -110,6 +114,8 @@ struct CanonicalCapsule {
     config_input_hash: String,
     #[serde(skip_serializing_if = "String::is_empty")]
     spec_input_hash: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    selection: Option<docs::ContextSelection>,
 }
 
 fn capsule_schema_version_default() -> String {
@@ -150,40 +156,14 @@ pub fn query_embedded_capsule_governed(
             "topic cannot be empty".to_string(),
         ));
     }
-    let max = limit.max(1);
-    let scope_prefix = format!("{scope}/");
     let resolved_authority = assets::resolved_override_evidence(repo_root)?;
 
-    let mut fragments = docs::resolve_scoped_fragments(
-        repo_root,
-        Some(topic),
-        None,
-        &[],
-        &[],
-        max.saturating_mul(3),
-    )
-    .into_iter()
-    .filter(|f| f.r#ref.starts_with(&scope_prefix))
-    .collect::<Vec<_>>();
-
-    if fragments.is_empty() {
-        let mut paths = assets::list_docs()
-            .into_iter()
-            .filter(|p| p.starts_with(&scope_prefix))
-            .collect::<Vec<_>>();
-        paths.sort();
-        for path in paths.into_iter().take(max) {
-            if let Some(fragment) = docs::get_fragment(repo_root, &path, None) {
-                fragments.push(fragment);
-            }
-        }
-    }
-
-    fragments.truncate(max);
+    let context =
+        docs::resolve_scoped_context(repo_root, Some(topic), None, &[], &[], limit, Some(scope));
 
     let mut sources = Vec::new();
     let mut snippets = Vec::new();
-    for fragment in fragments {
+    for fragment in context.fragments {
         let source_path = fragment
             .r#ref
             .split('#')
@@ -201,7 +181,7 @@ pub fn query_embedded_capsule_governed(
     }
 
     let capsule = DeterministicContextCapsule {
-        schema_version: capsule_schema_version_default(),
+        schema_version: "1.3.0".into(),
         topic: topic.to_string(),
         scope: scope.to_string(),
         task_id: task_id.map(str::to_string),
@@ -215,6 +195,7 @@ pub fn query_embedded_capsule_governed(
         repo_signal_fingerprint: repo_signal_fingerprint(repo_root).unwrap_or_default(),
         config_input_hash: config_input_hash(repo_root).unwrap_or_default(),
         spec_input_hash: spec_input_hash(repo_root).unwrap_or_default(),
+        selection: Some(context.selection),
     };
 
     capsule.with_recomputed_hash().map_err(|e| {

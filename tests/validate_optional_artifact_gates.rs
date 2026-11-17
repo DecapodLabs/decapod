@@ -510,6 +510,7 @@ fn validate_fails_on_verified_workunit_capsule_without_state_ref_binding() {
         repo_signal_fingerprint: "test_fingerprint".to_string(),
         config_input_hash: String::new(),
         spec_input_hash: String::new(),
+        selection: None,
     };
     capsule = capsule
         .with_recomputed_hash()
@@ -583,6 +584,7 @@ fn validate_fails_on_context_capsule_hash_mismatch_if_present() {
         repo_signal_fingerprint: "test_fingerprint".to_string(),
         config_input_hash: String::new(),
         spec_input_hash: String::new(),
+        selection: None,
     };
     capsule.capsule_hash = "wrong_hash".to_string();
     fs::write(

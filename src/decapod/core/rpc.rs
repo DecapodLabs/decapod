@@ -188,6 +188,8 @@ pub struct ContextResolveResult {
     pub scoped_fragments: Vec<DocFragment>,
     pub local_project_specs: LocalProjectSpecs,
     pub resolved_authority: Vec<crate::core::assets::ResolvedOverrideEvidence>,
+    #[serde(default)]
+    pub selection: crate::core::docs::ContextSelection,
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize)]

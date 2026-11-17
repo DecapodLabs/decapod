@@ -81,6 +81,7 @@ fn setup_release_fixture(changelog_unreleased: &str) -> (TempDir, PathBuf) {
         repo_signal_fingerprint: "test_fingerprint".to_string(),
         config_input_hash: String::new(),
         spec_input_hash: String::new(),
+        selection: None,
     }
     .with_recomputed_hash()
     .expect("compute capsule hash");

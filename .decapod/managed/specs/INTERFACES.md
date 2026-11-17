@@ -1,5 +1,27 @@
 # Interfaces
 
+## Bounded Constitution projection (#1772)
+
+`DocFragment` retains its existing fields. Context resolution adds separate
+`selection` evidence: stable node/section identity, declared authority and binding,
+active status, embedded or project-override source hash, fragment hash, resolver
+version and reproducible selection reasons. These labels do not authenticate a
+human decision or prove that the host delivered context to a model. Explicit
+operation/path/tag bindings precede lexical coverage; repeated terms contribute
+once. Namespace filtering occurs before ranking. A no-match advisory query emits
+`no_relevant_advisory_fragment` and no alphabetical filler. Mandates retain their
+separate native gate identifiers and point to existing embedded sections.
+
+New deterministic capsules use version 1.3.0 and bind optional selection evidence
+into their canonical hash. Legacy capsules omit it and preserve their canonical
+serialization. The resolver caps selected text at 8,192 UTF-8 bytes and twelve
+fragments; `context_bytes` counts excerpt bytes, excluding envelope and metadata.
+Unmatched exclusions are aggregated without injecting the excluded source text.
+Authorized directive overrides replace embedded text in the operative projection;
+the embedded source and override remain separately inspectable. Invalid override
+structure fails the fallible CLI/RPC owner. Retrieval supplies context, never an
+additional execution authorization or a performance-effectiveness claim.
+
 ## Internal source currency agreement (#1753)
 
 The existing private config-only source policy now also governs version-only
@@ -1218,7 +1240,7 @@ field. Nothing in this operation authorizes a mutation, approval or completion.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `59302b283273f65193215ee22c7b207943d8077e5105c464f9f5a2e7ac6faa43`
+- Repository signal fingerprint: `d3be4b16271b375a0de3eed31a4e8c1db6259f84a20e41cdccef68eb42696c95`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (236 files), `tests/` (235 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

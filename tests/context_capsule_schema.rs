@@ -44,6 +44,7 @@ fn context_capsule_canonical_serialization_is_deterministic() {
         repo_signal_fingerprint: "test_fingerprint".to_string(),
         config_input_hash: String::new(),
         spec_input_hash: String::new(),
+        selection: None,
     };
 
     let bytes1 = capsule.canonical_json_bytes().expect("serialize #1");
@@ -78,6 +79,7 @@ fn context_capsule_with_recomputed_hash_is_stable() {
         repo_signal_fingerprint: "test_fingerprint".to_string(),
         config_input_hash: String::new(),
         spec_input_hash: String::new(),
+        selection: None,
     };
 
     let normalized1 = base.with_recomputed_hash().expect("normalize #1");
@@ -173,5 +175,42 @@ Directive-like prose: ### core/NOT_A_DIRECTIVE
         duplicate
             .to_string()
             .contains("OVERRIDE_DUPLICATE_DIRECTIVE")
+    );
+}
+
+#[test]
+fn no_match_capsule_never_injects_alphabetical_advisory_filler() {
+    let root = tempdir().unwrap();
+    let capsule = query_embedded_capsule(
+        root.path(),
+        "zxqvquasarunrelated1772",
+        "interfaces",
+        None,
+        None,
+        usize::MAX,
+    )
+    .unwrap();
+    assert!(capsule.sources.is_empty());
+    assert!(capsule.snippets.is_empty());
+    assert_eq!(capsule.schema_version, "1.3.0");
+    assert_eq!(
+        capsule.selection.as_ref().unwrap().advisory_status,
+        "no_relevant_advisory_fragment"
+    );
+    assert_eq!(capsule.capsule_hash, capsule.computed_hash_hex().unwrap());
+}
+
+#[test]
+fn legacy_capsule_hash_does_not_gain_absent_selection_fields() {
+    let capsule: DeterministicContextCapsule = serde_json::from_value(serde_json::json!({
+        "schema_version":"1.2.0", "topic":"legacy", "scope":"core", "task_id":null,
+        "workunit_id":null, "sources":[], "snippets":[], "capsule_hash":""
+    }))
+    .unwrap();
+    assert!(capsule.selection.is_none());
+    assert!(
+        !String::from_utf8(capsule.canonical_json_bytes().unwrap())
+            .unwrap()
+            .contains("selection")
     );
 }

@@ -11562,70 +11562,24 @@ mod rpc_handlers {
         let limit = params.limit.unwrap_or(5);
         let resolved_authority = core::assets::resolved_override_evidence(ctx.project_root)?;
 
-        let mut fragments = Vec::new();
-        let bindings = docs::get_bindings(ctx.project_root);
-
-        if let Some(o) = &params.op
-            && let Some(doc_ref) = bindings.ops.get(o)
-        {
-            let parts: Vec<&str> = doc_ref.split('#').collect();
-            let path = parts[0];
-            let anchor = parts.get(1).copied();
-            if let Some(f) = docs::get_fragment(ctx.project_root, path, anchor) {
-                fragments.push(f);
-            }
-        }
-
-        if let Some(paths) = &params.touched_paths {
-            for p in paths {
-                for (prefix, doc_ref) in &bindings.paths {
-                    if p.contains(prefix) {
-                        let parts: Vec<&str> = doc_ref.split('#').collect();
-                        let path = parts[0];
-                        let anchor = parts.get(1).copied();
-                        if let Some(f) = docs::get_fragment(ctx.project_root, path, anchor) {
-                            fragments.push(f);
-                        }
-                    }
-                }
-            }
-        }
-
-        if let Some(tags) = &params.intent_tags {
-            for t in tags {
-                if let Some(doc_ref) = bindings.tags.get(t) {
-                    let parts: Vec<&str> = doc_ref.split('#').collect();
-                    let path = parts[0];
-                    let anchor = parts.get(1).copied();
-                    if let Some(f) = docs::get_fragment(ctx.project_root, path, anchor) {
-                        fragments.push(f);
-                    }
-                }
-            }
-        }
-
-        fragments.sort_by(|a, b| a.r#ref.cmp(&b.r#ref));
-        fragments.dedup_by(|a, b| a.r#ref == b.r#ref);
-
         let touched_vec = params.touched_paths.clone().unwrap_or_default();
         let tags_vec = params.intent_tags.clone().unwrap_or_default();
-
-        let scoped_fragments = docs::resolve_scoped_fragments(
+        let context = docs::resolve_scoped_context(
             ctx.project_root,
             params.query.as_deref(),
             params.op.as_deref(),
             &touched_vec,
             &tags_vec,
             limit,
+            None,
         );
-        fragments.extend(scoped_fragments.clone());
-        fragments.sort_by(|a, b| a.r#ref.cmp(&b.r#ref));
-        fragments.dedup_by(|a, b| a.r#ref == b.r#ref);
-        fragments.truncate(limit.max(1));
+        let fragments = context.fragments;
+        let scoped_fragments = fragments.clone();
 
         let local_specs = core::project_specs::local_project_specs_context(ctx.project_root);
 
         let result = ContextResolveResult {
+            selection: context.selection,
             fragments: fragments.clone(),
             scoped_fragments,
             local_project_specs: LocalProjectSpecs {

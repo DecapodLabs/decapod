@@ -118,6 +118,7 @@ fn prepared() -> (consumer::Fixture, Store) {
         repo_signal_fingerprint: "fixture".into(),
         config_input_hash: String::new(),
         spec_input_hash: String::new(),
+        selection: None,
     };
     context_capsule::write_context_capsule(root, &capsule).unwrap();
     workunit::init_workunit(root, TASK, INTENT).unwrap();
