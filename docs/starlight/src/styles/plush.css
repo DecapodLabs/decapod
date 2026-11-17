@@ -1,0 +1,78 @@
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=Outfit:wght@500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap');
+
+:root {
+  --sl-font: 'DM Sans', system-ui, sans-serif;
+  --sl-font-mono: 'JetBrains Mono', monospace;
+  --sl-color-accent-low: #ffe5d3;
+  --sl-color-accent: #cb492c;
+  --sl-color-accent-high: #692219;
+  --sl-color-white: #211825;
+  --sl-color-gray-1: #392b35;
+  --sl-color-gray-2: #51424b;
+  --sl-color-gray-3: #796973;
+  --sl-color-gray-4: #a28f94;
+  --sl-color-gray-5: #d9c8c0;
+  --sl-color-gray-6: #f2e7dc;
+  --sl-color-black: #fff9f0;
+  --sl-color-bg: #fff9f0;
+  --sl-color-bg-nav: #fff4e7;
+  --sl-color-bg-sidebar: #fff0e1;
+  --sl-color-hairline-light: #e9d4c4;
+  --sl-color-hairline: #e9d4c4;
+  --sl-content-width: 56rem;
+}
+:root[data-theme='dark'] {
+  --sl-color-accent-low: #4a292e;
+  --sl-color-accent: #ffa477;
+  --sl-color-accent-high: #ffdfbf;
+  --sl-color-white: #fff0e0;
+  --sl-color-gray-1: #f7e7db;
+  --sl-color-gray-2: #e9d3ce;
+  --sl-color-gray-3: #bfa4a7;
+  --sl-color-gray-4: #947c89;
+  --sl-color-gray-5: #594352;
+  --sl-color-gray-6: #332734;
+  --sl-color-black: #1c1721;
+  --sl-color-bg: #1c1721;
+  --sl-color-bg-nav: #251c28;
+  --sl-color-bg-sidebar: #241b29;
+  --sl-color-hairline-light: #49333c;
+  --sl-color-hairline: #49333c;
+}
+body { letter-spacing: -.008em; }
+h1,h2,h3,h4 { font-family: 'Outfit', system-ui, sans-serif; letter-spacing: -.045em; }
+header.header { border-bottom: 1px solid var(--sl-color-hairline); }
+.decapod-site-title { display:flex; align-items:center; gap:.7rem; text-decoration:none; min-width:0; }
+.decapod-site-mascot { width:3rem; height:2.75rem; object-fit:contain; flex:none; filter:drop-shadow(0 4px 5px #f05b3720); }
+.decapod-site-wordmark { display:block; width:10.5rem; flex:none; }
+.decapod-site-wordmark img { display:block; width:100%; height:auto; }
+.decapod-site-label { font-size:.65rem; font-weight:900; letter-spacing:.14em; border:1px solid #f05b3766; color:var(--sl-color-accent); border-radius:999px; padding:.35rem .48rem; }
+@media(max-width:560px) { .decapod-site-wordmark{width:7rem}.decapod-site-label{display:none}.decapod-site-mascot{width:2.35rem} }
+:root[data-theme='dark'] .decapod-site-wordmark img { content:url('https://decapodlabs.github.io/assets/logo-c.png'); }
+:root[data-theme='light'] .decapod-site-wordmark img { content:url('https://decapodlabs.github.io/assets/logo-a.png'); }
+.sidebar-pane { border-right:1px solid var(--sl-color-hairline); }
+.sidebar-content a[aria-current='page'] { background:#f05b371c; border-radius:.85rem; }
+.sl-markdown-content blockquote, .sl-markdown-content table,
+.sl-markdown-content .starlight-aside { border-radius:1.15rem; }
+.sl-markdown-content pre { border-radius:1.15rem; border:1px solid #f19c7633; box-shadow:0 8px 26px #21182514; }
+.sl-markdown-content :not(pre)>code { border-radius:.45rem; }
+.sl-markdown-content th { background:#f19c761f; }
+.sl-markdown-content a:not(.decapod-docs-btn) { text-underline-offset:.22rem; }
+.sl-markdown-content img { border-radius:1.1rem; }
+.decapod-footer { display:flex; align-items:center; justify-content:space-between; gap:1rem; flex-wrap:wrap; background:#211722; color:#ffdbc2; padding:1.2rem clamp(1rem,4vw,3rem); border-radius:1.4rem; margin:2rem 0 1rem; font-size:.82rem; }
+.decapod-footer img { display:block; width:11rem; height:auto; }
+.decapod-footer a { color:inherit; text-decoration:none; }
+.decapod-footer a:hover { color:#f19c76; }
+.decapod-docs-hero { display:grid; grid-template-columns:1.1fr .9fr; gap:1.25rem; align-items:center; padding:clamp(1.2rem,4vw,2.6rem); border-radius:2rem; background:radial-gradient(ellipse at 85% 15%,#ffe1ac,transparent 60%),#fff1dd; color:#231a25; border:1px solid #f2cfac; box-shadow:0 14px 35px #d9683b12; }
+.decapod-docs-hero h1 { color:#211722; font-size:clamp(2.6rem,6vw,5rem); line-height:1; }
+.decapod-docs-hero-copy p { color:#49383b; }
+.decapod-docs-hero img { max-width:100%; }
+.decapod-docs-brand { display:flex; align-items:center; justify-content:space-between; gap:1rem; }
+.decapod-docs-wordmark { width:14rem; height:auto; }
+.decapod-docs-video video { max-width:100%; border-radius:1.25rem; }
+.decapod-docs-grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:.8rem; }
+.decapod-docs-tile { padding:1.2rem; border-radius:1.1rem; background:#ffe4bd; color:#211722; display:flex; flex-direction:column; gap:.6rem; text-decoration:none; }
+.decapod-docs-tile.tile-orange{background:#f19c76}
+.decapod-docs-tile.tile-ink{background:#2b2130;color:white}
+@media(max-width:740px){.decapod-docs-hero{grid-template-columns:1fr}.decapod-docs-grid{grid-template-columns:1fr}}
+@media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important;transition:none!important}}
