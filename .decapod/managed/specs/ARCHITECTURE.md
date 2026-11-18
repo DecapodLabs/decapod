@@ -42,6 +42,41 @@ their mere existence cannot prove that a particular conformance test executed.
 Adding current observed conformance still requires an explicit binding to those
 owners and independently verified test execution, rather than another registry.
 
+## Current workunit validation judgments
+
+`core::validation_history::finish_archive` retains immutable successful
+observations and separately withdraws current workunit proof after a completed
+task-bound full not-ready judgment. `core::workunit` appends the withdrawal to
+its existing canonical journal, checking the observed generation and current
+task/custody inside the same database transaction before publishing the cache
+projection. The generation advances even when no proof had been promoted, so
+an earlier success cannot later authorize that subject. Recovery restores the
+journal's narrowed state; it does not reconstruct a success from diagnostics.
+
+Current workunit selection filters canonical history by exact current task
+binding before applying the existing proof and currentness checks. It never
+falls back to older custody or skips a newer matching stale observation.
+General historical lookup preserves its ambiguity contract. Separate stores
+remain explicitly unsupported for atomic proof acceptance or withdrawal.
+
+## Workunit declarations retain their proof owner (#1660)
+
+`validation_rules::evaluate_workunit_rule` accepts the opaque, complete current
+runtime result before canonical append, with a CLAIMED workunit, supported
+full-validation plans, bound living specs and genuine capsule policy lineage.
+`workunit::verify_capsule_policy_lineage_for_task` separately requires the
+task's context state reference and internally consistent capsule. These
+prerequisites stay enforced when recovering from a diagnostic declaration.
+
+`core::workunit::transition_status` obtains current applicability from
+`validation_history::current_workunit_proof` and fences accepted append in the
+canonical task/proof transaction. File integrity and a declared pass cannot
+replace that producer. `tests/consumer_readiness.rs` exercises this through
+real CLI task/workspace admission and a current checkpoint using the existing
+consumer fixture. It introduces no proof engine or alternate datastore.
+Separately initialized workunit stores retain their explicit unsupported
+atomic-domain boundary; this regression does not claim convergence.
+
 ## Source-policy currency continuity (#1753)
 
 `entrypoint_integrity::preserves_source_entrypoint_versions` reuses the existing
@@ -1030,7 +1065,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `3ee2937b2b0c719bb5b0f08d8c9c19faf265587b0c8a753a5d8a90e08eec6422`
+- Repository signal fingerprint: `6ba5edc87a1fbb3102291f95f24cdefb06d9d0a220a5cdd93b9dcad62c4061a5`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (236 files), `tests/` (235 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

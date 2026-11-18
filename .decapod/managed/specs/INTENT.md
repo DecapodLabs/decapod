@@ -1,40 +1,14 @@
 # Intent
 
-## Autonomous safe config recovery and privilege custody (#1771, #1776)
+## Accepted release source review
 
-The cloud boundary suite treats embedded schema discovery as file-only recovery,
-including CLI and RPC reads. `tests/common/cloud_managed_scenarios.rs` compares
-the complete project and private machine file inventories before and after each
-read, and requires zero HTTP requests. Unsupported operational `store.query`
-still exercises the cloud startup guard and must refuse local SQLite fallback;
-schema availability does not authorize operational persistence.
-
-First adoption on a verified accepted Git tree that predates repository policy
-uses the compiled global approval defaults for ordinary operations. The resolver
-confirms absence in that exact accepted tree, never an older ref or candidate
-fallback. Candidate RBAC, shared-claim and maintenance grants remain denied.
-Failure to read or verify accepted policy remains an error. Test fixtures must
-establish their accepted baseline before executing candidate-branch operations.
-
-PR #1779 previously used an explicit user exception for draft creation before
-full validation on 2026-11-17. That historical exception does not authorize
-another workstream, establish current admission or grant merge authority.
-
-Agents must be able to discover the embedded configuration contract even when
-their proposal is malformed, repair it in governed isolation, and resume
-ordinary work. They cannot use schema validity, a repinned candidate policy,
-or a changed base selector to acquire new exceptional authority. This change
-reuses existing parser, branch-safe maintenance policy and publication owners.
-It preserves accepted-policy rotation and revocation without repetitive human
-confirmation. Real-host activation (#880), unified diagnostic (#1071), and
-real-forge current admission (#1763) remain separate executable acceptance
-obligations; parser/RBAC regression results cannot stand in for those results.
-
-The proof-source inventory is reconciled against its last reviewed source
-`edbfc00d`: only the package version in `Cargo.toml` and `Cargo.lock` advanced
-from 0.148.7 to 0.148.9. The candidate preserves every workflow, command,
-coverage obligation and configured execution provider while acknowledging
-those release metadata bytes. Reconciliation does not establish test success.
+This currentness candidate incorporates accepted `352d8929` (0.148.11)
+through a real two-parent merge. All 105 verification-source inputs were
+independently measured, including declared symlink target bytes and their
+separately inventoried regular target. Only the root package versions in
+Cargo.toml/Cargo.lock changed from 0.148.10; the remaining 103, required
+workflow/executor graph and declared toolchain are unchanged. Reconciliation
+retains the full configured proof policy and does not establish execution.
 
 ## Truthful conformance discovery (#871, #1735)
 
@@ -83,6 +57,83 @@ authenticated producer receipt. Ordinary negotiation remains available.
 This closes the static-label counterexample only. Current binary-bound observed
 conformance, independent consumers and the rest of the campaign remain required
 before #871 or #1735 can be considered complete.
+
+## Observed proof remains current only within its execution contract
+
+A genuine prior success must remain inspectable as history while a newer full
+not-ready judgment withdraws current workunit verification. Safe repair must
+remain available: fresh complete proof for the exact current task and renewed
+custody can restore VERIFIED. This correction uses the existing validation
+history and workunit journal; it adds no alternative proof producer. The CLI
+regression executes real required Python checks and an explicitly declared
+external failure control. It proves bounded currentness and recovery, without
+claiming complete external-input closure, forge publication admission, or an
+independent agent/host.
+
+## Autonomous safe config recovery and privilege custody (#1771, #1776)
+
+The cloud boundary suite treats embedded schema discovery as file-only recovery,
+including CLI and RPC reads. `tests/common/cloud_managed_scenarios.rs` compares
+the complete project and private machine file inventories before and after each
+read, and requires zero HTTP requests. Unsupported operational `store.query`
+still exercises the cloud startup guard and must refuse local SQLite fallback;
+schema availability does not authorize operational persistence.
+
+First adoption on a verified accepted Git tree that predates repository policy
+uses the compiled global approval defaults for ordinary operations. The resolver
+confirms absence in that exact accepted tree, never an older ref or candidate
+fallback. Candidate RBAC, shared-claim and maintenance grants remain denied.
+Failure to read or verify accepted policy remains an error. Test fixtures must
+establish their accepted baseline before executing candidate-branch operations.
+
+PR #1779 previously used an explicit user exception for draft creation before
+full validation on 2026-11-17. That historical exception does not authorize
+another workstream, establish current admission or grant merge authority.
+
+Agents must be able to discover the embedded configuration contract even when
+their proposal is malformed, repair it in governed isolation, and resume
+ordinary work. They cannot use schema validity, a repinned candidate policy,
+or a changed base selector to acquire new exceptional authority. This change
+reuses existing parser, branch-safe maintenance policy and publication owners.
+It preserves accepted-policy rotation and revocation without repetitive human
+confirmation. Real-host activation (#880), unified diagnostic (#1071), and
+real-forge current admission (#1763) remain separate executable acceptance
+obligations; parser/RBAC regression results cannot stand in for those results.
+
+The proof-source inventory is reconciled against its last reviewed source
+`edbfc00d`: only the package version in `Cargo.toml` and `Cargo.lock` advanced
+from 0.148.7 to 0.148.9. The candidate preserves every workflow, command,
+coverage obligation and configured execution provider while acknowledging
+those release metadata bytes. Reconciliation does not establish test success.
+
+## Actual-boundary workunit proof controls (#1660, #1735)
+
+The combined candidate incorporates accepted release `34f837d4` (0.148.10).
+All 105 verification-source inputs were independently remeasured: only the
+root package versions in Cargo.toml and Cargo.lock changed from 0.148.9;
+the remaining 103 inputs, workflows, required graph and toolchain are intact.
+The reviewed inventory is reconciled accordingly. A scoped 0.148.10 controller,
+installed through the official session updater, owns current projection refresh
+and validation. Its actual binary digest is retained separately from candidate
+evidence. Controller installation and release integration are not test proof.
+
+The ordinary recovery path must retain the workunit's genuine task-bound
+context capsule and policy lineage. The source-file counterexample prepares
+that capsule through the public query and attach-state commands before
+requesting proof, so missing context cannot substitute for the producer test.
+Full validation uses its current runtime observation while the workunit is
+CLAIMED; it does not require a prior VERIFIED projection. A generic terminal
+rule refusal is not evidence of a circular proof dependency.
+
+An agent-declared passing result and a real source file's digest must remain
+diagnostic declarations. The existing canonical full-validation producer owns
+VERIFIED admission. The campaign's actual-binary control reaches an admitted
+task worktree and current execution checkpoint without gate-skip variables;
+recording a source-file pass succeeds, while VERIFIED is refused without the
+canonical producer record. The journal retains the declaration and CLAIMED
+status. This confirms the bounded guard, not the issue's entire proof matrix.
+Fresh trusted proof, split-store recovery, replay and publication remain
+separate acceptance obligations.
 
 ## Complete scoped source currency (#1753)
 
@@ -514,7 +565,7 @@ These declarations select authoring and proof obligations; they do not attest im
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `3ee2937b2b0c719bb5b0f08d8c9c19faf265587b0c8a753a5d8a90e08eec6422`
+- Repository signal fingerprint: `6ba5edc87a1fbb3102291f95f24cdefb06d9d0a220a5cdd93b9dcad62c4061a5`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (236 files), `tests/` (235 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

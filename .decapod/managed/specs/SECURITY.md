@@ -1,5 +1,16 @@
 # Security
 
+## Withdrawal and fresh custody
+
+A full validator not-ready judgment only narrows current workunit authority;
+it never creates a successful observation or relabels unexecuted checks as
+failed. Withdrawal checks the captured workunit generation and task custody
+atomically in the existing canonical database. A concurrent journal or lease
+change refuses the append. Historical successful records retain their original
+identity. Renewal does not transfer their authority: promotion requires fresh
+matching current proof, including the existing tool/input/source and epoch
+checks. Split-store atomicity remains unsupported and fails explicitly.
+
 ## Configuration validity and accepted privilege proposals (#1771, #1776)
 
 `cli::DecapodProjectConfig` rejects unsupported schema versions during typed
@@ -684,7 +695,7 @@ execution evidence remains required before publication readiness.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `3ee2937b2b0c719bb5b0f08d8c9c19faf265587b0c8a753a5d8a90e08eec6422`
+- Repository signal fingerprint: `6ba5edc87a1fbb3102291f95f24cdefb06d9d0a220a5cdd93b9dcad62c4061a5`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (236 files), `tests/` (235 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
