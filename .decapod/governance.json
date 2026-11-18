@@ -613,6 +613,14 @@
         "tests/context_capsule_schema.rs",
         "tests/unit/plugins/knowledge_tests.rs"
       ]
+    },
+    {
+      "id": "constitution-context-host-integration-02",
+      "summary": "Repair actual standalone CI drift through native managed Dockerfile refresh to0.14810, preserve project Dockerfile content and prior canceled/failing evidence, refresh current specs/reviews, and retain host-local/real-host blockers without gate or foreign task changes. New exact full validation required.",
+      "input_digest": "sha256:cd32c08b71f17e2e027879f19105503234732b93a6a323a5da1f843c035211e1",
+      "proof_refs": [
+        ".decapod/managed/specs/VALIDATION.md"
+      ]
     }
   ],
   "intents": {
@@ -653,21 +661,21 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Current-content review after final refresh: preserve whole-product identity, one corpus and existing knowledge/capsule/proof owners; bound applicability and envelopes, admit corpus structure before compression, and keep host adapters cooperative.",
+          "reason": "Rechecked after native image-pin/spec refresh. Authored architecture remains the reviewed integrated bounded context/admission/knowledge design; only release metadata changed in this repair.",
           "reviewed_code_fingerprint": "793c3b22cae86166bc8e717545ea604ae6d095d024751a3c971bd2a38aa11525",
           "spec_material_hash": "b6ffd59d9088c81608d51896c87cb10cabc8ce1eb0e3b07ab819c96b955bd476"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Current-content review: preserve legacy DocFragment and capsule hash compatibility; version optional selection/knowledge/plan context, explicit provenance/conflicts/budgets; typed native boundaries and compact reports deny publication authority and preserve unknown measurements.",
+          "reason": "Rechecked current interface content after generated refresh; compatibility, bounded explicit evidence and cooperative limitations remain unchanged, with no authority added by image metadata.",
           "reviewed_code_fingerprint": "793c3b22cae86166bc8e717545ea604ae6d095d024751a3c971bd2a38aa11525",
           "spec_material_hash": "54ed002bef22315ab7e69914268093edb5b3a90a03528a360169015041141265"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Current-content review: corpus assertions cannot self-promote; rejected/private/expired knowledge is excluded from operative context, credentials and unsafe paths are bounded through existing owners; no model delivery, human authentication, OS interception or current proof is inferred.",
+          "reason": "Rechecked current security content after generated refresh; preserve accepted policy, custody and independent proof boundaries. Failed local prerequisites and incomplete host trials remain failures, not inferred approval.",
           "reviewed_code_fingerprint": "793c3b22cae86166bc8e717545ea604ae6d095d024751a3c971bd2a38aa11525",
           "spec_material_hash": "35d8c625b3139e1d5bdbdb6d6833c71ad98a2ed35617dd139005fe635f5cdcd0"
         }
@@ -680,14 +688,14 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1794986684Z"
+      "updated_at": "1794988855Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch",
         "One global corpus; existing custody and proof owners; no inferred host delivery or current admission"
       ],
-      "artifact_hash": "sha256:c054dd7dd7cedab7e21214a71d8e4c4982a5a2df16d7885217958eeba37c4216",
+      "artifact_hash": "sha256:410de7830ca2df8fd3dbd231348f1f1d0cb2f75a7036daed352687af226fc378",
       "checks": [
         {
           "name": "activation_conformance",
@@ -727,7 +735,11 @@
         },
         {
           "name": "full_native_readiness",
-          "status": "unavailable"
+          "status": "failed"
+        },
+        {
+          "name": "host_project_prerequisites",
+          "status": "failed"
         },
         {
           "name": "knowledge_regressions",
@@ -744,10 +756,14 @@
         {
           "name": "retrieval_regressions",
           "status": "passed"
+        },
+        {
+          "name": "standalone_source_ci",
+          "status": "failed"
         }
       ],
       "completion_claim": "Implementation and focused regression verification only; exact committed candidate full native readiness and governed publication are pending; real-host acceptance gaps remain.",
-      "current_phase": "checkpoint",
+      "current_phase": "ci_repair",
       "custody": {
         "events": [
           {
@@ -796,10 +812,17 @@
             "intent_id": "intent:change_01M7PNVHBQSKPRK1M9P79X865W",
             "kind": "trajectory_step_recorded",
             "sequence": 8
+          },
+          {
+            "detail": "trajectory:branch_01M7PNVHF4GFRZRWZRPJWAQ8K5",
+            "event_id": "event:9",
+            "intent_id": "intent:change_01M7PNVHBQSKPRK1M9P79X865W",
+            "kind": "trajectory_step_recorded",
+            "sequence": 9
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 8,
+        "next_sequence": 9,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M7PNVHF4GFRZRWZRPJWAQ8K5": {
@@ -907,6 +930,26 @@
                 ],
                 "sequence": 8,
                 "validation_findings": []
+              },
+              {
+                "action": "ci_repair",
+                "custody_event_id": "event:9",
+                "observations": [
+                  ".decapod/managed/Dockerfile.decapod",
+                  "7222376f full native stopped for actual image-pin CI repair: SNAPSHOT_NOT_READY CI operation cancelled, snapshot yA52zA. GitHub standalone job134647393866 run44258972389 shows managed Dockerfile0.1489 to0.14810 drift only.",
+                  "Native govern project-check refreshed managed image/version header; its report remains failed for host container proof, unrelated existing done-task proof bugs_01m73xpkqns9286n, and uncommitted publication material. No foreign task mutation, provider/gate weakening or passing host-prerequisite claim."
+                ],
+                "proof_refs": [
+                  "full_native_readiness",
+                  "standalone_source_ci",
+                  "host_project_prerequisites"
+                ],
+                "scope": [
+                  "Constitution retrieval/admission, scoped knowledge, source chronology, cooperative boundaries and opt-in outcomes",
+                  "constitution-host-integration"
+                ],
+                "sequence": 9,
+                "validation_findings": []
               }
             ]
           }
@@ -916,11 +959,13 @@
       "destination": "pull request",
       "evidence": [
         "107 proof inputs reconciled: 101 identical accepted, 4 changed and 2 added; digest63c1693440f0f2cde32b1cd5b4924fe0faffa74f7a0b8ddb2c367ca2e489df71; no required gate/provider changes",
+        "7222376f full native stopped for actual image-pin CI repair: SNAPSHOT_NOT_READY CI operation cancelled, snapshot yA52zA. GitHub standalone job134647393866 run44258972389 shows managed Dockerfile0.1489 to0.14810 drift only.",
         "AJV 5.0.0 first rejected contributed node terms minItems; fifth meaningful term added; same schema command now passes",
         "Actual combined v0.148.10 outcome filter: 11 passed including 9 collector regressions and 2 existing flight-recorder controls; log private, no full readiness inferred",
         "Current actual CLI activation: new cooperative boundary test passed; old clean-checkout test failed because it expected VERIFIED from project_prerequisites_passed. Native owner correctly returned VALIDATION_HISTORY_TASK_PROOF_UNSUPPORTED. Correct fixture expectation; preserve production proof guard.",
         "Current integration: 8 scoped docs regressions passed; 10 knowledge regressions passed including atomic correction, repeated rejected history, conflicts, expiry, scope privacy, source changes, bundle refresh and UTF-8 bounds. Fixtures do not prove real-model delivery.",
         "Final focused integration run: 2 activation, 4 claims, 36 scaffolding/admission/history, 7 RPC and 7 schema; zero failures. Current library filters 8 docs,10 knowledge,4 boundary,11 outcome/flight-recorder; zero failures. Schema and formatting pass. Failed earlier fixture assertions retained, production proof guard unchanged.",
+        "Native govern project-check refreshed managed image/version header; its report remains failed for host container proof, unrelated existing done-task proof bugs_01m73xpkqns9286n, and uncommitted publication material. No foreign task mutation, provider/gate weakening or passing host-prerequisite claim.",
         "Preserved prior full validation 7a2708fb snapshot FQkm5L: remote tags changed during v0.148.10 release; no readiness",
         "Seven redacted pilot rows and eleven retained attempts; independently passing recovery functional check and historical validation remain distinct from absent native completion, unknown provider delivery and Claude authentication.",
         "Source-only donors 7a2708fb and code_01m7nxkqpj1hw95p exported in private patch manifests; no old governance/proof transferred"
@@ -931,11 +976,13 @@
       ],
       "intent_id": "intent:change_01M7PNVHBQSKPRK1M9P79X865W",
       "modified_files": [
+        ".decapod/managed/Dockerfile.decapod",
         "assets/constitution.json",
         "docs/research/host-outcome-pilot/observations.json",
         "src/decapod/core/flight_recorder/outcomes.rs"
       ],
       "next_transitions": [
+        "Checkpoint generated pin repair and revalidate exact new source via complete configured Buildkite route",
         "Refine plan and declare falsifiable checks",
         "Run affected regression tests, reconcile accepted proof inventory, refresh specs, checkpoint exact candidate and run full native validation"
       ],
