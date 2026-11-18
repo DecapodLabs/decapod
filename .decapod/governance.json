@@ -588,6 +588,14 @@
         "test:explicit_path_scope_1760",
         "test:workbranch_governance"
       ]
+    },
+    {
+      "id": "ckpt-scope-1760-2",
+      "summary": "Reconcile worktree fragmented scope projections via govern trajectory reconcile-scope (#1760)",
+      "input_digest": "sha256:ff6dc324c4817c1906c1c61e3b8e1b67bb333dd57cc6b3f3cab5e07df68bfcec",
+      "proof_refs": [
+        "test:explicit_path_scope_1760"
+      ]
     }
   ],
   "intents": {
@@ -598,10 +606,10 @@
         "Current claimed task and isolated work branch"
       ],
       "constraints": [
-        "paths:[\"src/decapod/core\"",
-        "\"src/decapod/lib.rs\"",
-        "\"tests\"",
-        "\".decapod/managed/specs\"]"
+        ".decapod/managed/specs",
+        "src/decapod/core",
+        "src/decapod/lib.rs",
+        "tests"
       ],
       "created_sequence": 1,
       "id": "intent:change_01M7R53QBGMV407MHXT3BSNNGX",
@@ -658,13 +666,13 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795037247Z"
+      "updated_at": "1795037519Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:81913ba95f4d5572aad34efee2f134a604e91d89bf36ba4d8e9013405b51dd50",
+      "artifact_hash": "sha256:2a2dcf8ef3a5b93fb8d4a0c8d151868e48b0c8d13379c96d4d8d0b3d0180d9ae",
       "checks": [
         {
           "name": "cli_contract_enforcement",
@@ -816,10 +824,10 @@
         "Refine plan and declare falsifiable checks"
       ],
       "repo_scope": [
-        "\".decapod/managed/specs\"]",
-        "\"src/decapod/lib.rs\"",
-        "\"tests\"",
-        "paths:[\"src/decapod/core\""
+        ".decapod/managed/specs",
+        "src/decapod/core",
+        "src/decapod/lib.rs",
+        "tests"
       ],
       "run_id": "branch_01M7R53QHQGEZPR24WRJ6ZSZ39",
       "schema_version": "1.1.0",
