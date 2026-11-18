@@ -896,15 +896,31 @@ checksum, not this interface or its evidence-admission obligations.
 Recovery guidance is an agent/harness error contract, not a human command
 checklist. Epoch drift and aggregate missing-proof errors direct the agent to
 non-reopening batch recovery with explicitly selected task-bound current files.
-A failed scoped child validation emits `VALIDATION_CHILD_FAILED` with only a
-fixed allowlist of blocker labels from at most 1 MiB per output stream, including
-`NEEDS_PLAN_APPROVAL`; this retains the actual unrelated blocker even when a
-separate ordinary validation encounters aggregate missing proof first.
-Unknown failures provide the supported `decapod validate --format json`
-diagnostic and original-command retry route. Raw child messages, paths, URLs,
-environment values and credentials are never forwarded by this diagnostic.
-Labels are diagnostic observations, never acceptance or proof. Initial/final
-recovery failures preserve historical/unverified or pending states respectively.
+A failed scoped child validation emits `VALIDATION_CHILD_FAILED` via
+`src/decapod/plugins/verify.rs` (`extract_safe_validation_diagnostic` and
+`SafeValidationDiagnostic`). Rather than relying solely on a 1 MiB raw-byte
+substring scan, `extract_from_validation_json` inspects structured JSON child
+reports up to 16 MiB (`gate`, `readiness`, `report`, and `scope`) to surface
+bounded canonical `stage` and `scope` fields plus compile-time allowlisted
+labels from `SAFE_BLOCKER_LABELS`, unwrapping nested `READINESS_BLOCKED` /
+`Cannot publish:` / `AUTOREMEDIABLE_VALIDATION_ERROR` / `Rule` wrappers via
+`extract_labels_from_structured_text` while prioritizing specific blocker codes
+over generic `READINESS_BLOCKED` within the `< 1024`-byte ceiling. Unstructured
+output and `stderr` fall back to token-boundary matching capped at 1 MiB per
+stream so prefix collisions (such as `LAYA_READINESS_BLOCKED`) and untrusted
+`notes` or arbitrary message suffixes never emit spurious labels. When `--json`
+is passed to `qa verify recover` (`run_recover_cli`) or `qa verify regen`
+(`VerifyCommand::Regen`), `emit_recovery_failure_json` prints the structured
+error payload (`phase`, `stage`, `scope`, `labels`, `output_hash`, and bounded
+`diagnostic`) before returning the existing fail-closed error, noting that
+unscoped `decapod validate --format json` may stop earlier at
+`PROOF_HOOK_FAILED`. Unknown failures retain the supported
+`decapod validate --format json` diagnostic and original-command retry route. Raw
+child messages, paths, URLs, environment values, task titles and credentials are
+never forwarded by this diagnostic. Labels and JSON error fields are diagnostic
+observations only, never acceptance, approval, or proof. Initial/final recovery
+and `regen` failures preserve historical/unverified or pending states without
+writing `task_verification` passes or altering task revisions.
 Humans may initialize Decapod; execution and recovery instructions target agents.
 
 ## Sessions, tasks, and workspaces
@@ -1343,7 +1359,7 @@ field. Nothing in this operation authorizes a mutation, approval or completion.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `90d4b929a7bcdc74ef6911bbdf1777f70eaf917821b9391afdf66badf08102bf`
+- Repository signal fingerprint: `b0186acd075ee228bb31110ab0e98e103bcfac5ca3913aee9b244e7d973f4d88`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (237 files), `tests/` (236 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

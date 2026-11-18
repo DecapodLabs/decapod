@@ -622,6 +622,16 @@
         ".decapod/managed/Dockerfile.decapod",
         ".decapod/managed/specs/.manifest.json"
       ]
+    },
+    {
+      "id": "cp-1744-5",
+      "summary": "Merge origin/master 0b6ce0a8 (#1799), refresh specs, and pass fmt/clippy/unit/trajectory checks",
+      "input_digest": "sha256:a443e63a77042abaeaf57e4b29a5169670b5d1968a0362f4c5e65b7d6f65f6fb",
+      "proof_refs": [
+        ".decapod/managed/specs/INTERFACES.md",
+        "src/decapod/core/migration.rs",
+        "tests/trajectory_cli.rs"
+      ]
     }
   ],
   "intents": {
@@ -664,22 +674,22 @@
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Scope #1744 changes only migration/doctor/CLI inspection interfaces and operations; architecture unchanged",
-          "reviewed_code_fingerprint": "90d4b929a7bcdc74ef6911bbdf1777f70eaf917821b9391afdf66badf08102bf",
+          "reason": "Scope #1744 unchanged across #1781 merge",
+          "reviewed_code_fingerprint": "b0186acd075ee228bb31110ab0e98e103bcfac5ca3913aee9b244e7d973f4d88",
           "spec_material_hash": "080e1e015d867051ec4ecbb1f18aca92a2d62a05798377057e563aaa5a3764e0"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Refreshed v0.148.13 projections for #1744 migration inspection and resolved root interfaces",
-          "reviewed_code_fingerprint": "90d4b929a7bcdc74ef6911bbdf1777f70eaf917821b9391afdf66badf08102bf",
-          "spec_material_hash": "3ee42482c4c6deea54ef3a21e4bf4d479bd967c6b1ee36b46bfdb40b39e8bc16"
+          "reason": "Merged origin/master 0b6ce0a8 (#1781) alongside #1744 migration inspection interfaces",
+          "reviewed_code_fingerprint": "b0186acd075ee228bb31110ab0e98e103bcfac5ca3913aee9b244e7d973f4d88",
+          "spec_material_hash": "1445e13fa7ccfa6c4a68850bd794b6b1ba7379c0148b570c3a7605b6a26beb25"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Read-only inspection adds no new trust authority, credentials, or mutating surfaces",
-          "reviewed_code_fingerprint": "90d4b929a7bcdc74ef6911bbdf1777f70eaf917821b9391afdf66badf08102bf",
+          "reason": "Read-only inspection security posture unchanged across #1781 merge",
+          "reviewed_code_fingerprint": "b0186acd075ee228bb31110ab0e98e103bcfac5ca3913aee9b244e7d973f4d88",
           "spec_material_hash": "735ae6e95c6b18ff2ccc718fbadaa4d7ae483d632aee2fb071d4f9ae6daa23de"
         }
       ],
@@ -691,13 +701,13 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795014143Z"
+      "updated_at": "1795024612Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:c83086c5d1a239b425b1239971d8d49424e3e4bd8e55aeeadc4e98569a005bea",
+      "artifact_hash": "sha256:201ce3989a2a79f0819cda1fe67d4f64c595db6bd08bc007052af802edee9f20",
       "checks": [
         {
           "name": "cargo_clippy",
@@ -770,10 +780,17 @@
             "intent_id": "intent:change_01M7QC2E2V4CN87W5CNH5D2MQN",
             "kind": "trajectory_step_recorded",
             "sequence": 7
+          },
+          {
+            "detail": "trajectory:branch_01M7QC2E68VSP1Z3HCFJF9168A",
+            "event_id": "event:8",
+            "intent_id": "intent:change_01M7QC2E2V4CN87W5CNH5D2MQN",
+            "kind": "trajectory_step_recorded",
+            "sequence": 8
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 7,
+        "next_sequence": 8,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M7QC2E68VSP1Z3HCFJF9168A": {
@@ -873,6 +890,21 @@
                 ],
                 "sequence": 7,
                 "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:8",
+                "observations": [
+                  "Merged origin/master 0b6ce0a8 (#1799) cleanly after Buildkite 12565 passed all checks on 04e9711b before base advanced"
+                ],
+                "proof_refs": [],
+                "scope": [
+                  "\".decapod/managed/specs\"]",
+                  "\"tests\"",
+                  "paths:[\"src/decapod\""
+                ],
+                "sequence": 8,
+                "validation_findings": []
               }
             ]
           }
@@ -890,6 +922,7 @@
       "destination": "pull request",
       "evidence": [
         "13/13 core::migration, 6/6 plugins::doctor, 4/4 doc_alignment, 10/10 trajectory_cli, 23/23 cli_contract_enforcement (--test-threads=1), clippy and fmt clean on 7bd0a915",
+        "Merged origin/master 0b6ce0a8 (#1799) cleanly after Buildkite 12565 passed all checks on 04e9711b before base advanced",
         "Merged origin/master c5bafce6 (v0.148.13: CHANGELOG.md, Cargo.toml, Cargo.lock only) and reconciled reviewed_sources_digest to sha256:f2c1d189ee0c96f6afb66185229233bd0436015d0ddd21dc56deb4f58709b2b2",
         "Refreshed v0.148.13 Dockerfile.decapod and .manifest.json with workspace 0.148.13 binary"
       ],
