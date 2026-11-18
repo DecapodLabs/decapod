@@ -604,6 +604,15 @@
         "tests/cli_contract_enforcement.rs",
         "tests/trajectory_cli.rs"
       ]
+    },
+    {
+      "id": "cp-1744-3",
+      "summary": "Sync origin/master c5bafce6 (v0.148.13) and reconcile proof inventory",
+      "input_digest": "sha256:f240a733fe5166f908a0c0642f1309fc3386b118857eb629ba12b854813a2e46",
+      "proof_refs": [
+        ".decapod/config.toml",
+        ".decapod/managed/specs/.manifest.json"
+      ]
     }
   ],
   "intents": {
@@ -644,11 +653,25 @@
       "schema_version": "1.1.0",
       "spec_reviews": [
         {
+          "disposition": "unchanged_with_reason",
+          "path": ".decapod/managed/specs/ARCHITECTURE.md",
+          "reason": "Scope #1744 changes only migration/doctor/CLI inspection interfaces and operations; architecture unchanged",
+          "reviewed_code_fingerprint": "90d4b929a7bcdc74ef6911bbdf1777f70eaf917821b9391afdf66badf08102bf",
+          "spec_material_hash": "080e1e015d867051ec4ecbb1f18aca92a2d62a05798377057e563aaa5a3764e0"
+        },
+        {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Merged origin/master (caeeaba8) #1660 interfaces and #1744 migration inspection interfaces",
-          "reviewed_code_fingerprint": "fe8b047baf9de01a3389df981aceae129c392c22e025897718bc3052f75ce497",
+          "reason": "Document read-only decapod system migrations CLI, non-initializing doctor check, and resolved decapod_root migration notices (#1744)",
+          "reviewed_code_fingerprint": "90d4b929a7bcdc74ef6911bbdf1777f70eaf917821b9391afdf66badf08102bf",
           "spec_material_hash": "3ee42482c4c6deea54ef3a21e4bf4d479bd967c6b1ee36b46bfdb40b39e8bc16"
+        },
+        {
+          "disposition": "unchanged_with_reason",
+          "path": ".decapod/managed/specs/SECURITY.md",
+          "reason": "Read-only inspection adds no new trust authority, credentials, or mutating surfaces",
+          "reviewed_code_fingerprint": "90d4b929a7bcdc74ef6911bbdf1777f70eaf917821b9391afdf66badf08102bf",
+          "spec_material_hash": "735ae6e95c6b18ff2ccc718fbadaa4d7ae483d632aee2fb071d4f9ae6daa23de"
         }
       ],
       "state": "APPROVED",
@@ -659,13 +682,13 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795011707Z"
+      "updated_at": "1795013196Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:aded7c4ae17de4b712f8f87de4295128b52c0209ef962161b41c367da33fcbf6",
+      "artifact_hash": "sha256:23b89963ed4dadcc00763362de91586d661d06db0f45a389fd5222a5d28543f6",
       "checks": [
         {
           "name": "cargo_clippy",
@@ -724,10 +747,17 @@
             "intent_id": "intent:change_01M7QC2E2V4CN87W5CNH5D2MQN",
             "kind": "trajectory_step_recorded",
             "sequence": 5
+          },
+          {
+            "detail": "trajectory:branch_01M7QC2E68VSP1Z3HCFJF9168A",
+            "event_id": "event:6",
+            "intent_id": "intent:change_01M7QC2E2V4CN87W5CNH5D2MQN",
+            "kind": "trajectory_step_recorded",
+            "sequence": 6
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 5,
+        "next_sequence": 6,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M7QC2E68VSP1Z3HCFJF9168A": {
@@ -794,6 +824,22 @@
                 ],
                 "sequence": 5,
                 "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:6",
+                "observations": [
+                  ".decapod/config.toml",
+                  "Merged origin/master c5bafce6 (v0.148.13: CHANGELOG.md, Cargo.toml, Cargo.lock only) and reconciled reviewed_sources_digest to sha256:f2c1d189ee0c96f6afb66185229233bd0436015d0ddd21dc56deb4f58709b2b2"
+                ],
+                "proof_refs": [],
+                "scope": [
+                  "\".decapod/managed/specs\"]",
+                  "\"tests\"",
+                  "paths:[\"src/decapod\""
+                ],
+                "sequence": 6,
+                "validation_findings": []
               }
             ]
           }
@@ -810,7 +856,8 @@
       ],
       "destination": "pull request",
       "evidence": [
-        "13/13 core::migration, 6/6 plugins::doctor, 4/4 doc_alignment, 10/10 trajectory_cli, 23/23 cli_contract_enforcement (--test-threads=1), clippy and fmt clean on 7bd0a915"
+        "13/13 core::migration, 6/6 plugins::doctor, 4/4 doc_alignment, 10/10 trajectory_cli, 23/23 cli_contract_enforcement (--test-threads=1), clippy and fmt clean on 7bd0a915",
+        "Merged origin/master c5bafce6 (v0.148.13: CHANGELOG.md, Cargo.toml, Cargo.lock only) and reconciled reviewed_sources_digest to sha256:f2c1d189ee0c96f6afb66185229233bd0436015d0ddd21dc56deb4f58709b2b2"
       ],
       "inspected_files": [
         "src/decapod/cli.rs",
@@ -826,6 +873,7 @@
       ],
       "intent_id": "intent:change_01M7QC2E2V4CN87W5CNH5D2MQN",
       "modified_files": [
+        ".decapod/config.toml",
         ".decapod/managed/specs/INTERFACES.md",
         ".decapod/managed/specs/OPERATIONS.md",
         "docs/agent/command-contracts.md",
