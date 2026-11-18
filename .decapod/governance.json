@@ -582,6 +582,11 @@
       "id": "cp-1736-1",
       "summary": "Implement reviewed per-platform executables and toolchain_files for repo.pr-readiness.v1 (#1736)",
       "input_digest": "sha256:b0fd218cf9dbd6cdeb6ed009730837630096c135237f2984e543c90f8479838c"
+    },
+    {
+      "id": "cp-1736-2",
+      "summary": "Align reviewed_sources_digest, Dockerfile.decapod, and specs manifest with v0.148.13",
+      "input_digest": "sha256:96dc6537425a2f06363850b5c3f981aae2ccacdc8a9b649255e9c368ec8d805b"
     }
   ],
   "intents": {
