@@ -611,6 +611,11 @@
       "id": "observer-clippy-closed-attribution",
       "summary": "Fix required Clippy attribution expressions while preserving missing-input rejection and passing actual core regression behavior",
       "input_digest": "sha256:c8b365eabdae9b09350204ea958b5bde52ad6f6a5859cd03d55aef44e3a47df9"
+    },
+    {
+      "id": "current-observer-publication-review",
+      "summary": "Bind all publication spec reviews to final observer source and document independent governance review enforcement",
+      "input_digest": "sha256:b4a67bfd5e9da96d62cc297a99b3a686207f91c03675fafcda4eff8aa8d5571b"
     }
   ],
   "intents": {
@@ -651,21 +656,21 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Read-only trusted-host observer preserves native authority and distinguishes source provenance; release9 fingerprint reviewed.",
-          "reviewed_code_fingerprint": "57239bffe75010ac8e32bb59d3f056adc98f2d68871ce03972dc80b9dde8a33b",
+          "reason": "Reviewed current exact acceptance observer after equivalent lint simplification; read-only boundary and existing recorder integration remain intact",
+          "reviewed_code_fingerprint": "a269664c29b640341bbf72fde90903eec511a3efe0a64c145f38b33b4b8c1e52",
           "spec_material_hash": "ee51ab44d2b4722b6a57c79cf3c5167270ff908803bc3377630386e4f7de6341"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Versioned capture contract with model-requested tool IDs and feedback boundaries; generated release9 projection reviewed.",
-          "reviewed_code_fingerprint": "57239bffe75010ac8e32bb59d3f056adc98f2d68871ce03972dc80b9dde8a33b",
+          "reason": "Reviewed current exact CLI export, typed sources and native receipt identity joins after equivalent lint simplification; no new publication authority",
+          "reviewed_code_fingerprint": "a269664c29b640341bbf72fde90903eec511a3efe0a64c145f38b33b4b8c1e52",
           "spec_material_hash": "7bfbbf44436b18dfb78b943a8a994fed517bf14e615dec530945abf70dbdfd23"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Maintain fail-closed absent model request and absent in-flight bash attribution; simplify equivalent booleans required by actual Clippy failure without waiver",
+          "reason": "Current source attribution and privacy predicates retain fail-closed behavior; historical evidence cannot grant current readiness",
           "reviewed_code_fingerprint": "a269664c29b640341bbf72fde90903eec511a3efe0a64c145f38b33b4b8c1e52",
           "spec_material_hash": "10419fe1e75d99f1a1fdd9bcd4f406d874c168e8e31288143f62aa79d338d3fe"
         }
@@ -678,13 +683,13 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1794956996Z"
+      "updated_at": "1794962888Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:5c618aaf710498a87343a4b208c60a72fec52032fbb7425484c73adf3ea3a3ce",
+      "artifact_hash": "sha256:0b8284d833ddbc2c510c97c815a692028d9a6d49b556eef9c8e5f4d383c48e43",
       "checks": [
         {
           "name": "actual-observer-export",
@@ -733,6 +738,10 @@
         {
           "name": "release_input_review",
           "status": "passed"
+        },
+        {
+          "name": "source-ci11926-governance",
+          "status": "failed"
         },
         {
           "name": "source-validation-release9",
@@ -799,10 +808,17 @@
             "intent_id": "intent:change_01M7NKA4FSD1G656VQZ9VQQF46",
             "kind": "trajectory_step_recorded",
             "sequence": 9
+          },
+          {
+            "detail": "trajectory:branch_01M7NKA4JJAP7XX9QCY1NHG3AH",
+            "event_id": "event:10",
+            "intent_id": "intent:change_01M7NKA4FSD1G656VQZ9VQQF46",
+            "kind": "trajectory_step_recorded",
+            "sequence": 10
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 9,
+        "next_sequence": 10,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M7NKA4JJAP7XX9QCY1NHG3AH": {
@@ -914,6 +930,21 @@
                 ],
                 "sequence": 9,
                 "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:10",
+                "observations": [
+                  "Actual Buildkite governance stage rejected STALE_SPEC_REVIEW after final lint edit. Review refreshed against current source; all completed source test/lint jobs passed except that publication-material review gate. Preserve failed candidate6b92 and run fresh full validation."
+                ],
+                "proof_refs": [
+                  "source-ci11926-governance"
+                ],
+                "scope": [
+                  "src/decapod/core"
+                ],
+                "sequence": 10,
+                "validation_findings": []
               }
             ]
           }
@@ -922,6 +953,7 @@
       "declared_commands": [],
       "destination": "pull request",
       "evidence": [
+        "Actual Buildkite governance stage rejected STALE_SPEC_REVIEW after final lint edit. Review refreshed against current source; all completed source test/lint jobs passed except that publication-material review gate. Preserve failed candidate6b92 and run fresh full validation.",
         "Actual Buildkite11881 core and full-library owner passed; Clippy found two nonminimal booleans in fail-closed observer attribution. Replaced with equivalent is_none_or predicates; no allow attributes. This candidate supersedes still-pending16bb CI.",
         "Buildkite11777 exposed task-branch false-positive redaction; corrected without relaxing credential filtering. Merged accepted master release9 and reviewed version-only Cargo inventory changes. Real Pi independently published fixture PR2; detailed observer correlation pending.",
         "Source Buildkite11883 rejected stale managed container8 pin after accepted package9 merge. Native project-check refresh repaired pin9; bounded host check reports container custody unavailable, so it is not final proof. Actual165/167-event Pi exports passed, historical autonomy true/current applicability false after real target advance.",
