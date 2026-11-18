@@ -31,6 +31,18 @@ retain their existing meaning. Valid requests requiring an unsupported extension
 retain the `negotiation_refused` envelope; successful compatibility discovery
 still grants no mutation, completion or publication permission.
 
+Both RPC stdin framing and flag parameters reject duplicate decoded object
+keys at every nesting level before startup. Escaped spellings of the same key
+are duplicates; later fields cannot erase an earlier required extension.
+Existing 32 MiB framing bounds and redacted inventory/maintenance diagnostics
+remain. JSON syntax acceptance does not waive the strict negotiation schema:
+unknown fields still return `invalid_params`. Supported optional operation and
+extension fields can carry unknown identifiers; negotiation reports them as
+omitted, preserving decoded Unicode identifiers. A focused
+Python stdlib decoder and the actual Rust CLI execute the same malformed and
+ordinary inputs; this is same-host differential parsing, not independent
+producer trust or full foreign-client governance conformance.
+
 The v1 manifest adds the existing reconciliation and state-read operations.
 Reconciliation remains advisory and session-free; state reads retain their
 existing session/workspace gates. Unknown RPC names now receive the existing
@@ -1265,8 +1277,8 @@ field. Nothing in this operation authorizes a mutation, approval or completion.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `a2219c06b91eca6871b7fe13a84cf26f760835273492b365db75df9905c2629b`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (236 files), `tests/` (235 files)
+- Repository signal fingerprint: `0890871e8e1aa847eb4a5518b3171861e1c2255cfadef08f293b6fbc7f0ef945`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (237 files), `tests/` (236 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 

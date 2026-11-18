@@ -1,5 +1,32 @@
 # Intent
 
+## Unambiguous client requirements
+
+Interop discovery must not silently erase a caller's required semantics.
+Malformed JSON and duplicate decoded keys are refused before RPC startup on
+both stdin and flag-parameter routes. Ordinary unique-key requests continue.
+The existing unique-key decoder is reused from release-manifest validation;
+focused cross-language parsing controls make no new conformance-receipt,
+independent-executor, authority or publication claim.
+
+This follow-up starts from accepted release `352d8929` (0.148.11), after
+PR #1787 was merged by another actor while the parser extension was prepared.
+The earlier unaccepted source and checkpoints remain in their original Git
+history. This new governed task reauthors only the reviewed duplicate-key
+correction. All 105 verification-source inputs were independently measured;
+only root package versions in Cargo.toml/Cargo.lock changed from 0.148.10.
+The remaining 103, workflow graph and declared toolchain are unchanged.
+Source-inventory reconciliation is not execution or publication proof.
+
+The first Actions evaluation built the candidate as 0.148.11 and passed its
+191 project checks, then correctly refused release-projection drift: the
+managed Docker header and manifest still described controller 0.148.10.
+The official session updater installed a private 0.148.11 controller; native
+refresh/project-check now owns those regenerated release surfaces. The
+configured proof graph is unchanged. Host-only container and shared-task
+proof blockers remain separate from portable source-CI execution and prevent
+any claim of native admission. Metadata repair is not a passing runtime test.
+
 ## Autonomous safe config recovery and privilege custody (#1771, #1776)
 
 The cloud boundary suite treats embedded schema discovery as file-only recovery,
@@ -520,8 +547,8 @@ These declarations select authoring and proof obligations; they do not attest im
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `a2219c06b91eca6871b7fe13a84cf26f760835273492b365db75df9905c2629b`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (236 files), `tests/` (235 files)
+- Repository signal fingerprint: `0890871e8e1aa847eb4a5518b3171861e1c2255cfadef08f293b6fbc7f0ef945`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (237 files), `tests/` (236 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 

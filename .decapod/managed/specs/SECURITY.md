@@ -1,5 +1,16 @@
 # Security
 
+## Ambiguous RPC JSON
+
+Duplicate decoded keys are invalid at every nesting level, including Unicode
+escapes that spell an existing key. A later field cannot erase an unsupported
+required extension before negotiation. Recursive uniqueness uses the existing
+release-manifest decoder through a shared internal utility, preserving caller
+size bounds and specialized redaction. This controls interpretation at the
+CLI RPC boundary only; it does not authenticate an imported proof or establish
+host-wide observation. Same-host Python differential parsing is distinct from
+independent trusted execution.
+
 ## Configuration validity and accepted privilege proposals (#1771, #1776)
 
 `cli::DecapodProjectConfig` rejects unsupported schema versions during typed
@@ -684,8 +695,8 @@ execution evidence remains required before publication readiness.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `a2219c06b91eca6871b7fe13a84cf26f760835273492b365db75df9905c2629b`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (236 files), `tests/` (235 files)
+- Repository signal fingerprint: `0890871e8e1aa847eb4a5518b3171861e1c2255cfadef08f293b6fbc7f0ef945`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (237 files), `tests/` (236 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 

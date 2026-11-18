@@ -39,6 +39,26 @@ fn isolated_command(root: &std::path::Path, program: &std::ffi::OsStr) -> std::p
     command
 }
 
+// A separate implementation/process checks the focused JSON interpretation.
+// This is same-host differential parsing, not independent executor trust or a
+// second implementation of Decapod's custody/publication policy.
+fn python_json_reason(root: &std::path::Path, value: &str) -> String {
+    use decapod::core::bounded_process::BoundedCommand;
+    let output = isolated_command(root, std::ffi::OsStr::new("python3"))
+        .args([
+            "-I",
+            "-S",
+            "-B",
+            "-c",
+            include_str!("fixtures/interop_strict_json.py"),
+            value,
+        ])
+        .bounded_output(std::time::Duration::from_secs(30))
+        .unwrap();
+    assert!(output.status.success(), "{}", combined(&output));
+    String::from_utf8(output.stdout).unwrap().trim().to_owned()
+}
+
 #[test]
 fn unregistered_rpc_is_rejected_before_project_startup() {
     use decapod::core::bounded_process::BoundedCommand;
@@ -84,7 +104,11 @@ fn malformed_rpc_parameters_cannot_drop_required_negotiation() {
         "{",
         r#"{"required_extensions":["unsupported"],}"#,
         r#"{"required_extensions":[1e400]}"#,
+        r#"{"required_extensions":["unsupported"],"required_extensions":[]}"#,
+        r#"{"required_extensions":["unsupported"],"required_\u0065xtensions":[]}"#,
+        r#"{"optional_metadata":{"grant":"narrow","grant":"wide"}}"#,
     ] {
+        assert_eq!(python_json_reason(fixture.path(), params), "invalid_json");
         let output = command(binary.as_os_str())
             .args(["rpc", "--op", "interop.negotiate", "--params", params])
             .bounded_output(Duration::from_secs(30))
@@ -161,6 +185,92 @@ fn malformed_rpc_parameters_cannot_drop_required_negotiation() {
     let response: Value = serde_json::from_slice(&output.stdout).unwrap();
     assert_eq!(response["success"], false, "{response}");
     assert_eq!(response["error"]["code"], "negotiation_refused");
+
+    // Both transports must preserve the same meaning, including escaped keys
+    // and nested duplicates. Refusal is followed by ordinary operation.
+    for params in [
+        r#"{"required_extensions":["unsupported"],"required_extensions":[]}"#,
+        r#"{"required_extensions":["unsupported"],"required_\u0065xtensions":[]}"#,
+        r#"{"optional_metadata":[{"grant":"narrow","grant":"wide"}]}"#,
+    ] {
+        assert_eq!(python_json_reason(fixture.path(), params), "invalid_json");
+        for stdin in [false, true] {
+            let mut invocation = command(binary.as_os_str());
+            if stdin {
+                use std::io::Write;
+                invocation.args(["rpc", "--stdin"]);
+                invocation.stdin(std::process::Stdio::piped());
+                let mut child = invocation
+                    .stdout(std::process::Stdio::piped())
+                    .stderr(std::process::Stdio::piped())
+                    .spawn()
+                    .unwrap();
+                let request = format!(r#"{{"op":"interop.negotiate","params":{params}}}"#);
+                child
+                    .stdin
+                    .take()
+                    .unwrap()
+                    .write_all(request.as_bytes())
+                    .unwrap();
+                let output = harness::wait_bounded(child);
+                assert!(!output.status.success(), "{}", combined(&output));
+                assert!(
+                    String::from_utf8_lossy(&output.stderr).contains("duplicate JSON key"),
+                    "{}",
+                    combined(&output)
+                );
+            } else {
+                let output = invocation
+                    .args(["rpc", "--op", "interop.negotiate", "--params", params])
+                    .bounded_output(Duration::from_secs(30))
+                    .unwrap();
+                assert!(!output.status.success(), "{}", combined(&output));
+                assert!(
+                    String::from_utf8_lossy(&output.stderr).contains("duplicate JSON key"),
+                    "{}",
+                    combined(&output)
+                );
+            }
+        }
+    }
+    // Legal JSON is still subject to the existing strict negotiation schema.
+    let unknown_field = r#"{"required_extensions":["receipts"],"optional_metadata":{"label":"é","ratio":1.25,"count":4,"enabled":true,"absent":null}}"#;
+    assert_eq!(
+        python_json_reason(fixture.path(), unknown_field),
+        "accepted"
+    );
+    let output = command(binary.as_os_str())
+        .args([
+            "rpc",
+            "--op",
+            "interop.negotiate",
+            "--params",
+            unknown_field,
+        ])
+        .bounded_output(Duration::from_secs(30))
+        .unwrap();
+    let response: Value = serde_json::from_slice(&output.stdout).unwrap();
+    assert_eq!(response["success"], false, "{response}");
+    assert_eq!(response["error"]["code"], "invalid_params");
+
+    let ordinary = r#"{"required_extensions":["receipts"],"optional_ops":["interop.\u03bb"],"optional_extensions":["future"]}"#;
+    assert_eq!(python_json_reason(fixture.path(), ordinary), "accepted");
+    let output = command(binary.as_os_str())
+        .args(["rpc", "--op", "interop.negotiate", "--params", ordinary])
+        .bounded_output(Duration::from_secs(30))
+        .unwrap();
+    assert!(output.status.success(), "{}", combined(&output));
+    let response: Value = serde_json::from_slice(&output.stdout).unwrap();
+    assert_eq!(response["success"], true, "{response}");
+    assert_eq!(response["result"]["outcome"]["negotiated"], true);
+    assert_eq!(
+        response["result"]["outcome"]["omitted_optional_ops"],
+        json!(["interop.λ"])
+    );
+    assert_eq!(
+        response["result"]["outcome"]["omitted_optional_extensions"],
+        json!(["future"])
+    );
 }
 
 /// Read-only ops whose dispatch acceptance is proven against the real binary
