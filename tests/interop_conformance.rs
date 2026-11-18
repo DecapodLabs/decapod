@@ -217,6 +217,8 @@ fn caller_supplied_reports_cannot_authenticate_current_proof() {
         assert!(output.status.success(), "{}", combined(&output));
         let response: Value = serde_json::from_slice(&output.stdout).unwrap();
         assert_eq!(response["success"], true, "{response}");
+        assert_eq!(response["result"]["input_origin"], "caller_supplied");
+        assert_eq!(response["result"]["canonical_state_verified"], false);
         let projection = &response["result"]["projection"];
         assert_eq!(projection["proof_judgment"], judgment, "{response}");
         assert_eq!(projection["publication_ready"], false, "{response}");
@@ -227,6 +229,37 @@ fn caller_supplied_reports_cannot_authenticate_current_proof() {
                 .contains("Caller-supplied report"),
             "{response}"
         );
+    }
+    for (approved, status) in [
+        (json!(true), "approved"),
+        (json!(false), "denied"),
+        (Value::Null, "pending"),
+    ] {
+        let params = json!({
+            "kind": "approval", "action": "workspace.publish", "scope": "repo",
+            "approved": approved,
+            "input_origin": "independent_executor", "canonical_state_verified": true
+        })
+        .to_string();
+        let output = command(binary.as_os_str())
+            .args(["rpc", "--op", "interop.project", "--params", &params])
+            .bounded_output(Duration::from_secs(30))
+            .unwrap();
+        assert!(output.status.success(), "{}", combined(&output));
+        let response: Value = serde_json::from_slice(&output.stdout).unwrap();
+        assert_eq!(response["success"], true, "{response}");
+        assert_eq!(response["result"]["input_origin"], "caller_supplied");
+        assert_eq!(response["result"]["canonical_state_verified"], false);
+        let projection = &response["result"]["projection"];
+        assert_eq!(projection["status"], status);
+        if status != "pending" {
+            assert!(
+                projection["remediation"]
+                    .as_str()
+                    .unwrap()
+                    .contains("does not authenticate")
+            );
+        }
     }
     // Unproven display data does not inhibit ordinary compatible operation.
     let output = command(binary.as_os_str())
@@ -716,9 +749,11 @@ fn authorized_mutation() {
     h.check(
         "projection.of_authorized_mutation",
         "rpc-stdin:interop.project",
-        "status=succeeded, op=store.upsert, correlation id preserved",
+        "reported status=succeeded with correlation id preserved, caller input not canonically verified",
         serde_json::to_string(p).unwrap_or_default(),
         proj["success"] == true
+            && proj["result"]["input_origin"] == "caller_supplied"
+            && proj["result"]["canonical_state_verified"] == false
             && p["status"] == "succeeded"
             && p["op"] == "store.upsert"
             && p["correlation_id"] == upsert["id"]

@@ -580,6 +580,14 @@
       "proof_refs": [
         "/private/tmp/attack-gaps-1726-native11-projection-before.json"
       ]
+    },
+    "pure-projection-input-provenance": {
+      "statement": "Every interop.project result identifies caller-owned input and refuses to claim canonical state verification; reported approval/denial booleans cannot be described as authenticated policy decisions.",
+      "falsifier": "Execute actual approval projections with caller true/false/absent values and spoofed origin/verified fields. Any output authenticating canonical state or describing caller data as a recorded policy decision refutes this claim.",
+      "status": "open",
+      "proof_refs": [
+        "/private/tmp/attack-gaps-1726-native11-approval-before.json"
+      ]
     }
   },
   "checkpoints": [
@@ -591,6 +599,16 @@
         "/private/tmp/attack-gaps-1726-native11-projection-before.json",
         "https://github.com/DecapodLabs/decapod/issues/1726",
         "sha256:3ce5e25ebcdafe6b5dc0229bf70f01a38ac6d7e2fbb1a270898fe4e8fd2484bb"
+      ]
+    },
+    {
+      "id": "pure-projection-input-provenance-20261118",
+      "summary": "Make reported operation/approval provenance explicit and prevent caller labels from asserting canonical verification",
+      "input_digest": "sha256:9c436f546c520baf70e4aa620a9681daf37f8e5f6f206a9fee1249ead8099a9f",
+      "proof_refs": [
+        "/private/tmp/attack-gaps-1726-native11-approval-before.json",
+        "https://github.com/DecapodLabs/decapod/issues/1726",
+        "sha256:f637728be842e3581181af24cd0740004b9b6d838cb01598ca0150ac13c45667"
       ]
     }
   ],
@@ -632,22 +650,22 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Read-only production callsites have no canonical producer/current authority. Pure report projection stays unproven regardless caller digest/identity labels; existing native typed proof/admission owners and stores remain unchanged.",
-          "reviewed_code_fingerprint": "2ab2126165a0c1b7fecb69c4735e8d676cd09a919122af1c16bae8d6cd421a76",
-          "spec_material_hash": "b77c37eb40e4b414f91743bd572b997aa606b82f46eb83717e31e3f19329ca78"
+          "reason": "Existing pure RPC result now marks caller-supplied input and canonical_state_verified=false after parsing; spoofed input labels cannot override constants. Status remains reported data and canonical policy/proof owners remain unchanged.",
+          "reviewed_code_fingerprint": "5f2f74a6ceb61e3c6aa4e7912c83443dd19a46d0f3dd1c137c8fcf09a2bb19ff",
+          "spec_material_hash": "702520bd1bc42124cd2c44f47abe1205111bb98abbb2a1a58d90a8368297467c"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Keep original reported fields and outer read-RPC success; current proof remains not_proven/not-ready with additive optional proof_reason. Preserve negative/stale/unknown interpretation and ordinary negotiation; no imported report establishes currentness.",
-          "reviewed_code_fingerprint": "2ab2126165a0c1b7fecb69c4735e8d676cd09a919122af1c16bae8d6cd421a76",
-          "spec_material_hash": "1b531dd4d06291a72b13d01a53db43b0debcaa91ce0f8bba883ef29ff3bb950e"
+          "reason": "Optional additive origin/no-canonical-verification fields apply to every projection kind; existing source string identifies input type only. Actual caller-boolean policy misreport remediation now says reported and unverified. No scope/approval/authority transition is synthesized.",
+          "reviewed_code_fingerprint": "5f2f74a6ceb61e3c6aa4e7912c83443dd19a46d0f3dd1c137c8fcf09a2bb19ff",
+          "spec_material_hash": "3336d1ef24949d5da281128918f4919367a9d3e11b84e09f2649038929f3aac4"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "The narrow change removes false authority from caller-owned JSON. No new producer/verifier/store/credentials or consequential publication path; existing canonical proof, input/custody and admission checks are retained.",
-          "reviewed_code_fingerprint": "2ab2126165a0c1b7fecb69c4735e8d676cd09a919122af1c16bae8d6cd421a76",
+          "reason": "No new trust root, parser interpreter, authorizer or store. Explicit caller provenance prevents display data masquerading as independently observed execution/policy. Actual native validation, authorization and publication retain their canonical owners.",
+          "reviewed_code_fingerprint": "5f2f74a6ceb61e3c6aa4e7912c83443dd19a46d0f3dd1c137c8fcf09a2bb19ff",
           "spec_material_hash": "cdc863757905c53f4f176284c72744f0575184c65a059b7edf6239b47c4fc644"
         }
       ],
@@ -659,13 +677,13 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795004536Z"
+      "updated_at": "1795005699Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:2785243487cc30d1c89ef43e3680aefe37e8ff1cf6979574ec75eb8330ec145c",
+      "artifact_hash": "sha256:05ca7368fd35a59e32f05ed0277bd66b90d8ec61f64e0f82a882b475a5e3fea9",
       "checks": [
         {
           "name": "diff-whitespace",
@@ -682,6 +700,10 @@
         {
           "name": "installed11-negative-stale-controls",
           "status": "passed"
+        },
+        {
+          "name": "installed11-projected-approval-origin",
+          "status": "failed"
         },
         {
           "name": "local-project-prerequisites",
@@ -720,10 +742,24 @@
             "intent_id": "intent:change_01M7Q97QD8Z4RM9340YANFM396",
             "kind": "trajectory_step_recorded",
             "sequence": 5
+          },
+          {
+            "detail": "trajectory:branch_01M7Q97QGBQF64V09927P0590A",
+            "event_id": "event:6",
+            "intent_id": "intent:change_01M7Q97QD8Z4RM9340YANFM396",
+            "kind": "trajectory_step_recorded",
+            "sequence": 6
+          },
+          {
+            "detail": "trajectory:branch_01M7Q97QGBQF64V09927P0590A",
+            "event_id": "event:7",
+            "intent_id": "intent:change_01M7Q97QD8Z4RM9340YANFM396",
+            "kind": "trajectory_step_recorded",
+            "sequence": 7
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 5,
+        "next_sequence": 7,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M7Q97QGBQF64V09927P0590A": {
@@ -775,6 +811,47 @@
                 "sequence": 5,
                 "tool": "Bounded official11 project-check refreshed current release metadata:201 passed,2 failed,12 skipped; not publication proof. All105 source-CI definitions independently rehashed to2acf with only root release metadata differences from earlier accepted e1a review. Source, profile graph, workflows and toolchain preserved. Required actual-source GitHub Actions not yet executed for this candidate.",
                 "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:6",
+                "observations": [
+                  "src/decapod/core/rpc.rs",
+                  "src/decapod/lib.rs",
+                  "src/decapod/core/projection.rs"
+                ],
+                "proof_refs": [
+                  "installed11-projected-approval-origin"
+                ],
+                "scope": [
+                  "issue-1726"
+                ],
+                "sequence": 6,
+                "tool": "Actual official11 approval projection with approved=true returned remediation Approval recorded through the governed policy path; caller false said Denied by policy. No policy operation or grant ran. Missing decision remained pending. Evidence SHA256f637728be842e3581181af24cd0740004b9b6d838cb01598ca0150ac13c45667. Keep reported statuses as data, add optional source-provenance/no-canonical-verification metadata to existing interop.project result, and remove false policy-observation text; no new authority flow or store.",
+                "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:7",
+                "observations": [
+                  "src/decapod/core/rpc.rs",
+                  "src/decapod/lib.rs",
+                  "src/decapod/core/projection.rs",
+                  "tests/interop_conformance.rs",
+                  ".decapod/managed/specs/INTENT.md",
+                  ".decapod/managed/specs/ARCHITECTURE.md",
+                  ".decapod/managed/specs/INTERFACES.md"
+                ],
+                "proof_refs": [
+                  "rustfmt",
+                  "diff-whitespace"
+                ],
+                "scope": [
+                  "issue-1726"
+                ],
+                "sequence": 7,
+                "tool": "Actual official11 caller-approval false policy-observation text is corrected without changing reported statuses or policy authority. Existing RPC result adds optional input_origin/canonical_state_verified, fixed caller_supplied/false. Real CLI controls spoof trusted-origin/verified labels and preserve approval/denial/pending display; genuine existing store mutation projection preserves success/correlation while explicitly not reauthenticating input. Required source Actions pending; graph/inventory unchanged.",
+                "validation_findings": []
               }
             ]
           }
@@ -786,6 +863,8 @@
       "inspected_files": [
         "src/decapod/core/governed_transition.rs",
         "src/decapod/core/projection.rs",
+        "src/decapod/core/rpc.rs",
+        "src/decapod/lib.rs",
         "tests/interop_conformance.rs",
         "tests/unit/core/projection_tests.rs"
       ],
@@ -796,6 +875,8 @@
         ".decapod/managed/specs/INTERFACES.md",
         "src/decapod/core/governed_transition.rs",
         "src/decapod/core/projection.rs",
+        "src/decapod/core/rpc.rs",
+        "src/decapod/lib.rs",
         "tests/interop_conformance.rs",
         "tests/unit/core/projection_tests.rs"
       ],
@@ -810,6 +891,8 @@
       "shortcut_risk_signals": [],
       "task_id": "bugs_01m7q969nypfd86q",
       "tool_calls": [
+        "Actual official11 approval projection with approved=true returned remediation Approval recorded through the governed policy path; caller false said Denied by policy. No policy operation or grant ran. Missing decision remained pending. Evidence SHA256f637728be842e3581181af24cd0740004b9b6d838cb01598ca0150ac13c45667. Keep reported statuses as data, add optional source-provenance/no-canonical-verification metadata to existing interop.project result, and remove false policy-observation text; no new authority flow or store.",
+        "Actual official11 caller-approval false policy-observation text is corrected without changing reported statuses or policy authority. Existing RPC result adds optional input_origin/canonical_state_verified, fixed caller_supplied/false. Real CLI controls spoof trusted-origin/verified labels and preserve approval/denial/pending display; genuine existing store mutation projection preserves success/correlation while explicitly not reauthenticating input. Required source Actions pending; graph/inventory unchanged.",
         "Bounded official11 project-check refreshed current release metadata:201 passed,2 failed,12 skipped; not publication proof. All105 source-CI definitions independently rehashed to2acf with only root release metadata differences from earlier accepted e1a review. Source, profile graph, workflows and toolchain preserved. Required actual-source GitHub Actions not yet executed for this candidate.",
         "Official11 SHA6c1b40e1206f6027f9c51294055c975468c4e18e13e3b2b4ba7faa796f49ddea actual interop.project returned proven/publication_ready=true for fabricated pass/head/digest, including full64hex and self-matching verifier/rules. Failure/stale remained false-ready, subsequent receipts negotiation succeeded. Raw evidence SHA2563ce5e25ebcdafe6b5dc0229bf70f01a38ac6d7e2fbb1a270898fe4e8fd2484bb. No actual publication attempted. Existing function only serves pure projection/reflection; canonical typed proof and admission remain separate. Audited owner38b and observer68: neither changes this function; PR search1726 finds only observer1784."
       ],

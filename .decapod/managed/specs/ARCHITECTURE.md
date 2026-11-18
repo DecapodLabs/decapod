@@ -13,6 +13,12 @@ remedy. Report identifiers and source remain display data. Actual native
 validation, canonical history/workunit proof and consequential publication retain
 their existing owners and are not redirected through this projection.
 
+The RPC result also labels all projection inputs as caller-supplied and not
+canonically verified. `lib.rs::handle_interop_project` writes those constant
+provenance fields after parsing the request; caller-provided origin/verification
+labels cannot become authority. Approval formatting preserves the reported
+value but does not assert that a policy transition or principal decision ran.
+
 ## Source coverage and execution observations (#871)
 
 The required broker preparation probe measures the competing mutation's elapsed
@@ -1043,7 +1049,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `2ab2126165a0c1b7fecb69c4735e8d676cd09a919122af1c16bae8d6cd421a76`
+- Repository signal fingerprint: `5f2f74a6ceb61e3c6aa4e7912c83443dd19a46d0f3dd1c137c8fcf09a2bb19ff`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (236 files), `tests/` (235 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

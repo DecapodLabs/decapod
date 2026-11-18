@@ -2,6 +2,15 @@
 
 ## Caller-supplied validation report projections (#1726)
 
+Every `interop.project` result adds optional `input_origin=caller_supplied` and
+`canonical_state_verified=false`. These describe the operation/approval/report
+input, not the receipt proving that the transformation itself ran. Caller input
+cannot override these output fields. The original per-kind `source` remains an
+input-type label, not authenticated producer provenance. Reported approval and
+denial statuses remain display data; their remediation no longer claims that
+the corresponding canonical policy operation occurred. Only the existing
+policy owner can establish a real grant or denial.
+
 `interop.project` with `kind=validation_report` remains a successful read-only
 transformation; outer RPC success does not verify its input. The reported
 `status`, candidate, epoch and identifiers remain visible. `proof_judgment` for
@@ -1280,7 +1289,7 @@ field. Nothing in this operation authorizes a mutation, approval or completion.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `2ab2126165a0c1b7fecb69c4735e8d676cd09a919122af1c16bae8d6cd421a76`
+- Repository signal fingerprint: `5f2f74a6ceb61e3c6aa4e7912c83443dd19a46d0f3dd1c137c8fcf09a2bb19ff`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (236 files), `tests/` (235 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

@@ -13231,7 +13231,14 @@ mod rpc_handlers {
             ctx.request.id.clone(),
             ctx.request.op.clone(),
             ctx.request.params.clone(),
-            Some(serde_json::to_value(InteropProjectResult { projection }).unwrap()),
+            Some(
+                serde_json::to_value(InteropProjectResult {
+                    projection,
+                    input_origin: Some("caller_supplied".to_string()),
+                    canonical_state_verified: Some(false),
+                })
+                .unwrap(),
+            ),
             vec![],
             None,
             vec![],

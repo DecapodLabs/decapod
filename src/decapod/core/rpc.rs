@@ -624,6 +624,12 @@ pub type InteropProjectParams = crate::core::projection::ProjectRequest;
 #[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct InteropProjectResult {
     pub projection: serde_json::Value,
+    /// Origin of the data being transformed, not the projection's RPC receipt.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub input_origin: Option<String>,
+    /// Pure projection does not authenticate the supplied operation or policy.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub canonical_state_verified: Option<bool>,
 }
 
 // State Subsystem
