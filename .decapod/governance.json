@@ -596,6 +596,14 @@
       "proof_refs": [
         "tests/policy_self_authorization_1776.rs (9/9 passed); clippy -D warnings ok"
       ]
+    },
+    {
+      "id": "integrate-master-1799-1776",
+      "summary": "Integrate accepted master 0b6ce0a8 with #1776 accepted-policy hardening",
+      "input_digest": "sha256:f3bc51cb47ca3037a37418fec52e676de5332d78cc36c8579f0513ea303eaa6d",
+      "proof_refs": [
+        "tests/policy_self_authorization_1776.rs (9/9 passed); clippy --all-targets -D warnings ok"
+      ]
     }
   ],
   "intents": {
@@ -636,22 +644,22 @@
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Merged origin/master release 0.148.13 (c5bafce6); #1776 remains bounded to cross-surface accepted-policy resolution.",
-          "reviewed_code_fingerprint": "28d558e83c684c391ddf1959fc5622715f6e1536bc478a65a190b0f3e398c4f9",
+          "reason": "Merged origin/master 0b6ce0a8 (PR #1799); #1776 remains bounded to cross-surface accepted-policy resolution.",
+          "reviewed_code_fingerprint": "ad01e2305258c4402711d92463c1cf84652f5a7a56093d753246046fee7561be",
           "spec_material_hash": "080e1e015d867051ec4ecbb1f18aca92a2d62a05798377057e563aaa5a3764e0"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Merged origin/master release 0.148.13 (c5bafce6); #1776 preserves existing interface contracts.",
-          "reviewed_code_fingerprint": "28d558e83c684c391ddf1959fc5622715f6e1536bc478a65a190b0f3e398c4f9",
-          "spec_material_hash": "ef090be85af851796f2ae92f9d6a6e992d59a452a8fff4918836cc689f020cdd"
+          "reason": "Merged origin/master 0b6ce0a8 (PR #1799); #1776 preserves existing interface contracts.",
+          "reviewed_code_fingerprint": "ad01e2305258c4402711d92463c1cf84652f5a7a56093d753246046fee7561be",
+          "spec_material_hash": "3baf7067b96d8fad41fcf9ff69aa2866b99b9bc631a1132df1daf96de9c82ab7"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Documented cross-surface accepted-policy resolution and #1776 adversarial bypass repairs against current merged 0.148.13 code.",
-          "reviewed_code_fingerprint": "28d558e83c684c391ddf1959fc5622715f6e1536bc478a65a190b0f3e398c4f9",
+          "reason": "Documented cross-surface accepted-policy resolution and #1776 repairs on merged origin/master 0b6ce0a8.",
+          "reviewed_code_fingerprint": "ad01e2305258c4402711d92463c1cf84652f5a7a56093d753246046fee7561be",
           "spec_material_hash": "49c7d1428d860804f8fc7f436c5da22483d385c9ce4be90f7db52f1cf4b362ee"
         }
       ],
@@ -663,16 +671,20 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795017660Z"
+      "updated_at": "1795022814Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:6dae082d7c8d9166acca79c7db394452c2e7c18a0d128e31194b09c0ada83915",
+      "artifact_hash": "sha256:b633d348a1297d5bcf3ef411d827dad9289fcbc8bd0aa4cb5a1bed393e489245",
       "checks": [
         {
           "name": "cargo_fmt",
+          "status": "passed"
+        },
+        {
+          "name": "clippy_all_targets",
           "status": "passed"
         },
         {
@@ -748,10 +760,17 @@
             "intent_id": "intent:change_01M7QBJ2W09CY5REY9D4DX2CGZ",
             "kind": "trajectory_step_recorded",
             "sequence": 5
+          },
+          {
+            "detail": "trajectory:branch_01M7QBJ2ZYCMN2HENQJSH4ZZW7",
+            "event_id": "event:6",
+            "intent_id": "intent:change_01M7QBJ2W09CY5REY9D4DX2CGZ",
+            "kind": "trajectory_step_recorded",
+            "sequence": 6
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 5,
+        "next_sequence": 6,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M7QBJ2ZYCMN2HENQJSH4ZZW7": {
@@ -820,6 +839,33 @@
                 ],
                 "sequence": 5,
                 "validation_findings": []
+              },
+              {
+                "action": "validation",
+                "custody_event_id": "event:6",
+                "observations": [
+                  ".decapod/config.toml",
+                  ".decapod/managed/specs/SECURITY.md",
+                  "src/decapod/core/db_maintenance.rs",
+                  "src/decapod/core/workspace.rs",
+                  "src/decapod/core/gatekeeper.rs",
+                  "src/decapod/plugins/policy.rs",
+                  "src/decapod/core/validation_rules.rs",
+                  "src/decapod/core/validate.rs",
+                  "src/decapod/lib.rs",
+                  "tests/policy_self_authorization_1776.rs",
+                  "Merged origin/master 0b6ce0a8 (PR #1799); cargo fmt --all -- --check ok; clippy --all-targets --all-features -D warnings ok; policy_self_authorization_1776 9/9 passed (198.79s)"
+                ],
+                "proof_refs": [
+                  "policy_self_authorization_1776",
+                  "cargo_fmt",
+                  "clippy_all_targets"
+                ],
+                "scope": [
+                  "root"
+                ],
+                "sequence": 6,
+                "validation_findings": []
               }
             ]
           }
@@ -828,6 +874,7 @@
       "declared_commands": [],
       "destination": "pull request",
       "evidence": [
+        "Merged origin/master 0b6ce0a8 (PR #1799); cargo fmt --all -- --check ok; clippy --all-targets --all-features -D warnings ok; policy_self_authorization_1776 9/9 passed (198.79s)",
         "Merged origin/master release 0.148.13 (c5bafce6); policy_self_authorization_1776 9/9 passed (213.03s); cargo fmt & clippy -D warnings ok",
         "policy_self_authorization_1776 9/9 passed (92.39s); clippy -D warnings ok; unit & regression suites passed"
       ],

@@ -378,39 +378,873 @@ fn hash_file(path: &Path) -> Result<(String, u64, Option<u64>), error::DecapodEr
     Ok((sha256_hex(&bytes), meta.len(), mtime))
 }
 
-// Return only fixed diagnostic labels, never child-controlled text, paths,
-// environment values or provider URLs. These labels survive the scoped recovery
-// validation, even when a separate ordinary validate would hit aggregate proof.
-fn safe_validation_failure_diagnostic(stdout: &[u8], stderr: &[u8]) -> String {
-    const MARKERS: &[&str] = &[
-        "NEEDS_PLAN_APPROVAL",
-        "PROOF_HOOK_FAILED",
-        "READINESS_BLOCKED",
-        "SNAPSHOT_NOT_READY",
-        "REQUIRED_PROOF_NOT_AUTHENTICATED",
-        "CONTROLLER_CONTRACT_UNSUPPORTED",
-        "SPEC_REVIEW_REQUIRED",
-        "STALE_SOURCE_INVENTORY",
-        "SNAPSHOT_UPLOAD_PENDING",
-    ];
-    let contains = |bytes: &[u8], marker: &str| {
-        bytes[..bytes.len().min(1024 * 1024)]
-            .windows(marker.len())
-            .any(|window| window == marker.as_bytes())
-    };
-    let found: Vec<_> = MARKERS
+const MAX_DIAGNOSTIC_TEXT_SCAN_BYTES: usize = 1024 * 1024;
+const MAX_DIAGNOSTIC_JSON_BYTES: usize = 16 * 1024 * 1024;
+const MAX_DIAGNOSTIC_LABELS: usize = 8;
+const MAX_DIAGNOSTIC_MESSAGE_BYTES: usize = 1023;
+
+const SAFE_VALIDATION_SCOPES: &[&str] = &[
+    "publication_readiness",
+    "source_pr_readiness",
+    "repository_local_readiness",
+    "repository_local_git_readiness",
+    "ci_local",
+    "project_prerequisites",
+];
+
+// Compile-time allowlist of canonical blocker labels. Only entries from this
+// table (never arbitrary child stdout/stderr text, paths, URLs, credentials, or
+// task titles) may be emitted in recovery diagnostics.
+const SAFE_BLOCKER_LABELS: &[&str] = &[
+    "NEEDS_PLAN_APPROVAL",
+    "PROOF_HOOK_FAILED",
+    "SNAPSHOT_NOT_READY",
+    "REQUIRED_PROOF_NOT_AUTHENTICATED",
+    "CONTROLLER_CONTRACT_UNSUPPORTED",
+    "SPEC_REVIEW_REQUIRED",
+    "STALE_SOURCE_INVENTORY",
+    "SNAPSHOT_UPLOAD_PENDING",
+    "WORKSPACE_PROTECTION",
+    "MISSING_PROOF_PROFILE",
+    "UNKNOWN_PROOF_PROFILE",
+    "PROOF_PROFILE_RECONCILIATION_REQUIRED",
+    "PROOF_PROFILE_INVALID",
+    "MISSING_REQUIRED_PROOF_ADAPTER",
+    "READINESS_PROFILE_REQUIRED",
+    "READINESS_PROVIDER_MISMATCH",
+    "REPOSITORY_PROFILE_PROVIDER_UNSUPPORTED",
+    "ACCEPTED_REPOSITORY_CONTRACT_CHANGED",
+    "REPOSITORY_CONTRACT_INVALID",
+    "REPOSITORY_CONTRACT_REQUIRED",
+    "REPOSITORY_COMMAND_CONTRACT",
+    "REPOSITORY_PROOF_SEAL",
+    "READINESS_SNAPSHOT_ADOPTED_PROOF_PENDING",
+    "READINESS_INVOCATION_INVALID",
+    "READINESS_TOOL_MISSING",
+    "READINESS_BASE_MISSING",
+    "READINESS_HEAD_MISSING",
+    "READINESS_TOOLCHAIN_CONTRACT",
+    "READINESS_DEADLINE_EXCEEDED",
+    "SNAPSHOT_UPLOAD_INCOMPLETE",
+    "INCOMPLETE_AUTHENTICATED_CATALOG",
+    "LEGACY_TEMPORARY_SNAPSHOT_UNSUPPORTED",
+    "SOURCE_CHANGED_DURING_SNAPSHOT_PROOF",
+    "DERIVED_RELEASE_CATALOG_MISSING",
+    "DERIVED_RELEASE_CUSTODY_BLOCKED",
+    "MISSING_SOURCE_EXECUTOR",
+    "SOURCE_EXECUTION_CUSTODY_BLOCKED",
+    "LOCAL_TARGET_HOST_MISMATCH",
+    "LOCAL_TARGET_IDENTITY_CHANGED",
+    "LOCAL_TARGET_PUBLICATION_UNSUPPORTED",
+    "PROJECT_PREREQUISITES_FAILED",
+    "PROJECT_PREREQUISITES_PROVIDER_MISMATCH",
+    "LAYA_READINESS_BLOCKED",
+    "LAYA_POLICY_CHANGED_DURING_INFERENCE",
+    "LAYA_POLICY_CHANGED_DURING_VALIDATION",
+    "NATIVE_EXECUTION_BLOCKED",
+    "NATIVE_SELECTION_DEADLINE",
+    "NATIVE_SLICE_FAILED",
+    "UNSUPPORTED_NATIVE_SLICE",
+    "PARTIAL_NATIVE_EVIDENCE",
+    "PARTIAL_NATIVE_PROOF",
+    "SOURCE_CHANGED_DURING_NATIVE_SLICE",
+    "ACCEPTED_BASE_NOT_ANCESTOR",
+    "STALE_ACCEPTED_BASE",
+    "MISSING_PROOF_SOURCE",
+    "BUILDKITE_SOURCE_CUSTODY_BLOCKED",
+    "MISMATCHED_CI_CONTRACT",
+    "UNKNOWN_CI_CONTRACT",
+    "NO_BUILD_OR_CI_CONTRACT",
+    "COMMIT_AND_RERUN",
+    "ENTRYPOINT_COMMIT_DISCIPLINE",
+    "FINGERPRINT_ONLY_SPECS",
+    "REMOTE_FINGERPRINT_ONLY_SPECS",
+    "STALE_SPEC_REVIEW",
+    "STALE_SPECS_FINGERPRINT",
+    "STALE_SPECS_TEMPLATE",
+    "STALE_CONFIG_INPUT_HASH",
+    "STALE_ENTRYPOINT_RELEASE",
+    "OUT_OF_SYNC_SPECS",
+    "MALFORMED_PROJECT_SPEC_LAYOUT",
+    "PROOF_DUAL_AUTHORITY",
+    "MANAGED_SPEC_PROJECTIONS_MISSING",
+    "GOVERNANCE_CHECKPOINT_MISSING",
+    "GOVERNANCE_CHECKPOINT_ID_CONFLICT",
+    "GOVERNANCE_CHECKPOINT_HISTORY_CHANGED",
+    "GOVERNANCE_HISTORY_INVALID",
+    "GOVERNANCE_HISTORY_INPUT_UNAVAILABLE",
+    "GOVERNANCE_ACCEPTED_BASE_MISSING",
+    "GOVERNANCE_ACCEPTED_CHECKPOINT_CHANGED",
+    "GOVERNANCE_ACCEPTED_BASELINE_CHANGED",
+    "GOVERNANCE_ACCEPTED_IDENTITY_CONFLICT",
+    "GOVERNANCE_PR_IDENTITY_MISSING",
+    "GOVERNANCE_PR_IDENTITY_CONFLICT",
+    "GOVERNANCE_PR_NOT_ACCEPTED",
+    "GOVERNANCE_PR_TARGET_CHANGED",
+    "GOVERNANCE_PR_TARGET_MISMATCH",
+    "GOVERNANCE_PR_BASE_MISMATCH",
+    "GOVERNANCE_PR_UPDATES",
+    "GOVERNANCE_PR_DIFF_MISSING",
+    "GOVERNANCE_PR_DIFF_UNAVAILABLE",
+    "GOVERNANCE_GIT_PROOF_UNAVAILABLE",
+    "GOVERNANCE_EMPTY_CHANGE",
+    "GOVERNANCE_PROTECTED_BRANCH",
+    "GOVERNANCE_UNSTAGED_MATERIAL",
+    "GOVERNANCE_UNARCHIVED_WORK",
+    "GOVERNANCE_WORK_CONTEXT_REQUIRED",
+    "GOVERNANCE_BRANCH_CREATION_PROOF_REQUIRED",
+    "GOVERNANCE_WORKSPACE_ALIAS",
+    "GOVERNANCE_AUTHORITY_CONFLICT",
+    "GOVERNANCE_SCHEMA_UNSUPPORTED",
+    "GOVERNANCE_LOCK_BUSY",
+    "GOVERNANCE_ARTIFACTS_INVALID",
+    "GOVERNANCE_VALIDATION_MISSING",
+    "GOVERNANCE_VALIDATION_INVALID",
+    "VALIDATION_ARTIFACTS_NOT_STAGED",
+    "VALIDATION_RECEIPT_MISMATCH",
+    "VALIDATION_HISTORY_PERSIST_FAILED",
+    "STALE_VALIDATION_EVIDENCE",
+    "VALIDATION_NOT_READY",
+    "VALIDATE_TIMEOUT_OR_LOCK",
+    "VALIDATE_WORKER_FAILED",
+    "PUBLICATION_NOT_READY",
+    "PUBLICATION_NOT_PROVEN",
+    "PUBLICATION_MATERIAL_BASE_MISSING",
+    "PUBLICATION_MATERIAL_BINDING_REQUIRED",
+    "PR_BASE_REF_MISSING",
+    "PR_MERGE_CONFLICT",
+    "PR_TRAJECTORY_MISSING",
+    "PR_TARGET_MISMATCH",
+    "PR_DIFF_MISMATCH",
+    "PR_NUMBER_MISMATCH",
+    "PR_PUBLICATION_RACE",
+    "PR_CREATE_UNCONFIRMED",
+    "PR_CREATED_NOT_ADMITTED",
+    "PR_QUARANTINE_TARGET_UNVERIFIED",
+    "PR_QUARANTINE_STATE_UNKNOWN",
+    "PR_QUARANTINE_UNCONFIRMED",
+    "PR_QUARANTINE_UNAVAILABLE_ALREADY_MERGED",
+    "TRAJECTORY_COOKIE_MISSING",
+    "TRAJECTORY_BLOCKERS_PRESENT",
+    "TRAJECTORY_TASK_MISMATCH",
+    "TRAJECTORY_PROOF_INSUFFICIENT",
+    "WORKUNIT_MANIFEST_MISSING",
+    "WORKUNIT_NOT_VERIFIED",
+    "EVAL_AGGREGATE_MISSING",
+    "EVAL_GATE_FAILED",
+    "NO_NETWORK_GIT_REMOTE",
+    "NEEDS_HUMAN_INPUT",
+    "PLAN_CHANGED_REQUIRES_APPROVAL",
+    "PLAN_REQUIRED",
+    "PHASE_REQUIRED",
+    "PHASES_INCOMPLETE",
+    "PHASE_GATE_NOT_SATISFIED",
+    "PHASE_LOCKED",
+    "PHASE_NOT_FOUND",
+    "INVALID_PHASE_CONTRACT",
+    "INVALID_PHASE_TRANSITION",
+    "TODO_PROJECTION_MISSING",
+    "SCOPE_VIOLATION",
+    "PROTECTED_PATH_VIOLATION",
+    "TASK_FORBIDDEN_PATH_VIOLATION",
+    "INVALID_WORKSPACE_CUSTODY",
+    "STALE_OR_MISSING_EVIDENCE",
+    "UNVERIFIED_COMPLETION",
+    "FILE_TOUCH_BUDGET_EXCEEDED",
+    "ROOT_REPOSITORY_MODIFIED",
+    "WORKSPACE_REQUIRED",
+    "WORKSPACE_BLOCKED",
+    "WORKSPACE_TODO_CLAIM_CONFLICT",
+    "WORKSPACE_BRANCH_TODO_CLAIM_CONFLICT",
+    "WORKSPACE_BRANCH_NOT_TODO_SCOPED",
+    "WORKSPACE_STORAGE_PREFLIGHT_FAILED",
+    "WORKSPACE_SCHEMA_REPAIR_FAILED",
+    "WORKSPACE_PATH_OWNERSHIP_CONFLICT",
+    "WORKTREE_CUSTODY_MISMATCH",
+    "WORKTREE_CUSTODY_REQUIRED",
+    "VALIDATION_RULES_FAILED",
+    "VALIDATION_RULE_VIOLATED",
+    "VALIDATION_RULE_STALE",
+    "VALIDATION_RULE_UNVERIFIABLE",
+    "PROJECT_SPECS_MANIFEST_MISSING",
+    "PROJECT_SPECS_MANIFEST_MISMATCH",
+    "SNAPSHOT_CLEANUP_PENDING",
+    "INVENTORY_INCOMPLETE",
+    "AUTHORING_ACTOR_REQUIRED",
+    "AUTHORING_BINDING_REQUIRED",
+    "AUTHORING_BINDING_STALE",
+    "AUTHORING_CHECKOUT_CHANGED",
+    "AUTHORING_CHECKOUT_OCCUPIED",
+    "AUTHORING_CHECKOUT_UNVERIFIED",
+    "AUTHORING_CUSTODY_LIMIT",
+    "AUTHORING_CUSTODY_STALE",
+    "AUTHORING_DEPENDENCIES_BLOCKED",
+    "AUTHORING_EVIDENCE_UNAVAILABLE",
+    "AUTHORING_PROFILE_UNSUPPORTED",
+    "AUTHORING_STORE_INVALID",
+    "AUTHORING_TASK_ALREADY_BOUND",
+    "AUTHORING_TASK_AMBIGUOUS",
+    "ACCEPTED_TARGET_UNAVAILABLE",
+    "ACCEPTED_POLICY_ABSENT",
+    "CI_ATTESTED_POLICY_NOT_ACCEPTED",
+    "CI_CHANGE_CONTEXT_INVALID",
+    "INVALID_CONFIG_SCHEMA",
+    "GOVERNANCE_HISTORY_NOT_PROVEN",
+    "INVALID_PLAN",
+    "INVALID_WORKTREE_CONFIG",
+    "LAYA_ACCEPTED_POLICY_CHANGED",
+    "LOCAL_TARGET_INVALID",
+    "LOCAL_TARGET_POLICY_UNACCEPTED",
+    "LOCAL_TARGET_UNAVAILABLE",
+    "LOCAL_PUBLICATION_RACE",
+    "NOT_READY_AFTER_RUST_WORKER",
+    "OUT_OF_SYNC_ENTRYPOINTS",
+    "PUBLICATION_BUNDLE_CURRENCY",
+    "PUBLICATION_CUSTODY_CHANGED",
+    "PUBLICATION_DECISION_REQUIRED",
+    "PUBLICATION_INCOMPLETE",
+    "PUBLICATION_LAYA_CHANGED",
+    "PUBLICATION_MATERIAL_BASE_CHANGED",
+    "PUBLICATION_OUTCOME_UNKNOWN",
+    "PUBLICATION_PROOF_MISMATCH",
+    "PUBLICATION_PROOF_MISSING",
+    "PUBLICATION_PROOF_SUBJECT_CHANGED",
+    "PUBLICATION_WORKBRANCH_REQUIRED",
+    "RAW_PROVIDER_ARTIFACT_REQUIRED",
+    "REMOTE_GOVERNANCE_DIFF_MISSING",
+    "REMOTE_HEAD_MISMATCH",
+    "REMOTE_PUBLICATION_RACE",
+    "REMOTE_SPECS_DIFF_MISSING",
+    "REPOSITORY_PROOF_SEAL_EXPIRED",
+    "REPOSITORY_PROOF_SEAL_MISMATCH",
+    "REPOSITORY_PROOF_SEAL_MISSING",
+    "REPOSITORY_PROOF_SEAL_STALE",
+    "REPOSITORY_PROOF_POLICY_DENIED",
+    "REPOSITORY_PROOF_REJECTED",
+    "READINESS_GATE_OVERRIDE_UNSUPPORTED",
+    "READINESS_REPOSITORY_MISSING",
+    "READINESS_REPOSITORY_UNSUPPORTED",
+    "REQUIRED_PROFILE_DOWNGRADE",
+    "RESOURCE_CUSTODY_PROFILE_UNSUPPORTED",
+    "RUST_WORKER_CONTRACT_INVALID",
+    "RUST_WORKER_FAILED",
+    "RUST_WORKER_INPUT_UNTRACKED",
+    "RUST_WORKER_NOT_READY",
+    "RUST_WORKER_POLICY_DOWNGRADE",
+    "RUST_WORKER_POLICY_STALE",
+    "RUST_WORKER_PROOF_OUTPUT_INVALID",
+    "RUST_WORKER_STRICT_PROFILE_REQUIRED",
+    "RUST_WORKER_TOOLCHAIN_CONFLICT",
+    "RUST_WORKER_TOOLCHAIN_REQUIRED",
+    "RUST_WORKER_WORKSPACE_REQUIRED",
+    "SPEC_REVIEW_DECISION_REQUIRED",
+    "SPEC_REVIEW_DISPOSITION_MISMATCH",
+    "STALE_COMMAND_CONTRACT",
+    "STALE_POLICY_AFTER_RUST_WORKER",
+    "STALE_POST_VALIDATION_DECISION",
+    "STALE_PUBLICATION_REVISION",
+    "STALE_PUBLICATION_TASK",
+    "STALE_PUBLICATION_VALIDATION",
+    "STALE_TASK_VERIFICATION",
+    "TERMINAL_VALIDATION_RULES_FAILED",
+    "TERMINAL_WORKUNIT_STALE",
+    "TERMINAL_WORKUNIT_UNPROVEN",
+    "UNCOMMITTED_GOVERNANCE_ARTIFACT",
+    "UNCOMMITTED_PUBLICATION_CONTENT",
+    "UNSTAGED_GOVERNANCE_ARTIFACT",
+    "UNSUPPORTED_SOURCE_CONTRACT",
+    "UNKNOWN_REQUIRED_PROFILE",
+    "MISSING_PROFILE_SOURCE",
+    "MISSING_REQUIRED_PROFILE",
+    "MISSING_NATIVE_CARGO",
+    "MISSING_NATIVE_LINKER",
+    "MISSING_NATIVE_MDBOOK_RESOLUTION",
+    "MISSING_NATIVE_PLATFORM",
+    "MISSING_NATIVE_RUST",
+    "MISSING_NATIVE_RUST_RESOLUTION",
+    "MISSING_NATIVE_SEQUENCE_ADAPTER",
+    "MISSING_NATIVE_TARGET",
+    "MISSING_NATIVE_TOOL",
+    "MISSING_NATIVE_TOOLCHAIN_CLOSURE",
+    "NATIVE_RUST_VERSION_MISMATCH",
+    "VALIDATION_HISTORY_BACKEND_UNSUPPORTED",
+    "VALIDATION_HISTORY_BINDING_MISMATCH",
+    "VALIDATION_HISTORY_DEPENDENCIES_BLOCKED",
+    "VALIDATION_HISTORY_INVALID",
+    "VALIDATION_HISTORY_MISSING",
+    "VALIDATION_HISTORY_OWNER_MISMATCH",
+    "VALIDATION_HISTORY_TASK_MISMATCH",
+    "VALIDATION_HISTORY_TASK_PROOF_UNSUPPORTED",
+    "VALIDATION_HISTORY_TASK_STALE",
+    "VALIDATION_HISTORY_TASK_UNBOUND",
+    "WORKSPACE_AMBIGUOUS_TASK_HASH",
+    "WORKSPACE_BASE_UNRESOLVED",
+    "WORKSPACE_OWNERSHIP_UNVERIFIED",
+    "WORKUNIT_PROOF_UNVERIFIABLE",
+    "WORKUNIT_PROOF_STALE",
+    "PROJECT_CONFIG_INVALID",
+    "PROOF_CONFIG_MISMATCH",
+    "LIVING_SPECS_INCOMPLETE",
+    "GATEKEEPER_VIOLATION",
+    "LINEAGE_GATE_VIOLATION",
+    "CONTEXT_CAPSULE_INVALID",
+    "MANAGED_DOCKERFILE_MISMATCH",
+    "ROOT_DOCKERFILE_MISCONFIGURED",
+    "ENTRYPOINT_CONTRACT_INVALID",
+    "SCHEMA_NON_DETERMINISTIC",
+    "REPOMAP_NON_DETERMINISTIC",
+    "ASSURANCE_MIGRATION_REQUIRED",
+    "CARGO_FMT_FAILED",
+    "CARGO_CLIPPY_FAILED",
+    "CARGO_FMT_EXECUTION_FAILED",
+    "CARGO_CLIPPY_EXECUTION_FAILED",
+    "RUSTFMT_UNAVAILABLE",
+    "CLIPPY_UNAVAILABLE",
+    "LINT_FAILED",
+    // Keep generic umbrella last so specific unwrapped labels take priority when capping.
+    "READINESS_BLOCKED",
+];
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+struct SafeValidationDiagnostic {
+    stage: Option<&'static str>,
+    scope: Option<&'static str>,
+    labels: Vec<&'static str>,
+    message: String,
+}
+
+impl SafeValidationDiagnostic {
+    fn empty() -> Self {
+        Self {
+            stage: None,
+            scope: None,
+            labels: Vec::new(),
+            message: String::new(),
+        }
+    }
+}
+
+fn canonical_safe_label(candidate: &str) -> Option<&'static str> {
+    let normalized = candidate.trim();
+    SAFE_BLOCKER_LABELS
         .iter()
         .copied()
-        .filter(|marker| contains(stdout, marker) || contains(stderr, marker))
-        .collect();
-    if found.is_empty() {
-        "VALIDATION_CHILD_FAILED: no recognized safe blocker label; run `decapod validate --format json` for the current structured diagnostic, repair its blockers, then retry the original verification command. No child output was forwarded.".into()
-    } else {
-        format!(
-            "VALIDATION_CHILD_FAILED: recognized labels observed in scoped validation output: {}; run `decapod validate --format json` and inspect the current structured diagnostic to identify actual blockers, repair them, then retry the original verification command. Observed labels are not independently established causes or proof; no child output was forwarded.",
-            found.join(", ")
-        )
+        .find(|label| label.eq_ignore_ascii_case(normalized))
+}
+
+fn canonical_safe_scope(value: Option<&serde_json::Value>) -> Option<&'static str> {
+    let raw = value.and_then(|v| v.as_str())?.trim();
+    SAFE_VALIDATION_SCOPES
+        .iter()
+        .copied()
+        .find(|scope| *scope == raw)
+}
+
+fn push_unique_label(labels: &mut Vec<&'static str>, label: &'static str) {
+    if !labels.contains(&label) {
+        labels.push(label);
     }
+}
+
+fn is_token_ident_byte(byte: u8) -> bool {
+    byte.is_ascii_alphanumeric() || byte == b'_'
+}
+
+fn contains_token_boundary(bytes: &[u8], token: &str) -> bool {
+    let needle = token.as_bytes();
+    if needle.is_empty() || bytes.len() < needle.len() {
+        return false;
+    }
+    bytes
+        .windows(needle.len())
+        .enumerate()
+        .any(|(idx, window)| {
+            if window != needle {
+                return false;
+            }
+            let left_ok = idx == 0 || !is_token_ident_byte(bytes[idx - 1]);
+            let right_idx = idx + needle.len();
+            let right_ok = right_idx == bytes.len() || !is_token_ident_byte(bytes[right_idx]);
+            left_ok && right_ok
+        })
+}
+
+fn collect_tokens_bounded(bytes: &[u8], labels: &mut Vec<&'static str>) {
+    let slice = &bytes[..bytes.len().min(MAX_DIAGNOSTIC_TEXT_SCAN_BYTES)];
+    for &label in SAFE_BLOCKER_LABELS {
+        if contains_token_boundary(slice, label) {
+            push_unique_label(labels, label);
+        }
+    }
+}
+
+fn strip_known_prefix<'a>(s: &'a str, prefix: &str) -> Option<&'a str> {
+    s.strip_prefix(prefix)
+}
+
+fn extract_labels_from_cannot_publish(rest: &str, labels: &mut Vec<&'static str>) {
+    let rest = rest.trim_start();
+    if let Some((token, _)) = split_leading_code_token(rest)
+        && let Some(label) = canonical_safe_label(token)
+    {
+        push_unique_label(labels, label);
+        return;
+    }
+    let fixed_mappings: &[(&str, &'static str)] = &[
+        (
+            "no network-capable git remote is configured",
+            "NO_NETWORK_GIT_REMOTE",
+        ),
+        ("not in a git worktree", "WORKSPACE_REQUIRED"),
+        ("on protected branch", "GOVERNANCE_PROTECTED_BRANCH"),
+        ("cannot resolve HEAD", "READINESS_HEAD_MISSING"),
+        (
+            "missing required workunit manifest",
+            "WORKUNIT_MANIFEST_MISSING",
+        ),
+        ("workunit ", "WORKUNIT_NOT_VERIFIED"),
+        ("missing trajectory cookie", "TRAJECTORY_COOKIE_MISSING"),
+        (
+            "missing governance validation section",
+            "GOVERNANCE_VALIDATION_MISSING",
+        ),
+        (
+            "invalid governance validation section",
+            "GOVERNANCE_VALIDATION_INVALID",
+        ),
+        (
+            "validation receipt is not bound",
+            "VALIDATION_RECEIPT_MISMATCH",
+        ),
+        ("missing governed plan", "PLAN_REQUIRED"),
+        (
+            "required governance artifact is missing or invalid",
+            "GOVERNANCE_ARTIFACTS_INVALID",
+        ),
+        (
+            "required governance artifacts are missing or invalid",
+            "GOVERNANCE_ARTIFACTS_INVALID",
+        ),
+        (
+            "required validation artifact was not staged",
+            "VALIDATION_ARTIFACTS_NOT_STAGED",
+        ),
+        (
+            "failed to inspect the PR diff",
+            "GOVERNANCE_PR_DIFF_UNAVAILABLE",
+        ),
+        (
+            "required governance artifacts are not included in the PR diff",
+            "GOVERNANCE_PR_DIFF_MISSING",
+        ),
+        ("required eval aggregate ", "EVAL_AGGREGATE_MISSING"),
+        ("eval gate failed for aggregate ", "EVAL_GATE_FAILED"),
+        ("base branch ", "GOVERNANCE_ACCEPTED_BASE_MISSING"),
+        (
+            "code-related changes versus ",
+            "MANAGED_SPEC_PROJECTIONS_MISSING",
+        ),
+    ];
+    for &(prefix, label) in fixed_mappings {
+        if rest.starts_with(prefix) {
+            push_unique_label(labels, label);
+            return;
+        }
+    }
+    if rest.starts_with("trajectory ") {
+        if rest.contains(" has blockers:") {
+            push_unique_label(labels, "TRAJECTORY_BLOCKERS_PRESENT");
+        } else if rest.contains(" is bound to task ") {
+            push_unique_label(labels, "TRAJECTORY_TASK_MISMATCH");
+        } else if rest.contains(" has insufficient proof status ") {
+            push_unique_label(labels, "TRAJECTORY_PROOF_INSUFFICIENT");
+        }
+    }
+}
+
+fn split_leading_code_token(s: &str) -> Option<(&str, &str)> {
+    let trimmed = s.trim_start();
+    let end = trimmed
+        .find(|c: char| !(c.is_ascii_uppercase() || c.is_ascii_digit() || c == '_'))
+        .unwrap_or(trimmed.len());
+    if end == 0 {
+        return None;
+    }
+    let token = &trimmed[..end];
+    let after = &trimmed[end..];
+    if after.is_empty()
+        || after.starts_with(':')
+        || after.starts_with(" —")
+        || after.starts_with(" -")
+        || after.starts_with(" (")
+        || after.starts_with(" or ")
+        || after.starts_with('\n')
+        || after.starts_with(' ')
+    {
+        Some((token, after))
+    } else {
+        None
+    }
+}
+
+// Inspect only structured leading wrappers/error codes of a validation blocker
+// or failure string so arbitrary untrusted suffixes (task titles, trajectory
+// blocker details, rule descriptions, URLs, paths) never trigger label emission.
+fn extract_labels_from_structured_text(raw: &str, labels: &mut Vec<&'static str>) {
+    let mut current = raw.trim_start();
+    for _ in 0..4 {
+        let mut stripped = false;
+        for scope in SAFE_VALIDATION_SCOPES {
+            if let Some(after_scope) = current.strip_prefix(scope)
+                && let Some(after_colon) = after_scope.strip_prefix(':')
+            {
+                current = after_colon.trim_start();
+                stripped = true;
+                break;
+            }
+        }
+        if stripped {
+            continue;
+        }
+        for prefix in ["Validation error:", "gate error:", "Error:"] {
+            if let Some(rest) = strip_known_prefix(current, prefix) {
+                current = rest.trim_start();
+                stripped = true;
+                break;
+            }
+        }
+        if !stripped {
+            break;
+        }
+    }
+
+    if let Some(after_auto) = current.strip_prefix("AUTOREMEDIABLE_VALIDATION_ERROR ") {
+        if let Some(after_code_kw) = after_auto.strip_prefix("code=") {
+            let token_end = after_code_kw
+                .find(|c: char| !is_token_ident_byte(c as u8))
+                .unwrap_or(after_code_kw.len());
+            if let Some(label) = canonical_safe_label(&after_code_kw[..token_end]) {
+                push_unique_label(labels, label);
+            }
+        }
+        if let Some((_, body)) = after_auto.split_once('\n') {
+            extract_labels_from_structured_text(body, labels);
+        }
+        return;
+    }
+
+    if let Some(rest) = current.strip_prefix("Cannot publish:") {
+        extract_labels_from_cannot_publish(rest, labels);
+        return;
+    }
+
+    if let Some(rest) = current.strip_prefix("Rule ") {
+        if let Some((_, body)) = rest.split_once(':') {
+            let body_trimmed = body.trim_start();
+            if body_trimmed.starts_with("Rule violated") {
+                push_unique_label(labels, "VALIDATION_RULE_VIOLATED");
+            } else if body_trimmed.starts_with("Rule stale") {
+                push_unique_label(labels, "VALIDATION_RULE_STALE");
+            } else if body_trimmed.starts_with("Rule unverifiable") {
+                push_unique_label(labels, "VALIDATION_RULE_UNVERIFIABLE");
+            } else if let Some((token, _)) = split_leading_code_token(body_trimmed)
+                && let Some(label) = canonical_safe_label(token)
+            {
+                push_unique_label(labels, label);
+            } else {
+                push_unique_label(labels, "VALIDATION_RULES_FAILED");
+            }
+        } else {
+            push_unique_label(labels, "VALIDATION_RULES_FAILED");
+        }
+        return;
+    }
+
+    if current.starts_with("Validation rules:") {
+        push_unique_label(labels, "VALIDATION_RULES_FAILED");
+        return;
+    }
+
+    if current.starts_with("Currently on protected branch")
+        || current.starts_with("Protected branch")
+    {
+        push_unique_label(labels, "GOVERNANCE_PROTECTED_BRANCH");
+        return;
+    }
+
+    if let Some(rest) = current.strip_prefix("TASK:") {
+        let rest_trimmed = rest.trim_start();
+        if rest_trimmed.starts_with("Project specs manifest missing") {
+            push_unique_label(labels, "PROJECT_SPECS_MANIFEST_MISSING");
+        } else if rest_trimmed.starts_with("Project specs manifest schema mismatch") {
+            push_unique_label(labels, "PROJECT_SPECS_MANIFEST_MISMATCH");
+        }
+        return;
+    }
+
+    let fixed_gate_prefixes: &[(&str, &'static str)] = &[
+        ("Project config ", "PROJECT_CONFIG_INVALID"),
+        ("Guided init ", "PROJECT_CONFIG_INVALID"),
+        ("Proof command", "PROOF_CONFIG_MISMATCH"),
+        (
+            "Missing required project specs file:",
+            "LIVING_SPECS_INCOMPLETE",
+        ),
+        ("Architecture spec ", "LIVING_SPECS_INCOMPLETE"),
+        ("Intent spec ", "LIVING_SPECS_INCOMPLETE"),
+        ("Interfaces spec ", "LIVING_SPECS_INCOMPLETE"),
+        ("Validation spec ", "LIVING_SPECS_INCOMPLETE"),
+        ("Semantics spec ", "LIVING_SPECS_INCOMPLETE"),
+        ("Operations spec ", "LIVING_SPECS_INCOMPLETE"),
+        ("Security spec ", "LIVING_SPECS_INCOMPLETE"),
+        ("Gatekeeper violations:", "GATEKEEPER_VIOLATION"),
+        ("Lineage gate violations:", "LINEAGE_GATE_VIOLATION"),
+        ("Context capsule ", "CONTEXT_CAPSULE_INVALID"),
+        (
+            "Managed Dockerfile release pin failure",
+            "MANAGED_DOCKERFILE_MISMATCH",
+        ),
+        ("Root Dockerfile contains", "ROOT_DOCKERFILE_MISCONFIGURED"),
+        ("AGENTS.md ", "ENTRYPOINT_CONTRACT_INVALID"),
+        ("CLAUDE.md ", "ENTRYPOINT_CONTRACT_INVALID"),
+        ("GEMINI.md ", "ENTRYPOINT_CONTRACT_INVALID"),
+        ("CODEX.md ", "ENTRYPOINT_CONTRACT_INVALID"),
+        (
+            "Schema output is non-deterministic",
+            "SCHEMA_NON_DETERMINISTIC",
+        ),
+        (
+            "Repo map output is non-deterministic",
+            "REPOMAP_NON_DETERMINISTIC",
+        ),
+        (
+            "Live assurance JSONL still present",
+            "ASSURANCE_MIGRATION_REQUIRED",
+        ),
+        ("Python linting failed", "LINT_FAILED"),
+        ("Shell script linting failed", "LINT_FAILED"),
+        ("YAML linting failed", "LINT_FAILED"),
+        ("Dockerfile linting failed", "LINT_FAILED"),
+    ];
+    for &(prefix, label) in fixed_gate_prefixes {
+        if current.starts_with(prefix) {
+            push_unique_label(labels, label);
+            return;
+        }
+    }
+
+    // Peel repeatable `<ALLOWLISTED_CODE>: ` chains (for example `READINESS_BLOCKED:
+    // FINGERPRINT_ONLY_SPECS: ...`) while checking non-code nested wrappers.
+    for _ in 0..3 {
+        let Some((token, after)) = split_leading_code_token(current) else {
+            break;
+        };
+        let Some(label) = canonical_safe_label(token) else {
+            break;
+        };
+        push_unique_label(labels, label);
+        let next = after
+            .trim_start()
+            .trim_start_matches([':', '—', '-'])
+            .trim_start();
+        if next.starts_with("Cannot publish:") {
+            if let Some(rest) = next.strip_prefix("Cannot publish:") {
+                extract_labels_from_cannot_publish(rest, labels);
+            }
+            break;
+        }
+        if next == current || next.is_empty() {
+            break;
+        }
+        current = next;
+    }
+}
+
+fn extract_from_validation_json(
+    value: &serde_json::Value,
+    stderr: &[u8],
+) -> Option<SafeValidationDiagnostic> {
+    let obj = value.as_object()?;
+    let looks_like_validate = obj.contains_key("gate")
+        || obj.contains_key("readiness")
+        || obj.contains_key("report")
+        || obj.contains_key("status");
+    if !looks_like_validate {
+        return None;
+    }
+
+    let mut stage: Option<&'static str> = None;
+    let top_scope = canonical_safe_scope(obj.get("scope"));
+    let mut readiness_scope: Option<&'static str> = None;
+    let mut labels: Vec<&'static str> = Vec::new();
+
+    if obj.get("gate").and_then(|v| v.as_str()) == Some("workspace_protection")
+        && obj.get("success").and_then(|v| v.as_bool()) == Some(false)
+    {
+        stage = Some("workspace_protection");
+        push_unique_label(&mut labels, "WORKSPACE_PROTECTION");
+        if obj.get("is_protected").and_then(|v| v.as_bool()) == Some(true) {
+            push_unique_label(&mut labels, "GOVERNANCE_PROTECTED_BRANCH");
+        }
+        if let Some(err) = obj.get("error").and_then(|v| v.as_str()) {
+            extract_labels_from_structured_text(err, &mut labels);
+        }
+    }
+
+    let report_failed = obj
+        .get("report")
+        .and_then(|v| v.as_object())
+        .is_some_and(|report| {
+            report.get("status").and_then(|v| v.as_str()) == Some("fail")
+                || report
+                    .get("fail_count")
+                    .and_then(|v| v.as_u64())
+                    .is_some_and(|count| count > 0)
+        });
+
+    if report_failed {
+        if stage.is_none() {
+            stage = Some("project_gates");
+        }
+        if let Some(failures) = obj
+            .get("report")
+            .and_then(|v| v.as_object())
+            .and_then(|r| r.get("failures"))
+            .and_then(|v| v.as_array())
+        {
+            for failure in failures {
+                if let Some(line) = failure.as_str() {
+                    extract_labels_from_structured_text(line, &mut labels);
+                }
+            }
+        }
+    }
+
+    if let Some(readiness) = obj.get("readiness").and_then(|v| v.as_object()) {
+        let ready = readiness.get("ready").and_then(|v| v.as_bool());
+        if ready == Some(false) {
+            readiness_scope = canonical_safe_scope(readiness.get("scope"));
+            if stage.is_none() {
+                stage = if readiness.get("proof_ready").and_then(|v| v.as_bool()) == Some(true) {
+                    Some("post_validation_readiness")
+                } else {
+                    Some("readiness")
+                };
+            }
+            if let Some(blockers) = readiness.get("blockers").and_then(|v| v.as_array()) {
+                for blocker in blockers {
+                    let Some(blocker_obj) = blocker.as_object() else {
+                        continue;
+                    };
+                    if let Some(detail) = blocker_obj.get("detail").and_then(|v| v.as_str()) {
+                        extract_labels_from_structured_text(detail, &mut labels);
+                    }
+                    if let Some(code) = blocker_obj.get("code").and_then(|v| v.as_str())
+                        && let Some(label) = canonical_safe_label(code)
+                    {
+                        push_unique_label(&mut labels, label);
+                    }
+                }
+            }
+        }
+    }
+
+    if stage.is_none() && obj.get("status").and_then(|v| v.as_str()) == Some("fail") {
+        stage = Some("validation_report");
+    }
+
+    collect_tokens_bounded(stderr, &mut labels);
+
+    let scope = match stage {
+        Some("readiness") | Some("post_validation_readiness") => readiness_scope.or(top_scope),
+        _ => top_scope.or(readiness_scope),
+    };
+
+    Some(build_safe_validation_diagnostic(stage, scope, labels))
+}
+
+fn format_diagnostic_header(stage: Option<&'static str>, scope: Option<&'static str>) -> String {
+    let mut header = String::from("VALIDATION_CHILD_FAILED");
+    if let Some(stage) = stage {
+        header.push_str("; stage=");
+        header.push_str(stage);
+    }
+    if let Some(scope) = scope {
+        header.push_str("; scope=");
+        header.push_str(scope);
+    }
+    header
+}
+
+fn build_safe_validation_diagnostic(
+    stage: Option<&'static str>,
+    scope: Option<&'static str>,
+    mut labels: Vec<&'static str>,
+) -> SafeValidationDiagnostic {
+    // Keep non-generic specific labels ahead of READINESS_BLOCKED so bounded
+    // output never drops the root blocker code behind the outer wrapper.
+    labels.sort_by_key(|label| *label == "READINESS_BLOCKED");
+
+    let header = format_diagnostic_header(stage, scope);
+    if labels.is_empty() {
+        let suffix = ": no recognized safe blocker label; inspect scoped recovery JSON (`--json`) or run `decapod validate --format json` (note: unscoped validate may stop earlier at `PROOF_HOOK_FAILED`), repair its blockers, then retry the original verification command. No child output was forwarded.";
+        let message = format!("{header}{suffix}");
+        return SafeValidationDiagnostic {
+            stage,
+            scope,
+            labels,
+            message,
+        };
+    }
+
+    let mid = ": recognized labels observed in scoped validation output: ";
+    let suffix = "; inspect scoped recovery JSON (`--json`) or run `decapod validate --format json` (note: unscoped validate may stop earlier at `PROOF_HOOK_FAILED`), repair the blockers, then retry the original verification command. Observed labels are not independently established causes or proof; no child output was forwarded.";
+
+    let mut chosen: Vec<&'static str> = Vec::new();
+    let mut labels_len = 0usize;
+    let fixed_len = header.len() + mid.len() + suffix.len();
+    for label in labels {
+        if chosen.len() >= MAX_DIAGNOSTIC_LABELS {
+            break;
+        }
+        let sep = if chosen.is_empty() { 0 } else { 2 };
+        if fixed_len + labels_len + sep + label.len() > MAX_DIAGNOSTIC_MESSAGE_BYTES {
+            break;
+        }
+        labels_len += sep + label.len();
+        chosen.push(label);
+    }
+
+    let message = format!("{header}{mid}{}{suffix}", chosen.join(", "));
+    SafeValidationDiagnostic {
+        stage,
+        scope,
+        labels: chosen,
+        message,
+    }
+}
+
+// Return only fixed diagnostic labels and static stage/scope names, never
+// child-controlled text, paths, environment values or provider URLs. These
+// diagnostics survive scoped recovery validation, even when a separate
+// ordinary validate would hit aggregate proof first.
+fn extract_safe_validation_diagnostic(stdout: &[u8], stderr: &[u8]) -> SafeValidationDiagnostic {
+    if stdout.len() <= MAX_DIAGNOSTIC_JSON_BYTES
+        && let Ok(value) = serde_json::from_slice::<serde_json::Value>(stdout)
+        && let Some(parsed) = extract_from_validation_json(&value, stderr)
+    {
+        return parsed;
+    }
+
+    let mut labels = Vec::new();
+    collect_tokens_bounded(stdout, &mut labels);
+    collect_tokens_bounded(stderr, &mut labels);
+    build_safe_validation_diagnostic(None, None, labels)
+}
+
+#[cfg(test)]
+fn safe_validation_failure_diagnostic(stdout: &[u8], stderr: &[u8]) -> String {
+    extract_safe_validation_diagnostic(stdout, stderr).message
 }
 
 // Test-only seam (#1527): counts entries into the child-validation
@@ -427,11 +1261,39 @@ fn validation_spawn_count() -> usize {
     VALIDATION_SPAWN_COUNT.with(|count| count.get())
 }
 
-fn run_validate_and_hash(
+#[derive(Debug, Clone)]
+struct ValidationRunOutcome {
+    passed: bool,
+    output_hash: String,
+    diagnostic: SafeValidationDiagnostic,
+}
+
+fn emit_recovery_failure_json(
+    phase: &'static str,
+    todo_id: Option<&str>,
+    outcome: &ValidationRunOutcome,
+) {
+    let mut payload = serde_json::json!({
+        "status": "error",
+        "error": "VALIDATION_CHILD_FAILED",
+        "phase": phase,
+        "stage": outcome.diagnostic.stage,
+        "scope": outcome.diagnostic.scope,
+        "labels": outcome.diagnostic.labels,
+        "output_hash": outcome.output_hash,
+        "diagnostic": outcome.diagnostic.message,
+    });
+    if let Some(id) = todo_id {
+        payload["todo_id"] = serde_json::Value::String(id.to_string());
+    }
+    println!("{payload}");
+}
+
+fn run_validate_and_hash_detailed(
     store_root: &Path,
     repo_root: &Path,
     todo_id: Option<&str>,
-) -> Result<(bool, String), error::DecapodError> {
+) -> Result<ValidationRunOutcome, error::DecapodError> {
     #[cfg(test)]
     VALIDATION_SPAWN_COUNT.with(|count| count.set(count.get() + 1));
     let _verifying = todo_id.map(|id| {
@@ -472,17 +1334,22 @@ fn run_validate_and_hash(
     } else {
         output
     };
-    if !output.status.success() {
-        eprintln!(
-            "{}",
-            safe_validation_failure_diagnostic(&output.stdout, &output.stderr)
-        );
-    }
+    let diagnostic = if !output.status.success() {
+        let diag = extract_safe_validation_diagnostic(&output.stdout, &output.stderr);
+        eprintln!("{}", diag.message);
+        diag
+    } else {
+        SafeValidationDiagnostic::empty()
+    };
     let stdout = String::from_utf8_lossy(&output.stdout).to_string();
     if let Ok(value) = serde_json::from_str::<serde_json::Value>(&stdout) {
         let normalized = normalize_validation_document(&value);
         let canonical = serde_json::to_string(&normalized).unwrap();
-        return Ok((output.status.success(), sha256_hex(canonical.as_bytes())));
+        return Ok(ValidationRunOutcome {
+            passed: output.status.success(),
+            output_hash: sha256_hex(canonical.as_bytes()),
+            diagnostic,
+        });
     }
 
     let mut merged = stdout;
@@ -492,7 +1359,20 @@ fn run_validate_and_hash(
     }
 
     let normalized = normalize_validate_output(&merged);
-    Ok((output.status.success(), sha256_hex(normalized.as_bytes())))
+    Ok(ValidationRunOutcome {
+        passed: output.status.success(),
+        output_hash: sha256_hex(normalized.as_bytes()),
+        diagnostic,
+    })
+}
+
+fn run_validate_and_hash(
+    store_root: &Path,
+    repo_root: &Path,
+    todo_id: Option<&str>,
+) -> Result<(bool, String), error::DecapodError> {
+    let outcome = run_validate_and_hash_detailed(store_root, repo_root, todo_id)?;
+    Ok((outcome.passed, outcome.output_hash))
 }
 
 fn append_event(store: &Store, value: &serde_json::Value) -> Result<(), error::DecapodError> {
@@ -1480,16 +2360,39 @@ impl PreparedTodoVerification {
     }
 }
 
+fn prepare_verified_completion_for_cli(
+    store: &Store,
+    repo_root: &Path,
+    todo_id: &str,
+    artifact_paths: Vec<String>,
+    emit_json_failure: bool,
+) -> Result<PreparedTodoVerification, error::DecapodError> {
+    crate::core::validation_runtime::require_full_readiness_environment()?;
+    let mut failed_outcome: Option<ValidationRunOutcome> = None;
+    let res = prepare_verified_completion_with(store, repo_root, todo_id, artifact_paths, || {
+        let outcome = run_validate_and_hash_detailed(&store.root, repo_root, Some(todo_id))?;
+        let summary = (outcome.passed, outcome.output_hash.clone());
+        if !outcome.passed {
+            failed_outcome = Some(outcome);
+        }
+        Ok(summary)
+    });
+    if let Err(err) = res {
+        if emit_json_failure && let Some(outcome) = failed_outcome.as_ref() {
+            emit_recovery_failure_json("regen", Some(todo_id), outcome);
+        }
+        return Err(err);
+    }
+    res
+}
+
 pub(crate) fn prepare_verified_completion(
     store: &Store,
     repo_root: &Path,
     todo_id: &str,
     artifact_paths: Vec<String>,
 ) -> Result<PreparedTodoVerification, error::DecapodError> {
-    crate::core::validation_runtime::require_full_readiness_environment()?;
-    prepare_verified_completion_with(store, repo_root, todo_id, artifact_paths, || {
-        run_validate_and_hash(&store.root, repo_root, Some(todo_id))
-    })
+    prepare_verified_completion_for_cli(store, repo_root, todo_id, artifact_paths, false)
 }
 
 /// Admit a prior full result for the same task and a proven accepted integration.
@@ -1733,6 +2636,16 @@ pub fn capture_baseline_for_todo(
     todo_id: &str,
     artifact_paths: Vec<String>,
 ) -> Result<(), error::DecapodError> {
+    capture_baseline_for_todo_impl(store, repo_root, todo_id, artifact_paths, false)
+}
+
+fn capture_baseline_for_todo_impl(
+    store: &Store,
+    repo_root: &Path,
+    todo_id: &str,
+    artifact_paths: Vec<String>,
+    emit_json_failure: bool,
+) -> Result<(), error::DecapodError> {
     todo::initialize_todo_db(&store.root)?;
     let task = todo::get_task(&store.root, todo_id)?
         .ok_or_else(|| error::DecapodError::NotFound(format!("TODO not found: {todo_id}")))?;
@@ -1741,7 +2654,13 @@ pub fn capture_baseline_for_todo(
             "Task must be in done state before capturing verification artifacts".to_string(),
         ));
     }
-    let prepared = prepare_verified_completion(store, repo_root, todo_id, artifact_paths)?;
+    let prepared = prepare_verified_completion_for_cli(
+        store,
+        repo_root,
+        todo_id,
+        artifact_paths,
+        emit_json_failure,
+    )?;
     todo::with_task_journal(
         &DbBroker::new(&store.root),
         &todo::todo_db_path(&store.root),
@@ -2200,14 +3119,14 @@ fn run_recover_cli(
         .join(",");
     let _verifying = VerifyingTodosGuard::enter(&target_ids);
 
-    let (passed, output_hash) = run_validate_and_hash(&store.root, repo_root, None)?;
+    let initial = run_validate_and_hash_detailed(&store.root, repo_root, None)?;
     let snapshot = ValidationSnapshot {
-        passed,
-        output_hash,
+        passed: initial.passed,
+        output_hash: initial.output_hash.clone(),
     };
     let validation_epoch = active_validation_epoch(repo_root)?;
-    let recovered_targets = if captures.is_empty() {
-        refresh_batch_baselines(store, &targets, &snapshot, &validation_epoch)?
+    let refresh_res = if captures.is_empty() {
+        refresh_batch_baselines(store, &targets, &snapshot, &validation_epoch)
     } else {
         refresh_batch_baselines_with_captures(
             store,
@@ -2215,22 +3134,39 @@ fn run_recover_cli(
             &snapshot,
             &validation_epoch,
             Some((repo_root, &captures)),
-        )?
+        )
+    };
+    let recovered_targets = match refresh_res {
+        Ok(recovered) => recovered,
+        Err(err) => {
+            if json && !initial.passed {
+                emit_recovery_failure_json("initial", None, &initial);
+            }
+            return Err(err);
+        }
     };
 
     // These exact tasks remain CLAIMED while their own aggregate admission
     // check is scoped out. All other final validation gates still execute.
     // Finalization rechecks every task/artifact and commits all passes at once.
-    let (final_passed, final_hash) = run_validate_and_hash(&store.root, repo_root, None)?;
-    let results = finalize_recovered_batch(
+    let final_run = run_validate_and_hash_detailed(&store.root, repo_root, None)?;
+    let results = match finalize_recovered_batch(
         store,
         repo_root,
         &recovered_targets,
         &ValidationSnapshot {
-            passed: final_passed,
-            output_hash: final_hash.clone(),
+            passed: final_run.passed,
+            output_hash: final_run.output_hash.clone(),
         },
-    )?;
+    ) {
+        Ok(results) => results,
+        Err(err) => {
+            if json && !final_run.passed {
+                emit_recovery_failure_json("final", None, &final_run);
+            }
+            return Err(err);
+        }
+    };
 
     if json {
         println!(
@@ -2240,7 +3176,7 @@ fn run_recover_cli(
                 "recovered": results.len(),
                 "validation_epoch": validation_epoch.epoch_id,
                 "snapshot_output_hash": snapshot.output_hash,
-                "final_output_hash": final_hash
+                "final_output_hash": final_run.output_hash
             })
         );
     } else {
@@ -2285,7 +3221,7 @@ pub fn run_verify_cli(
                 return Ok(());
             }
             VerifyCommand::Regen { id, artifact } => {
-                capture_baseline_for_todo(store, repo_root, id, artifact.clone())?;
+                capture_baseline_for_todo_impl(store, repo_root, id, artifact.clone(), cli.json)?;
                 if !cli.json {
                     println!("Successfully regenerated verification baseline for task {id}.");
                 } else {
