@@ -1,5 +1,10 @@
 # Validation
 
+Candidate2aff3336 reached the real source build, where the new lib-test parser
+call lacked its trait import. Its fully qualified `clap::Parser` call fixes that
+compile error. This is a test setup repair, and fresh required execution is
+still necessary; the earlier run is not reported as successful validation.
+
 ## Actual cold-reader dispatch regression
 
 A digest-verified GNU candidate built by source CI for d0ebc2c8 executed task claim, governed workspace, preserved predecessor journal, A/B initialization and pinned public GitHub comment C. Its independent actor-B state.resolve was refused as AUTHORING_CUSTODY_STALE before returning state. The existing regression now launches a different reader with isolated machine configuration and no Git-gate escape hatch, checks unchanged governance bytes, and checks that publication retains mutation requirements. That is a reproduced negative; repaired actual CLI and current full validation remain required before claiming the handoff passes. QEMU execution uses direct mutation transport and does not prove the group-broker path.
@@ -1658,7 +1663,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `910a97a958f709a75f3058d7fa6518cbce1e2be90ed73f62c543a0786872a529`
+- Repository signal fingerprint: `17bfdf3103378abff0a852699a564d9edaacc1a1092e7a3b7886e96621ff38d0`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (239 files), `tests/` (235 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

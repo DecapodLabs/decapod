@@ -13409,7 +13409,7 @@ fn state_readback_does_not_require_or_grant_authoring_custody() {
         assert!(rpc_op_bypasses_session(op));
         assert!(rpc_op_skips_mandate_enforcement(op));
         assert!(!rpc_op_requires_constitutional_awareness(op));
-        let cli = Cli::try_parse_from(["decapod", "rpc", "--op", op]).unwrap();
+        let cli = <Cli as clap::Parser>::try_parse_from(["decapod", "rpc", "--op", op]).unwrap();
         assert!(is_storage_independent_command(&cli.command));
     }
     assert!(rpc_op_requires_worktree("workspace.publish"));
