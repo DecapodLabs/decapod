@@ -617,6 +617,11 @@
       "id": "review-accepted-release-source-inventory",
       "summary": "Reconcile105 source inventory after accepted release; only Cargo package version lines differ, no validation command or requirement changes",
       "input_digest": "sha256:2fa2400448c300487d3de26f9fa18c05bab2e0750543f00e5ec939f5621ab567"
+    },
+    {
+      "id": "native-release10-current-projections",
+      "summary": "Checkpoint official native0.148.10 generated Docker/spec projections after genuine CI health rejection; preserve every required check and all failed attempts",
+      "input_digest": "sha256:59a586faf348be4f9001be98cd14380f3e13af0178f3e3941978f0689a88c1f2"
     }
   ],
   "intents": {
@@ -657,21 +662,21 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Reviewed all105 verification source bytes against1f21; only two package version lines in Cargo.toml/Cargo.lock changed, required graph and accepted helpers unchanged; explicit candidate inventory reconciliation is not readiness",
+          "reason": "Official0.148.10 native refresh regenerates current Docker pin and specs manifest after real source-CI health drift rejection; historical source entrypoint opt-out remains exact-repository scoped and no required check is bypassed",
           "reviewed_code_fingerprint": "563a3642c49fc8216ef13356f82fcb9df3898ba240963d28799735861fc2ed6b",
           "spec_material_hash": "ff25bc69c21d3dc98b8d66dc5bae62f1c01d8bd9e3e4dd82d3689991a9930d59"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Reviewed all105 verification source bytes against1f21; only two package version lines in Cargo.toml/Cargo.lock changed, required graph and accepted helpers unchanged; explicit candidate inventory reconciliation is not readiness",
+          "reason": "Official0.148.10 native refresh regenerates current Docker pin and specs manifest after real source-CI health drift rejection; historical source entrypoint opt-out remains exact-repository scoped and no required check is bypassed",
           "reviewed_code_fingerprint": "563a3642c49fc8216ef13356f82fcb9df3898ba240963d28799735861fc2ed6b",
           "spec_material_hash": "666f7aabd9b0d0f529f03a2a5ecbbcad4f8dc10be0bd9de5e49bcca6bd945f31"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Reviewed all105 verification source bytes against1f21; only two package version lines in Cargo.toml/Cargo.lock changed, required graph and accepted helpers unchanged; explicit candidate inventory reconciliation is not readiness",
+          "reason": "Official0.148.10 native refresh regenerates current Docker pin and specs manifest after real source-CI health drift rejection; historical source entrypoint opt-out remains exact-repository scoped and no required check is bypassed",
           "reviewed_code_fingerprint": "563a3642c49fc8216ef13356f82fcb9df3898ba240963d28799735861fc2ed6b",
           "spec_material_hash": "e4f5f7980dc0644082f18f5ed99f3829acf1179c4b3e556b13cfd7390ab5cd20"
         }
@@ -684,25 +689,37 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1794983317Z"
+      "updated_at": "1794985767Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:5019ec513b64fec2e9fab2c12a554a7a55437111c7e78399e0d5b5b2743e20c6",
+      "artifact_hash": "sha256:29de1e5e7e10f800b8b5eb5f152dbb6a4bcdc5110b8f893cab6ce470d9550425",
       "checks": [
         {
           "name": "accepted-target-ancestry",
           "status": "failed"
         },
         {
+          "name": "actual-capture-replay",
+          "status": "passed"
+        },
+        {
           "name": "actual-pi-capture",
           "status": "passed"
         },
         {
+          "name": "current-projection-ci-health",
+          "status": "failed"
+        },
+        {
           "name": "historical-source-checkpoints",
           "status": "failed"
+        },
+        {
+          "name": "native-projection-refresh",
+          "status": "partial"
         },
         {
           "name": "previous-target-applicability",
@@ -744,10 +761,17 @@
             "intent_id": "intent:change_01M7P3W97HA4M2MRGMQ0TYNRBB",
             "kind": "trajectory_step_recorded",
             "sequence": 6
+          },
+          {
+            "detail": "trajectory:branch_01M7P3W9AX80HN9XVHYSAD8B7C",
+            "event_id": "event:7",
+            "intent_id": "intent:change_01M7P3W97HA4M2MRGMQ0TYNRBB",
+            "kind": "trajectory_step_recorded",
+            "sequence": 7
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 6,
+        "next_sequence": 7,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M7P3W9AX80HN9XVHYSAD8B7C": {
@@ -800,6 +824,23 @@
                 ],
                 "sequence": 6,
                 "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:7",
+                "observations": [
+                  "Build12118 health job01a1ed5b-7d95-433d-9159-eb3eb09b8e2c rejected the0.148.9 Docker/manifest under the source-built0.148.10 binary. Preserved raw failure. Official0.148.10 archive checksum712521a5 verified, inspected and installed; native commands regenerated the two projections. Local prerequisite-only repair reported211 passes/3 failures and is not admission proof. Actual capture export test passed on d4269e35 with manifest4180e2b8 unchanged. Fresh complete exact-candidate CI is still required."
+                ],
+                "proof_refs": [
+                  "current-projection-ci-health",
+                  "native-projection-refresh",
+                  "actual-capture-replay"
+                ],
+                "scope": [
+                  "root"
+                ],
+                "sequence": 7,
+                "validation_findings": []
               }
             ]
           }
@@ -808,6 +849,7 @@
       "declared_commands": [],
       "destination": "pull request",
       "evidence": [
+        "Build12118 health job01a1ed5b-7d95-433d-9159-eb3eb09b8e2c rejected the0.148.9 Docker/manifest under the source-built0.148.10 binary. Preserved raw failure. Official0.148.10 archive checksum712521a5 verified, inspected and installed; native commands regenerated the two projections. Local prerequisite-only repair reported211 passes/3 failures and is not admission proof. Actual capture export test passed on d4269e35 with manifest4180e2b8 unchanged. Fresh complete exact-candidate CI is still required.",
         "Master advanced from6ab6de31 to c47137ad after native PR1784 admission. That admission remains historical, with no merge authorization. PR moved to draft; accepted policy-boundary changes merged without auto-commit, source/spec conflicts resolved preserving both responsibilities, and this exact integration tree will be checkpointed before commit. Fresh complete native validation is required.",
         "Preserved dad525d4 failed history including uncheckpointed integration c31d039f; native present-time recovery observation recorded. Reauthored five implementation files byte-for-byte; retained fresh identity. Real Pi archive3c6c373 and publication receipt remain historical observations, never imported readiness. Original source-CI deadline expired with SNAPSHOT_NOT_READY; fresh source requires complete validation.",
         "Validation09 failed closed in actual docs-sync CI context after master advanced to34f837d4 release0.148.10. Raw failed job12092 preserved. Only the accepted release metadata is merged here without auto-commit; no observer, check or policy is weakened. Exact merge checkpoint precedes commit and full validation must rerun."
