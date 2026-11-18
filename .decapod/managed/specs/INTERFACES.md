@@ -35,7 +35,10 @@ Both RPC stdin framing and flag parameters reject duplicate decoded object
 keys at every nesting level before startup. Escaped spellings of the same key
 are duplicates; later fields cannot erase an earlier required extension.
 Existing 32 MiB framing bounds and redacted inventory/maintenance diagnostics
-remain. Unique optional JSON values retain their existing meaning. A focused
+remain. JSON syntax acceptance does not waive the strict negotiation schema:
+unknown fields still return `invalid_params`. Supported optional operation and
+extension fields can carry unknown identifiers; negotiation reports them as
+omitted, preserving decoded Unicode identifiers. A focused
 Python stdlib decoder and the actual Rust CLI execute the same malformed and
 ordinary inputs; this is same-host differential parsing, not independent
 producer trust or full foreign-client governance conformance.
@@ -1274,7 +1277,7 @@ field. Nothing in this operation authorizes a mutation, approval or completion.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `ffc32d8d5b27e6612e398abd3d043398d4ef5f4414848e3049d405e8ba98f014`
+- Repository signal fingerprint: `325bb52abe2b2d4059279715a9322ef8ca5a525b74763f360326b4059015089f`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (237 files), `tests/` (236 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

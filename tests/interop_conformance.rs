@@ -233,7 +233,27 @@ fn malformed_rpc_parameters_cannot_drop_required_negotiation() {
             }
         }
     }
-    let ordinary = r#"{"required_extensions":["receipts"],"optional_metadata":{"label":"é","ratio":1.25,"count":4,"enabled":true,"absent":null}}"#;
+    // Legal JSON is still subject to the existing strict negotiation schema.
+    let unknown_field = r#"{"required_extensions":["receipts"],"optional_metadata":{"label":"é","ratio":1.25,"count":4,"enabled":true,"absent":null}}"#;
+    assert_eq!(
+        python_json_reason(fixture.path(), unknown_field),
+        "accepted"
+    );
+    let output = command(binary.as_os_str())
+        .args([
+            "rpc",
+            "--op",
+            "interop.negotiate",
+            "--params",
+            unknown_field,
+        ])
+        .bounded_output(Duration::from_secs(30))
+        .unwrap();
+    let response: Value = serde_json::from_slice(&output.stdout).unwrap();
+    assert_eq!(response["success"], false, "{response}");
+    assert_eq!(response["error"]["code"], "invalid_params");
+
+    let ordinary = r#"{"required_extensions":["receipts"],"optional_ops":["interop.\u03bb"],"optional_extensions":["future"]}"#;
     assert_eq!(python_json_reason(fixture.path(), ordinary), "accepted");
     let output = command(binary.as_os_str())
         .args(["rpc", "--op", "interop.negotiate", "--params", ordinary])
@@ -243,6 +263,14 @@ fn malformed_rpc_parameters_cannot_drop_required_negotiation() {
     let response: Value = serde_json::from_slice(&output.stdout).unwrap();
     assert_eq!(response["success"], true, "{response}");
     assert_eq!(response["result"]["outcome"]["negotiated"], true);
+    assert_eq!(
+        response["result"]["outcome"]["omitted_optional_ops"],
+        json!(["interop.λ"])
+    );
+    assert_eq!(
+        response["result"]["outcome"]["omitted_optional_extensions"],
+        json!(["future"])
+    );
 }
 
 /// Read-only ops whose dispatch acceptance is proven against the real binary

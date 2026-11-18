@@ -594,6 +594,15 @@
       "id": "explicit-bazel-interop-fixture",
       "summary": "Correct actual Bazel missing compile input by declaring only the included Python fixture for existing interop target; independently review all105 inventory entries,104 unchanged, full graph retained. Failed1ba build preserved. Checkpoint completes before commit; source tests pending.",
       "input_digest": "sha256:933651ac87df7a40cc8db8e9ae8197e13d66bfbad18056f7c30187c1e6ab42cf"
+    },
+    {
+      "id": "strict-json-schema-positive-recovery-20261118",
+      "summary": "Preserve strict unknown-field rejection and exercise supported optional negotiation after duplicate-key refusal",
+      "input_digest": "sha256:a6d0fd7fe160c886f6d51afdae5b90a7f752f5a739e46238df76203929a4fa35",
+      "proof_refs": [
+        "https://github.com/DecapodLabs/decapod/actions/runs/44292847842/job/134763116449",
+        "sha256:e6f2db17b3586a40db44261ab1d05dedaad2973ed68c92c2be1d21f69882d65c"
+      ]
     }
   ],
   "intents": {
@@ -632,24 +641,24 @@
       "schema_version": "1.1.0",
       "spec_reviews": [
         {
-          "disposition": "updated",
+          "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Existing Bazel target now declares the included Python fixture as compile_data, matching Cargo; preserves required targets/graph and truthful failed-build classification.",
-          "reviewed_code_fingerprint": "ffc32d8d5b27e6612e398abd3d043398d4ef5f4414848e3049d405e8ba98f014",
+          "reason": "Existing shared unique JSON decoder and strict typed schema are unchanged. Actual Actions reached the new final positive then refused its unknown optional_metadata field correctly. Correct only test expectations and supported recovery payload.",
+          "reviewed_code_fingerprint": "325bb52abe2b2d4059279715a9322ef8ca5a525b74763f360326b4059015089f",
           "spec_material_hash": "a56b9f78b78c318ce14753002b3e662908772761757d7adb849dde1951d37e6b"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "RPC duplicate-key refusal and valid recovery semantics unchanged; explicit build input enables the same actual consumer controls under the required Bazel recipe.",
-          "reviewed_code_fingerprint": "ffc32d8d5b27e6612e398abd3d043398d4ef5f4414848e3049d405e8ba98f014",
-          "spec_material_hash": "313ad2235c11482f6c9340b3b14abed124a826841f0a38e963d98afc9c3d3dec"
+          "reason": "Clarify that syntactically legal unique JSON still obeys strict negotiation fields. Preserve invalid_params for unknown field and verify lawful unknown optional identifiers are reported omitted, including decoded Unicode.",
+          "reviewed_code_fingerprint": "325bb52abe2b2d4059279715a9322ef8ca5a525b74763f360326b4059015089f",
+          "spec_material_hash": "c6ba8157ced34e186a41c4d9df94b98c47863ec271bcd16ee2d42b4f824b33f0"
         },
         {
-          "disposition": "updated",
+          "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Fixture input is declared, not discovered through ambient filesystem; no sandbox broadening, new authority, required-check removal or counterfeit execution state.",
-          "reviewed_code_fingerprint": "ffc32d8d5b27e6612e398abd3d043398d4ef5f4414848e3049d405e8ba98f014",
+          "reason": "No production change or relaxed validation. Keep required extension and duplicate-key rejection; retain unknown-field schema refusal and exercise legitimate optional negotiation afterward.",
+          "reviewed_code_fingerprint": "325bb52abe2b2d4059279715a9322ef8ca5a525b74763f360326b4059015089f",
           "spec_material_hash": "9d11c08d69c5a99641a0d006db91d357c43458787eb442f659ffe7ac04be2a7e"
         }
       ],
@@ -661,13 +670,13 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795000443Z"
+      "updated_at": "1795002891Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:9a784f6d5e2fd7ac0ab99c74f4d792a337cd9df12bb07e5e1d57b201a02e5fc4",
+      "artifact_hash": "sha256:41a215a899f967fd9a5d49aa1571d124dfa57ed667baa91f6bdff43c4f47a742",
       "checks": [
         {
           "name": "actions-bazel-interop-compilation",
@@ -678,8 +687,16 @@
           "status": "failed"
         },
         {
+          "name": "actions-strict-json-positive-control",
+          "status": "failed"
+        },
+        {
           "name": "candidate-execution",
           "status": "unavailable"
+        },
+        {
+          "name": "diff-whitespace",
+          "status": "passed"
         },
         {
           "name": "independently-reviewed-bazel-input",
@@ -707,6 +724,10 @@
         },
         {
           "name": "release11-source-inventory-review",
+          "status": "passed"
+        },
+        {
+          "name": "rustfmt",
           "status": "passed"
         }
       ],
@@ -745,10 +766,24 @@
             "intent_id": "intent:change_01M7Q3DQ50P9E0ATDWZTJHKFS5",
             "kind": "trajectory_step_recorded",
             "sequence": 6
+          },
+          {
+            "detail": "trajectory:branch_01M7Q3DQ8RFZAHXD2B6ZY1JSZ5",
+            "event_id": "event:7",
+            "intent_id": "intent:change_01M7Q3DQ50P9E0ATDWZTJHKFS5",
+            "kind": "trajectory_step_recorded",
+            "sequence": 7
+          },
+          {
+            "detail": "trajectory:branch_01M7Q3DQ8RFZAHXD2B6ZY1JSZ5",
+            "event_id": "event:8",
+            "intent_id": "intent:change_01M7Q3DQ50P9E0ATDWZTJHKFS5",
+            "kind": "trajectory_step_recorded",
+            "sequence": 8
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 6,
+        "next_sequence": 8,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M7Q3DQ8RFZAHXD2B6ZY1JSZ5": {
@@ -825,6 +860,41 @@
                 ],
                 "sequence": 6,
                 "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:7",
+                "observations": [
+                  "tests/interop_conformance.rs",
+                  "src/decapod/core/interop.rs"
+                ],
+                "proof_refs": [
+                  "actions-strict-json-positive-control"
+                ],
+                "scope": [
+                  "issue-871"
+                ],
+                "sequence": 7,
+                "tool": "Current bf388444 core Actions job134763116449: duplicate/escaped/nested negative controls completed, then legal-JSON positive sent unknown optional_metadata and strict schema correctly refused invalid_params at line244. 9 scenarios passed,1 failed. Raw log SHA256 e6f2db17b3586a40db44261ab1d05dedaad2973ed68c92c2be1d21f69882d65c. Preserve strict schema; make unknown-field refusal explicit and use supported optional_ops/extensions for ordinary recovery.",
+                "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:8",
+                "observations": [
+                  "tests/interop_conformance.rs",
+                  ".decapod/managed/specs/INTERFACES.md"
+                ],
+                "proof_refs": [
+                  "rustfmt",
+                  "diff-whitespace"
+                ],
+                "scope": [
+                  "issue-871"
+                ],
+                "sequence": 8,
+                "tool": "Converted invalid positive optional_metadata payload into an explicit strict-schema invalid_params control. Recovery now uses supported optional_ops/extensions, checks decoded Unicode and omitted values. Product parser/schema unchanged; runtime proof pending required Actions.",
+                "validation_findings": []
               }
             ]
           }
@@ -847,12 +917,15 @@
         "/private/tmp/attack-gaps-rpc-duplicate-keys-before.json"
       ],
       "inspected_files": [
-        "src/decapod/core/derived_release_profile.rs"
+        "src/decapod/core/derived_release_profile.rs",
+        "src/decapod/core/interop.rs",
+        "tests/interop_conformance.rs"
       ],
       "intent_id": "intent:change_01M7Q3DQ50P9E0ATDWZTJHKFS5",
       "modified_files": [
         ".config/build/decapod.BUILD.bzl",
         ".decapod/config.toml",
+        ".decapod/managed/specs/INTERFACES.md",
         "src/decapod/core/derived_release_profile.rs",
         "src/decapod/core/json.rs",
         "src/decapod/core/mod.rs",
@@ -874,7 +947,10 @@
       "schema_version": "1.1.0",
       "shortcut_risk_signals": [],
       "task_id": "bugs_01m7q384jw6mn3w5",
-      "tool_calls": [],
+      "tool_calls": [
+        "Converted invalid positive optional_metadata payload into an explicit strict-schema invalid_params control. Recovery now uses supported optional_ops/extensions, checks decoded Unicode and omitted values. Product parser/schema unchanged; runtime proof pending required Actions.",
+        "Current bf388444 core Actions job134763116449: duplicate/escaped/nested negative controls completed, then legal-JSON positive sent unknown optional_metadata and strict schema correctly refused invalid_params at line244. 9 scenarios passed,1 failed. Raw log SHA256 e6f2db17b3586a40db44261ab1d05dedaad2973ed68c92c2be1d21f69882d65c. Preserve strict schema; make unknown-field refusal explicit and use supported optional_ops/extensions for ordinary recovery."
+      ],
       "unresolved_assumptions": []
     }
   },
