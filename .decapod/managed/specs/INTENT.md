@@ -1,5 +1,73 @@
 # Intent
 
+## Checkpoint history recovery
+
+This fresh governed workstream preserves PR #1788 and immutable source
+`d53835ad2ee573996edcc31ef1ce2ef577a9a7cc`. Exact native inspection relative
+to current accepted `352d8929` found one missing checkpoint, after the agent
+committed a release merge before its asynchronous checkpoint completed. Eight
+earlier authored commits passed that same inspection. The native assessment
+of the older original baseline is retained separately with its complete
+findings. Neither assessment is relabelled as a passing history.
+
+The source branch and failures remain preserved. This task reauthors only
+reviewed workunit code, meaningful execution tests, source inventory and
+semantic prose from the accepted target, with a present-time native history
+recovery observation. It imports no prior governance, custody, success or
+publication authority. A late checkpoint cannot repair the old commit; fresh
+current checkpoints and independent execution must establish this candidate.
+
+## Accepted release source review
+
+This currentness candidate incorporates accepted `352d8929` (0.148.11)
+through a real two-parent merge. All 105 verification-source inputs were
+independently measured, including declared symlink target bytes and their
+separately inventoried regular target. Only the root package versions in
+Cargo.toml/Cargo.lock changed from 0.148.10; the remaining 103, required
+workflow/executor graph and declared toolchain are unchanged. Reconciliation
+retains the full configured proof policy and does not establish execution.
+
+## Observed proof remains current only within its execution contract
+
+A genuine prior success must remain inspectable as history while a newer full
+not-ready judgment withdraws current workunit verification. Safe repair must
+remain available: fresh complete proof for the exact current task and renewed
+custody can restore VERIFIED. This correction uses the existing validation
+history and workunit journal; it adds no alternative proof producer. The CLI
+regression executes real required Python checks and an explicitly declared
+external failure control. It proves bounded currentness and recovery, without
+claiming complete external-input closure, forge publication admission, or an
+independent agent/host.
+
+## Actual-boundary workunit proof controls (#1660, #1735)
+
+The combined candidate incorporates accepted release `34f837d4` (0.148.10).
+All 105 verification-source inputs were independently remeasured: only the
+root package versions in Cargo.toml and Cargo.lock changed from 0.148.9;
+the remaining 103 inputs, workflows, required graph and toolchain are intact.
+The reviewed inventory is reconciled accordingly. A scoped 0.148.10 controller,
+installed through the official session updater, owns current projection refresh
+and validation. Its actual binary digest is retained separately from candidate
+evidence. Controller installation and release integration are not test proof.
+
+The ordinary recovery path must retain the workunit's genuine task-bound
+context capsule and policy lineage. The source-file counterexample prepares
+that capsule through the public query and attach-state commands before
+requesting proof, so missing context cannot substitute for the producer test.
+Full validation uses its current runtime observation while the workunit is
+CLAIMED; it does not require a prior VERIFIED projection. A generic terminal
+rule refusal is not evidence of a circular proof dependency.
+
+An agent-declared passing result and a real source file's digest must remain
+diagnostic declarations. The existing canonical full-validation producer owns
+VERIFIED admission. The campaign's actual-binary control reaches an admitted
+task worktree and current execution checkpoint without gate-skip variables;
+recording a source-file pass succeeds, while VERIFIED is refused without the
+canonical producer record. The journal retains the declaration and CLAIMED
+status. This confirms the bounded guard, not the issue's entire proof matrix.
+Fresh trusted proof, split-store recovery, replay and publication remain
+separate acceptance obligations.
+
 ## Autonomous safe config recovery and privilege custody (#1771, #1776)
 
 The cloud boundary suite treats embedded schema discovery as file-only recovery,
@@ -514,7 +582,7 @@ These declarations select authoring and proof obligations; they do not attest im
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `3ee2937b2b0c719bb5b0f08d8c9c19faf265587b0c8a753a5d8a90e08eec6422`
+- Repository signal fingerprint: `6ba5edc87a1fbb3102291f95f24cdefb06d9d0a220a5cdd93b9dcad62c4061a5`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (236 files), `tests/` (235 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

@@ -1,5 +1,36 @@
 # Interfaces
 
+## Workunit proof and continuity semantics (#1660)
+
+Before full proof, use `govern capsule query --task-id <id> --workunit-id <id>
+--scope interfaces --topic <topic> --write`, then attach its emitted task
+capsule path using `workunit attach-state`. Creating a capsule does not itself
+prove execution. A fresh workunit checkpoint binds the resulting context;
+full validation and the canonical VERIFIED transition remain separate steps.
+
+`record-proof --status pass` may retain an agent declaration about an existing
+artifact. Success does not authorize `transition --to verified`; that operation
+requires a current canonical full-validation record. Readback preserves the
+unproven declaration without a validation epoch or producer reference.
+After relevant trajectory changes, resume refuses the old execution binding.
+Discarding obsolete passing declarations allows a fresh checkpoint and resume;
+the explicit diagnostic fail marker used to discard a claim is not an
+independently executed failed test. Historical journal entries remain intact.
+
+A completed task-bound full validation with a not-ready judgment withdraws
+current workunit verification through the existing journal. It clears the
+current proof results, validation epoch and producer selector, downgrades
+VERIFIED to CLAIMED, and advances the journal even if promotion had not yet
+occurred. The event is `validation_not_ready`: it does not assert that every
+check executed or failed. Partial CI-local and preparation scopes do not have
+this authority. Earlier successful observations remain historical records.
+
+Fresh full proof under a renewed lease can restore VERIFIED. The implicit
+workunit selector chooses the newest canonical success for the exact current
+task contract and custody; every epoch, source, execution, input and workunit
+subject check still applies. Generic `qa verify commit` inspection retains its
+mixed-custody ambiguity error and requires explicit historical selection.
+
 ## Config repair and accepted authority (#1771, #1776)
 
 Configuration errors use `INVALID_CONFIG_SCHEMA` with the original parser
@@ -1265,7 +1296,7 @@ field. Nothing in this operation authorizes a mutation, approval or completion.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `3ee2937b2b0c719bb5b0f08d8c9c19faf265587b0c8a753a5d8a90e08eec6422`
+- Repository signal fingerprint: `6ba5edc87a1fbb3102291f95f24cdefb06d9d0a220a5cdd93b9dcad62c4061a5`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (236 files), `tests/` (235 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
