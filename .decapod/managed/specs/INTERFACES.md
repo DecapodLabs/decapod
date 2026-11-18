@@ -14,6 +14,11 @@ grants exceptional permission. RBAC bypass keeps `proof_ready=false` and
 
 ## Conformance evidence boundary (#871)
 
+The existing broker responsiveness assertion retains its ten-second limit for
+the competing operation while optional preparation is blocked. Claim completion
+after the explicit release is separately bounded and must still succeed; its
+cleanup duration is not part of that competing-operation measurement.
+
 `context.bundle.export`, `context.bundle.import`, `mentor.obligations` and
 `assurance.evaluate` advertise `session_required=true`, matching existing
 entry enforcement. This includes automatic acquisition; compatibility metadata
@@ -1260,7 +1265,7 @@ field. Nothing in this operation authorizes a mutation, approval or completion.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `17a36a014bcdddc4543302550f6725d0ef47f21edcd0649f19becb2e86894a3c`
+- Repository signal fingerprint: `3ee2937b2b0c719bb5b0f08d8c9c19faf265587b0c8a753a5d8a90e08eec6422`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (236 files), `tests/` (235 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

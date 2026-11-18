@@ -637,6 +637,14 @@
       "proof_refs": [
         "/private/tmp/attack-gaps-rpc-malformed-negotiation-before.json"
       ]
+    },
+    {
+      "id": "attack-gaps-871-competing-duration",
+      "summary": "Preserve actual timing counterexample; measure competing call before preparation release and client cleanup, keep strict10s and strengthen blocked-preparation assertion.",
+      "input_digest": "sha256:8f9365450f4782cebfc19445a0e74bd0f0cdb4ade43905744f8158540e4dd188",
+      "proof_refs": [
+        "/private/tmp/attack-gaps-871-gh-core-timing-failure.json"
+      ]
     }
   ],
   "intents": {
@@ -678,22 +686,22 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Reviewed actual initialized-project replay and recovery in addition to rejection before startup; no authority or proof contract changes.",
-          "reviewed_code_fingerprint": "17a36a014bcdddc4543302550f6725d0ef47f21edcd0649f19becb2e86894a3c",
-          "spec_material_hash": "842f03eb7eab828a1f9d39800a702e0900f4871145288120c3e9e21f8b164eb0"
+          "reason": "Required broker probe retains10s and proves preparation remains blocked before release. Competing-operation duration is captured before unrelated child cleanup; product/runtime and required graph unchanged.",
+          "reviewed_code_fingerprint": "3ee2937b2b0c719bb5b0f08d8c9c19faf265587b0c8a753a5d8a90e08eec6422",
+          "spec_material_hash": "1fb88c990e8711b58bf3b4d3d9c4315a07de23b9e32fb76808d48de9349b5d73"
         },
         {
-          "disposition": "unchanged_with_reason",
+          "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Reviewed actual initialized-project replay and recovery in addition to rejection before startup; no authority or proof contract changes.",
-          "reviewed_code_fingerprint": "17a36a014bcdddc4543302550f6725d0ef47f21edcd0649f19becb2e86894a3c",
-          "spec_material_hash": "94306ae319fd13f68cf62105da91500b9a0179a279106b646093ecd2dcbe0a30"
+          "reason": "Required broker probe retains10s and proves preparation remains blocked before release. Competing-operation duration is captured before unrelated child cleanup; product/runtime and required graph unchanged.",
+          "reviewed_code_fingerprint": "3ee2937b2b0c719bb5b0f08d8c9c19faf265587b0c8a753a5d8a90e08eec6422",
+          "spec_material_hash": "f12b375f742d2120cd8551277a2013ccae2ddb11ade64032a52e56c0409f5eb2"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Reviewed actual initialized-project replay and recovery in addition to rejection before startup; no authority or proof contract changes.",
-          "reviewed_code_fingerprint": "17a36a014bcdddc4543302550f6725d0ef47f21edcd0649f19becb2e86894a3c",
+          "reason": "Required broker probe retains10s and proves preparation remains blocked before release. Competing-operation duration is captured before unrelated child cleanup; product/runtime and required graph unchanged.",
+          "reviewed_code_fingerprint": "3ee2937b2b0c719bb5b0f08d8c9c19faf265587b0c8a753a5d8a90e08eec6422",
           "spec_material_hash": "cdc863757905c53f4f176284c72744f0575184c65a059b7edf6239b47c4fc644"
         }
       ],
@@ -705,17 +713,21 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1794989501Z"
+      "updated_at": "1794990637Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch",
         "Linked worktree admission and execution-ready verified separately after backup denial; maintenance policy unchanged. No source/PR changes in other owners."
       ],
-      "artifact_hash": "sha256:256fbd25acaabc5ec9dd210fe85880962a79d8034f103c52c291cbf7cbb24eef",
+      "artifact_hash": "sha256:4cb9b1baf7235bb26032d9f6fc627fb67a28be2f6087d4d3d2d0ca94d6a6abf1",
       "checks": [
         {
           "name": "baseline_counterexample",
+          "status": "failed"
+        },
+        {
+          "name": "companion-broker-measurement",
           "status": "failed"
         },
         {
@@ -856,10 +868,17 @@
             "intent_id": "intent:change_01M7NWVMEADM6FS731H2AKEVZM",
             "kind": "trajectory_step_recorded",
             "sequence": 16
+          },
+          {
+            "detail": "trajectory:branch_01M7NWVMHPED3ZZQ4W9D4A0ZJ6",
+            "event_id": "event:17",
+            "intent_id": "intent:change_01M7NWVMEADM6FS731H2AKEVZM",
+            "kind": "trajectory_step_recorded",
+            "sequence": 17
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 16,
+        "next_sequence": 17,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M7NWVMHPED3ZZQ4W9D4A0ZJ6": {
@@ -1093,12 +1112,32 @@
                 ],
                 "sequence": 16,
                 "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "command": "Actual companion job134668344854: competing call9.796s, strict10s assertion includes later preparation release/child completion. Existing broker fixes ffec948b/a7b4b3dc/PR1517 audited; no active broker PR found.",
+                "custody_event_id": "event:17",
+                "observations": [
+                  "tests/group_broker.rs",
+                  "assets/tools/source_ci_profile.rs",
+                  "/private/tmp/attack-gaps-871-gh-core-timing-failure.json"
+                ],
+                "proof_refs": [
+                  "companion-broker-measurement"
+                ],
+                "scope": [
+                  "src/decapod/core/interop.rs",
+                  "tests/interop_conformance.rs"
+                ],
+                "sequence": 17,
+                "validation_findings": []
               }
             ]
           }
         }
       },
       "declared_commands": [
+        "Actual companion job134668344854: competing call9.796s, strict10s assertion includes later preparation release/child completion. Existing broker fixes ffec948b/a7b4b3dc/PR1517 audited; no active broker PR found.",
         "Actual official0.148.10 advertises four generic session-gated operations session-free; mentor/assurance calls auto-acquire sessions, bundle calls additionally require isolated workspace. data.database.inspect is an intentional earlier session-free route, not a defect.",
         "Actual official0.148.10: valid unsupported extension refused; trailing-comma flags accepted as empty negotiation; same malformed stdin rejected.",
         "Regression replays the original malformed negotiation after real project initialization, then executes ordinary compatibility recovery controls; repaired execution remains pending."
@@ -1107,6 +1146,7 @@
       "evidence": [
         "/private/tmp/attack-gaps-871-before.json; no passing Rust test or repaired-binary execution yet. Official validation owns fresh build and required checks.",
         "/private/tmp/attack-gaps-871-before.json; official binary0.148.9;12 false Verified labels; no executed identity. Snapshot container entry refused POLICY_OPT_IN_DISABLED. Session release cleared custody; re-read and reclaimed existing task without optional claim autorun; rebind before any source mutation.",
+        "/private/tmp/attack-gaps-871-gh-core-timing-failure.json",
         "/private/tmp/attack-gaps-871-session-metadata-audit.json",
         "/private/tmp/attack-gaps-871-session-metadata-before.json",
         "/private/tmp/attack-gaps-871-validation-1.json; PROOF_PROFILE_RECONCILIATION_REQUIRED before provider tests. Review:/private/tmp/attack-gaps-871-inventory-review.json;105 inputs compared to accepted edbfc00d; only root version0.148.7 to0.148.9 in Cargo.toml/Cargo.lock. Config backup outside Git. No graph, adapter, toolchain, worker, workflow or requiredness change.",
@@ -1119,9 +1159,11 @@
         "Required12110 compile failure fixed in f837e114. After actual1660 standalone validation showed Docker pin and manifest release/template drift9-to10, inspected official updater and package build script; used session acquire with scoped private CARGO_HOME and temporary repo.session_auto_update opt-in, then restored the exact backed config. No shared executable change. Session-installed controller0.148.10 SHA256a0f69315a950a17a8acf82898c1a8cab6fed71859295ad8cfb9852cc35363304; embedded docs ingested, new config/accepted-policy guidance read. Migration notice reported no applied migrations. Native workspace ensure/specs.refresh regenerated Docker/manifest and all3 reviews were rebound to current source. Actual official10 manifest still advertises12 false Verified entries with validate=true; /private/tmp/attack-gaps-871-release10-before.json preserves new baseline counterexample. No current conformance execution or full readiness yet."
       ],
       "inspected_files": [
+        "assets/tools/source_ci_profile.rs",
         "src/decapod/core/interop.rs",
         "src/decapod/core/validation_history.rs",
         "src/decapod/lib.rs",
+        "tests/group_broker.rs",
         "tests/interop_conformance.rs"
       ],
       "intent_id": "intent:change_01M7NWVMEADM6FS731H2AKEVZM",
@@ -1138,6 +1180,7 @@
         "tests/unit/core/interop_tests.rs"
       ],
       "next_transitions": [
+        "Capture elapsed and blocked-preparation fact immediately after competing call; retain10s budget and actual semantic checks; rerun full native profile.",
         "Correct four descriptors and compare every RPC session descriptor with existing enforcement; retain all authority gates.",
         "Refine plan and declare falsifiable checks",
         "Reject malformed RPC parameters before project/session startup; execute exact repaired candidate through full native validation."
