@@ -290,6 +290,21 @@ fn discovery_and_negotiation() {
         .cloned()
         .unwrap_or_default();
     h.check(
+        "manifest.session_requirements",
+        "rpc-stdin:interop.manifest",
+        "bundle export/import, mentor and assurance advertise their actual session gate",
+        serde_json::to_string(&caps).unwrap(),
+        [
+            "context.bundle.export", "context.bundle.import",
+            "mentor.obligations", "assurance.evaluate",
+        ].iter().all(|op| caps.iter().any(|cap| {
+            cap["id"] == format!("rpc:{op}")
+                && cap["implementation"]["session_required"] == true
+        })),
+        None,
+        vec!["session gates remain authoritative; automatic acquisition is not session-free execution".into()],
+    );
+    h.check(
         "manifest.current_dispatch_entries",
         "rpc-stdin:interop.manifest",
         "intent.reconcile, state.resolve and state.diff are implemented and advertised",

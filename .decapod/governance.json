@@ -621,6 +621,14 @@
       "proof_refs": [
         "/private/tmp/attack-gaps-rpc-malformed-negotiation-before.json"
       ]
+    },
+    {
+      "id": "attack-gaps-871-session-descriptors",
+      "summary": "Correct four advertised session requirements; retain real gate behavior, all-operation session contract regression and black-box manifest assertion.",
+      "input_digest": "sha256:e31b6fed6c59c8f992545abe1affe6f3c588836e2037ada8f5e094406002ec33",
+      "proof_refs": [
+        "/private/tmp/attack-gaps-871-session-metadata-before.json"
+      ]
     }
   ],
   "intents": {
@@ -662,22 +670,22 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Malformed flag parameters must not erase required extensions. Reviewed rejection before startup and legitimate negotiated/refused controls without gate overrides; no new authority or producer trust.",
-          "reviewed_code_fingerprint": "405c98f589935a6f8e63257932cf0bfce921fce0a51b8910416d230affe9f6e0",
-          "spec_material_hash": "9c408b20131fdd615dfa099cfeb1b5aaaa895783013fc67d6cde13f4e142adc2"
+          "reason": "Audited all RPC session descriptors against current entry enforcement, correcting four false session-free entries; bounded early database inspection remains exempt. Existing authorization gates are preserved.",
+          "reviewed_code_fingerprint": "5e07cf62e5b20fec6277789386040ff544c3bfef8d6799db2b4aa9c65dca8c55",
+          "spec_material_hash": "fdbaca69ba93aa18c0b9cd161855774844405802b6b4ddc2d269b088f48ffca1"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Malformed flag parameters must not erase required extensions. Reviewed rejection before startup and legitimate negotiated/refused controls without gate overrides; no new authority or producer trust.",
-          "reviewed_code_fingerprint": "405c98f589935a6f8e63257932cf0bfce921fce0a51b8910416d230affe9f6e0",
-          "spec_material_hash": "d41f8e2b1b468c3c5efceee8e0ea706d149f2e878c9e527d9d9b0a0a8b0a702b"
+          "reason": "Audited all RPC session descriptors against current entry enforcement, correcting four false session-free entries; bounded early database inspection remains exempt. Existing authorization gates are preserved.",
+          "reviewed_code_fingerprint": "5e07cf62e5b20fec6277789386040ff544c3bfef8d6799db2b4aa9c65dca8c55",
+          "spec_material_hash": "94306ae319fd13f68cf62105da91500b9a0179a279106b646093ecd2dcbe0a30"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Malformed flag parameters must not erase required extensions. Reviewed rejection before startup and legitimate negotiated/refused controls without gate overrides; no new authority or producer trust.",
-          "reviewed_code_fingerprint": "405c98f589935a6f8e63257932cf0bfce921fce0a51b8910416d230affe9f6e0",
+          "reason": "Audited all RPC session descriptors against current entry enforcement, correcting four false session-free entries; bounded early database inspection remains exempt. Existing authorization gates are preserved.",
+          "reviewed_code_fingerprint": "5e07cf62e5b20fec6277789386040ff544c3bfef8d6799db2b4aa9c65dca8c55",
           "spec_material_hash": "cdc863757905c53f4f176284c72744f0575184c65a059b7edf6239b47c4fc644"
         }
       ],
@@ -689,14 +697,14 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1794987758Z"
+      "updated_at": "1794988914Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch",
         "Linked worktree admission and execution-ready verified separately after backup denial; maintenance policy unchanged. No source/PR changes in other owners."
       ],
-      "artifact_hash": "sha256:7be7ae3f9224a8043a7841be2048677980dac0686de209c62f9f7a1e3353b712",
+      "artifact_hash": "sha256:c2d528a1368076ef25977fe8a4363b2ed50ccdc8de6d4d46271eb4e9ed9eccb7",
       "checks": [
         {
           "name": "baseline_counterexample",
@@ -724,6 +732,10 @@
         },
         {
           "name": "release10-source-compile",
+          "status": "failed"
+        },
+        {
+          "name": "session-metadata-drift",
           "status": "failed"
         },
         {
@@ -822,10 +834,17 @@
             "intent_id": "intent:change_01M7NWVMEADM6FS731H2AKEVZM",
             "kind": "trajectory_step_recorded",
             "sequence": 14
+          },
+          {
+            "detail": "trajectory:branch_01M7NWVMHPED3ZZQ4W9D4A0ZJ6",
+            "event_id": "event:15",
+            "intent_id": "intent:change_01M7NWVMEADM6FS731H2AKEVZM",
+            "kind": "trajectory_step_recorded",
+            "sequence": 15
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 14,
+        "next_sequence": 15,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M7NWVMHPED3ZZQ4W9D4A0ZJ6": {
@@ -1024,18 +1043,41 @@
                 ],
                 "sequence": 14,
                 "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "command": "Actual official0.148.10 advertises four generic session-gated operations session-free; mentor/assurance calls auto-acquire sessions, bundle calls additionally require isolated workspace. data.database.inspect is an intentional earlier session-free route, not a defect.",
+                "custody_event_id": "event:15",
+                "observations": [
+                  "src/decapod/core/interop.rs",
+                  "src/decapod/lib.rs",
+                  "/private/tmp/attack-gaps-871-session-metadata-before.json",
+                  "/private/tmp/attack-gaps-871-session-metadata-audit.json"
+                ],
+                "proof_refs": [
+                  "session-metadata-drift"
+                ],
+                "scope": [
+                  "src/decapod/core/interop.rs",
+                  "tests/interop_conformance.rs"
+                ],
+                "sequence": 15,
+                "validation_findings": []
               }
             ]
           }
         }
       },
       "declared_commands": [
+        "Actual official0.148.10 advertises four generic session-gated operations session-free; mentor/assurance calls auto-acquire sessions, bundle calls additionally require isolated workspace. data.database.inspect is an intentional earlier session-free route, not a defect.",
         "Actual official0.148.10: valid unsupported extension refused; trailing-comma flags accepted as empty negotiation; same malformed stdin rejected."
       ],
       "destination": "pull request",
       "evidence": [
         "/private/tmp/attack-gaps-871-before.json; no passing Rust test or repaired-binary execution yet. Official validation owns fresh build and required checks.",
         "/private/tmp/attack-gaps-871-before.json; official binary0.148.9;12 false Verified labels; no executed identity. Snapshot container entry refused POLICY_OPT_IN_DISABLED. Session release cleared custody; re-read and reclaimed existing task without optional claim autorun; rebind before any source mutation.",
+        "/private/tmp/attack-gaps-871-session-metadata-audit.json",
+        "/private/tmp/attack-gaps-871-session-metadata-before.json",
         "/private/tmp/attack-gaps-871-validation-1.json; PROOF_PROFILE_RECONCILIATION_REQUIRED before provider tests. Review:/private/tmp/attack-gaps-871-inventory-review.json;105 inputs compared to accepted edbfc00d; only root version0.148.7 to0.148.9 in Cargo.toml/Cargo.lock. Config backup outside Git. No graph, adapter, toolchain, worker, workflow or requiredness change.",
         "/private/tmp/attack-gaps-rpc-malformed-negotiation-before.json",
         "Accepted target advanced again to34f837d4 through ordinary0.148.10 release; merge preserves real parents and existing checkpoints. Independently hashed all105 inventory inputs in this worktree and matched official agent.init discovery: sha256:e1a242381f7411a8facfe285e2945040dafa93c46dd48c11a86ebd55d9a95b3f. Only Cargo package versions0.148.9 to0.148.10 changed;103 other sources identical. Backed up editable config before reconciliation; no workflow, carrier, required graph, toolchain, controller or policy weakening. Previous context/spec-review failures retained. Refreshed security as well as architecture/interface reviews after current source inspection. cargo fmt used only to format authored source; no local build or shadow proof suite.",
@@ -1065,6 +1107,7 @@
         "tests/unit/core/interop_tests.rs"
       ],
       "next_transitions": [
+        "Correct four descriptors and compare every RPC session descriptor with existing enforcement; retain all authority gates.",
         "Refine plan and declare falsifiable checks",
         "Reject malformed RPC parameters before project/session startup; execute exact repaired candidate through full native validation."
       ],

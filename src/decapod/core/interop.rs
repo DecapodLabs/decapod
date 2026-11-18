@@ -217,13 +217,13 @@ rpc_catalog![
     OpMeta {
         op: "context.bundle.export",
         read_only: true,
-        session_required: false,
+        session_required: true,
         description: "Export portable context bundle",
     },
     OpMeta {
         op: "context.bundle.import",
         read_only: false,
-        session_required: false,
+        session_required: true,
         description: "Import context bundle (stale bundles refused)",
     },
     OpMeta {
@@ -385,13 +385,13 @@ rpc_catalog![
     OpMeta {
         op: "mentor.obligations",
         read_only: true,
-        session_required: false,
+        session_required: true,
         description: "Query mentor obligations",
     },
     OpMeta {
         op: "assurance.evaluate",
         read_only: true,
-        session_required: false,
+        session_required: true,
         description: "Evaluate assurance harness",
     },
     OpMeta {

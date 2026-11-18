@@ -3857,6 +3857,26 @@ fn requires_session_token(command: &Command) -> bool {
     }
 }
 
+#[cfg(test)]
+#[test]
+fn advertised_rpc_sessions_match_the_actual_entry_guards() {
+    for capability in core::interop::builtin_manifest().capabilities {
+        if capability.surface != "rpc" {
+            continue;
+        }
+        let mapping = capability.implementation.expect("RPC implementation");
+        // Inspection returns before generic startup and has its own bounded,
+        // read-only route. Maintenance operations enforce their own session.
+        let required =
+            mapping.op != "data.database.inspect" && !rpc_op_bypasses_session(&mapping.op);
+        assert_eq!(
+            mapping.session_required, required,
+            "session descriptor differs from entry enforcement for {}",
+            mapping.op
+        );
+    }
+}
+
 #[derive(Debug, Serialize, Deserialize, Clone)]
 struct AgentSessionRecord {
     agent_id: String,
