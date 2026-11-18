@@ -594,6 +594,11 @@
       "id": "diagnostic-1071-candidate",
       "summary": "Checkpoint the live diagnostic delta, read-only projection refinements, native regressions and current contract. Both targeted native regressions passed.",
       "input_digest": "sha256:1bc242fe285815c039d085aa876e2679e62e3edfaef596c60c27cee1f8627a27"
+    },
+    {
+      "id": "diagnostic-1071-ci-repair",
+      "summary": "Repair Clippy formatting, generate the workspace diagnostic contract from the source-built CLI, refresh v0.148.10 projection metadata, and rerun both native regressions.",
+      "input_digest": "sha256:f72cf282a41c8ba63646ab50d1e3a536cb3703fcaf847ffb7537b6877ebffabf"
     }
   ],
   "intents": {
@@ -635,22 +640,22 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Publish the externally visible authority and read-only workspace diagnostic contract for #1071.",
-          "reviewed_code_fingerprint": "45d6f87dc033e11d5fe64c41d5b933fe99877e10b19541a5066f9e60c3294ffe",
+          "reason": "Re-record the reviewed workspace diagnostic spec against the regenerated v0.148.10 release metadata.",
+          "reviewed_code_fingerprint": "f1347054eecc8a087a5e4cafe758d49fb4614c1c2a3fa95901e054c109d97e07",
           "spec_material_hash": "d00d282949873448b71dd0351a29d10342d24087557b5f823dfba50a40e99584"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Specify #1071 output, redaction, and live publication ownership in the current diagnostic implementation.",
-          "reviewed_code_fingerprint": "45d6f87dc033e11d5fe64c41d5b933fe99877e10b19541a5066f9e60c3294ffe",
+          "reason": "Re-record the reviewed workspace diagnostic spec against the regenerated v0.148.10 release metadata.",
+          "reviewed_code_fingerprint": "f1347054eecc8a087a5e4cafe758d49fb4614c1c2a3fa95901e054c109d97e07",
           "spec_material_hash": "60d591f05d28dacfaa402db9a6375e7cbbc661d3be41557baf6890f44cf160b1"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Specify #1071 output, redaction, and live publication ownership in the current diagnostic implementation.",
-          "reviewed_code_fingerprint": "45d6f87dc033e11d5fe64c41d5b933fe99877e10b19541a5066f9e60c3294ffe",
+          "reason": "Re-record the reviewed workspace diagnostic spec against the regenerated v0.148.10 release metadata.",
+          "reviewed_code_fingerprint": "f1347054eecc8a087a5e4cafe758d49fb4614c1c2a3fa95901e054c109d97e07",
           "spec_material_hash": "8bdf28312ba04404ece615740e572ffcd11b416fd94547fe8340774feae99cb4"
         }
       ],
@@ -662,20 +667,28 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1794984763Z"
+      "updated_at": "1794986317Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:8a7c67441364f1fea160e817e45d18ef0d420a750c92302b526e8876490b42ff",
+      "artifact_hash": "sha256:94333faf14f50cc96879119ea44eab3607db24294683a749d64635e5c47845bd",
       "checks": [
+        {
+          "name": "initial_draft_ci",
+          "status": "failed"
+        },
         {
           "name": "live_handoff_delta_96d5ac16",
           "status": "passed"
         },
         {
           "name": "native_workspace_diagnostics_2_of_2",
+          "status": "passed"
+        },
+        {
+          "name": "repaired_native_diagnostics_2_of_2",
           "status": "passed"
         }
       ],
@@ -700,10 +713,17 @@
             "intent_id": "intent:change_01M7PNTY1326215RVKP88VR4NJ",
             "kind": "trajectory_step_recorded",
             "sequence": 4
+          },
+          {
+            "detail": "trajectory:branch_01M7PNTY4AR0ZXQ0RQS74779N8",
+            "event_id": "event:5",
+            "intent_id": "intent:change_01M7PNTY1326215RVKP88VR4NJ",
+            "kind": "trajectory_step_recorded",
+            "sequence": 5
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 4,
+        "next_sequence": 5,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M7PNTY4AR0ZXQ0RQS74779N8": {
@@ -727,6 +747,23 @@
                 ],
                 "sequence": 4,
                 "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:5",
+                "observations": [
+                  "src/decapod/core/workspace_diagnostic.rs",
+                  "src/decapod/core/docs_cli.rs"
+                ],
+                "proof_refs": [
+                  "initial_draft_ci",
+                  "repaired_native_diagnostics_2_of_2"
+                ],
+                "scope": [
+                  "root"
+                ],
+                "sequence": 5,
+                "validation_findings": []
               }
             ]
           }
@@ -740,7 +777,10 @@
         "src/decapod/core/workspace_publication.rs"
       ],
       "intent_id": "intent:change_01M7PNTY1326215RVKP88VR4NJ",
-      "modified_files": [],
+      "modified_files": [
+        "src/decapod/core/docs_cli.rs",
+        "src/decapod/core/workspace_diagnostic.rs"
+      ],
       "next_transitions": [
         "Refine plan and declare falsifiable checks"
       ],

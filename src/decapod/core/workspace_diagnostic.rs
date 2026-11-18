@@ -444,18 +444,17 @@ pub(crate) fn inspect(root: &Path, operation: &str, pr: Option<u64>, offline: bo
     }
     // One bounded observed snapshot, not a grant for a later mutation. Reuse
     // the canonical source again after independent reads to fence mixed epochs.
-    if let Ok((original, _, revision, _)) = &resolved {
-        if !policy::resolve_repository_policy(&main)
+    if let Ok((original, _, revision, _)) = &resolved
+        && !policy::resolve_repository_policy(&main)
             .is_ok_and(|(bytes, _, current, _)| bytes == *original && current == *revision)
-        {
-            authority["status"] = "changed_during_diagnosis".into();
-            eligible = None;
-            block(
-                &mut blockers,
-                "POLICY_SNAPSHOT_STALE",
-                "Retry diagnosis against the current accepted policy; earlier policy eligibility cannot authorize the changed operation",
-            );
-        }
+    {
+        authority["status"] = "changed_during_diagnosis".into();
+        eligible = None;
+        block(
+            &mut blockers,
+            "POLICY_SNAPSHOT_STALE",
+            "Retry diagnosis against the current accepted policy; earlier policy eligibility cannot authorize the changed operation",
+        );
     }
     let final_candidate =
         policy::read_regular_policy_bytes(&root.join(".decapod/config.toml")).ok();

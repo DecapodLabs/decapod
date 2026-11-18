@@ -62,27 +62,6 @@ This document defines the normative operational contracts for the Decapod CLI.
   complete candidate tree in the bounded accepted history. New lease generations
   and additional task-specific proof gates cannot inherit the old result.
 
-## `decapod workspace diagnose`
-
-- **Usage:** `decapod workspace diagnose [--json] [--offline] [--pr <number>] [--operation <name>]`.
-- **Prerequisites:** None for schema diagnosis. An existing Git checkout and
-  its accepted policy, task custody, and optional forge access supply richer
-  observations. The command does not acquire sessions or repair files.
-- **Output:** JSON schema `decapod.workspace-diagnostic.v1` projects repository
-  and checkout identity, custody, accepted policy and proposed config/override
-  changes, governance artifacts and dirty classifications, historical proof,
-  and optional exact PR head and required forge checks. Credential entries
-  give capability status only. `--offline` skips forge and Git remote reads.
-- **Operations:** `workspace.publish` is the default. `workspace.authoring`,
-  modeled database capabilities, and supported RBAC exceptions report scoped
-  local eligibility. The diagnostic does not invoke the selected operation.
-- **Status:** Exit 0 means the selected local operation has no observed
-  blocker. Exit 1 means blockers remain, 2 means the candidate config is
-  invalid, and 3 means the requested publication observation lacks verified
-  remote evidence. Use the ordered blockers and their next actions on recovery.
-- **Admission:** Forge checks and retained proof inform diagnosis. Live
-  exact-candidate validation and readback remain owned by `workspace publish`.
-
 ## `decapod validate`
 - **Intent:** Prove complete current-workbranch readiness before pull request creation
 - **Subject:** The exact current work branch, its accepted target tip, source and governance material, reviewed CI/release definitions, toolchain and applicable complete check matrix.
@@ -191,6 +170,21 @@ This document defines the normative operational contracts for the Decapod CLI.
 - **Preconditions:** Task must be claimed.
 - **State Transition:** Creates git worktrees/containers.
 - **Publication:** Publication is a governed transition and remains blocked while required validation or evidence is unsatisfied.
+
+### Workspace diagnosis
+
+`decapod workspace diagnose [--json] [--offline] [--pr <number>] [--operation <name>]`
+reads checkout and custody state, accepted policy, candidate config and
+override proposals, artifact freshness, dirty-file groups, and historical
+proof. Optional GitHub readback observes the exact PR head and required forge
+checks. `--offline` skips remote reads. Credentials appear as capability
+status. Diagnosis does not acquire sessions or repair files.
+
+JSON uses `decapod.workspace-diagnostic.v1`. Exit 0 means the selected local
+operation has no observed blocker. Exit 1 means blockers remain, 2 means
+candidate config is invalid, and 3 means the default publication diagnosis
+lacks verified remote evidence. Use the ordered next actions to recover.
+Live validation and readback remain owned by `workspace publish`.
 
 ## `decapod rpc`
 - **Intent:** Decapod-specific structured RPC interface for agents

@@ -650,6 +650,24 @@ fn build_docs(touched: Vec<PathBuf>) -> Result<(), error::DecapodError> {
                         file,
                         "- **Publication:** Publication is a governed transition and remains blocked while required validation or evidence is unsatisfied."
                     )?;
+                    writeln!(
+                        file,
+                        r#"
+### Workspace diagnosis
+
+`decapod workspace diagnose [--json] [--offline] [--pr <number>] [--operation <name>]`
+reads checkout and custody state, accepted policy, candidate config and
+override proposals, artifact freshness, dirty-file groups, and historical
+proof. Optional GitHub readback observes the exact PR head and required forge
+checks. `--offline` skips remote reads. Credentials appear as capability
+status. Diagnosis does not acquire sessions or repair files.
+
+JSON uses `decapod.workspace-diagnostic.v1`. Exit 0 means the selected local
+operation has no observed blocker. Exit 1 means blockers remain, 2 means
+candidate config is invalid, and 3 means the default publication diagnosis
+lacks verified remote evidence. Use the ordered next actions to recover.
+Live validation and readback remain owned by `workspace publish`."#
+                    )?;
                 }
                 "validate" => {
                     writeln!(file, "{}", readiness_contract())?;
