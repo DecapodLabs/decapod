@@ -14307,24 +14307,19 @@ fn governed_plan_context(
             todo_ids: vec![],
             proof_hooks: vec![],
             unresolved_items: vec![],
+            instruction_readiness: None,
             forbidden_paths: vec![],
             file_touch_budget: None,
             task_binding: "not_available".to_string(),
         });
     };
 
-    let mut unresolved_items = Vec::new();
-    unresolved_items.extend(plan.unknowns.iter().map(|item| format!("unknown: {item}")));
-    unresolved_items.extend(
-        plan.human_questions
-            .iter()
-            .map(|item| format!("human_question: {item}")),
-    );
-    unresolved_items.extend(
-        plan.unresolved_contradictions
-            .iter()
-            .map(|item| format!("contradiction: {item}")),
-    );
+    let instruction_readiness = plan_governance::instruction_readiness(&plan);
+    let mut unresolved_items: Vec<_> = instruction_readiness
+        .blockers
+        .iter()
+        .map(|blocker| blocker.question.clone())
+        .collect();
     unresolved_items.extend(
         plan.deferred_questions
             .iter()
@@ -14346,6 +14341,7 @@ fn governed_plan_context(
         todo_ids: plan.todo_ids,
         proof_hooks: plan.proof_hooks,
         unresolved_items,
+        instruction_readiness: Some(instruction_readiness),
         forbidden_paths: plan.constraints.forbidden_paths,
         file_touch_budget: plan.constraints.file_touch_budget,
         task_binding: task_binding.to_string(),
