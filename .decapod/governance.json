@@ -1,7 +1,7 @@
 {
   "schema_version": "1.0.0",
   "baseline": {
-    "accepted_commit": "6ab6de3134286a790d78d370ca3fb43c0d92f834",
+    "accepted_commit": "352d892958e1cdf692299927f7c2f3c0c36fc639",
     "policy": {
       "change_control": {
         "requires_human_review": true,
@@ -568,102 +568,59 @@
     }
   },
   "change": {
-    "id": "change_01M7NWVMEADM6FS731H2AKEVZM",
-    "base_commit": "6ab6de3134286a790d78d370ca3fb43c0d92f834",
+    "id": "change_01M7Q3DQ50P9E0ATDWZTJHKFS5",
+    "base_commit": "352d892958e1cdf692299927f7c2f3c0c36fc639",
     "target_base": "origin/master"
+  },
+  "claims": {
+    "duplicate-key-required-semantics": {
+      "statement": "Both RPC routes reject duplicate decoded JSON keys before startup; later fields cannot erase required extension semantics and unique-key ordinary negotiation can recover.",
+      "falsifier": "Duplicate or escaped-equivalent required_extensions erases the unsupported requirement, nested ambiguous JSON is accepted, or legitimate unique-key negotiation fails after refusal.",
+      "status": "open"
+    }
   },
   "checkpoints": [
     {
-      "id": "interop-source-labels-871",
-      "summary": "Reproduce twelve static false Verified labels; report source coverage as not_run and reject self-authored execution states; preserve positive negotiation and unresolved observed-conformance obligation.",
-      "input_digest": "sha256:c47919510d5e276edfddc7da31b58a34df907f202fa8f6ca1dad0a90e79a1298",
+      "id": "strict-json-reviewed-source",
+      "summary": "Fresh governed follow-up from352 after original1787 merged externally and compact-boundary refused. Reauthor reviewed unique decoder extraction/RPC strictness, both-route real CLI and Python parsing controls, semantic specs and independently reviewed version-only source digest; candidate Actions pending.",
+      "input_digest": "sha256:c4270b2739fb7b77681f792039bff9edd658b9440f1b6b978feea8318320628f"
+    },
+    {
+      "id": "official11-release-projection-correction",
+      "summary": "Repair actual Actions release drift through official session-updated11 native projections; preserve191/0 prerequisite result as bounded and host failures as failures. Metadata fix grants no conformance or native readiness. Checkpoint completes before commit.",
+      "input_digest": "sha256:02a169756d093ac1890782ef36663a2dd889ac8d5843fa7cdee36659ee63f31f"
+    },
+    {
+      "id": "explicit-bazel-interop-fixture",
+      "summary": "Correct actual Bazel missing compile input by declaring only the included Python fixture for existing interop target; independently review all105 inventory entries,104 unchanged, full graph retained. Failed1ba build preserved. Checkpoint completes before commit; source tests pending.",
+      "input_digest": "sha256:933651ac87df7a40cc8db8e9ae8197e13d66bfbad18056f7c30187c1e6ab42cf"
+    },
+    {
+      "id": "strict-json-schema-positive-recovery-20261118",
+      "summary": "Preserve strict unknown-field rejection and exercise supported optional negotiation after duplicate-key refusal",
+      "input_digest": "sha256:a6d0fd7fe160c886f6d51afdae5b90a7f752f5a739e46238df76203929a4fa35",
       "proof_refs": [
-        "/private/tmp/attack-gaps-871-before.json"
-      ]
-    },
-    {
-      "id": "interop-inventory-release-871",
-      "summary": "Review all105 inputs against last accepted declaration; acknowledge only Cargo package-version changes0.148.7 to0.148.9; retain required graph and previous failure.",
-      "input_digest": "sha256:6e22366ad069ceaeb5e8404a21a25ee8016c27e3458807e735d2d6dc6f47acfd",
-      "proof_refs": [
-        "/private/tmp/attack-gaps-871-inventory-review.json"
-      ]
-    },
-    {
-      "id": "conformance-accepted-base-c47137ad-871",
-      "summary": "Integrate accepted policy-custody fixes with truthful conformance labels; require fresh combined proof",
-      "input_digest": "sha256:840da8a46f5cfa42b28b1f693e8ded1e7c95e5536c5474d83bb614caf7ca86f2"
-    },
-    {
-      "id": "interop-registered-dispatch-871",
-      "summary": "Advertise existing reconciliation/state routes and require catalog registration before RPC startup",
-      "input_digest": "sha256:41d11de554d4f7ba7d1c46e98e6e0426d884f8584cd8953780af3791992f54d2"
-    },
-    {
-      "id": "attack-gaps-871-release10-reconciliation",
-      "summary": "Integrate accepted0.148.10, review all105 proof inputs and refresh current architecture/interface/security reviews",
-      "input_digest": "sha256:83410e26e1d08c7a2ed8661628d212cf7419ad7ff2b37dd0a6e0015d43f54b8c"
-    },
-    {
-      "id": "interop-startup-rpc-envelope-871",
-      "summary": "Use the existing qualified RPC refusal constructor after actual CI compile failure",
-      "input_digest": "sha256:e3186f8880387635b5a222c93f6cb8259746f17389440dfff7ed365e1dbd53e1"
-    },
-    {
-      "id": "conformance-controller10-projections-871",
-      "summary": "Regenerate accepted-release projections through isolated official0.148.10 controller and retain current counterexample",
-      "input_digest": "sha256:5e147b98ada976da72567b1258b9f27ddf5220aaa2a256b5b8721f5c12ef5248"
-    },
-    {
-      "id": "attack-gaps-871-malformed-parameters",
-      "summary": "Reject malformed RPC flag parameters before required negotiation semantics can be erased; retain actual negative/legitimate baseline evidence and clean real-project regression.",
-      "input_digest": "sha256:b30cd3fc2550aa9d13be19ff53f2d81d2190a999d157b8aed6f49e7ec92dfbbf",
-      "proof_refs": [
-        "/private/tmp/attack-gaps-rpc-malformed-negotiation-before.json"
-      ]
-    },
-    {
-      "id": "attack-gaps-871-session-descriptors",
-      "summary": "Correct four advertised session requirements; retain real gate behavior, all-operation session contract regression and black-box manifest assertion.",
-      "input_digest": "sha256:e31b6fed6c59c8f992545abe1affe6f3c588836e2037ada8f5e094406002ec33",
-      "proof_refs": [
-        "/private/tmp/attack-gaps-871-session-metadata-before.json"
-      ]
-    },
-    {
-      "id": "attack-gaps-871-initialized-replay",
-      "summary": "Replay malformed required-extension request on initialized fixture, then prove ordinary negotiation recovers; retain separate pre-startup refusals.",
-      "input_digest": "sha256:e5c3b6cdc3d20397c2c32ff7952bc0ba392f5328d8aafdae69c16292ccf97324",
-      "proof_refs": [
-        "/private/tmp/attack-gaps-rpc-malformed-negotiation-before.json"
-      ]
-    },
-    {
-      "id": "attack-gaps-871-competing-duration",
-      "summary": "Preserve actual timing counterexample; measure competing call before preparation release and client cleanup, keep strict10s and strengthen blocked-preparation assertion.",
-      "input_digest": "sha256:8f9365450f4782cebfc19445a0e74bd0f0cdb4ade43905744f8158540e4dd188",
-      "proof_refs": [
-        "/private/tmp/attack-gaps-871-gh-core-timing-failure.json"
+        "https://github.com/DecapodLabs/decapod/actions/runs/44292847842/job/134763116449",
+        "sha256:e6f2db17b3586a40db44261ab1d05dedaad2973ed68c92c2be1d21f69882d65c"
       ]
     }
   ],
   "intents": {
-    "intent:change_01M7NWVMEADM6FS731H2AKEVZM": {
+    "intent:change_01M7Q3DQ50P9E0ATDWZTJHKFS5": {
       "acceptance_criteria": [],
       "assumptions": [],
       "boundaries": [
         "Current claimed task and isolated work branch"
       ],
       "constraints": [
-        "src/decapod/core/interop.rs",
-        "tests/interop_conformance.rs"
+        "issue-871"
       ],
       "created_sequence": 1,
-      "id": "intent:change_01M7NWVMEADM6FS731H2AKEVZM",
+      "id": "intent:change_01M7Q3DQ50P9E0ATDWZTJHKFS5",
       "out_of_scope": [],
       "proof_requirements": [],
-      "raw_intent": "Attack the Gaps #1735: audit and repair conformance proof labels #871\n\nUser authorizes complete campaign with adversarial execution, governed worktrees, pushes, PR updates and issue evidence. First dependency slice #871; preserve all existing owners and current proof contracts.",
-      "refined_intent": "Attack the Gaps #1735: audit and repair conformance proof labels #871\n\nUser authorizes complete campaign with adversarial execution, governed worktrees, pushes, PR updates and issue evidence. First dependency slice #871; preserve all existing owners and current proof contracts.",
+      "raw_intent": "code: reject ambiguous RPC JSON without erasing required negotiation\n\nFollow-up to externally merged PR1787. Preserve immutable unaccepted6fff3707955811fc61365c237357eb0c78990b43 and its native checkpoints; prior begin-pr returned GOVERNANCE_PR_NOT_ACCEPTED. Fresh governed workstream from accepted e44ae7c6, reauthor only reviewed duplicate-key decoder extraction, framing and actual both-route/Python parsing tests plus authored prose. Explicit user authorizes publishing before native Buildkite admission and focusing Actions; no proof-policy change, fabricated execution, merge or issue closure.",
+      "refined_intent": "code: reject ambiguous RPC JSON without erasing required negotiation\n\nFollow-up to externally merged PR1787. Preserve immutable unaccepted6fff3707955811fc61365c237357eb0c78990b43 and its native checkpoints; prior begin-pr returned GOVERNANCE_PR_NOT_ACCEPTED. Fresh governed workstream from accepted e44ae7c6, reauthor only reviewed duplicate-key decoder extraction, framing and actual both-route/Python parsing tests plus authored prose. Explicit user authorizes publishing before native Buildkite admission and focusing Actions; no proof-policy change, fabricated execution, merge or issue closure.",
       "status": "refined",
       "updated_sequence": 3
     }
@@ -676,7 +633,7 @@
       },
       "deferred_questions": [],
       "human_questions": [],
-      "intent": "Complete #1735 Attack the Gaps campaign in dependency order. This first isolated slice reproduces #871 verified-by-name using the official binary; correct static conformance labels and refuse self-attested execution without adding a proof engine. Preserve source coverage and negotiation; actual observed conformance and full campaign closure require authenticated current execution and independent consumer evidence. Extend #1766 only under its valid custody after audit; retain other active owners.",
+      "intent": "Strict duplicate-key RPC follow-up to merged1787. Reuse existing recursive decoder, preserve required semantics/bounds/redaction and ordinary recovery. Actual Bazel compile failure requires explicitly declaring the Python fixture as compile_data only for existing interop_conformance; independently review changed build input across all105 sources without altering targets, commands, graph, budgets or toolchain. Preserve old failures and current official11 projection metadata. User authorizes publication and Actions focus while ignoring Buildkite; no native admission, history waiver, force push, merge or issue closure.",
       "phases": [],
       "proof_hooks": [
         "decapod validate"
@@ -684,261 +641,222 @@
       "schema_version": "1.1.0",
       "spec_reviews": [
         {
-          "disposition": "updated",
+          "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Required broker probe retains10s and proves preparation remains blocked before release. Competing-operation duration is captured before unrelated child cleanup; product/runtime and required graph unchanged.",
-          "reviewed_code_fingerprint": "3ee2937b2b0c719bb5b0f08d8c9c19faf265587b0c8a753a5d8a90e08eec6422",
-          "spec_material_hash": "1fb88c990e8711b58bf3b4d3d9c4315a07de23b9e32fb76808d48de9349b5d73"
+          "reason": "Existing shared unique JSON decoder and strict typed schema are unchanged. Actual Actions reached the new final positive then refused its unknown optional_metadata field correctly. Correct only test expectations and supported recovery payload.",
+          "reviewed_code_fingerprint": "325bb52abe2b2d4059279715a9322ef8ca5a525b74763f360326b4059015089f",
+          "spec_material_hash": "a56b9f78b78c318ce14753002b3e662908772761757d7adb849dde1951d37e6b"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Required broker probe retains10s and proves preparation remains blocked before release. Competing-operation duration is captured before unrelated child cleanup; product/runtime and required graph unchanged.",
-          "reviewed_code_fingerprint": "3ee2937b2b0c719bb5b0f08d8c9c19faf265587b0c8a753a5d8a90e08eec6422",
-          "spec_material_hash": "f12b375f742d2120cd8551277a2013ccae2ddb11ade64032a52e56c0409f5eb2"
+          "reason": "Clarify that syntactically legal unique JSON still obeys strict negotiation fields. Preserve invalid_params for unknown field and verify lawful unknown optional identifiers are reported omitted, including decoded Unicode.",
+          "reviewed_code_fingerprint": "325bb52abe2b2d4059279715a9322ef8ca5a525b74763f360326b4059015089f",
+          "spec_material_hash": "c6ba8157ced34e186a41c4d9df94b98c47863ec271bcd16ee2d42b4f824b33f0"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Required broker probe retains10s and proves preparation remains blocked before release. Competing-operation duration is captured before unrelated child cleanup; product/runtime and required graph unchanged.",
-          "reviewed_code_fingerprint": "3ee2937b2b0c719bb5b0f08d8c9c19faf265587b0c8a753a5d8a90e08eec6422",
-          "spec_material_hash": "cdc863757905c53f4f176284c72744f0575184c65a059b7edf6239b47c4fc644"
+          "reason": "No production change or relaxed validation. Keep required extension and duplicate-key rejection; retain unknown-field schema refusal and exercise legitimate optional negotiation afterward.",
+          "reviewed_code_fingerprint": "325bb52abe2b2d4059279715a9322ef8ca5a525b74763f360326b4059015089f",
+          "spec_material_hash": "9d11c08d69c5a99641a0d006db91d357c43458787eb442f659ffe7ac04be2a7e"
         }
       ],
       "state": "APPROVED",
       "stop_conditions": [],
-      "title": "Attack the Gaps #1735: audit and repair conformance proof labels #871",
+      "title": "code: reject ambiguous RPC JSON without erasing required negotiation",
       "todo_ids": [
-        "code_01m7nqvx27hszg3g"
+        "bugs_01m7q384jw6mn3w5"
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1794990637Z"
+      "updated_at": "1795002891Z"
     },
     "trajectory": {
       "active_boundaries": [
-        "Current claimed task and isolated work branch",
-        "Linked worktree admission and execution-ready verified separately after backup denial; maintenance policy unchanged. No source/PR changes in other owners."
+        "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:4cb9b1baf7235bb26032d9f6fc627fb67a28be2f6087d4d3d2d0ca94d6a6abf1",
+      "artifact_hash": "sha256:41a215a899f967fd9a5d49aa1571d124dfa57ed667baa91f6bdff43c4f47a742",
       "checks": [
         {
-          "name": "baseline_counterexample",
+          "name": "actions-bazel-interop-compilation",
           "status": "failed"
         },
         {
-          "name": "companion-broker-measurement",
+          "name": "actions-release-projection-drift",
           "status": "failed"
         },
         {
-          "name": "initial_full_validation",
+          "name": "actions-strict-json-positive-control",
           "status": "failed"
         },
         {
-          "name": "malformed-flags-counterexample",
-          "status": "failed"
-        },
-        {
-          "name": "malformed-parameter-regression",
+          "name": "candidate-execution",
           "status": "unavailable"
         },
         {
-          "name": "previous-buildkite-clippy",
+          "name": "diff-whitespace",
+          "status": "passed"
+        },
+        {
+          "name": "independently-reviewed-bazel-input",
+          "status": "passed"
+        },
+        {
+          "name": "native-host-project-prerequisites",
           "status": "failed"
         },
         {
-          "name": "previous-buildkite-core",
+          "name": "official10-duplicate-negotiation-refusal",
           "status": "failed"
         },
         {
-          "name": "release10-source-compile",
-          "status": "failed"
+          "name": "official10-ordinary-recovery",
+          "status": "passed"
         },
         {
-          "name": "session-metadata-drift",
-          "status": "failed"
+          "name": "official10-required-unsupported-refusal",
+          "status": "passed"
         },
         {
-          "name": "static_conformance_safe_assertion",
-          "status": "failed"
+          "name": "official11-private-controller-install",
+          "status": "passed"
+        },
+        {
+          "name": "release11-source-inventory-review",
+          "status": "passed"
+        },
+        {
+          "name": "rustfmt",
+          "status": "passed"
         }
       ],
-      "current_phase": "validation",
+      "current_phase": "intent",
       "custody": {
         "events": [
           {
             "event_id": "event:2",
-            "intent_id": "intent:change_01M7NWVMEADM6FS731H2AKEVZM",
+            "intent_id": "intent:change_01M7Q3DQ50P9E0ATDWZTJHKFS5",
             "kind": "created",
             "sequence": 2
           },
           {
             "event_id": "event:3",
-            "intent_id": "intent:change_01M7NWVMEADM6FS731H2AKEVZM",
+            "intent_id": "intent:change_01M7Q3DQ50P9E0ATDWZTJHKFS5",
             "kind": "refined",
             "sequence": 3
           },
           {
-            "detail": "trajectory:branch_01M7NWVMHPED3ZZQ4W9D4A0ZJ6",
+            "detail": "trajectory:branch_01M7Q3DQ8RFZAHXD2B6ZY1JSZ5",
             "event_id": "event:4",
-            "intent_id": "intent:change_01M7NWVMEADM6FS731H2AKEVZM",
+            "intent_id": "intent:change_01M7Q3DQ50P9E0ATDWZTJHKFS5",
             "kind": "trajectory_step_recorded",
             "sequence": 4
           },
           {
-            "detail": "trajectory:branch_01M7NWVMHPED3ZZQ4W9D4A0ZJ6",
+            "detail": "trajectory:branch_01M7Q3DQ8RFZAHXD2B6ZY1JSZ5",
             "event_id": "event:5",
-            "intent_id": "intent:change_01M7NWVMEADM6FS731H2AKEVZM",
+            "intent_id": "intent:change_01M7Q3DQ50P9E0ATDWZTJHKFS5",
             "kind": "trajectory_step_recorded",
             "sequence": 5
           },
           {
-            "detail": "trajectory:branch_01M7NWVMHPED3ZZQ4W9D4A0ZJ6",
+            "detail": "trajectory:branch_01M7Q3DQ8RFZAHXD2B6ZY1JSZ5",
             "event_id": "event:6",
-            "intent_id": "intent:change_01M7NWVMEADM6FS731H2AKEVZM",
+            "intent_id": "intent:change_01M7Q3DQ50P9E0ATDWZTJHKFS5",
             "kind": "trajectory_step_recorded",
             "sequence": 6
           },
           {
-            "detail": "trajectory:branch_01M7NWVMHPED3ZZQ4W9D4A0ZJ6",
+            "detail": "trajectory:branch_01M7Q3DQ8RFZAHXD2B6ZY1JSZ5",
             "event_id": "event:7",
-            "intent_id": "intent:change_01M7NWVMEADM6FS731H2AKEVZM",
+            "intent_id": "intent:change_01M7Q3DQ50P9E0ATDWZTJHKFS5",
             "kind": "trajectory_step_recorded",
             "sequence": 7
           },
           {
-            "detail": "trajectory:branch_01M7NWVMHPED3ZZQ4W9D4A0ZJ6",
+            "detail": "trajectory:branch_01M7Q3DQ8RFZAHXD2B6ZY1JSZ5",
             "event_id": "event:8",
-            "intent_id": "intent:change_01M7NWVMEADM6FS731H2AKEVZM",
+            "intent_id": "intent:change_01M7Q3DQ50P9E0ATDWZTJHKFS5",
             "kind": "trajectory_step_recorded",
             "sequence": 8
-          },
-          {
-            "detail": "trajectory:branch_01M7NWVMHPED3ZZQ4W9D4A0ZJ6",
-            "event_id": "event:9",
-            "intent_id": "intent:change_01M7NWVMEADM6FS731H2AKEVZM",
-            "kind": "trajectory_step_recorded",
-            "sequence": 9
-          },
-          {
-            "detail": "trajectory:branch_01M7NWVMHPED3ZZQ4W9D4A0ZJ6",
-            "event_id": "event:10",
-            "intent_id": "intent:change_01M7NWVMEADM6FS731H2AKEVZM",
-            "kind": "trajectory_step_recorded",
-            "sequence": 10
-          },
-          {
-            "detail": "trajectory:branch_01M7NWVMHPED3ZZQ4W9D4A0ZJ6",
-            "event_id": "event:11",
-            "intent_id": "intent:change_01M7NWVMEADM6FS731H2AKEVZM",
-            "kind": "trajectory_step_recorded",
-            "sequence": 11
-          },
-          {
-            "detail": "trajectory:branch_01M7NWVMHPED3ZZQ4W9D4A0ZJ6",
-            "event_id": "event:12",
-            "intent_id": "intent:change_01M7NWVMEADM6FS731H2AKEVZM",
-            "kind": "trajectory_step_recorded",
-            "sequence": 12
-          },
-          {
-            "detail": "trajectory:branch_01M7NWVMHPED3ZZQ4W9D4A0ZJ6",
-            "event_id": "event:13",
-            "intent_id": "intent:change_01M7NWVMEADM6FS731H2AKEVZM",
-            "kind": "trajectory_step_recorded",
-            "sequence": 13
-          },
-          {
-            "detail": "trajectory:branch_01M7NWVMHPED3ZZQ4W9D4A0ZJ6",
-            "event_id": "event:14",
-            "intent_id": "intent:change_01M7NWVMEADM6FS731H2AKEVZM",
-            "kind": "trajectory_step_recorded",
-            "sequence": 14
-          },
-          {
-            "detail": "trajectory:branch_01M7NWVMHPED3ZZQ4W9D4A0ZJ6",
-            "event_id": "event:15",
-            "intent_id": "intent:change_01M7NWVMEADM6FS731H2AKEVZM",
-            "kind": "trajectory_step_recorded",
-            "sequence": 15
-          },
-          {
-            "detail": "trajectory:branch_01M7NWVMHPED3ZZQ4W9D4A0ZJ6",
-            "event_id": "event:16",
-            "intent_id": "intent:change_01M7NWVMEADM6FS731H2AKEVZM",
-            "kind": "trajectory_step_recorded",
-            "sequence": 16
-          },
-          {
-            "detail": "trajectory:branch_01M7NWVMHPED3ZZQ4W9D4A0ZJ6",
-            "event_id": "event:17",
-            "intent_id": "intent:change_01M7NWVMEADM6FS731H2AKEVZM",
-            "kind": "trajectory_step_recorded",
-            "sequence": 17
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 17,
+        "next_sequence": 8,
         "schema_version": "1.0.0",
         "trajectories": {
-          "branch_01M7NWVMHPED3ZZQ4W9D4A0ZJ6": {
+          "branch_01M7Q3DQ8RFZAHXD2B6ZY1JSZ5": {
             "evidence_only": true,
-            "id": "branch_01M7NWVMHPED3ZZQ4W9D4A0ZJ6",
-            "intent_id": "intent:change_01M7NWVMEADM6FS731H2AKEVZM",
+            "id": "branch_01M7Q3DQ8RFZAHXD2B6ZY1JSZ5",
+            "intent_id": "intent:change_01M7Q3DQ50P9E0ATDWZTJHKFS5",
             "steps": [
               {
                 "action": "trajectory.record",
+                "command": "Reauthor selected reviewed source from6fff3707 in fresh claimed worktree at352d8929, after previous1787 merged externally. Preserve old source/checkpoints and native compact-boundary refusal, without importing old governance, custody or execution. Native/Python tests newly authored, source CI pending.",
                 "custody_event_id": "event:4",
                 "observations": [
-                  "/private/tmp/attack-gaps-871-before.json; official binary0.148.9;12 false Verified labels; no executed identity. Snapshot container entry refused POLICY_OPT_IN_DISABLED. Session release cleared custody; re-read and reclaimed existing task without optional claim autorun; rebind before any source mutation."
+                  "src/decapod/core/derived_release_profile.rs",
+                  "src/decapod/core/json.rs",
+                  "src/decapod/core/derived_release_profile.rs",
+                  "src/decapod/core/mod.rs",
+                  "src/decapod/lib.rs",
+                  "tests/interop_conformance.rs",
+                  "tests/support/interop_harness.rs",
+                  "tests/fixtures/interop_strict_json.py",
+                  "/private/tmp/attack-gaps-rpc-duplicate-keys-before.json",
+                  "/private/tmp/attack-gaps-871-json-release11-inventory-review.json",
+                  "/private/tmp/attack-gaps-871-duplicate-begin-pr.json"
                 ],
                 "proof_refs": [
-                  "static_conformance_safe_assertion"
+                  "official10-duplicate-negotiation-refusal",
+                  "official10-required-unsupported-refusal",
+                  "official10-ordinary-recovery",
+                  "release11-source-inventory-review",
+                  "candidate-execution"
                 ],
                 "scope": [
-                  "src/decapod/core/interop.rs",
-                  "tests/interop_conformance.rs"
+                  "issue-871"
                 ],
                 "sequence": 4,
                 "validation_findings": []
               },
               {
-                "action": "implementation",
+                "action": "trajectory.record",
+                "command": "Actual Actions project checks191pass/0fail then release-drift refusal at1ba because evaluator11 regenerated Docker10 and manifest10. Official10 session opt-in installed private official11, preserving old10 and shared binary, config restored. Native11 refresh/project-check regenerated owned projections; host container requirement and unrelated completed-task proof remain blocked, no native admission claimed or skips added.",
                 "custody_event_id": "event:5",
                 "observations": [
-                  "src/decapod/core/validation_history.rs",
-                  "src/decapod/core/interop.rs",
-                  "tests/interop_conformance.rs",
-                  "tests/unit/core/interop_tests.rs",
-                  ".decapod/managed/specs/INTENT.md",
-                  ".decapod/managed/specs/INTERFACES.md",
-                  "/private/tmp/attack-gaps-871-before.json; no passing Rust test or repaired-binary execution yet. Official validation owns fresh build and required checks."
+                  "/private/tmp/attack-gaps-1791-release11-projection-drift.json",
+                  "/private/tmp/attack-gaps-controller11-install.json",
+                  "/private/tmp/attack-gaps-json-controller11-project-check.json"
                 ],
                 "proof_refs": [
-                  "baseline_counterexample"
+                  "actions-release-projection-drift",
+                  "official11-private-controller-install",
+                  "native-host-project-prerequisites"
                 ],
                 "scope": [
-                  "src/decapod/core/interop.rs",
-                  "tests/interop_conformance.rs"
+                  "issue-871"
                 ],
                 "sequence": 5,
                 "validation_findings": []
               },
               {
-                "action": "validation",
+                "action": "trajectory.record",
+                "command": "Actual1ba PR core passed both dedicated broker probes but interop_conformance failed to build because include_str Python fixture was absent from Bazel compile_data; zero of11 unfiltered targets executed, no pass claimed. Declare exactly this input only for the existing target. Independently measure105 source inputs: only one .bzl changed,104 unchanged, literal diff only one compile_data path; required graph/budgets/commands unchanged, review digest ac2be63.",
                 "custody_event_id": "event:6",
                 "observations": [
+                  ".config/build/decapod.BUILD.bzl",
                   ".decapod/config.toml",
-                  "tests/golden/rpc/v1/interop_manifest.response.json",
-                  "tests/rpc_golden_vectors.rs",
-                  "/private/tmp/attack-gaps-871-validation-1.json; PROOF_PROFILE_RECONCILIATION_REQUIRED before provider tests. Review:/private/tmp/attack-gaps-871-inventory-review.json;105 inputs compared to accepted edbfc00d; only root version0.148.7 to0.148.9 in Cargo.toml/Cargo.lock. Config backup outside Git. No graph, adapter, toolchain, worker, workflow or requiredness change."
+                  "/private/tmp/attack-gaps-1791-first-core-134746196472.log",
+                  "/private/tmp/attack-gaps-1791-bazel-fixture-inventory-review.json"
                 ],
                 "proof_refs": [
-                  "initial_full_validation"
+                  "actions-bazel-interop-compilation",
+                  "independently-reviewed-bazel-input"
                 ],
                 "scope": [
-                  "src/decapod/core/interop.rs",
-                  "tests/interop_conformance.rs"
+                  "issue-871"
                 ],
                 "sequence": 6,
                 "validation_findings": []
@@ -947,189 +865,35 @@
                 "action": "trajectory.record",
                 "custody_event_id": "event:7",
                 "observations": [
-                  "Old candidate ddcefa86/base6ab6de31 retains Buildkite11973 clippy plugin-clone failure before execution and core validation smoke timeout; interop_conformance passed310.3s. Accepted master independently advanced to c47137ad via1779; reconcile real accepted changes in a two-parent merge and require fresh full exact-candidate proof. Keep active original governance and checkpoints through Git merge resolution; accepted historical governance remains in second parent. New merge is necessary source/base integration, not a synthetic CI trigger or proof relabel. All broader871 receipt-production/drift/consumer acceptance stays open."
+                  "tests/interop_conformance.rs",
+                  "src/decapod/core/interop.rs"
                 ],
                 "proof_refs": [
-                  "previous-buildkite-clippy",
-                  "previous-buildkite-core"
+                  "actions-strict-json-positive-control"
                 ],
                 "scope": [
-                  "src/decapod/core/interop.rs",
-                  "tests/interop_conformance.rs"
+                  "issue-871"
                 ],
                 "sequence": 7,
+                "tool": "Current bf388444 core Actions job134763116449: duplicate/escaped/nested negative controls completed, then legal-JSON positive sent unknown optional_metadata and strict schema correctly refused invalid_params at line244. 9 scenarios passed,1 failed. Raw log SHA256 e6f2db17b3586a40db44261ab1d05dedaad2973ed68c92c2be1d21f69882d65c. Preserve strict schema; make unknown-field refusal explicit and use supported optional_ops/extensions for ordinary recovery.",
                 "validation_findings": []
               },
               {
                 "action": "trajectory.record",
                 "custody_event_id": "event:8",
                 "observations": [
-                  "src/decapod/lib.rs",
-                  "src/decapod/core/interop.rs",
                   "tests/interop_conformance.rs",
-                  "Actual official0.148.9 RPC intent.reconcile succeeded while interop.manifest omitted it; raw outputs and binary SHA in /private/tmp/attack-gaps-871-drift-before-summary.json. Review found exactly42 current handlers vs39 catalog entries: intent.reconcile, state.resolve, state.diff omitted; no catalog name lacks a handler. Extend existing catalog and enforce registration before RPC routing, deriving name list from metadata to remove one duplicate table. Preserve per-operation session/workspace/mandate guards and no negotiation authority. Existing conformance reports lack tested-binary digest and authenticated custody; do not turn them into executed verification. New candidate supersedes pending e212ad75 proof only after fresh full execution."
+                  ".decapod/managed/specs/INTERFACES.md"
                 ],
-                "proof_refs": [],
+                "proof_refs": [
+                  "rustfmt",
+                  "diff-whitespace"
+                ],
                 "scope": [
-                  "src/decapod/core/interop.rs",
-                  "tests/interop_conformance.rs"
+                  "issue-871"
                 ],
                 "sequence": 8,
-                "validation_findings": []
-              },
-              {
-                "action": "trajectory.record",
-                "custody_event_id": "event:9",
-                "observations": [
-                  "src/decapod/core/interop.rs",
-                  "src/decapod/lib.rs",
-                  "tests/interop_conformance.rs",
-                  ".decapod/managed/specs/INTENT.md",
-                  ".decapod/managed/specs/ARCHITECTURE.md",
-                  ".decapod/managed/specs/INTERFACES.md",
-                  "Counterexample /private/tmp/attack-gaps-871-drift-before-summary.json: official binary dispatch success for unadvertised intent.reconcile. Empty-Git unknown-op baseline returned missing .decapod instead of typed refusal, creating no files; initial non-Git temp fixture reached an unrelated ancestor storage probe and is not used as product denial evidence. Add42-name single-declaration registration,3 missing entries, actual discovery assertions and isolated no-startup unknown-op regression. No patched-binary execution yet; all authenticated receipt-production and remaining authority/consumer obligations remain open."
-                ],
-                "proof_refs": [],
-                "scope": [
-                  "src/decapod/core/interop.rs",
-                  "tests/interop_conformance.rs"
-                ],
-                "sequence": 9,
-                "validation_findings": []
-              },
-              {
-                "action": "trajectory.record",
-                "custody_event_id": "event:10",
-                "observations": [
-                  "Accepted target advanced again to34f837d4 through ordinary0.148.10 release; merge preserves real parents and existing checkpoints. Independently hashed all105 inventory inputs in this worktree and matched official agent.init discovery: sha256:e1a242381f7411a8facfe285e2945040dafa93c46dd48c11a86ebd55d9a95b3f. Only Cargo package versions0.148.9 to0.148.10 changed;103 other sources identical. Backed up editable config before reconciliation; no workflow, carrier, required graph, toolchain, controller or policy weakening. Previous context/spec-review failures retained. Refreshed security as well as architecture/interface reviews after current source inspection. cargo fmt used only to format authored source; no local build or shadow proof suite."
-                ],
-                "proof_refs": [],
-                "scope": [
-                  "src/decapod/core/interop.rs",
-                  "tests/interop_conformance.rs"
-                ],
-                "sequence": 10,
-                "validation_findings": []
-              },
-              {
-                "action": "trajectory.record",
-                "custody_event_id": "event:11",
-                "observations": [
-                  "Actual Buildkite12110 job01a1ed56-73f9-4bbe-8f6d-99a75057233c and GitHub clippy134622777057 both fail E0425 atlib.rs2795 before tests: error_response was not in run function scope. Correct to core::rpc::error_response, preserving existing envelope constructor. No patched test execution claimed. Separate1660 actual0.148.10 standalone job reports Docker pin9-to10 and manifest evaluating-release/template metadata drift; installed controller remainsofficial0.148.9. Never manually rewrite generated projections or claim old execution for new source."
-                ],
-                "proof_refs": [
-                  "release10-source-compile"
-                ],
-                "scope": [
-                  "src/decapod/core/interop.rs",
-                  "tests/interop_conformance.rs"
-                ],
-                "sequence": 11,
-                "validation_findings": []
-              },
-              {
-                "action": "trajectory.record",
-                "custody_event_id": "event:12",
-                "observations": [
-                  "Required12110 compile failure fixed in f837e114. After actual1660 standalone validation showed Docker pin and manifest release/template drift9-to10, inspected official updater and package build script; used session acquire with scoped private CARGO_HOME and temporary repo.session_auto_update opt-in, then restored the exact backed config. No shared executable change. Session-installed controller0.148.10 SHA256a0f69315a950a17a8acf82898c1a8cab6fed71859295ad8cfb9852cc35363304; embedded docs ingested, new config/accepted-policy guidance read. Migration notice reported no applied migrations. Native workspace ensure/specs.refresh regenerated Docker/manifest and all3 reviews were rebound to current source. Actual official10 manifest still advertises12 false Verified entries with validate=true; /private/tmp/attack-gaps-871-release10-before.json preserves new baseline counterexample. No current conformance execution or full readiness yet."
-                ],
-                "proof_refs": [],
-                "scope": [
-                  "src/decapod/core/interop.rs",
-                  "tests/interop_conformance.rs"
-                ],
-                "sequence": 12,
-                "validation_findings": []
-              },
-              {
-                "action": "trajectory.record",
-                "command": "Actual official0.148.10: valid unsupported extension refused; trailing-comma flags accepted as empty negotiation; same malformed stdin rejected.",
-                "custody_event_id": "event:13",
-                "observations": [
-                  "src/decapod/lib.rs",
-                  "tests/interop_conformance.rs",
-                  "/private/tmp/attack-gaps-rpc-malformed-negotiation-before.json"
-                ],
-                "proof_refs": [
-                  "malformed-flags-counterexample"
-                ],
-                "scope": [
-                  "src/decapod/core/interop.rs",
-                  "tests/interop_conformance.rs"
-                ],
-                "sequence": 13,
-                "validation_findings": []
-              },
-              {
-                "action": "trajectory.record",
-                "custody_event_id": "event:14",
-                "observations": [
-                  "src/decapod/lib.rs",
-                  "tests/interop_conformance.rs",
-                  "/private/tmp/attack-gaps-rpc-malformed-negotiation-before.json"
-                ],
-                "proof_refs": [
-                  "malformed-parameter-regression"
-                ],
-                "scope": [
-                  "src/decapod/core/interop.rs",
-                  "tests/interop_conformance.rs"
-                ],
-                "sequence": 14,
-                "validation_findings": []
-              },
-              {
-                "action": "trajectory.record",
-                "command": "Actual official0.148.10 advertises four generic session-gated operations session-free; mentor/assurance calls auto-acquire sessions, bundle calls additionally require isolated workspace. data.database.inspect is an intentional earlier session-free route, not a defect.",
-                "custody_event_id": "event:15",
-                "observations": [
-                  "src/decapod/core/interop.rs",
-                  "src/decapod/lib.rs",
-                  "/private/tmp/attack-gaps-871-session-metadata-before.json",
-                  "/private/tmp/attack-gaps-871-session-metadata-audit.json"
-                ],
-                "proof_refs": [
-                  "session-metadata-drift"
-                ],
-                "scope": [
-                  "src/decapod/core/interop.rs",
-                  "tests/interop_conformance.rs"
-                ],
-                "sequence": 15,
-                "validation_findings": []
-              },
-              {
-                "action": "trajectory.record",
-                "command": "Regression replays the original malformed negotiation after real project initialization, then executes ordinary compatibility recovery controls; repaired execution remains pending.",
-                "custody_event_id": "event:16",
-                "observations": [
-                  "tests/interop_conformance.rs"
-                ],
-                "proof_refs": [],
-                "scope": [
-                  "src/decapod/core/interop.rs",
-                  "tests/interop_conformance.rs"
-                ],
-                "sequence": 16,
-                "validation_findings": []
-              },
-              {
-                "action": "trajectory.record",
-                "command": "Actual companion job134668344854: competing call9.796s, strict10s assertion includes later preparation release/child completion. Existing broker fixes ffec948b/a7b4b3dc/PR1517 audited; no active broker PR found.",
-                "custody_event_id": "event:17",
-                "observations": [
-                  "tests/group_broker.rs",
-                  "assets/tools/source_ci_profile.rs",
-                  "/private/tmp/attack-gaps-871-gh-core-timing-failure.json"
-                ],
-                "proof_refs": [
-                  "companion-broker-measurement"
-                ],
-                "scope": [
-                  "src/decapod/core/interop.rs",
-                  "tests/interop_conformance.rs"
-                ],
-                "sequence": 17,
+                "tool": "Converted invalid positive optional_metadata payload into an explicit strict-schema invalid_params control. Recovery now uses supported optional_ops/extensions, checks decoded Unicode and omitted values. Product parser/schema unchanged; runtime proof pending required Actions.",
                 "validation_findings": []
               }
             ]
@@ -1137,63 +901,56 @@
         }
       },
       "declared_commands": [
-        "Actual companion job134668344854: competing call9.796s, strict10s assertion includes later preparation release/child completion. Existing broker fixes ffec948b/a7b4b3dc/PR1517 audited; no active broker PR found.",
-        "Actual official0.148.10 advertises four generic session-gated operations session-free; mentor/assurance calls auto-acquire sessions, bundle calls additionally require isolated workspace. data.database.inspect is an intentional earlier session-free route, not a defect.",
-        "Actual official0.148.10: valid unsupported extension refused; trailing-comma flags accepted as empty negotiation; same malformed stdin rejected.",
-        "Regression replays the original malformed negotiation after real project initialization, then executes ordinary compatibility recovery controls; repaired execution remains pending."
+        "Actual Actions project checks191pass/0fail then release-drift refusal at1ba because evaluator11 regenerated Docker10 and manifest10. Official10 session opt-in installed private official11, preserving old10 and shared binary, config restored. Native11 refresh/project-check regenerated owned projections; host container requirement and unrelated completed-task proof remain blocked, no native admission claimed or skips added.",
+        "Actual1ba PR core passed both dedicated broker probes but interop_conformance failed to build because include_str Python fixture was absent from Bazel compile_data; zero of11 unfiltered targets executed, no pass claimed. Declare exactly this input only for the existing target. Independently measure105 source inputs: only one .bzl changed,104 unchanged, literal diff only one compile_data path; required graph/budgets/commands unchanged, review digest ac2be63.",
+        "Reauthor selected reviewed source from6fff3707 in fresh claimed worktree at352d8929, after previous1787 merged externally. Preserve old source/checkpoints and native compact-boundary refusal, without importing old governance, custody or execution. Native/Python tests newly authored, source CI pending."
       ],
       "destination": "pull request",
       "evidence": [
-        "/private/tmp/attack-gaps-871-before.json; no passing Rust test or repaired-binary execution yet. Official validation owns fresh build and required checks.",
-        "/private/tmp/attack-gaps-871-before.json; official binary0.148.9;12 false Verified labels; no executed identity. Snapshot container entry refused POLICY_OPT_IN_DISABLED. Session release cleared custody; re-read and reclaimed existing task without optional claim autorun; rebind before any source mutation.",
-        "/private/tmp/attack-gaps-871-gh-core-timing-failure.json",
-        "/private/tmp/attack-gaps-871-session-metadata-audit.json",
-        "/private/tmp/attack-gaps-871-session-metadata-before.json",
-        "/private/tmp/attack-gaps-871-validation-1.json; PROOF_PROFILE_RECONCILIATION_REQUIRED before provider tests. Review:/private/tmp/attack-gaps-871-inventory-review.json;105 inputs compared to accepted edbfc00d; only root version0.148.7 to0.148.9 in Cargo.toml/Cargo.lock. Config backup outside Git. No graph, adapter, toolchain, worker, workflow or requiredness change.",
-        "/private/tmp/attack-gaps-rpc-malformed-negotiation-before.json",
-        "Accepted target advanced again to34f837d4 through ordinary0.148.10 release; merge preserves real parents and existing checkpoints. Independently hashed all105 inventory inputs in this worktree and matched official agent.init discovery: sha256:e1a242381f7411a8facfe285e2945040dafa93c46dd48c11a86ebd55d9a95b3f. Only Cargo package versions0.148.9 to0.148.10 changed;103 other sources identical. Backed up editable config before reconciliation; no workflow, carrier, required graph, toolchain, controller or policy weakening. Previous context/spec-review failures retained. Refreshed security as well as architecture/interface reviews after current source inspection. cargo fmt used only to format authored source; no local build or shadow proof suite.",
-        "Actual Buildkite12110 job01a1ed56-73f9-4bbe-8f6d-99a75057233c and GitHub clippy134622777057 both fail E0425 atlib.rs2795 before tests: error_response was not in run function scope. Correct to core::rpc::error_response, preserving existing envelope constructor. No patched test execution claimed. Separate1660 actual0.148.10 standalone job reports Docker pin9-to10 and manifest evaluating-release/template metadata drift; installed controller remainsofficial0.148.9. Never manually rewrite generated projections or claim old execution for new source.",
-        "Actual official0.148.9 RPC intent.reconcile succeeded while interop.manifest omitted it; raw outputs and binary SHA in /private/tmp/attack-gaps-871-drift-before-summary.json. Review found exactly42 current handlers vs39 catalog entries: intent.reconcile, state.resolve, state.diff omitted; no catalog name lacks a handler. Extend existing catalog and enforce registration before RPC routing, deriving name list from metadata to remove one duplicate table. Preserve per-operation session/workspace/mandate guards and no negotiation authority. Existing conformance reports lack tested-binary digest and authenticated custody; do not turn them into executed verification. New candidate supersedes pending e212ad75 proof only after fresh full execution.",
-        "Counterexample /private/tmp/attack-gaps-871-drift-before-summary.json: official binary dispatch success for unadvertised intent.reconcile. Empty-Git unknown-op baseline returned missing .decapod instead of typed refusal, creating no files; initial non-Git temp fixture reached an unrelated ancestor storage probe and is not used as product denial evidence. Add42-name single-declaration registration,3 missing entries, actual discovery assertions and isolated no-startup unknown-op regression. No patched-binary execution yet; all authenticated receipt-production and remaining authority/consumer obligations remain open.",
-        "Old candidate ddcefa86/base6ab6de31 retains Buildkite11973 clippy plugin-clone failure before execution and core validation smoke timeout; interop_conformance passed310.3s. Accepted master independently advanced to c47137ad via1779; reconcile real accepted changes in a two-parent merge and require fresh full exact-candidate proof. Keep active original governance and checkpoints through Git merge resolution; accepted historical governance remains in second parent. New merge is necessary source/base integration, not a synthetic CI trigger or proof relabel. All broader871 receipt-production/drift/consumer acceptance stays open.",
-        "Required12110 compile failure fixed in f837e114. After actual1660 standalone validation showed Docker pin and manifest release/template drift9-to10, inspected official updater and package build script; used session acquire with scoped private CARGO_HOME and temporary repo.session_auto_update opt-in, then restored the exact backed config. No shared executable change. Session-installed controller0.148.10 SHA256a0f69315a950a17a8acf82898c1a8cab6fed71859295ad8cfb9852cc35363304; embedded docs ingested, new config/accepted-policy guidance read. Migration notice reported no applied migrations. Native workspace ensure/specs.refresh regenerated Docker/manifest and all3 reviews were rebound to current source. Actual official10 manifest still advertises12 false Verified entries with validate=true; /private/tmp/attack-gaps-871-release10-before.json preserves new baseline counterexample. No current conformance execution or full readiness yet."
+        "/private/tmp/attack-gaps-1791-bazel-fixture-inventory-review.json",
+        "/private/tmp/attack-gaps-1791-first-core-134746196472.log",
+        "/private/tmp/attack-gaps-1791-release11-projection-drift.json",
+        "/private/tmp/attack-gaps-871-duplicate-begin-pr.json",
+        "/private/tmp/attack-gaps-871-json-release11-inventory-review.json",
+        "/private/tmp/attack-gaps-controller11-install.json",
+        "/private/tmp/attack-gaps-json-controller11-project-check.json",
+        "/private/tmp/attack-gaps-rpc-duplicate-keys-before.json"
       ],
       "inspected_files": [
-        "assets/tools/source_ci_profile.rs",
+        "src/decapod/core/derived_release_profile.rs",
         "src/decapod/core/interop.rs",
-        "src/decapod/core/validation_history.rs",
-        "src/decapod/lib.rs",
-        "tests/group_broker.rs",
         "tests/interop_conformance.rs"
       ],
-      "intent_id": "intent:change_01M7NWVMEADM6FS731H2AKEVZM",
+      "intent_id": "intent:change_01M7Q3DQ50P9E0ATDWZTJHKFS5",
       "modified_files": [
+        ".config/build/decapod.BUILD.bzl",
         ".decapod/config.toml",
-        ".decapod/managed/specs/ARCHITECTURE.md",
-        ".decapod/managed/specs/INTENT.md",
         ".decapod/managed/specs/INTERFACES.md",
-        "src/decapod/core/interop.rs",
+        "src/decapod/core/derived_release_profile.rs",
+        "src/decapod/core/json.rs",
+        "src/decapod/core/mod.rs",
         "src/decapod/lib.rs",
-        "tests/golden/rpc/v1/interop_manifest.response.json",
+        "tests/fixtures/interop_strict_json.py",
         "tests/interop_conformance.rs",
-        "tests/rpc_golden_vectors.rs",
-        "tests/unit/core/interop_tests.rs"
+        "tests/support/interop_harness.rs"
       ],
       "next_transitions": [
-        "Capture elapsed and blocked-preparation fact immediately after competing call; retain10s budget and actual semantic checks; rerun full native profile.",
-        "Correct four descriptors and compare every RPC session descriptor with existing enforcement; retain all authority gates.",
+        "Checkpoint and commit actual official11 projection repair before push; rerun Actions for exact new source.",
         "Refine plan and declare falsifiable checks",
-        "Reject malformed RPC parameters before project/session startup; execute exact repaired candidate through full native validation."
+        "Refresh/review specs, checkpoint and publish a new narrow follow-up PR under explicit user exception; run all applicable GitHub Actions.",
+        "Refresh/review specs, checkpoint before commit, verify exact-head history, push1791 and execute current Actions."
       ],
       "repo_scope": [
-        "src/decapod/core/interop.rs",
-        "tests/interop_conformance.rs"
+        "issue-871"
       ],
-      "run_id": "branch_01M7NWVMHPED3ZZQ4W9D4A0ZJ6",
+      "run_id": "branch_01M7Q3DQ8RFZAHXD2B6ZY1JSZ5",
       "schema_version": "1.1.0",
       "shortcut_risk_signals": [],
-      "task_id": "code_01m7nqvx27hszg3g",
-      "tool_calls": [],
+      "task_id": "bugs_01m7q384jw6mn3w5",
+      "tool_calls": [
+        "Converted invalid positive optional_metadata payload into an explicit strict-schema invalid_params control. Recovery now uses supported optional_ops/extensions, checks decoded Unicode and omitted values. Product parser/schema unchanged; runtime proof pending required Actions.",
+        "Current bf388444 core Actions job134763116449: duplicate/escaped/nested negative controls completed, then legal-JSON positive sent unknown optional_metadata and strict schema correctly refused invalid_params at line244. 9 scenarios passed,1 failed. Raw log SHA256 e6f2db17b3586a40db44261ab1d05dedaad2973ed68c92c2be1d21f69882d65c. Preserve strict schema; make unknown-field refusal explicit and use supported optional_ops/extensions for ordinary recovery."
+      ],
       "unresolved_assumptions": []
     }
   },

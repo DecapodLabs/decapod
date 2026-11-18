@@ -381,7 +381,7 @@ def decapod_targets():
                 ".github/actions/source-ci-profile/action.yml",
                 "tests/fixtures/derived-release/Cargo.toml.fixture",
                 "src/decapod/core/derived_release_profile_tests.rs",
-            ] + native.glob([".github/workflows/*.yml"]) if path == "tests/source_ci_profile_policy.rs" else []) + (native.glob(["tests/fixtures/justfile_consumer/**"]) if path == "tests/cli_contracts.rs" else []),
+            ] + native.glob([".github/workflows/*.yml"]) if path == "tests/source_ci_profile_policy.rs" else []) + (native.glob(["tests/fixtures/justfile_consumer/**"]) if path == "tests/cli_contracts.rs" else []) + (["tests/fixtures/interop_strict_json.py"] if path == "tests/interop_conformance.rs" else []),
             edition = "2024",
             crate_features = ["supabase-cloud"],
             rustc_env_files = [":cargo_pkg_env"],

@@ -2,6 +2,20 @@
 
 ## Source coverage and execution observations (#871)
 
+The recursive unique-key JSON decoder previously local to
+`core::derived_release_profile` now lives in shared internal `core::json`.
+Existing release-manifest readers and RPC framing reuse it. Callers retain
+their framing budgets and typed schema/diagnostic owners. The extraction adds
+no proof authority. Actual-binary controls refuse nested and escaped duplicate
+keys on both RPC transports, then recover ordinary negotiation; a separate
+Python implementation checks the focused JSON meaning on the same host.
+
+The Bazel interoperability target declares the included Python source as
+compile data, matching Cargo's direct include dependency. Required test targets,
+commands and budgets are unchanged. The first Bazel run correctly failed to
+build when that input was undeclared; no interoperability execution is claimed
+for that failed build.
+
 The required broker preparation probe measures the competing mutation's elapsed
 time before releasing the mock preparation and awaiting its client cleanup.
 It retains the strict ten-second bound and explicitly checks that preparation
@@ -1030,8 +1044,8 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `3ee2937b2b0c719bb5b0f08d8c9c19faf265587b0c8a753a5d8a90e08eec6422`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (236 files), `tests/` (235 files)
+- Repository signal fingerprint: `325bb52abe2b2d4059279715a9322ef8ca5a525b74763f360326b4059015089f`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (237 files), `tests/` (236 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 
