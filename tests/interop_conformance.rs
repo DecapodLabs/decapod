@@ -17,6 +17,152 @@ mod harness;
 
 use harness::Harness;
 
+fn isolated_command(root: &std::path::Path, program: &std::ffi::OsStr) -> std::process::Command {
+    let mut command = std::process::Command::new(program);
+    command.current_dir(root);
+    for (key, _) in std::env::vars_os() {
+        let name = key.to_string_lossy();
+        if ["DECAPOD_", "GIT_", "BUILDKITE", "GITHUB", "XDG_"]
+            .iter()
+            .any(|prefix| name.starts_with(prefix))
+        {
+            command.env_remove(key);
+        }
+    }
+    command
+        .env("HOME", root)
+        .env("XDG_CONFIG_HOME", root.join("config"))
+        .env("XDG_CACHE_HOME", root.join("cache"))
+        .env("XDG_DATA_HOME", root.join("data"))
+        .env("GIT_CONFIG_GLOBAL", "/dev/null")
+        .env("GIT_CONFIG_NOSYSTEM", "1");
+    command
+}
+
+#[test]
+fn unregistered_rpc_is_rejected_before_project_startup() {
+    use decapod::core::bounded_process::BoundedCommand;
+    use std::time::Duration;
+
+    let fixture = tempfile::tempdir().unwrap();
+    let command = |program: &std::ffi::OsStr| isolated_command(fixture.path(), program);
+    let initialized = command(std::ffi::OsStr::new("git"))
+        .args(["init", "-q"])
+        .bounded_output(Duration::from_secs(30))
+        .unwrap();
+    assert!(initialized.status.success());
+    let output = command(harness::resolve_decapod_bin().as_os_str())
+        .args(["rpc", "--op", "interop.unregistered", "--params", "{}"])
+        .bounded_output(Duration::from_secs(30))
+        .unwrap();
+    let response: Value = serde_json::from_slice(&output.stdout)
+        .unwrap_or_else(|_| panic!("expected typed RPC refusal: {}", combined(&output)));
+    assert_eq!(response["success"], false);
+    assert_eq!(response["error"]["code"], "unknown_op");
+    assert!(
+        std::fs::read_dir(fixture.path())
+            .unwrap()
+            .all(|entry| entry.unwrap().file_name() == ".git"),
+        "an unknown RPC operation must not initialize a project or session"
+    );
+}
+
+#[test]
+fn malformed_rpc_parameters_cannot_drop_required_negotiation() {
+    use decapod::core::bounded_process::BoundedCommand;
+    use std::{ffi::OsStr, time::Duration};
+
+    let fixture = tempfile::tempdir().unwrap();
+    let binary = harness::resolve_decapod_bin();
+    let command = |program: &OsStr| isolated_command(fixture.path(), program);
+    let initialized = command(OsStr::new("git"))
+        .args(["init", "-q"])
+        .bounded_output(Duration::from_secs(30))
+        .unwrap();
+    assert!(initialized.status.success());
+    for params in [
+        "{",
+        r#"{"required_extensions":["unsupported"],}"#,
+        r#"{"required_extensions":[1e400]}"#,
+    ] {
+        let output = command(binary.as_os_str())
+            .args(["rpc", "--op", "interop.negotiate", "--params", params])
+            .bounded_output(Duration::from_secs(30))
+            .unwrap();
+        assert!(!output.status.success(), "{}", combined(&output));
+        assert!(
+            String::from_utf8_lossy(&output.stderr).contains("Invalid JSON parameters"),
+            "{}",
+            combined(&output)
+        );
+        assert!(
+            std::fs::read_dir(fixture.path())
+                .unwrap()
+                .all(|entry| entry.unwrap().file_name() == ".git"),
+            "invalid parameters must be refused before project or session startup"
+        );
+    }
+
+    // Establish a real project for ordinary compatibility discovery. No
+    // session, custody, provider or gate-skip override is supplied.
+    let initialized = command(binary.as_os_str())
+        .args([
+            "init",
+            "--product-summary",
+            "Isolated RPC negotiation controls",
+        ])
+        .bounded_output(Duration::from_secs(60))
+        .unwrap();
+    assert!(initialized.status.success(), "{}", combined(&initialized));
+    // Replay the original false accept on an initialized project, then prove
+    // ordinary negotiation still succeeds after that refusal.
+    let malformed = command(binary.as_os_str())
+        .args([
+            "rpc",
+            "--op",
+            "interop.negotiate",
+            "--params",
+            r#"{"required_extensions":["unsupported"],}"#,
+        ])
+        .bounded_output(Duration::from_secs(30))
+        .unwrap();
+    assert!(!malformed.status.success(), "{}", combined(&malformed));
+    assert!(
+        String::from_utf8_lossy(&malformed.stderr).contains("Invalid JSON parameters"),
+        "{}",
+        combined(&malformed)
+    );
+    for params in [
+        None,
+        Some("{}"),
+        Some(r#"{"required_extensions":["receipts"]}"#),
+    ] {
+        let mut invocation = command(binary.as_os_str());
+        invocation.args(["rpc", "--op", "interop.negotiate"]);
+        if let Some(params) = params {
+            invocation.args(["--params", params]);
+        }
+        let output = invocation.bounded_output(Duration::from_secs(30)).unwrap();
+        assert!(output.status.success(), "{}", combined(&output));
+        let response: Value = serde_json::from_slice(&output.stdout).unwrap();
+        assert_eq!(response["success"], true, "{response}");
+        assert_eq!(response["result"]["outcome"]["negotiated"], true);
+    }
+    let output = command(binary.as_os_str())
+        .args([
+            "rpc",
+            "--op",
+            "interop.negotiate",
+            "--params",
+            r#"{"required_extensions":["unsupported"]}"#,
+        ])
+        .bounded_output(Duration::from_secs(30))
+        .unwrap();
+    let response: Value = serde_json::from_slice(&output.stdout).unwrap();
+    assert_eq!(response["success"], false, "{response}");
+    assert_eq!(response["error"]["code"], "negotiation_refused");
+}
+
 /// Read-only ops whose dispatch acceptance is proven against the real binary
 /// (an advertised op that dispatch rejects as `unknown_op` fails the suite).
 fn read_only_dispatch_probes() -> Vec<(&'static str, Value)> {
@@ -38,6 +184,7 @@ fn read_only_dispatch_probes() -> Vec<(&'static str, Value)> {
         ("context.bindings", json!({})),
         ("constitution.get", json!({"section": "core/DECAPOD"})),
         ("schema.get", json!({"entity": "todo"})),
+        ("intent.reconcile", json!({})),
         ("store.query", json!({"entity": "todo"})),
         ("standards.resolve", json!({})),
         ("mentor.obligations", json!({})),
@@ -160,6 +307,56 @@ fn discovery_and_negotiation() {
         .as_array()
         .cloned()
         .unwrap_or_default();
+    h.check(
+        "manifest.session_requirements",
+        "rpc-stdin:interop.manifest",
+        "bundle export/import, mentor and assurance advertise their actual session gate",
+        serde_json::to_string(&caps).unwrap(),
+        [
+            "context.bundle.export", "context.bundle.import",
+            "mentor.obligations", "assurance.evaluate",
+        ].iter().all(|op| caps.iter().any(|cap| {
+            cap["id"] == format!("rpc:{op}")
+                && cap["implementation"]["session_required"] == true
+        })),
+        None,
+        vec!["session gates remain authoritative; automatic acquisition is not session-free execution".into()],
+    );
+    h.check(
+        "manifest.current_dispatch_entries",
+        "rpc-stdin:interop.manifest",
+        "intent.reconcile, state.resolve and state.diff are implemented and advertised",
+        serde_json::to_string(&caps.iter().map(|cap| &cap["id"]).collect::<Vec<_>>()).unwrap(),
+        ["intent.reconcile", "state.resolve", "state.diff"]
+            .iter()
+            .all(|op| {
+                caps.iter().any(|cap| {
+                    cap["id"] == format!("rpc:{op}")
+                        && cap["implementation_status"] == "implemented"
+                })
+            }),
+        None,
+        vec!["registered names and manifest metadata share the existing catalog".into()],
+    );
+    h.check(
+        "manifest.source_coverage_is_not_execution",
+        "rpc-stdin:interop.manifest",
+        "all capabilities not_run; source coverage locations retained",
+        serde_json::to_string(
+            &caps
+                .iter()
+                .map(|cap| (&cap["id"], &cap["evidence"]))
+                .collect::<Vec<_>>(),
+        )
+        .unwrap(),
+        caps.iter().all(|cap| cap["evidence"]["state"] == "not_run")
+            && caps.iter().any(|cap| {
+                cap["evidence"]["conformance_test"].is_string()
+                    && cap["evidence"]["evidence_ref"].is_string()
+            }),
+        None,
+        vec!["test registration describes source coverage, not an observed execution".into()],
+    );
     let mcp = caps.iter().find(|c| c["id"] == "transport:mcp");
     h.check(
         "manifest.mcp_intentionally_not_used",
@@ -204,7 +401,7 @@ fn discovery_and_negotiation() {
     }
     h.check(
         "manifest.ops_dispatch_accepted",
-        "rpc-stdin:<14 read-only ops>",
+        "rpc-stdin:<read-only probes>",
         "no advertised op is rejected as unknown_op by the real dispatcher",
         if rejected.is_empty() {
             "all dispatch-accepted".to_string()

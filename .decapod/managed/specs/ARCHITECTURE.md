@@ -1,5 +1,47 @@
 # Architecture
 
+## Source coverage and execution observations (#871)
+
+The required broker preparation probe measures the competing mutation's elapsed
+time before releasing the mock preparation and awaiting its client cleanup.
+It retains the strict ten-second bound and explicitly checks that preparation
+was still blocked when the competing mutation completed. Cleanup time cannot
+impersonate a measured broker serialization failure; product behavior and the
+required native recipe remain unchanged.
+
+The library regression compares every RPC session descriptor with the existing
+session bypass predicate and the earlier read-only database inspection route.
+Four stale false descriptors are corrected without changing those guards.
+The actual-binary manifest scenario checks their emitted values separately.
+
+`lib.rs::parse_rpc_request` propagates malformed flag-parameter JSON through
+the existing validation error boundary, just as malformed stdin framing does.
+Only absent parameters default to an empty object. Existing specialized
+inventory and maintenance diagnostics remain in their own branches. The
+black-box regression uses a fresh private Git project, removes ambient gate and
+provider overrides, proves rejection before project/session files exist, then
+initializes a real project and executes valid ordinary negotiation controls.
+It also replays the malformed required extension on that initialized project
+before the valid controls, exercising the original false accept and recovery.
+
+`interop::rpc_catalog` emits registered names and manifest metadata from the
+same declarations. The public `lib.rs::run` entrypoint builds unknown-name
+refusals with `core::rpc::error_response` before resolving project state, opening
+sessions or entering specialized schema/database routing. Registered operations
+continue through their existing handlers and authority gates. Black-box controls
+cover the formerly omitted reconciliation capability and confirm that unknown
+names return the typed envelope in a fresh Git fixture without project/session
+initialization.
+
+`src/decapod/core/interop.rs` describes implemented operations and known test
+locations without executing tests during discovery. Static coverage tables
+populate references with `NotRun`; `validate_manifest` refuses execution-state
+assertions lacking an authenticated observation surface. Existing full-validation
+and canonical workunit producers remain the owners of their own proof domains;
+their mere existence cannot prove that a particular conformance test executed.
+Adding current observed conformance still requires an explicit binding to those
+owners and independently verified test execution, rather than another registry.
+
 ## Source-policy currency continuity (#1753)
 
 `entrypoint_integrity::preserves_source_entrypoint_versions` reuses the existing
@@ -988,7 +1030,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `7b88d5d3e68ce397408f69e5635bceee4071a1c57b84cab441c0b3083ee7e3a7`
+- Repository signal fingerprint: `3ee2937b2b0c719bb5b0f08d8c9c19faf265587b0c8a753a5d8a90e08eec6422`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (236 files), `tests/` (235 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
