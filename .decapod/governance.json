@@ -634,6 +634,15 @@
       "id": "security-review-current",
       "summary": "Record current-content security review required by publication admission; no kernel gate changes",
       "input_digest": "sha256:92df67e2e1ae23d4e3ad4e4eaeb685154908b5b198e5d9c0f267a611a251cd0c"
+    },
+    {
+      "id": "rpc-bootstrap-regression-repair",
+      "summary": "Repair root bootstrap RPC regression exposed by actual macOS source CI, retaining mutation mandates and native workspace custody; current reviews and regression evidence recorded",
+      "input_digest": "sha256:116be7285ce4244e941a670864ee6d8bb9379ff61e7d628d42a2beade699368c",
+      "proof_refs": [
+        "src/decapod/lib.rs",
+        "tests/support/justfile_inventory.rs"
+      ]
     }
   ],
   "intents": {
@@ -675,22 +684,22 @@
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Reviewed current context owner and callers. Existing bounded-projection section correctly describes the common resolver, durable audit versus operative context and legacy wrapper; the added reason/topic limits refine the interface without changing architecture.",
-          "reviewed_code_fingerprint": "e452a9a4aeb507f2c05d1a8c363cb279534c8c37811a0b3e4c065ad7f0177aaf",
+          "reason": "Reviewed current common resolver, bootstrap RPC classification and custody owners. Existing architecture is accurate and the change adds no authority engine or store.",
+          "reviewed_code_fingerprint": "dcd12cb1faf011c2962d5fed5c8e490c8579c4292c9ad4c62732bfaa32d31029",
           "spec_material_hash": "3f980e69215f687fc85b0378720299c0df7dcfdd5bd2e31ef29da19a64be614f"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Reviewed current resolver, capsule canonicalization and RPC callers: explicit bindings precede unique-term coverage; no-match suppresses filler; optional selection preserves old canonical hashes; excerpt, reason-term and topic bounds are documented. Retrieval is advisory and does not authenticate human intent or host delivery.",
-          "reviewed_code_fingerprint": "e452a9a4aeb507f2c05d1a8c363cb279534c8c37811a0b3e4c065ad7f0177aaf",
-          "spec_material_hash": "e9dd9cc35868a64d05db7b7e58799ea59524144c684d6bbf035684fdf86f037e"
+          "reason": "Reviewed bounded context and bootstrap mandate regression repair, including preservation of worktree-free data-store operations under their existing awareness/mandate owner. Root initialization, status and ensure remain usable; actual protected mutation/publication gates remain enforced.",
+          "reviewed_code_fingerprint": "dcd12cb1faf011c2962d5fed5c8e490c8579c4292c9ad4c62732bfaa32d31029",
+          "spec_material_hash": "7d038b7ce06df1a89c3a412c4d4de9f8b8ada22b2d52d0b06314fc29437a10be"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Reviewed override failure, authority metadata, RPC mandates and corpus provenance: selected text does not confer execution permission; invalid overrides fail at fallible callers; kernel gates and independent proof remain unchanged. Existing security prose remains accurate.",
-          "reviewed_code_fingerprint": "e452a9a4aeb507f2c05d1a8c363cb279534c8c37811a0b3e4c065ad7f0177aaf",
+          "reason": "Reviewed current RPC classifiers: discovery/bootstrap exemptions preserve original initialization order; no changes to mutation awareness, task claims, workspace creation custody or publication proof; emitted mandates remain inspectable.",
+          "reviewed_code_fingerprint": "dcd12cb1faf011c2962d5fed5c8e490c8579c4292c9ad4c62732bfaa32d31029",
           "spec_material_hash": "0c791a6100ed5aec7fe4cedfa16680988dd1e48d50d00af272ef9dff372c3d4d"
         }
       ],
@@ -704,14 +713,18 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1794958026Z"
+      "updated_at": "1794959622Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:87a3e43065bc08610b1d95cc29c291013373c175852ae59b2314d6725f9ec948",
+      "artifact_hash": "sha256:8809279ac2c976e59bd28e7f2e0356ed434119938978391c6b4e7682b31f6343",
       "checks": [
+        {
+          "name": "bootstrap-rpc-regression",
+          "status": "passed"
+        },
         {
           "name": "bounded-selection-metadata",
           "status": "passed"
@@ -741,8 +754,12 @@
           "status": "unavailable"
         },
         {
+          "name": "macos-inventory-regression",
+          "status": "passed"
+        },
+        {
           "name": "native-ci",
-          "status": "partial"
+          "status": "failed"
         },
         {
           "name": "no_match_negative",
@@ -813,10 +830,24 @@
             "intent_id": "intent:change_01M7NQXTQ8MSHMYM11DJ5YRWJJ",
             "kind": "trajectory_step_recorded",
             "sequence": 9
+          },
+          {
+            "detail": "trajectory:branch_01M7NQXTTWEEHK0YNBJBBX8ERJ",
+            "event_id": "event:10",
+            "intent_id": "intent:change_01M7NQXTQ8MSHMYM11DJ5YRWJJ",
+            "kind": "trajectory_step_recorded",
+            "sequence": 10
+          },
+          {
+            "detail": "trajectory:branch_01M7NQXTTWEEHK0YNBJBBX8ERJ",
+            "event_id": "event:11",
+            "intent_id": "intent:change_01M7NQXTQ8MSHMYM11DJ5YRWJJ",
+            "kind": "trajectory_step_recorded",
+            "sequence": 11
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 9,
+        "next_sequence": 11,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M7NQXTTWEEHK0YNBJBBX8ERJ": {
@@ -932,6 +963,37 @@
                 ],
                 "sequence": 9,
                 "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:10",
+                "observations": [
+                  "c1da4c9f: actual macOS golden/Justfile integration failed because restored no-master mandate blocked bootstrap agent.init on root main. Buildkite11941 and GitHub44199857481 corroborate. Full collector interrupted for repair after840423ms provider wait; receipt RZivCh retained, never ready. Existing bootstrap RPC classifier now exempts agent.init/workspace.status/workspace.ensure while mutation checks stay enforced; new classification and existing APFS inventory regressions pending."
+                ],
+                "proof_refs": [
+                  "native-ci"
+                ],
+                "scope": [
+                  "constitution-context-1772-1774-657-880-1095-879"
+                ],
+                "sequence": 10,
+                "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:11",
+                "observations": [
+                  "After CI-reproduced root bootstrap rejection: bootstrap_rpc_does_not_require test passed; actual cli_contracts justfile_inventory executed four tests with zero failures, including case_insensitive_apfs and tracked-index inventory. Fixture assertion was corrected to preserve existing worktree-free store.upsert semantics while retaining mandate enforcement. No runtime gate was removed for mutation/publication."
+                ],
+                "proof_refs": [
+                  "bootstrap-rpc-regression",
+                  "macos-inventory-regression"
+                ],
+                "scope": [
+                  "constitution-context-1772-1774-657-880-1095-879"
+                ],
+                "sequence": 11,
+                "validation_findings": []
               }
             ]
           }
@@ -943,10 +1005,12 @@
       ],
       "destination": "pull request",
       "evidence": [
+        "After CI-reproduced root bootstrap rejection: bootstrap_rpc_does_not_require test passed; actual cli_contracts justfile_inventory executed four tests with zero failures, including case_insensitive_apfs and tracked-index inventory. Fixture assertion was corrected to preserve existing worktree-free store.upsert semantics while retaining mandate enforcement. No runtime gate was removed for mutation/publication.",
         "Buildkite Decapod Validate #11903 succeeded for c82cdf5d; full native collector interrupted for current-content review repair; GitHub governance-artifacts failed SPEC_REVIEW_REQUIRED for INTERFACES.md, now explicitly reviewed; no publication readiness asserted.",
         "Correction to inventory count: 105 inventoried paths were compared, not 107. Exact version-only delta and digest remain as observed.",
         "PROOF_PROFILE_RECONCILIATION_REQUIRED; complete 107-source inventory matches accepted master; since edbfc00 only Cargo package/lock version 0.148.7 to 0.148.9 differs, and accepted tag v0.148.9 tree equals 6ab6de3.",
         "Pre-change actual-binary negative receipt 01M7NR06P8P78Q7NMJJV44T4HH; post-change suite pending configured full validation.",
+        "c1da4c9f: actual macOS golden/Justfile integration failed because restored no-master mandate blocked bootstrap agent.init on root main. Buildkite11941 and GitHub44199857481 corroborate. Full collector interrupted for repair after840423ms provider wait; receipt RZivCh retained, never ready. Existing bootstrap RPC classifier now exempts agent.init/workspace.status/workspace.ensure while mutation checks stay enforced; new classification and existing APFS inventory regressions pending.",
         "cargo test --lib core::docs::tests: 7 passed; context_capsule_cli: 5 passed; repaired context_capsule_rpc: 5 passed; context_capsule_schema: 5 passed. Earlier RPC setup: 5 failures due unknown actor, repaired with explicit isolated fixture identity. Full validation collector first hit HTTP403 public quota, then was interrupted before mutation for fixture repair; no full readiness receipt exists.",
         "cargo test --lib core::docs::tests: eight tests passed on updated reason/topic limits; corpus-sized adversarial query metadata below 48 KiB; repeated output identical",
         "receipt:01M7NR06P8P78Q7NMJJV44T4HH; capsule:9636e0e74c098cb8647bdbdd0f536d08e320ba170598a95999e2530911328434"

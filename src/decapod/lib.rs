@@ -8244,7 +8244,12 @@ fn rpc_op_requires_constitutional_awareness(op: &str) -> bool {
 fn rpc_op_skips_mandate_enforcement(op: &str) -> bool {
     matches!(
         op,
-        "context.resolve"
+        // Bootstrap and status must work before an isolated workspace exists.
+        // workspace.ensure enforces creation custody in its native owner.
+        "agent.init"
+            | "workspace.status"
+            | "workspace.ensure"
+            | "context.resolve"
             | "context.scope"
             | "context.bindings"
             | "context.capsule.query"
@@ -13217,6 +13222,21 @@ fn intent_reconciliation_rpc_does_not_require_mutation_custody() {
     assert!(!rpc_op_requires_constitutional_awareness(
         "intent.reconcile"
     ));
+}
+
+#[cfg(test)]
+#[test]
+fn bootstrap_rpc_does_not_require_the_workspace_it_is_discovering_or_creating() {
+    for op in ["agent.init", "workspace.status", "workspace.ensure"] {
+        assert!(!rpc_op_requires_worktree(op));
+        assert!(rpc_op_skips_mandate_enforcement(op));
+    }
+    for op in ["workspace.publish", "scaffold.apply_answer"] {
+        assert!(rpc_op_requires_worktree(op));
+    }
+    for op in ["store.upsert", "workspace.publish", "scaffold.apply_answer"] {
+        assert!(!rpc_op_skips_mandate_enforcement(op));
+    }
 }
 
 /// Run RPC command

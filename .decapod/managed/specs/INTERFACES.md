@@ -11,6 +11,10 @@ operation/path/tag bindings precede lexical coverage; repeated terms contribute
 once. Namespace filtering occurs before ranking. A no-match advisory query emits
 `no_relevant_advisory_fragment` and no alphabetical filler. Mandates retain their
 separate native gate identifiers and point to existing embedded sections.
+Bootstrap RPC initialization, workspace status and workspace creation return
+their existing root-accessible discovery results. Mandates remain visible;
+workspace creation custody is enforced by its native owner, while mutating and
+publication operations retain worktree and mandate enforcement.
 
 New deterministic capsules use version 1.3.0 and bind optional selection evidence
 into their canonical hash. Legacy capsules omit it and preserve their canonical
@@ -1242,7 +1246,7 @@ field. Nothing in this operation authorizes a mutation, approval or completion.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `e452a9a4aeb507f2c05d1a8c363cb279534c8c37811a0b3e4c065ad7f0177aaf`
+- Repository signal fingerprint: `dcd12cb1faf011c2962d5fed5c8e490c8579c4292c9ad4c62732bfaa32d31029`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (236 files), `tests/` (235 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
