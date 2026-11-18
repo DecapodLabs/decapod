@@ -1,5 +1,16 @@
 # Interfaces
 
+## Workunit proof and continuity semantics (#1660)
+
+`record-proof --status pass` may retain an agent declaration about an existing
+artifact. Success does not authorize `transition --to verified`; that operation
+requires a current canonical full-validation record. Readback preserves the
+unproven declaration without a validation epoch or producer reference.
+After relevant trajectory changes, resume refuses the old execution binding.
+Discarding obsolete passing declarations allows a fresh checkpoint and resume;
+the explicit diagnostic fail marker used to discard a claim is not an
+independently executed failed test. Historical journal entries remain intact.
+
 ## Internal source currency agreement (#1753)
 
 The existing private config-only source policy now also governs version-only
@@ -1218,7 +1229,7 @@ field. Nothing in this operation authorizes a mutation, approval or completion.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `59302b283273f65193215ee22c7b207943d8077e5105c464f9f5a2e7ac6faa43`
+- Repository signal fingerprint: `f83bf824db90af102863ef3e10ceb795364b81e02331a3cf94ed5b62d8836696`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (236 files), `tests/` (235 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

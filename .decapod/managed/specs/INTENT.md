@@ -1,5 +1,17 @@
 # Intent
 
+## Actual-boundary workunit proof controls (#1660, #1735)
+
+An agent-declared passing result and a real source file's digest must remain
+diagnostic declarations. The existing canonical full-validation producer owns
+VERIFIED admission. The campaign's actual-binary control reaches an admitted
+task worktree and current execution checkpoint without gate-skip variables;
+recording a source-file pass succeeds, while VERIFIED is refused without the
+canonical producer record. The journal retains the declaration and CLAIMED
+status. This confirms the bounded guard, not the issue's entire proof matrix.
+Fresh trusted proof, split-store recovery, replay and publication remain
+separate acceptance obligations.
+
 ## Complete scoped source currency (#1753)
 
 The current follow-up also repairs the source-version policy's currency boundary.
@@ -430,7 +442,7 @@ These declarations select authoring and proof obligations; they do not attest im
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `59302b283273f65193215ee22c7b207943d8077e5105c464f9f5a2e7ac6faa43`
+- Repository signal fingerprint: `f83bf824db90af102863ef3e10ceb795364b81e02331a3cf94ed5b62d8836696`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (236 files), `tests/` (235 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
