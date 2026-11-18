@@ -9,6 +9,7 @@ use crate::core::events;
 use crate::core::store::Store;
 use clap::{Parser, Subcommand};
 use serde::{Deserialize, Serialize};
+pub mod outcomes;
 
 #[derive(Parser, Debug)]
 #[clap(
@@ -22,6 +23,11 @@ pub struct FlightRecorderCli {
 
 #[derive(Subcommand, Debug)]
 pub enum FlightRecorderCommand {
+    /// Render bounded opt-in host observations; never creates proof or authority
+    Compare {
+        #[clap(long)]
+        input: std::path::PathBuf,
+    },
     /// Render governance timeline from event logs
     Timeline {
         /// Output format: 'text' or 'json'
@@ -44,6 +50,15 @@ pub enum FlightRecorderCommand {
 
 pub fn run_flight_recorder_cli(store: &Store, cli: FlightRecorderCli) -> Result<(), DecapodError> {
     match cli.command {
+        FlightRecorderCommand::Compare { input } => {
+            let report = outcomes::read_and_compare(&input).map_err(DecapodError::IoError)?;
+            println!(
+                "{}",
+                serde_json::to_string_pretty(&report)
+                    .map_err(|e| DecapodError::ValidationError(e.to_string()))?
+            );
+            Ok(())
+        }
         FlightRecorderCommand::Timeline { format, limit } => render_timeline(store, &format, limit),
         FlightRecorderCommand::Transcript { output, actor } => {
             render_transcript(store, output.as_deref(), actor.as_deref())
@@ -269,6 +284,7 @@ pub fn schema() -> serde_json::Value {
         "version": "0.1.0",
         "description": "Governance timeline renderer - makes the narrow corridor legible",
         "commands": [
+            { "name": "compare", "description": "Opt-in compact observations; no authenticated proof or publication authority", "parameters": ["input"] },
             { "name": "timeline", "description": "Render governance timeline from event logs", "parameters": ["format", "limit"] },
             { "name": "transcript", "description": "Export transcript as markdown", "parameters": ["output", "actor"] }
         ],

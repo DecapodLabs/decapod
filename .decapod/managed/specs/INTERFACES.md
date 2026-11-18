@@ -1,5 +1,49 @@
 # Interfaces
 
+## Complete context and live recovery (#1772, #657)
+
+context.resolve adds governed_plan with canonical intent, declared plan state and explicit bound/unbound task relation from the existing orientation owner. New capsules carry the optional same projection; absent legacy fields retain their original canonical hash. Live bundle import rejects changed knowledge or intent; a legacy omission with applicable current knowledge, conflict or plan requires refresh. Oversized complete envelopes return context_budget_exceeded (ordinary RPC process-exit semantics remain unchanged); capsule/bundle errors use CONTEXT_BUDGET_EXCEEDED.
+
+## Bounded Constitution projection (#1772)
+
+`DocFragment` retains its existing fields. Context resolution adds separate
+`selection` evidence: stable node/section identity, declared authority and binding,
+active status, embedded or project-override source hash, fragment hash, resolver
+version and reproducible selection reasons. These labels do not authenticate a
+human decision or prove that the host delivered context to a model. Explicit
+operation/path/tag bindings precede lexical coverage; repeated terms contribute
+once. Namespace filtering occurs before ranking. A no-match advisory query emits
+`no_relevant_advisory_fragment` and no alphabetical filler. Mandates retain their
+separate native gate identifiers and point to existing embedded sections.
+Bootstrap RPC initialization, workspace status and workspace creation return
+their existing root-accessible discovery results. Mandates remain visible;
+workspace creation custody is enforced by its native owner, while mutating and
+publication operations retain worktree and mandate enforcement.
+
+New deterministic capsules use version 1.3.0 and bind optional selection evidence
+into their canonical hash. Legacy capsules omit it and preserve their canonical
+serialization. The resolver caps selected text at 8,192 UTF-8 bytes and twelve
+fragments; `context_bytes` counts excerpt bytes, excluding envelope and metadata.
+Unmatched exclusions are aggregated without injecting the excluded source text.
+Selection reasons consider at most 32 unique query terms of at most 64 bytes;
+capsule topics accept at most 4,096 bytes, bounding the echoed query envelope.
+Authorized directive overrides replace embedded text in the operative projection;
+the embedded source and override remain separately inspectable. Invalid override
+structure fails the fallible CLI/RPC owner. Retrieval supplies context, never an
+additional execution authorization or a performance-effectiveness claim.
+
+## Constitution admission and chronology (#1774, #879)
+
+Constitution source schema 3.1.0 adds explicit authority_review metadata for the fourteen reviewed binding nodes. The build owner rejects identity/category mismatch, unresolved references, router ineligibility, unsupported enforcement assertions and metadata-only promotion. Existing advisory nodes and proof discussion retain their meaning. The review basis is inspectable provenance, not authenticated approval. The optional build-tools binary decapod-constitution-history accepts a full accepted SHA and captured public evidence; its versioned JSON distinguishes source dates, tag dates and observed original release publication. Missing evidence remains null.
+
+## Scoped knowledge recovery (#657)
+
+context.resolve adds optional task_id and a typed knowledge projection. store.upsert knowledge accepts scope, merge_key, on_conflict, status, ttl_policy, expires_ts and claim_id through the existing owner. store.query with explicit id returns inactive history rows; id plus history=true returns up to64 correction events within1MiB, otherwise fails explicitly. New capsules use1.4.0 and bind optional knowledge; omitted legacy fields preserve canonical serialization. Bundle import recomputes the current knowledge projection and rejects CONTEXT_BUNDLE_STALE_KNOWLEDGE after correction, source observation or expiry changes. Source confidence remains declared provenance, never authenticated human policy.
+
+## Cooperative host boundaries and opt-in outcomes (#880, #1095)
+
+infer boundary --input accepts bounded decapod.native-boundary.v1 requests, chooses only the current executable and passes literal argv to native owners. Tool results record host declarations only; completion invokes full native validate. trace flight-recorder compare --input accepts strict decapod.outcome-observations.v1 records with explicit unknown measurements and identities. Duplicate/mismatched joins reject; unsuccessful and partial runs remain visible. The report separates independent functional correctness from declared native-completion-qualified useful work. Harmful-context rate is optional observed/reviewed evidence, never a default zero. Both result contracts deny publication and merge authority.
+
 ## Config repair and accepted authority (#1771, #1776)
 
 Configuration errors use `INVALID_CONFIG_SCHEMA` with the original parser
@@ -1277,8 +1321,8 @@ field. Nothing in this operation authorizes a mutation, approval or completion.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `325bb52abe2b2d4059279715a9322ef8ca5a525b74763f360326b4059015089f`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (237 files), `tests/` (236 files)
+- Repository signal fingerprint: `d6c4453306d34c72c25c078c9185a15e8271554b7c871d21f1179d53b28f748c`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (3 files), `src/` (239 files), `tests/` (243 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 

@@ -1,5 +1,48 @@
 # Architecture
 
+## Complete context and live recovery (#1772, #657)
+
+Context recovery reuses the existing governed-plan projection alongside scoped advisory knowledge; it creates no additional authority store. The complete pretty-serialized RPC, deterministic capsule and portable bundle are bounded to 262144 bytes, including duplicated fragments and identity metadata. Oversized context refuses explicitly before recording constitutional awareness; it does not silently drop operative authority.
+
+## Constitution selection owner (#1772)
+
+`core::docs::resolve_scoped_context` is the shared selector for legacy fragments,
+CLI/RPC context resolution and scoped capsules. It ranks explicit bindings before
+unique lexical coverage, filters namespaces before truncation, and records source
+identity beside the stable fragment contract. `context_capsule` no longer fills
+an empty result from sorted corpus paths. Existing override parsing remains the
+authority owner; malformed overlays are not treated as missing. The selector is
+deterministic for fixed source/override/query inputs and keeps the global corpus
+durable without publishing all of it as active context. Knowledge correction,
+host delivery and independent outcome measurement retain their separate owners.
+
+## Constitution source admission and public provenance (#1774, #879)
+
+The existing Constitution build stage validates the raw JSON graph before
+compression and embedding. A small shared Rust admission check and the existing
+JSON schema pin the accepted binding/router roles, require explicit review
+metadata for binding nodes, validate node/category identity and references, and
+reject unsupported machine-enforcement assertions. Advisory research remains
+contributable and does not acquire authority by ranking or authored metadata.
+Promotion changes require an explicit admission-code change and ordinary PR
+review; the recorded basis is not an authenticated approval receipt. Existing
+native workspace and mandate gates remain the execution owners.
+
+The opt-in Rust public-history generator reads immutable accepted source plus an
+explicit public tag/release capture. It verifies tag objects, emits source/blob
+identities and original observed release publication dates, and never scans
+arbitrary local branches or private artifacts. Source history, author testimony
+and measured outcomes remain separate evidence classes. No runtime service or
+additional policy engine is introduced.
+
+## Scoped knowledge recovery (#657)
+
+Knowledge continuation reuses the canonical knowledge and federation tables and existing capsule/bundle owners. Corrections run in one broker transaction and append the prior record to the existing knowledge event stream; failed insertion rolls back both supersession and history. Read-time expiry does not depend on a maintenance job. The bounded projection is advisory below current intent and policy, with explicit same-key conflicts and source observations rather than another authority engine. No conversation archive or remote store is introduced.
+
+## Cooperative host boundaries and opt-in outcomes (#880, #1095)
+
+The thin infer boundary adapter delegates typed lifecycle boundaries to existing prompt, RPC, custody, reflection, trajectory, validation and resume owners. It introduces no agent runtime or policy interpreter. The existing flight recorder gains an opt-in compact outcome comparison; evidence classes and null measurements remain distinct from native admission.
+
 ## Source coverage and execution observations (#871)
 
 The recursive unique-key JSON decoder previously local to
@@ -1044,8 +1087,8 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `325bb52abe2b2d4059279715a9322ef8ca5a525b74763f360326b4059015089f`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (237 files), `tests/` (236 files)
+- Repository signal fingerprint: `d6c4453306d34c72c25c078c9185a15e8271554b7c871d21f1179d53b28f748c`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (3 files), `src/` (239 files), `tests/` (243 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 

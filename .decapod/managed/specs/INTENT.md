@@ -1,5 +1,9 @@
 # Intent
 
+## Bounded context and evidence (#1772, #1774, #657, #880, #1095, #879)
+
+Decapod preserves one broad global Constitution and durable repository knowledge while delivering bounded applicable context on demand. Current intent and accepted policy govern; repeated rejected history and contributed research do not acquire authority through salience. Contributors can publish useful advisory knowledge through normal reviewed source admission. Agents and operators can inspect source/status, conflicts, corrections and public chronology without replaying long conversations. Cooperative host boundaries and compact opt-in outcome observations retain missing measurements and failed attempts. A selected excerpt, host declaration, historical receipt or comparison report never replaces current native custody, proof, approval or publication admission. Real-host delivery and efficacy claims require their own independently observed evidence.
+
 ## Unambiguous client requirements
 
 Interop discovery must not silently erase a caller's required semantics.
@@ -541,8 +545,8 @@ These declarations select authoring and proof obligations; they do not attest im
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `325bb52abe2b2d4059279715a9322ef8ca5a525b74763f360326b4059015089f`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (237 files), `tests/` (236 files)
+- Repository signal fingerprint: `d6c4453306d34c72c25c078c9185a15e8271554b7c871d21f1179d53b28f748c`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (3 files), `src/` (239 files), `tests/` (243 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 

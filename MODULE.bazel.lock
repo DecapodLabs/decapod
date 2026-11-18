@@ -501,7 +501,7 @@
           "REPO_MAPPING:rules_rust+,bazel_tools bazel_tools",
           "REPO_MAPPING:rules_rust+,rules_cc rules_cc+",
           "FILE:@@+cargo_inputs+decapod_cargo_inputs//Cargo.lock 5d430ebd6c8e43d293d73073f5f6536c17948e64111a42af36be7e0b976b5e21",
-          "FILE:@@+cargo_inputs+decapod_cargo_inputs//Cargo.toml 3b7ce8bfc0433e522a5c3585449bec508d83136d18fd12550769bf616cd4b0eb"
+          "FILE:@@+cargo_inputs+decapod_cargo_inputs//Cargo.toml 8b03e82fc2f7d376fcc64963688e459f208b0428868c535b912b6c06e7686125"
         ],
         "generatedRepoSpecs": {
           "crates": {

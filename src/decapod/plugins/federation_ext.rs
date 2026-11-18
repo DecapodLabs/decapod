@@ -10,12 +10,38 @@ pub fn list_nodes(
     priority: Option<String>,
     scope: Option<String>,
 ) -> Result<Vec<FederationNode>, error::DecapodError> {
+    list_nodes_with_limit(root, node_type, status, priority, scope, None, None)
+}
+
+pub(crate) fn context_nodes(
+    root: &Path,
+    scopes: &std::collections::BTreeSet<String>,
+) -> Result<Vec<FederationNode>, error::DecapodError> {
+    list_nodes_with_limit(root, None, None, None, None, Some(257), Some(scopes))
+}
+
+fn list_nodes_with_limit(
+    root: &Path,
+    node_type: Option<String>,
+    status: Option<String>,
+    priority: Option<String>,
+    scope: Option<String>,
+    limit: Option<usize>,
+    scopes: Option<&std::collections::BTreeSet<String>>,
+) -> Result<Vec<FederationNode>, error::DecapodError> {
     let broker = DbBroker::new(root);
     let db_path = federation_db_path(root);
 
     broker.with_conn(&db_path, "decapod", None, "federation.list", |conn| {
         let mut conditions = vec!["1=1".to_string()];
         let mut param_values: Vec<Box<dyn crate::core::db::types::ToSql>> = vec![];
+        if let Some(scopes) = scopes {
+            conditions.push("node_type IN ('decision','preference','lesson') AND status IN ('active','disputed')".into());
+            let placeholders = scopes.iter().map(|scope| {
+                param_values.push(Box::new(scope.clone())); format!("?{}", param_values.len())
+            }).collect::<Vec<_>>().join(",");
+            conditions.push(format!("scope IN ({placeholders})"));
+        }
 
         if let Some(ref nt) = node_type {
             let idx = param_values.len() + 1;
@@ -45,8 +71,11 @@ pub fn list_nodes(
                          FROM (SELECT metadata FROM node_edges
                                WHERE source_id = nodes.id AND edge_type = 'source'
                                ORDER BY json_extract(metadata, '$.source'))) AS sources_json
-                 FROM nodes WHERE {} ORDER BY updated_at DESC",
-            conditions.join(" AND ")
+                 FROM nodes WHERE {} ORDER BY updated_at DESC, id {}",
+            conditions.join(" AND "),
+            limit
+                .map(|limit| format!("LIMIT {limit}"))
+                .unwrap_or_default()
         );
 
         let mut stmt = conn.prepare(&sql)?;

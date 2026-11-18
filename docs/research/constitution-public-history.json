@@ -1,0 +1,239 @@
+{
+  "schema_version": "decapod.constitution-history.v1",
+  "repository": "DecapodLabs/decapod",
+  "accepted_ref": "6ab6de3134286a790d78d370ca3fb43c0d92f834",
+  "ordering": "first matching commit in reverse topological accepted/public-tag history; containing releases by observed original publication timestamp",
+  "limits": "Source predicates establish inspected implementation bytes, not execution, design inception, priority or effectiveness. Commit/tag dates are mutable repository metadata. Optional forge metadata is an explicitly captured observation, not authenticated by this generator. No arbitrary local refs or private artifacts are read.",
+  "public_evidence_hash": "2bf2156844de97c184d986f3f0923ffc85d4ade77a8086148be9ea4c3f048a13",
+  "public_evidence_class": "operator_captured_public_forge",
+  "facts": [
+    {
+      "mechanism": "embedded_markdown_constitution",
+      "commit": "0b4378d01fd5cb7033856938db6a0b24cbbb26b9",
+      "author_date": "2026-02-11T03:01:48-08:00",
+      "committer_date": "2026-02-11T03:01:48-08:00",
+      "source_path": "src/core/assets.rs",
+      "source_blob": "48a980f13d67c4f5673c9c5f0057629aab8d8f74",
+      "predicate": [
+        "CONSTITUTION_CORE_DECAPOD",
+        "include_str!"
+      ],
+      "first_containing_version_tag": "v0.0.1",
+      "tag_date": "2026-02-11T04:45:02-08:00",
+      "github_release_publication": {
+        "published_at": "2026-02-11T12:51:11Z",
+        "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.0.1"
+      },
+      "evidence_class": "repository_source",
+      "provenance": "https://github.com/DecapodLabs/decapod/blob/0b4378d01fd5cb7033856938db6a0b24cbbb26b9/src/core/assets.rs"
+    },
+    {
+      "mechanism": "generated_agent_entrypoint_template",
+      "commit": "0b4378d01fd5cb7033856938db6a0b24cbbb26b9",
+      "author_date": "2026-02-11T03:01:48-08:00",
+      "committer_date": "2026-02-11T03:01:48-08:00",
+      "source_path": "src/core/assets.rs",
+      "source_blob": "48a980f13d67c4f5673c9c5f0057629aab8d8f74",
+      "predicate": [
+        "TEMPLATE_AGENTS",
+        "AGENTS.md",
+        "include_str!"
+      ],
+      "first_containing_version_tag": "v0.0.1",
+      "tag_date": "2026-02-11T04:45:02-08:00",
+      "github_release_publication": {
+        "published_at": "2026-02-11T12:51:11Z",
+        "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.0.1"
+      },
+      "evidence_class": "repository_source",
+      "provenance": "https://github.com/DecapodLabs/decapod/blob/0b4378d01fd5cb7033856938db6a0b24cbbb26b9/src/core/assets.rs"
+    },
+    {
+      "mechanism": "repository_override_resolution",
+      "commit": "c164749cc5a3007dcae7afafcb04df9b71f4e314",
+      "author_date": "2026-02-12T15:07:21-08:00",
+      "committer_date": "2026-02-12T15:07:21-08:00",
+      "source_path": "src/core/assets.rs",
+      "source_blob": "2292cb558bae93894bdc4949b868d921401977b3",
+      "predicate": [
+        "get_override_doc",
+        "OVERRIDE.md",
+        "get_merged_doc"
+      ],
+      "first_containing_version_tag": "v0.1.4",
+      "tag_date": "2026-02-12T15:13:05-08:00",
+      "github_release_publication": {
+        "published_at": "2026-02-12T23:20:02Z",
+        "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.1.4"
+      },
+      "evidence_class": "repository_source",
+      "provenance": "https://github.com/DecapodLabs/decapod/blob/c164749cc5a3007dcae7afafcb04df9b71f4e314/src/core/assets.rs"
+    },
+    {
+      "mechanism": "section_fragment_with_source_hash",
+      "commit": "b50afbb654bc5dcb854523a943a78cd075ae115b",
+      "author_date": "2026-02-17T15:41:09-08:00",
+      "committer_date": "2026-02-17T15:41:09-08:00",
+      "source_path": "src/core/docs.rs",
+      "source_blob": "66b03b506b00905137bc699603619164e2f32cd0",
+      "predicate": [
+        "pub fn get_fragment",
+        "Sha256",
+        "excerpt"
+      ],
+      "first_containing_version_tag": "v0.26.0",
+      "tag_date": "2026-02-17T23:47:46Z",
+      "github_release_publication": {
+        "published_at": "2026-02-17T23:47:47Z",
+        "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.26.0"
+      },
+      "evidence_class": "repository_source",
+      "provenance": "https://github.com/DecapodLabs/decapod/blob/b50afbb654bc5dcb854523a943a78cd075ae115b/src/core/docs.rs"
+    },
+    {
+      "mechanism": "task_query_scoped_selection",
+      "commit": "329f5c234e73e6cc270a60e53bccb0c60b1389d6",
+      "author_date": "2026-02-23T04:28:38-08:00",
+      "committer_date": "2026-02-23T04:28:38-08:00",
+      "source_path": "src/core/docs.rs",
+      "source_blob": "deface293ca95a96e9f4d7b06f6d6b34814d6454",
+      "predicate": [
+        "pub fn resolve_scoped_fragments",
+        "touched_paths",
+        "intent_tags"
+      ],
+      "first_containing_version_tag": "v0.38.0",
+      "tag_date": "2026-02-23T12:47:14Z",
+      "github_release_publication": {
+        "published_at": "2026-02-23T12:47:14Z",
+        "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.38.0"
+      },
+      "evidence_class": "repository_source",
+      "provenance": "https://github.com/DecapodLabs/decapod/blob/329f5c234e73e6cc270a60e53bccb0c60b1389d6/src/core/docs.rs"
+    },
+    {
+      "mechanism": "global_json_node_corpus",
+      "commit": "0e87b0ebf9c3252482f2a37e1bb5b4188b044e12",
+      "author_date": "2026-05-21T21:55:18-07:00",
+      "committer_date": "2026-05-21T21:55:18-07:00",
+      "source_path": "assets/constitution.json",
+      "source_blob": "d16364c556f2dbbcdd41125ae14575debdae0512",
+      "predicate": [
+        "\"nodes\"",
+        "\"core/DECAPOD\""
+      ],
+      "first_containing_version_tag": "v0.49.0",
+      "tag_date": "2026-05-22T04:59:05Z",
+      "github_release_publication": {
+        "published_at": "2026-05-22T04:59:06Z",
+        "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.49.0"
+      },
+      "evidence_class": "repository_source",
+      "provenance": "https://github.com/DecapodLabs/decapod/blob/0e87b0ebf9c3252482f2a37e1bb5b4188b044e12/assets/constitution.json"
+    },
+    {
+      "mechanism": "compressed_json_embedding",
+      "commit": "94f17b3a4a762ba0c7ad3421360ba0ac5f1b12bb",
+      "author_date": "2026-05-27T17:33:29-07:00",
+      "committer_date": "2026-05-27T17:33:29-07:00",
+      "source_path": "build/compress_constitution.rs",
+      "source_blob": "36f9ffa9347e9a48d0c15d35769cca369fa03768",
+      "predicate": [
+        "GzEncoder",
+        "serde_json::to_string(&node)"
+      ],
+      "first_containing_version_tag": "v0.55.0",
+      "tag_date": "2026-05-28T00:36:17Z",
+      "github_release_publication": {
+        "published_at": "2026-05-28T00:36:19Z",
+        "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.55.0"
+      },
+      "evidence_class": "repository_source",
+      "provenance": "https://github.com/DecapodLabs/decapod/blob/94f17b3a4a762ba0c7ad3421360ba0ac5f1b12bb/build/compress_constitution.rs"
+    },
+    {
+      "mechanism": "state_bound_context_capsule",
+      "commit": "b4ea35b07ebf4990ef47184d6c13a22483ab37df",
+      "author_date": "2026-02-23T06:51:52-08:00",
+      "committer_date": "2026-02-23T06:51:52-08:00",
+      "source_path": "src/core/context_capsule.rs",
+      "source_blob": "e7aeff7c130e01d7cc197e75429934689942fd3c",
+      "predicate": [
+        "capsule_hash",
+        "task_id",
+        "pub fn query_embedded_capsule"
+      ],
+      "first_containing_version_tag": "v0.38.5",
+      "tag_date": "2026-02-23T15:18:51Z",
+      "github_release_publication": {
+        "published_at": "2026-02-23T15:18:52Z",
+        "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.38.5"
+      },
+      "evidence_class": "repository_source",
+      "provenance": "https://github.com/DecapodLabs/decapod/blob/b4ea35b07ebf4990ef47184d6c13a22483ab37df/src/core/context_capsule.rs"
+    },
+    {
+      "mechanism": "override_source_provenance",
+      "commit": "3590e46c46460b9e2fd42a8a1e447f017273e233",
+      "author_date": "2026-08-01T15:55:57-07:00",
+      "committer_date": "2026-08-01T19:37:05-07:00",
+      "source_path": "src/decapod/core/assets.rs",
+      "source_blob": "604f64fac1278cef660fd457e16741baa04821c6",
+      "predicate": [
+        "ResolvedOverrideEvidence",
+        "source_hash",
+        "body_hash",
+        "precedence"
+      ],
+      "first_containing_version_tag": "v0.93.0",
+      "tag_date": "2026-08-02T02:46:16Z",
+      "github_release_publication": {
+        "published_at": "2026-08-02T02:46:17Z",
+        "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.93.0"
+      },
+      "evidence_class": "repository_source",
+      "provenance": "https://github.com/DecapodLabs/decapod/blob/3590e46c46460b9e2fd42a8a1e447f017273e233/src/decapod/core/assets.rs"
+    },
+    {
+      "mechanism": "native_workspace_refusal",
+      "commit": "9f071132dd996fe713159a27dca012b0b325cb26",
+      "author_date": "2026-02-17T12:45:08-08:00",
+      "committer_date": "2026-02-17T12:45:08-08:00",
+      "source_path": "src/core/workspace.rs",
+      "source_blob": "1fb3e4db1a3f29b2ee421baa5183182b67c53274",
+      "predicate": [
+        "git.is_protected",
+        "BlockerKind::ProtectedBranch",
+        "can_work"
+      ],
+      "first_containing_version_tag": "v0.25.1",
+      "tag_date": "2026-02-17T20:51:27Z",
+      "github_release_publication": {
+        "published_at": "2026-02-17T20:51:28Z",
+        "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.25.1"
+      },
+      "evidence_class": "repository_source",
+      "provenance": "https://github.com/DecapodLabs/decapod/blob/9f071132dd996fe713159a27dca012b0b325cb26/src/core/workspace.rs"
+    },
+    {
+      "mechanism": "native_proof_gate",
+      "commit": "0537bf48b9eac9c71a4fe5558f9cf2f43c4b602d",
+      "author_date": "2026-02-23T06:40:40-08:00",
+      "committer_date": "2026-02-23T06:40:40-08:00",
+      "source_path": "src/core/workunit.rs",
+      "source_blob": "f2b7c61379cc0dc90a0fc5fc3915561a4e929bf8",
+      "predicate": [
+        "validate_verified_manifest",
+        "proof"
+      ],
+      "first_containing_version_tag": "v0.38.4",
+      "tag_date": "2026-02-23T14:57:39Z",
+      "github_release_publication": {
+        "published_at": "2026-02-23T14:57:40Z",
+        "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.38.4"
+      },
+      "evidence_class": "repository_source",
+      "provenance": "https://github.com/DecapodLabs/decapod/blob/0537bf48b9eac9c71a4fe5558f9cf2f43c4b602d/src/core/workunit.rs"
+    }
+  ]
+}

@@ -1,0 +1,205 @@
+{
+  "schema_version": "decapod.host-attempt-inventory.v1",
+  "attempts": [
+    {
+      "capture_id": "antigravity-governed-cold",
+      "process_exit": 3,
+      "start": {
+        "unix_ns": 1794962077596437000,
+        "clock": "unix_wall"
+      },
+      "end": {
+        "unix_ns": 1794962682377690000,
+        "exit_code": 3,
+        "clock": "unix_wall"
+      },
+      "retained_capture_hashes": {
+        "stderr.log": "73fdcd73794ccd2c4236c9ec4d169f05f142bd2c80d4be70b95a2b3e6002abe0",
+        "host.jsonl": "24796665198da203ba6498ed559e62bbbfb4bc61942a9cbcd240c315de8999d9"
+      },
+      "limit": "Operator capture inventory; exit zero does not establish engineering correctness or governance completion."
+    },
+    {
+      "capture_id": "claude-governed-cold/attempt2",
+      "process_exit": 1,
+      "start": {
+        "unix_ns": 1794962020313698000,
+        "clock": "unix_wall"
+      },
+      "end": {
+        "unix_ns": 1794962021266383000,
+        "exit_code": 1,
+        "clock": "unix_wall"
+      },
+      "retained_capture_hashes": {
+        "stderr.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "host.jsonl": "31d1ea2d4ae1986f1c4bcfc468a628f1451966040066816ce5f70a729dbe0e12"
+      },
+      "limit": "Operator capture inventory; exit zero does not establish engineering correctness or governance completion."
+    },
+    {
+      "capture_id": "claude-governed-cold",
+      "process_exit": 1,
+      "start": {
+        "unix_ns": 1794961263486779000,
+        "clock": "unix_wall"
+      },
+      "end": {
+        "unix_ns": 1794961264140251000,
+        "exit_code": 1,
+        "clock": "unix_wall"
+      },
+      "retained_capture_hashes": {
+        "stderr.log": "2122456c9827a04aff9792c1149505097ac016d61c330a0df0dd73976358987c",
+        "host.jsonl": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "limit": "Operator capture inventory; exit zero does not establish engineering correctness or governance completion."
+    },
+    {
+      "capture_id": "codex-baseline-cold/attempt3",
+      "process_exit": 0,
+      "start": {
+        "unix_ns": 1794960044318493000,
+        "monotonic_ns": 15190416,
+        "attempt": 3
+      },
+      "end": {
+        "unix_ns": 1794960074756110000,
+        "monotonic_ns": 13098000,
+        "exit_code": 0
+      },
+      "retained_capture_hashes": {
+        "stderr.log": "1aa26269eb1cc57f86b235a03cda53c004edb5b1e9fc99d4da4f00843293d721",
+        "host.jsonl": "5e6137d06e1e4c467cd3a6dc71e44fc21ae4ead743f4a9a5befdcf1add96b6f6"
+      },
+      "limit": "Operator capture inventory; exit zero does not establish engineering correctness or governance completion."
+    },
+    {
+      "capture_id": "codex-baseline-cold",
+      "process_exit": 1,
+      "start": {
+        "unix_ns": 1794959576324896000,
+        "monotonic_ns": 21865416,
+        "attempt": 2
+      },
+      "end": {
+        "unix_ns": 1794959577011828000,
+        "monotonic_ns": 22140666,
+        "exit_code": 1
+      },
+      "retained_capture_hashes": {
+        "stderr.log": "6aa9956b783a9cb8d078c83478d8e740ffc26f788d4ac61b4d9865d5deee12f1",
+        "host.jsonl": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "limit": "Operator capture inventory; exit zero does not establish engineering correctness or governance completion."
+    },
+    {
+      "capture_id": "codex-baseline-paired",
+      "process_exit": 0,
+      "start": {
+        "unix_ns": 1794960528558901000,
+        "clock": "unix_wall"
+      },
+      "end": {
+        "unix_ns": 1794960558744368000,
+        "exit_code": 0,
+        "clock": "unix_wall"
+      },
+      "retained_capture_hashes": {
+        "stderr.log": "1aa26269eb1cc57f86b235a03cda53c004edb5b1e9fc99d4da4f00843293d721",
+        "host.jsonl": "c64b0b4fa7bc0ae2d8c59cccfef35a9d94386ab67427a4b2e13af2f7dad198c6"
+      },
+      "limit": "Operator capture inventory; exit zero does not establish engineering correctness or governance completion."
+    },
+    {
+      "capture_id": "codex-governed-cold",
+      "process_exit": 0,
+      "start": {
+        "unix_ns": 1794961013933640000,
+        "clock": "unix_wall"
+      },
+      "end": {
+        "unix_ns": 1794961097317255000,
+        "exit_code": 0,
+        "clock": "unix_wall"
+      },
+      "retained_capture_hashes": {
+        "stderr.log": "704233a7db062812f09b30fbd7635407269279d9b42a747152da7b79f566f39e",
+        "host.jsonl": "66309267cf220123031151665aba5d739f840d97d9dfcfd16fb60cef6bd03777"
+      },
+      "limit": "Operator capture inventory; exit zero does not establish engineering correctness or governance completion."
+    },
+    {
+      "capture_id": "codex-governed-identified",
+      "process_exit": 0,
+      "start": {
+        "unix_ns": 1794961928984323000,
+        "clock": "unix_wall"
+      },
+      "end": {
+        "unix_ns": 1794962233179373000,
+        "exit_code": 0,
+        "clock": "unix_wall"
+      },
+      "retained_capture_hashes": {
+        "stderr.log": "1aa26269eb1cc57f86b235a03cda53c004edb5b1e9fc99d4da4f00843293d721",
+        "host.jsonl": "c2a84d53d82832d0440e40c5ffb97d5c61f1fcc3c9cefd6ac09e3a152bd1bd2a"
+      },
+      "limit": "Operator capture inventory; exit zero does not establish engineering correctness or governance completion."
+    },
+    {
+      "capture_id": "codex-baseline-cold/argument-parser-attempt1",
+      "process_exit": null,
+      "start": null,
+      "end": null,
+      "missing_reason": "argument parser failure captured before timing instrumentation",
+      "retained_capture_hashes": {
+        "host-attempt1.jsonl": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stderr-attempt1.log": "876763d6dd2f8dddbadc3ba2d6320d332e3432b8d59fa31e2e9090c7b0660b78"
+      },
+      "limit": "No inference or timed cost observation; launch failure remains retained."
+    },
+    {
+      "capture_id": "codex-governed-local-target",
+      "process_exit": -15,
+      "start": {
+        "unix_ns": 1794978826089773000,
+        "clock": "unix_wall",
+        "monotonic_ns": 38866208
+      },
+      "end": {
+        "unix_ns": 1794979426105838000,
+        "exit_code": -15,
+        "clock": "unix_wall",
+        "monotonic_elapsed_ns": 600011256583,
+        "timed_out": true
+      },
+      "retained_capture_hashes": {
+        "stderr.log": "1aa26269eb1cc57f86b235a03cda53c004edb5b1e9fc99d4da4f00843293d721",
+        "host.jsonl": "0189f001894917d7f649c190454d6dddda1f3ae3e7587b0753acd237f5b0fd60"
+      },
+      "limit": "Operator capture inventory; exit zero does not establish engineering correctness or governance completion."
+    },
+    {
+      "capture_id": "codex-governed-local-recovery",
+      "process_exit": 0,
+      "start": {
+        "unix_ns": 1794980507432476000,
+        "clock": "unix_wall",
+        "monotonic_ns": 251646708
+      },
+      "end": {
+        "unix_ns": 1794980597637076000,
+        "exit_code": 0,
+        "clock": "unix_wall",
+        "monotonic_elapsed_ns": 90204143333,
+        "timed_out": false
+      },
+      "retained_capture_hashes": {
+        "stderr.log": "1aa26269eb1cc57f86b235a03cda53c004edb5b1e9fc99d4da4f00843293d721",
+        "host.jsonl": "df4521a8fc8664494039a061df814eadd2240ed6f2169580783e84caad6e2e35"
+      },
+      "limit": "Operator capture inventory; exit zero does not establish engineering correctness or governance completion."
+    }
+  ]
+}

@@ -2381,6 +2381,8 @@ pub(crate) struct InferCli {
 
 #[derive(Subcommand, Debug)]
 pub(crate) enum InferCommand {
+    /// Cooperative host boundary over existing kernel owners; never executes arbitrary tools
+    Boundary(crate::core::interop::native_boundary::Cli),
     /// Initialize inference context: returns selected_context, excluded_context, token_budget
     Init(InferInitCli),
     /// Return a precise orientation packet before agent inference

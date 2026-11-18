@@ -38,6 +38,11 @@ path = "assets/tools/build_lifecycle.rs"
 required-features = ["build-tools"]
 
 [[bin]]
+name = "decapod-constitution-history"
+path = "assets/tools/constitution_history.rs"
+required-features = ["build-tools"]
+
+[[bin]]
 name = "decapod-release-metadata"
 path = "assets/tools/release_metadata.rs"
 required-features = ["build-tools"]
