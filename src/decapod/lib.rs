@@ -8242,20 +8242,13 @@ fn rpc_op_requires_constitutional_awareness(op: &str) -> bool {
 }
 
 fn rpc_op_skips_mandate_enforcement(op: &str) -> bool {
-    matches!(
-        op,
-        "context.resolve"
-            | "context.scope"
-            | "context.bindings"
-            | "context.capsule.query"
-            | "constitution.get"
-            | "schema.get"
-            | "intent.reconcile"
-            | "specs.refresh"
-            | "interop.manifest"
-            | "interop.negotiate"
-            | "interop.project"
-    )
+    // Reuse the canonical RPC custody/awareness classification. Read/bootstrap
+    // operations must be available before source-authoring custody exists;
+    // their native owners still enforce their own mutation/proof prerequisites.
+    op == "specs.refresh"
+        || (!rpc_op_requires_worktree(op)
+            && !rpc_op_requires_constitutional_awareness(op)
+            && !matches!(op, "validate.run" | "assurance.evaluate"))
 }
 
 fn enforce_constitutional_awareness_for_rpc(
@@ -11562,70 +11555,33 @@ mod rpc_handlers {
         let limit = params.limit.unwrap_or(5);
         let resolved_authority = core::assets::resolved_override_evidence(ctx.project_root)?;
 
-        let mut fragments = Vec::new();
-        let bindings = docs::get_bindings(ctx.project_root);
-
-        if let Some(o) = &params.op
-            && let Some(doc_ref) = bindings.ops.get(o)
-        {
-            let parts: Vec<&str> = doc_ref.split('#').collect();
-            let path = parts[0];
-            let anchor = parts.get(1).copied();
-            if let Some(f) = docs::get_fragment(ctx.project_root, path, anchor) {
-                fragments.push(f);
-            }
-        }
-
-        if let Some(paths) = &params.touched_paths {
-            for p in paths {
-                for (prefix, doc_ref) in &bindings.paths {
-                    if p.contains(prefix) {
-                        let parts: Vec<&str> = doc_ref.split('#').collect();
-                        let path = parts[0];
-                        let anchor = parts.get(1).copied();
-                        if let Some(f) = docs::get_fragment(ctx.project_root, path, anchor) {
-                            fragments.push(f);
-                        }
-                    }
-                }
-            }
-        }
-
-        if let Some(tags) = &params.intent_tags {
-            for t in tags {
-                if let Some(doc_ref) = bindings.tags.get(t) {
-                    let parts: Vec<&str> = doc_ref.split('#').collect();
-                    let path = parts[0];
-                    let anchor = parts.get(1).copied();
-                    if let Some(f) = docs::get_fragment(ctx.project_root, path, anchor) {
-                        fragments.push(f);
-                    }
-                }
-            }
-        }
-
-        fragments.sort_by(|a, b| a.r#ref.cmp(&b.r#ref));
-        fragments.dedup_by(|a, b| a.r#ref == b.r#ref);
-
         let touched_vec = params.touched_paths.clone().unwrap_or_default();
         let tags_vec = params.intent_tags.clone().unwrap_or_default();
-
-        let scoped_fragments = docs::resolve_scoped_fragments(
+        let context = docs::resolve_scoped_context(
             ctx.project_root,
             params.query.as_deref(),
             params.op.as_deref(),
             &touched_vec,
             &tags_vec,
             limit,
+            None,
         );
-        fragments.extend(scoped_fragments.clone());
-        fragments.sort_by(|a, b| a.r#ref.cmp(&b.r#ref));
-        fragments.dedup_by(|a, b| a.r#ref == b.r#ref);
-        fragments.truncate(limit.max(1));
+        let fragments = context.fragments;
+        let scoped_fragments = fragments.clone();
 
         let local_specs = core::project_specs::local_project_specs_context(ctx.project_root);
 
         let result = ContextResolveResult {
+            governed_plan: governed_plan_context(ctx.project_root, params.task_id.as_deref())?,
+            selection: context.selection,
+            knowledge: knowledge::resolve_context(
+                ctx.store,
+                ctx.project_root,
+                params.query.as_deref(),
+                params.task_id.as_deref(),
+                &touched_vec,
+                None,
+            )?,
             fragments: fragments.clone(),
             scoped_fragments,
             local_project_specs: LocalProjectSpecs {
@@ -11639,9 +11595,7 @@ mod rpc_handlers {
             },
             resolved_authority: resolved_authority.clone(),
         };
-        mark_constitution_context_resolved(ctx.project_root)?;
-
-        Ok(success_response(
+        let response = success_response(
             ctx.request.id.clone(),
             ctx.request.op.clone(),
             ctx.request.params.clone(),
@@ -11689,7 +11643,39 @@ mod rpc_handlers {
                 },
             ],
             ctx.mandates.clone(),
-        ))
+        );
+        if serde_json::to_vec_pretty(&response)
+            .map_err(|e| error::DecapodError::ValidationError(format!("context encoding: {e}")))?
+            .len()
+            > docs::MAX_CONTEXT_ENVELOPE_BYTES
+        {
+            let mut refused = error_response(
+                ctx.request.id.clone(),
+                ctx.request.op.clone(),
+                ctx.request.params.clone(),
+                "context_budget_exceeded".into(),
+                "Complete context exceeds 262144 bytes; narrow the source context before retrying"
+                    .into(),
+                None,
+                ctx.mandates.clone(),
+            );
+            refused.allowed_next_ops.clear();
+            if refused.id.len() > 128 {
+                use sha2::Digest;
+                refused.id = format!("sha256:{:x}", sha2::Sha256::digest(refused.id.as_bytes()));
+            }
+            if serde_json::to_vec_pretty(&refused)
+                .map_or(true, |bytes| bytes.len() > docs::MAX_CONTEXT_ENVELOPE_BYTES)
+            {
+                refused.mandates.clear();
+                refused.receipt.governing_anchors.clear();
+                refused.error.as_mut().unwrap().message =
+                    "Mandatory context exceeds the complete budget; no authority delivered".into();
+            }
+            return Ok(refused);
+        }
+        mark_constitution_context_resolved(ctx.project_root)?;
+        Ok(response)
     }
 
     pub(crate) fn handle_context_capsule_query(
@@ -12095,20 +12081,24 @@ mod rpc_handlers {
                     .to_string();
 
                 db::initialize_knowledge_db(&ctx.store.root)?;
-                let res = knowledge::add_knowledge(
+                let field = |name: &str| payload.and_then(|p| p.get(name)).and_then(|v| v.as_str());
+                let res = knowledge::add_scoped_knowledge(
                     ctx.store,
                     knowledge::AddKnowledgeParams {
                         id: &id,
                         title: &title,
                         content: &text,
                         provenance: &provenance,
-                        claim_id: None,
-                        merge_key: None,
-                        conflict_policy: knowledge::KnowledgeConflictPolicy::Merge,
-                        status: "active",
-                        ttl_policy: "persistent",
-                        expires_ts: None,
+                        claim_id: field("claim_id"),
+                        merge_key: field("merge_key"),
+                        conflict_policy: knowledge::parse_conflict_policy(
+                            field("on_conflict").unwrap_or("merge"),
+                        )?,
+                        status: field("status").unwrap_or("active"),
+                        ttl_policy: field("ttl_policy").unwrap_or("persistent"),
+                        expires_ts: field("expires_ts"),
                     },
+                    field("scope").unwrap_or("root"),
                 )?;
                 let result = StoreUpsertResult {
                     id: res.id,
@@ -12226,20 +12216,51 @@ mod rpc_handlers {
                     .and_then(|v| v.as_str())
                     .unwrap_or("");
                 db::initialize_knowledge_db(&ctx.store.root)?;
-                let entries = knowledge::search_knowledge(
-                    ctx.store,
-                    text,
-                    knowledge::SearchOptions {
-                        as_of: None,
-                        window_days: None,
-                        rank: "relevance",
-                    },
-                )?;
-                let result = StoreQueryResult {
-                    items: entries
+                let entries = if let Some(id) = params
+                    .query
+                    .as_ref()
+                    .and_then(|q| q.get("id"))
+                    .and_then(|v| v.as_str())
+                {
+                    knowledge::get_knowledge(ctx.store, id)?
                         .into_iter()
-                        .map(|e| serde_json::to_value(e).unwrap())
-                        .collect(),
+                        .collect()
+                } else {
+                    knowledge::search_knowledge(
+                        ctx.store,
+                        text,
+                        knowledge::SearchOptions {
+                            as_of: None,
+                            window_days: None,
+                            rank: "relevance",
+                        },
+                    )?
+                };
+                let result = StoreQueryResult {
+                    items: if params
+                        .query
+                        .as_ref()
+                        .and_then(|q| q.get("history"))
+                        .and_then(|v| v.as_bool())
+                        == Some(true)
+                    {
+                        let id = params
+                            .query
+                            .as_ref()
+                            .and_then(|q| q.get("id"))
+                            .and_then(|v| v.as_str())
+                            .ok_or_else(|| {
+                                error::DecapodError::ValidationError(
+                                    "knowledge history requires an explicit id".into(),
+                                )
+                            })?;
+                        knowledge::knowledge_history(ctx.store, id)?
+                    } else {
+                        entries
+                            .into_iter()
+                            .map(|e| serde_json::to_value(e).unwrap())
+                            .collect()
+                    },
                     next_page: None,
                 };
                 Ok(success_response(
@@ -13263,6 +13284,34 @@ fn intent_reconciliation_rpc_does_not_require_mutation_custody() {
     assert!(!rpc_op_requires_constitutional_awareness(
         "intent.reconcile"
     ));
+}
+
+#[cfg(test)]
+#[test]
+fn bootstrap_rpc_does_not_require_the_workspace_it_is_discovering_or_creating() {
+    for op in [
+        "agent.init",
+        "workspace.status",
+        "workspace.ensure",
+        "mentor.obligations",
+        "store.query",
+        "standards.resolve",
+    ] {
+        assert!(!rpc_op_requires_worktree(op));
+        assert!(rpc_op_skips_mandate_enforcement(op));
+    }
+    for op in ["workspace.publish", "scaffold.apply_answer"] {
+        assert!(rpc_op_requires_worktree(op));
+    }
+    for op in [
+        "store.upsert",
+        "workspace.publish",
+        "scaffold.apply_answer",
+        "validate.run",
+        "assurance.evaluate",
+    ] {
+        assert!(!rpc_op_skips_mandate_enforcement(op));
+    }
 }
 
 /// Run RPC command

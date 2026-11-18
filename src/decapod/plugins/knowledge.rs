@@ -4,7 +4,399 @@ use crate::core::error;
 use crate::core::events;
 use crate::core::store::Store;
 use serde::{Deserialize, Serialize};
+use sha2::{Digest, Sha256};
+use std::collections::{BTreeMap, BTreeSet};
 use std::path::{Path, PathBuf};
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Default)]
+pub struct KnowledgeContext {
+    pub schema_version: String,
+    pub status: String,
+    pub records: Vec<KnowledgeContextRecord>,
+    pub conflicts: Vec<Vec<String>>,
+    pub excluded: BTreeMap<String, usize>,
+    pub content_bytes: usize,
+    pub source_hash: String,
+    pub valid_until: Option<String>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+pub struct KnowledgeContextRecord {
+    pub id: String,
+    pub title: String,
+    pub excerpt: String,
+    pub scope: String,
+    pub status: String,
+    pub provenance: Vec<String>,
+    pub provenance_class: String,
+    pub freshness: String,
+    pub authority: String,
+    pub source_hash: String,
+    pub reasons: Vec<String>,
+    pub source_observation: BTreeMap<String, String>,
+}
+
+fn context_json(value: &impl Serialize) -> Result<Vec<u8>, error::DecapodError> {
+    serde_json::to_vec(value).map_err(|e| {
+        error::DecapodError::ValidationError(format!("knowledge context serialization: {e}"))
+    })
+}
+
+/// Disposable advisory projection from the existing local knowledge owners.
+/// Current plan/policy authority remains in its canonical sibling surfaces.
+pub fn resolve_context(
+    store: &Store,
+    repo_root: &Path,
+    query: Option<&str>,
+    task_id: Option<&str>,
+    touched_paths: &[String],
+    as_of: Option<&str>,
+) -> Result<KnowledgeContext, error::DecapodError> {
+    let mut packet = KnowledgeContext {
+        schema_version: "decapod.knowledge-context.v1".into(),
+        status: "no_relevant_advisory_knowledge".into(),
+        ..Default::default()
+    };
+    if store.kind != crate::core::store::StoreKind::Repo {
+        packet.status = "private_store_excluded".into();
+        return Ok(packet);
+    }
+    if !knowledge_db_path(&store.root).is_file() {
+        packet.status = "store_uninitialized".into();
+        return Ok(packet);
+    }
+    let reference = parse_epoch_z(&as_of.map(str::to_owned).unwrap_or_else(now_iso))?;
+    let mut scopes = BTreeSet::from(["root".to_string(), "repo".to_string()]);
+    if let Some(task) = task_id {
+        let scope = format!("task:{task}");
+        validate_scope(&scope)?;
+        scopes.insert(scope);
+    }
+    for path in touched_paths.iter().take(64) {
+        let scope = format!("path:{path}");
+        if validate_scope(&scope).is_ok() {
+            let mut current = Path::new(path);
+            loop {
+                scopes.insert(format!("path:{}", current.to_string_lossy()));
+                let Some(parent) = current.parent().filter(|p| !p.as_os_str().is_empty()) else {
+                    break;
+                };
+                current = parent;
+            }
+        }
+    }
+    let (entries, typed_available, knowledge_available) = DbBroker::new(&store.root).with_conn(&knowledge_db_path(&store.root),
+        "decapod", None, "knowledge.context", |conn| {
+        let table_exists = |name: &str| conn.query_row("SELECT COUNT(*) FROM sqlite_master WHERE type='table' AND name=?1", [name], |row| row.get::<_, i64>(0)).map(|count| count == 1);
+        let typed_available = table_exists("nodes")?;
+        if !table_exists("knowledge")? { return Ok((Vec::new(), typed_available, false)); }
+        let placeholders = (1..=scopes.len()).map(|i| format!("?{i}")).collect::<Vec<_>>().join(",");
+        let sql = format!("SELECT id, title, content, provenance, claim_id, created_at, updated_at,
+            status, merge_key, ttl_policy, expires_ts, supersedes_id, scope FROM knowledge
+            WHERE scope IN ({placeholders}) AND status IN ('active', 'disputed') ORDER BY id LIMIT 257");
+        let mut statement = conn.prepare(&sql)?;
+        let rows = statement.query_map(crate::core::db::params_from_iter(scopes.iter()), |row|
+            Ok((entry_from_row(row)?, row.get::<_, String>(12)?)))?;
+        Ok((rows.collect::<crate::core::db::Result<Vec<_>>>()?, typed_available, true))
+    })?;
+    if !knowledge_available {
+        packet
+            .excluded
+            .insert("knowledge_store_uninitialized".into(), 1);
+    }
+    if entries.len() > 256 {
+        packet.status = "candidate_budget_exceeded".into();
+        return Ok(packet);
+    }
+    let mut candidates = Vec::new();
+    let mut keys = BTreeMap::<String, Vec<(String, String)>>::new();
+    for (entry, scope) in entries {
+        if entry.id.len() > 256
+            || entry.title.len() > 512
+            || entry.content.len() > 65536
+            || entry.provenance.len() > 1024
+            || [&entry.id, &entry.title, &entry.content, &entry.provenance]
+                .into_iter()
+                .any(|text| crate::core::gatekeeper::contains_secret_material(text))
+        {
+            *packet
+                .excluded
+                .entry("unsafe_or_oversized_record".into())
+                .or_default() += 1;
+            continue;
+        }
+        if entry
+            .expires_ts
+            .as_deref()
+            .is_some_and(|ts| !parse_epoch_z(ts).is_ok_and(|expiry| expiry > reference))
+        {
+            *packet
+                .excluded
+                .entry("expired_or_invalid_expiry".into())
+                .or_default() += 1;
+            continue;
+        }
+        if let Some(expiry) = &entry.expires_ts {
+            if packet.valid_until.as_deref().is_none_or(|old| {
+                parse_epoch_z(old).unwrap_or(0) > parse_epoch_z(expiry).unwrap_or(0)
+            }) {
+                packet.valid_until = Some(expiry.clone());
+            }
+        }
+        if let Some(key) = &entry.merge_key {
+            if !key.is_empty() {
+                keys.entry(format!("legacy:{scope}:{key}"))
+                    .or_default()
+                    .push((entry.id.clone(), entry.content.clone()));
+            }
+        }
+        let source_hash = format!("{:x}", Sha256::digest(context_json(&entry)?));
+        candidates.push(KnowledgeContextRecord {
+            id: entry.id,
+            title: entry.title,
+            excerpt: entry.content,
+            scope,
+            status: entry.status,
+            provenance: vec![entry.provenance],
+            provenance_class: "recorded_source_unverified".into(),
+            freshness: "not_captured_at_write".into(),
+            authority: "advisory_below_current_intent_and_policy".into(),
+            source_hash,
+            reasons: vec!["applicable_repository_scope".into()],
+            source_observation: BTreeMap::new(),
+        });
+    }
+    // Typed decisions/preferences/lessons remain owned by federation. A confidence
+    // label is declared provenance, not authenticated human policy.
+    let typed = if typed_available {
+        crate::plugins::federation_ext::context_nodes(&store.root, &scopes)?
+    } else {
+        packet
+            .excluded
+            .insert("typed_store_uninitialized".into(), 1);
+        Vec::new()
+    };
+    if typed.len() > 256 {
+        packet.status = "candidate_budget_exceeded".into();
+        return Ok(packet);
+    }
+    for node in typed {
+        let sources = node.sources.as_deref().unwrap_or_default();
+        if node.id.len() > 240
+            || node.title.len() > 512
+            || node.body.len() > 65536
+            || sources.iter().map(String::len).sum::<usize>() > 1024
+            || [&node.id, &node.title, &node.body]
+                .into_iter()
+                .chain(sources.iter())
+                .any(|text| crate::core::gatekeeper::contains_secret_material(text))
+        {
+            *packet
+                .excluded
+                .entry("unsafe_or_oversized_record".into())
+                .or_default() += 1;
+            continue;
+        }
+        if !matches!(
+            node.node_type.as_str(),
+            "decision" | "preference" | "lesson"
+        ) || !matches!(node.status.as_str(), "active" | "disputed")
+            || !scopes.contains(&node.scope)
+        {
+            continue;
+        }
+        // Nonempty effective bounds use the canonical federation time parser's
+        // RFC3339 contract; malformed or ended records never become operative.
+        let effective = |value: &str| {
+            crate::core::time::parse_rfc3339(value)
+                .ok()
+                .map(|date| date.unix_timestamp())
+        };
+        if node
+            .effective_from
+            .as_deref()
+            .is_some_and(|ts| effective(ts).is_none_or(|t| t > reference as i64))
+            || node
+                .effective_to
+                .as_deref()
+                .is_some_and(|ts| effective(ts).is_none_or(|t| t <= reference as i64))
+        {
+            *packet
+                .excluded
+                .entry("outside_effective_window".into())
+                .or_default() += 1;
+            continue;
+        }
+        let id = format!("federation:{}", node.id);
+        keys.entry(format!(
+            "typed:{}:{}:{}",
+            node.scope,
+            node.node_type,
+            node.title.to_lowercase()
+        ))
+        .or_default()
+        .push((id.clone(), node.body.clone()));
+        let source_hash = format!("{:x}", Sha256::digest(context_json(&node)?));
+        candidates.push(KnowledgeContextRecord {
+            id,
+            title: node.title,
+            excerpt: node.body,
+            scope: node.scope,
+            status: node.status,
+            provenance: node.sources.unwrap_or_default(),
+            provenance_class: format!("declared_{}", node.confidence),
+            freshness: "not_captured_at_write".into(),
+            authority: "advisory_below_current_intent_and_policy".into(),
+            source_hash,
+            reasons: vec!["applicable_typed_knowledge".into()],
+            source_observation: BTreeMap::new(),
+        });
+    }
+    let mut conflict_ids = BTreeSet::new();
+    for entries in keys.values() {
+        if entries
+            .iter()
+            .map(|(_, body)| body)
+            .collect::<BTreeSet<_>>()
+            .len()
+            > 1
+        {
+            let mut ids: Vec<_> = entries.iter().map(|(id, _)| id.clone()).collect();
+            ids.sort();
+            conflict_ids.extend(ids.clone());
+            if packet.conflicts.len() < 8 {
+                if ids.len() > 8 {
+                    *packet
+                        .excluded
+                        .entry("conflict_references_budget".into())
+                        .or_default() += ids.len() - 8;
+                    ids.truncate(8);
+                }
+                packet.conflicts.push(ids);
+            } else {
+                *packet
+                    .excluded
+                    .entry("conflict_groups_budget".into())
+                    .or_default() += 1;
+            }
+        }
+    }
+    let bounded_query: String = query.unwrap_or("").chars().take(4096).collect();
+    let terms: BTreeSet<_> = bounded_query
+        .split(|c: char| !c.is_alphanumeric())
+        .filter(|term| term.len() >= 3 && term.len() <= 64)
+        .map(str::to_lowercase)
+        .collect::<BTreeSet<_>>()
+        .into_iter()
+        .take(32)
+        .collect();
+    candidates.sort_by(|a, b| a.id.cmp(&b.id));
+    for mut record in candidates {
+        let excluded = if record.status == "disputed" || conflict_ids.contains(&record.id) {
+            Some("unresolved_conflict")
+        } else if record.id.len() > 256
+            || record.title.len() > 512
+            || record.provenance.iter().map(String::len).sum::<usize>() > 1024
+        {
+            Some("metadata_budget_exceeded")
+        } else if [&record.id, &record.title, &record.excerpt]
+            .into_iter()
+            .chain(record.provenance.iter())
+            .any(|text| crate::core::gatekeeper::contains_secret_material(text))
+        {
+            Some("credential_material")
+        } else if record.provenance.is_empty() {
+            Some("unavailable_provenance")
+        } else {
+            None
+        };
+        if let Some(reason) = excluded {
+            *packet.excluded.entry(reason.into()).or_default() += 1;
+            continue;
+        }
+        for source in &record.provenance {
+            if let Some(file) = source.strip_prefix("file:") {
+                let file = file.split('#').next().unwrap_or("");
+                let observed = observe_source(repo_root, file);
+                if observed == "unavailable" {
+                    record.freshness = "source_unavailable".into();
+                }
+                record.source_observation.insert(source.clone(), observed);
+            }
+        }
+        let words: BTreeSet<_> = format!("{} {}", record.title, record.excerpt)
+            .split(|c: char| !c.is_alphanumeric())
+            .map(str::to_lowercase)
+            .collect();
+        if !terms.is_empty() && terms.is_disjoint(&words) {
+            *packet.excluded.entry("irrelevant".into()).or_default() += 1;
+            continue;
+        }
+        // Unversioned provenance is visible; current file bytes cannot establish
+        // what was present when an older assertion was recorded.
+        if record.provenance.iter().any(|source| {
+            source.starts_with("file:")
+                && !repo_root
+                    .join(
+                        source
+                            .trim_start_matches("file:")
+                            .split('#')
+                            .next()
+                            .unwrap_or(""),
+                    )
+                    .is_file()
+        }) {
+            record.freshness = "source_unavailable".into();
+        }
+        record.excerpt = record
+            .excerpt
+            .chars()
+            .scan(0usize, |bytes, ch| {
+                *bytes += ch.len_utf8();
+                (*bytes <= 512).then_some(ch)
+            })
+            .collect();
+        if packet.records.len() >= 8 || packet.content_bytes + record.excerpt.len() > 4096 {
+            *packet
+                .excluded
+                .entry("output_budget_exceeded".into())
+                .or_default() += 1;
+            continue;
+        }
+        packet.content_bytes += record.excerpt.len();
+        packet.records.push(record);
+    }
+    if !packet.conflicts.is_empty() {
+        packet.status = "unresolved_conflict".into();
+    } else if !packet.records.is_empty() {
+        packet.status = "advisory_knowledge_selected".into();
+    }
+    packet.source_hash = format!("{:x}", Sha256::digest(context_json(&packet)?));
+    Ok(packet)
+}
+
+fn observe_source(repo_root: &Path, relative: &str) -> String {
+    if relative.is_empty()
+        || !Path::new(relative)
+            .components()
+            .all(|part| matches!(part, std::path::Component::Normal(_)))
+    {
+        return "unavailable".into();
+    }
+    let observed = (|| {
+        let root = repo_root.canonicalize().ok()?;
+        let file = root.join(relative).canonicalize().ok()?;
+        if !file.starts_with(&root) || !file.is_file() || file.metadata().ok()?.len() > 1024 * 1024
+        {
+            return None;
+        }
+        Some(format!(
+            "sha256:{:x}",
+            Sha256::digest(std::fs::read(file).ok()?)
+        ))
+    })();
+    observed.unwrap_or_else(|| "unavailable".into())
+}
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct KnowledgeEntry {
@@ -113,6 +505,24 @@ pub fn add_knowledge(
     store: &Store,
     args: AddKnowledgeParams<'_>,
 ) -> Result<AddKnowledgeResult, error::DecapodError> {
+    add_scoped_knowledge(store, args, "root")
+}
+
+/// Scope is an applicability label, never an authorization or promotion claim.
+pub fn add_scoped_knowledge(
+    store: &Store,
+    args: AddKnowledgeParams<'_>,
+    scope: &str,
+) -> Result<AddKnowledgeResult, error::DecapodError> {
+    validate_scope(scope)?;
+    if [args.id, args.title, args.content, args.provenance]
+        .iter()
+        .any(|text| crate::core::gatekeeper::contains_secret_material(text))
+    {
+        return Err(error::DecapodError::ValidationError(
+            "knowledge contains credential material".into(),
+        ));
+    }
     use fancy_regex::Regex;
     let prov_re = Regex::new(
         r"^(file:[^#]+(#L\d+(-L\d+)?)?|url:[^ ]+|cmd:[^ ]+|commit:[a-f0-9]+|event:[A-Z0-9_]+)$",
@@ -128,10 +538,10 @@ pub fn add_knowledge(
 
     if !matches!(
         args.status,
-        "active" | "superseded" | "deprecated" | "stale"
+        "active" | "superseded" | "deprecated" | "stale" | "rejected" | "disputed"
     ) {
         return Err(error::DecapodError::ValidationError(format!(
-            "Invalid knowledge status '{}'. Expected active|superseded|deprecated|stale",
+            "Invalid knowledge status '{}'. Expected active|superseded|deprecated|stale|rejected|disputed",
             args.status
         )));
     }
@@ -181,7 +591,7 @@ pub fn add_knowledge(
     let db_path = knowledge_db_path(&store.root);
     let now = now_iso();
 
-    broker.with_conn(&db_path, "decapod", None, "knowledge.add", |conn| {
+    broker.with_transaction(&db_path, "decapod", None, "knowledge.add", |conn| {
         let mut action = "inserted".to_string();
         let mut effective_id = args.id.to_string();
         let mut superseded_ids = Vec::new();
@@ -189,17 +599,23 @@ pub fn add_knowledge(
         if let Some(merge_key) = args.merge_key {
             let existing = conn.query_row(
                 "SELECT id FROM knowledge WHERE merge_key = ?1 AND status = 'active' AND scope = ?2",
-                params![merge_key, "root"],
+                params![merge_key, scope],
                 |row| row.get::<_, String>(0),
-            );
+            ).optional()?;
 
-            if let Ok(existing_id) = existing {
+            if let Some(existing_id) = existing {
+                let previous = read_knowledge_on_conn(conn, &existing_id)?;
+                events::append_on_conn(conn, events::KNOWLEDGE, &serde_json::json!({
+                    "event_id": crate::core::ulid::new_ulid(), "ts": now,
+                    "event_type": "knowledge.before_correction", "entry": previous,
+                    "scope": scope, "replacement_id": args.id,
+                }))?;
                 match args.conflict_policy {
                     KnowledgeConflictPolicy::Merge => {
                         conn.execute(
                             "UPDATE knowledge
                              SET title = ?2, content = ?3, provenance = ?4, claim_id = ?5,
-                                 ttl_policy = ?6, expires_ts = ?7, updated_at = ?8
+                                 ttl_policy = ?6, expires_ts = ?7, updated_at = ?8, status = ?9
                              WHERE id = ?1",
                             params![
                                 existing_id,
@@ -209,7 +625,8 @@ pub fn add_knowledge(
                                 args.claim_id,
                                 args.ttl_policy,
                                 args.expires_ts,
-                                now
+                                now,
+                                args.status
                             ],
                         )?;
                         action = "merged".to_string();
@@ -233,7 +650,7 @@ pub fn add_knowledge(
                                 now,
                                 now,
                                 store.root.to_string_lossy(),
-                                "root",
+                                scope,
                                 args.status,
                                 args.merge_key,
                                 Some(existing_id),
@@ -264,7 +681,7 @@ pub fn add_knowledge(
                         now,
                         now,
                         store.root.to_string_lossy(),
-                        "root",
+                        scope,
                         args.status,
                         args.merge_key,
                         Option::<String>::None,
@@ -286,7 +703,7 @@ pub fn add_knowledge(
                     now,
                     now,
                     store.root.to_string_lossy(),
-                    "root",
+                    scope,
                     args.status,
                     Option::<String>::None,
                     args.ttl_policy,
@@ -317,7 +734,7 @@ pub fn search_knowledge(
                     status, merge_key, ttl_policy, expires_ts, supersedes_id
              FROM knowledge
              WHERE (title LIKE ?1 OR content LIKE ?1 OR provenance LIKE ?1)
-               AND status = 'active'",
+               AND status = 'active' AND scope IN ('root', 'repo') ORDER BY id",
         )?;
         let q = format!("%{query}%");
         let rows = stmt.query_map(params![q], |row| {
@@ -344,6 +761,24 @@ pub fn search_knowledge(
         }
         Ok(results)
     })?;
+
+    // Expiry is a read boundary; manual decay is maintenance, not a prerequisite.
+    let reference = options
+        .as_of
+        .map(parse_epoch_z)
+        .transpose()?
+        .unwrap_or_else(|| {
+            crate::core::time::now_epoch_z()
+                .trim_end_matches('Z')
+                .parse()
+                .unwrap_or(0)
+        });
+    rows.retain(|entry| {
+        entry
+            .expires_ts
+            .as_deref()
+            .is_none_or(|ts| parse_epoch_z(ts).is_ok_and(|expiry| expiry > reference))
+    });
 
     // Apply as_of temporal filtering
     if let Some(as_of) = options.as_of {
@@ -382,20 +817,14 @@ pub fn search_knowledge(
 
     // Apply recency scoring
     if options.rank == "recency_decay" {
-        let now_secs = {
-            use std::time::{SystemTime, UNIX_EPOCH};
-            SystemTime::now()
-                .duration_since(UNIX_EPOCH)
-                .unwrap_or_default()
-                .as_secs() as f64
-        };
+        let now_secs = reference as f64;
         for entry in &mut rows {
             let created_secs = entry
                 .created_at
                 .trim_end_matches('Z')
                 .parse::<f64>()
                 .unwrap_or(0.0);
-            let age_days = (now_secs - created_secs) / 86400.0;
+            let age_days = (now_secs - created_secs).max(0.0) / 86400.0;
             entry.recency_score = Some(1.0 / (1.0 + age_days));
         }
         rows.sort_by(|a, b| {
@@ -403,10 +832,108 @@ pub fn search_knowledge(
                 .unwrap_or(0.0)
                 .partial_cmp(&a.recency_score.unwrap_or(0.0))
                 .unwrap_or(std::cmp::Ordering::Equal)
+                .then_with(|| a.id.cmp(&b.id))
         });
     }
 
     Ok(rows)
+}
+
+fn validate_scope(scope: &str) -> Result<(), error::DecapodError> {
+    let valid = matches!(scope, "root" | "repo" | "private")
+        || scope.strip_prefix("task:").is_some_and(|id| {
+            !id.is_empty()
+                && id.len() <= 128
+                && id
+                    .bytes()
+                    .all(|c| c.is_ascii_alphanumeric() || b"_-".contains(&c))
+        })
+        || scope.strip_prefix("path:").is_some_and(|path| {
+            !path.is_empty()
+                && path.len() <= 1024
+                && Path::new(path).components().count() <= 32
+                && !Path::new(path).is_absolute()
+                && Path::new(path)
+                    .components()
+                    .all(|part| matches!(part, std::path::Component::Normal(_)))
+        });
+    if valid {
+        Ok(())
+    } else {
+        Err(error::DecapodError::ValidationError(
+            "invalid knowledge scope".into(),
+        ))
+    }
+}
+
+fn entry_from_row(row: &crate::core::db::Row<'_>) -> crate::core::db::Result<KnowledgeEntry> {
+    Ok(KnowledgeEntry {
+        id: row.get(0)?,
+        title: row.get(1)?,
+        content: row.get(2)?,
+        provenance: row.get(3)?,
+        claim_id: row.get(4)?,
+        created_at: row.get(5)?,
+        updated_at: row.get(6)?,
+        status: row.get(7)?,
+        merge_key: row.get(8)?,
+        ttl_policy: row.get(9)?,
+        expires_ts: row.get(10)?,
+        supersedes_id: row.get(11)?,
+        recency_score: None,
+    })
+}
+
+fn read_knowledge_on_conn(
+    conn: &crate::core::db::Connection,
+    id: &str,
+) -> Result<Option<KnowledgeEntry>, error::DecapodError> {
+    Ok(conn
+        .query_row(
+            "SELECT id, title, content, provenance, claim_id, created_at, updated_at,
+        status, merge_key, ttl_policy, expires_ts, supersedes_id FROM knowledge WHERE id = ?1",
+            params![id],
+            entry_from_row,
+        )
+        .optional()?)
+}
+
+/// Explicit history lookup retains superseded/rejected bodies outside live context.
+pub fn get_knowledge(
+    store: &Store,
+    id: &str,
+) -> Result<Option<KnowledgeEntry>, error::DecapodError> {
+    DbBroker::new(&store.root).with_conn(
+        &knowledge_db_path(&store.root),
+        "decapod",
+        None,
+        "knowledge.get",
+        |conn| read_knowledge_on_conn(conn, id),
+    )
+}
+
+/// Explicit bounded audit, never part of the operative context projection.
+pub fn knowledge_history(
+    store: &Store,
+    id: &str,
+) -> Result<Vec<serde_json::Value>, error::DecapodError> {
+    DbBroker::new(&store.root).with_conn(&knowledge_db_path(&store.root), "decapod", None,
+        "knowledge.history", |conn| {
+        let mut statement = conn.prepare("SELECT payload FROM events WHERE stream = 'knowledge'
+            AND event_type = 'knowledge.before_correction' AND json_extract(payload, '$.entry.id') = ?1
+            ORDER BY seq, event_id LIMIT 65")?;
+        let rows = statement.query_map([id], |row| row.get::<_, String>(0))?;
+        let mut history = Vec::new(); let mut bytes = 0usize;
+        for row in rows {
+            let raw = row?; bytes += raw.len();
+            if history.len() >= 64 || bytes > 1024 * 1024 {
+                return Err(error::DecapodError::ValidationError("knowledge history exceeds bounded audit; preserve existing journal for explicit recovery".into()));
+            }
+            history.push(serde_json::from_str(&raw).map_err(|e|
+                error::DecapodError::ValidationError(format!("invalid knowledge history: {e}")))?);
+        }
+        Ok(history)
+    })
 }
 
 /// Log a retrieval feedback event (append-only).
@@ -721,3 +1248,7 @@ pub fn schema() -> serde_json::Value {
         ]
     })
 }
+
+#[cfg(test)]
+#[path = "../../../tests/unit/plugins/knowledge_tests.rs"]
+mod tests;

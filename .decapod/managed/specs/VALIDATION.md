@@ -1,5 +1,17 @@
 # Validation
 
+## Complete context and live recovery (#1772, #657)
+
+Negative-first actual RPC tests reproduced unbounded authored summaries and missing canonical intent. Regression checks require complete-envelope refusal with no large payload, explicit current plan/task binding, full capsule metadata budget and unchanged legacy identity. Knowledge/bundle controls reject corrected or omitted current knowledge. Native complete validation remains independently required; ordinary RPC refusal is assessed by success=false in its envelope, preserving existing exit semantics.
+
+## Constitution admission and chronology (#1774, #879)
+
+Constitution admission is executed before compression by the existing build script and exercised through existing scaffolding tests. Negative controls cover research self-promotion, category/ID mismatch, dangling references and fabricated enforcement claims; legitimate advisory additions remain valid. Claims tests invoke real embedded metadata, mandate IDs and protected/root workspace refusal rather than synthesizing enforced rows. History fixtures cover immutable refs, public release evidence, excluded private orphans and deterministic output. Source-CI/schema checks and full native workbranch proof remain required; focused tests are not publication readiness.
+
+## Scoped knowledge recovery (#657)
+
+Negative-first knowledge regressions reproduce expired entries resurfacing and failed supersession destroying active state; both pass after the owner fixes. Multi-session fixtures cover A replacing repeated rejected B, scoped exclusions, atomic correction history, typed conflicts, source changes, credential rejection and UTF-8 budgets. Existing capsule compatibility and bundle tamper/staleness tests remain required. These deterministic observations establish projection semantics only. Three-host delivery, cost and efficacy require separately observed real-model work and independent native proof.
+
 ## Current report validation scope
 
 The current verification boundary begins at accepted release commit 9d1aed27.
@@ -1461,8 +1473,8 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `59302b283273f65193215ee22c7b207943d8077e5105c464f9f5a2e7ac6faa43`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (236 files), `tests/` (235 files)
+- Repository signal fingerprint: `c59ceb6526c4ac494bb3e44cb16b8664571d62392cd6789b016520f236edd42d`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (1 files), `src/` (236 files), `tests/` (236 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 

@@ -175,6 +175,8 @@ pub struct WorkspacePublishResult {
 // Context Subsystem
 #[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct ContextResolveParams {
+    #[serde(default)]
+    pub task_id: Option<String>,
     pub op: Option<String>,
     pub touched_paths: Option<Vec<String>>,
     pub intent_tags: Option<Vec<String>>,
@@ -184,10 +186,15 @@ pub struct ContextResolveParams {
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct ContextResolveResult {
+    pub governed_plan: GovernedPlanContext,
+    #[serde(default)]
+    pub knowledge: crate::plugins::knowledge::KnowledgeContext,
     pub fragments: Vec<DocFragment>,
     pub scoped_fragments: Vec<DocFragment>,
     pub local_project_specs: LocalProjectSpecs,
     pub resolved_authority: Vec<crate::core::assets::ResolvedOverrideEvidence>,
+    #[serde(default)]
+    pub selection: crate::core::docs::ContextSelection,
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize)]

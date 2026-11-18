@@ -1,6 +1,136 @@
 use std::process::Command;
 use std::sync::{Mutex, OnceLock};
 
+#[path = "../assets/build/constitution_admission.rs"]
+mod constitution_admission;
+
+#[path = "../assets/tools/constitution_history.rs"]
+mod constitution_history;
+
+fn admission_fixture() -> serde_json::Value {
+    serde_json::from_str(include_str!("../assets/constitution.json")).unwrap()
+}
+
+#[test]
+fn global_admission_rejects_metadata_self_promotion_and_broken_references() {
+    let graph = admission_fixture();
+    constitution_admission::validate(&graph).unwrap();
+    let mut hostile = graph.clone();
+    hostile["nodes"]["research/ADAM_2014"]["binding"] = "binding".into();
+    assert!(
+        constitution_admission::validate(&hostile)
+            .unwrap_err()
+            .contains("PROMOTION_REVIEW_REQUIRED")
+    );
+    hostile = graph.clone();
+    hostile["nodes"]["research/ADAM_2014"]["authority"] = "root-router".into();
+    assert!(
+        constitution_admission::validate(&hostile)
+            .unwrap_err()
+            .contains("ROUTER_AUTHORITY")
+    );
+    hostile = graph.clone();
+    hostile["nodes"]["research/ADAM_2014"]["category"] = "core".into();
+    assert!(
+        constitution_admission::validate(&hostile)
+            .unwrap_err()
+            .contains("ID_CATEGORY")
+    );
+    hostile = graph.clone();
+    hostile["nodes"]["research/ADAM_2014"]["links"]["references"] =
+        serde_json::json!(["research/DOES_NOT_EXIST"]);
+    assert!(
+        constitution_admission::validate(&hostile)
+            .unwrap_err()
+            .contains("REFERENCE_UNRESOLVED")
+    );
+    for suffix in [
+        "",
+        "main",
+        "../tree/master",
+        "0123456789012345678901234567890123456789?fake",
+    ] {
+        let mut malformed = graph.clone();
+        malformed["nodes"]["core/DECAPOD"]["authority_review"]["basis"] =
+            format!("https://github.com/DecapodLabs/decapod/commit/{suffix}").into();
+        assert!(
+            constitution_admission::validate(&malformed)
+                .unwrap_err()
+                .contains("AUTHORITY_REVIEW")
+        );
+    }
+    hostile = graph;
+    hostile["nodes"]["research/ADAM_2014"]["enforcement"] = "enforced".into();
+    assert!(
+        constitution_admission::validate(&hostile)
+            .unwrap_err()
+            .contains("UNSUPPORTED_ENFORCEMENT")
+    );
+}
+
+#[test]
+fn advisory_contributions_remain_admissible_without_execution_claims() {
+    let mut graph = admission_fixture();
+    let mut node = graph["nodes"]["research/ADAM_2014"].clone();
+    node["id"] = "research/ADVISORY_CONTRIBUTION".into();
+    graph["nodes"]["research/ADVISORY_CONTRIBUTION"] = node;
+    constitution_admission::validate(&graph).unwrap();
+    assert_eq!(
+        graph["nodes"]["research/ADVISORY_CONTRIBUTION"]["binding"],
+        "advisory"
+    );
+    assert!(
+        graph["nodes"]["research/ADVISORY_CONTRIBUTION"]["research_doctrine"]["authors"].is_array()
+    );
+}
+
+#[test]
+fn binding_controls_cannot_disappear_or_claim_unobserved_enforcement() {
+    let graph = admission_fixture();
+    let mut hostile = graph.clone();
+    hostile["nodes"]
+        .as_object_mut()
+        .unwrap()
+        .remove("core/DEMANDS");
+    assert!(constitution_admission::validate(&hostile).is_err());
+    hostile = graph.clone();
+    hostile["nodes"]["core/DECAPOD"]["authority_review"]["enforcement"] = "enforced".into();
+    assert!(
+        constitution_admission::validate(&hostile)
+            .unwrap_err()
+            .contains("AUTHORITY_REVIEW")
+    );
+    hostile = graph;
+    hostile["nodes"]["core/DECAPOD"]["authority_review"]
+        .as_object_mut()
+        .unwrap()
+        .remove("control_id");
+    assert!(
+        constitution_admission::validate(&hostile)
+            .unwrap_err()
+            .contains("AUTHORITY_REVIEW")
+    );
+}
+
+#[test]
+fn binding_amendment_keeps_review_identity_and_has_a_measurable_admission_gate() {
+    let mut graph = admission_fixture();
+    assert!(
+        graph["nodes"]["core/SPECS"]["sections"]["apply"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .any(|line| line.as_str().unwrap().contains("admission registry"))
+    );
+    constitution_admission::validate(&graph).unwrap();
+    graph["nodes"]["core/SPECS"]["binding"] = "advisory".into();
+    assert!(
+        constitution_admission::validate(&graph)
+            .unwrap_err()
+            .contains("BINDING_CONTROL_REMOVED")
+    );
+}
+
 const RUNTIME_NODES: &[&str] = &[
     "architecture/RUST",
     "architecture/GO",

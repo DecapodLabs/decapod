@@ -396,6 +396,12 @@ fn scan_for_dangerous_patterns(
 }
 
 /// Secret detection patterns
+pub(crate) fn contains_secret_material(text: &str) -> bool {
+    secret_patterns()
+        .iter()
+        .any(|pattern| pattern.is_match(text).unwrap_or(true))
+}
+
 fn secret_patterns() -> Vec<Regex> {
     vec![
         // AWS Access Key ID

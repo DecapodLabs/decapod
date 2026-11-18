@@ -225,21 +225,19 @@ pub fn run_docs_cli(cli: DocsCli) -> Result<DocsRunResult, error::DecapodError> 
         } => {
             let current_dir = std::env::current_dir().map_err(error::DecapodError::IoError)?;
             let repo_root = find_repo_root(&current_dir)?;
-            let all_fragments = docs::resolve_scoped_fragments(
+            assets::validate_override_structure(&repo_root)?;
+            let context = docs::resolve_scoped_context(
                 &repo_root,
                 Some(&query),
                 op.as_deref(),
                 &path,
                 &tag,
-                limit * 2, // Get more to allow for filtering
+                limit,
+                Some("docs/agent"),
             );
 
             // Filter for only docs/agent/
-            let fragments: Vec<_> = all_fragments
-                .into_iter()
-                .filter(|f| f.r#ref.contains("docs/agent/"))
-                .take(limit)
-                .collect();
+            let fragments = context.fragments;
 
             if format.eq_ignore_ascii_case("json") {
                 println!(
@@ -250,6 +248,7 @@ pub fn run_docs_cli(cli: DocsCli) -> Result<DocsRunResult, error::DecapodError> 
                         "paths": path,
                         "tags": tag,
                         "fragments": fragments,
+                        "selection": context.selection,
                     }))
                     .map_err(|e| error::DecapodError::ValidationError(e.to_string()))?
                 );
