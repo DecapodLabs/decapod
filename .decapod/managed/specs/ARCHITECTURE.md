@@ -1079,7 +1079,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `0ff17b4704e12feca628cd1d431b4a0f459c108afaf2223718b48870f9896a42`
+- Repository signal fingerprint: `a00c6cd0ee50a2cce891091ca6ad2b46ddb6f24d9da6d81b835112da8e0a9ae0`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (237 files), `tests/` (236 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
@@ -1484,3 +1484,7 @@ the reconciled candidate.
 ## Canonical local Git proof (#1069)
 
 The existing `repository_profile::RepositoryContract` review digest optionally binds canonical local Git target authority. `workspace::resolve_readiness_repository` keeps that identity distinct from cloud GitHub identity, requiring a reviewed local contract already committed on the canonical accepted branch. `RepositoryHost::canonical_local` reuses the sealed snapshot verifier and fresh ref observations; no daemon, parallel policy engine or datastore is added. `validation_history` preserves exact local scope and checks target movement. Native strict source proof and provider requirements remain intact.
+
+## Compact storage v2 floor reconciliation (#1739)
+
+`core::storage_compaction::{v2_format_metadata_needs_floor_upgrade,reconcile_v2_storage_format_metadata,stamp_storage_format_metadata}` compute `max_semver_floor` so `storage.min_reader_version` and `storage.min_writer_version` never fall below `0.144.2` on v2 stores (`storage.format_version = 2`), while preserving higher valid floors and leaving unmigrated v1 stores untouched until migration `1200` runs. `core::migration::schema_upgrade_pending` checks `v2_format_metadata_needs_floor_upgrade` so `check_and_migrate_with_backup_report` holds the exclusive storage lock and backup across legacy `0.141.0 -> 0.144.2` restamping, and `core::events::ensure_tables` reconciles on write-side initialization. Backwards-compatible reads and writes for `>= 0.144.2` binaries (`STORAGE_FORMAT_VERSION = 2`, `TODO_SCHEMA_VERSION = 18`) remain intact with no incompatible DDL or trigger additions.
