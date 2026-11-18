@@ -206,3 +206,215 @@ fn failed_child_diagnostics_are_bounded_fixed_labels_not_raw_output() {
         !super::safe_validation_failure_diagnostic(&oversized, b"").contains("NEEDS_PLAN_APPROVAL")
     );
 }
+
+#[test]
+fn scoped_validation_json_diagnostics_unwrap_nested_blockers_and_stages() {
+    let remote_readiness = serde_json::json!({
+        "status": "fail",
+        "scope": "publication_readiness",
+        "publication_ready": false,
+        "report": null,
+        "readiness": {
+            "scope": "source_pr_readiness",
+            "ready": false,
+            "proof_ready": false,
+            "blockers": [{
+                "code": "READINESS_BLOCKED",
+                "detail": "PROOF_PROFILE_RECONCILIATION_REQUIRED: source inventory differs; path=/private/repo token=secret"
+            }]
+        }
+    });
+    let diag = super::extract_safe_validation_diagnostic(
+        serde_json::to_string(&remote_readiness).unwrap().as_bytes(),
+        b"",
+    );
+    assert_eq!(diag.stage, Some("readiness"));
+    assert_eq!(diag.scope, Some("source_pr_readiness"));
+    assert_eq!(
+        diag.labels,
+        vec!["PROOF_PROFILE_RECONCILIATION_REQUIRED", "READINESS_BLOCKED"]
+    );
+    assert!(diag.message.contains("stage=readiness"));
+    assert!(diag.message.contains("scope=source_pr_readiness"));
+    assert!(
+        diag.message
+            .contains("PROOF_PROFILE_RECONCILIATION_REQUIRED")
+    );
+    assert!(diag.message.contains("PROOF_HOOK_FAILED"));
+    assert!(!diag.message.contains("/private/repo"));
+    assert!(!diag.message.contains("secret"));
+    assert!(diag.message.len() < 1024);
+
+    let post_readiness = serde_json::json!({
+        "status": "fail",
+        "scope": "publication_readiness",
+        "publication_ready": false,
+        "report": { "status": "pass", "fail_count": 0, "failures": [] },
+        "readiness": {
+            "scope": "repository_local_readiness",
+            "ready": false,
+            "proof_ready": true,
+            "blockers": [{
+                "code": "READINESS_BLOCKED",
+                "detail": "publication_readiness: Cannot publish: FINGERPRINT_ONLY_SPECS \u{2014} living specs unchanged vs master"
+            }]
+        }
+    });
+    let post_diag = super::extract_safe_validation_diagnostic(
+        serde_json::to_string(&post_readiness).unwrap().as_bytes(),
+        b"",
+    );
+    assert_eq!(post_diag.stage, Some("post_validation_readiness"));
+    assert_eq!(post_diag.scope, Some("repository_local_readiness"));
+    assert_eq!(
+        post_diag.labels,
+        vec!["FINGERPRINT_ONLY_SPECS", "READINESS_BLOCKED"]
+    );
+
+    let untrusted_trajectory = serde_json::json!({
+        "status": "fail",
+        "scope": "publication_readiness",
+        "readiness": {
+            "scope": "repository_local_readiness",
+            "ready": false,
+            "proof_ready": true,
+            "blockers": [{
+                "code": "READINESS_BLOCKED",
+                "detail": "publication_readiness: Cannot publish: trajectory 'evil-PROOF_HOOK_FAILED-id' has blockers: https://secret.invalid/leaked"
+            }]
+        }
+    });
+    let traj_diag = super::extract_safe_validation_diagnostic(
+        serde_json::to_string(&untrusted_trajectory)
+            .unwrap()
+            .as_bytes(),
+        b"",
+    );
+    assert_eq!(
+        traj_diag.labels,
+        vec!["TRAJECTORY_BLOCKERS_PRESENT", "READINESS_BLOCKED"]
+    );
+    assert!(!traj_diag.labels.contains(&"PROOF_HOOK_FAILED"));
+    assert!(!traj_diag.message.contains("evil"));
+    assert!(!traj_diag.message.contains("secret.invalid"));
+
+    let gate_failure = serde_json::json!({
+        "status": "fail",
+        "scope": "publication_readiness",
+        "report": {
+            "status": "fail",
+            "fail_count": 4,
+            "failures": [
+                "AUTOREMEDIABLE_VALIDATION_ERROR code=PR_MERGE_CONFLICT severity=blocking\nMerge conflict preflight failed for secret-branch",
+                "Rule custom.secret_rule: Rule violated: path /Users/private/secret.txt",
+                "AUTOREMEDIABLE_VALIDATION_ERROR code=cargo_fmt_failed severity=transient\nfmt failed in /private/src/secret.rs",
+                "Intent spec still has placeholder product outcome; capture explicit intent before implementation."
+            ]
+        },
+        "readiness": null
+    });
+    let gate_diag = super::extract_safe_validation_diagnostic(
+        serde_json::to_string(&gate_failure).unwrap().as_bytes(),
+        b"",
+    );
+    assert_eq!(gate_diag.stage, Some("project_gates"));
+    assert_eq!(gate_diag.scope, Some("publication_readiness"));
+    assert_eq!(
+        gate_diag.labels,
+        vec![
+            "PR_MERGE_CONFLICT",
+            "VALIDATION_RULE_VIOLATED",
+            "CARGO_FMT_FAILED",
+            "LIVING_SPECS_INCOMPLETE"
+        ]
+    );
+    assert!(!gate_diag.message.contains("secret"));
+    assert!(!gate_diag.message.contains("custom.secret_rule"));
+
+    let wp_failure = serde_json::json!({
+        "success": false,
+        "gate": "workspace_protection",
+        "error": "Currently on protected branch 'secret-main'.",
+        "is_protected": true
+    });
+    let wp_diag = super::extract_safe_validation_diagnostic(
+        serde_json::to_string(&wp_failure).unwrap().as_bytes(),
+        b"",
+    );
+    assert_eq!(wp_diag.stage, Some("workspace_protection"));
+    assert_eq!(
+        wp_diag.labels,
+        vec!["WORKSPACE_PROTECTION", "GOVERNANCE_PROTECTED_BRANCH"]
+    );
+    assert!(!wp_diag.message.contains("secret-main"));
+}
+
+#[test]
+fn scoped_validation_diagnostics_respect_token_boundaries_large_json_and_untrusted_notes() {
+    let subtoken = super::extract_safe_validation_diagnostic(
+        b"LAYA_READINESS_BLOCKED: private repository detail",
+        b"",
+    );
+    assert_eq!(subtoken.labels, vec!["LAYA_READINESS_BLOCKED"]);
+    assert!(!subtoken.labels.contains(&"READINESS_BLOCKED"));
+    assert!(!subtoken.message.contains("private"));
+
+    let big_notes = "note mentioning PROOF_HOOK_FAILED ".repeat(40_000);
+    assert!(big_notes.len() > 1024 * 1024);
+    let large_json = serde_json::json!({
+        "status": "fail",
+        "scope": "publication_readiness",
+        "report": {
+            "status": "pass",
+            "fail_count": 0,
+            "notes": [big_notes],
+            "failures": []
+        },
+        "readiness": {
+            "scope": "repository_local_readiness",
+            "ready": false,
+            "proof_ready": true,
+            "blockers": [{
+                "code": "READINESS_BLOCKED",
+                "detail": "publication_readiness: ACCEPTED_REPOSITORY_CONTRACT_CHANGED: local checks changed"
+            }]
+        }
+    });
+    let large_bytes = serde_json::to_vec(&large_json).unwrap();
+    assert!(large_bytes.len() > 1024 * 1024);
+    let large_diag = super::extract_safe_validation_diagnostic(&large_bytes, b"");
+    assert_eq!(large_diag.stage, Some("post_validation_readiness"));
+    assert_eq!(
+        large_diag.labels,
+        vec!["ACCEPTED_REPOSITORY_CONTRACT_CHANGED", "READINESS_BLOCKED"]
+    );
+    assert!(!large_diag.labels.contains(&"PROOF_HOOK_FAILED"));
+
+    let many_blockers = serde_json::json!({
+        "status": "fail",
+        "scope": "publication_readiness",
+        "readiness": {
+            "scope": "source_pr_readiness",
+            "ready": false,
+            "proof_ready": false,
+            "blockers": [
+                {"code": "READINESS_BLOCKED", "detail": "FINGERPRINT_ONLY_SPECS: x"},
+                {"code": "STALE_SPEC_REVIEW", "detail": "x"},
+                {"code": "GOVERNANCE_CHECKPOINT_MISSING", "detail": "x"},
+                {"code": "PROOF_PROFILE_RECONCILIATION_REQUIRED", "detail": "x"},
+                {"code": "ACCEPTED_REPOSITORY_CONTRACT_CHANGED", "detail": "x"},
+                {"code": "CONTROLLER_CONTRACT_UNSUPPORTED", "detail": "x"},
+                {"code": "SNAPSHOT_NOT_READY", "detail": "x"},
+                {"code": "REQUIRED_PROOF_NOT_AUTHENTICATED", "detail": "x"},
+                {"code": "SNAPSHOT_UPLOAD_PENDING", "detail": "x"}
+            ]
+        }
+    });
+    let capped = super::extract_safe_validation_diagnostic(
+        serde_json::to_string(&many_blockers).unwrap().as_bytes(),
+        b"",
+    );
+    assert!(capped.labels.len() <= 8);
+    assert!(!capped.labels.contains(&"READINESS_BLOCKED"));
+    assert!(capped.message.len() < 1024);
+}

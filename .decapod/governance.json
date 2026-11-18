@@ -606,6 +606,17 @@
       "proof_refs": [
         "rpc:01M7QPB03RJZHRK7GSWJJMWW04"
       ]
+    },
+    {
+      "id": "integrate-master-1799-1659",
+      "summary": "Integrate accepted master 0b6ce0a8 and enforce #1659 readiness gate in run_validate_and_hash_detailed",
+      "input_digest": "sha256:83a4991617055002749c558c94e15d6072d3516d04d41e4b34633b84df83c19f",
+      "proof_refs": [
+        "task-1050:clippy",
+        "task-1052:gate_skip_override_readiness_1659=5/5",
+        "task-1099:plugins::verify=60/60",
+        "task-1113:gatling::t210_verify=1/1"
+      ]
     }
   ],
   "intents": {
@@ -646,22 +657,22 @@
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Scope of #1659 is bounded to validation readiness override isolation (VALIDATION.md, tests/gate_skip_override_readiness_1659.rs, and targeted lib/verify fixes) merged cleanly onto accepted origin/master 0.148.13; ARCHITECTURE.md remains accurate.",
-          "reviewed_code_fingerprint": "6ed5c80eef0925f93cdbaf954604967e0ba7017e05cc0841c8eb2aaeb4289ed6",
+          "reason": "No architectural changes beyond #1659 VALIDATION.md and integrated 0b6ce0a8 verify.rs diagnostic surface",
+          "reviewed_code_fingerprint": "b5476023d7be627a8355618fce34940c2fdcd545f7a4eb94b682b9e7f9a64bb5",
           "spec_material_hash": "080e1e015d867051ec4ecbb1f18aca92a2d62a05798377057e563aaa5a3764e0"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Scope of #1659 is bounded to validation readiness override isolation (VALIDATION.md, tests/gate_skip_override_readiness_1659.rs, and targeted lib/verify fixes) merged cleanly onto accepted origin/master 0.148.13; INTERFACES.md remains accurate.",
-          "reviewed_code_fingerprint": "6ed5c80eef0925f93cdbaf954604967e0ba7017e05cc0841c8eb2aaeb4289ed6",
-          "spec_material_hash": "ef090be85af851796f2ae92f9d6a6e992d59a452a8fff4918836cc689f020cdd"
+          "reason": "Integrated 0b6ce0a8 INTERFACES.md intact; #1659 readiness gate interface behavior is documented in VALIDATION.md",
+          "reviewed_code_fingerprint": "b5476023d7be627a8355618fce34940c2fdcd545f7a4eb94b682b9e7f9a64bb5",
+          "spec_material_hash": "3baf7067b96d8fad41fcf9ff69aa2866b99b9bc631a1132df1daf96de9c82ab7"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Scope of #1659 is bounded to validation readiness override isolation (VALIDATION.md, tests/gate_skip_override_readiness_1659.rs, and targeted lib/verify fixes) merged cleanly onto accepted origin/master 0.148.13; SECURITY.md remains accurate.",
-          "reviewed_code_fingerprint": "6ed5c80eef0925f93cdbaf954604967e0ba7017e05cc0841c8eb2aaeb4289ed6",
+          "reason": "Security policy specs unchanged; #1659 gate-skip override readiness contract resides in VALIDATION.md",
+          "reviewed_code_fingerprint": "b5476023d7be627a8355618fce34940c2fdcd545f7a4eb94b682b9e7f9a64bb5",
           "spec_material_hash": "735ae6e95c6b18ff2ccc718fbadaa4d7ae483d632aee2fb071d4f9ae6daa23de"
         }
       ],
@@ -673,13 +684,13 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795015468Z"
+      "updated_at": "1795024011Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:f0a90a1bfc46296a1858a6d53da190e719211e878d7ef05012bfbd500a4c717e",
+      "artifact_hash": "sha256:b9f945b05b79baef7f5061610010ee737ec6313714bd649645cbc8b562236915",
       "checks": [
         {
           "name": "cargo_fmt_check",
@@ -695,6 +706,26 @@
         },
         {
           "name": "gatling_t210_verify",
+          "status": "passed"
+        },
+        {
+          "name": "post_0b6ce0a8_clippy_all_targets",
+          "status": "passed"
+        },
+        {
+          "name": "post_0b6ce0a8_fmt",
+          "status": "passed"
+        },
+        {
+          "name": "post_0b6ce0a8_gate_skip_override_readiness_1659",
+          "status": "passed"
+        },
+        {
+          "name": "post_0b6ce0a8_gatling_t210_verify",
+          "status": "passed"
+        },
+        {
+          "name": "post_0b6ce0a8_plugins_verify_unit",
           "status": "passed"
         },
         {
@@ -760,10 +791,17 @@
             "intent_id": "intent:change_01M7QBQZGRF4S5PJM1A13NTHPG",
             "kind": "trajectory_step_recorded",
             "sequence": 7
+          },
+          {
+            "detail": "trajectory:branch_01M7QBQZMHAZCN5HBTTY0F2NPK",
+            "event_id": "event:8",
+            "intent_id": "intent:change_01M7QBQZGRF4S5PJM1A13NTHPG",
+            "kind": "trajectory_step_recorded",
+            "sequence": 8
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 7,
+        "next_sequence": 8,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M7QBQZMHAZCN5HBTTY0F2NPK": {
@@ -851,20 +889,50 @@
                 ],
                 "sequence": 7,
                 "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "command": "cargo fmt --all -- --check",
+                "custody_event_id": "event:8",
+                "observations": [
+                  "src/decapod/plugins/verify.rs",
+                  ".decapod/managed/specs/VALIDATION.md",
+                  ".decapod/managed/specs/INTERFACES.md",
+                  ".decapod/managed/specs/.manifest.json",
+                  "Merged origin/master 0b6ce0a84bab0ef8b0bdfbbd5c9b57a2fb1160bf (PR #1799); reconciled verify.rs (SAFE_BLOCKER_LABELS + run_validate_and_hash_detailed); passed cargo fmt --all -- --check, clippy --all-targets -D warnings, gate_skip_override_readiness_1659 (5/5, 424.10s), plugins::verify:: (60/60, 47.45s, TMPDIR=/private/tmp), gatling::t210_verify (1/1, 21.54s); verify_deadlock_regression test_verify_recover_and_regen_json_surface_scoped_blockers_without_leaking & live_recovery passed while 2 legacy unclaimed-worktree tests failed pre-existing AUTHORING_ACTOR_REQUIRED"
+                ],
+                "proof_refs": [
+                  "post_0b6ce0a8_fmt",
+                  "post_0b6ce0a8_clippy_all_targets",
+                  "post_0b6ce0a8_plugins_verify_unit",
+                  "post_0b6ce0a8_gate_skip_override_readiness_1659",
+                  "post_0b6ce0a8_gatling_t210_verify"
+                ],
+                "scope": [
+                  "validation-override-boundary"
+                ],
+                "sequence": 8,
+                "validation_findings": []
               }
             ]
           }
         }
       },
       "declared_commands": [
+        "CLIPPY_CONF_DIR=.config cargo clippy --all-targets --all-features -- -D warnings",
         "CLIPPY_CONF_DIR=.config cargo clippy --test gate_skip_override_readiness_1659 --all-features -- -D warnings",
+        "TMPDIR=/private/tmp cargo test --lib plugins::verify::",
+        "TMPDIR=/private/tmp cargo test --test gatling t210_verify -- --nocapture",
+        "cargo fmt --all -- --check",
         "cargo fmt --check",
         "cargo test --test gate_skip_override_readiness_1659",
+        "cargo test --test gate_skip_override_readiness_1659 -- --nocapture",
         "cargo test --test gatling t210_verify",
         "decapod rpc --op specs.refresh"
       ],
       "destination": "pull request",
       "evidence": [
+        "Merged origin/master 0b6ce0a84bab0ef8b0bdfbbd5c9b57a2fb1160bf (PR #1799); reconciled verify.rs (SAFE_BLOCKER_LABELS + run_validate_and_hash_detailed); passed cargo fmt --all -- --check, clippy --all-targets -D warnings, gate_skip_override_readiness_1659 (5/5, 424.10s), plugins::verify:: (60/60, 47.45s, TMPDIR=/private/tmp), gatling::t210_verify (1/1, 21.54s); verify_deadlock_regression test_verify_recover_and_regen_json_surface_scoped_blockers_without_leaking & live_recovery passed while 2 legacy unclaimed-worktree tests failed pre-existing AUTHORING_ACTOR_REQUIRED",
         "Merged origin/master c5bafce6 (v0.148.13); aligned reviewed_sources_digest to sha256:f2c1d189ee0c96f6afb66185229233bd0436015d0ddd21dc56deb4f58709b2b2; task-818 passed fmt, clippy -D warnings, and 5/5 gate_skip_override_readiness_1659 (396.02s)",
         "cargo fmt --check (exit 0), CLIPPY_CONF_DIR=.config cargo clippy --test gate_skip_override_readiness_1659 --all-features -- -D warnings (exit 0), cargo test --test gate_skip_override_readiness_1659 (5 passed, 0 failed, 351.44s, task-709)",
         "unit group_broker (17/17), validation_scope (9/9), skip_fingerprint (1/1), gatling::t210_verify (1/1) passed (task-637)"
@@ -882,6 +950,7 @@
         ".decapod/config.toml",
         ".decapod/managed/Dockerfile.decapod",
         ".decapod/managed/specs/.manifest.json",
+        ".decapod/managed/specs/INTERFACES.md",
         ".decapod/managed/specs/VALIDATION.md",
         "src/decapod/lib.rs",
         "src/decapod/plugins/verify.rs",
