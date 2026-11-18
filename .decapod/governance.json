@@ -610,6 +610,15 @@
       "proof_refs": [
         ".decapod/managed/specs/.manifest.json"
       ]
+    },
+    {
+      "id": "cp-1739-5",
+      "summary": "Merge origin/master 2f12638a (v0.148.14), refresh v0.148.14 Dockerfile/manifest/specs, reconcile config.toml reviewed_sources_digest, re-verify fmt/clippy/datastore/core tests",
+      "input_digest": "sha256:18c9d6626417ed31f77c6c23bf6066093bd83269266aaa9c4921165dbb7bb039",
+      "proof_refs": [
+        "tests/datastore_contract.rs",
+        "tests/datastore_relational_compaction.rs"
+      ]
     }
   ],
   "intents": {
@@ -652,22 +661,22 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Document max_semver_floor reconciliation across activate/migration and write-side ensure_tables while preserving >= 0.144.2 compatibility (#1739)",
-          "reviewed_code_fingerprint": "a00c6cd0ee50a2cce891091ca6ad2b46ddb6f24d9da6d81b835112da8e0a9ae0",
+          "reason": "Re-reviewed after merging origin/master v0.148.14 (#1799/#1801) and refreshing projections (#1739)",
+          "reviewed_code_fingerprint": "1c29c883ac842d436acb39c7edbb0a5ee61dbac421c8b67254c41c139255bee7",
           "spec_material_hash": "e94b6cc9c5f061ffb5c7e3035c288d954dece7de272a07b42abc1e6df240eee7"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Document v2 storage 0.144.2 _ce_v1 reader/writer floor, legacy 0.141.0 restamping, and core::events compatibility checks (#1739)",
-          "reviewed_code_fingerprint": "a00c6cd0ee50a2cce891091ca6ad2b46ddb6f24d9da6d81b835112da8e0a9ae0",
-          "spec_material_hash": "da52e21cdb334969a57d346d0ef254b8c7d5ba9adefa093855d6da739b5cf0ef"
+          "reason": "Re-reviewed after merging origin/master v0.148.14 (#1799/#1801) and refreshing projections (#1739)",
+          "reviewed_code_fingerprint": "1c29c883ac842d436acb39c7edbb0a5ee61dbac421c8b67254c41c139255bee7",
+          "spec_material_hash": "989baceaed8446ee995868f59caf6ed759bf36a70c7d685b80eae57ea7239f9d"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Document fail-closed STORAGE_FORMAT_INCOMPATIBLE guards, epistemic limit of pre-metadata 0.141.0..0.144.1 binaries, and offline regression bounds (#1739)",
-          "reviewed_code_fingerprint": "a00c6cd0ee50a2cce891091ca6ad2b46ddb6f24d9da6d81b835112da8e0a9ae0",
+          "reason": "Re-reviewed after merging origin/master v0.148.14 (#1799/#1801) and refreshing projections (#1739)",
+          "reviewed_code_fingerprint": "1c29c883ac842d436acb39c7edbb0a5ee61dbac421c8b67254c41c139255bee7",
           "spec_material_hash": "64234c0ee96c7afcd7c64d7ba0de6a80e01076c5587eb213906b84add3005fc5"
         }
       ],
@@ -679,7 +688,7 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795016297Z"
+      "updated_at": "1795025779Z"
     },
     "trajectory": {
       "active_boundaries": [
