@@ -658,9 +658,11 @@ pub(crate) fn initialize_workbranch_governance_at(
     } else {
         scoped
     };
-    let context = (selected.len() == 1).then(|| {
+    let context = if selected.len() == 1 {
         let task = selected[0];
-        crate::core::governance_document::BranchWorkContext {
+        let scope = crate::core::fleet_coord::parse_scope_entries(&task.scope)
+            .map_err(DecapodError::ValidationError)?;
+        Some(crate::core::governance_document::BranchWorkContext {
             title: task.title.clone(),
             intent: if task.description.trim().is_empty() {
                 task.title.clone()
@@ -668,15 +670,11 @@ pub(crate) fn initialize_workbranch_governance_at(
                 format!("{}\n\n{}", task.title, task.description)
             },
             todo_ids: vec![task.id.clone()],
-            scope: task
-                .scope
-                .split(',')
-                .map(str::trim)
-                .filter(|s| !s.is_empty())
-                .map(str::to_string)
-                .collect(),
-        }
-    });
+            scope,
+        })
+    } else {
+        None
+    };
     crate::core::governance_document::initialize_workbranch_at(
         repo_root,
         &base_ref,

@@ -449,6 +449,16 @@ and gate shared mutations (`release lineage-sync` on `resource:release`; `worksp
 on `resource:integration` / `resource:integration:<base_branch>`) with `SHARED_RESOURCE_OCCUPIED`
 while leaving isolated worktree authoring and local validation unblocked.
 
+`infer orientation`, branch governance seeding (`trajectory.repo_scope` and custody
+`intent.constraints`), and `govern trajectory {init,record}` parse explicit `paths:[...]`
+JSON arrays through `fleet_coord::declared_paths` rather than splitting on commas.
+Already-generated fragmented projections in `.decapod/governance.json` can be repaired
+with `decapod govern trajectory reconcile-scope [--task-id <id>] [--run-id <id>]`,
+which requires the prior journal to be archived in Git (`SCOPE_RECONCILIATION_ARCHIVE_REQUIRED`),
+rejects ambiguous task or scope matches (`SCOPE_RECONCILIATION_AMBIGUOUS`), preserves
+original intent, custody events, checks, and checkpoints, resets plan approval to `DRAFT`,
+and is idempotent once canonical.
+
 ## `decapod todo journal reconcile-legacy`
 
 Review the canonical main repository's quiesced local legacy TODO input before

@@ -9084,6 +9084,18 @@ fn run_trajectory_command(
                 .unwrap()
             );
         }
+        TrajectoryCommand::ReconcileScope { task_id, run_id } => {
+            let store_root = core::store::find_governance_root(workspace_root)
+                .join(".decapod")
+                .join("data");
+            let report = core::governance_document::reconcile_scope_projections(
+                workspace_root,
+                &store_root,
+                task_id.as_deref(),
+                run_id.as_deref(),
+            )?;
+            println!("{}", serde_json::to_string_pretty(&report).unwrap());
+        }
     }
     Ok(())
 }
@@ -14194,12 +14206,9 @@ fn run_infer_orientation(
                     .known_unknowns
                     .push(format!("Task detail: {}", task.description));
             }
-            if !task.scope.is_empty() {
-                packet.allowed_scope = task
-                    .scope
-                    .split(',')
-                    .map(|s| s.trim().to_string())
-                    .collect();
+            if !task.scope.trim().is_empty() {
+                packet.allowed_scope = crate::core::fleet_coord::parse_scope_entries(&task.scope)
+                    .map_err(error::DecapodError::ValidationError)?;
             }
         }
     }

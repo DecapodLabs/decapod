@@ -1471,6 +1471,15 @@ pub(crate) enum TrajectoryCommand {
         #[clap(long)]
         run_id: String,
     },
+    /// Repair fragmented explicit path scope projections in the current governance document
+    ReconcileScope {
+        /// Optional task ID when not uniquely implied by trajectory or plan metadata
+        #[clap(long)]
+        task_id: Option<String>,
+        /// Optional run ID guard matching the active trajectory
+        #[clap(long)]
+        run_id: Option<String>,
+    },
 }
 
 #[derive(clap::ValueEnum, Clone, Debug)]

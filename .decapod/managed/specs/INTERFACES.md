@@ -1,5 +1,33 @@
 # Interfaces
 
+## Explicit path scope preservation and reconciliation (#1760)
+
+Explicit task path declarations (`--scope 'paths:[...]'`) are parsed once via
+`core::fleet_coord::parse_scope_entries` (delegating `paths:` prefixes to
+`core::fleet_coord::declared_paths`) rather than naive comma splitting. That
+single bounded JSON-array parser preserves both JSON array separators and commas
+embedded inside literal relative paths (such as `docs/a,b.md`) across
+`infer orientation` (`allowed_scope`), `workspace::initialize_workbranch_governance_at`
+(`BranchWorkContext.scope`), `trajectory::fresh_trajectory` / `record_trajectory`
+(`repo_scope`), and `custody::bootstrap_intent` (`intent.constraints`), keeping
+`todo get`, `infer orientation`, `govern trajectory get`, and `govern state resolve`
+consistent without weakening `declared_paths` validation or modifying legacy
+comma-separated scopes.
+
+Already-generated fragmented scope projections in `.decapod/governance.json`
+are repaired through `decapod govern trajectory reconcile-scope [--task-id <id>] [--run-id <id>]`
+(`core::governance_document::reconcile_scope_projections`). Before mutating any
+projection, reconciliation resolves a single unambiguous task binding
+(`SCOPE_RECONCILIATION_AMBIGUOUS_TASK` / `SCOPE_RECONCILIATION_TASK_REQUIRED`),
+verifies that existing fragments match the task's legacy comma-split projection
+(`SCOPE_RECONCILIATION_AMBIGUOUS`), and requires the prior governance document to
+be committed in Git (`SCOPE_RECONCILIATION_ARCHIVE_REQUIRED` via `recoverable_in_git`).
+Repair restores canonical sorted paths in both `sections.trajectory.repo_scope`
+and `intents.<id>.constraints`, recomputes `trajectory.artifact_hash`, invalidates
+`sections.plan.state` back to `DRAFT` when changes occur, preserves original
+recorded intent, prior custody events, checks, loops, and checkpoints, and is
+idempotent (`SCOPE_ALREADY_CANONICAL`) on repeat invocations.
+
 ## Workunit proof and continuity semantics (#1660)
 
 Before full proof, use `govern capsule query --task-id <id> --workunit-id <id>
@@ -1359,8 +1387,8 @@ field. Nothing in this operation authorizes a mutation, approval or completion.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `380b2556b1ce63d6c12b41fb4babda52cba9eb1d2d0f8da3ee6f525aef843493`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (237 files), `tests/` (236 files)
+- Repository signal fingerprint: `5bc2bf802286c6247c4dba4babe899d191f482fa9d7d52fffdf562df23198d49`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (238 files), `tests/` (237 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 
