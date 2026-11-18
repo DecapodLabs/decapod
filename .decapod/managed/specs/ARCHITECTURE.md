@@ -1079,7 +1079,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `0cd6f9ff0f09a73293db451761b3a2b1366a7b5ec837ea33428f8c549f6e25cd`
+- Repository signal fingerprint: `1c79591693b4afd49851a82a02704ef65c2353b3b287b89bf09603eea9b58e7c`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (237 files), `tests/` (237 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
@@ -1484,3 +1484,7 @@ the reconciled candidate.
 ## Canonical local Git proof (#1069)
 
 The existing `repository_profile::RepositoryContract` review digest optionally binds canonical local Git target authority. `workspace::resolve_readiness_repository` keeps that identity distinct from cloud GitHub identity, requiring a reviewed local contract already committed on the canonical accepted branch. `RepositoryHost::canonical_local` reuses the sealed snapshot verifier and fresh ref observations; no daemon, parallel policy engine or datastore is added. `validation_history` preserves exact local scope and checks target movement. Native strict source proof and provider requirements remain intact.
+
+## Target-scoped deployment closure (#1740)
+
+`repository_profile::resolve_target_closure` resolves a selected target's transitive `depends_on` closure plus any additional targets whose `shared_inputs` prefixes/globs (`matches_shared_input`) intersect `<accepted_base>..HEAD` changed paths (`ApplicabilityFacts.changed_paths`), failing closed on unknown targets (`UNKNOWN_DEPLOYMENT_TARGET`), dependency cycles (`DEPLOYMENT_TARGET_CYCLE`), invalid patterns (`REPOSITORY_CONTRACT_INVALID`), or missing diff context (`MISSING_SHARED_INPUT_DIFF_CONTEXT`). `repository_profile::required_catalog_for_target` builds `Obligation`s solely for commands in the resolved closure while recording excluded commands as `StageDispositionKind::NonApplicable` (`out_of_target_scope_no_assurance`) and binding the resolved scope into `definition_digest` and `RequiredCatalog.source_inventory_digest`. `RepositoryHost::select_commands` verifies platform compatibility (`INCOMPATIBLE_TARGET_EXECUTOR`) and installed executables only for targets in `resolved_targets`, allowing a Linux-only slice to run without unrelated macOS executables while full validation (`options.target == None`) remains unchanged.

@@ -400,6 +400,36 @@ journal/table or duplicate source snapshot store is introduced; existing evidenc
 retention and validation history apply. Full ten-worker A–H proof and independent
 remote publication remain separate unresolved requirements.
 
+## Target-scoped repository proof (#1740)
+
+Repositories using `repo.pr-readiness.v1` may declare an optional reviewed map
+`[proof.repository_contract.targets.<name>]` (`DeploymentTargetContract`) with:
+
+- `commands`: non-empty list of configured required command names for that target slice
+- `depends_on`: optional upstream target names included transitively
+- `shared_inputs`: optional repository-relative prefixes or globs (`*`, `**`) whose
+  intersection with `<accepted_base>..HEAD` changed paths expands proof to include
+  that target and its dependencies
+- `platforms`: optional canonical host platform keys (`linux-aarch64`, `linux-x86_64`,
+  `macos-aarch64`, `macos-x86_64`) compatible with that target's executor
+
+`command_contract_digest` preserves pre-#1740 digests byte-for-byte when `targets` is
+empty and binds `targets` when non-empty. `repository_profile::preserve_accepted`
+rejects candidate target removal, required command removal, `depends_on` or
+`shared_inputs` narrowing, and `platforms` changes with
+`ACCEPTED_REPOSITORY_CONTRACT_CHANGED`.
+
+Passing `--target <name>` to `decapod validate` (or `target` on RPC `validate.run`)
+resolves the selected target's `depends_on` closure plus any targets matched by
+changed `shared_inputs`, and runs only those obligations on compatible executors.
+Unrelated targets and unavailable foreign-host executables are excluded without
+weakening full validation (`decapod validate` without `--target`). Target-scoped
+results carry `scope = "repository_target_readiness"` (or
+`"repository_local_git_target_readiness"`), bind the target closure and exact
+candidate SHA into `native-readiness-receipt.json` and `CompletedReadinessEvidence`,
+keep `publication_ready = false`, and are rejected by full-repository PR publication,
+workunit `VERIFIED` promotion, and unrelated target lookups.
+
 ## Explicit legacy TODO retirement permission
 
 `governance.rbac.legacy_todo_reconcile_roles = ["maintainer"]` grants only

@@ -1359,7 +1359,7 @@ field. Nothing in this operation authorizes a mutation, approval or completion.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `0cd6f9ff0f09a73293db451761b3a2b1366a7b5ec837ea33428f8c549f6e25cd`
+- Repository signal fingerprint: `1c79591693b4afd49851a82a02704ef65c2353b3b287b89bf09603eea9b58e7c`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (237 files), `tests/` (237 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
@@ -1883,3 +1883,9 @@ manual or imported/self-hosted execution cannot grant Cachix publication.
 ## Canonical local Git proof (#1069)
 
 An accepted `proof.repository_contract.canonical_local_target = true` uses ordinary CLI/RPC validation against the canonical local branch. `readiness.ready` refers to that exact local subject with `scope=repository_local_git_readiness`; `publication_ready` stays false. `qa verify commit` inspects canonical historical proof. `workspace publish` and the independent final PR gate reject local-only target authority before remote publication. Omitted/false mode retains existing digests and GitHub behavior. Candidate-only mode, changed branch, strict profile and cloud selection cannot activate the local host.
+
+## Target-scoped repository proof (#1740)
+
+- `ValidateCli` (`src/decapod/cli.rs`) accepts `--target <TARGET>` and `ValidateRunParams` (`src/decapod/core/rpc.rs`) accepts optional `target: Option<String>` for `repo.pr-readiness.v1` (`validation_buildkite_preflights = false`). `--target` is rejected for `govern project-check`, `--bypass-validation`, Buildkite snapshot handoff flags, and `decapod.pr-readiness.v1` (`TARGET_SCOPE_UNSUPPORTED` / `READINESS_INVOCATION_INVALID` / `PROJECT_CHECK_SCOPE`).
+- `RepositoryContract.targets` (`BTreeMap<String, DeploymentTargetContract>` in `src/decapod/core/repository_profile.rs`) declares reviewed `commands`, `depends_on`, `shared_inputs`, and optional `platforms` (`CANONICAL_PLATFORM_KEYS`). Empty `targets` preserves pre-#1740 `command_contract_digest` values byte-for-byte; non-empty `targets` is included in `command_contract_digest`.
+- `ValidationReport` (`src/decapod/core/validation_runtime.rs`) exposes `target: Option<String>` and `resolved_targets: Vec<String>`, emits `scope = "repository_target_readiness"` (or `"repository_local_git_target_readiness"`), and forces `publication_ready() == false` whenever target-scoped. `completion/native-readiness-receipt.json` binds `"scope"`, `"target"`, `"resolved_targets"`, and `material.head_revision` inside `"receipt_hash"`.

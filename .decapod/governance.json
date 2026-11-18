@@ -572,6 +572,18 @@
     "base_commit": "352d892958e1cdf692299927f7c2f3c0c36fc639",
     "target_base": "origin/master"
   },
+  "claims": {
+    "claim:target-scoped-readiness": {
+      "statement": "Target-scoped validation proves only the selected target transitive dependency and shared_inputs closure on compatible trusted executors, fails closed on contract weakening or ambiguous/incompatible scope, and never authorizes full-repository PR publication or unrelated deployment targets.",
+      "falsifier": "Candidate target removal, command removal, or dependency/shared_inputs narrowing passes preserve_accepted; missing shared-input diff context or incompatible executor passes target validation; or a target-scoped receipt authorizes full-repository PR readiness, workunit verification, or an unrelated target.",
+      "status": "supported",
+      "proof_refs": [
+        "src/decapod/core/validation_history.rs",
+        "tests/consumer_readiness.rs",
+        "tests/unit/core/repository_profile_tests.rs"
+      ]
+    }
+  },
   "checkpoints": [
     {
       "id": "exact-candidate-1052-v1",
@@ -640,6 +652,22 @@
         "cargo fmt --all -- --check (exit 0)",
         "cargo test --test exact_candidate_governance_1052 (4 passed; 0 failed in 362.42s)"
       ]
+    },
+    {
+      "id": "cp-1740-1",
+      "summary": "Implement #1740 target-scoped repository proof on v0.149.1 (205d4e8d): RepositoryContract.targets schema & command_contract_digest preservation, fail-closed preserve_accepted & target invariants, --target CLI/RPC closure + shared_inputs diff expansion + compatible executor check, target-bound receipts & history isolation, updated specs/docs, and unit + consumer_readiness + 1052 tests passing.",
+      "input_digest": "sha256:c632a048775fe3695a9f86c7dc69d91307076a511d1c5a1771a3b49f35b65740",
+      "proof_refs": [
+        "cargo_clippy",
+        "cargo_fmt",
+        "consumer_readiness",
+        "core_repository_profile",
+        "core_validation_history",
+        "core_validation_runtime",
+        "doc_alignment",
+        "exact_candidate_governance_1052",
+        "validation_scope"
+      ]
     }
   ],
   "intents": {
@@ -670,52 +698,50 @@
       },
       "deferred_questions": [],
       "human_questions": [],
-      "intent": "Verify exact-candidate SHA/tree/base/task/lease_generation proof bindings and continuous invalidation via actual-binary integration tests in tests/exact_candidate_governance_1052.rs, and document the operational contract in OPERATIONS.md.",
+      "intent": "Extend RepositoryContract with optional deployment targets, enforce fail-closed preservation and target invariant checks, resolve transitive dependency and shared_inputs diff closures, add --target readiness validation, and bind target scope into receipts and validation history",
       "phases": [],
       "proof_hooks": [
-        "cargo test --test exact_candidate_governance_1052",
-        "decapod govern project-check",
         "decapod validate"
       ],
       "schema_version": "1.1.0",
       "spec_reviews": [
         {
-          "disposition": "unchanged_with_reason",
+          "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Refreshed v0.149.0 Dockerfile.decapod and .manifest.json with v0.149.0 binary; architecture unchanged.",
-          "reviewed_code_fingerprint": "0cd6f9ff0f09a73293db451761b3a2b1366a7b5ec837ea33428f8c549f6e25cd",
-          "spec_material_hash": "080e1e015d867051ec4ecbb1f18aca92a2d62a05798377057e563aaa5a3764e0"
+          "reason": "Document target closure resolution, shared_inputs diff expansion, and target-bound receipt history for #1740",
+          "reviewed_code_fingerprint": "1c79591693b4afd49851a82a02704ef65c2353b3b287b89bf09603eea9b58e7c",
+          "spec_material_hash": "e8d00d685b21659476795212b211594118e1acfe49b1a4fdac9904348c6bbe65"
         },
         {
-          "disposition": "unchanged_with_reason",
+          "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Refreshed v0.149.0 Dockerfile.decapod and .manifest.json with v0.149.0 binary; interfaces unchanged.",
-          "reviewed_code_fingerprint": "0cd6f9ff0f09a73293db451761b3a2b1366a7b5ec837ea33428f8c549f6e25cd",
-          "spec_material_hash": "1445e13fa7ccfa6c4a68850bd794b6b1ba7379c0148b570c3a7605b6a26beb25"
+          "reason": "Document --target CLI/RPC readiness flags, RepositoryContract.targets schema, and target-scoped proof boundaries for #1740",
+          "reviewed_code_fingerprint": "1c79591693b4afd49851a82a02704ef65c2353b3b287b89bf09603eea9b58e7c",
+          "spec_material_hash": "3d2e11acd9c14bea4b45b77931af5aed1eef385f53bc87092713c59b4296901c"
         },
         {
-          "disposition": "unchanged_with_reason",
+          "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Refreshed v0.149.0 Dockerfile.decapod and .manifest.json with v0.149.0 binary; security unchanged.",
-          "reviewed_code_fingerprint": "0cd6f9ff0f09a73293db451761b3a2b1366a7b5ec837ea33428f8c549f6e25cd",
-          "spec_material_hash": "735ae6e95c6b18ff2ccc718fbadaa4d7ae483d632aee2fb071d4f9ae6daa23de"
+          "reason": "Document fail-closed target contract preservation, target receipt scope isolation, and incompatible executor checks for #1740",
+          "reviewed_code_fingerprint": "1c79591693b4afd49851a82a02704ef65c2353b3b287b89bf09603eea9b58e7c",
+          "spec_material_hash": "a8fc49a6589b9b8889199ddc871d5c64cc823ce7e79ca3306284a98d4425ee11"
         }
       ],
       "state": "APPROVED",
       "stop_conditions": [],
-      "title": "Exact-candidate governance and continuous proof validity (#1052)",
+      "title": "Solve #1740: scope repository-local proof to selected deployment target",
       "todo_ids": [
-        "code_01m79j3db4bd4tdd"
+        "cicd_01m7r1ranb6b7wfe"
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795034623Z"
+      "updated_at": "1795036333Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:a4bac92972a76743bdd754f6420ec0cbd9ff6e079df359af5794f636f2b1e137",
+      "artifact_hash": "sha256:bbb4f47955a1788734757e03251eef8092a2430046f7083720a4222bd7ba4bd9",
       "checks": [
         {
           "name": "cargo-fmt-all",
@@ -726,11 +752,47 @@
           "status": "passed"
         },
         {
+          "name": "cargo_clippy",
+          "status": "passed"
+        },
+        {
+          "name": "cargo_fmt",
+          "status": "passed"
+        },
+        {
           "name": "ci_local_project_check_and_publish_freshness",
           "status": "passed"
         },
         {
+          "name": "cli_contract_enforcement",
+          "status": "passed"
+        },
+        {
           "name": "clippy-exact-candidate-1052",
+          "status": "passed"
+        },
+        {
+          "name": "consumer_readiness",
+          "status": "passed"
+        },
+        {
+          "name": "core_repository_profile",
+          "status": "passed"
+        },
+        {
+          "name": "core_validation_history",
+          "status": "passed"
+        },
+        {
+          "name": "core_validation_runtime",
+          "status": "passed"
+        },
+        {
+          "name": "doc_alignment",
+          "status": "passed"
+        },
+        {
+          "name": "entrypoint_correctness_branch_rejects",
           "status": "passed"
         },
         {
@@ -754,15 +816,23 @@
           "status": "passed"
         },
         {
+          "name": "spec_conformance",
+          "status": "passed"
+        },
+        {
           "name": "task_lease_renewal_and_workunit_custody",
           "status": "passed"
         },
         {
           "name": "v0.149.0-projection-refresh",
           "status": "passed"
+        },
+        {
+          "name": "validation_scope",
+          "status": "passed"
         }
       ],
-      "current_phase": "intent",
+      "current_phase": "verify_v0.149.1",
       "custody": {
         "events": [
           {
@@ -825,10 +895,17 @@
             "intent_id": "intent:change_01M7QBGV59Y7MXFNYG75MBZDQ9",
             "kind": "trajectory_step_recorded",
             "sequence": 10
+          },
+          {
+            "detail": "trajectory:branch_01M7QBGV8G7Y7EZGFJBVX1KFM7",
+            "event_id": "event:11",
+            "intent_id": "intent:change_01M7QBGV59Y7MXFNYG75MBZDQ9",
+            "kind": "trajectory_step_recorded",
+            "sequence": 11
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 10,
+        "next_sequence": 11,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M7QBGV8G7Y7EZGFJBVX1KFM7": {
@@ -970,6 +1047,31 @@
                 ],
                 "sequence": 10,
                 "validation_findings": []
+              },
+              {
+                "action": "verify_v0.149.1",
+                "custody_event_id": "event:11",
+                "observations": [
+                  "Merged origin/master 205d4e8d (v0.149.1), updated reviewed_sources_digest, refreshed specs, and verified all local suites on v0.149.1."
+                ],
+                "proof_refs": [
+                  "cargo_fmt",
+                  "cargo_clippy",
+                  "core_repository_profile",
+                  "core_validation_history",
+                  "core_validation_runtime",
+                  "validation_scope",
+                  "consumer_readiness",
+                  "doc_alignment",
+                  "cli_contract_enforcement",
+                  "spec_conformance",
+                  "entrypoint_correctness_branch_rejects"
+                ],
+                "scope": [
+                  "validation-kernel"
+                ],
+                "sequence": 11,
+                "validation_findings": []
               }
             ]
           }
@@ -981,6 +1083,7 @@
         "Actual-binary tests in tests/exact_candidate_governance_1052.rs verified exact SHA/tree/base/task/lease_generation binding, invalidation on edit/amend/rebase/target-advance/lease-renewal, ci_local and project-check non-readiness, workspace publish refusals, and immutable qa verify commit lookup",
         "Formatted tests/exact_candidate_governance_1052.rs with cargo fmt --all (Edition 2024); cargo fmt --all -- --check exit 0; clippy -D warnings exit 0; cargo test --test exact_candidate_governance_1052: 4 passed, 0 failed in 198.35s",
         "Merged origin/master 0b6ce0a8 (PR #1799 verify.rs fix); cargo fmt --all -- --check exit 0; clippy -D warnings exit 0; cargo test --test exact_candidate_governance_1052: 4 passed, 0 failed in 218.98s",
+        "Merged origin/master 205d4e8d (v0.149.1), updated reviewed_sources_digest, refreshed specs, and verified all local suites on v0.149.1.",
         "Merged origin/master a5a1edadb (v0.149.0, PR #1802 + #1804); refreshed Dockerfile/manifest/specs with v0.149.0; cargo fmt --all -- --check exit 0; clippy -D warnings exit 0; cargo test --test exact_candidate_governance_1052: 4 passed, 0 failed in 362.42s",
         "Merged origin/master c5bafce6 (v0.148.13), verified only version metadata changed in proof sources, updated reviewed_sources_digest, refreshed Dockerfile/specs via controller 0.148.13",
         "On merged origin/master c5bafce6 (v0.148.13): rustfmt --check exit 0; clippy -D warnings exit 0; cargo test --test exact_candidate_governance_1052: 4 passed, 0 failed in 250.33s",
@@ -1012,7 +1115,7 @@
       "run_id": "branch_01M7QBGV8G7Y7EZGFJBVX1KFM7",
       "schema_version": "1.1.0",
       "shortcut_risk_signals": [],
-      "task_id": "code_01m79j3db4bd4tdd",
+      "task_id": "cicd_01m7r1ranb6b7wfe",
       "tool_calls": [],
       "unresolved_assumptions": []
     }

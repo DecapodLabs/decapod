@@ -425,6 +425,7 @@ fn structured_init_proof_config() -> DecapodProjectConfig {
             reason: None,
         }],
         executions: BTreeMap::new(),
+        targets: BTreeMap::new(),
     });
     config.proof.commands = vec![
         proof::ProofDef {

@@ -6651,6 +6651,7 @@ pub(crate) struct ReadinessInvocation {
     snapshot_resume: Option<std::path::PathBuf>,
     snapshot_adopt: Option<String>,
     provider_artifacts: Option<std::path::PathBuf>,
+    target: Option<String>,
 }
 
 impl ReadinessInvocation {
@@ -6663,6 +6664,18 @@ impl ReadinessInvocation {
             return Err(error::DecapodError::ValidationError(
                 "READINESS_INVOCATION_INVALID: prepare and resume are exclusive; raw artifact handoff and host adoption each require an exact resume locator and are mutually exclusive".into(),
             ));
+        }
+        if let Some(target) = &self.target {
+            if target.trim().is_empty() || target.trim() != target {
+                return Err(error::DecapodError::ValidationError(
+                    "READINESS_INVOCATION_INVALID: --target must be a non-empty deployment target name".into(),
+                ));
+            }
+            if self.has_snapshot_arguments() {
+                return Err(error::DecapodError::ValidationError(
+                    "READINESS_INVOCATION_INVALID: --target cannot be combined with Buildkite snapshot handoff flags".into(),
+                ));
+            }
         }
         Ok(())
     }
@@ -6693,6 +6706,7 @@ fn run_validate_command(
             || validate_cli.snapshot_resume.is_some()
             || validate_cli.snapshot_adopt.is_some()
             || validate_cli.provider_artifacts.is_some()
+            || validate_cli.target.is_some()
         {
             return Err(error::DecapodError::ValidationError(
                 "RBAC_VALIDATION_BYPASS_SCOPE: unsupported validation scope or snapshot handoff"
@@ -6771,6 +6785,7 @@ fn run_validate_command_remote(
         snapshot_resume: cli.snapshot_resume,
         snapshot_adopt: cli.snapshot_adopt,
         provider_artifacts: cli.provider_artifacts,
+        target: cli.target,
     };
     invocation.validate()?;
     reject_remote_arguments_in_partial_scope(scope, &invocation)?;
@@ -6826,9 +6841,15 @@ fn run_validate_command_local(
         snapshot_resume: validate_cli.snapshot_resume.clone(),
         snapshot_adopt: validate_cli.snapshot_adopt.clone(),
         provider_artifacts: validate_cli.provider_artifacts.clone(),
+        target: validate_cli.target.clone(),
     };
     readiness_invocation.validate()?;
     reject_remote_arguments_in_partial_scope(scope, &readiness_invocation)?;
+    if scope == ValidationScope::ProjectPrerequisites && readiness_invocation.target.is_some() {
+        return Err(error::DecapodError::ValidationError(
+            "PROJECT_CHECK_SCOPE: --target is not valid for project-check".into(),
+        ));
+    }
 
     let non_git_diagnostics =
         !scope.requires_publication_proof() && !is_git_repository(workspace_root);
@@ -6995,12 +7016,20 @@ fn run_validate_command_local(
         .as_ref()
         .map(|result| &result.agent_guidance)
         .unwrap_or(&fallback_guidance);
+    let outer_scope = if readiness_invocation.target.is_some() {
+        readiness
+            .as_ref()
+            .map(|r| r.scope)
+            .unwrap_or(core::repository_profile::TARGET_READINESS_SCOPE)
+    } else {
+        scope.label()
+    };
     if validate_cli.format == "json" {
         println!(
             "{}",
             serde_json::to_string_pretty(&serde_json::json!({
                 "status": report.status,
-                "scope": scope.label(),
+                "scope": outer_scope,
                 "publication_ready": readiness.as_ref().is_some_and(|r| r.publication_ready()),
                 "agent_guidance": scope.requires_publication_proof().then_some(guidance),
                 "readiness": readiness,
@@ -7038,7 +7067,11 @@ fn run_validate_command_local(
         }
         mark_project_prerequisites_completed(workspace_root)?;
     } else if scope.requires_publication_proof() {
-        mark_validation_completed(workspace_root)?;
+        if readiness_invocation.target.is_some() {
+            mark_project_validation_scope_completed(workspace_root, "validate.target")?;
+        } else {
+            mark_validation_completed(workspace_root)?;
+        }
     }
     Ok(())
 }
@@ -7127,6 +7160,7 @@ fn readiness_environment(
         max_input_bytes: 8 * 1024 * 1024 * 1024,
         max_files: 200_000,
         max_output_bytes: 16 * 1024 * 1024,
+        target: None,
     };
     Ok((options, repository))
 }
@@ -7250,7 +7284,20 @@ fn run_current_workbranch_readiness_with(
             .as_ref()
             .is_some_and(|profile| profile.id == core::repository_profile::REQUIRED_PROFILE)
         {
-            report_scope = core::repository_profile::READINESS_SCOPE;
+            report_scope = if invocation.target.is_some() {
+                core::repository_profile::TARGET_READINESS_SCOPE
+            } else {
+                core::repository_profile::READINESS_SCOPE
+            };
+        } else if invocation.target.is_some() {
+            return Err(error::DecapodError::ValidationError(
+                "TARGET_SCOPE_UNSUPPORTED: --target is only supported for repo.pr-readiness.v1 local proof".into(),
+            ));
+        }
+        if invocation.target.is_some() && config.proof.validation_buildkite_preflights {
+            return Err(error::DecapodError::ValidationError(
+                "TARGET_SCOPE_UNSUPPORTED: --target cannot be used with validation_buildkite_preflights = true".into(),
+            ));
         }
         if invocation.has_snapshot_arguments() && !config.proof.validation_buildkite_preflights {
             return Err(error::DecapodError::ValidationError(
@@ -7290,7 +7337,8 @@ fn run_current_workbranch_readiness_with(
         } else {
             core::workspace::verify_current_publication_prerequisites(workspace_root)?;
         }
-        let (options, repository) = readiness_environment(workspace_root)?;
+        let (mut options, repository) = readiness_environment(workspace_root)?;
+        options.target = invocation.target.clone();
         let mut signal_guard = core::bounded_process::SignalCancellationGuard::new()?;
         let cancellation = signal_guard.cancellation().clone();
         let store_root = find_governance_root(workspace_root).join(".decapod/data");
@@ -7380,6 +7428,8 @@ fn run_current_workbranch_readiness_with(
 
                     laya_readiness: None,
                     scope: runtime::READINESS_SCOPE,
+                    target: None,
+                    resolved_targets: Vec::new(),
                     agent_guidance: runtime::ValidationGuidance::for_outcome(false),
                     stage_dispositions: Vec::new(),
                     blockers: vec![runtime::Blocker::new(
@@ -7515,6 +7565,8 @@ fn run_current_workbranch_readiness_with(
 
         laya_readiness: None,
         scope: report_scope,
+        target: invocation.target.clone(),
+        resolved_targets: Vec::new(),
         agent_guidance: runtime::ValidationGuidance::for_outcome(false),
         stage_dispositions: Vec::new(),
         blockers: vec![runtime::Blocker::new(
@@ -11232,6 +11284,7 @@ fn run_workspace_command(
                 snapshot_resume,
                 snapshot_adopt: None,
                 provider_artifacts,
+                target: None,
             };
             let result = workspace::publish_workspace_with_readiness(
                 workspace_root,
@@ -11602,6 +11655,7 @@ mod rpc_handlers {
             snapshot_resume: params.snapshot_resume,
             snapshot_adopt: None,
             provider_artifacts: params.provider_artifacts,
+            target: None,
         };
         let result = workspace::publish_workspace_with_readiness(
             ctx.project_root,
@@ -12396,6 +12450,7 @@ mod rpc_handlers {
             snapshot_resume: params.snapshot_resume,
             snapshot_adopt: params.snapshot_adopt,
             provider_artifacts: params.provider_artifacts,
+            target: params.target,
         };
         invocation.validate()?;
         ensure_session_valid()?;
@@ -12445,10 +12500,16 @@ mod rpc_handlers {
             snapshot_resume: params.snapshot_resume,
             snapshot_adopt: params.snapshot_adopt,
             provider_artifacts: params.provider_artifacts,
+            target: params.target,
         };
         invocation.validate()?;
         let scope = super::ValidationScope::public_validate();
         super::reject_remote_arguments_in_partial_scope(scope, &invocation)?;
+        if scope == super::ValidationScope::ProjectPrerequisites && invocation.target.is_some() {
+            return Err(error::DecapodError::ValidationError(
+                "PROJECT_CHECK_SCOPE: target is not valid for project-check".into(),
+            ));
+        }
 
         ensure_session_valid()?;
         let workspace_root = &ctx.project_root;
@@ -12542,7 +12603,11 @@ mod rpc_handlers {
                 let result = ValidateRunResult {
                     success: true,
                     report: "All validation gates passed".to_string(),
-                    scope: scope.label().into(),
+                    scope: if invocation.target.is_some() {
+                        readiness.scope.into()
+                    } else {
+                        scope.label().into()
+                    },
                     publication_ready: readiness.publication_ready(),
                 };
                 Ok(success_response(

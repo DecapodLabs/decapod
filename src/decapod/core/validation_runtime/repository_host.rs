@@ -28,6 +28,7 @@ pub struct AuthorizedRepositoryProof {
     source_inventory_digest: String,
     source_root: PathBuf,
     repository: String,
+    target: Option<String>,
     deadline: Instant,
     cancel: Cancellation,
 }
@@ -68,16 +69,20 @@ impl AuthorizedRepositoryProof {
             .repository_contract
             .as_ref()
             .ok_or_else(|| invalid("repository proof contract missing"))?;
-        repository_profile::validate_contract(
+        let catalog = repository_profile::required_catalog_for_target(
             declaration,
             &project.sources,
+            &project.facts,
             &project.configuration.commands,
             contract,
+            self.target.as_deref(),
         )
         .map_err(io::Error::other)?;
         if project.configuration.validation_buildkite_preflights
             || project.identity_inputs.root != self.source_root
             || project.identity_inputs.repository != self.repository
+            || project.target_scope.as_ref().map(|s| s.target.as_str()) != self.target.as_deref()
+            || catalog.obligations() != project.catalog.obligations()
             || project.sources.digest().map_err(io::Error::other)? != self.source_inventory_digest
             || contract.reviewed_commands_digest != self.command_contract_digest
         {
@@ -278,6 +283,7 @@ impl Host for RepositoryHost<'_> {
                     source_inventory_digest: sources.clone(),
                     source_root: project.identity_inputs.root.clone(),
                     repository: project.identity_inputs.repository.clone(),
+                    target: project.target_scope.as_ref().map(|s| s.target.clone()),
                     deadline: budget.deadline,
                     cancel: budget.cancel.clone(),
                 },
@@ -510,18 +516,49 @@ pub fn select_commands(
             .repository_contract
             .as_ref()
             .ok_or_else(|| invalid("repository command contract is missing"))?;
-        let catalog = repository_profile::required_catalog(
+        let catalog = repository_profile::required_catalog_for_target(
             declaration,
             &project.sources,
             &project.facts,
             &project.configuration.commands,
             contract,
+            project.target_scope.as_ref().map(|s| s.target.as_str()),
         )
         .map_err(io::Error::other)?;
         if catalog.obligations() != project.catalog.obligations() {
             return Err(invalid(
                 "repository command catalog differs from the reviewed contract",
             ));
+        }
+        if let Some(scope) = &project.target_scope {
+            let expected_scope = repository_profile::resolve_target_closure(
+                contract,
+                &scope.target,
+                Some(&project.facts.changed_paths),
+            )
+            .map_err(io::Error::other)?;
+            if &expected_scope != scope {
+                return Err(invalid(
+                    "repository deployment target closure differs from the reviewed contract",
+                ));
+            }
+            let current_platform = native_proof::NativePlatform::current()
+                .ok()
+                .and_then(repository_profile::platform_key);
+            for target_name in &scope.resolved_targets {
+                let target_def = contract.targets.get(target_name).ok_or_else(|| {
+                    invalid(format!("UNKNOWN_DEPLOYMENT_TARGET: {target_name:?}"))
+                })?;
+                if !target_def.platforms.is_empty()
+                    && !current_platform
+                        .is_some_and(|key| target_def.platforms.iter().any(|p| p == key))
+                {
+                    return Err(invalid(format!(
+                        "INCOMPATIBLE_TARGET_EXECUTOR: deployment target {target_name:?} requires platform {:?}, current host executor is {:?}",
+                        target_def.platforms, current_platform
+                    )));
+                }
+            }
         }
         Ok(contract)
     })()
@@ -611,6 +648,7 @@ mod tests {
             max_input_bytes: 1024,
             max_files: 100,
             max_output_bytes: 1024,
+            target: None,
         }
     }
 
@@ -819,6 +857,7 @@ mod tests {
                     timeout_seconds: 5,
                 },
             )]),
+            targets: BTreeMap::new(),
         };
         contract.reviewed_commands_digest =
             repository_profile::command_contract_digest(&commands, &contract).unwrap();
@@ -856,6 +895,7 @@ mod tests {
             facts,
             release: None,
             catalog,
+            target_scope: None,
             identity_inputs: IdentityInputs {
                 root: source.clone(),
                 git_program: root.join("unused-git"),

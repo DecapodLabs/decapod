@@ -67,6 +67,9 @@ pub(crate) struct ValidateCli {
     /// Human-reviewed explanation, recorded in the append-only audit stream.
     #[clap(long = "bypass-reason", requires = "bypass_validation")]
     pub bypass_reason: Option<String>,
+    /// Scope `repo.pr-readiness.v1` local proof to a reviewed deployment target slice.
+    #[clap(long, value_name = "TARGET")]
+    pub target: Option<String>,
 }
 
 #[derive(clap::Args, Debug)]

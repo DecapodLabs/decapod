@@ -244,6 +244,7 @@ fn native_and_provider_capture_archive_and_lookup_survive_evidence_directory_del
         let completed = CompletedReadinessEvidence::from_runtime(
             &completed.invocation_id,
             &completed.scope,
+            None,
             &completed.material,
             &completed.governance_digest,
             &completed.trajectory_digest,
@@ -265,6 +266,8 @@ fn native_and_provider_capture_archive_and_lookup_survive_evidence_directory_del
             proof_ready: true,
             laya_readiness: Some(completed.laya.clone()),
             scope: validation_runtime::READINESS_SCOPE,
+            target: None,
+            resolved_targets: vec![],
             agent_guidance: validation_runtime::ValidationGuidance::for_outcome(true),
             stage_dispositions: vec![],
             blockers: vec![],

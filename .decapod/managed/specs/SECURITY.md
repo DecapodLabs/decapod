@@ -706,7 +706,7 @@ execution evidence remains required before publication readiness.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `0cd6f9ff0f09a73293db451761b3a2b1366a7b5ec837ea33428f8c549f6e25cd`
+- Repository signal fingerprint: `1c79591693b4afd49851a82a02704ef65c2353b3b287b89bf09603eea9b58e7c`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (237 files), `tests/` (237 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
@@ -1106,6 +1106,10 @@ exercise kernel admission; a model refusal or a predetermined provider error
 would not establish the guarantee. Accepted-target observation and the configured
 executor remain trust roots. This repair does not claim OS isolation from an
 unrestricted agent or add authenticated cloud authority.
+
+### Target-scoped proof isolation and preservation (#1740)
+
+`repository_profile::preserve_accepted` rejects candidate attempts to delete accepted entries from `RepositoryContract.targets`, remove required target commands, narrow `depends_on` or `shared_inputs`, or alter `platforms` (`ACCEPTED_REPOSITORY_CONTRACT_CHANGED`) before execution selection. `AuthorizedRepositoryProof::verify_context` re-validates the sealed target scope before execution. Target-scoped receipts (`completion/native-readiness-receipt.json`) and durable history records (`CompletedReadinessEvidence.target_scope: Option<TargetProofScope>`) bind the exact candidate SHA, selected target, and resolved target closure: `PublicationReadiness::from_report`, `validation_runtime::verify_native_receipt_scope`, `validation_history::lookup`, `lookup_record`, `lookup_current_workunit`, and `check_workunit_append_on_conn` reject target-scoped evidence for full-repository PR publication, workunit `VERIFIED` promotion, mismatched targets, or stale candidate SHAs.
 
 ### Hosted source-check substitution control
 

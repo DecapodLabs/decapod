@@ -500,6 +500,8 @@ pub struct ValidateRunParams {
     pub snapshot_resume: Option<std::path::PathBuf>,
     pub snapshot_adopt: Option<String>,
     pub provider_artifacts: Option<std::path::PathBuf>,
+    #[serde(default)]
+    pub target: Option<String>,
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
