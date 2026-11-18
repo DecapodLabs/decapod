@@ -606,6 +606,14 @@
         "lint:fmt",
         "test:explicit_path_scope_1760"
       ]
+    },
+    {
+      "id": "ckpt-scope-1760-4",
+      "summary": "Record post-merge SECURITY.md spec review fingerprint for v0.149.1 (#1760)",
+      "input_digest": "sha256:7ebe1bc296b26035bb3a96ead8f5781f1c2519916d89c0a1068c2120f8b66f9c",
+      "proof_refs": [
+        "spec:.decapod/managed/specs/SECURITY.md"
+      ]
     }
   ],
   "intents": {
@@ -663,8 +671,8 @@
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Security invariants preserved: declared_paths ASCII/path-traversal bounds unchanged, reconcile-scope fails closed on unarchived journals (SCOPE_RECONCILIATION_ARCHIVE_REQUIRED) and ambiguous repairs (SCOPE_RECONCILIATION_AMBIGUOUS), and resets plan approval to DRAFT.",
-          "reviewed_code_fingerprint": "5bc2bf802286c6247c4dba4babe899d191f482fa9d7d52fffdf562df23198d49",
+          "reason": "Integrated origin/master 205d4e8da (v0.149.1); #1760 security invariants preserved.",
+          "reviewed_code_fingerprint": "5cdb0b8f2e9954eb4b70c960caabae69da65b6a66b9826bb1193527c66a941b8",
           "spec_material_hash": "735ae6e95c6b18ff2ccc718fbadaa4d7ae483d632aee2fb071d4f9ae6daa23de"
         }
       ],
@@ -676,7 +684,7 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795039075Z"
+      "updated_at": "1795039218Z"
     },
     "trajectory": {
       "active_boundaries": [
