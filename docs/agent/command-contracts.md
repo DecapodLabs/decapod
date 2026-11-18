@@ -187,7 +187,12 @@ This document defines the normative operational contracts for the Decapod CLI.
 - **Intent:** Local trace management
 
 ## `decapod system`
-- **Intent:** System: capabilities, version, doctor
+- **Intent:** System: capabilities, version, doctor, migrations
+
+### Read-Only System & Migration Inspection (`decapod system ...`)
+
+- **Non-initializing diagnostics (`decapod system migrations`, `decapod system doctor check`, `decapod system version`, `decapod system capabilities`):** Run without requiring `DECAPOD_SESSION_PASSWORD`, without creating `.decapod/data/`, without modifying `version_counter.json`, `applied.json`, or `catalog.json`, and without consuming a pending migration notice.
+- **Migration inspection (`decapod system migrations --format {json,text}`):** Resolves `workspace_root`, `governance_root`, and `decapod_root` (following the main repository `.decapod` from governed worktrees) and exposes `version_counter`, `applied`, compiled/on-disk `catalog`, `pending_migrations`, `action_required`, `reason_codes`, and actionable `instructions`.
 
 ## `decapod context`
 - **Intent:** Context: infer, lcm, internalize, preflight, impact
