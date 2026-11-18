@@ -596,6 +596,16 @@
       "proof_refs": [
         "test:explicit_path_scope_1760"
       ]
+    },
+    {
+      "id": "ckpt-scope-1760-3",
+      "summary": "Integrate origin/master v0.149.1 (205d4e8da) and refresh v0.149.1 specs and Dockerfile (#1760)",
+      "input_digest": "sha256:8f0f37b99bdbfefc816e97b2dec983da5354fb0660d13b2cf77b4978ba21c019",
+      "proof_refs": [
+        "lint:clippy",
+        "lint:fmt",
+        "test:explicit_path_scope_1760"
+      ]
     }
   ],
   "intents": {
@@ -639,15 +649,15 @@
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Architectural boundaries unchanged; scope parsing reuses fleet_coord::declared_paths and scope reconciliation lives in core::governance_document::scope_reconciliation.",
-          "reviewed_code_fingerprint": "5bc2bf802286c6247c4dba4babe899d191f482fa9d7d52fffdf562df23198d49",
+          "reason": "Integrated origin/master 205d4e8da (v0.149.1); #1760 architectural boundaries unchanged.",
+          "reviewed_code_fingerprint": "5cdb0b8f2e9954eb4b70c960caabae69da65b6a66b9826bb1193527c66a941b8",
           "spec_material_hash": "080e1e015d867051ec4ecbb1f18aca92a2d62a05798377057e563aaa5a3764e0"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Document canonical explicit paths:[...] parsing via fleet_coord::parse_scope_entries across orientation, workspace seeding, trajectory, custody constraints, and fail-closed govern trajectory reconcile-scope (#1760).",
-          "reviewed_code_fingerprint": "5bc2bf802286c6247c4dba4babe899d191f482fa9d7d52fffdf562df23198d49",
+          "reason": "Integrated origin/master 205d4e8da (v0.149.1) and refreshed v0.149.1 projections; #1760 INTERFACES.md specification preserved.",
+          "reviewed_code_fingerprint": "5cdb0b8f2e9954eb4b70c960caabae69da65b6a66b9826bb1193527c66a941b8",
           "spec_material_hash": "902dea24a1899bb65d7e1121bad7ca92ca20e711bb2411d4830d660d468eea83"
         },
         {
@@ -666,7 +676,7 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795037519Z"
+      "updated_at": "1795039075Z"
     },
     "trajectory": {
       "active_boundaries": [

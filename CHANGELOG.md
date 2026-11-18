@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.149.1](https://github.com/DecapodLabs/decapod/compare/v0.149.0...v0.149.1) - 2026-11-18
+
+### Other
+
+- *(qa)* refresh v0.149.0 Dockerfile and specs manifest ([#1052](https://github.com/DecapodLabs/decapod/pull/1052))
+- *(qa)* integrate accepted master v0.149.0 ([#1052](https://github.com/DecapodLabs/decapod/pull/1052))
+- *(qa)* record INTERFACES.md unchanged-with-reason review ([#1052](https://github.com/DecapodLabs/decapod/pull/1052))
+- *(qa)* integrate accepted master 0b6ce0a8 ([#1052](https://github.com/DecapodLabs/decapod/pull/1052))
+- *(test)* format exact_candidate_governance_1052 with cargo fmt ([#1052](https://github.com/DecapodLabs/decapod/pull/1052))
+- *(qa)* integrate accepted release 0.148.13
+- *(governance)* add #1052 actual-binary exact-candidate regression suite
+
 ## [0.149.0](https://github.com/DecapodLabs/decapod/compare/v0.148.14...v0.149.0) - 2026-11-18
 
 ### Added
