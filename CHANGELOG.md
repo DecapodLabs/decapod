@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.148.12](https://github.com/DecapodLabs/decapod/compare/v0.148.11...v0.148.12) - 2026-11-18
+
+### Fixed
+
+- *(interop)* reject duplicate JSON at the RPC boundary
+
+### Other
+
+- *(interop)* preserve strict schema in negotiation controls
+- *(interop)* declare the Python consumer in Bazel compile inputs
+- *(interop)* refresh projections with official controller 0.148.11
+
 ## [0.148.11](https://github.com/DecapodLabs/decapod/compare/v0.148.10...v0.148.11) - 2026-11-18
 
 ### Fixed
