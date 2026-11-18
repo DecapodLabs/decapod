@@ -38,6 +38,13 @@ those release metadata bytes. Reconciliation does not establish test success.
 
 ## Truthful conformance discovery (#871, #1735)
 
+The current RPC surface must also advertise `intent.reconcile`, `state.resolve`
+and `state.diff`. The real entry boundary rejects unregistered operation names
+with `unknown_op` before project/session startup. Registration and metadata
+come from one declaration in the existing interop catalog; registration grants
+no authority and preserves every registered operation's own gates. This bounds
+undiscoverable additions without claiming an authenticated conformance producer.
+
 The source-inventory review compared all 105 discovered inputs against the last
 accepted review `edbfc00d`. Only the root package version in Cargo.toml and
 Cargo.lock changed, from 0.148.7 to 0.148.9. The reviewed digest acknowledges
@@ -484,7 +491,7 @@ These declarations select authoring and proof obligations; they do not attest im
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `2db1c28d706e3ac7e577ee487eadbd559b59c5107e64835280e6bb8d7ab2b759`
+- Repository signal fingerprint: `e8f10499b0e64bd867236d6fa91cb7584de58284f56f79ffb59a4712800c3de4`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (236 files), `tests/` (235 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

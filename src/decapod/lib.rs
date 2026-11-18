@@ -2788,6 +2788,26 @@ pub fn run() -> Result<(), error::DecapodError> {
         _ => None,
     };
     if let Some(request) = predecoded_rpc_request.as_ref()
+        && !core::interop::RPC_OPS.contains(&request.op.as_str())
+    {
+        // A handler cannot become a callable, undiscoverable operation. This
+        // registration check grants no session, custody or policy authority.
+        let response = error_response(
+            request.id.clone(),
+            request.op.clone(),
+            request.params.clone(),
+            "unknown_op".to_string(),
+            format!("Unknown operation: {}", request.op),
+            None,
+            vec![],
+        );
+        println!(
+            "{}",
+            serde_json::to_string_pretty(&response).map_err(io::Error::other)?
+        );
+        return rpc_validation_exit_status(&request.op, response.success);
+    }
+    if let Some(request) = predecoded_rpc_request.as_ref()
         && request.op == "schema.get"
     {
         // Pure embedded reference: no config, session, migrations, mandate

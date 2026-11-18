@@ -23,57 +23,6 @@ pub const SUPPORTED_PROFILE_VERSIONS: &[&str] = &["v1"];
 pub const SUPPORTED_EXTENSIONS: &[&str] =
     &["receipts", "interlocks", "projections", "context-capsule"];
 
-/// Registered RPC operation names.
-///
-/// This list is the canonical registry for the dispatch-derived manifest
-/// entries. The dispatcher still matches op names with its own table, so this
-/// is not a generated single source of truth; instead the black-box conformance
-/// harness (`tests/interop_conformance.rs`) drift-checks the two, proving every
-/// entry is actually accepted by the real dispatcher (an advertised op that
-/// the dispatch rejects as `unknown_op` fails the suite). Harness detection of
-/// drift is proof of synchronization between registry and dispatcher.
-pub const RPC_OPS: &[&str] = &[
-    "agent.init",
-    "workspace.status",
-    "workspace.ensure",
-    "workspace.publish",
-    "context.resolve",
-    "context.scope",
-    "context.capsule.query",
-    "context.bundle.export",
-    "context.bundle.import",
-    "context.bindings",
-    "constitution.get",
-    "constitution.links.query",
-    "constitution.links.navigate",
-    "constitution.migrate",
-    "agent.registry.query",
-    "specs.refresh",
-    "schema.get",
-    "data.database.inspect",
-    "data.database.capabilities",
-    "data.database.maintain.inspect",
-    "data.database.verify",
-    "data.database.backup",
-    "data.database.recover",
-    "data.database.lock.diagnose",
-    "data.database.lock.retry",
-    "data.database.lock.release_own",
-    "data.database.audit",
-    "store.upsert",
-    "store.query",
-    "validate.run",
-    "scaffold.next_question",
-    "scaffold.apply_answer",
-    "scaffold.generate_artifacts",
-    "standards.resolve",
-    "mentor.obligations",
-    "assurance.evaluate",
-    "interop.manifest",
-    "interop.negotiate",
-    "interop.project",
-];
-
 /// Conformance test identifiers known to the black-box harness.
 ///
 /// These identify source coverage only. Registration is not evidence that a
@@ -202,7 +151,27 @@ struct OpMeta {
     description: &'static str,
 }
 
-const OP_META: &[OpMeta] = &[
+// Keep routing registration and manifest metadata in the existing catalog.
+// Registration permits routing only; the operation's own authority gates apply.
+macro_rules! rpc_catalog {
+    ($(OpMeta {
+        op: $op:literal,
+        read_only: $read_only:literal,
+        session_required: $session_required:literal,
+        description: $description:literal,
+    }),* $(,)?) => {
+        /// Registered RPC names, derived from the manifest's operation metadata.
+        pub const RPC_OPS: &[&str] = &[$($op),*];
+        const OP_META: &[OpMeta] = &[$(OpMeta {
+            op: $op,
+            read_only: $read_only,
+            session_required: $session_required,
+            description: $description,
+        }),*];
+    };
+}
+
+rpc_catalog![
     OpMeta {
         op: "agent.init",
         read_only: true,
@@ -298,6 +267,12 @@ const OP_META: &[OpMeta] = &[
         read_only: false,
         session_required: true,
         description: "Refresh governed spec fingerprints/manifests",
+    },
+    OpMeta {
+        op: "intent.reconcile",
+        read_only: true,
+        session_required: false,
+        description: "Inspect recorded intent, living-spec references and advisory change impact",
     },
     OpMeta {
         op: "schema.get",
@@ -436,6 +411,18 @@ const OP_META: &[OpMeta] = &[
         read_only: true,
         session_required: false,
         description: "Structured projection of a captured outcome (derived, non-authoritative)",
+    },
+    OpMeta {
+        op: "state.resolve",
+        read_only: true,
+        session_required: true,
+        description: "Resolve current governed state and evidence applicability",
+    },
+    OpMeta {
+        op: "state.diff",
+        read_only: true,
+        session_required: true,
+        description: "Compare governed state projections",
     },
 ];
 

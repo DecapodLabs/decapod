@@ -2,6 +2,14 @@
 
 ## Source coverage and execution observations (#871)
 
+`interop::rpc_catalog` emits the operation-name slice and manifest metadata from
+the same declarations. `lib.rs` checks that slice before specialized schema or
+database routing and normal RPC startup. The existing handler and authority
+paths remain responsible for execution; this is an enforced registration
+boundary, not another dispatcher or policy evaluator. Actual black-box controls
+cover the formerly omitted reconciliation capability and unknown-operation
+refusal in a fresh Git fixture without creating project/session state.
+
 `src/decapod/core/interop.rs` describes implemented operations and known test
 locations without executing tests during discovery. Static coverage tables
 populate references with `NotRun`; `validate_manifest` refuses execution-state
@@ -999,7 +1007,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `2db1c28d706e3ac7e577ee487eadbd559b59c5107e64835280e6bb8d7ab2b759`
+- Repository signal fingerprint: `e8f10499b0e64bd867236d6fa91cb7584de58284f56f79ffb59a4712800c3de4`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (236 files), `tests/` (235 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

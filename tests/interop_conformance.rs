@@ -17,6 +17,54 @@ mod harness;
 
 use harness::Harness;
 
+#[test]
+fn unregistered_rpc_is_rejected_before_project_startup() {
+    use decapod::core::bounded_process::BoundedCommand;
+    use std::{process::Command, time::Duration};
+
+    let fixture = tempfile::tempdir().unwrap();
+    let command = |program: &std::ffi::OsStr| {
+        let mut command = Command::new(program);
+        command.current_dir(fixture.path());
+        for (key, _) in std::env::vars_os() {
+            let name = key.to_string_lossy();
+            if ["DECAPOD_", "GIT_", "BUILDKITE", "GITHUB", "XDG_"]
+                .iter()
+                .any(|prefix| name.starts_with(prefix))
+            {
+                command.env_remove(key);
+            }
+        }
+        command
+            .env("HOME", fixture.path())
+            .env("XDG_CONFIG_HOME", fixture.path().join("config"))
+            .env("XDG_CACHE_HOME", fixture.path().join("cache"))
+            .env("XDG_DATA_HOME", fixture.path().join("data"))
+            .env("GIT_CONFIG_GLOBAL", "/dev/null")
+            .env("GIT_CONFIG_NOSYSTEM", "1");
+        command
+    };
+    let initialized = command(std::ffi::OsStr::new("git"))
+        .args(["init", "-q"])
+        .bounded_output(Duration::from_secs(30))
+        .unwrap();
+    assert!(initialized.status.success());
+    let output = command(harness::resolve_decapod_bin().as_os_str())
+        .args(["rpc", "--op", "interop.unregistered", "--params", "{}"])
+        .bounded_output(Duration::from_secs(30))
+        .unwrap();
+    let response: Value = serde_json::from_slice(&output.stdout)
+        .unwrap_or_else(|_| panic!("expected typed RPC refusal: {}", combined(&output)));
+    assert_eq!(response["success"], false);
+    assert_eq!(response["error"]["code"], "unknown_op");
+    assert!(
+        std::fs::read_dir(fixture.path())
+            .unwrap()
+            .all(|entry| entry.unwrap().file_name() == ".git"),
+        "an unknown RPC operation must not initialize a project or session"
+    );
+}
+
 /// Read-only ops whose dispatch acceptance is proven against the real binary
 /// (an advertised op that dispatch rejects as `unknown_op` fails the suite).
 fn read_only_dispatch_probes() -> Vec<(&'static str, Value)> {
@@ -38,6 +86,7 @@ fn read_only_dispatch_probes() -> Vec<(&'static str, Value)> {
         ("context.bindings", json!({})),
         ("constitution.get", json!({"section": "core/DECAPOD"})),
         ("schema.get", json!({"entity": "todo"})),
+        ("intent.reconcile", json!({})),
         ("store.query", json!({"entity": "todo"})),
         ("standards.resolve", json!({})),
         ("mentor.obligations", json!({})),
@@ -161,6 +210,23 @@ fn discovery_and_negotiation() {
         .cloned()
         .unwrap_or_default();
     h.check(
+        "manifest.current_dispatch_entries",
+        "rpc-stdin:interop.manifest",
+        "intent.reconcile, state.resolve and state.diff are implemented and advertised",
+        serde_json::to_string(&caps.iter().map(|cap| &cap["id"]).collect::<Vec<_>>())
+            .unwrap(),
+        ["intent.reconcile", "state.resolve", "state.diff"]
+            .iter()
+            .all(|op| {
+                caps.iter().any(|cap| {
+                    cap["id"] == format!("rpc:{op}")
+                        && cap["implementation_status"] == "implemented"
+                })
+            }),
+        None,
+        vec!["registered names and manifest metadata share the existing catalog".into()],
+    );
+    h.check(
         "manifest.source_coverage_is_not_execution",
         "rpc-stdin:interop.manifest",
         "all capabilities not_run; source coverage locations retained",
@@ -223,7 +289,7 @@ fn discovery_and_negotiation() {
     }
     h.check(
         "manifest.ops_dispatch_accepted",
-        "rpc-stdin:<14 read-only ops>",
+        "rpc-stdin:<read-only probes>",
         "no advertised op is rejected as unknown_op by the real dispatcher",
         if rejected.is_empty() {
             "all dispatch-accepted".to_string()

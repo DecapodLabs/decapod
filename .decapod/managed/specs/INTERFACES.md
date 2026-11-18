@@ -14,6 +14,13 @@ grants exceptional permission. RBAC bypass keeps `proof_ready=false` and
 
 ## Conformance evidence boundary (#871)
 
+The v1 manifest adds the existing reconciliation and state-read operations.
+Reconciliation remains advisory and session-free; state reads retain their
+existing session/workspace gates. Unknown RPC names now receive the existing
+`unknown_op` envelope before startup, including in an uninitialized Git project.
+Both stdin RPC and the HTTP adapter use that same local entry boundary. No
+negotiation result or catalog entry supplies mutation permission.
+
 `interop.manifest` retains its v1 wire shape and source coverage references.
 `evidence.conformance_test` and `evidence.evidence_ref` identify source tests;
 they do not attest execution, transport, binary identity or current applicability.
@@ -1241,7 +1248,7 @@ field. Nothing in this operation authorizes a mutation, approval or completion.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `2db1c28d706e3ac7e577ee487eadbd559b59c5107e64835280e6bb8d7ab2b759`
+- Repository signal fingerprint: `e8f10499b0e64bd867236d6fa91cb7584de58284f56f79ffb59a4712800c3de4`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (236 files), `tests/` (235 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
