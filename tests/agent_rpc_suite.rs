@@ -62,6 +62,18 @@ fn test_repo_root() -> &'static PathBuf {
             String::from_utf8_lossy(&init.stderr)
         );
 
+        // The RPC fixture later works on an unaccepted feature checkout.
+        // Establish independently accepted policy first, as real workspaces
+        // require; its candidate config must not authorize its own operations.
+        for args in [
+            vec!["add", "."],
+            vec!["-c", "user.name=RPC fixture", "-c", "user.email=fixture@example.invalid",
+                "commit", "-m", "fixture: accept initial repository policy"],
+        ] {
+            let accepted = Command::new("git").current_dir(&dir).args(args).output().unwrap();
+            assert!(accepted.status.success(), "{}", String::from_utf8_lossy(&accepted.stderr));
+        }
+
         dir
     })
 }
@@ -381,15 +393,25 @@ fn test_rpc_context_bindings() {
 fn test_rpc_trace_and_redaction() {
     let secret_id = format!("SECRET_{}", new_ulid());
     let request = serde_json::json!({
-        "op": "schema.get",
+        // Schema bootstrap is deliberately read-only and sessionless. Exercise
+        // redaction on a real traced mutation rather than requiring a repair
+        // reference to initialize or append to operational storage.
+        "op": "store.upsert",
         "params": {
-            "entity": "todo",
+            "entity": "knowledge",
+            "payload": {
+                "id": secret_id,
+                "title": "Trace redaction fixture",
+                "text": "Non-secret tracing regression payload",
+                "provenance": "cmd:cargo-test"
+            },
             "my_password": "supersecretpassword",
             "id": secret_id
         }
     });
 
-    let _res = run_rpc(request);
+    let response = run_rpc(request);
+    assert_eq!(response["success"], true);
 
     let lock = RPC_LOCK.get_or_init(|| Mutex::new(()));
     let _guard = match lock.lock() {

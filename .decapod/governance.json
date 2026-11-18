@@ -588,6 +588,11 @@
       "proof_refs": [
         "/private/tmp/attack-gaps-871-inventory-review.json"
       ]
+    },
+    {
+      "id": "conformance-accepted-base-c47137ad-871",
+      "summary": "Integrate accepted policy-custody fixes with truthful conformance labels; require fresh combined proof",
+      "input_digest": "sha256:840da8a46f5cfa42b28b1f693e8ded1e7c95e5536c5474d83bb614caf7ca86f2"
     }
   ],
   "intents": {
@@ -629,16 +634,16 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Conformance still uses existing proof owners. Reviewed all105 source inputs against accepted edbfc00d; only package version changed; no adapter or required graph change.",
-          "reviewed_code_fingerprint": "8d3a83eb6e973692366d0bc6921e498f21e64aa289a5eda3bcdae3779945f46d",
+          "reason": "Preserve existing interop negotiation with truthful source coverage and no execution receipt input; incorporate accepted1779 parser, RBAC and fixture changes without altering required CI.",
+          "reviewed_code_fingerprint": "2db1c28d706e3ac7e577ee487eadbd559b59c5107e64835280e6bb8d7ab2b759",
           "spec_material_hash": "c238d7dfb20c2c4da1cb9972dd628627c335f8a148e33990376fd6629a775dca"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Preserve v1 wire shape and coverage; source-inventory acknowledgment changes no RPC, executable recipe, requiredness, transport or producer authority.",
-          "reviewed_code_fingerprint": "8d3a83eb6e973692366d0bc6921e498f21e64aa289a5eda3bcdae3779945f46d",
-          "spec_material_hash": "cb50da1c20b7a2b46fb4159558869344ca818e55b2208059ebe303e4fd5813b0"
+          "reason": "Retain accepted schema recovery and privilege boundaries alongside NotRun conformance labels and rejection of self-authored Verified/Failed; no current executed-conformance claim.",
+          "reviewed_code_fingerprint": "2db1c28d706e3ac7e577ee487eadbd559b59c5107e64835280e6bb8d7ab2b759",
+          "spec_material_hash": "2f10dc5acae8c9f498686a052cbd0f2bab5290c485a08f69b98bc9f5772ba9d1"
         },
         {
           "disposition": "unchanged_with_reason",
@@ -656,14 +661,14 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1794960554Z"
+      "updated_at": "1794981689Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch",
         "Linked worktree admission and execution-ready verified separately after backup denial; maintenance policy unchanged. No source/PR changes in other owners."
       ],
-      "artifact_hash": "sha256:d4fb348a35e0b1455505d4d766b312aa15a8751ae3dec06b46d5979fda37b107",
+      "artifact_hash": "sha256:35eca01232dad625a2e5f97bc4e42a27699c49d012cb2d15e57504293e0f95de",
       "checks": [
         {
           "name": "baseline_counterexample",
@@ -671,6 +676,14 @@
         },
         {
           "name": "initial_full_validation",
+          "status": "failed"
+        },
+        {
+          "name": "previous-buildkite-clippy",
+          "status": "failed"
+        },
+        {
+          "name": "previous-buildkite-core",
           "status": "failed"
         },
         {
@@ -713,10 +726,17 @@
             "intent_id": "intent:change_01M7NWVMEADM6FS731H2AKEVZM",
             "kind": "trajectory_step_recorded",
             "sequence": 6
+          },
+          {
+            "detail": "trajectory:branch_01M7NWVMHPED3ZZQ4W9D4A0ZJ6",
+            "event_id": "event:7",
+            "intent_id": "intent:change_01M7NWVMEADM6FS731H2AKEVZM",
+            "kind": "trajectory_step_recorded",
+            "sequence": 7
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 6,
+        "next_sequence": 7,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M7NWVMHPED3ZZQ4W9D4A0ZJ6": {
@@ -780,6 +800,23 @@
                 ],
                 "sequence": 6,
                 "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:7",
+                "observations": [
+                  "Old candidate ddcefa86/base6ab6de31 retains Buildkite11973 clippy plugin-clone failure before execution and core validation smoke timeout; interop_conformance passed310.3s. Accepted master independently advanced to c47137ad via1779; reconcile real accepted changes in a two-parent merge and require fresh full exact-candidate proof. Keep active original governance and checkpoints through Git merge resolution; accepted historical governance remains in second parent. New merge is necessary source/base integration, not a synthetic CI trigger or proof relabel. All broader871 receipt-production/drift/consumer acceptance stays open."
+                ],
+                "proof_refs": [
+                  "previous-buildkite-clippy",
+                  "previous-buildkite-core"
+                ],
+                "scope": [
+                  "src/decapod/core/interop.rs",
+                  "tests/interop_conformance.rs"
+                ],
+                "sequence": 7,
+                "validation_findings": []
               }
             ]
           }
@@ -790,7 +827,8 @@
       "evidence": [
         "/private/tmp/attack-gaps-871-before.json; no passing Rust test or repaired-binary execution yet. Official validation owns fresh build and required checks.",
         "/private/tmp/attack-gaps-871-before.json; official binary0.148.9;12 false Verified labels; no executed identity. Snapshot container entry refused POLICY_OPT_IN_DISABLED. Session release cleared custody; re-read and reclaimed existing task without optional claim autorun; rebind before any source mutation.",
-        "/private/tmp/attack-gaps-871-validation-1.json; PROOF_PROFILE_RECONCILIATION_REQUIRED before provider tests. Review:/private/tmp/attack-gaps-871-inventory-review.json;105 inputs compared to accepted edbfc00d; only root version0.148.7 to0.148.9 in Cargo.toml/Cargo.lock. Config backup outside Git. No graph, adapter, toolchain, worker, workflow or requiredness change."
+        "/private/tmp/attack-gaps-871-validation-1.json; PROOF_PROFILE_RECONCILIATION_REQUIRED before provider tests. Review:/private/tmp/attack-gaps-871-inventory-review.json;105 inputs compared to accepted edbfc00d; only root version0.148.7 to0.148.9 in Cargo.toml/Cargo.lock. Config backup outside Git. No graph, adapter, toolchain, worker, workflow or requiredness change.",
+        "Old candidate ddcefa86/base6ab6de31 retains Buildkite11973 clippy plugin-clone failure before execution and core validation smoke timeout; interop_conformance passed310.3s. Accepted master independently advanced to c47137ad via1779; reconcile real accepted changes in a two-parent merge and require fresh full exact-candidate proof. Keep active original governance and checkpoints through Git merge resolution; accepted historical governance remains in second parent. New merge is necessary source/base integration, not a synthetic CI trigger or proof relabel. All broader871 receipt-production/drift/consumer acceptance stays open."
       ],
       "inspected_files": [
         "src/decapod/core/validation_history.rs"

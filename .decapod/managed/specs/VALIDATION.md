@@ -1461,7 +1461,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `8d3a83eb6e973692366d0bc6921e498f21e64aa289a5eda3bcdae3779945f46d`
+- Repository signal fingerprint: `2db1c28d706e3ac7e577ee487eadbd559b59c5107e64835280e6bb8d7ab2b759`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (236 files), `tests/` (235 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
