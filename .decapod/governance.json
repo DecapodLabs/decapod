@@ -589,6 +589,16 @@
         "cargo test --test gatling t070_policy (1 passed)",
         "cargo test --test plugins_policy_tests (21 passed)"
       ]
+    },
+    {
+      "id": "cp-1782-2",
+      "summary": "Sync origin/master v0.148.12 and refresh living spec attestation for #1782",
+      "input_digest": "sha256:c56cdf383143ec7911c952608ec5336610cf7d945a6353c40db4e04667f35519",
+      "proof_refs": [
+        "cargo test --lib risk_map_warning (1 passed)",
+        "cargo test --test cli_contract_enforcement risk_map_warnings (1 passed)",
+        "cargo test --test plugins_policy_tests (21 passed)"
+      ]
     }
   ],
   "intents": {
@@ -631,8 +641,8 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Document canonical govern policy riskmap warning CLI contract and scoped tests for #1782",
-          "reviewed_code_fingerprint": "7a9afa0cac17c4530fb888dc9108b81070e9f0c9d6a700dce981c85023ec5dc1",
+          "reason": "Re-verify INTERFACES.md against merged origin/master v0.148.12 (#1782)",
+          "reviewed_code_fingerprint": "e53a489f3b817bfeaa6c470d21866853e69035f69d172c5cd4bc9b72c86bdece",
           "spec_material_hash": "ae715539292369d4d9355fd315dae1516fec70720f43ae93b45fabd63215710e"
         }
       ],
@@ -644,7 +654,7 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795008965Z"
+      "updated_at": "1795009138Z"
     },
     "trajectory": {
       "active_boundaries": [
