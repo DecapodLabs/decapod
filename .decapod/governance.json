@@ -630,6 +630,16 @@
         "cargo fmt --all -- --check (exit 0)",
         "cargo test --test exact_candidate_governance_1052 (4 passed; 0 failed in 362.42s)"
       ]
+    },
+    {
+      "id": "exact-candidate-1052-v014900-projections",
+      "summary": "Refresh Dockerfile.decapod and specs manifest to v0.149.0 (#1052)",
+      "input_digest": "sha256:49952f5caeb5e7f1288619484f08e16cc7939c5ac15575360f886df5e58c3e19",
+      "proof_refs": [
+        "CLIPPY_CONF_DIR=.config cargo clippy --test exact_candidate_governance_1052 --all-features -- -D warnings (exit 0)",
+        "cargo fmt --all -- --check (exit 0)",
+        "cargo test --test exact_candidate_governance_1052 (4 passed; 0 failed in 362.42s)"
+      ]
     }
   ],
   "intents": {
@@ -672,21 +682,21 @@
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Integrated origin/master a5a1edadb (PR #1802 + v0.149.0); architecture boundaries preserved.",
+          "reason": "Refreshed v0.149.0 Dockerfile.decapod and .manifest.json with v0.149.0 binary; architecture unchanged.",
           "reviewed_code_fingerprint": "0cd6f9ff0f09a73293db451761b3a2b1366a7b5ec837ea33428f8c549f6e25cd",
           "spec_material_hash": "080e1e015d867051ec4ecbb1f18aca92a2d62a05798377057e563aaa5a3764e0"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "PR #1802 INTERFACES.md updates are already on origin/master a5a1edadb; #1052 branch adds zero interface changes.",
+          "reason": "Refreshed v0.149.0 Dockerfile.decapod and .manifest.json with v0.149.0 binary; interfaces unchanged.",
           "reviewed_code_fingerprint": "0cd6f9ff0f09a73293db451761b3a2b1366a7b5ec837ea33428f8c549f6e25cd",
           "spec_material_hash": "1445e13fa7ccfa6c4a68850bd794b6b1ba7379c0148b570c3a7605b6a26beb25"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Integrated origin/master a5a1edadb (v0.149.0); #1052 custody and exact-candidate security invariants preserved.",
+          "reason": "Refreshed v0.149.0 Dockerfile.decapod and .manifest.json with v0.149.0 binary; security unchanged.",
           "reviewed_code_fingerprint": "0cd6f9ff0f09a73293db451761b3a2b1366a7b5ec837ea33428f8c549f6e25cd",
           "spec_material_hash": "735ae6e95c6b18ff2ccc718fbadaa4d7ae483d632aee2fb071d4f9ae6daa23de"
         }
@@ -699,13 +709,13 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795034143Z"
+      "updated_at": "1795034623Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:fad48ca9472b0e6361405f3dec7089a0255b437a056c7a8ea326197a604098b2",
+      "artifact_hash": "sha256:a4bac92972a76743bdd754f6420ec0cbd9ff6e079df359af5794f636f2b1e137",
       "checks": [
         {
           "name": "cargo-fmt-all",
@@ -745,6 +755,10 @@
         },
         {
           "name": "task_lease_renewal_and_workunit_custody",
+          "status": "passed"
+        },
+        {
+          "name": "v0.149.0-projection-refresh",
           "status": "passed"
         }
       ],
@@ -804,10 +818,17 @@
             "intent_id": "intent:change_01M7QBGV59Y7MXFNYG75MBZDQ9",
             "kind": "trajectory_step_recorded",
             "sequence": 9
+          },
+          {
+            "detail": "trajectory:branch_01M7QBGV8G7Y7EZGFJBVX1KFM7",
+            "event_id": "event:10",
+            "intent_id": "intent:change_01M7QBGV59Y7MXFNYG75MBZDQ9",
+            "kind": "trajectory_step_recorded",
+            "sequence": 10
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 9,
+        "next_sequence": 10,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M7QBGV8G7Y7EZGFJBVX1KFM7": {
@@ -933,6 +954,22 @@
                 ],
                 "sequence": 9,
                 "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:10",
+                "observations": [
+                  ".decapod/managed/Dockerfile.decapod",
+                  "Refreshed Dockerfile.decapod (v0.149.0) and .manifest.json (decapod_release=0.149.0) using built v0.149.0 binary"
+                ],
+                "proof_refs": [
+                  "v0.149.0-projection-refresh"
+                ],
+                "scope": [
+                  "validation-kernel"
+                ],
+                "sequence": 10,
+                "validation_findings": []
               }
             ]
           }
@@ -946,7 +983,8 @@
         "Merged origin/master 0b6ce0a8 (PR #1799 verify.rs fix); cargo fmt --all -- --check exit 0; clippy -D warnings exit 0; cargo test --test exact_candidate_governance_1052: 4 passed, 0 failed in 218.98s",
         "Merged origin/master a5a1edadb (v0.149.0, PR #1802 + #1804); refreshed Dockerfile/manifest/specs with v0.149.0; cargo fmt --all -- --check exit 0; clippy -D warnings exit 0; cargo test --test exact_candidate_governance_1052: 4 passed, 0 failed in 362.42s",
         "Merged origin/master c5bafce6 (v0.148.13), verified only version metadata changed in proof sources, updated reviewed_sources_digest, refreshed Dockerfile/specs via controller 0.148.13",
-        "On merged origin/master c5bafce6 (v0.148.13): rustfmt --check exit 0; clippy -D warnings exit 0; cargo test --test exact_candidate_governance_1052: 4 passed, 0 failed in 250.33s"
+        "On merged origin/master c5bafce6 (v0.148.13): rustfmt --check exit 0; clippy -D warnings exit 0; cargo test --test exact_candidate_governance_1052: 4 passed, 0 failed in 250.33s",
+        "Refreshed Dockerfile.decapod (v0.149.0) and .manifest.json (decapod_release=0.149.0) using built v0.149.0 binary"
       ],
       "inspected_files": [
         "src/decapod/core/task_journal.rs",
