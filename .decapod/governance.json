@@ -588,6 +588,14 @@
         "Branch CLI and unit tests cover refusal, legacy plans, and corrected approval",
         "v0.148.11 CLI reproduced contradictory plan approval"
       ]
+    },
+    {
+      "id": "issue-1764-release-inventory-reconciliation",
+      "summary": "Pin the inherited v0.148.11 source inventory",
+      "input_digest": "sha256:7dbf132184ee3df405b1db26788c3ca0074a34e90247529fb9a5d0c7e23c938f",
+      "proof_refs": [
+        "Release commit 14e5d8d8 changes the package version in two of the 105 inventoried definitions"
+      ]
     }
   ],
   "intents": {
@@ -667,8 +675,12 @@
         "Current claimed task and isolated work branch",
         "One linked Git worktree. Draft #1766 is the prior multi-issue review path."
       ],
-      "artifact_hash": "sha256:b294ff4d5a36114b3e36ab0e84a1123f835e83e31f9dcca86187d5cf3a703bce",
+      "artifact_hash": "sha256:ff9db072c39fda61a0a37609aa23840ff4f0e555b79e9d91bf16b6ab29b68246",
       "checks": [
+        {
+          "name": "ffbb3375 preflight",
+          "status": "failed"
+        },
         {
           "name": "format and diff whitespace",
           "status": "passed"
@@ -699,10 +711,17 @@
             "intent_id": "intent:change_01M7Q67PD7JE7XEM5PZFDFM81P",
             "kind": "trajectory_step_recorded",
             "sequence": 4
+          },
+          {
+            "detail": "trajectory:branch_01M7Q67PFZY3BACJDTFC02YGVX",
+            "event_id": "event:5",
+            "intent_id": "intent:change_01M7Q67PD7JE7XEM5PZFDFM81P",
+            "kind": "trajectory_step_recorded",
+            "sequence": 5
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 4,
+        "next_sequence": 5,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M7Q67PFZY3BACJDTFC02YGVX": {
@@ -736,6 +755,29 @@
                 ],
                 "sequence": 4,
                 "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:5",
+                "observations": [
+                  ".decapod/config.toml",
+                  "PROOF_PROFILE_RECONCILIATION_REQUIRED. Agent init measured 105 source definitions. Their only changes from the pre-release accepted target to v0.148.11 are package-version entries in Cargo.toml and Cargo.lock. ffbb3375 changes none of those definitions. The Buildkite provider and required graph remain configured."
+                ],
+                "proof_refs": [
+                  "ffbb3375 preflight"
+                ],
+                "scope": [
+                  "\".decapod/managed/specs\"",
+                  "\"docs\"]",
+                  "\"tests\"",
+                  ".decapod/managed/specs",
+                  "docs",
+                  "paths:[\"src/decapod\"",
+                  "src/decapod",
+                  "tests"
+                ],
+                "sequence": 5,
+                "validation_findings": []
               }
             ]
           }
@@ -745,6 +787,7 @@
       "destination": "pull request",
       "evidence": [
         "Implementation adds cross-phase tests to the required CLI and library test targets.",
+        "PROOF_PROFILE_RECONCILIATION_REQUIRED. Agent init measured 105 source definitions. Their only changes from the pre-release accepted target to v0.148.11 are package-version entries in Cargo.toml and Cargo.lock. ffbb3375 changes none of those definitions. The Buildkite provider and required graph remain configured.",
         "Released v0.148.11 approved a draft that retained a recorded compatibility contradiction in a disposable local CLI fixture."
       ],
       "inspected_files": [
@@ -755,6 +798,7 @@
       ],
       "intent_id": "intent:change_01M7Q67PD7JE7XEM5PZFDFM81P",
       "modified_files": [
+        ".decapod/config.toml",
         "src/decapod/lib.rs",
         "src/decapod/plan_governance.rs",
         "tests/cli_contract_enforcement.rs"
@@ -766,6 +810,7 @@
         "\".decapod/managed/specs\"",
         "\"docs\"]",
         "\"tests\"",
+        ".decapod/config.toml",
         ".decapod/managed/specs",
         "docs",
         "paths:[\"src/decapod\"",
