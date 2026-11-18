@@ -1,5 +1,9 @@
 # Architecture
 
+## Canonical task-scope projections
+
+Task.scope remains the authoritative journaled declaration. Inference and workbranch bootstrap reuse fleet_coord::declared_paths through one projection helper; JSON commas never become scope boundaries. Known legacy projection repair stays in the existing governance transaction and custody event stream, preserves the original instruction and complete prior journal, and invalidates plan acceptance. It creates no scope registry or write-authorization claim.
+
 ## Retained native-path authority
 
 The existing execution binding owner inventories canonical external-action policy even when Git ignores that file. Serialized path evidence remains historical data: terminal validation, history append, workunit reuse and publication remeasure current execution authority. Validation bookkeeping keeps its existing epoch/history fence; current instruction, plan, effective policy, approvals and live lease remain separately required. This extends the existing owner without a second policy resolver.
@@ -1108,8 +1112,8 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `17bfdf3103378abff0a852699a564d9edaacc1a1092e7a3b7886e96621ff38d0`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (239 files), `tests/` (235 files)
+- Repository signal fingerprint: `070f743a1e98fc16adf155c3c9da6513f68b94ca5c9ee7e9d947f2d5e823949b`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (240 files), `tests/` (235 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 

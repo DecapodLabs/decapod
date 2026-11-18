@@ -15,11 +15,13 @@ use std::path::{Path, PathBuf};
 mod execution;
 pub mod instruction_source;
 pub mod path;
+mod scope;
 pub use execution::{
     ExecutionApprovalBinding, ExecutionCheckpoint, ExecutionStateBinding,
     capture_execution_binding, checkpoint_execution, verify_execution_binding,
     verify_execution_resume,
 };
+pub(crate) use scope::reconcile_task_scope_projection;
 
 pub const TRAJECTORY_SCHEMA_VERSION: &str = "1.1.0";
 pub const LEGACY_TRAJECTORY_SCHEMA_VERSION: &str = "1.0.0";

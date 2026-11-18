@@ -1,5 +1,9 @@
 # Security
 
+## Bounded task-scope recovery
+
+The scope reconciler receives task data from claimed-workbranch preparation and rechecks canonical task scope and revision around its prepared write. It only replaces exact known legacy fragments; it does not infer which independent constraints to discard. The complete predecessor must already be recoverable in Git. Original request, source revisions, prior custody events and failed checks remain intact. Plan acceptance is revoked, and changed governance/trajectory bindings invalidate old proof. The SQLite and Git/document observations are guarded reads, not a claimed cross-store atomic transaction or filesystem authorization boundary.
+
 ## Readback does not grant continuation authority
 
 An ignored `EXTERNAL_ACTIONS.json` change cannot reuse the old execution authority. The canonical bounded policy inventory hashes that file, and retained native-path consumers resample current authority before using successful historical execution. Policy denial remains owned by the actual native authorizer; measuring a fresh policy binding does not grant the denied proof command.
@@ -738,8 +742,8 @@ execution evidence remains required before publication readiness.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `17bfdf3103378abff0a852699a564d9edaacc1a1092e7a3b7886e96621ff38d0`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (239 files), `tests/` (235 files)
+- Repository signal fingerprint: `070f743a1e98fc16adf155c3c9da6513f68b94ca5c9ee7e9d947f2d5e823949b`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (240 files), `tests/` (235 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 

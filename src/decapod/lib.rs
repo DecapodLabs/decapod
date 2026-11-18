@@ -14237,11 +14237,10 @@ fn run_infer_orientation(
                     .push(format!("Task detail: {}", task.description));
             }
             if !task.scope.is_empty() {
-                packet.allowed_scope = task
-                    .scope
-                    .split(',')
-                    .map(|s| s.trim().to_string())
-                    .collect();
+                packet.allowed_scope = core::fleet_coord::scope_projection(&task.scope)
+                    .map_err(|reason| error::DecapodError::ValidationError(format!(
+                        "SCOPE_DECLARATION_INVALID: {reason}; preserve the task scope and repair it through its authoritative owner"
+                    )))?;
             }
         }
     }

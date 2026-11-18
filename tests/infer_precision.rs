@@ -48,6 +48,155 @@ fn extract_json(output: &Output) -> Value {
 }
 
 #[test]
+fn explicit_task_paths_survive_claim_workspace_orientation_and_repeat_preparation() {
+    let repo = tempdir().unwrap();
+    let machine = tempdir().unwrap();
+    let root = repo.path();
+    init_git_repo(root);
+    assert!(
+        Command::new("git")
+            .current_dir(root)
+            .args(["symbolic-ref", "HEAD", "refs/heads/main"])
+            .output()
+            .unwrap()
+            .status
+            .success()
+    );
+    let binary = Path::new(env!("CARGO_BIN_EXE_decapod"))
+        .canonicalize()
+        .unwrap();
+    let call = |cwd: &Path, args: &[&str]| {
+        let output = Command::new(&binary)
+            .current_dir(cwd)
+            .args(args)
+            .env_remove("DECAPOD_VALIDATE_SKIP_GIT_GATES")
+            .env_remove("DECAPOD_SESSION_PASSWORD")
+            .env_remove("GITHUB_ACTIONS")
+            .env_remove("BUILDKITE")
+            .env("DECAPOD_AGENT_ID", "scope-projection-cli")
+            .env("DECAPOD_CLAIM_AUTORUN", "0")
+            .env("DECAPOD_GROUP_BROKER_IDLE_SECS", "1")
+            .env("XDG_CONFIG_HOME", machine.path())
+            .output()
+            .unwrap();
+        assert!(
+            output.status.success(),
+            "scope CLI operation failed: {:?}: {}",
+            args.first(),
+            String::from_utf8_lossy(&output.stderr)
+        );
+        output
+    };
+    call(
+        root,
+        &[
+            "eval",
+            "--prompt",
+            "Preserve exact declared task paths in an isolated acceptance fixture",
+            "--format",
+            "json",
+        ],
+    );
+    call(
+        root,
+        &[
+            "init",
+            "--no-ci",
+            "--no-specs",
+            "--no-container-workspaces",
+            "--product-name",
+            "Scope fixture",
+            "--product-summary",
+            "Preserve explicit task paths",
+            "--product-type",
+            "service_or_library",
+            "--architecture-direction",
+            "cli",
+            "--done-criteria",
+            "The same literal paths survive every generated projection",
+            "--primary-language",
+            "text",
+        ],
+    );
+    call(root, &["docs", "ingest"]);
+    call(root, &["session", "acquire"]);
+    for args in [
+        vec!["add", "."],
+        vec![
+            "-c",
+            "commit.gpgsign=false",
+            "commit",
+            "-m",
+            "accept fixture source",
+        ],
+    ] {
+        let output = Command::new("git")
+            .current_dir(root)
+            .args(args)
+            .output()
+            .unwrap();
+        assert!(output.status.success());
+    }
+    let raw = r#"paths:["src/a,b.rs","tests/x.rs",".decapod/managed/specs"]"#;
+    let added = call(
+        root,
+        &[
+            "todo",
+            "add",
+            "Preserve explicit task path scope",
+            "--scope",
+            raw,
+            "--format",
+            "json",
+        ],
+    );
+    let task = extract_json(&added)["id"].as_str().unwrap().to_owned();
+    call(
+        root,
+        &["todo", "claim", "--id", &task, "--lease-seconds", "3600"],
+    );
+    let branch = format!("agent/scope-projection-cli/{task}-scope");
+    let created = call(root, &["workspace", "ensure", "--branch", &branch]);
+    let created = extract_json(&created);
+    assert_eq!(created["can_work"], true);
+    let work = Path::new(created["worktree_path"].as_str().unwrap());
+    let expected = serde_json::json!([".decapod/managed/specs", "src/a,b.rs", "tests/x.rs"]);
+    let packet = extract_json(&call(
+        work,
+        &[
+            "infer",
+            "orientation",
+            "--task-id",
+            &task,
+            "--format",
+            "json",
+        ],
+    ));
+    assert_eq!(packet["allowed_scope"], expected);
+    let path = work.join(".decapod/governance.json");
+    let before = fs::read(&path).unwrap();
+    let document: Value = serde_json::from_slice(&before).unwrap();
+    let trajectory = &document["sections"]["trajectory"];
+    assert_eq!(trajectory["repo_scope"], expected);
+    let intent = trajectory["intent_id"].as_str().unwrap();
+    assert_eq!(document["intents"][intent]["constraints"], expected);
+    assert_eq!(
+        document["sections"]["plan"]["todo_ids"],
+        serde_json::json!([task.clone()])
+    );
+    assert_eq!(
+        extract_json(&call(root, &["todo", "get", "--id", &task]))["item"]["scope"],
+        raw
+    );
+    call(root, &["workspace", "ensure", "--branch", &branch]);
+    assert_eq!(
+        before,
+        fs::read(path).unwrap(),
+        "repeat preparation must retain the active journal"
+    );
+}
+
+#[test]
 fn test_infer_orientation_simple_task() {
     let dir = tempdir().unwrap();
     let root = dir.path();

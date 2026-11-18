@@ -1,5 +1,11 @@
 # Interfaces
 
+## Explicit path scope and supported legacy recovery
+
+An explicit paths:[...] task scope produces the same decoded literal path set in orientation, trajectory repo_scope and custody constraints. Non-path logical scopes retain their existing comma-separated representation. Invalid explicit declarations fail without falling back to a broader scope.
+
+For an old journal containing the exact former split projection, checkpoint and commit the complete current journal, then rerun workspace ensure or agent.init. Preparation reads the canonical task, corrects only proven generated fragments, appends custody evidence and resets plan acceptance and phase progress. Reaccept the plan and obtain fresh proof. Independently changed or terminal constraints are preserved and ambiguous mixed repairs are refused; this operation cannot edit Task.scope or remove unrelated modified-file observations.
+
 ## Independent state readers
 
 `state.resolve` and `state.diff` expose recorded governance to a cold reader without requiring the writer's authoring claim, worktree custody or local agent session. They do not run migration, presence or worktree-pruning startup hooks. Reading does not acquire a lease, approve a plan, satisfy a recorded blocker or grant publication authority. Unsupported backend paths retain their explicit failure; this read classification does not grant cloud access.
@@ -1312,8 +1318,8 @@ field. Nothing in this operation authorizes a mutation, approval or completion.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `17bfdf3103378abff0a852699a564d9edaacc1a1092e7a3b7886e96621ff38d0`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (239 files), `tests/` (235 files)
+- Repository signal fingerprint: `070f743a1e98fc16adf155c3c9da6513f68b94ca5c9ee7e9d947f2d5e823949b`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (240 files), `tests/` (235 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 

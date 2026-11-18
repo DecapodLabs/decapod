@@ -505,6 +505,49 @@ impl<S: CustodyStore> Custody<S> {
         )
     }
 
+    /// Only the host's canonical task-scope reconciler calls this. It repairs
+    /// a proven legacy projection, retains history and revokes derived approval.
+    pub(crate) fn reconcile_scope_projection(
+        &mut self,
+        id: &str,
+        expected: &[String],
+        canonical: &[String],
+        detail: String,
+    ) -> Result<(), CustodyError> {
+        let record = self
+            .state()
+            .intents
+            .get(id)
+            .ok_or_else(|| CustodyError::IntentNotFound(id.into()))?;
+        if record.status.is_terminal() || record.constraints != expected {
+            return Err(CustodyError::InstructionConflict(
+                "SCOPE_RECONCILIATION_AMBIGUOUS: preserve terminal or independently changed constraints".into(),
+            ));
+        }
+        let sequence = self.next_sequence();
+        let record = self
+            .store
+            .state_mut()
+            .intents
+            .get_mut(id)
+            .expect("checked above");
+        record.constraints = canonical.to_vec();
+        record.status = if record.refined_intent.is_some() {
+            IntentStatus::Refined
+        } else {
+            IntentStatus::Raw
+        };
+        record.updated_sequence = sequence;
+        self.event_with_sequence(
+            sequence,
+            id,
+            IntentEventKind::Refined,
+            detail,
+            self.event_id(sequence),
+        );
+        Ok(())
+    }
+
     pub fn append_instruction(
         &mut self,
         id: &str,

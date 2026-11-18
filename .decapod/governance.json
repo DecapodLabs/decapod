@@ -673,6 +673,11 @@
       "id": "qualify-parser-trait-20261118",
       "summary": "Fix CI-observed test parser qualification; retain actual failed traces and require fresh full validation after task custody was reestablished",
       "input_digest": "sha256:d208f450b0a3e610d5849100ac7ad1efcbede294730fa13a20726858ce7a80b2"
+    },
+    {
+      "id": "preserve-canonical-task-scope",
+      "summary": "Reproduce explicit paths CSV fragmentation in installed controller; use existing declared_paths parser, preserve complete legacy journal before deterministic repair, retain independent constraints and prior failures, invalidate plan/proof acceptance. New tests await configured full native validation.",
+      "input_digest": "sha256:6f598e72f9e5240434567f060b9b9b242c6a27b35729f6947002a0b6376652f7"
     }
   ],
   "intents": {
@@ -715,25 +720,25 @@
       "schema_version": "1.1.0",
       "spec_reviews": [
         {
-          "disposition": "unchanged_with_reason",
+          "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Test-only parser trait qualification does not alter native authority owners",
-          "reviewed_code_fingerprint": "17bfdf3103378abff0a852699a564d9edaacc1a1092e7a3b7886e96621ff38d0",
-          "spec_material_hash": "b9b4e6fa5c45b357e41cb544356e5f7b45a9654cd9758c80001f2a83517749b1"
+          "reason": "Reuse canonical task-scope parser; reconcile only archived known legacy projections, preserve independent constraints and original history, revoke approval and require fresh proof",
+          "reviewed_code_fingerprint": "070f743a1e98fc16adf155c3c9da6513f68b94ca5c9ee7e9d947f2d5e823949b",
+          "spec_material_hash": "68902808d64fc0f419f2489074024da71e72bc9a8da546995d7c0520d90d76e5"
         },
         {
-          "disposition": "unchanged_with_reason",
+          "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Readback and mutation RPC boundaries remain the same after a test-only parser fix",
-          "reviewed_code_fingerprint": "17bfdf3103378abff0a852699a564d9edaacc1a1092e7a3b7886e96621ff38d0",
-          "spec_material_hash": "1a37cc8e0fe4543c54f2856a392967c941c5433b68d5fb2363f8635764b2cee6"
+          "reason": "Reuse canonical task-scope parser; reconcile only archived known legacy projections, preserve independent constraints and original history, revoke approval and require fresh proof",
+          "reviewed_code_fingerprint": "070f743a1e98fc16adf155c3c9da6513f68b94ca5c9ee7e9d947f2d5e823949b",
+          "spec_material_hash": "1beb502472ad8dd29d02318b8d124e9ea62ef27d13c55250b10f0ab80a736063"
         },
         {
-          "disposition": "unchanged_with_reason",
+          "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Test-only parser fix changes no approval, custody or policy scope",
-          "reviewed_code_fingerprint": "17bfdf3103378abff0a852699a564d9edaacc1a1092e7a3b7886e96621ff38d0",
-          "spec_material_hash": "ed95b4a0590d1ea8d0f74668d44a5fbbd3120ba30df25dd9b1d185bff9a8ef1e"
+          "reason": "Reuse canonical task-scope parser; reconcile only archived known legacy projections, preserve independent constraints and original history, revoke approval and require fresh proof",
+          "reviewed_code_fingerprint": "070f743a1e98fc16adf155c3c9da6513f68b94ca5c9ee7e9d947f2d5e823949b",
+          "spec_material_hash": "a7c59a15ee64df77bfa5b0f80718b6798230d5617dd5cdd9109faae56d4c9737"
         }
       ],
       "state": "APPROVED",
@@ -744,7 +749,7 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1794963576Z"
+      "updated_at": "1794982176Z"
     },
     "trajectory": {
       "active_boundaries": [

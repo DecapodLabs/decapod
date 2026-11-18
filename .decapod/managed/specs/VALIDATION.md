@@ -1,5 +1,11 @@
 # Validation
 
+## Task-scope dependency negative and repair coverage
+
+An actual installed release9 orientation on the claimed issue task returned four fragments instead of its four explicit paths: the first retained the paths:[ prefix and the remaining entries retained JSON quoting. The unchanged canonical task still held one valid paths:[...] declaration. This reproduces #1760's dependency for #1761/#1764 without claiming a source-write bypass.
+
+The new CLI regression uses real add, claim, governed workspace and orientation calls without the Git-gate escape hatch, includes a comma inside a filename, checks canonical task/trajectory/custody projections and preserves the journal on repeat preparation. A real Git/SQLite unit fixture builds the old producer's projection through the canonical constructor, refuses unarchived repair, preserves a prior failed check and event prefix, revokes approval after repair, keeps raw Task.scope unchanged and checks idempotence and ambiguous-constraint refusal. These new changes require fresh full validation; the collected3e5bf009 proof predates them.
+
 Candidate2aff3336 reached the real source build, where the new lib-test parser
 call lacked its trait import. Its fully qualified `clap::Parser` call fixes that
 compile error. This is a test setup repair, and fresh required execution is
@@ -1663,8 +1669,8 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `17bfdf3103378abff0a852699a564d9edaacc1a1092e7a3b7886e96621ff38d0`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (239 files), `tests/` (235 files)
+- Repository signal fingerprint: `070f743a1e98fc16adf155c3c9da6513f68b94ca5c9ee7e9d947f2d5e823949b`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (240 files), `tests/` (235 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 
