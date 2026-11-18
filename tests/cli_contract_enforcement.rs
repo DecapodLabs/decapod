@@ -821,10 +821,10 @@ mod plan_governed_execution {
 
         let approve = run_decapod(&dir, &["govern", "plan", "approve"]);
         assert!(
-            approve.status.success(),
-            "plan approve failed: {}",
-            String::from_utf8_lossy(&approve.stderr)
+            !approve.status.success(),
+            "unresolved questions cannot approve"
         );
+        assert!(String::from_utf8_lossy(&approve.stderr).contains("NEEDS_HUMAN_INPUT"));
 
         let blocked = run_decapod(
             &dir,
@@ -876,6 +876,74 @@ mod plan_governed_execution {
             ok.status.success(),
             "check-execute should pass after the revised plan is approved: {}",
             String::from_utf8_lossy(&ok.stderr)
+        );
+    }
+
+    #[test]
+    fn recorded_later_prompt_conflict_blocks_automatic_execution_and_reapproval() {
+        let (_tmp, dir, todo_id) = setup_repo();
+        let conflict = "Later prompt removes the compatibility behavior required by the original";
+        let init = run_decapod(
+            &dir,
+            &[
+                "govern",
+                "plan",
+                "init",
+                "--title",
+                "Conflicting instructions",
+                "--intent",
+                "Preserve compatibility while evolving the API",
+                "--todo-id",
+                &todo_id,
+                "--contradiction",
+                conflict,
+            ],
+        );
+        assert!(
+            init.status.success(),
+            "plan init failed: {}",
+            String::from_utf8_lossy(&init.stderr)
+        );
+        let rejected = run_decapod(&dir, &["govern", "plan", "approve"]);
+        assert!(
+            !rejected.status.success(),
+            "contradicted plan cannot approve"
+        );
+        assert!(String::from_utf8_lossy(&rejected.stderr).contains("NEEDS_HUMAN_INPUT"));
+
+        let blocked = run_decapod(
+            &dir,
+            &["govern", "plan", "check-execute", "--todo-id", &todo_id],
+        );
+        assert!(!blocked.status.success());
+        let stderr = String::from_utf8_lossy(&blocked.stderr);
+        assert!(stderr.contains("NEEDS_HUMAN_INPUT"), "{stderr}");
+        assert!(stderr.contains("conflicting requests"), "{stderr}");
+
+        let corrected = run_decapod(
+            &dir,
+            &["govern", "plan", "update", "--clear-contradictions"],
+        );
+        assert!(corrected.status.success(), "{:?}", corrected);
+        let stale = run_decapod(
+            &dir,
+            &["govern", "plan", "check-execute", "--todo-id", &todo_id],
+        );
+        assert!(!stale.status.success());
+        assert!(String::from_utf8_lossy(&stale.stderr).contains("NEEDS_PLAN_APPROVAL"));
+        assert!(
+            run_decapod(&dir, &["govern", "plan", "approve"])
+                .status
+                .success()
+        );
+        let eligible = run_decapod(
+            &dir,
+            &["govern", "plan", "check-execute", "--todo-id", &todo_id],
+        );
+        assert!(
+            eligible.status.success(),
+            "reapproved corrected plan should pass the execution check: {}",
+            String::from_utf8_lossy(&eligible.stderr)
         );
     }
 

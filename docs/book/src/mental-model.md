@@ -2,7 +2,7 @@
 
 Decapod is a governance kernel, not a prompt framework, model router, swarm manager, or wrapper. Humans usually express intent through an agent. The agent invokes Decapod through its CLI or structured RPC interface.
 
-Each invocation is ephemeral. Decapod deliberately runs without a daemon. The repository is the durable execution surface: `.decapod/` preserves the intent, selected context, workspace custody, boundaries, validation evidence, and publication state that should not live only in a chat transcript. One agent task may span many invocations, processes, models, or harnesses.
+Each invocation is ephemeral. Decapod deliberately runs without a daemon. The repository is the durable execution surface: `.decapod/` preserves the recorded intent, selected context, workspace custody, boundaries, previous attempts, validation evidence, and publication state that should not live only in a chat transcript. One agent task may span many invocations, processes, models, or harnesses. Durability is necessary for continuation; a fresh agent still has to retrieve and act on the applicable records.
 
 ## The Kernel Analogy
 
@@ -12,6 +12,14 @@ In an operating system, the kernel manages hardware resources and provides a sta
 - **API:** Agents call Decapod via a structured CLI or Decapod-specific RPC interface to request resources or validate their state.
 - **Isolation:** Decapod ensures that processes (agents) don't interfere with each other or the system's "main memory" (the root repository branch).
 - **State:** Decapod records the governed trail of the work in the repository so another agent, reviewer, or CI run can resume or audit without depending on the original transcript.
+
+## Closed-loop metacognitive governance
+
+The agent repeatedly compares its interpretation and actions with the original request, accepted subsequent prompts, repository constraints, and Decapod's feedback. Decapod provides the governance contract and reports unmet requirements or rejected transitions; the agent decides how to remedy supported failures. This loop is how work converges rather than merely accumulating activity.
+
+The agent also designs falsifiable proof obligations as part of fulfilling the request. **Validation is a separate adjudication boundary:** the configured gates execute the required proofs against a specific artifact and its governing state. The agent can iterate after a failed verdict; it cannot manufacture a passing verdict by asserting that the work is done.
+
+[Closed-loop governance and proof design](concepts/convergence.md) explains the two mechanisms in detail.
 
 ## The governed execution loop
 

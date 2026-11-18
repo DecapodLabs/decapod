@@ -376,6 +376,8 @@ fn dockerfile_orientation_separates_workspace_and_application_containers() {
             forbidden_paths: vec![],
             file_touch_budget: None,
             task_binding: "not_available".to_string(),
+            instruction_readiness: None,
+            instruction_lineage: None,
         },
         constraints: vec![],
         allowed_scope: vec![],

@@ -53,6 +53,10 @@ pub struct GovernedPlanContext {
     pub forbidden_paths: Vec<String>,
     pub file_touch_budget: Option<usize>,
     pub task_binding: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub instruction_readiness: Option<crate::plan_governance::InstructionReadiness>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub instruction_lineage: Option<crate::core::custody::InstructionLineage>,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]

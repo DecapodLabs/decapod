@@ -549,6 +549,21 @@ pub fn declared_paths(scope: &str) -> Result<Option<Vec<String>>, String> {
     Ok(Some(paths))
 }
 
+/// Project the existing authoritative scope grammar without splitting JSON
+/// strings or introducing a second path parser. Non-path logical scopes retain
+/// their historical comma-separated representation.
+pub fn scope_projection(scope: &str) -> Result<Vec<String>, String> {
+    if let Some(paths) = declared_paths(scope)? {
+        return Ok(paths);
+    }
+    Ok(scope
+        .split(',')
+        .map(str::trim)
+        .filter(|s| !s.is_empty())
+        .map(str::to_owned)
+        .collect())
+}
+
 /// Extract canonical `resource:<name>` reservations from a task scope.
 /// Empty or malformed `resource:` prefixes never invent a resource identifier.
 pub fn declared_resources(scope: &str) -> Vec<String> {

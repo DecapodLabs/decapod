@@ -1,7 +1,7 @@
 {
   "schema_version": "1.0.0",
   "baseline": {
-    "accepted_commit": "6ab6de3134286a790d78d370ca3fb43c0d92f834",
+    "accepted_commit": "9d1aed2795dae5b9345d9ec3ad1d3fcfe1d770d8",
     "policy": {
       "change_control": {
         "requires_human_review": true,
@@ -568,72 +568,158 @@
     }
   },
   "change": {
-    "id": "change_01M7NR0Z9M2Q4AQQFBP1ZPD07Q",
-    "base_commit": "6ab6de3134286a790d78d370ca3fb43c0d92f834",
+    "id": "admission-postmerge-proof",
+    "base_commit": "9d1aed2795dae5b9345d9ec3ad1d3fcfe1d770d8",
     "target_base": "origin/master"
-  },
-  "claims": {
-    "config-and-policy-authority": {
-      "statement": "Invalid config versions deny mutation while schema references remain accessible; unaccepted root RBAC proposals cannot self-authorize and accepted scoped grants remain usable and revocable.",
-      "falsifier": "Actual CLI or RPC accepts unsupported config for mutation, blocks schema repair, or grants a privilege solely from an unaccepted proposal; legitimate accepted operations deadlock.",
-      "status": "open",
-      "proof_refs": [
-        "/private/tmp/decapod-boundary-red-c30w2kjb/evidence"
-      ]
-    }
   },
   "checkpoints": [
     {
-      "id": "policy-config-repair-01",
-      "summary": "Reject unsupported config versions, preserve read-only schema recovery, and resolve exceptional RBAC/shared policy through existing branch-safe authority; preserve executable red traces and denial/recovery regression controls.",
-      "input_digest": "sha256:68dd440ff99fc50cac85b3e711ea908e86595b8b6b6e229e4023e73b70e38ef5",
+      "id": "admission-postmerge-record",
+      "summary": "Record externally accepted source tree and release 0.148.7, preserve actual stale-target CI rejection and all immutable live evidence, distinguish native admission from human forge integration, and require fresh exact-report head/base validation without runtime or check-policy changes",
+      "input_digest": "sha256:1a915f556f29fdda21f7dd819a38400c10e72131164a84deac747626338a3f43"
+    },
+    {
+      "id": "admission-postmerge-source-review",
+      "summary": "Re-review the two accepted 0.148.7 Cargo package-version inputs, reconcile source inventory only, preserve complete check graph and executor definitions, and require fresh exact-subject validation for the final report",
+      "input_digest": "sha256:1bbc48e66d4fe797c9d47c9a5857ee3730938f50113de3216dfabf7c0c68c051"
+    },
+    {
+      "id": "source-currency-1753-complete",
+      "summary": "Complete config-only exact-source version policy through publication currency without changing agent entrypoints; preserve generated-pin upgrade requirements and all integrity/execution checks; add real-Git cross-boundary regressions; record strict live 07 receipts and CLI-generated evaluating-0.148.7 metadata. Tests require configured execution.",
+      "input_digest": "sha256:7a0c8bec403859b8453c3de5f382628b2414a87dbf55e7c26b71724dffbf2c29"
+    },
+    {
+      "id": "issues-1764-readiness-20261117-01",
+      "summary": "Unify preparation and phase-specific recorded instruction blockers; reject legacy phase entry; repair current PR execution-checkpoint and README regressions; author specs and refresh projections. Tests authored; exact-candidate validation pending. Prior strict historical checkpoint inspection remains invalid and is not relabelled as proof.",
+      "input_digest": "sha256:b67930d575483c8c2513a3e5af8d5a56ae88f3a9945216b8bb9ea1dbdb135746",
       "proof_refs": [
-        "/private/tmp/decapod-boundary-red-c30w2kjb/evidence"
+        "https://github.com/DecapodLabs/decapod/actions/runs/44163787850/job/134324583729",
+        "https://github.com/DecapodLabs/decapod/actions/runs/44163787850/job/134324583919"
       ]
     },
     {
-      "id": "policy-config-repair-02",
-      "summary": "Finalize current parser/schema-repair and branch-safe RBAC regressions after exact-content spec reviews; original binary reproduced violations, patched execution remains pending full validation.",
-      "input_digest": "sha256:b7b572f6f316bc77921dcf3ca45370247f60ed2d378073f29ac7ddba85aff9d5",
+      "id": "issues-1764-custody-20261117-02",
+      "summary": "Bind the current user request, distinct interpretation and task to a fresh trajectory after archiving inherited governance in36ede3fd. Preserve original PR source and current open acceptance obligations; no execution or publication proof claimed.",
+      "input_digest": "sha256:47bf3bfb2f1b89d5a45afe20ef99d541884a71d2adcc005bcb5766504f54eab9",
       "proof_refs": [
-        "/private/tmp/decapod-boundary-red-c30w2kjb/evidence"
+        "36ede3fd"
       ]
     },
     {
-      "id": "reviewed-release-inventory-03",
-      "summary": "Review proof inventory against edbfc00d: only package versions in Cargo.toml and Cargo.lock advanced 0.148.7 to 0.148.9; preserve complete required profile, commands, workflows and provider.",
-      "input_digest": "sha256:7e632c55c8968879b71f4485a15e1d21de070a0cc472e86ce6338e98e3c15913",
+      "id": "issues-1764-inventory-20261117-03",
+      "summary": "Review accepted0.148.8 package-version-only inventory delta from edbfc00d; preserve all105 sources and unchanged proof recipes, refresh specs and retain failed validation evidence. This is contract reconciliation, not passing proof.",
+      "input_digest": "sha256:8dcaf0467cf88c0fb67531da1c72c983ed6b15cf522b0d3eb0238653e57eb2f1",
       "proof_refs": [
-        "/private/tmp/decapod-boundary-red-c30w2kjb/evidence/candidate-init-reconciliation.json"
+        "18cbb30ca4d16a80810d8f3c0cecfc4073a83cbc",
+        "edbfc00ddfd4c24458a2277176762c6924de13cc"
       ]
     },
     {
-      "id": "first-adoption-recovery-04",
-      "summary": "Preserve ordinary first-adoption approval defaults without candidate grants; establish accepted fixture policy and trace real RPC mutations. Targeted policy, workunit, RPC and task-transfer checks pass; complete CI remains required.",
-      "input_digest": "sha256:78c09092de976b4d89512c8021ccdbf8aad2798ea3606faa5eaf33e63ed5b54e"
+      "id": "issues-1762-negative-controls-20261117-04",
+      "summary": "Add required-lane accepted tenant isolation negative-and-repair fixture and actual producer-consumer signature mismatch on independently passing worktrees; regenerate stale Docker and release headers using supported init and refresh specs. Preserve provider-branch mismatch denial. Fixtures authored; next official exact-candidate execution is pending.",
+      "input_digest": "sha256:ae5622ec80dc66243f36cf555b1bb7006a62fda6672ae6feefadb19ebb32545a",
+      "proof_refs": [
+        "https://buildkite.com/decapodlabs/decapod/builds/11782",
+        "https://buildkite.com/decapodlabs/decapod/builds/11787",
+        "https://github.com/DecapodLabs/decapod/actions/runs/44175234588/job/134364708406"
+      ]
     },
     {
-      "id": "cloud-schema-boundary-recovery-05",
-      "summary": "Verify read-only cloud schema CLI/RPC without filesystem or HTTP side effects; retain unsupported operational cloud startup refusal. All 41 native cloud-boundary tests pass; fresh full CI required.",
-      "input_digest": "sha256:fafc981ce8da319f9afbecc2ed57e995f05c6f343a7c1932e793586ee0624325"
+      "id": "readiness-projection-cli-repair",
+      "summary": "Expose canonical typed preparation readiness and repair actual CLI regression access without widening private APIs",
+      "input_digest": "sha256:2d33064d66ad0b4fb4af3db08663306f2e481b519adf58b5784cd400082c7256"
+    },
+    {
+      "id": "accepted-target-ab4abe05",
+      "summary": "Integrate accepted Constitution documentation without dropping PR1766 continuation copy; invalidate earlier target readiness",
+      "input_digest": "sha256:d335539947e31795df5e23a4a303df7d29af3a69b1203fc5f71e8116e903bbc5"
+    },
+    {
+      "id": "accepted-release9-proof-boundary",
+      "summary": "Bind current candidate to accepted6ab6de31 release9 source inventory; preserve failed earlier provider attempts",
+      "input_digest": "sha256:fbbe0aa26d3b4c05a52cd6c70d18dce19f35cdf3484c22f6db779fbd572a8b34"
+    },
+    {
+      "id": "selected-root-global-relation-controls",
+      "summary": "Add source-accepted selected root conservation, bounded eq/ne consistency, native identity joins and scripted negative/repair fixtures; no closure or host-authentication claim",
+      "input_digest": "sha256:c7f88ae5e14005fafc2120357baa8c6f3f6ba9a89ff8b5db97c48902f5dc4bb5"
+    },
+    {
+      "id": "instruction-lineage-selected-readiness-20261117",
+      "summary": "Preserve original recorded source and ordered clarification CAS, invalidate stale plan/checkpoints, expose canonical phase feedback and selected consistency, repair Dactyl readonly lookup and fixture configuration. Acceptance remains unproven pending exact-candidate validation.",
+      "input_digest": "sha256:361e241c9997f51e9ba93a3cb6870ae5df1fb6fd4df40db8d59bd1534da5200b"
+    },
+    {
+      "id": "provider-source-and-pr-continuation-20261117",
+      "summary": "Preserve PR1766 Constitution ancestry; repair release9 generated docs and callback lint; add bounded official GitHub comment observation through existing custody CAS without human-consent claims. Required path conformance and complete acceptance remain open.",
+      "input_digest": "sha256:3c9d5ccce2f42fe97ddc973c3f05ab47b7100dc23fe54eb603263e647c9730ca"
+    },
+    {
+      "id": "owned-native-path-and-fixture-repair-20261117",
+      "summary": "Separate actual owned native-path conformance from artifact and unknown host coverage; enforce only accepted required observation policy; bind current invocation, plan, instructions, lease and source/base; repair TOML fixture insertion and unborn ancestry. All new material requires full current proof.",
+      "input_digest": "sha256:c53b3047285db8528e264eed64099b386e28f8c30a59ac0c7032b7f9d777a5a7"
+    },
+    {
+      "id": "native-policy-replay-audit-20261118",
+      "summary": "Repair lib-test module qualification and add a negative against the existing execution-binding owner for ignored external-action policy changes. This audits the boundary before any production policy inventory change; no proof or exploit result is inferred.",
+      "input_digest": "sha256:8c399168e5b0a68886221619ea5bd353b4ec24626c91742271ee5599d4ee5e7b"
+    },
+    {
+      "id": "current-authority-and-independent-readback-20261118",
+      "summary": "Repair actual cold-reader custody refusal and CI-reproduced ignored-policy replay; reuse current execution authority at retained native-path consumers, with fresh validation and acceptance still pending",
+      "input_digest": "sha256:622a52b52e67e1a3a3579c5d3699f0df1d7ee8c67556a27855d4e6965435b85e"
+    },
+    {
+      "id": "qualify-parser-trait-20261118",
+      "summary": "Fix CI-observed test parser qualification; retain actual failed traces and require fresh full validation after task custody was reestablished",
+      "input_digest": "sha256:d208f450b0a3e610d5849100ac7ad1efcbede294730fa13a20726858ce7a80b2"
+    },
+    {
+      "id": "preserve-canonical-task-scope",
+      "summary": "Reproduce explicit paths CSV fragmentation in installed controller; use existing declared_paths parser, preserve complete legacy journal before deterministic repair, retain independent constraints and prior failures, invalidate plan/proof acceptance. New tests await configured full native validation.",
+      "input_digest": "sha256:6f598e72f9e5240434567f060b9b9b242c6a27b35729f6947002a0b6376652f7"
+    },
+    {
+      "id": "incorporate-accepted-policy-boundary",
+      "summary": "Incorporate accepted master c47137ad including PR1779 without modifying protected main; retain active task journal whole and other owner history in Git, regenerate current projections. Previous 3e full proof historical; scope and policy composition await fresh complete validation.",
+      "input_digest": "sha256:490925fc26fe8174d0cce37e13a02a692c3ed8a6d98b98183d71dfea9b825342"
+    },
+    {
+      "id": "incorporate-accepted-release10",
+      "summary": "Accepted target advanced during b3b proof: preserve SNAPSHOT_NOT_READY denial, incorporate accepted 34f837d4 release v0.148.10 and regenerate source inventory; no protected ref modification or proof waiver.",
+      "input_digest": "sha256:e94d7187e75f9ca097e68f70346d60770fcd6c6af5cb68e55d0b127fc8b4aeb8"
+    },
+    {
+      "id": "retain-custody-refusal-and-reviewed-inventory",
+      "summary": "Actual revoked-lease publication refused but misreported canonical managed checkout as external. Preserve workspace-owned exact blockers/remediation; strengthen existing regression without changing authority. Explicitly review accepted release-only Cargo version inventory delta; all checks retained. Fresh full proof pending.",
+      "input_digest": "sha256:cb525cf3ee51bedc6dd60788824c070fe444151c00287254f854d86998715a48"
+    },
+    {
+      "id": "reconcile-official-release10-projections",
+      "summary": "Actual source90448d89 CI refuses release/spec drift, not waived. Native session-update installs official registry0.148.10 into isolated root; supported init and specs.refresh regenerate entrypoints/Docker/manifest. Preserve exact user config and tracked predecessor backups. Source-backed phase matrix names actual owners, refusals, observations, bypass and freshness bounds. Complete fresh proof remains required.",
+      "input_digest": "sha256:1d6ac72030cd33e0368b15da3201c6ded79266e2ce9ce8520392dc3d3d1915d2"
     }
   ],
   "intents": {
-    "intent:change_01M7NR0Z9M2Q4AQQFBP1ZPD07Q": {
+    "intent:todo:bugs_01m7nm3pnpc3be76": {
       "acceptance_criteria": [],
       "assumptions": [],
       "boundaries": [
-        "Current claimed task and isolated work branch"
+        "No protected root edits, force push, merge, gate waiver or fabricated evidence"
       ],
       "constraints": [
-        "root"
+        "src/decapod",
+        "tests",
+        "README.md",
+        "docs",
+        ".decapod/managed/specs"
       ],
       "created_sequence": 1,
-      "id": "intent:change_01M7NR0Z9M2Q4AQQFBP1ZPD07Q",
+      "id": "intent:todo:bugs_01m7nm3pnpc3be76",
       "out_of_scope": [],
       "proof_requirements": [],
-      "raw_intent": "Adversarial fixes for Decapod issues 1776 1771 1763 1071 880\n\nImplement user-authorized security fixes and binary negative/repair tests; inspect dependencies and PR 1766; isolate work; validate before PR; preserve human merge authority and truthful host evidence.",
-      "refined_intent": "Adversarial fixes for Decapod issues 1776 1771 1763 1071 880\n\nImplement user-authorized security fixes and binary negative/repair tests; inspect dependencies and PR 1766; isolate work; validate before PR; preserve human merge authority and truthful host evidence.",
+      "raw_intent": "Go solve DecapodLabs/decapod issues #1761, #1762, #1763, #1764, #1767, #1768, and #1770. Follow their execution contracts, coordinate dependencies, preserve existing PR #1766, and close issues only with independently verifiable acceptance evidence. Do what must be done.",
+      "refined_intent": "Preserve PR1766 and its history; repair the canonical cross-phase recorded instruction gate first, then source revision, coverage, typed relations, required behavioral controls and witnessed paths with exact-candidate proof. No merge or false closure.",
       "status": "refined",
       "updated_sequence": 3
     }
@@ -646,7 +732,7 @@
       },
       "deferred_questions": [],
       "human_questions": [],
-      "intent": "Adversarial fixes for Decapod issues 1776 1771 1763 1071 880\n\nImplement user-authorized security fixes and binary negative/repair tests; inspect dependencies and PR 1766; isolate work; validate before PR; preserve human merge authority and truthful host evidence.",
+      "intent": "Complete issues 1761, 1762, 1763, 1764, 1767, 1768 and 1770 on PR 1766; preserve existing source and history, coordinate selected instruction revisions, coverage, typed consistency, behavioral proof and witnessed path authority. Begin with actual negatives, repair minimally, validate exact candidate and accepted base under current policy and required CI, close only with independently verifiable acceptance. No merge, force push, gate waiver or fabricated proof.",
       "phases": [],
       "proof_hooks": [
         "decapod validate"
@@ -654,208 +740,258 @@
       "schema_version": "1.1.0",
       "spec_reviews": [
         {
-          "disposition": "unchanged_with_reason",
+          "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Cloud regression now verifies unchanged project and machine inventories for schema CLI/RPC, and preserves operational cloud fallback denial. No authority or implementation interface changes; existing architecture and security boundaries remain accurate.",
-          "reviewed_code_fingerprint": "7b88d5d3e68ce397408f69e5635bceee4071a1c57b84cab441c0b3083ee7e3a7",
-          "spec_material_hash": "0b7738e450b1038116cd3fce2e9660a615fbea502d988760d54dbf8c314f9146"
+          "reason": "Official independently published v0.148.10 controller regenerates release projections after actual CI drift; retain complete required profile, configuration, task journal, predecessor backups and explicit phase/bypass matrix",
+          "reviewed_code_fingerprint": "b3ab0860271f59e3bd8b813a35975cd9df65e64e146793c67939b9ef37cc6c75",
+          "spec_material_hash": "68902808d64fc0f419f2489074024da71e72bc9a8da546995d7c0520d90d76e5"
         },
         {
-          "disposition": "unchanged_with_reason",
+          "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Cloud regression now verifies unchanged project and machine inventories for schema CLI/RPC, and preserves operational cloud fallback denial. No authority or implementation interface changes; existing architecture and security boundaries remain accurate.",
-          "reviewed_code_fingerprint": "7b88d5d3e68ce397408f69e5635bceee4071a1c57b84cab441c0b3083ee7e3a7",
-          "spec_material_hash": "060bb3be1c58675e825374cf10d34d04b38688f5cd88e6d2c5f7fcd91e2fd690"
+          "reason": "Official independently published v0.148.10 controller regenerates release projections after actual CI drift; retain complete required profile, configuration, task journal, predecessor backups and explicit phase/bypass matrix",
+          "reviewed_code_fingerprint": "b3ab0860271f59e3bd8b813a35975cd9df65e64e146793c67939b9ef37cc6c75",
+          "spec_material_hash": "bdd74b3fa4e4e791114d721dfba217bfbfb15f1d21ae0c832042eea2e0a3e16e"
         },
         {
-          "disposition": "unchanged_with_reason",
+          "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Cloud regression now verifies unchanged project and machine inventories for schema CLI/RPC, and preserves operational cloud fallback denial. No authority or implementation interface changes; existing architecture and security boundaries remain accurate.",
-          "reviewed_code_fingerprint": "7b88d5d3e68ce397408f69e5635bceee4071a1c57b84cab441c0b3083ee7e3a7",
-          "spec_material_hash": "cdc863757905c53f4f176284c72744f0575184c65a059b7edf6239b47c4fc644"
+          "reason": "Official independently published v0.148.10 controller regenerates release projections after actual CI drift; retain complete required profile, configuration, task journal, predecessor backups and explicit phase/bypass matrix",
+          "reviewed_code_fingerprint": "b3ab0860271f59e3bd8b813a35975cd9df65e64e146793c67939b9ef37cc6c75",
+          "spec_material_hash": "0f80a7bae9c396f6ef79bcb1674252d853c5fe192cb7baba382a05919875407b"
         }
       ],
       "state": "APPROVED",
       "stop_conditions": [],
-      "title": "Adversarial fixes for Decapod issues 1776 1771 1763 1071 880",
+      "title": "Complete issue contracts on preserved PR 1766",
       "todo_ids": [
-        "bugs_01m7nqz8dxaz801k"
+        "bugs_01m7nm3pnpc3be76"
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1794979218Z"
+      "updated_at": "1794984774Z"
     },
     "trajectory": {
       "active_boundaries": [
-        "Current claimed task and isolated work branch",
-        "User explicitly authorizes draft PR creation before validation; no admission or merge authority follows"
+        "No protected root edits, force push, merge, gate waiver or fabricated evidence"
       ],
-      "artifact_hash": "sha256:f5a1d2b7b4abd7127c93760ba8bbc56b67e8b33890167d6a7c5fd7474a27a871",
+      "artifact_hash": "sha256:b44b4b6a827549965c5ee23e9f7722507c61292c2e07925bbe5fcf263f265a58",
       "checks": [
         {
-          "name": "buildkite-11921",
+          "name": "actual-cli-independent-lineage-reader",
           "status": "failed"
         },
         {
-          "name": "ci-cb4b87b1",
+          "name": "actual-cli-provider-ingress",
+          "status": "passed"
+        },
+        {
+          "name": "candidate_986_cli_compile",
           "status": "failed"
         },
         {
-          "name": "cloud-schema-recovery-native",
-          "status": "passed"
-        },
-        {
-          "name": "config_version_actual_binary",
+          "name": "cli_27798279",
           "status": "failed"
         },
         {
-          "name": "full-cloud-boundary-native",
-          "status": "passed"
-        },
-        {
-          "name": "full_validation_d6fa03bc",
+          "name": "clippy_97ef93f6",
           "status": "failed"
         },
         {
-          "name": "malformed_schema_reference",
+          "name": "d0_lib_test_compile",
           "status": "failed"
         },
         {
-          "name": "native-interop-suite",
-          "status": "partial"
-        },
-        {
-          "name": "native-policy-tests",
+          "name": "docs_sync_github_27798279",
           "status": "passed"
         },
         {
-          "name": "native-rpc-suite",
+          "name": "e3_dactyl_readonly_snapshot",
+          "status": "failed"
+        },
+        {
+          "name": "e3_selected_root_fixture",
+          "status": "failed"
+        },
+        {
+          "name": "e3_tenant_and_combined_interface",
           "status": "passed"
         },
         {
-          "name": "native-task-transfer",
+          "name": "exact_candidate_validation",
+          "status": "failed"
+        },
+        {
+          "name": "fb20_standalone_release_projection",
+          "status": "failed"
+        },
+        {
+          "name": "formatting",
           "status": "passed"
         },
         {
-          "name": "native-workunit-observation",
-          "status": "passed"
+          "name": "ignored-canonical-policy-replay-negative",
+          "status": "failed"
         },
         {
-          "name": "rbac_self_grant_original_binary",
+          "name": "library_27798279",
+          "status": "failed"
+        },
+        {
+          "name": "native_97ef93f6",
           "status": "failed"
         }
       ],
-      "current_phase": "verification",
+      "current_phase": "implementation",
       "custody": {
         "events": [
           {
             "event_id": "event:2",
-            "intent_id": "intent:change_01M7NR0Z9M2Q4AQQFBP1ZPD07Q",
+            "intent_id": "intent:todo:bugs_01m7nm3pnpc3be76",
             "kind": "created",
             "sequence": 2
           },
           {
             "event_id": "event:3",
-            "intent_id": "intent:change_01M7NR0Z9M2Q4AQQFBP1ZPD07Q",
+            "intent_id": "intent:todo:bugs_01m7nm3pnpc3be76",
             "kind": "refined",
             "sequence": 3
           },
           {
-            "detail": "trajectory:branch_01M7NR0ZCNHC7YZKZ9SYWWDDVJ",
+            "detail": "trajectory:issues-1761-1770-20261117",
             "event_id": "event:4",
-            "intent_id": "intent:change_01M7NR0Z9M2Q4AQQFBP1ZPD07Q",
+            "intent_id": "intent:todo:bugs_01m7nm3pnpc3be76",
             "kind": "trajectory_step_recorded",
             "sequence": 4
           },
           {
-            "detail": "trajectory:branch_01M7NR0ZCNHC7YZKZ9SYWWDDVJ",
+            "detail": "trajectory:issues-1761-1770-20261117",
             "event_id": "event:5",
-            "intent_id": "intent:change_01M7NR0Z9M2Q4AQQFBP1ZPD07Q",
+            "intent_id": "intent:todo:bugs_01m7nm3pnpc3be76",
             "kind": "trajectory_step_recorded",
             "sequence": 5
           },
           {
-            "detail": "trajectory:branch_01M7NR0ZCNHC7YZKZ9SYWWDDVJ",
+            "detail": "trajectory:issues-1761-1770-20261117",
             "event_id": "event:6",
-            "intent_id": "intent:change_01M7NR0Z9M2Q4AQQFBP1ZPD07Q",
+            "intent_id": "intent:todo:bugs_01m7nm3pnpc3be76",
             "kind": "trajectory_step_recorded",
             "sequence": 6
           },
           {
-            "detail": "trajectory:branch_01M7NR0ZCNHC7YZKZ9SYWWDDVJ",
+            "detail": "trajectory:issues-1761-1770-20261117",
             "event_id": "event:7",
-            "intent_id": "intent:change_01M7NR0Z9M2Q4AQQFBP1ZPD07Q",
+            "intent_id": "intent:todo:bugs_01m7nm3pnpc3be76",
             "kind": "trajectory_step_recorded",
             "sequence": 7
           },
           {
-            "detail": "trajectory:branch_01M7NR0ZCNHC7YZKZ9SYWWDDVJ",
+            "detail": "trajectory:issues-1761-1770-20261117",
             "event_id": "event:8",
-            "intent_id": "intent:change_01M7NR0Z9M2Q4AQQFBP1ZPD07Q",
+            "intent_id": "intent:todo:bugs_01m7nm3pnpc3be76",
             "kind": "trajectory_step_recorded",
             "sequence": 8
           },
           {
-            "detail": "trajectory:branch_01M7NR0ZCNHC7YZKZ9SYWWDDVJ",
+            "detail": "trajectory:issues-1761-1770-20261117",
             "event_id": "event:9",
-            "intent_id": "intent:change_01M7NR0Z9M2Q4AQQFBP1ZPD07Q",
+            "intent_id": "intent:todo:bugs_01m7nm3pnpc3be76",
             "kind": "trajectory_step_recorded",
             "sequence": 9
           },
           {
-            "detail": "trajectory:branch_01M7NR0ZCNHC7YZKZ9SYWWDDVJ",
+            "detail": "trajectory:issues-1761-1770-20261117",
             "event_id": "event:10",
-            "intent_id": "intent:change_01M7NR0Z9M2Q4AQQFBP1ZPD07Q",
+            "intent_id": "intent:todo:bugs_01m7nm3pnpc3be76",
             "kind": "trajectory_step_recorded",
             "sequence": 10
+          },
+          {
+            "detail": "trajectory:issues-1761-1770-20261117",
+            "event_id": "event:11",
+            "intent_id": "intent:todo:bugs_01m7nm3pnpc3be76",
+            "kind": "trajectory_step_recorded",
+            "sequence": 11
+          },
+          {
+            "detail": "trajectory:issues-1761-1770-20261117",
+            "event_id": "event:12",
+            "intent_id": "intent:todo:bugs_01m7nm3pnpc3be76",
+            "kind": "trajectory_step_recorded",
+            "sequence": 12
+          },
+          {
+            "detail": "trajectory:issues-1761-1770-20261117",
+            "event_id": "event:13",
+            "intent_id": "intent:todo:bugs_01m7nm3pnpc3be76",
+            "kind": "trajectory_step_recorded",
+            "sequence": 13
+          },
+          {
+            "detail": "trajectory:issues-1761-1770-20261117",
+            "event_id": "event:14",
+            "intent_id": "intent:todo:bugs_01m7nm3pnpc3be76",
+            "kind": "trajectory_step_recorded",
+            "sequence": 14
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 10,
+        "next_sequence": 14,
         "schema_version": "1.0.0",
         "trajectories": {
-          "branch_01M7NR0ZCNHC7YZKZ9SYWWDDVJ": {
+          "issues-1761-1770-20261117": {
             "evidence_only": true,
-            "id": "branch_01M7NR0ZCNHC7YZKZ9SYWWDDVJ",
-            "intent_id": "intent:change_01M7NR0Z9M2Q4AQQFBP1ZPD07Q",
+            "id": "issues-1761-1770-20261117",
+            "intent_id": "intent:todo:bugs_01m7nm3pnpc3be76",
             "steps": [
               {
                 "action": "trajectory.record",
+                "command": "cargo fmt --all",
                 "custody_event_id": "event:4",
                 "observations": [
-                  "src/decapod/cli.rs",
+                  "src/decapod/plan_governance.rs",
+                  "src/decapod/core/governance_document.rs",
+                  "src/decapod/core/obligation.rs",
+                  "src/decapod/core/intent_reconcile.rs",
+                  "src/decapod/plan_governance.rs",
                   "src/decapod/lib.rs",
-                  "src/decapod/plugins/policy.rs",
-                  "src/decapod/core/db_maintenance.rs",
-                  "/private/tmp/decapod-boundary-red-c30w2kjb/evidence"
+                  "src/decapod/core/trajectory/execution.rs",
+                  "src/decapod/core/validate.rs",
+                  "src/decapod/core/workspace.rs",
+                  "Preserved PR1766 original head12d403ac and base18cbb30c. Actual CI44163787850 rejects obsolete checkpoint test and missing README constitution reference. Repaired source36ede3fd; tests authored, execution pending official validation. Strict historical checkpoint inspection reports original unproven/invalid lineage; current continuation cannot be described as historical proof."
                 ],
                 "proof_refs": [
-                  "config_version_actual_binary",
-                  "malformed_schema_reference"
+                  "formatting"
                 ],
                 "scope": [
-                  "root"
+                  ".decapod/managed/specs",
+                  "README.md",
+                  "docs",
+                  "src/decapod",
+                  "tests"
                 ],
                 "sequence": 4,
-                "validation_findings": []
+                "validation_findings": [
+                  "Instruction origin authentication, accepted root coverage, typed global consistency, independent behavior controls and genuine path observation remain open acceptance obligations."
+                ]
               },
               {
                 "action": "trajectory.record",
                 "custody_event_id": "event:5",
                 "observations": [
-                  "src/decapod/cli.rs",
-                  "src/decapod/lib.rs",
-                  "src/decapod/core/db_maintenance.rs",
-                  "src/decapod/plugins/policy.rs",
-                  "tests/init_config_behavior.rs",
-                  "tests/sqlite_maintenance.rs",
-                  "/private/tmp/decapod-boundary-red-c30w2kjb/evidence/rbac-main-unaccepted.json"
+                  ".decapod/config.toml",
+                  ".decapod/managed/specs/VALIDATION.md",
+                  "Official0.148.8 validate on0a8350c9 stopped before test execution with PROOF_PROFILE_RECONCILIATION_REQUIRED. Read-only agent.init reports inventory sha256:b929199963bc910eb5f099a92ec5d152d6e78d7b6608f0bdf74c22eeda13fdc8 and only STALE_SOURCE_INVENTORY plus REQUIRED_PROOF_NOT_RUN. Compared every discovery input from last accepted config review edbfc00d: only Cargo.toml and Cargo.lock package version0.148.7 to0.148.8 differ. Backed up config privately; reviewed digest update preserves all workflow/helper/check/toolchain contracts."
                 ],
                 "proof_refs": [
-                  "rbac_self_grant_original_binary"
+                  "exact_candidate_validation"
                 ],
                 "scope": [
-                  "root"
+                  ".decapod/managed/specs",
+                  "README.md",
+                  "docs",
+                  "src/decapod",
+                  "tests"
                 ],
                 "sequence": 5,
                 "validation_findings": []
@@ -864,16 +1000,24 @@
                 "action": "trajectory.record",
                 "custody_event_id": "event:6",
                 "observations": [
-                  "Cargo.toml",
-                  "Cargo.lock",
-                  ".decapod/config.toml",
-                  "/private/tmp/decapod-boundary-red-c30w2kjb/evidence/candidate-init-reconciliation.json"
+                  "tests/cli_contracts.rs",
+                  "tests/consumer_readiness.rs",
+                  ".decapod/managed/Dockerfile.decapod",
+                  "AGENTS.md",
+                  "CLAUDE.md",
+                  "CODEX.md",
+                  "GEMINI.md",
+                  "Official validate on a55c1de8 ended SNAPSHOT_NOT_READY public build identity mismatch after308039ms provider wait. Public envelopes11782(task branch) and11787(original PR branch) share sourceSHA but differ in branch authority. Preserve denial and full evidence at private snapshot9TwHAM. Actual CI standalone job134364708406 exposed only stale managed Docker0.148.7 pin; installed CLI init --proof regenerated release-bound projections without changing config, workflows or authored specs. Added accepted tenant negative+repair and actual producer/consumer signature-mismatch fixtures; new tests unexecuted until next exact-candidate validation."
                 ],
                 "proof_refs": [
-                  "full_validation_d6fa03bc"
+                  "exact_candidate_validation"
                 ],
                 "scope": [
-                  "root"
+                  ".decapod/managed/specs",
+                  "README.md",
+                  "docs",
+                  "src/decapod",
+                  "tests"
                 ],
                 "sequence": 6,
                 "validation_findings": []
@@ -882,142 +1026,290 @@
                 "action": "trajectory.record",
                 "custody_event_id": "event:7",
                 "observations": [
-                  "src/decapod/core/db_maintenance.rs",
-                  "src/decapod/plugins/policy.rs",
-                  "tests/agent_rpc_suite.rs",
-                  "tests/cli_contract_enforcement.rs",
-                  "tests/support/interop_harness.rs",
-                  "RPC suite: 5 passed; workunit observation: 6 passed; policy tests: 8 passed including first-adoption denial control",
-                  "https://buildkite.com/decapodlabs/decapod/builds/11921",
-                  "https://github.com/DecapodLabs/decapod/pull/1779"
+                  "tests/infer_precision.rs",
+                  "src/decapod/core/rpc.rs",
+                  "src/decapod/lib.rs",
+                  "tests/infer_precision.rs",
+                  "https://github.com/DecapodLabs/decapod/actions/runs/44177760790/job/134374440067"
                 ],
                 "proof_refs": [
-                  "native-rpc-suite",
-                  "native-workunit-observation",
-                  "native-policy-tests",
-                  "buildkite-11921"
+                  "candidate_986_cli_compile"
                 ],
                 "scope": [
-                  "root"
+                  ".decapod/managed/specs",
+                  "README.md",
+                  "docs",
+                  "src/decapod",
+                  "tests"
                 ],
                 "sequence": 7,
                 "validation_findings": [
-                  "Remaining fixture repairs require executable checks and fresh full validation"
+                  "Accepted master advanced to ab4abe0593ddd8fd15186001558b79addd08aebc during provider wait; old proof is not current."
                 ]
               },
               {
-                "action": "implementation",
+                "action": "trajectory.record",
                 "custody_event_id": "event:8",
                 "observations": [
-                  "public_task_transfer_preserves_identity_without_importing_a_live_lease: 1 passed; interop approval_roundtrip passed, suite still running",
-                  "User directly authorized exception to pre-PR requirement; direct forge draft 1779 is external and not admitted"
+                  "src/decapod/core/intent_reconcile/selected.rs",
+                  "src/decapod/core/obligation.rs",
+                  "src/decapod/core/native_proof.rs",
+                  "tests/consumer_readiness.rs",
+                  "https://buildkite.com/decapodlabs/decapod/builds/11873"
                 ],
                 "proof_refs": [
-                  "native-task-transfer",
-                  "native-interop-suite"
+                  "fb20_standalone_release_projection"
                 ],
                 "scope": [
-                  "root"
+                  ".decapod/managed/specs",
+                  "README.md",
+                  "docs",
+                  "src/decapod",
+                  "tests"
                 ],
                 "sequence": 8,
-                "validation_findings": []
+                "validation_findings": [
+                  "Selected-root/typed-relation fixtures are scripted local-policy/native controls and remain unverified until source CI executes them. No authenticated prompt capture or external witness is claimed."
+                ]
               },
               {
-                "action": "verification",
+                "action": "trajectory.record",
                 "custody_event_id": "event:9",
                 "observations": [
-                  "src/decapod/lib.rs",
-                  "src/decapod/core/snapshot_provider/automatic.rs",
-                  "tests/common/cloud_managed_scenarios.rs",
-                  "https://buildkite.com/decapodlabs/decapod/builds/11967#01a1ebfa-5cfa-4425-862b-2c76150a0bfc",
-                  "/private/tmp/decapod-boundary-red-c30w2kjb/evidence/cloud-schema-recovery-native.log"
+                  "src/decapod/core/custody_model.rs",
+                  "src/decapod/core/governance_document.rs",
+                  "src/decapod/core/state.rs",
+                  "src/decapod/core/obligation.rs",
+                  "https://github.com/DecapodLabs/decapod/actions/runs/44186574654/job/134406250320",
+                  "https://github.com/DecapodLabs/decapod/actions/runs/44186574654/job/134406250356"
                 ],
                 "proof_refs": [
-                  "cloud-schema-recovery-native",
-                  "full-cloud-boundary-native",
-                  "ci-cb4b87b1"
+                  "e3_tenant_and_combined_interface",
+                  "e3_selected_root_fixture",
+                  "e3_dactyl_readonly_snapshot"
                 ],
                 "scope": [
-                  "root"
+                  ".decapod/managed/specs",
+                  "README.md",
+                  "docs",
+                  "src/decapod",
+                  "tests"
                 ],
                 "sequence": 9,
                 "validation_findings": [
-                  "Fresh complete exact-candidate CI required after cloud test contract correction"
+                  "Installed registry controller is now0.148.9; supported init refreshed release projections. Prior isolated-binary exception request is obsolete. Same-lineage source remains caller-reported, not authenticated human or host witness."
                 ]
               },
               {
                 "action": "trajectory.record",
                 "custody_event_id": "event:10",
                 "observations": [
-                  "/private/tmp/decapod-boundary-red-c30w2kjb/evidence/cloud-boundary-native-full.log: 41 passed, 0 failed, 0 ignored, 57.71 seconds"
+                  "src/decapod/core/trajectory/instruction_source.rs",
+                  "src/decapod/core/custody_model.rs",
+                  "src/decapod/core/governance_document.rs",
+                  "docs/agent/config-schema.md",
+                  "https://buildkite.com/decapodlabs/decapod/builds/11920",
+                  "https://github.com/DecapodLabs/decapod/actions/runs/44196295665/job/134439168067"
                 ],
                 "proof_refs": [
-                  "full-cloud-boundary-native"
+                  "native_97ef93f6",
+                  "clippy_97ef93f6"
                 ],
                 "scope": [
-                  "root"
+                  ".decapod/managed/specs",
+                  "README.md",
+                  "docs",
+                  "src/decapod",
+                  "tests"
                 ],
                 "sequence": 10,
+                "validation_findings": [
+                  "Provider-observed account metadata does not authenticate a human or grant operation authority; current ingress and phase repairs require actual source execution."
+                ]
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:11",
+                "observations": [
+                  "src/decapod/core/trajectory/path.rs",
+                  "src/decapod/core/validation_runtime.rs",
+                  "src/decapod/core/validation_history.rs",
+                  "tests/common/consumer_readiness_fixture.rs",
+                  "tests/infer_precision.rs",
+                  "https://github.com/DecapodLabs/decapod/actions/runs/44198555328/job/134447435222",
+                  "https://github.com/DecapodLabs/decapod/actions/runs/44198555328/job/134447435393"
+                ],
+                "proof_refs": [
+                  "library_27798279",
+                  "cli_27798279",
+                  "docs_sync_github_27798279"
+                ],
+                "scope": [
+                  ".decapod/managed/specs",
+                  "README.md",
+                  "docs",
+                  "src/decapod",
+                  "tests"
+                ],
+                "sequence": 11,
+                "validation_findings": [
+                  "Owned native proof-call observations are scoped kernel evidence, not independent whole-host or human attestation. Native ARM candidate artifact startup is a prerequisite, not successful acceptance. New path code and fixture repairs remain unverified."
+                ]
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:12",
+                "observations": [
+                  "src/decapod/core/validation_history.rs",
+                  "tests/unit/core/execution_checkpoint_tests.rs",
+                  "https://github.com/DecapodLabs/decapod/actions/runs/44203259346/job/134462866270",
+                  "https://github.com/DecapodLabs/decapod/issues/1776#issuecomment-6964621038"
+                ],
+                "proof_refs": [
+                  "d0_lib_test_compile"
+                ],
+                "scope": [
+                  ".decapod/managed/specs",
+                  "README.md",
+                  "docs",
+                  "src/decapod",
+                  "tests"
+                ],
+                "sequence": 12,
+                "validation_findings": [
+                  "The new ignored external-action policy replay control audits an existing owner; no bypass or successful protection is asserted before execution. Native-path positive CLI acceptance remains pending."
+                ]
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:13",
+                "observations": [
+                  "src/decapod/lib.rs",
+                  "tests/infer_precision.rs",
+                  "source:d0ebc2c899d6c5bc643cb984ab4126610898b07c;ci:44203259346;binary-sha256:a55067e506f7fec9794100dd4f327550b0a4612475ec452cc92fccbfae60ce0d;public-comment:6958213300;body-sha256:1ffa7769deeaf03f02a989ea56cbc0dcee251dde8413d3b8f317955df48f94a1;negative:AUTHORING_CUSTODY_STALE;repair-pending"
+                ],
+                "proof_refs": [
+                  "actual-cli-provider-ingress",
+                  "actual-cli-independent-lineage-reader"
+                ],
+                "scope": [
+                  ".decapod/managed/specs",
+                  "README.md",
+                  "docs",
+                  "src/decapod",
+                  "tests"
+                ],
+                "sequence": 13,
+                "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:14",
+                "observations": [
+                  "src/decapod/core/trajectory/execution.rs",
+                  "src/decapod/core/validation_history.rs",
+                  "source:7b4c14a0e02fde5c32be8df80900a6f671f7d071;base:6ab6de3134286a790d78d370ca3fb43c0d92f834;ci-job:134473589855;library:1816-passed-1-failed-8-ignored;negative:ignored_external_action_policy_cannot_replay_execution_binding;repair-pending"
+                ],
+                "proof_refs": [
+                  "ignored-canonical-policy-replay-negative"
+                ],
+                "scope": [
+                  ".decapod/managed/specs",
+                  "README.md",
+                  "docs",
+                  "src/decapod",
+                  "tests"
+                ],
+                "sequence": 14,
                 "validation_findings": []
               }
             ]
           }
         }
       },
-      "declared_commands": [],
-      "destination": "pull request",
+      "declared_commands": [
+        "cargo fmt --all"
+      ],
+      "destination": "Existing PR1766",
       "evidence": [
-        "/private/tmp/decapod-boundary-red-c30w2kjb/evidence",
-        "/private/tmp/decapod-boundary-red-c30w2kjb/evidence/candidate-init-reconciliation.json",
-        "/private/tmp/decapod-boundary-red-c30w2kjb/evidence/cloud-boundary-native-full.log: 41 passed, 0 failed, 0 ignored, 57.71 seconds",
-        "/private/tmp/decapod-boundary-red-c30w2kjb/evidence/cloud-schema-recovery-native.log",
-        "/private/tmp/decapod-boundary-red-c30w2kjb/evidence/rbac-main-unaccepted.json",
-        "RPC suite: 5 passed; workunit observation: 6 passed; policy tests: 8 passed including first-adoption denial control",
-        "User directly authorized exception to pre-PR requirement; direct forge draft 1779 is external and not admitted",
-        "https://buildkite.com/decapodlabs/decapod/builds/11921",
-        "https://buildkite.com/decapodlabs/decapod/builds/11967#01a1ebfa-5cfa-4425-862b-2c76150a0bfc",
-        "https://github.com/DecapodLabs/decapod/pull/1779",
-        "public_task_transfer_preserves_identity_without_importing_a_live_lease: 1 passed; interop approval_roundtrip passed, suite still running"
+        "Official validate on a55c1de8 ended SNAPSHOT_NOT_READY public build identity mismatch after308039ms provider wait. Public envelopes11782(task branch) and11787(original PR branch) share sourceSHA but differ in branch authority. Preserve denial and full evidence at private snapshot9TwHAM. Actual CI standalone job134364708406 exposed only stale managed Docker0.148.7 pin; installed CLI init --proof regenerated release-bound projections without changing config, workflows or authored specs. Added accepted tenant negative+repair and actual producer/consumer signature-mismatch fixtures; new tests unexecuted until next exact-candidate validation.",
+        "Official0.148.8 validate on0a8350c9 stopped before test execution with PROOF_PROFILE_RECONCILIATION_REQUIRED. Read-only agent.init reports inventory sha256:b929199963bc910eb5f099a92ec5d152d6e78d7b6608f0bdf74c22eeda13fdc8 and only STALE_SOURCE_INVENTORY plus REQUIRED_PROOF_NOT_RUN. Compared every discovery input from last accepted config review edbfc00d: only Cargo.toml and Cargo.lock package version0.148.7 to0.148.8 differ. Backed up config privately; reviewed digest update preserves all workflow/helper/check/toolchain contracts.",
+        "Preserved PR1766 original head12d403ac and base18cbb30c. Actual CI44163787850 rejects obsolete checkpoint test and missing README constitution reference. Repaired source36ede3fd; tests authored, execution pending official validation. Strict historical checkpoint inspection reports original unproven/invalid lineage; current continuation cannot be described as historical proof.",
+        "https://buildkite.com/decapodlabs/decapod/builds/11873",
+        "https://buildkite.com/decapodlabs/decapod/builds/11920",
+        "https://github.com/DecapodLabs/decapod/actions/runs/44177760790/job/134374440067",
+        "https://github.com/DecapodLabs/decapod/actions/runs/44186574654/job/134406250320",
+        "https://github.com/DecapodLabs/decapod/actions/runs/44186574654/job/134406250356",
+        "https://github.com/DecapodLabs/decapod/actions/runs/44196295665/job/134439168067",
+        "https://github.com/DecapodLabs/decapod/actions/runs/44198555328/job/134447435222",
+        "https://github.com/DecapodLabs/decapod/actions/runs/44198555328/job/134447435393",
+        "https://github.com/DecapodLabs/decapod/actions/runs/44203259346/job/134462866270",
+        "https://github.com/DecapodLabs/decapod/issues/1776#issuecomment-6964621038",
+        "source:7b4c14a0e02fde5c32be8df80900a6f671f7d071;base:6ab6de3134286a790d78d370ca3fb43c0d92f834;ci-job:134473589855;library:1816-passed-1-failed-8-ignored;negative:ignored_external_action_policy_cannot_replay_execution_binding;repair-pending",
+        "source:d0ebc2c899d6c5bc643cb984ab4126610898b07c;ci:44203259346;binary-sha256:a55067e506f7fec9794100dd4f327550b0a4612475ec452cc92fccbfae60ce0d;public-comment:6958213300;body-sha256:1ffa7769deeaf03f02a989ea56cbc0dcee251dde8413d3b8f317955df48f94a1;negative:AUTHORING_CUSTODY_STALE;repair-pending"
       ],
       "inspected_files": [
-        "Cargo.lock",
-        "Cargo.toml",
-        "src/decapod/cli.rs",
-        "src/decapod/core/db_maintenance.rs",
-        "src/decapod/core/snapshot_provider/automatic.rs",
+        "src/decapod/core/governance_document.rs",
+        "src/decapod/core/intent_reconcile.rs",
+        "src/decapod/core/obligation.rs",
+        "src/decapod/core/trajectory/execution.rs",
+        "src/decapod/core/validation_history.rs",
         "src/decapod/lib.rs",
-        "src/decapod/plugins/policy.rs"
+        "src/decapod/plan_governance.rs",
+        "tests/infer_precision.rs"
       ],
-      "intent_id": "intent:change_01M7NR0Z9M2Q4AQQFBP1ZPD07Q",
+      "intent_id": "intent:todo:bugs_01m7nm3pnpc3be76",
       "modified_files": [
         ".decapod/config.toml",
-        "src/decapod/cli.rs",
-        "src/decapod/core/db_maintenance.rs",
+        ".decapod/managed/Dockerfile.decapod",
+        ".decapod/managed/specs/VALIDATION.md",
+        "AGENTS.md",
+        "CLAUDE.md",
+        "CODEX.md",
+        "GEMINI.md",
+        "docs/agent/config-schema.md",
+        "src/decapod/core/custody_model.rs",
+        "src/decapod/core/governance_document.rs",
+        "src/decapod/core/intent_reconcile/selected.rs",
+        "src/decapod/core/native_proof.rs",
+        "src/decapod/core/obligation.rs",
+        "src/decapod/core/rpc.rs",
+        "src/decapod/core/state.rs",
+        "src/decapod/core/trajectory/execution.rs",
+        "src/decapod/core/trajectory/instruction_source.rs",
+        "src/decapod/core/trajectory/path.rs",
+        "src/decapod/core/validate.rs",
+        "src/decapod/core/validation_history.rs",
+        "src/decapod/core/validation_runtime.rs",
+        "src/decapod/core/workspace.rs",
         "src/decapod/lib.rs",
-        "src/decapod/plugins/policy.rs",
-        "tests/agent_rpc_suite.rs",
-        "tests/cli_contract_enforcement.rs",
-        "tests/common/cloud_managed_scenarios.rs",
-        "tests/init_config_behavior.rs",
-        "tests/sqlite_maintenance.rs",
-        "tests/support/interop_harness.rs"
-      ],
-      "next_transitions": [
-        "Commit cloud-boundary correction, push same PR branch, then run exact-candidate full validation",
-        "Push recovery commit to draft PR 1779, then run fresh complete validation",
-        "Refine plan and declare falsifiable checks"
+        "src/decapod/plan_governance.rs",
+        "tests/cli_contracts.rs",
+        "tests/common/consumer_readiness_fixture.rs",
+        "tests/consumer_readiness.rs",
+        "tests/infer_precision.rs",
+        "tests/unit/core/execution_checkpoint_tests.rs"
       ],
       "repo_scope": [
-        "root"
+        ".decapod/managed/specs",
+        "README.md",
+        "docs",
+        "src/decapod",
+        "tests"
       ],
-      "run_id": "branch_01M7NR0ZCNHC7YZKZ9SYWWDDVJ",
+      "run_id": "issues-1761-1770-20261117",
       "schema_version": "1.1.0",
       "shortcut_risk_signals": [],
-      "task_id": "bugs_01m7nqz8dxaz801k",
+      "task_id": "bugs_01m7nm3pnpc3be76",
       "tool_calls": [],
       "unresolved_assumptions": [
-        "Fresh complete exact-candidate CI required after cloud test contract correction",
-        "Remaining fixture repairs require executable checks and fresh full validation"
+        "Accepted master advanced to ab4abe0593ddd8fd15186001558b79addd08aebc during provider wait; old proof is not current.",
+        "Installed registry controller is now0.148.9; supported init refreshed release projections. Prior isolated-binary exception request is obsolete. Same-lineage source remains caller-reported, not authenticated human or host witness.",
+        "Instruction origin authentication, accepted root coverage, typed global consistency, independent behavior controls and genuine path observation remain open acceptance obligations.",
+        "Owned native proof-call observations are scoped kernel evidence, not independent whole-host or human attestation. Native ARM candidate artifact startup is a prerequisite, not successful acceptance. New path code and fixture repairs remain unverified.",
+        "Provider-observed account metadata does not authenticate a human or grant operation authority; current ingress and phase repairs require actual source execution.",
+        "Selected-root/typed-relation fixtures are scripted local-policy/native controls and remain unverified until source CI executes them. No authenticated prompt capture or external witness is claimed.",
+        "The new ignored external-action policy replay control audits an existing owner; no bypass or successful protection is asserted before execution. Native-path positive CLI acceptance remains pending."
       ]
     }
   },

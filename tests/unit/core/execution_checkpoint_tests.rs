@@ -123,6 +123,114 @@ fn execution_checkpoint_commit_resume_is_deterministic_and_read_only() {
 }
 
 #[test]
+fn ignored_external_action_policy_cannot_replay_execution_binding() {
+    // The real external-action owner may read an ignored canonical policy file.
+    // Git source equality alone must not certify that policy after it changes.
+    let temp = fixture();
+    let root = temp.path();
+    let ignore = root.join(".gitignore");
+    let before = fs::read_to_string(&ignore).unwrap();
+    fs::write(
+        &ignore,
+        format!("{before}\n.decapod/EXTERNAL_ACTIONS.json\n"),
+    )
+    .unwrap();
+    commit(root);
+    let binding = capture_execution_binding(root, "task_execution").unwrap();
+    verify_execution_authority(root, &binding).unwrap();
+    fs::write(
+        root.join(".decapod/EXTERNAL_ACTIONS.json"),
+        r#"{"rules":[{"capability":"proof_exec","allowed_bins":[]}]}"#,
+    )
+    .unwrap();
+    assert!(git(root, &["status", "--porcelain"]).is_empty());
+    assert!(
+        verify_execution_binding(root, "task_execution", &binding).is_err(),
+        "A changed effective native authorization policy must revoke the previous binding"
+    );
+    assert!(verify_execution_authority(root, &binding).is_err());
+    // Current policy can be measured again. This does not authorize the denied
+    // proof command: its real native adapter still owns that operation gate.
+    let fresh = capture_execution_binding(root, "task_execution").unwrap();
+    verify_execution_authority(root, &fresh).unwrap();
+}
+
+#[test]
+fn recorded_clarification_revokes_old_checkpoint_then_allows_fresh_authorized_repair() {
+    use crate::core::custody::{
+        InstructionRevisionInput, RecordedInstructionKind, ReportedInstructionSource,
+    };
+    let temp = fixture();
+    let root = temp.path();
+    let old = checkpoint_execution(root, "run_execution", "before-C", &[]).unwrap();
+    commit(root);
+    let artifact = load_trajectory(root, "run_execution").unwrap();
+    let source_revision = artifact.custody.intents["intent_execution"]
+        .instruction_revision()
+        .unwrap();
+    trajectory::append_instruction(
+        root,
+        "run_execution",
+        InstructionRevisionInput {
+            revision_id: "C".into(),
+            expected_revision: source_revision,
+            instruction: "Preserve the same scope with an explicit clarification".into(),
+            source_claim: ReportedInstructionSource {
+                source_ref: "fixture:clarification".into(),
+                principal_claim: Some("principal".into()),
+            },
+            kind: RecordedInstructionKind::Clarification,
+            supersedes: vec![],
+            derived_intent: None,
+        },
+    )
+    .unwrap();
+    assert!(
+        verify_execution_resume(root, "run_execution", "before-C")
+            .unwrap_err()
+            .to_string()
+            .contains("EXECUTION_DECISION_REQUIRED")
+    );
+    plan_governance::patch_plan(
+        root,
+        PlanPatch {
+            unknowns: Some(vec![]),
+            ..Default::default()
+        },
+    )
+    .unwrap();
+    plan_governance::patch_plan(
+        root,
+        PlanPatch {
+            state: Some(PlanState::Approved),
+            ..Default::default()
+        },
+    )
+    .unwrap();
+    commit(root);
+    assert!(
+        verify_execution_resume(root, "run_execution", "before-C")
+            .unwrap_err()
+            .to_string()
+            .contains("EXECUTION_STATE_CHANGED")
+    );
+    let fresh = checkpoint_execution(root, "run_execution", "after-C", &[]).unwrap();
+    commit(root);
+    assert_eq!(
+        verify_execution_resume(root, "run_execution", "after-C").unwrap(),
+        fresh
+    );
+    let preserved = load_trajectory(root, "run_execution").unwrap();
+    assert_eq!(preserved.execution_checkpoints[0], old);
+    assert_eq!(
+        preserved.custody.intents["intent_execution"]
+            .instruction_revisions
+            .len(),
+        1
+    );
+}
+
+#[test]
 fn execution_resume_refuses_dirty_and_committed_source_changes() {
     let temp = fixture();
     let root = temp.path();
@@ -182,14 +290,21 @@ fn execution_resume_rechecks_plan_acceptance_and_human_decisions() {
     )
     .unwrap();
     assert!(verify_execution_binding(root, "task_execution", &binding).is_err());
-    plan_governance::patch_plan(
+    let rejected = plan_governance::patch_plan(
         root,
         PlanPatch {
             state: Some(PlanState::Approved),
             ..Default::default()
         },
     )
-    .unwrap();
+    .unwrap_err()
+    .to_string();
+    assert!(rejected.contains("NEEDS_HUMAN_INPUT"), "{rejected}");
+    // Legacy documents can contain accepted-but-unresolved state even though
+    // the current transition refuses it. Resume must reject those bytes too.
+    let mut legacy = plan_governance::load_plan(root).unwrap().unwrap();
+    legacy.state = PlanState::Approved;
+    plan_governance::save_plan(root, &legacy).unwrap();
     assert!(
         verify_execution_binding(root, "task_execution", &binding)
             .unwrap_err()

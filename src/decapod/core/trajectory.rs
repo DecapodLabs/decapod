@@ -13,11 +13,15 @@ use std::fs;
 use std::path::{Path, PathBuf};
 
 mod execution;
+pub mod instruction_source;
+pub mod path;
+mod scope;
 pub use execution::{
     ExecutionApprovalBinding, ExecutionCheckpoint, ExecutionStateBinding,
     capture_execution_binding, checkpoint_execution, verify_execution_binding,
     verify_execution_resume,
 };
+pub(crate) use scope::reconcile_task_scope_projection;
 
 pub const TRAJECTORY_SCHEMA_VERSION: &str = "1.1.0";
 pub const LEGACY_TRAJECTORY_SCHEMA_VERSION: &str = "1.0.0";
@@ -518,7 +522,23 @@ pub fn init_trajectory(
                     ))
                 })?;
         }
-        let written = fresh_trajectory(project_root, input)?;
+        let mut written = fresh_trajectory(project_root, input)?;
+        if let Some(existing) = load_trajectory_cookie(project_root)?
+            && written.intent_id == existing.intent_id
+        {
+            if !existing.execution_checkpoints.is_empty() {
+                return Err(error::DecapodError::ValidationError("INSTRUCTION_CONTINUATION_REQUIRES_RESUME: preserve the existing run and use its checkpoint/resume gate; a new run cannot discard same-lineage approval requirements".into()));
+            }
+            if written.original_intent != existing.original_intent
+                || written.derived_intent != existing.derived_intent
+            {
+                return Err(error::DecapodError::ValidationError("INTENT_ORIGIN_CONFLICT: same-lineage continuation must preserve origin and interpretation; append a recorded instruction revision for changes".into()));
+            }
+            written.custody = existing.custody;
+            written = written
+                .with_recomputed_hash()
+                .map_err(|e| error::DecapodError::ValidationError(e.to_string()))?;
+        }
         let updates = vec![(
             "trajectory",
             Some(
@@ -552,9 +572,15 @@ pub fn load_trajectory_cookie(
 ) -> Result<Option<TrajectoryArtifact>, error::DecapodError> {
     crate::core::governance_document::read_section(project_root, "trajectory")?
         .map(|value| {
-            serde_json::from_value(value).map_err(|e| {
+            let artifact: TrajectoryArtifact = serde_json::from_value(value).map_err(|e| {
                 error::DecapodError::ValidationError(format!("Invalid trajectory: {e}"))
-            })
+            })?;
+            for record in artifact.custody.intents.values() {
+                record
+                    .validate_instruction_history()
+                    .map_err(|e| error::DecapodError::ValidationError(e.to_string()))?;
+            }
+            Ok(artifact)
         })
         .transpose()
 }
@@ -769,6 +795,118 @@ pub fn record_trajectory(
             artifact.completion_claim = update.completion_claim;
         }
         write_trajectory(project_root, &artifact)
+    })
+}
+
+/// Append caller-reported instructions in the same lineage and atomically
+/// revoke plan acceptance in the single Git-owned governance document. This
+/// records no independent human/host authentication and grants no supersession.
+pub fn append_instruction(
+    root: &Path,
+    run_id: &str,
+    input: crate::core::custody::InstructionRevisionInput,
+) -> Result<TrajectoryArtifact, error::DecapodError> {
+    append_instruction_from_source(root, run_id, input, None)
+}
+
+pub(crate) fn append_observed_instruction(
+    root: &Path,
+    run_id: &str,
+    input: crate::core::custody::InstructionRevisionInput,
+    observed: instruction_source::ObservedInstruction,
+) -> Result<TrajectoryArtifact, error::DecapodError> {
+    append_instruction_from_source(root, run_id, input, Some(observed))
+}
+
+fn append_instruction_from_source(
+    root: &Path,
+    run_id: &str,
+    input: crate::core::custody::InstructionRevisionInput,
+    observed: Option<instruction_source::ObservedInstruction>,
+) -> Result<TrajectoryArtifact, error::DecapodError> {
+    use crate::core::{
+        custody::{Custody, RecordedInstructionKind},
+        governance_document,
+    };
+    governance_document::with_lock(root, || {
+        let mut artifact = load_trajectory(root, run_id)?;
+        let intent_id = artifact.intent_id.clone().ok_or_else(|| {
+            error::DecapodError::ValidationError("INSTRUCTION_INTENT_MISSING".into())
+        })?;
+        let before = artifact
+            .custody
+            .intents
+            .get(&intent_id)
+            .ok_or_else(|| {
+                error::DecapodError::ValidationError("INSTRUCTION_INTENT_MISSING".into())
+            })?
+            .instruction_revision()
+            .map_err(|e| error::DecapodError::ValidationError(e.to_string()))?;
+        let mut custody = Custody::from_state(artifact.custody.clone());
+        let revision = match observed {
+            Some(source) => custody.append_observed_instruction(&intent_id, input, source),
+            None => custody.append_instruction(&intent_id, input),
+        }
+        .map_err(|e| error::DecapodError::ValidationError(e.to_string()))?;
+        let after = custody.state().intents[&intent_id]
+            .instruction_revision()
+            .map_err(|e| error::DecapodError::ValidationError(e.to_string()))?;
+        if before == after {
+            return Ok(artifact);
+        }
+        let mut plan = crate::plan_governance::load_plan(root)?.ok_or_else(|| error::DecapodError::ValidationError("INSTRUCTION_PLAN_MISSING: initialize a plan bound to this lineage before recording changes".into()))?;
+        if artifact
+            .task_id
+            .as_ref()
+            .is_some_and(|task| !plan.todo_ids.contains(task))
+        {
+            return Err(error::DecapodError::ValidationError(
+                "INSTRUCTION_TASK_MISMATCH: plan and trajectory must name the same current task"
+                    .into(),
+            ));
+        }
+        crate::plan_governance::invalidate_plan_acceptance(&mut plan);
+        let review = format!(
+            "Review recorded instruction {} from {} ({after}); provenance={}, human authorization remains unproven",
+            revision.revision_id,
+            revision.source_claim.source_ref,
+            if revision.source_observation.is_some() {
+                "provider_observed_record"
+            } else {
+                "agent_reported"
+            }
+        );
+        if revision.kind == RecordedInstructionKind::Contradiction {
+            plan.unresolved_contradictions.push(review);
+        } else {
+            plan.unknowns.push(review);
+        }
+        plan.updated_at = crate::core::time::now_epoch_z();
+        if let Some(derived) = &revision.derived_intent {
+            artifact.derived_intent = derived.clone();
+        }
+        artifact.custody = custody.into_state();
+        artifact = artifact
+            .with_recomputed_hash()
+            .map_err(|e| error::DecapodError::ValidationError(e.to_string()))?;
+        let updates = [
+            (
+                "trajectory",
+                Some(
+                    serde_json::to_value(&artifact)
+                        .map_err(|e| error::DecapodError::ValidationError(e.to_string()))?,
+                ),
+            ),
+            (
+                "plan",
+                Some(
+                    serde_json::to_value(plan)
+                        .map_err(|e| error::DecapodError::ValidationError(e.to_string()))?,
+                ),
+            ),
+        ];
+        governance_document::write_sections(root, &updates)?;
+        Ok(artifact)
     })
 }
 

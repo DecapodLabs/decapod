@@ -2,6 +2,7 @@ use crate::core::db::OptionalExtension;
 use crate::core::error;
 use serde::{Deserialize, Serialize};
 use serde_json::json;
+use sha2::{Digest, Sha256};
 use std::fs;
 use std::path::{Path, PathBuf};
 use std::process::Command;
@@ -380,6 +381,17 @@ pub fn patch_plan(
         if let Some(state) = patch.state {
             plan.state = state;
         }
+        if matches!(
+            plan.state,
+            PlanState::Approved | PlanState::Executing | PlanState::Done
+        ) {
+            ensure_instruction_ready_at(
+                project_root,
+                &plan,
+                crate::core::validation_rules::EvaluationPhase::PreExecution,
+                "NEEDS_HUMAN_INPUT",
+            )?;
+        }
         validate_plan_progress(&plan)?;
         plan.updated_at = crate::core::time::now_epoch_z();
         save_plan(project_root, &plan)?;
@@ -403,7 +415,13 @@ pub(crate) fn invalidate_plan_acceptance(plan: &mut GovernedPlan) {
     }
 }
 
-fn require_phase_acceptance(plan: &GovernedPlan) -> Result<(), error::DecapodError> {
+fn require_phase_acceptance(root: &Path, plan: &GovernedPlan) -> Result<(), error::DecapodError> {
+    ensure_instruction_ready_at(
+        root,
+        plan,
+        crate::core::validation_rules::EvaluationPhase::DuringExecution,
+        "NEEDS_HUMAN_INPUT",
+    )?;
     if !matches!(plan.state, PlanState::Approved | PlanState::Executing) {
         return Err(marker_error(
             "NEEDS_PLAN_APPROVAL",
@@ -574,6 +592,301 @@ pub fn update_gate(
     })
 }
 
+/// Reuse the same recorded instruction obligations at every governed boundary.
+/// Preparation is allowed to collect open questions, never to approve them.
+#[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Eq)]
+pub struct InstructionBlocker {
+    pub id: String,
+    pub source: String,
+    pub question: String,
+    pub authority: crate::core::validation_rules::RuleAuthority,
+}
+
+/// Recorded plan readiness only. Neither the source digest nor an accepted plan
+/// authenticates a human principal or proves unexpressed semantic requirements.
+#[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Eq)]
+pub struct InstructionReadiness {
+    pub schema_version: String,
+    pub rule_id: String,
+    pub authority: crate::core::validation_rules::RuleAuthority,
+    pub severity: crate::core::validation_rules::RuleSeverity,
+    pub phase: crate::core::validation_rules::EvaluationPhase,
+    pub verdict: crate::core::validation_rules::RuleVerdict,
+    pub source_revision: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub instruction_revision: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub global_consistency: Option<crate::core::intent_reconcile::selected::ConstraintJudgment>,
+    pub blockers: Vec<InstructionBlocker>,
+    pub questions: Vec<String>,
+    pub remediation: String,
+    pub rule_remediation: crate::core::validation_rules::RuleRemediation,
+}
+
+pub fn instruction_readiness(
+    plan: &GovernedPlan,
+    phase: crate::core::validation_rules::EvaluationPhase,
+) -> InstructionReadiness {
+    use crate::core::validation_rules::{
+        RuleAuthority, RuleRemediation, RuleSeverity, RuleVerdict,
+    };
+    let mut blockers = Vec::new();
+    let mut add = |field: &str, question: String| {
+        let source = format!("{PLAN_PATH}#/sections/plan/{field}");
+        let identity = json!([plan.todo_ids, source, question]);
+        blockers.push(InstructionBlocker {
+            id: format!("instruction:{:x}", Sha256::digest(identity.to_string())),
+            source,
+            question,
+            authority: RuleAuthority::TaskConstraints,
+        });
+    };
+    if plan.intent.trim().is_empty() {
+        add(
+            "intent",
+            "What is the single-sentence intent for this change?".into(),
+        );
+    }
+    for (index, question) in plan.human_questions.iter().enumerate() {
+        add(&format!("human_questions/{index}"), question.clone());
+    }
+    for (index, unknown) in plan.unknowns.iter().enumerate() {
+        add(
+            &format!("unknowns/{index}"),
+            format!("Resolve unknown before execution: {unknown}"),
+        );
+    }
+    for (index, contradiction) in plan.unresolved_contradictions.iter().enumerate() {
+        add(
+            &format!("unresolved_contradictions/{index}"),
+            format!("Resolve conflicting requests before execution: {contradiction}"),
+        );
+    }
+    for (index, review) in plan.spec_reviews.iter().enumerate() {
+        if review.disposition == SpecReviewDisposition::RequiresDecision {
+            add(
+                &format!("spec_reviews/{index}"),
+                format!(
+                    "Resolve pending human spec review before execution: {}",
+                    review.path
+                ),
+            );
+        }
+    }
+    // Acceptance and measured progress do not alter instruction identity.
+    // Content and task changes do, including pending review source changes.
+    let source = json!({
+        "intent": plan.intent, "todo_ids": plan.todo_ids,
+        "unknowns": plan.unknowns, "human_questions": plan.human_questions,
+        "unresolved_contradictions": plan.unresolved_contradictions,
+        "spec_reviews": plan.spec_reviews,
+    });
+    let human_required = !plan.human_questions.is_empty()
+        || plan
+            .spec_reviews
+            .iter()
+            .any(|r| r.disposition == SpecReviewDisposition::RequiresDecision);
+    let rule_remediation = RuleRemediation {
+        error_code: "NEEDS_HUMAN_INPUT".into(),
+        violation_description: "Recorded instructions have unresolved obligations".into(),
+        expected_condition: "No current required instruction blocker".into(),
+        observed_condition: format!("{} recorded blockers", blockers.len()),
+        affected_paths: blockers.iter().map(|b| b.source.clone()).collect(),
+        required_steps: vec!["Consult the recorded governing sources and resolve their obligations through supported plan/review operations".into(), "Separately reaccept the revised execution contract and rerun affected proof".into()],
+        autonomous_remediation_permitted: !human_required,
+        human_authorization_required: human_required,
+        evidence_for_revalidation: vec!["Current plan/review source revision and fresh applicable proof".into()],
+        related_rules: vec![],
+    };
+    InstructionReadiness {
+        schema_version: "1.1.0".into(),
+        rule_id: "recorded_instruction_readiness".into(),
+        authority: RuleAuthority::TaskConstraints,
+        severity: RuleSeverity::Error,
+        phase,
+        verdict: if blockers.is_empty() { RuleVerdict::Pass } else { RuleVerdict::Fail },
+        source_revision: format!("sha256:{:x}", Sha256::digest(source.to_string())),
+        instruction_revision: None,
+        global_consistency: None,
+        questions: blockers.iter().map(|blocker| blocker.question.clone()).collect(),
+        blockers,
+        remediation: "Resolve recorded obligations and separately reaccept the revised plan; rerun affected proof.".into(),
+        rule_remediation,
+    }
+}
+
+pub(crate) fn unresolved_instruction_questions(plan: &GovernedPlan) -> Vec<String> {
+    instruction_readiness(
+        plan,
+        crate::core::validation_rules::EvaluationPhase::PreExecution,
+    )
+    .questions
+}
+
+pub(crate) fn ensure_instruction_ready(
+    plan: &GovernedPlan,
+    phase: crate::core::validation_rules::EvaluationPhase,
+    marker: &str,
+) -> Result<(), error::DecapodError> {
+    let readiness = instruction_readiness(plan, phase);
+    ensure_instruction_report_ready(readiness, marker)
+}
+
+pub fn instruction_lineage_for_plan(
+    root: &Path,
+    plan: &GovernedPlan,
+) -> Result<Option<crate::core::custody::InstructionLineage>, error::DecapodError> {
+    let Some(artifact) = crate::core::trajectory::load_trajectory_cookie(root)? else {
+        return Ok(None);
+    };
+    if artifact
+        .task_id
+        .as_ref()
+        .is_none_or(|task| !plan.todo_ids.contains(task))
+    {
+        return Ok(None);
+    }
+    artifact
+        .intent_id
+        .as_deref()
+        .and_then(|id| artifact.custody.intents.get(id))
+        .map(|record| {
+            record
+                .instruction_lineage()
+                .map_err(|e| error::DecapodError::ValidationError(e.to_string()))
+        })
+        .transpose()
+}
+
+pub fn instruction_readiness_at(
+    root: &Path,
+    plan: &GovernedPlan,
+    phase: crate::core::validation_rules::EvaluationPhase,
+) -> Result<InstructionReadiness, error::DecapodError> {
+    let mut report = instruction_readiness(plan, phase);
+    if let Some(lineage) = instruction_lineage_for_plan(root, plan)? {
+        report.schema_version = "1.2.0".into();
+        report.source_revision = format!(
+            "sha256:{:x}",
+            Sha256::digest(
+                json!([report.source_revision, lineage.intent_id, lineage.revision]).to_string()
+            )
+        );
+        report.instruction_revision = Some(lineage.revision);
+    }
+    use crate::core::{
+        intent_reconcile::selected,
+        validation_rules::{RuleAuthority, RuleVerdict},
+    };
+    let mut selected_blocker = None;
+    match selected::cached_selection(root) {
+        Ok(Some(selection)) => {
+            let model = &selection.work;
+            let revision = model.source_revision()?;
+            let (verdict, conflicts, unsupported) = selected::consistency(model)?;
+            let source = format!(
+                "{}:.decapod/config.toml#/proof/selected_work",
+                selection.source_commit
+            );
+            report.source_revision = format!(
+                "sha256:{:x}",
+                Sha256::digest(
+                    json!([report.source_revision, selection.source_commit, revision]).to_string()
+                )
+            );
+            if !selection.candidate_matches {
+                selected_blocker = Some((source, "Preserve the exact accepted selected-work policy; a candidate rewrite is not acceptance".into(), false));
+            } else if report.instruction_revision.as_deref()
+                != Some(model.instruction_revision.as_str())
+            {
+                selected_blocker = Some((source, "Reconcile the selected recorded instruction revision with independently accepted roots before execution".into(), false));
+            } else if verdict != RuleVerdict::Pass {
+                selected_blocker = Some((
+                    source,
+                    format!(
+                        "Resolve accepted global relations through an authority decision: conflicting={conflicts:?}, unsupported={unsupported:?}"
+                    ),
+                    true,
+                ));
+            }
+            report.global_consistency = Some(selected::ConstraintJudgment {
+                source_commit: selection.source_commit,
+                source_revision: revision,
+                instruction_revision: model.instruction_revision.clone(),
+                source_authority: "cached_target_ref".into(),
+                verdict,
+                conflicting_relations: conflicts,
+                unsupported_relations: unsupported,
+            });
+            report.schema_version = "1.3.0".into();
+        }
+        Ok(None) => {}
+        Err(error) => {
+            selected_blocker = Some((
+                ".decapod/config.toml#/proof/selected_work".into(),
+                error.to_string(),
+                false,
+            ))
+        }
+    }
+    if let Some((source, question, requires_authority)) = selected_blocker {
+        let id = format!(
+            "instruction:{:x}",
+            Sha256::digest(json!([plan.todo_ids, source, question]).to_string())
+        );
+        report.blockers.push(InstructionBlocker {
+            id,
+            source: source.clone(),
+            question: question.clone(),
+            authority: RuleAuthority::ProjectOverride,
+        });
+        report.questions.push(question);
+        report.verdict = RuleVerdict::Fail;
+        report.rule_remediation.affected_paths.push(source);
+        report.rule_remediation.observed_condition =
+            format!("{} recorded blockers", report.blockers.len());
+        report.rule_remediation.human_authorization_required |= requires_authority;
+        report.rule_remediation.autonomous_remediation_permitted =
+            !report.rule_remediation.human_authorization_required;
+        report.rule_remediation.required_steps.push("Repair the source binding through supported operations. Genuine policy conflicts require the existing authority path; then separately reaccept the plan and obtain fresh proof".into());
+    }
+    Ok(report)
+}
+
+pub(crate) fn ensure_instruction_ready_at(
+    root: &Path,
+    plan: &GovernedPlan,
+    phase: crate::core::validation_rules::EvaluationPhase,
+    marker: &str,
+) -> Result<(), error::DecapodError> {
+    ensure_instruction_report_ready(instruction_readiness_at(root, plan, phase)?, marker)
+}
+
+fn ensure_instruction_report_ready(
+    readiness: InstructionReadiness,
+    marker: &str,
+) -> Result<(), error::DecapodError> {
+    if readiness.blockers.is_empty() {
+        return Ok(());
+    }
+    Err(marker_error(
+        marker,
+        if marker == "NEEDS_HUMAN_INPUT" {
+            "Recorded instructions require resolution."
+        } else {
+            "NEEDS_HUMAN_INPUT: recorded instructions require resolution."
+        },
+        Some(
+            serde_json::to_value(readiness)
+                .map_err(|e| error::DecapodError::ValidationError(e.to_string()))?,
+        ),
+    ))
+}
+
+pub(crate) fn has_unresolved_intent_requirements(plan: &GovernedPlan) -> bool {
+    !unresolved_instruction_questions(plan).is_empty()
+}
+
 pub fn ensure_execute_ready(
     input: ExecuteCheckInput<'_>,
 ) -> Result<GovernedPlan, error::DecapodError> {
@@ -585,33 +898,21 @@ pub fn ensure_execute_ready(
         )
     })?;
 
-    if plan.state != PlanState::Approved
-        && plan.state != PlanState::Executing
-        && plan.state != PlanState::Done
-    {
+    ensure_instruction_ready_at(
+        input.project_root,
+        &plan,
+        crate::core::validation_rules::EvaluationPhase::DuringExecution,
+        "NEEDS_HUMAN_INPUT",
+    )?;
+
+    if !matches!(
+        plan.state,
+        PlanState::Approved | PlanState::Executing | PlanState::Done
+    ) {
         return Err(marker_error(
             "NEEDS_PLAN_APPROVAL",
             "Execution blocked: plan state must be APPROVED.",
             Some(json!({ "current_state": format!("{:?}", plan.state).to_uppercase() })),
-        ));
-    }
-
-    if plan.intent.trim().is_empty()
-        || !plan.unknowns.is_empty()
-        || !plan.human_questions.is_empty()
-    {
-        let mut questions = Vec::new();
-        if plan.intent.trim().is_empty() {
-            questions.push("What is the single-sentence intent for this change?".to_string());
-        }
-        questions.extend(plan.human_questions.clone());
-        for unknown in &plan.unknowns {
-            questions.push(format!("Resolve unknown before execution: {unknown}"));
-        }
-        return Err(marker_error(
-            "NEEDS_HUMAN_INPUT",
-            "Execution blocked: unresolved intent or unknowns.",
-            Some(json!({ "questions": questions })),
         ));
     }
 
@@ -718,7 +1019,24 @@ pub fn ensure_execute_ready(
 /// Structural progress must agree with the current contract even when a caller
 /// loads old state. Shared by explicit transitions, execution and publication.
 pub fn validate_plan_progress(plan: &GovernedPlan) -> Result<(), error::DecapodError> {
+    validate_plan_progress_at(
+        plan,
+        crate::core::validation_rules::EvaluationPhase::PreExecution,
+    )
+}
+
+pub(crate) fn validate_plan_progress_at(
+    plan: &GovernedPlan,
+    phase: crate::core::validation_rules::EvaluationPhase,
+) -> Result<(), error::DecapodError> {
     validate_phase_contract(&plan.phases)?;
+    if matches!(
+        plan.state,
+        PlanState::Approved | PlanState::Executing | PlanState::Done
+    ) && has_unresolved_intent_requirements(plan)
+    {
+        ensure_instruction_ready(plan, phase, "NEEDS_HUMAN_INPUT")?;
+    }
     if plan.state == PlanState::Done && plan.phases.iter().any(|phase| !phase.completed) {
         return Err(marker_error(
             "PHASES_INCOMPLETE",
@@ -741,6 +1059,15 @@ pub fn validate_plan_progress(plan: &GovernedPlan) -> Result<(), error::DecapodE
         ));
     }
     Ok(())
+}
+
+pub(crate) fn validate_plan_progress_at_root(
+    root: &Path,
+    plan: &GovernedPlan,
+    phase: crate::core::validation_rules::EvaluationPhase,
+) -> Result<(), error::DecapodError> {
+    ensure_instruction_ready_at(root, plan, phase.clone(), "NEEDS_HUMAN_INPUT")?;
+    validate_plan_progress_at(plan, phase)
 }
 
 fn validate_phase_contract(phases: &[Phase]) -> Result<(), error::DecapodError> {
@@ -784,7 +1111,7 @@ pub fn enter_phase(
             )
         })?;
 
-        require_phase_acceptance(&plan)?;
+        require_phase_acceptance(project_root, &plan)?;
 
         // Find the phase
         let phase_index = plan
@@ -875,7 +1202,7 @@ pub fn complete_phase(
             )
         })?;
 
-        require_phase_acceptance(&plan)?;
+        require_phase_acceptance(project_root, &plan)?;
 
         // Find the phase
         let phase_index = plan

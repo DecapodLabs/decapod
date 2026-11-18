@@ -2,6 +2,231 @@
 use super::*;
 use tempfile::tempdir;
 
+#[test]
+fn legacy_task_scope_reconciliation_preserves_history_and_revokes_acceptance() {
+    use crate::core::{
+        db, governance_document,
+        store::{Store, StoreKind},
+        todo,
+    };
+    use crate::plan_governance::{self, PlanPatch, PlanState};
+    let temp = tempdir().unwrap();
+    let root = temp.path();
+    let raw = r#"paths:["src/a,b.rs","tests/x.rs",".decapod/managed/specs"]"#;
+    trajectory_git(root, &["init", "-b", "main"]);
+    trajectory_git(root, &["config", "user.name", "Scope fixture"]);
+    trajectory_git(root, &["config", "user.email", "scope@example.invalid"]);
+    fs::write(
+        root.join(".gitignore"),
+        ".decapod/data/\n.decapod/managed/governance-document.lock\n",
+    )
+    .unwrap();
+    governance_document::migrate(root).unwrap();
+    trajectory_git(root, &["add", "."]);
+    trajectory_git(
+        root,
+        &[
+            "-c",
+            "commit.gpgsign=false",
+            "commit",
+            "-m",
+            "accepted source",
+        ],
+    );
+    trajectory_git(root, &["checkout", "-b", "agent/scope/task_scope"]);
+    let store = Store {
+        kind: StoreKind::Repo,
+        root: root.join(".decapod/data"),
+    };
+    todo::initialize_todo_db(&store.root).unwrap();
+    let conn = db::db_connect(&todo::todo_db_path(&store.root).to_string_lossy()).unwrap();
+    conn.execute("INSERT INTO tasks(id,hash,title,status,created_at,updated_at,dir_path,scope,revision) VALUES('task_scope','scope','Preserve explicit scope','open','1Z','1Z',?1,?2,1)", db::params![root.to_string_lossy().as_ref(),raw]).unwrap();
+    drop(conn);
+    // This is the actual old producer's projection, written through the
+    // canonical fixture constructor rather than hand-editing a live journal.
+    let context = governance_document::BranchWorkContext {
+        title: "Scope fixture".into(),
+        intent: "Preserve original task and scope".into(),
+        todo_ids: vec!["task_scope".into()],
+        scope: raw.split(',').map(str::trim).map(str::to_owned).collect(),
+    };
+    governance_document::initialize_workbranch(root, "main", Some(&context)).unwrap();
+    plan_governance::patch_plan(
+        root,
+        PlanPatch {
+            state: Some(PlanState::Approved),
+            ..Default::default()
+        },
+    )
+    .unwrap();
+    let old = load_trajectory_cookie(root).unwrap().unwrap();
+    record_trajectory(
+        root,
+        &old.run_id,
+        TrajectoryUpdate {
+            checks: vec![TrajectoryCheck {
+                name: "prior-negative".into(),
+                status: TrajectoryCheckStatus::Failed,
+            }],
+            ..Default::default()
+        },
+    )
+    .unwrap();
+    let before = fs::read(root.join(TRAJECTORY_PATH)).unwrap();
+    assert!(
+        reconcile_task_scope_projection(root, "task_scope", raw)
+            .unwrap_err()
+            .to_string()
+            .contains("ARCHIVE_REQUIRED")
+    );
+    assert_eq!(before, fs::read(root.join(TRAJECTORY_PATH)).unwrap());
+    trajectory_git(root, &["add", "."]);
+    trajectory_git(
+        root,
+        &[
+            "-c",
+            "commit.gpgsign=false",
+            "commit",
+            "-m",
+            "retain complete legacy journal",
+        ],
+    );
+    let old = load_trajectory_cookie(root).unwrap().unwrap();
+    reconcile_task_scope_projection(root, "task_scope", raw).unwrap();
+    let new = load_trajectory_cookie(root).unwrap().unwrap();
+    let canonical = crate::core::fleet_coord::declared_paths(raw)
+        .unwrap()
+        .unwrap();
+    assert_eq!(new.repo_scope, canonical);
+    let id = new.intent_id.as_ref().unwrap();
+    assert_eq!(new.custody.intents[id].constraints, canonical);
+    assert_eq!(new.original_intent, old.original_intent);
+    assert_eq!(new.derived_intent, old.derived_intent);
+    assert_eq!(new.checks, old.checks);
+    assert!(new.custody.events.starts_with(&old.custody.events));
+    assert_eq!(new.custody.events.len(), old.custody.events.len() + 1);
+    assert_eq!(
+        plan_governance::load_plan(root).unwrap().unwrap().state,
+        PlanState::Draft
+    );
+    assert_eq!(
+        todo::get_task(&store.root, "task_scope")
+            .unwrap()
+            .unwrap()
+            .scope,
+        raw
+    );
+    let repaired = fs::read(root.join(TRAJECTORY_PATH)).unwrap();
+    reconcile_task_scope_projection(root, "task_scope", raw).unwrap();
+    assert_eq!(repaired, fs::read(root.join(TRAJECTORY_PATH)).unwrap());
+
+    // Independently changed constraints must survive a mixed legacy record.
+    // This adversarial fixture goes through the typed canonical writer.
+    let mut mixed = new.clone();
+    mixed.repo_scope = old.repo_scope;
+    mixed
+        .custody
+        .intents
+        .get_mut(id)
+        .unwrap()
+        .constraints
+        .push("independent requirement".into());
+    let mixed = mixed.with_recomputed_hash().unwrap();
+    governance_document::write_section(root, "trajectory", &serde_json::to_value(mixed).unwrap())
+        .unwrap();
+    let before = fs::read(root.join(TRAJECTORY_PATH)).unwrap();
+    assert!(
+        reconcile_task_scope_projection(root, "task_scope", raw)
+            .unwrap_err()
+            .to_string()
+            .contains("AMBIGUOUS")
+    );
+    assert_eq!(before, fs::read(root.join(TRAJECTORY_PATH)).unwrap());
+}
+
+#[test]
+fn same_lineage_append_is_atomic_and_prior_source_cannot_be_rewritten() {
+    use crate::core::custody::{
+        InstructionRevisionInput, RecordedInstructionKind, ReportedInstructionSource,
+    };
+    use crate::plan_governance::{self, InitPlanInput};
+    let temp = tempdir().unwrap();
+    let root = temp.path();
+    plan_governance::init_plan(
+        root,
+        InitPlanInput {
+            title: "Lineage".into(),
+            intent: "Preserve origin".into(),
+            todo_ids: vec![],
+            proof_hooks: vec![],
+            unknowns: vec![],
+            human_questions: vec![],
+            stop_conditions: vec![],
+            unresolved_contradictions: vec![],
+            deferred_questions: vec![],
+            constraints: Default::default(),
+            phases: vec![],
+        },
+    )
+    .unwrap();
+    let mut init = replacement_init("lineage");
+    init.intent_id = Some("intent:lineage".into());
+    let artifact = init_trajectory(root, init).unwrap();
+    let before = artifact.custody.intents["intent:lineage"]
+        .instruction_revision()
+        .unwrap();
+    let input = InstructionRevisionInput {
+        revision_id: "C".into(),
+        expected_revision: before,
+        instruction: "A reported clarification".into(),
+        source_claim: ReportedInstructionSource {
+            source_ref: "fixture:C".into(),
+            principal_claim: Some("principal-A".into()),
+        },
+        kind: RecordedInstructionKind::Clarification,
+        supersedes: vec![],
+        derived_intent: Some("A corrected interpretation".into()),
+    };
+    let appended = append_instruction(root, "lineage", input).unwrap();
+    let stored = fs::read(root.join(TRAJECTORY_PATH)).unwrap();
+    let mut truncated = appended.clone();
+    truncated
+        .custody
+        .intents
+        .get_mut("intent:lineage")
+        .unwrap()
+        .instruction_revisions
+        .clear();
+    let truncated = truncated.with_recomputed_hash().unwrap();
+    assert!(write_trajectory(root, &truncated).is_err());
+    let mut rewritten = appended.clone();
+    rewritten
+        .custody
+        .intents
+        .get_mut("intent:lineage")
+        .unwrap()
+        .instruction_revisions[0]
+        .instruction = "forged source".into();
+    assert!(write_trajectory(root, &rewritten.with_recomputed_hash().unwrap()).is_err());
+    let mut spoofed = appended;
+    spoofed
+        .custody
+        .intents
+        .get_mut("intent:lineage")
+        .unwrap()
+        .instruction_origin
+        .as_mut()
+        .unwrap()
+        .principal_claim = Some("authenticated-human-claim".into());
+    assert!(
+        write_trajectory(root, &spoofed.with_recomputed_hash().unwrap())
+            .unwrap_err()
+            .to_string()
+            .contains("INTENT_ORIGIN_CONFLICT")
+    );
+    assert_eq!(stored, fs::read(root.join(TRAJECTORY_PATH)).unwrap());
+}
+
 fn trajectory_git(root: &Path, args: &[&str]) -> Vec<u8> {
     let output = std::process::Command::new("git")
         .current_dir(root)
@@ -107,6 +332,38 @@ fn new_run_replaces_the_cookie_and_git_preserves_prior_history() {
     let same_run = init_trajectory(temp.path(), replacement_init("run_new"));
     assert!(same_run.is_err());
     assert_eq!(fs::read(cookie_path).unwrap(), current);
+}
+
+#[test]
+fn a_reused_intent_id_cannot_rewrite_the_original_prompt() {
+    let temp = tempdir().unwrap();
+    let mut first = replacement_init("original_run");
+    first.intent_id = Some("intent:human-request".into());
+    first.original_intent = "Keep compatibility with v1".into();
+    init_trajectory(temp.path(), first).unwrap();
+    commit_trajectory_journal(temp.path());
+    let before = fs::read(trajectory_cookie_path(temp.path())).unwrap();
+
+    let mut overwritten = replacement_init("replacement_run");
+    overwritten.intent_id = Some("intent:human-request".into());
+    overwritten.original_intent = "Break compatibility with v1".into();
+    let blocked = init_trajectory(temp.path(), overwritten)
+        .unwrap_err()
+        .to_string();
+    assert!(blocked.contains("INTENT_ORIGIN_CONFLICT"), "{blocked}");
+    assert_eq!(
+        fs::read(trajectory_cookie_path(temp.path())).unwrap(),
+        before
+    );
+
+    let mut next = replacement_init("new_request");
+    next.intent_id = Some("intent:later-instruction".into());
+    next.original_intent = "A new human instruction".into();
+    init_trajectory(temp.path(), next).unwrap();
+    assert_eq!(
+        trajectory_git(temp.path(), &["show", "HEAD:.decapod/governance.json"]),
+        before
+    );
 }
 
 #[test]

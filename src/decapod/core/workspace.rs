@@ -658,9 +658,9 @@ pub(crate) fn initialize_workbranch_governance_at(
     } else {
         scoped
     };
-    let context = (selected.len() == 1).then(|| {
+    let context = if selected.len() == 1 {
         let task = selected[0];
-        crate::core::governance_document::BranchWorkContext {
+        Some(crate::core::governance_document::BranchWorkContext {
             title: task.title.clone(),
             intent: if task.description.trim().is_empty() {
                 task.title.clone()
@@ -668,21 +668,26 @@ pub(crate) fn initialize_workbranch_governance_at(
                 format!("{}\n\n{}", task.title, task.description)
             },
             todo_ids: vec![task.id.clone()],
-            scope: task
-                .scope
-                .split(',')
-                .map(str::trim)
-                .filter(|s| !s.is_empty())
-                .map(str::to_string)
-                .collect(),
-        }
-    });
+            scope: crate::core::fleet_coord::scope_projection(&task.scope).map_err(|reason| {
+                DecapodError::ValidationError(format!("SCOPE_DECLARATION_INVALID: {reason}"))
+            })?,
+        })
+    } else {
+        None
+    };
     crate::core::governance_document::initialize_workbranch_at(
         repo_root,
         &base_ref,
         context.as_ref(),
         created_base,
     )?;
+    if selected.len() == 1 {
+        crate::core::trajectory::reconcile_task_scope_projection(
+            repo_root,
+            &selected[0].id,
+            &selected[0].scope,
+        )?;
+    }
     Ok(())
 }
 
@@ -2939,9 +2944,12 @@ fn verify_current_governance_ownership(
     {
         return Err(DecapodError::ValidationError("STALE_PUBLICATION_TASK: plan and trajectory must bind the same current todo. Update the governed plan and rerun validation.".into()));
     }
-    if !plan.human_questions.is_empty() || !plan.unresolved_contradictions.is_empty() {
-        return Err(DecapodError::ValidationError("PUBLICATION_DECISION_REQUIRED: resolve the governed plan's human questions and contradictions before publication; do not infer approval.".into()));
-    }
+    plan_governance::ensure_instruction_ready_at(
+        repo_root,
+        &plan,
+        crate::core::validation_rules::EvaluationPhase::Publication,
+        "PUBLICATION_DECISION_REQUIRED",
+    )?;
     Ok(trajectory)
 }
 

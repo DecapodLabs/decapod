@@ -190,3 +190,20 @@ button,input,a{font-family:inherit}
 .decapod-docs-brand .logo-c{display:none}
 .navy .decapod-docs-brand .logo-a,.coal .decapod-docs-brand .logo-a,.ayu .decapod-docs-brand .logo-a{display:none}
 .navy .decapod-docs-brand .logo-c,.coal .decapod-docs-brand .logo-c,.ayu .decapod-docs-brand .logo-c{display:block}
+
+/* Closed-loop governance landing model: conceptual loop and separate proof boundary. */
+.decapod-docs-loop{display:grid;grid-template-columns:1fr 1fr;gap:13px;margin:30px 0 18px;min-width:0}
+.decapod-docs-loop-stage{display:flex;flex-direction:column;gap:12px;min-width:0;border:1px solid var(--shell-stroke);border-radius:24px;padding:24px 25px;background:var(--shell-card);box-shadow:var(--shell-shadow)}
+.decapod-docs-loop-stage.decapod-docs-loop-verify{background:var(--shell-soft);border-color:var(--decapod-coral)}
+.decapod-docs-loop-label{font-size:10px;font-weight:900;letter-spacing:.12em;color:var(--links)}
+.decapod-docs-loop-stage strong{font-family:'Outfit',system-ui,sans-serif;font-size:clamp(20px,2.5vw,27px);line-height:1.1;letter-spacing:-.045em;color:var(--shell-strong)}
+.decapod-docs-loop-stage p{font-size:14px;line-height:1.58;color:var(--shell-muted);margin:0}
+@media(max-width:740px){.decapod-docs-loop{grid-template-columns:1fr}.decapod-docs-loop-stage{padding:21px}}
+
+/* Three-part metacognitive model: retained state, correction, validation. */
+.decapod-docs-loop{grid-template-columns:repeat(3,minmax(0,1fr))}
+.decapod-docs-loop-stage{padding:22px 20px}
+.decapod-docs-loop-stage.decapod-docs-loop-feedback{background:var(--shell-soft)}
+.decapod-docs-loop-stage strong{font-size:clamp(19px,2.1vw,25px)}
+@media(max-width:1050px){.decapod-docs-loop{grid-template-columns:1fr}.decapod-docs-loop-stage{min-height:0;padding:23px}}
+@media(max-width:650px){.decapod-docs-loop-stage{padding:19px}.decapod-docs-loop-stage strong{font-size:22px}}
