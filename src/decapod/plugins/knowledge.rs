@@ -136,19 +136,19 @@ pub fn resolve_context(
                 .or_default() += 1;
             continue;
         }
-        if let Some(expiry) = &entry.expires_ts {
-            if packet.valid_until.as_deref().is_none_or(|old| {
+        if let Some(expiry) = &entry.expires_ts
+            && packet.valid_until.as_deref().is_none_or(|old| {
                 parse_epoch_z(old).unwrap_or(0) > parse_epoch_z(expiry).unwrap_or(0)
-            }) {
-                packet.valid_until = Some(expiry.clone());
-            }
+            })
+        {
+            packet.valid_until = Some(expiry.clone());
         }
-        if let Some(key) = &entry.merge_key {
-            if !key.is_empty() {
-                keys.entry(format!("legacy:{scope}:{key}"))
-                    .or_default()
-                    .push((entry.id.clone(), entry.content.clone()));
-            }
+        if let Some(key) = &entry.merge_key
+            && !key.is_empty()
+        {
+            keys.entry(format!("legacy:{scope}:{key}"))
+                .or_default()
+                .push((entry.id.clone(), entry.content.clone()));
         }
         let source_hash = format!("{:x}", Sha256::digest(context_json(&entry)?));
         candidates.push(KnowledgeContextRecord {

@@ -589,6 +589,11 @@
       "id": "context-bundle-fixture-config",
       "summary": "Provide required default fixture config for live bundle identity regression; all10 knowledge and49 admission/capsule regressions pass; fresh full native proof required.",
       "input_digest": "sha256:1fb4e2bc4869d252064886dc4effa52d0d87f5bc4e88465fabba3319315d403a"
+    },
+    {
+      "id": "context-integrated-ci-repair",
+      "summary": "Repair actual CI: Bazel manifest lock, Clippy conditionals, native spec fingerprints; preserve mandatory Buildkite graph and earlier failed evidence.",
+      "input_digest": "sha256:6063b35a51fc3475980f1757b3a32aa7ac3e766e5f41b259109101b323f4bf2d"
     }
   ],
   "intents": {
@@ -629,22 +634,22 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Current integrated source reviewed: common authority-aware selector, advisory scoped knowledge/correction, existing canonical plan projection, complete context budget and stale live import; shared executable corpus admission and public-history evidence. No new policy engine or proof/approval authority. Real-host completion and full native readiness remain separate obligations.",
-          "reviewed_code_fingerprint": "c59ceb6526c4ac494bb3e44cb16b8664571d62392cd6789b016520f236edd42d",
+          "reason": "Reviewed current integrated semantics after native fingerprint refresh: bounded authority-aware context, advisory correction/history, existing plan projection, stale live import, corpus admission and public chronology. Exact CI repair collapses2 conditionals and updates Bazel manifest identity only; required checks/provider unchanged.",
+          "reviewed_code_fingerprint": "79d7d67d23ffaf64f5c1d503bba3a2015a2c1ac476479b3e5259948465189cd4",
           "spec_material_hash": "bf1b0ada94bac3cb40375692f2a44fac98c06960a6b51e4bb65cbee4fdace0bd"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Current integrated source reviewed: common authority-aware selector, advisory scoped knowledge/correction, existing canonical plan projection, complete context budget and stale live import; shared executable corpus admission and public-history evidence. No new policy engine or proof/approval authority. Real-host completion and full native readiness remain separate obligations.",
-          "reviewed_code_fingerprint": "c59ceb6526c4ac494bb3e44cb16b8664571d62392cd6789b016520f236edd42d",
+          "reason": "Reviewed current integrated semantics after native fingerprint refresh: bounded authority-aware context, advisory correction/history, existing plan projection, stale live import, corpus admission and public chronology. Exact CI repair collapses2 conditionals and updates Bazel manifest identity only; required checks/provider unchanged.",
+          "reviewed_code_fingerprint": "79d7d67d23ffaf64f5c1d503bba3a2015a2c1ac476479b3e5259948465189cd4",
           "spec_material_hash": "3074fb50fda603bc357f250b9634b16c8166a8b1cbd58ac4e5b179b9faec8bf5"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Current integrated source reviewed: common authority-aware selector, advisory scoped knowledge/correction, existing canonical plan projection, complete context budget and stale live import; shared executable corpus admission and public-history evidence. No new policy engine or proof/approval authority. Real-host completion and full native readiness remain separate obligations.",
-          "reviewed_code_fingerprint": "c59ceb6526c4ac494bb3e44cb16b8664571d62392cd6789b016520f236edd42d",
+          "reason": "Reviewed current integrated semantics after native fingerprint refresh: bounded authority-aware context, advisory correction/history, existing plan projection, stale live import, corpus admission and public chronology. Exact CI repair collapses2 conditionals and updates Bazel manifest identity only; required checks/provider unchanged.",
+          "reviewed_code_fingerprint": "79d7d67d23ffaf64f5c1d503bba3a2015a2c1ac476479b3e5259948465189cd4",
           "spec_material_hash": "207347d91e76019371844b3725272f3f1b58a84cd55bc7a58a21dc502789ebea"
         }
       ],
@@ -656,17 +661,21 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1794964842Z"
+      "updated_at": "1794979256Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:0d384c3864901599b644eab44dd6ef222fc6a8921f01fdf6e56b56e43efaf954",
+      "artifact_hash": "sha256:ff67b7ae84fb6300875c9b48112efd9ccd22ba0abe2839446a627d644c273b10",
       "checks": [
         {
           "name": "admission-and-history-focused",
           "status": "passed"
+        },
+        {
+          "name": "ci-lint-and-lock-repair",
+          "status": "partial"
         },
         {
           "name": "combined-regressions",
@@ -678,7 +687,7 @@
         },
         {
           "name": "full-native-readiness",
-          "status": "unavailable"
+          "status": "failed"
         },
         {
           "name": "knowledge-regressions",
@@ -720,10 +729,17 @@
             "intent_id": "intent:change_01M7P2GCQ3JMEQAX9NZH2W9386",
             "kind": "trajectory_step_recorded",
             "sequence": 6
+          },
+          {
+            "detail": "trajectory:branch_01M7P2GCTKA3ZSV0EZESM31FG5",
+            "event_id": "event:7",
+            "intent_id": "intent:change_01M7P2GCQ3JMEQAX9NZH2W9386",
+            "kind": "trajectory_step_recorded",
+            "sequence": 7
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 6,
+        "next_sequence": 7,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M7P2GCTKA3ZSV0EZESM31FG5": {
@@ -786,6 +802,22 @@
                 ],
                 "sequence": 6,
                 "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:7",
+                "observations": [
+                  "Exact candidatee6b237947aae981b6a86b688d17982a64bba5acd actual source CI44216054322 rejected stale Bazel Cargo manifest lock and Clippy collapsible_if knowledge139/146; standalone CI44216054243 rejected generated spec fingerprint drift after fixture edit. Cancelled own provider wait after275749ms; no readiness/admission. Repaired conditionals without semantic change; reported bazel mod deps --lockfile_mode=update changed one manifest digest and no dependencies. Reviewed107-source inventory newdigest341737bb1d37c685b56e7655ab4c082f3847f014581e7f3686a287fc561a1251. Native specs.refresh regenerated final fingerprints. Daemon restart advanced4h; native authoring refused expired lease; inspected unchanged owner, reclaimed only own task and re-ensured original worktree can_work=true. Claim auto-prepared separate own containers; stopped own disposable preparation, preserved all branches/history; source profile remains Buildkite. Fresh full proof required."
+                ],
+                "proof_refs": [
+                  "full-native-readiness",
+                  "ci-lint-and-lock-repair"
+                ],
+                "scope": [
+                  "constitution-context-integration"
+                ],
+                "sequence": 7,
+                "validation_findings": []
               }
             ]
           }
@@ -795,6 +827,7 @@
       "destination": "pull request",
       "evidence": [
         "Combined 4 claims and35 scaffolding tests passed. Actual new RPC negative-first tests reproduced uncapped project summary and absent canonical intent. Reused existing plan projection; whole pretty-serialized context/capsule/bundle cap262144, unchanged legacy identity; live bundle refresh required for current knowledge/intent. Fixed test expectation to existing ordinary RPC success=false envelope semantics, without changing exit conventions. Inventory107:102 identical accepted master;3 reviewed changed build declaration/Cargo/compression;2 new reviewed admission/history helpers. Reviewed digest695cc3afe06a3637d639c6489ba38a3febb5089f2ecdbd556cbfd76b67c02fec. Config backup private. Bounded local project-check failed container custody, dirty test-vector scan and unrelated historical proof; not full native proof and no bypass. Fresh exact source-CI remains required.",
+        "Exact candidatee6b237947aae981b6a86b688d17982a64bba5acd actual source CI44216054322 rejected stale Bazel Cargo manifest lock and Clippy collapsible_if knowledge139/146; standalone CI44216054243 rejected generated spec fingerprint drift after fixture edit. Cancelled own provider wait after275749ms; no readiness/admission. Repaired conditionals without semantic change; reported bazel mod deps --lockfile_mode=update changed one manifest digest and no dependencies. Reviewed107-source inventory newdigest341737bb1d37c685b56e7655ab4c082f3847f014581e7f3686a287fc561a1251. Native specs.refresh regenerated final fingerprints. Daemon restart advanced4h; native authoring refused expired lease; inspected unchanged owner, reclaimed only own task and re-ensured original worktree can_work=true. Claim auto-prepared separate own containers; stopped own disposable preparation, preserved all branches/history; source profile remains Buildkite. Fresh full proof required.",
         "Fresh combined source from own preserved checkpoint heads: retrieval2cb8b7ae1bcd8ba602eb295105008fbc1440e6fa; admission/history90296129a44572b49249e855d5482b9dc2c479a4; knowledge0a06ecae1f0db3997d6d2cc5ba2c95f374a0c40c. Applied authored source/tests/docs only; no prior governance, machine projections or readiness copied. Resolved Rust capsule/RPC conflicts retaining both selection and knowledge fields, explicit new1.4.0 and legacy1.2 default. Authored spec sections combined; generated blocks remain CLI-owned. New full integrated proof pending.",
         "Integrated current source:35 scaffolding/admission/history,7 real capsule RPC,7 capsule schema and10 knowledge tests passed. New bundle regression initially failed because fixture omitted required config.toml; added normal default fixture configuration, then all10 passed. Cancelled earlier exact-head full controller dc604df5 before claiming any proof; native report validation cancelled/SNAPSHOT_NOT_READY at snapshot9HatTM. New candidate must earn fresh full native proof; no old provider receipt inherited."
       ],
