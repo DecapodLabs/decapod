@@ -657,6 +657,11 @@
       "id": "contracts-integrate-accepted-352d",
       "summary": "Integrate accepted interop conformance and v0.148.11; preserve complete active journal and accepted parent, align cold state descriptors with actual guards, retain required proof graph and reviewed release-only source inventory. Historical a62 proof grants no current admission.",
       "input_digest": "sha256:5229df747996acfb9fd58cdb6e6f303d9aa6e557280becaa1b3d1477a50244ed"
+    },
+    {
+      "id": "retain-pending-review-through-plan-reset",
+      "summary": "Actual38b eighteen-operation CLI counterexample: pending spec decision refused approval, same-task init erased it, approval and execution then returned0 without decision. Reuse concurrent1764 owner ffbb3375 sticky pending reviews and acceptance invalidation, extend existing regression and lifecycle test; retain one canonical projection and explicit resolve-spec-review remedy. Old38b native collector superseded; no prior green proves this repair, human authentication, source PR admission or merge. Fresh complete native/CI and actual-binary guard-held evidence required.",
+      "input_digest": "sha256:efe6a92d175523fbd8995b8bc83320d6b734bc2d0303950de0e7a434f889886e"
     }
   ],
   "intents": {
@@ -705,22 +710,22 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Reviewed accepted 352d integration with recorded instruction, selected-root, observation and source-policy owners preserved; truthful interop descriptors match cold state readers.",
-          "reviewed_code_fingerprint": "f2418e136073b6d88b968de8d7ec9f9466cd91e962ea950134729c1778fb61c9",
-          "spec_material_hash": "6781493c0895d0e3e24ade5e92650a0779eccff06512bc21b68a4bc599875b19"
+          "reason": "Reuses concurrent owner ffbb3375 pending-decision continuity and acceptance invalidation in the existing plan owner; actual38b18-operation counterexample retained, no parallel readiness or authority engine.",
+          "reviewed_code_fingerprint": "560a7c9e2963c1b168927c64981b568858ae09d16ddd3da3f4ff40046496a94b",
+          "spec_material_hash": "8a6830e720497ea6d8aaa5a95b1a3aa760d196f858aa7edb53eabfc7d5a36a6a"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Reviewed accepted interop discovery and strict JSON parser with cold read-only state session descriptors, existing selected-work and observation wire boundaries, and explicit unsupported authority limits.",
-          "reviewed_code_fingerprint": "f2418e136073b6d88b968de8d7ec9f9466cd91e962ea950134729c1778fb61c9",
-          "spec_material_hash": "9d4646921ff1054fea83ce18e24015a403067a42b59071fb8b6a77fe7e8e0974"
+          "reason": "Pending required reviews survive same-journal initialization; canonical remedy names existing resolve-spec-review; resolution revokes old acceptance and requires reapproval and fresh proof, with declared provenance distinct from human authentication.",
+          "reviewed_code_fingerprint": "560a7c9e2963c1b168927c64981b568858ae09d16ddd3da3f4ff40046496a94b",
+          "spec_material_hash": "a847e03dbe36f226d5fd7674a49c8bb6bd23df2b698ba019b01b677a990d81b9"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Accepted interop changes grant no execution or publication authority. Cold state reads retain no migration or authoring mutation. Existing recorded provenance, accepted-policy, opaque observation and custody boundaries remain enforced; no secret or runtime state is committed.",
-          "reviewed_code_fingerprint": "f2418e136073b6d88b968de8d7ec9f9466cd91e962ea950134729c1778fb61c9",
+          "reason": "Existing human approval, current-content, source provenance, lease and publication authorities remain unchanged; the minimal lifecycle repair prevents a supported reset bypass without granting authenticated human authority or weakening any required check.",
+          "reviewed_code_fingerprint": "560a7c9e2963c1b168927c64981b568858ae09d16ddd3da3f4ff40046496a94b",
           "spec_material_hash": "0f80a7bae9c396f6ef79bcb1674252d853c5fe192cb7baba382a05919875407b"
         }
       ],
@@ -732,7 +737,7 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1794999548Z"
+      "updated_at": "1795005241Z"
     },
     "trajectory": {
       "active_boundaries": [

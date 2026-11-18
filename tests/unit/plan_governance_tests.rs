@@ -1124,4 +1124,96 @@ fn contract_revision_preserves_pending_spec_decisions() {
     .unwrap();
     assert_acceptance_invalidated(&updated);
     assert_eq!(updated.spec_reviews, plan.spec_reviews);
+
+    let reinitialized = init_plan(
+        dir.path(),
+        InitPlanInput {
+            title: "Reinitialized work".into(),
+            intent: "Revised work".into(),
+            todo_ids: vec![],
+            proof_hooks: vec![],
+            unknowns: vec![],
+            human_questions: vec![],
+            stop_conditions: vec![],
+            unresolved_contradictions: vec![],
+            deferred_questions: vec![],
+            constraints: ScopeConstraints::default(),
+            phases: vec![],
+        },
+    )
+    .unwrap();
+    assert_eq!(reinitialized.spec_reviews, plan.spec_reviews);
+    let error = patch_plan(
+        dir.path(),
+        PlanPatch {
+            state: Some(PlanState::Approved),
+            ..Default::default()
+        },
+    )
+    .unwrap_err()
+    .to_string();
+    assert!(error.contains("NEEDS_HUMAN_INPUT"));
+    assert!(error.contains("resolve-spec-review"));
+}
+
+#[test]
+fn spec_decision_lifecycle_requires_fresh_plan_acceptance() {
+    let (dir, _) = progressed_plan(PlanState::Done);
+    let path = PUBLICATION_REVIEW_SPECS[0];
+    let file = dir.path().join(path);
+    fs::create_dir_all(file.parent().unwrap()).unwrap();
+    fs::write(
+        &file,
+        "# Contract\nA required authority decision is pending.\n",
+    )
+    .unwrap();
+    let pending = review_spec(
+        dir.path(),
+        path,
+        SpecReviewDisposition::RequiresDecision,
+        "A required decision has not been supplied",
+    )
+    .unwrap();
+    assert_acceptance_invalidated(&pending);
+    let blocked = patch_plan(
+        dir.path(),
+        PlanPatch {
+            state: Some(PlanState::Approved),
+            ..Default::default()
+        },
+    )
+    .unwrap_err()
+    .to_string();
+    assert!(blocked.contains("NEEDS_HUMAN_INPUT"));
+    assert!(blocked.contains("resolve-spec-review"));
+
+    // This core-API fixture supplies declared decision provenance. It does not
+    // authenticate a human or replace the command's existing authority gates.
+    let resolved = resolve_spec_review(
+        dir.path(),
+        path,
+        "fixture:declared-decision",
+        "The controlled fixture's decision has been recorded",
+    )
+    .unwrap();
+    assert_acceptance_invalidated(&resolved);
+    assert_eq!(
+        resolved.spec_reviews[0].decision_ref.as_deref(),
+        Some("fixture:declared-decision")
+    );
+    let reaccepted = patch_plan(
+        dir.path(),
+        PlanPatch {
+            state: Some(PlanState::Approved),
+            ..Default::default()
+        },
+    )
+    .unwrap();
+    assert_eq!(reaccepted.state, PlanState::Approved);
+    assert!(
+        reaccepted
+            .phases
+            .iter()
+            .all(|phase| !phase.entered && !phase.completed)
+    );
 }

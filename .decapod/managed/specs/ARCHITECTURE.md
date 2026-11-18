@@ -1,5 +1,16 @@
 # Architecture
 
+## Pending spec decision continuity
+
+`plan_governance::init_plan` retains pending `RequiresDecision` reviews from the
+existing journal while dropping ordinary stale review attestations. The existing
+`review_spec` and `resolve_spec_review` owners invalidate plan acceptance and
+phase evidence when a required decision is introduced or resolved. Initialization
+cannot serve as a resolution path. This reuses the concurrent #1764 owner's
+ffbb3375 repair within the single existing plan record; no new decision store,
+human identity assertion or authority mechanism is introduced. A new governed
+workspace for unrelated work still receives its own journal template.
+
 ## Canonical task-scope projections
 
 Task.scope remains the authoritative journaled declaration. Inference and workbranch bootstrap reuse fleet_coord::declared_paths through one projection helper; JSON commas never become scope boundaries. Known legacy projection repair stays in the existing governance transaction and custody event stream, preserves the original instruction and complete prior journal, and invalidates plan acceptance. It creates no scope registry or write-authorization claim.
@@ -1154,7 +1165,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `f2418e136073b6d88b968de8d7ec9f9466cd91e962ea950134729c1778fb61c9`
+- Repository signal fingerprint: `560a7c9e2963c1b168927c64981b568858ae09d16ddd3da3f4ff40046496a94b`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (240 files), `tests/` (235 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

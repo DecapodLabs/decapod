@@ -164,6 +164,7 @@ pub fn review_spec(
         {
             return Err(error::DecapodError::ValidationError("SPEC_REVIEW_DECISION_REQUIRED: this contract still requires human judgment. Preserve the decision request; do not replace it with agent self-approval. After obtaining the human decision, use `decapod govern plan resolve-spec-review --path <path> --decision-ref <human decision reference> --reason <accepted rationale>`; ordinary review cannot grant approval.".into()));
         }
+        let requires_decision = disposition == SpecReviewDisposition::RequiresDecision;
         plan.spec_reviews.retain(|review| review.path != path);
         plan.spec_reviews.push(SpecReview {
             path: path.to_string(),
@@ -174,6 +175,9 @@ pub fn review_spec(
             decision_ref: None,
         });
         plan.spec_reviews.sort_by(|a, b| a.path.cmp(&b.path));
+        if requires_decision {
+            invalidate_plan_acceptance(&mut plan);
+        }
         plan.schema_version = PLAN_SCHEMA_VERSION.to_string();
         plan.updated_at = crate::core::time::now_epoch_z();
         save_plan(project_root, &plan)?;
@@ -224,6 +228,7 @@ pub fn resolve_spec_review(
             reason.trim()
         );
         review.decision_ref = Some(decision_ref.trim().to_string());
+        invalidate_plan_acceptance(&mut plan);
         plan.schema_version = PLAN_SCHEMA_VERSION.to_string();
         plan.updated_at = crate::core::time::now_epoch_z();
         save_plan(project_root, &plan)?;
@@ -294,7 +299,15 @@ pub fn init_plan(
 ) -> Result<GovernedPlan, error::DecapodError> {
     crate::core::governance_document::with_lock(project_root, || {
         // Reinitializing a plan must not erase a live or exhausted budget.
-        let reflection = load_plan(project_root)?.and_then(|plan| plan.reflection);
+        let previous = load_plan(project_root)?;
+        let spec_reviews = previous
+            .as_ref()
+            .into_iter()
+            .flat_map(|plan| &plan.spec_reviews)
+            .filter(|review| review.disposition == SpecReviewDisposition::RequiresDecision)
+            .cloned()
+            .collect();
+        let reflection = previous.and_then(|plan| plan.reflection);
         let plan = GovernedPlan {
             schema_version: PLAN_SCHEMA_VERSION.to_string(),
             title: input.title,
@@ -309,7 +322,7 @@ pub fn init_plan(
             deferred_questions: input.deferred_questions,
             constraints: input.constraints,
             phases: input.phases,
-            spec_reviews: Vec::new(),
+            spec_reviews,
             reflection,
             updated_at: crate::core::time::now_epoch_z(),
         };
@@ -681,21 +694,31 @@ pub fn instruction_readiness(
         "unresolved_contradictions": plan.unresolved_contradictions,
         "spec_reviews": plan.spec_reviews,
     });
-    let human_required = !plan.human_questions.is_empty()
-        || plan
-            .spec_reviews
-            .iter()
-            .any(|r| r.disposition == SpecReviewDisposition::RequiresDecision);
+    let pending_spec_review = plan
+        .spec_reviews
+        .iter()
+        .any(|r| r.disposition == SpecReviewDisposition::RequiresDecision);
+    let human_required = !plan.human_questions.is_empty() || pending_spec_review;
+    let mut required_steps = vec![
+        "Consult the recorded governing sources and resolve their obligations through supported plan/review operations".into(),
+    ];
+    if pending_spec_review {
+        required_steps.push("Obtain the required human spec decision, then record it with `decapod govern plan resolve-spec-review`; the decision reference records provenance, not authenticated identity".into());
+    }
+    required_steps
+        .push("Separately reaccept the revised execution contract and rerun affected proof".into());
     let rule_remediation = RuleRemediation {
         error_code: "NEEDS_HUMAN_INPUT".into(),
         violation_description: "Recorded instructions have unresolved obligations".into(),
         expected_condition: "No current required instruction blocker".into(),
         observed_condition: format!("{} recorded blockers", blockers.len()),
         affected_paths: blockers.iter().map(|b| b.source.clone()).collect(),
-        required_steps: vec!["Consult the recorded governing sources and resolve their obligations through supported plan/review operations".into(), "Separately reaccept the revised execution contract and rerun affected proof".into()],
+        required_steps,
         autonomous_remediation_permitted: !human_required,
         human_authorization_required: human_required,
-        evidence_for_revalidation: vec!["Current plan/review source revision and fresh applicable proof".into()],
+        evidence_for_revalidation: vec![
+            "Current plan/review source revision and fresh applicable proof".into(),
+        ],
         related_rules: vec![],
     };
     InstructionReadiness {

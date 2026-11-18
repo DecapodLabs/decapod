@@ -1,5 +1,21 @@
 # Intent
 
+## Preserve pending decisions through plan lifecycle (#1764)
+
+An actual 38b37c90 CLI fixture first refused a required spec decision, then
+demonstrated that same-task plan initialization erased it and allowed approval
+and execution without a supplied decision. Its eighteen operations remain
+counterexample evidence; the green source CI did not prove this missing case.
+The combined repair reuses the pending-review continuity and acceptance
+invalidation from concurrent owner commit ffbb3375, retaining this workstream's
+existing canonical readiness, instruction lineage and accepted relation policy.
+Pending decisions survive initialization in the same governance journal.
+Introducing or resolving a required review revokes old acceptance and phase
+evidence; explicit reacceptance and current proof remain necessary. Decision
+references are declared provenance, never authenticated human identity. This
+source change requires fresh exact-candidate validation; prior 38b evidence is
+historical and does not prove the repair.
+
 ## Accepted target integration (0.148.11)
 
 The combined candidate incorporates accepted target 352d8929, including truthful
@@ -542,7 +558,7 @@ These declarations select authoring and proof obligations; they do not attest im
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `f2418e136073b6d88b968de8d7ec9f9466cd91e962ea950134729c1778fb61c9`
+- Repository signal fingerprint: `560a7c9e2963c1b168927c64981b568858ae09d16ddd3da3f4ff40046496a94b`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (240 files), `tests/` (235 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
