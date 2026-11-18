@@ -594,6 +594,14 @@
       "proof_refs": [
         ".decapod/config.toml"
       ]
+    },
+    {
+      "id": "cp-1739-3",
+      "summary": "Update .decapod/config.toml reviewed_sources_digest to sha256:f2c1d189ee0c96f6afb66185229233bd0436015d0ddd21dc56deb4f58709b2b2 matching v0.148.13 (c5bafce6)",
+      "input_digest": "sha256:856ba74646ef1f9958704504ac8968b8de0b054d3884f28b23832564737459b4",
+      "proof_refs": [
+        ".decapod/config.toml"
+      ]
     }
   ],
   "intents": {
