@@ -587,6 +587,15 @@
         "tests/doc_alignment.rs",
         "tests/trajectory_docs.rs"
       ]
+    },
+    {
+      "id": "ckpt-byoa-docs-1789-v0149",
+      "summary": "Refresh v0.149.0 projections and Dockerfile pin (#1789)",
+      "input_digest": "sha256:804d201e97955c647df0ab925974db5e575b00aadcaa04d41de23232ca7413d1",
+      "proof_refs": [
+        "tests/contract_conformance.rs",
+        "tests/doc_alignment.rs"
+      ]
     }
   ],
   "intents": {
@@ -627,23 +636,23 @@
       "schema_version": "1.1.0",
       "spec_reviews": [
         {
-          "disposition": "updated",
+          "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Document #1789 public mdBook BYOA, Human->Agent->Kernel, metacognitive decision-time loop, concurrency boundaries, subordinate Constitution, and Local/Cloud parity coverage",
+          "reason": "Refreshed v0.149.0 Dockerfile pin and specs manifest; #1789 ARCHITECTURE.md authored content unchanged since eb63cc19",
           "reviewed_code_fingerprint": "47845a9aec1b11182a24a3b1c74d3fd554473953ab308fed7d33b9b4a68b1668",
           "spec_material_hash": "08d8b55a59f075e87e839424935874ac5976524805468dba8d29d27bd0bb2d22"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Docs-only #1789 PR; inspected CLI/RPC interface contracts and tests — no interface code or docs/agent/* contracts changed",
+          "reason": "Refreshed v0.149.0 projections; docs-only #1789 PR leaves CLI/RPC interfaces unchanged",
           "reviewed_code_fingerprint": "47845a9aec1b11182a24a3b1c74d3fd554473953ab308fed7d33b9b4a68b1668",
           "spec_material_hash": "1445e13fa7ccfa6c4a68850bd794b6b1ba7379c0148b570c3a7605b6a26beb25"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Docs-only #1789 PR; inspected security and trust-boundary specs — no auth, custody, or runtime security invariants changed",
+          "reason": "Refreshed v0.149.0 projections; docs-only #1789 PR leaves security invariants unchanged",
           "reviewed_code_fingerprint": "47845a9aec1b11182a24a3b1c74d3fd554473953ab308fed7d33b9b4a68b1668",
           "spec_material_hash": "735ae6e95c6b18ff2ccc718fbadaa4d7ae483d632aee2fb071d4f9ae6daa23de"
         }
@@ -656,13 +665,13 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795033671Z"
+      "updated_at": "1795036349Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:054a149013a056963ce04be8dc40fc41a9c69e5d8247e290a92e8671c0f5596a",
+      "artifact_hash": "sha256:2b3777b853921d0d918a5ebebe21ee78a8fb3e7764b1d8b2cccdb3c62b9019f7",
       "checks": [
         {
           "name": "contract_conformance",
@@ -714,10 +723,17 @@
             "intent_id": "intent:change_01M7R4ZAHNJFT5PGD1R58DDXC5",
             "kind": "trajectory_step_recorded",
             "sequence": 4
+          },
+          {
+            "detail": "trajectory:branch_01M7R4ZAS8A2D6PMN4WRWVY4S3",
+            "event_id": "event:5",
+            "intent_id": "intent:change_01M7R4ZAHNJFT5PGD1R58DDXC5",
+            "kind": "trajectory_step_recorded",
+            "sequence": 5
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 4,
+        "next_sequence": 5,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M7R4ZAS8A2D6PMN4WRWVY4S3": {
@@ -771,6 +787,23 @@
                 "validation_findings": [
                   "mdBook site build (docs-build CI check) will execute on Linux CI with mdbook 0.4.40"
                 ]
+              },
+              {
+                "action": "verification",
+                "custody_event_id": "event:5",
+                "observations": [
+                  ".decapod/managed/Dockerfile.decapod",
+                  ".decapod/managed/specs/.manifest.json",
+                  "Refreshed v0.149.0 Dockerfile.decapod and .manifest.json with /private/tmp/swarm-controller-0.149.0/bin/decapod"
+                ],
+                "proof_refs": [],
+                "scope": [
+                  "\".decapod/managed/specs\"]",
+                  "\"README.md\"",
+                  "paths:[\"docs/book/src\""
+                ],
+                "sequence": 5,
+                "validation_findings": []
               }
             ]
           }
@@ -779,6 +812,7 @@
       "declared_commands": [],
       "destination": "pull request",
       "evidence": [
+        "Refreshed v0.149.0 Dockerfile.decapod and .manifest.json with /private/tmp/swarm-controller-0.149.0/bin/decapod",
         "cargo test --test doc_alignment (4/4 passed); --test contract_conformance (12/12 passed); --test trajectory_docs (5/5 passed); python3 relative link + SUMMARY + stale-phrase check passed; docs_sync_checkpoint_boundary 11/12 passed (1 macOS APFS EILSEQ); specs_refresh_docs 6/7 passed (pre-existing docs_cli.rs); mdbook not installed locally"
       ],
       "inspected_files": [
@@ -793,6 +827,8 @@
       ],
       "intent_id": "intent:change_01M7R4ZAHNJFT5PGD1R58DDXC5",
       "modified_files": [
+        ".decapod/managed/Dockerfile.decapod",
+        ".decapod/managed/specs/.manifest.json",
         ".decapod/managed/specs/ARCHITECTURE.md",
         ".decapod/managed/specs/INTENT.md",
         "README.md",
