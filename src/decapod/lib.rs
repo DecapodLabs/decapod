@@ -93,9 +93,7 @@ fn load_project_config_if_present(
         return Ok(None);
     }
     let raw = fs::read_to_string(&config_path).map_err(error::DecapodError::IoError)?;
-    let cfg: DecapodProjectConfig = toml::from_str(&raw).map_err(|e| {
-        error::DecapodError::ValidationError(format!("AUTOREMEDIABLE_VALIDATION_ERROR code=INVALID_CONFIG_SCHEMA severity=transient auto_remediable=true audience=agent agent_action=\"fix the .decapod/config.toml schema to be valid TOML\" user_note=\"Configuration file schema is invalid; the agent should correct the file or report the issue.\"\nInvalid .decapod/config.toml schema: {e}"))
-    })?;
+    let cfg = DecapodProjectConfig::parse(&raw)?;
     Ok(Some(cfg))
 }
 
@@ -2694,6 +2692,9 @@ pub fn run() -> Result<(), error::DecapodError> {
     // Keep them out of the migration/session path so a missing or damaged
     // local store cannot prevent bootstrap diagnostics from running.
     let command = match command {
+        Command::Data(DataCli {
+            command: DataCommand::Schema(schema_cli),
+        }) => return run_schema_command(schema_cli),
         Command::Capabilities(cap_cli) => return run_capabilities_command(cap_cli),
         Command::Constitution(constitution_cli) => {
             return crate::core::constitution_cli::run_constitution_cli(constitution_cli);
@@ -2792,6 +2793,28 @@ pub fn run() -> Result<(), error::DecapodError> {
         Command::Rpc(cli) if !cli.http_server => Some(parse_rpc_request(cli)?),
         _ => None,
     };
+    if let Some(request) = predecoded_rpc_request.as_ref()
+        && request.op == "schema.get"
+    {
+        // Pure embedded reference: no config, session, migrations, mandate
+        // resolution or workspace preparation can be needed to repair config.
+        let root = std::env::current_dir()?;
+        let store = Store {
+            kind: StoreKind::Repo,
+            root: root.join(".decapod/data"),
+        };
+        let response = rpc_handlers::handle_schema_get(&RpcCtx {
+            project_root: &root,
+            store: &store,
+            request,
+            mandates: vec![],
+        })?;
+        println!(
+            "{}",
+            serde_json::to_string_pretty(&response).map_err(io::Error::other)?
+        );
+        return Ok(());
+    }
     if let Some(request) = predecoded_rpc_request.as_ref()
         && request.op == "data.database.inspect"
     {
@@ -9605,37 +9628,7 @@ fn run_data_command(
                 }
             }
         }
-        DataCommand::Schema(schema_cli) => {
-            let schemas = schema_catalog();
-
-            let output = if let Some(sub) = schema_cli.subsystem {
-                schemas
-                    .get(sub.as_str())
-                    .cloned()
-                    .unwrap_or(serde_json::json!({ "error": "subsystem not found" }))
-            } else {
-                let mut envelope = deterministic_schema_envelope();
-                if !schema_cli.deterministic {
-                    envelope.as_object_mut().unwrap().insert(
-                        "generated_at".to_string(),
-                        serde_json::json!(format!("{:?}", std::time::SystemTime::now())),
-                    );
-                }
-                envelope
-            };
-
-            match schema_cli.format.as_str() {
-                "json" => println!("{}", serde_json::to_string_pretty(&output).unwrap()),
-                "md" => {
-                    println!("{}", schema_to_markdown(&output));
-                }
-                other => {
-                    return Err(error::DecapodError::ValidationError(format!(
-                        "Unsupported schema format '{other}'. Use 'json' or 'md'."
-                    )));
-                }
-            }
-        }
+        DataCommand::Schema(schema_cli) => run_schema_command(schema_cli)?,
         DataCommand::Repo(repo_cli) => match repo_cli.command {
             RepoCommand::Map => {
                 let map = repomap::generate_map(workspace_root);
@@ -10795,6 +10788,39 @@ pub(crate) fn deterministic_schema_envelope() -> serde_json::Value {
         "deprecations": deprecation_metadata(),
         "command_registry": command_registry
     })
+}
+
+fn run_schema_command(schema_cli: SchemaCli) -> Result<(), error::DecapodError> {
+    let schemas = schema_catalog();
+
+    let output = if let Some(sub) = schema_cli.subsystem {
+        schemas
+            .get(sub.as_str())
+            .cloned()
+            .unwrap_or(serde_json::json!({ "error": "subsystem not found" }))
+    } else {
+        let mut envelope = deterministic_schema_envelope();
+        if !schema_cli.deterministic {
+            envelope.as_object_mut().unwrap().insert(
+                "generated_at".to_string(),
+                serde_json::json!(format!("{:?}", std::time::SystemTime::now())),
+            );
+        }
+        envelope
+    };
+
+    match schema_cli.format.as_str() {
+        "json" => println!("{}", serde_json::to_string_pretty(&output).unwrap()),
+        "md" => {
+            println!("{}", schema_to_markdown(&output));
+        }
+        other => {
+            return Err(error::DecapodError::ValidationError(format!(
+                "Unsupported schema format '{other}'. Use 'json' or 'md'."
+            )));
+        }
+    }
+    Ok(())
 }
 
 fn schema_catalog() -> std::collections::BTreeMap<&'static str, serde_json::Value> {

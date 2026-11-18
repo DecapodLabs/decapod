@@ -2,6 +2,7 @@
 
 ```rust
 pub struct DecapodProjectConfig {
+    #[serde(deserialize_with = "deserialize_config_schema_version")]
     pub schema_version: String,
     pub init: InitConfigSection,
     pub repo: RepoContext,
@@ -23,12 +24,30 @@ pub struct DecapodProjectConfig {
 }
 ```
 
+## Invalid configuration and repair (#1771)
+
+`schema_version` must be `"1.0.0"`. Invalid TOML, known field types/enums,
+unsupported versions and unknown fields in protected sections reject ordinary
+mutation with `INVALID_CONFIG_SCHEMA`. The diagnostic identifies the offending
+input and points to `decapod docs show config-schema --source embedded`.
+Read-only `data schema` and RPC `schema.get` remain usable before config,
+sessions, migrations or workspace preparation. Correct the candidate config
+and retry the ordinary operation; schema validity does not grant authority.
+Unknown extension sections retain their existing compatibility; this is not
+a universal unknown-key prohibition.
+
 ## RBAC exceptions and Laya
 
 `[governance.rbac]` declares `actor_roles`, `journal_repair_roles`,
 `legacy_todo_reconcile_roles` and `validation_bypass_roles`, all empty/denied by
 default. The main
-repository config is the sole source for a bounded policy read. Journal
+repository's existing branch-safe resolver supplies the bounded policy read.
+An unaccepted main-root feature checkout cannot grant exceptions, shared
+claims or remove Git-backed approval requirements. Its base selector cannot
+declare that same feature ref protected. Protected main/mainline policy and
+independently selected accepted refs remain cooperative host-local authority;
+Git administrator access and mounted host policy require their external host
+boundary. Journal
 repair requires an explicitly granted role and records the policy fingerprint
 with the reviewed repairs. `validate --bypass-validation --bypass-reason`
 requires its own role and leaves proof and publication readiness false.
@@ -62,8 +81,8 @@ or bypass approval, dependency or other gates. Cloud-backed claims do not use
 this policy. The false default is omitted when Decapod serializes config;
 older versions may reject a config that explicitly contains the new field.
 
-This is a cooperative local policy, not authentication. An agent that can edit
-the main config can enable the switch, and agent labels can be impersonated. The
+This is a cooperative local policy, not authentication. An independently
+accepted main policy can enable the switch, and agent labels can be impersonated. The
 config fingerprint in an audit record shows the bytes used, not who edited them
 or who invoked the claim. The main repository config is read rather than the
 candidate workspace config; if the main root cannot be resolved or the config

@@ -678,6 +678,11 @@
       "id": "preserve-canonical-task-scope",
       "summary": "Reproduce explicit paths CSV fragmentation in installed controller; use existing declared_paths parser, preserve complete legacy journal before deterministic repair, retain independent constraints and prior failures, invalidate plan/proof acceptance. New tests await configured full native validation.",
       "input_digest": "sha256:6f598e72f9e5240434567f060b9b9b242c6a27b35729f6947002a0b6376652f7"
+    },
+    {
+      "id": "incorporate-accepted-policy-boundary",
+      "summary": "Incorporate accepted master c47137ad including PR1779 without modifying protected main; retain active task journal whole and other owner history in Git, regenerate current projections. Previous 3e full proof historical; scope and policy composition await fresh complete validation.",
+      "input_digest": "sha256:490925fc26fe8174d0cce37e13a02a692c3ed8a6d98b98183d71dfea9b825342"
     }
   ],
   "intents": {
@@ -722,23 +727,23 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Reuse canonical task-scope parser; reconcile only archived known legacy projections, preserve independent constraints and original history, revoke approval and require fresh proof",
-          "reviewed_code_fingerprint": "070f743a1e98fc16adf155c3c9da6513f68b94ca5c9ee7e9d947f2d5e823949b",
+          "reason": "Compose accepted PR1779 policy and schema boundary through existing owners; preserve complete active task journal and accepted predecessor ancestry, no field merge or privilege waiver",
+          "reviewed_code_fingerprint": "6b10cc9b8f96e7778890e9ebf9a44a5c6ef73ba7ebd51beb64a9fac72ad0f9b9",
           "spec_material_hash": "68902808d64fc0f419f2489074024da71e72bc9a8da546995d7c0520d90d76e5"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Reuse canonical task-scope parser; reconcile only archived known legacy projections, preserve independent constraints and original history, revoke approval and require fresh proof",
-          "reviewed_code_fingerprint": "070f743a1e98fc16adf155c3c9da6513f68b94ca5c9ee7e9d947f2d5e823949b",
-          "spec_material_hash": "1beb502472ad8dd29d02318b8d124e9ea62ef27d13c55250b10f0ab80a736063"
+          "reason": "Compose accepted PR1779 policy and schema boundary through existing owners; preserve complete active task journal and accepted predecessor ancestry, no field merge or privilege waiver",
+          "reviewed_code_fingerprint": "6b10cc9b8f96e7778890e9ebf9a44a5c6ef73ba7ebd51beb64a9fac72ad0f9b9",
+          "spec_material_hash": "d76740eb7a4062fd23a8dcce5547f881ada3c2e14c89b3a8ca64a2cc90922b83"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Reuse canonical task-scope parser; reconcile only archived known legacy projections, preserve independent constraints and original history, revoke approval and require fresh proof",
-          "reviewed_code_fingerprint": "070f743a1e98fc16adf155c3c9da6513f68b94ca5c9ee7e9d947f2d5e823949b",
-          "spec_material_hash": "a7c59a15ee64df77bfa5b0f80718b6798230d5617dd5cdd9109faae56d4c9737"
+          "reason": "Compose accepted PR1779 policy and schema boundary through existing owners; preserve complete active task journal and accepted predecessor ancestry, no field merge or privilege waiver",
+          "reviewed_code_fingerprint": "6b10cc9b8f96e7778890e9ebf9a44a5c6ef73ba7ebd51beb64a9fac72ad0f9b9",
+          "spec_material_hash": "0f80a7bae9c396f6ef79bcb1674252d853c5fe192cb7baba382a05919875407b"
         }
       ],
       "state": "APPROVED",
@@ -749,7 +754,7 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1794982176Z"
+      "updated_at": "1794982356Z"
     },
     "trajectory": {
       "active_boundaries": [

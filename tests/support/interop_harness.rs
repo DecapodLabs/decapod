@@ -167,8 +167,6 @@ impl Harness {
             "decapod init: {}",
             String::from_utf8_lossy(&out.stderr)
         );
-        let out = git(&root, &["checkout", "-b", &format!("feat/{scenario}")]);
-        assert!(out.status.success());
         let out = git(&root, &["add", "-A"]);
         assert!(out.status.success());
         let out = git(&root, &["commit", "-m", "interop fixture baseline"]);
@@ -177,6 +175,10 @@ impl Harness {
             "fixture commit: {}",
             String::from_utf8_lossy(&out.stderr)
         );
+
+        // Accept the fixture policy before running candidate-branch operations.
+        let out = git(&root, &["checkout", "-b", &format!("feat/{scenario}")]);
+        assert!(out.status.success());
 
         // Session acquire (prints "Password: ...").
         let out = h.raw(&["session", "acquire"], &[], false);

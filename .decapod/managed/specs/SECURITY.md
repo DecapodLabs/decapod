@@ -1,5 +1,28 @@
 # Security
 
+## Configuration validity and accepted privilege proposals (#1771, #1776)
+
+`cli::DecapodProjectConfig` rejects unsupported schema versions during typed
+deserialization, including consumers that deserialize accepted policy directly.
+Its canonical parser returns `INVALID_CONFIG_SCHEMA` with an embedded reference
+and a retry path. `lib.rs` serves CLI schema and RPC `schema.get` before config,
+session and migration startup so malformed configuration cannot block repair.
+
+`core::db_maintenance::resolve_repository_policy` is the shared branch-safe
+source for maintenance, exceptional RBAC, shared-claim opt-in and Git-backed
+approval categories. A proposed main-root feature checkout cannot supply its
+own grant or protect itself by changing `repo.base_branch`. Accepted grants
+remain prospective and revocable. A validation bypass remains explicitly
+non-proof and cannot authorize publication. Local protected-root/Git administrator
+access and explicitly mounted host policy retain their cooperative host trust
+boundary; this does not authenticate a human or intercept unrestricted shell.
+
+The original v0.148.9 binary admitted an unsupported config version and an
+unaccepted root RBAC bypass; it denied malformed TOML but blocked schema repair
+access. Public-command regression controls cover denial, corrected ordinary
+operations, independently accepted bounded grants and revocation. Candidate
+test execution and exact-head full validation remain required before delivery.
+
 ## Bounded task-scope recovery
 
 The scope reconciler receives task data from claimed-workbranch preparation and rechecks canonical task scope and revision around its prepared write. It only replaces exact known legacy fragments; it does not infer which independent constraints to discard. The complete predecessor must already be recoverable in Git. Original request, source revisions, prior custody events and failed checks remain intact. Plan acceptance is revoked, and changed governance/trajectory bindings invalidate old proof. The SQLite and Git/document observations are guarded reads, not a claimed cross-store atomic transaction or filesystem authorization boundary.
@@ -742,7 +765,7 @@ execution evidence remains required before publication readiness.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `070f743a1e98fc16adf155c3c9da6513f68b94ca5c9ee7e9d947f2d5e823949b`
+- Repository signal fingerprint: `6b10cc9b8f96e7778890e9ebf9a44a5c6ef73ba7ebd51beb64a9fac72ad0f9b9`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (240 files), `tests/` (235 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

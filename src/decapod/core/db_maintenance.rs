@@ -403,35 +403,8 @@ pub fn resolve_canonical_policy(
         ));
     }
 
-    let main_config_path = main_root.join(".decapod").join("config.toml");
-    let main_bytes = read_regular_policy_bytes(&main_config_path)?;
-    let main_parsed: DecapodProjectConfig =
-        toml::from_str(std::str::from_utf8(&main_bytes).map_err(|_| {
-            (
-                "INVALID_CANONICAL_POLICY",
-                "canonical .decapod/config.toml is not valid UTF-8".to_string(),
-            )
-        })?)
-        .map_err(|e| {
-            (
-                "INVALID_CANONICAL_POLICY",
-                format!("canonical .decapod/config.toml failed schema validation: {e}"),
-            )
-        })?;
-
-    let configured_base = main_parsed
-        .repo
-        .base_branch
-        .as_deref()
-        .unwrap_or("master")
-        .trim()
-        .to_string();
-
-    // Enforce protected-branch boundary on main_root: if main_root itself is checked
-    // out to a non-protected branch (e.g. `agent/*` or a PR branch), refuse to trust
-    // main_root's working tree and read committed `<base_branch>:.decapod/config.toml`.
     let (effective_bytes, effective_cfg, canonical_revision, unmerged_violation) =
-        resolve_branch_safe_policy(&main_root, &configured_base, main_bytes, main_parsed)?;
+        resolve_repository_policy(&main_root)?;
 
     // Check backend consistency between workspace_root and canonical main_root so a
     // worktree config edit cannot switch `cloud` -> `local` or vice versa.
@@ -482,6 +455,39 @@ pub fn resolve_canonical_policy(
     })
 }
 
+/// Shared accepted-policy source for privileged consumers. Candidate checkout
+/// bytes can propose a grant, but only a protected root or independently
+/// selected accepted ref supplies cooperative local authority.
+pub(crate) fn resolve_repository_policy(
+    main_root: &Path,
+) -> Result<ResolvedPolicyInputs, PolicyResolutionError> {
+    let main_config_path = main_root.join(".decapod").join("config.toml");
+    let main_bytes = read_regular_policy_bytes(&main_config_path)?;
+    let main_parsed: DecapodProjectConfig =
+        toml::from_str(std::str::from_utf8(&main_bytes).map_err(|_| {
+            (
+                "INVALID_CANONICAL_POLICY",
+                "canonical .decapod/config.toml is not valid UTF-8".to_string(),
+            )
+        })?)
+        .map_err(|e| {
+            (
+                "INVALID_CANONICAL_POLICY",
+                format!("canonical .decapod/config.toml failed schema validation: {e}"),
+            )
+        })?;
+
+    let configured_base = main_parsed
+        .repo
+        .base_branch
+        .as_deref()
+        .unwrap_or("master")
+        .trim()
+        .to_string();
+
+    resolve_branch_safe_policy(main_root, &configured_base, main_bytes, main_parsed)
+}
+
 type ResolvedPolicyInputs = (Vec<u8>, DecapodProjectConfig, String, Option<String>);
 type PolicyResolutionError = (&'static str, String);
 
@@ -501,9 +507,25 @@ fn resolve_branch_safe_policy(
 
     let head_branch = git_stdout(main_root, &["symbolic-ref", "--quiet", "--short", "HEAD"]);
     let head_oid = git_stdout(main_root, &["rev-parse", "--verify", "HEAD"]);
-    let is_protected = head_branch
-        .as_deref()
-        .is_some_and(|branch| is_protected_branch_name(branch, configured_base));
+    // A candidate may edit repo.base_branch too. It cannot make its own
+    // feature ref protected by naming that ref in the same proposal.
+    let remote_default = git_stdout(
+        main_root,
+        &["symbolic-ref", "--quiet", "refs/remotes/origin/HEAD"],
+    );
+    let independent_base = matches!(configured_base, "master" | "main")
+        || remote_default.as_deref()
+            == Some(format!("refs/remotes/origin/{configured_base}").as_str());
+    let is_protected = head_branch.as_deref().is_some_and(|branch| {
+        is_protected_branch_name(
+            branch,
+            if independent_base {
+                configured_base
+            } else {
+                ""
+            },
+        )
+    });
 
     if is_protected {
         let dirty = git_stdout(
@@ -524,21 +546,43 @@ fn resolve_branch_safe_policy(
 
     // `main_root` is on a detached HEAD or non-protected branch (e.g. `agent/*` or a PR branch).
     // Never trust working-tree edits on an unmerged branch; resolve from protected base ref.
-    let candidate_refs = [
-        format!("refs/remotes/origin/{configured_base}"),
-        format!("refs/heads/{configured_base}"),
+    let mut candidate_refs = Vec::new();
+    if independent_base {
+        candidate_refs.extend([
+            format!("refs/remotes/origin/{configured_base}"),
+            format!("refs/heads/{configured_base}"),
+        ]);
+    }
+    candidate_refs.extend([
         "refs/remotes/origin/master".to_string(),
         "refs/remotes/origin/main".to_string(),
         "refs/heads/master".to_string(),
         "refs/heads/main".to_string(),
-    ];
+    ]);
     for git_ref in candidate_refs {
-        if let Some(base_oid) = git_stdout(main_root, &["rev-parse", "--verify", &git_ref])
-            && let Some(blob) = git_bytes(
+        if let Some(base_oid) = git_stdout(main_root, &["rev-parse", "--verify", &git_ref]) {
+            let Some(blob) = git_bytes(
                 main_root,
                 &["show", &format!("{base_oid}:.decapod/config.toml")],
-            )
-        {
+            ) else {
+                // First adoption may have an accepted source tree without any
+                // repository policy. Confirm absence from that exact tree;
+                // I/O failure must not fall back to another ref or a proposal.
+                if git_bytes(
+                    main_root,
+                    &["ls-tree", "-z", &base_oid, "--", ".decapod/config.toml"],
+                )
+                .is_some_and(|tree| tree.is_empty())
+                {
+                    return Err((
+                        "ACCEPTED_POLICY_ABSENT",
+                        format!(
+                            "accepted ref {git_ref} at {base_oid} has no repository policy; candidate grants remain unaccepted"
+                        ),
+                    ));
+                }
+                return Err(("INVALID_CANONICAL_POLICY","accepted policy could not be read; no older ref or candidate fallback is permitted".into()));
+            };
             if blob.len() as u64 > MAX_CANONICAL_POLICY_BYTES {
                 return Err((
                     "INVALID_CANONICAL_POLICY",
@@ -1890,7 +1934,7 @@ fn read_regular_policy_bytes(path: &Path) -> Result<Vec<u8>, (&'static str, Stri
     #[cfg(unix)]
     {
         use std::os::unix::fs::OpenOptionsExt;
-        opts.custom_flags(libc::O_NOFOLLOW);
+        opts.custom_flags(libc::O_NOFOLLOW | libc::O_NONBLOCK);
     }
     let file: File = opts.open(path).map_err(|e| {
         (
@@ -1898,6 +1942,16 @@ fn read_regular_policy_bytes(path: &Path) -> Result<Vec<u8>, (&'static str, Stri
             format!("unable to open policy config.toml safely: {e}"),
         )
     })?;
+    if !file
+        .metadata()
+        .map_err(|error| ("INVALID_CANONICAL_POLICY", error.to_string()))?
+        .is_file()
+    {
+        return Err((
+            "INVALID_CANONICAL_POLICY",
+            "opened policy config.toml must be a regular file".to_string(),
+        ));
+    }
     let mut buf = Vec::new();
     file.take(MAX_CANONICAL_POLICY_BYTES + 1)
         .read_to_end(&mut buf)

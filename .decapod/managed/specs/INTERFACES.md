@@ -1,5 +1,17 @@
 # Interfaces
 
+## Config repair and accepted authority (#1771, #1776)
+
+Configuration errors use `INVALID_CONFIG_SCHEMA` with the original parser
+location/type/expected-value diagnostic and embedded repair commands. Supported
+schema version is 1.0.0; root extension compatibility remains unchanged.
+`data schema` and `rpc --op schema.get` expose their existing schemas without
+config parsing or datastore/session mutation, including on malformed projects.
+Ordinary mutations resume after a valid correction. Valid syntax alone never
+grants exceptional permission. RBAC bypass keeps `proof_ready=false` and
+`publication_ready=false`; unaccepted root policy proposals return
+`RBAC_PERMISSION_DENIED`, and unresolved accepted sources fail closed.
+
 ## Explicit path scope and supported legacy recovery
 
 An explicit paths:[...] task scope produces the same decoded literal path set in orientation, trajectory repo_scope and custody constraints. Non-path logical scopes retain their existing comma-separated representation. Invalid explicit declarations fail without falling back to a broader scope.
@@ -1318,7 +1330,7 @@ field. Nothing in this operation authorizes a mutation, approval or completion.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `070f743a1e98fc16adf155c3c9da6513f68b94ca5c9ee7e9d947f2d5e823949b`
+- Repository signal fingerprint: `6b10cc9b8f96e7778890e9ebf9a44a5c6ef73ba7ebd51beb64a9fac72ad0f9b9`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (240 files), `tests/` (235 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
