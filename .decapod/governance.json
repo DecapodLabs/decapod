@@ -693,6 +693,11 @@
       "id": "retain-custody-refusal-and-reviewed-inventory",
       "summary": "Actual revoked-lease publication refused but misreported canonical managed checkout as external. Preserve workspace-owned exact blockers/remediation; strengthen existing regression without changing authority. Explicitly review accepted release-only Cargo version inventory delta; all checks retained. Fresh full proof pending.",
       "input_digest": "sha256:cb525cf3ee51bedc6dd60788824c070fe444151c00287254f854d86998715a48"
+    },
+    {
+      "id": "reconcile-official-release10-projections",
+      "summary": "Actual source90448d89 CI refuses release/spec drift, not waived. Native session-update installs official registry0.148.10 into isolated root; supported init and specs.refresh regenerate entrypoints/Docker/manifest. Preserve exact user config and tracked predecessor backups. Source-backed phase matrix names actual owners, refusals, observations, bypass and freshness bounds. Complete fresh proof remains required.",
+      "input_digest": "sha256:1d6ac72030cd33e0368b15da3201c6ded79266e2ce9ce8520392dc3d3d1915d2"
     }
   ],
   "intents": {
@@ -737,21 +742,21 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Preserve exact canonical custody refusal in validation, distinct from external path mismatch; review accepted release-only inventory delta, retain mandatory source graph and historical failed fixture",
+          "reason": "Official independently published v0.148.10 controller regenerates release projections after actual CI drift; retain complete required profile, configuration, task journal, predecessor backups and explicit phase/bypass matrix",
           "reviewed_code_fingerprint": "b3ab0860271f59e3bd8b813a35975cd9df65e64e146793c67939b9ef37cc6c75",
           "spec_material_hash": "68902808d64fc0f419f2489074024da71e72bc9a8da546995d7c0520d90d76e5"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Preserve exact canonical custody refusal in validation, distinct from external path mismatch; review accepted release-only inventory delta, retain mandatory source graph and historical failed fixture",
+          "reason": "Official independently published v0.148.10 controller regenerates release projections after actual CI drift; retain complete required profile, configuration, task journal, predecessor backups and explicit phase/bypass matrix",
           "reviewed_code_fingerprint": "b3ab0860271f59e3bd8b813a35975cd9df65e64e146793c67939b9ef37cc6c75",
           "spec_material_hash": "bdd74b3fa4e4e791114d721dfba217bfbfb15f1d21ae0c832042eea2e0a3e16e"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Preserve exact canonical custody refusal in validation, distinct from external path mismatch; review accepted release-only inventory delta, retain mandatory source graph and historical failed fixture",
+          "reason": "Official independently published v0.148.10 controller regenerates release projections after actual CI drift; retain complete required profile, configuration, task journal, predecessor backups and explicit phase/bypass matrix",
           "reviewed_code_fingerprint": "b3ab0860271f59e3bd8b813a35975cd9df65e64e146793c67939b9ef37cc6c75",
           "spec_material_hash": "0f80a7bae9c396f6ef79bcb1674252d853c5fe192cb7baba382a05919875407b"
         }
@@ -764,7 +769,7 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1794983620Z"
+      "updated_at": "1794984774Z"
     },
     "trajectory": {
       "active_boundaries": [
