@@ -1393,6 +1393,10 @@ required-profile review declaration is reconciled to that complete inventory;
 the finite workflow graph, adapters, provider selection and proof requirements
 remain unchanged. This review pin is configuration, not execution evidence.
 
+## Accepted release inventory review
+
+Release target34f837d4 changed only the decapod package version from0.148.9 to0.148.10 in Cargo.toml/Cargo.lock and changelog. All105 verification source definitions were compared to the prior reviewed candidate; only those two version lines changed. No required check, workflow, helper, adapter, environment or timeout changes. The candidate source inventory is explicitly reconciled tosha256:e1a242381f7411a8facfe285e2945040dafa93c46dd48c11a86ebd55d9a95b3f; fresh native source-CI validation still decides admission. Validation09 target-ancestry failure and validation10 stale-inventory rejection remain preserved.
+
 <!-- decapod:requirement REQ-INTENT-TRACEABILITY -->
 The read-only reconciliation report must detect missing/orphaned/duplicate
 requirement references, missing proof-spec mappings, stale code fingerprints,
