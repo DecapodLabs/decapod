@@ -466,128 +466,6 @@
         "statement": "Workunit generation-fenced mutations have durable event snapshots before JSON publication; interrupted projection publication is explicitly recoverable without inventing current proof.",
         "status": "open"
       },
-      "history-recovery:dad525d46feb9daf09f498c3d2934cd6560fc87b": {
-        "actor": "codex-launch-1757",
-        "assessment": {
-          "base_commit": "18cbb30ca4d16a80810d8f3c0cecfc4073a83cbc",
-          "disposition": "unproven_history",
-          "findings": [
-            {
-              "code": "GOVERNANCE_CHECKPOINT_MISSING",
-              "commit": "4661155e65a93882f18ac38e19dc172c7d6c3e9a",
-              "detail": "GOVERNANCE_CHECKPOINT_MISSING: commit 4661155e65a93882f18ac38e19dc172c7d6c3e9a needs a new checkpoint bound to its exact material tree and governance inputs",
-              "disposition": "unproven_history",
-              "expected_input_digest": "sha256:94ed7e93650eb7cd566960f6f030f82da282e78a22933cb54033922310444a33",
-              "obligation": "checkpoint_for_material",
-              "prior_event_can_be_regenerated": false,
-              "recovery": "A checkpoint written now cannot establish that this immutable commit carried a checkpoint. Preserve the source ref and evidence; create a fresh claimed workspace from the accepted target, reauthor the reviewed material with current intent/spec reviews and checkpoints, and rerun independent validation. No current policy authorizes a candidate-local history waiver.",
-              "tree": "16de40d85f9dcdd6111c82764e04b425e9e2e9e5"
-            },
-            {
-              "code": "GOVERNANCE_CHECKPOINT_MISSING",
-              "commit": "edd46f738da6f6c880b2d8e3aeb5d0e1d948c5d8",
-              "detail": "GOVERNANCE_CHECKPOINT_MISSING: commit edd46f738da6f6c880b2d8e3aeb5d0e1d948c5d8 needs a new checkpoint bound to its exact material tree and governance inputs",
-              "disposition": "unproven_history",
-              "expected_input_digest": "sha256:d9a50d76ec1003c84c96980c2b938489e04577da945d59415322366a22d905b7",
-              "obligation": "checkpoint_for_material",
-              "prior_event_can_be_regenerated": false,
-              "recovery": "A checkpoint written now cannot establish that this immutable commit carried a checkpoint. Preserve the source ref and evidence; create a fresh claimed workspace from the accepted target, reauthor the reviewed material with current intent/spec reviews and checkpoints, and rerun independent validation. No current policy authorizes a candidate-local history waiver.",
-              "tree": "e1d60ca2890c6c99345fde38275e7d7b7f4f03b5"
-            },
-            {
-              "code": "GOVERNANCE_CHECKPOINT_MISSING",
-              "commit": "cac93252c2a5f99e87481f6b806c515b19824523",
-              "detail": "GOVERNANCE_CHECKPOINT_MISSING: commit cac93252c2a5f99e87481f6b806c515b19824523 needs a new checkpoint bound to its exact material tree and governance inputs",
-              "disposition": "unproven_history",
-              "expected_input_digest": "sha256:23033d7af46a9622c2abe1dc1f803650b94fac3d3cc8c37223c39cf9be39d57f",
-              "obligation": "checkpoint_for_material",
-              "prior_event_can_be_regenerated": false,
-              "recovery": "A checkpoint written now cannot establish that this immutable commit carried a checkpoint. Preserve the source ref and evidence; create a fresh claimed workspace from the accepted target, reauthor the reviewed material with current intent/spec reviews and checkpoints, and rerun independent validation. No current policy authorizes a candidate-local history waiver.",
-              "tree": "2b13c5b2a00516036b138b66e0e899723d919051"
-            },
-            {
-              "code": "GOVERNANCE_CHECKPOINT_MISSING",
-              "commit": "52c9a169e36a4adac4795044150135f9d2bc11c1",
-              "detail": "GOVERNANCE_CHECKPOINT_MISSING: commit 52c9a169e36a4adac4795044150135f9d2bc11c1 needs a new checkpoint bound to its exact material tree and governance inputs",
-              "disposition": "unproven_history",
-              "expected_input_digest": "sha256:7b1466a3478850793a1ac152106bc28f74e5fa1d7efaf382af1d3bcebb1fa069",
-              "obligation": "checkpoint_for_material",
-              "prior_event_can_be_regenerated": false,
-              "recovery": "A checkpoint written now cannot establish that this immutable commit carried a checkpoint. Preserve the source ref and evidence; create a fresh claimed workspace from the accepted target, reauthor the reviewed material with current intent/spec reviews and checkpoints, and rerun independent validation. No current policy authorizes a candidate-local history waiver.",
-              "tree": "d36094536201c74e3b3ee57e798ca84dfd6c0718"
-            },
-            {
-              "code": "GOVERNANCE_CHECKPOINT_MISSING",
-              "commit": "ab4abe0593ddd8fd15186001558b79addd08aebc",
-              "detail": "GOVERNANCE_CHECKPOINT_MISSING: commit ab4abe0593ddd8fd15186001558b79addd08aebc needs a new checkpoint bound to its exact material tree and governance inputs",
-              "disposition": "unproven_history",
-              "expected_input_digest": "sha256:7b1466a3478850793a1ac152106bc28f74e5fa1d7efaf382af1d3bcebb1fa069",
-              "obligation": "checkpoint_for_material",
-              "prior_event_can_be_regenerated": false,
-              "recovery": "A checkpoint written now cannot establish that this immutable commit carried a checkpoint. Preserve the source ref and evidence; create a fresh claimed workspace from the accepted target, reauthor the reviewed material with current intent/spec reviews and checkpoints, and rerun independent validation. No current policy authorizes a candidate-local history waiver.",
-              "tree": "d36094536201c74e3b3ee57e798ca84dfd6c0718"
-            },
-            {
-              "code": "GOVERNANCE_CHECKPOINT_MISSING",
-              "commit": "bddd69fa9cd3c49f9db4ca95d8329e03ebc95ef3",
-              "detail": "GOVERNANCE_CHECKPOINT_MISSING: commit bddd69fa9cd3c49f9db4ca95d8329e03ebc95ef3 needs a new checkpoint bound to its exact material tree and governance inputs",
-              "disposition": "unproven_history",
-              "expected_input_digest": "sha256:7d93caa755193f599d4e2f1a1fa72762d376dc5755517d76f247a018a46ea397",
-              "obligation": "checkpoint_for_material",
-              "prior_event_can_be_regenerated": false,
-              "recovery": "A checkpoint written now cannot establish that this immutable commit carried a checkpoint. Preserve the source ref and evidence; create a fresh claimed workspace from the accepted target, reauthor the reviewed material with current intent/spec reviews and checkpoints, and rerun independent validation. No current policy authorizes a candidate-local history waiver.",
-              "tree": "96c5e870427672779720dad5a71cc47800a82eb2"
-            },
-            {
-              "code": "GOVERNANCE_CHECKPOINT_MISSING",
-              "commit": "6ab6de3134286a790d78d370ca3fb43c0d92f834",
-              "detail": "GOVERNANCE_CHECKPOINT_MISSING: commit 6ab6de3134286a790d78d370ca3fb43c0d92f834 needs a new checkpoint bound to its exact material tree and governance inputs",
-              "disposition": "unproven_history",
-              "expected_input_digest": "sha256:7d93caa755193f599d4e2f1a1fa72762d376dc5755517d76f247a018a46ea397",
-              "obligation": "checkpoint_for_material",
-              "prior_event_can_be_regenerated": false,
-              "recovery": "A checkpoint written now cannot establish that this immutable commit carried a checkpoint. Preserve the source ref and evidence; create a fresh claimed workspace from the accepted target, reauthor the reviewed material with current intent/spec reviews and checkpoints, and rerun independent validation. No current policy authorizes a candidate-local history waiver.",
-              "tree": "96c5e870427672779720dad5a71cc47800a82eb2"
-            },
-            {
-              "code": "GOVERNANCE_CHECKPOINT_MISSING",
-              "commit": "c31d039f1e242cb847a7f8c7d530f16d651b5076",
-              "detail": "GOVERNANCE_CHECKPOINT_MISSING: commit c31d039f1e242cb847a7f8c7d530f16d651b5076 needs a new checkpoint bound to its exact material tree and governance inputs",
-              "disposition": "unproven_history",
-              "expected_input_digest": "sha256:410f76fb130f0d1a97480919b03d777698bc3e3451831ac08ce92819a48a98f4",
-              "obligation": "checkpoint_for_material",
-              "prior_event_can_be_regenerated": false,
-              "recovery": "A checkpoint written now cannot establish that this immutable commit carried a checkpoint. Preserve the source ref and evidence; create a fresh claimed workspace from the accepted target, reauthor the reviewed material with current intent/spec reviews and checkpoints, and rerun independent validation. No current policy authorizes a candidate-local history waiver.",
-              "tree": "2b258a6ad0bc4f34522bc70944b4e281a89012f8"
-            }
-          ],
-          "head_commit": "dad525d46feb9daf09f498c3d2934cd6560fc87b",
-          "history_proven": false,
-          "inspection_complete": true,
-          "publication_ready": false,
-          "schema": "decapod.checkpoint-history.v1",
-          "scope": "checkpoint_history",
-          "verified_commits": [
-            "186b0b65437a110519dd3444cd50629c5c2d0bea",
-            "b374cae0346ef40cbfa2a7a6ff458b170725e946",
-            "ebf206dbdc173509e08ef5789a5d8cb74165e016",
-            "16bb669d1130ea0df1fd84eb00ed1869aab2b752",
-            "6b92b5cf73cc1e83581922cb2644f3b230362161",
-            "dad525d46feb9daf09f498c3d2934cd6560fc87b"
-          ]
-        },
-        "authority": "current_task_custody_only",
-        "destination_base": "6ab6de3134286a790d78d370ca3fb43c0d92f834",
-        "destination_change": "change_01M7P3W97HA4M2MRGMQ0TYNRBB",
-        "exception_authorized": false,
-        "historical_proof": "not_proven",
-        "reason": "Actual governance CI rejected historical merge c31d039f without an exact-material checkpoint. Preserve that branch and failed reports; review and reauthor the final observer in this fresh claimed workstream. No historical proof is fabricated or imported.",
-        "recovery": "reauthor_and_obtain_fresh_proof",
-        "schema": "decapod.history-recovery.v1",
-        "source_commit": "dad525d46feb9daf09f498c3d2934cd6560fc87b",
-        "source_governance_blob": "8dcb336df05c19c2e00aeeea1e69d3706127f4eb",
-        "source_tree": "ebd4df6da5f6e0a787190f8210bc9eec8394ac35"
-      },
       "plan:3109ff52b1ce422e": "Determine the smallest existing-provider execution boundary that keeps candidate build/test code from modifying trusted measurement or final-verdict authority.",
       "plan:5dbe0918f5d72eb4": "Buildkite collection excluded by user; no full native publication receipt is claimed",
       "plan:7f9060fac006b60a": "An already shipped controller cannot retroactively implement this code; distinguish one-time controller rollout from future older-catalog compatibility proof.",
@@ -694,11 +572,36 @@
     "base_commit": "6ab6de3134286a790d78d370ca3fb43c0d92f834",
     "target_base": "origin/master"
   },
+  "claims": {
+    "observed-autonomous-admission-export": {
+      "statement": "The read-only observer correlates the actual single Pi failure/repair/fresh-proof/GitHub arc while retaining false publication_ready and merge_authorized and clearing current applicability after source/base changes; trusted-host assertions remain explicit",
+      "falsifier": "An absent executed required failure, absent new agent repair after feedback, mismatched receipt/forge subject, or an export granting current publication or merge authority refutes the corresponding claim",
+      "status": "supported",
+      "proof_refs": [
+        "https://github.com/alexhraber/decapod-admission-acceptance-20261117-1747-06/tree/3c6c373ea703144a2a096e7c3ad6b17c45fcdc38"
+      ]
+    }
+  },
+  "resolutions": {
+    "history-recovery:dad525d46feb9daf09f498c3d2934cd6560fc87b": {
+      "obligation_digest": "sha256:5f54f11c3402049c538ccc9597f567a65886ceb7e9c22101f468e6f9e9107735",
+      "resolution": "Selected source was reviewed and reauthored in this fresh workstream; original failed history remains preserved and unproven. This resolves present recovery custody only; current publication still requires complete fresh validation.",
+      "proof_refs": [
+        "git:fafe6138db68a0d450cc01513b628c17cc40aa3e",
+        "https://github.com/DecapodLabs/decapod/actions/runs/44210899557/job/134496234668"
+      ]
+    }
+  },
   "checkpoints": [
     {
       "id": "reauthored-observer-and-history-custody",
       "summary": "Fresh claimed observer implementation and material specs with native present-time custody of preserved failed source history; no retrospective checkpoint or readiness import",
       "input_digest": "sha256:681802f9bc964b230f807b147976e2e9bb6b613787aa35e496f5aef4ad67df4e"
+    },
+    {
+      "id": "record-recovery-disposition",
+      "summary": "Reference the committed current recovery archive while retaining the original unproven history and requiring fresh source-CI admission",
+      "input_digest": "sha256:14f9768feee40894a229596770663eb3f09d9898a17f48d6d9e8c569b7730a6f"
     }
   ],
   "intents": {

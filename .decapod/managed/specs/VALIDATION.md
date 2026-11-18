@@ -1413,6 +1413,10 @@ Human-intent questions, requirement markers, stable hashes and changed-source
 inventory are advisory: none may satisfy a proof gate or change
 `semantic_alignment: not_proven`.
 
+## Recovery archive disposition
+
+The selected-source reauthoring and present-time history observation are committed together at fafe6138db68a0d450cc01513b628c17cc40aa3e. The subsequent recovery disposition references that immutable archive. It does not establish the missing historical checkpoint or replace full current-candidate validation.
+
 ## Preserved failed source history
 
 The prior source branch at dad525d46feb9daf09f498c3d2934cd6560fc87b contains integration merge c31d039f without an exact-material checkpoint. That history remains preserved and unproven. The current workstream records the native present-time recovery observation, reauthors the reviewed source in a fresh claimed workspace, and requires independent full validation of its new commits. No retrospective checkpoint or inherited readiness is asserted.
