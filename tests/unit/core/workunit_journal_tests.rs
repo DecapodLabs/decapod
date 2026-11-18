@@ -990,6 +990,23 @@ fn separately_initialized_workspace_cannot_replay_main_store_verified_authority(
     );
     assert_eq!(journal_records(&workspace, task).unwrap().len(), 1);
     assert!(validate_verified_manifest(&workspace, &previous.manifest).is_err());
+    assert!(error.to_string().contains("claim a fresh task"), "{error}");
+    assert!(error.to_string().contains("does not migrate"), "{error}");
+    let custody =
+        crate::core::todo::capture_validation_binding(&root.join(".decapod/data"), task).unwrap();
+    let subject = WorkUnitValidationSubject {
+        contract_digest: validation_contract_digest(&local.manifest).unwrap(),
+        manifest_digest: local.manifest_hash,
+        generation: local.generation,
+    };
+    let error = invalidate_current_validation(&workspace, &custody, &subject).unwrap_err();
+    assert!(
+        error
+            .to_string()
+            .contains("WORKUNIT_PROOF_ATOMIC_DOMAIN_UNSUPPORTED"),
+        "{error}"
+    );
+    assert_eq!(journal_records(&workspace, task).unwrap().len(), 1);
 }
 
 #[test]
@@ -1019,4 +1036,43 @@ fn prepared_snapshot_cannot_retain_verified_authority_across_a_downgrade() {
     );
     assert_eq!(workunit_journal_status(&root, task).unwrap(), before);
     assert_eq!(load_workunit(&root, task).unwrap(), original);
+}
+
+#[test]
+#[cfg(any(target_os = "linux", target_os = "macos"))]
+fn validation_withdrawal_fences_journal_generation_and_task_custody() {
+    let (_temp, root, task) =
+        crate::core::validation_history::workunit_observation_tests::verified_fixture();
+    let data = root.join(".decapod/data");
+    let custody = crate::core::todo::capture_validation_binding(&data, task).unwrap();
+    let original = capture_validation_subject(&root, task).unwrap().unwrap();
+    checkpoint_workunit(&root, task, "advance-before-validator-finishes", None).unwrap();
+    let count = journal_records(&root, task).unwrap().len();
+    let error = invalidate_current_validation(&root, &custody, &original).unwrap_err();
+    assert!(
+        error.to_string().contains("WORKUNIT_GENERATION_CONFLICT"),
+        "{error}"
+    );
+    assert_eq!(journal_records(&root, task).unwrap().len(), count);
+    let current = capture_validation_subject(&root, task).unwrap().unwrap();
+    crate::core::todo::with_task_journal(
+        &crate::core::broker::DbBroker::new(&data),
+        &crate::core::todo::todo_db_path(&data),
+        &crate::current_agent_id(), Some(task), "test.renew-before-validation-withdrawal",
+        crate::core::todo::TaskJournalSelection::Ids(vec![task.into()]),
+        |conn| {
+            conn.execute("UPDATE tasks SET lease_generation=lease_generation+1, revision=revision+1 WHERE id=?1", db::params![task])?;
+            Ok(())
+        },
+    ).unwrap();
+    let error = invalidate_current_validation(&root, &custody, &current).unwrap_err();
+    assert!(
+        error.to_string().contains("VALIDATION_HISTORY_TASK_STALE"),
+        "{error}"
+    );
+    assert_eq!(journal_records(&root, task).unwrap().len(), count);
+    assert_eq!(
+        load_workunit(&root, task).unwrap().status,
+        WorkUnitStatus::Verified
+    );
 }

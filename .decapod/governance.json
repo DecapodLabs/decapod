@@ -580,6 +580,14 @@
       "proof_refs": [
         "tests/policy_self_authorization_1776.rs (9/9 passed); clippy -D warnings ok"
       ]
+    },
+    {
+      "id": "policy-redteam-1776-v014813-merge",
+      "summary": "Integrate accepted release 0.148.13 (c5bafce6) and verify 9/9 policy_self_authorization_1776 tests",
+      "input_digest": "sha256:e88dd9b48541e6cee5871cbf31643098223e929ed96cee996f16f568844c4ae2",
+      "proof_refs": [
+        "tests/policy_self_authorization_1776.rs (9/9 passed); clippy -D warnings ok"
+      ]
     }
   ],
   "intents": {
@@ -620,16 +628,16 @@
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Issue #1776 repairs accepted-policy resolution inside existing canonical modules without altering repository architecture.",
-          "reviewed_code_fingerprint": "b90df372838a25aff3f7746e2c2f89d4113c170234f4edc707327d8f2be8d5fa",
-          "spec_material_hash": "1fb88c990e8711b58bf3b4d3d9c4315a07de23b9e32fb76808d48de9349b5d73"
+          "reason": "Merged origin/master release 0.148.13 (c5bafce6); #1776 remains bounded to cross-surface accepted-policy resolution.",
+          "reviewed_code_fingerprint": "28d558e83c684c391ddf1959fc5622715f6e1536bc478a65a190b0f3e398c4f9",
+          "spec_material_hash": "080e1e015d867051ec4ecbb1f18aca92a2d62a05798377057e563aaa5a3764e0"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Issue #1776 hardens existing CLI, gatekeeper, override, and validation enforcement against candidate self-authorization without altering interface contracts.",
-          "reviewed_code_fingerprint": "b90df372838a25aff3f7746e2c2f89d4113c170234f4edc707327d8f2be8d5fa",
-          "spec_material_hash": "f12b375f742d2120cd8551277a2013ccae2ddb11ade64032a52e56c0409f5eb2"
+          "reason": "Merged origin/master release 0.148.13 (c5bafce6); #1776 preserves existing interface contracts.",
+          "reviewed_code_fingerprint": "28d558e83c684c391ddf1959fc5622715f6e1536bc478a65a190b0f3e398c4f9",
+          "spec_material_hash": "ef090be85af851796f2ae92f9d6a6e992d59a452a8fff4918836cc689f020cdd"
         }
       ],
       "state": "APPROVED",
@@ -640,13 +648,13 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795014748Z"
+      "updated_at": "1795015559Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:5684d18220afaa769eeaaa9f45cd369162876e836879af2797ed67994114d7a4",
+      "artifact_hash": "sha256:6dae082d7c8d9166acca79c7db394452c2e7c18a0d128e31194b09c0ada83915",
       "checks": [
         {
           "name": "cargo_fmt",
@@ -718,10 +726,17 @@
             "intent_id": "intent:change_01M7QBJ2W09CY5REY9D4DX2CGZ",
             "kind": "trajectory_step_recorded",
             "sequence": 4
+          },
+          {
+            "detail": "trajectory:branch_01M7QBJ2ZYCMN2HENQJSH4ZZW7",
+            "event_id": "event:5",
+            "intent_id": "intent:change_01M7QBJ2W09CY5REY9D4DX2CGZ",
+            "kind": "trajectory_step_recorded",
+            "sequence": 5
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 4,
+        "next_sequence": 5,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M7QBJ2ZYCMN2HENQJSH4ZZW7": {
@@ -763,6 +778,33 @@
                 ],
                 "sequence": 4,
                 "validation_findings": []
+              },
+              {
+                "action": "validation",
+                "custody_event_id": "event:5",
+                "observations": [
+                  ".decapod/config.toml",
+                  ".decapod/managed/specs/SECURITY.md",
+                  "src/decapod/core/db_maintenance.rs",
+                  "src/decapod/core/workspace.rs",
+                  "src/decapod/core/gatekeeper.rs",
+                  "src/decapod/plugins/policy.rs",
+                  "src/decapod/core/validation_rules.rs",
+                  "src/decapod/core/validate.rs",
+                  "src/decapod/lib.rs",
+                  "tests/policy_self_authorization_1776.rs",
+                  "Merged origin/master release 0.148.13 (c5bafce6); policy_self_authorization_1776 9/9 passed (213.03s); cargo fmt & clippy -D warnings ok"
+                ],
+                "proof_refs": [
+                  "policy_self_authorization_1776",
+                  "cargo_fmt",
+                  "clippy_lib_and_test"
+                ],
+                "scope": [
+                  "root"
+                ],
+                "sequence": 5,
+                "validation_findings": []
               }
             ]
           }
@@ -771,11 +813,13 @@
       "declared_commands": [],
       "destination": "pull request",
       "evidence": [
+        "Merged origin/master release 0.148.13 (c5bafce6); policy_self_authorization_1776 9/9 passed (213.03s); cargo fmt & clippy -D warnings ok",
         "policy_self_authorization_1776 9/9 passed (92.39s); clippy -D warnings ok; unit & regression suites passed"
       ],
       "inspected_files": [],
       "intent_id": "intent:change_01M7QBJ2W09CY5REY9D4DX2CGZ",
       "modified_files": [
+        ".decapod/config.toml",
         ".decapod/managed/specs/SECURITY.md",
         "src/decapod/core/db_maintenance.rs",
         "src/decapod/core/gatekeeper.rs",
