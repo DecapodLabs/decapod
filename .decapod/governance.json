@@ -587,6 +587,11 @@
       "id": "cp-1736-2",
       "summary": "Align reviewed_sources_digest, Dockerfile.decapod, and specs manifest with v0.148.13",
       "input_digest": "sha256:96dc6537425a2f06363850b5c3f981aae2ccacdc8a9b649255e9c368ec8d805b"
+    },
+    {
+      "id": "cp-1736-3",
+      "summary": "Merge origin/master v0.148.14 (2f12638a) and align config digest, Dockerfile, and specs manifest",
+      "input_digest": "sha256:3c4e1cb9fbbde0a003b620835088d0d4322c9b85976f0bc58c8b4e9816d5afb5"
     }
   ],
   "intents": {
@@ -630,22 +635,22 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Documented PlatformExecution, RepositoryExecution::resolve_for_platform, and repository_host per-platform host selection and before/after measurement flow for #1736.",
-          "reviewed_code_fingerprint": "d4ab83154a507af00abe6f3a1ed827547d5ceacd487029fe5239dfc93ddcba86",
+          "reason": "Documented PlatformExecution, RepositoryExecution::resolve_for_platform, and repository_host per-platform selection on v0.148.14.",
+          "reviewed_code_fingerprint": "80aedc3e948bbb238d051257eac1472a780eb0f5694f5f209a2c7e1e7833e7fb",
           "spec_material_hash": "94363f192c09525bcd8e7dab2a5fd641d5a985ae490736808a2f2739f43169a1"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Documented repo.pr-readiness.v1 per-platform RepositoryExecution::platforms and PlatformExecution schema, command_contract_digest stability, and preserve_accepted enforcement for #1736.",
-          "reviewed_code_fingerprint": "d4ab83154a507af00abe6f3a1ed827547d5ceacd487029fe5239dfc93ddcba86",
-          "spec_material_hash": "50da804f7ed7360f69b07d47fb3b8d4d1466609ccb9caffe9a3700dc618c7a36"
+          "reason": "Preserved #1781 and #1736 per-platform repo.pr-readiness.v1 contract prose across origin/master v0.148.14 merge.",
+          "reviewed_code_fingerprint": "80aedc3e948bbb238d051257eac1472a780eb0f5694f5f209a2c7e1e7833e7fb",
+          "spec_material_hash": "a86f59b5dbee3b46b311f8d9318eb81b8c5323058c125046ad2dbe6b621160ac"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Documented #1736 fail-closed host platform selection boundary, digest/accepted-target preservation across all declared platforms, and separation from #1738 policy migration.",
-          "reviewed_code_fingerprint": "d4ab83154a507af00abe6f3a1ed827547d5ceacd487029fe5239dfc93ddcba86",
+          "reason": "Documented #1736 fail-closed host platform selection boundary and accepted-target preservation on v0.148.14.",
+          "reviewed_code_fingerprint": "80aedc3e948bbb238d051257eac1472a780eb0f5694f5f209a2c7e1e7833e7fb",
           "spec_material_hash": "92963aba58aa4edd11c0484e1bb750c7c0e51e1f74aa2bfa0d4c3821d1123123"
         }
       ],
@@ -657,13 +662,13 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795018863Z"
+      "updated_at": "1795025807Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:94e1303fed272a3cb6957c3ecd316f35910024b215d735291fcee277cb9abfa6",
+      "artifact_hash": "sha256:1c7cd6a37749cc0c83f19851c146740e1c9d7fa3a2b597828399b38ff535ddf9",
       "checks": [
         {
           "name": "cargo_clippy",
@@ -682,7 +687,15 @@
           "status": "passed"
         },
         {
+          "name": "core_full_targets",
+          "status": "passed"
+        },
+        {
           "name": "doc_alignment",
+          "status": "passed"
+        },
+        {
+          "name": "entrypoint_correctness",
           "status": "passed"
         },
         {
@@ -715,10 +728,17 @@
             "intent_id": "intent:change_01M7QNGXR8M0YARA25DCX9933Z",
             "kind": "trajectory_step_recorded",
             "sequence": 4
+          },
+          {
+            "detail": "trajectory:branch_01M7QNGXVG2P2VB3JGMXQRF1NC",
+            "event_id": "event:5",
+            "intent_id": "intent:change_01M7QNGXR8M0YARA25DCX9933Z",
+            "kind": "trajectory_step_recorded",
+            "sequence": 5
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 4,
+        "next_sequence": 5,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M7QNGXVG2P2VB3JGMXQRF1NC": {
@@ -766,6 +786,25 @@
                 ],
                 "sequence": 4,
                 "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:5",
+                "observations": [
+                  "Post-12595 local verification passed entrypoint_correctness (42/42) and all 11 core_full test binaries (71/71); merged origin/master 2f12638a (v0.148.14) cleanly with zero source conflicts."
+                ],
+                "proof_refs": [
+                  "entrypoint_correctness",
+                  "core_full_targets"
+                ],
+                "scope": [
+                  "\".decapod/managed/specs\"]",
+                  "\"docs\"",
+                  "\"tests\"",
+                  "paths:[\"src/decapod\""
+                ],
+                "sequence": 5,
+                "validation_findings": []
               }
             ]
           }
@@ -774,7 +813,8 @@
       "declared_commands": [],
       "destination": "pull request",
       "evidence": [
-        "17 repository_profile unit tests passed, 6 repository_host unit tests passed, 27 consumer_readiness integration tests passed, 4 doc_alignment tests passed, 12 contract_conformance tests passed, clippy -D warnings and cargo fmt --check passed."
+        "17 repository_profile unit tests passed, 6 repository_host unit tests passed, 27 consumer_readiness integration tests passed, 4 doc_alignment tests passed, 12 contract_conformance tests passed, clippy -D warnings and cargo fmt --check passed.",
+        "Post-12595 local verification passed entrypoint_correctness (42/42) and all 11 core_full test binaries (71/71); merged origin/master 2f12638a (v0.148.14) cleanly with zero source conflicts."
       ],
       "inspected_files": [
         "docs/agent/config-schema.md",
