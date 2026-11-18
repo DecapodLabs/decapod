@@ -1079,7 +1079,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `0ff17b4704e12feca628cd1d431b4a0f459c108afaf2223718b48870f9896a42`
+- Repository signal fingerprint: `d4ab83154a507af00abe6f3a1ed827547d5ceacd487029fe5239dfc93ddcba86`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (237 files), `tests/` (236 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
@@ -1130,11 +1130,18 @@ cannot acquire new protocol code merely because its repository source changed.
 Consumer repositories select `repo.pr-readiness.v1` through the canonical proof
 configuration. `core/repository_profile.rs` checks complete discovered workflow
 mapping, required commands and explicit execution declarations against reviewed
-source and command digests. `validation_runtime/repository_host.rs` translates
-that reviewed local contract into the existing bounded native runner; it does not
-interpret workflow YAML or introduce an orchestration engine. Every command runs
-in the frozen source snapshot, with byte-measured declared tool inputs and fresh
-accepted-target queries. Source/configuration/tool/target drift invalidates proof.
+source and command digests, including `RepositoryExecution::platforms`
+(`PlatformExecution` entries keyed by `CANONICAL_PLATFORM_KEYS`) and
+`RepositoryExecution::resolve_for_platform`. `validation_runtime/repository_host.rs`
+translates that reviewed local contract into the existing bounded native runner via
+`command_invocation_for_platform` / `select_commands_for_platform`, resolving and
+byte-measuring only the current host platform's reviewed executable and
+`toolchain_files` and failing closed (`MISSING_PLATFORM_EXECUTION` /
+`UNSUPPORTED_PLATFORM`) without fallback if the host platform is absent or
+unsupported; it does not interpret workflow YAML or introduce an orchestration
+engine. Every command runs in the frozen source snapshot, with byte-measured
+declared tool inputs before and after execution and fresh accepted-target queries.
+Source/configuration/tool/target drift invalidates proof.
 
 The resulting `repository_local_readiness` scope attests those local commands,
 not hosted workflow jobs, platform matrices or release/deployment execution. The

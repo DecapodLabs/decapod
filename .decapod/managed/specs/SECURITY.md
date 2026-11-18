@@ -706,7 +706,7 @@ execution evidence remains required before publication readiness.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `0ff17b4704e12feca628cd1d431b4a0f459c108afaf2223718b48870f9896a42`
+- Repository signal fingerprint: `d4ab83154a507af00abe6f3a1ed827547d5ceacd487029fe5239dfc93ddcba86`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (237 files), `tests/` (236 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
@@ -1186,3 +1186,7 @@ exercise real secrets nor prove actual native cache publication.
 ## Canonical local Git proof (#1069)
 
 Canonical local proof shares the OS user trust domain with source, policy, tools and SQLite; it is not cryptographic authentication or OS isolation. The local authority is accepted on canonical Git rather than supplied by a candidate report, and cannot act as cloud/forge identity. Target reads disable ambient Git redirects, transport and replacement objects. Material/policy/target changes invalidate applicability without rewriting historical success. Supported forge publication rejects local-only authority; unrestricted shell/Git remains outside that enforcement boundary. No keys, credentials or machine-local logs belong in tracked state.
+
+## Per-platform execution selection boundary (#1736)
+
+`repo.pr-readiness.v1` per-platform execution entries (`RepositoryExecution::platforms` / `PlatformExecution`) preserve fail-closed `#[serde(deny_unknown_fields)]` schema strictness, reject ambient `PATH` resolution, relative paths, mixed top-level/per-platform declarations, and uncanonical or unsupported platform keys, and bind every declared platform alternative into `command_contract_digest` and `preserve_accepted` (`ACCEPTED_REPOSITORY_CONTRACT_CHANGED`). Candidate additions, removals, or edits to any platform table—including non-host platforms—cannot self-approve and remain rejected until independently accepted on the target (tracked separately from policy migration in #1738). At host selection and execution time (`RepositoryExecution::resolve_for_platform`, `repository_host::select_commands_for_platform`, `native_proof::validate_invocation`), only the current host platform's reviewed executable and `toolchain_files` are selected, checked for canonical host binary format, and byte-measured before and after execution; missing or unsupported host platforms fail closed without fallback.
