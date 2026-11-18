@@ -598,6 +598,11 @@
       "id": "interop-registered-dispatch-871",
       "summary": "Advertise existing reconciliation/state routes and require catalog registration before RPC startup",
       "input_digest": "sha256:41d11de554d4f7ba7d1c46e98e6e0426d884f8584cd8953780af3791992f54d2"
+    },
+    {
+      "id": "attack-gaps-871-release10-reconciliation",
+      "summary": "Integrate accepted0.148.10, review all105 proof inputs and refresh current architecture/interface/security reviews",
+      "input_digest": "sha256:83410e26e1d08c7a2ed8661628d212cf7419ad7ff2b37dd0a6e0015d43f54b8c"
     }
   ],
   "intents": {
@@ -639,23 +644,23 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Reviewed existing42 RPC handlers; derive names and metadata from existing catalog, enforce registration before early/normal routing, add3 omitted operations; preserve handler and authority ownership.",
-          "reviewed_code_fingerprint": "e8f10499b0e64bd867236d6fa91cb7584de58284f56f79ffb59a4712800c3de4",
+          "reason": "Reviewed current implementation and accepted0.148.10 merge; preserve existing validation, custody and proof owners and material task-specific architecture.",
+          "reviewed_code_fingerprint": "42e5378321dc5afcb90b64a7790fe850c8a4503bee7c481061be5c432f83a077",
           "spec_material_hash": "d283bcd7bb456c0bd3d344e1a16d24c4587cad261a9629239f5fd548ac544097"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Document additive current operations and typed unknown-op refusal before startup; no registered-op policy change or authenticated execution claim.",
-          "reviewed_code_fingerprint": "e8f10499b0e64bd867236d6fa91cb7584de58284f56f79ffb59a4712800c3de4",
+          "reason": "Reviewed current interface prose against final code and accepted0.148.10; preserve registered operation authority and declaration-versus-observed-proof distinction.",
+          "reviewed_code_fingerprint": "42e5378321dc5afcb90b64a7790fe850c8a4503bee7c481061be5c432f83a077",
           "spec_material_hash": "3b629c292e92c2ad14441fd2ee1d5c0247a599fd66b05237b0e5d4f06f26f974"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Package-version-only inventory review grants no new authority or bypass; existing policy, workflow and all required checks preserved.",
-          "reviewed_code_fingerprint": "8d3a83eb6e973692366d0bc6921e498f21e64aa289a5eda3bcdae3779945f46d",
-          "spec_material_hash": "0c791a6100ed5aec7fe4cedfa16680988dd1e48d50d00af272ef9dff372c3d4d"
+          "reason": "Accepted1779 parser, privilege custody, maintenance policy and no-raw-store security boundaries are preserved. Current task changes add no privilege or proof authority; existing security prose remains applicable to these exact bytes.",
+          "reviewed_code_fingerprint": "42e5378321dc5afcb90b64a7790fe850c8a4503bee7c481061be5c432f83a077",
+          "spec_material_hash": "cdc863757905c53f4f176284c72744f0575184c65a059b7edf6239b47c4fc644"
         }
       ],
       "state": "APPROVED",
@@ -666,14 +671,14 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1794982598Z"
+      "updated_at": "1794982984Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch",
         "Linked worktree admission and execution-ready verified separately after backup denial; maintenance policy unchanged. No source/PR changes in other owners."
       ],
-      "artifact_hash": "sha256:5410f3946a72a4e56db7bd4874d4183ed4b5a61a7415145e266b012c889cdfdb",
+      "artifact_hash": "sha256:63cd5516aee6d23d3e61fbcd887aed2f22acf8802d97cec7f4ac30af457d3f2f",
       "checks": [
         {
           "name": "baseline_counterexample",
@@ -752,10 +757,17 @@
             "intent_id": "intent:change_01M7NWVMEADM6FS731H2AKEVZM",
             "kind": "trajectory_step_recorded",
             "sequence": 9
+          },
+          {
+            "detail": "trajectory:branch_01M7NWVMHPED3ZZQ4W9D4A0ZJ6",
+            "event_id": "event:10",
+            "intent_id": "intent:change_01M7NWVMEADM6FS731H2AKEVZM",
+            "kind": "trajectory_step_recorded",
+            "sequence": 10
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 9,
+        "next_sequence": 10,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M7NWVMHPED3ZZQ4W9D4A0ZJ6": {
@@ -873,6 +885,20 @@
                 ],
                 "sequence": 9,
                 "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:10",
+                "observations": [
+                  "Accepted target advanced again to34f837d4 through ordinary0.148.10 release; merge preserves real parents and existing checkpoints. Independently hashed all105 inventory inputs in this worktree and matched official agent.init discovery: sha256:e1a242381f7411a8facfe285e2945040dafa93c46dd48c11a86ebd55d9a95b3f. Only Cargo package versions0.148.9 to0.148.10 changed;103 other sources identical. Backed up editable config before reconciliation; no workflow, carrier, required graph, toolchain, controller or policy weakening. Previous context/spec-review failures retained. Refreshed security as well as architecture/interface reviews after current source inspection. cargo fmt used only to format authored source; no local build or shadow proof suite."
+                ],
+                "proof_refs": [],
+                "scope": [
+                  "src/decapod/core/interop.rs",
+                  "tests/interop_conformance.rs"
+                ],
+                "sequence": 10,
+                "validation_findings": []
               }
             ]
           }
@@ -884,6 +910,7 @@
         "/private/tmp/attack-gaps-871-before.json; no passing Rust test or repaired-binary execution yet. Official validation owns fresh build and required checks.",
         "/private/tmp/attack-gaps-871-before.json; official binary0.148.9;12 false Verified labels; no executed identity. Snapshot container entry refused POLICY_OPT_IN_DISABLED. Session release cleared custody; re-read and reclaimed existing task without optional claim autorun; rebind before any source mutation.",
         "/private/tmp/attack-gaps-871-validation-1.json; PROOF_PROFILE_RECONCILIATION_REQUIRED before provider tests. Review:/private/tmp/attack-gaps-871-inventory-review.json;105 inputs compared to accepted edbfc00d; only root version0.148.7 to0.148.9 in Cargo.toml/Cargo.lock. Config backup outside Git. No graph, adapter, toolchain, worker, workflow or requiredness change.",
+        "Accepted target advanced again to34f837d4 through ordinary0.148.10 release; merge preserves real parents and existing checkpoints. Independently hashed all105 inventory inputs in this worktree and matched official agent.init discovery: sha256:e1a242381f7411a8facfe285e2945040dafa93c46dd48c11a86ebd55d9a95b3f. Only Cargo package versions0.148.9 to0.148.10 changed;103 other sources identical. Backed up editable config before reconciliation; no workflow, carrier, required graph, toolchain, controller or policy weakening. Previous context/spec-review failures retained. Refreshed security as well as architecture/interface reviews after current source inspection. cargo fmt used only to format authored source; no local build or shadow proof suite.",
         "Actual official0.148.9 RPC intent.reconcile succeeded while interop.manifest omitted it; raw outputs and binary SHA in /private/tmp/attack-gaps-871-drift-before-summary.json. Review found exactly42 current handlers vs39 catalog entries: intent.reconcile, state.resolve, state.diff omitted; no catalog name lacks a handler. Extend existing catalog and enforce registration before RPC routing, deriving name list from metadata to remove one duplicate table. Preserve per-operation session/workspace/mandate guards and no negotiation authority. Existing conformance reports lack tested-binary digest and authenticated custody; do not turn them into executed verification. New candidate supersedes pending e212ad75 proof only after fresh full execution.",
         "Counterexample /private/tmp/attack-gaps-871-drift-before-summary.json: official binary dispatch success for unadvertised intent.reconcile. Empty-Git unknown-op baseline returned missing .decapod instead of typed refusal, creating no files; initial non-Git temp fixture reached an unrelated ancestor storage probe and is not used as product denial evidence. Add42-name single-declaration registration,3 missing entries, actual discovery assertions and isolated no-startup unknown-op regression. No patched-binary execution yet; all authenticated receipt-production and remaining authority/consumer obligations remain open.",
         "Old candidate ddcefa86/base6ab6de31 retains Buildkite11973 clippy plugin-clone failure before execution and core validation smoke timeout; interop_conformance passed310.3s. Accepted master independently advanced to c47137ad via1779; reconcile real accepted changes in a two-parent merge and require fresh full exact-candidate proof. Keep active original governance and checkpoints through Git merge resolution; accepted historical governance remains in second parent. New merge is necessary source/base integration, not a synthetic CI trigger or proof relabel. All broader871 receipt-production/drift/consumer acceptance stays open."

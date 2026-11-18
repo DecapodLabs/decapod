@@ -213,8 +213,7 @@ fn discovery_and_negotiation() {
         "manifest.current_dispatch_entries",
         "rpc-stdin:interop.manifest",
         "intent.reconcile, state.resolve and state.diff are implemented and advertised",
-        serde_json::to_string(&caps.iter().map(|cap| &cap["id"]).collect::<Vec<_>>())
-            .unwrap(),
+        serde_json::to_string(&caps.iter().map(|cap| &cap["id"]).collect::<Vec<_>>()).unwrap(),
         ["intent.reconcile", "state.resolve", "state.diff"]
             .iter()
             .all(|op| {

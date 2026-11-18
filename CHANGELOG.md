@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.148.10](https://github.com/DecapodLabs/decapod/compare/v0.148.9...v0.148.10) - 2026-11-18
+
+### Fixed
+
+- *(governance)* preserve verified first-adoption recovery
+- *(proof)* reconcile reviewed release version inputs
+- *(governance)* reject invalid config and unaccepted privilege grants
+
+### Other
+
+- *(cloud)* preserve schema recovery and storage boundary coverage
+
 ## [0.148.9](https://github.com/DecapodLabs/decapod/compare/v0.148.8...v0.148.9) - 2026-11-17
 
 ### Other
