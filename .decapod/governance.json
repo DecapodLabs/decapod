@@ -629,6 +629,14 @@
       "proof_refs": [
         "/private/tmp/attack-gaps-871-session-metadata-before.json"
       ]
+    },
+    {
+      "id": "attack-gaps-871-initialized-replay",
+      "summary": "Replay malformed required-extension request on initialized fixture, then prove ordinary negotiation recovers; retain separate pre-startup refusals.",
+      "input_digest": "sha256:e5c3b6cdc3d20397c2c32ff7952bc0ba392f5328d8aafdae69c16292ccf97324",
+      "proof_refs": [
+        "/private/tmp/attack-gaps-rpc-malformed-negotiation-before.json"
+      ]
     }
   ],
   "intents": {
@@ -670,22 +678,22 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Audited all RPC session descriptors against current entry enforcement, correcting four false session-free entries; bounded early database inspection remains exempt. Existing authorization gates are preserved.",
-          "reviewed_code_fingerprint": "5e07cf62e5b20fec6277789386040ff544c3bfef8d6799db2b4aa9c65dca8c55",
-          "spec_material_hash": "fdbaca69ba93aa18c0b9cd161855774844405802b6b4ddc2d269b088f48ffca1"
+          "reason": "Reviewed actual initialized-project replay and recovery in addition to rejection before startup; no authority or proof contract changes.",
+          "reviewed_code_fingerprint": "17a36a014bcdddc4543302550f6725d0ef47f21edcd0649f19becb2e86894a3c",
+          "spec_material_hash": "842f03eb7eab828a1f9d39800a702e0900f4871145288120c3e9e21f8b164eb0"
         },
         {
-          "disposition": "updated",
+          "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Audited all RPC session descriptors against current entry enforcement, correcting four false session-free entries; bounded early database inspection remains exempt. Existing authorization gates are preserved.",
-          "reviewed_code_fingerprint": "5e07cf62e5b20fec6277789386040ff544c3bfef8d6799db2b4aa9c65dca8c55",
+          "reason": "Reviewed actual initialized-project replay and recovery in addition to rejection before startup; no authority or proof contract changes.",
+          "reviewed_code_fingerprint": "17a36a014bcdddc4543302550f6725d0ef47f21edcd0649f19becb2e86894a3c",
           "spec_material_hash": "94306ae319fd13f68cf62105da91500b9a0179a279106b646093ecd2dcbe0a30"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Audited all RPC session descriptors against current entry enforcement, correcting four false session-free entries; bounded early database inspection remains exempt. Existing authorization gates are preserved.",
-          "reviewed_code_fingerprint": "5e07cf62e5b20fec6277789386040ff544c3bfef8d6799db2b4aa9c65dca8c55",
+          "reason": "Reviewed actual initialized-project replay and recovery in addition to rejection before startup; no authority or proof contract changes.",
+          "reviewed_code_fingerprint": "17a36a014bcdddc4543302550f6725d0ef47f21edcd0649f19becb2e86894a3c",
           "spec_material_hash": "cdc863757905c53f4f176284c72744f0575184c65a059b7edf6239b47c4fc644"
         }
       ],
@@ -697,14 +705,14 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1794988914Z"
+      "updated_at": "1794989501Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch",
         "Linked worktree admission and execution-ready verified separately after backup denial; maintenance policy unchanged. No source/PR changes in other owners."
       ],
-      "artifact_hash": "sha256:c2d528a1368076ef25977fe8a4363b2ed50ccdc8de6d4d46271eb4e9ed9eccb7",
+      "artifact_hash": "sha256:256fbd25acaabc5ec9dd210fe85880962a79d8034f103c52c291cbf7cbb24eef",
       "checks": [
         {
           "name": "baseline_counterexample",
@@ -841,10 +849,17 @@
             "intent_id": "intent:change_01M7NWVMEADM6FS731H2AKEVZM",
             "kind": "trajectory_step_recorded",
             "sequence": 15
+          },
+          {
+            "detail": "trajectory:branch_01M7NWVMHPED3ZZQ4W9D4A0ZJ6",
+            "event_id": "event:16",
+            "intent_id": "intent:change_01M7NWVMEADM6FS731H2AKEVZM",
+            "kind": "trajectory_step_recorded",
+            "sequence": 16
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 15,
+        "next_sequence": 16,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M7NWVMHPED3ZZQ4W9D4A0ZJ6": {
@@ -1063,6 +1078,21 @@
                 ],
                 "sequence": 15,
                 "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "command": "Regression replays the original malformed negotiation after real project initialization, then executes ordinary compatibility recovery controls; repaired execution remains pending.",
+                "custody_event_id": "event:16",
+                "observations": [
+                  "tests/interop_conformance.rs"
+                ],
+                "proof_refs": [],
+                "scope": [
+                  "src/decapod/core/interop.rs",
+                  "tests/interop_conformance.rs"
+                ],
+                "sequence": 16,
+                "validation_findings": []
               }
             ]
           }
@@ -1070,7 +1100,8 @@
       },
       "declared_commands": [
         "Actual official0.148.10 advertises four generic session-gated operations session-free; mentor/assurance calls auto-acquire sessions, bundle calls additionally require isolated workspace. data.database.inspect is an intentional earlier session-free route, not a defect.",
-        "Actual official0.148.10: valid unsupported extension refused; trailing-comma flags accepted as empty negotiation; same malformed stdin rejected."
+        "Actual official0.148.10: valid unsupported extension refused; trailing-comma flags accepted as empty negotiation; same malformed stdin rejected.",
+        "Regression replays the original malformed negotiation after real project initialization, then executes ordinary compatibility recovery controls; repaired execution remains pending."
       ],
       "destination": "pull request",
       "evidence": [

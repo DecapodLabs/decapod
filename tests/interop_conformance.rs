@@ -114,6 +114,24 @@ fn malformed_rpc_parameters_cannot_drop_required_negotiation() {
         .bounded_output(Duration::from_secs(60))
         .unwrap();
     assert!(initialized.status.success(), "{}", combined(&initialized));
+    // Replay the original false accept on an initialized project, then prove
+    // ordinary negotiation still succeeds after that refusal.
+    let malformed = command(binary.as_os_str())
+        .args([
+            "rpc",
+            "--op",
+            "interop.negotiate",
+            "--params",
+            r#"{"required_extensions":["unsupported"],}"#,
+        ])
+        .bounded_output(Duration::from_secs(30))
+        .unwrap();
+    assert!(!malformed.status.success(), "{}", combined(&malformed));
+    assert!(
+        String::from_utf8_lossy(&malformed.stderr).contains("Invalid JSON parameters"),
+        "{}",
+        combined(&malformed)
+    );
     for params in [
         None,
         Some("{}"),

@@ -14,6 +14,8 @@ inventory and maintenance diagnostics remain in their own branches. The
 black-box regression uses a fresh private Git project, removes ambient gate and
 provider overrides, proves rejection before project/session files exist, then
 initializes a real project and executes valid ordinary negotiation controls.
+It also replays the malformed required extension on that initialized project
+before the valid controls, exercising the original false accept and recovery.
 
 `interop::rpc_catalog` emits registered names and manifest metadata from the
 same declarations. The public `lib.rs::run` entrypoint builds unknown-name
@@ -1021,7 +1023,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `5e07cf62e5b20fec6277789386040ff544c3bfef8d6799db2b4aa9c65dca8c55`
+- Repository signal fingerprint: `17a36a014bcdddc4543302550f6725d0ef47f21edcd0649f19becb2e86894a3c`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (236 files), `tests/` (235 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
