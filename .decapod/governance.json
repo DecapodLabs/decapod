@@ -610,6 +610,14 @@
         "tests/unit/plugins/verify_tests.rs",
         "tests/verify_deadlock_regression.rs"
       ]
+    },
+    {
+      "id": "cp-1781-4",
+      "summary": "Refresh v0.148.13 Dockerfile.decapod and specs manifest projections and re-verify spec reviews",
+      "input_digest": "sha256:df763eaf4d13b2e43d46caf5e0c98f8bbf66ce54ca1f63771457927c00137386",
+      "proof_refs": [
+        "v0.148.13-projections=passed"
+      ]
     }
   ],
   "intents": {
@@ -652,21 +660,21 @@
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Re-verified post-v0.148.13 merge architecture boundary: diagnostic extraction remains encapsulated in plugins::verify",
+          "reason": "No architectural changes beyond scoped qa verify recover/regen diagnostic extraction in src/decapod/plugins/verify.rs",
           "reviewed_code_fingerprint": "7e6122e7165b1cd3d1789eade7b28cd2734b1f2633d9df865448c87e71c846a8",
           "spec_material_hash": "080e1e015d867051ec4ecbb1f18aca92a2d62a05798377057e563aaa5a3764e0"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Merged origin/master c5bafce6 (v0.148.13) and reconciled reviewed_sources_digest",
+          "reason": "Verified INTERFACES.md scoped qa verify recover/regen diagnostic contract aligns with v0.148.13 refreshed projections",
           "reviewed_code_fingerprint": "7e6122e7165b1cd3d1789eade7b28cd2734b1f2633d9df865448c87e71c846a8",
           "spec_material_hash": "3baf7067b96d8fad41fcf9ff69aa2866b99b9bc631a1132df1daf96de9c82ab7"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Re-verified post-v0.148.13 merge fail-closed security invariants and zero-leak allowlist boundaries",
+          "reason": "Fail-closed verification boundary and redaction invariants preserved without changes to SECURITY.md",
           "reviewed_code_fingerprint": "7e6122e7165b1cd3d1789eade7b28cd2734b1f2633d9df865448c87e71c846a8",
           "spec_material_hash": "735ae6e95c6b18ff2ccc718fbadaa4d7ae483d632aee2fb071d4f9ae6daa23de"
         }
@@ -679,14 +687,14 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795012991Z"
+      "updated_at": "1795013937Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch",
         "Fail-closed verification: never bypass PROOF_HOOK_FAILED, admit failing snapshots, or leak untrusted child text/paths/URLs"
       ],
-      "artifact_hash": "sha256:05456cd8534f139d981f3243b6344ea3feea39b0488ab1659e6548b129df775c",
+      "artifact_hash": "sha256:665196d859295d189d7502d6518049e57639f52bdf8f25c36709f887ee7d52a1",
       "checks": [
         {
           "name": "cargo_clippy",
@@ -698,6 +706,10 @@
         },
         {
           "name": "plugins_verify_tests",
+          "status": "passed"
+        },
+        {
+          "name": "v0.148.13-projections",
           "status": "passed"
         },
         {
@@ -747,10 +759,17 @@
             "intent_id": "intent:change_01M7QBP48AQ173W18SNDHSF9D8",
             "kind": "trajectory_step_recorded",
             "sequence": 7
+          },
+          {
+            "detail": "trajectory:branch_01M7QBP4CC8XKHSQ4J53W8A0K5",
+            "event_id": "event:8",
+            "intent_id": "intent:change_01M7QBP48AQ173W18SNDHSF9D8",
+            "kind": "trajectory_step_recorded",
+            "sequence": 8
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 7,
+        "next_sequence": 8,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M7QBP4CC8XKHSQ4J53W8A0K5": {
@@ -861,13 +880,37 @@
                 ],
                 "sequence": 7,
                 "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "command": "decapod govern project-check --refresh-specs (v0.148.13)",
+                "custody_event_id": "event:8",
+                "observations": [
+                  ".decapod/managed/Dockerfile.decapod",
+                  ".decapod/managed/specs/.manifest.json"
+                ],
+                "proof_refs": [
+                  "v0.148.13-projections"
+                ],
+                "scope": [
+                  "\".decapod/managed/specs\"]",
+                  "\"tests\"",
+                  ".decapod/managed/specs/INTERFACES.md",
+                  "paths:[\"src/decapod\"",
+                  "src/decapod/plugins/verify.rs",
+                  "tests/unit/plugins/verify_tests.rs",
+                  "tests/verify_deadlock_regression.rs"
+                ],
+                "sequence": 8,
+                "validation_findings": []
               }
             ]
           }
         }
       },
       "declared_commands": [
-        "decapod govern plan approve"
+        "decapod govern plan approve",
+        "decapod govern project-check --refresh-specs (v0.148.13)"
       ],
       "destination": "pull request",
       "evidence": [
@@ -892,6 +935,8 @@
       "intent_id": "intent:change_01M7QBP48AQ173W18SNDHSF9D8",
       "modified_files": [
         ".decapod/config.toml",
+        ".decapod/managed/Dockerfile.decapod",
+        ".decapod/managed/specs/.manifest.json",
         ".decapod/managed/specs/INTERFACES.md",
         "src/decapod/plugins/verify.rs",
         "tests/unit/plugins/verify_tests.rs",
