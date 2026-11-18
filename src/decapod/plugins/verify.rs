@@ -383,6 +383,7 @@ fn hash_file(path: &Path) -> Result<(String, u64, Option<u64>), error::DecapodEr
 // validation, even when a separate ordinary validate would hit aggregate proof.
 fn safe_validation_failure_diagnostic(stdout: &[u8], stderr: &[u8]) -> String {
     const MARKERS: &[&str] = &[
+        "READINESS_GATE_OVERRIDE_UNSUPPORTED",
         "NEEDS_PLAN_APPROVAL",
         "PROOF_HOOK_FAILED",
         "READINESS_BLOCKED",
@@ -432,6 +433,7 @@ fn run_validate_and_hash(
     repo_root: &Path,
     todo_id: Option<&str>,
 ) -> Result<(bool, String), error::DecapodError> {
+    crate::core::validation_runtime::require_full_readiness_environment()?;
     #[cfg(test)]
     VALIDATION_SPAWN_COUNT.with(|count| count.set(count.get() + 1));
     let _verifying = todo_id.map(|id| {
