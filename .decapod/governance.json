@@ -608,6 +608,17 @@
         "agent.init inventory_digest sha256:bd7eec7e7edaa9a427dea5c3d6b4de42e885b23d2b1911f3602527686e366c4e",
         "git diff 9c7e6cff..7bd0a915 (Cargo.toml/Cargo.lock/CHANGELOG.md only)"
       ]
+    },
+    {
+      "id": "cp-1782-4",
+      "summary": "Sync origin/master caeeaba8 (#1792) and verify #1782 risk-map contract tests",
+      "input_digest": "sha256:285507e74d31a744966a5dee940e8f9e40af2d27d9b92cf5ca0348bef69d297f",
+      "proof_refs": [
+        "cargo fmt --check",
+        "cargo test --lib risk_map_warning (1 passed)",
+        "cargo test --test cli_contract_enforcement risk_map_warnings (1 passed)",
+        "cargo test --test plugins_policy_tests (21 passed)"
+      ]
     }
   ],
   "intents": {
@@ -650,9 +661,9 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Re-verify INTERFACES.md against merged origin/master v0.148.12 (#1782)",
-          "reviewed_code_fingerprint": "e53a489f3b817bfeaa6c470d21866853e69035f69d172c5cd4bc9b72c86bdece",
-          "spec_material_hash": "ae715539292369d4d9355fd315dae1516fec70720f43ae93b45fabd63215710e"
+          "reason": "Merged origin/master caeeaba8 (#1792) while preserving Risk-map warning CLI contract (#1782) in INTERFACES.md and refreshed attestation.",
+          "reviewed_code_fingerprint": "fa831c80b453837a1b7126137ab058c4de7df5ef986a013bb93a13bd5d405ba6",
+          "spec_material_hash": "6698eaf9f32bd46fcff1c24d105be4944677927b486675acd9def2db154557c8"
         }
       ],
       "state": "APPROVED",
@@ -663,7 +674,7 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795009138Z"
+      "updated_at": "1795011484Z"
     },
     "trajectory": {
       "active_boundaries": [

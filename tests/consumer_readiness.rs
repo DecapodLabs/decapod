@@ -12,6 +12,233 @@ use std::fs;
 mod consumer_readiness_fixture;
 use consumer_readiness_fixture::{Fixture, LocalHost, WORKFLOW, git};
 
+#[test]
+fn admitted_cli_source_file_pass_cannot_mint_verified_workunit() {
+    use consumer_readiness_fixture::{CONFIG, governed_command};
+    use std::{path::Path, time::Duration};
+
+    let fixture = Fixture::new();
+    let storage = fixture._storage.path();
+    let root = &fixture.options.root;
+    fs::create_dir(storage.join("home")).unwrap();
+    git(root, &["checkout", "-B", "main"]);
+    // Use the same genuine first-adoption path as fresh_docs_readiness.
+    fs::remove_file(root.join(CONFIG)).unwrap();
+    let run = |at: &Path, args: &[&str]| {
+        governed_command(at, storage, args)
+            .bounded_output(Duration::from_secs(30))
+            .unwrap()
+    };
+    let ok = |at: &Path, args: &[&str]| {
+        let output = run(at, args);
+        assert!(
+            output.status.success(),
+            "{args:?}: stdout={} stderr={}",
+            String::from_utf8_lossy(&output.stdout),
+            String::from_utf8_lossy(&output.stderr)
+        );
+        serde_json::from_slice::<serde_json::Value>(&output.stdout)
+            .unwrap_or(serde_json::Value::Null)
+    };
+    ok(
+        root,
+        &[
+            "init",
+            "--force",
+            "--backend",
+            "local",
+            "--no-container-workspaces",
+        ],
+    );
+    git(root, &["add", "-A"]);
+    git(
+        root,
+        &["commit", "-m", "test: accept isolated workunit fixture"],
+    );
+    git(root, &["push", "origin", "main"]);
+    // Match the existing CLI fixture's supported repository identity. No forge
+    // operation or remote execution is performed by this negative control.
+    git(
+        root,
+        &[
+            "remote",
+            "set-url",
+            "origin",
+            "https://github.com/consumer/project.git",
+        ],
+    );
+    let task = ok(
+        root,
+        &[
+            "todo",
+            "add",
+            "test: reject counterfeit workunit proof",
+            "--format",
+            "json",
+        ],
+    );
+    let id = task["id"].as_str().unwrap();
+    ok(root, &["todo", "claim", "--id", id]);
+    let branch = format!("agent/docs-bootstrap/{id}-counterfeit");
+    let workspace = ok(root, &["workspace", "ensure", "--branch", &branch]);
+    let workspace = std::path::PathBuf::from(workspace["worktree_path"].as_str().unwrap());
+    ok(&workspace, &["infer", "orientation", "--task-id", id]);
+    ok(&workspace, &["govern", "plan", "approve"]);
+    let ready = ok(
+        &workspace,
+        &["govern", "plan", "check-execute", "--todo-id", id],
+    );
+    assert_eq!(ready["marker"], "EXECUTION_READY");
+    let governance = ok(&workspace, &["govern", "artifacts", "status"]);
+    let intent = governance["sections"]["trajectory"]["intent_id"]
+        .as_str()
+        .unwrap();
+    ok(
+        &workspace,
+        &[
+            "govern",
+            "workunit",
+            "init",
+            "--task-id",
+            id,
+            "--intent-ref",
+            intent,
+        ],
+    );
+    ok(
+        &workspace,
+        &[
+            "govern",
+            "workunit",
+            "attach-spec",
+            "--task-id",
+            id,
+            "--ref",
+            ".decapod/managed/specs/INTENT.md",
+        ],
+    );
+    ok(
+        &workspace,
+        &[
+            "govern",
+            "capsule",
+            "query",
+            "--topic",
+            "canonical observed workunit proof",
+            "--scope",
+            "interfaces",
+            "--task-id",
+            id,
+            "--workunit-id",
+            id,
+            "--write",
+        ],
+    );
+    let capsule_ref = format!(".decapod/managed/context/{id}.json");
+    ok(
+        &workspace,
+        &[
+            "govern",
+            "workunit",
+            "attach-state",
+            "--task-id",
+            id,
+            "--ref",
+            &capsule_ref,
+        ],
+    );
+    ok(
+        &workspace,
+        &[
+            "govern",
+            "workunit",
+            "set-proof-plan",
+            "--task-id",
+            id,
+            "--gate",
+            "validate_passes",
+        ],
+    );
+    let checkpoint = ok(
+        &workspace,
+        &[
+            "govern",
+            "workunit",
+            "checkpoint",
+            "--task-id",
+            id,
+            "--operation-id",
+            "counterfeit-current",
+        ],
+    );
+    assert_eq!(checkpoint["resumable"], true);
+    for status in ["executing", "claimed"] {
+        ok(
+            &workspace,
+            &[
+                "govern",
+                "workunit",
+                "transition",
+                "--task-id",
+                id,
+                "--to",
+                status,
+            ],
+        );
+    }
+    // A real file passes the artifact-integrity check. It is still only an
+    // agent declaration, so test the canonical producer gate beyond that check.
+    ok(
+        &workspace,
+        &[
+            "govern",
+            "workunit",
+            "record-proof",
+            "--task-id",
+            id,
+            "--gate",
+            "validate_passes",
+            "--status",
+            "pass",
+            "--artifact",
+            ".decapod/managed/specs/INTENT.md",
+        ],
+    );
+    let before = ok(
+        &workspace,
+        &["govern", "workunit", "journal-status", "--task-id", id],
+    );
+    let denied = run(
+        &workspace,
+        &[
+            "govern",
+            "workunit",
+            "transition",
+            "--task-id",
+            id,
+            "--to",
+            "verified",
+        ],
+    );
+    assert!(!denied.status.success());
+    let diagnostic = String::from_utf8_lossy(&denied.stderr);
+    assert!(diagnostic.contains("VALIDATION_HISTORY"), "{diagnostic}");
+    assert!(
+        diagnostic.contains("no canonical full validation proof"),
+        "{diagnostic}"
+    );
+    let manifest = ok(&workspace, &["govern", "workunit", "get", "--task-id", id]);
+    assert_eq!(manifest["status"], "CLAIMED");
+    assert_eq!(manifest["proof_results"][0]["status"], "pass");
+    assert!(manifest.get("validation_record").is_none());
+    let after = ok(
+        &workspace,
+        &["govern", "workunit", "journal-status", "--task-id", id],
+    );
+    assert_eq!(before["generation"], after["generation"]);
+    assert_eq!(after["projection_state"], "current");
+}
+
 impl Fixture {
     fn with_accepted_profile(id: &str) -> Self {
         Self::with_accepted_config(Some(&format!(

@@ -1,5 +1,15 @@
 # Intent
 
+## Accepted release12 continuity
+
+The accepted target advanced again to `7bd0a915` (0.148.12), which changes only the root package versions and changelog after9c. The prior9c merge remains a real parent with its own checkpoint; this release integration gets a new native checkpoint. All105 verification-source inputs were independently remeasured: Cargo.toml/Cargo.lock version bytes changed and103 remained identical. Required helpers, graph, commands and toolchain remain unchanged. Official session acquire installed a private0.148.12 controller (SHA256 `1fb9e592076c937f0be049f2329b287e22f2e6a346b8f351ec863bfc92a6d7d3`) and restored the temporary config opt-in; old/shared binaries remain intact. Native projection refresh does not transfer earlier Actions success or establish current admission.
+
+## Current accepted-target integration
+
+The active currentness task integrates accepted master `9c7e6cff` through a real two-parent merge after the external acceptance of PR1791. Its strict JSON source, test compile inputs and authored contracts are retained alongside this task's current proof obligations. Earlier352-based source results remain historical; the combined candidate requires new execution against9c. The native active journal stays with this task; Git preserves both parents and all accepted history. No merge admission is inferred from the external ref update.
+
+## Accepted interoperability workstream context
+
 ## Unambiguous client requirements
 
 Interop discovery must not silently erase a caller's required semantics.
@@ -26,6 +36,82 @@ refresh/project-check now owns those regenerated release surfaces. The
 configured proof graph is unchanged. Host-only container and shared-task
 proof blockers remain separate from portable source-CI execution and prevent
 any claim of native admission. Metadata repair is not a passing runtime test.
+
+## Checkpoint history recovery
+
+This fresh governed workstream preserves PR #1788 and immutable source
+`d53835ad2ee573996edcc31ef1ce2ef577a9a7cc`. Exact native inspection relative
+to current accepted `352d8929` found one missing checkpoint, after the agent
+committed a release merge before its asynchronous checkpoint completed. Eight
+earlier authored commits passed that same inspection. The native assessment
+of the older original baseline is retained separately with its complete
+findings. Neither assessment is relabelled as a passing history.
+
+After the present-time recovery archive was committed, the native resolver
+accepted only its current archive/reauthoring disposition. The original gap
+remains historical and unproven. Official 0.148.11 refreshes the current managed
+Docker pin and manifest release metadata; its installation used the supported
+session updater in a private location. Shared-host prerequisites are not
+publication proof, and fresh applicable Actions execution is still required.
+
+The source branch and failures remain preserved. This task reauthors only
+reviewed workunit code, meaningful execution tests, source inventory and
+semantic prose from the accepted target, with a present-time native history
+recovery observation. It imports no prior governance, custody, success or
+publication authority. A late checkpoint cannot repair the old commit; fresh
+current checkpoints and independent execution must establish this candidate.
+
+## Accepted release source review
+
+This currentness workstream starts from accepted `352d8929` (0.148.11).
+The preserved original branch integrated that release through a real
+two-parent merge. All 105 verification-source inputs were
+independently measured, including declared symlink target bytes and their
+separately inventoried regular target. Only the root package versions in
+Cargo.toml/Cargo.lock changed from 0.148.10; the remaining 103, required
+workflow/executor graph and declared toolchain are unchanged. Reconciliation
+retains the full configured proof policy and does not establish execution.
+
+## Observed proof remains current only within its execution contract
+
+A genuine prior success must remain inspectable as history while a newer full
+not-ready judgment withdraws current workunit verification. Safe repair must
+remain available: fresh complete proof for the exact current task and renewed
+custody can restore VERIFIED. This correction uses the existing validation
+history and workunit journal; it adds no alternative proof producer. The CLI
+regression executes real required Python checks and an explicitly declared
+external failure control. It proves bounded currentness and recovery, without
+claiming complete external-input closure, forge publication admission, or an
+independent agent/host.
+
+## Actual-boundary workunit proof controls (#1660, #1735)
+
+The combined candidate incorporates accepted release `34f837d4` (0.148.10).
+All 105 verification-source inputs were independently remeasured: only the
+root package versions in Cargo.toml and Cargo.lock changed from 0.148.9;
+the remaining 103 inputs, workflows, required graph and toolchain are intact.
+The reviewed inventory is reconciled accordingly. A scoped 0.148.10 controller,
+installed through the official session updater, owns current projection refresh
+and validation. Its actual binary digest is retained separately from candidate
+evidence. Controller installation and release integration are not test proof.
+
+The ordinary recovery path must retain the workunit's genuine task-bound
+context capsule and policy lineage. The source-file counterexample prepares
+that capsule through the public query and attach-state commands before
+requesting proof, so missing context cannot substitute for the producer test.
+Full validation uses its current runtime observation while the workunit is
+CLAIMED; it does not require a prior VERIFIED projection. A generic terminal
+rule refusal is not evidence of a circular proof dependency.
+
+An agent-declared passing result and a real source file's digest must remain
+diagnostic declarations. The existing canonical full-validation producer owns
+VERIFIED admission. The campaign's actual-binary control reaches an admitted
+task worktree and current execution checkpoint without gate-skip variables;
+recording a source-file pass succeeds, while VERIFIED is refused without the
+canonical producer record. The journal retains the declaration and CLAIMED
+status. This confirms the bounded guard, not the issue's entire proof matrix.
+Fresh trusted proof, split-store recovery, replay and publication remain
+separate acceptance obligations.
 
 ## Autonomous safe config recovery and privilege custody (#1771, #1776)
 
@@ -541,7 +627,7 @@ These declarations select authoring and proof obligations; they do not attest im
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `e53a489f3b817bfeaa6c470d21866853e69035f69d172c5cd4bc9b72c86bdece`
+- Repository signal fingerprint: `fa831c80b453837a1b7126137ab058c4de7df5ef986a013bb93a13bd5d405ba6`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (237 files), `tests/` (236 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
