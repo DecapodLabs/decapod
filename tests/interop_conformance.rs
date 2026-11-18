@@ -1081,8 +1081,15 @@ fn session_task_continuity() {
     let mut h = Harness::new("session_task_continuity");
 
     // Process A: create and claim governed work.
+    let primary_acquire = h.raw_as("primary", None, &["session", "acquire"], &[]);
+    let primary_pw = parse_session_password(&primary_acquire);
     let tid = add_todo_cli(&h, "interop continuity probe");
-    let claim = h.raw(&["todo", "claim", "--id", &tid], &[], true);
+    let claim = h.raw_as(
+        "primary",
+        Some(&primary_pw),
+        &["todo", "claim", "--id", &tid],
+        &[],
+    );
     assert!(claim.status.success(), "claim failed: {}", combined(&claim));
 
     // Separate processes observe durable state.
@@ -1122,7 +1129,7 @@ fn session_task_continuity() {
     h.check(
         "continuity.replacement_cannot_claim",
         "cli:todo.claim --mode exclusive as agent 'intruder'",
-        "typed conflict: task already claimed by 'unknown'",
+        "typed conflict: task already claimed by 'primary'",
         combined(&intruder_claim)
             .chars()
             .take(200)
@@ -1143,7 +1150,7 @@ fn session_task_continuity() {
             "--id",
             &tid,
             "--to",
-            "unknown",
+            "primary",
             "--summary",
             "replacement probe",
         ],
@@ -1166,7 +1173,7 @@ fn session_task_continuity() {
     // id is rejected by the session binding.
     let replay = h.rpc_payload_raw(
         "intruder",
-        Some(&h.password),
+        Some(&primary_pw),
         json!({
             "op": "store.upsert",
             "params": {"entity": "knowledge", "payload": {"id": "K_REPLAY", "title": "replay", "text": "replay probe", "provenance": "cmd:interop-conformance-replay"}},
@@ -1174,7 +1181,7 @@ fn session_task_continuity() {
     );
     h.check(
         "continuity.session_replay_rejected",
-        "rpc-stdin:store.upsert as 'intruder' with unknown's password",
+        "rpc-stdin:store.upsert as 'intruder' with primary's password",
         "rejected; replayed session grants no authority",
         format!("success={} exit={}", replay.0["success"], replay.1.status),
         replay.0["success"] != true,
@@ -1197,7 +1204,7 @@ fn session_task_continuity() {
             "item.status={} item.owner={}",
             get_json["item"]["status"], get_json["item"]["owner"]
         ),
-        get_json["item"]["status"] == "open" && get_json["item"]["owner"] == "unknown",
+        get_json["item"]["status"] == "open" && get_json["item"]["owner"] == "primary",
         None,
         vec![],
     );

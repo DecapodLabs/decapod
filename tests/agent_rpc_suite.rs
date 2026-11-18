@@ -117,7 +117,7 @@ fn bootstrap_session() -> &'static str {
     // This prerequisite result is not full publication-readiness proof.
 
     SESSION_PASSWORD.get_or_init(|| {
-        let agent_id = "unknown";
+        let agent_id = "rpc-suite-agent";
 
         let _ = Command::new("git")
             .current_dir(test_repo_root())
@@ -187,11 +187,12 @@ fn bootstrap_session() -> &'static str {
 
 fn ensure_claimed_task(session_password: &str) -> &'static str {
     CLAIMED_TODO_ID.get_or_init(|| {
+        let agent_id = "rpc-suite-agent";
         let todo_add_out = run_cmd_with_lock_retry(|| {
             run_decapod(
                 &["todo", "add", "ordering gate test task", "--format", "json"],
                 &[
-                    ("DECAPOD_AGENT_ID", "unknown"),
+                    ("DECAPOD_AGENT_ID", agent_id),
                     ("DECAPOD_CLAIM_AUTORUN", "0"),
                     ("DECAPOD_SESSION_PASSWORD", session_password),
                 ],
@@ -210,10 +211,10 @@ fn ensure_claimed_task(session_password: &str) -> &'static str {
         let todo_claim_out = run_cmd_with_lock_retry(|| {
             run_decapod(
                 &[
-                    "todo", "claim", "--id", &todo_id, "--agent", "unknown", "--format", "json",
+                    "todo", "claim", "--id", &todo_id, "--agent", agent_id, "--format", "json",
                 ],
                 &[
-                    ("DECAPOD_AGENT_ID", "unknown"),
+                    ("DECAPOD_AGENT_ID", agent_id),
                     ("DECAPOD_CLAIM_AUTORUN", "0"),
                     ("DECAPOD_SESSION_PASSWORD", session_password),
                 ],
@@ -243,7 +244,7 @@ fn run_rpc(request: serde_json::Value) -> serde_json::Value {
             let mut cmd = Command::new(exe);
             cmd.current_dir(test_repo_root())
                 .args(["rpc", "--stdin"])
-                .env("DECAPOD_AGENT_ID", "unknown")
+                .env("DECAPOD_AGENT_ID", "rpc-suite-agent")
                 .env("DECAPOD_CLAIM_AUTORUN", "0")
                 .env("DECAPOD_SESSION_PASSWORD", session_password)
                 .stdin(Stdio::piped())

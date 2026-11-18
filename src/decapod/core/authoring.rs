@@ -2,6 +2,39 @@
 //! Cloud task profiles deliberately do not infer filesystem authority from paths.
 use super::*;
 
+/// Returns `true` when `actor` is missing, whitespace-only, or the `"unknown"` placeholder.
+pub(crate) fn is_missing_or_unknown_actor(actor: &str) -> bool {
+    let trimmed = actor.trim();
+    trimmed.is_empty() || trimmed.eq_ignore_ascii_case("unknown")
+}
+
+/// Canonical fail-closed error when an exclusive claim or authoring action lacks an explicit actor.
+pub(crate) fn authoring_actor_required_error() -> error::DecapodError {
+    error::DecapodError::ValidationError(
+        "AUTHORING_ACTOR_REQUIRED: explicit non-'unknown' actor identity is required; set and export DECAPOD_AGENT_ID=<actor> (or pass --agent <actor>) before claiming a task or provisioning an authoring workspace; inspect current task custody and checkout; do not impersonate another actor or retry an ambiguous write".into(),
+    )
+}
+
+/// Returns `true` if `task_id` currently holds a checkout binding for any non-`unknown` actor.
+pub(crate) fn has_real_actor_checkout_custody(
+    conn: &Connection,
+    task_id: &str,
+) -> Result<bool, error::DecapodError> {
+    if !conn.has_table("authoring_bindings")? {
+        return Ok(false);
+    }
+    let mut stmt =
+        conn.prepare("SELECT agent_id FROM authoring_bindings WHERE task_id = ?1 LIMIT 65")?;
+    let rows = stmt.query_map([task_id], |r| r.get::<_, String>(0))?;
+    for row in rows {
+        let bound_agent = row?;
+        if !is_missing_or_unknown_actor(&bound_agent) {
+            return Ok(true);
+        }
+    }
+    Ok(false)
+}
+
 fn denied(code: &str) -> error::DecapodError {
     error::DecapodError::ValidationError(format!(
         "{code}: inspect current task custody and checkout; do not impersonate another actor or retry an ambiguous write"
@@ -79,7 +112,7 @@ pub(crate) fn retire_task_bindings_on_conn(
         "DELETE FROM authoring_bindings WHERE task_id = ?1",
         [task_id],
     )?;
-    let effective_actor = if actor.trim().is_empty() || actor == "unknown" {
+    let effective_actor = if is_missing_or_unknown_actor(actor) {
         "decapod"
     } else {
         actor
@@ -182,7 +215,7 @@ pub fn release_authoring_binding(
     if !db_path.exists() {
         return Ok(false);
     }
-    let effective_actor = if actor.trim().is_empty() || actor == "unknown" {
+    let effective_actor = if is_missing_or_unknown_actor(actor) {
         "decapod"
     } else {
         actor
@@ -258,7 +291,7 @@ pub fn enforce_shared_resource_available(
     }
     let now = now_iso();
     let active = list_active_exclusive_claims(&conn, &now)?;
-    let has_verified_actor = !actor.trim().is_empty() && actor != "unknown";
+    let has_verified_actor = !is_missing_or_unknown_actor(actor);
     for requested in requested_resources {
         for claim in &active {
             if claim.agent_id.trim().is_empty()
@@ -311,8 +344,8 @@ pub fn check_authoring(
     if broker.is_cloud() {
         return Err(error::DecapodError::NotImplemented("AUTHORING_PROFILE_UNSUPPORTED: cloud tasks/events do not support verified host checkout bindings; no local shadow or fallback".into()));
     }
-    if actor.trim().is_empty() || actor == "unknown" {
-        return Err(denied("AUTHORING_ACTOR_REQUIRED"));
+    if is_missing_or_unknown_actor(actor) {
+        return Err(authoring_actor_required_error());
     }
     let observed = crate::core::workspace::observe_checkout(checkout);
     let main = crate::core::workspace::get_main_repo_root(checkout)?;

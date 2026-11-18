@@ -397,3 +397,154 @@ fn worker_missing_artifact_never_completes_or_archives_task() {
     let failures: i64 = conn.query_row("SELECT count(*) FROM events WHERE stream='todo' AND subject_id=?1 AND event_type='task.verify.capture_failed'",[id],|r|r.get(0)).unwrap();
     assert_eq!(failures, 1);
 }
+
+#[test]
+fn claim_task_rejects_unknown_and_empty_actor_with_guidance() {
+    let temp = tempfile::tempdir().unwrap();
+    let root = temp.path().join(".decapod/data");
+    super::initialize_todo_db(&root).unwrap();
+    let added = super::add_task(
+        &root,
+        &super::TodoCommand::Add {
+            title: "Reject unknown claim".into(),
+            description: String::new(),
+            tags: String::new(),
+            owner: String::new(),
+            due: None,
+            r#ref: String::new(),
+            scope: String::new(),
+            dir: Some(temp.path().to_string_lossy().into_owned()),
+            priority: "medium".into(),
+            depends_on: String::new(),
+            blocks: String::new(),
+            parent: None,
+            one_shot: 0,
+        },
+    )
+    .unwrap();
+    let id = added["id"].as_str().unwrap();
+
+    for actor in ["unknown", "UNKNOWN", "", "   "] {
+        for mode in [super::ClaimMode::Exclusive, super::ClaimMode::Shared] {
+            let err = super::claim_task_with_lease(&root, id, actor, mode, None, None)
+                .unwrap_err()
+                .to_string();
+            assert!(
+                err.contains("AUTHORING_ACTOR_REQUIRED"),
+                "expected AUTHORING_ACTOR_REQUIRED for actor={actor:?}, got: {err}"
+            );
+            assert!(
+                err.contains("DECAPOD_AGENT_ID=<actor>"),
+                "expected DECAPOD_AGENT_ID guidance for actor={actor:?}, got: {err}"
+            );
+        }
+        let renew_err = super::renew_claim_lease(&root, id, actor, Some(600))
+            .unwrap_err()
+            .to_string();
+        assert!(renew_err.contains("AUTHORING_ACTOR_REQUIRED"));
+        let yield_err = super::yield_claim_lease(&root, id, actor, "done")
+            .unwrap_err()
+            .to_string();
+        assert!(yield_err.contains("AUTHORING_ACTOR_REQUIRED"));
+    }
+
+    let task = super::get_task(&root, id).unwrap().unwrap();
+    assert_eq!(task.assigned_to, "");
+    assert!(task.owners.is_empty());
+}
+
+#[test]
+fn claim_task_recovers_legacy_unknown_claim_without_real_custody_and_blocks_if_bound() {
+    let temp = tempfile::tempdir().unwrap();
+    let root = temp.path().join(".decapod/data");
+    super::initialize_todo_db(&root).unwrap();
+
+    let clean_id = "code_01legacyunknownclean";
+    let bound_id = "code_01legacyunknownbound";
+
+    let conn = crate::core::db::Connection::open(super::todo_db_path(&root)).unwrap();
+    for (id, hash, title) in [
+        (
+            clean_id,
+            "01lega",
+            "Legacy unknown claim without checkout custody",
+        ),
+        (
+            bound_id,
+            "01legb",
+            "Legacy unknown claim with real checkout binding",
+        ),
+    ] {
+        conn.execute(
+            "INSERT INTO tasks(id,hash,title,status,created_at,updated_at,dir_path,scope,owner,assigned_to,assigned_at,lease_expires_at,lease_generation,lease_lifecycle,intent_anchor,revision)
+             VALUES(?1,?2,?3,'open','100Z','100Z',?,'root','unknown','unknown','100Z','4102444800Z',1,'claimed',?5,1)",
+            crate::core::db::params![
+                id,
+                hash,
+                title,
+                temp.path().to_string_lossy().as_ref(),
+                format!("intent:todo:{id}")
+            ],
+        )
+        .unwrap();
+        conn.execute(
+            "INSERT INTO task_owners(id, task_id, agent_id, claimed_at, claim_type)
+             VALUES(?1, ?2, 'unknown', '100Z', 'primary')",
+            crate::core::db::params![format!("own_{id}"), id],
+        )
+        .unwrap();
+    }
+    conn.execute(
+        "INSERT INTO authoring_bindings(worktree_id, task_id, agent_id, lease_generation, branch, repository_id, updated_at)
+         VALUES('wt-real-custody', ?1, 'real-custodian', 1, 'agent/real-custodian/bound', '/repo/.git', '100Z')",
+        [bound_id],
+    )
+    .unwrap();
+    drop(conn);
+    assert_eq!(
+        super::task_journal_checkpoint(&root, None).unwrap()["status"],
+        "ok"
+    );
+
+    // Explicit real actor cleanly adopts legacy 'unknown' claim with no real checkout custody.
+    let adopted = super::claim_task_with_lease(
+        &root,
+        clean_id,
+        "alice",
+        super::ClaimMode::Exclusive,
+        Some(1800),
+        None,
+    )
+    .unwrap();
+    assert_eq!(adopted["status"], "ok", "{adopted}");
+    assert_eq!(adopted["result"]["assigned_to"], "alice");
+    assert_eq!(adopted["result"]["reclaimed_from"], "unknown");
+    assert_eq!(adopted["result"]["lease_generation"], 2);
+    assert_eq!(adopted["result"]["lease_lifecycle"], "reclaimed");
+
+    // Cross-owner custody between real actors remains blocked.
+    let cross_owner = super::claim_task_with_lease(
+        &root,
+        clean_id,
+        "bob",
+        super::ClaimMode::Exclusive,
+        Some(1800),
+        None,
+    )
+    .unwrap();
+    assert_eq!(cross_owner["status"], "conflict", "{cross_owner}");
+    assert_eq!(cross_owner["result"]["assigned_to"], "alice");
+
+    // Pre-existing 'unknown' claim with verified real-actor checkout custody fails closed.
+    let blocked = super::claim_task_with_lease(
+        &root,
+        bound_id,
+        "dave",
+        super::ClaimMode::Exclusive,
+        Some(1800),
+        None,
+    )
+    .unwrap();
+    assert_eq!(blocked["status"], "conflict", "{blocked}");
+    assert_eq!(blocked["result"]["assigned_to"], "unknown");
+}

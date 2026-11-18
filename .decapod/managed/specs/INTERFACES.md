@@ -1,5 +1,26 @@
 # Interfaces
 
+## Explicit actor identity on claim and workspace boundaries (#1737)
+
+`todo::claim_task_with_lease` (covering CLI `decapod todo claim`, cloud
+`TodoCommand::Claim`, `todo renew`, `todo yield`, `todo heartbeat --autoclaim`,
+`todo worker-run`, `todo add-owner`, and explicit `--owner` on `todo add` /
+`todo edit`), `workspace::ensure_workspace` (CLI `decapod workspace ensure`
+and RPC `workspace.ensure`), and `core::mentor::reflection::custody` reject
+missing, whitespace-only, or `"unknown"` actors via
+`core::authoring::is_missing_or_unknown_actor` before mutating task custody or
+creating a branch/worktree, failing closed with `AUTHORING_ACTOR_REQUIRED` and
+explicit `DECAPOD_AGENT_ID=<actor>` guidance.
+
+Read-only inspection and intake surfaces (`todo list`, `todo get`, `todo show`,
+`workspace status`, `docs ingest`, `eval`) and ownerless `todo add` remain
+usable when `DECAPOD_AGENT_ID` is unset. For pre-existing tasks whose
+`assigned_to` is `"unknown"`, an explicit non-`"unknown"` actor can adopt the
+task via exclusive `todo claim` or `workspace ensure --branch` when
+`authoring_bindings` holds no real-actor checkout custody and `task_owners` holds
+no other real primary owner; adoption emits `task.release` with reason
+`unknown_actor_adopted` and advances `lease_generation` (`lease_lifecycle = "reclaimed"`).
+
 ## Workunit proof and continuity semantics (#1660)
 
 Before full proof, use `govern capsule query --task-id <id> --workunit-id <id>
@@ -1339,7 +1360,7 @@ field. Nothing in this operation authorizes a mutation, approval or completion.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `7e6122e7165b1cd3d1789eade7b28cd2734b1f2633d9df865448c87e71c846a8`
+- Repository signal fingerprint: `5c45dadbac801cc0036409b08b1116c6c63b2befb9d45a17189b8b45baab3355`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (237 files), `tests/` (236 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

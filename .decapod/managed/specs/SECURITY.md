@@ -1,5 +1,23 @@
 # Security
 
+## Actor custody enforcement and unknown-claim recovery (#1737)
+
+`core::authoring::is_missing_or_unknown_actor` and
+`core::authoring::authoring_actor_required_error` close the `"unknown"` / empty
+actor bypass across task claiming, lease lifecycle (`renew`, `yield`), explicit
+owner assignment, mentor reflection custody (`core::mentor::reflection::custody`),
+and workspace provisioning (`workspace::ensure_workspace` for both CLI and RPC).
+Failing closed at entry prevents `"unknown"` locks and unowned `agent/unknown/*`
+coordination todos or worktrees from being created.
+
+Recovery of legacy `assigned_to == "unknown"` claims is narrowly bounded:
+`claim_task_with_lease` and `claim_branch_scoped_open_tasks` allow an explicit
+real `DECAPOD_AGENT_ID` to adopt an `"unknown"` task only when
+`core::authoring::has_real_actor_checkout_custody` and
+`has_other_real_primary_owner` are both false. Tasks bound in `authoring_bindings`
+to a real actor, holding another real primary owner, or actively claimed by a
+real actor fail closed (`status: "conflict"` / `WORKSPACE_BRANCH_TODO_CLAIM_CONFLICT`).
+
 ## Ambiguous RPC JSON
 
 Duplicate decoded keys are invalid at every nesting level, including Unicode
@@ -706,7 +724,7 @@ execution evidence remains required before publication readiness.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `7e6122e7165b1cd3d1789eade7b28cd2734b1f2633d9df865448c87e71c846a8`
+- Repository signal fingerprint: `5c45dadbac801cc0036409b08b1116c6c63b2befb9d45a17189b8b45baab3355`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (237 files), `tests/` (236 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

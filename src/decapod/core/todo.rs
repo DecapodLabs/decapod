@@ -41,6 +41,7 @@ mod task_journal;
 pub use authoring::{
     admit_authoring, check_authoring, enforce_shared_resource_available, release_authoring_binding,
 };
+pub(crate) use authoring::{authoring_actor_required_error, is_missing_or_unknown_actor};
 pub use task_journal::{
     VerifyBudget as TaskJournalVerifyBudget, VerifyCursor as TaskJournalVerifyCursor,
 };
@@ -712,7 +713,7 @@ pub enum TodoCommand {
     Claim {
         #[clap(long)]
         id: String,
-        /// Agent identifier (defaults to environment or 'unknown').
+        /// Agent identifier (defaults to DECAPOD_AGENT_ID; 'unknown' is rejected).
         #[clap(long)]
         agent: Option<String>,
         /// Claim mode: exclusive takes assignment; shared joins as secondary owner.
@@ -739,7 +740,7 @@ pub enum TodoCommand {
     Renew {
         #[clap(long)]
         id: String,
-        /// Agent identifier (defaults to environment or 'unknown').
+        /// Agent identifier (defaults to DECAPOD_AGENT_ID; 'unknown' is rejected).
         #[clap(long)]
         agent: Option<String>,
         /// Lease duration in seconds from now (default 1800, max 86400).
@@ -750,7 +751,7 @@ pub enum TodoCommand {
     Yield {
         #[clap(long)]
         id: String,
-        /// Agent identifier (defaults to environment or 'unknown').
+        /// Agent identifier (defaults to DECAPOD_AGENT_ID; 'unknown' is rejected).
         #[clap(long)]
         agent: Option<String>,
         /// Optional reason recorded on the yield event.
@@ -3512,6 +3513,12 @@ pub fn add_task(root: &Path, args: &TodoCommand) -> Result<serde_json::Value, er
     let ts = now_iso();
     let intent_ref = format!("intent:todo.add:{}", crate::core::ulid::new_ulid());
     let owner_list = parse_owners_input(owner);
+    if owner_list
+        .iter()
+        .any(|o| authoring::is_missing_or_unknown_actor(o))
+    {
+        return Err(authoring::authoring_actor_required_error());
+    }
     let validated_collections = crate::core::storage_contracts::validate_task_write(
         &crate::core::storage_contracts::TaskWriteInput {
             title,
@@ -4065,6 +4072,13 @@ pub fn edit_task(
     category: Option<&str>,
 ) -> Result<serde_json::Value, error::DecapodError> {
     let parsed_owners = owner.map(parse_owners_input);
+    if parsed_owners.as_ref().is_some_and(|owners| {
+        owners
+            .iter()
+            .any(|o| authoring::is_missing_or_unknown_actor(o))
+    }) {
+        return Err(authoring::authoring_actor_required_error());
+    }
     crate::core::storage_contracts::validate_task_patch(
         &crate::core::storage_contracts::TaskPatchInput {
             id,
@@ -4309,6 +4323,9 @@ pub fn claim_task_with_lease(
     lease_seconds: Option<u64>,
     intent_anchor: Option<String>,
 ) -> Result<serde_json::Value, error::DecapodError> {
+    if authoring::is_missing_or_unknown_actor(agent_id) {
+        return Err(authoring::authoring_actor_required_error());
+    }
     let ts = now_iso();
     let now_secs = parse_epoch_z(&ts).unwrap_or_else(now_unix_secs);
     let lease_secs = lease_seconds
@@ -4458,7 +4475,18 @@ pub fn claim_task_with_lease(
                         }));
                     }
                     if !assigned_to.is_empty() && assigned_to != agent_id {
+                        let is_unknown_assignee =
+                            authoring::is_missing_or_unknown_actor(&assigned_to);
                         if mode == ClaimMode::Shared {
+                            if is_unknown_assignee {
+                                return Ok(serde_json::json!({
+                                    "status": "conflict",
+                                    "mode": "shared",
+                                    "message": format!("Task {} is currently claimed by '{}'; claim it exclusively with an explicit DECAPOD_AGENT_ID before adding shared owners", id, assigned_to),
+                                    "resolution": "claim_exclusive_as_real_actor",
+                                    "assigned_to": assigned_to
+                                }));
+                            }
                             let claim_id = upsert_task_owner(conn, id, agent_id, "secondary", &ts)?;
                             write_ownership_claim_event(
                                 root,
@@ -4496,11 +4524,24 @@ pub fn claim_task_with_lease(
                             }));
                         }
 
+                        let unknown_recoverable = is_unknown_assignee
+                            && !authoring::has_real_actor_checkout_custody(conn, id)?
+                            && !has_other_real_primary_owner(conn, id, agent_id)?;
                         let lease_expired =
                             fleet_coord::lease_allows_reclaim(existing_lease.as_deref(), &ts);
                         let agent_stale =
                             is_agent_stale(conn, &assigned_to, &ts, AGENT_EVICT_TIMEOUT_SECS)?;
-                        if lease_expired || agent_stale {
+                        if unknown_recoverable {
+                            force_release_assignment(
+                                conn,
+                                id,
+                                &assigned_to,
+                                agent_id,
+                                &ts,
+                                "unknown_actor_adopted",
+                            )?;
+                            reclaimed_from = Some(assigned_to);
+                        } else if !is_unknown_assignee && (lease_expired || agent_stale) {
                             force_release_assignment(
                                 conn,
                                 id,
@@ -4728,6 +4769,30 @@ pub fn claim_task_with_lease(
     }))
 }
 
+fn has_other_real_primary_owner(
+    conn: &Connection,
+    task_id: &str,
+    claiming_agent: &str,
+) -> Result<bool, error::DecapodError> {
+    let mut stmt = conn
+        .prepare(
+            "SELECT agent_id FROM task_owners
+             WHERE task_id = ?1 AND claim_type = 'primary'
+             LIMIT 65",
+        )
+        .map_err(error::DecapodError::StorageError)?;
+    let rows = stmt
+        .query_map([task_id], |r| r.get::<_, String>(0))
+        .map_err(error::DecapodError::StorageError)?;
+    for row in rows {
+        let owner = row.map_err(error::DecapodError::StorageError)?;
+        if owner != claiming_agent && !authoring::is_missing_or_unknown_actor(&owner) {
+            return Ok(true);
+        }
+    }
+    Ok(false)
+}
+
 fn force_release_assignment(
     conn: &Connection,
     task_id: &str,
@@ -4870,6 +4935,9 @@ pub fn renew_claim_lease(
     agent_id: &str,
     lease_seconds: Option<u64>,
 ) -> Result<serde_json::Value, error::DecapodError> {
+    if authoring::is_missing_or_unknown_actor(agent_id) {
+        return Err(authoring::authoring_actor_required_error());
+    }
     let ts = now_iso();
     let now_secs = parse_epoch_z(&ts).unwrap_or_else(now_unix_secs);
     let lease_secs = lease_seconds
@@ -5031,6 +5099,9 @@ pub fn yield_claim_lease(
     agent_id: &str,
     reason: &str,
 ) -> Result<serde_json::Value, error::DecapodError> {
+    if authoring::is_missing_or_unknown_actor(agent_id) {
+        return Err(authoring::authoring_actor_required_error());
+    }
     let ts = now_iso();
     let broker = DbBroker::new(root);
     let db_path = todo_db_path(root);
@@ -6004,6 +6075,9 @@ fn add_task_owner(
     agent_id: &str,
     claim_type: &str,
 ) -> Result<serde_json::Value, error::DecapodError> {
+    if authoring::is_missing_or_unknown_actor(agent_id) {
+        return Err(authoring::authoring_actor_required_error());
+    }
     let ts = now_iso();
     let broker = DbBroker::new(root);
     let db_path = todo_db_path(root);
@@ -7905,6 +7979,9 @@ async fn run_cloud_todo_command_with_store_async(
             cloud_get_task(root, store, &task_id).await?
         }
         TodoCommand::Claim { id, .. } => {
+            if authoring::is_missing_or_unknown_actor(&actor) {
+                return Err(authoring::authoring_actor_required_error());
+            }
             let task = store.claim_task(id, actor).await.map_err(cloud_error)?;
             serde_json::json!({
                 "ts": now_iso(),
@@ -8453,6 +8530,9 @@ pub fn run_todo_cli_with_cloud_factory<F: CloudTodoStoreFactory>(
             let default_agent =
                 env::var("DECAPOD_AGENT_ID").unwrap_or_else(|_| "unknown".to_string());
             let agent_id = agent.as_deref().unwrap_or(&default_agent);
+            if *autoclaim && authoring::is_missing_or_unknown_actor(agent_id) {
+                return Err(authoring::authoring_actor_required_error());
+            }
             let heartbeat = record_heartbeat(root, agent_id)?;
             if !*autoclaim {
                 heartbeat
@@ -8514,6 +8594,9 @@ pub fn run_todo_cli_with_cloud_factory<F: CloudTodoStoreFactory>(
             let default_agent =
                 env::var("DECAPOD_AGENT_ID").unwrap_or_else(|_| "unknown".to_string());
             let agent_id = agent.as_deref().unwrap_or(&default_agent);
+            if authoring::is_missing_or_unknown_actor(agent_id) {
+                return Err(authoring::authoring_actor_required_error());
+            }
             run_worker_loop(
                 store,
                 agent_id,

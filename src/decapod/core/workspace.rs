@@ -572,7 +572,7 @@ fn claim_branch_scoped_open_tasks(
                 task.id, task.assigned_to
             )));
         }
-        if !task.assigned_to.is_empty() {
+        if !task.assigned_to.is_empty() && !todo::is_missing_or_unknown_actor(&task.assigned_to) {
             return Err(DecapodError::ValidationError(format!(
                 "AUTOREMEDIABLE_VALIDATION_ERROR code=WORKSPACE_BRANCH_TODO_CLAIM_CONFLICT severity=transient auto_remediable=true audience=agent agent_action=\"switch to the agent that owns todo {} or choose a different todo-scoped workspace; Decapod is preventing cross-work while preserving the captured todo\" user_note=\"This branch already belongs to another agent's Decapod todo claim; use the owner or a different todo-scoped workspace.\"\nBranch '{}' is scoped to todo {} but it is already claimed by {}.",
                 task.id, current_branch, task.id, task.assigned_to
@@ -692,6 +692,9 @@ pub fn ensure_workspace(
     config: Option<WorkspaceConfig>,
     agent_id: &str,
 ) -> Result<WorkspaceStatus, DecapodError> {
+    if todo::is_missing_or_unknown_actor(agent_id) {
+        return Err(todo::authoring_actor_required_error());
+    }
     let main_repo = get_main_repo_root(repo_root)?;
     verify_workspace_parent(&main_repo)?;
     let source_inventory = root_isolation(&main_repo)?;
