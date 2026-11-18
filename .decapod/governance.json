@@ -619,6 +619,11 @@
         "tests/datastore_contract.rs",
         "tests/datastore_relational_compaction.rs"
       ]
+    },
+    {
+      "id": "cp-1739-6",
+      "summary": "Reconcile origin/master v0.149.0, rebuild 0.149.0 binary, update reviewed_sources_digest, refresh living specs and projections, record spec reviews, and re-verify fmt/clippy/unit and datastore integration suites",
+      "input_digest": "sha256:ac82f5fcb660b03e499e81a87243359fe07c801d2c20e6223953a45c5a759283"
     }
   ],
   "intents": {
@@ -668,8 +673,8 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Re-reviewed after merging origin/master v0.148.14 (#1799/#1801) and refreshing projections (#1739)",
-          "reviewed_code_fingerprint": "1c29c883ac842d436acb39c7edbb0a5ee61dbac421c8b67254c41c139255bee7",
+          "reason": "Reconciled with origin/master v0.149.0 and verified v2 storage compatibility floor (0.144.2) and _ce_v1/read/write boundary notes",
+          "reviewed_code_fingerprint": "88960a830064920a111cc79bb7758707f7311be1951e076a027795e5bf33ab63",
           "spec_material_hash": "989baceaed8446ee995868f59caf6ed759bf36a70c7d685b80eae57ea7239f9d"
         },
         {
@@ -688,7 +693,7 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795025779Z"
+      "updated_at": "1795033692Z"
     },
     "trajectory": {
       "active_boundaries": [
