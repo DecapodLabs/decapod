@@ -89,7 +89,7 @@ worktree the same rules are evaluated.
 
 ## Baseline comparison
 
-A clean detached worktree at exact base `e5760258` (`/Users/arx/src/decapod-worktrees/baseline-e5760258`) ran:
+A clean detached worktree at exact base `e5760258` (`<worktree-root>/baseline-e5760258`) ran:
 
 `cargo test --all-features --offline`
 

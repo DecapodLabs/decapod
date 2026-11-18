@@ -1,5 +1,15 @@
 # Security
 
+## Public documentation privacy
+
+Public product documentation and site artifacts must exclude real merchant and
+bank/tax identifiers, credentials, private billing configuration and private
+operational records. Technical examples use explicit synthetic values; local
+machine paths use portable placeholders. The existing state-machine audit keeps
+its historical commit and test results while replacing its machine-specific
+worktree path. Marketing navigation exposes the Coming soon product preview,
+without embedding private catalog data or activating a purchase path.
+
 ## Scoped currency authorization (#1753)
 
 Currency preservation requires the same explicit config, sole exact canonical

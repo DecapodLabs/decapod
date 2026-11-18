@@ -794,6 +794,11 @@
       "id": "docs-offerings-recovery-current",
       "summary": "Freshly reauthor the six-line offering entry with release9 projections and unchanged accepted source-CI definitions; preserve old history gap and create no past proof.",
       "input_digest": "sha256:9002263a7d1d1d46432c9038382a1717c80960a233534a4ab0adabc6f34c3ad7"
+    },
+    {
+      "id": "docs-privacy-canonical-preview-20261117",
+      "summary": "Point public Local and Cloud documentation to canonical Coming soon preview; replace inherited machine path and specify public-artifact privacy boundaries",
+      "input_digest": "sha256:a449b0ad33a445f1412501efc8ee9796fcaf0511412fce3c8783c76662b4d303"
     }
   ],
   "intents": {
@@ -824,7 +829,7 @@
       },
       "deferred_questions": [],
       "human_questions": [],
-      "intent": "Issue1769: reauthor the minimal highlighted documentation entry linking the live offering page. Local is free without signup and Get started remains quickstart; Cloud benefits are visible without prices or an active purchase. Preserve latest accepted constitution/brand copy and full required source-CI. Keep previous failed candidate and checkpoint gap as negative evidence; no fabricated historical receipt.",
+      "intent": "Issue1769: publish the minimal highlighted docs entry to the current canonical Coming soon pricing preview, retaining Local free/no signup and quickstart. User additionally requires public site/repository source and generated artifacts to exclude sensitive merchant/account information, credentials, private billing configuration and operational records. Remove the one inherited machine-specific path found in an existing public audit document. Preserve all source-CI requirements, current marketing design and the prior history-gap evidence.",
       "phases": [],
       "proof_hooks": [
         "Complete exact-candidate source-CI, including every authored commit checkpoint and existing docs build"
@@ -834,26 +839,26 @@
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Reauthor only the static documentation offering entry from accepted6ab6de31. No runtime, provider, workflow or accepted check changes; retain present-time history-gap record.",
+          "reason": "Public documentation navigation and privacy hygiene only; no runtime, source-CI provider, required check or storage architecture changes.",
           "reviewed_code_fingerprint": "281f7d1bd3cdb33b2a6393b6086f0adac571bb507ff67b08daa7316ccb1e5e5c",
           "spec_material_hash": "0b7738e450b1038116cd3fce2e9660a615fbea502d988760d54dbf8c314f9146"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Highlighted Local + Cloud link targets the published no-price/Coming soon comparison. Existing quickstart, navigation, themes and motion preferences remain; no account or purchasing authority.",
+          "reason": "Use current canonical pricing preview; free Local and Coming soon Cloud remain explicit and quickstart unchanged. No private billing data is exposed.",
           "reviewed_code_fingerprint": "281f7d1bd3cdb33b2a6393b6086f0adac571bb507ff67b08daa7316ccb1e5e5c",
-          "spec_material_hash": "0308dce5b13c433ffa27376f4363cd0b614696df0ee2577999f36b086b4e31f5"
+          "spec_material_hash": "00da83bcbe7b5f5565fd0de4fc50107402057584e8fe89c8ee307f76a369f7dc"
         },
         {
-          "disposition": "unchanged_with_reason",
+          "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "No auth, credentials, backend selection or permissions changes. Preserve old missing-checkpoint failure and require every current authored commit to have a fresh exact-material checkpoint.",
+          "reason": "User requires public artifacts to omit sensitive merchant/configuration/credential data. Replace inherited machine-specific worktree path with portable placeholder; keep historical tests and commit facts.",
           "reviewed_code_fingerprint": "281f7d1bd3cdb33b2a6393b6086f0adac571bb507ff67b08daa7316ccb1e5e5c",
-          "spec_material_hash": "0c791a6100ed5aec7fe4cedfa16680988dd1e48d50d00af272ef9dff372c3d4d"
+          "spec_material_hash": "1ed86e6a952cc8ec06896237981fb30ef90246fe762a8daf37fcef2986cf3844"
         }
       ],
-      "state": "APPROVED",
+      "state": "DRAFT",
       "stop_conditions": [],
       "title": "Documentation entry for published Local and Coming soon Cloud",
       "todo_ids": [
@@ -861,7 +866,7 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1794956990Z"
+      "updated_at": "1794960827Z"
     },
     "trajectory": {
       "active_boundaries": [

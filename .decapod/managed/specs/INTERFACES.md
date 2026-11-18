@@ -3,7 +3,7 @@
 ## Public documentation offering navigation
 
 The documentation landing page links to the company-owned comparison at
-https://decapodlabs.github.io/offerings.html through a highlighted Local + Cloud
+https://decapodlabs.github.io/pricing.html through a highlighted Local + Cloud
 entry. Local remains free without signup. Cloud benefits are a Coming soon
 preview, with no public price or active purchasing route. Get started retains
 the existing quickstart.html destination. This navigation adds no account,
