@@ -624,6 +624,11 @@
       "id": "cp-1739-6",
       "summary": "Reconcile origin/master v0.149.0, rebuild 0.149.0 binary, update reviewed_sources_digest, refresh living specs and projections, record spec reviews, and re-verify fmt/clippy/unit and datastore integration suites",
       "input_digest": "sha256:ac82f5fcb660b03e499e81a87243359fe07c801d2c20e6223953a45c5a759283"
+    },
+    {
+      "id": "cp-1739-7",
+      "summary": "Record updated 0.149.0 spec reviews for INTERFACES.md, ARCHITECTURE.md, and SECURITY.md",
+      "input_digest": "sha256:ae303982dd619d4b14995b99590b24f78390a8006a6ff386d18be073667c7842"
     }
   ],
   "intents": {
@@ -666,8 +671,8 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Re-reviewed after merging origin/master v0.148.14 (#1799/#1801) and refreshing projections (#1739)",
-          "reviewed_code_fingerprint": "1c29c883ac842d436acb39c7edbb0a5ee61dbac421c8b67254c41c139255bee7",
+          "reason": "Reconciled with origin/master v0.149.0 and verified storage_compaction / migration / events v2 compatibility floor design",
+          "reviewed_code_fingerprint": "88960a830064920a111cc79bb7758707f7311be1951e076a027795e5bf33ab63",
           "spec_material_hash": "e94b6cc9c5f061ffb5c7e3035c288d954dece7de272a07b42abc1e6df240eee7"
         },
         {
@@ -680,8 +685,8 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Re-reviewed after merging origin/master v0.148.14 (#1799/#1801) and refreshing projections (#1739)",
-          "reviewed_code_fingerprint": "1c29c883ac842d436acb39c7edbb0a5ee61dbac421c8b67254c41c139255bee7",
+          "reason": "Reconciled with origin/master v0.149.0 and verified v2 storage read/write guard and pre-codec binary epistemic limits",
+          "reviewed_code_fingerprint": "88960a830064920a111cc79bb7758707f7311be1951e076a027795e5bf33ab63",
           "spec_material_hash": "64234c0ee96c7afcd7c64d7ba0de6a80e01076c5587eb213906b84add3005fc5"
         }
       ],
@@ -693,7 +698,7 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795033692Z"
+      "updated_at": "1795033767Z"
     },
     "trajectory": {
       "active_boundaries": [
