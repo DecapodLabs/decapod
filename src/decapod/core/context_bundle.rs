@@ -128,6 +128,15 @@ pub fn validate_bundle(
     project_root: &Path,
     bundle: &PortableContextBundle,
 ) -> Result<(), error::DecapodError> {
+    if serde_json::to_vec_pretty(bundle)
+        .map_err(|e| error::DecapodError::ValidationError(format!("bundle encoding: {e}")))?
+        .len()
+        > crate::core::docs::MAX_CONTEXT_ENVELOPE_BYTES
+    {
+        return Err(error::DecapodError::ValidationError(
+            "CONTEXT_BUDGET_EXCEEDED: complete bundle exceeds 262144 bytes".into(),
+        ));
+    }
     if bundle.schema_version != PORTABLE_CONTEXT_BUNDLE_SCHEMA_VERSION {
         return Err(error::DecapodError::ValidationError(format!(
             "CONTEXT_BUNDLE_INCOMPATIBLE: schema_version {} is not supported",
@@ -151,6 +160,40 @@ pub fn validate_bundle(
         ));
     }
     let current_config = config_input_hash(project_root)?;
+    let current_knowledge = crate::plugins::knowledge::resolve_context(
+        &crate::core::store::Store {
+            kind: crate::core::store::StoreKind::Repo,
+            root: crate::core::store::find_governance_root(project_root).join(".decapod/data"),
+        },
+        project_root,
+        Some(&bundle.capsule.topic),
+        bundle.capsule.task_id.as_deref(),
+        &[],
+        None,
+    )?;
+    let stale_knowledge = match &bundle.capsule.knowledge {
+        Some(previous) => *previous != current_knowledge,
+        None => {
+            !current_knowledge.records.is_empty()
+                || !current_knowledge.conflicts.is_empty()
+                || current_knowledge.status == "candidate_budget_exceeded"
+        }
+    };
+    if stale_knowledge {
+        return Err(error::DecapodError::ValidationError(
+            "CONTEXT_BUNDLE_STALE_KNOWLEDGE: refresh the current knowledge projection".into(),
+        ));
+    }
+    let current_plan =
+        crate::governed_plan_context(project_root, bundle.capsule.task_id.as_deref())?;
+    if match &bundle.capsule.governed_plan {
+        Some(previous) => *previous != current_plan,
+        None => current_plan.status == "present",
+    } {
+        return Err(error::DecapodError::ValidationError(
+            "CONTEXT_BUNDLE_STALE_INTENT: refresh the current governed plan projection".into(),
+        ));
+    }
     let current_specs = spec_input_hash(project_root)?;
     if bundle.capsule.config_input_hash != current_config
         || bundle.capsule.spec_input_hash != current_specs

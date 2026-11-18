@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Bounded, source-labeled Constitution and scoped knowledge context with auditable corrections.
+- Explicit Constitution contribution admission, an advisory AGENTS.md research node and reproducible public chronology.
+- Cooperative native host boundaries and opt-in compact outcome comparisons that preserve incomplete evidence.
+
+### Fixed
+
+- Repetition-biased advisory selection, arbitrary no-match context, expired knowledge projection and non-atomic supersession.
+- Complete context-envelope budgeting and stale knowledge/plan checks on continuation bundles.
+
 ## [0.148.11](https://github.com/DecapodLabs/decapod/compare/v0.148.10...v0.148.11) - 2026-11-18
 
 ### Fixed

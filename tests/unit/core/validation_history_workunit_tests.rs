@@ -98,6 +98,8 @@ fn prepared() -> (consumer::Fixture, Store) {
     )
     .unwrap();
     let capsule = context_capsule::DeterministicContextCapsule {
+        knowledge: None,
+        governed_plan: None,
         schema_version: "1.1.0".into(),
         topic: "Observe local proof".into(),
         scope: "interfaces".into(),
@@ -118,6 +120,7 @@ fn prepared() -> (consumer::Fixture, Store) {
         repo_signal_fingerprint: "fixture".into(),
         config_input_hash: String::new(),
         spec_input_hash: String::new(),
+        selection: None,
     };
     context_capsule::write_context_capsule(root, &capsule).unwrap();
     workunit::init_workunit(root, TASK, INTENT).unwrap();

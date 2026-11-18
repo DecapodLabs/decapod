@@ -1,5 +1,66 @@
 # Validation
 
+## Integrated current target and retained failures
+
+The integrated0.148.11 source passes121 focused checks:8 scoped retrieval,
+10 knowledge,11 outcome/flight-recorder,4 native-boundary,21 interoperability
+library,1 all-operation session-descriptor consistency,2 activation,4 real
+Constitution claims,36 scaffolding/admission/history,7 capsule RPC,7 capsule
+schema and10 actual-binary interoperability cases. Formatting, whitespace and
+AJV CLI5.0.0 structural validation pass. These observations concern the combined
+source; complete native current-candidate/target readiness is still required.
+The newly built integrated binary also reproduces the original seven-row report
+and both two-row follow-up reports byte-for-byte. Rendering establishes neither
+capture authentication nor current host-task acceptance.
+
+The native0.148.11 reconciliation discovers107 reviewed inputs:101 match this
+accepted base, four change the existing build declarations/compression path, and
+two add the admission/history sources. All workflow, carrier, provider and
+required check definitions remain unchanged. The explicitly reviewed digest is
+`sha256:22d23d8b2ee8e565de796c323fea6aa3305e07aba8903c598f49373d6385bfe3`.
+The official published crate checksum is
+`ba2778c20fb97a5ef97523f1064a9856c1b595dbeff2c6dcd29c97b650ff3f02`;
+its build scripts match accepted source. Native opt-in session update installed
+the controller privately, SHA256
+`e4cf66b125231ae8a1379c3b6637d514e50ebcc70c72448d0ca5d0dd00fae712`,
+and the temporary user-config opt-in was restored exactly. Native bounded
+preparation refreshed the managed image/version pin to0.148.11, then returned
+`VALIDATE_TIMEOUT_OR_LOCK`; it produced no passing local or publication proof.
+
+The fresh governed integration begins at accepted `352d892958e1cdf692299927f7c2f3c0c36fc639` (v0.148.11), including accepted PR1787 RPC registration, malformed-parameter refusal and truthful conformance metadata. Source-only fusion excludes every prior governance, custody and proof artifact. The earlier f68666f7 full native run ended `SNAPSHOT_NOT_READY: CI operation deadline exceeded` after the fixed7200s budget, with publication_ready=false and snapshot91JK0A; required Buildkite test lanes were concurrency-limited. Its successful source checks do not establish current readiness. The donor task remains distinct and the current task has its own native exclusive claim and checkpoint.
+
+The candidate-context follow-up directory records two predeclared real Codex pairs, with fresh-session and warm project/compiler-cache workflows, independent fixed functional checks and actual executed failure/recovery. The governed context resolved only active A (222 knowledge text bytes) while B remained audit-accessible. Provider-correlated delivery and independently current completion remain unproven. The warm governed continuation refused stale custody and unaccepted-history completion; its UNKNOWN write outcome is preserved privately without replay. Human attention, complete setup and monetary costs remain unavailable. These tiny observations show overhead without an established completion benefit, not efficacy. Historical source-only checks and failures below remain historical; fresh integrated regressions, source inventory reconciliation and full native proof are independently required.
+
+## Historical integration and source review
+
+Source CI on `da63f252` passed standalone validation after the managed image repair, then its required all-target/all-feature Clippy invocation rejected two collector idioms (`manual_range_contains` and `filter_map_bool_then`, GitHub run 44263615823/job 134663476125). The native attempt was stopped and preserved as canceled/non-ready snapshot `Z6Ak6C`. The repair uses range containment and separate filter/map while preserving finite, nonnegative, exact-count bounds and missing-identity semantics. No lint, evidence, provider or proof requirement is suppressed. The complete local all-target/all-feature Clippy command passes, all 11 outcome/flight-recorder regressions pass, the actual CLI cooperative-boundary case passes, and the rebuilt collector reproduces the seven-row report byte-for-byte. New exact-candidate native proof remains required.
+
+Actual source CI for `7222376f` rejected only a stale managed Dockerfile release pin in its standalone validation job (GitHub run 44258972389, job 134647393866). The full native attempt was stopped for repair and retained `SNAPSHOT_NOT_READY: CI operation cancelled`, snapshot `yA52zA`, without readiness. Native bounded project preparation refreshed only the managed image/version header from 0.148.9 to 0.148.10. Its host-local report remains failed for container-workspace proof, an unrelated historical done-task proof gap (`bugs_01m73xpkqns9286n`), and the then-uncommitted publication bundle. No foreign task or proof was rewritten. The configured complete Buildkite route remains authoritative and must execute for the new committed pin repair.
+
+Focused current integration checks passed: 2 actual CLI activation/adapter cases, 4 real Constitution-claim cases, 36 scaffolding/admission/history cases, 7 capsule RPC cases and 7 capsule schema cases (56 integration tests). Library filters cover 8 retrieval, 10 knowledge, 4 native-boundary and 11 outcome/flight-recorder cases. AJV validates the contributed advisory node after correcting its missing fifth term. The collector reproduced seven compact rows with incomplete identity/pair warnings, zero governed useful-work outcomes, and unavailable human-attention ratios; raw captures remain private. These observations do not establish full native readiness or model-delivery efficacy.
+
+This integration begins at accepted `34f837d4dbb2a611c0d68a2cf14845cbe6823367` (v0.148.10). The independently released controller was installed privately through native opt-in session update from the checksum-verified published crate; the global controller is unchanged. Source-only donor patches preserve previous failures without importing old custody, governance or proof. The earlier 7a2708fb full attempt was refused after remote release tags changed and remains non-ready.
+
+All 107 discovered verification inputs were reconciled against the accepted target: 101 are byte-identical, four changed (Bazel source declarations, the optional history binary in Cargo.toml, its normalized manifest lock hash, and the existing compression build hook), and two added (the shared Rust admission check and deterministic history generator). The reviewed digest is `sha256:63c1693440f0f2cde32b1cd5b4924fe0faffa74f7a0b8ddb2c367ca2e489df71`. No required source graph, workflow, command, provider or gate was removed. Current exact-candidate full native validation is independently required.
+
+## Complete context and live recovery (#1772, #657)
+
+Negative-first actual RPC tests reproduced unbounded authored summaries and missing canonical intent. Regression checks require complete-envelope refusal with no large payload, explicit current plan/task binding, full capsule metadata budget and unchanged legacy identity. Knowledge/bundle controls reject corrected or omitted current knowledge. Native complete validation remains independently required; ordinary RPC refusal is assessed by success=false in its envelope, preserving existing exit semantics.
+
+## Constitution admission and chronology (#1774, #879)
+
+Constitution admission is executed before compression by the existing build script and exercised through existing scaffolding tests. Negative controls cover research self-promotion, category/ID mismatch, dangling references and fabricated enforcement claims; legitimate advisory additions remain valid. Claims tests invoke real embedded metadata, mandate IDs and protected/root workspace refusal rather than synthesizing enforced rows. History fixtures cover immutable refs, public release evidence, excluded private orphans and deterministic output. Source-CI/schema checks and full native workbranch proof remain required; focused tests are not publication readiness.
+
+## Scoped knowledge recovery (#657)
+
+Negative-first knowledge regressions reproduce expired entries resurfacing and failed supersession destroying active state; both pass after the owner fixes. Multi-session fixtures cover A replacing repeated rejected B, scoped exclusions, atomic correction history, typed conflicts, source changes, credential rejection and UTF-8 budgets. Existing capsule compatibility and bundle tamper/staleness tests remain required. These deterministic observations establish projection semantics only. Three-host delivery, cost and efficacy require separately observed real-model work and independent native proof.
+
+## Cooperative host boundaries and opt-in outcomes (#880, #1095)
+
+The complete activation regression exposed a stale fixture expectation: a project-prerequisite declaration was treated as sufficient for VERIFIED. The test now requires the actual `VALIDATION_HISTORY_TASK_PROOF_UNSUPPORTED` refusal, retained CLAIMED state and absent native validation record. Production admission is unchanged. The deterministic fixture documentation explicitly distinguishes its diagnostic flags/refusals from complete real-host acceptance.
+
+Collector controls cover duplicates, partial/canceled runs, wrong joins, missing/negative measurements, identity omissions and credential-shaped labels. Adapter tests cover the existing safety owner, explicit identity, literal task argv and immutable delegation. Actual CLI bootstrap and unclaimed-workspace refusal run against the real binary. The original released-kernel pilot retains model/auth/timeout failures and independent fixed-checker outcomes, while authenticated Claude, warm/engineering-failure strata and complete governed host acceptance remain unproven. The local-target fresh-session recovery has a passing historical validation lookup and independent functional check, but no completion record or current admission. Outcome regressions separate functional correctness from native completion and reject a harmful-context rate without observed delivery and reviewed evidence.
+
 ## Current report validation scope
 
 The current verification boundary begins at accepted release commit 9d1aed27.
@@ -1461,8 +1522,8 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `3ee2937b2b0c719bb5b0f08d8c9c19faf265587b0c8a753a5d8a90e08eec6422`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (236 files), `tests/` (235 files)
+- Repository signal fingerprint: `059b896088dbeb8486103d37044db7075a95098bc45b06285c6e4b6a8872eb6f`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (3 files), `src/` (238 files), `tests/` (242 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 

@@ -1,5 +1,9 @@
 # Intent
 
+## Bounded context and evidence (#1772, #1774, #657, #880, #1095, #879)
+
+Decapod preserves one broad global Constitution and durable repository knowledge while delivering bounded applicable context on demand. Current intent and accepted policy govern; repeated rejected history and contributed research do not acquire authority through salience. Contributors can publish useful advisory knowledge through normal reviewed source admission. Agents and operators can inspect source/status, conflicts, corrections and public chronology without replaying long conversations. Cooperative host boundaries and compact opt-in outcome observations retain missing measurements and failed attempts. A selected excerpt, host declaration, historical receipt or comparison report never replaces current native custody, proof, approval or publication admission. Real-host delivery and efficacy claims require their own independently observed evidence.
+
 ## Autonomous safe config recovery and privilege custody (#1771, #1776)
 
 The cloud boundary suite treats embedded schema discovery as file-only recovery,
@@ -514,8 +518,8 @@ These declarations select authoring and proof obligations; they do not attest im
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `3ee2937b2b0c719bb5b0f08d8c9c19faf265587b0c8a753a5d8a90e08eec6422`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (236 files), `tests/` (235 files)
+- Repository signal fingerprint: `059b896088dbeb8486103d37044db7075a95098bc45b06285c6e4b6a8872eb6f`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (3 files), `src/` (238 files), `tests/` (242 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 

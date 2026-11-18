@@ -9,6 +9,7 @@
 //! never establish `verified` or `failed` conformance.
 
 use serde::{Deserialize, Serialize};
+pub mod native_boundary;
 use std::collections::BTreeSet;
 
 /// Manifest schema version.
