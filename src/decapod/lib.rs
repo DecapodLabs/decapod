@@ -13374,7 +13374,8 @@ fn parse_rpc_request(cli: &RpcCli) -> Result<core::rpc::RpcRequest, error::Decap
         if buffer.len() > MAX_REQUEST_BYTES {
             return Err(budget_error());
         }
-        serde_json::from_str(&buffer)
+        core::json::unique_value(buffer.as_bytes())
+            .and_then(serde_json::from_value)
             .map_err(|e| error::DecapodError::ValidationError(format!("Invalid JSON: {e}")))
     } else {
         if cli
@@ -13391,7 +13392,7 @@ fn parse_rpc_request(cli: &RpcCli) -> Result<core::rpc::RpcRequest, error::Decap
         let params = if op == "data.database.inspect" {
             cli.params
                 .as_ref()
-                .map(|params| serde_json::from_str(params))
+                .map(|params| core::json::unique_value(params.as_bytes()))
                 .transpose()
                 .map_err(|_| {
                     error::DecapodError::ValidationError("Invalid inventory parameters".into())
@@ -13400,7 +13401,7 @@ fn parse_rpc_request(cli: &RpcCli) -> Result<core::rpc::RpcRequest, error::Decap
         } else if is_governed_db_maintenance_rpc_op(&op) {
             cli.params
                 .as_ref()
-                .map(|params| serde_json::from_str(params))
+                .map(|params| core::json::unique_value(params.as_bytes()))
                 .transpose()
                 .map_err(|_| {
                     error::DecapodError::ValidationError(
@@ -13411,7 +13412,7 @@ fn parse_rpc_request(cli: &RpcCli) -> Result<core::rpc::RpcRequest, error::Decap
         } else {
             cli.params
                 .as_ref()
-                .map(|params| serde_json::from_str(params))
+                .map(|params| core::json::unique_value(params.as_bytes()))
                 .transpose()
                 .map_err(|e| {
                     error::DecapodError::ValidationError(format!("Invalid JSON parameters: {e}"))

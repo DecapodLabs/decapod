@@ -1,5 +1,14 @@
 # Intent
 
+## Unambiguous client requirements
+
+Interop discovery must not silently erase a caller's required semantics.
+Malformed JSON and duplicate decoded keys are refused before RPC startup on
+both stdin and flag-parameter routes. Ordinary unique-key requests continue.
+The existing unique-key decoder is reused from release-manifest validation;
+the focused cross-language parsing controls make no new conformance-receipt,
+independent-executor, authority or publication claim.
+
 ## Autonomous safe config recovery and privilege custody (#1771, #1776)
 
 The cloud boundary suite treats embedded schema discovery as file-only recovery,
@@ -514,8 +523,8 @@ These declarations select authoring and proof obligations; they do not attest im
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `3ee2937b2b0c719bb5b0f08d8c9c19faf265587b0c8a753a5d8a90e08eec6422`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (236 files), `tests/` (235 files)
+- Repository signal fingerprint: `66ba42c793fc1b9f1bad683b84a5825a14518ba3a4f9a8ac74962485fb46b127`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (237 files), `tests/` (236 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 

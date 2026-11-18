@@ -2,6 +2,14 @@
 
 ## Source coverage and execution observations (#871)
 
+The recursive unique-key JSON decoder previously local to
+`core::derived_release_profile` now lives in the shared internal `core::json`
+utility. The existing release-manifest readers and RPC framing reuse it.
+Callers retain their framing budgets and typed schema/diagnostic owners.
+The extraction adds no proof authority. Actual-binary controls refuse nested
+and escaped duplicate keys on both RPC transports, then recover ordinary
+negotiation; a separate Python implementation checks the focused JSON meaning.
+
 The required broker preparation probe measures the competing mutation's elapsed
 time before releasing the mock preparation and awaiting its client cleanup.
 It retains the strict ten-second bound and explicitly checks that preparation
@@ -1030,8 +1038,8 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `3ee2937b2b0c719bb5b0f08d8c9c19faf265587b0c8a753a5d8a90e08eec6422`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (236 files), `tests/` (235 files)
+- Repository signal fingerprint: `66ba42c793fc1b9f1bad683b84a5825a14518ba3a4f9a8ac74962485fb46b127`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (237 files), `tests/` (236 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 

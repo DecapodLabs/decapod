@@ -572,6 +572,13 @@
     "base_commit": "6ab6de3134286a790d78d370ca3fb43c0d92f834",
     "target_base": "origin/master"
   },
+  "claims": {
+    "strict-json-required-semantics": {
+      "statement": "RPC parsing refuses ambiguous duplicate decoded keys before startup so later values cannot erase required extension semantics; ordinary unique-key requests recover.",
+      "falsifier": "A duplicate or escaped-equivalent required_extensions key silently changes the required semantics, or ordinary unique-key requests cease to negotiate after refusal.",
+      "status": "open"
+    }
+  },
   "checkpoints": [
     {
       "id": "interop-source-labels-871",
@@ -645,6 +652,11 @@
       "proof_refs": [
         "/private/tmp/attack-gaps-871-gh-core-timing-failure.json"
       ]
+    },
+    {
+      "id": "duplicate-json-required-semantics",
+      "summary": "Official0.148.10 actual flags/stdin duplicate required_extensions erases refusal. Reuse existing unique-key decoder, retain bounds/redaction, add both-route rejection and same-host Python differential parsing with ordinary recovery; new Actions pending.",
+      "input_digest": "sha256:061fbeab57c9e26fc00b69822f9211264b86357c1bbbe3410ec6079cf5ee0ed6"
     }
   ],
   "intents": {
@@ -676,7 +688,7 @@
       },
       "deferred_questions": [],
       "human_questions": [],
-      "intent": "Complete #1735 Attack the Gaps campaign in dependency order. This first isolated slice reproduces #871 verified-by-name using the official binary; correct static conformance labels and refuse self-attested execution without adding a proof engine. Preserve source coverage and negotiation; actual observed conformance and full campaign closure require authenticated current execution and independent consumer evidence. Extend #1766 only under its valid custody after audit; retain other active owners.",
+      "intent": "Complete #871 truthful discovery and strict negotiation in existing PR1787. Actual official0.148.10 duplicate required_extensions parameters erase an unsupported mandatory extension in both RPC transports. Extract the existing recursive unique-key JSON decoder into a shared internal utility and reuse it at RPC framing; keep bounded input, existing maintenance/inventory redaction, supported optional fields and ordinary negotiation. Add real-binary rejection/recovery and independent Python decoding controls; no new conformance producer, proof engine or authority. Preserve initial Actions successes as historical after changes; use new Actions under explicit user publication exception, without native admission or merge.",
       "phases": [],
       "proof_hooks": [
         "decapod validate"
@@ -686,23 +698,23 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Required broker probe retains10s and proves preparation remains blocked before release. Competing-operation duration is captured before unrelated child cleanup; product/runtime and required graph unchanged.",
-          "reviewed_code_fingerprint": "3ee2937b2b0c719bb5b0f08d8c9c19faf265587b0c8a753a5d8a90e08eec6422",
-          "spec_material_hash": "1fb88c990e8711b58bf3b4d3d9c4315a07de23b9e32fb76808d48de9349b5d73"
+          "reason": "Existing release unique-key decoder is extracted for reuse at RPC framing; size/schema/diagnostic owners remain, and same-host Python parsing is distinct from trusted execution.",
+          "reviewed_code_fingerprint": "66ba42c793fc1b9f1bad683b84a5825a14518ba3a4f9a8ac74962485fb46b127",
+          "spec_material_hash": "be15a599bf1161435648c10d8fce58d07620a9c5cd46dd7ac30acefc49574a1b"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Required broker probe retains10s and proves preparation remains blocked before release. Competing-operation duration is captured before unrelated child cleanup; product/runtime and required graph unchanged.",
-          "reviewed_code_fingerprint": "3ee2937b2b0c719bb5b0f08d8c9c19faf265587b0c8a753a5d8a90e08eec6422",
-          "spec_material_hash": "f12b375f742d2120cd8551277a2013ccae2ddb11ade64032a52e56c0409f5eb2"
+          "reason": "Document recursive duplicate decoded-key refusal in both RPC routes, unchanged legitimate optional requests and focused differential parsing scope.",
+          "reviewed_code_fingerprint": "66ba42c793fc1b9f1bad683b84a5825a14518ba3a4f9a8ac74962485fb46b127",
+          "spec_material_hash": "eb4609f80419c3a1c071cab99fad7941c006a0450094d8bd62951e483e4516e9"
         },
         {
-          "disposition": "unchanged_with_reason",
+          "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Required broker probe retains10s and proves preparation remains blocked before release. Competing-operation duration is captured before unrelated child cleanup; product/runtime and required graph unchanged.",
-          "reviewed_code_fingerprint": "3ee2937b2b0c719bb5b0f08d8c9c19faf265587b0c8a753a5d8a90e08eec6422",
-          "spec_material_hash": "cdc863757905c53f4f176284c72744f0575184c65a059b7edf6239b47c4fc644"
+          "reason": "Ambiguous JSON cannot erase required extension semantics; preserve specialized redaction, existing framing bounds and no new proof/authority claims.",
+          "reviewed_code_fingerprint": "66ba42c793fc1b9f1bad683b84a5825a14518ba3a4f9a8ac74962485fb46b127",
+          "spec_material_hash": "9d11c08d69c5a99641a0d006db91d357c43458787eb442f659ffe7ac04be2a7e"
         }
       ],
       "state": "APPROVED",
@@ -713,18 +725,34 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1794990637Z"
+      "updated_at": "1794997440Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch",
         "Linked worktree admission and execution-ready verified separately after backup denial; maintenance policy unchanged. No source/PR changes in other owners."
       ],
-      "artifact_hash": "sha256:4cb9b1baf7235bb26032d9f6fc627fb67a28be2f6087d4d3d2d0ca94d6a6abf1",
+      "artifact_hash": "sha256:0765436005aa229e0e25db3d8bb755d1ba0e48c6b80880d199099b8b948a5706",
       "checks": [
+        {
+          "name": "actual-official-binary-duplicate-key-refusal",
+          "status": "failed"
+        },
+        {
+          "name": "actual-official-binary-ordinary-recovery",
+          "status": "passed"
+        },
+        {
+          "name": "actual-official-binary-valid-required-refusal",
+          "status": "passed"
+        },
         {
           "name": "baseline_counterexample",
           "status": "failed"
+        },
+        {
+          "name": "candidate-source-execution",
+          "status": "unavailable"
         },
         {
           "name": "companion-broker-measurement",
@@ -749,6 +777,10 @@
         {
           "name": "previous-buildkite-core",
           "status": "failed"
+        },
+        {
+          "name": "python-json-differential-smoke",
+          "status": "passed"
         },
         {
           "name": "release10-source-compile",
@@ -875,10 +907,17 @@
             "intent_id": "intent:change_01M7NWVMEADM6FS731H2AKEVZM",
             "kind": "trajectory_step_recorded",
             "sequence": 17
+          },
+          {
+            "detail": "trajectory:branch_01M7NWVMHPED3ZZQ4W9D4A0ZJ6",
+            "event_id": "event:18",
+            "intent_id": "intent:change_01M7NWVMEADM6FS731H2AKEVZM",
+            "kind": "trajectory_step_recorded",
+            "sequence": 18
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 17,
+        "next_sequence": 18,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M7NWVMHPED3ZZQ4W9D4A0ZJ6": {
@@ -1131,6 +1170,35 @@
                 ],
                 "sequence": 17,
                 "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "command": "Official0.148.10 rejects unsupported required_extensions yet accepts duplicate required_extensions erasing it in flag and stdin RPC. Top-level duplicate op already refused. Extract existing unique decoder, add actual CLI both-transport and same-host Python differential controls; no candidate execution pass yet.",
+                "custody_event_id": "event:18",
+                "observations": [
+                  "src/decapod/core/derived_release_profile.rs",
+                  "src/decapod/core/json.rs",
+                  "src/decapod/core/derived_release_profile.rs",
+                  "src/decapod/core/mod.rs",
+                  "src/decapod/lib.rs",
+                  "tests/interop_conformance.rs",
+                  "tests/support/interop_harness.rs",
+                  "tests/fixtures/interop_strict_json.py",
+                  "/private/tmp/attack-gaps-rpc-duplicate-keys-before.json"
+                ],
+                "proof_refs": [
+                  "actual-official-binary-duplicate-key-refusal",
+                  "actual-official-binary-valid-required-refusal",
+                  "actual-official-binary-ordinary-recovery",
+                  "python-json-differential-smoke",
+                  "candidate-source-execution"
+                ],
+                "scope": [
+                  "src/decapod/core/interop.rs",
+                  "tests/interop_conformance.rs"
+                ],
+                "sequence": 18,
+                "validation_findings": []
               }
             ]
           }
@@ -1140,6 +1208,7 @@
         "Actual companion job134668344854: competing call9.796s, strict10s assertion includes later preparation release/child completion. Existing broker fixes ffec948b/a7b4b3dc/PR1517 audited; no active broker PR found.",
         "Actual official0.148.10 advertises four generic session-gated operations session-free; mentor/assurance calls auto-acquire sessions, bundle calls additionally require isolated workspace. data.database.inspect is an intentional earlier session-free route, not a defect.",
         "Actual official0.148.10: valid unsupported extension refused; trailing-comma flags accepted as empty negotiation; same malformed stdin rejected.",
+        "Official0.148.10 rejects unsupported required_extensions yet accepts duplicate required_extensions erasing it in flag and stdin RPC. Top-level duplicate op already refused. Extract existing unique decoder, add actual CLI both-transport and same-host Python differential controls; no candidate execution pass yet.",
         "Regression replays the original malformed negotiation after real project initialization, then executes ordinary compatibility recovery controls; repaired execution remains pending."
       ],
       "destination": "pull request",
@@ -1150,6 +1219,7 @@
         "/private/tmp/attack-gaps-871-session-metadata-audit.json",
         "/private/tmp/attack-gaps-871-session-metadata-before.json",
         "/private/tmp/attack-gaps-871-validation-1.json; PROOF_PROFILE_RECONCILIATION_REQUIRED before provider tests. Review:/private/tmp/attack-gaps-871-inventory-review.json;105 inputs compared to accepted edbfc00d; only root version0.148.7 to0.148.9 in Cargo.toml/Cargo.lock. Config backup outside Git. No graph, adapter, toolchain, worker, workflow or requiredness change.",
+        "/private/tmp/attack-gaps-rpc-duplicate-keys-before.json",
         "/private/tmp/attack-gaps-rpc-malformed-negotiation-before.json",
         "Accepted target advanced again to34f837d4 through ordinary0.148.10 release; merge preserves real parents and existing checkpoints. Independently hashed all105 inventory inputs in this worktree and matched official agent.init discovery: sha256:e1a242381f7411a8facfe285e2945040dafa93c46dd48c11a86ebd55d9a95b3f. Only Cargo package versions0.148.9 to0.148.10 changed;103 other sources identical. Backed up editable config before reconciliation; no workflow, carrier, required graph, toolchain, controller or policy weakening. Previous context/spec-review failures retained. Refreshed security as well as architecture/interface reviews after current source inspection. cargo fmt used only to format authored source; no local build or shadow proof suite.",
         "Actual Buildkite12110 job01a1ed56-73f9-4bbe-8f6d-99a75057233c and GitHub clippy134622777057 both fail E0425 atlib.rs2795 before tests: error_response was not in run function scope. Correct to core::rpc::error_response, preserving existing envelope constructor. No patched test execution claimed. Separate1660 actual0.148.10 standalone job reports Docker pin9-to10 and manifest evaluating-release/template metadata drift; installed controller remainsofficial0.148.9. Never manually rewrite generated projections or claim old execution for new source.",
@@ -1160,6 +1230,7 @@
       ],
       "inspected_files": [
         "assets/tools/source_ci_profile.rs",
+        "src/decapod/core/derived_release_profile.rs",
         "src/decapod/core/interop.rs",
         "src/decapod/core/validation_history.rs",
         "src/decapod/lib.rs",
@@ -1172,17 +1243,23 @@
         ".decapod/managed/specs/ARCHITECTURE.md",
         ".decapod/managed/specs/INTENT.md",
         ".decapod/managed/specs/INTERFACES.md",
+        "src/decapod/core/derived_release_profile.rs",
         "src/decapod/core/interop.rs",
+        "src/decapod/core/json.rs",
+        "src/decapod/core/mod.rs",
         "src/decapod/lib.rs",
+        "tests/fixtures/interop_strict_json.py",
         "tests/golden/rpc/v1/interop_manifest.response.json",
         "tests/interop_conformance.rs",
         "tests/rpc_golden_vectors.rs",
+        "tests/support/interop_harness.rs",
         "tests/unit/core/interop_tests.rs"
       ],
       "next_transitions": [
         "Capture elapsed and blocked-preparation fact immediately after competing call; retain10s budget and actual semantic checks; rerun full native profile.",
         "Correct four descriptors and compare every RPC session descriptor with existing enforcement; retain all authority gates.",
         "Refine plan and declare falsifiable checks",
+        "Refresh and review semantic specs, checkpoint, push existing PR1787, run required Actions under explicit user publication exception.",
         "Reject malformed RPC parameters before project/session startup; execute exact repaired candidate through full native validation."
       ],
       "repo_scope": [
