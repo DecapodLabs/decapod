@@ -1968,6 +1968,15 @@ pub(crate) enum SystemCommand {
     Doctor(doctor::DoctorCli),
     /// Show Decapod capabilities (for agent discovery)
     Capabilities(CapabilitiesCli),
+    /// Inspect migration notices, applied ledger, catalog, and resolved decapod_root (read-only, non-initializing)
+    Migrations(MigrationsCli),
+}
+
+#[derive(clap::Args, Debug)]
+pub(crate) struct MigrationsCli {
+    /// Output format: 'json' or 'text'
+    #[clap(long, default_value = "json", value_parser = ["json", "text"])]
+    pub format: String,
 }
 
 #[derive(clap::Args, Debug)]
@@ -2084,7 +2093,7 @@ pub(crate) enum Command {
     #[clap(name = "trace")]
     Trace(TraceCli),
 
-    /// System: capabilities, version, doctor
+    /// System: capabilities, version, doctor, migrations
     #[clap(name = "system")]
     System(SystemCli),
 

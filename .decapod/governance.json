@@ -592,6 +592,14 @@
       "proof_refs": [
         "claim-1737-actor-custody"
       ]
+    },
+    {
+      "id": "cp-1737-2",
+      "summary": "Reconcile origin/master a5a1edad (v0.149.0) merge, projections, and updated spec reviews for #1737",
+      "input_digest": "sha256:152394c8a9c8873a0f925a3c982585e9f031f0d86b6514a6d849da6024bdfa80",
+      "proof_refs": [
+        "claim-1737-actor-custody"
+      ]
     }
   ],
   "intents": {
@@ -632,22 +640,22 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Document #1737 fail-closed actor check before claim or workspace mutation",
-          "reviewed_code_fingerprint": "5c45dadbac801cc0036409b08b1116c6c63b2befb9d45a17189b8b45baab3355",
+          "reason": "Reconcile #1737 spec with origin/master a5a1edad (v0.149.0)",
+          "reviewed_code_fingerprint": "2b69ef8cfbcb0e3a285de9451f97707beeb75d7798bf1201ef8d004584fc5cfe",
           "spec_material_hash": "d7a2ca3605cb67e0ecc981daca8a52721e418fc1ab0d559923ddd917e5896a79"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Document #1737 actor identity gate across todo claim/lease, workspace ensure, mentor reflection custody, and legacy unknown recovery",
-          "reviewed_code_fingerprint": "5c45dadbac801cc0036409b08b1116c6c63b2befb9d45a17189b8b45baab3355",
-          "spec_material_hash": "2fa7da4738f676fefe9d9e16dbd5bc481508f46c8cff8e80a6ca23d6ff8bb720"
+          "reason": "Reconcile #1737 spec with origin/master a5a1edad (v0.149.0)",
+          "reviewed_code_fingerprint": "2b69ef8cfbcb0e3a285de9451f97707beeb75d7798bf1201ef8d004584fc5cfe",
+          "spec_material_hash": "b6e078abfa4f1231dddaaffe281c48e79ee89b2a01608b6c3fd393ca29b4dc92"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Document #1737 custody invariants and narrow unknown-claim recovery",
-          "reviewed_code_fingerprint": "5c45dadbac801cc0036409b08b1116c6c63b2befb9d45a17189b8b45baab3355",
+          "reason": "Reconcile #1737 spec with origin/master a5a1edad (v0.149.0)",
+          "reviewed_code_fingerprint": "2b69ef8cfbcb0e3a285de9451f97707beeb75d7798bf1201ef8d004584fc5cfe",
           "spec_material_hash": "0204e052ed0a3a4bfe1c645bf1d0f34ec5ac5ccf30e19c5949501e64d9136bbf"
         }
       ],
@@ -659,13 +667,13 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795029719Z"
+      "updated_at": "1795034441Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:72a584098c4409b03ac97df50a06b21304d9d7ed0f99dd6abb4ed589d9995158",
+      "artifact_hash": "sha256:2a42be5296d00461f84dd8e301a3d0d85387c93e84717453c0d915bd7b4254aa",
       "checks": [
         {
           "name": "cargo_clippy_all_targets",
@@ -685,6 +693,10 @@
         },
         {
           "name": "cargo_test_core_todo",
+          "status": "passed"
+        },
+        {
+          "name": "cargo_test_core_todo_claim",
           "status": "passed"
         },
         {
@@ -721,10 +733,17 @@
             "intent_id": "intent:change_01M7QXTS2XBE1SK835T05MEJCV",
             "kind": "trajectory_step_recorded",
             "sequence": 4
+          },
+          {
+            "detail": "trajectory:branch_01M7QXTS6XVVV8NKSX2EE61TB7",
+            "event_id": "event:5",
+            "intent_id": "intent:change_01M7QXTS2XBE1SK835T05MEJCV",
+            "kind": "trajectory_step_recorded",
+            "sequence": 5
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 4,
+        "next_sequence": 5,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M7QXTS6XVVV8NKSX2EE61TB7": {
@@ -766,6 +785,27 @@
                 ],
                 "sequence": 4,
                 "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:5",
+                "observations": [
+                  "Merged origin/master a5a1edad (v0.149.0): fmt --check ok, clippy --all-targets --all-features -- -D warnings ok, core::todo::tests::claim_task_* 2/2, core::mentor::reflection::* 33/33, todo_enforcement 5/5, cli_contract_enforcement 23/23, doc_alignment 4/4 passed"
+                ],
+                "proof_refs": [
+                  "cargo_fmt_check",
+                  "cargo_clippy_all_targets",
+                  "cargo_test_core_todo_claim",
+                  "cargo_test_core_reflection",
+                  "cargo_test_todo_enforcement",
+                  "cargo_test_cli_contract_enforcement",
+                  "cargo_test_doc_alignment"
+                ],
+                "scope": [
+                  "root"
+                ],
+                "sequence": 5,
+                "validation_findings": []
               }
             ]
           }
@@ -774,6 +814,7 @@
       "declared_commands": [],
       "destination": "pull request",
       "evidence": [
+        "Merged origin/master a5a1edad (v0.149.0): fmt --check ok, clippy --all-targets --all-features -- -D warnings ok, core::todo::tests::claim_task_* 2/2, core::mentor::reflection::* 33/33, todo_enforcement 5/5, cli_contract_enforcement 23/23, doc_alignment 4/4 passed",
         "core::todo::* 94/94, core::mentor::reflection::* 33/33, todo_enforcement 5/5, plugins_todo_tests 40/40 (39/39 + autorun), cli_contract_enforcement 22/22, doc_alignment 4/4, agent_rpc_suite 5/5, context_capsule_rpc 5/5, infer_precision 7/7, spec_conformance 15/15, workspace_interlock 1/1, clippy & fmt clean"
       ],
       "inspected_files": [

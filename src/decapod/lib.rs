@@ -2710,6 +2710,21 @@ pub fn run() -> Result<(), error::DecapodError> {
         Command::System(SystemCli {
             command: SystemCommand::Capabilities(cap_cli),
         }) => return run_capabilities_command(cap_cli),
+        Command::System(SystemCli {
+            command: SystemCommand::Migrations(mig_cli),
+        }) => return run_system_migrations_command(&std::env::current_dir()?, mig_cli),
+        Command::System(SystemCli {
+            command: SystemCommand::Doctor(doctor_cli),
+        }) => {
+            let current_dir = std::env::current_dir()?;
+            let workspace_root = find_decapod_project_root(&current_dir).unwrap_or(current_dir);
+            let governance_root = find_governance_root(&workspace_root);
+            let project_store = Store {
+                kind: StoreKind::Repo,
+                root: governance_root.join(".decapod").join("data"),
+            };
+            return doctor::run_doctor_cli(&project_store, &workspace_root, doctor_cli);
+        }
         command => command,
     };
 
@@ -13734,6 +13749,31 @@ fn run_trace_command(
     Ok(())
 }
 
+fn run_system_migrations_command(
+    current_dir: &Path,
+    cli: MigrationsCli,
+) -> Result<(), error::DecapodError> {
+    let workspace_root = find_decapod_project_root(current_dir)?;
+    let report = migration::inspect_migration_state(&workspace_root)?;
+    match cli.format.as_str() {
+        "json" => {
+            println!(
+                "{}",
+                serde_json::to_string_pretty(&report).map_err(io::Error::other)?
+            );
+        }
+        "text" => {
+            println!("{}", migration::render_migration_inspection_text(&report));
+        }
+        other => {
+            return Err(error::DecapodError::ValidationError(format!(
+                "Unsupported format '{other}'. Expected 'json' or 'text'."
+            )));
+        }
+    }
+    Ok(())
+}
+
 fn run_system_command(
     cli: SystemCli,
     project_store: &Store,
@@ -13745,6 +13785,7 @@ fn run_system_command(
             doctor::run_doctor_cli(project_store, project_root, doctor_cli)
         }
         SystemCommand::Capabilities(cap_cli) => run_capabilities_command(cap_cli),
+        SystemCommand::Migrations(mig_cli) => run_system_migrations_command(project_root, mig_cli),
     }
 }
 
