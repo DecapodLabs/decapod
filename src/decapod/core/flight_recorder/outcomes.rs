@@ -248,8 +248,7 @@ pub fn compare(input: Input) -> io::Result<Report> {
             match metric.value {
                 Some(value)
                     if value.is_finite()
-                        && value >= 0.0
-                        && value <= 9_007_199_254_740_991.0
+                        && (0.0..=9_007_199_254_740_991.0).contains(&value)
                         && metric.missing_reason.is_none()
                         && metric.evidence.as_ref().is_some_and(evidence) =>
                 {
@@ -347,10 +346,10 @@ pub fn compare(input: Input) -> io::Result<Report> {
         .collect();
     let unverified_pair_identities = pairs
         .iter()
-        .filter_map(|(id, (run, _))| {
-            (run.host_sha256.is_none() || run.environment_sha256.is_none() || run.model.is_none())
-                .then(|| (*id).to_string())
+        .filter(|(_, (run, _))| {
+            run.host_sha256.is_none() || run.environment_sha256.is_none() || run.model.is_none()
         })
+        .map(|(id, _)| (*id).to_string())
         .collect();
     let summaries = [Arm::Baseline, Arm::Governed]
         .into_iter()

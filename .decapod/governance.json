@@ -621,6 +621,16 @@
       "proof_refs": [
         ".decapod/managed/specs/VALIDATION.md"
       ]
+    },
+    {
+      "id": "constitution-context-host-integration-03",
+      "summary": "Fix two actual all-targets/features Clippy errors using equivalent standard iterator/range forms. Complete Clippy and affected unit/actual-CLI regressions pass; comparison bytes unchanged. Preserve all failed/canceled native attempts, current spec reviews, source graph and real-host blockers; require new exact full validation.",
+      "input_digest": "sha256:de99b1136bd751c5eb09080e7a4bd0fe800b0d72c047489ab3e3776613795e55",
+      "proof_refs": [
+        ".decapod/managed/specs/VALIDATION.md",
+        "src/decapod/core/flight_recorder/outcomes.rs",
+        "tests/unit/core/outcome_comparison_tests.rs"
+      ]
     }
   ],
   "intents": {
@@ -661,22 +671,22 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Rechecked after native image-pin/spec refresh. Authored architecture remains the reviewed integrated bounded context/admission/knowledge design; only release metadata changed in this repair.",
-          "reviewed_code_fingerprint": "793c3b22cae86166bc8e717545ea604ae6d095d024751a3c971bd2a38aa11525",
+          "reason": "Current-content review after narrow collector idiom repair and supported refresh; the existing architecture and proof owners remain unchanged.",
+          "reviewed_code_fingerprint": "c44f2b3b6338290dd819e64a0360575b01f20f4ca3c00c7d67d21e29dd276e76",
           "spec_material_hash": "b6ffd59d9088c81608d51896c87cb10cabc8ce1eb0e3b07ab819c96b955bd476"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Rechecked current interface content after generated refresh; compatibility, bounded explicit evidence and cooperative limitations remain unchanged, with no authority added by image metadata.",
-          "reviewed_code_fingerprint": "793c3b22cae86166bc8e717545ea604ae6d095d024751a3c971bd2a38aa11525",
+          "reason": "Current-content review: collector protocol, numeric bounds, unknown identities and denial of publication authority are unchanged; regenerated report is byte-identical.",
+          "reviewed_code_fingerprint": "c44f2b3b6338290dd819e64a0360575b01f20f4ca3c00c7d67d21e29dd276e76",
           "spec_material_hash": "54ed002bef22315ab7e69914268093edb5b3a90a03528a360169015041141265"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Rechecked current security content after generated refresh; preserve accepted policy, custody and independent proof boundaries. Failed local prerequisites and incomplete host trials remain failures, not inferred approval.",
-          "reviewed_code_fingerprint": "793c3b22cae86166bc8e717545ea604ae6d095d024751a3c971bd2a38aa11525",
+          "reason": "Current-content review: no lint or proof gate suppression; retain finite bounded observations, explicit unauthenticated labels and native custody/admission.",
+          "reviewed_code_fingerprint": "c44f2b3b6338290dd819e64a0360575b01f20f4ca3c00c7d67d21e29dd276e76",
           "spec_material_hash": "35d8c625b3139e1d5bdbdb6d6833c71ad98a2ed35617dd139005fe635f5cdcd0"
         }
       ],
@@ -688,17 +698,21 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1794988855Z"
+      "updated_at": "1794990225Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch",
         "One global corpus; existing custody and proof owners; no inferred host delivery or current admission"
       ],
-      "artifact_hash": "sha256:410de7830ca2df8fd3dbd231348f1f1d0cb2f75a7036daed352687af226fc378",
+      "artifact_hash": "sha256:91cc1e121d15b52c7c84a2c1628e7bec490aed9ee754a0ace4c5d34837b66afa",
       "checks": [
         {
           "name": "activation_conformance",
+          "status": "passed"
+        },
+        {
+          "name": "adapter_cli_regression",
           "status": "passed"
         },
         {
@@ -710,11 +724,19 @@
           "status": "failed"
         },
         {
+          "name": "all_targets_features_clippy",
+          "status": "passed"
+        },
+        {
           "name": "capsule_rpc",
           "status": "passed"
         },
         {
           "name": "capsule_schema",
+          "status": "passed"
+        },
+        {
+          "name": "comparison_reproduction",
           "status": "passed"
         },
         {
@@ -759,7 +781,7 @@
         },
         {
           "name": "standalone_source_ci",
-          "status": "failed"
+          "status": "passed"
         }
       ],
       "completion_claim": "Implementation and focused regression verification only; exact committed candidate full native readiness and governed publication are pending; real-host acceptance gaps remain.",
@@ -819,10 +841,24 @@
             "intent_id": "intent:change_01M7PNVHBQSKPRK1M9P79X865W",
             "kind": "trajectory_step_recorded",
             "sequence": 9
+          },
+          {
+            "detail": "trajectory:branch_01M7PNVHF4GFRZRWZRPJWAQ8K5",
+            "event_id": "event:10",
+            "intent_id": "intent:change_01M7PNVHBQSKPRK1M9P79X865W",
+            "kind": "trajectory_step_recorded",
+            "sequence": 10
+          },
+          {
+            "detail": "trajectory:branch_01M7PNVHF4GFRZRWZRPJWAQ8K5",
+            "event_id": "event:11",
+            "intent_id": "intent:change_01M7PNVHBQSKPRK1M9P79X865W",
+            "kind": "trajectory_step_recorded",
+            "sequence": 11
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 9,
+        "next_sequence": 11,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M7PNVHF4GFRZRWZRPJWAQ8K5": {
@@ -950,6 +986,45 @@
                 ],
                 "sequence": 9,
                 "validation_findings": []
+              },
+              {
+                "action": "ci_repair",
+                "custody_event_id": "event:10",
+                "observations": [
+                  "src/decapod/core/flight_recorder/outcomes.rs",
+                  "da63f252 standalone source CI passed; required GitHub Clippy run44263615823/job134663476125 exposed manual_range_contains and filter_map_bool_then in outcomes.rs. Native wait stopped, snapshot Z6Ak6C non-ready/canceled retained.",
+                  "Current source uses standard range containment and filter/map with unchanged bounds and identities; actual cargo clippy --all-targets --all-features -- -D warnings passed locally in1m43s. New affected regressions and exact native proof are pending."
+                ],
+                "proof_refs": [
+                  "full_native_readiness",
+                  "standalone_source_ci",
+                  "all_targets_features_clippy"
+                ],
+                "scope": [
+                  "Constitution retrieval/admission, scoped knowledge, source chronology, cooperative boundaries and opt-in outcomes",
+                  "constitution-host-integration"
+                ],
+                "sequence": 10,
+                "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:11",
+                "observations": [
+                  "Post-repair full Clippy passed; 11 outcome/flight-recorder tests and the actual CLI adapter case passed. Rebuilt current CLI comparison output is byte-identical to committed seven-row report. No new full readiness claim."
+                ],
+                "proof_refs": [
+                  "all_targets_features_clippy",
+                  "outcome_regressions",
+                  "adapter_cli_regression",
+                  "comparison_reproduction"
+                ],
+                "scope": [
+                  "Constitution retrieval/admission, scoped knowledge, source chronology, cooperative boundaries and opt-in outcomes",
+                  "constitution-host-integration"
+                ],
+                "sequence": 11,
+                "validation_findings": []
               }
             ]
           }
@@ -964,11 +1039,14 @@
         "Actual combined v0.148.10 outcome filter: 11 passed including 9 collector regressions and 2 existing flight-recorder controls; log private, no full readiness inferred",
         "Current actual CLI activation: new cooperative boundary test passed; old clean-checkout test failed because it expected VERIFIED from project_prerequisites_passed. Native owner correctly returned VALIDATION_HISTORY_TASK_PROOF_UNSUPPORTED. Correct fixture expectation; preserve production proof guard.",
         "Current integration: 8 scoped docs regressions passed; 10 knowledge regressions passed including atomic correction, repeated rejected history, conflicts, expiry, scope privacy, source changes, bundle refresh and UTF-8 bounds. Fixtures do not prove real-model delivery.",
+        "Current source uses standard range containment and filter/map with unchanged bounds and identities; actual cargo clippy --all-targets --all-features -- -D warnings passed locally in1m43s. New affected regressions and exact native proof are pending.",
         "Final focused integration run: 2 activation, 4 claims, 36 scaffolding/admission/history, 7 RPC and 7 schema; zero failures. Current library filters 8 docs,10 knowledge,4 boundary,11 outcome/flight-recorder; zero failures. Schema and formatting pass. Failed earlier fixture assertions retained, production proof guard unchanged.",
         "Native govern project-check refreshed managed image/version header; its report remains failed for host container proof, unrelated existing done-task proof bugs_01m73xpkqns9286n, and uncommitted publication material. No foreign task mutation, provider/gate weakening or passing host-prerequisite claim.",
+        "Post-repair full Clippy passed; 11 outcome/flight-recorder tests and the actual CLI adapter case passed. Rebuilt current CLI comparison output is byte-identical to committed seven-row report. No new full readiness claim.",
         "Preserved prior full validation 7a2708fb snapshot FQkm5L: remote tags changed during v0.148.10 release; no readiness",
         "Seven redacted pilot rows and eleven retained attempts; independently passing recovery functional check and historical validation remain distinct from absent native completion, unknown provider delivery and Claude authentication.",
-        "Source-only donors 7a2708fb and code_01m7nxkqpj1hw95p exported in private patch manifests; no old governance/proof transferred"
+        "Source-only donors 7a2708fb and code_01m7nxkqpj1hw95p exported in private patch manifests; no old governance/proof transferred",
+        "da63f252 standalone source CI passed; required GitHub Clippy run44263615823/job134663476125 exposed manual_range_contains and filter_map_bool_then in outcomes.rs. Native wait stopped, snapshot Z6Ak6C non-ready/canceled retained."
       ],
       "inspected_files": [
         "src/decapod/core/flight_recorder/outcomes.rs",

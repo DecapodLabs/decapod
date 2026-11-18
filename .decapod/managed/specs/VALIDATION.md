@@ -2,6 +2,8 @@
 
 ## Current integration and source review
 
+Source CI on `da63f252` passed standalone validation after the managed image repair, then its required all-target/all-feature Clippy invocation rejected two collector idioms (`manual_range_contains` and `filter_map_bool_then`, GitHub run 44263615823/job 134663476125). The native attempt was stopped and preserved as canceled/non-ready snapshot `Z6Ak6C`. The repair uses range containment and separate filter/map while preserving finite, nonnegative, exact-count bounds and missing-identity semantics. No lint, evidence, provider or proof requirement is suppressed. The complete local all-target/all-feature Clippy command passes, all 11 outcome/flight-recorder regressions pass, the actual CLI cooperative-boundary case passes, and the rebuilt collector reproduces the seven-row report byte-for-byte. New exact-candidate native proof remains required.
+
 Actual source CI for `7222376f` rejected only a stale managed Dockerfile release pin in its standalone validation job (GitHub run 44258972389, job 134647393866). The full native attempt was stopped for repair and retained `SNAPSHOT_NOT_READY: CI operation cancelled`, snapshot `yA52zA`, without readiness. Native bounded project preparation refreshed only the managed image/version header from 0.148.9 to 0.148.10. Its host-local report remains failed for container-workspace proof, an unrelated historical done-task proof gap (`bugs_01m73xpkqns9286n`), and the then-uncommitted publication bundle. No foreign task or proof was rewritten. The configured complete Buildkite route remains authoritative and must execute for the new committed pin repair.
 
 Focused current integration checks passed: 2 actual CLI activation/adapter cases, 4 real Constitution-claim cases, 36 scaffolding/admission/history cases, 7 capsule RPC cases and 7 capsule schema cases (56 integration tests). Library filters cover 8 retrieval, 10 knowledge, 4 native-boundary and 11 outcome/flight-recorder cases. AJV validates the contributed advisory node after correcting its missing fifth term. The collector reproduced seven compact rows with incomplete identity/pair warnings, zero governed useful-work outcomes, and unavailable human-attention ratios; raw captures remain private. These observations do not establish full native readiness or model-delivery efficacy.
@@ -1489,7 +1491,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `793c3b22cae86166bc8e717545ea604ae6d095d024751a3c971bd2a38aa11525`
+- Repository signal fingerprint: `c44f2b3b6338290dd819e64a0360575b01f20f4ca3c00c7d67d21e29dd276e76`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (2 files), `src/` (238 files), `tests/` (242 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
