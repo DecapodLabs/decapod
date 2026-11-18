@@ -588,6 +588,14 @@
       "proof_refs": [
         "tests/policy_self_authorization_1776.rs (9/9 passed); clippy -D warnings ok"
       ]
+    },
+    {
+      "id": "policy-redteam-1776-spec-review",
+      "summary": "Record SECURITY.md spec review for #1776 publication material verification",
+      "input_digest": "sha256:18c7fbd7b039bdf1affcd39438e2dfe514c04a3e2082116c67bc7f4c36e41437",
+      "proof_refs": [
+        "tests/policy_self_authorization_1776.rs (9/9 passed); clippy -D warnings ok"
+      ]
     }
   ],
   "intents": {
@@ -638,6 +646,13 @@
           "reason": "Merged origin/master release 0.148.13 (c5bafce6); #1776 preserves existing interface contracts.",
           "reviewed_code_fingerprint": "28d558e83c684c391ddf1959fc5622715f6e1536bc478a65a190b0f3e398c4f9",
           "spec_material_hash": "ef090be85af851796f2ae92f9d6a6e992d59a452a8fff4918836cc689f020cdd"
+        },
+        {
+          "disposition": "updated",
+          "path": ".decapod/managed/specs/SECURITY.md",
+          "reason": "Documented cross-surface accepted-policy resolution and #1776 adversarial bypass repairs against current merged 0.148.13 code.",
+          "reviewed_code_fingerprint": "28d558e83c684c391ddf1959fc5622715f6e1536bc478a65a190b0f3e398c4f9",
+          "spec_material_hash": "49c7d1428d860804f8fc7f436c5da22483d385c9ce4be90f7db52f1cf4b362ee"
         }
       ],
       "state": "APPROVED",
@@ -648,7 +663,7 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795015559Z"
+      "updated_at": "1795017660Z"
     },
     "trajectory": {
       "active_boundaries": [
