@@ -632,6 +632,16 @@
         "src/decapod/core/migration.rs",
         "tests/trajectory_cli.rs"
       ]
+    },
+    {
+      "id": "cp-1744-6",
+      "summary": "Merge origin/master 2f12638a (v0.148.14), refresh Dockerfile/manifest projections, and reconcile proof digest",
+      "input_digest": "sha256:af9b9bcc7e42c7633892109a8a9f589d29c55f3355d3080402efe23ccb2b17c2",
+      "proof_refs": [
+        ".decapod/config.toml",
+        ".decapod/managed/Dockerfile.decapod",
+        ".decapod/managed/specs/.manifest.json"
+      ]
     }
   ],
   "intents": {
@@ -674,22 +684,22 @@
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Scope #1744 unchanged across #1781 merge",
-          "reviewed_code_fingerprint": "b0186acd075ee228bb31110ab0e98e103bcfac5ca3913aee9b244e7d973f4d88",
+          "reason": "Scope #1744 unchanged across v0.148.14 release bump",
+          "reviewed_code_fingerprint": "380b2556b1ce63d6c12b41fb4babda52cba9eb1d2d0f8da3ee6f525aef843493",
           "spec_material_hash": "080e1e015d867051ec4ecbb1f18aca92a2d62a05798377057e563aaa5a3764e0"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Merged origin/master 0b6ce0a8 (#1781) alongside #1744 migration inspection interfaces",
-          "reviewed_code_fingerprint": "b0186acd075ee228bb31110ab0e98e103bcfac5ca3913aee9b244e7d973f4d88",
+          "reason": "Synced origin/master 2f12638a (v0.148.14) alongside #1744 migration inspection interfaces",
+          "reviewed_code_fingerprint": "380b2556b1ce63d6c12b41fb4babda52cba9eb1d2d0f8da3ee6f525aef843493",
           "spec_material_hash": "1445e13fa7ccfa6c4a68850bd794b6b1ba7379c0148b570c3a7605b6a26beb25"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Read-only inspection security posture unchanged across #1781 merge",
-          "reviewed_code_fingerprint": "b0186acd075ee228bb31110ab0e98e103bcfac5ca3913aee9b244e7d973f4d88",
+          "reason": "Read-only inspection security posture unchanged across v0.148.14 release bump",
+          "reviewed_code_fingerprint": "380b2556b1ce63d6c12b41fb4babda52cba9eb1d2d0f8da3ee6f525aef843493",
           "spec_material_hash": "735ae6e95c6b18ff2ccc718fbadaa4d7ae483d632aee2fb071d4f9ae6daa23de"
         }
       ],
@@ -701,13 +711,13 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795024612Z"
+      "updated_at": "1795025550Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:201ce3989a2a79f0819cda1fe67d4f64c595db6bd08bc007052af802edee9f20",
+      "artifact_hash": "sha256:92a37d1179cd7e9dbaaa04436f32a70a854c783f876f4d4fc7b498453fbf3975",
       "checks": [
         {
           "name": "cargo_clippy",
@@ -787,10 +797,17 @@
             "intent_id": "intent:change_01M7QC2E2V4CN87W5CNH5D2MQN",
             "kind": "trajectory_step_recorded",
             "sequence": 8
+          },
+          {
+            "detail": "trajectory:branch_01M7QC2E68VSP1Z3HCFJF9168A",
+            "event_id": "event:9",
+            "intent_id": "intent:change_01M7QC2E2V4CN87W5CNH5D2MQN",
+            "kind": "trajectory_step_recorded",
+            "sequence": 9
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 8,
+        "next_sequence": 9,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M7QC2E68VSP1Z3HCFJF9168A": {
@@ -905,6 +922,21 @@
                 ],
                 "sequence": 8,
                 "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:9",
+                "observations": [
+                  "Merged origin/master 2f12638a (v0.148.14: CHANGELOG.md, Cargo.toml, Cargo.lock only), reconciled reviewed_sources_digest to sha256:e7e434a726822ced1a8b5ddfa51502c7f3932d4e373acfbef4f06f7a2c697051, refreshed v0.148.14 Dockerfile.decapod and .manifest.json"
+                ],
+                "proof_refs": [],
+                "scope": [
+                  "\".decapod/managed/specs\"]",
+                  "\"tests\"",
+                  "paths:[\"src/decapod\""
+                ],
+                "sequence": 9,
+                "validation_findings": []
               }
             ]
           }
@@ -923,6 +955,7 @@
       "evidence": [
         "13/13 core::migration, 6/6 plugins::doctor, 4/4 doc_alignment, 10/10 trajectory_cli, 23/23 cli_contract_enforcement (--test-threads=1), clippy and fmt clean on 7bd0a915",
         "Merged origin/master 0b6ce0a8 (#1799) cleanly after Buildkite 12565 passed all checks on 04e9711b before base advanced",
+        "Merged origin/master 2f12638a (v0.148.14: CHANGELOG.md, Cargo.toml, Cargo.lock only), reconciled reviewed_sources_digest to sha256:e7e434a726822ced1a8b5ddfa51502c7f3932d4e373acfbef4f06f7a2c697051, refreshed v0.148.14 Dockerfile.decapod and .manifest.json",
         "Merged origin/master c5bafce6 (v0.148.13: CHANGELOG.md, Cargo.toml, Cargo.lock only) and reconciled reviewed_sources_digest to sha256:f2c1d189ee0c96f6afb66185229233bd0436015d0ddd21dc56deb4f58709b2b2",
         "Refreshed v0.148.13 Dockerfile.decapod and .manifest.json with workspace 0.148.13 binary"
       ],
