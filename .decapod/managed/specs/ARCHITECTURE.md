@@ -1,5 +1,40 @@
 # Architecture
 
+## Current workunit validation judgments
+
+`core::validation_history::finish_archive` retains immutable successful
+observations and separately withdraws current workunit proof after a completed
+task-bound full not-ready judgment. `core::workunit` appends the withdrawal to
+its existing canonical journal, checking the observed generation and current
+task/custody inside the same database transaction before publishing the cache
+projection. The generation advances even when no proof had been promoted, so
+an earlier success cannot later authorize that subject. Recovery restores the
+journal's narrowed state; it does not reconstruct a success from diagnostics.
+
+Current workunit selection filters canonical history by exact current task
+binding before applying the existing proof and currentness checks. It never
+falls back to older custody or skips a newer matching stale observation.
+General historical lookup preserves its ambiguity contract. Separate stores
+remain explicitly unsupported for atomic proof acceptance or withdrawal.
+
+## Workunit declarations retain their proof owner (#1660)
+
+`validation_rules::evaluate_workunit_rule` accepts the opaque, complete current
+runtime result before canonical append, with a CLAIMED workunit, supported
+full-validation plans, bound living specs and genuine capsule policy lineage.
+`workunit::verify_capsule_policy_lineage_for_task` separately requires the
+task's context state reference and internally consistent capsule. These
+prerequisites stay enforced when recovering from a diagnostic declaration.
+
+`core::workunit::transition_status` obtains current applicability from
+`validation_history::current_workunit_proof` and fences accepted append in the
+canonical task/proof transaction. File integrity and a declared pass cannot
+replace that producer. `tests/consumer_readiness.rs` exercises this through
+real CLI task/workspace admission and a current checkpoint using the existing
+consumer fixture. It introduces no proof engine or alternate datastore.
+Separately initialized workunit stores retain their explicit unsupported
+atomic-domain boundary; this regression does not claim convergence.
+
 ## Source coverage and execution observations (#871)
 
 The recursive unique-key JSON decoder previously local to
@@ -1044,7 +1079,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `444cc51b005d37d63f625c8ed5348c72ce1d2f390dc3d9fcef5b1e258a5c8887`
+- Repository signal fingerprint: `6ed5c80eef0925f93cdbaf954604967e0ba7017e05cc0841c8eb2aaeb4289ed6`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (237 files), `tests/` (237 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

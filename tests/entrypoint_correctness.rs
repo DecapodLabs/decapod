@@ -1463,6 +1463,12 @@ fn canonical_local_target_cli_readiness_is_source_bound() {
     fresh_docs_readiness::canonical_local_cli_proves_and_rejects_stale_authority();
 }
 
+#[test]
+#[cfg(any(target_os = "linux", target_os = "macos"))]
+fn canonical_workunit_withdraws_superseded_proof_and_recovers_after_lease_renewal() {
+    fresh_docs_readiness::canonical_local_workunit_rejects_superseded_proof_and_recovers();
+}
+
 #[cfg(any(target_os = "linux", target_os = "macos"))]
 #[path = "acceptance/publication_admission.rs"]
 mod publication_admission;
