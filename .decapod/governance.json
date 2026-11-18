@@ -601,6 +601,15 @@
         "tests/unit/plugins/verify_tests.rs",
         "tests/verify_deadlock_regression.rs"
       ]
+    },
+    {
+      "id": "cp-1781-3",
+      "summary": "Merge origin/master c5bafce6 (v0.148.13) and reconcile proof source inventory",
+      "input_digest": "sha256:fd6f16d17721235851d370fbb7fc4e224c2307fdcc4826f93932722c3c7ddab8",
+      "proof_refs": [
+        "tests/unit/plugins/verify_tests.rs",
+        "tests/verify_deadlock_regression.rs"
+      ]
     }
   ],
   "intents": {
@@ -643,22 +652,22 @@
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Re-verified post-merge architecture boundary: diagnostic extraction remains encapsulated in plugins::verify",
-          "reviewed_code_fingerprint": "bf697177ba9acb353d87d8090f704a2a48bb8d1aca0d7a928b6fae2496421d89",
+          "reason": "Re-verified post-v0.148.13 merge architecture boundary: diagnostic extraction remains encapsulated in plugins::verify",
+          "reviewed_code_fingerprint": "7e6122e7165b1cd3d1789eade7b28cd2734b1f2633d9df865448c87e71c846a8",
           "spec_material_hash": "080e1e015d867051ec4ecbb1f18aca92a2d62a05798377057e563aaa5a3764e0"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Merged origin/master caeeaba8 and re-verified INTERFACES.md documentation of safe scoped recovery diagnostics in src/decapod/plugins/verify.rs",
-          "reviewed_code_fingerprint": "bf697177ba9acb353d87d8090f704a2a48bb8d1aca0d7a928b6fae2496421d89",
+          "reason": "Merged origin/master c5bafce6 (v0.148.13) and reconciled reviewed_sources_digest",
+          "reviewed_code_fingerprint": "7e6122e7165b1cd3d1789eade7b28cd2734b1f2633d9df865448c87e71c846a8",
           "spec_material_hash": "3baf7067b96d8fad41fcf9ff69aa2866b99b9bc631a1132df1daf96de9c82ab7"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Re-verified post-merge fail-closed security invariants and zero-leak allowlist boundaries",
-          "reviewed_code_fingerprint": "bf697177ba9acb353d87d8090f704a2a48bb8d1aca0d7a928b6fae2496421d89",
+          "reason": "Re-verified post-v0.148.13 merge fail-closed security invariants and zero-leak allowlist boundaries",
+          "reviewed_code_fingerprint": "7e6122e7165b1cd3d1789eade7b28cd2734b1f2633d9df865448c87e71c846a8",
           "spec_material_hash": "735ae6e95c6b18ff2ccc718fbadaa4d7ae483d632aee2fb071d4f9ae6daa23de"
         }
       ],
@@ -670,14 +679,14 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795011672Z"
+      "updated_at": "1795012991Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch",
         "Fail-closed verification: never bypass PROOF_HOOK_FAILED, admit failing snapshots, or leak untrusted child text/paths/URLs"
       ],
-      "artifact_hash": "sha256:d73c0e8cfdd126703303dfd336fb12299b5de84c86786d25d1b525b90f08befb",
+      "artifact_hash": "sha256:05456cd8534f139d981f3243b6344ea3feea39b0488ab1659e6548b129df775c",
       "checks": [
         {
           "name": "cargo_clippy",
@@ -731,10 +740,17 @@
             "intent_id": "intent:change_01M7QBP48AQ173W18SNDHSF9D8",
             "kind": "trajectory_step_recorded",
             "sequence": 6
+          },
+          {
+            "detail": "trajectory:branch_01M7QBP4CC8XKHSQ4J53W8A0K5",
+            "event_id": "event:7",
+            "intent_id": "intent:change_01M7QBP48AQ173W18SNDHSF9D8",
+            "kind": "trajectory_step_recorded",
+            "sequence": 7
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 6,
+        "next_sequence": 7,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M7QBP4CC8XKHSQ4J53W8A0K5": {
@@ -820,6 +836,31 @@
                 ],
                 "sequence": 6,
                 "validation_findings": []
+              },
+              {
+                "action": "verify",
+                "custody_event_id": "event:7",
+                "observations": [
+                  ".decapod/config.toml",
+                  "Merged origin/master c5bafce6 (v0.148.13 Cargo/CHANGELOG-only bump) and reconciled reviewed_sources_digest to sha256:f2c1d189ee0c96f6afb66185229233bd0436015d0ddd21dc56deb4f58709b2b2"
+                ],
+                "proof_refs": [
+                  "cargo_fmt",
+                  "cargo_clippy",
+                  "plugins_verify_tests",
+                  "verify_deadlock_cli_regression"
+                ],
+                "scope": [
+                  "\".decapod/managed/specs\"]",
+                  "\"tests\"",
+                  ".decapod/managed/specs/INTERFACES.md",
+                  "paths:[\"src/decapod\"",
+                  "src/decapod/plugins/verify.rs",
+                  "tests/unit/plugins/verify_tests.rs",
+                  "tests/verify_deadlock_regression.rs"
+                ],
+                "sequence": 7,
+                "validation_findings": []
               }
             ]
           }
@@ -831,6 +872,7 @@
       "destination": "pull request",
       "evidence": [
         "CLIPPY_CONF_DIR=.config cargo clippy --all-targets --all-features -- -D warnings: ok (0 warnings)",
+        "Merged origin/master c5bafce6 (v0.148.13 Cargo/CHANGELOG-only bump) and reconciled reviewed_sources_digest to sha256:f2c1d189ee0c96f6afb66185229233bd0436015d0ddd21dc56deb4f58709b2b2",
         "Post-merge caeeaba8: cargo fmt --check ok; clippy --all-targets --all-features -- -D warnings ok; plugins::verify::tests 11/11 passed; test_verify_recover_and_regen_json_surface_scoped_blockers_without_leaking ok",
         "cargo test --lib plugins::verify::tests: 11 passed; 0 failed",
         "cargo test --test verify_deadlock_regression test_verify_recover_and_regen_json_surface_scoped_blockers_without_leaking: ok"
@@ -849,6 +891,7 @@
       ],
       "intent_id": "intent:change_01M7QBP48AQ173W18SNDHSF9D8",
       "modified_files": [
+        ".decapod/config.toml",
         ".decapod/managed/specs/INTERFACES.md",
         "src/decapod/plugins/verify.rs",
         "tests/unit/plugins/verify_tests.rs",
