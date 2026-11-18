@@ -611,6 +611,11 @@
       "id": "first-adoption-recovery-04",
       "summary": "Preserve ordinary first-adoption approval defaults without candidate grants; establish accepted fixture policy and trace real RPC mutations. Targeted policy, workunit, RPC and task-transfer checks pass; complete CI remains required.",
       "input_digest": "sha256:78c09092de976b4d89512c8021ccdbf8aad2798ea3606faa5eaf33e63ed5b54e"
+    },
+    {
+      "id": "cloud-schema-boundary-recovery-05",
+      "summary": "Verify read-only cloud schema CLI/RPC without filesystem or HTTP side effects; retain unsupported operational cloud startup refusal. All 41 native cloud-boundary tests pass; fresh full CI required.",
+      "input_digest": "sha256:fafc981ce8da319f9afbecc2ed57e995f05c6f343a7c1932e793586ee0624325"
     }
   ],
   "intents": {
@@ -651,22 +656,22 @@
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Reviewed first-adoption recovery: verified absent accepted policy uses global approval defaults only; candidate exceptional grants remain denied. Existing authority, repair interface and publication boundaries remain accurate.",
-          "reviewed_code_fingerprint": "29aae8095f277a3e9b84231921887eaf1bdec28298c467ba7d2f6523c2ecfb14",
+          "reason": "Cloud regression now verifies unchanged project and machine inventories for schema CLI/RPC, and preserves operational cloud fallback denial. No authority or implementation interface changes; existing architecture and security boundaries remain accurate.",
+          "reviewed_code_fingerprint": "7b88d5d3e68ce397408f69e5635bceee4071a1c57b84cab441c0b3083ee7e3a7",
           "spec_material_hash": "0b7738e450b1038116cd3fce2e9660a615fbea502d988760d54dbf8c314f9146"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Recovery preserves ordinary approval defaults only after accepted-tree absence is verified; candidate privilege grants remain denied. Existing CLI and RPC repair interfaces remain accurate.",
-          "reviewed_code_fingerprint": "29aae8095f277a3e9b84231921887eaf1bdec28298c467ba7d2f6523c2ecfb14",
+          "reason": "Cloud regression now verifies unchanged project and machine inventories for schema CLI/RPC, and preserves operational cloud fallback denial. No authority or implementation interface changes; existing architecture and security boundaries remain accurate.",
+          "reviewed_code_fingerprint": "7b88d5d3e68ce397408f69e5635bceee4071a1c57b84cab441c0b3083ee7e3a7",
           "spec_material_hash": "060bb3be1c58675e825374cf10d34d04b38688f5cd88e6d2c5f7fcd91e2fd690"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "First adoption requires independently verified absence at the accepted tree and retains compiled policy. Unresolved refs, I/O failure and candidate exceptional grants stay denied; draft creation is external forge publication without admission.",
-          "reviewed_code_fingerprint": "29aae8095f277a3e9b84231921887eaf1bdec28298c467ba7d2f6523c2ecfb14",
+          "reason": "Cloud regression now verifies unchanged project and machine inventories for schema CLI/RPC, and preserves operational cloud fallback denial. No authority or implementation interface changes; existing architecture and security boundaries remain accurate.",
+          "reviewed_code_fingerprint": "7b88d5d3e68ce397408f69e5635bceee4071a1c57b84cab441c0b3083ee7e3a7",
           "spec_material_hash": "cdc863757905c53f4f176284c72744f0575184c65a059b7edf6239b47c4fc644"
         }
       ],
@@ -678,22 +683,34 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1794960193Z"
+      "updated_at": "1794979218Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch",
         "User explicitly authorizes draft PR creation before validation; no admission or merge authority follows"
       ],
-      "artifact_hash": "sha256:06663d626a25965880082bebea2c863436c876e849ae73932e3aa3489e507a0e",
+      "artifact_hash": "sha256:f5a1d2b7b4abd7127c93760ba8bbc56b67e8b33890167d6a7c5fd7474a27a871",
       "checks": [
         {
           "name": "buildkite-11921",
           "status": "failed"
         },
         {
+          "name": "ci-cb4b87b1",
+          "status": "failed"
+        },
+        {
+          "name": "cloud-schema-recovery-native",
+          "status": "passed"
+        },
+        {
           "name": "config_version_actual_binary",
           "status": "failed"
+        },
+        {
+          "name": "full-cloud-boundary-native",
+          "status": "passed"
         },
         {
           "name": "full_validation_d6fa03bc",
@@ -728,7 +745,7 @@
           "status": "failed"
         }
       ],
-      "current_phase": "implementation",
+      "current_phase": "verification",
       "custody": {
         "events": [
           {
@@ -777,10 +794,24 @@
             "intent_id": "intent:change_01M7NR0Z9M2Q4AQQFBP1ZPD07Q",
             "kind": "trajectory_step_recorded",
             "sequence": 8
+          },
+          {
+            "detail": "trajectory:branch_01M7NR0ZCNHC7YZKZ9SYWWDDVJ",
+            "event_id": "event:9",
+            "intent_id": "intent:change_01M7NR0Z9M2Q4AQQFBP1ZPD07Q",
+            "kind": "trajectory_step_recorded",
+            "sequence": 9
+          },
+          {
+            "detail": "trajectory:branch_01M7NR0ZCNHC7YZKZ9SYWWDDVJ",
+            "event_id": "event:10",
+            "intent_id": "intent:change_01M7NR0Z9M2Q4AQQFBP1ZPD07Q",
+            "kind": "trajectory_step_recorded",
+            "sequence": 10
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 8,
+        "next_sequence": 10,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M7NR0ZCNHC7YZKZ9SYWWDDVJ": {
@@ -890,6 +921,44 @@
                 ],
                 "sequence": 8,
                 "validation_findings": []
+              },
+              {
+                "action": "verification",
+                "custody_event_id": "event:9",
+                "observations": [
+                  "src/decapod/lib.rs",
+                  "src/decapod/core/snapshot_provider/automatic.rs",
+                  "tests/common/cloud_managed_scenarios.rs",
+                  "https://buildkite.com/decapodlabs/decapod/builds/11967#01a1ebfa-5cfa-4425-862b-2c76150a0bfc",
+                  "/private/tmp/decapod-boundary-red-c30w2kjb/evidence/cloud-schema-recovery-native.log"
+                ],
+                "proof_refs": [
+                  "cloud-schema-recovery-native",
+                  "full-cloud-boundary-native",
+                  "ci-cb4b87b1"
+                ],
+                "scope": [
+                  "root"
+                ],
+                "sequence": 9,
+                "validation_findings": [
+                  "Fresh complete exact-candidate CI required after cloud test contract correction"
+                ]
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:10",
+                "observations": [
+                  "/private/tmp/decapod-boundary-red-c30w2kjb/evidence/cloud-boundary-native-full.log: 41 passed, 0 failed, 0 ignored, 57.71 seconds"
+                ],
+                "proof_refs": [
+                  "full-cloud-boundary-native"
+                ],
+                "scope": [
+                  "root"
+                ],
+                "sequence": 10,
+                "validation_findings": []
               }
             ]
           }
@@ -900,10 +969,13 @@
       "evidence": [
         "/private/tmp/decapod-boundary-red-c30w2kjb/evidence",
         "/private/tmp/decapod-boundary-red-c30w2kjb/evidence/candidate-init-reconciliation.json",
+        "/private/tmp/decapod-boundary-red-c30w2kjb/evidence/cloud-boundary-native-full.log: 41 passed, 0 failed, 0 ignored, 57.71 seconds",
+        "/private/tmp/decapod-boundary-red-c30w2kjb/evidence/cloud-schema-recovery-native.log",
         "/private/tmp/decapod-boundary-red-c30w2kjb/evidence/rbac-main-unaccepted.json",
         "RPC suite: 5 passed; workunit observation: 6 passed; policy tests: 8 passed including first-adoption denial control",
         "User directly authorized exception to pre-PR requirement; direct forge draft 1779 is external and not admitted",
         "https://buildkite.com/decapodlabs/decapod/builds/11921",
+        "https://buildkite.com/decapodlabs/decapod/builds/11967#01a1ebfa-5cfa-4425-862b-2c76150a0bfc",
         "https://github.com/DecapodLabs/decapod/pull/1779",
         "public_task_transfer_preserves_identity_without_importing_a_live_lease: 1 passed; interop approval_roundtrip passed, suite still running"
       ],
@@ -912,6 +984,7 @@
         "Cargo.toml",
         "src/decapod/cli.rs",
         "src/decapod/core/db_maintenance.rs",
+        "src/decapod/core/snapshot_provider/automatic.rs",
         "src/decapod/lib.rs",
         "src/decapod/plugins/policy.rs"
       ],
@@ -924,11 +997,13 @@
         "src/decapod/plugins/policy.rs",
         "tests/agent_rpc_suite.rs",
         "tests/cli_contract_enforcement.rs",
+        "tests/common/cloud_managed_scenarios.rs",
         "tests/init_config_behavior.rs",
         "tests/sqlite_maintenance.rs",
         "tests/support/interop_harness.rs"
       ],
       "next_transitions": [
+        "Commit cloud-boundary correction, push same PR branch, then run exact-candidate full validation",
         "Push recovery commit to draft PR 1779, then run fresh complete validation",
         "Refine plan and declare falsifiable checks"
       ],
@@ -941,6 +1016,7 @@
       "task_id": "bugs_01m7nqz8dxaz801k",
       "tool_calls": [],
       "unresolved_assumptions": [
+        "Fresh complete exact-candidate CI required after cloud test contract correction",
         "Remaining fixture repairs require executable checks and fresh full validation"
       ]
     }

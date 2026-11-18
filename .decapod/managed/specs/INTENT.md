@@ -2,6 +2,13 @@
 
 ## Autonomous safe config recovery and privilege custody (#1771, #1776)
 
+The cloud boundary suite treats embedded schema discovery as file-only recovery,
+including CLI and RPC reads. `tests/common/cloud_managed_scenarios.rs` compares
+the complete project and private machine file inventories before and after each
+read, and requires zero HTTP requests. Unsupported operational `store.query`
+still exercises the cloud startup guard and must refuse local SQLite fallback;
+schema availability does not authorize operational persistence.
+
 First adoption on a verified accepted Git tree that predates repository policy
 uses the compiled global approval defaults for ordinary operations. The resolver
 confirms absence in that exact accepted tree, never an older ref or candidate
@@ -460,7 +467,7 @@ These declarations select authoring and proof obligations; they do not attest im
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `29aae8095f277a3e9b84231921887eaf1bdec28298c467ba7d2f6523c2ecfb14`
+- Repository signal fingerprint: `7b88d5d3e68ce397408f69e5635bceee4071a1c57b84cab441c0b3083ee7e3a7`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (236 files), `tests/` (235 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
