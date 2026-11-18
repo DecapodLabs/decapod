@@ -349,6 +349,34 @@ pub fn verify_execution_binding(
     })
 }
 
+/// Recheck live execution authority when reusing a completed native path.
+/// Validation bookkeeping has its own epoch/history fence and may advance
+/// during completion; it cannot substitute for current plan, policy or custody.
+pub(crate) fn verify_execution_authority(
+    root: &Path,
+    expected: &ExecutionStateBinding,
+) -> Result<(), DecapodError> {
+    let current = capture_execution_binding(root, &expected.task_id)?;
+    if current.schema_version != expected.schema_version
+        || current.run_id != expected.run_id
+        || current.intent_id != expected.intent_id
+        || current.head_revision != expected.head_revision
+        || current.work_branch != expected.work_branch
+        || current.material_digest != expected.material_digest
+        || current.plan_digest != expected.plan_digest
+        || current.trajectory_digest != expected.trajectory_digest
+        || current.policy_digest != expected.policy_digest
+        || current.task_custody_digest != expected.task_custody_digest
+        || current.required_approvals != expected.required_approvals
+    {
+        return Err(blocked(
+            "OBSERVED_PATH_STALE",
+            "source, instruction, plan, effective policy, approval or lease changed after native observation; obtain fresh proof",
+        ));
+    }
+    Ok(())
+}
+
 fn valid_revision(value: &str) -> bool {
     matches!(value.len(), 40 | 64) && value.bytes().all(|b| b.is_ascii_hexdigit())
 }
@@ -487,6 +515,11 @@ fn capture_policy(
             owner.join(".decapod/OVERRIDE.md"),
         ),
         ("riskmap", owner.as_path(), store.join("RISKMAP.json")),
+        (
+            "external_actions",
+            owner.as_path(),
+            owner.join(".decapod/EXTERNAL_ACTIONS.json"),
+        ),
     ] {
         let bytes = read_policy_input(input_root, &path, io)?;
         material.insert(

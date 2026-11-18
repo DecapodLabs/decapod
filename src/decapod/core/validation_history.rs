@@ -374,6 +374,7 @@ impl PublicationReadiness {
             .as_ref()
             .ok_or_else(|| invalid("PUBLICATION_PROOF_MISSING: current input witness is absent"))?
             .verify_current(root, &self.proof.material)?;
+        self.proof.verify_observed_authority(root)?;
         let laya = laya_readiness::configuration(root)?;
         if laya.mode != self.proof.laya.mode
             || digest(&laya)? != self.proof.laya.binding.configuration_digest
@@ -584,6 +585,12 @@ impl CompletedReadinessEvidence {
     }
     pub(crate) fn changed_paths(&self) -> &std::collections::BTreeSet<String> {
         &self.suite.facts.changed_paths
+    }
+    pub(crate) fn verify_observed_authority(&self, root: &Path) -> Result<(), DecapodError> {
+        if let Some(path) = &self.observed_path {
+            path.verify_current_authority(root).map_err(invalid)?;
+        }
+        Ok(())
     }
     pub(crate) fn verify_current(
         &self,
@@ -885,6 +892,7 @@ pub(crate) fn finish_archive(
         return Err(invalid("workunit changed during full validation"));
     }
     let mut archived = proof.clone();
+    archived.verify_observed_authority(root)?;
     if binding.workunit_subject.is_some() {
         archived
             .current_inputs
@@ -1196,6 +1204,7 @@ pub(crate) fn current_workunit_proof(
             )
         })?
         .verify_current(root, &record.proof.material)?;
+    record.proof.verify_observed_authority(root)?;
     Ok(proof)
 }
 

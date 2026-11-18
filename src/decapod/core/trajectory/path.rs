@@ -129,6 +129,20 @@ impl Judgment {
     pub(crate) fn permits(&self) -> bool {
         !self.required || self.process_conformance == RuleVerdict::Pass
     }
+    pub(crate) fn verify_current_authority(&self, root: &Path) -> io::Result<()> {
+        let binding = self.binding.as_ref().ok_or_else(|| {
+            invalid("OBSERVED_PATH_NOT_PROVEN: retained native path has no authority binding")
+        })?;
+        if binding.actor != crate::current_agent_id()
+            || binding.producer != format!("decapod-native-runner/{}", env!("CARGO_PKG_VERSION"))
+        {
+            return Err(invalid(
+                "OBSERVED_PATH_STALE: current actor or producer differs; rerun native validation",
+            ));
+        }
+        super::execution::verify_execution_authority(root, &binding.execution)
+            .map_err(io::Error::other)
+    }
     pub(crate) fn recheck_current(&mut self, current: &MaterialIdentity, accepted_target: &str) {
         if self.binding.as_ref().is_some_and(|binding| {
             binding.subject != *current || binding.subject.accepted_base_revision != accepted_target

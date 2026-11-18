@@ -275,21 +275,39 @@ fn fresh_process_reconstructs_same_lineage_and_does_not_authenticate_reported_so
             .status
             .success()
     );
+    // A different cold reader needs neither the writer's claim nor a Git-gate
+    // escape hatch. This was rejected as AUTHORING_CUSTODY_STALE in the actual
+    // governed-worktree CLI acceptance even though the RPC only reads state.
+    let reader_home = tempdir().unwrap();
     let read = || {
-        let output = run_cmd(
-            root,
-            &[
-                "rpc",
-                "--op",
-                "state.resolve",
-                "--params",
-                "{\"intent_id\":\"intent:lineage\"}",
-            ],
-        );
+        let before = fs::read(root.join(".decapod/governance.json")).unwrap();
+        let output = Command::new(
+            Path::new(env!("CARGO_BIN_EXE_decapod"))
+                .canonicalize()
+                .unwrap(),
+        )
+        .current_dir(root)
+        .env_remove("DECAPOD_VALIDATE_SKIP_GIT_GATES")
+        .env_remove("DECAPOD_SESSION_PASSWORD")
+        .env("DECAPOD_AGENT_ID", "independent-lineage-reader")
+        .env("XDG_CONFIG_HOME", reader_home.path())
+        .args([
+            "rpc",
+            "--op",
+            "state.resolve",
+            "--params",
+            "{\"intent_id\":\"intent:lineage\"}",
+        ])
+        .output()
+        .unwrap();
         assert!(
             output.status.success(),
             "{}",
             String::from_utf8_lossy(&output.stderr)
+        );
+        assert_eq!(
+            before,
+            fs::read(root.join(".decapod/governance.json")).unwrap()
         );
         extract_json(&output)["result"]["resolution"].clone()
     };

@@ -1,6 +1,20 @@
 # Validation
 
+## Actual cold-reader dispatch regression
+
+A digest-verified GNU candidate built by source CI for d0ebc2c8 executed task claim, governed workspace, preserved predecessor journal, A/B initialization and pinned public GitHub comment C. Its independent actor-B state.resolve was refused as AUTHORING_CUSTODY_STALE before returning state. The existing regression now launches a different reader with isolated machine configuration and no Git-gate escape hatch, checks unchanged governance bytes, and checks that publication retains mutation requirements. That is a reproduced negative; repaired actual CLI and current full validation remain required before claiming the handoff passes. QEMU execution uses direct mutation transport and does not prove the group-broker path.
+
 ## Native authorization-policy replay audit
+
+The complete library execution for7b4c14a0 in source job134473589855 returned
+1816 passed,1 failed,8 ignored. The sole failure is the new ignored-policy
+negative: old execution authority survived a canonical external-action policy
+change. The existing bounded policy inventory now includes that exact source,
+and retained owned-path proof rechecks current authority at terminal validation,
+history append, workunit reuse and final publication readback. The regression
+also requires a freshly measured binding to work under the current policy;
+this does not authorize a command that the native authorizer denies.
+Repaired execution and actual path-positive/repair acceptance are still pending.
 
 Candidate d0ebc2c8 compiled the runtime slice, but the lib-test build found one
 test-only qualification error for `trajectory::path::Judgment`; it now uses its
@@ -1644,7 +1658,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `b8ba776cbbfb04dda0031ed4ec7d0c7a576128202cd644764f64a2695c01669c`
+- Repository signal fingerprint: `910a97a958f709a75f3058d7fa6518cbce1e2be90ed73f62c543a0786872a529`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (239 files), `tests/` (235 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

@@ -3265,6 +3265,7 @@ pub fn run() -> Result<(), error::DecapodError> {
             // Best-effort hygiene: routinely scrub stale git worktree metadata/config.
             // This must not block primary command execution.
             if local_storage_startup
+                && !is_storage_independent_command(&cli.command)
                 && let Err(e) = workspace::prune_stale_worktree_config(&workspace_root)
                 && !is_not_git_repository_error(&e)
             {
@@ -3470,7 +3471,7 @@ fn is_storage_independent_command(command: &Command) -> bool {
     match command {
         Command::Rpc(rpc_cli) => matches!(
             rpc_cli.op.as_deref(),
-            Some("specs.refresh" | "intent.reconcile")
+            Some("specs.refresh" | "intent.reconcile" | "state.resolve" | "state.diff")
         ),
         // Maintenance commands operate on the canonical store through the
         // Dactyl contract and must not run startup migrations or presence
@@ -3692,6 +3693,8 @@ fn rpc_op_requires_worktree(op: &str) -> bool {
             | "constitution.get"
             | "schema.get"
             | "intent.reconcile"
+            | "state.resolve"
+            | "state.diff"
             | "store.upsert"
             | "store.query"
             | "validate.run"
@@ -3764,6 +3767,8 @@ fn rpc_op_bypasses_session(op: &str) -> bool {
             | "constitution.get"
             | "schema.get"
             | "intent.reconcile"
+            | "state.resolve"
+            | "state.diff"
             | "store.upsert"
             | "store.query"
             | "validate.run"
@@ -8267,6 +8272,8 @@ fn rpc_op_skips_mandate_enforcement(op: &str) -> bool {
             | "constitution.get"
             | "schema.get"
             | "intent.reconcile"
+            | "state.resolve"
+            | "state.diff"
             | "specs.refresh"
             | "interop.manifest"
             | "interop.negotiate"
@@ -13391,6 +13398,24 @@ fn intent_reconciliation_rpc_does_not_require_mutation_custody() {
     assert!(rpc_op_skips_mandate_enforcement("intent.reconcile"));
     assert!(!rpc_op_requires_constitutional_awareness(
         "intent.reconcile"
+    ));
+}
+
+#[cfg(test)]
+#[test]
+fn state_readback_does_not_require_or_grant_authoring_custody() {
+    for op in ["state.resolve", "state.diff"] {
+        assert!(!rpc_op_requires_worktree(op));
+        assert!(rpc_op_bypasses_session(op));
+        assert!(rpc_op_skips_mandate_enforcement(op));
+        assert!(!rpc_op_requires_constitutional_awareness(op));
+        let cli = Cli::try_parse_from(["decapod", "rpc", "--op", op]).unwrap();
+        assert!(is_storage_independent_command(&cli.command));
+    }
+    assert!(rpc_op_requires_worktree("workspace.publish"));
+    assert!(!rpc_op_bypasses_session("workspace.publish"));
+    assert!(rpc_op_requires_constitutional_awareness(
+        "workspace.publish"
     ));
 }
 

@@ -1,5 +1,9 @@
 # Architecture
 
+## Retained native-path authority
+
+The existing execution binding owner inventories canonical external-action policy even when Git ignores that file. Serialized path evidence remains historical data: terminal validation, history append, workunit reuse and publication remeasure current execution authority. Validation bookkeeping keeps its existing epoch/history fence; current instruction, plan, effective policy, approvals and live lease remain separately required. This extends the existing owner without a second policy resolver.
+
 ## Bounded native-path observation (#1767)
 
 `core/trajectory/path.rs` extends existing execution bindings and native validation
@@ -1104,7 +1108,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `b8ba776cbbfb04dda0031ed4ec7d0c7a576128202cd644764f64a2695c01669c`
+- Repository signal fingerprint: `910a97a958f709a75f3058d7fa6518cbce1e2be90ed73f62c543a0786872a529`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (239 files), `tests/` (235 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

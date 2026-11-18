@@ -137,6 +137,7 @@ fn ignored_external_action_policy_cannot_replay_execution_binding() {
     .unwrap();
     commit(root);
     let binding = capture_execution_binding(root, "task_execution").unwrap();
+    verify_execution_authority(root, &binding).unwrap();
     fs::write(
         root.join(".decapod/EXTERNAL_ACTIONS.json"),
         r#"{"rules":[{"capability":"proof_exec","allowed_bins":[]}]}"#,
@@ -147,6 +148,11 @@ fn ignored_external_action_policy_cannot_replay_execution_binding() {
         verify_execution_binding(root, "task_execution", &binding).is_err(),
         "A changed effective native authorization policy must revoke the previous binding"
     );
+    assert!(verify_execution_authority(root, &binding).is_err());
+    // Current policy can be measured again. This does not authorize the denied
+    // proof command: its real native adapter still owns that operation gate.
+    let fresh = capture_execution_binding(root, "task_execution").unwrap();
+    verify_execution_authority(root, &fresh).unwrap();
 }
 
 #[test]

@@ -1,5 +1,11 @@
 # Security
 
+## Readback does not grant continuation authority
+
+An ignored `EXTERNAL_ACTIONS.json` change cannot reuse the old execution authority. The canonical bounded policy inventory hashes that file, and retained native-path consumers resample current authority before using successful historical execution. Policy denial remains owned by the actual native authorizer; measuring a fresh policy binding does not grant the denied proof command.
+
+A second agent may inspect canonical state without impersonating the task owner. Only the two state read RPCs receive that classification; authoring and publication still evaluate current custody and their existing gates. An actual CLI trace on source d0ebc2c8 accepted a pinned public GitHub comment but rejected independent reader B with AUTHORING_CUSTODY_STALE. The read-dispatch correction addresses that observed handoff failure; it is not authenticated human approval or a waiver of mutation authority.
+
 ## Observed native path and truthful coverage
 
 Only actual native adapter authorization and terminal runner results construct
@@ -732,7 +738,7 @@ execution evidence remains required before publication readiness.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `b8ba776cbbfb04dda0031ed4ec7d0c7a576128202cd644764f64a2695c01669c`
+- Repository signal fingerprint: `910a97a958f709a75f3058d7fa6518cbce1e2be90ed73f62c543a0786872a529`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (239 files), `tests/` (235 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

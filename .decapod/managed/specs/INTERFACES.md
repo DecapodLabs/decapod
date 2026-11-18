@@ -1,5 +1,9 @@
 # Interfaces
 
+## Independent state readers
+
+`state.resolve` and `state.diff` expose recorded governance to a cold reader without requiring the writer's authoring claim, worktree custody or local agent session. They do not run migration, presence or worktree-pruning startup hooks. Reading does not acquire a lease, approve a plan, satisfy a recorded blocker or grant publication authority. Unsupported backend paths retain their explicit failure; this read classification does not grant cloud access.
+
 ## Native-path policy and result
 
 `proof.observed_path` takes `schema_version="1.0.0"`,
@@ -1308,7 +1312,7 @@ field. Nothing in this operation authorizes a mutation, approval or completion.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `b8ba776cbbfb04dda0031ed4ec7d0c7a576128202cd644764f64a2695c01669c`
+- Repository signal fingerprint: `910a97a958f709a75f3058d7fa6518cbce1e2be90ed73f62c543a0786872a529`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (239 files), `tests/` (235 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

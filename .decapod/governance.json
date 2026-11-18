@@ -663,6 +663,11 @@
       "id": "native-policy-replay-audit-20261118",
       "summary": "Repair lib-test module qualification and add a negative against the existing execution-binding owner for ignored external-action policy changes. This audits the boundary before any production policy inventory change; no proof or exploit result is inferred.",
       "input_digest": "sha256:8c399168e5b0a68886221619ea5bd353b4ec24626c91742271ee5599d4ee5e7b"
+    },
+    {
+      "id": "current-authority-and-independent-readback-20261118",
+      "summary": "Repair actual cold-reader custody refusal and CI-reproduced ignored-policy replay; reuse current execution authority at retained native-path consumers, with fresh validation and acceptance still pending",
+      "input_digest": "sha256:622a52b52e67e1a3a3579c5d3699f0df1d7ee8c67556a27855d4e6965435b85e"
     }
   ],
   "intents": {
@@ -705,25 +710,25 @@
       "schema_version": "1.1.0",
       "spec_reviews": [
         {
-          "disposition": "unchanged_with_reason",
+          "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Runtime architecture is unchanged by the lib-test qualification fix; audit the existing execution-binding owner for ignored external-action policy replay before adding a production policy mechanism.",
-          "reviewed_code_fingerprint": "b8ba776cbbfb04dda0031ed4ec7d0c7a576128202cd644764f64a2695c01669c",
-          "spec_material_hash": "92fb0017a849356459362e2ae2468d557830e2e01bc2b132e62a1cc89db2098f"
+          "reason": "Retained owned native path uses the existing execution authority owner at final consumers, including ignored external-action policy",
+          "reviewed_code_fingerprint": "910a97a958f709a75f3058d7fa6518cbce1e2be90ed73f62c543a0786872a529",
+          "spec_material_hash": "b9b4e6fa5c45b357e41cb544356e5f7b45a9654cd9758c80001f2a83517749b1"
         },
         {
-          "disposition": "unchanged_with_reason",
+          "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Public native-path and source-ingress contracts are unchanged; the pending regression exercises the existing binding API and preserves typed unknown/stale boundaries.",
-          "reviewed_code_fingerprint": "b8ba776cbbfb04dda0031ed4ec7d0c7a576128202cd644764f64a2695c01669c",
-          "spec_material_hash": "c35563bd5d42bc92de2ede3ee57d8a3088b9b9f7f07075293c499cd82c68e55d"
+          "reason": "Independent state reads retain backend limits and cannot acquire mutation or publication authority",
+          "reviewed_code_fingerprint": "910a97a958f709a75f3058d7fa6518cbce1e2be90ed73f62c543a0786872a529",
+          "spec_material_hash": "1a37cc8e0fe4543c54f2856a392967c941c5433b68d5fb2363f8635764b2cee6"
         },
         {
-          "disposition": "unchanged_with_reason",
+          "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Retain existing policy ownership; a new negative checks ignored canonical external-action policy movement without asserting a reproduced exploit or changing authority.",
-          "reviewed_code_fingerprint": "b8ba776cbbfb04dda0031ed4ec7d0c7a576128202cd644764f64a2695c01669c",
-          "spec_material_hash": "b56b277f45086b5f2cf92d7fe4ae618f98d52ef0db2f432c432e18adbbe5bd94"
+          "reason": "Review reproduced stale-policy and cold-reader negatives with current authority rechecks and no expanded mutation grants",
+          "reviewed_code_fingerprint": "910a97a958f709a75f3058d7fa6518cbce1e2be90ed73f62c543a0786872a529",
+          "spec_material_hash": "ed95b4a0590d1ea8d0f74668d44a5fbbd3120ba30df25dd9b1d185bff9a8ef1e"
         }
       ],
       "state": "APPROVED",
@@ -734,14 +739,22 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1794960070Z"
+      "updated_at": "1794962643Z"
     },
     "trajectory": {
       "active_boundaries": [
         "No protected root edits, force push, merge, gate waiver or fabricated evidence"
       ],
-      "artifact_hash": "sha256:f252ae15651dd84e12edb0d1973b979c580d1d411ea8d4e3c7795d64e85150a2",
+      "artifact_hash": "sha256:b44b4b6a827549965c5ee23e9f7722507c61292c2e07925bbe5fcf263f265a58",
       "checks": [
+        {
+          "name": "actual-cli-independent-lineage-reader",
+          "status": "failed"
+        },
+        {
+          "name": "actual-cli-provider-ingress",
+          "status": "passed"
+        },
         {
           "name": "candidate_986_cli_compile",
           "status": "failed"
@@ -785,6 +798,10 @@
         {
           "name": "formatting",
           "status": "passed"
+        },
+        {
+          "name": "ignored-canonical-policy-replay-negative",
+          "status": "failed"
         },
         {
           "name": "library_27798279",
@@ -872,10 +889,24 @@
             "intent_id": "intent:todo:bugs_01m7nm3pnpc3be76",
             "kind": "trajectory_step_recorded",
             "sequence": 12
+          },
+          {
+            "detail": "trajectory:issues-1761-1770-20261117",
+            "event_id": "event:13",
+            "intent_id": "intent:todo:bugs_01m7nm3pnpc3be76",
+            "kind": "trajectory_step_recorded",
+            "sequence": 13
+          },
+          {
+            "detail": "trajectory:issues-1761-1770-20261117",
+            "event_id": "event:14",
+            "intent_id": "intent:todo:bugs_01m7nm3pnpc3be76",
+            "kind": "trajectory_step_recorded",
+            "sequence": 14
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 12,
+        "next_sequence": 14,
         "schema_version": "1.0.0",
         "trajectories": {
           "issues-1761-1770-20261117": {
@@ -1118,6 +1149,49 @@
                 "validation_findings": [
                   "The new ignored external-action policy replay control audits an existing owner; no bypass or successful protection is asserted before execution. Native-path positive CLI acceptance remains pending."
                 ]
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:13",
+                "observations": [
+                  "src/decapod/lib.rs",
+                  "tests/infer_precision.rs",
+                  "source:d0ebc2c899d6c5bc643cb984ab4126610898b07c;ci:44203259346;binary-sha256:a55067e506f7fec9794100dd4f327550b0a4612475ec452cc92fccbfae60ce0d;public-comment:6958213300;body-sha256:1ffa7769deeaf03f02a989ea56cbc0dcee251dde8413d3b8f317955df48f94a1;negative:AUTHORING_CUSTODY_STALE;repair-pending"
+                ],
+                "proof_refs": [
+                  "actual-cli-provider-ingress",
+                  "actual-cli-independent-lineage-reader"
+                ],
+                "scope": [
+                  ".decapod/managed/specs",
+                  "README.md",
+                  "docs",
+                  "src/decapod",
+                  "tests"
+                ],
+                "sequence": 13,
+                "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:14",
+                "observations": [
+                  "src/decapod/core/trajectory/execution.rs",
+                  "src/decapod/core/validation_history.rs",
+                  "source:7b4c14a0e02fde5c32be8df80900a6f671f7d071;base:6ab6de3134286a790d78d370ca3fb43c0d92f834;ci-job:134473589855;library:1816-passed-1-failed-8-ignored;negative:ignored_external_action_policy_cannot_replay_execution_binding;repair-pending"
+                ],
+                "proof_refs": [
+                  "ignored-canonical-policy-replay-negative"
+                ],
+                "scope": [
+                  ".decapod/managed/specs",
+                  "README.md",
+                  "docs",
+                  "src/decapod",
+                  "tests"
+                ],
+                "sequence": 14,
+                "validation_findings": []
               }
             ]
           }
@@ -1140,12 +1214,17 @@
         "https://github.com/DecapodLabs/decapod/actions/runs/44198555328/job/134447435222",
         "https://github.com/DecapodLabs/decapod/actions/runs/44198555328/job/134447435393",
         "https://github.com/DecapodLabs/decapod/actions/runs/44203259346/job/134462866270",
-        "https://github.com/DecapodLabs/decapod/issues/1776#issuecomment-6964621038"
+        "https://github.com/DecapodLabs/decapod/issues/1776#issuecomment-6964621038",
+        "source:7b4c14a0e02fde5c32be8df80900a6f671f7d071;base:6ab6de3134286a790d78d370ca3fb43c0d92f834;ci-job:134473589855;library:1816-passed-1-failed-8-ignored;negative:ignored_external_action_policy_cannot_replay_execution_binding;repair-pending",
+        "source:d0ebc2c899d6c5bc643cb984ab4126610898b07c;ci:44203259346;binary-sha256:a55067e506f7fec9794100dd4f327550b0a4612475ec452cc92fccbfae60ce0d;public-comment:6958213300;body-sha256:1ffa7769deeaf03f02a989ea56cbc0dcee251dde8413d3b8f317955df48f94a1;negative:AUTHORING_CUSTODY_STALE;repair-pending"
       ],
       "inspected_files": [
         "src/decapod/core/governance_document.rs",
         "src/decapod/core/intent_reconcile.rs",
         "src/decapod/core/obligation.rs",
+        "src/decapod/core/trajectory/execution.rs",
+        "src/decapod/core/validation_history.rs",
+        "src/decapod/lib.rs",
         "src/decapod/plan_governance.rs",
         "tests/infer_precision.rs"
       ],
