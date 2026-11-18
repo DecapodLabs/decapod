@@ -863,6 +863,9 @@ fn claim_preparation_probe(broker: bool) {
     let start = Instant::now();
     claim_probe_stage("competing mutation");
     let competing = run_decapod_bounded(&dir, &["todo", "add", "while preparation waits"], &envs);
+    let competing_elapsed = start.elapsed();
+    let preparation_still_blocked =
+        !release.exists() && std::fs::metadata(&output_path).unwrap().len() == 0;
     std::fs::write(&release, "release").unwrap(); // always release before assertions
     claim_probe_stage("await final claim envelope");
     let output = child.output(&output_path, &progress, &hooks, "claim completion");
@@ -871,7 +874,11 @@ fn claim_preparation_probe(broker: bool) {
         "{}",
         String::from_utf8_lossy(&competing.stderr)
     );
-    assert!(start.elapsed() < Duration::from_secs(10));
+    assert!(preparation_still_blocked);
+    assert!(
+        competing_elapsed < Duration::from_secs(10),
+        "competing mutation took {competing_elapsed:?} before preparation release"
+    );
     assert!(
         output.status.success(),
         "{}",

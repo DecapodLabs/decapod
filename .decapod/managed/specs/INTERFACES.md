@@ -12,6 +12,41 @@ grants exceptional permission. RBAC bypass keeps `proof_ready=false` and
 `publication_ready=false`; unaccepted root policy proposals return
 `RBAC_PERMISSION_DENIED`, and unresolved accepted sources fail closed.
 
+## Conformance evidence boundary (#871)
+
+The existing broker responsiveness assertion retains its ten-second limit for
+the competing operation while optional preparation is blocked. Claim completion
+after the explicit release is separately bounded and must still succeed; its
+cleanup duration is not part of that competing-operation measurement.
+
+`context.bundle.export`, `context.bundle.import`, `mentor.obligations` and
+`assurance.evaluate` advertise `session_required=true`, matching existing
+entry enforcement. This includes automatic acquisition; compatibility metadata
+does not issue a session. Bounded `data.database.inspect` remains session-free.
+
+Malformed `rpc --op ... --params ...` JSON returns nonzero with
+`Invalid JSON parameters`, before project/session startup; it is never converted
+to an empty compatibility request. Omitted parameters and explicit empty objects
+retain their existing meaning. Valid requests requiring an unsupported extension
+retain the `negotiation_refused` envelope; successful compatibility discovery
+still grants no mutation, completion or publication permission.
+
+The v1 manifest adds the existing reconciliation and state-read operations.
+Reconciliation remains advisory and session-free; state reads retain their
+existing session/workspace gates. Unknown RPC names now receive the existing
+`unknown_op` envelope before startup, including in an uninitialized Git project.
+Both stdin RPC and the HTTP adapter use that same local entry boundary. No
+negotiation result or catalog entry supplies mutation permission.
+
+`interop.manifest` retains its v1 wire shape and source coverage references.
+`evidence.conformance_test` and `evidence.evidence_ref` identify source tests;
+they do not attest execution, transport, binary identity or current applicability.
+Built-in evidence is `not_run`. The Rust manifest validator refuses authored
+`verified`/`failed` with `unobserved_conformance`, including known tests and
+plausible references. Historical JSON remains deserializable without gaining
+current assurance. No new execution producer, receipt import or authorization
+path is introduced; actual observed conformance remains an unresolved contract.
+
 ## Internal source currency agreement (#1753)
 
 The existing private config-only source policy now also governs version-only
@@ -1240,7 +1275,7 @@ Consumers must preserve private-capture and cooperative-host assurance limits.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `563a3642c49fc8216ef13356f82fcb9df3898ba240963d28799735861fc2ed6b`
+- Repository signal fingerprint: `7923ecd8b88929f0423f533f7837ced19bd932a774458551fd20b74cd670c9dc`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (237 files), `tests/` (236 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

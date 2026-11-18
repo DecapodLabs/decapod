@@ -7,6 +7,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.148.11](https://github.com/DecapodLabs/decapod/compare/v0.148.10...v0.148.11) - 2026-11-18
+
+### Fixed
+
+- *(interop)* align session descriptors with entry guards
+- *(rpc)* reject malformed parameters before negotiation
+- *(interop)* qualify startup RPC refusal constructor
+- *(interop)* require advertised RPC registration before dispatch
+- *(interop)* distinguish source coverage from executed conformance
+
+### Other
+
+- *(broker)* measure competing mutation before preparation cleanup
+- *(interop)* replay malformed negotiation after initialization
+- *(interop)* refresh release projections with controller0.148.10
+- *(proof)* reconcile accepted release0.148.10
+- *(interop)* reconcile accepted policy-custody fixes
+- *(proof)* reconcile reviewed release inputs for conformance
+
 ## [0.148.10](https://github.com/DecapodLabs/decapod/compare/v0.148.9...v0.148.10) - 2026-11-18
 
 ### Fixed

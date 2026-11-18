@@ -622,6 +622,11 @@
       "id": "native-release10-current-projections",
       "summary": "Checkpoint official native0.148.10 generated Docker/spec projections after genuine CI health rejection; preserve every required check and all failed attempts",
       "input_digest": "sha256:59a586faf348be4f9001be98cd14380f3e13af0178f3e3941978f0689a88c1f2"
+    },
+    {
+      "id": "accepted-conformance-release11-integration",
+      "summary": "Checkpoint accepted conformance/RPC guards and release0.148.11 with unchanged observer; refresh official native projections and source inventory after target invalidated earlier admission; require fresh complete proof",
+      "input_digest": "sha256:1e1fa4f1e4ab8f01b214ab58df58fb6b1975b44e03e6b7b8ba639d63327136b9"
     }
   ],
   "intents": {
@@ -662,22 +667,22 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Official0.148.10 native refresh regenerates current Docker pin and specs manifest after real source-CI health drift rejection; historical source entrypoint opt-out remains exact-repository scoped and no required check is bypassed",
-          "reviewed_code_fingerprint": "563a3642c49fc8216ef13356f82fcb9df3898ba240963d28799735861fc2ed6b",
-          "spec_material_hash": "ff25bc69c21d3dc98b8d66dc5bae62f1c01d8bd9e3e4dd82d3689991a9930d59"
+          "reason": "Preserve accepted source-versus-execution conformance and strict RPC registration/parameter/session guards alongside unchanged read-only observer; official0.148.11 controller,105 source definitions reviewed, full current-candidate proof remains required",
+          "reviewed_code_fingerprint": "7923ecd8b88929f0423f533f7837ced19bd932a774458551fd20b74cd670c9dc",
+          "spec_material_hash": "3b63516a8cf4a08e90043eae356dfd2a0eca06f8b98e599615ba708c6154119a"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Official0.148.10 native refresh regenerates current Docker pin and specs manifest after real source-CI health drift rejection; historical source entrypoint opt-out remains exact-repository scoped and no required check is bypassed",
-          "reviewed_code_fingerprint": "563a3642c49fc8216ef13356f82fcb9df3898ba240963d28799735861fc2ed6b",
-          "spec_material_hash": "666f7aabd9b0d0f529f03a2a5ecbbcad4f8dc10be0bd9de5e49bcca6bd945f31"
+          "reason": "Preserve accepted source-versus-execution conformance and strict RPC registration/parameter/session guards alongside unchanged read-only observer; official0.148.11 controller,105 source definitions reviewed, full current-candidate proof remains required",
+          "reviewed_code_fingerprint": "7923ecd8b88929f0423f533f7837ced19bd932a774458551fd20b74cd670c9dc",
+          "spec_material_hash": "81514c33f3601499867670f91f4d8a8ba8bfc955107a6354b68ff91b9fbe0c69"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Official0.148.10 native refresh regenerates current Docker pin and specs manifest after real source-CI health drift rejection; historical source entrypoint opt-out remains exact-repository scoped and no required check is bypassed",
-          "reviewed_code_fingerprint": "563a3642c49fc8216ef13356f82fcb9df3898ba240963d28799735861fc2ed6b",
+          "reason": "Preserve accepted source-versus-execution conformance and strict RPC registration/parameter/session guards alongside unchanged read-only observer; official0.148.11 controller,105 source definitions reviewed, full current-candidate proof remains required",
+          "reviewed_code_fingerprint": "7923ecd8b88929f0423f533f7837ced19bd932a774458551fd20b74cd670c9dc",
           "spec_material_hash": "e4f5f7980dc0644082f18f5ed99f3829acf1179c4b3e556b13cfd7390ab5cd20"
         }
       ],
@@ -689,13 +694,13 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1794985767Z"
+      "updated_at": "1794999086Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:29de1e5e7e10f800b8b5eb5f152dbb6a4bcdc5110b8f893cab6ce470d9550425",
+      "artifact_hash": "sha256:76dedb8bddd54e15a8a9ee201ad9343508212d19016e09a2230207fe3b2c1858",
       "checks": [
         {
           "name": "accepted-target-ancestry",
@@ -714,12 +719,24 @@
           "status": "failed"
         },
         {
+          "name": "fresh-complete-proof",
+          "status": "unavailable"
+        },
+        {
           "name": "historical-source-checkpoints",
           "status": "failed"
         },
         {
           "name": "native-projection-refresh",
           "status": "partial"
+        },
+        {
+          "name": "official-release11-install",
+          "status": "passed"
+        },
+        {
+          "name": "previous-admission-current-applicability",
+          "status": "failed"
         },
         {
           "name": "previous-target-applicability",
@@ -768,10 +785,17 @@
             "intent_id": "intent:change_01M7P3W97HA4M2MRGMQ0TYNRBB",
             "kind": "trajectory_step_recorded",
             "sequence": 7
+          },
+          {
+            "detail": "trajectory:branch_01M7P3W9AX80HN9XVHYSAD8B7C",
+            "event_id": "event:8",
+            "intent_id": "intent:change_01M7P3W97HA4M2MRGMQ0TYNRBB",
+            "kind": "trajectory_step_recorded",
+            "sequence": 8
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 7,
+        "next_sequence": 8,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M7P3W9AX80HN9XVHYSAD8B7C": {
@@ -841,6 +865,23 @@
                 ],
                 "sequence": 7,
                 "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:8",
+                "observations": [
+                  "Prior45ae/34f8 full native graph and actual publication passed, then accepted master advanced to352d8929 with conformance fixes and0.148.11. PR1784 returned to draft. Preserve prior successful and failed records. Merge accepted implementation/tests without auto-commit; reconcile authored spec prose while native blocks remain CLI-owned. Official release tag and master trees match; archive5412a6ba verified and installed, original Pi binary unchanged.105 inventory2acf1af7 reviewed with unchanged required graph. This checkpoint precedes merge commit and fresh full proof."
+                ],
+                "proof_refs": [
+                  "previous-admission-current-applicability",
+                  "official-release11-install",
+                  "fresh-complete-proof"
+                ],
+                "scope": [
+                  "root"
+                ],
+                "sequence": 8,
+                "validation_findings": []
               }
             ]
           }
@@ -852,6 +893,7 @@
         "Build12118 health job01a1ed5b-7d95-433d-9159-eb3eb09b8e2c rejected the0.148.9 Docker/manifest under the source-built0.148.10 binary. Preserved raw failure. Official0.148.10 archive checksum712521a5 verified, inspected and installed; native commands regenerated the two projections. Local prerequisite-only repair reported211 passes/3 failures and is not admission proof. Actual capture export test passed on d4269e35 with manifest4180e2b8 unchanged. Fresh complete exact-candidate CI is still required.",
         "Master advanced from6ab6de31 to c47137ad after native PR1784 admission. That admission remains historical, with no merge authorization. PR moved to draft; accepted policy-boundary changes merged without auto-commit, source/spec conflicts resolved preserving both responsibilities, and this exact integration tree will be checkpointed before commit. Fresh complete native validation is required.",
         "Preserved dad525d4 failed history including uncheckpointed integration c31d039f; native present-time recovery observation recorded. Reauthored five implementation files byte-for-byte; retained fresh identity. Real Pi archive3c6c373 and publication receipt remain historical observations, never imported readiness. Original source-CI deadline expired with SNAPSHOT_NOT_READY; fresh source requires complete validation.",
+        "Prior45ae/34f8 full native graph and actual publication passed, then accepted master advanced to352d8929 with conformance fixes and0.148.11. PR1784 returned to draft. Preserve prior successful and failed records. Merge accepted implementation/tests without auto-commit; reconcile authored spec prose while native blocks remain CLI-owned. Official release tag and master trees match; archive5412a6ba verified and installed, original Pi binary unchanged.105 inventory2acf1af7 reviewed with unchanged required graph. This checkpoint precedes merge commit and fresh full proof.",
         "Validation09 failed closed in actual docs-sync CI context after master advanced to34f837d4 release0.148.10. Raw failed job12092 preserved. Only the accepted release metadata is merged here without auto-commit; no observer, check or policy is weakened. Exact merge checkpoint precedes commit and full validation must rerun."
       ],
       "inspected_files": [],
