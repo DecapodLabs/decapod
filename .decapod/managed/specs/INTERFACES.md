@@ -1339,7 +1339,7 @@ field. Nothing in this operation authorizes a mutation, approval or completion.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `7e6122e7165b1cd3d1789eade7b28cd2734b1f2633d9df865448c87e71c846a8`
+- Repository signal fingerprint: `42d7b60e9c005456ac44735ad2b3e420eb3d1a699b39448cbe600d42ccd43fdd`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (237 files), `tests/` (236 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
@@ -1863,3 +1863,9 @@ manual or imported/self-hosted execution cannot grant Cachix publication.
 ## Canonical local Git proof (#1069)
 
 An accepted `proof.repository_contract.canonical_local_target = true` uses ordinary CLI/RPC validation against the canonical local branch. `readiness.ready` refers to that exact local subject with `scope=repository_local_git_readiness`; `publication_ready` stays false. `qa verify commit` inspects canonical historical proof. `workspace publish` and the independent final PR gate reject local-only target authority before remote publication. Omitted/false mode retains existing digests and GitHub behavior. Candidate-only mode, changed branch, strict profile and cloud selection cannot activate the local host.
+
+## Verifiable broker writer incarnation and orphan recovery (#1783)
+
+`BrokerEvent` in `src/decapod/core/broker.rs` extends new `pending` audit events with backward-compatible optional fields `writer_pid`, `writer_start_id`, `writer_boot_id`, `writer_host_id`, and `writer_pid_ns` populated by `WriterIncarnation::current()`, while terminal and acknowledgment events omit them when unset. `DbBroker::verify_replay` and `decapod data broker verify` populate each `Divergence` with `writer_liveness` (`active` | `stopped` | `unknown`), `human_review_required`, `liveness_detail`, and any captured `writer_*` provenance fields.
+
+`BrokerCommand::Repair` (`src/decapod/cli.rs`, routed to `DbBroker::repair_with_options` in `src/decapod/lib.rs`) adds `--acknowledge-unknown-writer` and reports `writer_liveness`, `human_review_required`, `liveness_detail`, `acknowledgment_required`, and `acknowledged_unknown_writer` in `RepairReport`. Active writers (`writer_liveness = "active"`) are unconditionally refused in both preview and `--apply`. Proven stopped writers (`writer_liveness = "stopped"`) repair directly with `--apply` without waiting on age thresholds or requiring overrides. Legacy provenance-free, partial, cross-host, or unverifiable pending events report `writer_liveness = "unknown"` and `human_review_required = true` in `verify` and `repair` preview, and refuse silent `--apply` unless `--acknowledge-unknown-writer` is explicitly provided after human review. See `docs/agent/error-recovery.md` and `docs/agent/command-contracts.md`.

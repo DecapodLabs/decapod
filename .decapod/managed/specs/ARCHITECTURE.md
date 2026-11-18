@@ -1079,7 +1079,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `7e6122e7165b1cd3d1789eade7b28cd2734b1f2633d9df865448c87e71c846a8`
+- Repository signal fingerprint: `42d7b60e9c005456ac44735ad2b3e420eb3d1a699b39448cbe600d42ccd43fdd`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (237 files), `tests/` (236 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
@@ -1484,3 +1484,9 @@ the reconciled candidate.
 ## Canonical local Git proof (#1069)
 
 The existing `repository_profile::RepositoryContract` review digest optionally binds canonical local Git target authority. `workspace::resolve_readiness_repository` keeps that identity distinct from cloud GitHub identity, requiring a reviewed local contract already committed on the canonical accepted branch. `RepositoryHost::canonical_local` reuses the sealed snapshot verifier and fresh ref observations; no daemon, parallel policy engine or datastore is added. `validation_history` preserves exact local scope and checks target movement. Native strict source proof and provider requirements remain intact.
+
+## Broker writer incarnation provenance (#1783)
+
+`DbBroker::build_event` (`src/decapod/core/broker.rs`) captures `WriterIncarnation::current()` on `pending` write audit events without adding external crate dependencies. On macOS, `RealIncarnationProbe` reads `libc::proc_pidinfo` (`PROC_PIDTBSDINFO`) process start timestamps (`pbi_start_tvsec`/`pbi_start_tvusec`), `kern.bootsessionuuid` via `libc::sysctlbyname`, and `libc::gethostuuid`. On Linux, it reads `/proc/<pid>/stat` field 22 (`starttime`), `/proc/sys/kernel/random/boot_id`, `/etc/machine-id` (or `/var/lib/dbus/machine-id`), and `/proc/self/ns/pid`, falling back safely to `None` / `ProcessProbe::Unverifiable` when unavailable.
+
+`assess_writer_liveness` establishes `WriterLiveness::Stopped` only when provenance is complete and either (a) the current boot incarnation (plus host ID and PID namespace when applicable) matches and the PID is absent/zombie (`ESRCH` / `SZOMB` / `Z`) or running with a different `writer_start_id` (proving PID reuse), or (b) `writer_host_id` matches the current host and `writer_boot_id` proves a different prior boot incarnation. Neither event age alone nor a bare PID check without start-identity and boot/host correlation ever proves writer termination.

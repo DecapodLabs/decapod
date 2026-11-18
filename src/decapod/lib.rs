@@ -9558,9 +9558,16 @@ fn run_data_command(
                 let report = broker.verify_replay()?;
                 println!("{}", serde_json::to_string_pretty(&report).unwrap());
                 if !report.divergences.is_empty() {
+                    let unknown_note = if report.divergences.iter().any(|d| d.human_review_required)
+                    {
+                        " Divergences with writer_liveness=\"unknown\" require human review and `--acknowledge-unknown-writer` on `--apply`."
+                    } else {
+                        ""
+                    };
                     return Err(error::DecapodError::ValidationError(format!(
-                        "Audit log integrity check failed: {} divergence(s) detected. Inspect the original writer, then preview `decapod data broker repair --event-id <id> --reason <reason>`. For database corruption or unsupported recovery, stop and escalate to a human/maintainer; raw sqlite3, REINDEX, and direct database access are never authorized.",
-                        report.divergences.len()
+                        "Audit log integrity check failed: {} divergence(s) detected. Inspect the original writer, then preview `decapod data broker repair --event-id <id> --reason <reason>`.{} For database corruption or unsupported recovery, stop and escalate to a human/maintainer; raw sqlite3, REINDEX, and direct database access are never authorized.",
+                        report.divergences.len(),
+                        unknown_note
                     )));
                 }
             }
@@ -9568,10 +9575,17 @@ fn run_data_command(
                 event_id,
                 reason,
                 apply,
+                acknowledge_unknown_writer,
             } => {
                 let broker = core::broker::DbBroker::new(store_root);
                 let actor = std::env::var("DECAPOD_AGENT_ID").unwrap_or_else(|_| "cli".into());
-                let report = broker.repair(&event_id, &reason, apply, &actor)?;
+                let report = broker.repair_with_options(
+                    &event_id,
+                    &reason,
+                    apply,
+                    acknowledge_unknown_writer,
+                    &actor,
+                )?;
                 println!("{}", serde_json::to_string_pretty(&report).unwrap());
             }
         },

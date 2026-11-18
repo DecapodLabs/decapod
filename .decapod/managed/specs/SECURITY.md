@@ -706,7 +706,7 @@ execution evidence remains required before publication readiness.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `7e6122e7165b1cd3d1789eade7b28cd2734b1f2633d9df865448c87e71c846a8`
+- Repository signal fingerprint: `42d7b60e9c005456ac44735ad2b3e420eb3d1a699b39448cbe600d42ccd43fdd`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (237 files), `tests/` (236 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
@@ -1186,3 +1186,9 @@ exercise real secrets nor prove actual native cache publication.
 ## Canonical local Git proof (#1069)
 
 Canonical local proof shares the OS user trust domain with source, policy, tools and SQLite; it is not cryptographic authentication or OS isolation. The local authority is accepted on canonical Git rather than supplied by a candidate report, and cannot act as cloud/forge identity. Target reads disable ambient Git redirects, transport and replacement objects. Material/policy/target changes invalidate applicability without rewriting historical success. Supported forge publication rejects local-only authority; unrestricted shell/Git remains outside that enforcement boundary. No keys, credentials or machine-local logs belong in tracked state.
+
+## Fail-closed broker orphan acknowledgment (#1783)
+
+`prepare_repair_with_probe` and `assess_writer_liveness` (`src/decapod/core/broker.rs`) enforce fail-closed orphan repair boundaries against reused PIDs, cross-host shared storage, and historical provenance-free audit entries. Confirmed active writers (matching boot/host/PID-namespace, live PID, and matching `writer_start_id`) are unconditionally refused in both preview and `--apply`, even when `--acknowledge-unknown-writer` is supplied.
+
+Legacy provenance-free `pending` events, partial provenance lacking `writer_start_id` or `writer_boot_id`, cross-host boot mismatches, mismatched Linux PID namespaces, and uninspectable processes (`ProcessProbe::Unverifiable`) resolve to `WriterLiveness::Unknown` with `human_review_required = true`. Silent `broker repair --apply` is refused for all `Unknown` cases; applying requires explicit human review via `--acknowledge-unknown-writer`, records `writer_liveness`, `human_review_required`, and `acknowledge_unknown_writer` on the `"abandoned"` audit entry, preserves `original_outcome = "unknown"`, and remains gated by `control.mutate` policy and session checks.

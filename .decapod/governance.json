@@ -1,7 +1,7 @@
 {
   "schema_version": "1.0.0",
   "baseline": {
-    "accepted_commit": "352d892958e1cdf692299927f7c2f3c0c36fc639",
+    "accepted_commit": "2f12638aec0d16597526d4f7b116328083b5e95b",
     "policy": {
       "change_control": {
         "requires_human_review": true,
@@ -568,76 +568,48 @@
     }
   },
   "change": {
-    "id": "change_01M7QBP48AQ173W18SNDHSF9D8",
-    "base_commit": "352d892958e1cdf692299927f7c2f3c0c36fc639",
+    "id": "change_01M7R1CWXC45KTFHQQ66YZABEX",
+    "base_commit": "2f12638aec0d16597526d4f7b116328083b5e95b",
     "target_base": "origin/master"
   },
   "claims": {
-    "claim:scoped-recovery-diagnostics": {
-      "statement": "Scoped qa verify recover and regen surface bounded allowlisted blocker labels and structured stage/scope diagnostics without bypassing PROOF_HOOK_FAILED or leaking untrusted child output",
-      "falsifier": "Any failing snapshot writes task_verification or mutates task state, any child text/URL/credential/note leaks into diagnostics or JSON, or token substring collision emits READINESS_BLOCKED from LAYA_READINESS_BLOCKED",
+    "claim:broker-writer-incarnation-provenance": {
+      "statement": "Pending broker audit events record optional OS writer incarnation provenance, verify/repair prove termination only via start-identity or same-host prior-boot correlation, and legacy/cross-host/unverifiable entries fail closed as unknown unless --acknowledge-unknown-writer is explicitly passed",
+      "falsifier": "Age alone or bare PID checks repair an active or PID-reused writer, or silent broker repair --apply abandons a provenance-free/unknown event without --acknowledge-unknown-writer",
       "status": "supported",
       "proof_refs": [
-        "tests/unit/plugins/verify_tests.rs",
-        "tests/verify_deadlock_regression.rs"
+        "tests/crash_consistency.rs",
+        "tests/unit/core/broker_tests.rs"
       ]
     }
   },
   "checkpoints": [
     {
-      "id": "cp-1781-1",
-      "summary": "Implement safe scoped validation blocker diagnostics and --json failure output in qa verify recover and regen",
-      "input_digest": "sha256:ebd0700469678de70eef31a60d5006f4ef7c3a5bbd1f8a319b67e5203273b747",
+      "id": "cp-1783-1",
+      "summary": "feat(broker): record verifiable writer incarnation provenance and enforce fail-closed unknown recovery (#1783)",
+      "input_digest": "sha256:b1513845c4323f7d73c31cd3f85272fcfabd38f2fa3ad4aacae3c10879d9d7d6",
       "proof_refs": [
-        "tests/unit/plugins/verify_tests.rs",
-        "tests/verify_deadlock_regression.rs"
-      ]
-    },
-    {
-      "id": "cp-1781-2",
-      "summary": "Merge origin/master caeeaba8 (PR #1792) and verify fmt, clippy, and verify tests",
-      "input_digest": "sha256:f4a9ef80ead389ac51811fca6cf64f8bf1f23818a7cb79c885ec55e27ace32b0",
-      "proof_refs": [
-        "tests/unit/plugins/verify_tests.rs",
-        "tests/verify_deadlock_regression.rs"
-      ]
-    },
-    {
-      "id": "cp-1781-3",
-      "summary": "Merge origin/master c5bafce6 (v0.148.13) and reconcile proof source inventory",
-      "input_digest": "sha256:fd6f16d17721235851d370fbb7fc4e224c2307fdcc4826f93932722c3c7ddab8",
-      "proof_refs": [
-        "tests/unit/plugins/verify_tests.rs",
-        "tests/verify_deadlock_regression.rs"
-      ]
-    },
-    {
-      "id": "cp-1781-4",
-      "summary": "Refresh v0.148.13 Dockerfile.decapod and specs manifest projections and re-verify spec reviews",
-      "input_digest": "sha256:df763eaf4d13b2e43d46caf5e0c98f8bbf66ce54ca1f63771457927c00137386",
-      "proof_refs": [
-        "v0.148.13-projections=passed"
+        "tests/crash_consistency.rs",
+        "tests/unit/core/broker_tests.rs"
       ]
     }
   ],
   "intents": {
-    "intent:change_01M7QBP48AQ173W18SNDHSF9D8": {
+    "intent:change_01M7R1CWXC45KTFHQQ66YZABEX": {
       "acceptance_criteria": [],
       "assumptions": [],
       "boundaries": [
         "Current claimed task and isolated work branch"
       ],
       "constraints": [
-        "paths:[\"src/decapod\"",
-        "\"tests\"",
-        "\".decapod/managed/specs\"]"
+        "root"
       ],
       "created_sequence": 1,
-      "id": "intent:change_01M7QBP48AQ173W18SNDHSF9D8",
+      "id": "intent:change_01M7R1CWXC45KTFHQQ66YZABEX",
       "out_of_scope": [],
       "proof_requirements": [],
-      "raw_intent": "Fix #1781: surface safe scoped validation blocker diagnostics in qa verify recover\n\nSurface bounded, non-leaking allowlisted blocker labels in qa verify recover/regen without bypassing verification safety per Alex's design",
-      "refined_intent": "Fix #1781: surface safe scoped validation blocker diagnostics in qa verify recover\n\nSurface bounded, non-leaking allowlisted blocker labels in qa verify recover/regen without bypassing verification safety per Alex's design",
+      "raw_intent": "Fix #1783: verifiable writer incarnation provenance for broker pending events and orphan recovery",
+      "refined_intent": "Fix #1783: verifiable writer incarnation provenance for broker pending events and orphan recovery",
       "status": "refined",
       "updated_sequence": 3
     }
@@ -650,7 +622,7 @@
       },
       "deferred_questions": [],
       "human_questions": [],
-      "intent": "Fix #1781: surface safe scoped validation blocker diagnostics in qa verify recover\n\nSurface bounded, non-leaking allowlisted blocker labels in qa verify recover/regen without bypassing verification safety per Alex's design",
+      "intent": "Fix #1783: verifiable writer incarnation provenance for broker pending events and orphan recovery",
       "phases": [],
       "proof_hooks": [
         "decapod validate"
@@ -658,43 +630,42 @@
       "schema_version": "1.1.0",
       "spec_reviews": [
         {
-          "disposition": "unchanged_with_reason",
+          "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "No architectural changes beyond scoped qa verify recover/regen diagnostic extraction in src/decapod/plugins/verify.rs",
-          "reviewed_code_fingerprint": "7e6122e7165b1cd3d1789eade7b28cd2734b1f2633d9df865448c87e71c846a8",
-          "spec_material_hash": "080e1e015d867051ec4ecbb1f18aca92a2d62a05798377057e563aaa5a3764e0"
+          "reason": "Document #1783 OS probe and liveness correlation architecture",
+          "reviewed_code_fingerprint": "42d7b60e9c005456ac44735ad2b3e420eb3d1a699b39448cbe600d42ccd43fdd",
+          "spec_material_hash": "4929deadf9cb8583650d9f9c3d2cb84acc645960aad1662857d3510b50ae1e23"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Verified INTERFACES.md scoped qa verify recover/regen diagnostic contract aligns with v0.148.13 refreshed projections",
-          "reviewed_code_fingerprint": "7e6122e7165b1cd3d1789eade7b28cd2734b1f2633d9df865448c87e71c846a8",
-          "spec_material_hash": "3baf7067b96d8fad41fcf9ff69aa2866b99b9bc631a1132df1daf96de9c82ab7"
+          "reason": "Document #1783 broker writer incarnation provenance and --acknowledge-unknown-writer",
+          "reviewed_code_fingerprint": "42d7b60e9c005456ac44735ad2b3e420eb3d1a699b39448cbe600d42ccd43fdd",
+          "spec_material_hash": "d81ced6cec8ddf9c1fb346fd84d32762827cfa9992d8b5a5ba053d5f356af69f"
         },
         {
-          "disposition": "unchanged_with_reason",
+          "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Fail-closed verification boundary and redaction invariants preserved without changes to SECURITY.md",
-          "reviewed_code_fingerprint": "7e6122e7165b1cd3d1789eade7b28cd2734b1f2633d9df865448c87e71c846a8",
-          "spec_material_hash": "735ae6e95c6b18ff2ccc718fbadaa4d7ae483d632aee2fb071d4f9ae6daa23de"
+          "reason": "Document #1783 fail-closed orphan acknowledgment and active-writer refusal",
+          "reviewed_code_fingerprint": "42d7b60e9c005456ac44735ad2b3e420eb3d1a699b39448cbe600d42ccd43fdd",
+          "spec_material_hash": "0662955287aed3e33e71a27b537cba0673fafeb47f65465b3e197c1cb5b762a3"
         }
       ],
       "state": "APPROVED",
       "stop_conditions": [],
-      "title": "Fix #1781: surface safe scoped validation blocker diagnostics in qa verify recover",
+      "title": "Fix #1783: verifiable writer incarnation provenance for broker pending events and orphan recovery",
       "todo_ids": [
-        "bugs_01m7qbjm2x2nsptt"
+        "bugs_01m7r13b7j70bp8x"
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795013937Z"
+      "updated_at": "1795031296Z"
     },
     "trajectory": {
       "active_boundaries": [
-        "Current claimed task and isolated work branch",
-        "Fail-closed verification: never bypass PROOF_HOOK_FAILED, admit failing snapshots, or leak untrusted child text/paths/URLs"
+        "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:665196d859295d189d7502d6518049e57639f52bdf8f25c36709f887ee7d52a1",
+      "artifact_hash": "sha256:3ec53cabb35b60bc0fbb4456cbee2ac3f5fb76d76be242c0f99ff455730aad15",
       "checks": [
         {
           "name": "cargo_clippy",
@@ -705,259 +676,135 @@
           "status": "passed"
         },
         {
-          "name": "plugins_verify_tests",
+          "name": "cli_contract_enforcement",
           "status": "passed"
         },
         {
-          "name": "v0.148.13-projections",
+          "name": "core_broker_unit",
           "status": "passed"
         },
         {
-          "name": "verify_deadlock_cli_regression",
+          "name": "crash_consistency",
+          "status": "passed"
+        },
+        {
+          "name": "doc_alignment",
+          "status": "passed"
+        },
+        {
+          "name": "single_datastore",
           "status": "passed"
         }
       ],
-      "current_phase": "verify",
+      "current_phase": "verification",
       "custody": {
         "events": [
           {
             "event_id": "event:2",
-            "intent_id": "intent:change_01M7QBP48AQ173W18SNDHSF9D8",
+            "intent_id": "intent:change_01M7R1CWXC45KTFHQQ66YZABEX",
             "kind": "created",
             "sequence": 2
           },
           {
             "event_id": "event:3",
-            "intent_id": "intent:change_01M7QBP48AQ173W18SNDHSF9D8",
+            "intent_id": "intent:change_01M7R1CWXC45KTFHQQ66YZABEX",
             "kind": "refined",
             "sequence": 3
           },
           {
-            "detail": "trajectory:branch_01M7QBP4CC8XKHSQ4J53W8A0K5",
+            "detail": "trajectory:branch_01M7R1CX1G0E1K1F07ZPNJDYTA",
             "event_id": "event:4",
-            "intent_id": "intent:change_01M7QBP48AQ173W18SNDHSF9D8",
+            "intent_id": "intent:change_01M7R1CWXC45KTFHQQ66YZABEX",
             "kind": "trajectory_step_recorded",
             "sequence": 4
-          },
-          {
-            "detail": "trajectory:branch_01M7QBP4CC8XKHSQ4J53W8A0K5",
-            "event_id": "event:5",
-            "intent_id": "intent:change_01M7QBP48AQ173W18SNDHSF9D8",
-            "kind": "trajectory_step_recorded",
-            "sequence": 5
-          },
-          {
-            "detail": "trajectory:branch_01M7QBP4CC8XKHSQ4J53W8A0K5",
-            "event_id": "event:6",
-            "intent_id": "intent:change_01M7QBP48AQ173W18SNDHSF9D8",
-            "kind": "trajectory_step_recorded",
-            "sequence": 6
-          },
-          {
-            "detail": "trajectory:branch_01M7QBP4CC8XKHSQ4J53W8A0K5",
-            "event_id": "event:7",
-            "intent_id": "intent:change_01M7QBP48AQ173W18SNDHSF9D8",
-            "kind": "trajectory_step_recorded",
-            "sequence": 7
-          },
-          {
-            "detail": "trajectory:branch_01M7QBP4CC8XKHSQ4J53W8A0K5",
-            "event_id": "event:8",
-            "intent_id": "intent:change_01M7QBP48AQ173W18SNDHSF9D8",
-            "kind": "trajectory_step_recorded",
-            "sequence": 8
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 8,
+        "next_sequence": 4,
         "schema_version": "1.0.0",
         "trajectories": {
-          "branch_01M7QBP4CC8XKHSQ4J53W8A0K5": {
+          "branch_01M7R1CX1G0E1K1F07ZPNJDYTA": {
             "evidence_only": true,
-            "id": "branch_01M7QBP4CC8XKHSQ4J53W8A0K5",
-            "intent_id": "intent:change_01M7QBP48AQ173W18SNDHSF9D8",
+            "id": "branch_01M7R1CX1G0E1K1F07ZPNJDYTA",
+            "intent_id": "intent:change_01M7R1CWXC45KTFHQQ66YZABEX",
             "steps": [
               {
-                "action": "plan",
-                "command": "decapod govern plan approve",
+                "action": "verification",
                 "custody_event_id": "event:4",
                 "observations": [
-                  "src/decapod/plugins/verify.rs",
-                  "tests/unit/plugins/verify_tests.rs",
-                  "tests/verify_deadlock_regression.rs",
+                  "src/decapod/core/broker.rs",
+                  "src/decapod/cli.rs",
                   "src/decapod/lib.rs",
-                  "src/decapod/core/readiness_profile.rs",
-                  "src/decapod/core/repository_profile.rs",
-                  "src/decapod/core/validation_runtime.rs",
-                  "src/decapod/core/workspace_publication.rs",
-                  "src/decapod/core/workspace.rs",
-                  ".decapod/managed/specs/INTERFACES.md"
+                  "src/decapod/core/docs_cli.rs",
+                  "src/decapod/core/broker.rs",
+                  "src/decapod/cli.rs",
+                  "src/decapod/lib.rs",
+                  "src/decapod/core/docs_cli.rs",
+                  "docs/agent/command-contracts.md",
+                  "docs/agent/error-recovery.md",
+                  "tests/unit/core/broker_tests.rs",
+                  "tests/crash_consistency.rs",
+                  ".decapod/config.toml",
+                  ".decapod/managed/specs/INTERFACES.md",
+                  ".decapod/managed/specs/ARCHITECTURE.md",
+                  ".decapod/managed/specs/SECURITY.md",
+                  "core::broker::tests 7/7 passed; crash_consistency 8/8 passed; cli_contract_enforcement 22/22 passed; doc_alignment 4/4 passed; single_datastore 9/9 passed; clippy and fmt clean"
                 ],
-                "proof_refs": [],
+                "proof_refs": [
+                  "cargo_fmt",
+                  "cargo_clippy",
+                  "core_broker_unit",
+                  "crash_consistency",
+                  "cli_contract_enforcement",
+                  "doc_alignment",
+                  "single_datastore"
+                ],
                 "scope": [
-                  "\".decapod/managed/specs\"]",
-                  "\"tests\"",
-                  "paths:[\"src/decapod\""
+                  "root"
                 ],
                 "sequence": 4,
-                "validation_findings": []
-              },
-              {
-                "action": "verify",
-                "custody_event_id": "event:5",
-                "observations": [
-                  "src/decapod/plugins/verify.rs",
-                  "tests/unit/plugins/verify_tests.rs",
-                  "tests/verify_deadlock_regression.rs",
-                  ".decapod/managed/specs/INTERFACES.md",
-                  "cargo test --lib plugins::verify::tests: 11 passed; 0 failed",
-                  "cargo test --test verify_deadlock_regression test_verify_recover_and_regen_json_surface_scoped_blockers_without_leaking: ok",
-                  "CLIPPY_CONF_DIR=.config cargo clippy --all-targets --all-features -- -D warnings: ok (0 warnings)"
-                ],
-                "proof_refs": [
-                  "cargo_fmt",
-                  "cargo_clippy",
-                  "plugins_verify_tests",
-                  "verify_deadlock_cli_regression"
-                ],
-                "scope": [
-                  "\".decapod/managed/specs\"]",
-                  "\"tests\"",
-                  ".decapod/managed/specs/INTERFACES.md",
-                  "paths:[\"src/decapod\"",
-                  "src/decapod/plugins/verify.rs",
-                  "tests/unit/plugins/verify_tests.rs",
-                  "tests/verify_deadlock_regression.rs"
-                ],
-                "sequence": 5,
-                "validation_findings": []
-              },
-              {
-                "action": "verify",
-                "custody_event_id": "event:6",
-                "observations": [
-                  "Post-merge caeeaba8: cargo fmt --check ok; clippy --all-targets --all-features -- -D warnings ok; plugins::verify::tests 11/11 passed; test_verify_recover_and_regen_json_surface_scoped_blockers_without_leaking ok"
-                ],
-                "proof_refs": [
-                  "cargo_fmt",
-                  "cargo_clippy",
-                  "plugins_verify_tests",
-                  "verify_deadlock_cli_regression"
-                ],
-                "scope": [
-                  "\".decapod/managed/specs\"]",
-                  "\"tests\"",
-                  ".decapod/managed/specs/INTERFACES.md",
-                  "paths:[\"src/decapod\"",
-                  "src/decapod/plugins/verify.rs",
-                  "tests/unit/plugins/verify_tests.rs",
-                  "tests/verify_deadlock_regression.rs"
-                ],
-                "sequence": 6,
-                "validation_findings": []
-              },
-              {
-                "action": "verify",
-                "custody_event_id": "event:7",
-                "observations": [
-                  ".decapod/config.toml",
-                  "Merged origin/master c5bafce6 (v0.148.13 Cargo/CHANGELOG-only bump) and reconciled reviewed_sources_digest to sha256:f2c1d189ee0c96f6afb66185229233bd0436015d0ddd21dc56deb4f58709b2b2"
-                ],
-                "proof_refs": [
-                  "cargo_fmt",
-                  "cargo_clippy",
-                  "plugins_verify_tests",
-                  "verify_deadlock_cli_regression"
-                ],
-                "scope": [
-                  "\".decapod/managed/specs\"]",
-                  "\"tests\"",
-                  ".decapod/managed/specs/INTERFACES.md",
-                  "paths:[\"src/decapod\"",
-                  "src/decapod/plugins/verify.rs",
-                  "tests/unit/plugins/verify_tests.rs",
-                  "tests/verify_deadlock_regression.rs"
-                ],
-                "sequence": 7,
-                "validation_findings": []
-              },
-              {
-                "action": "trajectory.record",
-                "command": "decapod govern project-check --refresh-specs (v0.148.13)",
-                "custody_event_id": "event:8",
-                "observations": [
-                  ".decapod/managed/Dockerfile.decapod",
-                  ".decapod/managed/specs/.manifest.json"
-                ],
-                "proof_refs": [
-                  "v0.148.13-projections"
-                ],
-                "scope": [
-                  "\".decapod/managed/specs\"]",
-                  "\"tests\"",
-                  ".decapod/managed/specs/INTERFACES.md",
-                  "paths:[\"src/decapod\"",
-                  "src/decapod/plugins/verify.rs",
-                  "tests/unit/plugins/verify_tests.rs",
-                  "tests/verify_deadlock_regression.rs"
-                ],
-                "sequence": 8,
                 "validation_findings": []
               }
             ]
           }
         }
       },
-      "declared_commands": [
-        "decapod govern plan approve",
-        "decapod govern project-check --refresh-specs (v0.148.13)"
-      ],
+      "declared_commands": [],
       "destination": "pull request",
       "evidence": [
-        "CLIPPY_CONF_DIR=.config cargo clippy --all-targets --all-features -- -D warnings: ok (0 warnings)",
-        "Merged origin/master c5bafce6 (v0.148.13 Cargo/CHANGELOG-only bump) and reconciled reviewed_sources_digest to sha256:f2c1d189ee0c96f6afb66185229233bd0436015d0ddd21dc56deb4f58709b2b2",
-        "Post-merge caeeaba8: cargo fmt --check ok; clippy --all-targets --all-features -- -D warnings ok; plugins::verify::tests 11/11 passed; test_verify_recover_and_regen_json_surface_scoped_blockers_without_leaking ok",
-        "cargo test --lib plugins::verify::tests: 11 passed; 0 failed",
-        "cargo test --test verify_deadlock_regression test_verify_recover_and_regen_json_surface_scoped_blockers_without_leaking: ok"
+        "core::broker::tests 7/7 passed; crash_consistency 8/8 passed; cli_contract_enforcement 22/22 passed; doc_alignment 4/4 passed; single_datastore 9/9 passed; clippy and fmt clean"
       ],
       "inspected_files": [
-        ".decapod/managed/specs/INTERFACES.md",
-        "src/decapod/core/readiness_profile.rs",
-        "src/decapod/core/repository_profile.rs",
-        "src/decapod/core/validation_runtime.rs",
-        "src/decapod/core/workspace.rs",
-        "src/decapod/core/workspace_publication.rs",
-        "src/decapod/lib.rs",
-        "src/decapod/plugins/verify.rs",
-        "tests/unit/plugins/verify_tests.rs",
-        "tests/verify_deadlock_regression.rs"
+        "src/decapod/cli.rs",
+        "src/decapod/core/broker.rs",
+        "src/decapod/core/docs_cli.rs",
+        "src/decapod/lib.rs"
       ],
-      "intent_id": "intent:change_01M7QBP48AQ173W18SNDHSF9D8",
+      "intent_id": "intent:change_01M7R1CWXC45KTFHQQ66YZABEX",
       "modified_files": [
         ".decapod/config.toml",
-        ".decapod/managed/Dockerfile.decapod",
-        ".decapod/managed/specs/.manifest.json",
+        ".decapod/managed/specs/ARCHITECTURE.md",
         ".decapod/managed/specs/INTERFACES.md",
-        "src/decapod/plugins/verify.rs",
-        "tests/unit/plugins/verify_tests.rs",
-        "tests/verify_deadlock_regression.rs"
+        ".decapod/managed/specs/SECURITY.md",
+        "docs/agent/command-contracts.md",
+        "docs/agent/error-recovery.md",
+        "src/decapod/cli.rs",
+        "src/decapod/core/broker.rs",
+        "src/decapod/core/docs_cli.rs",
+        "src/decapod/lib.rs",
+        "tests/crash_consistency.rs",
+        "tests/unit/core/broker_tests.rs"
       ],
       "next_transitions": [
         "Refine plan and declare falsifiable checks"
       ],
       "repo_scope": [
-        "\".decapod/managed/specs\"]",
-        "\"tests\"",
-        ".decapod/managed/specs/INTERFACES.md",
-        "paths:[\"src/decapod\"",
-        "src/decapod/plugins/verify.rs",
-        "tests/unit/plugins/verify_tests.rs",
-        "tests/verify_deadlock_regression.rs"
+        "root"
       ],
-      "run_id": "branch_01M7QBP4CC8XKHSQ4J53W8A0K5",
+      "run_id": "branch_01M7R1CX1G0E1K1F07ZPNJDYTA",
       "schema_version": "1.1.0",
       "shortcut_risk_signals": [],
-      "task_id": "bugs_01m7qbjm2x2nsptt",
+      "task_id": "bugs_01m7r13b7j70bp8x",
       "tool_calls": [],
       "unresolved_assumptions": []
     }
