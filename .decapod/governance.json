@@ -688,6 +688,11 @@
       "id": "incorporate-accepted-release10",
       "summary": "Accepted target advanced during b3b proof: preserve SNAPSHOT_NOT_READY denial, incorporate accepted 34f837d4 release v0.148.10 and regenerate source inventory; no protected ref modification or proof waiver.",
       "input_digest": "sha256:e94d7187e75f9ca097e68f70346d60770fcd6c6af5cb68e55d0b127fc8b4aeb8"
+    },
+    {
+      "id": "retain-custody-refusal-and-reviewed-inventory",
+      "summary": "Actual revoked-lease publication refused but misreported canonical managed checkout as external. Preserve workspace-owned exact blockers/remediation; strengthen existing regression without changing authority. Explicitly review accepted release-only Cargo version inventory delta; all checks retained. Fresh full proof pending.",
+      "input_digest": "sha256:cb525cf3ee51bedc6dd60788824c070fe444151c00287254f854d86998715a48"
     }
   ],
   "intents": {
@@ -732,22 +737,22 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Accepted v0.148.10 release inputs incorporated through Git; implementation and trust boundaries unchanged; regenerate source fingerprint and require fresh complete proof",
-          "reviewed_code_fingerprint": "e6c3e0206fe0b7064bf750bd23f688ae01f6cc4d085448bc6a952ffa9f936354",
+          "reason": "Preserve exact canonical custody refusal in validation, distinct from external path mismatch; review accepted release-only inventory delta, retain mandatory source graph and historical failed fixture",
+          "reviewed_code_fingerprint": "b3ab0860271f59e3bd8b813a35975cd9df65e64e146793c67939b9ef37cc6c75",
           "spec_material_hash": "68902808d64fc0f419f2489074024da71e72bc9a8da546995d7c0520d90d76e5"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Accepted v0.148.10 release inputs incorporated through Git; implementation and trust boundaries unchanged; regenerate source fingerprint and require fresh complete proof",
-          "reviewed_code_fingerprint": "e6c3e0206fe0b7064bf750bd23f688ae01f6cc4d085448bc6a952ffa9f936354",
-          "spec_material_hash": "d76740eb7a4062fd23a8dcce5547f881ada3c2e14c89b3a8ca64a2cc90922b83"
+          "reason": "Preserve exact canonical custody refusal in validation, distinct from external path mismatch; review accepted release-only inventory delta, retain mandatory source graph and historical failed fixture",
+          "reviewed_code_fingerprint": "b3ab0860271f59e3bd8b813a35975cd9df65e64e146793c67939b9ef37cc6c75",
+          "spec_material_hash": "bdd74b3fa4e4e791114d721dfba217bfbfb15f1d21ae0c832042eea2e0a3e16e"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Accepted v0.148.10 release inputs incorporated through Git; implementation and trust boundaries unchanged; regenerate source fingerprint and require fresh complete proof",
-          "reviewed_code_fingerprint": "e6c3e0206fe0b7064bf750bd23f688ae01f6cc4d085448bc6a952ffa9f936354",
+          "reason": "Preserve exact canonical custody refusal in validation, distinct from external path mismatch; review accepted release-only inventory delta, retain mandatory source graph and historical failed fixture",
+          "reviewed_code_fingerprint": "b3ab0860271f59e3bd8b813a35975cd9df65e64e146793c67939b9ef37cc6c75",
           "spec_material_hash": "0f80a7bae9c396f6ef79bcb1674252d853c5fe192cb7baba382a05919875407b"
         }
       ],
@@ -759,7 +764,7 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1794982597Z"
+      "updated_at": "1794983620Z"
     },
     "trajectory": {
       "active_boundaries": [

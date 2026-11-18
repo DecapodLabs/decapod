@@ -1330,7 +1330,7 @@ field. Nothing in this operation authorizes a mutation, approval or completion.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `e6c3e0206fe0b7064bf750bd23f688ae01f6cc4d085448bc6a952ffa9f936354`
+- Repository signal fingerprint: `b3ab0860271f59e3bd8b813a35975cd9df65e64e146793c67939b9ef37cc6c75`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (240 files), `tests/` (235 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
@@ -1854,3 +1854,5 @@ manual or imported/self-hosted execution cannot grant Cachix publication.
 ## Canonical local Git proof (#1069)
 
 An accepted `proof.repository_contract.canonical_local_target = true` uses ordinary CLI/RPC validation against the canonical local branch. `readiness.ready` refers to that exact local subject with `scope=repository_local_git_readiness`; `publication_ready` stays false. `qa verify commit` inspects canonical historical proof. `workspace publish` and the independent final PR gate reject local-only target authority before remote publication. Omitted/false mode retains existing digests and GitHub behavior. Candidate-only mode, changed branch, strict profile and cloud selection cannot activate the local host.
+
+Revoked-custody acceptance exposed a diagnostic mismatch: validation denied a registered managed checkout but called it external. `validate_git_workspace_context` now preserves the workspace owner's exact blocker and recovery instruction for canonical paths. External worktrees retain their distinct context diagnostic. Both routes remain refused; no authoring or publication authority is added.

@@ -5764,18 +5764,31 @@ fn validate_git_workspace_context(
     } else if let Ok(status) = workspace::get_workspace_status(repo_root)
         && status.git.in_worktree
     {
-        let path = status.git.worktree_path.as_deref().unwrap_or(repo_root);
-        fail(
-            &auto_remediable_validation_message(
-                "workspace_context_mismatch",
-                format!(
-                    "Git reports an isolated worktree at '{}' but it is not Decapod-owned under '.decapod/workspaces/'. The host worktree detector and validation context disagree about custody.",
-                    path.display()
+        if workspace::is_canonical_decapod_workspace_path(repo_root) && !status.blockers.is_empty()
+        {
+            // A canonical checkout may have lost lease or binding authority.
+            // Preserve the existing owner's exact refusal and recovery instead
+            // of misclassifying an authority failure as an external directory.
+            for blocker in &status.blockers {
+                fail(
+                    &format!("{} Recovery: {}", blocker.message, blocker.resolve_hint),
+                    ctx,
+                );
+            }
+        } else {
+            let path = status.git.worktree_path.as_deref().unwrap_or(repo_root);
+            fail(
+                &auto_remediable_validation_message(
+                    "workspace_context_mismatch",
+                    format!(
+                        "Git reports an isolated worktree at '{}' but it is not Decapod-owned under '.decapod/workspaces/'. The host worktree detector and validation context disagree about custody.",
+                        path.display()
+                    ),
+                    "Agent: run `decapod workspace status`; enter the Decapod-reported worktree or run `decapod workspace ensure`, then rerun validation.",
                 ),
-                "Agent: run `decapod workspace status`; enter the Decapod-reported worktree or run `decapod workspace ensure`, then rerun validation.",
-            ),
-            ctx,
-        );
+                ctx,
+            );
+        }
     } else {
         fail(
             "Not running in isolated git worktree - must use .decapod/workspaces/ to prevent disrupting the root repository",
