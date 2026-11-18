@@ -1266,9 +1266,10 @@ fn task_lease_renewal_and_workunit_custody_invalidate_stale_proof() {
 
     fs::write(wt2.join("src/app.txt"), "module-lease-v2\n").unwrap();
     update_operations_spec(&wt2, "lease-c2");
-    assert!(h
-        .decapod_in(&wt2, &["rpc", "--op", "specs.refresh"])
-        .success());
+    assert!(
+        h.decapod_in(&wt2, &["rpc", "--op", "specs.refresh"])
+            .success()
+    );
     let gov2: Value =
         serde_json::from_str(&fs::read_to_string(wt2.join(".decapod/governance.json")).unwrap())
             .unwrap();
@@ -1276,8 +1277,8 @@ fn task_lease_renewal_and_workunit_custody_invalidate_stale_proof() {
         .as_str()
         .unwrap()
         .to_string();
-    assert!(h
-        .decapod_in(
+    assert!(
+        h.decapod_in(
             &wt2,
             &[
                 "govern",
@@ -1293,7 +1294,8 @@ fn task_lease_renewal_and_workunit_custody_invalidate_stale_proof() {
                 "decapod validate",
             ],
         )
-        .success());
+        .success()
+    );
     assert!(h.decapod_in(&wt2, &["govern", "plan", "approve"]).success());
     for (spec, reason) in [
         (
@@ -1309,8 +1311,8 @@ fn task_lease_renewal_and_workunit_custody_invalidate_stale_proof() {
             "Security boundaries unchanged in gen-2 check",
         ),
     ] {
-        assert!(h
-            .decapod_in(
+        assert!(
+            h.decapod_in(
                 &wt2,
                 &[
                     "govern",
@@ -1324,10 +1326,11 @@ fn task_lease_renewal_and_workunit_custody_invalidate_stale_proof() {
                     reason,
                 ],
             )
-            .success());
+            .success()
+        );
     }
-    assert!(h
-        .decapod_in(
+    assert!(
+        h.decapod_in(
             &wt2,
             &[
                 "govern",
@@ -1343,10 +1346,11 @@ fn task_lease_renewal_and_workunit_custody_invalidate_stale_proof() {
                 "smoke=passed",
             ],
         )
-        .success());
+        .success()
+    );
     git(&wt2, &["add", "src/app.txt", ".decapod/managed/specs/"]);
-    assert!(h
-        .decapod_in(
+    assert!(
+        h.decapod_in(
             &wt2,
             &[
                 "govern",
@@ -1360,7 +1364,8 @@ fn task_lease_renewal_and_workunit_custody_invalidate_stale_proof() {
                 "smoke=passed",
             ],
         )
-        .success());
+        .success()
+    );
     git(&wt2, &["add", "."]);
     git(
         &wt2,
