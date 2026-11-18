@@ -691,9 +691,7 @@ pub(crate) fn basic_shared_claim_policy_digest(
     root: &Path,
 ) -> Result<Option<String>, error::DecapodError> {
     use sha2::{Digest, Sha256};
-    use std::io::Read;
 
-    const MAX_CONFIG_BYTES: u64 = 1024 * 1024;
     // Unlike the legacy approval-category lookup, this opt-in must never fall
     // back to a candidate workspace when the main repository cannot be located.
     let project_root = root
@@ -722,43 +720,19 @@ pub(crate) fn basic_shared_claim_policy_digest(
         ));
     }
     let path = main_root.join(".decapod/config.toml");
-    let metadata = match std::fs::symlink_metadata(&path) {
-        Ok(metadata) => metadata,
+    match std::fs::symlink_metadata(&path) {
         Err(error) if error.kind() == std::io::ErrorKind::NotFound => return Ok(None),
         Err(error) => return Err(error::DecapodError::IoError(error)),
-    };
-    if !metadata.is_file() {
-        return Err(error::DecapodError::Config(
-            "Shared-claim policy config must be a regular file, not a symlink or special file"
-                .into(),
-        ));
+        Ok(_) => {}
     }
-    let mut options = std::fs::OpenOptions::new();
-    options.read(true);
-    #[cfg(unix)]
-    {
-        use std::os::unix::fs::OpenOptionsExt;
-        options.custom_flags(libc::O_NOFOLLOW | libc::O_NONBLOCK);
-    }
-    let file = options.open(&path)?;
-    if !file.metadata()?.is_file() {
-        return Err(error::DecapodError::Config(
-            "Shared-claim policy config must be a regular file".into(),
-        ));
-    }
-    let mut bytes = Vec::new();
-    file.take(MAX_CONFIG_BYTES + 1).read_to_end(&mut bytes)?;
-    if bytes.len() as u64 > MAX_CONFIG_BYTES {
-        return Err(error::DecapodError::Config(
-            "Shared-claim policy config exceeds 1 MiB".into(),
-        ));
-    }
-    let text = std::str::from_utf8(&bytes).map_err(|_| {
-        error::DecapodError::Config("Shared-claim policy config is not UTF-8".into())
-    })?;
-    let config: crate::cli::DecapodProjectConfig = toml::from_str(text).map_err(|e| {
-        error::DecapodError::Config(format!("Unable to load shared-claim policy: {e}"))
-    })?;
+    let (bytes, config, _revision, _proposal) =
+        crate::core::db_maintenance::resolve_repository_policy(&main_root).map_err(
+            |(code, message)| {
+                error::DecapodError::Config(format!(
+                    "SHARED_CLAIM_POLICY_INVALID: {code}: {message}"
+                ))
+            },
+        )?;
     Ok(config
         .governance
         .allow_basic_shared_claims
@@ -774,7 +748,6 @@ pub(crate) fn authorize_rbac_exception(
     permission: &str,
 ) -> Result<String, error::DecapodError> {
     use sha2::{Digest, Sha256};
-    use std::io::Read;
 
     if !matches!(
         permission,
@@ -784,7 +757,6 @@ pub(crate) fn authorize_rbac_exception(
             "RBAC_PERMISSION_UNKNOWN: no exceptional grant exists".into(),
         ));
     }
-    const MAX_CONFIG_BYTES: u64 = 1024 * 1024;
     let project_root = root
         .parent()
         .filter(|parent| {
@@ -808,40 +780,12 @@ pub(crate) fn authorize_rbac_exception(
             "RBAC_POLICY_ROOT_UNAVAILABLE: inconsistent main repository".into(),
         ));
     }
-    let path = main_root.join(".decapod/config.toml");
-    let metadata = std::fs::symlink_metadata(&path).map_err(|_| {
-        error::DecapodError::Config("RBAC_POLICY_UNAVAILABLE: missing main configuration".into())
-    })?;
-    if !metadata.is_file() || metadata.len() > MAX_CONFIG_BYTES {
-        return Err(error::DecapodError::Config(
-            "RBAC_POLICY_INVALID: configuration must be a bounded regular file".into(),
-        ));
-    }
-    let mut options = std::fs::OpenOptions::new();
-    options.read(true);
-    #[cfg(unix)]
-    {
-        use std::os::unix::fs::OpenOptionsExt;
-        options.custom_flags(libc::O_NOFOLLOW | libc::O_NONBLOCK);
-    }
-    let file = options.open(&path)?;
-    if !file.metadata()?.is_file() {
-        return Err(error::DecapodError::Config(
-            "RBAC_POLICY_INVALID: configuration is not a regular file".into(),
-        ));
-    }
-    let mut bytes = Vec::new();
-    file.take(MAX_CONFIG_BYTES + 1).read_to_end(&mut bytes)?;
-    if bytes.len() as u64 > MAX_CONFIG_BYTES {
-        return Err(error::DecapodError::Config(
-            "RBAC_POLICY_INVALID: configuration exceeds 1 MiB".into(),
-        ));
-    }
-    let config: crate::cli::DecapodProjectConfig =
-        toml::from_str(std::str::from_utf8(&bytes).map_err(|_| {
-            error::DecapodError::Config("RBAC_POLICY_INVALID: configuration is not UTF-8".into())
-        })?)
-        .map_err(|e| error::DecapodError::Config(format!("RBAC_POLICY_INVALID: {e}")))?;
+    let (bytes, config, _revision, _proposal) =
+        crate::core::db_maintenance::resolve_repository_policy(&main_root).map_err(
+            |(code, message)| {
+                error::DecapodError::Config(format!("RBAC_POLICY_INVALID: {code}: {message}"))
+            },
+        )?;
     if !config.governance.rbac.allows(actor, permission) {
         return Err(error::DecapodError::ValidationError(format!(
             "RBAC_PERMISSION_DENIED: actor '{actor}' lacks '{permission}' in the main repository .decapod/config.toml"
@@ -857,8 +801,31 @@ fn configured_approval_categories_at_project(
     if !config_path.exists() {
         return Ok(Vec::new());
     }
-    let config = crate::cli::DecapodProjectConfig::load(main_root)
-        .map_err(|e| error::DecapodError::Config(format!("Unable to load approval policy: {e}")))?;
+    let config = if main_root.join(".git").exists() {
+        crate::core::db_maintenance::resolve_repository_policy(main_root)
+            .map(|(_, config, _, _)| config)
+            .or_else(|(code, message)| {
+                if code == "ACCEPTED_POLICY_ABSENT" {
+                    // Verified first adoption has no accepted project-specific
+                    // approval additions. Immutable kernel trust/risk/approval
+                    // requirements still apply; candidate RBAC grants do not.
+                    Ok(crate::cli::DecapodProjectConfig::default())
+                } else {
+                    Err((code, message))
+                }
+            })
+            .map_err(|(code, message)| {
+                error::DecapodError::Config(format!(
+                    "Unable to load approval policy: {code}: {message}"
+                ))
+            })?
+    } else {
+        // Existing explicitly mounted host-policy profile: Git provenance is
+        // supplied by its host boundary, not inferred from a candidate clone.
+        crate::cli::DecapodProjectConfig::load(main_root).map_err(|e| {
+            error::DecapodError::Config(format!("Unable to load approval policy: {e}"))
+        })?
+    };
     Ok(config.governance.approval_categories)
 }
 
@@ -1527,6 +1494,65 @@ mod tests {
             toml::to_string(&config).unwrap(),
         )
         .unwrap();
+    }
+
+    #[test]
+    fn verified_first_adoption_uses_global_defaults_without_candidate_grants() {
+        let repo = tempfile::tempdir().unwrap();
+        let git = |args: &[&str]| {
+            let output = std::process::Command::new("git")
+                .current_dir(repo.path())
+                .env("GIT_AUTHOR_NAME", "Policy fixture")
+                .env("GIT_COMMITTER_NAME", "Policy fixture")
+                .env("GIT_AUTHOR_EMAIL", "fixture@example.invalid")
+                .env("GIT_COMMITTER_EMAIL", "fixture@example.invalid")
+                .args(args)
+                .output()
+                .unwrap();
+            assert!(
+                output.status.success(),
+                "{}",
+                String::from_utf8_lossy(&output.stderr)
+            );
+        };
+        git(&["init", "-b", "main"]);
+        std::fs::write(
+            repo.path().join("README.md"),
+            "Accepted source predates Decapod\n",
+        )
+        .unwrap();
+        git(&["add", "README.md"]);
+        git(&[
+            "commit",
+            "-m",
+            "fixture: accept source before policy adoption",
+        ]);
+        git(&["checkout", "-b", "candidate-policy"]);
+        write_shared_policy(repo.path(), true);
+        let path = repo.path().join(".decapod/config.toml");
+        let mut config = crate::cli::DecapodProjectConfig::load(repo.path()).unwrap();
+        config
+            .governance
+            .rbac
+            .actor_roles
+            .insert("candidate".into(), vec!["owner".into()]);
+        config.governance.rbac.validation_bypass_roles = vec!["owner".into()];
+        std::fs::write(path, toml::to_string(&config).unwrap()).unwrap();
+        let store = repo.path().join(".decapod/data");
+        std::fs::create_dir_all(&store).unwrap();
+        assert!(configured_approval_categories(&store).unwrap().is_empty());
+        assert!(
+            authorize_rbac_exception(&store, "candidate", "validate.bypass")
+                .unwrap_err()
+                .to_string()
+                .contains("ACCEPTED_POLICY_ABSENT")
+        );
+        assert!(
+            basic_shared_claim_policy_digest(&store)
+                .unwrap_err()
+                .to_string()
+                .contains("ACCEPTED_POLICY_ABSENT")
+        );
     }
 
     #[test]

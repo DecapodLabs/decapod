@@ -1,5 +1,28 @@
 # Security
 
+## Configuration validity and accepted privilege proposals (#1771, #1776)
+
+`cli::DecapodProjectConfig` rejects unsupported schema versions during typed
+deserialization, including consumers that deserialize accepted policy directly.
+Its canonical parser returns `INVALID_CONFIG_SCHEMA` with an embedded reference
+and a retry path. `lib.rs` serves CLI schema and RPC `schema.get` before config,
+session and migration startup so malformed configuration cannot block repair.
+
+`core::db_maintenance::resolve_repository_policy` is the shared branch-safe
+source for maintenance, exceptional RBAC, shared-claim opt-in and Git-backed
+approval categories. A proposed main-root feature checkout cannot supply its
+own grant or protect itself by changing `repo.base_branch`. Accepted grants
+remain prospective and revocable. A validation bypass remains explicitly
+non-proof and cannot authorize publication. Local protected-root/Git administrator
+access and explicitly mounted host policy retain their cooperative host trust
+boundary; this does not authenticate a human or intercept unrestricted shell.
+
+The original v0.148.9 binary admitted an unsupported config version and an
+unaccepted root RBAC bypass; it denied malformed TOML but blocked schema repair
+access. Public-command regression controls cover denial, corrected ordinary
+operations, independently accepted bounded grants and revocation. Candidate
+test execution and exact-head full validation remain required before delivery.
+
 ## Scoped currency authorization (#1753)
 
 Currency preservation requires the same explicit config, sole exact canonical
@@ -661,7 +684,7 @@ execution evidence remains required before publication readiness.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `59302b283273f65193215ee22c7b207943d8077e5105c464f9f5a2e7ac6faa43`
+- Repository signal fingerprint: `7b88d5d3e68ce397408f69e5635bceee4071a1c57b84cab441c0b3083ee7e3a7`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (236 files), `tests/` (235 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

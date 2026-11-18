@@ -94,7 +94,7 @@ fn public_task_transfer_preserves_identity_without_importing_a_live_lease() {
         );
     }
     let source = TempDir::new().unwrap();
-    git(source.path(), &["init", "-q", "-b", "transfer-fixture"]);
+    git(source.path(), &["init", "-q", "-b", "main"]);
     git(
         source.path(),
         &[
@@ -120,6 +120,9 @@ fn public_task_transfer_preserves_identity_without_importing_a_live_lease() {
             "git@github.com:fixture/transfer.git",
         ],
     );
+    // Keep an independently accepted source before first policy adoption.
+    // The transfer checkout must not supply its own exceptional authority.
+    git(source.path(), &["checkout", "-q", "-b", "transfer-fixture"]);
     init(source.path());
     let task = cli(
         source.path(),
