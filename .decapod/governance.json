@@ -598,6 +598,14 @@
         ".decapod/managed/specs/VALIDATION.md",
         "tests/gate_skip_override_readiness_1659.rs"
       ]
+    },
+    {
+      "id": "gates-1659-manifest-refresh-014813",
+      "summary": "Refresh .decapod/managed/specs/.manifest.json config_input_hash to match updated reviewed_sources_digest in .decapod/config.toml",
+      "input_digest": "sha256:55d485f4b40bfb67ed699a39ad81fa6358872eb520d9799e1bd29dbecdea0927",
+      "proof_refs": [
+        "rpc:01M7QPB03RJZHRK7GSWJJMWW04"
+      ]
     }
   ],
   "intents": {
@@ -671,7 +679,7 @@
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:6b2178fd983a51bdfca9a06f13655c61d1123d54a572eef65e473e9f90e4a790",
+      "artifact_hash": "sha256:f0a90a1bfc46296a1858a6d53da190e719211e878d7ef05012bfbd500a4c717e",
       "checks": [
         {
           "name": "cargo_fmt_check",
@@ -699,6 +707,10 @@
         },
         {
           "name": "post_merge_gate_skip_override_readiness_1659",
+          "status": "passed"
+        },
+        {
+          "name": "specs_refresh",
           "status": "passed"
         },
         {
@@ -741,10 +753,17 @@
             "intent_id": "intent:change_01M7QBQZGRF4S5PJM1A13NTHPG",
             "kind": "trajectory_step_recorded",
             "sequence": 6
+          },
+          {
+            "detail": "trajectory:branch_01M7QBQZMHAZCN5HBTTY0F2NPK",
+            "event_id": "event:7",
+            "intent_id": "intent:change_01M7QBQZGRF4S5PJM1A13NTHPG",
+            "kind": "trajectory_step_recorded",
+            "sequence": 7
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 6,
+        "next_sequence": 7,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M7QBQZMHAZCN5HBTTY0F2NPK": {
@@ -816,6 +835,22 @@
                 ],
                 "sequence": 6,
                 "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "command": "decapod rpc --op specs.refresh",
+                "custody_event_id": "event:7",
+                "observations": [
+                  ".decapod/managed/specs/.manifest.json"
+                ],
+                "proof_refs": [
+                  "specs_refresh"
+                ],
+                "scope": [
+                  "validation-override-boundary"
+                ],
+                "sequence": 7,
+                "validation_findings": []
               }
             ]
           }
@@ -825,7 +860,8 @@
         "CLIPPY_CONF_DIR=.config cargo clippy --test gate_skip_override_readiness_1659 --all-features -- -D warnings",
         "cargo fmt --check",
         "cargo test --test gate_skip_override_readiness_1659",
-        "cargo test --test gatling t210_verify"
+        "cargo test --test gatling t210_verify",
+        "decapod rpc --op specs.refresh"
       ],
       "destination": "pull request",
       "evidence": [
@@ -845,6 +881,7 @@
       "modified_files": [
         ".decapod/config.toml",
         ".decapod/managed/Dockerfile.decapod",
+        ".decapod/managed/specs/.manifest.json",
         ".decapod/managed/specs/VALIDATION.md",
         "src/decapod/lib.rs",
         "src/decapod/plugins/verify.rs",
