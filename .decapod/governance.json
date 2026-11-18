@@ -628,6 +628,16 @@
         "git:9c7e6cff94908dbfe87f4e4c0dbb1f1e0f4b12d5",
         "https://github.com/DecapodLabs/decapod/actions/runs/44305150424/job/134806810318"
       ]
+    },
+    {
+      "id": "workunit-currentness-accepted12-release-integration-20261118",
+      "summary": "Integrate accepted release12 metadata with current workunit and strict JSON source, regenerate via scoped official12 and require fresh proof",
+      "input_digest": "sha256:13b9263c64b1c3faf9191c927cc868cc7f8bd58003745890666cbbf8e47dc3d8",
+      "proof_refs": [
+        "/private/tmp/attack-gaps-1792-release12-inventory-review.json",
+        "/private/tmp/attack-gaps-controller12-install.json",
+        "git:7bd0a915dc87b796fdffba1b8a2b613b5dff1a3a"
+      ]
     }
   ],
   "intents": {
@@ -666,24 +676,24 @@
       "schema_version": "1.1.0",
       "spec_reviews": [
         {
-          "disposition": "updated",
+          "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Combined candidate retains current workunit journal/custody corrections and accepted9c shared strict JSON decoder and Bazel Python compile input. Authored contracts from both branches preserved; native owner regenerates all attestations.",
-          "reviewed_code_fingerprint": "217edd1e775555fbd8eb45d2e391a6066c8bc71254c80b7f20934feb1073601c",
+          "reason": "Accepted12 changes only root package/changelog metadata after accepted9c; workunit currentness and strict JSON operative contracts are preserved. Official12 refreshes release-bound projections for combined source; no prior proof is transferred.",
+          "reviewed_code_fingerprint": "0ff17b4704e12feca628cd1d431b4a0f459c108afaf2223718b48870f9896a42",
           "spec_material_hash": "080e1e015d867051ec4ecbb1f18aca92a2d62a05798377057e563aaa5a3764e0"
         },
         {
-          "disposition": "updated",
+          "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Retain exact workunit negative/check-identity/recovery semantics and accepted duplicate-key/strict-schema/optional-negotiation contracts. Old352-based CI is historical; fresh combined-source proof required against9c.",
-          "reviewed_code_fingerprint": "217edd1e775555fbd8eb45d2e391a6066c8bc71254c80b7f20934feb1073601c",
+          "reason": "All workunit rejection/recovery/check-identity and accepted strict JSON contracts remain unchanged across release12; fresh combined source/base execution is required after actual target movement.",
+          "reviewed_code_fingerprint": "0ff17b4704e12feca628cd1d431b4a0f459c108afaf2223718b48870f9896a42",
           "spec_material_hash": "ef090be85af851796f2ae92f9d6a6e992d59a452a8fff4918836cc689f020cdd"
         },
         {
-          "disposition": "updated",
+          "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Preserve both native withdrawal/custody fences and accepted strict JSON interpretation/redaction limits. No new authority, timing waiver or fabricated admission; Git preserves accepted parent and active journal remains task-owned.",
-          "reviewed_code_fingerprint": "217edd1e775555fbd8eb45d2e391a6066c8bc71254c80b7f20934feb1073601c",
+          "reason": "No permission, validation, timing or provider-policy change. Scoped official12 install preserved old/shared binaries, restored opt-in config and has measured binary hash; native proof admission remains unproven.",
+          "reviewed_code_fingerprint": "0ff17b4704e12feca628cd1d431b4a0f459c108afaf2223718b48870f9896a42",
           "spec_material_hash": "735ae6e95c6b18ff2ccc718fbadaa4d7ae483d632aee2fb071d4f9ae6daa23de"
         }
       ],
@@ -695,13 +705,13 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795007441Z"
+      "updated_at": "1795008929Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:4ee7ca855a45699fc825741eae9ca5107a1d2c75e664183b0d051e7b9c259731",
+      "artifact_hash": "sha256:c2ce633dec13e57e9d58dbe9fc98f412d40646bc2e9c938f302306400cb74919",
       "checks": [
         {
           "name": "accepted-9c-source-inventory",
@@ -714,6 +724,10 @@
         {
           "name": "actions-currentness-readback",
           "status": "failed"
+        },
+        {
+          "name": "controller12-install",
+          "status": "passed"
         },
         {
           "name": "current-candidate-execution",
@@ -734,6 +748,10 @@
         {
           "name": "independently-reviewed-source-inputs",
           "status": "passed"
+        },
+        {
+          "name": "native-project-preparation",
+          "status": "failed"
         },
         {
           "name": "official10-canonical-positive",
@@ -773,6 +791,10 @@
         },
         {
           "name": "rustfmt",
+          "status": "passed"
+        },
+        {
+          "name": "source12-inventory",
           "status": "passed"
         },
         {
@@ -850,10 +872,17 @@
             "intent_id": "intent:change_01M7Q44RVCTZPBYQ12A8MB3C5Y",
             "kind": "trajectory_step_recorded",
             "sequence": 11
+          },
+          {
+            "detail": "trajectory:branch_01M7Q44RYMGVJGZ2JGB3YZ9VP7",
+            "event_id": "event:12",
+            "intent_id": "intent:change_01M7Q44RVCTZPBYQ12A8MB3C5Y",
+            "kind": "trajectory_step_recorded",
+            "sequence": 12
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 11,
+        "next_sequence": 12,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M7Q44RYMGVJGZ2JGB3YZ9VP7": {
@@ -1023,6 +1052,26 @@
                 "sequence": 11,
                 "tool": "External merge1791 advanced live master9c7e6cff at12:56:40UTC; this agent did not merge or assert admission. Old2f push jobs134806810318/134806810211 correctly refused Git merge-base context before tests; raw hashes54bab00c5c0479e878b62a0c27c9dc1a1e2ac2fba9042c1e426096153664b309 and82880faeb9a7241d21123440fc5b09576efc6b2ceefaaef44202837e050c806b. Preserve native active governance/manifest via Git ours, accepted config via Git theirs after backup, all authored operative paragraphs from both parents. Rehash all105 merged source-CI inputs to acceptedac2. Native refresh owns projections; no source test manually run and no old success transferred.",
                 "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:12",
+                "observations": [
+                  ".decapod/managed/specs/INTENT.md"
+                ],
+                "proof_refs": [
+                  "rustfmt",
+                  "diff-whitespace",
+                  "source12-inventory",
+                  "controller12-install",
+                  "native-project-preparation"
+                ],
+                "scope": [
+                  "issue-1660"
+                ],
+                "sequence": 12,
+                "tool": "Accepted master advanced7bd0a915 via external release1794 at13:10:39UTC; only package/changelog changed. Current workbranch merge parent7bd pinned. All105 source-CI inputs independently rehashed tobd7eec7e7edaa9a427dea5c3d6b4de42e885b23d2b1911f3602527686e366c4e; only2 Cargo version bytes changed,103 unchanged. Official11 session acquire opt-in installed scoped12 binary SHA1fb9e592076c937f0be049f2329b287e22f2e6a346b8f351ec863bfc92a6d7d3; original config and old/shared binaries preserved. Native prep attempt1 unavailable storage contention; supported retry209passed4failed: host container proof, unrelated done task proof, pending merge ancestry and not-yet-committed Docker12. No passing admission claimed; commit addresses the two pending-material conditions, source Actions must re-execute.",
+                "validation_findings": []
               }
             ]
           }
@@ -1080,6 +1129,7 @@
       "shortcut_risk_signals": [],
       "task_id": "bugs_01m7q41y4d66h98s",
       "tool_calls": [
+        "Accepted master advanced7bd0a915 via external release1794 at13:10:39UTC; only package/changelog changed. Current workbranch merge parent7bd pinned. All105 source-CI inputs independently rehashed tobd7eec7e7edaa9a427dea5c3d6b4de42e885b23d2b1911f3602527686e366c4e; only2 Cargo version bytes changed,103 unchanged. Official11 session acquire opt-in installed scoped12 binary SHA1fb9e592076c937f0be049f2329b287e22f2e6a346b8f351ec863bfc92a6d7d3; original config and old/shared binaries preserved. Native prep attempt1 unavailable storage contention; supported retry209passed4failed: host container proof, unrelated done task proof, pending merge ancestry and not-yet-committed Docker12. No passing admission claimed; commit addresses the two pending-material conditions, source Actions must re-execute.",
         "Added only validation_not_ready to the existing recognized journal kinds. No source tests executed manually; unchanged actual negative/full-proof readback regression will run on required GitHub Actions.",
         "Exact82a1c098 PR CLI job134777427412 executed41 entrypoint cases passed,1 failed,5 ignored. Initial real full proof and VERIFIED succeeded and newer full validation returned not-ready. Test then wrongly read native-0 exit0, but fixture canonically sorts inspect-second before inspect-source. Existing native-N.diagnostic.json binds each capture to CheckKey; select exact inspect-source identity, still require actual step exit1 and stderr observed required failure. Raw log SHA256788c87fbbd46f81c47885388d6b575be2dbbca33348e837d37cb3009de20397a. Product proof contracts, source check, required graph and timing limits unchanged.",
         "External merge1791 advanced live master9c7e6cff at12:56:40UTC; this agent did not merge or assert admission. Old2f push jobs134806810318/134806810211 correctly refused Git merge-base context before tests; raw hashes54bab00c5c0479e878b62a0c27c9dc1a1e2ac2fba9042c1e426096153664b309 and82880faeb9a7241d21123440fc5b09576efc6b2ceefaaef44202837e050c806b. Preserve native active governance/manifest via Git ours, accepted config via Git theirs after backup, all authored operative paragraphs from both parents. Rehash all105 merged source-CI inputs to acceptedac2. Native refresh owns projections; no source test manually run and no old success transferred.",

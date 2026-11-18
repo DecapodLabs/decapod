@@ -1,5 +1,9 @@
 # Intent
 
+## Accepted release12 continuity
+
+The accepted target advanced again to `7bd0a915` (0.148.12), which changes only the root package versions and changelog after9c. The prior9c merge remains a real parent with its own checkpoint; this release integration gets a new native checkpoint. All105 verification-source inputs were independently remeasured: Cargo.toml/Cargo.lock version bytes changed and103 remained identical. Required helpers, graph, commands and toolchain remain unchanged. Official session acquire installed a private0.148.12 controller (SHA256 `1fb9e592076c937f0be049f2329b287e22f2e6a346b8f351ec863bfc92a6d7d3`) and restored the temporary config opt-in; old/shared binaries remain intact. Native projection refresh does not transfer earlier Actions success or establish current admission.
+
 ## Current accepted-target integration
 
 The active currentness task integrates accepted master `9c7e6cff` through a real two-parent merge after the external acceptance of PR1791. Its strict JSON source, test compile inputs and authored contracts are retained alongside this task's current proof obligations. Earlier352-based source results remain historical; the combined candidate requires new execution against9c. The native active journal stays with this task; Git preserves both parents and all accepted history. No merge admission is inferred from the external ref update.
@@ -623,7 +627,7 @@ These declarations select authoring and proof obligations; they do not attest im
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `217edd1e775555fbd8eb45d2e391a6066c8bc71254c80b7f20934feb1073601c`
+- Repository signal fingerprint: `0ff17b4704e12feca628cd1d431b4a0f459c108afaf2223718b48870f9896a42`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (237 files), `tests/` (236 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
