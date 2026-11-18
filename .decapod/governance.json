@@ -585,6 +585,14 @@
       "proof_refs": [
         "cargo test --test governance_fault_detection_1795: 4 passed; 0 failed (750.39s)"
       ]
+    },
+    {
+      "id": "integrate-master-1799-1795",
+      "summary": "Integrate accepted master 0b6ce0a8 with #1795 fault detection suite",
+      "input_digest": "sha256:46e956d784c528f09e7072b225106edc4133d697757e2b5acc651090b03e51c0",
+      "proof_refs": [
+        "post-merge cargo test --test governance_fault_detection_1795: 4 passed; 0 failed (850.62s)"
+      ]
     }
   ],
   "intents": {
@@ -626,22 +634,22 @@
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Scope of #1795 is bounded to tests/governance_fault_detection_1795.rs and material SEMANTICS.md fault-detection documentation (no production src/ or interface/architecture/security surface changes); ARCHITECTURE.md remains accurate.",
-          "reviewed_code_fingerprint": "90bbbd5ed9881cf34e760bfa1359319b6d7fe9b8c15d00965d3031c404fd1a75",
+          "reason": "Integrated origin/master 0b6ce0a8 (PR #1799); scope of #1795 remains bounded to tests/governance_fault_detection_1795.rs and SEMANTICS.md.",
+          "reviewed_code_fingerprint": "6d18ee96fe4bd077edf94c84003dd17e9a257992a9f400431322a88ac6b0e617",
           "spec_material_hash": "080e1e015d867051ec4ecbb1f18aca92a2d62a05798377057e563aaa5a3764e0"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Scope of #1795 is bounded to tests/governance_fault_detection_1795.rs and material SEMANTICS.md fault-detection documentation (no production src/ or interface/architecture/security surface changes); INTERFACES.md remains accurate.",
-          "reviewed_code_fingerprint": "90bbbd5ed9881cf34e760bfa1359319b6d7fe9b8c15d00965d3031c404fd1a75",
-          "spec_material_hash": "ef090be85af851796f2ae92f9d6a6e992d59a452a8fff4918836cc689f020cdd"
+          "reason": "Integrated origin/master 0b6ce0a8 (PR #1799); scope of #1795 remains bounded to tests/governance_fault_detection_1795.rs and SEMANTICS.md.",
+          "reviewed_code_fingerprint": "6d18ee96fe4bd077edf94c84003dd17e9a257992a9f400431322a88ac6b0e617",
+          "spec_material_hash": "3baf7067b96d8fad41fcf9ff69aa2866b99b9bc631a1132df1daf96de9c82ab7"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Scope of #1795 is bounded to tests/governance_fault_detection_1795.rs and material SEMANTICS.md fault-detection documentation (no production src/ or interface/architecture/security surface changes); SECURITY.md remains accurate.",
-          "reviewed_code_fingerprint": "90bbbd5ed9881cf34e760bfa1359319b6d7fe9b8c15d00965d3031c404fd1a75",
+          "reason": "Integrated origin/master 0b6ce0a8 (PR #1799); scope of #1795 remains bounded to tests/governance_fault_detection_1795.rs and SEMANTICS.md.",
+          "reviewed_code_fingerprint": "6d18ee96fe4bd077edf94c84003dd17e9a257992a9f400431322a88ac6b0e617",
           "spec_material_hash": "735ae6e95c6b18ff2ccc718fbadaa4d7ae483d632aee2fb071d4f9ae6daa23de"
         }
       ],
@@ -653,13 +661,13 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795021395Z"
+      "updated_at": "1795022532Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:1bd27dd8e9dea195d019ec609ade3b7df9d7a934c9858f645c68f26a97942e92",
+      "artifact_hash": "sha256:e54aa3795573f6571bde385d309765a71fedc46958152e4cf3d55fa3030865ad",
       "checks": [
         {
           "name": "cargo-fmt",
@@ -671,6 +679,18 @@
         },
         {
           "name": "governance_fault_detection_1795",
+          "status": "passed"
+        },
+        {
+          "name": "post-merge-clippy",
+          "status": "passed"
+        },
+        {
+          "name": "post-merge-fmt",
+          "status": "passed"
+        },
+        {
+          "name": "post-merge-governance_fault_detection_1795",
           "status": "passed"
         }
       ],
@@ -695,10 +715,17 @@
             "intent_id": "intent:change_01M7QN04YE8S7HSJ4C7NA5VKRV",
             "kind": "trajectory_step_recorded",
             "sequence": 4
+          },
+          {
+            "detail": "trajectory:branch_01M7QN05164G5FSGX020W1AAKJ",
+            "event_id": "event:5",
+            "intent_id": "intent:change_01M7QN04YE8S7HSJ4C7NA5VKRV",
+            "kind": "trajectory_step_recorded",
+            "sequence": 5
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 4,
+        "next_sequence": 5,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M7QN05164G5FSGX020W1AAKJ": {
@@ -732,6 +759,30 @@
                 ],
                 "sequence": 4,
                 "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:5",
+                "observations": [
+                  "src/decapod/plugins/verify.rs",
+                  ".decapod/config.toml",
+                  ".decapod/managed/Dockerfile.decapod",
+                  ".decapod/managed/specs/.manifest.json",
+                  ".decapod/managed/specs/INTERFACES.md",
+                  ".decapod/managed/specs/SEMANTICS.md",
+                  "Merged origin/master 0b6ce0a8 (PR #1799); specs.refresh + review-spec completed; cargo fmt --all -- --check, clippy -D warnings, and cargo test --test governance_fault_detection_1795 passed 4/4 in 850.62s"
+                ],
+                "proof_refs": [
+                  "post-merge-fmt",
+                  "post-merge-clippy",
+                  "post-merge-governance_fault_detection_1795"
+                ],
+                "scope": [
+                  "\".decapod/managed/specs/SEMANTICS.md\"]",
+                  "paths:[\"tests/governance_fault_detection_1795.rs\""
+                ],
+                "sequence": 5,
+                "validation_findings": []
               }
             ]
           }
@@ -740,19 +791,23 @@
       "declared_commands": [],
       "destination": "pull request",
       "evidence": [
-        "4/4 tests passed in 750.39s; 5/5 isolated rule faults reach Detected (RULE-CUSTODY-004 survived unchanged suite and caught by expired_lease_renew_negative_and_positive_fixture)"
+        "4/4 tests passed in 750.39s; 5/5 isolated rule faults reach Detected (RULE-CUSTODY-004 survived unchanged suite and caught by expired_lease_renew_negative_and_positive_fixture)",
+        "Merged origin/master 0b6ce0a8 (PR #1799); specs.refresh + review-spec completed; cargo fmt --all -- --check, clippy -D warnings, and cargo test --test governance_fault_detection_1795 passed 4/4 in 850.62s"
       ],
       "inspected_files": [
         "src/decapod/core/group_broker.rs",
         "src/decapod/core/readiness_profile.rs",
         "src/decapod/core/todo.rs",
         "src/decapod/core/workspace.rs",
-        "src/decapod/core/workunit.rs"
+        "src/decapod/core/workunit.rs",
+        "src/decapod/plugins/verify.rs"
       ],
       "intent_id": "intent:change_01M7QN04YE8S7HSJ4C7NA5VKRV",
       "modified_files": [
+        ".decapod/config.toml",
         ".decapod/managed/Dockerfile.decapod",
         ".decapod/managed/specs/.manifest.json",
+        ".decapod/managed/specs/INTERFACES.md",
         ".decapod/managed/specs/SEMANTICS.md",
         "tests/governance_fault_detection_1795.rs"
       ],

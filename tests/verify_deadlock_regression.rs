@@ -506,3 +506,352 @@ fn test_verify_replay_excludes_target_from_missing_plan_gate() {
         validate_combined
     );
 }
+
+#[test]
+fn test_verify_recover_and_regen_json_surface_scoped_blockers_without_leaking() {
+    let tmp = tempdir().unwrap();
+    let main_repo = tmp.path().join("main_repo");
+    std::fs::create_dir_all(&main_repo).unwrap();
+
+    init_git_repo(&main_repo);
+    std::fs::write(main_repo.join("README.md"), "# diag test\n").unwrap();
+    assert!(
+        Command::new("git")
+            .current_dir(&main_repo)
+            .args(["add", "README.md"])
+            .status()
+            .unwrap()
+            .success()
+    );
+    assert!(
+        Command::new("git")
+            .current_dir(&main_repo)
+            .args(["commit", "-m", "initial commit"])
+            .status()
+            .unwrap()
+            .success()
+    );
+
+    let agent_env = [("DECAPOD_AGENT_ID", "diag-agent")];
+    let init = run_cmd(
+        &main_repo,
+        &[
+            "init",
+            "--dir",
+            ".",
+            "--proof",
+            "--no-container-workspaces",
+            "--product-summary",
+            "Scoped validation diagnostics test repo",
+            "--architecture-direction",
+            "Single-crate Rust CLI",
+        ],
+        &agent_env,
+    );
+    assert!(
+        init.status.success(),
+        "init failed: {}",
+        String::from_utf8_lossy(&init.stderr)
+    );
+    assert!(
+        Command::new("git")
+            .current_dir(&main_repo)
+            .args(["add", "-A"])
+            .status()
+            .unwrap()
+            .success()
+    );
+    assert!(
+        Command::new("git")
+            .current_dir(&main_repo)
+            .args(["commit", "-m", "init decapod"])
+            .status()
+            .unwrap()
+            .success()
+    );
+
+    let session = run_cmd(&main_repo, &["session", "acquire"], &agent_env);
+    assert!(
+        session.status.success(),
+        "session acquire failed: {}",
+        String::from_utf8_lossy(&session.stderr)
+    );
+
+    let add_active = run_cmd(
+        &main_repo,
+        &[
+            "todo",
+            "add",
+            "Active workspace task",
+            "--dir",
+            ".",
+            "--format",
+            "json",
+        ],
+        &agent_env,
+    );
+    assert!(
+        add_active.status.success(),
+        "active todo add failed: {}",
+        String::from_utf8_lossy(&add_active.stderr)
+    );
+    let active_stdout = String::from_utf8_lossy(&add_active.stdout);
+    let active_json: serde_json::Value =
+        serde_json::from_str(&active_stdout[active_stdout.find('{').unwrap()..]).unwrap();
+    let active_todo_id = active_json["id"].as_str().unwrap().to_string();
+
+    let claim = run_cmd(
+        &main_repo,
+        &["todo", "claim", "--id", &active_todo_id],
+        &agent_env,
+    );
+    assert!(
+        claim.status.success(),
+        "todo claim failed: {}",
+        String::from_utf8_lossy(&claim.stderr)
+    );
+
+    let add = run_cmd(
+        &main_repo,
+        &[
+            "todo",
+            "add",
+            "Secret task title https://secret.invalid/token?cred=raw",
+            "--dir",
+            ".",
+            "--format",
+            "json",
+        ],
+        &agent_env,
+    );
+    assert!(
+        add.status.success(),
+        "todo add failed: {}",
+        String::from_utf8_lossy(&add.stderr)
+    );
+    let add_stdout = String::from_utf8_lossy(&add.stdout);
+    let add_json: serde_json::Value =
+        serde_json::from_str(&add_stdout[add_stdout.find('{').unwrap()..]).unwrap();
+    let todo_id = add_json["id"].as_str().unwrap().to_string();
+
+    let ensure_branch = format!("agent/diag-agent/{active_todo_id}-diag");
+    let ensure = run_cmd(
+        &main_repo,
+        &["workspace", "ensure", "--branch", &ensure_branch],
+        &agent_env,
+    );
+    assert!(
+        ensure.status.success(),
+        "workspace ensure failed: stdout={} stderr={}",
+        String::from_utf8_lossy(&ensure.stdout),
+        String::from_utf8_lossy(&ensure.stderr)
+    );
+    let ensure_stdout = String::from_utf8_lossy(&ensure.stdout);
+    let ensure_json: serde_json::Value =
+        serde_json::from_str(&ensure_stdout[ensure_stdout.find('{').unwrap()..]).unwrap();
+    let wt_path = std::path::PathBuf::from(ensure_json["worktree_path"].as_str().unwrap());
+
+    std::fs::write(
+        wt_path.join("recovery-proof.txt"),
+        "secret-artifact-payload\n",
+    )
+    .unwrap();
+    let db_path = decapod::core::todo::todo_db_path(&main_repo.join(".decapod/data"));
+    let conn = Connection::open(&db_path).unwrap();
+    conn.execute("UPDATE tasks SET status = 'done' WHERE id = ?1", [&todo_id])
+        .unwrap();
+    conn.execute(
+        "INSERT INTO task_verification(todo_id, proof_plan, verification_artifacts, last_verified_at, last_verified_status, last_verified_notes, verification_policy_days, updated_at)
+         VALUES(?1, '[\"validate_passes\"]', '{}', '2026-06-20T00:00:00Z', 'fail', 'Stale failure', 90, '2026-06-20T00:00:00Z')
+         ON CONFLICT(todo_id) DO UPDATE SET last_verified_status = 'fail'",
+        [&todo_id],
+    )
+    .unwrap();
+    let (done_status, done_revision): (String, i64) = conn
+        .query_row(
+            "SELECT status, revision FROM tasks WHERE id = ?1",
+            [&todo_id],
+            |row| Ok((row.get(0)?, row.get(1)?)),
+        )
+        .unwrap();
+    assert_eq!(done_status, "done");
+
+    // 1. With governed plan still in DRAFT, scoped recover --json must emit
+    // structured JSON and stderr identifying project_gates / NEEDS_PLAN_APPROVAL
+    // with no raw leaks.
+    let artifact_arg = format!("{todo_id}=recovery-proof.txt");
+    let recover_draft = run_cmd(
+        &wt_path,
+        &[
+            "qa",
+            "verify",
+            "recover",
+            "--artifact",
+            &artifact_arg,
+            "--json",
+        ],
+        &agent_env,
+    );
+    assert!(!recover_draft.status.success(), "{recover_draft:?}");
+    let draft_stdout = String::from_utf8_lossy(&recover_draft.stdout);
+    let draft_stderr = String::from_utf8_lossy(&recover_draft.stderr);
+    let draft_start = draft_stdout.find('{').unwrap_or_else(|| {
+        panic!("expected JSON failure output in stdout={draft_stdout:?} stderr={draft_stderr:?}")
+    });
+    let draft_json: serde_json::Value = serde_json::from_str(&draft_stdout[draft_start..]).unwrap();
+    assert_eq!(draft_json["status"], "error");
+    assert_eq!(draft_json["error"], "VALIDATION_CHILD_FAILED");
+    assert_eq!(draft_json["phase"], "initial");
+    assert_eq!(draft_json["stage"], "project_gates");
+    assert_eq!(draft_json["scope"], "publication_readiness");
+    assert!(
+        draft_json["labels"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .any(|l| l == "NEEDS_PLAN_APPROVAL"),
+        "expected NEEDS_PLAN_APPROVAL in {draft_json}"
+    );
+    assert!(draft_stderr.contains("failing validation snapshot"));
+    assert!(draft_stderr.contains("VALIDATION_CHILD_FAILED"));
+    assert!(draft_stderr.contains("NEEDS_PLAN_APPROVAL"));
+    for secret in ["secret.invalid", "cred=raw", "secret-artifact-payload"] {
+        assert!(!draft_stdout.contains(secret), "stdout leaked {secret}");
+        assert!(!draft_stderr.contains(secret), "stderr leaked {secret}");
+    }
+
+    // 2. Re-approve plan; unscoped validate now fails on PROOF_HOOK_FAILED, while
+    // scoped recover/regen scopes out the target todo and exposes the deeper blocker.
+    let approve = run_cmd(&wt_path, &["govern", "plan", "approve"], &agent_env);
+    assert!(
+        approve.status.success(),
+        "plan approve failed: {}",
+        String::from_utf8_lossy(&approve.stderr)
+    );
+
+    let unscoped = run_cmd(&wt_path, &["validate", "--format", "json"], &agent_env);
+    assert!(!unscoped.status.success());
+    assert!(
+        String::from_utf8_lossy(&unscoped.stdout).contains("PROOF_HOOK_FAILED"),
+        "expected unscoped validate to stop on PROOF_HOOK_FAILED: {}",
+        String::from_utf8_lossy(&unscoped.stdout)
+    );
+
+    let recover_scoped = run_cmd(
+        &wt_path,
+        &[
+            "qa",
+            "verify",
+            "recover",
+            "--artifact",
+            &artifact_arg,
+            "--json",
+        ],
+        &agent_env,
+    );
+    assert!(!recover_scoped.status.success(), "{recover_scoped:?}");
+    let scoped_stdout = String::from_utf8_lossy(&recover_scoped.stdout);
+    let scoped_stderr = String::from_utf8_lossy(&recover_scoped.stderr);
+    let scoped_start = scoped_stdout.find('{').unwrap_or_else(|| {
+        panic!("expected JSON failure output in stdout={scoped_stdout:?} stderr={scoped_stderr:?}")
+    });
+    let scoped_json: serde_json::Value =
+        serde_json::from_str(&scoped_stdout[scoped_start..]).unwrap();
+    assert_eq!(scoped_json["status"], "error");
+    assert_eq!(scoped_json["error"], "VALIDATION_CHILD_FAILED");
+    assert_eq!(scoped_json["phase"], "initial");
+    assert!(
+        !scoped_json["stage"].is_null(),
+        "expected stage in scoped JSON: {scoped_json}"
+    );
+    let scoped_labels = scoped_json["labels"].as_array().unwrap();
+    assert!(
+        !scoped_labels.is_empty(),
+        "expected specific safe blocker label(s) beyond aggregate proof hook: {scoped_json}"
+    );
+    assert!(
+        scoped_labels.iter().all(|l| l != "NEEDS_PLAN_APPROVAL"),
+        "expected NEEDS_PLAN_APPROVAL cleared after plan approve: {scoped_json}"
+    );
+    assert!(scoped_stderr.contains("failing validation snapshot"));
+    assert!(scoped_stderr.contains("stage="));
+    for secret in ["secret.invalid", "cred=raw", "secret-artifact-payload"] {
+        assert!(!scoped_stdout.contains(secret), "stdout leaked {secret}");
+        assert!(!scoped_stderr.contains(secret), "stderr leaked {secret}");
+    }
+
+    let (after_recover_status, after_recover_revision): (String, i64) = conn
+        .query_row(
+            "SELECT status, revision FROM tasks WHERE id = ?1",
+            [&todo_id],
+            |row| Ok((row.get(0)?, row.get(1)?)),
+        )
+        .unwrap();
+    let after_recover_ver_status: String = conn
+        .query_row(
+            "SELECT last_verified_status FROM task_verification WHERE todo_id = ?1",
+            [&todo_id],
+            |row| row.get(0),
+        )
+        .unwrap();
+    assert_eq!(after_recover_status, done_status);
+    assert_eq!(after_recover_revision, done_revision);
+    assert_eq!(after_recover_ver_status, "fail");
+
+    // 3. Delete the stale task_verification row and verify `qa verify regen --json`
+    // surfaces the same safe failure JSON without writing task_verification or mutating the task.
+    conn.execute(
+        "DELETE FROM task_verification WHERE todo_id = ?1",
+        [&todo_id],
+    )
+    .unwrap();
+    let regen = run_cmd(
+        &wt_path,
+        &[
+            "qa",
+            "verify",
+            "regen",
+            &todo_id,
+            "--artifact",
+            "recovery-proof.txt",
+            "--json",
+        ],
+        &agent_env,
+    );
+    assert!(!regen.status.success(), "{regen:?}");
+    let regen_stdout = String::from_utf8_lossy(&regen.stdout);
+    let regen_stderr = String::from_utf8_lossy(&regen.stderr);
+    let regen_start = regen_stdout.find('{').unwrap_or_else(|| {
+        panic!("expected JSON failure output in stdout={regen_stdout:?} stderr={regen_stderr:?}")
+    });
+    let regen_json: serde_json::Value = serde_json::from_str(&regen_stdout[regen_start..]).unwrap();
+    assert_eq!(regen_json["status"], "error");
+    assert_eq!(regen_json["error"], "VALIDATION_CHILD_FAILED");
+    assert_eq!(regen_json["phase"], "regen");
+    assert_eq!(regen_json["todo_id"], todo_id);
+    assert!(!regen_json["stage"].is_null());
+    assert!(!regen_json["labels"].as_array().unwrap().is_empty());
+    for secret in ["secret.invalid", "cred=raw", "secret-artifact-payload"] {
+        assert!(!regen_stdout.contains(secret), "stdout leaked {secret}");
+        assert!(!regen_stderr.contains(secret), "stderr leaked {secret}");
+    }
+
+    let (final_status, final_revision): (String, i64) = conn
+        .query_row(
+            "SELECT status, revision FROM tasks WHERE id = ?1",
+            [&todo_id],
+            |row| Ok((row.get(0)?, row.get(1)?)),
+        )
+        .unwrap();
+    assert_eq!(final_status, "done");
+    assert_eq!(final_revision, done_revision);
+    let verifications: i64 = conn
+        .query_row("SELECT COUNT(*) FROM task_verification", [], |row| {
+            row.get(0)
+        })
+        .unwrap();
+    assert_eq!(
+        verifications, 0,
+        "failing regen must never write task_verification rows"
+    );
+}
