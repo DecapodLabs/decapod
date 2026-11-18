@@ -626,6 +626,15 @@
         "task-1274:specs.refresh",
         "task-1280:clippy+validation_scope(9/9)+gate_skip_override_readiness_1659(5/5)"
       ]
+    },
+    {
+      "id": "integrate-master-01492-1659",
+      "summary": "Integrate accepted master v0.149.2 (e0f6aec81, PR #1811 + #1812) and refresh 0.149.2 projections (#1659)",
+      "input_digest": "sha256:06d19d1f07c321bc71e1947dab261ab88fb4982923b04d7f8600b54b920a06ef",
+      "proof_refs": [
+        "task-1348:fmt+validation_scope(9/9)",
+        "task-1424:v01492-specs-refresh"
+      ]
     }
   ],
   "intents": {
@@ -666,22 +675,22 @@
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Integrated master v0.149.1 (205d4e8da); no architectural changes beyond #1659 readiness override boundary in VALIDATION.md",
-          "reviewed_code_fingerprint": "30143f21b510e0e8973e649782273164fda4ef1ccd42281438a145c0bd1a8dc0",
+          "reason": "Integrated master v0.149.2 (e0f6aec81, PR #1811 + #1812); no architectural changes beyond #1659 readiness override boundary in VALIDATION.md",
+          "reviewed_code_fingerprint": "1e60a57374c12fbc63b20f06f1a9155450ef756ec54a285d4e5641154c3468ef",
           "spec_material_hash": "080e1e015d867051ec4ecbb1f18aca92a2d62a05798377057e563aaa5a3764e0"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Integrated master v0.149.1 INTERFACES.md intact; #1659 gate-skip override rejection behavior is documented in VALIDATION.md",
-          "reviewed_code_fingerprint": "30143f21b510e0e8973e649782273164fda4ef1ccd42281438a145c0bd1a8dc0",
+          "reason": "Integrated master v0.149.2 INTERFACES.md intact; #1659 gate-skip override rejection behavior is documented in VALIDATION.md",
+          "reviewed_code_fingerprint": "1e60a57374c12fbc63b20f06f1a9155450ef756ec54a285d4e5641154c3468ef",
           "spec_material_hash": "1445e13fa7ccfa6c4a68850bd794b6b1ba7379c0148b570c3a7605b6a26beb25"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Integrated master v0.149.1 SECURITY.md intact; #1659 gate-skip override readiness contract resides in VALIDATION.md",
-          "reviewed_code_fingerprint": "30143f21b510e0e8973e649782273164fda4ef1ccd42281438a145c0bd1a8dc0",
+          "reason": "Integrated master v0.149.2 SECURITY.md intact; #1659 gate-skip override readiness contract resides in VALIDATION.md",
+          "reviewed_code_fingerprint": "1e60a57374c12fbc63b20f06f1a9155450ef756ec54a285d4e5641154c3468ef",
           "spec_material_hash": "735ae6e95c6b18ff2ccc718fbadaa4d7ae483d632aee2fb071d4f9ae6daa23de"
         }
       ],
@@ -693,13 +702,13 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795040777Z"
+      "updated_at": "1795045764Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:cc5ee3947f2effe5a49bb8dddd07ede24a191e2377be39c4259e6b60af2e7e22",
+      "artifact_hash": "sha256:442b6bcf8851f11b4706cf0c90f33e58663cff67fa54444918028fb2e6c47fba",
       "checks": [
         {
           "name": "cargo_fmt_check",
@@ -776,6 +785,18 @@
         {
           "name": "v01491_validation_scope",
           "status": "passed"
+        },
+        {
+          "name": "v01492_fmt",
+          "status": "passed"
+        },
+        {
+          "name": "v01492_specs_refresh",
+          "status": "passed"
+        },
+        {
+          "name": "v01492_validation_scope",
+          "status": "passed"
         }
       ],
       "current_phase": "verification",
@@ -834,10 +855,17 @@
             "intent_id": "intent:change_01M7QBQZGRF4S5PJM1A13NTHPG",
             "kind": "trajectory_step_recorded",
             "sequence": 9
+          },
+          {
+            "detail": "trajectory:branch_01M7QBQZMHAZCN5HBTTY0F2NPK",
+            "event_id": "event:10",
+            "intent_id": "intent:change_01M7QBQZGRF4S5PJM1A13NTHPG",
+            "kind": "trajectory_step_recorded",
+            "sequence": 10
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 9,
+        "next_sequence": 10,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M7QBQZMHAZCN5HBTTY0F2NPK": {
@@ -973,6 +1001,28 @@
                 ],
                 "sequence": 9,
                 "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "command": "RUSTC_WRAPPER=\"\" CARGO_BUILD_RUSTC_WRAPPER=\"\" CARGO_BUILD_JOBS=4 cargo fmt --all -- --check",
+                "custody_event_id": "event:10",
+                "observations": [
+                  ".decapod/managed/Dockerfile.decapod",
+                  ".decapod/managed/specs/.manifest.json",
+                  ".decapod/managed/specs/SEMANTICS.md",
+                  ".decapod/managed/specs/VALIDATION.md",
+                  "Integrated origin/master e0f6aec81eb7d8d32015a195bfdf4c8ea739c106 (PR #1811 + PR #1812 v0.149.2); refreshed Dockerfile.decapod (v0.149.2-debian/0.149.2) and .manifest.json (decapod_release=0.149.2, config_input_hash=1a8fa732fd380cb0ef8a5f1bc33be6464b88e4837011b8e5660bdf7624d450be) via /private/tmp/swarm-controller-0.149.2/bin/decapod (task-1424); task-1348 passed cargo fmt --all -- --check and cargo test --lib validation_scope (9/9, 0.01s) with zero src/ or tests/gate_skip_override_readiness_1659.rs changes vs audited 135dede05"
+                ],
+                "proof_refs": [
+                  "v01492_specs_refresh",
+                  "v01492_fmt",
+                  "v01492_validation_scope"
+                ],
+                "scope": [
+                  "validation-override-boundary"
+                ],
+                "sequence": 10,
+                "validation_findings": []
               }
             ]
           }
@@ -981,6 +1031,8 @@
       "declared_commands": [
         "CLIPPY_CONF_DIR=.config cargo clippy --all-targets --all-features -- -D warnings",
         "CLIPPY_CONF_DIR=.config cargo clippy --test gate_skip_override_readiness_1659 --all-features -- -D warnings",
+        "RUSTC_WRAPPER=\"\" CARGO_BUILD_RUSTC_WRAPPER=\"\" CARGO_BUILD_JOBS=4 cargo fmt --all -- --check",
+        "RUSTC_WRAPPER=\"\" CARGO_BUILD_RUSTC_WRAPPER=\"\" CARGO_BUILD_JOBS=4 cargo test --lib validation_scope",
         "TMPDIR=/private/tmp cargo test --lib plugins::verify::",
         "TMPDIR=/private/tmp cargo test --test gate_skip_override_readiness_1659 -- --nocapture",
         "TMPDIR=/private/tmp cargo test --test gatling t210_verify -- --nocapture",
@@ -996,6 +1048,7 @@
       "destination": "pull request",
       "evidence": [
         "Integrated origin/master 205d4e8dad2e7690100eb401e12ea6d6f8e23665 (v0.149.1); refreshed Dockerfile.decapod (v0.149.1-debian/0.149.1) and .manifest.json (decapod_release=0.149.1, config_input_hash=1a8fa732fd380cb0ef8a5f1bc33be6464b88e4837011b8e5660bdf7624d450be) via 0.149.1 controller; task-1280 passed cargo fmt --all -- --check, clippy --all-targets -D warnings, validation_scope (9/9, 0.01s), and gate_skip_override_readiness_1659 (5/5, 176.26s)",
+        "Integrated origin/master e0f6aec81eb7d8d32015a195bfdf4c8ea739c106 (PR #1811 + PR #1812 v0.149.2); refreshed Dockerfile.decapod (v0.149.2-debian/0.149.2) and .manifest.json (decapod_release=0.149.2, config_input_hash=1a8fa732fd380cb0ef8a5f1bc33be6464b88e4837011b8e5660bdf7624d450be) via /private/tmp/swarm-controller-0.149.2/bin/decapod (task-1424); task-1348 passed cargo fmt --all -- --check and cargo test --lib validation_scope (9/9, 0.01s) with zero src/ or tests/gate_skip_override_readiness_1659.rs changes vs audited 135dede05",
         "Merged origin/master 0b6ce0a84bab0ef8b0bdfbbd5c9b57a2fb1160bf (PR #1799); reconciled verify.rs (SAFE_BLOCKER_LABELS + run_validate_and_hash_detailed); passed cargo fmt --all -- --check, clippy --all-targets -D warnings, gate_skip_override_readiness_1659 (5/5, 424.10s), plugins::verify:: (60/60, 47.45s, TMPDIR=/private/tmp), gatling::t210_verify (1/1, 21.54s); verify_deadlock_regression test_verify_recover_and_regen_json_surface_scoped_blockers_without_leaking & live_recovery passed while 2 legacy unclaimed-worktree tests failed pre-existing AUTHORING_ACTOR_REQUIRED",
         "Merged origin/master c5bafce6 (v0.148.13); aligned reviewed_sources_digest to sha256:f2c1d189ee0c96f6afb66185229233bd0436015d0ddd21dc56deb4f58709b2b2; task-818 passed fmt, clippy -D warnings, and 5/5 gate_skip_override_readiness_1659 (396.02s)",
         "cargo fmt --check (exit 0), CLIPPY_CONF_DIR=.config cargo clippy --test gate_skip_override_readiness_1659 --all-features -- -D warnings (exit 0), cargo test --test gate_skip_override_readiness_1659 (5 passed, 0 failed, 351.44s, task-709)",
@@ -1015,6 +1068,7 @@
         ".decapod/managed/Dockerfile.decapod",
         ".decapod/managed/specs/.manifest.json",
         ".decapod/managed/specs/INTERFACES.md",
+        ".decapod/managed/specs/SEMANTICS.md",
         ".decapod/managed/specs/VALIDATION.md",
         "src/decapod/lib.rs",
         "src/decapod/plugins/verify.rs",
