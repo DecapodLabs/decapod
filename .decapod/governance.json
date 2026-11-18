@@ -584,6 +584,11 @@
       "id": "strict-json-reviewed-source",
       "summary": "Fresh governed follow-up from352 after original1787 merged externally and compact-boundary refused. Reauthor reviewed unique decoder extraction/RPC strictness, both-route real CLI and Python parsing controls, semantic specs and independently reviewed version-only source digest; candidate Actions pending.",
       "input_digest": "sha256:c4270b2739fb7b77681f792039bff9edd658b9440f1b6b978feea8318320628f"
+    },
+    {
+      "id": "official11-release-projection-correction",
+      "summary": "Repair actual Actions release drift through official session-updated11 native projections; preserve191/0 prerequisite result as bounded and host failures as failures. Metadata fix grants no conformance or native readiness. Checkpoint completes before commit.",
+      "input_digest": "sha256:02a169756d093ac1890782ef36663a2dd889ac8d5843fa7cdee36659ee63f31f"
     }
   ],
   "intents": {
@@ -624,21 +629,21 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Reused existing recursive unique-key decoder in shared utility and RPC framing; no parallel parser or proof engine. Actual transport/Python controls remain pending source execution.",
+          "reason": "Existing unique decoder extraction and RPC semantics retained; official11 generated projections now match the actual Actions evaluator, without a new producer or weakened graph.",
           "reviewed_code_fingerprint": "ffc32d8d5b27e6612e398abd3d043398d4ef5f4414848e3049d405e8ba98f014",
           "spec_material_hash": "9c4a97b951b43c4eff6e3ce901810faea79d3bd282ed709654daf5ef55f933ae"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Both RPC routes reject decoded duplicate keys with existing bounds/redaction; unique optional fields and ordinary negotiation retain meaning.",
+          "reason": "Recursive decoded-key refusal, ordinary optional JSON and typed transport contracts remain; current evaluator metadata is a separate prerequisite, not execution conformance.",
           "reviewed_code_fingerprint": "ffc32d8d5b27e6612e398abd3d043398d4ef5f4414848e3049d405e8ba98f014",
           "spec_material_hash": "313ad2235c11482f6c9340b3b14abed124a826841f0a38e963d98afc9c3d3dec"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Ambiguous required semantics cannot be erased by a later key. Same-host Python parsing is distinguished from independent authority and full governance conformance.",
+          "reason": "Preserve framing/redaction and trust boundaries; no host container, unrelated task proof, CI required check or native admission gate is waived.",
           "reviewed_code_fingerprint": "ffc32d8d5b27e6612e398abd3d043398d4ef5f4414848e3049d405e8ba98f014",
           "spec_material_hash": "9d11c08d69c5a99641a0d006db91d357c43458787eb442f659ffe7ac04be2a7e"
         }
@@ -651,17 +656,25 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1794998343Z"
+      "updated_at": "1794999773Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:0a1c06977c71a15256bb5e349eb85ea6728ba0edda1d32de79bf749195e1fd6a",
+      "artifact_hash": "sha256:5c32b7d95d2794527687f4f4ee70f8b5da41d520984d72d8bfbb89750646c49d",
       "checks": [
+        {
+          "name": "actions-release-projection-drift",
+          "status": "failed"
+        },
         {
           "name": "candidate-execution",
           "status": "unavailable"
+        },
+        {
+          "name": "native-host-project-prerequisites",
+          "status": "failed"
         },
         {
           "name": "official10-duplicate-negotiation-refusal",
@@ -673,6 +686,10 @@
         },
         {
           "name": "official10-required-unsupported-refusal",
+          "status": "passed"
+        },
+        {
+          "name": "official11-private-controller-install",
           "status": "passed"
         },
         {
@@ -701,10 +718,17 @@
             "intent_id": "intent:change_01M7Q3DQ50P9E0ATDWZTJHKFS5",
             "kind": "trajectory_step_recorded",
             "sequence": 4
+          },
+          {
+            "detail": "trajectory:branch_01M7Q3DQ8RFZAHXD2B6ZY1JSZ5",
+            "event_id": "event:5",
+            "intent_id": "intent:change_01M7Q3DQ50P9E0ATDWZTJHKFS5",
+            "kind": "trajectory_step_recorded",
+            "sequence": 5
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 4,
+        "next_sequence": 5,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M7Q3DQ8RFZAHXD2B6ZY1JSZ5": {
@@ -741,18 +765,42 @@
                 ],
                 "sequence": 4,
                 "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "command": "Actual Actions project checks191pass/0fail then release-drift refusal at1ba because evaluator11 regenerated Docker10 and manifest10. Official10 session opt-in installed private official11, preserving old10 and shared binary, config restored. Native11 refresh/project-check regenerated owned projections; host container requirement and unrelated completed-task proof remain blocked, no native admission claimed or skips added.",
+                "custody_event_id": "event:5",
+                "observations": [
+                  "/private/tmp/attack-gaps-1791-release11-projection-drift.json",
+                  "/private/tmp/attack-gaps-controller11-install.json",
+                  "/private/tmp/attack-gaps-json-controller11-project-check.json"
+                ],
+                "proof_refs": [
+                  "actions-release-projection-drift",
+                  "official11-private-controller-install",
+                  "native-host-project-prerequisites"
+                ],
+                "scope": [
+                  "issue-871"
+                ],
+                "sequence": 5,
+                "validation_findings": []
               }
             ]
           }
         }
       },
       "declared_commands": [
+        "Actual Actions project checks191pass/0fail then release-drift refusal at1ba because evaluator11 regenerated Docker10 and manifest10. Official10 session opt-in installed private official11, preserving old10 and shared binary, config restored. Native11 refresh/project-check regenerated owned projections; host container requirement and unrelated completed-task proof remain blocked, no native admission claimed or skips added.",
         "Reauthor selected reviewed source from6fff3707 in fresh claimed worktree at352d8929, after previous1787 merged externally. Preserve old source/checkpoints and native compact-boundary refusal, without importing old governance, custody or execution. Native/Python tests newly authored, source CI pending."
       ],
       "destination": "pull request",
       "evidence": [
+        "/private/tmp/attack-gaps-1791-release11-projection-drift.json",
         "/private/tmp/attack-gaps-871-duplicate-begin-pr.json",
         "/private/tmp/attack-gaps-871-json-release11-inventory-review.json",
+        "/private/tmp/attack-gaps-controller11-install.json",
+        "/private/tmp/attack-gaps-json-controller11-project-check.json",
         "/private/tmp/attack-gaps-rpc-duplicate-keys-before.json"
       ],
       "inspected_files": [
@@ -769,6 +817,7 @@
         "tests/support/interop_harness.rs"
       ],
       "next_transitions": [
+        "Checkpoint and commit actual official11 projection repair before push; rerun Actions for exact new source.",
         "Refine plan and declare falsifiable checks",
         "Refresh/review specs, checkpoint and publish a new narrow follow-up PR under explicit user exception; run all applicable GitHub Actions."
       ],

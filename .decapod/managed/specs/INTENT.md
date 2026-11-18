@@ -18,6 +18,15 @@ only root package versions in Cargo.toml/Cargo.lock changed from 0.148.10.
 The remaining 103, workflow graph and declared toolchain are unchanged.
 Source-inventory reconciliation is not execution or publication proof.
 
+The first Actions evaluation built the candidate as 0.148.11 and passed its
+191 project checks, then correctly refused release-projection drift: the
+managed Docker header and manifest still described controller 0.148.10.
+The official session updater installed a private 0.148.11 controller; native
+refresh/project-check now owns those regenerated release surfaces. The
+configured proof graph is unchanged. Host-only container and shared-task
+proof blockers remain separate from portable source-CI execution and prevent
+any claim of native admission. Metadata repair is not a passing runtime test.
+
 ## Autonomous safe config recovery and privilege custody (#1771, #1776)
 
 The cloud boundary suite treats embedded schema discovery as file-only recovery,
