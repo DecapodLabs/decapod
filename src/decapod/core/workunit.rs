@@ -1024,7 +1024,8 @@ pub(crate) fn invalidate_current_validation(
             previous.binding,
             Default::default(),
         )?;
-        publish_projection(root, &record.manifest)
+        publish_projection(root, &record.manifest)?;
+        Ok(())
     })
 }
 

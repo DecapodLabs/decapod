@@ -623,6 +623,11 @@
       "id": "currentness-withdrawal-and-renewed-custody",
       "summary": "Actual official0.148.10 exposed old VERIFIED after newer required failure and blocked promotion after fresh renewed-custody success. Correct existing history/journal paths; retain all positive producer and currentness checks. Add real CLI failure/recovery and atomic race/split-store regressions; new source execution pending Actions.",
       "input_digest": "sha256:6e5e34883db50b92f912bd18380caf03b038bd0ff1365263a0f119615997b59e"
+    },
+    {
+      "id": "currentness-compile-return-correction",
+      "summary": "Preserve Actions E0308 at818e376c; publish the workunit projection then explicitly return unit from withdrawal. No runtime pass claimed until fresh Actions execute.",
+      "input_digest": "sha256:dec4279f49c0b8160ef76a38836f4a3dbe736e299d703891ea0f923724242382"
     }
   ],
   "intents": {
@@ -663,22 +668,22 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Reviewed final currentness withdrawal and exact-custody selection in existing history/journal owners; source execution remains pending on Actions.",
-          "reviewed_code_fingerprint": "2db17653fae8b2be41ccd0390d5d67bbd3a1dec72e94e0fc165a60f6619ab959",
+          "reason": "Reviewed withdrawal through canonical journal before fallible cache publication; correct unit return does not change the documented architecture.",
+          "reviewed_code_fingerprint": "41fec954716289bf8ca4a8e5793182653636f392efdbad6bd478d0462f460f91",
           "spec_material_hash": "601a399687f8bf9e937ee043bfb05c5e20914070e9413ecfbdb452999489ef2c"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Reviewed truthful full not-ready journal semantics, historical ambiguity and renewed-custody recovery without new success authority.",
-          "reviewed_code_fingerprint": "2db17653fae8b2be41ccd0390d5d67bbd3a1dec72e94e0fc165a60f6619ab959",
+          "reason": "Existing currentness withdrawal and fresh-custody interface semantics remain; compile failure is preserved and new Actions required.",
+          "reviewed_code_fingerprint": "41fec954716289bf8ca4a8e5793182653636f392efdbad6bd478d0462f460f91",
           "spec_material_hash": "2f97ab2be6c259d4365f5a71017b15d0e74407feab0624c71337ecbe1c38b716"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Reviewed atomic custody/generation refusal, preserved producer validation and explicit split-store unsupported boundary.",
-          "reviewed_code_fingerprint": "2db17653fae8b2be41ccd0390d5d67bbd3a1dec72e94e0fc165a60f6619ab959",
+          "reason": "Same atomic narrowing and unsupported split-store boundary; no producer or validation exception added.",
+          "reviewed_code_fingerprint": "41fec954716289bf8ca4a8e5793182653636f392efdbad6bd478d0462f460f91",
           "spec_material_hash": "01c40f1a3b54a8c42ac8c5de455ecacfcc3a5572861212f46f5055589eaffc87"
         }
       ],
@@ -690,15 +695,19 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1794996884Z"
+      "updated_at": "1794997147Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch",
         "No gate-skip variables; authentic original task and canonical shared runtime; no fabricated execution evidence or status rewrite."
       ],
-      "artifact_hash": "sha256:dcfab1dcbfd1e5e1c4478af5f3a28f85eb04def934881550422a671be66cf7cf",
+      "artifact_hash": "sha256:ec1a834faf1e763cfe14aea841c8848d5abd8523af6572c2a6e948a8ab95cb7f",
       "checks": [
+        {
+          "name": "actions-candidate-compilation",
+          "status": "failed"
+        },
         {
           "name": "actual-official-binary-canonical-positive",
           "status": "passed"
@@ -810,10 +819,17 @@
             "intent_id": "intent:change_01M7P04Q5RZB944BR5SYSDARTZ",
             "kind": "trajectory_step_recorded",
             "sequence": 11
+          },
+          {
+            "detail": "trajectory:branch_01M7P04Q8GWB2CF2GZZZEJR5K4",
+            "event_id": "event:12",
+            "intent_id": "intent:change_01M7P04Q5RZB944BR5SYSDARTZ",
+            "kind": "trajectory_step_recorded",
+            "sequence": 12
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 11,
+        "next_sequence": 12,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M7P04Q8GWB2CF2GZZZEJR5K4": {
@@ -959,17 +975,36 @@
                 ],
                 "sequence": 11,
                 "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "command": "Actions 44283648313 job134730808370 reports E0308: publish_projection returns PathBuf but withdrawal returns unit. Preserve real failure; explicitly discard returned cache path after successful publication.",
+                "custody_event_id": "event:12",
+                "observations": [
+                  "src/decapod/core/workunit.rs",
+                  "/private/tmp/attack-gaps-1660-currentness-clippy-first.log"
+                ],
+                "proof_refs": [
+                  "actions-candidate-compilation"
+                ],
+                "scope": [
+                  "issue-1660"
+                ],
+                "sequence": 12,
+                "validation_findings": []
               }
             ]
           }
         }
       },
       "declared_commands": [
+        "Actions 44283648313 job134730808370 reports E0308: publish_projection returns PathBuf but withdrawal returns unit. Preserve real failure; explicitly discard returned cache path after successful publication.",
         "Actual official0.148.10 full local Git validation and native workunit transitions preserved in freshness fixture evidence 055-076; initial PR1788 Actions success remains historical after this source extension."
       ],
       "destination": "pull request",
       "evidence": [
         "/private/tmp/attack-gaps-1660-counterfeit-execution.json; sha256:abc refused at artifact observation. /private/tmp/attack-gaps-1660-source-file-pass.json; real source-file pass declaration recorded, VERIFIED refused by canonical full validation history; remained CLAIMED, journal current and resumable generation7. These are tested denials, not independent host proof or successful completion.",
+        "/private/tmp/attack-gaps-1660-currentness-clippy-first.log",
         "/private/tmp/attack-gaps-1660-freshness-state.json",
         "/private/tmp/attack-gaps-1660-source-file-pass.json proves the actual declaration/VERIFIED distinction. /private/tmp/attack-gaps-1660-old-checkpoint-resume.json preserves EXECUTION_STATE_CHANGED; obsolete-pass discard then checkpoint generation9 and resume generation10 succeeded. Fail marker is diagnostic claim discard, not an executed failing suite. Canonical full proof and hosted positive VERIFIED remain unproven. Added replayable no-skip CLI regression on existing consumer fixture; not yet executed.",
         "/private/tmp/attack-gaps-current-actions-evidence.json",
@@ -1000,7 +1035,8 @@
       ],
       "next_transitions": [
         "Checkpoint source and semantic specs, push existing PR1788, execute GitHub Actions under explicit user publication exception; no Buildkite wait or native admission claim.",
-        "Refine plan and declare falsifiable checks"
+        "Refine plan and declare falsifiable checks",
+        "Refresh source-bound metadata, checkpoint and push the corrected same PR; run required Actions again."
       ],
       "repo_scope": [
         "issue-1660"
