@@ -1,5 +1,20 @@
 # Interfaces
 
+## Caller-supplied validation report projections (#1726)
+
+`interop.project` with `kind=validation_report` remains a successful read-only
+transformation; outer RPC success does not verify its input. The reported
+`status`, candidate, epoch and identifiers remain visible. `proof_judgment` for
+a well-formed reported PASS is `not_proven` and `publication_ready` is false,
+including plausible receipt digests and caller-matched verifier/rule identities.
+Reported failed, stale and unknown inputs retain their existing classifications.
+The optional additive `proof_reason` explains that these are caller-supplied
+reports and directs the reader to canonical validation for the exact candidate
+and accepted base. A copied genuine report also cannot prove present currency
+through a pure transformation. Current proof must come from the canonical owner.
+Existing actual-binary controls execute counterfeit, negative/stale and ordinary
+negotiation recovery without provider, custody or gate-skip overrides.
+
 ## Config repair and accepted authority (#1771, #1776)
 
 Configuration errors use `INVALID_CONFIG_SCHEMA` with the original parser
@@ -1265,7 +1280,7 @@ field. Nothing in this operation authorizes a mutation, approval or completion.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `3ee2937b2b0c719bb5b0f08d8c9c19faf265587b0c8a753a5d8a90e08eec6422`
+- Repository signal fingerprint: `2ab2126165a0c1b7fecb69c4735e8d676cd09a919122af1c16bae8d6cd421a76`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (236 files), `tests/` (235 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

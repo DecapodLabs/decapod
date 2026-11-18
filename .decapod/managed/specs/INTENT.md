@@ -1,5 +1,17 @@
 # Intent
 
+## Reporting claims and current proof (#1726, #1735)
+
+Decapod remains the repo-native governance kernel; consumers must distinguish
+reported outcomes from its canonical current validation and admission decisions.
+Official0.148.11 reproduced a reporting false accept: `interop.project` returned
+`proven` and publication-ready from fabricated pass/head/digest fields, even when
+the caller supplied its own matching verifier and rule labels. No validation or
+actual publication occurred. Pure report projection must instead retain the
+reported status while refusing current proof, explain the missing canonical
+authority, preserve negative/stale diagnostics, and permit ordinary operation.
+This correction adds no validator, report generator or receipt store.
+
 ## Autonomous safe config recovery and privilege custody (#1771, #1776)
 
 The cloud boundary suite treats embedded schema discovery as file-only recovery,
@@ -514,7 +526,7 @@ These declarations select authoring and proof obligations; they do not attest im
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `3ee2937b2b0c719bb5b0f08d8c9c19faf265587b0c8a753a5d8a90e08eec6422`
+- Repository signal fingerprint: `2ab2126165a0c1b7fecb69c4735e8d676cd09a919122af1c16bae8d6cd421a76`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (236 files), `tests/` (235 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

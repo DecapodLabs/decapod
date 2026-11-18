@@ -1,5 +1,18 @@
 # Architecture
 
+## Pure report projection does not authenticate proof (#1726)
+
+`core::governed_transition::project_report_publication` reads caller-owned JSON.
+Its only production consumer is `core::projection::project_validation_report`;
+it has no canonical producer, current task, candidate/base or authority lookup.
+A digest and mutually matching caller labels therefore cannot produce PROVEN.
+The existing pure helper retains failed/stale/unknown interpretations but leaves
+passing reports not_proven and ineligible. The projection exposes an additive
+optional `proof_reason` explaining the missing authority and current-validation
+remedy. Report identifiers and source remain display data. Actual native
+validation, canonical history/workunit proof and consequential publication retain
+their existing owners and are not redirected through this projection.
+
 ## Source coverage and execution observations (#871)
 
 The required broker preparation probe measures the competing mutation's elapsed
@@ -1030,7 +1043,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `3ee2937b2b0c719bb5b0f08d8c9c19faf265587b0c8a753a5d8a90e08eec6422`
+- Repository signal fingerprint: `2ab2126165a0c1b7fecb69c4735e8d676cd09a919122af1c16bae8d6cd421a76`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (236 files), `tests/` (235 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

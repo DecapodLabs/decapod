@@ -1,7 +1,7 @@
 {
   "schema_version": "1.0.0",
   "baseline": {
-    "accepted_commit": "6ab6de3134286a790d78d370ca3fb43c0d92f834",
+    "accepted_commit": "352d892958e1cdf692299927f7c2f3c0c36fc639",
     "policy": {
       "change_control": {
         "requires_human_review": true,
@@ -568,102 +568,48 @@
     }
   },
   "change": {
-    "id": "change_01M7NWVMEADM6FS731H2AKEVZM",
-    "base_commit": "6ab6de3134286a790d78d370ca3fb43c0d92f834",
+    "id": "change_01M7Q97QD8Z4RM9340YANFM396",
+    "base_commit": "352d892958e1cdf692299927f7c2f3c0c36fc639",
     "target_base": "origin/master"
+  },
+  "claims": {
+    "caller-reports-not-observed-proof": {
+      "statement": "A caller-supplied validation report cannot confer proven or publication-ready status through the existing pure report projection; negative and stale diagnostics remain visible and ordinary governed operation remains available.",
+      "falsifier": "Run actual RPC interop.project with fabricated pass/head/receipt and self-matching rule/verifier fields, then legal negotiation and current canonical native proof controls. Any fabricated report yielding proven or publication_ready=true refutes the claim.",
+      "status": "open",
+      "proof_refs": [
+        "/private/tmp/attack-gaps-1726-native11-projection-before.json"
+      ]
+    }
   },
   "checkpoints": [
     {
-      "id": "interop-source-labels-871",
-      "summary": "Reproduce twelve static false Verified labels; report source coverage as not_run and reject self-authored execution states; preserve positive negotiation and unresolved observed-conformance obligation.",
-      "input_digest": "sha256:c47919510d5e276edfddc7da31b58a34df907f202fa8f6ca1dad0a90e79a1298",
+      "id": "report-projection-canonical-proof-boundary-20261118",
+      "summary": "Refuse false current proof from caller-supplied reports; preserve diagnostics and canonical native owners after measured official11 counterexample",
+      "input_digest": "sha256:76b3a008014c44712d3c4230a9608dac11a995487323c0742b9262d43a74ed3e",
       "proof_refs": [
-        "/private/tmp/attack-gaps-871-before.json"
-      ]
-    },
-    {
-      "id": "interop-inventory-release-871",
-      "summary": "Review all105 inputs against last accepted declaration; acknowledge only Cargo package-version changes0.148.7 to0.148.9; retain required graph and previous failure.",
-      "input_digest": "sha256:6e22366ad069ceaeb5e8404a21a25ee8016c27e3458807e735d2d6dc6f47acfd",
-      "proof_refs": [
-        "/private/tmp/attack-gaps-871-inventory-review.json"
-      ]
-    },
-    {
-      "id": "conformance-accepted-base-c47137ad-871",
-      "summary": "Integrate accepted policy-custody fixes with truthful conformance labels; require fresh combined proof",
-      "input_digest": "sha256:840da8a46f5cfa42b28b1f693e8ded1e7c95e5536c5474d83bb614caf7ca86f2"
-    },
-    {
-      "id": "interop-registered-dispatch-871",
-      "summary": "Advertise existing reconciliation/state routes and require catalog registration before RPC startup",
-      "input_digest": "sha256:41d11de554d4f7ba7d1c46e98e6e0426d884f8584cd8953780af3791992f54d2"
-    },
-    {
-      "id": "attack-gaps-871-release10-reconciliation",
-      "summary": "Integrate accepted0.148.10, review all105 proof inputs and refresh current architecture/interface/security reviews",
-      "input_digest": "sha256:83410e26e1d08c7a2ed8661628d212cf7419ad7ff2b37dd0a6e0015d43f54b8c"
-    },
-    {
-      "id": "interop-startup-rpc-envelope-871",
-      "summary": "Use the existing qualified RPC refusal constructor after actual CI compile failure",
-      "input_digest": "sha256:e3186f8880387635b5a222c93f6cb8259746f17389440dfff7ed365e1dbd53e1"
-    },
-    {
-      "id": "conformance-controller10-projections-871",
-      "summary": "Regenerate accepted-release projections through isolated official0.148.10 controller and retain current counterexample",
-      "input_digest": "sha256:5e147b98ada976da72567b1258b9f27ddf5220aaa2a256b5b8721f5c12ef5248"
-    },
-    {
-      "id": "attack-gaps-871-malformed-parameters",
-      "summary": "Reject malformed RPC flag parameters before required negotiation semantics can be erased; retain actual negative/legitimate baseline evidence and clean real-project regression.",
-      "input_digest": "sha256:b30cd3fc2550aa9d13be19ff53f2d81d2190a999d157b8aed6f49e7ec92dfbbf",
-      "proof_refs": [
-        "/private/tmp/attack-gaps-rpc-malformed-negotiation-before.json"
-      ]
-    },
-    {
-      "id": "attack-gaps-871-session-descriptors",
-      "summary": "Correct four advertised session requirements; retain real gate behavior, all-operation session contract regression and black-box manifest assertion.",
-      "input_digest": "sha256:e31b6fed6c59c8f992545abe1affe6f3c588836e2037ada8f5e094406002ec33",
-      "proof_refs": [
-        "/private/tmp/attack-gaps-871-session-metadata-before.json"
-      ]
-    },
-    {
-      "id": "attack-gaps-871-initialized-replay",
-      "summary": "Replay malformed required-extension request on initialized fixture, then prove ordinary negotiation recovers; retain separate pre-startup refusals.",
-      "input_digest": "sha256:e5c3b6cdc3d20397c2c32ff7952bc0ba392f5328d8aafdae69c16292ccf97324",
-      "proof_refs": [
-        "/private/tmp/attack-gaps-rpc-malformed-negotiation-before.json"
-      ]
-    },
-    {
-      "id": "attack-gaps-871-competing-duration",
-      "summary": "Preserve actual timing counterexample; measure competing call before preparation release and client cleanup, keep strict10s and strengthen blocked-preparation assertion.",
-      "input_digest": "sha256:8f9365450f4782cebfc19445a0e74bd0f0cdb4ade43905744f8158540e4dd188",
-      "proof_refs": [
-        "/private/tmp/attack-gaps-871-gh-core-timing-failure.json"
+        "/private/tmp/attack-gaps-1726-native11-projection-before.json",
+        "https://github.com/DecapodLabs/decapod/issues/1726",
+        "sha256:3ce5e25ebcdafe6b5dc0229bf70f01a38ac6d7e2fbb1a270898fe4e8fd2484bb"
       ]
     }
   ],
   "intents": {
-    "intent:change_01M7NWVMEADM6FS731H2AKEVZM": {
+    "intent:change_01M7Q97QD8Z4RM9340YANFM396": {
       "acceptance_criteria": [],
       "assumptions": [],
       "boundaries": [
         "Current claimed task and isolated work branch"
       ],
       "constraints": [
-        "src/decapod/core/interop.rs",
-        "tests/interop_conformance.rs"
+        "issue-1726"
       ],
       "created_sequence": 1,
-      "id": "intent:change_01M7NWVMEADM6FS731H2AKEVZM",
+      "id": "intent:change_01M7Q97QD8Z4RM9340YANFM396",
       "out_of_scope": [],
       "proof_requirements": [],
-      "raw_intent": "Attack the Gaps #1735: audit and repair conformance proof labels #871\n\nUser authorizes complete campaign with adversarial execution, governed worktrees, pushes, PR updates and issue evidence. First dependency slice #871; preserve all existing owners and current proof contracts.",
-      "refined_intent": "Attack the Gaps #1735: audit and repair conformance proof labels #871\n\nUser authorizes complete campaign with adversarial execution, governed worktrees, pushes, PR updates and issue evidence. First dependency slice #871; preserve all existing owners and current proof contracts.",
+      "raw_intent": "fix: keep caller-supplied report projections unproven\n\nContinue Attack the Gaps #1735 in dependency order while current source Actions execute. Read-only audit found project_report_publication can derive Proven/publication_ready from caller-owned status/head/digest JSON; owner38b retains the same code. Audit actual installed11 RPC before changes, closed issues and active PRs, distinguish nonauthoritative display from consequential publication, retain legitimate negative/stale states and current native proof. Correct only the existing projection owner without a new report generator/receipt store or weakening any admission. Actual binary adversarial controls plus normal operation, required Actions, canonical specs/checkpoints. User explicitly selects publication and GitHub Actions while ignoring Buildkite; no native admission, merge or closure is inferred.",
+      "refined_intent": "fix: keep caller-supplied report projections unproven\n\nContinue Attack the Gaps #1735 in dependency order while current source Actions execute. Read-only audit found project_report_publication can derive Proven/publication_ready from caller-owned status/head/digest JSON; owner38b retains the same code. Audit actual installed11 RPC before changes, closed issues and active PRs, distinguish nonauthoritative display from consequential publication, retain legitimate negative/stale states and current native proof. Correct only the existing projection owner without a new report generator/receipt store or weakening any admission. Actual binary adversarial controls plus normal operation, required Actions, canonical specs/checkpoints. User explicitly selects publication and GitHub Actions while ignoring Buildkite; no native admission, merge or closure is inferred.",
       "status": "refined",
       "updated_sequence": 3
     }
@@ -676,7 +622,7 @@
       },
       "deferred_questions": [],
       "human_questions": [],
-      "intent": "Complete #1735 Attack the Gaps campaign in dependency order. This first isolated slice reproduces #871 verified-by-name using the official binary; correct static conformance labels and refuse self-attested execution without adding a proof engine. Preserve source coverage and negotiation; actual observed conformance and full campaign closure require authenticated current execution and independent consumer evidence. Extend #1766 only under its valid custody after audit; retain other active owners.",
+      "intent": "fix: keep caller-supplied report projections unproven\n\nContinue Attack the Gaps #1735 in dependency order while current source Actions execute. Read-only audit found project_report_publication can derive Proven/publication_ready from caller-owned status/head/digest JSON; owner38b retains the same code. Audit actual installed11 RPC before changes, closed issues and active PRs, distinguish nonauthoritative display from consequential publication, retain legitimate negative/stale states and current native proof. Correct only the existing projection owner without a new report generator/receipt store or weakening any admission. Actual binary adversarial controls plus normal operation, required Actions, canonical specs/checkpoints. User explicitly selects publication and GitHub Actions while ignoring Buildkite; no native admission, merge or closure is inferred.",
       "phases": [],
       "proof_hooks": [
         "decapod validate"
@@ -686,514 +632,187 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Required broker probe retains10s and proves preparation remains blocked before release. Competing-operation duration is captured before unrelated child cleanup; product/runtime and required graph unchanged.",
-          "reviewed_code_fingerprint": "3ee2937b2b0c719bb5b0f08d8c9c19faf265587b0c8a753a5d8a90e08eec6422",
-          "spec_material_hash": "1fb88c990e8711b58bf3b4d3d9c4315a07de23b9e32fb76808d48de9349b5d73"
+          "reason": "Read-only production callsites have no canonical producer/current authority. Pure report projection stays unproven regardless caller digest/identity labels; existing native typed proof/admission owners and stores remain unchanged.",
+          "reviewed_code_fingerprint": "2ab2126165a0c1b7fecb69c4735e8d676cd09a919122af1c16bae8d6cd421a76",
+          "spec_material_hash": "b77c37eb40e4b414f91743bd572b997aa606b82f46eb83717e31e3f19329ca78"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Required broker probe retains10s and proves preparation remains blocked before release. Competing-operation duration is captured before unrelated child cleanup; product/runtime and required graph unchanged.",
-          "reviewed_code_fingerprint": "3ee2937b2b0c719bb5b0f08d8c9c19faf265587b0c8a753a5d8a90e08eec6422",
-          "spec_material_hash": "f12b375f742d2120cd8551277a2013ccae2ddb11ade64032a52e56c0409f5eb2"
+          "reason": "Keep original reported fields and outer read-RPC success; current proof remains not_proven/not-ready with additive optional proof_reason. Preserve negative/stale/unknown interpretation and ordinary negotiation; no imported report establishes currentness.",
+          "reviewed_code_fingerprint": "2ab2126165a0c1b7fecb69c4735e8d676cd09a919122af1c16bae8d6cd421a76",
+          "spec_material_hash": "1b531dd4d06291a72b13d01a53db43b0debcaa91ce0f8bba883ef29ff3bb950e"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Required broker probe retains10s and proves preparation remains blocked before release. Competing-operation duration is captured before unrelated child cleanup; product/runtime and required graph unchanged.",
-          "reviewed_code_fingerprint": "3ee2937b2b0c719bb5b0f08d8c9c19faf265587b0c8a753a5d8a90e08eec6422",
+          "reason": "The narrow change removes false authority from caller-owned JSON. No new producer/verifier/store/credentials or consequential publication path; existing canonical proof, input/custody and admission checks are retained.",
+          "reviewed_code_fingerprint": "2ab2126165a0c1b7fecb69c4735e8d676cd09a919122af1c16bae8d6cd421a76",
           "spec_material_hash": "cdc863757905c53f4f176284c72744f0575184c65a059b7edf6239b47c4fc644"
         }
       ],
       "state": "APPROVED",
       "stop_conditions": [],
-      "title": "Attack the Gaps #1735: audit and repair conformance proof labels #871",
+      "title": "fix: keep caller-supplied report projections unproven",
       "todo_ids": [
-        "code_01m7nqvx27hszg3g"
+        "bugs_01m7q969nypfd86q"
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1794990637Z"
+      "updated_at": "1795004536Z"
     },
     "trajectory": {
       "active_boundaries": [
-        "Current claimed task and isolated work branch",
-        "Linked worktree admission and execution-ready verified separately after backup denial; maintenance policy unchanged. No source/PR changes in other owners."
+        "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:4cb9b1baf7235bb26032d9f6fc627fb67a28be2f6087d4d3d2d0ca94d6a6abf1",
+      "artifact_hash": "sha256:2785243487cc30d1c89ef43e3680aefe37e8ff1cf6979574ec75eb8330ec145c",
       "checks": [
         {
-          "name": "baseline_counterexample",
+          "name": "diff-whitespace",
+          "status": "passed"
+        },
+        {
+          "name": "installed11-counterfeit-report-rejected",
           "status": "failed"
         },
         {
-          "name": "companion-broker-measurement",
+          "name": "installed11-legitimate-negotiation",
+          "status": "passed"
+        },
+        {
+          "name": "installed11-negative-stale-controls",
+          "status": "passed"
+        },
+        {
+          "name": "local-project-prerequisites",
           "status": "failed"
         },
         {
-          "name": "initial_full_validation",
-          "status": "failed"
-        },
-        {
-          "name": "malformed-flags-counterexample",
-          "status": "failed"
-        },
-        {
-          "name": "malformed-parameter-regression",
-          "status": "unavailable"
-        },
-        {
-          "name": "previous-buildkite-clippy",
-          "status": "failed"
-        },
-        {
-          "name": "previous-buildkite-core",
-          "status": "failed"
-        },
-        {
-          "name": "release10-source-compile",
-          "status": "failed"
-        },
-        {
-          "name": "session-metadata-drift",
-          "status": "failed"
-        },
-        {
-          "name": "static_conformance_safe_assertion",
-          "status": "failed"
+          "name": "rustfmt",
+          "status": "passed"
         }
       ],
-      "current_phase": "validation",
+      "current_phase": "intent",
       "custody": {
         "events": [
           {
             "event_id": "event:2",
-            "intent_id": "intent:change_01M7NWVMEADM6FS731H2AKEVZM",
+            "intent_id": "intent:change_01M7Q97QD8Z4RM9340YANFM396",
             "kind": "created",
             "sequence": 2
           },
           {
             "event_id": "event:3",
-            "intent_id": "intent:change_01M7NWVMEADM6FS731H2AKEVZM",
+            "intent_id": "intent:change_01M7Q97QD8Z4RM9340YANFM396",
             "kind": "refined",
             "sequence": 3
           },
           {
-            "detail": "trajectory:branch_01M7NWVMHPED3ZZQ4W9D4A0ZJ6",
+            "detail": "trajectory:branch_01M7Q97QGBQF64V09927P0590A",
             "event_id": "event:4",
-            "intent_id": "intent:change_01M7NWVMEADM6FS731H2AKEVZM",
+            "intent_id": "intent:change_01M7Q97QD8Z4RM9340YANFM396",
             "kind": "trajectory_step_recorded",
             "sequence": 4
           },
           {
-            "detail": "trajectory:branch_01M7NWVMHPED3ZZQ4W9D4A0ZJ6",
+            "detail": "trajectory:branch_01M7Q97QGBQF64V09927P0590A",
             "event_id": "event:5",
-            "intent_id": "intent:change_01M7NWVMEADM6FS731H2AKEVZM",
+            "intent_id": "intent:change_01M7Q97QD8Z4RM9340YANFM396",
             "kind": "trajectory_step_recorded",
             "sequence": 5
-          },
-          {
-            "detail": "trajectory:branch_01M7NWVMHPED3ZZQ4W9D4A0ZJ6",
-            "event_id": "event:6",
-            "intent_id": "intent:change_01M7NWVMEADM6FS731H2AKEVZM",
-            "kind": "trajectory_step_recorded",
-            "sequence": 6
-          },
-          {
-            "detail": "trajectory:branch_01M7NWVMHPED3ZZQ4W9D4A0ZJ6",
-            "event_id": "event:7",
-            "intent_id": "intent:change_01M7NWVMEADM6FS731H2AKEVZM",
-            "kind": "trajectory_step_recorded",
-            "sequence": 7
-          },
-          {
-            "detail": "trajectory:branch_01M7NWVMHPED3ZZQ4W9D4A0ZJ6",
-            "event_id": "event:8",
-            "intent_id": "intent:change_01M7NWVMEADM6FS731H2AKEVZM",
-            "kind": "trajectory_step_recorded",
-            "sequence": 8
-          },
-          {
-            "detail": "trajectory:branch_01M7NWVMHPED3ZZQ4W9D4A0ZJ6",
-            "event_id": "event:9",
-            "intent_id": "intent:change_01M7NWVMEADM6FS731H2AKEVZM",
-            "kind": "trajectory_step_recorded",
-            "sequence": 9
-          },
-          {
-            "detail": "trajectory:branch_01M7NWVMHPED3ZZQ4W9D4A0ZJ6",
-            "event_id": "event:10",
-            "intent_id": "intent:change_01M7NWVMEADM6FS731H2AKEVZM",
-            "kind": "trajectory_step_recorded",
-            "sequence": 10
-          },
-          {
-            "detail": "trajectory:branch_01M7NWVMHPED3ZZQ4W9D4A0ZJ6",
-            "event_id": "event:11",
-            "intent_id": "intent:change_01M7NWVMEADM6FS731H2AKEVZM",
-            "kind": "trajectory_step_recorded",
-            "sequence": 11
-          },
-          {
-            "detail": "trajectory:branch_01M7NWVMHPED3ZZQ4W9D4A0ZJ6",
-            "event_id": "event:12",
-            "intent_id": "intent:change_01M7NWVMEADM6FS731H2AKEVZM",
-            "kind": "trajectory_step_recorded",
-            "sequence": 12
-          },
-          {
-            "detail": "trajectory:branch_01M7NWVMHPED3ZZQ4W9D4A0ZJ6",
-            "event_id": "event:13",
-            "intent_id": "intent:change_01M7NWVMEADM6FS731H2AKEVZM",
-            "kind": "trajectory_step_recorded",
-            "sequence": 13
-          },
-          {
-            "detail": "trajectory:branch_01M7NWVMHPED3ZZQ4W9D4A0ZJ6",
-            "event_id": "event:14",
-            "intent_id": "intent:change_01M7NWVMEADM6FS731H2AKEVZM",
-            "kind": "trajectory_step_recorded",
-            "sequence": 14
-          },
-          {
-            "detail": "trajectory:branch_01M7NWVMHPED3ZZQ4W9D4A0ZJ6",
-            "event_id": "event:15",
-            "intent_id": "intent:change_01M7NWVMEADM6FS731H2AKEVZM",
-            "kind": "trajectory_step_recorded",
-            "sequence": 15
-          },
-          {
-            "detail": "trajectory:branch_01M7NWVMHPED3ZZQ4W9D4A0ZJ6",
-            "event_id": "event:16",
-            "intent_id": "intent:change_01M7NWVMEADM6FS731H2AKEVZM",
-            "kind": "trajectory_step_recorded",
-            "sequence": 16
-          },
-          {
-            "detail": "trajectory:branch_01M7NWVMHPED3ZZQ4W9D4A0ZJ6",
-            "event_id": "event:17",
-            "intent_id": "intent:change_01M7NWVMEADM6FS731H2AKEVZM",
-            "kind": "trajectory_step_recorded",
-            "sequence": 17
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 17,
+        "next_sequence": 5,
         "schema_version": "1.0.0",
         "trajectories": {
-          "branch_01M7NWVMHPED3ZZQ4W9D4A0ZJ6": {
+          "branch_01M7Q97QGBQF64V09927P0590A": {
             "evidence_only": true,
-            "id": "branch_01M7NWVMHPED3ZZQ4W9D4A0ZJ6",
-            "intent_id": "intent:change_01M7NWVMEADM6FS731H2AKEVZM",
+            "id": "branch_01M7Q97QGBQF64V09927P0590A",
+            "intent_id": "intent:change_01M7Q97QD8Z4RM9340YANFM396",
             "steps": [
               {
                 "action": "trajectory.record",
                 "custody_event_id": "event:4",
                 "observations": [
-                  "/private/tmp/attack-gaps-871-before.json; official binary0.148.9;12 false Verified labels; no executed identity. Snapshot container entry refused POLICY_OPT_IN_DISABLED. Session release cleared custody; re-read and reclaimed existing task without optional claim autorun; rebind before any source mutation."
+                  "src/decapod/core/governed_transition.rs",
+                  "src/decapod/core/projection.rs",
+                  "tests/unit/core/projection_tests.rs",
+                  "tests/interop_conformance.rs"
                 ],
                 "proof_refs": [
-                  "static_conformance_safe_assertion"
+                  "installed11-counterfeit-report-rejected",
+                  "installed11-negative-stale-controls",
+                  "installed11-legitimate-negotiation"
                 ],
                 "scope": [
-                  "src/decapod/core/interop.rs",
-                  "tests/interop_conformance.rs"
+                  "issue-1726"
                 ],
                 "sequence": 4,
+                "tool": "Official11 SHA6c1b40e1206f6027f9c51294055c975468c4e18e13e3b2b4ba7faa796f49ddea actual interop.project returned proven/publication_ready=true for fabricated pass/head/digest, including full64hex and self-matching verifier/rules. Failure/stale remained false-ready, subsequent receipts negotiation succeeded. Raw evidence SHA2563ce5e25ebcdafe6b5dc0229bf70f01a38ac6d7e2fbb1a270898fe4e8fd2484bb. No actual publication attempted. Existing function only serves pure projection/reflection; canonical typed proof and admission remain separate. Audited owner38b and observer68: neither changes this function; PR search1726 finds only observer1784.",
                 "validation_findings": []
               },
               {
-                "action": "implementation",
+                "action": "trajectory.record",
                 "custody_event_id": "event:5",
                 "observations": [
-                  "src/decapod/core/validation_history.rs",
-                  "src/decapod/core/interop.rs",
+                  "src/decapod/core/governed_transition.rs",
+                  "src/decapod/core/projection.rs",
                   "tests/interop_conformance.rs",
-                  "tests/unit/core/interop_tests.rs",
-                  ".decapod/managed/specs/INTENT.md",
-                  ".decapod/managed/specs/INTERFACES.md",
-                  "/private/tmp/attack-gaps-871-before.json; no passing Rust test or repaired-binary execution yet. Official validation owns fresh build and required checks."
-                ],
-                "proof_refs": [
-                  "baseline_counterexample"
-                ],
-                "scope": [
-                  "src/decapod/core/interop.rs",
-                  "tests/interop_conformance.rs"
-                ],
-                "sequence": 5,
-                "validation_findings": []
-              },
-              {
-                "action": "validation",
-                "custody_event_id": "event:6",
-                "observations": [
-                  ".decapod/config.toml",
-                  "tests/golden/rpc/v1/interop_manifest.response.json",
-                  "tests/rpc_golden_vectors.rs",
-                  "/private/tmp/attack-gaps-871-validation-1.json; PROOF_PROFILE_RECONCILIATION_REQUIRED before provider tests. Review:/private/tmp/attack-gaps-871-inventory-review.json;105 inputs compared to accepted edbfc00d; only root version0.148.7 to0.148.9 in Cargo.toml/Cargo.lock. Config backup outside Git. No graph, adapter, toolchain, worker, workflow or requiredness change."
-                ],
-                "proof_refs": [
-                  "initial_full_validation"
-                ],
-                "scope": [
-                  "src/decapod/core/interop.rs",
-                  "tests/interop_conformance.rs"
-                ],
-                "sequence": 6,
-                "validation_findings": []
-              },
-              {
-                "action": "trajectory.record",
-                "custody_event_id": "event:7",
-                "observations": [
-                  "Old candidate ddcefa86/base6ab6de31 retains Buildkite11973 clippy plugin-clone failure before execution and core validation smoke timeout; interop_conformance passed310.3s. Accepted master independently advanced to c47137ad via1779; reconcile real accepted changes in a two-parent merge and require fresh full exact-candidate proof. Keep active original governance and checkpoints through Git merge resolution; accepted historical governance remains in second parent. New merge is necessary source/base integration, not a synthetic CI trigger or proof relabel. All broader871 receipt-production/drift/consumer acceptance stays open."
-                ],
-                "proof_refs": [
-                  "previous-buildkite-clippy",
-                  "previous-buildkite-core"
-                ],
-                "scope": [
-                  "src/decapod/core/interop.rs",
-                  "tests/interop_conformance.rs"
-                ],
-                "sequence": 7,
-                "validation_findings": []
-              },
-              {
-                "action": "trajectory.record",
-                "custody_event_id": "event:8",
-                "observations": [
-                  "src/decapod/lib.rs",
-                  "src/decapod/core/interop.rs",
-                  "tests/interop_conformance.rs",
-                  "Actual official0.148.9 RPC intent.reconcile succeeded while interop.manifest omitted it; raw outputs and binary SHA in /private/tmp/attack-gaps-871-drift-before-summary.json. Review found exactly42 current handlers vs39 catalog entries: intent.reconcile, state.resolve, state.diff omitted; no catalog name lacks a handler. Extend existing catalog and enforce registration before RPC routing, deriving name list from metadata to remove one duplicate table. Preserve per-operation session/workspace/mandate guards and no negotiation authority. Existing conformance reports lack tested-binary digest and authenticated custody; do not turn them into executed verification. New candidate supersedes pending e212ad75 proof only after fresh full execution."
-                ],
-                "proof_refs": [],
-                "scope": [
-                  "src/decapod/core/interop.rs",
-                  "tests/interop_conformance.rs"
-                ],
-                "sequence": 8,
-                "validation_findings": []
-              },
-              {
-                "action": "trajectory.record",
-                "custody_event_id": "event:9",
-                "observations": [
-                  "src/decapod/core/interop.rs",
-                  "src/decapod/lib.rs",
-                  "tests/interop_conformance.rs",
+                  "tests/unit/core/projection_tests.rs",
                   ".decapod/managed/specs/INTENT.md",
                   ".decapod/managed/specs/ARCHITECTURE.md",
-                  ".decapod/managed/specs/INTERFACES.md",
-                  "Counterexample /private/tmp/attack-gaps-871-drift-before-summary.json: official binary dispatch success for unadvertised intent.reconcile. Empty-Git unknown-op baseline returned missing .decapod instead of typed refusal, creating no files; initial non-Git temp fixture reached an unrelated ancestor storage probe and is not used as product denial evidence. Add42-name single-declaration registration,3 missing entries, actual discovery assertions and isolated no-startup unknown-op regression. No patched-binary execution yet; all authenticated receipt-production and remaining authority/consumer obligations remain open."
-                ],
-                "proof_refs": [],
-                "scope": [
-                  "src/decapod/core/interop.rs",
-                  "tests/interop_conformance.rs"
-                ],
-                "sequence": 9,
-                "validation_findings": []
-              },
-              {
-                "action": "trajectory.record",
-                "custody_event_id": "event:10",
-                "observations": [
-                  "Accepted target advanced again to34f837d4 through ordinary0.148.10 release; merge preserves real parents and existing checkpoints. Independently hashed all105 inventory inputs in this worktree and matched official agent.init discovery: sha256:e1a242381f7411a8facfe285e2945040dafa93c46dd48c11a86ebd55d9a95b3f. Only Cargo package versions0.148.9 to0.148.10 changed;103 other sources identical. Backed up editable config before reconciliation; no workflow, carrier, required graph, toolchain, controller or policy weakening. Previous context/spec-review failures retained. Refreshed security as well as architecture/interface reviews after current source inspection. cargo fmt used only to format authored source; no local build or shadow proof suite."
-                ],
-                "proof_refs": [],
-                "scope": [
-                  "src/decapod/core/interop.rs",
-                  "tests/interop_conformance.rs"
-                ],
-                "sequence": 10,
-                "validation_findings": []
-              },
-              {
-                "action": "trajectory.record",
-                "custody_event_id": "event:11",
-                "observations": [
-                  "Actual Buildkite12110 job01a1ed56-73f9-4bbe-8f6d-99a75057233c and GitHub clippy134622777057 both fail E0425 atlib.rs2795 before tests: error_response was not in run function scope. Correct to core::rpc::error_response, preserving existing envelope constructor. No patched test execution claimed. Separate1660 actual0.148.10 standalone job reports Docker pin9-to10 and manifest evaluating-release/template metadata drift; installed controller remainsofficial0.148.9. Never manually rewrite generated projections or claim old execution for new source."
+                  ".decapod/managed/specs/INTERFACES.md"
                 ],
                 "proof_refs": [
-                  "release10-source-compile"
+                  "rustfmt",
+                  "diff-whitespace",
+                  "local-project-prerequisites"
                 ],
                 "scope": [
-                  "src/decapod/core/interop.rs",
-                  "tests/interop_conformance.rs"
+                  "issue-1726"
                 ],
-                "sequence": 11,
-                "validation_findings": []
-              },
-              {
-                "action": "trajectory.record",
-                "custody_event_id": "event:12",
-                "observations": [
-                  "Required12110 compile failure fixed in f837e114. After actual1660 standalone validation showed Docker pin and manifest release/template drift9-to10, inspected official updater and package build script; used session acquire with scoped private CARGO_HOME and temporary repo.session_auto_update opt-in, then restored the exact backed config. No shared executable change. Session-installed controller0.148.10 SHA256a0f69315a950a17a8acf82898c1a8cab6fed71859295ad8cfb9852cc35363304; embedded docs ingested, new config/accepted-policy guidance read. Migration notice reported no applied migrations. Native workspace ensure/specs.refresh regenerated Docker/manifest and all3 reviews were rebound to current source. Actual official10 manifest still advertises12 false Verified entries with validate=true; /private/tmp/attack-gaps-871-release10-before.json preserves new baseline counterexample. No current conformance execution or full readiness yet."
-                ],
-                "proof_refs": [],
-                "scope": [
-                  "src/decapod/core/interop.rs",
-                  "tests/interop_conformance.rs"
-                ],
-                "sequence": 12,
-                "validation_findings": []
-              },
-              {
-                "action": "trajectory.record",
-                "command": "Actual official0.148.10: valid unsupported extension refused; trailing-comma flags accepted as empty negotiation; same malformed stdin rejected.",
-                "custody_event_id": "event:13",
-                "observations": [
-                  "src/decapod/lib.rs",
-                  "tests/interop_conformance.rs",
-                  "/private/tmp/attack-gaps-rpc-malformed-negotiation-before.json"
-                ],
-                "proof_refs": [
-                  "malformed-flags-counterexample"
-                ],
-                "scope": [
-                  "src/decapod/core/interop.rs",
-                  "tests/interop_conformance.rs"
-                ],
-                "sequence": 13,
-                "validation_findings": []
-              },
-              {
-                "action": "trajectory.record",
-                "custody_event_id": "event:14",
-                "observations": [
-                  "src/decapod/lib.rs",
-                  "tests/interop_conformance.rs",
-                  "/private/tmp/attack-gaps-rpc-malformed-negotiation-before.json"
-                ],
-                "proof_refs": [
-                  "malformed-parameter-regression"
-                ],
-                "scope": [
-                  "src/decapod/core/interop.rs",
-                  "tests/interop_conformance.rs"
-                ],
-                "sequence": 14,
-                "validation_findings": []
-              },
-              {
-                "action": "trajectory.record",
-                "command": "Actual official0.148.10 advertises four generic session-gated operations session-free; mentor/assurance calls auto-acquire sessions, bundle calls additionally require isolated workspace. data.database.inspect is an intentional earlier session-free route, not a defect.",
-                "custody_event_id": "event:15",
-                "observations": [
-                  "src/decapod/core/interop.rs",
-                  "src/decapod/lib.rs",
-                  "/private/tmp/attack-gaps-871-session-metadata-before.json",
-                  "/private/tmp/attack-gaps-871-session-metadata-audit.json"
-                ],
-                "proof_refs": [
-                  "session-metadata-drift"
-                ],
-                "scope": [
-                  "src/decapod/core/interop.rs",
-                  "tests/interop_conformance.rs"
-                ],
-                "sequence": 15,
-                "validation_findings": []
-              },
-              {
-                "action": "trajectory.record",
-                "command": "Regression replays the original malformed negotiation after real project initialization, then executes ordinary compatibility recovery controls; repaired execution remains pending.",
-                "custody_event_id": "event:16",
-                "observations": [
-                  "tests/interop_conformance.rs"
-                ],
-                "proof_refs": [],
-                "scope": [
-                  "src/decapod/core/interop.rs",
-                  "tests/interop_conformance.rs"
-                ],
-                "sequence": 16,
-                "validation_findings": []
-              },
-              {
-                "action": "trajectory.record",
-                "command": "Actual companion job134668344854: competing call9.796s, strict10s assertion includes later preparation release/child completion. Existing broker fixes ffec948b/a7b4b3dc/PR1517 audited; no active broker PR found.",
-                "custody_event_id": "event:17",
-                "observations": [
-                  "tests/group_broker.rs",
-                  "assets/tools/source_ci_profile.rs",
-                  "/private/tmp/attack-gaps-871-gh-core-timing-failure.json"
-                ],
-                "proof_refs": [
-                  "companion-broker-measurement"
-                ],
-                "scope": [
-                  "src/decapod/core/interop.rs",
-                  "tests/interop_conformance.rs"
-                ],
-                "sequence": 17,
+                "sequence": 5,
+                "tool": "Bounded official11 project-check refreshed current release metadata:201 passed,2 failed,12 skipped; not publication proof. All105 source-CI definitions independently rehashed to2acf with only root release metadata differences from earlier accepted e1a review. Source, profile graph, workflows and toolchain preserved. Required actual-source GitHub Actions not yet executed for this candidate.",
                 "validation_findings": []
               }
             ]
           }
         }
       },
-      "declared_commands": [
-        "Actual companion job134668344854: competing call9.796s, strict10s assertion includes later preparation release/child completion. Existing broker fixes ffec948b/a7b4b3dc/PR1517 audited; no active broker PR found.",
-        "Actual official0.148.10 advertises four generic session-gated operations session-free; mentor/assurance calls auto-acquire sessions, bundle calls additionally require isolated workspace. data.database.inspect is an intentional earlier session-free route, not a defect.",
-        "Actual official0.148.10: valid unsupported extension refused; trailing-comma flags accepted as empty negotiation; same malformed stdin rejected.",
-        "Regression replays the original malformed negotiation after real project initialization, then executes ordinary compatibility recovery controls; repaired execution remains pending."
-      ],
+      "declared_commands": [],
       "destination": "pull request",
-      "evidence": [
-        "/private/tmp/attack-gaps-871-before.json; no passing Rust test or repaired-binary execution yet. Official validation owns fresh build and required checks.",
-        "/private/tmp/attack-gaps-871-before.json; official binary0.148.9;12 false Verified labels; no executed identity. Snapshot container entry refused POLICY_OPT_IN_DISABLED. Session release cleared custody; re-read and reclaimed existing task without optional claim autorun; rebind before any source mutation.",
-        "/private/tmp/attack-gaps-871-gh-core-timing-failure.json",
-        "/private/tmp/attack-gaps-871-session-metadata-audit.json",
-        "/private/tmp/attack-gaps-871-session-metadata-before.json",
-        "/private/tmp/attack-gaps-871-validation-1.json; PROOF_PROFILE_RECONCILIATION_REQUIRED before provider tests. Review:/private/tmp/attack-gaps-871-inventory-review.json;105 inputs compared to accepted edbfc00d; only root version0.148.7 to0.148.9 in Cargo.toml/Cargo.lock. Config backup outside Git. No graph, adapter, toolchain, worker, workflow or requiredness change.",
-        "/private/tmp/attack-gaps-rpc-malformed-negotiation-before.json",
-        "Accepted target advanced again to34f837d4 through ordinary0.148.10 release; merge preserves real parents and existing checkpoints. Independently hashed all105 inventory inputs in this worktree and matched official agent.init discovery: sha256:e1a242381f7411a8facfe285e2945040dafa93c46dd48c11a86ebd55d9a95b3f. Only Cargo package versions0.148.9 to0.148.10 changed;103 other sources identical. Backed up editable config before reconciliation; no workflow, carrier, required graph, toolchain, controller or policy weakening. Previous context/spec-review failures retained. Refreshed security as well as architecture/interface reviews after current source inspection. cargo fmt used only to format authored source; no local build or shadow proof suite.",
-        "Actual Buildkite12110 job01a1ed56-73f9-4bbe-8f6d-99a75057233c and GitHub clippy134622777057 both fail E0425 atlib.rs2795 before tests: error_response was not in run function scope. Correct to core::rpc::error_response, preserving existing envelope constructor. No patched test execution claimed. Separate1660 actual0.148.10 standalone job reports Docker pin9-to10 and manifest evaluating-release/template metadata drift; installed controller remainsofficial0.148.9. Never manually rewrite generated projections or claim old execution for new source.",
-        "Actual official0.148.9 RPC intent.reconcile succeeded while interop.manifest omitted it; raw outputs and binary SHA in /private/tmp/attack-gaps-871-drift-before-summary.json. Review found exactly42 current handlers vs39 catalog entries: intent.reconcile, state.resolve, state.diff omitted; no catalog name lacks a handler. Extend existing catalog and enforce registration before RPC routing, deriving name list from metadata to remove one duplicate table. Preserve per-operation session/workspace/mandate guards and no negotiation authority. Existing conformance reports lack tested-binary digest and authenticated custody; do not turn them into executed verification. New candidate supersedes pending e212ad75 proof only after fresh full execution.",
-        "Counterexample /private/tmp/attack-gaps-871-drift-before-summary.json: official binary dispatch success for unadvertised intent.reconcile. Empty-Git unknown-op baseline returned missing .decapod instead of typed refusal, creating no files; initial non-Git temp fixture reached an unrelated ancestor storage probe and is not used as product denial evidence. Add42-name single-declaration registration,3 missing entries, actual discovery assertions and isolated no-startup unknown-op regression. No patched-binary execution yet; all authenticated receipt-production and remaining authority/consumer obligations remain open.",
-        "Old candidate ddcefa86/base6ab6de31 retains Buildkite11973 clippy plugin-clone failure before execution and core validation smoke timeout; interop_conformance passed310.3s. Accepted master independently advanced to c47137ad via1779; reconcile real accepted changes in a two-parent merge and require fresh full exact-candidate proof. Keep active original governance and checkpoints through Git merge resolution; accepted historical governance remains in second parent. New merge is necessary source/base integration, not a synthetic CI trigger or proof relabel. All broader871 receipt-production/drift/consumer acceptance stays open.",
-        "Required12110 compile failure fixed in f837e114. After actual1660 standalone validation showed Docker pin and manifest release/template drift9-to10, inspected official updater and package build script; used session acquire with scoped private CARGO_HOME and temporary repo.session_auto_update opt-in, then restored the exact backed config. No shared executable change. Session-installed controller0.148.10 SHA256a0f69315a950a17a8acf82898c1a8cab6fed71859295ad8cfb9852cc35363304; embedded docs ingested, new config/accepted-policy guidance read. Migration notice reported no applied migrations. Native workspace ensure/specs.refresh regenerated Docker/manifest and all3 reviews were rebound to current source. Actual official10 manifest still advertises12 false Verified entries with validate=true; /private/tmp/attack-gaps-871-release10-before.json preserves new baseline counterexample. No current conformance execution or full readiness yet."
-      ],
+      "evidence": [],
       "inspected_files": [
-        "assets/tools/source_ci_profile.rs",
-        "src/decapod/core/interop.rs",
-        "src/decapod/core/validation_history.rs",
-        "src/decapod/lib.rs",
-        "tests/group_broker.rs",
-        "tests/interop_conformance.rs"
+        "src/decapod/core/governed_transition.rs",
+        "src/decapod/core/projection.rs",
+        "tests/interop_conformance.rs",
+        "tests/unit/core/projection_tests.rs"
       ],
-      "intent_id": "intent:change_01M7NWVMEADM6FS731H2AKEVZM",
+      "intent_id": "intent:change_01M7Q97QD8Z4RM9340YANFM396",
       "modified_files": [
-        ".decapod/config.toml",
         ".decapod/managed/specs/ARCHITECTURE.md",
         ".decapod/managed/specs/INTENT.md",
         ".decapod/managed/specs/INTERFACES.md",
-        "src/decapod/core/interop.rs",
-        "src/decapod/lib.rs",
-        "tests/golden/rpc/v1/interop_manifest.response.json",
+        "src/decapod/core/governed_transition.rs",
+        "src/decapod/core/projection.rs",
         "tests/interop_conformance.rs",
-        "tests/rpc_golden_vectors.rs",
-        "tests/unit/core/interop_tests.rs"
+        "tests/unit/core/projection_tests.rs"
       ],
       "next_transitions": [
-        "Capture elapsed and blocked-preparation fact immediately after competing call; retain10s budget and actual semantic checks; rerun full native profile.",
-        "Correct four descriptors and compare every RPC session descriptor with existing enforcement; retain all authority gates.",
-        "Refine plan and declare falsifiable checks",
-        "Reject malformed RPC parameters before project/session startup; execute exact repaired candidate through full native validation."
+        "Refine plan and declare falsifiable checks"
       ],
       "repo_scope": [
-        "src/decapod/core/interop.rs",
-        "tests/interop_conformance.rs"
+        "issue-1726"
       ],
-      "run_id": "branch_01M7NWVMHPED3ZZQ4W9D4A0ZJ6",
+      "run_id": "branch_01M7Q97QGBQF64V09927P0590A",
       "schema_version": "1.1.0",
       "shortcut_risk_signals": [],
-      "task_id": "code_01m7nqvx27hszg3g",
-      "tool_calls": [],
+      "task_id": "bugs_01m7q969nypfd86q",
+      "tool_calls": [
+        "Bounded official11 project-check refreshed current release metadata:201 passed,2 failed,12 skipped; not publication proof. All105 source-CI definitions independently rehashed to2acf with only root release metadata differences from earlier accepted e1a review. Source, profile graph, workflows and toolchain preserved. Required actual-source GitHub Actions not yet executed for this candidate.",
+        "Official11 SHA6c1b40e1206f6027f9c51294055c975468c4e18e13e3b2b4ba7faa796f49ddea actual interop.project returned proven/publication_ready=true for fabricated pass/head/digest, including full64hex and self-matching verifier/rules. Failure/stale remained false-ready, subsequent receipts negotiation succeeded. Raw evidence SHA2563ce5e25ebcdafe6b5dc0229bf70f01a38ac6d7e2fbb1a270898fe4e8fd2484bb. No actual publication attempted. Existing function only serves pure projection/reflection; canonical typed proof and admission remain separate. Audited owner38b and observer68: neither changes this function; PR search1726 finds only observer1784."
+      ],
       "unresolved_assumptions": []
     }
   },
