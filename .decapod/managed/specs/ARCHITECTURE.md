@@ -2,6 +2,14 @@
 
 ## Source coverage and execution observations (#871)
 
+`lib.rs::parse_rpc_request` propagates malformed flag-parameter JSON through
+the existing validation error boundary, just as malformed stdin framing does.
+Only absent parameters default to an empty object. Existing specialized
+inventory and maintenance diagnostics remain in their own branches. The
+black-box regression uses a fresh private Git project, removes ambient gate and
+provider overrides, proves rejection before project/session files exist, then
+initializes a real project and executes valid ordinary negotiation controls.
+
 `interop::rpc_catalog` emits registered names and manifest metadata from the
 same declarations. The public `lib.rs::run` entrypoint builds unknown-name
 refusals with `core::rpc::error_response` before resolving project state, opening
@@ -1008,7 +1016,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `224611d124f2edf70798aa0c4282ccd863df38a3eedf3b6848f2ab5f2b5f07f5`
+- Repository signal fingerprint: `405c98f589935a6f8e63257932cf0bfce921fce0a51b8910416d230affe9f6e0`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (236 files), `tests/` (235 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

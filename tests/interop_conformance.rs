@@ -17,33 +17,35 @@ mod harness;
 
 use harness::Harness;
 
+fn isolated_command(root: &std::path::Path, program: &std::ffi::OsStr) -> std::process::Command {
+    let mut command = std::process::Command::new(program);
+    command.current_dir(root);
+    for (key, _) in std::env::vars_os() {
+        let name = key.to_string_lossy();
+        if ["DECAPOD_", "GIT_", "BUILDKITE", "GITHUB", "XDG_"]
+            .iter()
+            .any(|prefix| name.starts_with(prefix))
+        {
+            command.env_remove(key);
+        }
+    }
+    command
+        .env("HOME", root)
+        .env("XDG_CONFIG_HOME", root.join("config"))
+        .env("XDG_CACHE_HOME", root.join("cache"))
+        .env("XDG_DATA_HOME", root.join("data"))
+        .env("GIT_CONFIG_GLOBAL", "/dev/null")
+        .env("GIT_CONFIG_NOSYSTEM", "1");
+    command
+}
+
 #[test]
 fn unregistered_rpc_is_rejected_before_project_startup() {
     use decapod::core::bounded_process::BoundedCommand;
-    use std::{process::Command, time::Duration};
+    use std::time::Duration;
 
     let fixture = tempfile::tempdir().unwrap();
-    let command = |program: &std::ffi::OsStr| {
-        let mut command = Command::new(program);
-        command.current_dir(fixture.path());
-        for (key, _) in std::env::vars_os() {
-            let name = key.to_string_lossy();
-            if ["DECAPOD_", "GIT_", "BUILDKITE", "GITHUB", "XDG_"]
-                .iter()
-                .any(|prefix| name.starts_with(prefix))
-            {
-                command.env_remove(key);
-            }
-        }
-        command
-            .env("HOME", fixture.path())
-            .env("XDG_CONFIG_HOME", fixture.path().join("config"))
-            .env("XDG_CACHE_HOME", fixture.path().join("cache"))
-            .env("XDG_DATA_HOME", fixture.path().join("data"))
-            .env("GIT_CONFIG_GLOBAL", "/dev/null")
-            .env("GIT_CONFIG_NOSYSTEM", "1");
-        command
-    };
+    let command = |program: &std::ffi::OsStr| isolated_command(fixture.path(), program);
     let initialized = command(std::ffi::OsStr::new("git"))
         .args(["init", "-q"])
         .bounded_output(Duration::from_secs(30))
@@ -63,6 +65,84 @@ fn unregistered_rpc_is_rejected_before_project_startup() {
             .all(|entry| entry.unwrap().file_name() == ".git"),
         "an unknown RPC operation must not initialize a project or session"
     );
+}
+
+#[test]
+fn malformed_rpc_parameters_cannot_drop_required_negotiation() {
+    use decapod::core::bounded_process::BoundedCommand;
+    use std::{ffi::OsStr, time::Duration};
+
+    let fixture = tempfile::tempdir().unwrap();
+    let binary = harness::resolve_decapod_bin();
+    let command = |program: &OsStr| isolated_command(fixture.path(), program);
+    let initialized = command(OsStr::new("git"))
+        .args(["init", "-q"])
+        .bounded_output(Duration::from_secs(30))
+        .unwrap();
+    assert!(initialized.status.success());
+    for params in [
+        "{",
+        r#"{"required_extensions":["unsupported"],}"#,
+        r#"{"required_extensions":[1e400]}"#,
+    ] {
+        let output = command(binary.as_os_str())
+            .args(["rpc", "--op", "interop.negotiate", "--params", params])
+            .bounded_output(Duration::from_secs(30))
+            .unwrap();
+        assert!(!output.status.success(), "{}", combined(&output));
+        assert!(
+            String::from_utf8_lossy(&output.stderr).contains("Invalid JSON parameters"),
+            "{}",
+            combined(&output)
+        );
+        assert!(
+            std::fs::read_dir(fixture.path())
+                .unwrap()
+                .all(|entry| entry.unwrap().file_name() == ".git"),
+            "invalid parameters must be refused before project or session startup"
+        );
+    }
+
+    // Establish a real project for ordinary compatibility discovery. No
+    // session, custody, provider or gate-skip override is supplied.
+    let initialized = command(binary.as_os_str())
+        .args([
+            "init",
+            "--product-summary",
+            "Isolated RPC negotiation controls",
+        ])
+        .bounded_output(Duration::from_secs(60))
+        .unwrap();
+    assert!(initialized.status.success(), "{}", combined(&initialized));
+    for params in [
+        None,
+        Some("{}"),
+        Some(r#"{"required_extensions":["receipts"]}"#),
+    ] {
+        let mut invocation = command(binary.as_os_str());
+        invocation.args(["rpc", "--op", "interop.negotiate"]);
+        if let Some(params) = params {
+            invocation.args(["--params", params]);
+        }
+        let output = invocation.bounded_output(Duration::from_secs(30)).unwrap();
+        assert!(output.status.success(), "{}", combined(&output));
+        let response: Value = serde_json::from_slice(&output.stdout).unwrap();
+        assert_eq!(response["success"], true, "{response}");
+        assert_eq!(response["result"]["outcome"]["negotiated"], true);
+    }
+    let output = command(binary.as_os_str())
+        .args([
+            "rpc",
+            "--op",
+            "interop.negotiate",
+            "--params",
+            r#"{"required_extensions":["unsupported"]}"#,
+        ])
+        .bounded_output(Duration::from_secs(30))
+        .unwrap();
+    let response: Value = serde_json::from_slice(&output.stdout).unwrap();
+    assert_eq!(response["success"], false, "{response}");
+    assert_eq!(response["error"]["code"], "negotiation_refused");
 }
 
 /// Read-only ops whose dispatch acceptance is proven against the real binary

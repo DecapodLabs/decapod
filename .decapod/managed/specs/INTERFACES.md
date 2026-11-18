@@ -14,6 +14,13 @@ grants exceptional permission. RBAC bypass keeps `proof_ready=false` and
 
 ## Conformance evidence boundary (#871)
 
+Malformed `rpc --op ... --params ...` JSON returns nonzero with
+`Invalid JSON parameters`, before project/session startup; it is never converted
+to an empty compatibility request. Omitted parameters and explicit empty objects
+retain their existing meaning. Valid requests requiring an unsupported extension
+retain the `negotiation_refused` envelope; successful compatibility discovery
+still grants no mutation, completion or publication permission.
+
 The v1 manifest adds the existing reconciliation and state-read operations.
 Reconciliation remains advisory and session-free; state reads retain their
 existing session/workspace gates. Unknown RPC names now receive the existing
@@ -1248,7 +1255,7 @@ field. Nothing in this operation authorizes a mutation, approval or completion.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `224611d124f2edf70798aa0c4282ccd863df38a3eedf3b6848f2ab5f2b5f07f5`
+- Repository signal fingerprint: `405c98f589935a6f8e63257932cf0bfce921fce0a51b8910416d230affe9f6e0`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (236 files), `tests/` (235 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

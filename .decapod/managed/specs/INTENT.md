@@ -38,6 +38,14 @@ those release metadata bytes. Reconciliation does not establish test success.
 
 ## Truthful conformance discovery (#871, #1735)
 
+Compatibility discovery must preserve required semantics at the parser boundary.
+The official 0.148.10 counterexample refused a valid unsupported extension but
+accepted its trailing-comma flag form after silently replacing the parameters
+with an empty object. Flag parameters now fail on invalid JSON before startup;
+omitted parameters still mean an empty object. Ordinary supported negotiation
+and valid unsupported-extension refusal remain available. This is an input
+interpretation correction, not authority or executed-conformance attestation.
+
 The combined candidate incorporates accepted release `34f837d4` (0.148.10).
 All 105 verification-source inputs were independently remeasured: only the
 root package versions in Cargo.toml and Cargo.lock changed from 0.148.9;
@@ -500,7 +508,7 @@ These declarations select authoring and proof obligations; they do not attest im
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `224611d124f2edf70798aa0c4282ccd863df38a3eedf3b6848f2ab5f2b5f07f5`
+- Repository signal fingerprint: `405c98f589935a6f8e63257932cf0bfce921fce0a51b8910416d230affe9f6e0`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (236 files), `tests/` (235 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

@@ -613,6 +613,14 @@
       "id": "conformance-controller10-projections-871",
       "summary": "Regenerate accepted-release projections through isolated official0.148.10 controller and retain current counterexample",
       "input_digest": "sha256:5e147b98ada976da72567b1258b9f27ddf5220aaa2a256b5b8721f5c12ef5248"
+    },
+    {
+      "id": "attack-gaps-871-malformed-parameters",
+      "summary": "Reject malformed RPC flag parameters before required negotiation semantics can be erased; retain actual negative/legitimate baseline evidence and clean real-project regression.",
+      "input_digest": "sha256:b30cd3fc2550aa9d13be19ff53f2d81d2190a999d157b8aed6f49e7ec92dfbbf",
+      "proof_refs": [
+        "/private/tmp/attack-gaps-rpc-malformed-negotiation-before.json"
+      ]
     }
   ],
   "intents": {
@@ -654,22 +662,22 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Current source retains existing RPC catalog, typed envelope and canonical proof owners; official0.148.10 regeneration aligns release projections without a candidate verifier or new proof authority.",
-          "reviewed_code_fingerprint": "224611d124f2edf70798aa0c4282ccd863df38a3eedf3b6848f2ab5f2b5f07f5",
-          "spec_material_hash": "7cb4917d4fa717f12caadf23ebdecf9d042d50e14a43ed05af52bb880a3f8320"
+          "reason": "Malformed flag parameters must not erase required extensions. Reviewed rejection before startup and legitimate negotiated/refused controls without gate overrides; no new authority or producer trust.",
+          "reviewed_code_fingerprint": "405c98f589935a6f8e63257932cf0bfce921fce0a51b8910416d230affe9f6e0",
+          "spec_material_hash": "9c408b20131fdd615dfa099cfeb1b5aaaa895783013fc67d6cde13f4e142adc2"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Current interface preserves NotRun source coverage, existing response envelopes and native operation gates; controller10 refresh is release metadata, not executed conformance.",
-          "reviewed_code_fingerprint": "224611d124f2edf70798aa0c4282ccd863df38a3eedf3b6848f2ab5f2b5f07f5",
-          "spec_material_hash": "3b629c292e92c2ad14441fd2ee1d5c0247a599fd66b05237b0e5d4f06f26f974"
+          "reason": "Malformed flag parameters must not erase required extensions. Reviewed rejection before startup and legitimate negotiated/refused controls without gate overrides; no new authority or producer trust.",
+          "reviewed_code_fingerprint": "405c98f589935a6f8e63257932cf0bfce921fce0a51b8910416d230affe9f6e0",
+          "spec_material_hash": "d41f8e2b1b468c3c5efceee8e0ea706d149f2e878c9e527d9d9b0a0a8b0a702b"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Existing accepted policy, custody, proof-producer and store boundaries remain enforced; a private official controller update grants no new project privilege.",
-          "reviewed_code_fingerprint": "224611d124f2edf70798aa0c4282ccd863df38a3eedf3b6848f2ab5f2b5f07f5",
+          "reason": "Malformed flag parameters must not erase required extensions. Reviewed rejection before startup and legitimate negotiated/refused controls without gate overrides; no new authority or producer trust.",
+          "reviewed_code_fingerprint": "405c98f589935a6f8e63257932cf0bfce921fce0a51b8910416d230affe9f6e0",
           "spec_material_hash": "cdc863757905c53f4f176284c72744f0575184c65a059b7edf6239b47c4fc644"
         }
       ],
@@ -681,14 +689,14 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1794984214Z"
+      "updated_at": "1794987758Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch",
         "Linked worktree admission and execution-ready verified separately after backup denial; maintenance policy unchanged. No source/PR changes in other owners."
       ],
-      "artifact_hash": "sha256:f515fe67e278e3614f781a256403d9fceda38690eef9e0fa7925cacc824c3d41",
+      "artifact_hash": "sha256:7be7ae3f9224a8043a7841be2048677980dac0686de209c62f9f7a1e3353b712",
       "checks": [
         {
           "name": "baseline_counterexample",
@@ -697,6 +705,14 @@
         {
           "name": "initial_full_validation",
           "status": "failed"
+        },
+        {
+          "name": "malformed-flags-counterexample",
+          "status": "failed"
+        },
+        {
+          "name": "malformed-parameter-regression",
+          "status": "unavailable"
         },
         {
           "name": "previous-buildkite-clippy",
@@ -792,10 +808,24 @@
             "intent_id": "intent:change_01M7NWVMEADM6FS731H2AKEVZM",
             "kind": "trajectory_step_recorded",
             "sequence": 12
+          },
+          {
+            "detail": "trajectory:branch_01M7NWVMHPED3ZZQ4W9D4A0ZJ6",
+            "event_id": "event:13",
+            "intent_id": "intent:change_01M7NWVMEADM6FS731H2AKEVZM",
+            "kind": "trajectory_step_recorded",
+            "sequence": 13
+          },
+          {
+            "detail": "trajectory:branch_01M7NWVMHPED3ZZQ4W9D4A0ZJ6",
+            "event_id": "event:14",
+            "intent_id": "intent:change_01M7NWVMEADM6FS731H2AKEVZM",
+            "kind": "trajectory_step_recorded",
+            "sequence": 14
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 12,
+        "next_sequence": 14,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M7NWVMHPED3ZZQ4W9D4A0ZJ6": {
@@ -957,17 +987,57 @@
                 ],
                 "sequence": 12,
                 "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "command": "Actual official0.148.10: valid unsupported extension refused; trailing-comma flags accepted as empty negotiation; same malformed stdin rejected.",
+                "custody_event_id": "event:13",
+                "observations": [
+                  "src/decapod/lib.rs",
+                  "tests/interop_conformance.rs",
+                  "/private/tmp/attack-gaps-rpc-malformed-negotiation-before.json"
+                ],
+                "proof_refs": [
+                  "malformed-flags-counterexample"
+                ],
+                "scope": [
+                  "src/decapod/core/interop.rs",
+                  "tests/interop_conformance.rs"
+                ],
+                "sequence": 13,
+                "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:14",
+                "observations": [
+                  "src/decapod/lib.rs",
+                  "tests/interop_conformance.rs",
+                  "/private/tmp/attack-gaps-rpc-malformed-negotiation-before.json"
+                ],
+                "proof_refs": [
+                  "malformed-parameter-regression"
+                ],
+                "scope": [
+                  "src/decapod/core/interop.rs",
+                  "tests/interop_conformance.rs"
+                ],
+                "sequence": 14,
+                "validation_findings": []
               }
             ]
           }
         }
       },
-      "declared_commands": [],
+      "declared_commands": [
+        "Actual official0.148.10: valid unsupported extension refused; trailing-comma flags accepted as empty negotiation; same malformed stdin rejected."
+      ],
       "destination": "pull request",
       "evidence": [
         "/private/tmp/attack-gaps-871-before.json; no passing Rust test or repaired-binary execution yet. Official validation owns fresh build and required checks.",
         "/private/tmp/attack-gaps-871-before.json; official binary0.148.9;12 false Verified labels; no executed identity. Snapshot container entry refused POLICY_OPT_IN_DISABLED. Session release cleared custody; re-read and reclaimed existing task without optional claim autorun; rebind before any source mutation.",
         "/private/tmp/attack-gaps-871-validation-1.json; PROOF_PROFILE_RECONCILIATION_REQUIRED before provider tests. Review:/private/tmp/attack-gaps-871-inventory-review.json;105 inputs compared to accepted edbfc00d; only root version0.148.7 to0.148.9 in Cargo.toml/Cargo.lock. Config backup outside Git. No graph, adapter, toolchain, worker, workflow or requiredness change.",
+        "/private/tmp/attack-gaps-rpc-malformed-negotiation-before.json",
         "Accepted target advanced again to34f837d4 through ordinary0.148.10 release; merge preserves real parents and existing checkpoints. Independently hashed all105 inventory inputs in this worktree and matched official agent.init discovery: sha256:e1a242381f7411a8facfe285e2945040dafa93c46dd48c11a86ebd55d9a95b3f. Only Cargo package versions0.148.9 to0.148.10 changed;103 other sources identical. Backed up editable config before reconciliation; no workflow, carrier, required graph, toolchain, controller or policy weakening. Previous context/spec-review failures retained. Refreshed security as well as architecture/interface reviews after current source inspection. cargo fmt used only to format authored source; no local build or shadow proof suite.",
         "Actual Buildkite12110 job01a1ed56-73f9-4bbe-8f6d-99a75057233c and GitHub clippy134622777057 both fail E0425 atlib.rs2795 before tests: error_response was not in run function scope. Correct to core::rpc::error_response, preserving existing envelope constructor. No patched test execution claimed. Separate1660 actual0.148.10 standalone job reports Docker pin9-to10 and manifest evaluating-release/template metadata drift; installed controller remainsofficial0.148.9. Never manually rewrite generated projections or claim old execution for new source.",
         "Actual official0.148.9 RPC intent.reconcile succeeded while interop.manifest omitted it; raw outputs and binary SHA in /private/tmp/attack-gaps-871-drift-before-summary.json. Review found exactly42 current handlers vs39 catalog entries: intent.reconcile, state.resolve, state.diff omitted; no catalog name lacks a handler. Extend existing catalog and enforce registration before RPC routing, deriving name list from metadata to remove one duplicate table. Preserve per-operation session/workspace/mandate guards and no negotiation authority. Existing conformance reports lack tested-binary digest and authenticated custody; do not turn them into executed verification. New candidate supersedes pending e212ad75 proof only after fresh full execution.",
@@ -995,7 +1065,8 @@
         "tests/unit/core/interop_tests.rs"
       ],
       "next_transitions": [
-        "Refine plan and declare falsifiable checks"
+        "Refine plan and declare falsifiable checks",
+        "Reject malformed RPC parameters before project/session startup; execute exact repaired candidate through full native validation."
       ],
       "repo_scope": [
         "src/decapod/core/interop.rs",

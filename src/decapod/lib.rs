@@ -13391,7 +13391,11 @@ fn parse_rpc_request(cli: &RpcCli) -> Result<core::rpc::RpcRequest, error::Decap
         } else {
             cli.params
                 .as_ref()
-                .and_then(|p| serde_json::from_str(p).ok())
+                .map(|params| serde_json::from_str(params))
+                .transpose()
+                .map_err(|e| {
+                    error::DecapodError::ValidationError(format!("Invalid JSON parameters: {e}"))
+                })?
                 .unwrap_or(serde_json::json!({}))
         };
         Ok(RpcRequest {
