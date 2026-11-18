@@ -603,6 +603,11 @@
       "id": "attack-gaps-871-release10-reconciliation",
       "summary": "Integrate accepted0.148.10, review all105 proof inputs and refresh current architecture/interface/security reviews",
       "input_digest": "sha256:83410e26e1d08c7a2ed8661628d212cf7419ad7ff2b37dd0a6e0015d43f54b8c"
+    },
+    {
+      "id": "interop-startup-rpc-envelope-871",
+      "summary": "Use the existing qualified RPC refusal constructor after actual CI compile failure",
+      "input_digest": "sha256:e3186f8880387635b5a222c93f6cb8259746f17389440dfff7ed365e1dbd53e1"
     }
   ],
   "intents": {
@@ -644,22 +649,22 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Reviewed current implementation and accepted0.148.10 merge; preserve existing validation, custody and proof owners and material task-specific architecture.",
-          "reviewed_code_fingerprint": "42e5378321dc5afcb90b64a7790fe850c8a4503bee7c481061be5c432f83a077",
-          "spec_material_hash": "d283bcd7bb456c0bd3d344e1a16d24c4587cad261a9629239f5fd548ac544097"
+          "reason": "The public startup function calls the qualified existing RPC error constructor before project startup; source changes are limited to the namespace correction, with the registered-operation authority paths preserved.",
+          "reviewed_code_fingerprint": "224611d124f2edf70798aa0c4282ccd863df38a3eedf3b6848f2ab5f2b5f07f5",
+          "spec_material_hash": "7cb4917d4fa717f12caadf23ebdecf9d042d50e14a43ed05af52bb880a3f8320"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Reviewed current interface prose against final code and accepted0.148.10; preserve registered operation authority and declaration-versus-observed-proof distinction.",
-          "reviewed_code_fingerprint": "42e5378321dc5afcb90b64a7790fe850c8a4503bee7c481061be5c432f83a077",
+          "reason": "Same existing unknown_op wire envelope; current source namespace correction does not alter discovery or registered operation authority.",
+          "reviewed_code_fingerprint": "224611d124f2edf70798aa0c4282ccd863df38a3eedf3b6848f2ab5f2b5f07f5",
           "spec_material_hash": "3b629c292e92c2ad14441fd2ee1d5c0247a599fd66b05237b0e5d4f06f26f974"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Accepted1779 parser, privilege custody, maintenance policy and no-raw-store security boundaries are preserved. Current task changes add no privilege or proof authority; existing security prose remains applicable to these exact bytes.",
-          "reviewed_code_fingerprint": "42e5378321dc5afcb90b64a7790fe850c8a4503bee7c481061be5c432f83a077",
+          "reason": "Qualified call to existing error constructor adds no privilege or producer authority; preserve all accepted security restrictions.",
+          "reviewed_code_fingerprint": "224611d124f2edf70798aa0c4282ccd863df38a3eedf3b6848f2ab5f2b5f07f5",
           "spec_material_hash": "cdc863757905c53f4f176284c72744f0575184c65a059b7edf6239b47c4fc644"
         }
       ],
@@ -671,14 +676,14 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1794982984Z"
+      "updated_at": "1794983667Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch",
         "Linked worktree admission and execution-ready verified separately after backup denial; maintenance policy unchanged. No source/PR changes in other owners."
       ],
-      "artifact_hash": "sha256:63cd5516aee6d23d3e61fbcd887aed2f22acf8802d97cec7f4ac30af457d3f2f",
+      "artifact_hash": "sha256:14580dbcca130094cc81a6a916d3d67ea5afeacf573d2eebf3b68e3abb5ce49b",
       "checks": [
         {
           "name": "baseline_counterexample",
@@ -694,6 +699,10 @@
         },
         {
           "name": "previous-buildkite-core",
+          "status": "failed"
+        },
+        {
+          "name": "release10-source-compile",
           "status": "failed"
         },
         {
@@ -764,10 +773,17 @@
             "intent_id": "intent:change_01M7NWVMEADM6FS731H2AKEVZM",
             "kind": "trajectory_step_recorded",
             "sequence": 10
+          },
+          {
+            "detail": "trajectory:branch_01M7NWVMHPED3ZZQ4W9D4A0ZJ6",
+            "event_id": "event:11",
+            "intent_id": "intent:change_01M7NWVMEADM6FS731H2AKEVZM",
+            "kind": "trajectory_step_recorded",
+            "sequence": 11
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 10,
+        "next_sequence": 11,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M7NWVMHPED3ZZQ4W9D4A0ZJ6": {
@@ -899,6 +915,22 @@
                 ],
                 "sequence": 10,
                 "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:11",
+                "observations": [
+                  "Actual Buildkite12110 job01a1ed56-73f9-4bbe-8f6d-99a75057233c and GitHub clippy134622777057 both fail E0425 atlib.rs2795 before tests: error_response was not in run function scope. Correct to core::rpc::error_response, preserving existing envelope constructor. No patched test execution claimed. Separate1660 actual0.148.10 standalone job reports Docker pin9-to10 and manifest evaluating-release/template metadata drift; installed controller remainsofficial0.148.9. Never manually rewrite generated projections or claim old execution for new source."
+                ],
+                "proof_refs": [
+                  "release10-source-compile"
+                ],
+                "scope": [
+                  "src/decapod/core/interop.rs",
+                  "tests/interop_conformance.rs"
+                ],
+                "sequence": 11,
+                "validation_findings": []
               }
             ]
           }
@@ -911,6 +943,7 @@
         "/private/tmp/attack-gaps-871-before.json; official binary0.148.9;12 false Verified labels; no executed identity. Snapshot container entry refused POLICY_OPT_IN_DISABLED. Session release cleared custody; re-read and reclaimed existing task without optional claim autorun; rebind before any source mutation.",
         "/private/tmp/attack-gaps-871-validation-1.json; PROOF_PROFILE_RECONCILIATION_REQUIRED before provider tests. Review:/private/tmp/attack-gaps-871-inventory-review.json;105 inputs compared to accepted edbfc00d; only root version0.148.7 to0.148.9 in Cargo.toml/Cargo.lock. Config backup outside Git. No graph, adapter, toolchain, worker, workflow or requiredness change.",
         "Accepted target advanced again to34f837d4 through ordinary0.148.10 release; merge preserves real parents and existing checkpoints. Independently hashed all105 inventory inputs in this worktree and matched official agent.init discovery: sha256:e1a242381f7411a8facfe285e2945040dafa93c46dd48c11a86ebd55d9a95b3f. Only Cargo package versions0.148.9 to0.148.10 changed;103 other sources identical. Backed up editable config before reconciliation; no workflow, carrier, required graph, toolchain, controller or policy weakening. Previous context/spec-review failures retained. Refreshed security as well as architecture/interface reviews after current source inspection. cargo fmt used only to format authored source; no local build or shadow proof suite.",
+        "Actual Buildkite12110 job01a1ed56-73f9-4bbe-8f6d-99a75057233c and GitHub clippy134622777057 both fail E0425 atlib.rs2795 before tests: error_response was not in run function scope. Correct to core::rpc::error_response, preserving existing envelope constructor. No patched test execution claimed. Separate1660 actual0.148.10 standalone job reports Docker pin9-to10 and manifest evaluating-release/template metadata drift; installed controller remainsofficial0.148.9. Never manually rewrite generated projections or claim old execution for new source.",
         "Actual official0.148.9 RPC intent.reconcile succeeded while interop.manifest omitted it; raw outputs and binary SHA in /private/tmp/attack-gaps-871-drift-before-summary.json. Review found exactly42 current handlers vs39 catalog entries: intent.reconcile, state.resolve, state.diff omitted; no catalog name lacks a handler. Extend existing catalog and enforce registration before RPC routing, deriving name list from metadata to remove one duplicate table. Preserve per-operation session/workspace/mandate guards and no negotiation authority. Existing conformance reports lack tested-binary digest and authenticated custody; do not turn them into executed verification. New candidate supersedes pending e212ad75 proof only after fresh full execution.",
         "Counterexample /private/tmp/attack-gaps-871-drift-before-summary.json: official binary dispatch success for unadvertised intent.reconcile. Empty-Git unknown-op baseline returned missing .decapod instead of typed refusal, creating no files; initial non-Git temp fixture reached an unrelated ancestor storage probe and is not used as product denial evidence. Add42-name single-declaration registration,3 missing entries, actual discovery assertions and isolated no-startup unknown-op regression. No patched-binary execution yet; all authenticated receipt-production and remaining authority/consumer obligations remain open.",
         "Old candidate ddcefa86/base6ab6de31 retains Buildkite11973 clippy plugin-clone failure before execution and core validation smoke timeout; interop_conformance passed310.3s. Accepted master independently advanced to c47137ad via1779; reconcile real accepted changes in a two-parent merge and require fresh full exact-candidate proof. Keep active original governance and checkpoints through Git merge resolution; accepted historical governance remains in second parent. New merge is necessary source/base integration, not a synthetic CI trigger or proof relabel. All broader871 receipt-production/drift/consumer acceptance stays open."

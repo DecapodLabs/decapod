@@ -2,13 +2,14 @@
 
 ## Source coverage and execution observations (#871)
 
-`interop::rpc_catalog` emits the operation-name slice and manifest metadata from
-the same declarations. `lib.rs` checks that slice before specialized schema or
-database routing and normal RPC startup. The existing handler and authority
-paths remain responsible for execution; this is an enforced registration
-boundary, not another dispatcher or policy evaluator. Actual black-box controls
-cover the formerly omitted reconciliation capability and unknown-operation
-refusal in a fresh Git fixture without creating project/session state.
+`interop::rpc_catalog` emits registered names and manifest metadata from the
+same declarations. The public `lib.rs::run` entrypoint builds unknown-name
+refusals with `core::rpc::error_response` before resolving project state, opening
+sessions or entering specialized schema/database routing. Registered operations
+continue through their existing handlers and authority gates. Black-box controls
+cover the formerly omitted reconciliation capability and confirm that unknown
+names return the typed envelope in a fresh Git fixture without project/session
+initialization.
 
 `src/decapod/core/interop.rs` describes implemented operations and known test
 locations without executing tests during discovery. Static coverage tables
@@ -1007,7 +1008,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `42e5378321dc5afcb90b64a7790fe850c8a4503bee7c481061be5c432f83a077`
+- Repository signal fingerprint: `224611d124f2edf70798aa0c4282ccd863df38a3eedf3b6848f2ab5f2b5f07f5`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (236 files), `tests/` (235 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

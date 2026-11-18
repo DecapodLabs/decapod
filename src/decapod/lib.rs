@@ -2792,7 +2792,7 @@ pub fn run() -> Result<(), error::DecapodError> {
     {
         // A handler cannot become a callable, undiscoverable operation. This
         // registration check grants no session, custody or policy authority.
-        let response = error_response(
+        let response = core::rpc::error_response(
             request.id.clone(),
             request.op.clone(),
             request.params.clone(),
