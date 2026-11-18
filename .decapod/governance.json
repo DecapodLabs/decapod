@@ -586,6 +586,14 @@
         "tests/datastore_contract.rs",
         "tests/datastore_relational_compaction.rs"
       ]
+    },
+    {
+      "id": "cp-1739-2",
+      "summary": "Reconcile reviewed_sources_digest in .decapod/config.toml to v0.148.13 (c5bafce6) inventory_digest sha256:f2c1d189ee0c96f6afb66185229233bd0436015d0ddd21dc56deb4f58709b2b2",
+      "input_digest": "sha256:6c7bfb9c3ca8a7581db7e8da77d8b3d7853aff7e19ce537a34a6ff3d2df4dca7",
+      "proof_refs": [
+        ".decapod/config.toml"
+      ]
     }
   ],
   "intents": {
