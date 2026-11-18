@@ -608,6 +608,11 @@
       "id": "attack-gaps-1660-release10-reconciliation",
       "summary": "Integrate accepted0.148.10, review all105 proof inputs and refresh current architecture/interface/security reviews",
       "input_digest": "sha256:7a0c232ad2e4528c08cba0d7dea48df535e10a0c678dec4907424c804d3ea883"
+    },
+    {
+      "id": "workunit-controller10-projections-1660",
+      "summary": "Regenerate release10 metadata through official isolated controller and retain canonical workunit proof requirements",
+      "input_digest": "sha256:3983ecd797499c5a9f730a0d6728f2dbe5937ff009a4a044c96791f127d50d1f"
     }
   ],
   "intents": {
@@ -648,21 +653,21 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Reviewed current implementation and accepted0.148.10 merge; preserve existing validation, custody and proof owners and material task-specific architecture.",
+          "reason": "Current genuine capsule, runtime proof and canonical workunit append architecture is preserved; matching official0.148.10 controller regenerates release metadata without changing the proof owner.",
           "reviewed_code_fingerprint": "287dcb5d62f31d02dba09fb7a788ec1bbb01ecd4ee72a2bb301fa7796c105ea9",
           "spec_material_hash": "d233cbb406c4dd580d2dd1b1767c42bedb43bd18f90f19b4a153c4ab2d56c85c"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Reviewed current interface prose against final code and accepted0.148.10; preserve registered operation authority and declaration-versus-observed-proof distinction.",
+          "reason": "Retain diagnostic declarations, current full-validation requirement and genuine capsule lineage; projection refresh cannot certify execution or promote proof.",
           "reviewed_code_fingerprint": "287dcb5d62f31d02dba09fb7a788ec1bbb01ecd4ee72a2bb301fa7796c105ea9",
           "spec_material_hash": "6f1496bae0bede67763604fe3cadbf147971570eeadd1c3a9fc3e7936eed72f5"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Accepted1779 parser, privilege custody, maintenance policy and no-raw-store security boundaries are preserved. Current task changes add no privilege or proof authority; existing security prose remains applicable to these exact bytes.",
+          "reason": "Current source retains accepted canonical policy and atomic proof custody; private official session update does not modify these privilege or trust boundaries.",
           "reviewed_code_fingerprint": "287dcb5d62f31d02dba09fb7a788ec1bbb01ecd4ee72a2bb301fa7796c105ea9",
           "spec_material_hash": "cdc863757905c53f4f176284c72744f0575184c65a059b7edf6239b47c4fc644"
         }
@@ -675,14 +680,14 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1794982983Z"
+      "updated_at": "1794984324Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch",
         "No gate-skip variables; authentic original task and canonical shared runtime; no fabricated execution evidence or status rewrite."
       ],
-      "artifact_hash": "sha256:0f8f5a3fe0ac9737cc9218f870691a5bb1da687f73ccef8dc168199583d3b8cd",
+      "artifact_hash": "sha256:41235e570e467a4cfd0b4646db6ac7c282715cebd0c3a5df6096cfad858f3dda",
       "checks": [
         {
           "name": "counterfeit_hash_declared_pass",
@@ -765,10 +770,17 @@
             "intent_id": "intent:change_01M7P04Q5RZB944BR5SYSDARTZ",
             "kind": "trajectory_step_recorded",
             "sequence": 9
+          },
+          {
+            "detail": "trajectory:branch_01M7P04Q8GWB2CF2GZZZEJR5K4",
+            "event_id": "event:10",
+            "intent_id": "intent:change_01M7P04Q5RZB944BR5SYSDARTZ",
+            "kind": "trajectory_step_recorded",
+            "sequence": 10
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 9,
+        "next_sequence": 10,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M7P04Q8GWB2CF2GZZZEJR5K4": {
@@ -873,6 +885,19 @@
                 ],
                 "sequence": 9,
                 "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:10",
+                "observations": [
+                  "Official0.148.10 was installed by the required session-acquire updater into private CARGO_HOME; temporary update opt-in was restored byte-for-byte from backup. The shared executable hash did not change. Controller digest a0f69315a950a17a8acf82898c1a8cab6fed71859295ad8cfb9852cc35363304, embedded docs ingested and updated config/branch-safe policy contract read. Native workspace ensure/specs.refresh regenerated Docker release10 and manifest/template metadata after actual12115 standalone drift; no generated state edited by hand. Native migration notices explicitly reported no applied migrations. All3 current spec reviews refreshed. Complete source execution and current VERIFIED positive control remain pending; no old proof adopted."
+                ],
+                "proof_refs": [],
+                "scope": [
+                  "issue-1660"
+                ],
+                "sequence": 10,
+                "validation_findings": []
               }
             ]
           }
@@ -886,6 +911,7 @@
         "Accepted target advanced again to34f837d4 through ordinary0.148.10 release; merge preserves real parents and existing checkpoints. Independently hashed all105 inventory inputs in this worktree and matched official agent.init discovery: sha256:e1a242381f7411a8facfe285e2945040dafa93c46dd48c11a86ebd55d9a95b3f. Only Cargo package versions0.148.9 to0.148.10 changed;103 other sources identical. Backed up editable config before reconciliation; no workflow, carrier, required graph, toolchain, controller or policy weakening. Previous context/spec-review failures retained. Refreshed security as well as architecture/interface reviews after current source inspection. cargo fmt used only to format authored source; no local build or shadow proof suite.",
         "Correction to provisional cycle hypothesis: source evaluate_workunit_rule explicitly accepts CLAIMED plus opaque complete runtime proof before canonical append. Actual workunit has no capsule state_ref, violating verify_capsule_policy_lineage_for_task. Resolve genuine capsule dependency via existing query/attach-state and checkpoint; do not relax validation or treat diagnostic fail as test failure.",
         "Independently remeasured all105 source-inventory inputs; byte-identical to reviewed #871 inputs; only accepted package-version0.148.7 to0.148.9 differs from edbfc00d. No check, executor, helper, workflow or toolchain change.",
+        "Official0.148.10 was installed by the required session-acquire updater into private CARGO_HOME; temporary update opt-in was restored byte-for-byte from backup. The shared executable hash did not change. Controller digest a0f69315a950a17a8acf82898c1a8cab6fed71859295ad8cfb9852cc35363304, embedded docs ingested and updated config/branch-safe policy contract read. Native workspace ensure/specs.refresh regenerated Docker release10 and manifest/template metadata after actual12115 standalone drift; no generated state edited by hand. Native migration notices explicitly reported no applied migrations. All3 current spec reviews refreshed. Complete source execution and current VERIFIED positive control remain pending; no old proof adopted.",
         "Official0.148.9 validation-3 reached authenticated provider collection and refused terminal workunit completion; missing capsule state_ref independently confirmed in workunit get. Existing evaluate_workunit_rule already accepts opaque current complete proof from CLAIMED. Genuine query/attach-state/checkpoint recovered the required capsule. Extend actual CLI regression to prepare capsule before counterfeit proof; new revision not yet executed. No validator, policy or proof-plan weakening.",
         "Validation4 at a20e15e7 rejected accepted base or transport ref changed; independent remote readback showed master c47137adae825aeaaede4473f91ec21c6bd4b853 after accepted1779. Reviewed two-parent merge includes accepted code/tests and preserves authored1660 regression. Preserved exact active governance from first parent through Git conflict resolution rather than combine unrelated trajectories; current checkpoint generated natively before merge commit. Source specs retain accepted parser/RBAC meaning and scope historical1779 draft exception only to that prior workstream. No readiness inherited."
       ],
