@@ -607,6 +607,11 @@
       "id": "accepted-policy-target-integration",
       "summary": "Preserve accepted policy-boundary implementation and observer source, checkpoint the exact integration merge before commit and invalidate prior target applicability",
       "input_digest": "sha256:a655e7a7d6d4f5094a90243bdfa8f34a65479019de030f4ac03f0348f67f9557"
+    },
+    {
+      "id": "accepted-release-target-integration",
+      "summary": "Checkpoint exact release-target integration after genuine target-ancestry rejection; retain all required checks and observer source",
+      "input_digest": "sha256:ae2f3e34937c7001d515d3568ac57acfad5499548975aa0fbb2a7878363ebcb8"
     }
   ],
   "intents": {
@@ -647,22 +652,22 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Preserve newly accepted c47137ad configuration repair, explicit operator policy and first-adoption recovery boundaries alongside the unchanged read-only acceptance observer; current source reviewed after target advancement",
-          "reviewed_code_fingerprint": "315095ce32d28c036a44caeb4bc219cc0e720ccbb1037f9b048ab586d8d3e36f",
+          "reason": "Only accepted release metadata Cargo.toml/Cargo.lock/CHANGELOG changed at34f837d4; preserve observer and policy implementations, native repo-scoped entrypoint drift opt-out already accepted; fresh exact-target validation required",
+          "reviewed_code_fingerprint": "563a3642c49fc8216ef13356f82fcb9df3898ba240963d28799735861fc2ed6b",
           "spec_material_hash": "ff25bc69c21d3dc98b8d66dc5bae62f1c01d8bd9e3e4dd82d3689991a9930d59"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Preserve newly accepted c47137ad configuration repair, explicit operator policy and first-adoption recovery boundaries alongside the unchanged read-only acceptance observer; current source reviewed after target advancement",
-          "reviewed_code_fingerprint": "315095ce32d28c036a44caeb4bc219cc0e720ccbb1037f9b048ab586d8d3e36f",
+          "reason": "Only accepted release metadata Cargo.toml/Cargo.lock/CHANGELOG changed at34f837d4; preserve observer and policy implementations, native repo-scoped entrypoint drift opt-out already accepted; fresh exact-target validation required",
+          "reviewed_code_fingerprint": "563a3642c49fc8216ef13356f82fcb9df3898ba240963d28799735861fc2ed6b",
           "spec_material_hash": "666f7aabd9b0d0f529f03a2a5ecbbcad4f8dc10be0bd9de5e49bcca6bd945f31"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Preserve newly accepted c47137ad configuration repair, explicit operator policy and first-adoption recovery boundaries alongside the unchanged read-only acceptance observer; current source reviewed after target advancement",
-          "reviewed_code_fingerprint": "315095ce32d28c036a44caeb4bc219cc0e720ccbb1037f9b048ab586d8d3e36f",
+          "reason": "Only accepted release metadata Cargo.toml/Cargo.lock/CHANGELOG changed at34f837d4; preserve observer and policy implementations, native repo-scoped entrypoint drift opt-out already accepted; fresh exact-target validation required",
+          "reviewed_code_fingerprint": "563a3642c49fc8216ef13356f82fcb9df3898ba240963d28799735861fc2ed6b",
           "spec_material_hash": "e4f5f7980dc0644082f18f5ed99f3829acf1179c4b3e556b13cfd7390ab5cd20"
         }
       ],
@@ -674,14 +679,18 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1794982048Z"
+      "updated_at": "1794983173Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:3943fcf49170186b6cbbcb56df108e4825e450367a275c577ad8faaeaf041be1",
+      "artifact_hash": "sha256:5019ec513b64fec2e9fab2c12a554a7a55437111c7e78399e0d5b5b2743e20c6",
       "checks": [
+        {
+          "name": "accepted-target-ancestry",
+          "status": "failed"
+        },
         {
           "name": "actual-pi-capture",
           "status": "passed"
@@ -723,10 +732,17 @@
             "intent_id": "intent:change_01M7P3W97HA4M2MRGMQ0TYNRBB",
             "kind": "trajectory_step_recorded",
             "sequence": 5
+          },
+          {
+            "detail": "trajectory:branch_01M7P3W9AX80HN9XVHYSAD8B7C",
+            "event_id": "event:6",
+            "intent_id": "intent:change_01M7P3W97HA4M2MRGMQ0TYNRBB",
+            "kind": "trajectory_step_recorded",
+            "sequence": 6
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 5,
+        "next_sequence": 6,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M7P3W9AX80HN9XVHYSAD8B7C": {
@@ -764,6 +780,21 @@
                 ],
                 "sequence": 5,
                 "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:6",
+                "observations": [
+                  "Validation09 failed closed in actual docs-sync CI context after master advanced to34f837d4 release0.148.10. Raw failed job12092 preserved. Only the accepted release metadata is merged here without auto-commit; no observer, check or policy is weakened. Exact merge checkpoint precedes commit and full validation must rerun."
+                ],
+                "proof_refs": [
+                  "accepted-target-ancestry"
+                ],
+                "scope": [
+                  "root"
+                ],
+                "sequence": 6,
+                "validation_findings": []
               }
             ]
           }
@@ -773,7 +804,8 @@
       "destination": "pull request",
       "evidence": [
         "Master advanced from6ab6de31 to c47137ad after native PR1784 admission. That admission remains historical, with no merge authorization. PR moved to draft; accepted policy-boundary changes merged without auto-commit, source/spec conflicts resolved preserving both responsibilities, and this exact integration tree will be checkpointed before commit. Fresh complete native validation is required.",
-        "Preserved dad525d4 failed history including uncheckpointed integration c31d039f; native present-time recovery observation recorded. Reauthored five implementation files byte-for-byte; retained fresh identity. Real Pi archive3c6c373 and publication receipt remain historical observations, never imported readiness. Original source-CI deadline expired with SNAPSHOT_NOT_READY; fresh source requires complete validation."
+        "Preserved dad525d4 failed history including uncheckpointed integration c31d039f; native present-time recovery observation recorded. Reauthored five implementation files byte-for-byte; retained fresh identity. Real Pi archive3c6c373 and publication receipt remain historical observations, never imported readiness. Original source-CI deadline expired with SNAPSHOT_NOT_READY; fresh source requires complete validation.",
+        "Validation09 failed closed in actual docs-sync CI context after master advanced to34f837d4 release0.148.10. Raw failed job12092 preserved. Only the accepted release metadata is merged here without auto-commit; no observer, check or policy is weakened. Exact merge checkpoint precedes commit and full validation must rerun."
       ],
       "inspected_files": [],
       "intent_id": "intent:change_01M7P3W97HA4M2MRGMQ0TYNRBB",
