@@ -112,6 +112,42 @@ publication markers remain. CLI stderr is a diagnostic, not an RPC wire schema.
 Approval state and timestamps cannot change blocker identity. This projection
 does not authenticate the author of an instruction or establish human consent.
 
+## Conformance evidence boundary (#871)
+
+The existing broker responsiveness assertion retains its ten-second limit for
+the competing operation while optional preparation is blocked. Claim completion
+after the explicit release is separately bounded and must still succeed; its
+cleanup duration is not part of that competing-operation measurement.
+
+`context.bundle.export`, `context.bundle.import`, `mentor.obligations` and
+`assurance.evaluate` advertise `session_required=true`, matching existing
+entry enforcement. This includes automatic acquisition; compatibility metadata
+does not issue a session. Bounded `data.database.inspect` remains session-free.
+
+Malformed `rpc --op ... --params ...` JSON returns nonzero with
+`Invalid JSON parameters`, before project/session startup; it is never converted
+to an empty compatibility request. Omitted parameters and explicit empty objects
+retain their existing meaning. Valid requests requiring an unsupported extension
+retain the `negotiation_refused` envelope; successful compatibility discovery
+still grants no mutation, completion or publication permission.
+
+The v1 manifest adds the existing reconciliation and state-read operations.
+Reconciliation remains advisory and session-free. In this integrated workstream,
+state reads are cold, read-only projections and advertise session_required=false,
+matching their startup bypass; they grant no authoring custody or publication. Unknown RPC names now receive the existing
+`unknown_op` envelope before startup, including in an uninitialized Git project.
+Both stdin RPC and the HTTP adapter use that same local entry boundary. No
+negotiation result or catalog entry supplies mutation permission.
+
+`interop.manifest` retains its v1 wire shape and source coverage references.
+`evidence.conformance_test` and `evidence.evidence_ref` identify source tests;
+they do not attest execution, transport, binary identity or current applicability.
+Built-in evidence is `not_run`. The Rust manifest validator refuses authored
+`verified`/`failed` with `unobserved_conformance`, including known tests and
+plausible references. Historical JSON remains deserializable without gaining
+current assurance. No new execution producer, receipt import or authorization
+path is introduced; actual observed conformance remains an unresolved contract.
+
 ## Internal source currency agreement (#1753)
 
 The existing private config-only source policy now also governs version-only
@@ -1330,7 +1366,7 @@ field. Nothing in this operation authorizes a mutation, approval or completion.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `b3ab0860271f59e3bd8b813a35975cd9df65e64e146793c67939b9ef37cc6c75`
+- Repository signal fingerprint: `f2418e136073b6d88b968de8d7ec9f9466cd91e962ea950134729c1778fb61c9`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (240 files), `tests/` (235 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

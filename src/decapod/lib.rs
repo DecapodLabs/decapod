@@ -2794,6 +2794,26 @@ pub fn run() -> Result<(), error::DecapodError> {
         _ => None,
     };
     if let Some(request) = predecoded_rpc_request.as_ref()
+        && !core::interop::RPC_OPS.contains(&request.op.as_str())
+    {
+        // A handler cannot become a callable, undiscoverable operation. This
+        // registration check grants no session, custody or policy authority.
+        let response = core::rpc::error_response(
+            request.id.clone(),
+            request.op.clone(),
+            request.params.clone(),
+            "unknown_op".to_string(),
+            format!("Unknown operation: {}", request.op),
+            None,
+            vec![],
+        );
+        println!(
+            "{}",
+            serde_json::to_string_pretty(&response).map_err(io::Error::other)?
+        );
+        return rpc_validation_exit_status(&request.op, response.success);
+    }
+    if let Some(request) = predecoded_rpc_request.as_ref()
         && request.op == "schema.get"
     {
         // Pure embedded reference: no config, session, migrations, mandate
@@ -3847,6 +3867,26 @@ fn requires_session_token(command: &Command) -> bool {
             }
         }
         _ => true,
+    }
+}
+
+#[cfg(test)]
+#[test]
+fn advertised_rpc_sessions_match_the_actual_entry_guards() {
+    for capability in core::interop::builtin_manifest().capabilities {
+        if capability.surface != "rpc" {
+            continue;
+        }
+        let mapping = capability.implementation.expect("RPC implementation");
+        // Inspection returns before generic startup and has its own bounded,
+        // read-only route. Maintenance operations enforce their own session.
+        let required =
+            mapping.op != "data.database.inspect" && !rpc_op_bypasses_session(&mapping.op);
+        assert_eq!(
+            mapping.session_required, required,
+            "session descriptor differs from entry enforcement for {}",
+            mapping.op
+        );
     }
 }
 
@@ -13525,7 +13565,11 @@ fn parse_rpc_request(cli: &RpcCli) -> Result<core::rpc::RpcRequest, error::Decap
         } else {
             cli.params
                 .as_ref()
-                .and_then(|p| serde_json::from_str(p).ok())
+                .map(|params| serde_json::from_str(params))
+                .transpose()
+                .map_err(|e| {
+                    error::DecapodError::ValidationError(format!("Invalid JSON parameters: {e}"))
+                })?
                 .unwrap_or(serde_json::json!({}))
         };
         Ok(RpcRequest {

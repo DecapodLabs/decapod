@@ -652,6 +652,11 @@
       "id": "preserve-history-disposition-and-current-proof-obligations",
       "summary": "Separately dispose archived present-time history observation after authentic source8ac775e0 checkpoint. Original1d5b9e59 history remains not_proven and preserved; no exception/retroactive proof. This exact new workstream still requires complete native validation and current acceptance; native first-commit history verifier passed only its narrow checkpoint scope.",
       "input_digest": "sha256:796bea89e7490af2b363e2ad96712e520e70aebec8de45ebda388b7bc35b653d"
+    },
+    {
+      "id": "contracts-integrate-accepted-352d",
+      "summary": "Integrate accepted interop conformance and v0.148.11; preserve complete active journal and accepted parent, align cold state descriptors with actual guards, retain required proof graph and reviewed release-only source inventory. Historical a62 proof grants no current admission.",
+      "input_digest": "sha256:5229df747996acfb9fd58cdb6e6f303d9aa6e557280becaa1b3d1477a50244ed"
     }
   ],
   "intents": {
@@ -700,22 +705,22 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Archive present history observation before separate current-workflow disposition; old proof remains unproven, fresh source retains all required behavioral, policy, custody and complete CI obligations",
-          "reviewed_code_fingerprint": "b3ab0860271f59e3bd8b813a35975cd9df65e64e146793c67939b9ef37cc6c75",
-          "spec_material_hash": "68902808d64fc0f419f2489074024da71e72bc9a8da546995d7c0520d90d76e5"
+          "reason": "Reviewed accepted 352d integration with recorded instruction, selected-root, observation and source-policy owners preserved; truthful interop descriptors match cold state readers.",
+          "reviewed_code_fingerprint": "f2418e136073b6d88b968de8d7ec9f9466cd91e962ea950134729c1778fb61c9",
+          "spec_material_hash": "6781493c0895d0e3e24ade5e92650a0779eccff06512bc21b68a4bc599875b19"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Archive present history observation before separate current-workflow disposition; old proof remains unproven, fresh source retains all required behavioral, policy, custody and complete CI obligations",
-          "reviewed_code_fingerprint": "b3ab0860271f59e3bd8b813a35975cd9df65e64e146793c67939b9ef37cc6c75",
-          "spec_material_hash": "bdd74b3fa4e4e791114d721dfba217bfbfb15f1d21ae0c832042eea2e0a3e16e"
+          "reason": "Reviewed accepted interop discovery and strict JSON parser with cold read-only state session descriptors, existing selected-work and observation wire boundaries, and explicit unsupported authority limits.",
+          "reviewed_code_fingerprint": "f2418e136073b6d88b968de8d7ec9f9466cd91e962ea950134729c1778fb61c9",
+          "spec_material_hash": "9d4646921ff1054fea83ce18e24015a403067a42b59071fb8b6a77fe7e8e0974"
         },
         {
-          "disposition": "updated",
+          "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Archive present history observation before separate current-workflow disposition; old proof remains unproven, fresh source retains all required behavioral, policy, custody and complete CI obligations",
-          "reviewed_code_fingerprint": "b3ab0860271f59e3bd8b813a35975cd9df65e64e146793c67939b9ef37cc6c75",
+          "reason": "Accepted interop changes grant no execution or publication authority. Cold state reads retain no migration or authoring mutation. Existing recorded provenance, accepted-policy, opaque observation and custody boundaries remain enforced; no secret or runtime state is committed.",
+          "reviewed_code_fingerprint": "f2418e136073b6d88b968de8d7ec9f9466cd91e962ea950134729c1778fb61c9",
           "spec_material_hash": "0f80a7bae9c396f6ef79bcb1674252d853c5fe192cb7baba382a05919875407b"
         }
       ],
@@ -727,7 +732,7 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1794986408Z"
+      "updated_at": "1794999548Z"
     },
     "trajectory": {
       "active_boundaries": [

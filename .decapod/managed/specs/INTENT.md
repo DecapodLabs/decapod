@@ -1,5 +1,23 @@
 # Intent
 
+## Accepted target integration (0.148.11)
+
+The combined candidate incorporates accepted target 352d8929, including truthful
+interop discovery, strict malformed RPC parameter rejection and the 0.148.11
+release metadata. Static conformance labels remain not_run. The state.resolve
+and state.diff catalog entries match this workstream's existing cold-reader
+startup bypass and cannot confer mutation authority. Complete active governance
+history is retained; the accepted journal remains in the merge parent. Earlier
+a62d6eb5 proof against 34f837d4 is historical after this target change and cannot
+establish current publication readiness. Required validation must measure the
+new exact source and independently captured accepted target.
+The native discovery owner reports inventory 2acf1af7 across 105 sources.
+Independent comparison with the previously reviewed candidate found only the
+root package version changes in Cargo.toml and Cargo.lock, 0.148.10 to 0.148.11.
+All other 103 build, workflow, toolchain and helper inputs are unchanged; the
+required graph and command coverage remain intact. The explicitly reviewed
+source digest acknowledges those release bytes and is not execution evidence.
+
 ## Preserve recorded authority and prove current combined work (#1761–#1770)
 
 This continuation preserves draft PR1766 and its source ancestry while completing
@@ -18,6 +36,81 @@ suite. No new grant service, transcript database or universal shell interceptor
 is introduced. Full required validation and independently reviewable negative,
 repair and current-subject evidence must precede any issue closure. The user did
 not authorize merging, force pushes, protected-main changes or gate waivers.
+
+First adoption on a verified accepted Git tree that predates repository policy
+uses the compiled global approval defaults for ordinary operations. The resolver
+confirms absence in that exact accepted tree, never an older ref or candidate
+fallback. Candidate RBAC, shared-claim and maintenance grants remain denied.
+Failure to read or verify accepted policy remains an error. Test fixtures must
+establish their accepted baseline before executing candidate-branch operations.
+
+PR #1779 previously used an explicit user exception for draft creation before
+full validation on 2026-11-17. That historical exception does not authorize
+another workstream, establish current admission or grant merge authority.
+
+Agents must be able to discover the embedded configuration contract even when
+their proposal is malformed, repair it in governed isolation, and resume
+ordinary work. They cannot use schema validity, a repinned candidate policy,
+or a changed base selector to acquire new exceptional authority. This change
+reuses existing parser, branch-safe maintenance policy and publication owners.
+It preserves accepted-policy rotation and revocation without repetitive human
+confirmation. Real-host activation (#880), unified diagnostic (#1071), and
+real-forge current admission (#1763) remain separate executable acceptance
+obligations; parser/RBAC regression results cannot stand in for those results.
+
+The proof-source inventory is reconciled against its last reviewed source
+`edbfc00d`: only the package version in `Cargo.toml` and `Cargo.lock` advanced
+from 0.148.7 to 0.148.9. The candidate preserves every workflow, command,
+coverage obligation and configured execution provider while acknowledging
+those release metadata bytes. Reconciliation does not establish test success.
+
+## Truthful conformance discovery (#871, #1735)
+
+Compatibility discovery must preserve required semantics at the parser boundary.
+Discovery also reports the existing session requirements for context bundle
+export/import, mentor obligations and assurance evaluation. Automatic session
+acquisition does not make an operation session-free. Every RPC descriptor is
+checked against the existing entry guards; read-only database inspection retains
+its earlier bounded session-free route. No enforcement permission is changed.
+
+The official 0.148.10 counterexample refused a valid unsupported extension but
+accepted its trailing-comma flag form after silently replacing the parameters
+with an empty object. Flag parameters now fail on invalid JSON before startup;
+omitted parameters still mean an empty object. Ordinary supported negotiation
+and valid unsupported-extension refusal remain available. This is an input
+interpretation correction, not authority or executed-conformance attestation.
+
+The combined candidate incorporates accepted release `34f837d4` (0.148.10).
+All 105 verification-source inputs were independently remeasured: only the
+root package versions in Cargo.toml and Cargo.lock changed from 0.148.9;
+the remaining 103 inputs, workflows, required graph and toolchain are intact.
+The reviewed inventory is reconciled accordingly. A scoped 0.148.10 controller,
+installed through the official session updater, owns current projection refresh
+and validation. Its actual binary digest is retained separately from candidate
+evidence. Controller installation and release integration are not test proof.
+
+The current RPC surface must also advertise `intent.reconcile`, `state.resolve`
+and `state.diff`. The real entry boundary rejects unregistered operation names
+with `unknown_op` before project/session startup. Registration and metadata
+come from one declaration in the existing interop catalog; registration grants
+no authority and preserves every registered operation's own gates. This bounds
+undiscoverable additions without claiming an authenticated conformance producer.
+
+The source-inventory review compared all 105 discovered inputs against the last
+accepted review `edbfc00d`. Only the root package version in Cargo.toml and
+Cargo.lock changed, from 0.148.7 to 0.148.9. The reviewed digest acknowledges
+those release inputs; workflows, helpers, toolchains and required coverage are
+unchanged. This review is not evidence that any required check executed.
+
+Harnesses may discover implemented operations and their source test coverage
+without an execution claim. The built-in interoperability manifest reports
+`not_run` even where a registered conformance test and source location exist.
+`core::interop::validate_manifest` rejects declared `verified` and `failed`
+results with `unobserved_conformance`: the current manifest format supplies no
+authenticated producer receipt. Ordinary negotiation remains available.
+This closes the static-label counterexample only. Current binary-bound observed
+conformance, independent consumers and the rest of the campaign remain required
+before #871 or #1735 can be considered complete.
 
 ## Complete scoped source currency (#1753)
 
@@ -449,7 +542,7 @@ These declarations select authoring and proof obligations; they do not attest im
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `b3ab0860271f59e3bd8b813a35975cd9df65e64e146793c67939b9ef37cc6c75`
+- Repository signal fingerprint: `f2418e136073b6d88b968de8d7ec9f9466cd91e962ea950134729c1778fb61c9`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (240 files), `tests/` (235 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
