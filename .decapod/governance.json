@@ -619,6 +619,16 @@
         "cargo test --test cli_contract_enforcement risk_map_warnings (1 passed)",
         "cargo test --test plugins_policy_tests (21 passed)"
       ]
+    },
+    {
+      "id": "cp-1782-5",
+      "summary": "Sync origin/master c5bafce6 (v0.148.13) and reconcile reviewed_sources_digest",
+      "input_digest": "sha256:bf77d81d97450606989d9288aebdd7f28ff5c29676d9cae3082c80ce84e4fe0a",
+      "proof_refs": [
+        "agent.init inventory_digest sha256:f2c1d189ee0c96f6afb66185229233bd0436015d0ddd21dc56deb4f58709b2b2",
+        "cargo fmt --check",
+        "git diff caeeaba8..c5bafce6 (Cargo.toml/Cargo.lock/CHANGELOG.md only)"
+      ]
     }
   ],
   "intents": {
@@ -661,8 +671,8 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Merged origin/master caeeaba8 (#1792) while preserving Risk-map warning CLI contract (#1782) in INTERFACES.md and refreshed attestation.",
-          "reviewed_code_fingerprint": "fa831c80b453837a1b7126137ab058c4de7df5ef986a013bb93a13bd5d405ba6",
+          "reason": "Merged origin/master c5bafce6 (v0.148.13) and reconciled reviewed_sources_digest; Risk-map warning CLI contract (#1782) prose and source/test bytes unchanged.",
+          "reviewed_code_fingerprint": "9b4d9d1420e68806ef58dbfcb61d9e61853f73eecc981c9b2422d39704a689d6",
           "spec_material_hash": "6698eaf9f32bd46fcff1c24d105be4944677927b486675acd9def2db154557c8"
         }
       ],
@@ -674,13 +684,13 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795011484Z"
+      "updated_at": "1795012332Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:854d0c8ef7a22a8cd56e38b2ed0c83642edcbf9cbf19166a800bc8521067fd0b",
+      "artifact_hash": "sha256:862f3a532f23a2f136b0a87e8b904920f732b70a94f1b3354b00410a39f88675",
       "checks": [
         {
           "name": "cli_contract_enforcement_riskmap",
@@ -700,6 +710,10 @@
         },
         {
           "name": "inventory_digest",
+          "status": "passed"
+        },
+        {
+          "name": "inventory_digest_v014813",
           "status": "passed"
         },
         {
@@ -746,10 +760,17 @@
             "intent_id": "intent:change_01M7QC4ST58WGCQ5JNZKJPCTF1",
             "kind": "trajectory_step_recorded",
             "sequence": 6
+          },
+          {
+            "detail": "trajectory:branch_01M7QC4T0FX5CFADGN7WFGBTNQ",
+            "event_id": "event:7",
+            "intent_id": "intent:change_01M7QC4ST58WGCQ5JNZKJPCTF1",
+            "kind": "trajectory_step_recorded",
+            "sequence": 7
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 6,
+        "next_sequence": 7,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M7QC4T0FX5CFADGN7WFGBTNQ": {
@@ -825,6 +846,25 @@
                 ],
                 "sequence": 6,
                 "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:7",
+                "observations": [
+                  ".decapod/config.toml",
+                  ".decapod/config.toml",
+                  "Reviewed git diff caeeaba8..c5bafce6 (Cargo.toml, Cargo.lock, CHANGELOG.md only for v0.148.13) and reconciled proof.required_profile.reviewed_sources_digest to sha256:f2c1d189ee0c96f6afb66185229233bd0436015d0ddd21dc56deb4f58709b2b2"
+                ],
+                "proof_refs": [
+                  "inventory_digest_v014813"
+                ],
+                "scope": [
+                  "\".decapod/managed/specs\"]",
+                  "\"tests\"",
+                  "paths:[\"src/decapod\""
+                ],
+                "sequence": 7,
+                "validation_findings": []
               }
             ]
           }
@@ -834,6 +874,7 @@
       "destination": "pull request",
       "evidence": [
         "Reviewed git diff 9c7e6cff..7bd0a915 (Cargo.toml, Cargo.lock, CHANGELOG.md only for v0.148.12) and reconciled proof.required_profile.reviewed_sources_digest to sha256:bd7eec7e7edaa9a427dea5c3d6b4de42e885b23d2b1911f3602527686e366c4e",
+        "Reviewed git diff caeeaba8..c5bafce6 (Cargo.toml, Cargo.lock, CHANGELOG.md only for v0.148.13) and reconciled proof.required_profile.reviewed_sources_digest to sha256:f2c1d189ee0c96f6afb66185229233bd0436015d0ddd21dc56deb4f58709b2b2",
         "Verified clap mounts PolicyCli under GovernCommand::Policy (decapod govern policy riskmap init/verify), whereas validate.rs emitted unsupported 'decapod riskmap init' and policy.rs emitted unsupported 'decapod policy riskmap init'.",
         "cargo fmt --check ok; CLIPPY_CONF_DIR=.config cargo clippy --all-targets --all-features -- -D warnings ok; cargo test --lib core::validate::tests (61 passed); cargo test --test plugins_policy_tests (21 passed); cargo test --test cli_contract_enforcement risk_map_warnings (1 passed); cargo test --test gatling t070_policy (1 passed)"
       ],
