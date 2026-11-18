@@ -508,27 +508,25 @@ fn contract_edits_revoke_every_accepted_state_and_all_phase_evidence() {
     ];
     for state in [PlanState::Approved, PlanState::Executing, PlanState::Done] {
         for patch in &patches {
+            let expected = if patch.unknowns.is_some()
+                || patch.human_questions.is_some()
+                || patch.unresolved_contradictions.is_some()
+            {
+                "NEEDS_HUMAN_INPUT"
+            } else {
+                "NEEDS_PLAN_APPROVAL"
+            };
             let (dir, store) = progressed_plan(state.clone());
             let changed = patch_plan(dir.path(), patch.clone()).unwrap();
             assert_acceptance_invalidated(&changed);
-            assert!(
-                execute_check(dir.path(), &store, None)
-                    .unwrap_err()
-                    .to_string()
-                    .contains("NEEDS_PLAN_APPROVAL")
-            );
-            assert!(
-                enter_phase(dir.path(), &changed.phases[0].id)
-                    .unwrap_err()
-                    .to_string()
-                    .contains("NEEDS_PLAN_APPROVAL")
-            );
-            assert!(
-                complete_phase(dir.path(), &changed.phases[0].id)
-                    .unwrap_err()
-                    .to_string()
-                    .contains("NEEDS_PLAN_APPROVAL")
-            );
+            for result in [
+                execute_check(dir.path(), &store, None),
+                enter_phase(dir.path(), &changed.phases[0].id),
+                complete_phase(dir.path(), &changed.phases[0].id),
+            ] {
+                let error = result.unwrap_err().to_string();
+                assert!(error.contains(expected), "{error}");
+            }
         }
     }
 }

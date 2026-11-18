@@ -596,6 +596,14 @@
       "proof_refs": [
         "Release commit 14e5d8d8 changes the package version in two of the 105 inventoried definitions"
       ]
+    },
+    {
+      "id": "issue-1764-diagnostic-precedence-regression",
+      "summary": "Exercise recorded instruction priority and draft reapproval in existing phase fixtures",
+      "input_digest": "sha256:56cf62f157569c13bff05af3eab05b9be38ab87f77162dcecd88b2f0359e074e",
+      "proof_refs": [
+        "https://github.com/DecapodLabs/decapod/actions/runs/44295371118/job/134771807179"
+      ]
     }
   ],
   "intents": {
@@ -641,22 +649,22 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Documents the shared predicate and revision binding in plan_governance and its current call sites.",
-          "reviewed_code_fingerprint": "1cfc3a80900d0cd4d523bda968d37b59aace83e40ecad915c69fd76f7773b727",
+          "reason": "Documents the common recorded-plan check and proof revision behavior exercised by the current fixtures.",
+          "reviewed_code_fingerprint": "a2219c06b91eca6871b7fe13a84cf26f760835273492b365db75df9905c2629b",
           "spec_material_hash": "ce85b698e5402fc30d3099575e19e94957db2d6764bfc67b198f0a307f6785cf"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Documents the readiness projection, supported blocker remediation, and reapproval behavior.",
-          "reviewed_code_fingerprint": "1cfc3a80900d0cd4d523bda968d37b59aace83e40ecad915c69fd76f7773b727",
+          "reason": "Describes the readiness projection, actionable diagnostics and reapproval semantics exercised by the current fixtures.",
+          "reviewed_code_fingerprint": "a2219c06b91eca6871b7fe13a84cf26f760835273492b365db75df9905c2629b",
           "spec_material_hash": "05cea9736aa9332c90b734e384e86aafb93bbf9548c2fe864465ed2983f14413"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "The shared recorded-plan check preserves existing session, actor, and explicit spec decision authority. The report adds no credential or stronger identity claim.",
-          "reviewed_code_fingerprint": "1cfc3a80900d0cd4d523bda968d37b59aace83e40ecad915c69fd76f7773b727",
+          "reason": "The fixture correction checks error precedence. Actor custody, human decision authority and accepted verification policy keep their existing rules.",
+          "reviewed_code_fingerprint": "a2219c06b91eca6871b7fe13a84cf26f760835273492b365db75df9905c2629b",
           "spec_material_hash": "cdc863757905c53f4f176284c72744f0575184c65a059b7edf6239b47c4fc644"
         }
       ],
@@ -668,15 +676,19 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795001285Z"
+      "updated_at": "1795003397Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch",
         "One linked Git worktree. Draft #1766 is the prior multi-issue review path."
       ],
-      "artifact_hash": "sha256:ff9db072c39fda61a0a37609aa23840ff4f0e555b79e9d91bf16b6ab29b68246",
+      "artifact_hash": "sha256:a746083296f9dbd866b1d5fa227852f1d6e2c923ca092eae2b99053c1b34ef4f",
       "checks": [
+        {
+          "name": "3fe9682a GitHub library regression",
+          "status": "failed"
+        },
         {
           "name": "ffbb3375 preflight",
           "status": "failed"
@@ -718,10 +730,17 @@
             "intent_id": "intent:change_01M7Q67PD7JE7XEM5PZFDFM81P",
             "kind": "trajectory_step_recorded",
             "sequence": 5
+          },
+          {
+            "detail": "trajectory:branch_01M7Q67PFZY3BACJDTFC02YGVX",
+            "event_id": "event:6",
+            "intent_id": "intent:change_01M7Q67PD7JE7XEM5PZFDFM81P",
+            "kind": "trajectory_step_recorded",
+            "sequence": 6
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 5,
+        "next_sequence": 6,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M7Q67PFZY3BACJDTFC02YGVX": {
@@ -778,6 +797,30 @@
                 ],
                 "sequence": 5,
                 "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:6",
+                "observations": [
+                  "tests/unit/plan_governance_tests.rs",
+                  "GitHub Actions 44295371118 job 134771807179 ran 1803 library tests. The contract-edit test assumed NEEDS_PLAN_APPROVAL for all draft outcomes. The corrected test asserts NEEDS_HUMAN_INPUT for newly unresolved requirements and NEEDS_PLAN_APPROVAL for clear draft revisions, through execution and both phase transitions."
+                ],
+                "proof_refs": [
+                  "3fe9682a GitHub library regression"
+                ],
+                "scope": [
+                  "\".decapod/managed/specs\"",
+                  "\"docs\"]",
+                  "\"tests\"",
+                  ".decapod/config.toml",
+                  ".decapod/managed/specs",
+                  "docs",
+                  "paths:[\"src/decapod\"",
+                  "src/decapod",
+                  "tests"
+                ],
+                "sequence": 6,
+                "validation_findings": []
               }
             ]
           }
@@ -786,6 +829,7 @@
       "declared_commands": [],
       "destination": "pull request",
       "evidence": [
+        "GitHub Actions 44295371118 job 134771807179 ran 1803 library tests. The contract-edit test assumed NEEDS_PLAN_APPROVAL for all draft outcomes. The corrected test asserts NEEDS_HUMAN_INPUT for newly unresolved requirements and NEEDS_PLAN_APPROVAL for clear draft revisions, through execution and both phase transitions.",
         "Implementation adds cross-phase tests to the required CLI and library test targets.",
         "PROOF_PROFILE_RECONCILIATION_REQUIRED. Agent init measured 105 source definitions. Their only changes from the pre-release accepted target to v0.148.11 are package-version entries in Cargo.toml and Cargo.lock. ffbb3375 changes none of those definitions. The Buildkite provider and required graph remain configured.",
         "Released v0.148.11 approved a draft that retained a recorded compatibility contradiction in a disposable local CLI fixture."
@@ -801,7 +845,8 @@
         ".decapod/config.toml",
         "src/decapod/lib.rs",
         "src/decapod/plan_governance.rs",
-        "tests/cli_contract_enforcement.rs"
+        "tests/cli_contract_enforcement.rs",
+        "tests/unit/plan_governance_tests.rs"
       ],
       "next_transitions": [
         "Refine plan and declare falsifiable checks"
