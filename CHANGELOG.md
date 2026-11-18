@@ -7,6 +7,32 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.149.0](https://github.com/DecapodLabs/decapod/compare/v0.148.14...v0.149.0) - 2026-11-18
+
+### Added
+
+- *(migration)* expose read-only migration notice inspection and resolved root
+
+### Other
+
+- Merge remote-tracking branch 'origin/master' into agent/wog-issue-1744/bugs_01m7qbm33farx8qs-issue-1744
+- Merge remote-tracking branch 'origin/master' into agent/wog-issue-1744/bugs_01m7qbm33farx8qs-issue-1744
+- *(proof)* refresh v0.148.13 projections and checkpoint
+- Merge remote-tracking branch 'origin/master' into agent/wog-issue-1744/bugs_01m7qbm33farx8qs-issue-1744
+- Merge remote-tracking branch 'origin/master' into agent/wog-issue-1744/bugs_01m7qbm33farx8qs-issue-1744
+
+## [0.148.14](https://github.com/DecapodLabs/decapod/compare/v0.148.13...v0.148.14) - 2026-11-18
+
+### Fixed
+
+- *(verify)* surface safe scoped validation blocker diagnostics ([#1781](https://github.com/DecapodLabs/decapod/pull/1781))
+
+### Other
+
+- *(proof)* refresh v0.148.13 projections and checkpoint
+- *(merge)* sync origin/master c5bafce6 (v0.148.13) and reconcile proof
+- *(merge)* sync origin/master caeeaba8 ([#1792](https://github.com/DecapodLabs/decapod/pull/1792))
+
 ## [0.148.13](https://github.com/DecapodLabs/decapod/compare/v0.148.12...v0.148.13) - 2026-11-18
 
 ### Fixed

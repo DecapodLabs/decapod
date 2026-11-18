@@ -620,6 +620,16 @@
       "proof_refs": [
         "cargo test --test exact_candidate_governance_1052 (4 passed; 0 failed in 218.98s)"
       ]
+    },
+    {
+      "id": "exact-candidate-1052-v014900",
+      "summary": "Integrate accepted master v0.149.0 (a5a1edadb, PR #1802 + #1804) with #1052 exact-candidate suite",
+      "input_digest": "sha256:61efba699f099e7c81b01c272ce39e75c910f84652b1ba96189f8bc77f0f5d74",
+      "proof_refs": [
+        "CLIPPY_CONF_DIR=.config cargo clippy --test exact_candidate_governance_1052 --all-features -- -D warnings (exit 0)",
+        "cargo fmt --all -- --check (exit 0)",
+        "cargo test --test exact_candidate_governance_1052 (4 passed; 0 failed in 362.42s)"
+      ]
     }
   ],
   "intents": {
@@ -662,22 +672,22 @@
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Merged origin/master 0b6ce0a8 (PR #1799 verify.rs fix); architecture boundaries preserved.",
-          "reviewed_code_fingerprint": "2a2db2a28520e66a72c7a0f4fa65683503f039f25f0e3ccf826ff60ac7df6cf8",
+          "reason": "Integrated origin/master a5a1edadb (PR #1802 + v0.149.0); architecture boundaries preserved.",
+          "reviewed_code_fingerprint": "0cd6f9ff0f09a73293db451761b3a2b1366a7b5ec837ea33428f8c549f6e25cd",
           "spec_material_hash": "080e1e015d867051ec4ecbb1f18aca92a2d62a05798377057e563aaa5a3764e0"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "PR #1799 INTERFACES.md updates are already on origin/master 0b6ce0a8; #1052 branch adds zero interface changes.",
-          "reviewed_code_fingerprint": "2a2db2a28520e66a72c7a0f4fa65683503f039f25f0e3ccf826ff60ac7df6cf8",
-          "spec_material_hash": "3baf7067b96d8fad41fcf9ff69aa2866b99b9bc631a1132df1daf96de9c82ab7"
+          "reason": "PR #1802 INTERFACES.md updates are already on origin/master a5a1edadb; #1052 branch adds zero interface changes.",
+          "reviewed_code_fingerprint": "0cd6f9ff0f09a73293db451761b3a2b1366a7b5ec837ea33428f8c549f6e25cd",
+          "spec_material_hash": "1445e13fa7ccfa6c4a68850bd794b6b1ba7379c0148b570c3a7605b6a26beb25"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Merged origin/master 0b6ce0a8 (PR #1799); #1052 custody and exact-candidate security invariants preserved.",
-          "reviewed_code_fingerprint": "2a2db2a28520e66a72c7a0f4fa65683503f039f25f0e3ccf826ff60ac7df6cf8",
+          "reason": "Integrated origin/master a5a1edadb (v0.149.0); #1052 custody and exact-candidate security invariants preserved.",
+          "reviewed_code_fingerprint": "0cd6f9ff0f09a73293db451761b3a2b1366a7b5ec837ea33428f8c549f6e25cd",
           "spec_material_hash": "735ae6e95c6b18ff2ccc718fbadaa4d7ae483d632aee2fb071d4f9ae6daa23de"
         }
       ],
@@ -689,13 +699,13 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795022932Z"
+      "updated_at": "1795034143Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:eabb4a8a83448474fc41761d7b7b860f82d016a63f492504a7e0a6efa1fff758",
+      "artifact_hash": "sha256:fad48ca9472b0e6361405f3dec7089a0255b437a056c7a8ea326197a604098b2",
       "checks": [
         {
           "name": "cargo-fmt-all",
@@ -719,6 +729,10 @@
         },
         {
           "name": "merge-master-0b6ce0a8",
+          "status": "passed"
+        },
+        {
+          "name": "merge-master-v0.149.0",
           "status": "passed"
         },
         {
@@ -783,10 +797,17 @@
             "intent_id": "intent:change_01M7QBGV59Y7MXFNYG75MBZDQ9",
             "kind": "trajectory_step_recorded",
             "sequence": 8
+          },
+          {
+            "detail": "trajectory:branch_01M7QBGV8G7Y7EZGFJBVX1KFM7",
+            "event_id": "event:9",
+            "intent_id": "intent:change_01M7QBGV59Y7MXFNYG75MBZDQ9",
+            "kind": "trajectory_step_recorded",
+            "sequence": 9
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 8,
+        "next_sequence": 9,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M7QBGV8G7Y7EZGFJBVX1KFM7": {
@@ -891,6 +912,27 @@
                 ],
                 "sequence": 8,
                 "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:9",
+                "observations": [
+                  ".decapod/config.toml",
+                  ".decapod/managed/Dockerfile.decapod",
+                  ".decapod/managed/specs/OPERATIONS.md",
+                  "Merged origin/master a5a1edadb (v0.149.0, PR #1802 + #1804); refreshed Dockerfile/manifest/specs with v0.149.0; cargo fmt --all -- --check exit 0; clippy -D warnings exit 0; cargo test --test exact_candidate_governance_1052: 4 passed, 0 failed in 362.42s"
+                ],
+                "proof_refs": [
+                  "merge-master-v0.149.0",
+                  "cargo-fmt-all",
+                  "clippy-exact-candidate-1052",
+                  "cargo-test-exact-candidate-1052"
+                ],
+                "scope": [
+                  "validation-kernel"
+                ],
+                "sequence": 9,
+                "validation_findings": []
               }
             ]
           }
@@ -902,6 +944,7 @@
         "Actual-binary tests in tests/exact_candidate_governance_1052.rs verified exact SHA/tree/base/task/lease_generation binding, invalidation on edit/amend/rebase/target-advance/lease-renewal, ci_local and project-check non-readiness, workspace publish refusals, and immutable qa verify commit lookup",
         "Formatted tests/exact_candidate_governance_1052.rs with cargo fmt --all (Edition 2024); cargo fmt --all -- --check exit 0; clippy -D warnings exit 0; cargo test --test exact_candidate_governance_1052: 4 passed, 0 failed in 198.35s",
         "Merged origin/master 0b6ce0a8 (PR #1799 verify.rs fix); cargo fmt --all -- --check exit 0; clippy -D warnings exit 0; cargo test --test exact_candidate_governance_1052: 4 passed, 0 failed in 218.98s",
+        "Merged origin/master a5a1edadb (v0.149.0, PR #1802 + #1804); refreshed Dockerfile/manifest/specs with v0.149.0; cargo fmt --all -- --check exit 0; clippy -D warnings exit 0; cargo test --test exact_candidate_governance_1052: 4 passed, 0 failed in 362.42s",
         "Merged origin/master c5bafce6 (v0.148.13), verified only version metadata changed in proof sources, updated reviewed_sources_digest, refreshed Dockerfile/specs via controller 0.148.13",
         "On merged origin/master c5bafce6 (v0.148.13): rustfmt --check exit 0; clippy -D warnings exit 0; cargo test --test exact_candidate_governance_1052: 4 passed, 0 failed in 250.33s"
       ],
