@@ -160,6 +160,25 @@ fn discovery_and_negotiation() {
         .as_array()
         .cloned()
         .unwrap_or_default();
+    h.check(
+        "manifest.source_coverage_is_not_execution",
+        "rpc-stdin:interop.manifest",
+        "all capabilities not_run; source coverage locations retained",
+        serde_json::to_string(
+            &caps
+                .iter()
+                .map(|cap| (&cap["id"], &cap["evidence"]))
+                .collect::<Vec<_>>(),
+        )
+        .unwrap(),
+        caps.iter().all(|cap| cap["evidence"]["state"] == "not_run")
+            && caps.iter().any(|cap| {
+                cap["evidence"]["conformance_test"].is_string()
+                    && cap["evidence"]["evidence_ref"].is_string()
+            }),
+        None,
+        vec!["test registration describes source coverage, not an observed execution".into()],
+    );
     let mcp = caps.iter().find(|c| c["id"] == "transport:mcp");
     h.check(
         "manifest.mcp_intentionally_not_used",

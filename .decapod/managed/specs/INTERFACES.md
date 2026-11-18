@@ -1,5 +1,16 @@
 # Interfaces
 
+## Conformance evidence boundary (#871)
+
+`interop.manifest` retains its v1 wire shape and source coverage references.
+`evidence.conformance_test` and `evidence.evidence_ref` identify source tests;
+they do not attest execution, transport, binary identity or current applicability.
+Built-in evidence is `not_run`. The Rust manifest validator refuses authored
+`verified`/`failed` with `unobserved_conformance`, including known tests and
+plausible references. Historical JSON remains deserializable without gaining
+current assurance. No new execution producer, receipt import or authorization
+path is introduced; actual observed conformance remains an unresolved contract.
+
 ## Internal source currency agreement (#1753)
 
 The existing private config-only source policy now also governs version-only
@@ -1218,7 +1229,7 @@ field. Nothing in this operation authorizes a mutation, approval or completion.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `59302b283273f65193215ee22c7b207943d8077e5105c464f9f5a2e7ac6faa43`
+- Repository signal fingerprint: `8d3a83eb6e973692366d0bc6921e498f21e64aa289a5eda3bcdae3779945f46d`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (236 files), `tests/` (235 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

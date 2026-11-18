@@ -1,5 +1,16 @@
 # Architecture
 
+## Source coverage and execution observations (#871)
+
+`src/decapod/core/interop.rs` describes implemented operations and known test
+locations without executing tests during discovery. Static coverage tables
+populate references with `NotRun`; `validate_manifest` refuses execution-state
+assertions lacking an authenticated observation surface. Existing full-validation
+and canonical workunit producers remain the owners of their own proof domains;
+their mere existence cannot prove that a particular conformance test executed.
+Adding current observed conformance still requires an explicit binding to those
+owners and independently verified test execution, rather than another registry.
+
 ## Source-policy currency continuity (#1753)
 
 `entrypoint_integrity::preserves_source_entrypoint_versions` reuses the existing
@@ -988,7 +999,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `59302b283273f65193215ee22c7b207943d8077e5105c464f9f5a2e7ac6faa43`
+- Repository signal fingerprint: `8d3a83eb6e973692366d0bc6921e498f21e64aa289a5eda3bcdae3779945f46d`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (236 files), `tests/` (235 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
