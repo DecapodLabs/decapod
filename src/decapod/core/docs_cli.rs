@@ -657,6 +657,9 @@ fn build_docs(touched: Vec<PathBuf>) -> Result<(), error::DecapodError> {
                 "data" => {
                     writeln!(file, "\n{}", db_maintenance_command_contract())?;
                 }
+                "system" => {
+                    writeln!(file, "\n{}", system_command_contract())?;
+                }
                 _ => {}
             }
             writeln!(file)?;
@@ -725,6 +728,13 @@ fn db_maintenance_command_contract() -> &'static str {
 - **Read-only inventory (ungated):** `decapod data database inspect` / RPC `data.database.inspect` remains non-initializing and read-only.
 - **Governed capabilities (default-deny):** `decapod data db capabilities`, `decapod data db lock {diagnose,retry,release-own}`, `decapod data db maintain {inspect,verify,backup,recover}`, and `decapod data db audit` (plus `data.database.{capabilities,maintain.inspect,verify,backup,recover,lock.diagnose,lock.retry,lock.release_own,audit}`) require an authenticated local `DECAPOD_AGENT_ID` + `DECAPOD_SESSION_PASSWORD` inside the agent's claimed `.decapod/workspaces/*` worktree and canonical main-repository `[governance.db_maintenance] enabled = true`.
 - **Boundaries:** `db.backup` writes only to non-existing paths under `.decapod/backups/` (`<= 512 MiB`) and never implies `db.recover`; `db.recover` requires repository `owner` repair authority (`#1590`); `backend = "cloud"` fails closed (`CLOUD_PRINCIPAL_UNVERIFIED`); raw SQL, `sqlite3`, vacuum, and restore are unmodeled (`CAPABILITY_UNSUPPORTED`)."#
+}
+
+fn system_command_contract() -> &'static str {
+    r#"### Read-Only System & Migration Inspection (`decapod system ...`)
+
+- **Non-initializing diagnostics (`decapod system migrations`, `decapod system doctor check`, `decapod system version`, `decapod system capabilities`):** Run without requiring `DECAPOD_SESSION_PASSWORD`, without creating `.decapod/data/`, without modifying `version_counter.json`, `applied.json`, or `catalog.json`, and without consuming a pending migration notice.
+- **Migration inspection (`decapod system migrations --format {json,text}`):** Resolves `workspace_root`, `governance_root`, and `decapod_root` (following the main repository `.decapod` from governed worktrees) and exposes `version_counter`, `applied`, compiled/on-disk `catalog`, `pending_migrations`, `action_required`, `reason_codes`, and actionable `instructions`."#
 }
 
 fn shared_claim_config_contract() -> &'static str {
