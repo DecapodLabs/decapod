@@ -618,6 +618,16 @@
         "https://github.com/DecapodLabs/decapod/actions/runs/44296749390/job/134777427412",
         "sha256:788c87fbbd46f81c47885388d6b575be2dbbca33348e837d37cb3009de20397a"
       ]
+    },
+    {
+      "id": "workunit-currentness-accepted9c-integration-20261118",
+      "summary": "Integrate accepted9c strict JSON source and contracts with current workunit proof correction; preserve both histories and require fresh combined proof",
+      "input_digest": "sha256:d82c06ad37c49bd59532ef80095ac2de0d26be5efbde938622e11507a9c81beb",
+      "proof_refs": [
+        "/private/tmp/attack-gaps-1792-9c-inventory-review.json",
+        "git:9c7e6cff94908dbfe87f4e4c0dbb1f1e0f4b12d5",
+        "https://github.com/DecapodLabs/decapod/actions/runs/44305150424/job/134806810318"
+      ]
     }
   ],
   "intents": {
@@ -656,25 +666,25 @@
       "schema_version": "1.1.0",
       "spec_reviews": [
         {
-          "disposition": "unchanged_with_reason",
+          "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Runtime journal withdrawal, canonical custody selection and transaction fences are unchanged. Actual CLI failed a test ordinal assumption; bind existing native diagnostic capture to exact declared inspect-source check instead of native-0.",
-          "reviewed_code_fingerprint": "e27b964f5bd25b96d878b5ab1d2d2ecd0d49995feec75e847130ce2235122289",
-          "spec_material_hash": "fc3e0ad37051b50ab9b60e66722518c47b241e10788e5c2aa11882bc2142cd4c"
+          "reason": "Combined candidate retains current workunit journal/custody corrections and accepted9c shared strict JSON decoder and Bazel Python compile input. Authored contracts from both branches preserved; native owner regenerates all attestations.",
+          "reviewed_code_fingerprint": "217edd1e775555fbd8eb45d2e391a6066c8bc71254c80b7f20934feb1073601c",
+          "spec_material_hash": "080e1e015d867051ec4ecbb1f18aca92a2d62a05798377057e563aaa5a3764e0"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Negative execution evidence must identify the selected required check, not merely a numbered capture. Require full native inspect-source check identity, actual exited step1 and assertion marker; preserve every withdrawal/recovery assertion.",
-          "reviewed_code_fingerprint": "e27b964f5bd25b96d878b5ab1d2d2ecd0d49995feec75e847130ce2235122289",
-          "spec_material_hash": "9ccbcf1a4b5de2a8c93f75ee58b44c6c645fe5e965961fb510e9fbe85c809b38"
+          "reason": "Retain exact workunit negative/check-identity/recovery semantics and accepted duplicate-key/strict-schema/optional-negotiation contracts. Old352-based CI is historical; fresh combined-source proof required against9c.",
+          "reviewed_code_fingerprint": "217edd1e775555fbd8eb45d2e391a6066c8bc71254c80b7f20934feb1073601c",
+          "spec_material_hash": "ef090be85af851796f2ae92f9d6a6e992d59a452a8fff4918836cc689f020cdd"
         },
         {
-          "disposition": "unchanged_with_reason",
+          "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "No authority, validator, required check or timing threshold changes. The test now correlates actual native failure to its declared check identity; it cannot substitute inspect-second success for observed failure.",
-          "reviewed_code_fingerprint": "e27b964f5bd25b96d878b5ab1d2d2ecd0d49995feec75e847130ce2235122289",
-          "spec_material_hash": "01c40f1a3b54a8c42ac8c5de455ecacfcc3a5572861212f46f5055589eaffc87"
+          "reason": "Preserve both native withdrawal/custody fences and accepted strict JSON interpretation/redaction limits. No new authority, timing waiver or fabricated admission; Git preserves accepted parent and active journal remains task-owned.",
+          "reviewed_code_fingerprint": "217edd1e775555fbd8eb45d2e391a6066c8bc71254c80b7f20934feb1073601c",
+          "spec_material_hash": "735ae6e95c6b18ff2ccc718fbadaa4d7ae483d632aee2fb071d4f9ae6daa23de"
         }
       ],
       "state": "APPROVED",
@@ -685,14 +695,18 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795005213Z"
+      "updated_at": "1795007441Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:01f742620cd4e6c8693a196544649d28aa643a17535775d685b4bd68bab0f416",
+      "artifact_hash": "sha256:4ee7ca855a45699fc825741eae9ca5107a1d2c75e664183b0d051e7b9c259731",
       "checks": [
+        {
+          "name": "accepted-9c-source-inventory",
+          "status": "passed"
+        },
         {
           "name": "actions-cli-required-failure-capture",
           "status": "failed"
@@ -760,6 +774,10 @@
         {
           "name": "rustfmt",
           "status": "passed"
+        },
+        {
+          "name": "stale-accepted-target-ci-context",
+          "status": "failed"
         }
       ],
       "current_phase": "intent",
@@ -825,10 +843,17 @@
             "intent_id": "intent:change_01M7Q44RVCTZPBYQ12A8MB3C5Y",
             "kind": "trajectory_step_recorded",
             "sequence": 10
+          },
+          {
+            "detail": "trajectory:branch_01M7Q44RYMGVJGZ2JGB3YZ9VP7",
+            "event_id": "event:11",
+            "intent_id": "intent:change_01M7Q44RVCTZPBYQ12A8MB3C5Y",
+            "kind": "trajectory_step_recorded",
+            "sequence": 11
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 10,
+        "next_sequence": 11,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M7Q44RYMGVJGZ2JGB3YZ9VP7": {
@@ -977,6 +1002,27 @@
                 "sequence": 10,
                 "tool": "Selected the negative capture by schema and all CheckKey fields from existing native diagnostic metadata; retained exit1 and expected stderr, additionally require Exited and no per-step execution error. Preserve current canonical ordering and every later withdrawal/old-proof refusal/recovery/lease assertion. No runtime or source-CI graph changes. Prior82 PR broker timing failure remains failed; fresh exact-source Actions will exercise unchanged strict probe.",
                 "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:11",
+                "observations": [
+                  ".config/build/decapod.BUILD.bzl",
+                  ".decapod/managed/specs/INTENT.md",
+                  ".decapod/managed/specs/ARCHITECTURE.md",
+                  ".decapod/managed/specs/INTERFACES.md",
+                  ".decapod/managed/specs/SECURITY.md"
+                ],
+                "proof_refs": [
+                  "stale-accepted-target-ci-context",
+                  "accepted-9c-source-inventory"
+                ],
+                "scope": [
+                  "issue-1660"
+                ],
+                "sequence": 11,
+                "tool": "External merge1791 advanced live master9c7e6cff at12:56:40UTC; this agent did not merge or assert admission. Old2f push jobs134806810318/134806810211 correctly refused Git merge-base context before tests; raw hashes54bab00c5c0479e878b62a0c27c9dc1a1e2ac2fba9042c1e426096153664b309 and82880faeb9a7241d21123440fc5b09576efc6b2ceefaaef44202837e050c806b. Preserve native active governance/manifest via Git ours, accepted config via Git theirs after backup, all authored operative paragraphs from both parents. Rehash all105 merged source-CI inputs to acceptedac2. Native refresh owns projections; no source test manually run and no old success transferred.",
+                "validation_findings": []
               }
             ]
           }
@@ -998,6 +1044,7 @@
         "git:de9c8b68bc05ca0893295b6b97b5ca52039234c9:.decapod/governance.json"
       ],
       "inspected_files": [
+        ".config/build/decapod.BUILD.bzl",
         "src/decapod/core/validation_history.rs",
         "src/decapod/core/validation_runtime.rs",
         "src/decapod/core/workunit.rs",
@@ -1007,7 +1054,10 @@
       ],
       "intent_id": "intent:change_01M7Q44RVCTZPBYQ12A8MB3C5Y",
       "modified_files": [
+        ".decapod/managed/specs/ARCHITECTURE.md",
+        ".decapod/managed/specs/INTENT.md",
         ".decapod/managed/specs/INTERFACES.md",
+        ".decapod/managed/specs/SECURITY.md",
         "src/decapod/core/validation_history.rs",
         "src/decapod/core/workunit.rs",
         "tests/consumer_readiness.rs",
@@ -1032,6 +1082,7 @@
       "tool_calls": [
         "Added only validation_not_ready to the existing recognized journal kinds. No source tests executed manually; unchanged actual negative/full-proof readback regression will run on required GitHub Actions.",
         "Exact82a1c098 PR CLI job134777427412 executed41 entrypoint cases passed,1 failed,5 ignored. Initial real full proof and VERIFIED succeeded and newer full validation returned not-ready. Test then wrongly read native-0 exit0, but fixture canonically sorts inspect-second before inspect-source. Existing native-N.diagnostic.json binds each capture to CheckKey; select exact inspect-source identity, still require actual step exit1 and stderr observed required failure. Raw log SHA256788c87fbbd46f81c47885388d6b575be2dbbca33348e837d37cb3009de20397a. Product proof contracts, source check, required graph and timing limits unchanged.",
+        "External merge1791 advanced live master9c7e6cff at12:56:40UTC; this agent did not merge or assert admission. Old2f push jobs134806810318/134806810211 correctly refused Git merge-base context before tests; raw hashes54bab00c5c0479e878b62a0c27c9dc1a1e2ac2fba9042c1e426096153664b309 and82880faeb9a7241d21123440fc5b09576efc6b2ceefaaef44202837e050c806b. Preserve native active governance/manifest via Git ours, accepted config via Git theirs after backup, all authored operative paragraphs from both parents. Rehash all105 merged source-CI inputs to acceptedac2. Native refresh owns projections; no source test manually run and no old success transferred.",
         "GitHub Actions Supabase job 134761459192: 1803 library tests passed, 1 failed, 8 ignored. Withdrawal regression rejected its own validation_not_ready journal kind. Raw log SHA256 5b4e36a94d5b09b8cc78c596293168ec4af32ba1ad9e1597d990737c06ad70cd. Correct existing reader inventory only; preserve hashes and CAS/custody fences.",
         "Selected the negative capture by schema and all CheckKey fields from existing native diagnostic metadata; retained exit1 and expected stderr, additionally require Exited and no per-step execution error. Preserve current canonical ordering and every later withdrawal/old-proof refusal/recovery/lease assertion. No runtime or source-CI graph changes. Prior82 PR broker timing failure remains failed; fresh exact-source Actions will exercise unchanged strict probe."
       ],
