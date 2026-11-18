@@ -608,6 +608,14 @@
       "proof_refs": [
         "claim-1737-actor-custody"
       ]
+    },
+    {
+      "id": "cp-1737-4",
+      "summary": "Reconcile origin/master 205d4e8da (v0.149.1) merge, projections, and updated spec reviews for #1737",
+      "input_digest": "sha256:8a8a9f2632e55947c093c9dbc1f74e22ab8dad2997a88d9c71860c7961151c3a",
+      "proof_refs": [
+        "claim-1737-actor-custody"
+      ]
     }
   ],
   "intents": {
@@ -648,22 +656,22 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Reconcile #1737 spec with origin/master baa25a054",
-          "reviewed_code_fingerprint": "9f442b9f6776a95d72d41487349c626d594a469cabac59a3266bc38055801efc",
+          "reason": "Reconcile #1737 spec with origin/master 205d4e8da (v0.149.1)",
+          "reviewed_code_fingerprint": "a9f6674f676f41c31cb8f6e497957ea69cb6f96dc1cd8ce3fa78599c541a2b54",
           "spec_material_hash": "d7a2ca3605cb67e0ecc981daca8a52721e418fc1ab0d559923ddd917e5896a79"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Reconcile #1737 spec with origin/master baa25a054",
-          "reviewed_code_fingerprint": "9f442b9f6776a95d72d41487349c626d594a469cabac59a3266bc38055801efc",
+          "reason": "Reconcile #1737 spec with origin/master 205d4e8da (v0.149.1)",
+          "reviewed_code_fingerprint": "a9f6674f676f41c31cb8f6e497957ea69cb6f96dc1cd8ce3fa78599c541a2b54",
           "spec_material_hash": "b6e078abfa4f1231dddaaffe281c48e79ee89b2a01608b6c3fd393ca29b4dc92"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Reconcile #1737 spec with origin/master baa25a054",
-          "reviewed_code_fingerprint": "9f442b9f6776a95d72d41487349c626d594a469cabac59a3266bc38055801efc",
+          "reason": "Reconcile #1737 spec with origin/master 205d4e8da (v0.149.1)",
+          "reviewed_code_fingerprint": "a9f6674f676f41c31cb8f6e497957ea69cb6f96dc1cd8ce3fa78599c541a2b54",
           "spec_material_hash": "0204e052ed0a3a4bfe1c645bf1d0f34ec5ac5ccf30e19c5949501e64d9136bbf"
         }
       ],
@@ -675,13 +683,13 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795035420Z"
+      "updated_at": "1795037581Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:2a42be5296d00461f84dd8e301a3d0d85387c93e84717453c0d915bd7b4254aa",
+      "artifact_hash": "sha256:2f20e2100a6ae20268ad6d3fc478f51b11169b9cd2632e19b1ec48ccf66fb0bb",
       "checks": [
         {
           "name": "cargo_clippy_all_targets",
@@ -748,10 +756,17 @@
             "intent_id": "intent:change_01M7QXTS2XBE1SK835T05MEJCV",
             "kind": "trajectory_step_recorded",
             "sequence": 5
+          },
+          {
+            "detail": "trajectory:branch_01M7QXTS6XVVV8NKSX2EE61TB7",
+            "event_id": "event:6",
+            "intent_id": "intent:change_01M7QXTS2XBE1SK835T05MEJCV",
+            "kind": "trajectory_step_recorded",
+            "sequence": 6
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 5,
+        "next_sequence": 6,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M7QXTS6XVVV8NKSX2EE61TB7": {
@@ -814,6 +829,24 @@
                 ],
                 "sequence": 5,
                 "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:6",
+                "observations": [
+                  "Merged origin/master 205d4e8da (v0.149.1): fmt --check ok, clippy --all-targets --all-features -- -D warnings ok, core::todo::tests::claim_task_* 2/2, todo_enforcement 5/5 passed"
+                ],
+                "proof_refs": [
+                  "cargo_fmt_check",
+                  "cargo_clippy_all_targets",
+                  "cargo_test_core_todo_claim",
+                  "cargo_test_todo_enforcement"
+                ],
+                "scope": [
+                  "root"
+                ],
+                "sequence": 6,
+                "validation_findings": []
               }
             ]
           }
@@ -822,6 +855,7 @@
       "declared_commands": [],
       "destination": "pull request",
       "evidence": [
+        "Merged origin/master 205d4e8da (v0.149.1): fmt --check ok, clippy --all-targets --all-features -- -D warnings ok, core::todo::tests::claim_task_* 2/2, todo_enforcement 5/5 passed",
         "Merged origin/master a5a1edad (v0.149.0): fmt --check ok, clippy --all-targets --all-features -- -D warnings ok, core::todo::tests::claim_task_* 2/2, core::mentor::reflection::* 33/33, todo_enforcement 5/5, cli_contract_enforcement 23/23, doc_alignment 4/4 passed",
         "core::todo::* 94/94, core::mentor::reflection::* 33/33, todo_enforcement 5/5, plugins_todo_tests 40/40 (39/39 + autorun), cli_contract_enforcement 22/22, doc_alignment 4/4, agent_rpc_suite 5/5, context_capsule_rpc 5/5, infer_precision 7/7, spec_conformance 15/15, workspace_interlock 1/1, clippy & fmt clean"
       ],
