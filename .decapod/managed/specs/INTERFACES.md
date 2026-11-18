@@ -1277,7 +1277,7 @@ field. Nothing in this operation authorizes a mutation, approval or completion.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `325bb52abe2b2d4059279715a9322ef8ca5a525b74763f360326b4059015089f`
+- Repository signal fingerprint: `7a9afa0cac17c4530fb888dc9108b81070e9f0c9d6a700dce981c85023ec5dc1`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (237 files), `tests/` (236 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
@@ -1801,3 +1801,9 @@ manual or imported/self-hosted execution cannot grant Cachix publication.
 ## Canonical local Git proof (#1069)
 
 An accepted `proof.repository_contract.canonical_local_target = true` uses ordinary CLI/RPC validation against the canonical local branch. `readiness.ready` refers to that exact local subject with `scope=repository_local_git_readiness`; `publication_ready` stays false. `qa verify commit` inspects canonical historical proof. `workspace publish` and the independent final PR gate reject local-only target authority before remote publication. Omitted/false mode retains existing digests and GitHub behavior. Candidate-only mode, changed branch, strict profile and cloud selection cannot activate the local host.
+
+## Risk-map warning CLI contract (#1782)
+
+`src/decapod/cli.rs` mounts `PolicyCli` (`src/decapod/plugins/policy.rs`) exclusively under `Command::Govern(GovernCommand::Policy)`, exposing risk-map initialization and verification at `decapod govern policy riskmap init` and `decapod govern policy riskmap verify`. Both missing-map diagnostics—`src/decapod/core/validate.rs::validate_risk_map` and `RiskmapSubcommand::Verify` in `src/decapod/plugins/policy.rs`—derive their warning guidance from `plugins::policy::missing_riskmap_warning` and `plugins::policy::RISKMAP_INIT_COMMAND` (`decapod govern policy riskmap init`), removing the previously emitted unsupported `decapod riskmap init` and `decapod policy riskmap init` paths. Read-only `RiskmapSubcommand::Verify` remains unauthenticated by `policy.control`, while `RiskmapSubcommand::Init` retains its existing `enforce_broker_mutation_policy(..., "policy.control")` (`core` trust) gate.
+
+Scoped regression coverage in `tests/unit/core/validate_tests.rs::risk_map_warning_recommends_supported_cli_command_and_clears_when_present`, `tests/plugins/policy.rs::riskmap_verify_recommends_supported_cli_command_when_missing`, and `tests/cli_contract_enforcement.rs::documented_bootstrap::risk_map_warnings_recommend_supported_cli_command_paths` checks `Cli::try_parse_from` and real CLI binary execution across missing-map warning emission, `--help` resolution, unsupported-path rejection, `core`-trust enforcement, and warning clearance once `RISKMAP.json` exists; complete exact-candidate validation remains required before PR publication.

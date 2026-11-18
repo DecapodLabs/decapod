@@ -48,6 +48,14 @@ pub enum PolicyCommand {
     },
 }
 
+/// Canonical CLI command path for initializing the blast-radius risk map.
+pub const RISKMAP_INIT_COMMAND: &str = "decapod govern policy riskmap init";
+
+/// Canonical diagnostic text emitted when `RISKMAP.json` is absent.
+pub fn missing_riskmap_warning() -> String {
+    format!("Risk map missing (run `{RISKMAP_INIT_COMMAND}`)")
+}
+
 #[derive(Subcommand, Debug)]
 pub enum RiskmapSubcommand {
     /// Initialize a default risk map.
@@ -152,7 +160,7 @@ pub fn run_policy_cli_as(
                     if risk_map_path.exists() {
                         println!("Risk map present and readable.");
                     } else {
-                        println!("Risk map missing (run `decapod policy riskmap init`).");
+                        println!("{}.", missing_riskmap_warning());
                     }
                 }
             }

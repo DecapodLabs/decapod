@@ -1,7 +1,7 @@
 {
   "schema_version": "1.0.0",
   "baseline": {
-    "accepted_commit": "352d892958e1cdf692299927f7c2f3c0c36fc639",
+    "accepted_commit": "9c7e6cff94908dbfe87f4e4c0dbb1f1e0f4b12d5",
     "policy": {
       "change_control": {
         "requires_human_review": true,
@@ -184,6 +184,11 @@
           "PR source diff and pending remote validation"
         ],
         "statement": "No Dagger-specific engine execution or authorization capability remains; generic proof custody is retained",
+        "status": "open"
+      },
+      "claim:duplicate-key-required-semantics": {
+        "falsifier": "Duplicate or escaped-equivalent required_extensions erases the unsupported requirement, nested ambiguous JSON is accepted, or legitimate unique-key negotiation fails after refusal.",
+        "statement": "Both RPC routes reject duplicate decoded JSON keys before startup; later fields cannot erase required extension semantics and unique-key ordinary negotiation can recover.",
         "status": "open"
       },
       "claim:durable-artifact-publication": {
@@ -568,59 +573,42 @@
     }
   },
   "change": {
-    "id": "change_01M7Q3DQ50P9E0ATDWZTJHKFS5",
-    "base_commit": "352d892958e1cdf692299927f7c2f3c0c36fc639",
+    "id": "change_01M7QC4ST58WGCQ5JNZKJPCTF1",
+    "base_commit": "9c7e6cff94908dbfe87f4e4c0dbb1f1e0f4b12d5",
     "target_base": "origin/master"
-  },
-  "claims": {
-    "duplicate-key-required-semantics": {
-      "statement": "Both RPC routes reject duplicate decoded JSON keys before startup; later fields cannot erase required extension semantics and unique-key ordinary negotiation can recover.",
-      "falsifier": "Duplicate or escaped-equivalent required_extensions erases the unsupported requirement, nested ambiguous JSON is accepted, or legitimate unique-key negotiation fails after refusal.",
-      "status": "open"
-    }
   },
   "checkpoints": [
     {
-      "id": "strict-json-reviewed-source",
-      "summary": "Fresh governed follow-up from352 after original1787 merged externally and compact-boundary refused. Reauthor reviewed unique decoder extraction/RPC strictness, both-route real CLI and Python parsing controls, semantic specs and independently reviewed version-only source digest; candidate Actions pending.",
-      "input_digest": "sha256:c4270b2739fb7b77681f792039bff9edd658b9440f1b6b978feea8318320628f"
-    },
-    {
-      "id": "official11-release-projection-correction",
-      "summary": "Repair actual Actions release drift through official session-updated11 native projections; preserve191/0 prerequisite result as bounded and host failures as failures. Metadata fix grants no conformance or native readiness. Checkpoint completes before commit.",
-      "input_digest": "sha256:02a169756d093ac1890782ef36663a2dd889ac8d5843fa7cdee36659ee63f31f"
-    },
-    {
-      "id": "explicit-bazel-interop-fixture",
-      "summary": "Correct actual Bazel missing compile input by declaring only the included Python fixture for existing interop target; independently review all105 inventory entries,104 unchanged, full graph retained. Failed1ba build preserved. Checkpoint completes before commit; source tests pending.",
-      "input_digest": "sha256:933651ac87df7a40cc8db8e9ae8197e13d66bfbad18056f7c30187c1e6ab42cf"
-    },
-    {
-      "id": "strict-json-schema-positive-recovery-20261118",
-      "summary": "Preserve strict unknown-field rejection and exercise supported optional negotiation after duplicate-key refusal",
-      "input_digest": "sha256:a6d0fd7fe160c886f6d51afdae5b90a7f752f5a739e46238df76203929a4fa35",
+      "id": "cp-1782-1",
+      "summary": "Fix #1782 risk-map warnings to recommend decapod govern policy riskmap init with unit, plugin, CLI contract tests, and INTERFACES.md spec",
+      "input_digest": "sha256:320c7d6ae99634c31827b1fe8c80947d6a52de2bb437be599ea7aaa6f660e041",
       "proof_refs": [
-        "https://github.com/DecapodLabs/decapod/actions/runs/44292847842/job/134763116449",
-        "sha256:e6f2db17b3586a40db44261ab1d05dedaad2973ed68c92c2be1d21f69882d65c"
+        "CLIPPY_CONF_DIR=.config cargo clippy --all-targets --all-features -- -D warnings",
+        "cargo test --lib core::validate::tests (61 passed)",
+        "cargo test --test cli_contract_enforcement risk_map_warnings (1 passed)",
+        "cargo test --test gatling t070_policy (1 passed)",
+        "cargo test --test plugins_policy_tests (21 passed)"
       ]
     }
   ],
   "intents": {
-    "intent:change_01M7Q3DQ50P9E0ATDWZTJHKFS5": {
+    "intent:change_01M7QC4ST58WGCQ5JNZKJPCTF1": {
       "acceptance_criteria": [],
       "assumptions": [],
       "boundaries": [
         "Current claimed task and isolated work branch"
       ],
       "constraints": [
-        "issue-871"
+        "paths:[\"src/decapod\"",
+        "\"tests\"",
+        "\".decapod/managed/specs\"]"
       ],
       "created_sequence": 1,
-      "id": "intent:change_01M7Q3DQ50P9E0ATDWZTJHKFS5",
+      "id": "intent:change_01M7QC4ST58WGCQ5JNZKJPCTF1",
       "out_of_scope": [],
       "proof_requirements": [],
-      "raw_intent": "code: reject ambiguous RPC JSON without erasing required negotiation\n\nFollow-up to externally merged PR1787. Preserve immutable unaccepted6fff3707955811fc61365c237357eb0c78990b43 and its native checkpoints; prior begin-pr returned GOVERNANCE_PR_NOT_ACCEPTED. Fresh governed workstream from accepted e44ae7c6, reauthor only reviewed duplicate-key decoder extraction, framing and actual both-route/Python parsing tests plus authored prose. Explicit user authorizes publishing before native Buildkite admission and focusing Actions; no proof-policy change, fabricated execution, merge or issue closure.",
-      "refined_intent": "code: reject ambiguous RPC JSON without erasing required negotiation\n\nFollow-up to externally merged PR1787. Preserve immutable unaccepted6fff3707955811fc61365c237357eb0c78990b43 and its native checkpoints; prior begin-pr returned GOVERNANCE_PR_NOT_ACCEPTED. Fresh governed workstream from accepted e44ae7c6, reauthor only reviewed duplicate-key decoder extraction, framing and actual both-route/Python parsing tests plus authored prose. Explicit user authorizes publishing before native Buildkite admission and focusing Actions; no proof-policy change, fabricated execution, merge or issue closure.",
+      "raw_intent": "Fix #1782: align risk-map warning paths with supported CLI commands\n\nAlign risk-map warning guidance with supported Decapod CLI contracts per Alex's CLI architecture",
+      "refined_intent": "Fix #1782: align risk-map warning paths with supported CLI commands\n\nAlign risk-map warning guidance with supported Decapod CLI contracts per Alex's CLI architecture",
       "status": "refined",
       "updated_sequence": 3
     }
@@ -633,7 +621,7 @@
       },
       "deferred_questions": [],
       "human_questions": [],
-      "intent": "Strict duplicate-key RPC follow-up to merged1787. Reuse existing recursive decoder, preserve required semantics/bounds/redaction and ordinary recovery. Actual Bazel compile failure requires explicitly declaring the Python fixture as compile_data only for existing interop_conformance; independently review changed build input across all105 sources without altering targets, commands, graph, budgets or toolchain. Preserve old failures and current official11 projection metadata. User authorizes publication and Actions focus while ignoring Buildkite; no native admission, history waiver, force push, merge or issue closure.",
+      "intent": "Fix #1782: align risk-map warning paths with supported CLI commands\n\nAlign risk-map warning guidance with supported Decapod CLI contracts per Alex's CLI architecture",
       "phases": [],
       "proof_hooks": [
         "decapod validate"
@@ -641,316 +629,184 @@
       "schema_version": "1.1.0",
       "spec_reviews": [
         {
-          "disposition": "unchanged_with_reason",
-          "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Existing shared unique JSON decoder and strict typed schema are unchanged. Actual Actions reached the new final positive then refused its unknown optional_metadata field correctly. Correct only test expectations and supported recovery payload.",
-          "reviewed_code_fingerprint": "325bb52abe2b2d4059279715a9322ef8ca5a525b74763f360326b4059015089f",
-          "spec_material_hash": "a56b9f78b78c318ce14753002b3e662908772761757d7adb849dde1951d37e6b"
-        },
-        {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Clarify that syntactically legal unique JSON still obeys strict negotiation fields. Preserve invalid_params for unknown field and verify lawful unknown optional identifiers are reported omitted, including decoded Unicode.",
-          "reviewed_code_fingerprint": "325bb52abe2b2d4059279715a9322ef8ca5a525b74763f360326b4059015089f",
-          "spec_material_hash": "c6ba8157ced34e186a41c4d9df94b98c47863ec271bcd16ee2d42b4f824b33f0"
-        },
-        {
-          "disposition": "unchanged_with_reason",
-          "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "No production change or relaxed validation. Keep required extension and duplicate-key rejection; retain unknown-field schema refusal and exercise legitimate optional negotiation afterward.",
-          "reviewed_code_fingerprint": "325bb52abe2b2d4059279715a9322ef8ca5a525b74763f360326b4059015089f",
-          "spec_material_hash": "9d11c08d69c5a99641a0d006db91d357c43458787eb442f659ffe7ac04be2a7e"
+          "reason": "Document canonical govern policy riskmap warning CLI contract and scoped tests for #1782",
+          "reviewed_code_fingerprint": "7a9afa0cac17c4530fb888dc9108b81070e9f0c9d6a700dce981c85023ec5dc1",
+          "spec_material_hash": "ae715539292369d4d9355fd315dae1516fec70720f43ae93b45fabd63215710e"
         }
       ],
       "state": "APPROVED",
       "stop_conditions": [],
-      "title": "code: reject ambiguous RPC JSON without erasing required negotiation",
+      "title": "Fix #1782: align risk-map warning paths with supported CLI commands",
       "todo_ids": [
-        "bugs_01m7q384jw6mn3w5"
+        "bugs_01m7qbj86wggnc9g"
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795002891Z"
+      "updated_at": "1795008965Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:41a215a899f967fd9a5d49aa1571d124dfa57ed667baa91f6bdff43c4f47a742",
+      "artifact_hash": "sha256:28f5f6f2511785bd7417d7c9cb15d4f19395553c0f0d42a8d18c99f24dea42aa",
       "checks": [
         {
-          "name": "actions-bazel-interop-compilation",
-          "status": "failed"
-        },
-        {
-          "name": "actions-release-projection-drift",
-          "status": "failed"
-        },
-        {
-          "name": "actions-strict-json-positive-control",
-          "status": "failed"
-        },
-        {
-          "name": "candidate-execution",
-          "status": "unavailable"
-        },
-        {
-          "name": "diff-whitespace",
+          "name": "cli_contract_enforcement_riskmap",
           "status": "passed"
         },
         {
-          "name": "independently-reviewed-bazel-input",
+          "name": "clippy",
           "status": "passed"
         },
         {
-          "name": "native-host-project-prerequisites",
-          "status": "failed"
-        },
-        {
-          "name": "official10-duplicate-negotiation-refusal",
-          "status": "failed"
-        },
-        {
-          "name": "official10-ordinary-recovery",
+          "name": "fmt",
           "status": "passed"
         },
         {
-          "name": "official10-required-unsupported-refusal",
+          "name": "gatling_t070_policy",
           "status": "passed"
         },
         {
-          "name": "official11-private-controller-install",
+          "name": "plugins_policy_tests",
           "status": "passed"
         },
         {
-          "name": "release11-source-inventory-review",
-          "status": "passed"
-        },
-        {
-          "name": "rustfmt",
+          "name": "validate_tests",
           "status": "passed"
         }
       ],
-      "current_phase": "intent",
+      "current_phase": "verify",
       "custody": {
         "events": [
           {
             "event_id": "event:2",
-            "intent_id": "intent:change_01M7Q3DQ50P9E0ATDWZTJHKFS5",
+            "intent_id": "intent:change_01M7QC4ST58WGCQ5JNZKJPCTF1",
             "kind": "created",
             "sequence": 2
           },
           {
             "event_id": "event:3",
-            "intent_id": "intent:change_01M7Q3DQ50P9E0ATDWZTJHKFS5",
+            "intent_id": "intent:change_01M7QC4ST58WGCQ5JNZKJPCTF1",
             "kind": "refined",
             "sequence": 3
           },
           {
-            "detail": "trajectory:branch_01M7Q3DQ8RFZAHXD2B6ZY1JSZ5",
+            "detail": "trajectory:branch_01M7QC4T0FX5CFADGN7WFGBTNQ",
             "event_id": "event:4",
-            "intent_id": "intent:change_01M7Q3DQ50P9E0ATDWZTJHKFS5",
+            "intent_id": "intent:change_01M7QC4ST58WGCQ5JNZKJPCTF1",
             "kind": "trajectory_step_recorded",
             "sequence": 4
           },
           {
-            "detail": "trajectory:branch_01M7Q3DQ8RFZAHXD2B6ZY1JSZ5",
+            "detail": "trajectory:branch_01M7QC4T0FX5CFADGN7WFGBTNQ",
             "event_id": "event:5",
-            "intent_id": "intent:change_01M7Q3DQ50P9E0ATDWZTJHKFS5",
+            "intent_id": "intent:change_01M7QC4ST58WGCQ5JNZKJPCTF1",
             "kind": "trajectory_step_recorded",
             "sequence": 5
-          },
-          {
-            "detail": "trajectory:branch_01M7Q3DQ8RFZAHXD2B6ZY1JSZ5",
-            "event_id": "event:6",
-            "intent_id": "intent:change_01M7Q3DQ50P9E0ATDWZTJHKFS5",
-            "kind": "trajectory_step_recorded",
-            "sequence": 6
-          },
-          {
-            "detail": "trajectory:branch_01M7Q3DQ8RFZAHXD2B6ZY1JSZ5",
-            "event_id": "event:7",
-            "intent_id": "intent:change_01M7Q3DQ50P9E0ATDWZTJHKFS5",
-            "kind": "trajectory_step_recorded",
-            "sequence": 7
-          },
-          {
-            "detail": "trajectory:branch_01M7Q3DQ8RFZAHXD2B6ZY1JSZ5",
-            "event_id": "event:8",
-            "intent_id": "intent:change_01M7Q3DQ50P9E0ATDWZTJHKFS5",
-            "kind": "trajectory_step_recorded",
-            "sequence": 8
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 8,
+        "next_sequence": 5,
         "schema_version": "1.0.0",
         "trajectories": {
-          "branch_01M7Q3DQ8RFZAHXD2B6ZY1JSZ5": {
+          "branch_01M7QC4T0FX5CFADGN7WFGBTNQ": {
             "evidence_only": true,
-            "id": "branch_01M7Q3DQ8RFZAHXD2B6ZY1JSZ5",
-            "intent_id": "intent:change_01M7Q3DQ50P9E0ATDWZTJHKFS5",
+            "id": "branch_01M7QC4T0FX5CFADGN7WFGBTNQ",
+            "intent_id": "intent:change_01M7QC4ST58WGCQ5JNZKJPCTF1",
             "steps": [
               {
-                "action": "trajectory.record",
-                "command": "Reauthor selected reviewed source from6fff3707 in fresh claimed worktree at352d8929, after previous1787 merged externally. Preserve old source/checkpoints and native compact-boundary refusal, without importing old governance, custody or execution. Native/Python tests newly authored, source CI pending.",
+                "action": "implement",
                 "custody_event_id": "event:4",
                 "observations": [
-                  "src/decapod/core/derived_release_profile.rs",
-                  "src/decapod/core/json.rs",
-                  "src/decapod/core/derived_release_profile.rs",
-                  "src/decapod/core/mod.rs",
-                  "src/decapod/lib.rs",
-                  "tests/interop_conformance.rs",
-                  "tests/support/interop_harness.rs",
-                  "tests/fixtures/interop_strict_json.py",
-                  "/private/tmp/attack-gaps-rpc-duplicate-keys-before.json",
-                  "/private/tmp/attack-gaps-871-json-release11-inventory-review.json",
-                  "/private/tmp/attack-gaps-871-duplicate-begin-pr.json"
+                  "src/decapod/core/validate.rs",
+                  "src/decapod/plugins/policy.rs",
+                  "src/decapod/cli.rs",
+                  "tests/gatling.rs",
+                  "tests/plugins/policy.rs",
+                  "tests/unit/core/validate_tests.rs",
+                  "tests/cli_contract_enforcement.rs",
+                  "Verified clap mounts PolicyCli under GovernCommand::Policy (decapod govern policy riskmap init/verify), whereas validate.rs emitted unsupported 'decapod riskmap init' and policy.rs emitted unsupported 'decapod policy riskmap init'."
                 ],
-                "proof_refs": [
-                  "official10-duplicate-negotiation-refusal",
-                  "official10-required-unsupported-refusal",
-                  "official10-ordinary-recovery",
-                  "release11-source-inventory-review",
-                  "candidate-execution"
-                ],
+                "proof_refs": [],
                 "scope": [
-                  "issue-871"
+                  "\".decapod/managed/specs\"]",
+                  "\"tests\"",
+                  "paths:[\"src/decapod\""
                 ],
                 "sequence": 4,
                 "validation_findings": []
               },
               {
-                "action": "trajectory.record",
-                "command": "Actual Actions project checks191pass/0fail then release-drift refusal at1ba because evaluator11 regenerated Docker10 and manifest10. Official10 session opt-in installed private official11, preserving old10 and shared binary, config restored. Native11 refresh/project-check regenerated owned projections; host container requirement and unrelated completed-task proof remain blocked, no native admission claimed or skips added.",
+                "action": "verify",
                 "custody_event_id": "event:5",
                 "observations": [
-                  "/private/tmp/attack-gaps-1791-release11-projection-drift.json",
-                  "/private/tmp/attack-gaps-controller11-install.json",
-                  "/private/tmp/attack-gaps-json-controller11-project-check.json"
+                  "src/decapod/core/validate.rs",
+                  "src/decapod/plugins/policy.rs",
+                  "tests/unit/core/validate_tests.rs",
+                  "tests/plugins/policy.rs",
+                  "tests/cli_contract_enforcement.rs",
+                  ".decapod/managed/specs/INTERFACES.md",
+                  "cargo fmt --check ok; CLIPPY_CONF_DIR=.config cargo clippy --all-targets --all-features -- -D warnings ok; cargo test --lib core::validate::tests (61 passed); cargo test --test plugins_policy_tests (21 passed); cargo test --test cli_contract_enforcement risk_map_warnings (1 passed); cargo test --test gatling t070_policy (1 passed)"
                 ],
                 "proof_refs": [
-                  "actions-release-projection-drift",
-                  "official11-private-controller-install",
-                  "native-host-project-prerequisites"
+                  "fmt",
+                  "clippy",
+                  "validate_tests",
+                  "plugins_policy_tests",
+                  "cli_contract_enforcement_riskmap",
+                  "gatling_t070_policy"
                 ],
                 "scope": [
-                  "issue-871"
+                  "\".decapod/managed/specs\"]",
+                  "\"tests\"",
+                  "paths:[\"src/decapod\""
                 ],
                 "sequence": 5,
-                "validation_findings": []
-              },
-              {
-                "action": "trajectory.record",
-                "command": "Actual1ba PR core passed both dedicated broker probes but interop_conformance failed to build because include_str Python fixture was absent from Bazel compile_data; zero of11 unfiltered targets executed, no pass claimed. Declare exactly this input only for the existing target. Independently measure105 source inputs: only one .bzl changed,104 unchanged, literal diff only one compile_data path; required graph/budgets/commands unchanged, review digest ac2be63.",
-                "custody_event_id": "event:6",
-                "observations": [
-                  ".config/build/decapod.BUILD.bzl",
-                  ".decapod/config.toml",
-                  "/private/tmp/attack-gaps-1791-first-core-134746196472.log",
-                  "/private/tmp/attack-gaps-1791-bazel-fixture-inventory-review.json"
-                ],
-                "proof_refs": [
-                  "actions-bazel-interop-compilation",
-                  "independently-reviewed-bazel-input"
-                ],
-                "scope": [
-                  "issue-871"
-                ],
-                "sequence": 6,
-                "validation_findings": []
-              },
-              {
-                "action": "trajectory.record",
-                "custody_event_id": "event:7",
-                "observations": [
-                  "tests/interop_conformance.rs",
-                  "src/decapod/core/interop.rs"
-                ],
-                "proof_refs": [
-                  "actions-strict-json-positive-control"
-                ],
-                "scope": [
-                  "issue-871"
-                ],
-                "sequence": 7,
-                "tool": "Current bf388444 core Actions job134763116449: duplicate/escaped/nested negative controls completed, then legal-JSON positive sent unknown optional_metadata and strict schema correctly refused invalid_params at line244. 9 scenarios passed,1 failed. Raw log SHA256 e6f2db17b3586a40db44261ab1d05dedaad2973ed68c92c2be1d21f69882d65c. Preserve strict schema; make unknown-field refusal explicit and use supported optional_ops/extensions for ordinary recovery.",
-                "validation_findings": []
-              },
-              {
-                "action": "trajectory.record",
-                "custody_event_id": "event:8",
-                "observations": [
-                  "tests/interop_conformance.rs",
-                  ".decapod/managed/specs/INTERFACES.md"
-                ],
-                "proof_refs": [
-                  "rustfmt",
-                  "diff-whitespace"
-                ],
-                "scope": [
-                  "issue-871"
-                ],
-                "sequence": 8,
-                "tool": "Converted invalid positive optional_metadata payload into an explicit strict-schema invalid_params control. Recovery now uses supported optional_ops/extensions, checks decoded Unicode and omitted values. Product parser/schema unchanged; runtime proof pending required Actions.",
                 "validation_findings": []
               }
             ]
           }
         }
       },
-      "declared_commands": [
-        "Actual Actions project checks191pass/0fail then release-drift refusal at1ba because evaluator11 regenerated Docker10 and manifest10. Official10 session opt-in installed private official11, preserving old10 and shared binary, config restored. Native11 refresh/project-check regenerated owned projections; host container requirement and unrelated completed-task proof remain blocked, no native admission claimed or skips added.",
-        "Actual1ba PR core passed both dedicated broker probes but interop_conformance failed to build because include_str Python fixture was absent from Bazel compile_data; zero of11 unfiltered targets executed, no pass claimed. Declare exactly this input only for the existing target. Independently measure105 source inputs: only one .bzl changed,104 unchanged, literal diff only one compile_data path; required graph/budgets/commands unchanged, review digest ac2be63.",
-        "Reauthor selected reviewed source from6fff3707 in fresh claimed worktree at352d8929, after previous1787 merged externally. Preserve old source/checkpoints and native compact-boundary refusal, without importing old governance, custody or execution. Native/Python tests newly authored, source CI pending."
-      ],
+      "declared_commands": [],
       "destination": "pull request",
       "evidence": [
-        "/private/tmp/attack-gaps-1791-bazel-fixture-inventory-review.json",
-        "/private/tmp/attack-gaps-1791-first-core-134746196472.log",
-        "/private/tmp/attack-gaps-1791-release11-projection-drift.json",
-        "/private/tmp/attack-gaps-871-duplicate-begin-pr.json",
-        "/private/tmp/attack-gaps-871-json-release11-inventory-review.json",
-        "/private/tmp/attack-gaps-controller11-install.json",
-        "/private/tmp/attack-gaps-json-controller11-project-check.json",
-        "/private/tmp/attack-gaps-rpc-duplicate-keys-before.json"
+        "Verified clap mounts PolicyCli under GovernCommand::Policy (decapod govern policy riskmap init/verify), whereas validate.rs emitted unsupported 'decapod riskmap init' and policy.rs emitted unsupported 'decapod policy riskmap init'.",
+        "cargo fmt --check ok; CLIPPY_CONF_DIR=.config cargo clippy --all-targets --all-features -- -D warnings ok; cargo test --lib core::validate::tests (61 passed); cargo test --test plugins_policy_tests (21 passed); cargo test --test cli_contract_enforcement risk_map_warnings (1 passed); cargo test --test gatling t070_policy (1 passed)"
       ],
       "inspected_files": [
-        "src/decapod/core/derived_release_profile.rs",
-        "src/decapod/core/interop.rs",
-        "tests/interop_conformance.rs"
+        "src/decapod/cli.rs",
+        "src/decapod/core/validate.rs",
+        "src/decapod/plugins/policy.rs",
+        "tests/cli_contract_enforcement.rs",
+        "tests/gatling.rs",
+        "tests/plugins/policy.rs",
+        "tests/unit/core/validate_tests.rs"
       ],
-      "intent_id": "intent:change_01M7Q3DQ50P9E0ATDWZTJHKFS5",
+      "intent_id": "intent:change_01M7QC4ST58WGCQ5JNZKJPCTF1",
       "modified_files": [
-        ".config/build/decapod.BUILD.bzl",
-        ".decapod/config.toml",
         ".decapod/managed/specs/INTERFACES.md",
-        "src/decapod/core/derived_release_profile.rs",
-        "src/decapod/core/json.rs",
-        "src/decapod/core/mod.rs",
-        "src/decapod/lib.rs",
-        "tests/fixtures/interop_strict_json.py",
-        "tests/interop_conformance.rs",
-        "tests/support/interop_harness.rs"
+        "src/decapod/core/validate.rs",
+        "src/decapod/plugins/policy.rs",
+        "tests/cli_contract_enforcement.rs",
+        "tests/plugins/policy.rs",
+        "tests/unit/core/validate_tests.rs"
       ],
       "next_transitions": [
-        "Checkpoint and commit actual official11 projection repair before push; rerun Actions for exact new source.",
-        "Refine plan and declare falsifiable checks",
-        "Refresh/review specs, checkpoint and publish a new narrow follow-up PR under explicit user exception; run all applicable GitHub Actions.",
-        "Refresh/review specs, checkpoint before commit, verify exact-head history, push1791 and execute current Actions."
+        "Refine plan and declare falsifiable checks"
       ],
       "repo_scope": [
-        "issue-871"
+        "\".decapod/managed/specs\"]",
+        "\"tests\"",
+        "paths:[\"src/decapod\""
       ],
-      "run_id": "branch_01M7Q3DQ8RFZAHXD2B6ZY1JSZ5",
+      "run_id": "branch_01M7QC4T0FX5CFADGN7WFGBTNQ",
       "schema_version": "1.1.0",
       "shortcut_risk_signals": [],
-      "task_id": "bugs_01m7q384jw6mn3w5",
-      "tool_calls": [
-        "Converted invalid positive optional_metadata payload into an explicit strict-schema invalid_params control. Recovery now uses supported optional_ops/extensions, checks decoded Unicode and omitted values. Product parser/schema unchanged; runtime proof pending required Actions.",
-        "Current bf388444 core Actions job134763116449: duplicate/escaped/nested negative controls completed, then legal-JSON positive sent unknown optional_metadata and strict schema correctly refused invalid_params at line244. 9 scenarios passed,1 failed. Raw log SHA256 e6f2db17b3586a40db44261ab1d05dedaad2973ed68c92c2be1d21f69882d65c. Preserve strict schema; make unknown-field refusal explicit and use supported optional_ops/extensions for ordinary recovery."
-      ],
+      "task_id": "bugs_01m7qbj86wggnc9g",
+      "tool_calls": [],
       "unresolved_assumptions": []
     }
   },
