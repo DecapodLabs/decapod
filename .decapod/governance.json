@@ -602,6 +602,14 @@
       "proof_refs": [
         ".decapod/config.toml"
       ]
+    },
+    {
+      "id": "cp-1739-4",
+      "summary": "Refresh .manifest.json config_input_hash to 3eebcedcab3ab9a0a3b9e246f50e473dbe93d37ed41874918a81fac8bd6354ce after config.toml digest reconciliation",
+      "input_digest": "sha256:f3b057af5b209f41acfe9415038e1fa77ef21747ea727b1e6854be3babaf3cbf",
+      "proof_refs": [
+        ".decapod/managed/specs/.manifest.json"
+      ]
     }
   ],
   "intents": {
