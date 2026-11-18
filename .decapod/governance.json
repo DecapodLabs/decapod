@@ -643,6 +643,16 @@
         "src/decapod/lib.rs",
         "tests/support/justfile_inventory.rs"
       ]
+    },
+    {
+      "id": "advisory-rpc-custody-classification",
+      "summary": "Reuse canonical RPC custody/awareness classification for bootstrap and advisory reads while retaining validation/assurance mandate checks; observed seven reflection and four inventory regressions pass",
+      "input_digest": "sha256:b1c2e7251d5f0dbb012077a2da6b5a3c06936c5f84191aae6441a305cd3fe7b3",
+      "proof_refs": [
+        "src/decapod/lib.rs",
+        "tests/infer_precision.rs",
+        "tests/support/justfile_inventory.rs"
+      ]
     }
   ],
   "intents": {
@@ -684,22 +694,22 @@
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Reviewed current common resolver, bootstrap RPC classification and custody owners. Existing architecture is accurate and the change adds no authority engine or store.",
-          "reviewed_code_fingerprint": "dcd12cb1faf011c2962d5fed5c8e490c8579c4292c9ad4c62732bfaa32d31029",
+          "reason": "Reviewed current common resolver and canonical RPC custody/awareness reuse. Bootstrap/advisory state resolution precedes source authoring; native workspace, mutation and proof owners remain unchanged.",
+          "reviewed_code_fingerprint": "96f90afade7d451134683c8171d335ca40f2d61e3b5c4b425aaff30a716e53a4",
           "spec_material_hash": "3f980e69215f687fc85b0378720299c0df7dcfdd5bd2e31ef29da19a64be614f"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Reviewed bounded context and bootstrap mandate regression repair, including preservation of worktree-free data-store operations under their existing awareness/mandate owner. Root initialization, status and ensure remain usable; actual protected mutation/publication gates remain enforced.",
-          "reviewed_code_fingerprint": "dcd12cb1faf011c2962d5fed5c8e490c8579c4292c9ad4c62732bfaa32d31029",
+          "reason": "Reviewed restored mandate references, bounded selector and root advisory/bootstrap operations against canonical RPC custody/awareness classifiers. validate.run and assurance.evaluate retain mandate checks. Existing macOS inventory and orientation/mentor regressions pass without changing their proof assertions.",
+          "reviewed_code_fingerprint": "96f90afade7d451134683c8171d335ca40f2d61e3b5c4b425aaff30a716e53a4",
           "spec_material_hash": "7d038b7ce06df1a89c3a412c4d4de9f8b8ada22b2d52d0b06314fc29437a10be"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Reviewed current RPC classifiers: discovery/bootstrap exemptions preserve original initialization order; no changes to mutation awareness, task claims, workspace creation custody or publication proof; emitted mandates remain inspectable.",
-          "reviewed_code_fingerprint": "dcd12cb1faf011c2962d5fed5c8e490c8579c4292c9ad4c62732bfaa32d31029",
+          "reason": "Reviewed current classification and explicit retention of validate.run/assurance mandate checks. Mutating store.upsert, source scaffolding and publication stay gated; root advisory reads do not authorize execution or proof.",
+          "reviewed_code_fingerprint": "96f90afade7d451134683c8171d335ca40f2d61e3b5c4b425aaff30a716e53a4",
           "spec_material_hash": "0c791a6100ed5aec7fe4cedfa16680988dd1e48d50d00af272ef9dff372c3d4d"
         }
       ],
@@ -713,14 +723,18 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1794959622Z"
+      "updated_at": "1794961076Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:8809279ac2c976e59bd28e7f2e0356ed434119938978391c6b4e7682b31f6343",
+      "artifact_hash": "sha256:14bfa700d7446c21e08ec4072417506bf0d53c87d3b9bc418cb4718e3e5d0da8",
       "checks": [
+        {
+          "name": "advisory-rpc-regressions",
+          "status": "passed"
+        },
         {
           "name": "bootstrap-rpc-regression",
           "status": "passed"
@@ -844,10 +858,17 @@
             "intent_id": "intent:change_01M7NQXTQ8MSHMYM11DJ5YRWJJ",
             "kind": "trajectory_step_recorded",
             "sequence": 11
+          },
+          {
+            "detail": "trajectory:branch_01M7NQXTTWEEHK0YNBJBBX8ERJ",
+            "event_id": "event:12",
+            "intent_id": "intent:change_01M7NQXTQ8MSHMYM11DJ5YRWJJ",
+            "kind": "trajectory_step_recorded",
+            "sequence": 12
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 11,
+        "next_sequence": 12,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M7NQXTTWEEHK0YNBJBBX8ERJ": {
@@ -994,6 +1015,21 @@
                 ],
                 "sequence": 11,
                 "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:12",
+                "observations": [
+                  "Actual entrypoint_correctness infer_precision executed seven tests and all passed, including the two failures observed in GitHub44199857481. The earlier cli_contracts filter matched zero tests and supplies no reflection evidence. Bootstrap unit passed; actual macOS inventory four tests passed. Current source preserves validate.run and assurance mandate enforcement."
+                ],
+                "proof_refs": [
+                  "advisory-rpc-regressions"
+                ],
+                "scope": [
+                  "constitution-context-1772-1774-657-880-1095-879"
+                ],
+                "sequence": 12,
+                "validation_findings": []
               }
             ]
           }
@@ -1005,6 +1041,7 @@
       ],
       "destination": "pull request",
       "evidence": [
+        "Actual entrypoint_correctness infer_precision executed seven tests and all passed, including the two failures observed in GitHub44199857481. The earlier cli_contracts filter matched zero tests and supplies no reflection evidence. Bootstrap unit passed; actual macOS inventory four tests passed. Current source preserves validate.run and assurance mandate enforcement.",
         "After CI-reproduced root bootstrap rejection: bootstrap_rpc_does_not_require test passed; actual cli_contracts justfile_inventory executed four tests with zero failures, including case_insensitive_apfs and tracked-index inventory. Fixture assertion was corrected to preserve existing worktree-free store.upsert semantics while retaining mandate enforcement. No runtime gate was removed for mutation/publication.",
         "Buildkite Decapod Validate #11903 succeeded for c82cdf5d; full native collector interrupted for current-content review repair; GitHub governance-artifacts failed SPEC_REVIEW_REQUIRED for INTERFACES.md, now explicitly reviewed; no publication readiness asserted.",
         "Correction to inventory count: 105 inventoried paths were compared, not 107. Exact version-only delta and digest remain as observed.",

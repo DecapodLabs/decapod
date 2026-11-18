@@ -8242,25 +8242,13 @@ fn rpc_op_requires_constitutional_awareness(op: &str) -> bool {
 }
 
 fn rpc_op_skips_mandate_enforcement(op: &str) -> bool {
-    matches!(
-        op,
-        // Bootstrap and status must work before an isolated workspace exists.
-        // workspace.ensure enforces creation custody in its native owner.
-        "agent.init"
-            | "workspace.status"
-            | "workspace.ensure"
-            | "context.resolve"
-            | "context.scope"
-            | "context.bindings"
-            | "context.capsule.query"
-            | "constitution.get"
-            | "schema.get"
-            | "intent.reconcile"
-            | "specs.refresh"
-            | "interop.manifest"
-            | "interop.negotiate"
-            | "interop.project"
-    )
+    // Reuse the canonical RPC custody/awareness classification. Read/bootstrap
+    // operations must be available before source-authoring custody exists;
+    // their native owners still enforce their own mutation/proof prerequisites.
+    op == "specs.refresh"
+        || (!rpc_op_requires_worktree(op)
+            && !rpc_op_requires_constitutional_awareness(op)
+            && !matches!(op, "validate.run" | "assurance.evaluate"))
 }
 
 fn enforce_constitutional_awareness_for_rpc(
@@ -13227,14 +13215,27 @@ fn intent_reconciliation_rpc_does_not_require_mutation_custody() {
 #[cfg(test)]
 #[test]
 fn bootstrap_rpc_does_not_require_the_workspace_it_is_discovering_or_creating() {
-    for op in ["agent.init", "workspace.status", "workspace.ensure"] {
+    for op in [
+        "agent.init",
+        "workspace.status",
+        "workspace.ensure",
+        "mentor.obligations",
+        "store.query",
+        "standards.resolve",
+    ] {
         assert!(!rpc_op_requires_worktree(op));
         assert!(rpc_op_skips_mandate_enforcement(op));
     }
     for op in ["workspace.publish", "scaffold.apply_answer"] {
         assert!(rpc_op_requires_worktree(op));
     }
-    for op in ["store.upsert", "workspace.publish", "scaffold.apply_answer"] {
+    for op in [
+        "store.upsert",
+        "workspace.publish",
+        "scaffold.apply_answer",
+        "validate.run",
+        "assurance.evaluate",
+    ] {
         assert!(!rpc_op_skips_mandate_enforcement(op));
     }
 }
