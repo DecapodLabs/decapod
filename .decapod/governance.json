@@ -608,6 +608,11 @@
       "id": "interop-startup-rpc-envelope-871",
       "summary": "Use the existing qualified RPC refusal constructor after actual CI compile failure",
       "input_digest": "sha256:e3186f8880387635b5a222c93f6cb8259746f17389440dfff7ed365e1dbd53e1"
+    },
+    {
+      "id": "conformance-controller10-projections-871",
+      "summary": "Regenerate accepted-release projections through isolated official0.148.10 controller and retain current counterexample",
+      "input_digest": "sha256:5e147b98ada976da72567b1258b9f27ddf5220aaa2a256b5b8721f5c12ef5248"
     }
   ],
   "intents": {
@@ -649,21 +654,21 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "The public startup function calls the qualified existing RPC error constructor before project startup; source changes are limited to the namespace correction, with the registered-operation authority paths preserved.",
+          "reason": "Current source retains existing RPC catalog, typed envelope and canonical proof owners; official0.148.10 regeneration aligns release projections without a candidate verifier or new proof authority.",
           "reviewed_code_fingerprint": "224611d124f2edf70798aa0c4282ccd863df38a3eedf3b6848f2ab5f2b5f07f5",
           "spec_material_hash": "7cb4917d4fa717f12caadf23ebdecf9d042d50e14a43ed05af52bb880a3f8320"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Same existing unknown_op wire envelope; current source namespace correction does not alter discovery or registered operation authority.",
+          "reason": "Current interface preserves NotRun source coverage, existing response envelopes and native operation gates; controller10 refresh is release metadata, not executed conformance.",
           "reviewed_code_fingerprint": "224611d124f2edf70798aa0c4282ccd863df38a3eedf3b6848f2ab5f2b5f07f5",
           "spec_material_hash": "3b629c292e92c2ad14441fd2ee1d5c0247a599fd66b05237b0e5d4f06f26f974"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Qualified call to existing error constructor adds no privilege or producer authority; preserve all accepted security restrictions.",
+          "reason": "Existing accepted policy, custody, proof-producer and store boundaries remain enforced; a private official controller update grants no new project privilege.",
           "reviewed_code_fingerprint": "224611d124f2edf70798aa0c4282ccd863df38a3eedf3b6848f2ab5f2b5f07f5",
           "spec_material_hash": "cdc863757905c53f4f176284c72744f0575184c65a059b7edf6239b47c4fc644"
         }
@@ -676,14 +681,14 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1794983667Z"
+      "updated_at": "1794984214Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch",
         "Linked worktree admission and execution-ready verified separately after backup denial; maintenance policy unchanged. No source/PR changes in other owners."
       ],
-      "artifact_hash": "sha256:14580dbcca130094cc81a6a916d3d67ea5afeacf573d2eebf3b68e3abb5ce49b",
+      "artifact_hash": "sha256:f515fe67e278e3614f781a256403d9fceda38690eef9e0fa7925cacc824c3d41",
       "checks": [
         {
           "name": "baseline_counterexample",
@@ -780,10 +785,17 @@
             "intent_id": "intent:change_01M7NWVMEADM6FS731H2AKEVZM",
             "kind": "trajectory_step_recorded",
             "sequence": 11
+          },
+          {
+            "detail": "trajectory:branch_01M7NWVMHPED3ZZQ4W9D4A0ZJ6",
+            "event_id": "event:12",
+            "intent_id": "intent:change_01M7NWVMEADM6FS731H2AKEVZM",
+            "kind": "trajectory_step_recorded",
+            "sequence": 12
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 11,
+        "next_sequence": 12,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M7NWVMHPED3ZZQ4W9D4A0ZJ6": {
@@ -931,6 +943,20 @@
                 ],
                 "sequence": 11,
                 "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:12",
+                "observations": [
+                  "Required12110 compile failure fixed in f837e114. After actual1660 standalone validation showed Docker pin and manifest release/template drift9-to10, inspected official updater and package build script; used session acquire with scoped private CARGO_HOME and temporary repo.session_auto_update opt-in, then restored the exact backed config. No shared executable change. Session-installed controller0.148.10 SHA256a0f69315a950a17a8acf82898c1a8cab6fed71859295ad8cfb9852cc35363304; embedded docs ingested, new config/accepted-policy guidance read. Migration notice reported no applied migrations. Native workspace ensure/specs.refresh regenerated Docker/manifest and all3 reviews were rebound to current source. Actual official10 manifest still advertises12 false Verified entries with validate=true; /private/tmp/attack-gaps-871-release10-before.json preserves new baseline counterexample. No current conformance execution or full readiness yet."
+                ],
+                "proof_refs": [],
+                "scope": [
+                  "src/decapod/core/interop.rs",
+                  "tests/interop_conformance.rs"
+                ],
+                "sequence": 12,
+                "validation_findings": []
               }
             ]
           }
@@ -946,7 +972,8 @@
         "Actual Buildkite12110 job01a1ed56-73f9-4bbe-8f6d-99a75057233c and GitHub clippy134622777057 both fail E0425 atlib.rs2795 before tests: error_response was not in run function scope. Correct to core::rpc::error_response, preserving existing envelope constructor. No patched test execution claimed. Separate1660 actual0.148.10 standalone job reports Docker pin9-to10 and manifest evaluating-release/template metadata drift; installed controller remainsofficial0.148.9. Never manually rewrite generated projections or claim old execution for new source.",
         "Actual official0.148.9 RPC intent.reconcile succeeded while interop.manifest omitted it; raw outputs and binary SHA in /private/tmp/attack-gaps-871-drift-before-summary.json. Review found exactly42 current handlers vs39 catalog entries: intent.reconcile, state.resolve, state.diff omitted; no catalog name lacks a handler. Extend existing catalog and enforce registration before RPC routing, deriving name list from metadata to remove one duplicate table. Preserve per-operation session/workspace/mandate guards and no negotiation authority. Existing conformance reports lack tested-binary digest and authenticated custody; do not turn them into executed verification. New candidate supersedes pending e212ad75 proof only after fresh full execution.",
         "Counterexample /private/tmp/attack-gaps-871-drift-before-summary.json: official binary dispatch success for unadvertised intent.reconcile. Empty-Git unknown-op baseline returned missing .decapod instead of typed refusal, creating no files; initial non-Git temp fixture reached an unrelated ancestor storage probe and is not used as product denial evidence. Add42-name single-declaration registration,3 missing entries, actual discovery assertions and isolated no-startup unknown-op regression. No patched-binary execution yet; all authenticated receipt-production and remaining authority/consumer obligations remain open.",
-        "Old candidate ddcefa86/base6ab6de31 retains Buildkite11973 clippy plugin-clone failure before execution and core validation smoke timeout; interop_conformance passed310.3s. Accepted master independently advanced to c47137ad via1779; reconcile real accepted changes in a two-parent merge and require fresh full exact-candidate proof. Keep active original governance and checkpoints through Git merge resolution; accepted historical governance remains in second parent. New merge is necessary source/base integration, not a synthetic CI trigger or proof relabel. All broader871 receipt-production/drift/consumer acceptance stays open."
+        "Old candidate ddcefa86/base6ab6de31 retains Buildkite11973 clippy plugin-clone failure before execution and core validation smoke timeout; interop_conformance passed310.3s. Accepted master independently advanced to c47137ad via1779; reconcile real accepted changes in a two-parent merge and require fresh full exact-candidate proof. Keep active original governance and checkpoints through Git merge resolution; accepted historical governance remains in second parent. New merge is necessary source/base integration, not a synthetic CI trigger or proof relabel. All broader871 receipt-production/drift/consumer acceptance stays open.",
+        "Required12110 compile failure fixed in f837e114. After actual1660 standalone validation showed Docker pin and manifest release/template drift9-to10, inspected official updater and package build script; used session acquire with scoped private CARGO_HOME and temporary repo.session_auto_update opt-in, then restored the exact backed config. No shared executable change. Session-installed controller0.148.10 SHA256a0f69315a950a17a8acf82898c1a8cab6fed71859295ad8cfb9852cc35363304; embedded docs ingested, new config/accepted-policy guidance read. Migration notice reported no applied migrations. Native workspace ensure/specs.refresh regenerated Docker/manifest and all3 reviews were rebound to current source. Actual official10 manifest still advertises12 false Verified entries with validate=true; /private/tmp/attack-gaps-871-release10-before.json preserves new baseline counterexample. No current conformance execution or full readiness yet."
       ],
       "inspected_files": [
         "src/decapod/core/interop.rs",

@@ -42,8 +42,10 @@ The combined candidate incorporates accepted release `34f837d4` (0.148.10).
 All 105 verification-source inputs were independently remeasured: only the
 root package versions in Cargo.toml and Cargo.lock changed from 0.148.9;
 the remaining 103 inputs, workflows, required graph and toolchain are intact.
-The reviewed inventory is reconciled accordingly. The installed 0.148.9
-controller is unchanged; release integration and review are not execution proof.
+The reviewed inventory is reconciled accordingly. A scoped 0.148.10 controller,
+installed through the official session updater, owns current projection refresh
+and validation. Its actual binary digest is retained separately from candidate
+evidence. Controller installation and release integration are not test proof.
 
 The current RPC surface must also advertise `intent.reconcile`, `state.resolve`
 and `state.diff`. The real entry boundary rejects unregistered operation names
