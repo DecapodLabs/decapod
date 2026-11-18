@@ -589,6 +589,11 @@
       "id": "official11-release-projection-correction",
       "summary": "Repair actual Actions release drift through official session-updated11 native projections; preserve191/0 prerequisite result as bounded and host failures as failures. Metadata fix grants no conformance or native readiness. Checkpoint completes before commit.",
       "input_digest": "sha256:02a169756d093ac1890782ef36663a2dd889ac8d5843fa7cdee36659ee63f31f"
+    },
+    {
+      "id": "explicit-bazel-interop-fixture",
+      "summary": "Correct actual Bazel missing compile input by declaring only the included Python fixture for existing interop target; independently review all105 inventory entries,104 unchanged, full graph retained. Failed1ba build preserved. Checkpoint completes before commit; source tests pending.",
+      "input_digest": "sha256:933651ac87df7a40cc8db8e9ae8197e13d66bfbad18056f7c30187c1e6ab42cf"
     }
   ],
   "intents": {
@@ -619,7 +624,7 @@
       },
       "deferred_questions": [],
       "human_questions": [],
-      "intent": "Fresh follow-up to merged1787 from actual accepted352d8929 (release0.148.11). Preserve unaccepted6fff history and native begin-pr refusal. Reauthor only existing unique decoder extraction, strict both-route RPC framing, real binary/Python differential controls and semantic specs. Reconcile only independently measured release source-inventory changes; keep canonical proof and all configured requirements. User explicitly selects publish PR and GitHub Actions success while ignoring Buildkite; no native admission or merge claim.",
+      "intent": "Strict duplicate-key RPC follow-up to merged1787. Reuse existing recursive decoder, preserve required semantics/bounds/redaction and ordinary recovery. Actual Bazel compile failure requires explicitly declaring the Python fixture as compile_data only for existing interop_conformance; independently review changed build input across all105 sources without altering targets, commands, graph, budgets or toolchain. Preserve old failures and current official11 projection metadata. User authorizes publication and Actions focus while ignoring Buildkite; no native admission, history waiver, force push, merge or issue closure.",
       "phases": [],
       "proof_hooks": [
         "decapod validate"
@@ -629,21 +634,21 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Existing unique decoder extraction and RPC semantics retained; official11 generated projections now match the actual Actions evaluator, without a new producer or weakened graph.",
+          "reason": "Existing Bazel target now declares the included Python fixture as compile_data, matching Cargo; preserves required targets/graph and truthful failed-build classification.",
           "reviewed_code_fingerprint": "ffc32d8d5b27e6612e398abd3d043398d4ef5f4414848e3049d405e8ba98f014",
-          "spec_material_hash": "9c4a97b951b43c4eff6e3ce901810faea79d3bd282ed709654daf5ef55f933ae"
+          "spec_material_hash": "a56b9f78b78c318ce14753002b3e662908772761757d7adb849dde1951d37e6b"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Recursive decoded-key refusal, ordinary optional JSON and typed transport contracts remain; current evaluator metadata is a separate prerequisite, not execution conformance.",
+          "reason": "RPC duplicate-key refusal and valid recovery semantics unchanged; explicit build input enables the same actual consumer controls under the required Bazel recipe.",
           "reviewed_code_fingerprint": "ffc32d8d5b27e6612e398abd3d043398d4ef5f4414848e3049d405e8ba98f014",
           "spec_material_hash": "313ad2235c11482f6c9340b3b14abed124a826841f0a38e963d98afc9c3d3dec"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Preserve framing/redaction and trust boundaries; no host container, unrelated task proof, CI required check or native admission gate is waived.",
+          "reason": "Fixture input is declared, not discovered through ambient filesystem; no sandbox broadening, new authority, required-check removal or counterfeit execution state.",
           "reviewed_code_fingerprint": "ffc32d8d5b27e6612e398abd3d043398d4ef5f4414848e3049d405e8ba98f014",
           "spec_material_hash": "9d11c08d69c5a99641a0d006db91d357c43458787eb442f659ffe7ac04be2a7e"
         }
@@ -656,14 +661,18 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1794999773Z"
+      "updated_at": "1795000443Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:5c32b7d95d2794527687f4f4ee70f8b5da41d520984d72d8bfbb89750646c49d",
+      "artifact_hash": "sha256:9a784f6d5e2fd7ac0ab99c74f4d792a337cd9df12bb07e5e1d57b201a02e5fc4",
       "checks": [
+        {
+          "name": "actions-bazel-interop-compilation",
+          "status": "failed"
+        },
         {
           "name": "actions-release-projection-drift",
           "status": "failed"
@@ -671,6 +680,10 @@
         {
           "name": "candidate-execution",
           "status": "unavailable"
+        },
+        {
+          "name": "independently-reviewed-bazel-input",
+          "status": "passed"
         },
         {
           "name": "native-host-project-prerequisites",
@@ -725,10 +738,17 @@
             "intent_id": "intent:change_01M7Q3DQ50P9E0ATDWZTJHKFS5",
             "kind": "trajectory_step_recorded",
             "sequence": 5
+          },
+          {
+            "detail": "trajectory:branch_01M7Q3DQ8RFZAHXD2B6ZY1JSZ5",
+            "event_id": "event:6",
+            "intent_id": "intent:change_01M7Q3DQ50P9E0ATDWZTJHKFS5",
+            "kind": "trajectory_step_recorded",
+            "sequence": 6
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 5,
+        "next_sequence": 6,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M7Q3DQ8RFZAHXD2B6ZY1JSZ5": {
@@ -785,6 +805,26 @@
                 ],
                 "sequence": 5,
                 "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "command": "Actual1ba PR core passed both dedicated broker probes but interop_conformance failed to build because include_str Python fixture was absent from Bazel compile_data; zero of11 unfiltered targets executed, no pass claimed. Declare exactly this input only for the existing target. Independently measure105 source inputs: only one .bzl changed,104 unchanged, literal diff only one compile_data path; required graph/budgets/commands unchanged, review digest ac2be63.",
+                "custody_event_id": "event:6",
+                "observations": [
+                  ".config/build/decapod.BUILD.bzl",
+                  ".decapod/config.toml",
+                  "/private/tmp/attack-gaps-1791-first-core-134746196472.log",
+                  "/private/tmp/attack-gaps-1791-bazel-fixture-inventory-review.json"
+                ],
+                "proof_refs": [
+                  "actions-bazel-interop-compilation",
+                  "independently-reviewed-bazel-input"
+                ],
+                "scope": [
+                  "issue-871"
+                ],
+                "sequence": 6,
+                "validation_findings": []
               }
             ]
           }
@@ -792,10 +832,13 @@
       },
       "declared_commands": [
         "Actual Actions project checks191pass/0fail then release-drift refusal at1ba because evaluator11 regenerated Docker10 and manifest10. Official10 session opt-in installed private official11, preserving old10 and shared binary, config restored. Native11 refresh/project-check regenerated owned projections; host container requirement and unrelated completed-task proof remain blocked, no native admission claimed or skips added.",
+        "Actual1ba PR core passed both dedicated broker probes but interop_conformance failed to build because include_str Python fixture was absent from Bazel compile_data; zero of11 unfiltered targets executed, no pass claimed. Declare exactly this input only for the existing target. Independently measure105 source inputs: only one .bzl changed,104 unchanged, literal diff only one compile_data path; required graph/budgets/commands unchanged, review digest ac2be63.",
         "Reauthor selected reviewed source from6fff3707 in fresh claimed worktree at352d8929, after previous1787 merged externally. Preserve old source/checkpoints and native compact-boundary refusal, without importing old governance, custody or execution. Native/Python tests newly authored, source CI pending."
       ],
       "destination": "pull request",
       "evidence": [
+        "/private/tmp/attack-gaps-1791-bazel-fixture-inventory-review.json",
+        "/private/tmp/attack-gaps-1791-first-core-134746196472.log",
         "/private/tmp/attack-gaps-1791-release11-projection-drift.json",
         "/private/tmp/attack-gaps-871-duplicate-begin-pr.json",
         "/private/tmp/attack-gaps-871-json-release11-inventory-review.json",
@@ -808,6 +851,8 @@
       ],
       "intent_id": "intent:change_01M7Q3DQ50P9E0ATDWZTJHKFS5",
       "modified_files": [
+        ".config/build/decapod.BUILD.bzl",
+        ".decapod/config.toml",
         "src/decapod/core/derived_release_profile.rs",
         "src/decapod/core/json.rs",
         "src/decapod/core/mod.rs",
@@ -819,7 +864,8 @@
       "next_transitions": [
         "Checkpoint and commit actual official11 projection repair before push; rerun Actions for exact new source.",
         "Refine plan and declare falsifiable checks",
-        "Refresh/review specs, checkpoint and publish a new narrow follow-up PR under explicit user exception; run all applicable GitHub Actions."
+        "Refresh/review specs, checkpoint and publish a new narrow follow-up PR under explicit user exception; run all applicable GitHub Actions.",
+        "Refresh/review specs, checkpoint before commit, verify exact-head history, push1791 and execute current Actions."
       ],
       "repo_scope": [
         "issue-871"

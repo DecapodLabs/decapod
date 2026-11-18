@@ -10,6 +10,12 @@ no proof authority. Actual-binary controls refuse nested and escaped duplicate
 keys on both RPC transports, then recover ordinary negotiation; a separate
 Python implementation checks the focused JSON meaning on the same host.
 
+The Bazel interoperability target declares the included Python source as
+compile data, matching Cargo's direct include dependency. Required test targets,
+commands and budgets are unchanged. The first Bazel run correctly failed to
+build when that input was undeclared; no interoperability execution is claimed
+for that failed build.
+
 The required broker preparation probe measures the competing mutation's elapsed
 time before releasing the mock preparation and awaiting its client cleanup.
 It retains the strict ten-second bound and explicitly checks that preparation
