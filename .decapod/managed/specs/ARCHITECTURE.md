@@ -1,6 +1,55 @@
 # Architecture
 
+## Current workunit validation judgments
+
+`core::validation_history::finish_archive` retains immutable successful
+observations and separately withdraws current workunit proof after a completed
+task-bound full not-ready judgment. `core::workunit` appends the withdrawal to
+its existing canonical journal, checking the observed generation and current
+task/custody inside the same database transaction before publishing the cache
+projection. The generation advances even when no proof had been promoted, so
+an earlier success cannot later authorize that subject. Recovery restores the
+journal's narrowed state; it does not reconstruct a success from diagnostics.
+
+Current workunit selection filters canonical history by exact current task
+binding before applying the existing proof and currentness checks. It never
+falls back to older custody or skips a newer matching stale observation.
+General historical lookup preserves its ambiguity contract. Separate stores
+remain explicitly unsupported for atomic proof acceptance or withdrawal.
+
+## Workunit declarations retain their proof owner (#1660)
+
+`validation_rules::evaluate_workunit_rule` accepts the opaque, complete current
+runtime result before canonical append, with a CLAIMED workunit, supported
+full-validation plans, bound living specs and genuine capsule policy lineage.
+`workunit::verify_capsule_policy_lineage_for_task` separately requires the
+task's context state reference and internally consistent capsule. These
+prerequisites stay enforced when recovering from a diagnostic declaration.
+
+`core::workunit::transition_status` obtains current applicability from
+`validation_history::current_workunit_proof` and fences accepted append in the
+canonical task/proof transaction. File integrity and a declared pass cannot
+replace that producer. `tests/consumer_readiness.rs` exercises this through
+real CLI task/workspace admission and a current checkpoint using the existing
+consumer fixture. It introduces no proof engine or alternate datastore.
+Separately initialized workunit stores retain their explicit unsupported
+atomic-domain boundary; this regression does not claim convergence.
+
 ## Source coverage and execution observations (#871)
+
+The recursive unique-key JSON decoder previously local to
+`core::derived_release_profile` now lives in shared internal `core::json`.
+Existing release-manifest readers and RPC framing reuse it. Callers retain
+their framing budgets and typed schema/diagnostic owners. The extraction adds
+no proof authority. Actual-binary controls refuse nested and escaped duplicate
+keys on both RPC transports, then recover ordinary negotiation; a separate
+Python implementation checks the focused JSON meaning on the same host.
+
+The Bazel interoperability target declares the included Python source as
+compile data, matching Cargo's direct include dependency. Required test targets,
+commands and budgets are unchanged. The first Bazel run correctly failed to
+build when that input was undeclared; no interoperability execution is claimed
+for that failed build.
 
 The required broker preparation probe measures the competing mutation's elapsed
 time before releasing the mock preparation and awaiting its client cleanup.
@@ -1030,8 +1079,8 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `39c1936feca390d3b98543f2bcdaa014a205d26c432c8b238ec618f30d6504c3`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (236 files), `tests/` (236 files)
+- Repository signal fingerprint: `4b9f27e49b2e369d71805544ece3945c865791739f6b73e0f483c75c50e2d68e`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (237 files), `tests/` (237 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 

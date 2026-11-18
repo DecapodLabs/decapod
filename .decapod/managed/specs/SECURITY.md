@@ -1,5 +1,27 @@
 # Security
 
+## Ambiguous RPC JSON
+
+Duplicate decoded keys are invalid at every nesting level, including Unicode
+escapes that spell an existing key. A later field cannot erase an unsupported
+required extension before negotiation. Recursive uniqueness uses the existing
+release-manifest decoder through a shared internal utility, preserving caller
+size bounds and specialized redaction. This controls interpretation at the
+CLI RPC boundary only; it does not authenticate an imported proof or establish
+host-wide observation. Same-host Python differential parsing is distinct from
+independent trusted execution.
+
+## Withdrawal and fresh custody
+
+A full validator not-ready judgment only narrows current workunit authority;
+it never creates a successful observation or relabels unexecuted checks as
+failed. Withdrawal checks the captured workunit generation and task custody
+atomically in the existing canonical database. A concurrent journal or lease
+change refuses the append. Historical successful records retain their original
+identity. Renewal does not transfer their authority: promotion requires fresh
+matching current proof, including the existing tool/input/source and epoch
+checks. Split-store atomicity remains unsupported and fails explicitly.
+
 ## Configuration validity and accepted privilege proposals (#1771, #1776)
 
 `cli::DecapodProjectConfig` rejects unsupported schema versions during typed
@@ -684,8 +706,8 @@ execution evidence remains required before publication readiness.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `39c1936feca390d3b98543f2bcdaa014a205d26c432c8b238ec618f30d6504c3`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (236 files), `tests/` (236 files)
+- Repository signal fingerprint: `4b9f27e49b2e369d71805544ece3945c865791739f6b73e0f483c75c50e2d68e`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (237 files), `tests/` (237 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 

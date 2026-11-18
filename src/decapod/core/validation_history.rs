@@ -817,6 +817,25 @@ pub(crate) fn finish_archive(
     report: &ValidationReport,
 ) -> Result<(), DecapodError> {
     if !report.ready {
+        if let Some(subject) = &binding.workunit_subject
+            && matches!(
+                report.scope,
+                validation_runtime::READINESS_SCOPE
+                    | super::repository_profile::READINESS_SCOPE
+                    | super::repository_profile::LOCAL_GIT_READINESS_SCOPE
+            )
+        {
+            let current = capture_task_binding_inner(store, root, false)?
+                .ok_or_else(|| invalid("current task authority is unavailable"))?;
+            let mut original = binding.clone();
+            original.workunit_subject = None;
+            if current != original {
+                return Err(invalid(
+                    "task, custody or validation context changed during validation",
+                ));
+            }
+            super::workunit::invalidate_current_validation(root, &binding.task, subject)?;
+        }
         return Ok(());
     }
     require_local(store, root)?;
@@ -1053,6 +1072,56 @@ pub(crate) fn lookup_record(
     lookup_inner(root, store, sha, Some(record_id))
 }
 
+/// Current custody is an exact selector, never permission to borrow a prior
+/// owner's result. Generic historical lookup deliberately remains ambiguous.
+fn lookup_current_workunit(
+    root: &Path,
+    store: &Store,
+    binding: &ValidationBinding,
+) -> Result<HistoricalValidationProof, DecapodError> {
+    require_sha(&binding.candidate_sha)?;
+    require_local(store, root)?;
+    let path = events::canonical_db_path(&store.root);
+    if !path.is_file() {
+        return Err(invalid(
+            "no canonical full validation proof was recorded for this commit",
+        ));
+    }
+    let conn = db::db_connect_for_validate(&path.to_string_lossy())?;
+    let history = events::query_subject_on_conn(
+        &conn,
+        events::VERIFICATION,
+        "commit",
+        &binding.candidate_sha,
+        MAX_RECORDS,
+    )?;
+    if history.is_empty() {
+        return Err(invalid(
+            "no canonical full validation proof was recorded for this commit",
+        ));
+    }
+    let mut selected = None;
+    for event in &history {
+        let record = decode(event)?;
+        if record.candidate_sha != binding.candidate_sha
+            || record.proof.material.repository != binding.repository
+        {
+            return Err(invalid(
+                "subject journal contains another commit or repository",
+            ));
+        }
+        if record.task_binding == binding.task {
+            selected = Some(record);
+        }
+    }
+    Ok(HistoricalValidationProof {
+        record: selected.ok_or_else(|| invalid(
+            "WORKUNIT_PROOF_STALE: no successful full validation for current task and custody; obtain fresh full validation"
+        ))?,
+        store_root: store.root.clone(),
+    })
+}
+
 /// Fence the canonical task/custody and producer reference in the same
 /// transaction that accepts a VERIFIED workunit. No second connection, command
 /// execution or agent-supplied success is trusted at this commit boundary.
@@ -1125,7 +1194,7 @@ pub(crate) fn current_workunit_proof(
         }
         lookup_record(root, &store, candidate, record)?
     } else {
-        lookup(root, &store, &binding.candidate_sha)?
+        lookup_current_workunit(root, &store, &binding)?
     };
     let record = &proof.record;
     if record.task_binding != binding.task
