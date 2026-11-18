@@ -473,7 +473,12 @@ fn journal_records_on_conn(
             || record.record_hash != record_hash(&record)?
             || !matches!(
                 record.kind.as_str(),
-                "initialized" | "legacy_baseline" | "mutation" | "checkpoint" | "resumed"
+                "initialized"
+                    | "legacy_baseline"
+                    | "mutation"
+                    | "checkpoint"
+                    | "resumed"
+                    | "validation_not_ready"
             )
         {
             return Err(journal_error(

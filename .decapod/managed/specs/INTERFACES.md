@@ -22,8 +22,11 @@ current workunit verification through the existing journal. It clears the
 current proof results, validation epoch and producer selector, downgrades
 VERIFIED to CLAIMED, and advances the journal even if promotion had not yet
 occurred. The event is `validation_not_ready`: it does not assert that every
-check executed or failed. Partial CI-local and preparation scopes do not have
-this authority. Earlier successful observations remain historical records.
+check executed or failed. The journal reader recognizes this event kind while
+retaining the same identity, manifest hash, record hash and predecessor checks;
+the resulting CLAIMED snapshot must remain readable for repair. Partial CI-local
+and preparation scopes do not have this authority. Earlier successful
+observations remain historical records.
 
 Fresh full proof under a renewed lease can restore VERIFIED. The implicit
 workunit selector chooses the newest canonical success for the exact current
@@ -1302,7 +1305,7 @@ field. Nothing in this operation authorizes a mutation, approval or completion.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `2c65a95b548e7d6cb0bdbe3a329e5bb147cd5941234ba053cf5ae8e720e0b8b6`
+- Repository signal fingerprint: `b668ade4d12d58ecc42ffa36fd237442fe59d1da69d79c5564896df9da31dd59`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (236 files), `tests/` (235 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

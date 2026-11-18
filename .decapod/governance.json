@@ -600,6 +600,15 @@
       "id": "official11-present-recovery-disposition",
       "summary": "Only after de9 archive, resolve current recovery disposition without blessing original history. Bind official11 release projections and actionable split-store refusal; preserve actual current11 counterexamples and every producer/currentness fence. Native checkpoint completes before commit.",
       "input_digest": "sha256:4592c4eb84a2ddd9efb1bec7db42df8103cedc85e5941021fa17a78acb663fbc"
+    },
+    {
+      "id": "workunit-currentness-negative-event-readback-20261118",
+      "summary": "Recognize the native validation_not_ready journal snapshot after real Actions failure; retain all integrity and authority fences",
+      "input_digest": "sha256:4cfd74be7b05bf308b3a6120ab256ce3bfad52405478e69aa6f1bec197e87053",
+      "proof_refs": [
+        "https://github.com/DecapodLabs/decapod/actions/runs/44292400157/job/134761459192",
+        "sha256:5b4e36a94d5b09b8cc78c596293168ec4af32ba1ad9e1597d990737c06ad70cd"
+      ]
     }
   ],
   "intents": {
@@ -638,24 +647,24 @@
       "schema_version": "1.1.0",
       "spec_reviews": [
         {
-          "disposition": "updated",
+          "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Reviewed exact-current-custody selection, existing journal withdrawal and atomic generation/task fence; official11 projections and present recovery preserve historical provenance without old governance import.",
-          "reviewed_code_fingerprint": "2c65a95b548e7d6cb0bdbe3a329e5bb147cd5941234ba053cf5ae8e720e0b8b6",
+          "reason": "The existing append-only workunit architecture is unchanged. Actions exposed omission of the already-authored validation_not_ready event kind from the same journal reader inventory; recognition retains every identity, hash, generation and custody check.",
+          "reviewed_code_fingerprint": "b668ade4d12d58ecc42ffa36fd237442fe59d1da69d79c5564896df9da31dd59",
           "spec_material_hash": "fc3e0ad37051b50ab9b60e66722518c47b241e10788e5c2aa11882bc2142cd4c"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Reviewed real failure withdrawal, lawful fresh proof/lease recovery, unchanged generic ambiguity and actionable split-store refusal. Fresh workspace guidance is not migration or old-proof authentication.",
-          "reviewed_code_fingerprint": "2c65a95b548e7d6cb0bdbe3a329e5bb147cd5941234ba053cf5ae8e720e0b8b6",
-          "spec_material_hash": "937d43c761e5818e6f27aa227f93167b97b4ae1527a16cb4391206a3917c2878"
+          "reason": "Specify readable negative snapshot and unchanged journal identity/hash/predecessor validation. Existing full-not-ready regression failed on actual Actions readback; this correction recognizes its exact event kind without widening unsupported kinds.",
+          "reviewed_code_fingerprint": "b668ade4d12d58ecc42ffa36fd237442fe59d1da69d79c5564896df9da31dd59",
+          "spec_material_hash": "5a2a3e8e63fce15d8754a90d0dcaddb631f22eb9e54daf1542af5e1249820ef2"
         },
         {
-          "disposition": "updated",
+          "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "No producer, source, epoch, input, custody, partial-scope or unsupported-domain fence weakened. Original d538 remains unproven; current recovery is independently checkpointed and still awaits executed source checks.",
-          "reviewed_code_fingerprint": "2c65a95b548e7d6cb0bdbe3a329e5bb147cd5941234ba053cf5ae8e720e0b8b6",
+          "reason": "Only existing negative judgment event kind inventory is corrected. Canonical task custody, atomic transaction, journal CAS, hashes and positive proof authority remain enforced.",
+          "reviewed_code_fingerprint": "b668ade4d12d58ecc42ffa36fd237442fe59d1da69d79c5564896df9da31dd59",
           "spec_material_hash": "01c40f1a3b54a8c42ac8c5de455ecacfcc3a5572861212f46f5055589eaffc87"
         }
       ],
@@ -667,14 +676,18 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795000125Z"
+      "updated_at": "1795001976Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:a1800e0195692f97b36c010bb01bda4eaee3dd9c448d85742f85f9ad91547b14",
+      "artifact_hash": "sha256:60ff17ead8e58c139ae7c4d9a46067322ec153b34069e40ed1dae748bc5f6356",
       "checks": [
+        {
+          "name": "actions-currentness-readback",
+          "status": "failed"
+        },
         {
           "name": "current-candidate-execution",
           "status": "unavailable"
@@ -682,6 +695,10 @@
         {
           "name": "current-source-execution",
           "status": "unavailable"
+        },
+        {
+          "name": "diff-whitespace",
+          "status": "passed"
         },
         {
           "name": "historical-d538-checkpoint",
@@ -726,6 +743,10 @@
         {
           "name": "recovery-observation-archived",
           "status": "passed"
+        },
+        {
+          "name": "rustfmt",
+          "status": "passed"
         }
       ],
       "current_phase": "intent",
@@ -763,10 +784,24 @@
             "intent_id": "intent:change_01M7Q44RVCTZPBYQ12A8MB3C5Y",
             "kind": "trajectory_step_recorded",
             "sequence": 6
+          },
+          {
+            "detail": "trajectory:branch_01M7Q44RYMGVJGZ2JGB3YZ9VP7",
+            "event_id": "event:7",
+            "intent_id": "intent:change_01M7Q44RVCTZPBYQ12A8MB3C5Y",
+            "kind": "trajectory_step_recorded",
+            "sequence": 7
+          },
+          {
+            "detail": "trajectory:branch_01M7Q44RYMGVJGZ2JGB3YZ9VP7",
+            "event_id": "event:8",
+            "intent_id": "intent:change_01M7Q44RVCTZPBYQ12A8MB3C5Y",
+            "kind": "trajectory_step_recorded",
+            "sequence": 8
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 6,
+        "next_sequence": 8,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M7Q44RYMGVJGZ2JGB3YZ9VP7": {
@@ -844,6 +879,41 @@
                 ],
                 "sequence": 6,
                 "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:7",
+                "observations": [
+                  "src/decapod/core/workunit.rs",
+                  "tests/unit/core/validation_history_workunit_tests.rs"
+                ],
+                "proof_refs": [
+                  "actions-currentness-readback"
+                ],
+                "scope": [
+                  "issue-1660"
+                ],
+                "sequence": 7,
+                "tool": "GitHub Actions Supabase job 134761459192: 1803 library tests passed, 1 failed, 8 ignored. Withdrawal regression rejected its own validation_not_ready journal kind. Raw log SHA256 5b4e36a94d5b09b8cc78c596293168ec4af32ba1ad9e1597d990737c06ad70cd. Correct existing reader inventory only; preserve hashes and CAS/custody fences.",
+                "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:8",
+                "observations": [
+                  "src/decapod/core/workunit.rs",
+                  ".decapod/managed/specs/INTERFACES.md"
+                ],
+                "proof_refs": [
+                  "rustfmt",
+                  "diff-whitespace"
+                ],
+                "scope": [
+                  "issue-1660"
+                ],
+                "sequence": 8,
+                "tool": "Added only validation_not_ready to the existing recognized journal kinds. No source tests executed manually; unchanged actual negative/full-proof readback regression will run on required GitHub Actions.",
+                "validation_findings": []
               }
             ]
           }
@@ -866,10 +936,12 @@
       ],
       "inspected_files": [
         "src/decapod/core/validation_history.rs",
-        "src/decapod/core/workunit.rs"
+        "src/decapod/core/workunit.rs",
+        "tests/unit/core/validation_history_workunit_tests.rs"
       ],
       "intent_id": "intent:change_01M7Q44RVCTZPBYQ12A8MB3C5Y",
       "modified_files": [
+        ".decapod/managed/specs/INTERFACES.md",
         "src/decapod/core/validation_history.rs",
         "src/decapod/core/workunit.rs",
         "tests/consumer_readiness.rs",
@@ -891,7 +963,10 @@
       "schema_version": "1.1.0",
       "shortcut_risk_signals": [],
       "task_id": "bugs_01m7q41y4d66h98s",
-      "tool_calls": [],
+      "tool_calls": [
+        "Added only validation_not_ready to the existing recognized journal kinds. No source tests executed manually; unchanged actual negative/full-proof readback regression will run on required GitHub Actions.",
+        "GitHub Actions Supabase job 134761459192: 1803 library tests passed, 1 failed, 8 ignored. Withdrawal regression rejected its own validation_not_ready journal kind. Raw log SHA256 5b4e36a94d5b09b8cc78c596293168ec4af32ba1ad9e1597d990737c06ad70cd. Correct existing reader inventory only; preserve hashes and CAS/custody fences."
+      ],
       "unresolved_assumptions": []
     }
   },
