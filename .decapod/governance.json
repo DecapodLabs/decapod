@@ -568,59 +568,94 @@
     }
   },
   "change": {
-    "id": "change_01M7Q3DQ50P9E0ATDWZTJHKFS5",
+    "id": "change_01M7Q44RVCTZPBYQ12A8MB3C5Y",
     "base_commit": "352d892958e1cdf692299927f7c2f3c0c36fc639",
     "target_base": "origin/master"
   },
   "claims": {
-    "duplicate-key-required-semantics": {
-      "statement": "Both RPC routes reject duplicate decoded JSON keys before startup; later fields cannot erase required extension semantics and unique-key ordinary negotiation can recover.",
-      "falsifier": "Duplicate or escaped-equivalent required_extensions erases the unsupported requirement, nested ambiguous JSON is accepted, or legitimate unique-key negotiation fails after refusal.",
+    "current-validation-withdrawal": {
+      "statement": "A newer task-bound full not-ready judgment withdraws current workunit proof, preserves historical success, and fresh current-custody proof restores legitimate VERIFIED operation.",
+      "falsifier": "A newer observed required failure leaves old VERIFIED applicable, an old subject promotes after withdrawal, or fresh complete current-custody validation cannot recover after renewal.",
       "status": "open"
+    }
+  },
+  "resolutions": {
+    "history-recovery:d53835ad2ee573996edcc31ef1ce2ef577a9a7cc": {
+      "obligation_digest": "sha256:46d50bc226cf5c02f8cfcb3d95320c330751c606d4f830434c49b9a03525842c",
+      "resolution": "Original historical proof remains not_proven; no exception, prior event or native admission is created. Present-time archive de9c8b68bc05ca0893295b6b97b5ca52039234c9 commits the complete native source assessment and immutable d538 reference, reviewed selected source/tests/config and authored semantics in fresh task custody from accepted352. This resolves only the current recovery archive/reauthoring disposition. Current checkpoint history and independent full applicable source execution must still pass; old1788 remains blocked and preserved.",
+      "proof_refs": [
+        "/private/tmp/attack-gaps-1660-release11-checkpoint-inspection-exact.json",
+        "git:de9c8b68bc05ca0893295b6b97b5ca52039234c9:.decapod/governance.json",
+        "https://github.com/DecapodLabs/decapod/pull/1788"
+      ]
     }
   },
   "checkpoints": [
     {
-      "id": "strict-json-reviewed-source",
-      "summary": "Fresh governed follow-up from352 after original1787 merged externally and compact-boundary refused. Reauthor reviewed unique decoder extraction/RPC strictness, both-route real CLI and Python parsing controls, semantic specs and independently reviewed version-only source digest; candidate Actions pending.",
-      "input_digest": "sha256:c4270b2739fb7b77681f792039bff9edd658b9440f1b6b978feea8318320628f"
+      "id": "currentness-present-recovery-archive",
+      "summary": "Fresh source reauthoring from accepted352 after immutable d538 gap. Preserve full native source history assessment and actual-binary counterexamples; current code/specs and all105 reviewed source inputs bound. This checkpoint completes before the archive commit; source execution remains pending.",
+      "input_digest": "sha256:df5c1fad9925f4b78c07fa9f6b8121fabd16467cd826935f4483bb83d8b0d82c"
     },
     {
-      "id": "official11-release-projection-correction",
-      "summary": "Repair actual Actions release drift through official session-updated11 native projections; preserve191/0 prerequisite result as bounded and host failures as failures. Metadata fix grants no conformance or native readiness. Checkpoint completes before commit.",
-      "input_digest": "sha256:02a169756d093ac1890782ef36663a2dd889ac8d5843fa7cdee36659ee63f31f"
+      "id": "official11-present-recovery-disposition",
+      "summary": "Only after de9 archive, resolve current recovery disposition without blessing original history. Bind official11 release projections and actionable split-store refusal; preserve actual current11 counterexamples and every producer/currentness fence. Native checkpoint completes before commit.",
+      "input_digest": "sha256:4592c4eb84a2ddd9efb1bec7db42df8103cedc85e5941021fa17a78acb663fbc"
     },
     {
-      "id": "explicit-bazel-interop-fixture",
-      "summary": "Correct actual Bazel missing compile input by declaring only the included Python fixture for existing interop target; independently review all105 inventory entries,104 unchanged, full graph retained. Failed1ba build preserved. Checkpoint completes before commit; source tests pending.",
-      "input_digest": "sha256:933651ac87df7a40cc8db8e9ae8197e13d66bfbad18056f7c30187c1e6ab42cf"
-    },
-    {
-      "id": "strict-json-schema-positive-recovery-20261118",
-      "summary": "Preserve strict unknown-field rejection and exercise supported optional negotiation after duplicate-key refusal",
-      "input_digest": "sha256:a6d0fd7fe160c886f6d51afdae5b90a7f752f5a739e46238df76203929a4fa35",
+      "id": "workunit-currentness-negative-event-readback-20261118",
+      "summary": "Recognize the native validation_not_ready journal snapshot after real Actions failure; retain all integrity and authority fences",
+      "input_digest": "sha256:4cfd74be7b05bf308b3a6120ab256ce3bfad52405478e69aa6f1bec197e87053",
       "proof_refs": [
-        "https://github.com/DecapodLabs/decapod/actions/runs/44292847842/job/134763116449",
-        "sha256:e6f2db17b3586a40db44261ab1d05dedaad2973ed68c92c2be1d21f69882d65c"
+        "https://github.com/DecapodLabs/decapod/actions/runs/44292400157/job/134761459192",
+        "sha256:5b4e36a94d5b09b8cc78c596293168ec4af32ba1ad9e1597d990737c06ad70cd"
+      ]
+    },
+    {
+      "id": "workunit-currentness-failure-check-identity-20261118",
+      "summary": "Bind CLI negative execution to its actual required check rather than capture ordinal; retain strict rejection/recovery assertions",
+      "input_digest": "sha256:243754c2034df5093cd8d39e018f15b432dcd27f0b0f3954f0b4360779c136b3",
+      "proof_refs": [
+        "https://github.com/DecapodLabs/decapod/actions/runs/44296749390/job/134777427412",
+        "sha256:788c87fbbd46f81c47885388d6b575be2dbbca33348e837d37cb3009de20397a"
+      ]
+    },
+    {
+      "id": "workunit-currentness-accepted9c-integration-20261118",
+      "summary": "Integrate accepted9c strict JSON source and contracts with current workunit proof correction; preserve both histories and require fresh combined proof",
+      "input_digest": "sha256:d82c06ad37c49bd59532ef80095ac2de0d26be5efbde938622e11507a9c81beb",
+      "proof_refs": [
+        "/private/tmp/attack-gaps-1792-9c-inventory-review.json",
+        "git:9c7e6cff94908dbfe87f4e4c0dbb1f1e0f4b12d5",
+        "https://github.com/DecapodLabs/decapod/actions/runs/44305150424/job/134806810318"
+      ]
+    },
+    {
+      "id": "workunit-currentness-accepted12-release-integration-20261118",
+      "summary": "Integrate accepted release12 metadata with current workunit and strict JSON source, regenerate via scoped official12 and require fresh proof",
+      "input_digest": "sha256:13b9263c64b1c3faf9191c927cc868cc7f8bd58003745890666cbbf8e47dc3d8",
+      "proof_refs": [
+        "/private/tmp/attack-gaps-1792-release12-inventory-review.json",
+        "/private/tmp/attack-gaps-controller12-install.json",
+        "git:7bd0a915dc87b796fdffba1b8a2b613b5dff1a3a"
       ]
     }
   ],
   "intents": {
-    "intent:change_01M7Q3DQ50P9E0ATDWZTJHKFS5": {
+    "intent:change_01M7Q44RVCTZPBYQ12A8MB3C5Y": {
       "acceptance_criteria": [],
       "assumptions": [],
       "boundaries": [
         "Current claimed task and isolated work branch"
       ],
       "constraints": [
-        "issue-871"
+        "issue-1660"
       ],
       "created_sequence": 1,
-      "id": "intent:change_01M7Q3DQ50P9E0ATDWZTJHKFS5",
+      "id": "intent:change_01M7Q44RVCTZPBYQ12A8MB3C5Y",
       "out_of_scope": [],
       "proof_requirements": [],
-      "raw_intent": "code: reject ambiguous RPC JSON without erasing required negotiation\n\nFollow-up to externally merged PR1787. Preserve immutable unaccepted6fff3707955811fc61365c237357eb0c78990b43 and its native checkpoints; prior begin-pr returned GOVERNANCE_PR_NOT_ACCEPTED. Fresh governed workstream from accepted e44ae7c6, reauthor only reviewed duplicate-key decoder extraction, framing and actual both-route/Python parsing tests plus authored prose. Explicit user authorizes publishing before native Buildkite admission and focusing Actions; no proof-policy change, fabricated execution, merge or issue closure.",
-      "refined_intent": "code: reject ambiguous RPC JSON without erasing required negotiation\n\nFollow-up to externally merged PR1787. Preserve immutable unaccepted6fff3707955811fc61365c237357eb0c78990b43 and its native checkpoints; prior begin-pr returned GOVERNANCE_PR_NOT_ACCEPTED. Fresh governed workstream from accepted e44ae7c6, reauthor only reviewed duplicate-key decoder extraction, framing and actual both-route/Python parsing tests plus authored prose. Explicit user authorizes publishing before native Buildkite admission and focusing Actions; no proof-policy change, fabricated execution, merge or issue closure.",
+      "raw_intent": "test: recover workunit currentness correction with proven checkpoint history\n\nContinue #1660/#1070/#1735 after native exact-head checkpoint audit found one missing checkpoint on d53835ad due agent committing before asynchronous native checkpoint completed. Preserve blocked PR1788 and all original source/checkpoints/failures. Native report forbids retroactive repair and prescribes a fresh claimed worktree from accepted target, reviewed source reauthoring, current intent/spec/checkpoints and independent execution. Carry only actual workunit correction and meaningful tests/config/prose; no old governance/custody/proof import, force push, bypass or merge. User explicitly selects GitHub Actions and publication exception, ignoring Buildkite; all other authority/proof remains strict.",
+      "refined_intent": "test: recover workunit currentness correction with proven checkpoint history\n\nContinue #1660/#1070/#1735 after native exact-head checkpoint audit found one missing checkpoint on d53835ad due agent committing before asynchronous native checkpoint completed. Preserve blocked PR1788 and all original source/checkpoints/failures. Native report forbids retroactive repair and prescribes a fresh claimed worktree from accepted target, reviewed source reauthoring, current intent/spec/checkpoints and independent execution. Carry only actual workunit correction and meaningful tests/config/prose; no old governance/custody/proof import, force push, bypass or merge. User explicitly selects GitHub Actions and publication exception, ignoring Buildkite; all other authority/proof remains strict.",
       "status": "refined",
       "updated_sequence": 3
     }
@@ -633,7 +668,7 @@
       },
       "deferred_questions": [],
       "human_questions": [],
-      "intent": "Strict duplicate-key RPC follow-up to merged1787. Reuse existing recursive decoder, preserve required semantics/bounds/redaction and ordinary recovery. Actual Bazel compile failure requires explicitly declaring the Python fixture as compile_data only for existing interop_conformance; independently review changed build input across all105 sources without altering targets, commands, graph, budgets or toolchain. Preserve old failures and current official11 projection metadata. User authorizes publication and Actions focus while ignoring Buildkite; no native admission, history waiver, force push, merge or issue closure.",
+      "intent": "test: recover workunit currentness correction with proven checkpoint history\n\nContinue #1660/#1070/#1735 after native exact-head checkpoint audit found one missing checkpoint on d53835ad due agent committing before asynchronous native checkpoint completed. Preserve blocked PR1788 and all original source/checkpoints/failures. Native report forbids retroactive repair and prescribes a fresh claimed worktree from accepted target, reviewed source reauthoring, current intent/spec/checkpoints and independent execution. Carry only actual workunit correction and meaningful tests/config/prose; no old governance/custody/proof import, force push, bypass or merge. User explicitly selects GitHub Actions and publication exception, ignoring Buildkite; all other authority/proof remains strict.",
       "phases": [],
       "proof_hooks": [
         "decapod validate"
@@ -643,55 +678,63 @@
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Existing shared unique JSON decoder and strict typed schema are unchanged. Actual Actions reached the new final positive then refused its unknown optional_metadata field correctly. Correct only test expectations and supported recovery payload.",
-          "reviewed_code_fingerprint": "325bb52abe2b2d4059279715a9322ef8ca5a525b74763f360326b4059015089f",
-          "spec_material_hash": "a56b9f78b78c318ce14753002b3e662908772761757d7adb849dde1951d37e6b"
+          "reason": "Accepted12 changes only root package/changelog metadata after accepted9c; workunit currentness and strict JSON operative contracts are preserved. Official12 refreshes release-bound projections for combined source; no prior proof is transferred.",
+          "reviewed_code_fingerprint": "0ff17b4704e12feca628cd1d431b4a0f459c108afaf2223718b48870f9896a42",
+          "spec_material_hash": "080e1e015d867051ec4ecbb1f18aca92a2d62a05798377057e563aaa5a3764e0"
         },
         {
-          "disposition": "updated",
+          "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Clarify that syntactically legal unique JSON still obeys strict negotiation fields. Preserve invalid_params for unknown field and verify lawful unknown optional identifiers are reported omitted, including decoded Unicode.",
-          "reviewed_code_fingerprint": "325bb52abe2b2d4059279715a9322ef8ca5a525b74763f360326b4059015089f",
-          "spec_material_hash": "c6ba8157ced34e186a41c4d9df94b98c47863ec271bcd16ee2d42b4f824b33f0"
+          "reason": "All workunit rejection/recovery/check-identity and accepted strict JSON contracts remain unchanged across release12; fresh combined source/base execution is required after actual target movement.",
+          "reviewed_code_fingerprint": "0ff17b4704e12feca628cd1d431b4a0f459c108afaf2223718b48870f9896a42",
+          "spec_material_hash": "ef090be85af851796f2ae92f9d6a6e992d59a452a8fff4918836cc689f020cdd"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "No production change or relaxed validation. Keep required extension and duplicate-key rejection; retain unknown-field schema refusal and exercise legitimate optional negotiation afterward.",
-          "reviewed_code_fingerprint": "325bb52abe2b2d4059279715a9322ef8ca5a525b74763f360326b4059015089f",
-          "spec_material_hash": "9d11c08d69c5a99641a0d006db91d357c43458787eb442f659ffe7ac04be2a7e"
+          "reason": "No permission, validation, timing or provider-policy change. Scoped official12 install preserved old/shared binaries, restored opt-in config and has measured binary hash; native proof admission remains unproven.",
+          "reviewed_code_fingerprint": "0ff17b4704e12feca628cd1d431b4a0f459c108afaf2223718b48870f9896a42",
+          "spec_material_hash": "735ae6e95c6b18ff2ccc718fbadaa4d7ae483d632aee2fb071d4f9ae6daa23de"
         }
       ],
       "state": "APPROVED",
       "stop_conditions": [],
-      "title": "code: reject ambiguous RPC JSON without erasing required negotiation",
+      "title": "test: recover workunit currentness correction with proven checkpoint history",
       "todo_ids": [
-        "bugs_01m7q384jw6mn3w5"
+        "bugs_01m7q41y4d66h98s"
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795002891Z"
+      "updated_at": "1795008929Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:41a215a899f967fd9a5d49aa1571d124dfa57ed667baa91f6bdff43c4f47a742",
+      "artifact_hash": "sha256:c2ce633dec13e57e9d58dbe9fc98f412d40646bc2e9c938f302306400cb74919",
       "checks": [
         {
-          "name": "actions-bazel-interop-compilation",
+          "name": "accepted-9c-source-inventory",
+          "status": "passed"
+        },
+        {
+          "name": "actions-cli-required-failure-capture",
           "status": "failed"
         },
         {
-          "name": "actions-release-projection-drift",
+          "name": "actions-currentness-readback",
           "status": "failed"
         },
         {
-          "name": "actions-strict-json-positive-control",
-          "status": "failed"
+          "name": "controller12-install",
+          "status": "passed"
         },
         {
-          "name": "candidate-execution",
+          "name": "current-candidate-execution",
+          "status": "unavailable"
+        },
+        {
+          "name": "current-source-execution",
           "status": "unavailable"
         },
         {
@@ -699,36 +742,64 @@
           "status": "passed"
         },
         {
-          "name": "independently-reviewed-bazel-input",
-          "status": "passed"
-        },
-        {
-          "name": "native-host-project-prerequisites",
+          "name": "historical-d538-checkpoint",
           "status": "failed"
         },
         {
-          "name": "official10-duplicate-negotiation-refusal",
+          "name": "independently-reviewed-source-inputs",
+          "status": "passed"
+        },
+        {
+          "name": "native-project-preparation",
           "status": "failed"
         },
         {
-          "name": "official10-ordinary-recovery",
+          "name": "official10-canonical-positive",
           "status": "passed"
         },
         {
-          "name": "official10-required-unsupported-refusal",
+          "name": "official10-newer-failure-currentness",
+          "status": "failed"
+        },
+        {
+          "name": "official10-renewed-custody-recovery",
+          "status": "failed"
+        },
+        {
+          "name": "official11-canonical-positive",
           "status": "passed"
         },
         {
-          "name": "official11-private-controller-install",
+          "name": "official11-current-lease-proof-recovery",
+          "status": "failed"
+        },
+        {
+          "name": "official11-host-project-prerequisites",
+          "status": "unavailable"
+        },
+        {
+          "name": "official11-latest-required-failure-currentness",
+          "status": "failed"
+        },
+        {
+          "name": "recovery-archive-disposition",
           "status": "passed"
         },
         {
-          "name": "release11-source-inventory-review",
+          "name": "recovery-observation-archived",
           "status": "passed"
         },
         {
           "name": "rustfmt",
           "status": "passed"
+        },
+        {
+          "name": "source12-inventory",
+          "status": "passed"
+        },
+        {
+          "name": "stale-accepted-target-ci-context",
+          "status": "failed"
         }
       ],
       "current_phase": "intent",
@@ -736,127 +807,156 @@
         "events": [
           {
             "event_id": "event:2",
-            "intent_id": "intent:change_01M7Q3DQ50P9E0ATDWZTJHKFS5",
+            "intent_id": "intent:change_01M7Q44RVCTZPBYQ12A8MB3C5Y",
             "kind": "created",
             "sequence": 2
           },
           {
             "event_id": "event:3",
-            "intent_id": "intent:change_01M7Q3DQ50P9E0ATDWZTJHKFS5",
+            "intent_id": "intent:change_01M7Q44RVCTZPBYQ12A8MB3C5Y",
             "kind": "refined",
             "sequence": 3
           },
           {
-            "detail": "trajectory:branch_01M7Q3DQ8RFZAHXD2B6ZY1JSZ5",
+            "detail": "trajectory:branch_01M7Q44RYMGVJGZ2JGB3YZ9VP7",
             "event_id": "event:4",
-            "intent_id": "intent:change_01M7Q3DQ50P9E0ATDWZTJHKFS5",
+            "intent_id": "intent:change_01M7Q44RVCTZPBYQ12A8MB3C5Y",
             "kind": "trajectory_step_recorded",
             "sequence": 4
           },
           {
-            "detail": "trajectory:branch_01M7Q3DQ8RFZAHXD2B6ZY1JSZ5",
+            "detail": "trajectory:branch_01M7Q44RYMGVJGZ2JGB3YZ9VP7",
             "event_id": "event:5",
-            "intent_id": "intent:change_01M7Q3DQ50P9E0ATDWZTJHKFS5",
+            "intent_id": "intent:change_01M7Q44RVCTZPBYQ12A8MB3C5Y",
             "kind": "trajectory_step_recorded",
             "sequence": 5
           },
           {
-            "detail": "trajectory:branch_01M7Q3DQ8RFZAHXD2B6ZY1JSZ5",
+            "detail": "trajectory:branch_01M7Q44RYMGVJGZ2JGB3YZ9VP7",
             "event_id": "event:6",
-            "intent_id": "intent:change_01M7Q3DQ50P9E0ATDWZTJHKFS5",
+            "intent_id": "intent:change_01M7Q44RVCTZPBYQ12A8MB3C5Y",
             "kind": "trajectory_step_recorded",
             "sequence": 6
           },
           {
-            "detail": "trajectory:branch_01M7Q3DQ8RFZAHXD2B6ZY1JSZ5",
+            "detail": "trajectory:branch_01M7Q44RYMGVJGZ2JGB3YZ9VP7",
             "event_id": "event:7",
-            "intent_id": "intent:change_01M7Q3DQ50P9E0ATDWZTJHKFS5",
+            "intent_id": "intent:change_01M7Q44RVCTZPBYQ12A8MB3C5Y",
             "kind": "trajectory_step_recorded",
             "sequence": 7
           },
           {
-            "detail": "trajectory:branch_01M7Q3DQ8RFZAHXD2B6ZY1JSZ5",
+            "detail": "trajectory:branch_01M7Q44RYMGVJGZ2JGB3YZ9VP7",
             "event_id": "event:8",
-            "intent_id": "intent:change_01M7Q3DQ50P9E0ATDWZTJHKFS5",
+            "intent_id": "intent:change_01M7Q44RVCTZPBYQ12A8MB3C5Y",
             "kind": "trajectory_step_recorded",
             "sequence": 8
+          },
+          {
+            "detail": "trajectory:branch_01M7Q44RYMGVJGZ2JGB3YZ9VP7",
+            "event_id": "event:9",
+            "intent_id": "intent:change_01M7Q44RVCTZPBYQ12A8MB3C5Y",
+            "kind": "trajectory_step_recorded",
+            "sequence": 9
+          },
+          {
+            "detail": "trajectory:branch_01M7Q44RYMGVJGZ2JGB3YZ9VP7",
+            "event_id": "event:10",
+            "intent_id": "intent:change_01M7Q44RVCTZPBYQ12A8MB3C5Y",
+            "kind": "trajectory_step_recorded",
+            "sequence": 10
+          },
+          {
+            "detail": "trajectory:branch_01M7Q44RYMGVJGZ2JGB3YZ9VP7",
+            "event_id": "event:11",
+            "intent_id": "intent:change_01M7Q44RVCTZPBYQ12A8MB3C5Y",
+            "kind": "trajectory_step_recorded",
+            "sequence": 11
+          },
+          {
+            "detail": "trajectory:branch_01M7Q44RYMGVJGZ2JGB3YZ9VP7",
+            "event_id": "event:12",
+            "intent_id": "intent:change_01M7Q44RVCTZPBYQ12A8MB3C5Y",
+            "kind": "trajectory_step_recorded",
+            "sequence": 12
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 8,
+        "next_sequence": 12,
         "schema_version": "1.0.0",
         "trajectories": {
-          "branch_01M7Q3DQ8RFZAHXD2B6ZY1JSZ5": {
+          "branch_01M7Q44RYMGVJGZ2JGB3YZ9VP7": {
             "evidence_only": true,
-            "id": "branch_01M7Q3DQ8RFZAHXD2B6ZY1JSZ5",
-            "intent_id": "intent:change_01M7Q3DQ50P9E0ATDWZTJHKFS5",
+            "id": "branch_01M7Q44RYMGVJGZ2JGB3YZ9VP7",
+            "intent_id": "intent:change_01M7Q44RVCTZPBYQ12A8MB3C5Y",
             "steps": [
               {
                 "action": "trajectory.record",
-                "command": "Reauthor selected reviewed source from6fff3707 in fresh claimed worktree at352d8929, after previous1787 merged externally. Preserve old source/checkpoints and native compact-boundary refusal, without importing old governance, custody or execution. Native/Python tests newly authored, source CI pending.",
+                "command": "Native-prescribed present-time recovery only: preserve blocked1788 and d538 immutable gap, reauthor reviewed code/tests/config and selected semantic prose from accepted352. Import no prior governance/custody/proof, retain complete native recovery assessment. Current validation withdrawal uses existing journal atomic custody/generation fence; exact-current-custody history selection retains all producer/input checks. Real CLI/unit source execution pending.",
                 "custody_event_id": "event:4",
                 "observations": [
-                  "src/decapod/core/derived_release_profile.rs",
-                  "src/decapod/core/json.rs",
-                  "src/decapod/core/derived_release_profile.rs",
-                  "src/decapod/core/mod.rs",
-                  "src/decapod/lib.rs",
-                  "tests/interop_conformance.rs",
-                  "tests/support/interop_harness.rs",
-                  "tests/fixtures/interop_strict_json.py",
-                  "/private/tmp/attack-gaps-rpc-duplicate-keys-before.json",
-                  "/private/tmp/attack-gaps-871-json-release11-inventory-review.json",
-                  "/private/tmp/attack-gaps-871-duplicate-begin-pr.json"
+                  "src/decapod/core/validation_history.rs",
+                  "src/decapod/core/workunit.rs",
+                  "src/decapod/core/validation_history.rs",
+                  "src/decapod/core/workunit.rs",
+                  "tests/consumer_readiness.rs",
+                  "tests/entrypoint_correctness.rs",
+                  "tests/support/fresh_docs_readiness.rs",
+                  "tests/unit/core/validation_history_workunit_tests.rs",
+                  "tests/unit/core/workunit_journal_tests.rs",
+                  "/private/tmp/attack-gaps-1660-release11-checkpoint-inspection-exact.json",
+                  "/private/tmp/attack-gaps-1660-recovery-source-review.json",
+                  "/private/tmp/attack-gaps-1660-freshness-state.json"
                 ],
                 "proof_refs": [
-                  "official10-duplicate-negotiation-refusal",
-                  "official10-required-unsupported-refusal",
-                  "official10-ordinary-recovery",
-                  "release11-source-inventory-review",
-                  "candidate-execution"
+                  "historical-d538-checkpoint",
+                  "official10-canonical-positive",
+                  "official10-newer-failure-currentness",
+                  "official10-renewed-custody-recovery",
+                  "independently-reviewed-source-inputs",
+                  "current-candidate-execution"
                 ],
                 "scope": [
-                  "issue-871"
+                  "issue-1660"
                 ],
                 "sequence": 4,
                 "validation_findings": []
               },
               {
                 "action": "trajectory.record",
-                "command": "Actual Actions project checks191pass/0fail then release-drift refusal at1ba because evaluator11 regenerated Docker10 and manifest10. Official10 session opt-in installed private official11, preserving old10 and shared binary, config restored. Native11 refresh/project-check regenerated owned projections; host container requirement and unrelated completed-task proof remain blocked, no native admission claimed or skips added.",
+                "command": "Only after de9 archive committed, native resolver accepts current recovery disposition. Historical d538 remains not_proven, no exception authorized. Current runtime and metadata checks still pending; official session updater installing11 privately after actual Actions drift failure.",
                 "custody_event_id": "event:5",
                 "observations": [
-                  "/private/tmp/attack-gaps-1791-release11-projection-drift.json",
-                  "/private/tmp/attack-gaps-controller11-install.json",
-                  "/private/tmp/attack-gaps-json-controller11-project-check.json"
+                  "git:de9c8b68bc05ca0893295b6b97b5ca52039234c9:.decapod/governance.json"
                 ],
                 "proof_refs": [
-                  "actions-release-projection-drift",
-                  "official11-private-controller-install",
-                  "native-host-project-prerequisites"
+                  "recovery-observation-archived",
+                  "current-source-execution"
                 ],
                 "scope": [
-                  "issue-871"
+                  "issue-1660"
                 ],
                 "sequence": 5,
                 "validation_findings": []
               },
               {
                 "action": "trajectory.record",
-                "command": "Actual1ba PR core passed both dedicated broker probes but interop_conformance failed to build because include_str Python fixture was absent from Bazel compile_data; zero of11 unfiltered targets executed, no pass claimed. Declare exactly this input only for the existing target. Independently measure105 source inputs: only one .bzl changed,104 unchanged, literal diff only one compile_data path; required graph/budgets/commands unchanged, review digest ac2be63.",
+                "command": "Repeated actual current official11 controls: c339 candidate genuine full local proof mnOf3s, native VERIFIED; newer actual required failure EqRhuK leaves old VERIFIED/resumable and resume0. Fresh repair proof t39rpO succeeds; after lease renewal old resume denied, fresh full N3xuMN succeeds but promotion incorrectly refuses mixed-custody history. Bounded external flag remains outside captured source/tool bytes; no forge admission. Native split-store refusal now supplies fresh-task/canonical-workspace/new-proof recovery without claiming migration. Official11 projections refreshed; host project-check lock failure preserved, not a pass.",
                 "custody_event_id": "event:6",
                 "observations": [
-                  ".config/build/decapod.BUILD.bzl",
-                  ".decapod/config.toml",
-                  "/private/tmp/attack-gaps-1791-first-core-134746196472.log",
-                  "/private/tmp/attack-gaps-1791-bazel-fixture-inventory-review.json"
+                  "/private/tmp/attack-gaps-1660-native11-falsifiers-summary.json",
+                  "/private/tmp/attack-gaps-1660-recovery-present-resolution.json",
+                  "/private/tmp/attack-gaps-controller11-install.json"
                 ],
                 "proof_refs": [
-                  "actions-bazel-interop-compilation",
-                  "independently-reviewed-bazel-input"
+                  "official11-canonical-positive",
+                  "official11-latest-required-failure-currentness",
+                  "official11-current-lease-proof-recovery",
+                  "recovery-archive-disposition",
+                  "official11-host-project-prerequisites"
                 ],
                 "scope": [
-                  "issue-871"
+                  "issue-1660"
                 ],
                 "sequence": 6,
                 "validation_findings": []
@@ -865,24 +965,24 @@
                 "action": "trajectory.record",
                 "custody_event_id": "event:7",
                 "observations": [
-                  "tests/interop_conformance.rs",
-                  "src/decapod/core/interop.rs"
+                  "src/decapod/core/workunit.rs",
+                  "tests/unit/core/validation_history_workunit_tests.rs"
                 ],
                 "proof_refs": [
-                  "actions-strict-json-positive-control"
+                  "actions-currentness-readback"
                 ],
                 "scope": [
-                  "issue-871"
+                  "issue-1660"
                 ],
                 "sequence": 7,
-                "tool": "Current bf388444 core Actions job134763116449: duplicate/escaped/nested negative controls completed, then legal-JSON positive sent unknown optional_metadata and strict schema correctly refused invalid_params at line244. 9 scenarios passed,1 failed. Raw log SHA256 e6f2db17b3586a40db44261ab1d05dedaad2973ed68c92c2be1d21f69882d65c. Preserve strict schema; make unknown-field refusal explicit and use supported optional_ops/extensions for ordinary recovery.",
+                "tool": "GitHub Actions Supabase job 134761459192: 1803 library tests passed, 1 failed, 8 ignored. Withdrawal regression rejected its own validation_not_ready journal kind. Raw log SHA256 5b4e36a94d5b09b8cc78c596293168ec4af32ba1ad9e1597d990737c06ad70cd. Correct existing reader inventory only; preserve hashes and CAS/custody fences.",
                 "validation_findings": []
               },
               {
                 "action": "trajectory.record",
                 "custody_event_id": "event:8",
                 "observations": [
-                  "tests/interop_conformance.rs",
+                  "src/decapod/core/workunit.rs",
                   ".decapod/managed/specs/INTERFACES.md"
                 ],
                 "proof_refs": [
@@ -890,10 +990,87 @@
                   "diff-whitespace"
                 ],
                 "scope": [
-                  "issue-871"
+                  "issue-1660"
                 ],
                 "sequence": 8,
-                "tool": "Converted invalid positive optional_metadata payload into an explicit strict-schema invalid_params control. Recovery now uses supported optional_ops/extensions, checks decoded Unicode and omitted values. Product parser/schema unchanged; runtime proof pending required Actions.",
+                "tool": "Added only validation_not_ready to the existing recognized journal kinds. No source tests executed manually; unchanged actual negative/full-proof readback regression will run on required GitHub Actions.",
+                "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:9",
+                "observations": [
+                  "tests/support/fresh_docs_readiness.rs",
+                  "tests/common/consumer_readiness_fixture.rs",
+                  "src/decapod/core/validation_runtime.rs"
+                ],
+                "proof_refs": [
+                  "actions-cli-required-failure-capture"
+                ],
+                "scope": [
+                  "issue-1660"
+                ],
+                "sequence": 9,
+                "tool": "Exact82a1c098 PR CLI job134777427412 executed41 entrypoint cases passed,1 failed,5 ignored. Initial real full proof and VERIFIED succeeded and newer full validation returned not-ready. Test then wrongly read native-0 exit0, but fixture canonically sorts inspect-second before inspect-source. Existing native-N.diagnostic.json binds each capture to CheckKey; select exact inspect-source identity, still require actual step exit1 and stderr observed required failure. Raw log SHA256788c87fbbd46f81c47885388d6b575be2dbbca33348e837d37cb3009de20397a. Product proof contracts, source check, required graph and timing limits unchanged.",
+                "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:10",
+                "observations": [
+                  "tests/support/fresh_docs_readiness.rs",
+                  ".decapod/managed/specs/INTERFACES.md"
+                ],
+                "proof_refs": [
+                  "rustfmt",
+                  "diff-whitespace"
+                ],
+                "scope": [
+                  "issue-1660"
+                ],
+                "sequence": 10,
+                "tool": "Selected the negative capture by schema and all CheckKey fields from existing native diagnostic metadata; retained exit1 and expected stderr, additionally require Exited and no per-step execution error. Preserve current canonical ordering and every later withdrawal/old-proof refusal/recovery/lease assertion. No runtime or source-CI graph changes. Prior82 PR broker timing failure remains failed; fresh exact-source Actions will exercise unchanged strict probe.",
+                "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:11",
+                "observations": [
+                  ".config/build/decapod.BUILD.bzl",
+                  ".decapod/managed/specs/INTENT.md",
+                  ".decapod/managed/specs/ARCHITECTURE.md",
+                  ".decapod/managed/specs/INTERFACES.md",
+                  ".decapod/managed/specs/SECURITY.md"
+                ],
+                "proof_refs": [
+                  "stale-accepted-target-ci-context",
+                  "accepted-9c-source-inventory"
+                ],
+                "scope": [
+                  "issue-1660"
+                ],
+                "sequence": 11,
+                "tool": "External merge1791 advanced live master9c7e6cff at12:56:40UTC; this agent did not merge or assert admission. Old2f push jobs134806810318/134806810211 correctly refused Git merge-base context before tests; raw hashes54bab00c5c0479e878b62a0c27c9dc1a1e2ac2fba9042c1e426096153664b309 and82880faeb9a7241d21123440fc5b09576efc6b2ceefaaef44202837e050c806b. Preserve native active governance/manifest via Git ours, accepted config via Git theirs after backup, all authored operative paragraphs from both parents. Rehash all105 merged source-CI inputs to acceptedac2. Native refresh owns projections; no source test manually run and no old success transferred.",
+                "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:12",
+                "observations": [
+                  ".decapod/managed/specs/INTENT.md"
+                ],
+                "proof_refs": [
+                  "rustfmt",
+                  "diff-whitespace",
+                  "source12-inventory",
+                  "controller12-install",
+                  "native-project-preparation"
+                ],
+                "scope": [
+                  "issue-1660"
+                ],
+                "sequence": 12,
+                "tool": "Accepted master advanced7bd0a915 via external release1794 at13:10:39UTC; only package/changelog changed. Current workbranch merge parent7bd pinned. All105 source-CI inputs independently rehashed tobd7eec7e7edaa9a427dea5c3d6b4de42e885b23d2b1911f3602527686e366c4e; only2 Cargo version bytes changed,103 unchanged. Official11 session acquire opt-in installed scoped12 binary SHA1fb9e592076c937f0be049f2329b287e22f2e6a346b8f351ec863bfc92a6d7d3; original config and old/shared binaries preserved. Native prep attempt1 unavailable storage contention; supported retry209passed4failed: host container proof, unrelated done task proof, pending merge ancestry and not-yet-committed Docker12. No passing admission claimed; commit addresses the two pending-material conditions, source Actions must re-execute.",
                 "validation_findings": []
               }
             ]
@@ -901,55 +1078,63 @@
         }
       },
       "declared_commands": [
-        "Actual Actions project checks191pass/0fail then release-drift refusal at1ba because evaluator11 regenerated Docker10 and manifest10. Official10 session opt-in installed private official11, preserving old10 and shared binary, config restored. Native11 refresh/project-check regenerated owned projections; host container requirement and unrelated completed-task proof remain blocked, no native admission claimed or skips added.",
-        "Actual1ba PR core passed both dedicated broker probes but interop_conformance failed to build because include_str Python fixture was absent from Bazel compile_data; zero of11 unfiltered targets executed, no pass claimed. Declare exactly this input only for the existing target. Independently measure105 source inputs: only one .bzl changed,104 unchanged, literal diff only one compile_data path; required graph/budgets/commands unchanged, review digest ac2be63.",
-        "Reauthor selected reviewed source from6fff3707 in fresh claimed worktree at352d8929, after previous1787 merged externally. Preserve old source/checkpoints and native compact-boundary refusal, without importing old governance, custody or execution. Native/Python tests newly authored, source CI pending."
+        "Native-prescribed present-time recovery only: preserve blocked1788 and d538 immutable gap, reauthor reviewed code/tests/config and selected semantic prose from accepted352. Import no prior governance/custody/proof, retain complete native recovery assessment. Current validation withdrawal uses existing journal atomic custody/generation fence; exact-current-custody history selection retains all producer/input checks. Real CLI/unit source execution pending.",
+        "Only after de9 archive committed, native resolver accepts current recovery disposition. Historical d538 remains not_proven, no exception authorized. Current runtime and metadata checks still pending; official session updater installing11 privately after actual Actions drift failure.",
+        "Repeated actual current official11 controls: c339 candidate genuine full local proof mnOf3s, native VERIFIED; newer actual required failure EqRhuK leaves old VERIFIED/resumable and resume0. Fresh repair proof t39rpO succeeds; after lease renewal old resume denied, fresh full N3xuMN succeeds but promotion incorrectly refuses mixed-custody history. Bounded external flag remains outside captured source/tool bytes; no forge admission. Native split-store refusal now supplies fresh-task/canonical-workspace/new-proof recovery without claiming migration. Official11 projections refreshed; host project-check lock failure preserved, not a pass."
       ],
       "destination": "pull request",
       "evidence": [
-        "/private/tmp/attack-gaps-1791-bazel-fixture-inventory-review.json",
-        "/private/tmp/attack-gaps-1791-first-core-134746196472.log",
-        "/private/tmp/attack-gaps-1791-release11-projection-drift.json",
-        "/private/tmp/attack-gaps-871-duplicate-begin-pr.json",
-        "/private/tmp/attack-gaps-871-json-release11-inventory-review.json",
+        "/private/tmp/attack-gaps-1660-freshness-state.json",
+        "/private/tmp/attack-gaps-1660-native11-falsifiers-summary.json",
+        "/private/tmp/attack-gaps-1660-recovery-present-resolution.json",
+        "/private/tmp/attack-gaps-1660-recovery-source-review.json",
+        "/private/tmp/attack-gaps-1660-release11-checkpoint-inspection-exact.json",
         "/private/tmp/attack-gaps-controller11-install.json",
-        "/private/tmp/attack-gaps-json-controller11-project-check.json",
-        "/private/tmp/attack-gaps-rpc-duplicate-keys-before.json"
+        "git:de9c8b68bc05ca0893295b6b97b5ca52039234c9:.decapod/governance.json"
       ],
       "inspected_files": [
-        "src/decapod/core/derived_release_profile.rs",
-        "src/decapod/core/interop.rs",
-        "tests/interop_conformance.rs"
-      ],
-      "intent_id": "intent:change_01M7Q3DQ50P9E0ATDWZTJHKFS5",
-      "modified_files": [
         ".config/build/decapod.BUILD.bzl",
-        ".decapod/config.toml",
+        "src/decapod/core/validation_history.rs",
+        "src/decapod/core/validation_runtime.rs",
+        "src/decapod/core/workunit.rs",
+        "tests/common/consumer_readiness_fixture.rs",
+        "tests/support/fresh_docs_readiness.rs",
+        "tests/unit/core/validation_history_workunit_tests.rs"
+      ],
+      "intent_id": "intent:change_01M7Q44RVCTZPBYQ12A8MB3C5Y",
+      "modified_files": [
+        ".decapod/managed/specs/ARCHITECTURE.md",
+        ".decapod/managed/specs/INTENT.md",
         ".decapod/managed/specs/INTERFACES.md",
-        "src/decapod/core/derived_release_profile.rs",
-        "src/decapod/core/json.rs",
-        "src/decapod/core/mod.rs",
-        "src/decapod/lib.rs",
-        "tests/fixtures/interop_strict_json.py",
-        "tests/interop_conformance.rs",
-        "tests/support/interop_harness.rs"
+        ".decapod/managed/specs/SECURITY.md",
+        "src/decapod/core/validation_history.rs",
+        "src/decapod/core/workunit.rs",
+        "tests/consumer_readiness.rs",
+        "tests/entrypoint_correctness.rs",
+        "tests/support/fresh_docs_readiness.rs",
+        "tests/unit/core/validation_history_workunit_tests.rs",
+        "tests/unit/core/workunit_journal_tests.rs"
       ],
       "next_transitions": [
-        "Checkpoint and commit actual official11 projection repair before push; rerun Actions for exact new source.",
+        "Finish current semantic review and native checkpoint before second commit; require exact-head native history proof, push and publish recovery PR, run applicable Actions.",
         "Refine plan and declare falsifiable checks",
-        "Refresh/review specs, checkpoint and publish a new narrow follow-up PR under explicit user exception; run all applicable GitHub Actions.",
-        "Refresh/review specs, checkpoint before commit, verify exact-head history, push1791 and execute current Actions."
+        "Refresh/review semantic specs, archive present recovery with native checkpoint completed before commit, then resolve only current recovery disposition with archive proof; no historical waiver.",
+        "Use supported official11 projections, checkpoint this present resolution before committing, inspect every new commit natively, then publish recovery PR and run Actions."
       ],
       "repo_scope": [
-        "issue-871"
+        "issue-1660"
       ],
-      "run_id": "branch_01M7Q3DQ8RFZAHXD2B6ZY1JSZ5",
+      "run_id": "branch_01M7Q44RYMGVJGZ2JGB3YZ9VP7",
       "schema_version": "1.1.0",
       "shortcut_risk_signals": [],
-      "task_id": "bugs_01m7q384jw6mn3w5",
+      "task_id": "bugs_01m7q41y4d66h98s",
       "tool_calls": [
-        "Converted invalid positive optional_metadata payload into an explicit strict-schema invalid_params control. Recovery now uses supported optional_ops/extensions, checks decoded Unicode and omitted values. Product parser/schema unchanged; runtime proof pending required Actions.",
-        "Current bf388444 core Actions job134763116449: duplicate/escaped/nested negative controls completed, then legal-JSON positive sent unknown optional_metadata and strict schema correctly refused invalid_params at line244. 9 scenarios passed,1 failed. Raw log SHA256 e6f2db17b3586a40db44261ab1d05dedaad2973ed68c92c2be1d21f69882d65c. Preserve strict schema; make unknown-field refusal explicit and use supported optional_ops/extensions for ordinary recovery."
+        "Accepted master advanced7bd0a915 via external release1794 at13:10:39UTC; only package/changelog changed. Current workbranch merge parent7bd pinned. All105 source-CI inputs independently rehashed tobd7eec7e7edaa9a427dea5c3d6b4de42e885b23d2b1911f3602527686e366c4e; only2 Cargo version bytes changed,103 unchanged. Official11 session acquire opt-in installed scoped12 binary SHA1fb9e592076c937f0be049f2329b287e22f2e6a346b8f351ec863bfc92a6d7d3; original config and old/shared binaries preserved. Native prep attempt1 unavailable storage contention; supported retry209passed4failed: host container proof, unrelated done task proof, pending merge ancestry and not-yet-committed Docker12. No passing admission claimed; commit addresses the two pending-material conditions, source Actions must re-execute.",
+        "Added only validation_not_ready to the existing recognized journal kinds. No source tests executed manually; unchanged actual negative/full-proof readback regression will run on required GitHub Actions.",
+        "Exact82a1c098 PR CLI job134777427412 executed41 entrypoint cases passed,1 failed,5 ignored. Initial real full proof and VERIFIED succeeded and newer full validation returned not-ready. Test then wrongly read native-0 exit0, but fixture canonically sorts inspect-second before inspect-source. Existing native-N.diagnostic.json binds each capture to CheckKey; select exact inspect-source identity, still require actual step exit1 and stderr observed required failure. Raw log SHA256788c87fbbd46f81c47885388d6b575be2dbbca33348e837d37cb3009de20397a. Product proof contracts, source check, required graph and timing limits unchanged.",
+        "External merge1791 advanced live master9c7e6cff at12:56:40UTC; this agent did not merge or assert admission. Old2f push jobs134806810318/134806810211 correctly refused Git merge-base context before tests; raw hashes54bab00c5c0479e878b62a0c27c9dc1a1e2ac2fba9042c1e426096153664b309 and82880faeb9a7241d21123440fc5b09576efc6b2ceefaaef44202837e050c806b. Preserve native active governance/manifest via Git ours, accepted config via Git theirs after backup, all authored operative paragraphs from both parents. Rehash all105 merged source-CI inputs to acceptedac2. Native refresh owns projections; no source test manually run and no old success transferred.",
+        "GitHub Actions Supabase job 134761459192: 1803 library tests passed, 1 failed, 8 ignored. Withdrawal regression rejected its own validation_not_ready journal kind. Raw log SHA256 5b4e36a94d5b09b8cc78c596293168ec4af32ba1ad9e1597d990737c06ad70cd. Correct existing reader inventory only; preserve hashes and CAS/custody fences.",
+        "Selected the negative capture by schema and all CheckKey fields from existing native diagnostic metadata; retained exit1 and expected stderr, additionally require Exited and no per-step execution error. Preserve current canonical ordering and every later withdrawal/old-proof refusal/recovery/lease assertion. No runtime or source-CI graph changes. Prior82 PR broker timing failure remains failed; fresh exact-source Actions will exercise unchanged strict probe."
       ],
       "unresolved_assumptions": []
     }
