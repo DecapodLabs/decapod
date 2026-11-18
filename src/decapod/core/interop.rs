@@ -8,6 +8,7 @@
 //! an entry can never self-certify.
 
 use serde::{Deserialize, Serialize};
+pub mod native_boundary;
 use std::collections::BTreeSet;
 
 /// Manifest schema version.

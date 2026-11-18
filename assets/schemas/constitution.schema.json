@@ -1,7 +1,7 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
   "title": "Decapod Constitution Core Discovery Graph",
-  "version": "3.0.0",
+  "version": "3.1.0",
   "x-doctrine_model": {
     "schema_version": "section-doctrine-v1",
     "uplifted_namespaces": [
@@ -56,6 +56,87 @@
     "node": {
       "type": "object",
       "allOf": [
+        {
+          "if": {
+            "properties": {
+              "binding": {
+                "const": "binding"
+              }
+            },
+            "required": [
+              "binding"
+            ]
+          },
+          "then": {
+            "required": [
+              "authority_review"
+            ],
+            "properties": {
+              "id": {
+                "enum": [
+                  "core/DECAPOD",
+                  "core/SCAFFOLDING",
+                  "core/ARCHITECTURE",
+                  "core/DOCS",
+                  "core/INTERFACES",
+                  "core/METHODOLOGY",
+                  "core/PLUGINS",
+                  "core/SPECS",
+                  "core/METADATA",
+                  "core/DEMANDS",
+                  "core/DEPRECATION",
+                  "core/EMERGENCY_PROTOCOL",
+                  "core/DATA",
+                  "core/RESEARCH"
+                ]
+              },
+              "category": {
+                "const": "core"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "authority": {
+                "const": "root-router"
+              }
+            },
+            "required": [
+              "authority"
+            ]
+          },
+          "then": {
+            "properties": {
+              "id": {
+                "const": "core/DECAPOD"
+              },
+              "category": {
+                "const": "core"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "authority": {
+                "const": "namespace-router"
+              }
+            },
+            "required": [
+              "authority"
+            ]
+          },
+          "then": {
+            "properties": {
+              "category": {
+                "const": "core"
+              }
+            }
+          }
+        },
         {
           "if": {
             "properties": {
@@ -389,6 +470,9 @@
         },
         "research_doctrine": {
           "$ref": "#/definitions/research_doctrine"
+        },
+        "authority_review": {
+          "$ref": "#/definitions/authority_review"
         }
       }
     },
@@ -681,6 +765,31 @@
             "type": "string"
           },
           "uniqueItems": true
+        }
+      }
+    },
+    "authority_review": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "control_id",
+        "required_review",
+        "enforcement",
+        "basis"
+      ],
+      "properties": {
+        "control_id": {
+          "const": "core/SPECS"
+        },
+        "required_review": {
+          "const": "repository_pr_review"
+        },
+        "enforcement": {
+          "const": "not_machine_enforced"
+        },
+        "basis": {
+          "type": "string",
+          "pattern": "^https://github\\.com/DecapodLabs/decapod/commit/[a-f0-9]{40}$"
         }
       }
     }

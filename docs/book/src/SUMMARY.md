@@ -19,6 +19,7 @@
   - [Proof](concepts/proof.md)
   - [Common Questions](concepts/faq.md)
   - [Constitution](concepts/constitution.md)
+  - [Constitution Provenance](concepts/constitution-history.md)
   - [Overrides](concepts/overrides.md)
   - [Model Context Protocol (MCP)](concepts/mcp.md)
 

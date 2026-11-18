@@ -1,7 +1,7 @@
 {
   "schema_version": "1.0.0",
   "baseline": {
-    "accepted_commit": "6ab6de3134286a790d78d370ca3fb43c0d92f834",
+    "accepted_commit": "34f837d4dbb2a611c0d68a2cf14845cbe6823367",
     "policy": {
       "change_control": {
         "requires_human_review": true,
@@ -132,6 +132,14 @@
       "claim:complete-prepush-readiness": {
         "falsifier": "An empty, stale, skipped-required, mocked-code or missing-provider result authorizes publication, or CLI/RPC/publish bypasses the same boundary",
         "statement": "Public validate can authorize source PR publication only after all applicable actual source checks and candidate builds pass with genuine current material/provider evidence; release-only packaging is explicitly outside core source scope",
+        "status": "open"
+      },
+      "claim:config-and-policy-authority": {
+        "falsifier": "Actual CLI or RPC accepts unsupported config for mutation, blocks schema repair, or grants a privilege solely from an unaccepted proposal; legitimate accepted operations deadlock.",
+        "proof_refs": [
+          "/private/tmp/decapod-boundary-red-c30w2kjb/evidence"
+        ],
+        "statement": "Invalid config versions deny mutation while schema references remain accessible; unaccepted root RBAC proposals cannot self-authorize and accepted scoped grants remain usable and revocable.",
         "status": "open"
       },
       "claim:consumer-local-proof": {
@@ -474,6 +482,7 @@
       "trajectory:06645c9215349379": "custody isolation is container, but this host has no Docker; the work uses a git worktree workspace",
       "trajectory:083d2ad8e4cb2b22": "Current v2 mutation receipts and Dactyl 0.13.0 native consumer require fresh full proof; prior source proof is historical.",
       "trajectory:13217192dadb3ee3": "No local prerequisite suite run; remote full validation remains required",
+      "trajectory:14bb95d52b8efabf": "Fresh complete exact-candidate CI required after cloud test contract correction",
       "trajectory:150b60dea853e3ba": "Real native measurements and separate holdout risk/coverage are required; current source CI success is insufficient. Evaluation criteria recorded before model outputs; no readiness fitting or holdout evaluation executed.",
       "trajectory:17139f4701f494a5": "Hosted verification and exact-candidate publication readiness remain pending; no local tests run.",
       "trajectory:17669a7d73b8ecb7": "RPC download403 is runner-specific; same pinned URL succeeded on another fresh runner. Policy fixture exit126 OS detail is unknown because stderr was discarded.",
@@ -563,77 +572,65 @@
       "trajectory:ec49216a39e5bf93": "The config decision is cooperative; its author and agent labels are not authenticated.",
       "trajectory:ecfec9650d4ed288": "Independent standalone validation exposed four stale generated release-bound entrypoints; supported init refresh changed headers only, required graph preserved.",
       "trajectory:f000bb05667cb46e": "No actual four-target release artifact build is scheduled by ordinary source preflight;1049 latency improvement remains unmeasured",
+      "trajectory:f004e139bd2e3056": "Remaining fixture repairs require executable checks and fresh full validation",
       "trajectory:f9fb9362db79deb2": "Userauthorizesboundedcontractdiagnosis and evidence-backed productdecision, no repeatedfailedfullrun before causalcorrection. No sourcecode/math/weights/calibration/tolerance/gate/recipe changes justified bycontractreview. Authoranexposed-study audit andsourceadmissionledger, maintainlivingvalidation/intent interpretations, andprepareexplicitunappliedscopeproposal. Actualproductionprojection differsfromoldfullpatchharness andcannotbeclaimedtestedbythose29outcomes.",
       "trajectory:fa421ac6b37186ed": "Automatic trusted remote controller bootstrap is absent; a two-revision independent provider harness requires separate scope decision. Diagnostics do not claim to close that gap."
     }
   },
   "change": {
-    "id": "change_01M7NR0Z9M2Q4AQQFBP1ZPD07Q",
-    "base_commit": "6ab6de3134286a790d78d370ca3fb43c0d92f834",
+    "id": "change_01M7PNVHBQSKPRK1M9P79X865W",
+    "base_commit": "34f837d4dbb2a611c0d68a2cf14845cbe6823367",
     "target_base": "origin/master"
   },
   "claims": {
-    "config-and-policy-authority": {
-      "statement": "Invalid config versions deny mutation while schema references remain accessible; unaccepted root RBAC proposals cannot self-authorize and accepted scoped grants remain usable and revocable.",
-      "falsifier": "Actual CLI or RPC accepts unsupported config for mutation, blocks schema repair, or grants a privilege solely from an unaccepted proposal; legitimate accepted operations deadlock.",
+    "bounded-context-admission-and-evidence": {
+      "statement": "One embedded corpus retains explicit admission; bounded context excludes superseded/rejected knowledge and arbitrary advisory fallback, preserves current plan and legacy hashes, and cooperative host/outcome surfaces never grant current proof or publication authority.",
+      "falsifier": "Repetition promotes lower authority, no-match emits filler, stale knowledge or plan survives fresh continuation, a research PR grants binding authority, an incomplete host run becomes useful-work proof, or an adapter/report authorizes publication.",
       "status": "open",
       "proof_refs": [
-        "/private/tmp/decapod-boundary-red-c30w2kjb/evidence"
+        "docs/research/host-outcome-pilot/README.md",
+        "tests/constitution_claims.rs",
+        "tests/constitution_scaffolding.rs",
+        "tests/context_capsule_rpc.rs",
+        "tests/context_capsule_schema.rs",
+        "tests/unit/core/docs_tests.rs",
+        "tests/unit/core/native_boundary_tests.rs",
+        "tests/unit/core/outcome_comparison_tests.rs",
+        "tests/unit/plugins/knowledge_tests.rs"
       ]
     }
   },
   "checkpoints": [
     {
-      "id": "policy-config-repair-01",
-      "summary": "Reject unsupported config versions, preserve read-only schema recovery, and resolve exceptional RBAC/shared policy through existing branch-safe authority; preserve executable red traces and denial/recovery regression controls.",
-      "input_digest": "sha256:68dd440ff99fc50cac85b3e711ea908e86595b8b6b6e229e4023e73b70e38ef5",
+      "id": "constitution-context-host-integration-01",
+      "summary": "Integrate reviewed source-only Constitution retrieval/admission, scoped knowledge, public chronology, cooperative native boundaries and honest opt-in pilot outcomes on accepted v0.148.10. Preserve prior failures, fresh claimed custody, all required proof gates and actual 89 focused checks; no real-host efficacy or full readiness inferred. Fix stale activation fixture assertions while retaining native refusal.",
+      "input_digest": "sha256:75126ba0f80b046aad37e3acd5586de17ef02ee4281d307826152f79b9b436b8",
       "proof_refs": [
-        "/private/tmp/decapod-boundary-red-c30w2kjb/evidence"
+        "docs/research/host-outcome-pilot/README.md",
+        "tests/activation_conformance.rs",
+        "tests/constitution_scaffolding.rs",
+        "tests/context_capsule_rpc.rs",
+        "tests/context_capsule_schema.rs",
+        "tests/unit/plugins/knowledge_tests.rs"
       ]
-    },
-    {
-      "id": "policy-config-repair-02",
-      "summary": "Finalize current parser/schema-repair and branch-safe RBAC regressions after exact-content spec reviews; original binary reproduced violations, patched execution remains pending full validation.",
-      "input_digest": "sha256:b7b572f6f316bc77921dcf3ca45370247f60ed2d378073f29ac7ddba85aff9d5",
-      "proof_refs": [
-        "/private/tmp/decapod-boundary-red-c30w2kjb/evidence"
-      ]
-    },
-    {
-      "id": "reviewed-release-inventory-03",
-      "summary": "Review proof inventory against edbfc00d: only package versions in Cargo.toml and Cargo.lock advanced 0.148.7 to 0.148.9; preserve complete required profile, commands, workflows and provider.",
-      "input_digest": "sha256:7e632c55c8968879b71f4485a15e1d21de070a0cc472e86ce6338e98e3c15913",
-      "proof_refs": [
-        "/private/tmp/decapod-boundary-red-c30w2kjb/evidence/candidate-init-reconciliation.json"
-      ]
-    },
-    {
-      "id": "first-adoption-recovery-04",
-      "summary": "Preserve ordinary first-adoption approval defaults without candidate grants; establish accepted fixture policy and trace real RPC mutations. Targeted policy, workunit, RPC and task-transfer checks pass; complete CI remains required.",
-      "input_digest": "sha256:78c09092de976b4d89512c8021ccdbf8aad2798ea3606faa5eaf33e63ed5b54e"
-    },
-    {
-      "id": "cloud-schema-boundary-recovery-05",
-      "summary": "Verify read-only cloud schema CLI/RPC without filesystem or HTTP side effects; retain unsupported operational cloud startup refusal. All 41 native cloud-boundary tests pass; fresh full CI required.",
-      "input_digest": "sha256:fafc981ce8da319f9afbecc2ed57e995f05c6f343a7c1932e793586ee0624325"
     }
   ],
   "intents": {
-    "intent:change_01M7NR0Z9M2Q4AQQFBP1ZPD07Q": {
+    "intent:change_01M7PNVHBQSKPRK1M9P79X865W": {
       "acceptance_criteria": [],
       "assumptions": [],
       "boundaries": [
         "Current claimed task and isolated work branch"
       ],
       "constraints": [
-        "root"
+        "constitution-host-integration"
       ],
       "created_sequence": 1,
-      "id": "intent:change_01M7NR0Z9M2Q4AQQFBP1ZPD07Q",
+      "id": "intent:change_01M7PNVHBQSKPRK1M9P79X865W",
       "out_of_scope": [],
       "proof_requirements": [],
-      "raw_intent": "Adversarial fixes for Decapod issues 1776 1771 1763 1071 880\n\nImplement user-authorized security fixes and binary negative/repair tests; inspect dependencies and PR 1766; isolate work; validate before PR; preserve human merge authority and truthful host evidence.",
-      "refined_intent": "Adversarial fixes for Decapod issues 1776 1771 1763 1071 880\n\nImplement user-authorized security fixes and binary negative/repair tests; inspect dependencies and PR 1766; isolate work; validate before PR; preserve human merge authority and truthful host evidence.",
+      "raw_intent": "Integrate current accepted Constitution context and host evidence (#1772 #1774 #657 #880 #1095 #879)\n\nUser-authorized integrated delivery of all six contracts from the current accepted target. Preserve own source checkpoints and failed evidence from code_01m7p2bh487vg661 and code_01m7nxkqpj1hw95p. The latter remains unassigned with UNKNOWN broker receipts; do not transfer its custody or copy its governance/proof. This distinct integration task must claim fresh native custody, reconcile accepted changes and authored source, earn new exact full proof, publish and merge only through native admission. Retain authentication and real-host proof limitations.",
+      "refined_intent": "Integrate current accepted Constitution context and host evidence (#1772 #1774 #657 #880 #1095 #879)\n\nUser-authorized integrated delivery of all six contracts from the current accepted target. Preserve own source checkpoints and failed evidence from code_01m7p2bh487vg661 and code_01m7nxkqpj1hw95p. The latter remains unassigned with UNKNOWN broker receipts; do not transfer its custody or copy its governance/proof. This distinct integration task must claim fresh native custody, reconcile accepted changes and authored source, earn new exact full proof, publish and merge only through native admission. Retain authentication and real-host proof limitations.",
       "status": "refined",
       "updated_sequence": 3
     }
@@ -646,7 +643,7 @@
       },
       "deferred_questions": [],
       "human_questions": [],
-      "intent": "Adversarial fixes for Decapod issues 1776 1771 1763 1071 880\n\nImplement user-authorized security fixes and binary negative/repair tests; inspect dependencies and PR 1766; isolate work; validate before PR; preserve human merge authority and truthful host evidence.",
+      "intent": "Integrate current accepted Constitution context and host evidence (#1772 #1774 #657 #880 #1095 #879)\n\nUser-authorized integrated delivery of all six contracts from the current accepted target. Preserve own source checkpoints and failed evidence from code_01m7p2bh487vg661 and code_01m7nxkqpj1hw95p. The latter remains unassigned with UNKNOWN broker receipts; do not transfer its custody or copy its governance/proof. This distinct integration task must claim fresh native custody, reconcile accepted changes and authored source, earn new exact full proof, publish and merge only through native admission. Retain authentication and real-host proof limitations.",
       "phases": [],
       "proof_hooks": [
         "decapod validate"
@@ -654,226 +651,218 @@
       "schema_version": "1.1.0",
       "spec_reviews": [
         {
-          "disposition": "unchanged_with_reason",
+          "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Cloud regression now verifies unchanged project and machine inventories for schema CLI/RPC, and preserves operational cloud fallback denial. No authority or implementation interface changes; existing architecture and security boundaries remain accurate.",
-          "reviewed_code_fingerprint": "7b88d5d3e68ce397408f69e5635bceee4071a1c57b84cab441c0b3083ee7e3a7",
-          "spec_material_hash": "0b7738e450b1038116cd3fce2e9660a615fbea502d988760d54dbf8c314f9146"
+          "reason": "Current-content review after final refresh: preserve whole-product identity, one corpus and existing knowledge/capsule/proof owners; bound applicability and envelopes, admit corpus structure before compression, and keep host adapters cooperative.",
+          "reviewed_code_fingerprint": "793c3b22cae86166bc8e717545ea604ae6d095d024751a3c971bd2a38aa11525",
+          "spec_material_hash": "b6ffd59d9088c81608d51896c87cb10cabc8ce1eb0e3b07ab819c96b955bd476"
         },
         {
-          "disposition": "unchanged_with_reason",
+          "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Cloud regression now verifies unchanged project and machine inventories for schema CLI/RPC, and preserves operational cloud fallback denial. No authority or implementation interface changes; existing architecture and security boundaries remain accurate.",
-          "reviewed_code_fingerprint": "7b88d5d3e68ce397408f69e5635bceee4071a1c57b84cab441c0b3083ee7e3a7",
-          "spec_material_hash": "060bb3be1c58675e825374cf10d34d04b38688f5cd88e6d2c5f7fcd91e2fd690"
+          "reason": "Current-content review: preserve legacy DocFragment and capsule hash compatibility; version optional selection/knowledge/plan context, explicit provenance/conflicts/budgets; typed native boundaries and compact reports deny publication authority and preserve unknown measurements.",
+          "reviewed_code_fingerprint": "793c3b22cae86166bc8e717545ea604ae6d095d024751a3c971bd2a38aa11525",
+          "spec_material_hash": "54ed002bef22315ab7e69914268093edb5b3a90a03528a360169015041141265"
         },
         {
-          "disposition": "unchanged_with_reason",
+          "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Cloud regression now verifies unchanged project and machine inventories for schema CLI/RPC, and preserves operational cloud fallback denial. No authority or implementation interface changes; existing architecture and security boundaries remain accurate.",
-          "reviewed_code_fingerprint": "7b88d5d3e68ce397408f69e5635bceee4071a1c57b84cab441c0b3083ee7e3a7",
-          "spec_material_hash": "cdc863757905c53f4f176284c72744f0575184c65a059b7edf6239b47c4fc644"
+          "reason": "Current-content review: corpus assertions cannot self-promote; rejected/private/expired knowledge is excluded from operative context, credentials and unsafe paths are bounded through existing owners; no model delivery, human authentication, OS interception or current proof is inferred.",
+          "reviewed_code_fingerprint": "793c3b22cae86166bc8e717545ea604ae6d095d024751a3c971bd2a38aa11525",
+          "spec_material_hash": "35d8c625b3139e1d5bdbdb6d6833c71ad98a2ed35617dd139005fe635f5cdcd0"
         }
       ],
       "state": "APPROVED",
       "stop_conditions": [],
-      "title": "Adversarial fixes for Decapod issues 1776 1771 1763 1071 880",
+      "title": "Integrate current accepted Constitution context and host evidence (#1772 #1774 #657 #880 #1095 #879)",
       "todo_ids": [
-        "bugs_01m7nqz8dxaz801k"
+        "code_01m7pngvfmhsvmz5"
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1794979218Z"
+      "updated_at": "1794986684Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch",
-        "User explicitly authorizes draft PR creation before validation; no admission or merge authority follows"
+        "One global corpus; existing custody and proof owners; no inferred host delivery or current admission"
       ],
-      "artifact_hash": "sha256:f5a1d2b7b4abd7127c93760ba8bbc56b67e8b33890167d6a7c5fd7474a27a871",
+      "artifact_hash": "sha256:c054dd7dd7cedab7e21214a71d8e4c4982a5a2df16d7885217958eeba37c4216",
       "checks": [
         {
-          "name": "buildkite-11921",
-          "status": "failed"
-        },
-        {
-          "name": "ci-cb4b87b1",
-          "status": "failed"
-        },
-        {
-          "name": "cloud-schema-recovery-native",
+          "name": "activation_conformance",
           "status": "passed"
         },
         {
-          "name": "config_version_actual_binary",
+          "name": "adapter_unit_regressions",
+          "status": "passed"
+        },
+        {
+          "name": "advisory_query_regression",
           "status": "failed"
         },
         {
-          "name": "full-cloud-boundary-native",
+          "name": "capsule_rpc",
           "status": "passed"
         },
         {
-          "name": "full_validation_d6fa03bc",
+          "name": "capsule_schema",
+          "status": "passed"
+        },
+        {
+          "name": "constitution_ajv",
+          "status": "passed"
+        },
+        {
+          "name": "constitution_claims",
+          "status": "passed"
+        },
+        {
+          "name": "constitution_scaffolding",
+          "status": "passed"
+        },
+        {
+          "name": "final_library_filters",
+          "status": "passed"
+        },
+        {
+          "name": "full_native_readiness",
+          "status": "unavailable"
+        },
+        {
+          "name": "knowledge_regressions",
+          "status": "passed"
+        },
+        {
+          "name": "outcome_regressions",
+          "status": "passed"
+        },
+        {
+          "name": "prior_integrated_native_validation",
           "status": "failed"
         },
         {
-          "name": "malformed_schema_reference",
-          "status": "failed"
-        },
-        {
-          "name": "native-interop-suite",
-          "status": "partial"
-        },
-        {
-          "name": "native-policy-tests",
+          "name": "retrieval_regressions",
           "status": "passed"
-        },
-        {
-          "name": "native-rpc-suite",
-          "status": "passed"
-        },
-        {
-          "name": "native-task-transfer",
-          "status": "passed"
-        },
-        {
-          "name": "native-workunit-observation",
-          "status": "passed"
-        },
-        {
-          "name": "rbac_self_grant_original_binary",
-          "status": "failed"
         }
       ],
-      "current_phase": "verification",
+      "completion_claim": "Implementation and focused regression verification only; exact committed candidate full native readiness and governed publication are pending; real-host acceptance gaps remain.",
+      "current_phase": "checkpoint",
       "custody": {
         "events": [
           {
             "event_id": "event:2",
-            "intent_id": "intent:change_01M7NR0Z9M2Q4AQQFBP1ZPD07Q",
+            "intent_id": "intent:change_01M7PNVHBQSKPRK1M9P79X865W",
             "kind": "created",
             "sequence": 2
           },
           {
             "event_id": "event:3",
-            "intent_id": "intent:change_01M7NR0Z9M2Q4AQQFBP1ZPD07Q",
+            "intent_id": "intent:change_01M7PNVHBQSKPRK1M9P79X865W",
             "kind": "refined",
             "sequence": 3
           },
           {
-            "detail": "trajectory:branch_01M7NR0ZCNHC7YZKZ9SYWWDDVJ",
+            "detail": "trajectory:branch_01M7PNVHF4GFRZRWZRPJWAQ8K5",
             "event_id": "event:4",
-            "intent_id": "intent:change_01M7NR0Z9M2Q4AQQFBP1ZPD07Q",
+            "intent_id": "intent:change_01M7PNVHBQSKPRK1M9P79X865W",
             "kind": "trajectory_step_recorded",
             "sequence": 4
           },
           {
-            "detail": "trajectory:branch_01M7NR0ZCNHC7YZKZ9SYWWDDVJ",
+            "detail": "trajectory:branch_01M7PNVHF4GFRZRWZRPJWAQ8K5",
             "event_id": "event:5",
-            "intent_id": "intent:change_01M7NR0Z9M2Q4AQQFBP1ZPD07Q",
+            "intent_id": "intent:change_01M7PNVHBQSKPRK1M9P79X865W",
             "kind": "trajectory_step_recorded",
             "sequence": 5
           },
           {
-            "detail": "trajectory:branch_01M7NR0ZCNHC7YZKZ9SYWWDDVJ",
+            "detail": "trajectory:branch_01M7PNVHF4GFRZRWZRPJWAQ8K5",
             "event_id": "event:6",
-            "intent_id": "intent:change_01M7NR0Z9M2Q4AQQFBP1ZPD07Q",
+            "intent_id": "intent:change_01M7PNVHBQSKPRK1M9P79X865W",
             "kind": "trajectory_step_recorded",
             "sequence": 6
           },
           {
-            "detail": "trajectory:branch_01M7NR0ZCNHC7YZKZ9SYWWDDVJ",
+            "detail": "trajectory:branch_01M7PNVHF4GFRZRWZRPJWAQ8K5",
             "event_id": "event:7",
-            "intent_id": "intent:change_01M7NR0Z9M2Q4AQQFBP1ZPD07Q",
+            "intent_id": "intent:change_01M7PNVHBQSKPRK1M9P79X865W",
             "kind": "trajectory_step_recorded",
             "sequence": 7
           },
           {
-            "detail": "trajectory:branch_01M7NR0ZCNHC7YZKZ9SYWWDDVJ",
+            "detail": "trajectory:branch_01M7PNVHF4GFRZRWZRPJWAQ8K5",
             "event_id": "event:8",
-            "intent_id": "intent:change_01M7NR0Z9M2Q4AQQFBP1ZPD07Q",
+            "intent_id": "intent:change_01M7PNVHBQSKPRK1M9P79X865W",
             "kind": "trajectory_step_recorded",
             "sequence": 8
-          },
-          {
-            "detail": "trajectory:branch_01M7NR0ZCNHC7YZKZ9SYWWDDVJ",
-            "event_id": "event:9",
-            "intent_id": "intent:change_01M7NR0Z9M2Q4AQQFBP1ZPD07Q",
-            "kind": "trajectory_step_recorded",
-            "sequence": 9
-          },
-          {
-            "detail": "trajectory:branch_01M7NR0ZCNHC7YZKZ9SYWWDDVJ",
-            "event_id": "event:10",
-            "intent_id": "intent:change_01M7NR0Z9M2Q4AQQFBP1ZPD07Q",
-            "kind": "trajectory_step_recorded",
-            "sequence": 10
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 10,
+        "next_sequence": 8,
         "schema_version": "1.0.0",
         "trajectories": {
-          "branch_01M7NR0ZCNHC7YZKZ9SYWWDDVJ": {
+          "branch_01M7PNVHF4GFRZRWZRPJWAQ8K5": {
             "evidence_only": true,
-            "id": "branch_01M7NR0ZCNHC7YZKZ9SYWWDDVJ",
-            "intent_id": "intent:change_01M7NR0Z9M2Q4AQQFBP1ZPD07Q",
+            "id": "branch_01M7PNVHF4GFRZRWZRPJWAQ8K5",
+            "intent_id": "intent:change_01M7PNVHBQSKPRK1M9P79X865W",
             "steps": [
               {
-                "action": "trajectory.record",
+                "action": "integration",
                 "custody_event_id": "event:4",
                 "observations": [
-                  "src/decapod/cli.rs",
-                  "src/decapod/lib.rs",
-                  "src/decapod/plugins/policy.rs",
-                  "src/decapod/core/db_maintenance.rs",
-                  "/private/tmp/decapod-boundary-red-c30w2kjb/evidence"
+                  "src/decapod/core/flight_recorder/outcomes.rs",
+                  "tests/constitution_scaffolding.rs",
+                  "Preserved prior full validation 7a2708fb snapshot FQkm5L: remote tags changed during v0.148.10 release; no readiness",
+                  "Source-only donors 7a2708fb and code_01m7nxkqpj1hw95p exported in private patch manifests; no old governance/proof transferred"
                 ],
                 "proof_refs": [
-                  "config_version_actual_binary",
-                  "malformed_schema_reference"
+                  "prior_integrated_native_validation",
+                  "advisory_query_regression"
                 ],
                 "scope": [
-                  "root"
+                  "constitution-host-integration"
                 ],
                 "sequence": 4,
-                "validation_findings": []
+                "validation_findings": [
+                  "Claude authentication absent; provider delivery, warm/failure strata and reviewed human attention remain unverified"
+                ]
               },
               {
-                "action": "trajectory.record",
+                "action": "regression",
                 "custody_event_id": "event:5",
                 "observations": [
-                  "src/decapod/cli.rs",
-                  "src/decapod/lib.rs",
-                  "src/decapod/core/db_maintenance.rs",
-                  "src/decapod/plugins/policy.rs",
-                  "tests/init_config_behavior.rs",
-                  "tests/sqlite_maintenance.rs",
-                  "/private/tmp/decapod-boundary-red-c30w2kjb/evidence/rbac-main-unaccepted.json"
+                  "src/decapod/core/flight_recorder/outcomes.rs",
+                  "assets/constitution.json",
+                  "docs/research/host-outcome-pilot/observations.json",
+                  "Actual combined v0.148.10 outcome filter: 11 passed including 9 collector regressions and 2 existing flight-recorder controls; log private, no full readiness inferred",
+                  "AJV 5.0.0 first rejected contributed node terms minItems; fifth meaningful term added; same schema command now passes",
+                  "107 proof inputs reconciled: 101 identical accepted, 4 changed and 2 added; digest63c1693440f0f2cde32b1cd5b4924fe0faffa74f7a0b8ddb2c367ca2e489df71; no required gate/provider changes"
                 ],
                 "proof_refs": [
-                  "rbac_self_grant_original_binary"
+                  "outcome_regressions",
+                  "constitution_ajv"
                 ],
                 "scope": [
-                  "root"
+                  "Constitution retrieval/admission, scoped knowledge, source chronology, cooperative boundaries and opt-in outcomes",
+                  "constitution-host-integration"
                 ],
                 "sequence": 5,
                 "validation_findings": []
               },
               {
-                "action": "trajectory.record",
+                "action": "regression",
                 "custody_event_id": "event:6",
                 "observations": [
-                  "Cargo.toml",
-                  "Cargo.lock",
-                  ".decapod/config.toml",
-                  "/private/tmp/decapod-boundary-red-c30w2kjb/evidence/candidate-init-reconciliation.json"
+                  "Current integration: 8 scoped docs regressions passed; 10 knowledge regressions passed including atomic correction, repeated rejected history, conflicts, expiry, scope privacy, source changes, bundle refresh and UTF-8 bounds. Fixtures do not prove real-model delivery."
                 ],
                 "proof_refs": [
-                  "full_validation_d6fa03bc"
+                  "retrieval_regressions",
+                  "knowledge_regressions"
                 ],
                 "scope": [
-                  "root"
+                  "Constitution retrieval/admission, scoped knowledge, source chronology, cooperative boundaries and opt-in outcomes",
+                  "constitution-host-integration"
                 ],
                 "sequence": 6,
                 "validation_findings": []
@@ -882,82 +871,41 @@
                 "action": "trajectory.record",
                 "custody_event_id": "event:7",
                 "observations": [
-                  "src/decapod/core/db_maintenance.rs",
-                  "src/decapod/plugins/policy.rs",
-                  "tests/agent_rpc_suite.rs",
-                  "tests/cli_contract_enforcement.rs",
-                  "tests/support/interop_harness.rs",
-                  "RPC suite: 5 passed; workunit observation: 6 passed; policy tests: 8 passed including first-adoption denial control",
-                  "https://buildkite.com/decapodlabs/decapod/builds/11921",
-                  "https://github.com/DecapodLabs/decapod/pull/1779"
+                  "Current actual CLI activation: new cooperative boundary test passed; old clean-checkout test failed because it expected VERIFIED from project_prerequisites_passed. Native owner correctly returned VALIDATION_HISTORY_TASK_PROOF_UNSUPPORTED. Correct fixture expectation; preserve production proof guard."
                 ],
                 "proof_refs": [
-                  "native-rpc-suite",
-                  "native-workunit-observation",
-                  "native-policy-tests",
-                  "buildkite-11921"
+                  "activation_conformance",
+                  "adapter_unit_regressions"
                 ],
                 "scope": [
-                  "root"
+                  "Constitution retrieval/admission, scoped knowledge, source chronology, cooperative boundaries and opt-in outcomes",
+                  "constitution-host-integration"
                 ],
                 "sequence": 7,
-                "validation_findings": [
-                  "Remaining fixture repairs require executable checks and fresh full validation"
-                ]
-              },
-              {
-                "action": "implementation",
-                "custody_event_id": "event:8",
-                "observations": [
-                  "public_task_transfer_preserves_identity_without_importing_a_live_lease: 1 passed; interop approval_roundtrip passed, suite still running",
-                  "User directly authorized exception to pre-PR requirement; direct forge draft 1779 is external and not admitted"
-                ],
-                "proof_refs": [
-                  "native-task-transfer",
-                  "native-interop-suite"
-                ],
-                "scope": [
-                  "root"
-                ],
-                "sequence": 8,
                 "validation_findings": []
               },
               {
-                "action": "verification",
-                "custody_event_id": "event:9",
+                "action": "checkpoint",
+                "custody_event_id": "event:8",
                 "observations": [
-                  "src/decapod/lib.rs",
-                  "src/decapod/core/snapshot_provider/automatic.rs",
-                  "tests/common/cloud_managed_scenarios.rs",
-                  "https://buildkite.com/decapodlabs/decapod/builds/11967#01a1ebfa-5cfa-4425-862b-2c76150a0bfc",
-                  "/private/tmp/decapod-boundary-red-c30w2kjb/evidence/cloud-schema-recovery-native.log"
+                  "Final focused integration run: 2 activation, 4 claims, 36 scaffolding/admission/history, 7 RPC and 7 schema; zero failures. Current library filters 8 docs,10 knowledge,4 boundary,11 outcome/flight-recorder; zero failures. Schema and formatting pass. Failed earlier fixture assertions retained, production proof guard unchanged.",
+                  "Seven redacted pilot rows and eleven retained attempts; independently passing recovery functional check and historical validation remain distinct from absent native completion, unknown provider delivery and Claude authentication."
                 ],
                 "proof_refs": [
-                  "cloud-schema-recovery-native",
-                  "full-cloud-boundary-native",
-                  "ci-cb4b87b1"
+                  "activation_conformance",
+                  "constitution_scaffolding",
+                  "constitution_claims",
+                  "capsule_rpc",
+                  "capsule_schema",
+                  "final_library_filters",
+                  "constitution_ajv",
+                  "full_native_readiness"
                 ],
                 "scope": [
-                  "root"
+                  "Constitution retrieval/admission, scoped knowledge, source chronology, cooperative boundaries and opt-in outcomes",
+                  "constitution-host-integration"
                 ],
-                "sequence": 9,
-                "validation_findings": [
-                  "Fresh complete exact-candidate CI required after cloud test contract correction"
-                ]
-              },
-              {
-                "action": "trajectory.record",
-                "custody_event_id": "event:10",
-                "observations": [
-                  "/private/tmp/decapod-boundary-red-c30w2kjb/evidence/cloud-boundary-native-full.log: 41 passed, 0 failed, 0 ignored, 57.71 seconds"
-                ],
-                "proof_refs": [
-                  "full-cloud-boundary-native"
-                ],
-                "scope": [
-                  "root"
-                ],
-                "sequence": 10,
+                "sequence": 8,
                 "validation_findings": []
               }
             ]
@@ -967,57 +915,41 @@
       "declared_commands": [],
       "destination": "pull request",
       "evidence": [
-        "/private/tmp/decapod-boundary-red-c30w2kjb/evidence",
-        "/private/tmp/decapod-boundary-red-c30w2kjb/evidence/candidate-init-reconciliation.json",
-        "/private/tmp/decapod-boundary-red-c30w2kjb/evidence/cloud-boundary-native-full.log: 41 passed, 0 failed, 0 ignored, 57.71 seconds",
-        "/private/tmp/decapod-boundary-red-c30w2kjb/evidence/cloud-schema-recovery-native.log",
-        "/private/tmp/decapod-boundary-red-c30w2kjb/evidence/rbac-main-unaccepted.json",
-        "RPC suite: 5 passed; workunit observation: 6 passed; policy tests: 8 passed including first-adoption denial control",
-        "User directly authorized exception to pre-PR requirement; direct forge draft 1779 is external and not admitted",
-        "https://buildkite.com/decapodlabs/decapod/builds/11921",
-        "https://buildkite.com/decapodlabs/decapod/builds/11967#01a1ebfa-5cfa-4425-862b-2c76150a0bfc",
-        "https://github.com/DecapodLabs/decapod/pull/1779",
-        "public_task_transfer_preserves_identity_without_importing_a_live_lease: 1 passed; interop approval_roundtrip passed, suite still running"
+        "107 proof inputs reconciled: 101 identical accepted, 4 changed and 2 added; digest63c1693440f0f2cde32b1cd5b4924fe0faffa74f7a0b8ddb2c367ca2e489df71; no required gate/provider changes",
+        "AJV 5.0.0 first rejected contributed node terms minItems; fifth meaningful term added; same schema command now passes",
+        "Actual combined v0.148.10 outcome filter: 11 passed including 9 collector regressions and 2 existing flight-recorder controls; log private, no full readiness inferred",
+        "Current actual CLI activation: new cooperative boundary test passed; old clean-checkout test failed because it expected VERIFIED from project_prerequisites_passed. Native owner correctly returned VALIDATION_HISTORY_TASK_PROOF_UNSUPPORTED. Correct fixture expectation; preserve production proof guard.",
+        "Current integration: 8 scoped docs regressions passed; 10 knowledge regressions passed including atomic correction, repeated rejected history, conflicts, expiry, scope privacy, source changes, bundle refresh and UTF-8 bounds. Fixtures do not prove real-model delivery.",
+        "Final focused integration run: 2 activation, 4 claims, 36 scaffolding/admission/history, 7 RPC and 7 schema; zero failures. Current library filters 8 docs,10 knowledge,4 boundary,11 outcome/flight-recorder; zero failures. Schema and formatting pass. Failed earlier fixture assertions retained, production proof guard unchanged.",
+        "Preserved prior full validation 7a2708fb snapshot FQkm5L: remote tags changed during v0.148.10 release; no readiness",
+        "Seven redacted pilot rows and eleven retained attempts; independently passing recovery functional check and historical validation remain distinct from absent native completion, unknown provider delivery and Claude authentication.",
+        "Source-only donors 7a2708fb and code_01m7nxkqpj1hw95p exported in private patch manifests; no old governance/proof transferred"
       ],
       "inspected_files": [
-        "Cargo.lock",
-        "Cargo.toml",
-        "src/decapod/cli.rs",
-        "src/decapod/core/db_maintenance.rs",
-        "src/decapod/core/snapshot_provider/automatic.rs",
-        "src/decapod/lib.rs",
-        "src/decapod/plugins/policy.rs"
+        "src/decapod/core/flight_recorder/outcomes.rs",
+        "tests/constitution_scaffolding.rs"
       ],
-      "intent_id": "intent:change_01M7NR0Z9M2Q4AQQFBP1ZPD07Q",
+      "intent_id": "intent:change_01M7PNVHBQSKPRK1M9P79X865W",
       "modified_files": [
-        ".decapod/config.toml",
-        "src/decapod/cli.rs",
-        "src/decapod/core/db_maintenance.rs",
-        "src/decapod/lib.rs",
-        "src/decapod/plugins/policy.rs",
-        "tests/agent_rpc_suite.rs",
-        "tests/cli_contract_enforcement.rs",
-        "tests/common/cloud_managed_scenarios.rs",
-        "tests/init_config_behavior.rs",
-        "tests/sqlite_maintenance.rs",
-        "tests/support/interop_harness.rs"
+        "assets/constitution.json",
+        "docs/research/host-outcome-pilot/observations.json",
+        "src/decapod/core/flight_recorder/outcomes.rs"
       ],
       "next_transitions": [
-        "Commit cloud-boundary correction, push same PR branch, then run exact-candidate full validation",
-        "Push recovery commit to draft PR 1779, then run fresh complete validation",
-        "Refine plan and declare falsifiable checks"
+        "Refine plan and declare falsifiable checks",
+        "Run affected regression tests, reconcile accepted proof inventory, refresh specs, checkpoint exact candidate and run full native validation"
       ],
       "repo_scope": [
-        "root"
+        "Constitution retrieval/admission, scoped knowledge, source chronology, cooperative boundaries and opt-in outcomes",
+        "constitution-host-integration"
       ],
-      "run_id": "branch_01M7NR0ZCNHC7YZKZ9SYWWDDVJ",
+      "run_id": "branch_01M7PNVHF4GFRZRWZRPJWAQ8K5",
       "schema_version": "1.1.0",
       "shortcut_risk_signals": [],
-      "task_id": "bugs_01m7nqz8dxaz801k",
+      "task_id": "code_01m7pngvfmhsvmz5",
       "tool_calls": [],
       "unresolved_assumptions": [
-        "Fresh complete exact-candidate CI required after cloud test contract correction",
-        "Remaining fixture repairs require executable checks and fresh full validation"
+        "Claude authentication absent; provider delivery, warm/failure strata and reviewed human attention remain unverified"
       ]
     }
   },

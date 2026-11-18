@@ -1,5 +1,21 @@
 # Security
 
+## Complete context and live recovery (#1772, #657)
+
+Current plan state and task binding are projected without authenticating human approval. Advisory correction history never outranks current canonical intent or policy. Complete context overflow refuses delivery and awareness rather than truncating authority into a misleading success. Historical legacy hashes remain inspectable; live import cannot use missing legacy knowledge or plan fields to bypass applicable current state. Accepted-source review basis requires a literal full commit identity, not a mutable ref or URL prefix.
+
+## Constitution admission and chronology (#1774, #879)
+
+Constitution contributions remain advisory unless the reviewed admission registry and explicit non-machine-enforced review metadata permit their binding role. Source admission cannot authenticate a reviewer, prove arbitrary prose true, or make every guideline executable. Real workspace refusal and mandate gates are tested directly. Public chronology admits only accepted history and explicitly captured public tag objects; it excludes arbitrary local branches and private artifacts. Neither historical priority nor source hashes establish host delivery or empirical benefit.
+
+## Scoped knowledge recovery (#657)
+
+Knowledge packets read repository stores only, filtering root/repo, the exact task and component-safe touched-path scopes. Private/unrelated scopes never enter candidate selection. Rejected/superseded/stale rows remain explicitly audit-accessible but absent from operative guidance. Equally applicable same-key conflicting bodies are suppressed with bounded IDs; no recency or repetition arbitrates authority. Credentials and oversized records are excluded using the existing secret-pattern owner. Current file observations are confined to canonical in-repository paths and bounded reads; their hashes do not prove what existed when an old assertion was recorded. Unversioned/unavailable provenance stays explicit.
+
+## Cooperative host boundaries and opt-in outcomes (#880, #1095)
+
+Private regular request files are bounded and opened without following symlinks; hard-linked inputs and secret-shaped identifiers reject. Existing trace and database secret redactors own sanitization. Digests and producer evidence classes do not authenticate a human, provider delivery or executed proof. No unrestricted shell/forge interception is claimed; native custody and full proof remain mandatory. Raw host captures, credentials and machine state stay outside Git.
+
 ## Configuration validity and accepted privilege proposals (#1771, #1776)
 
 `cli::DecapodProjectConfig` rejects unsupported schema versions during typed
@@ -684,8 +700,8 @@ execution evidence remains required before publication readiness.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `7b88d5d3e68ce397408f69e5635bceee4071a1c57b84cab441c0b3083ee7e3a7`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (236 files), `tests/` (235 files)
+- Repository signal fingerprint: `793c3b22cae86166bc8e717545ea604ae6d095d024751a3c971bd2a38aa11525`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (2 files), `src/` (238 files), `tests/` (242 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 

@@ -1,7 +1,7 @@
 use crate::core::assets;
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
-use std::collections::{BTreeSet, HashMap};
+use std::collections::{BTreeMap, BTreeSet};
 use std::path::Path;
 
 /// A fragment of a constitution or authority document.
@@ -12,6 +12,43 @@ pub struct DocFragment {
     pub title: String,
     pub excerpt: String,
     pub hash: String,
+}
+
+/// Selection evidence is separate from the stable fragment wire contract.
+/// A source hash proves identity, never relevance, human approval or execution.
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+pub struct FragmentSelection {
+    pub fragment_ref: String,
+    pub node_id: String,
+    pub authority: String,
+    pub binding: String,
+    pub status: String,
+    pub source_layer: String,
+    pub source_hash: String,
+    pub fragment_hash: String,
+    pub resolver_version: String,
+    pub reasons: Vec<String>,
+}
+
+#[derive(Debug, Clone, Default, Serialize, Deserialize, PartialEq, Eq)]
+pub struct ContextSelection {
+    pub selected: Vec<FragmentSelection>,
+    pub excluded: BTreeMap<String, String>,
+    pub excluded_counts: BTreeMap<String, usize>,
+    pub advisory_status: String,
+    pub context_bytes: usize,
+}
+
+pub const MAX_CONTEXT_FRAGMENTS: usize = 12;
+pub const MAX_CONTEXT_BYTES: usize = 8192;
+/// Complete serialized context envelope, including duplicated fragments and metadata.
+pub const MAX_CONTEXT_ENVELOPE_BYTES: usize = 256 * 1024;
+pub const RESOLVER_VERSION: &str = "authority-projection-v1";
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ScopedContext {
+    pub fragments: Vec<DocFragment>,
+    pub selection: ContextSelection,
 }
 
 /// A specific rule or mandate extracted from the constitution that governs agent behavior.
@@ -58,15 +95,41 @@ pub fn resolve_scoped_fragments(
     intent_tags: &[String],
     limit: usize,
 ) -> Vec<DocFragment> {
+    resolve_scoped_context(
+        repo_root,
+        query,
+        op,
+        touched_paths,
+        intent_tags,
+        limit,
+        None,
+    )
+    .fragments
+}
+
+/// Filter the namespace before ranking, so unrelated high scores cannot starve
+/// an applicable in-scope reference. Explicit bindings precede lexical matches.
+pub fn resolve_scoped_context(
+    repo_root: &Path,
+    query: Option<&str>,
+    op: Option<&str>,
+    touched_paths: &[String],
+    intent_tags: &[String],
+    limit: usize,
+    scope: Option<&str>,
+) -> ScopedContext {
     let bindings = get_bindings(repo_root);
-    let mut path_boosts: HashMap<String, i64> = HashMap::new();
-    let mut preferred_anchors: HashMap<String, String> = HashMap::new();
+    let mut reasons: BTreeMap<String, BTreeSet<String>> = BTreeMap::new();
+    let mut preferred_anchors = BTreeMap::new();
 
     if let Some(op_name) = op
         && let Some(doc_ref) = bindings.ops.get(op_name)
     {
         let (path, anchor) = split_doc_ref(doc_ref);
-        *path_boosts.entry(path.to_string()).or_insert(0) += 60;
+        reasons
+            .entry(path.to_string())
+            .or_default()
+            .insert(format!("operation:{op_name}"));
         if let Some(a) = anchor {
             preferred_anchors.insert(path.to_string(), a.to_string());
         }
@@ -76,7 +139,10 @@ pub fn resolve_scoped_fragments(
         for (prefix, doc_ref) in &bindings.paths {
             if touched.contains(prefix) {
                 let (path, anchor) = split_doc_ref(doc_ref);
-                *path_boosts.entry(path.to_string()).or_insert(0) += 25;
+                reasons
+                    .entry(path.to_string())
+                    .or_default()
+                    .insert(format!("path:{prefix}"));
                 if let Some(a) = anchor {
                     preferred_anchors.insert(path.to_string(), a.to_string());
                 }
@@ -87,7 +153,10 @@ pub fn resolve_scoped_fragments(
     for tag in intent_tags {
         if let Some(doc_ref) = bindings.tags.get(tag) {
             let (path, anchor) = split_doc_ref(doc_ref);
-            *path_boosts.entry(path.to_string()).or_insert(0) += 30;
+            reasons
+                .entry(path.to_string())
+                .or_default()
+                .insert(format!("tag:{tag}"));
             if let Some(a) = anchor {
                 preferred_anchors.insert(path.to_string(), a.to_string());
             }
@@ -98,10 +167,12 @@ pub fn resolve_scoped_fragments(
         .map(tokenize)
         .unwrap_or_default()
         .into_iter()
+        .filter(|term| term.len() <= 64)
+        .take(32)
         .collect::<Vec<_>>();
 
     let mut candidate_paths = BTreeSet::new();
-    for path in path_boosts.keys() {
+    for path in reasons.keys() {
         candidate_paths.insert(path.clone());
     }
     if !terms.is_empty() {
@@ -110,59 +181,175 @@ pub fn resolve_scoped_fragments(
         }
     }
 
-    let mut ranked: Vec<(i64, DocFragment)> = Vec::new();
+    let mut selection = ContextSelection::default();
+    // Invalid overrides must never be silently treated as absent. Fallible
+    // CLI/RPC owners return the parser's typed error; this legacy Vec API emits
+    // no authority on malformed input.
+    if assets::validate_override_structure(repo_root).is_err() {
+        selection
+            .excluded
+            .insert(".decapod/OVERRIDE.md".into(), "invalid_override".into());
+        selection.advisory_status = "invalid_authority".into();
+        return ScopedContext {
+            fragments: vec![],
+            selection,
+        };
+    }
+    let mut ranked = Vec::new();
     for path in candidate_paths {
-        let Some(content) = assets::get_merged_doc(repo_root, &path) else {
+        if scope.is_some_and(|prefix| !path.starts_with(&format!("{prefix}/"))) {
+            continue;
+        }
+        let Some(raw) = assets::get_embedded_doc(&path) else {
             continue;
         };
-        let mut score = *path_boosts.get(&path).unwrap_or(&0);
-        let content_lc = content.to_lowercase();
-
-        if !terms.is_empty() {
-            for term in &terms {
-                score += (count_occurrences(&content_lc, term) as i64) * 3;
-                if path.to_lowercase().contains(term) {
-                    score += 2;
-                }
-            }
+        let Ok(node) = serde_json::from_str::<serde_json::Value>(&raw) else {
+            continue;
+        };
+        let status = node["status"].as_str().unwrap_or("active");
+        if status != "active" {
+            selection
+                .excluded
+                .insert(path, format!("inactive:{status}"));
+            continue;
         }
-
-        let fragment = if let Some(anchor) = preferred_anchors.get(&path) {
+        let override_body = assets::get_override_doc(repo_root, &path);
+        let Some(content) = override_body
+            .as_ref()
+            .map(|body| format!("# Project Overrides\n{body}"))
+            .or_else(|| assets::get_merged_doc(repo_root, &path))
+        else {
+            continue;
+        };
+        let bound = reasons.contains_key(&path);
+        let mut node_reasons = reasons.remove(&path).unwrap_or_default();
+        let content_terms: BTreeSet<_> = tokenize(&content).into_iter().collect();
+        let metadata_terms: BTreeSet<_> =
+            tokenize(&format!("{path} {} {}", node["title"], node["terms"]))
+                .into_iter()
+                .collect();
+        let matched: Vec<_> = terms
+            .iter()
+            .filter(|term| content_terms.contains(*term) || metadata_terms.contains(*term))
+            .collect();
+        // Presence/coverage, never raw frequency or document size.
+        let score = matched
+            .iter()
+            .map(|term| if metadata_terms.contains(*term) { 4 } else { 1 })
+            .sum::<usize>();
+        if !bound && score == 0 {
+            *selection
+                .excluded_counts
+                .entry("no_relevant_advisory_fragment".into())
+                .or_default() += 1;
+            continue;
+        }
+        if !matched.is_empty() {
+            node_reasons.insert(format!(
+                "unique_terms:{}",
+                matched
+                    .iter()
+                    .map(|s| s.as_str())
+                    .collect::<Vec<_>>()
+                    .join(",")
+            ));
+        }
+        let fragment = if override_body.is_some() {
+            node_reasons.insert("repository_project_override".into());
+            fragment_from_section(&path, "Project Overrides", &content)
+        } else if let Some(anchor) = preferred_anchors.get(&path) {
             get_fragment(repo_root, &path, Some(anchor))
+                .or_else(|| get_fragment(repo_root, &path, None))
         } else if !terms.is_empty() {
             get_best_fragment_for_terms(&path, &content, &terms)
+                .or_else(|| get_fragment(repo_root, &path, None))
         } else {
             get_fragment(repo_root, &path, None)
         };
-
-        if let Some(f) = fragment
-            && (score > 0 || !terms.is_empty() || path_boosts.contains_key(&path))
-        {
-            ranked.push((score, f));
+        if let Some(f) = fragment {
+            let evidence = FragmentSelection {
+                fragment_ref: f.r#ref.clone(),
+                node_id: path,
+                authority: if override_body.is_some() {
+                    "override"
+                } else {
+                    node["authority"].as_str().unwrap_or("unknown")
+                }
+                .into(),
+                binding: node["binding"].as_str().unwrap_or("advisory").into(),
+                status: status.into(),
+                source_layer: if override_body.is_some() {
+                    "repository_project_override"
+                } else {
+                    "binary_embedded"
+                }
+                .into(),
+                source_hash: format!(
+                    "{:x}",
+                    Sha256::digest(if let Some(body) = &override_body {
+                        body.as_bytes()
+                    } else {
+                        raw.as_bytes()
+                    })
+                ),
+                fragment_hash: f.hash.clone(),
+                resolver_version: RESOLVER_VERSION.into(),
+                reasons: node_reasons.into_iter().collect(),
+            };
+            ranked.push((bound, score, f, evidence));
         }
     }
 
-    ranked.sort_by(|(sa, fa), (sb, fb)| sb.cmp(sa).then_with(|| fa.r#ref.cmp(&fb.r#ref)));
-    ranked
-        .into_iter()
-        .map(|(_, f)| f)
-        .take(limit.max(1))
-        .collect()
+    ranked.sort_by(|(ba, sa, fa, _), (bb, sb, fb, _)| {
+        bb.cmp(ba)
+            .then_with(|| sb.cmp(sa))
+            .then_with(|| fa.r#ref.cmp(&fb.r#ref))
+    });
+    let mut fragments = Vec::new();
+    for (_, _, fragment, evidence) in ranked {
+        if fragments.len() >= limit.clamp(1, MAX_CONTEXT_FRAGMENTS)
+            || selection.context_bytes + fragment.excerpt.len() > MAX_CONTEXT_BYTES
+        {
+            *selection
+                .excluded_counts
+                .entry("context_budget".into())
+                .or_default() += 1;
+            if selection.excluded.len() < MAX_CONTEXT_FRAGMENTS {
+                selection
+                    .excluded
+                    .insert(evidence.node_id, "context_budget".into());
+            }
+            continue;
+        }
+        selection.context_bytes += fragment.excerpt.len();
+        selection.selected.push(evidence);
+        fragments.push(fragment);
+    }
+    selection.advisory_status = if fragments.is_empty() {
+        "no_relevant_advisory_fragment"
+    } else {
+        "selected"
+    }
+    .into();
+    ScopedContext {
+        fragments,
+        selection,
+    }
 }
 
 pub fn get_bindings(_repo_root: &Path) -> Bindings {
     let mut ops = std::collections::HashMap::new();
     ops.insert(
         "workspace.ensure".to_string(),
-        "core/DECAPOD#workspaces".to_string(),
+        "docs/agent/contribution-conventions.md#Current-PR sequence".to_string(),
     );
     ops.insert(
         "workspace.status".to_string(),
-        "core/DECAPOD#workspaces".to_string(),
+        "docs/agent/contribution-conventions.md#Current-PR sequence".to_string(),
     );
     ops.insert(
         "validate".to_string(),
-        "core/DECAPOD#validation".to_string(),
+        "docs/agent/command-contracts.md#`decapod validate`".to_string(),
     );
 
     let mut paths = std::collections::HashMap::new();
@@ -214,21 +401,29 @@ fn get_mandate_by_id(repo_root: &Path, id: &str) -> Option<Mandate> {
             severity: "non-negotiable".to_string(),
             fragment: get_fragment(
                 repo_root,
-                "core/DECAPOD",
-                Some("Workspace Rules (Non-Negotiable)"),
+                "docs/agent/contribution-conventions.md",
+                Some("Current-PR sequence"),
             )?,
             check_tag: "gate.worktree.no_master".to_string(),
         }),
         "mandatory-init" => Some(Mandate {
             id: id.to_string(),
             severity: "non-negotiable".to_string(),
-            fragment: get_fragment(repo_root, "core/DECAPOD", Some("For Agents: Quick Start"))?,
+            fragment: get_fragment(
+                repo_root,
+                "docs/agent/api-index.md",
+                Some("Before Any Agent Action"),
+            )?,
             check_tag: "gate.session.active".to_string(),
         }),
         "mandatory-todo" => Some(Mandate {
             id: id.to_string(),
             severity: "required".to_string(),
-            fragment: get_fragment(repo_root, "core/DECAPOD", Some("Subsystems"))?, // We'll link to todo section
+            fragment: get_fragment(
+                repo_root,
+                "docs/agent/api-index.md",
+                Some("Before Any Agent Action"),
+            )?,
             check_tag: "gate.todo.active_task".to_string(),
         }),
         "validate-before-done" => Some(Mandate {
@@ -236,8 +431,8 @@ fn get_mandate_by_id(repo_root: &Path, id: &str) -> Option<Mandate> {
             severity: "required".to_string(),
             fragment: get_fragment(
                 repo_root,
-                "core/DECAPOD",
-                Some("Validation (must pass before claiming done)"),
+                "docs/agent/command-contracts.md",
+                Some("`decapod validate`"),
             )?,
             check_tag: "gate.validation.pass".to_string(),
         }),
@@ -246,8 +441,8 @@ fn get_mandate_by_id(repo_root: &Path, id: &str) -> Option<Mandate> {
             severity: "required".to_string(),
             fragment: get_fragment(
                 repo_root,
-                "core/DECAPOD",
-                Some("Workspace Rules (Non-Negotiable)"),
+                "docs/agent/contribution-conventions.md",
+                Some("Current-PR sequence"),
             )?,
             check_tag: "gate.worktree.isolated".to_string(),
         }),
@@ -367,7 +562,7 @@ fn count_occurrences(haystack: &str, needle: &str) -> usize {
     if needle.is_empty() {
         return 0;
     }
-    haystack.match_indices(needle).count()
+    usize::from(tokenize(haystack).iter().any(|term| term == needle))
 }
 
 fn get_best_fragment_for_terms(path: &str, content: &str, terms: &[String]) -> Option<DocFragment> {
@@ -420,6 +615,10 @@ fn get_best_fragment_for_terms(path: &str, content: &str, terms: &[String]) -> O
     }
 
     let (_, title, section) = best?;
+    fragment_from_section(path, &title, &section)
+}
+
+fn fragment_from_section(path: &str, title: &str, section: &str) -> Option<DocFragment> {
     let mut hasher = Sha256::new();
     hasher.update(section.as_bytes());
     let hash = format!("{:x}", hasher.finalize());
@@ -433,7 +632,7 @@ fn get_best_fragment_for_terms(path: &str, content: &str, terms: &[String]) -> O
     Some(DocFragment {
         kind: "constitution".to_string(),
         r#ref: format!("{path}#{title}"),
-        title,
+        title: title.to_string(),
         excerpt,
         hash,
     })

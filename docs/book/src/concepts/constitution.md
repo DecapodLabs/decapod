@@ -14,7 +14,7 @@ Think of it as an agent-queryable engineering canon: a common source of proven p
 
 ## Agents query; humans define intent
 
-An agent can discover relevant Constitution material through Decapod's own CLI or structured RPC interface. Context resolution can select applicable fragments alongside the specific repository's state and requirements. This is more precise than pasting tens of thousands of lines into `AGENTS.md`, and does not require a human to select knowledge entries with slash commands.
+An agent can discover Constitution material through Decapod's CLI or structured RPC. Context resolution selects bounded fragments alongside repository state and requirements. The corpus stays durable while the agent requests context for its task. Whether that improves task outcomes requires measured host comparisons; it does not follow from a smaller projection.
 
 For example:
 
@@ -40,5 +40,17 @@ The Constitution has a **global baseline**, with local policy applied through se
 The Constitution is open to improvements through **reviewed GitHub pull requests** to [Decapod](https://github.com/DecapodLabs/decapod). See [Contributing](https://github.com/DecapodLabs/decapod/blob/master/CONTRIBUTING.md) for the repository's review and proof expectations.
 
 Useful contributions strengthen a software-engineering or software-business golden path, document a relevant research result and its limitations, clarify an architectural tradeoff, or improve how agents find applicable knowledge. Include sources and explain what decisions the material should improve. Changes affecting binding behavior also need appropriate compatibility and validation evidence.
+
+Corpus schema 3.1 and the existing compression build apply structural admission.
+Ordinary nodes remain advisory doctrine. Binding/router promotions must change
+the reviewed native admission registry and identify the owning control and PR
+review requirement. Declared guidance remains `not_machine_enforced`; native
+execution gates retain their own measured proof. Editing metadata or a review
+label cannot authenticate human approval or establish that a check passed.
+
+See [Constitution provenance](constitution-history.md) for reproducible source
+history, author testimony, external research dates and security/effectiveness
+limits. The global JSON corpus, early Markdown embedding, scoped retrieval and
+later provenance/gates have separate histories.
 
 The focus stays on **building and operating software businesses**. A bigger corpus is valuable only when it makes the next engineering decision clearer, safer, or more verifiable.

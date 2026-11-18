@@ -68,12 +68,30 @@ pub fn run_constitution_cli(cli: ConstitutionCli) -> Result<(), error::DecapodEr
         ConstitutionCommand::Search { query, limit } => {
             let current_dir = std::env::current_dir().map_err(error::DecapodError::IoError)?;
             let repo_root = find_repo_root(&current_dir)?;
-            let fragments =
-                docs::resolve_scoped_fragments(&repo_root, Some(&query), None, &[], &[], limit);
+            assets::validate_override_structure(&repo_root)?;
+            let context =
+                docs::resolve_scoped_context(&repo_root, Some(&query), None, &[], &[], limit, None);
 
             println!("Scoped constitution context:");
-            for (idx, fragment) in fragments.iter().enumerate() {
+            if context.fragments.is_empty() {
+                println!("No relevant advisory fragment.");
+            }
+            for (idx, (fragment, evidence)) in context
+                .fragments
+                .iter()
+                .zip(&context.selection.selected)
+                .enumerate()
+            {
                 println!("\n{}. {} ({})", idx + 1, fragment.title, fragment.r#ref);
+                println!(
+                    "Source: {} | {} | {} | {} | sha256:{} | {}",
+                    evidence.source_layer,
+                    evidence.authority,
+                    evidence.binding,
+                    evidence.status,
+                    evidence.source_hash,
+                    evidence.reasons.join("; ")
+                );
                 println!("{}", fragment.excerpt);
             }
             Ok(())
