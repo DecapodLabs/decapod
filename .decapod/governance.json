@@ -603,6 +603,11 @@
       "id": "workunit-accepted-base-c47137ad-1660",
       "summary": "Reconcile accepted policy fixes and preserve genuine observed-workunit controls in the combined candidate",
       "input_digest": "sha256:7d5b31f8af1870d34226ff3eca5cba45778bf41e381d9df611c34fe1abb577bc"
+    },
+    {
+      "id": "attack-gaps-1660-release10-reconciliation",
+      "summary": "Integrate accepted0.148.10, review all105 proof inputs and refresh current architecture/interface/security reviews",
+      "input_digest": "sha256:7a0c232ad2e4528c08cba0d7dea48df535e10a0c678dec4907424c804d3ea883"
     }
   ],
   "intents": {
@@ -643,23 +648,23 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Retain canonical runtime producer, genuine capsule lineage and atomic workunit acceptance while incorporating accepted1779 parser and privilege-custody fixes; no new proof subsystem.",
-          "reviewed_code_fingerprint": "1e67e79dbad02067bd3eac2c5bc229262fcaad2054da02395bf7a4b90ed063ae",
+          "reason": "Reviewed current implementation and accepted0.148.10 merge; preserve existing validation, custody and proof owners and material task-specific architecture.",
+          "reviewed_code_fingerprint": "287dcb5d62f31d02dba09fb7a788ec1bbb01ecd4ee72a2bb301fa7796c105ea9",
           "spec_material_hash": "d233cbb406c4dd580d2dd1b1767c42bedb43bd18f90f19b4a153c4ab2d56c85c"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Retain accepted schema-repair and privilege-denial contract alongside real capsule preparation and declared-versus-observed workunit proof; preserve canonical validation requirements.",
-          "reviewed_code_fingerprint": "1e67e79dbad02067bd3eac2c5bc229262fcaad2054da02395bf7a4b90ed063ae",
+          "reason": "Reviewed current interface prose against final code and accepted0.148.10; preserve registered operation authority and declaration-versus-observed-proof distinction.",
+          "reviewed_code_fingerprint": "287dcb5d62f31d02dba09fb7a788ec1bbb01ecd4ee72a2bb301fa7796c105ea9",
           "spec_material_hash": "6f1496bae0bede67763604fe3cadbf147971570eeadd1c3a9fc3e7936eed72f5"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "No policy, trust, execution or publication bypass; fake proof remains refused and separate-store atomicity remains explicitly unsupported.",
-          "reviewed_code_fingerprint": "f83bf824db90af102863ef3e10ceb795364b81e02331a3cf94ed5b62d8836696",
-          "spec_material_hash": "0c791a6100ed5aec7fe4cedfa16680988dd1e48d50d00af272ef9dff372c3d4d"
+          "reason": "Accepted1779 parser, privilege custody, maintenance policy and no-raw-store security boundaries are preserved. Current task changes add no privilege or proof authority; existing security prose remains applicable to these exact bytes.",
+          "reviewed_code_fingerprint": "287dcb5d62f31d02dba09fb7a788ec1bbb01ecd4ee72a2bb301fa7796c105ea9",
+          "spec_material_hash": "cdc863757905c53f4f176284c72744f0575184c65a059b7edf6239b47c4fc644"
         }
       ],
       "state": "APPROVED",
@@ -670,14 +675,14 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1794981564Z"
+      "updated_at": "1794982983Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch",
         "No gate-skip variables; authentic original task and canonical shared runtime; no fabricated execution evidence or status rewrite."
       ],
-      "artifact_hash": "sha256:622ff07272e98c397e6406d90b462e7567774e22f1e51bb42fa7506378523a2d",
+      "artifact_hash": "sha256:0f8f5a3fe0ac9737cc9218f870691a5bb1da687f73ccef8dc168199583d3b8cd",
       "checks": [
         {
           "name": "counterfeit_hash_declared_pass",
@@ -753,10 +758,17 @@
             "intent_id": "intent:change_01M7P04Q5RZB944BR5SYSDARTZ",
             "kind": "trajectory_step_recorded",
             "sequence": 8
+          },
+          {
+            "detail": "trajectory:branch_01M7P04Q8GWB2CF2GZZZEJR5K4",
+            "event_id": "event:9",
+            "intent_id": "intent:change_01M7P04Q5RZB944BR5SYSDARTZ",
+            "kind": "trajectory_step_recorded",
+            "sequence": 9
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 8,
+        "next_sequence": 9,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M7P04Q8GWB2CF2GZZZEJR5K4": {
@@ -848,6 +860,19 @@
                 ],
                 "sequence": 8,
                 "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:9",
+                "observations": [
+                  "Accepted target advanced again to34f837d4 through ordinary0.148.10 release; merge preserves real parents and existing checkpoints. Independently hashed all105 inventory inputs in this worktree and matched official agent.init discovery: sha256:e1a242381f7411a8facfe285e2945040dafa93c46dd48c11a86ebd55d9a95b3f. Only Cargo package versions0.148.9 to0.148.10 changed;103 other sources identical. Backed up editable config before reconciliation; no workflow, carrier, required graph, toolchain, controller or policy weakening. Previous context/spec-review failures retained. Refreshed security as well as architecture/interface reviews after current source inspection. cargo fmt used only to format authored source; no local build or shadow proof suite."
+                ],
+                "proof_refs": [],
+                "scope": [
+                  "issue-1660"
+                ],
+                "sequence": 9,
+                "validation_findings": []
               }
             ]
           }
@@ -858,6 +883,7 @@
       "evidence": [
         "/private/tmp/attack-gaps-1660-counterfeit-execution.json; sha256:abc refused at artifact observation. /private/tmp/attack-gaps-1660-source-file-pass.json; real source-file pass declaration recorded, VERIFIED refused by canonical full validation history; remained CLAIMED, journal current and resumable generation7. These are tested denials, not independent host proof or successful completion.",
         "/private/tmp/attack-gaps-1660-source-file-pass.json proves the actual declaration/VERIFIED distinction. /private/tmp/attack-gaps-1660-old-checkpoint-resume.json preserves EXECUTION_STATE_CHANGED; obsolete-pass discard then checkpoint generation9 and resume generation10 succeeded. Fail marker is diagnostic claim discard, not an executed failing suite. Canonical full proof and hosted positive VERIFIED remain unproven. Added replayable no-skip CLI regression on existing consumer fixture; not yet executed.",
+        "Accepted target advanced again to34f837d4 through ordinary0.148.10 release; merge preserves real parents and existing checkpoints. Independently hashed all105 inventory inputs in this worktree and matched official agent.init discovery: sha256:e1a242381f7411a8facfe285e2945040dafa93c46dd48c11a86ebd55d9a95b3f. Only Cargo package versions0.148.9 to0.148.10 changed;103 other sources identical. Backed up editable config before reconciliation; no workflow, carrier, required graph, toolchain, controller or policy weakening. Previous context/spec-review failures retained. Refreshed security as well as architecture/interface reviews after current source inspection. cargo fmt used only to format authored source; no local build or shadow proof suite.",
         "Correction to provisional cycle hypothesis: source evaluate_workunit_rule explicitly accepts CLAIMED plus opaque complete runtime proof before canonical append. Actual workunit has no capsule state_ref, violating verify_capsule_policy_lineage_for_task. Resolve genuine capsule dependency via existing query/attach-state and checkpoint; do not relax validation or treat diagnostic fail as test failure.",
         "Independently remeasured all105 source-inventory inputs; byte-identical to reviewed #871 inputs; only accepted package-version0.148.7 to0.148.9 differs from edbfc00d. No check, executor, helper, workflow or toolchain change.",
         "Official0.148.9 validation-3 reached authenticated provider collection and refused terminal workunit completion; missing capsule state_ref independently confirmed in workunit get. Existing evaluate_workunit_rule already accepts opaque current complete proof from CLAIMED. Genuine query/attach-state/checkpoint recovered the required capsule. Extend actual CLI regression to prepare capsule before counterfeit proof; new revision not yet executed. No validator, policy or proof-plan weakening.",

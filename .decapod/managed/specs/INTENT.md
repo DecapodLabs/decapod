@@ -38,6 +38,13 @@ those release metadata bytes. Reconciliation does not establish test success.
 
 ## Actual-boundary workunit proof controls (#1660, #1735)
 
+The combined candidate incorporates accepted release `34f837d4` (0.148.10).
+All 105 verification-source inputs were independently remeasured: only the
+root package versions in Cargo.toml and Cargo.lock changed from 0.148.9;
+the remaining 103 inputs, workflows, required graph and toolchain are intact.
+The reviewed inventory is reconciled accordingly. The installed 0.148.9
+controller is unchanged; release integration and review are not execution proof.
+
 The ordinary recovery path must retain the workunit's genuine task-bound
 context capsule and policy lineage. The source-file counterexample prepares
 that capsule through the public query and attach-state commands before
@@ -486,7 +493,7 @@ These declarations select authoring and proof obligations; they do not attest im
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `1e67e79dbad02067bd3eac2c5bc229262fcaad2054da02395bf7a4b90ed063ae`
+- Repository signal fingerprint: `287dcb5d62f31d02dba09fb7a788ec1bbb01ecd4ee72a2bb301fa7796c105ea9`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (236 files), `tests/` (235 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
