@@ -1638,6 +1638,8 @@ fn init_with_from_config(
         existing_proof_commands: config.proof.commands.clone(),
         existing_required_profile: config.proof.required_profile.clone(),
         existing_repository_contract: config.proof.repository_contract.clone(),
+        existing_selected_work: config.proof.selected_work.clone(),
+        existing_observed_path: config.proof.observed_path.clone(),
         existing_rust_workers: config.proof.rust_workers.clone(),
         existing_ci_attested: config.proof.ci_attested.clone(),
         existing_allow_basic_shared_claims: config.governance.allow_basic_shared_claims,
@@ -1752,6 +1754,8 @@ fn preserve_unspecified_init_options(
     init.existing_required_profile = existing.existing_required_profile;
     init.existing_rust_workers = existing.existing_rust_workers;
     init.existing_repository_contract = existing.existing_repository_contract;
+    init.existing_selected_work = existing.existing_selected_work;
+    init.existing_observed_path = existing.existing_observed_path;
     init.existing_ci_attested = existing.existing_ci_attested;
     init.existing_allow_basic_shared_claims = existing.existing_allow_basic_shared_claims;
     init.existing_rbac = existing.existing_rbac;
@@ -1844,6 +1848,8 @@ fn config_from_init_with(init: &InitWithCli, repo: RepoContext) -> DecapodProjec
             db_maintenance: init.existing_db_maintenance.clone(),
         },
         proof: proof::ProjectProofConfig {
+            selected_work: init.existing_selected_work.clone(),
+            observed_path: init.existing_observed_path.clone(),
             validation_buildkite_preflights: init.validation_buildkite_preflights.unwrap_or(false),
             required_profile: init.existing_required_profile.clone(),
             repository_contract: init.existing_repository_contract.clone(),
@@ -2904,6 +2910,8 @@ pub fn run() -> Result<(), error::DecapodError> {
                             existing_proof_commands: Vec::new(),
                             existing_required_profile: None,
                             existing_repository_contract: None,
+                            existing_selected_work: None,
+                            existing_observed_path: None,
                             existing_rust_workers: None,
                             existing_ci_attested: None,
                             existing_allow_basic_shared_claims: false,
@@ -3280,6 +3288,7 @@ pub fn run() -> Result<(), error::DecapodError> {
             // Best-effort hygiene: routinely scrub stale git worktree metadata/config.
             // This must not block primary command execution.
             if local_storage_startup
+                && !is_storage_independent_command(&cli.command)
                 && let Err(e) = workspace::prune_stale_worktree_config(&workspace_root)
                 && !is_not_git_repository_error(&e)
             {
@@ -3485,7 +3494,7 @@ fn is_storage_independent_command(command: &Command) -> bool {
     match command {
         Command::Rpc(rpc_cli) => matches!(
             rpc_cli.op.as_deref(),
-            Some("specs.refresh" | "intent.reconcile")
+            Some("specs.refresh" | "intent.reconcile" | "state.resolve" | "state.diff")
         ),
         // Maintenance commands operate on the canonical store through the
         // Dactyl contract and must not run startup migrations or presence
@@ -3707,6 +3716,8 @@ fn rpc_op_requires_worktree(op: &str) -> bool {
             | "constitution.get"
             | "schema.get"
             | "intent.reconcile"
+            | "state.resolve"
+            | "state.diff"
             | "store.upsert"
             | "store.query"
             | "validate.run"
@@ -3779,6 +3790,8 @@ fn rpc_op_bypasses_session(op: &str) -> bool {
             | "constitution.get"
             | "schema.get"
             | "intent.reconcile"
+            | "state.resolve"
+            | "state.diff"
             | "store.upsert"
             | "store.query"
             | "validate.run"
@@ -7319,6 +7332,10 @@ fn run_current_workbranch_readiness_with(
                 )?;
                 signal_guard.restore()?;
                 return Ok(runtime::ValidationReport {
+                    observed_path: core::trajectory::path::Judgment::unavailable(
+                        false,
+                        "No path observation was completed",
+                    ),
                     completed_evidence: None,
                     ready: false,
                     proof_ready: false,
@@ -7454,6 +7471,10 @@ fn run_current_workbranch_readiness_with(
         Ok(report)
     })();
     result.unwrap_or_else(|error| runtime::ValidationReport {
+        observed_path: core::trajectory::path::Judgment::unavailable(
+            false,
+            "No path observation was completed",
+        ),
         completed_evidence: None,
         ready: false,
         proof_ready: false,
@@ -8274,6 +8295,8 @@ fn rpc_op_skips_mandate_enforcement(op: &str) -> bool {
             | "constitution.get"
             | "schema.get"
             | "intent.reconcile"
+            | "state.resolve"
+            | "state.diff"
             | "specs.refresh"
             | "interop.manifest"
             | "interop.negotiate"
@@ -8884,6 +8907,119 @@ fn run_trajectory_command(
     workspace_root: &Path,
 ) -> Result<(), error::DecapodError> {
     match trajectory_cli.command {
+        TrajectoryCommand::ClarifyGithubComment {
+            run_id,
+            revision_id,
+            expected_revision,
+            repository,
+            comment_id,
+            expected_body_digest,
+            public,
+            kind,
+            supersedes,
+            derived_intent,
+        } => {
+            use core::snapshot_provider::{Budget, OfficialCli, Repository};
+            let (owner, name) = repository.split_once('/').ok_or_else(|| {
+                error::DecapodError::ValidationError(
+                    "INSTRUCTION_SOURCE_INVALID: use owner/repository".into(),
+                )
+            })?;
+            let repository = Repository::new(owner, name)?;
+            let store = find_governance_root(workspace_root).join(".decapod/data");
+            let authority_store = store.clone();
+            let official = OfficialCli::git_only(
+                readiness_installed_tool(workspace_root, "git")?,
+                move |spec, executable| {
+                    authorize_readiness_snapshot_command(&authority_store, spec, executable)
+                },
+            )?;
+            let mut runner = if public {
+                ReadinessSnapshotRunner::Public(core::snapshot_provider::PublicGithubReads::new(
+                    readiness_installed_tool(workspace_root, "curl")?,
+                    repository.clone(),
+                    official,
+                    move |spec, executable| {
+                        let request = spec.authorize_provider_read()?;
+                        core::external_action::authorize_public_github_json_read(
+                            &store, executable, &request,
+                        )
+                        .map_err(std::io::Error::other)
+                    },
+                )?)
+            } else {
+                ReadinessSnapshotRunner::Configured(OfficialCli::new(
+                    readiness_installed_tool(workspace_root, "git")?,
+                    readiness_installed_tool(workspace_root, "gh")?,
+                    None,
+                    move |spec, executable| {
+                        authorize_readiness_snapshot_command(&store, spec, executable)
+                    },
+                )?)
+            };
+            let cancellation = core::bounded_process::Cancellation::default();
+            let budget = Budget::new(std::time::Duration::from_secs(30), 64 * 1024, &cancellation)?;
+            let observed = core::trajectory::instruction_source::observe_github_comment(
+                workspace_root,
+                &mut runner,
+                &repository,
+                comment_id,
+                &expected_body_digest,
+                &budget,
+            )?;
+            let input = core::custody::InstructionRevisionInput {
+                revision_id,
+                expected_revision,
+                instruction: String::new(),
+                source_claim: core::custody::ReportedInstructionSource {
+                    source_ref: String::new(),
+                    principal_claim: None,
+                },
+                kind,
+                supersedes,
+                derived_intent,
+            };
+            let artifact = core::trajectory::append_observed_instruction(
+                workspace_root,
+                &run_id,
+                input,
+                observed,
+            )?;
+            println!(
+                "{}",
+                serde_json::to_string_pretty(&artifact)
+                    .map_err(|e| error::DecapodError::ValidationError(e.to_string()))?
+            );
+        }
+        TrajectoryCommand::Clarify {
+            run_id,
+            revision_id,
+            expected_revision,
+            instruction,
+            source_ref,
+            principal_claim,
+            kind,
+            supersedes,
+            derived_intent,
+        } => {
+            let artifact = core::trajectory::append_instruction(
+                workspace_root,
+                &run_id,
+                core::custody::InstructionRevisionInput {
+                    revision_id,
+                    expected_revision,
+                    instruction,
+                    source_claim: core::custody::ReportedInstructionSource {
+                        source_ref,
+                        principal_claim,
+                    },
+                    kind,
+                    supersedes,
+                    derived_intent,
+                },
+            )?;
+            println!("{}", serde_json::to_string_pretty(&artifact).unwrap());
+        }
         TrajectoryCommand::Checkpoint {
             run_id,
             checkpoint_id,
@@ -13291,6 +13427,24 @@ fn intent_reconciliation_rpc_does_not_require_mutation_custody() {
     ));
 }
 
+#[cfg(test)]
+#[test]
+fn state_readback_does_not_require_or_grant_authoring_custody() {
+    for op in ["state.resolve", "state.diff"] {
+        assert!(!rpc_op_requires_worktree(op));
+        assert!(rpc_op_bypasses_session(op));
+        assert!(rpc_op_skips_mandate_enforcement(op));
+        assert!(!rpc_op_requires_constitutional_awareness(op));
+        let cli = <Cli as clap::Parser>::try_parse_from(["decapod", "rpc", "--op", op]).unwrap();
+        assert!(is_storage_independent_command(&cli.command));
+    }
+    assert!(rpc_op_requires_worktree("workspace.publish"));
+    assert!(!rpc_op_bypasses_session("workspace.publish"));
+    assert!(rpc_op_requires_constitutional_awareness(
+        "workspace.publish"
+    ));
+}
+
 /// Run RPC command
 fn rpc_validation_exit_status(op: &str, success: bool) -> Result<(), error::DecapodError> {
     if op == "validate.run" && !success {
@@ -14109,11 +14263,10 @@ fn run_infer_orientation(
                     .push(format!("Task detail: {}", task.description));
             }
             if !task.scope.is_empty() {
-                packet.allowed_scope = task
-                    .scope
-                    .split(',')
-                    .map(|s| s.trim().to_string())
-                    .collect();
+                packet.allowed_scope = core::fleet_coord::scope_projection(&task.scope)
+                    .map_err(|reason| error::DecapodError::ValidationError(format!(
+                        "SCOPE_DECLARATION_INVALID: {reason}; preserve the task scope and repair it through its authoritative owner"
+                    )))?;
             }
         }
     }
@@ -14266,26 +14419,30 @@ fn governed_plan_context(
             forbidden_paths: vec![],
             file_touch_budget: None,
             task_binding: "not_available".to_string(),
+            instruction_readiness: None,
+            instruction_lineage: None,
         });
     };
 
-    let mut unresolved_items = Vec::new();
-    unresolved_items.extend(plan.unknowns.iter().map(|item| format!("unknown: {item}")));
-    unresolved_items.extend(
-        plan.human_questions
-            .iter()
-            .map(|item| format!("human_question: {item}")),
-    );
-    unresolved_items.extend(
-        plan.unresolved_contradictions
-            .iter()
-            .map(|item| format!("contradiction: {item}")),
-    );
-    unresolved_items.extend(
-        plan.deferred_questions
-            .iter()
-            .map(|item| format!("deferred_question: {item}")),
-    );
+    let selected = task_id.is_none_or(|id| plan.todo_ids.iter().any(|candidate| candidate == id));
+    let instruction_readiness = if selected {
+        plan_governance::instruction_readiness_at(
+            project_root,
+            &plan,
+            core::validation_rules::EvaluationPhase::PreExecution,
+        )?
+    } else {
+        plan_governance::instruction_readiness(
+            &plan,
+            core::validation_rules::EvaluationPhase::PreExecution,
+        )
+    };
+    let instruction_lineage = if selected {
+        plan_governance::instruction_lineage_for_plan(project_root, &plan)?
+    } else {
+        None
+    };
+    let unresolved_items = instruction_readiness.questions.clone();
 
     let task_binding = match task_id {
         Some(id) if plan.todo_ids.iter().any(|candidate| candidate == id) => "bound",
@@ -14305,6 +14462,8 @@ fn governed_plan_context(
         forbidden_paths: plan.constraints.forbidden_paths,
         file_touch_budget: plan.constraints.file_touch_budget,
         task_binding: task_binding.to_string(),
+        instruction_readiness: Some(instruction_readiness),
+        instruction_lineage,
     })
 }
 

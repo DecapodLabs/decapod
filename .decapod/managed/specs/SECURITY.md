@@ -23,6 +23,87 @@ access. Public-command regression controls cover denial, corrected ordinary
 operations, independently accepted bounded grants and revocation. Candidate
 test execution and exact-head full validation remain required before delivery.
 
+## Bounded task-scope recovery
+
+The scope reconciler receives task data from claimed-workbranch preparation and rechecks canonical task scope and revision around its prepared write. It only replaces exact known legacy fragments; it does not infer which independent constraints to discard. The complete predecessor must already be recoverable in Git. Original request, source revisions, prior custody events and failed checks remain intact. Plan acceptance is revoked, and changed governance/trajectory bindings invalidate old proof. The SQLite and Git/document observations are guarded reads, not a claimed cross-store atomic transaction or filesystem authorization boundary.
+
+## Readback does not grant continuation authority
+
+An ignored `EXTERNAL_ACTIONS.json` change cannot reuse the old execution authority. The canonical bounded policy inventory hashes that file, and retained native-path consumers resample current authority before using successful historical execution. Policy denial remains owned by the actual native authorizer; measuring a fresh policy binding does not grant the denied proof command.
+
+A second agent may inspect canonical state without impersonating the task owner. Only the two state read RPCs receive that classification; authoring and publication still evaluate current custody and their existing gates. An actual CLI trace on source d0ebc2c8 accepted a pinned public GitHub comment but rejected independent reader B with AUTHORING_CUSTODY_STALE. The read-dispatch correction addresses that observed handoff failure; it is not authenticated human approval or a waiver of mutation authority.
+
+## Observed native path and truthful coverage
+
+Only actual native adapter authorization and terminal runner results construct
+owned path evidence. An agent cannot upgrade a reported loop, proof-ref string,
+JSON judgment, claimed signer or source digest into that capability. Required
+scope is taken from independently accepted target policy. A fresh runtime nonce,
+original task/run and instruction revision, current plan/policy, actor/lease and
+head/base prevent old or cross-scope observations from establishing currentness.
+Failed and unknown outcomes remain separate; ordered hash checks alone are only
+structural integrity. Existing validation/workunit journals retain actual history.
+
+This trust boundary is the existing compiled kernel/native-runner process, not
+cryptographic attestation of a hostile same-user machine or independent full-host
+observation. Unrestricted shell/forge effects and unobserved source-edit paths stay
+unproven. Unsupported required scopes refuse rather than claiming host parity;
+optional unknown coverage does not block ordinary accepted checks. Required-path
+admission and real external-agent applicability still require executed acceptance
+evidence before #1767 can close.
+
+## Instruction source integrity and trust classes
+
+Recorded origin and ordered revisions are immutable through governed writers.
+Native validation also checks retained source history, so an out-of-kernel edit
+and rehash cannot change the same lineage's origin or remove an accepted recorded
+prefix. Historical source rewrites remain inspectable when a corrected current
+candidate earns fresh proof. Neither the source guard nor a custody hash claims
+to observe or intercept arbitrary shell/forge actions.
+
+The ordinary clarification API accepts reported source/principal claims only; it has
+no caller-settable authenticated flag. Readback classifies these as agent-reported
+and independently unverifiable. Missing legacy origin provenance remains unknown.
+No test or CLI plan approval authenticates a human principal. The separate GitHub
+comment ingress constructs an owned observation only after a bounded sealed GET
+through the existing official-client or preselected anonymous-HTTPS authority, checks exact repository,
+object/account and expected body identity, and retains historical provider evidence.
+It exposes no caller-settable trust switch and no response-file importer. Account
+observation is not human authentication, authorization, policy acceptance or proof
+that mutable remote content is still current. Same-user filesystem compromise is
+outside this local trust boundary. Policy-required witnessed process conformance
+still needs its independent observer/controller contract.
+
+## Selected requirement trust boundary
+
+Only independently captured accepted-target policy governs the selected native
+requirement model. Candidate deletion, replacement or self-repinning is refused.
+Neither a declared source label, a mapping nor a satisfiable relation graph
+authenticates a principal or proves application behavior. A read-only requested
+Git revision is labelled requested, not accepted. The native before/after
+identity binds the selected SQLite join and plan context in addition to existing
+source/base/policy/toolchain identity. Changed assignments and duplicate mappings
+cannot reuse current readiness. Canonical DB snapshots and Git pins provide
+freshness checks, not atomic distributed transactions or host-wide observation.
+
+This initial extension supports local canonical DB reads and existing native
+repository commands only. It refuses unsupported hosted/cloud joins and arbitrary
+relation semantics. It adds no `covers` dependency edges, implicit natural-language
+solver, universal semantic judge or witness-import authority. Observer custody
+and authenticated instruction ingress remain separate dependencies.
+
+## Recorded blockers and evidence limits (#1764)
+
+Instruction readiness hashes identify recorded plan content and source locations.
+They do not authenticate a human, independently accept a behavioral oracle, or
+observe an external shell action. Pending human spec decisions remain blocking
+at preparation and checkpoint boundaries even for a legacy approved plan. A
+deferred future question alone does not create a current authority requirement.
+The existing external validation and publication owners still require current
+candidate, accepted target, policy and custody evidence. Unimplemented instruction
+provenance, root coverage, typed relation consistency and witnessed-path contracts
+remain separate open obligations under #1761, #1768, #1770 and #1767.
+
 ## Scoped currency authorization (#1753)
 
 Currency preservation requires the same explicit config, sole exact canonical
@@ -684,8 +765,8 @@ execution evidence remains required before publication readiness.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `7b88d5d3e68ce397408f69e5635bceee4071a1c57b84cab441c0b3083ee7e3a7`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (236 files), `tests/` (235 files)
+- Repository signal fingerprint: `b3ab0860271f59e3bd8b813a35975cd9df65e64e146793c67939b9ef37cc6c75`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (240 files), `tests/` (235 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 

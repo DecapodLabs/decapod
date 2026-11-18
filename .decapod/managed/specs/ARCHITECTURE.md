@@ -1,5 +1,129 @@
 # Architecture
 
+## Canonical task-scope projections
+
+Task.scope remains the authoritative journaled declaration. Inference and workbranch bootstrap reuse fleet_coord::declared_paths through one projection helper; JSON commas never become scope boundaries. Known legacy projection repair stays in the existing governance transaction and custody event stream, preserves the original instruction and complete prior journal, and invalidates plan acceptance. It creates no scope registry or write-authorization claim.
+
+## Retained native-path authority
+
+The existing execution binding owner inventories canonical external-action policy even when Git ignores that file. Serialized path evidence remains historical data: terminal validation, history append, workunit reuse and publication remeasure current execution authority. Validation bookkeeping keeps its existing epoch/history fence; current instruction, plan, effective policy, approvals and live lease remain separately required. This extends the existing owner without a second policy resolver.
+
+## Bounded native-path observation (#1767)
+
+`core/trajectory/path.rs` extends existing execution bindings and native validation
+adapters. An independently accepted `proof.observed_path` policy may require
+schema1.0.0 `native_proof_calls`; candidate changes cannot first accept, remove or
+loosen it. Other observation scopes remain explicitly unsupported. The actual
+native/repository adapters capture instruction/task/plan, actor/lease, source/base,
+policy and producer context around existing authorization and runner execution.
+Ordered event hashes bind this context and a fresh runtime observation ID. They
+are integrity checks, not independent identity signatures.
+
+Only live adapters construct opaque `OwnedObservation`; recorded loops, source
+hashes and JSON captures cannot construct it. Validation separately reports
+artifact proof, process conformance and observation coverage. Missing required
+native observation refuses readiness even when actual artifact checks are green;
+optional unknown coverage permits ordinary accepted proof. Attempt-only evidence,
+failed outcomes and changed invocation/subject/instructions/plan/policy/custody
+or producer remain distinct. Reordered or omitted events cannot establish coverage.
+
+Successful owned path evidence binds into the existing completed-readiness journal
+with nested proof schema `decapod.validation-history-proof.v1.1`. Legacy proofs
+retain their schema and claim no observed path. Existing current task/epoch/proof
+and publication readback owners govern reuse. No new event database, grant engine
+or shell interceptor is introduced. This observes native proof calls only, not
+independent full-host, remote harness, human identity or source-edit authorization.
+
+## Selected accepted roots and typed relations (#1768, #1770)
+
+`core/intent_reconcile/selected.rs` reads the explicitly selected
+`proof.selected_work` policy from the independently captured accepted Git target.
+Candidate edits cannot remove, replace or first accept this policy. The initial
+adapter supports repository-local native proof; hosted and cloud joins return
+unsupported instead of claiming equivalent authority. Accepted Git policy is
+distinct from authenticated human authorship.
+The selected policy pins the origin/recorded-instruction content revision; an
+agent refinement is a different field. Changed recorded instructions revoke
+selected-policy applicability rather than silently inheriting the previous roots.
+
+Each root retains one integration obligation in canonical `decapod.db`, using
+the reported source-revision-bound `obligation_ref` as its existing `intent_ref`.
+Its proof labels must include the named accepted required native commands.
+Coverage is a mapping judgment, never observed behavior. The existing native
+runner must still execute every accepted check on the integrated candidate.
+No new obligation edge kind, completion cache, database or admission engine is
+introduced. Unrelated unattempted backlog remains outside this selection.
+
+The supported relation domain is equality/inequality over uninterpreted values.
+A bounded equality-path traversal witnesses a conflicting inequality; three
+inequalities can be satisfiable and dependency cycles have no relation semantics.
+Unsupported kinds remain unverifiable. Limits are 128 roots, 32 checks per root,
+256 relations and 128-byte identifiers. Selected DB lookups use an additive local
+index and at most two rows per root, within one read statement snapshot. Git and
+SQLite remain separate domains: native identity recaptures the selected join,
+plan context and accepted base before/after execution and receipt readback.
+This does not implement authenticated instruction revisions or host witnesses.
+
+## Recorded instruction lineage and current phase feedback
+
+Custody schema 1.1.0 adds bounded, append-only recorded instruction revisions to
+the existing `IntentRecord`. The original request, its reported source, preceding
+agent interpretation, source claims, revision order and supersession claims remain
+distinct. Revision IDs are idempotent only for identical payloads; stale parents,
+rewritten origin/provenance and truncated or changed revision prefixes are refused.
+The source digest covers origin and recorded instructions, not execution status.
+Caller-reported source/principal labels never authenticate a human or trusted host.
+`trajectory/instruction_source.rs` additionally owns bounded official GitHub comment
+observation. Only its fresh sealed adapter read constructs the non-deserializable
+source value; the normal custody revision writer records it and performs the same
+CAS/invalidation transaction. Numeric account identity and exact source body hash
+remain separate from human identity and grants. Source metadata is historical,
+not new proof authority or a second instruction store.
+
+`trajectory::append_instruction` updates the trajectory and revokes plan acceptance
+and phase progress in one governance-document transaction. Existing execution
+checkpoints remain as history; changed source/plan/custody makes them stale. An
+identical retry after reacceptance cannot revoke that acceptance a second time.
+Same-lineage new runs preserve custody, and a checkpointed run must use resume
+instead of discarding its required approval references through reinitialization.
+
+The root-aware readiness projection exposes the same instruction revision in
+preparation, state, acceptance, execution and validation/publication. A separate
+accepted typed model contributes policy blockers to that same projection through
+an explicitly cached-target view. Native validation independently obtains the
+current accepted target and checks exact model/instruction applicability, root
+coverage and actual required execution. An offline cached consistency result is
+not final provider freshness, behavior proof or observed-path authority.
+
+The native source-history guard compares the selected lineage with bounded
+first-parent Git history (at most 256 inspected governance-changing commits).
+Counterfeit source plus recomputed hashes cannot replace the retained origin or
+drop recorded revisions. Invalid intermediate rewrites remain source observations
+in Git; restoring the canonical source permits fresh proof without laundering the
+old failure or permanently poisoning legitimate repair. This is source integrity,
+not independent observation that a particular host operation occurred.
+
+The selected DB read uses one bounded, indexed compound SELECT through Dactyl's
+read-only route. Each root contributes at most two rows in that single statement;
+it does not issue write-routed transaction commands. The mapping revision binds
+the complete selected check declaration, including changes beyond mere presence.
+Git and SQLite remain separate domains: native identity recaptures the selected join,
+plan context and accepted base before/after execution and receipt readback.
+Authenticated ingress and trusted host-witness consumption remain separate work.
+
+## One recorded instruction projection (#1764)
+
+`plan_governance::instruction_readiness` derives the selected plan's recorded
+blockers without another ledger. `governed_plan_context` uses that projection
+before inference, while existing execution, trajectory, validation and workspace
+publication boundaries consume its decisions. Drafts may retain unresolved
+instructions; accepted transitions refuse them. Legacy accepted-but-unresolved
+documents are checked again at resume. Content correction changes the readiness
+source revision and normal plan mutation revokes acceptance and phase progress;
+reacceptance does not restore old execution proof. This is recorded instruction
+enforcement; global relation consistency and root coverage are separate selected
+policy judgments, and none of these establishes host observation.
+
 ## Source-policy currency continuity (#1753)
 
 `entrypoint_integrity::preserves_source_entrypoint_versions` reuses the existing
@@ -988,8 +1112,8 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `7b88d5d3e68ce397408f69e5635bceee4071a1c57b84cab441c0b3083ee7e3a7`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (236 files), `tests/` (235 files)
+- Repository signal fingerprint: `b3ab0860271f59e3bd8b813a35975cd9df65e64e146793c67939b9ef37cc6c75`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (240 files), `tests/` (235 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 

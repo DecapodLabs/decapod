@@ -1,6 +1,21 @@
 // Moved from src/decapod/core/fleet_coord.rs
 use super::*;
 
+#[test]
+fn scope_projection_preserves_json_paths_and_legacy_logical_scopes() {
+    let raw = r#"paths:["src/a,b.rs","tests/x.rs",".decapod/managed/specs"]"#;
+    assert_eq!(
+        scope_projection(raw).unwrap(),
+        declared_paths(raw).unwrap().unwrap()
+    );
+    assert_eq!(
+        scope_projection("repo, component").unwrap(),
+        ["repo", "component"]
+    );
+    assert!(scope_projection(r#"paths:["../outside"]"#).is_err());
+    assert!(scope_projection("paths:[not-json]").is_err());
+}
+
 fn claim(
     task_id: &str,
     agent: &str,

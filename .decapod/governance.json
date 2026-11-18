@@ -1,7 +1,7 @@
 {
   "schema_version": "1.0.0",
   "baseline": {
-    "accepted_commit": "6ab6de3134286a790d78d370ca3fb43c0d92f834",
+    "accepted_commit": "34f837d4dbb2a611c0d68a2cf14845cbe6823367",
     "policy": {
       "change_control": {
         "requires_human_review": true,
@@ -132,6 +132,14 @@
       "claim:complete-prepush-readiness": {
         "falsifier": "An empty, stale, skipped-required, mocked-code or missing-provider result authorizes publication, or CLI/RPC/publish bypasses the same boundary",
         "statement": "Public validate can authorize source PR publication only after all applicable actual source checks and candidate builds pass with genuine current material/provider evidence; release-only packaging is explicitly outside core source scope",
+        "status": "open"
+      },
+      "claim:config-and-policy-authority": {
+        "falsifier": "Actual CLI or RPC accepts unsupported config for mutation, blocks schema repair, or grants a privilege solely from an unaccepted proposal; legitimate accepted operations deadlock.",
+        "proof_refs": [
+          "/private/tmp/decapod-boundary-red-c30w2kjb/evidence"
+        ],
+        "statement": "Invalid config versions deny mutation while schema references remain accessible; unaccepted root RBAC proposals cannot self-authorize and accepted scoped grants remain usable and revocable.",
         "status": "open"
       },
       "claim:consumer-local-proof": {
@@ -466,6 +474,428 @@
         "statement": "Workunit generation-fenced mutations have durable event snapshots before JSON publication; interrupted projection publication is explicitly recoverable without inventing current proof.",
         "status": "open"
       },
+      "history-recovery:1d5b9e59cd357fc75c25ecacf3d5167d5c46eee8": {
+        "actor": "codex-issue-contracts-20261117",
+        "assessment": {
+          "base_commit": "9d1aed2795dae5b9345d9ec3ad1d3fcfe1d770d8",
+          "disposition": "invalid_history",
+          "findings": [
+            {
+              "code": "GOVERNANCE_HISTORY_INVALID",
+              "commit": "83268ec94bff35d423e312230970b26404999a26",
+              "detail": "GOVERNANCE_PR_BASE_MISMATCH: base identity changed inside the PR",
+              "disposition": "invalid_history",
+              "obligation": "accepted_base",
+              "prior_event_can_be_regenerated": false,
+              "recovery": "Preserve the invalid commit and genuine prior evidence. Do not overwrite checkpoints or relabel provenance; inspect the affected obligation and reauthor in a fresh governed workspace if authentic historical evidence is unavailable.",
+              "tree": "389a88e471d6d2fee9d0afd3c20daa98734e009c"
+            },
+            {
+              "code": "GOVERNANCE_HISTORY_INVALID",
+              "commit": "002c9a44cd03aef91cc00196f9fd54e19c7f9980",
+              "detail": "GOVERNANCE_PR_BASE_MISMATCH: base identity changed inside the PR",
+              "disposition": "invalid_history",
+              "obligation": "accepted_base",
+              "prior_event_can_be_regenerated": false,
+              "recovery": "Preserve the invalid commit and genuine prior evidence. Do not overwrite checkpoints or relabel provenance; inspect the affected obligation and reauthor in a fresh governed workspace if authentic historical evidence is unavailable.",
+              "tree": "a1f7d8bf9e2e6663e07c1252cfff70251c4f43f1"
+            },
+            {
+              "code": "GOVERNANCE_HISTORY_INVALID",
+              "commit": "137198af509cfa732fe21557a779d48575b10498",
+              "detail": "GOVERNANCE_PR_BASE_MISMATCH: base identity changed inside the PR",
+              "disposition": "invalid_history",
+              "obligation": "accepted_base",
+              "prior_event_can_be_regenerated": false,
+              "recovery": "Preserve the invalid commit and genuine prior evidence. Do not overwrite checkpoints or relabel provenance; inspect the affected obligation and reauthor in a fresh governed workspace if authentic historical evidence is unavailable.",
+              "tree": "1504d775545545b87d8d7dd5395196d9e1d0a4bb"
+            },
+            {
+              "code": "GOVERNANCE_HISTORY_INVALID",
+              "commit": "c6fa3ac410d60a3d94a069ee665fc898bfc25750",
+              "detail": "GOVERNANCE_PR_BASE_MISMATCH: base identity changed inside the PR",
+              "disposition": "invalid_history",
+              "obligation": "accepted_base",
+              "prior_event_can_be_regenerated": false,
+              "recovery": "Preserve the invalid commit and genuine prior evidence. Do not overwrite checkpoints or relabel provenance; inspect the affected obligation and reauthor in a fresh governed workspace if authentic historical evidence is unavailable.",
+              "tree": "4c24afdd550cdc8db514b19db44fd69d174fa204"
+            },
+            {
+              "code": "GOVERNANCE_HISTORY_INVALID",
+              "commit": "d41e85d4d5bd4a2fc78d826ea11f8dd87e3d87d7",
+              "detail": "GOVERNANCE_PR_BASE_MISMATCH: base identity changed inside the PR",
+              "disposition": "invalid_history",
+              "obligation": "accepted_base",
+              "prior_event_can_be_regenerated": false,
+              "recovery": "Preserve the invalid commit and genuine prior evidence. Do not overwrite checkpoints or relabel provenance; inspect the affected obligation and reauthor in a fresh governed workspace if authentic historical evidence is unavailable.",
+              "tree": "3c03491a0f6cc8fe8aeac1b9b208c74517b8ba4f"
+            },
+            {
+              "code": "GOVERNANCE_HISTORY_INVALID",
+              "commit": "89625b2d5e41795bc9c56e8a7a3f221b6a07ba25",
+              "detail": "GOVERNANCE_PR_BASE_MISMATCH: base identity changed inside the PR",
+              "disposition": "invalid_history",
+              "obligation": "accepted_base",
+              "prior_event_can_be_regenerated": false,
+              "recovery": "Preserve the invalid commit and genuine prior evidence. Do not overwrite checkpoints or relabel provenance; inspect the affected obligation and reauthor in a fresh governed workspace if authentic historical evidence is unavailable.",
+              "tree": "8f61817ce393788cf4bb933d7aa196ea156ce2e4"
+            },
+            {
+              "code": "GOVERNANCE_HISTORY_INVALID",
+              "commit": "b650e0a925f034db4d606b9b09f3626cbbe93277",
+              "detail": "GOVERNANCE_PR_BASE_MISMATCH: base identity changed inside the PR",
+              "disposition": "invalid_history",
+              "obligation": "accepted_base",
+              "prior_event_can_be_regenerated": false,
+              "recovery": "Preserve the invalid commit and genuine prior evidence. Do not overwrite checkpoints or relabel provenance; inspect the affected obligation and reauthor in a fresh governed workspace if authentic historical evidence is unavailable.",
+              "tree": "38c27fa9367aa3b07611a62b04eea802bf8e699f"
+            },
+            {
+              "code": "GOVERNANCE_HISTORY_INVALID",
+              "commit": "bdc2d8bb4918cbcfd4ee18a54a7bfe3e6f5f58d4",
+              "detail": "GOVERNANCE_PR_BASE_MISMATCH: base identity changed inside the PR",
+              "disposition": "invalid_history",
+              "obligation": "accepted_base",
+              "prior_event_can_be_regenerated": false,
+              "recovery": "Preserve the invalid commit and genuine prior evidence. Do not overwrite checkpoints or relabel provenance; inspect the affected obligation and reauthor in a fresh governed workspace if authentic historical evidence is unavailable.",
+              "tree": "c741d65d39c8b064a3cb2c3c0ee6ccf3caedcc7c"
+            },
+            {
+              "code": "GOVERNANCE_HISTORY_INVALID",
+              "commit": "1d6a1351d34fb0e65cb2c0f1c4b831f2622ba2db",
+              "detail": "GOVERNANCE_PR_BASE_MISMATCH: base identity changed inside the PR",
+              "disposition": "invalid_history",
+              "obligation": "accepted_base",
+              "prior_event_can_be_regenerated": false,
+              "recovery": "Preserve the invalid commit and genuine prior evidence. Do not overwrite checkpoints or relabel provenance; inspect the affected obligation and reauthor in a fresh governed workspace if authentic historical evidence is unavailable.",
+              "tree": "57eab1a33cdd1f399bcd442792c3a0c4f6f3f19c"
+            },
+            {
+              "code": "GOVERNANCE_HISTORY_INVALID",
+              "commit": "bee9f594851ac5dd132982968d508ac5cd748014",
+              "detail": "GOVERNANCE_PR_BASE_MISMATCH: base identity changed inside the PR",
+              "disposition": "invalid_history",
+              "obligation": "accepted_base",
+              "prior_event_can_be_regenerated": false,
+              "recovery": "Preserve the invalid commit and genuine prior evidence. Do not overwrite checkpoints or relabel provenance; inspect the affected obligation and reauthor in a fresh governed workspace if authentic historical evidence is unavailable.",
+              "tree": "4e0614757d3229482bb29b838a60a2e83a5f4a8c"
+            },
+            {
+              "code": "GOVERNANCE_HISTORY_INVALID",
+              "commit": "60dac93ff0be8274f6840d7005dea669c6d4076c",
+              "detail": "GOVERNANCE_PR_BASE_MISMATCH: base identity changed inside the PR",
+              "disposition": "invalid_history",
+              "obligation": "accepted_base",
+              "prior_event_can_be_regenerated": false,
+              "recovery": "Preserve the invalid commit and genuine prior evidence. Do not overwrite checkpoints or relabel provenance; inspect the affected obligation and reauthor in a fresh governed workspace if authentic historical evidence is unavailable.",
+              "tree": "f65ead7bd7f098f9977acf4882750c6079229e2c"
+            },
+            {
+              "code": "GOVERNANCE_HISTORY_INVALID",
+              "commit": "ce644ebefd707419a03de6f72bbb9d1556739c77",
+              "detail": "GOVERNANCE_PR_BASE_MISMATCH: base identity changed inside the PR",
+              "disposition": "invalid_history",
+              "obligation": "accepted_base",
+              "prior_event_can_be_regenerated": false,
+              "recovery": "Preserve the invalid commit and genuine prior evidence. Do not overwrite checkpoints or relabel provenance; inspect the affected obligation and reauthor in a fresh governed workspace if authentic historical evidence is unavailable.",
+              "tree": "a859914b53db9c18e585af9208e34d010e511380"
+            },
+            {
+              "code": "GOVERNANCE_HISTORY_INVALID",
+              "commit": "f286b9bee202774241ad2cb3e8ee7ff5dac43a35",
+              "detail": "GOVERNANCE_PR_BASE_MISMATCH: base identity changed inside the PR",
+              "disposition": "invalid_history",
+              "obligation": "accepted_base",
+              "prior_event_can_be_regenerated": false,
+              "recovery": "Preserve the invalid commit and genuine prior evidence. Do not overwrite checkpoints or relabel provenance; inspect the affected obligation and reauthor in a fresh governed workspace if authentic historical evidence is unavailable.",
+              "tree": "488805c422a6703b3a2d76cf0498d74aeef0b951"
+            },
+            {
+              "code": "GOVERNANCE_HISTORY_INVALID",
+              "commit": "c5c45f82e64f2199db9536bbfafd372763d4042c",
+              "detail": "GOVERNANCE_PR_BASE_MISMATCH: base identity changed inside the PR",
+              "disposition": "invalid_history",
+              "obligation": "accepted_base",
+              "prior_event_can_be_regenerated": false,
+              "recovery": "Preserve the invalid commit and genuine prior evidence. Do not overwrite checkpoints or relabel provenance; inspect the affected obligation and reauthor in a fresh governed workspace if authentic historical evidence is unavailable.",
+              "tree": "6f37d3ff6ebb4a55ba93b9e96e156eeeabf65969"
+            },
+            {
+              "code": "GOVERNANCE_HISTORY_INVALID",
+              "commit": "2b12fd13e82ebbe720ef6d2c086dd739e1d3b943",
+              "detail": "GOVERNANCE_PR_BASE_MISMATCH: base identity changed inside the PR",
+              "disposition": "invalid_history",
+              "obligation": "accepted_base",
+              "prior_event_can_be_regenerated": false,
+              "recovery": "Preserve the invalid commit and genuine prior evidence. Do not overwrite checkpoints or relabel provenance; inspect the affected obligation and reauthor in a fresh governed workspace if authentic historical evidence is unavailable.",
+              "tree": "f22ea0fbce06fc56c0afaa928bbef6d30b1273e8"
+            },
+            {
+              "code": "GOVERNANCE_HISTORY_INVALID",
+              "commit": "a2371460d960305a4a93addc26f8a5210b530a4a",
+              "detail": "GOVERNANCE_PR_BASE_MISMATCH: base identity changed inside the PR",
+              "disposition": "invalid_history",
+              "obligation": "accepted_base",
+              "prior_event_can_be_regenerated": false,
+              "recovery": "Preserve the invalid commit and genuine prior evidence. Do not overwrite checkpoints or relabel provenance; inspect the affected obligation and reauthor in a fresh governed workspace if authentic historical evidence is unavailable.",
+              "tree": "623b71244e4048dab8df1a91f65fa21171b32327"
+            },
+            {
+              "code": "GOVERNANCE_HISTORY_INVALID",
+              "commit": "ed03d58952d32e17d82de4d5bb4f9bd14d14f6dd",
+              "detail": "GOVERNANCE_PR_BASE_MISMATCH: base identity changed inside the PR",
+              "disposition": "invalid_history",
+              "obligation": "accepted_base",
+              "prior_event_can_be_regenerated": false,
+              "recovery": "Preserve the invalid commit and genuine prior evidence. Do not overwrite checkpoints or relabel provenance; inspect the affected obligation and reauthor in a fresh governed workspace if authentic historical evidence is unavailable.",
+              "tree": "76b0c9ea9b0cd4395cc92132465dadf4245087f1"
+            },
+            {
+              "code": "GOVERNANCE_CHECKPOINT_MISSING",
+              "commit": "dbb622f6f2a140cf6746c4f8cefa4e7f86952c8a",
+              "detail": "GOVERNANCE_CHECKPOINT_MISSING: commit dbb622f6f2a140cf6746c4f8cefa4e7f86952c8a needs a new checkpoint bound to its exact material tree and governance inputs",
+              "disposition": "unproven_history",
+              "expected_input_digest": "sha256:823bb540ade558da6a03259ba9b186a576b857ac476167c1dc8081db0f3438f2",
+              "obligation": "checkpoint_for_material",
+              "prior_event_can_be_regenerated": false,
+              "recovery": "A checkpoint written now cannot establish that this immutable commit carried a checkpoint. Preserve the source ref and evidence; create a fresh claimed workspace from the accepted target, reauthor the reviewed material with current intent/spec reviews and checkpoints, and rerun independent validation. No current policy authorizes a candidate-local history waiver.",
+              "tree": "b59d8dc8f9d34dad776ac9c08c805d206170d7e7"
+            },
+            {
+              "code": "GOVERNANCE_CHECKPOINT_MISSING",
+              "commit": "18cbb30ca4d16a80810d8f3c0cecfc4073a83cbc",
+              "detail": "GOVERNANCE_CHECKPOINT_MISSING: commit 18cbb30ca4d16a80810d8f3c0cecfc4073a83cbc needs a new checkpoint bound to its exact material tree and governance inputs",
+              "disposition": "unproven_history",
+              "expected_input_digest": "sha256:823bb540ade558da6a03259ba9b186a576b857ac476167c1dc8081db0f3438f2",
+              "obligation": "checkpoint_for_material",
+              "prior_event_can_be_regenerated": false,
+              "recovery": "A checkpoint written now cannot establish that this immutable commit carried a checkpoint. Preserve the source ref and evidence; create a fresh claimed workspace from the accepted target, reauthor the reviewed material with current intent/spec reviews and checkpoints, and rerun independent validation. No current policy authorizes a candidate-local history waiver.",
+              "tree": "b59d8dc8f9d34dad776ac9c08c805d206170d7e7"
+            },
+            {
+              "code": "GOVERNANCE_HISTORY_INVALID",
+              "commit": "12d403ac0d791c4eea375c46daa6e7825ccdf6d6",
+              "detail": "GOVERNANCE_PR_IDENTITY_CONFLICT: commit 12d403ac0d791c4eea375c46daa6e7825ccdf6d6 changed identity inside an unaccepted lineage",
+              "disposition": "invalid_history",
+              "obligation": "workstream_identity",
+              "prior_event_can_be_regenerated": false,
+              "recovery": "Preserve the invalid commit and genuine prior evidence. Do not overwrite checkpoints or relabel provenance; inspect the affected obligation and reauthor in a fresh governed workspace if authentic historical evidence is unavailable.",
+              "tree": "153feba3265bc824b58f82f39bbfd3647d71a416"
+            },
+            {
+              "code": "GOVERNANCE_CHECKPOINT_MISSING",
+              "commit": "4661155e65a93882f18ac38e19dc172c7d6c3e9a",
+              "detail": "GOVERNANCE_CHECKPOINT_MISSING: commit 4661155e65a93882f18ac38e19dc172c7d6c3e9a needs a new checkpoint bound to its exact material tree and governance inputs",
+              "disposition": "unproven_history",
+              "expected_input_digest": "sha256:94ed7e93650eb7cd566960f6f030f82da282e78a22933cb54033922310444a33",
+              "obligation": "checkpoint_for_material",
+              "prior_event_can_be_regenerated": false,
+              "recovery": "A checkpoint written now cannot establish that this immutable commit carried a checkpoint. Preserve the source ref and evidence; create a fresh claimed workspace from the accepted target, reauthor the reviewed material with current intent/spec reviews and checkpoints, and rerun independent validation. No current policy authorizes a candidate-local history waiver.",
+              "tree": "16de40d85f9dcdd6111c82764e04b425e9e2e9e5"
+            },
+            {
+              "code": "GOVERNANCE_CHECKPOINT_MISSING",
+              "commit": "edd46f738da6f6c880b2d8e3aeb5d0e1d948c5d8",
+              "detail": "GOVERNANCE_CHECKPOINT_MISSING: commit edd46f738da6f6c880b2d8e3aeb5d0e1d948c5d8 needs a new checkpoint bound to its exact material tree and governance inputs",
+              "disposition": "unproven_history",
+              "expected_input_digest": "sha256:d9a50d76ec1003c84c96980c2b938489e04577da945d59415322366a22d905b7",
+              "obligation": "checkpoint_for_material",
+              "prior_event_can_be_regenerated": false,
+              "recovery": "A checkpoint written now cannot establish that this immutable commit carried a checkpoint. Preserve the source ref and evidence; create a fresh claimed workspace from the accepted target, reauthor the reviewed material with current intent/spec reviews and checkpoints, and rerun independent validation. No current policy authorizes a candidate-local history waiver.",
+              "tree": "e1d60ca2890c6c99345fde38275e7d7b7f4f03b5"
+            },
+            {
+              "code": "GOVERNANCE_CHECKPOINT_MISSING",
+              "commit": "cac93252c2a5f99e87481f6b806c515b19824523",
+              "detail": "GOVERNANCE_CHECKPOINT_MISSING: commit cac93252c2a5f99e87481f6b806c515b19824523 needs a new checkpoint bound to its exact material tree and governance inputs",
+              "disposition": "unproven_history",
+              "expected_input_digest": "sha256:23033d7af46a9622c2abe1dc1f803650b94fac3d3cc8c37223c39cf9be39d57f",
+              "obligation": "checkpoint_for_material",
+              "prior_event_can_be_regenerated": false,
+              "recovery": "A checkpoint written now cannot establish that this immutable commit carried a checkpoint. Preserve the source ref and evidence; create a fresh claimed workspace from the accepted target, reauthor the reviewed material with current intent/spec reviews and checkpoints, and rerun independent validation. No current policy authorizes a candidate-local history waiver.",
+              "tree": "2b13c5b2a00516036b138b66e0e899723d919051"
+            },
+            {
+              "code": "GOVERNANCE_CHECKPOINT_MISSING",
+              "commit": "52c9a169e36a4adac4795044150135f9d2bc11c1",
+              "detail": "GOVERNANCE_CHECKPOINT_MISSING: commit 52c9a169e36a4adac4795044150135f9d2bc11c1 needs a new checkpoint bound to its exact material tree and governance inputs",
+              "disposition": "unproven_history",
+              "expected_input_digest": "sha256:7b1466a3478850793a1ac152106bc28f74e5fa1d7efaf382af1d3bcebb1fa069",
+              "obligation": "checkpoint_for_material",
+              "prior_event_can_be_regenerated": false,
+              "recovery": "A checkpoint written now cannot establish that this immutable commit carried a checkpoint. Preserve the source ref and evidence; create a fresh claimed workspace from the accepted target, reauthor the reviewed material with current intent/spec reviews and checkpoints, and rerun independent validation. No current policy authorizes a candidate-local history waiver.",
+              "tree": "d36094536201c74e3b3ee57e798ca84dfd6c0718"
+            },
+            {
+              "code": "GOVERNANCE_CHECKPOINT_MISSING",
+              "commit": "ab4abe0593ddd8fd15186001558b79addd08aebc",
+              "detail": "GOVERNANCE_CHECKPOINT_MISSING: commit ab4abe0593ddd8fd15186001558b79addd08aebc needs a new checkpoint bound to its exact material tree and governance inputs",
+              "disposition": "unproven_history",
+              "expected_input_digest": "sha256:7b1466a3478850793a1ac152106bc28f74e5fa1d7efaf382af1d3bcebb1fa069",
+              "obligation": "checkpoint_for_material",
+              "prior_event_can_be_regenerated": false,
+              "recovery": "A checkpoint written now cannot establish that this immutable commit carried a checkpoint. Preserve the source ref and evidence; create a fresh claimed workspace from the accepted target, reauthor the reviewed material with current intent/spec reviews and checkpoints, and rerun independent validation. No current policy authorizes a candidate-local history waiver.",
+              "tree": "d36094536201c74e3b3ee57e798ca84dfd6c0718"
+            },
+            {
+              "code": "GOVERNANCE_CHECKPOINT_MISSING",
+              "commit": "bddd69fa9cd3c49f9db4ca95d8329e03ebc95ef3",
+              "detail": "GOVERNANCE_CHECKPOINT_MISSING: commit bddd69fa9cd3c49f9db4ca95d8329e03ebc95ef3 needs a new checkpoint bound to its exact material tree and governance inputs",
+              "disposition": "unproven_history",
+              "expected_input_digest": "sha256:7d93caa755193f599d4e2f1a1fa72762d376dc5755517d76f247a018a46ea397",
+              "obligation": "checkpoint_for_material",
+              "prior_event_can_be_regenerated": false,
+              "recovery": "A checkpoint written now cannot establish that this immutable commit carried a checkpoint. Preserve the source ref and evidence; create a fresh claimed workspace from the accepted target, reauthor the reviewed material with current intent/spec reviews and checkpoints, and rerun independent validation. No current policy authorizes a candidate-local history waiver.",
+              "tree": "96c5e870427672779720dad5a71cc47800a82eb2"
+            },
+            {
+              "code": "GOVERNANCE_CHECKPOINT_MISSING",
+              "commit": "6ab6de3134286a790d78d370ca3fb43c0d92f834",
+              "detail": "GOVERNANCE_CHECKPOINT_MISSING: commit 6ab6de3134286a790d78d370ca3fb43c0d92f834 needs a new checkpoint bound to its exact material tree and governance inputs",
+              "disposition": "unproven_history",
+              "expected_input_digest": "sha256:7d93caa755193f599d4e2f1a1fa72762d376dc5755517d76f247a018a46ea397",
+              "obligation": "checkpoint_for_material",
+              "prior_event_can_be_regenerated": false,
+              "recovery": "A checkpoint written now cannot establish that this immutable commit carried a checkpoint. Preserve the source ref and evidence; create a fresh claimed workspace from the accepted target, reauthor the reviewed material with current intent/spec reviews and checkpoints, and rerun independent validation. No current policy authorizes a candidate-local history waiver.",
+              "tree": "96c5e870427672779720dad5a71cc47800a82eb2"
+            },
+            {
+              "code": "GOVERNANCE_CHECKPOINT_MISSING",
+              "commit": "515d39abad41edacf3ed556c1c62d695484301b9",
+              "detail": "GOVERNANCE_CHECKPOINT_MISSING: commit 515d39abad41edacf3ed556c1c62d695484301b9 needs a new checkpoint bound to its exact material tree and governance inputs",
+              "disposition": "unproven_history",
+              "expected_input_digest": "sha256:71429636ce421031aea83e5ce0ffe9f32224041de23a2263d212b41cb228b3f9",
+              "obligation": "checkpoint_for_material",
+              "prior_event_can_be_regenerated": false,
+              "recovery": "A checkpoint written now cannot establish that this immutable commit carried a checkpoint. Preserve the source ref and evidence; create a fresh claimed workspace from the accepted target, reauthor the reviewed material with current intent/spec reviews and checkpoints, and rerun independent validation. No current policy authorizes a candidate-local history waiver.",
+              "tree": "d3160a90ba8fe99c5f69e29165d6aa053f88bdfe"
+            },
+            {
+              "code": "GOVERNANCE_CHECKPOINT_MISSING",
+              "commit": "0f2e520d115b8512d4158a89084dccaae87546c6",
+              "detail": "GOVERNANCE_CHECKPOINT_MISSING: commit 0f2e520d115b8512d4158a89084dccaae87546c6 needs a new checkpoint bound to its exact material tree and governance inputs",
+              "disposition": "unproven_history",
+              "expected_input_digest": "sha256:087a8514dd64dc83cd787412cc4ca22b950f2834236425fc5df164f50b9249f4",
+              "obligation": "checkpoint_for_material",
+              "prior_event_can_be_regenerated": false,
+              "recovery": "A checkpoint written now cannot establish that this immutable commit carried a checkpoint. Preserve the source ref and evidence; create a fresh claimed workspace from the accepted target, reauthor the reviewed material with current intent/spec reviews and checkpoints, and rerun independent validation. No current policy authorizes a candidate-local history waiver.",
+              "tree": "2b750950db7c51c744425d822d10745a5b67eeea"
+            },
+            {
+              "code": "GOVERNANCE_HISTORY_INVALID",
+              "commit": "d6fa03bc68d7a843061885e8ae20c3a9f910e7d6",
+              "detail": "GOVERNANCE_PR_BASE_MISMATCH: imported commit d6fa03bc68d7a843061885e8ae20c3a9f910e7d6 has an unaccepted base",
+              "disposition": "invalid_history",
+              "obligation": "accepted_base",
+              "prior_event_can_be_regenerated": false,
+              "recovery": "Preserve the invalid commit and genuine prior evidence. Do not overwrite checkpoints or relabel provenance; inspect the affected obligation and reauthor in a fresh governed workspace if authentic historical evidence is unavailable.",
+              "tree": "09362b76ef915e3a96e6e32f6a92ee08df164a6d"
+            },
+            {
+              "code": "GOVERNANCE_HISTORY_INVALID",
+              "commit": "563e6f7e02b99618daaf0ddacb88d5414e9a9cd2",
+              "detail": "GOVERNANCE_PR_BASE_MISMATCH: imported commit 563e6f7e02b99618daaf0ddacb88d5414e9a9cd2 has an unaccepted base",
+              "disposition": "invalid_history",
+              "obligation": "accepted_base",
+              "prior_event_can_be_regenerated": false,
+              "recovery": "Preserve the invalid commit and genuine prior evidence. Do not overwrite checkpoints or relabel provenance; inspect the affected obligation and reauthor in a fresh governed workspace if authentic historical evidence is unavailable.",
+              "tree": "b2bdfa39b9609e2635299e7ff8517297763915e9"
+            },
+            {
+              "code": "GOVERNANCE_HISTORY_INVALID",
+              "commit": "cb4b87b12f1ff0818073fbec86752c5c7b2f39e0",
+              "detail": "GOVERNANCE_PR_BASE_MISMATCH: imported commit cb4b87b12f1ff0818073fbec86752c5c7b2f39e0 has an unaccepted base",
+              "disposition": "invalid_history",
+              "obligation": "accepted_base",
+              "prior_event_can_be_regenerated": false,
+              "recovery": "Preserve the invalid commit and genuine prior evidence. Do not overwrite checkpoints or relabel provenance; inspect the affected obligation and reauthor in a fresh governed workspace if authentic historical evidence is unavailable.",
+              "tree": "ec95dc3cd106336a9b2f98de66c2a83b1c6156aa"
+            },
+            {
+              "code": "GOVERNANCE_HISTORY_INVALID",
+              "commit": "96d5ac16993c31f90df23d79397e3218610e21d3",
+              "detail": "GOVERNANCE_PR_BASE_MISMATCH: imported commit 96d5ac16993c31f90df23d79397e3218610e21d3 has an unaccepted base",
+              "disposition": "invalid_history",
+              "obligation": "accepted_base",
+              "prior_event_can_be_regenerated": false,
+              "recovery": "Preserve the invalid commit and genuine prior evidence. Do not overwrite checkpoints or relabel provenance; inspect the affected obligation and reauthor in a fresh governed workspace if authentic historical evidence is unavailable.",
+              "tree": "b59f7fb25800c1b36258f6d70c2fafbf11b9e2ca"
+            },
+            {
+              "code": "GOVERNANCE_HISTORY_INVALID",
+              "commit": "c47137adae825aeaaede4473f91ec21c6bd4b853",
+              "detail": "GOVERNANCE_PR_BASE_MISMATCH: imported commit c47137adae825aeaaede4473f91ec21c6bd4b853 has an unaccepted base",
+              "disposition": "invalid_history",
+              "obligation": "accepted_base",
+              "prior_event_can_be_regenerated": false,
+              "recovery": "Preserve the invalid commit and genuine prior evidence. Do not overwrite checkpoints or relabel provenance; inspect the affected obligation and reauthor in a fresh governed workspace if authentic historical evidence is unavailable.",
+              "tree": "b59f7fb25800c1b36258f6d70c2fafbf11b9e2ca"
+            },
+            {
+              "code": "GOVERNANCE_HISTORY_INVALID",
+              "commit": "07c75f4cfde82198e5b66fd3eac2043e5f2a1dbe",
+              "detail": "GOVERNANCE_PR_BASE_MISMATCH: imported commit 07c75f4cfde82198e5b66fd3eac2043e5f2a1dbe has an unaccepted base",
+              "disposition": "invalid_history",
+              "obligation": "accepted_base",
+              "prior_event_can_be_regenerated": false,
+              "recovery": "Preserve the invalid commit and genuine prior evidence. Do not overwrite checkpoints or relabel provenance; inspect the affected obligation and reauthor in a fresh governed workspace if authentic historical evidence is unavailable.",
+              "tree": "02b1e6fc08ac1ab0935b65cdd1ce18c418a044bc"
+            },
+            {
+              "code": "GOVERNANCE_HISTORY_INVALID",
+              "commit": "34f837d4dbb2a611c0d68a2cf14845cbe6823367",
+              "detail": "GOVERNANCE_PR_BASE_MISMATCH: imported commit 34f837d4dbb2a611c0d68a2cf14845cbe6823367 has an unaccepted base",
+              "disposition": "invalid_history",
+              "obligation": "accepted_base",
+              "prior_event_can_be_regenerated": false,
+              "recovery": "Preserve the invalid commit and genuine prior evidence. Do not overwrite checkpoints or relabel provenance; inspect the affected obligation and reauthor in a fresh governed workspace if authentic historical evidence is unavailable.",
+              "tree": "02b1e6fc08ac1ab0935b65cdd1ce18c418a044bc"
+            }
+          ],
+          "head_commit": "1d5b9e59cd357fc75c25ecacf3d5167d5c46eee8",
+          "history_proven": false,
+          "inspection_complete": true,
+          "publication_ready": false,
+          "schema": "decapod.checkpoint-history.v1",
+          "scope": "checkpoint_history",
+          "verified_commits": [
+            "4a94d3c2f3465f418c97f7bf041838533e215937",
+            "edbfc00ddfd4c24458a2277176762c6924de13cc",
+            "f6e5855b7ec288085ddad0583c2271e98104f57b",
+            "6bf9683e5f6cff8f22a03363b8a55a651d822c19",
+            "36ede3fd859b706f6c0be066c3987e3ac63478ce",
+            "0a8350c9c3d63b5f51d182873645decb19ab4f68",
+            "a55c1de8b6e0539afe0121fb0f208151993710d3",
+            "986dd194c082fa0cd5f6433500e92cd9e0732493",
+            "12ccde2656e1539338673cd41a2680ac3c1fccf8",
+            "7849e0c8a443ac823a27f09a84786a7461407b81",
+            "fb20e3bd7394f18d3ce62744b6ddffa80fd20740",
+            "e3a06926a4616ab8dba72b18e624c314e573798f",
+            "97ef93f611a95fd71dad75d17a59347f3f41b35a",
+            "277982791abac211291e77e7af8745a1223c482e",
+            "d0ebc2c899d6c5bc643cb984ab4126610898b07c",
+            "7b4c14a0e02fde5c32be8df80900a6f671f7d071",
+            "2aff33363c2ddcfb5580cf2e9314fbf0eeb0c57d",
+            "3e5bf009239349253668d6a8674d668d92572e13",
+            "15f511574acdcc862a6db2d27b644436a76cf44a",
+            "b3b6f0cca3be075d9973ee33445f474d721b1e46",
+            "8dbcb957d324b3e84d66b7734173698293617226",
+            "90448d89fc9a0d652c0acecde8ba9948063bbca2",
+            "1d5b9e59cd357fc75c25ecacf3d5167d5c46eee8"
+          ]
+        },
+        "authority": "current_task_custody_only",
+        "destination_base": "34f837d4dbb2a611c0d68a2cf14845cbe6823367",
+        "destination_change": "change_01M7PQMA9DG5FG2QMC9WPR3ZCJ",
+        "exception_authorized": false,
+        "historical_proof": "not_proven",
+        "reason": "Native immutable assessment reports20 original lineage/base findings after accepted target changed identity. Preserve PR1766 and old branch exactly; reauthor reviewed implementation on this fresh claimed34f837d4 workstream and obtain new complete proof. This observation grants no exception and no historical or merge authority.",
+        "recovery": "reauthor_and_obtain_fresh_proof",
+        "schema": "decapod.history-recovery.v1",
+        "source_commit": "1d5b9e59cd357fc75c25ecacf3d5167d5c46eee8",
+        "source_governance_blob": "d2af12667f99b99f3c74a5e5cb6dbcc642dbd551",
+        "source_tree": "b7ed46350d806a6716a2fcbf25f80c1bd8d0fbe3"
+      },
       "plan:3109ff52b1ce422e": "Determine the smallest existing-provider execution boundary that keeps candidate build/test code from modifying trusted measurement or final-verdict authority.",
       "plan:5dbe0918f5d72eb4": "Buildkite collection excluded by user; no full native publication receipt is claimed",
       "plan:7f9060fac006b60a": "An already shipped controller cannot retroactively implement this code; distinguish one-time controller rollout from future older-catalog compatibility proof.",
@@ -474,6 +904,7 @@
       "trajectory:06645c9215349379": "custody isolation is container, but this host has no Docker; the work uses a git worktree workspace",
       "trajectory:083d2ad8e4cb2b22": "Current v2 mutation receipts and Dactyl 0.13.0 native consumer require fresh full proof; prior source proof is historical.",
       "trajectory:13217192dadb3ee3": "No local prerequisite suite run; remote full validation remains required",
+      "trajectory:14bb95d52b8efabf": "Fresh complete exact-candidate CI required after cloud test contract correction",
       "trajectory:150b60dea853e3ba": "Real native measurements and separate holdout risk/coverage are required; current source CI success is insufficient. Evaluation criteria recorded before model outputs; no readiness fitting or holdout evaluation executed.",
       "trajectory:17139f4701f494a5": "Hosted verification and exact-candidate publication readiness remain pending; no local tests run.",
       "trajectory:17669a7d73b8ecb7": "RPC download403 is runner-specific; same pinned URL succeeded on another fresh runner. Policy fixture exit126 OS detail is unknown because stderr was discarded.",
@@ -563,77 +994,97 @@
       "trajectory:ec49216a39e5bf93": "The config decision is cooperative; its author and agent labels are not authenticated.",
       "trajectory:ecfec9650d4ed288": "Independent standalone validation exposed four stale generated release-bound entrypoints; supported init refresh changed headers only, required graph preserved.",
       "trajectory:f000bb05667cb46e": "No actual four-target release artifact build is scheduled by ordinary source preflight;1049 latency improvement remains unmeasured",
+      "trajectory:f004e139bd2e3056": "Remaining fixture repairs require executable checks and fresh full validation",
       "trajectory:f9fb9362db79deb2": "Userauthorizesboundedcontractdiagnosis and evidence-backed productdecision, no repeatedfailedfullrun before causalcorrection. No sourcecode/math/weights/calibration/tolerance/gate/recipe changes justified bycontractreview. Authoranexposed-study audit andsourceadmissionledger, maintainlivingvalidation/intent interpretations, andprepareexplicitunappliedscopeproposal. Actualproductionprojection differsfromoldfullpatchharness andcannotbeclaimedtestedbythose29outcomes.",
       "trajectory:fa421ac6b37186ed": "Automatic trusted remote controller bootstrap is absent; a two-revision independent provider harness requires separate scope decision. Diagnostics do not claim to close that gap."
     }
   },
   "change": {
-    "id": "change_01M7NR0Z9M2Q4AQQFBP1ZPD07Q",
-    "base_commit": "6ab6de3134286a790d78d370ca3fb43c0d92f834",
+    "id": "change_01M7PQMA9DG5FG2QMC9WPR3ZCJ",
+    "base_commit": "34f837d4dbb2a611c0d68a2cf14845cbe6823367",
     "target_base": "origin/master"
   },
   "claims": {
-    "config-and-policy-authority": {
-      "statement": "Invalid config versions deny mutation while schema references remain accessible; unaccepted root RBAC proposals cannot self-authorize and accepted scoped grants remain usable and revocable.",
-      "falsifier": "Actual CLI or RPC accepts unsupported config for mutation, blocks schema repair, or grants a privilege solely from an unaccepted proposal; legitimate accepted operations deadlock.",
+    "accepted-behavior-controls": {
+      "statement": "Accepted tenant and combined-interface negative controls run against the exact integrated artifact; authored positives alone never prove semantic alignment.",
+      "falsifier": "A cross-tenant leak, incompatible clean merge or rewritten accepted oracle earns required readiness without executing the unchanged applicable falsifier.",
       "status": "open",
       "proof_refs": [
-        "/private/tmp/decapod-boundary-red-c30w2kjb/evidence"
+        "tests/consumer_readiness.rs"
+      ]
+    },
+    "canonical-scope-projection": {
+      "statement": "Existing bounded task scope parser preserves JSON paths and only exact archived legacy projection fragments receive deterministic repair with history retained and approval revoked.",
+      "falsifier": "Commas split literal paths, independent constraints are discarded, historical failures are erased or migration grants proof or a filesystem authorization claim.",
+      "status": "open",
+      "proof_refs": [
+        "src/decapod/core/trajectory/scope.rs"
+      ]
+    },
+    "owned-native-path-authority": {
+      "statement": "Only current owned native authorization and actual terminal observations satisfy required path policy; full-host coverage remains unknown.",
+      "falsifier": "Counterfeit loops or copied JSON, changed source/base/policy, revoked lease or a failed rerun can authorize current publication from an old pass.",
+      "status": "open",
+      "proof_refs": [
+        "src/decapod/core/trajectory/path.rs"
+      ]
+    },
+    "recorded-blocker-parity": {
+      "statement": "Canonical recorded blockers refuse required plan, execution, validation and publication transitions and lawful repair requires renewed acceptance.",
+      "falsifier": "A required contradiction or spec decision is ignored at one supported boundary or old approval survives material instruction revision.",
+      "status": "open",
+      "proof_refs": [
+        "tests/unit/plan_governance_tests.rs"
+      ]
+    },
+    "recorded-instruction-lineage": {
+      "statement": "Original recorded instruction and ordered provider or reported revisions remain distinct from derived interpretation and human authorization; cold readers recover the same applicable revision.",
+      "falsifier": "Origin rewrite, spoofed authentication or a new actor drops or widens accepted recorded instructions or reuses stale authority.",
+      "status": "open",
+      "proof_refs": [
+        "tests/infer_precision.rs"
+      ]
+    },
+    "selected-root-and-relation-conservation": {
+      "statement": "Explicit accepted selected roots map uniquely through existing obligations and supported eq/ne relations are checked globally without asserting implementation correctness.",
+      "falsifier": "Omitted R3, duplicate or stale DB mapping, candidate policy repin or the inconsistent accepted triangle earns current readiness.",
+      "status": "open",
+      "proof_refs": [
+        "src/decapod/core/intent_reconcile/selected.rs"
       ]
     }
   },
   "checkpoints": [
     {
-      "id": "policy-config-repair-01",
-      "summary": "Reject unsupported config versions, preserve read-only schema recovery, and resolve exceptional RBAC/shared policy through existing branch-safe authority; preserve executable red traces and denial/recovery regression controls.",
-      "input_digest": "sha256:68dd440ff99fc50cac85b3e711ea908e86595b8b6b6e229e4023e73b70e38ef5",
-      "proof_refs": [
-        "/private/tmp/decapod-boundary-red-c30w2kjb/evidence"
-      ]
-    },
-    {
-      "id": "policy-config-repair-02",
-      "summary": "Finalize current parser/schema-repair and branch-safe RBAC regressions after exact-content spec reviews; original binary reproduced violations, patched execution remains pending full validation.",
-      "input_digest": "sha256:b7b572f6f316bc77921dcf3ca45370247f60ed2d378073f29ac7ddba85aff9d5",
-      "proof_refs": [
-        "/private/tmp/decapod-boundary-red-c30w2kjb/evidence"
-      ]
-    },
-    {
-      "id": "reviewed-release-inventory-03",
-      "summary": "Review proof inventory against edbfc00d: only package versions in Cargo.toml and Cargo.lock advanced 0.148.7 to 0.148.9; preserve complete required profile, commands, workflows and provider.",
-      "input_digest": "sha256:7e632c55c8968879b71f4485a15e1d21de070a0cc472e86ce6338e98e3c15913",
-      "proof_refs": [
-        "/private/tmp/decapod-boundary-red-c30w2kjb/evidence/candidate-init-reconciliation.json"
-      ]
-    },
-    {
-      "id": "first-adoption-recovery-04",
-      "summary": "Preserve ordinary first-adoption approval defaults without candidate grants; establish accepted fixture policy and trace real RPC mutations. Targeted policy, workunit, RPC and task-transfer checks pass; complete CI remains required.",
-      "input_digest": "sha256:78c09092de976b4d89512c8021ccdbf8aad2798ea3606faa5eaf33e63ed5b54e"
-    },
-    {
-      "id": "cloud-schema-boundary-recovery-05",
-      "summary": "Verify read-only cloud schema CLI/RPC without filesystem or HTTP side effects; retain unsupported operational cloud startup refusal. All 41 native cloud-boundary tests pass; fresh full CI required.",
-      "input_digest": "sha256:fafc981ce8da319f9afbecc2ed57e995f05c6f343a7c1932e793586ee0624325"
+      "id": "reauthor-contracts-with-present-history-observation",
+      "summary": "Reauthor66 reviewed material paths from immutable1d5b9e59 against accepted34f837d4; preserve PR1766, original commits/0f2e520d, active old journal and actual20-finding assessment in native recovery record. New current task/plan and falsifiable claims; no past proof, exception, admission or merge is granted. Native source verification and actual candidate tests remain required.",
+      "input_digest": "sha256:da26c698ca1998a2425cabd83bdb2129700b417dc4a89eb051b1a557ed57f860"
     }
   ],
   "intents": {
-    "intent:change_01M7NR0Z9M2Q4AQQFBP1ZPD07Q": {
+    "intent:change_01M7PQMA9DG5FG2QMC9WPR3ZCJ": {
       "acceptance_criteria": [],
       "assumptions": [],
       "boundaries": [
         "Current claimed task and isolated work branch"
       ],
       "constraints": [
-        "root"
+        "paths:[\"src\"",
+        "\"tests\"",
+        "\"docs\"",
+        "\".decapod\"",
+        "\"README.md\"",
+        "\"AGENTS.md\"",
+        "\"CLAUDE.md\"",
+        "\"CODEX.md\"",
+        "\"GEMINI.md\"]"
       ],
       "created_sequence": 1,
-      "id": "intent:change_01M7NR0Z9M2Q4AQQFBP1ZPD07Q",
+      "id": "intent:change_01M7PQMA9DG5FG2QMC9WPR3ZCJ",
       "out_of_scope": [],
       "proof_requirements": [],
-      "raw_intent": "Adversarial fixes for Decapod issues 1776 1771 1763 1071 880\n\nImplement user-authorized security fixes and binary negative/repair tests; inspect dependencies and PR 1766; isolate work; validate before PR; preserve human merge authority and truthful host evidence.",
-      "refined_intent": "Adversarial fixes for Decapod issues 1776 1771 1763 1071 880\n\nImplement user-authorized security fixes and binary negative/repair tests; inspect dependencies and PR 1766; isolate work; validate before PR; preserve human merge authority and truthful host evidence.",
+      "raw_intent": "Recover issue-contract implementation with independently current proof\n\nContinue the authorized work on Decapod issues 1761,1762,1763,1764,1767,1768,1770 while preserving existing PR1766. Reauthor reviewed source from immutable1d5b9e59 on fresh accepted34f837d4 as prescribed by20 invalid-history findings. Retain old branch/journal and explicit present-time recovery observation; do not invent past proof, replace the PR, force-push, modify protected main, waive required gates or merge. Prove original instruction custody, canonical blockers, accepted behavioral negatives, selected-root conservation, typed eq/ne consistency and current owned native-path authority with actual negative/repair CLI and full native/required CI. Scope dependency1760 is the canonical parser and archived known-projection repair only. Exact code provenance includes preserved originalPR and0f2e520d Constitution work.",
+      "refined_intent": "Recover issue-contract implementation with independently current proof\n\nContinue the authorized work on Decapod issues 1761,1762,1763,1764,1767,1768,1770 while preserving existing PR1766. Reauthor reviewed source from immutable1d5b9e59 on fresh accepted34f837d4 as prescribed by20 invalid-history findings. Retain old branch/journal and explicit present-time recovery observation; do not invent past proof, replace the PR, force-push, modify protected main, waive required gates or merge. Prove original instruction custody, canonical blockers, accepted behavioral negatives, selected-root conservation, typed eq/ne consistency and current owned native-path authority with actual negative/repair CLI and full native/required CI. Scope dependency1760 is the canonical parser and archived known-projection repair only. Exact code provenance includes preserved originalPR and0f2e520d Constitution work.",
       "status": "refined",
       "updated_sequence": 3
     }
@@ -646,7 +1097,7 @@
       },
       "deferred_questions": [],
       "human_questions": [],
-      "intent": "Adversarial fixes for Decapod issues 1776 1771 1763 1071 880\n\nImplement user-authorized security fixes and binary negative/repair tests; inspect dependencies and PR 1766; isolate work; validate before PR; preserve human merge authority and truthful host evidence.",
+      "intent": "Recover issue-contract implementation with independently current proof\n\nContinue the authorized work on Decapod issues 1761,1762,1763,1764,1767,1768,1770 while preserving existing PR1766. Reauthor reviewed source from immutable1d5b9e59 on fresh accepted34f837d4 as prescribed by20 invalid-history findings. Retain old branch/journal and explicit present-time recovery observation; do not invent past proof, replace the PR, force-push, modify protected main, waive required gates or merge. Prove original instruction custody, canonical blockers, accepted behavioral negatives, selected-root conservation, typed eq/ne consistency and current owned native-path authority with actual negative/repair CLI and full native/required CI. Scope dependency1760 is the canonical parser and archived known-projection repair only. Exact code provenance includes preserved originalPR and0f2e520d Constitution work.",
       "phases": [],
       "proof_hooks": [
         "decapod validate"
@@ -654,371 +1105,90 @@
       "schema_version": "1.1.0",
       "spec_reviews": [
         {
-          "disposition": "unchanged_with_reason",
+          "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Cloud regression now verifies unchanged project and machine inventories for schema CLI/RPC, and preserves operational cloud fallback denial. No authority or implementation interface changes; existing architecture and security boundaries remain accurate.",
-          "reviewed_code_fingerprint": "7b88d5d3e68ce397408f69e5635bceee4071a1c57b84cab441c0b3083ee7e3a7",
-          "spec_material_hash": "0b7738e450b1038116cd3fce2e9660a615fbea502d988760d54dbf8c314f9146"
+          "reason": "Reauthor reviewed finite issue-contract changes in fresh claimed workstream; preserve source1d5b9e59 and native historical-gap observation, do not relabel history or infer completed proof; retain accepted policy and all required source checks",
+          "reviewed_code_fingerprint": "b3ab0860271f59e3bd8b813a35975cd9df65e64e146793c67939b9ef37cc6c75",
+          "spec_material_hash": "68902808d64fc0f419f2489074024da71e72bc9a8da546995d7c0520d90d76e5"
         },
         {
-          "disposition": "unchanged_with_reason",
+          "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Cloud regression now verifies unchanged project and machine inventories for schema CLI/RPC, and preserves operational cloud fallback denial. No authority or implementation interface changes; existing architecture and security boundaries remain accurate.",
-          "reviewed_code_fingerprint": "7b88d5d3e68ce397408f69e5635bceee4071a1c57b84cab441c0b3083ee7e3a7",
-          "spec_material_hash": "060bb3be1c58675e825374cf10d34d04b38688f5cd88e6d2c5f7fcd91e2fd690"
+          "reason": "Reauthor reviewed finite issue-contract changes in fresh claimed workstream; preserve source1d5b9e59 and native historical-gap observation, do not relabel history or infer completed proof; retain accepted policy and all required source checks",
+          "reviewed_code_fingerprint": "b3ab0860271f59e3bd8b813a35975cd9df65e64e146793c67939b9ef37cc6c75",
+          "spec_material_hash": "bdd74b3fa4e4e791114d721dfba217bfbfb15f1d21ae0c832042eea2e0a3e16e"
         },
         {
-          "disposition": "unchanged_with_reason",
+          "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Cloud regression now verifies unchanged project and machine inventories for schema CLI/RPC, and preserves operational cloud fallback denial. No authority or implementation interface changes; existing architecture and security boundaries remain accurate.",
-          "reviewed_code_fingerprint": "7b88d5d3e68ce397408f69e5635bceee4071a1c57b84cab441c0b3083ee7e3a7",
-          "spec_material_hash": "cdc863757905c53f4f176284c72744f0575184c65a059b7edf6239b47c4fc644"
+          "reason": "Reauthor reviewed finite issue-contract changes in fresh claimed workstream; preserve source1d5b9e59 and native historical-gap observation, do not relabel history or infer completed proof; retain accepted policy and all required source checks",
+          "reviewed_code_fingerprint": "b3ab0860271f59e3bd8b813a35975cd9df65e64e146793c67939b9ef37cc6c75",
+          "spec_material_hash": "0f80a7bae9c396f6ef79bcb1674252d853c5fe192cb7baba382a05919875407b"
         }
       ],
       "state": "APPROVED",
       "stop_conditions": [],
-      "title": "Adversarial fixes for Decapod issues 1776 1771 1763 1071 880",
+      "title": "Recover issue-contract implementation with independently current proof",
       "todo_ids": [
-        "bugs_01m7nqz8dxaz801k"
+        "feat_01m7pqj9rg9p2w2p"
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1794979218Z"
+      "updated_at": "1794986086Z"
     },
     "trajectory": {
       "active_boundaries": [
-        "Current claimed task and isolated work branch",
-        "User explicitly authorizes draft PR creation before validation; no admission or merge authority follows"
+        "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:f5a1d2b7b4abd7127c93760ba8bbc56b67e8b33890167d6a7c5fd7474a27a871",
-      "checks": [
-        {
-          "name": "buildkite-11921",
-          "status": "failed"
-        },
-        {
-          "name": "ci-cb4b87b1",
-          "status": "failed"
-        },
-        {
-          "name": "cloud-schema-recovery-native",
-          "status": "passed"
-        },
-        {
-          "name": "config_version_actual_binary",
-          "status": "failed"
-        },
-        {
-          "name": "full-cloud-boundary-native",
-          "status": "passed"
-        },
-        {
-          "name": "full_validation_d6fa03bc",
-          "status": "failed"
-        },
-        {
-          "name": "malformed_schema_reference",
-          "status": "failed"
-        },
-        {
-          "name": "native-interop-suite",
-          "status": "partial"
-        },
-        {
-          "name": "native-policy-tests",
-          "status": "passed"
-        },
-        {
-          "name": "native-rpc-suite",
-          "status": "passed"
-        },
-        {
-          "name": "native-task-transfer",
-          "status": "passed"
-        },
-        {
-          "name": "native-workunit-observation",
-          "status": "passed"
-        },
-        {
-          "name": "rbac_self_grant_original_binary",
-          "status": "failed"
-        }
-      ],
-      "current_phase": "verification",
+      "artifact_hash": "sha256:92c41a8b2f56e267cbaf0010b42c1936d71d2b2ca063b50c5b6df6c6192878f3",
+      "checks": [],
+      "current_phase": "intent",
       "custody": {
         "events": [
           {
             "event_id": "event:2",
-            "intent_id": "intent:change_01M7NR0Z9M2Q4AQQFBP1ZPD07Q",
+            "intent_id": "intent:change_01M7PQMA9DG5FG2QMC9WPR3ZCJ",
             "kind": "created",
             "sequence": 2
           },
           {
             "event_id": "event:3",
-            "intent_id": "intent:change_01M7NR0Z9M2Q4AQQFBP1ZPD07Q",
+            "intent_id": "intent:change_01M7PQMA9DG5FG2QMC9WPR3ZCJ",
             "kind": "refined",
             "sequence": 3
-          },
-          {
-            "detail": "trajectory:branch_01M7NR0ZCNHC7YZKZ9SYWWDDVJ",
-            "event_id": "event:4",
-            "intent_id": "intent:change_01M7NR0Z9M2Q4AQQFBP1ZPD07Q",
-            "kind": "trajectory_step_recorded",
-            "sequence": 4
-          },
-          {
-            "detail": "trajectory:branch_01M7NR0ZCNHC7YZKZ9SYWWDDVJ",
-            "event_id": "event:5",
-            "intent_id": "intent:change_01M7NR0Z9M2Q4AQQFBP1ZPD07Q",
-            "kind": "trajectory_step_recorded",
-            "sequence": 5
-          },
-          {
-            "detail": "trajectory:branch_01M7NR0ZCNHC7YZKZ9SYWWDDVJ",
-            "event_id": "event:6",
-            "intent_id": "intent:change_01M7NR0Z9M2Q4AQQFBP1ZPD07Q",
-            "kind": "trajectory_step_recorded",
-            "sequence": 6
-          },
-          {
-            "detail": "trajectory:branch_01M7NR0ZCNHC7YZKZ9SYWWDDVJ",
-            "event_id": "event:7",
-            "intent_id": "intent:change_01M7NR0Z9M2Q4AQQFBP1ZPD07Q",
-            "kind": "trajectory_step_recorded",
-            "sequence": 7
-          },
-          {
-            "detail": "trajectory:branch_01M7NR0ZCNHC7YZKZ9SYWWDDVJ",
-            "event_id": "event:8",
-            "intent_id": "intent:change_01M7NR0Z9M2Q4AQQFBP1ZPD07Q",
-            "kind": "trajectory_step_recorded",
-            "sequence": 8
-          },
-          {
-            "detail": "trajectory:branch_01M7NR0ZCNHC7YZKZ9SYWWDDVJ",
-            "event_id": "event:9",
-            "intent_id": "intent:change_01M7NR0Z9M2Q4AQQFBP1ZPD07Q",
-            "kind": "trajectory_step_recorded",
-            "sequence": 9
-          },
-          {
-            "detail": "trajectory:branch_01M7NR0ZCNHC7YZKZ9SYWWDDVJ",
-            "event_id": "event:10",
-            "intent_id": "intent:change_01M7NR0Z9M2Q4AQQFBP1ZPD07Q",
-            "kind": "trajectory_step_recorded",
-            "sequence": 10
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 10,
+        "next_sequence": 3,
         "schema_version": "1.0.0",
-        "trajectories": {
-          "branch_01M7NR0ZCNHC7YZKZ9SYWWDDVJ": {
-            "evidence_only": true,
-            "id": "branch_01M7NR0ZCNHC7YZKZ9SYWWDDVJ",
-            "intent_id": "intent:change_01M7NR0Z9M2Q4AQQFBP1ZPD07Q",
-            "steps": [
-              {
-                "action": "trajectory.record",
-                "custody_event_id": "event:4",
-                "observations": [
-                  "src/decapod/cli.rs",
-                  "src/decapod/lib.rs",
-                  "src/decapod/plugins/policy.rs",
-                  "src/decapod/core/db_maintenance.rs",
-                  "/private/tmp/decapod-boundary-red-c30w2kjb/evidence"
-                ],
-                "proof_refs": [
-                  "config_version_actual_binary",
-                  "malformed_schema_reference"
-                ],
-                "scope": [
-                  "root"
-                ],
-                "sequence": 4,
-                "validation_findings": []
-              },
-              {
-                "action": "trajectory.record",
-                "custody_event_id": "event:5",
-                "observations": [
-                  "src/decapod/cli.rs",
-                  "src/decapod/lib.rs",
-                  "src/decapod/core/db_maintenance.rs",
-                  "src/decapod/plugins/policy.rs",
-                  "tests/init_config_behavior.rs",
-                  "tests/sqlite_maintenance.rs",
-                  "/private/tmp/decapod-boundary-red-c30w2kjb/evidence/rbac-main-unaccepted.json"
-                ],
-                "proof_refs": [
-                  "rbac_self_grant_original_binary"
-                ],
-                "scope": [
-                  "root"
-                ],
-                "sequence": 5,
-                "validation_findings": []
-              },
-              {
-                "action": "trajectory.record",
-                "custody_event_id": "event:6",
-                "observations": [
-                  "Cargo.toml",
-                  "Cargo.lock",
-                  ".decapod/config.toml",
-                  "/private/tmp/decapod-boundary-red-c30w2kjb/evidence/candidate-init-reconciliation.json"
-                ],
-                "proof_refs": [
-                  "full_validation_d6fa03bc"
-                ],
-                "scope": [
-                  "root"
-                ],
-                "sequence": 6,
-                "validation_findings": []
-              },
-              {
-                "action": "trajectory.record",
-                "custody_event_id": "event:7",
-                "observations": [
-                  "src/decapod/core/db_maintenance.rs",
-                  "src/decapod/plugins/policy.rs",
-                  "tests/agent_rpc_suite.rs",
-                  "tests/cli_contract_enforcement.rs",
-                  "tests/support/interop_harness.rs",
-                  "RPC suite: 5 passed; workunit observation: 6 passed; policy tests: 8 passed including first-adoption denial control",
-                  "https://buildkite.com/decapodlabs/decapod/builds/11921",
-                  "https://github.com/DecapodLabs/decapod/pull/1779"
-                ],
-                "proof_refs": [
-                  "native-rpc-suite",
-                  "native-workunit-observation",
-                  "native-policy-tests",
-                  "buildkite-11921"
-                ],
-                "scope": [
-                  "root"
-                ],
-                "sequence": 7,
-                "validation_findings": [
-                  "Remaining fixture repairs require executable checks and fresh full validation"
-                ]
-              },
-              {
-                "action": "implementation",
-                "custody_event_id": "event:8",
-                "observations": [
-                  "public_task_transfer_preserves_identity_without_importing_a_live_lease: 1 passed; interop approval_roundtrip passed, suite still running",
-                  "User directly authorized exception to pre-PR requirement; direct forge draft 1779 is external and not admitted"
-                ],
-                "proof_refs": [
-                  "native-task-transfer",
-                  "native-interop-suite"
-                ],
-                "scope": [
-                  "root"
-                ],
-                "sequence": 8,
-                "validation_findings": []
-              },
-              {
-                "action": "verification",
-                "custody_event_id": "event:9",
-                "observations": [
-                  "src/decapod/lib.rs",
-                  "src/decapod/core/snapshot_provider/automatic.rs",
-                  "tests/common/cloud_managed_scenarios.rs",
-                  "https://buildkite.com/decapodlabs/decapod/builds/11967#01a1ebfa-5cfa-4425-862b-2c76150a0bfc",
-                  "/private/tmp/decapod-boundary-red-c30w2kjb/evidence/cloud-schema-recovery-native.log"
-                ],
-                "proof_refs": [
-                  "cloud-schema-recovery-native",
-                  "full-cloud-boundary-native",
-                  "ci-cb4b87b1"
-                ],
-                "scope": [
-                  "root"
-                ],
-                "sequence": 9,
-                "validation_findings": [
-                  "Fresh complete exact-candidate CI required after cloud test contract correction"
-                ]
-              },
-              {
-                "action": "trajectory.record",
-                "custody_event_id": "event:10",
-                "observations": [
-                  "/private/tmp/decapod-boundary-red-c30w2kjb/evidence/cloud-boundary-native-full.log: 41 passed, 0 failed, 0 ignored, 57.71 seconds"
-                ],
-                "proof_refs": [
-                  "full-cloud-boundary-native"
-                ],
-                "scope": [
-                  "root"
-                ],
-                "sequence": 10,
-                "validation_findings": []
-              }
-            ]
-          }
-        }
+        "trajectories": {}
       },
       "declared_commands": [],
       "destination": "pull request",
-      "evidence": [
-        "/private/tmp/decapod-boundary-red-c30w2kjb/evidence",
-        "/private/tmp/decapod-boundary-red-c30w2kjb/evidence/candidate-init-reconciliation.json",
-        "/private/tmp/decapod-boundary-red-c30w2kjb/evidence/cloud-boundary-native-full.log: 41 passed, 0 failed, 0 ignored, 57.71 seconds",
-        "/private/tmp/decapod-boundary-red-c30w2kjb/evidence/cloud-schema-recovery-native.log",
-        "/private/tmp/decapod-boundary-red-c30w2kjb/evidence/rbac-main-unaccepted.json",
-        "RPC suite: 5 passed; workunit observation: 6 passed; policy tests: 8 passed including first-adoption denial control",
-        "User directly authorized exception to pre-PR requirement; direct forge draft 1779 is external and not admitted",
-        "https://buildkite.com/decapodlabs/decapod/builds/11921",
-        "https://buildkite.com/decapodlabs/decapod/builds/11967#01a1ebfa-5cfa-4425-862b-2c76150a0bfc",
-        "https://github.com/DecapodLabs/decapod/pull/1779",
-        "public_task_transfer_preserves_identity_without_importing_a_live_lease: 1 passed; interop approval_roundtrip passed, suite still running"
-      ],
-      "inspected_files": [
-        "Cargo.lock",
-        "Cargo.toml",
-        "src/decapod/cli.rs",
-        "src/decapod/core/db_maintenance.rs",
-        "src/decapod/core/snapshot_provider/automatic.rs",
-        "src/decapod/lib.rs",
-        "src/decapod/plugins/policy.rs"
-      ],
-      "intent_id": "intent:change_01M7NR0Z9M2Q4AQQFBP1ZPD07Q",
-      "modified_files": [
-        ".decapod/config.toml",
-        "src/decapod/cli.rs",
-        "src/decapod/core/db_maintenance.rs",
-        "src/decapod/lib.rs",
-        "src/decapod/plugins/policy.rs",
-        "tests/agent_rpc_suite.rs",
-        "tests/cli_contract_enforcement.rs",
-        "tests/common/cloud_managed_scenarios.rs",
-        "tests/init_config_behavior.rs",
-        "tests/sqlite_maintenance.rs",
-        "tests/support/interop_harness.rs"
-      ],
+      "evidence": [],
+      "inspected_files": [],
+      "intent_id": "intent:change_01M7PQMA9DG5FG2QMC9WPR3ZCJ",
+      "modified_files": [],
       "next_transitions": [
-        "Commit cloud-boundary correction, push same PR branch, then run exact-candidate full validation",
-        "Push recovery commit to draft PR 1779, then run fresh complete validation",
         "Refine plan and declare falsifiable checks"
       ],
       "repo_scope": [
-        "root"
+        "\".decapod\"",
+        "\"AGENTS.md\"",
+        "\"CLAUDE.md\"",
+        "\"CODEX.md\"",
+        "\"GEMINI.md\"]",
+        "\"README.md\"",
+        "\"docs\"",
+        "\"tests\"",
+        "paths:[\"src\""
       ],
-      "run_id": "branch_01M7NR0ZCNHC7YZKZ9SYWWDDVJ",
+      "run_id": "branch_01M7PQMADCS3EAWQSXB0HVXNQP",
       "schema_version": "1.1.0",
       "shortcut_risk_signals": [],
-      "task_id": "bugs_01m7nqz8dxaz801k",
+      "task_id": "feat_01m7pqj9rg9p2w2p",
       "tool_calls": [],
-      "unresolved_assumptions": [
-        "Fresh complete exact-candidate CI required after cloud test contract correction",
-        "Remaining fixture repairs require executable checks and fresh full validation"
-      ]
+      "unresolved_assumptions": []
     }
   },
   "legacy_digests": {

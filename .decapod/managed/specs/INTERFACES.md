@@ -12,6 +12,106 @@ grants exceptional permission. RBAC bypass keeps `proof_ready=false` and
 `publication_ready=false`; unaccepted root policy proposals return
 `RBAC_PERMISSION_DENIED`, and unresolved accepted sources fail closed.
 
+## Explicit path scope and supported legacy recovery
+
+An explicit paths:[...] task scope produces the same decoded literal path set in orientation, trajectory repo_scope and custody constraints. Non-path logical scopes retain their existing comma-separated representation. Invalid explicit declarations fail without falling back to a broader scope.
+
+For an old journal containing the exact former split projection, checkpoint and commit the complete current journal, then rerun workspace ensure or agent.init. Preparation reads the canonical task, corrects only proven generated fragments, appends custody evidence and resets plan acceptance and phase progress. Reaccept the plan and obtain fresh proof. Independently changed or terminal constraints are preserved and ambiguous mixed repairs are refused; this operation cannot edit Task.scope or remove unrelated modified-file observations.
+
+## Independent state readers
+
+`state.resolve` and `state.diff` expose recorded governance to a cold reader without requiring the writer's authoring claim, worktree custody or local agent session. They do not run migration, presence or worktree-pruning startup hooks. Reading does not acquire a lease, approve a plan, satisfy a recorded blocker or grant publication authority. Unsupported backend paths retain their explicit failure; this read classification does not grant cloud access.
+
+## Native-path policy and result
+
+`proof.observed_path` takes `schema_version="1.0.0"`,
+`scope="native_proof_calls"` and `required`. The declaration must match the
+independently captured accepted target; candidate repinning returns
+`OBSERVED_PATH_POLICY_NOT_ACCEPTED`. Init preserves it without authorizing it.
+Full validation reports versioned `observed_path` alongside artifact readiness,
+using current rule authority/severity/phase/remediation. Missing coverage is
+`unverifiable`, actual failure is `fail`, and relevant binding movement is `stale`.
+Required non-pass blocks readiness; optional unknown remains nonblocking. The
+observer authority is kernel-mediated native execution. Full-host coverage stays
+unverifiable.
+
+Private `observed-path.json` retains ordered event IDs and references to actual
+native suite rows, binding runtime invocation, task/run, instruction/proof-plan
+revision, actor/lease and subject/head/base/policy. The live result has no
+Deserialize or public constructor; serialized judgments are readback, not import
+capabilities. Existing current-proof and custody owners still control publication.
+
+## Recorded clarification and lineage readback
+
+`decapod govern trajectory clarify` appends a revision to the current run/intent
+with `--revision-id`, `--expected-revision`, bounded `--instruction`, and a
+credential-free `--source-ref`. `--principal-claim`, `--kind` (clarification,
+contradiction, supersession), `--supersedes` and `--derived-intent` record explicit
+claims. They grant no human authority or automatic precedence. Secret-pattern
+redaction applies before persistence. Distinct conflicting principals remain
+distinct reported claims; a later supersession claim does not silently clear
+earlier plan contradictions or constitute an authenticated authority decision.
+
+`govern trajectory clarify-github-comment` instead reads one exact comment using
+the installed official GitHub client, or explicitly selected `--public` anonymous
+HTTPS adapter, through existing sealed GET/external-action authority. An auth
+failure never selects another transport. It takes repository/comment identity and
+an expected original body SHA256,
+alongside the same revision/CAS/kind parameters. It refuses source identity/content
+movement before mutation. The journal retains provider-observed numeric account,
+object, issue, source-update and body identities, with bounded/redacted text.
+This is historical account observation, not proof the account is human, a grant,
+or a current remote recheck. Public JSON cannot construct the owned observation;
+offline readback preserves its declared trust limit and never authenticates local
+bytes. Normal `clarify` still reports caller provenance as unverified.
+
+`state.resolve` and preparation expose the same selected `instruction_lineage`:
+original request/source confidence, preceding and current interpretation, ordered
+revisions, current revision digest and independently unverified authority. They
+do not inherit another task's trajectory boundaries, blockers or instruction
+revision. The state schema advances to 1.1.0. Recorded readiness includes the
+current instruction revision and, when selected, a separate global-consistency
+judgment whose `source_authority=cached_target_ref` distinguishes offline planning
+from full validation's independently captured accepted target. CLI stderr remains
+diagnostic text, not a stable structured transport schema.
+
+## Explicit selected-work policy and readback
+
+`proof.selected_work` schema 1.0.0 names an ID, intent ID, recorded instruction
+revision, explicit roots with
+existing required command names, and optional typed relations (`eq`/`ne`, ID,
+participating root, left and right terms). It becomes governing policy only
+through separate acceptance on the canonical Git target. Init preserves it;
+candidate review digests cannot approve it. Current native support is limited
+to `repo.pr-readiness.v1` with the local DB broker.
+
+`intent.reconcile` with an immutable `base_commit` returns the selected-work
+read model when that requested revision declares it (report schema 1.2.0).
+Its `source_authority=requested_immutable_revision` explicitly does not establish
+independent acceptance or admission. Full validation independently captures its
+accepted target and enforces `SELECTED_POLICY_NOT_ACCEPTED`, selected intent,
+mandatory check coverage, root coverage and typed consistency. The report keeps
+coverage, consistency and behavior-proof verdicts separate, gives source/revision
+and exact conflicting relation IDs, and supplies legal recovery instructions.
+
+For a retained integration obligation, use `decapod obligation add --intent`
+with the returned `obligation_ref`, and `--proofs` with its accepted check names.
+A declaration cannot mark behavior proven. An older local DB can initialize the
+lookup index through `decapod obligation list`; reads do not silently migrate it.
+Existing checkpoint, lease and publication requirements continue to apply.
+
+## Recorded instruction readiness (#1764)
+
+Preparation's `governed_plan.unresolved_items` uses the same recorded blockers as
+plan acceptance, execution, checkpoint/resume, validation and publication. Empty
+intent and pending spec decisions are included; deferred questions alone do not
+block current work. `plan_governance::InstructionReadiness` exposes rule authority,
+phase, verdict, source revision, source-linked blocker IDs and a common remedy in
+existing decision-marker payloads. Existing operation-specific checkpoint and
+publication markers remain. CLI stderr is a diagnostic, not an RPC wire schema.
+Approval state and timestamps cannot change blocker identity. This projection
+does not authenticate the author of an instruction or establish human consent.
+
 ## Internal source currency agreement (#1753)
 
 The existing private config-only source policy now also governs version-only
@@ -1230,8 +1330,8 @@ field. Nothing in this operation authorizes a mutation, approval or completion.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `7b88d5d3e68ce397408f69e5635bceee4071a1c57b84cab441c0b3083ee7e3a7`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (236 files), `tests/` (235 files)
+- Repository signal fingerprint: `b3ab0860271f59e3bd8b813a35975cd9df65e64e146793c67939b9ef37cc6c75`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (240 files), `tests/` (235 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 
@@ -1754,3 +1854,5 @@ manual or imported/self-hosted execution cannot grant Cachix publication.
 ## Canonical local Git proof (#1069)
 
 An accepted `proof.repository_contract.canonical_local_target = true` uses ordinary CLI/RPC validation against the canonical local branch. `readiness.ready` refers to that exact local subject with `scope=repository_local_git_readiness`; `publication_ready` stays false. `qa verify commit` inspects canonical historical proof. `workspace publish` and the independent final PR gate reject local-only target authority before remote publication. Omitted/false mode retains existing digests and GitHub behavior. Candidate-only mode, changed branch, strict profile and cloud selection cannot activate the local host.
+
+Revoked-custody acceptance exposed a diagnostic mismatch: validation denied a registered managed checkout but called it external. `validate_git_workspace_context` now preserves the workspace owner's exact blocker and recovery instruction for canonical paths. External worktrees retain their distinct context diagnostic. Both routes remain refused; no authoring or publication authority is added.

@@ -1,5 +1,213 @@
 # Validation
 
+## Task-scope dependency negative and repair coverage
+
+An actual installed release9 orientation on the claimed issue task returned four fragments instead of its four explicit paths: the first retained the paths:[ prefix and the remaining entries retained JSON quoting. The unchanged canonical task still held one valid paths:[...] declaration. This reproduces #1760's dependency for #1761/#1764 without claiming a source-write bypass.
+
+The new CLI regression uses real add, claim, governed workspace and orientation calls without the Git-gate escape hatch, includes a comma inside a filename, checks canonical task/trajectory/custody projections and preserves the journal on repeat preparation. A real Git/SQLite unit fixture builds the old producer's projection through the canonical constructor, refuses unarchived repair, preserves a prior failed check and event prefix, revokes approval after repair, keeps raw Task.scope unchanged and checks idempotence and ambiguous-constraint refusal. These new changes require fresh full validation; the collected3e5bf009 proof predates them.
+
+Candidate2aff3336 reached the real source build, where the new lib-test parser
+call lacked its trait import. Its fully qualified `clap::Parser` call fixes that
+compile error. This is a test setup repair, and fresh required execution is
+still necessary; the earlier run is not reported as successful validation.
+
+## Actual cold-reader dispatch regression
+
+A digest-verified GNU candidate built by source CI for d0ebc2c8 executed task claim, governed workspace, preserved predecessor journal, A/B initialization and pinned public GitHub comment C. Its independent actor-B state.resolve was refused as AUTHORING_CUSTODY_STALE before returning state. The existing regression now launches a different reader with isolated machine configuration and no Git-gate escape hatch, checks unchanged governance bytes, and checks that publication retains mutation requirements. That is a reproduced negative; repaired actual CLI and current full validation remain required before claiming the handoff passes. QEMU execution uses direct mutation transport and does not prove the group-broker path.
+
+## Native authorization-policy replay audit
+
+The complete library execution for7b4c14a0 in source job134473589855 returned
+1816 passed,1 failed,8 ignored. The sole failure is the new ignored-policy
+negative: old execution authority survived a canonical external-action policy
+change. The existing bounded policy inventory now includes that exact source,
+and retained owned-path proof rechecks current authority at terminal validation,
+history append, workunit reuse and final publication readback. The regression
+also requires a freshly measured binding to work under the current policy;
+this does not authorize a command that the native authorizer denies.
+Repaired execution and actual path-positive/repair acceptance are still pending.
+
+Candidate d0ebc2c8 compiled the runtime slice, but the lib-test build found one
+test-only qualification error for `trajectory::path::Judgment`; it now uses its
+crate-qualified module path. A new negative execution-binding fixture changes an
+ignored canonical `EXTERNAL_ACTIONS.json` after capture and asks the real existing
+binding owner to refuse replay. This is an audit of existing protection before
+any production inventory change, not proof of a bypass or a new policy resolver.
+The fixture and runtime changes still require actual validation execution.
+
+## Native path conformance qualification
+
+Scripted native consumer cases distinguish a genuinely executed green artifact
+suite without an owned mediated-path observation from an accepted required path.
+The former cannot authorize the latter; candidate policy edits cannot remove that
+obligation. A separately accepted optional policy permits truthful unknown coverage.
+Unit trust-seam controls cover missing authorization, attempt-only/failed results,
+fresh repair, event omission/reordering, changed source/base/instructions/plan/policy,
+actor/lease/producer and harness invocation. Synthetic unit bindings are explicitly
+not host attestation. Live required-path positive/repair and provider-ingress CLI
+acceptance remain pending and must precede closure.
+
+Candidate27798279 compiled the provider ingress and passed documentation sync, but
+Clippy rejected a consumer-only fixture method in the shared entrypoint target.
+That method now lives in the consumer test extension, retaining strict lint policy.
+Its library lane executed1797 passing tests and17 failures, all at the same
+new fixture table assignment: TOML IndexMut cannot insert an absent proof table.
+Both fixture writers now use table insertion while preserving unrelated sections.
+The actual CLI lane also identified the same table panic and an unborn-HEAD
+fixture: independent state resolution needs an actual Git revision. The new
+lineage case now establishes empty fixture ancestry before setup, without adding
+credentials or machine state to Git. The added native-path slice is new
+material and needs its own checkpoint and exact-candidate full validation.
+
+Independent #1757/#1758 evidence is archived at fixture commit
+3c6c373ea703144a2a096e7c3ad6b17c45fcdc38. It records one real Pi denial, repair,
+complete native proof and PR admission, plus later actual stale-source/base and
+created-not-admitted controls. That is historical external evidence, not an
+importable current authorization or completion of the separate path-sensitive
+cases. Its raw captures and fixture ownership remain outside this worktree.
+
+## Candidate 97ef93f6 repair boundary
+
+Full native validation failed on required Buildkite documentation-sync build11920;
+the actual source job is GitHub job134438521463. Supported `decapod docs build`
+repairs the omitted release9 RBAC schema paragraph. The source generator matches
+the accepted/installed release; no manual build or changed check is used. Clippy
+job134439168067 rejected a complex callback trait-object signature; the source
+history reader now uses the equivalent generic callback. These fixes need fresh
+exact-candidate execution. PR1766's concurrent Constitution commit0f2e520d is
+preserved in merge ancestry, with its content already supplied by accepted master.
+
+Provider-source decoder tests are scripted controls, not live human approval.
+They pin comment repository/ID/body/account, reject changed source and caller
+imported observation metadata, and retain A/B/C with idempotent retries. Live CLI
+provider ingress and the remaining path-observation cases still require actual
+acceptance evidence; no source claim alone closes #1761 or #1767.
+
+## Lineage, replay and native source repair controls
+
+New actual CLI/RPC fixtures reconstruct original A, preceding misinterpretation B
+and recorded clarification C in a fresh process, with explicit reported confidence.
+They compare preparation/state revision identity, refuse acceptance while C needs
+resolution, and check identical retries before and after reacceptance. Unit controls
+cover changed retry IDs/payloads, stale parents, rejected spoofed provenance and
+revision truncation, plus stale execution checkpoints and fresh resumed repair.
+An actual native fixture edits and rehashes a counterfeit same-ID origin outside
+the kernel, requires a source-history refusal, restores the canonical source while
+retaining the rejected commit, and requires a new exact-head/base receipt.
+
+The selected-root slice's real source-CI run on `e3a06926` passed the tenant-isolation
+negative/repair and clean-merge interface fixture. Its complete CLI lane failed
+because the new governed DB fixtures used an intentionally minimal native config;
+they now use the complete supported project schema and preserve its sections.
+The full-library Supabase fixture exposed a read-only Dactyl rejection of explicit
+SQL transaction commands; the selected join now uses one bounded read statement.
+Clippy's complex tuple signature is replaced by a named mapping type. None of
+these repairs is counted as executed proof until the new exact candidate runs.
+
+After restart, the normal installed registry controller reports 0.148.9. Supported
+initialization refreshes all release-bound entrypoints, Docker pin and manifest;
+tracked historical backup files are retained. The temporary-binary exception
+request is obsolete. Required Buildkite proof, current accepted target and all
+other gates remain mandatory; GHA subsets cannot establish that profile.
+
+## Selected roots and global relation falsifiers
+
+The required CLI suite registers actual native fixtures for omitted R3 audit
+coverage and a contradictory accepted triangle. The audit fixture reads the same
+selected roots through a fresh CLI/RPC process, observes omission before execution,
+then maps R3 and requires an actual accepted negative to fail against the exact
+candidate. Source repair reruns the same check and obtains its own head/base
+receipt; a later duplicate DB mapping invalidates readiness. Mapping is never
+reported as executed proof. The triangle fixture rejects the full present set,
+candidate self-repinning, and stale mappings after a separately scripted accepted
+policy repair, then requires new actual execution. Unit controls cover every
+standalone/pair projection, a satisfiable equality cycle, a satisfiable three-way
+inequality set and unsupported relation kinds.
+
+These tests use an isolated local accepted Git upstream and scripted policy
+acceptance. They do not authenticate human speakers or substitute for #1757/#1758
+external observer evidence. All new fixtures remain unverified until the exact
+candidate's required pipeline actually executes them. Plan/phase recorded blocker
+reports now include existing typed severity and RuleRemediation fields; their
+source revision still derives from recorded governing content rather than a
+caller-supplied approval assertion.
+
+## Current phase and enforcement ownership (#1763)
+
+| Boundary | Accepted owner and enforcement point | Observation source | Refusal and supported recovery | Bypass / external control | Applicability subject |
+| --- | --- | --- | --- | --- | --- |
+| Preparation / acceptance | Task constraints; `plan_governance::instruction_readiness_at` and plan acceptance | Canonical plan/trajectory and selected task reads; recorded provenance is not a human signature | `NEEDS_HUMAN_INPUT`; resolve the identified source-backed blocker, then reaccept. A draft may record blockers. | Direct file edits require host isolation; retained source-history checks detect supported journal rewrites later. | Exact recorded plan/instruction revision and required spec decision |
+| Task execution / resume | Kernel custody and task constraints; `ensure_execute_ready`, `checkpoint_execution`, `verify_execution_resume` | Current canonical task lease/binding, Git material, policy and governance reads | `AUTHORING_CUSTODY_STALE`, `NEEDS_HUMAN_INPUT`, `EXECUTION_STATE_CHANGED`; claim lawful custody, ensure the registered worktree, review/reaccept and create a fresh checkpoint. | Unrestricted shell is outside the mediated operation; host permissions/sandbox must enforce that boundary. | Task, actor, lease generation, branch, source, intent/plan, policy, applicable approval and checkpoint |
+| Native validation | Accepted required profile and kernel invariants; `validation_runtime` plus existing native adapter and terminal rules | Measured executable/tool closure and sealed execution results, independently read target, bounded selected DB snapshot | `READINESS_BLOCKED`, `SELECTED_REQUIREMENTS_BLOCKED`, `ACCEPTED_REPOSITORY_CONTRACT_CHANGED`, `STALE_ACCEPTED_BASE`, `OBSERVED_PATH_NOT_PROVEN`; repair source or separately accept policy, then execute all current required proof. | Agent-authored output is a declaration; local host/Git administration remains a cooperative trust boundary. | Combined source, declared untracked inputs, accepted base, policy/check plan, toolchain/dependencies, selected roots/DB join and current custody; no unmeasured remote service guarantee |
+| Push / publication | Current custody and required proof; `workspace` publication and `workspace_publication::verify_remote` / `verify_remote_unchanged` | Fresh native proof and actual remote Git heads | `PUBLICATION_NOT_READY`, `REMOTE_HEAD_MISMATCH`, `REMOTE_PUBLICATION_RACE`; reconcile without force-pushing and validate the exact new candidate. | Direct Git push is external; server permissions and branch rules are the remote control. | Exact validated head/base, material, governance, policy, proof producer and task authority rechecked around remote effects |
+| PR readback | `workspace_publication::ensure_and_verify_pr` and current workunit/receipt consumers | Real GitHub API repository/head/base/state readback plus current local proof identity | `PR_CREATED_NOT_ADMITTED`, `PR_TARGET_MISMATCH`, `WORKUNIT_PROOF_STALE`; retain/quarantine the created PR, repair and revalidate, then reuse it. | Direct API creation is external/non-admitted; no remote interception or configured branch-protection guarantee is inferred. | Current PR head/base and current source/policy/custody at final readback; creation alone grants no admission |
+| Merge | Human authorization and actual remote repository policy; this workflow grants none | Independent forge/branch-policy state would be required; no merge is performed | `merge_authorized=false`; no completion receipt supplies a merge grant. | A forge administrator can act outside this kernel; actual remote checks/permissions must control that action. | Exact remote candidate and applicable merge policy, assessed independently of historical admission |
+
+This matrix describes supported current boundaries, not universal interception.
+Selected-model cross-phase instruction feedback, authenticated instruction ingress
+and policy-required observed-path integration still need their own acceptance
+evidence. No successful source slice, agent-authored witness, created PR or logical
+model result substitutes for those separate judgments.
+
+## Issue-contract continuation and source review (#1764)
+
+The preparation/checkpoint regressions and source-backed blocker consistency
+tests run in the existing Rust and actual-binary test lanes. They establish only
+recorded instruction behavior, not principal authentication, global constraint
+satisfiability, root requirement completeness or independent path observation.
+Full exact-candidate validation remains mandatory before any closure claim.
+
+Preparation exposes the complete typed readiness report, including stable blocker
+IDs, source revision and remediation, alongside the legacy question strings.
+The actual CLI fixture creates pending spec decisions and an empty intent using
+supported commands; it does not import private library implementation modules.
+The first candidate's compile denial is retained as failed evidence. Phase-entry
+regressions expect the current instruction blocker before approval-state repair.
+
+The continuation incorporates accepted target `ab4abe05` after the Constitution
+documentation update. The index retains both the existing closed-loop explanation
+and the accepted distinction between global engineering doctrine and repository
+policy. Checks captured against the earlier `18cbb30c` target cannot establish
+readiness for this integration; target ancestry and all current proof are renewed.
+The subsequent accepted release `6ab6de31` changes only the package version to
+0.148.9, its lockfile entry and release notes. Review of the same 105 proof inputs
+therefore updates the source inventory digest for these two version lines only;
+no execution command, check requirement, toolchain or helper is replaced. The
+installed controller remains 0.148.8 under the existing scoped source-version
+policy. The prior run failed Buildkite docs-sync build 11813 and grants no proof.
+
+The reviewed source inventory advances from the last accepted review at
+`edbfc00ddfd4c24458a2277176762c6924de13cc` solely for the accepted package-version
+change from 0.148.7 to 0.148.8 in `Cargo.toml` and `Cargo.lock`. The 105-input
+inventory is otherwise unchanged: no workflow, helper, command, requiredness or
+toolchain substitution is authorized. A matching inventory digest is review
+consistency, not executed proof. Historical checkpoint inspection of PR #1766
+remains distinct from current continuation material and is not relabelled green.
+
+## Accepted behavioral negatives (#1762)
+
+`tests/cli_contracts.rs` registers the tenant-isolation control from the existing
+`tests/consumer_readiness.rs` native fixture. The controller fixes its negative
+criterion and reviewed execution contract on a local accepted Git upstream
+before candidate code introduces a cross-tenant read. Candidate positive tests
+execute and pass, while the accepted negative fails without a readiness receipt.
+Repair reruns the identical accepted check and requires a fresh candidate-bound
+receipt. This is scripted fixture-policy acceptance, not authenticated human
+authorship, a live service test or real-model observation.
+
+The existing two-worktree integration fixture also executes producer and consumer
+source: a positional-only producer and keyword caller each work with the accepted
+baseline but fail together after a clean merge. Repairing the separate numeric
+invariant cannot hide that signature mismatch; the combined candidate needs fresh
+executed proof after interface repair. Local green receipts do not compose.
+
+The official continuation run on `a55c1de8` rejected provider identity after that
+same SHA was pushed onto both the task branch and original PR branch. Public
+Buildkite envelopes 11782 and 11787 identify those different branches. Preserve
+the rejection; do not rebind one branch's run as another's proof. Validate a new
+candidate before its next review-branch update. Initialization through the
+installed CLI regenerates the stale managed Docker release pin found by actual CI.
+
 ## Current report validation scope
 
 The current verification boundary begins at accepted release commit 9d1aed27.
@@ -1461,8 +1669,8 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `7b88d5d3e68ce397408f69e5635bceee4071a1c57b84cab441c0b3083ee7e3a7`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (236 files), `tests/` (235 files)
+- Repository signal fingerprint: `b3ab0860271f59e3bd8b813a35975cd9df65e64e146793c67939b9ef37cc6c75`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (240 files), `tests/` (235 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 
@@ -2309,3 +2517,47 @@ The showcase kernel PR must not introduce a new GitHub Actions workflow, shadow
 the website's renderer or suppress the existing living-spec material gate.
 Independent native source validation and complete candidate readiness remain
 necessary before merging.
+
+## Contradictory human requests must remain blocked (#1764)
+
+The plan-derived execution and source validation gates must reject any nonempty
+unresolved_contradictions regardless of an APPROVED plan state. A deterministic
+negative fixture has a valid recorded plan, original prompt and incompatible
+later prompt, but the task projection is missing: execution reports unresolved
+human input rather than a missing task. After a supported plan update clears the
+conflict, prior plan acceptance is invalidated. The subsequent check may report
+the genuinely missing task, and must not invent a new intent concern.
+
+The source validation gate must use the same unresolved-plan predicate so
+a later PR admission cannot rely on a passed plan-intent gate while a conflict
+remains. Test the predicate directly and the execution command; preserve the
+current validation and publication proof surfaces, including exact subject
+freshness. These tests establish only deterministic enforcement of **recorded**
+contradictions, not model discovery of every semantic conflict. Independent
+fidelity testing remains open under #1761/#1762.
+
+## Request-origin and cross-phase acceptance regressions
+
+Source regression must prove `state.resolve` returns the custody-recorded
+original request independently of the agent's refined plan, and excludes
+an unrelated active trajectory. Attempts to regenerate an existing
+`intent_id` with different `raw_intent` must fail atomically; a new
+explicit identity can start after the predecessor was safely archived.
+
+At preparation, approved/executing/done plan transitions cannot accept
+known unresolved questions, unknowns, contradictions or pending spec
+decisions; execution and validation must apply the same shared conditions.
+Changing recorded instructions revokes the prior plan acceptance.
+An absent task projection is distinct from and never substitutes for a
+known instruction blocker. Include actual CLI cases and a source-level
+negative fixture.
+
+Required validation remains a policy, provenance, source, environment,
+scope, custody, proof and publication decision in addition to executing
+configured tests. The current tests only demonstrate consistency for
+recorded conditions. No asserted semantic correctness beyond accepted
+evidence, nor authenticated human approval, follows from these tests.
+
+Accepted target `34f837d4` supplies release v0.148.10. Native inventory discovery under the installed official controller changes only `Cargo.toml` and `Cargo.lock` package-version inputs relative to the preceding reviewed inventory. The strict source graph and required checks remain complete; the new inventory review is not a test pass, and prior receipts remain historical after the target change.
+
+The accepted v0.148.10 evaluator reported release-projection drift on source `90448d89`; this is retained as failed CI. The independently published registry controller was installed through native `session acquire` opt-in into an isolated install (SHA256 `bdde4a99403a89cc6bf6101c27564395b2f42454611a4131311af98126cedcec`). Supported init/spec refresh regenerated release stamps, Docker pin and manifest; existing project configuration and tracked predecessor backups were preserved. These generated updates still require a fresh complete source proof.

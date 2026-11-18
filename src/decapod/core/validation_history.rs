@@ -374,6 +374,7 @@ impl PublicationReadiness {
             .as_ref()
             .ok_or_else(|| invalid("PUBLICATION_PROOF_MISSING: current input witness is absent"))?
             .verify_current(root, &self.proof.material)?;
+        self.proof.verify_observed_authority(root)?;
         let laya = laya_readiness::configuration(root)?;
         if laya.mode != self.proof.laya.mode
             || digest(&laya)? != self.proof.laya.binding.configuration_digest
@@ -523,6 +524,8 @@ fn capture_task_binding_inner(
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub(crate) struct CompletedReadinessEvidence {
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    observed_path: Option<super::trajectory::path::Judgment>,
     schema: String,
     decapod_version: String,
     invocation_id: String,
@@ -551,6 +554,7 @@ impl CompletedReadinessEvidence {
         current_inputs: Option<CurrentEvidenceInputs>,
     ) -> Result<Self, DecapodError> {
         let value = Self {
+            observed_path: None,
             schema: SCHEMA.into(),
             decapod_version: env!("CARGO_PKG_VERSION").into(),
             invocation_id: invocation_id.into(),
@@ -566,8 +570,27 @@ impl CompletedReadinessEvidence {
         value.verify()?;
         Ok(value)
     }
+    pub(super) fn bind_observed_path(
+        mut self,
+        observation: &super::trajectory::path::OwnedObservation,
+    ) -> Result<Self, DecapodError> {
+        observation
+            .judgment()
+            .verify_retained(&self.material, &self.suite)
+            .map_err(invalid)?;
+        self.observed_path = Some(observation.judgment().clone());
+        self.schema = "decapod.validation-history-proof.v1.1".into();
+        self.verify()?;
+        Ok(self)
+    }
     pub(crate) fn changed_paths(&self) -> &std::collections::BTreeSet<String> {
         &self.suite.facts.changed_paths
+    }
+    pub(crate) fn verify_observed_authority(&self, root: &Path) -> Result<(), DecapodError> {
+        if let Some(path) = &self.observed_path {
+            path.verify_current_authority(root).map_err(invalid)?;
+        }
+        Ok(())
     }
     pub(crate) fn verify_current(
         &self,
@@ -599,7 +622,10 @@ impl CompletedReadinessEvidence {
         } else {
             validation_runtime::READINESS_SCOPE
         };
-        if self.schema != SCHEMA
+        if (self.schema != SCHEMA && self.schema != "decapod.validation-history-proof.v1.1")
+            || (self.schema == SCHEMA && self.observed_path.is_some())
+            || (self.schema == "decapod.validation-history-proof.v1.1"
+                && self.observed_path.is_none())
             || self.decapod_version.is_empty()
             || self.invocation_id.is_empty()
             || self.scope != scope
@@ -619,6 +645,10 @@ impl CompletedReadinessEvidence {
                 "stored complete-suite proof is invalid: {:?}",
                 verified.failures
             )));
+        }
+        if let Some(path) = &self.observed_path {
+            path.verify_retained(&self.material, &self.suite)
+                .map_err(invalid)?;
         }
         let binding = &self.laya.binding;
         if !self.laya.permits_readiness()
@@ -862,6 +892,7 @@ pub(crate) fn finish_archive(
         return Err(invalid("workunit changed during full validation"));
     }
     let mut archived = proof.clone();
+    archived.verify_observed_authority(root)?;
     if binding.workunit_subject.is_some() {
         archived
             .current_inputs
@@ -1173,6 +1204,7 @@ pub(crate) fn current_workunit_proof(
             )
         })?
         .verify_current(root, &record.proof.material)?;
+    record.proof.verify_observed_authority(root)?;
     Ok(proof)
 }
 
@@ -2068,6 +2100,10 @@ mod tests {
             workunit_subject: None,
         };
         let mut report = ValidationReport {
+            observed_path: crate::core::trajectory::path::Judgment::unavailable(
+                false,
+                "fixture has no path witness",
+            ),
             ready: true,
             proof_ready: true,
             laya_readiness: Some(record.proof.laya.clone()),

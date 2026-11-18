@@ -305,6 +305,7 @@ impl Host for RepositoryHost<'_> {
                 "REPOSITORY_PROOF_SEAL_MISSING: select the complete reviewed contract before execution",
             ));
         }
+        let mut path = begin_native_path(project, identity, plan, evidence_directory)?;
         for (key, invocation) in &selection.native_invocations {
             budget.remaining()?;
             let seal = &self.authorized_commands[key];
@@ -312,8 +313,11 @@ impl Host for RepositoryHost<'_> {
             seal.verify(invocation)?;
             verify_invocation_path(invocation, &project.identity_inputs.root, budget)?;
             (self.authorize)(NativeAction::RepositoryCheck { invocation, seal })?;
+            if let Some(observed) = &mut path {
+                observed.authorized(key, &invocation.digest()?)?;
+            }
         }
-        let result = execute_native(
+        let mut result = execute_native(
             project,
             selection,
             plan,
@@ -324,6 +328,14 @@ impl Host for RepositoryHost<'_> {
         for invocation in selection.native_invocations.values() {
             verify_invocation_path(invocation, &project.identity_inputs.root, budget)?;
         }
+        finish_native_path(
+            project,
+            identity,
+            plan,
+            evidence_directory,
+            path,
+            &mut result,
+        )?;
         Ok(result)
     }
 }
@@ -844,6 +856,8 @@ mod tests {
         .unwrap();
         let mut project = CurrentProject {
             configuration: ProofConfiguration {
+                observed_path: None,
+                selected_work: None,
                 validation_buildkite_preflights: false,
                 required_profile: Some(declaration),
                 commands,

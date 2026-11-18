@@ -14,6 +14,7 @@
 
 - [Concepts]()
   - [Agent-First Architecture](concepts/agent-first.md)
+  - [Closed-Loop Metacognitive Governance](concepts/convergence.md)
   - [Intent](concepts/intent.md)
   - [Workspaces](concepts/workspaces.md)
   - [Proof](concepts/proof.md)

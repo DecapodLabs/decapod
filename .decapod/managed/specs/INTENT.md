@@ -1,41 +1,23 @@
 # Intent
 
-## Autonomous safe config recovery and privilege custody (#1771, #1776)
+## Preserve recorded authority and prove current combined work (#1761–#1770)
 
-The cloud boundary suite treats embedded schema discovery as file-only recovery,
-including CLI and RPC reads. `tests/common/cloud_managed_scenarios.rs` compares
-the complete project and private machine file inventories before and after each
-read, and requires zero HTTP requests. Unsupported operational `store.query`
-still exercises the cloud startup guard and must refuse local SQLite fallback;
-schema availability does not authorize operational persistence.
+This continuation preserves draft PR1766 and its source ancestry while completing
+the explicitly requested instruction, blocker, selected-root, typed-consistency,
+behavioral-proof and observed-path contracts. Original requests, agent
+interpretations, source-account observations and actual grants remain separate.
+Accepted roots cannot disappear before DB mapping; explicit equality/inequality
+relations must be jointly consistent; real accepted negative and integration checks
+must execute on the combined source. Canonical blockers persist across consequential
+phases. Current source/base/policy/task/lease and owned native observations govern
+applicable proof, while unobserved host activity and unexpressed meaning stay unknown.
 
-First adoption on a verified accepted Git tree that predates repository policy
-uses the compiled global approval defaults for ordinary operations. The resolver
-confirms absence in that exact accepted tree, never an older ref or candidate
-fallback. Candidate RBAC, shared-claim and maintenance grants remain denied.
-Failure to read or verify accepted policy remains an error. Test fixtures must
-establish their accepted baseline before executing candidate-branch operations.
-
-The user explicitly authorized creation of a draft review PR before full
-validation on 2026-11-17. This exception concerns the forge creation operation
-only; the draft has no current admission or merge authority and failing required
-checks remain delivery blockers.
-
-Agents must be able to discover the embedded configuration contract even when
-their proposal is malformed, repair it in governed isolation, and resume
-ordinary work. They cannot use schema validity, a repinned candidate policy,
-or a changed base selector to acquire new exceptional authority. This change
-reuses existing parser, branch-safe maintenance policy and publication owners.
-It preserves accepted-policy rotation and revocation without repetitive human
-confirmation. Real-host activation (#880), unified diagnostic (#1071), and
-real-forge current admission (#1763) remain separate executable acceptance
-obligations; parser/RBAC regression results cannot stand in for those results.
-
-The proof-source inventory is reconciled against its last reviewed source
-`edbfc00d`: only the package version in `Cargo.toml` and `Cargo.lock` advanced
-from 0.148.7 to 0.148.9. The candidate preserves every workflow, command,
-coverage obligation and configured execution provider while acknowledging
-those release metadata bytes. Reconciliation does not establish test success.
+Ordinary unambiguous work remains autonomous under its accepted gates. Required
+evidence cannot be replaced by a reported pass, byte hash, draft PR or partial
+suite. No new grant service, transcript database or universal shell interceptor
+is introduced. Full required validation and independently reviewable negative,
+repair and current-subject evidence must precede any issue closure. The user did
+not authorize merging, force pushes, protected-main changes or gate waivers.
 
 ## Complete scoped source currency (#1753)
 
@@ -51,7 +33,7 @@ The implementation was accepted externally in merge 41e7e152 with the exact
 c35eb608 Git tree, then released as 0.148.7 at 9d1aed27. That forge transition
 does not turn the stale prior native validation into admission. The current
 proposal must validate its own head against the newly accepted base;
-runtime changes are limited to the scoped currency correction above; required
+that earlier runtime follow-up was limited to the scoped currency correction; required
 checks remain enforced. Strict live
 acceptance 07 additionally repeats the complete sequence on evaluating release
 0.148.7; its receipts retain their own exact controller and fixture subjects. The release-only Cargo.toml/Cargo.lock version changes require a
@@ -467,8 +449,8 @@ These declarations select authoring and proof obligations; they do not attest im
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `7b88d5d3e68ce397408f69e5635bceee4071a1c57b84cab441c0b3083ee7e3a7`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (236 files), `tests/` (235 files)
+- Repository signal fingerprint: `b3ab0860271f59e3bd8b813a35975cd9df65e64e146793c67939b9ef37cc6c75`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (240 files), `tests/` (235 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 
@@ -900,3 +882,101 @@ The report's manifest and managed Docker pin must be generated by the actual
 0.148.7 evaluating binary. An earlier CI-local pass with 0.148.6 projections was
 not full readiness. Only supported CLI regeneration repairs that metadata;
 the current candidate still requires complete fresh proof before publication.
+
+## Closed-loop metacognitive governance in public documentation (November 2026)
+
+The public README must make Decapod immediately comprehensible and usable:
+preserve the official mascot and product film, link prominently to the Decapod
+Labs homepage, and place the local install command before explanatory detail.
+The README is a concise adoption surface; the website and technical manual
+carry the deeper explanation. Keep agent and human documentation separate.
+
+Explain two separate but coupled mechanisms without exaggerating the kernel's
+authority. Within a closed-loop metacognitive execution cycle, coding agents
+preserve the original prompt and accepted subsequent instructions, interpret
+intent, implement changes, react to Decapod's actionable governance feedback,
+and correct their trajectory. As a governed part of fulfilling that intent,
+the agent designs falsifiable proof obligations under the project's explicit
+expectations. The validation layer executes required gates against the actual
+artifact and retains the exact candidate's evidence; it is separate from the
+agent's self-assessment. Failure returns to iteration without constituting
+acceptance. No marketing prose may claim that Decapod inspects every internal
+model reasoning step, perfectly judges semantic intent, or admits a change
+without the configured proofs.
+
+Technical content must preserve the accepted mdBook shell, current links,
+accessible responsive layout, Rust-first source ownership, and existing
+Constitution/tasks/workspace/proof explanations. Acceptance requires a
+rendered documentation build, navigable convergence reference, preserved
+README install path, and observed proof from the source-validation gates.
+
+## Recorded intent authority and bounded assurance (issues #1761–#1764)
+
+Human input supplies the requested outcome, and the agent records an interpretation
+in a plan and living specs. The current repo state proves the recorded interpretation,
+not independent human-authenticated authorship or complete understanding. A plan
+state of APPROVED is a separate, caller-driven governed transition. Neither the
+plan nor a green check may be represented as independently human-approved meaning.
+
+For the bounded first hardening slice, treat nonempty governed plan
+unresolved_contradictions as an execution blocker across the CLI execution gate
+and source validation path. This must reject an auto-approved conflicting plan
+before accidentally reporting a missing task projection as the root failure.
+Correcting the contradiction revokes prior plan acceptance, and a new plan
+transition is required; it cannot make earlier proof or acceptance current.
+
+Follow-on acceptance belongs to #1761 (human request provenance and changes),
+#1762 (independent semantic falsifiers), and #1763 (host versus kernel
+enforcement and approval authority). Never claim that code/spec hashes, the
+Constitution, agent-authored tests, or an existing PR independently prove the
+human's unexpressed wants. This docs/source change is a bounded consistency
+repair, not fulfillment of the larger semantic-intent authority programme.
+
+## Canonical intent custody and lifecycle gate parity (November 17, 2026)
+
+Reuse the already tracked `.decapod/governance.json` top-level intents,
+plan, trajectory, claims, validation and checkpoint records. Do not add a
+parallel prompt ledger. The original `raw_intent` and its agent-derived
+`refined_intent` are distinct. `state.resolve` must preserve this
+distinction and may never copy a refinement into the origin field. Reusing
+the same intent identifier with different recorded original text must
+fail without altering governance state; a distinct later instruction
+has its own identity and Git-preserved provenance.
+
+Use a shared instruction-obligation function for preparation, plan
+acceptance, execution, checkpoint, validation and publication. Drafts may
+record ambiguity; an approved or executing plan must resolve recorded
+unknowns, human questions, contradictions, missing intent and pending
+human spec review before proceeding. A later plan revision invalidates
+acceptance and applicable proof.
+
+Continue using existing `validation_rules` authority/phase/severity/verdict
+taxonomies. Avoid any new prompt runtime, duplicate state database or
+claim of authenticated human identity from agent-entered text. Validation
+is broader than test completion, and semantic coverage remains bounded
+by accepted requirements and observed evidence.
+
+## Durable execution context and corrective feedback documentation (November 17, 2026)
+
+Keep the marketing/docs split coherent. Public copy emphasizes the useful
+capability: durable governing context across agent sessions, source-backed
+corrective feedback at supported Decapod-mediated boundaries, and independent
+proof adjudication on the exact candidate. Do not collapse memory into proof
+or equate failed validation with an automatically completed repair.
+
+The documentation can use the user intent "Continue PR #1234" as a
+falsifiable **target** for cold-context handoff, not a universally shipped
+API command. Real validation requires a fresh agent with no old transcript,
+current repo and Git/forge state, previous failed/attempted corrective work,
+a new source change, current proof and an independently verified update of
+the *same* PR. See #1367 and #1758, and reuse #1083/#1084. No new runtime,
+generic summarizer, secondary ledger, or false claim of hidden-model access.
+
+The docs landing page mirrors the three-part homepage model, remains
+responsive and accessible under mdBook, and retains the approved branding,
+film, mascot, working links, and original install command. README stays
+concise and unchanged by this deeper technical explanation.
+
+## Current issue-contract recovery workstream
+
+The authorized request remains issues #1761, #1762, #1763, #1764, #1767, #1768 and #1770, with the existing PR #1766 retained as the review record. Native history assessment of immutable source `1d5b9e59` reports twenty original base/identity history findings after accepted target `34f837d4` changed governance identity. This fresh claimed workstream reauthors the inspected implementation and documentation through the supported recovery path. The original branch, source commits, journal and failures remain in Git; a native present-time recovery observation grants neither historical proof nor an exception. The new source must earn its own complete current validation and accepted behavioral/path evidence. No replacement PR, protected-main edit, force push, gate waiver or merge is authorized.
