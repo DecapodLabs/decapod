@@ -629,6 +629,16 @@
         "cargo fmt --check",
         "git diff caeeaba8..c5bafce6 (Cargo.toml/Cargo.lock/CHANGELOG.md only)"
       ]
+    },
+    {
+      "id": "cp-1782-6",
+      "summary": "Refresh v0.148.13 projections and complete ARCHITECTURE/SECURITY publication spec reviews",
+      "input_digest": "sha256:a46fccee1985cb155c0854a6cef4205130a2c7f27bd3504f00966ddecca7a9ef",
+      "proof_refs": [
+        "cargo fmt --check",
+        "govern plan review-spec INTERFACES.md/ARCHITECTURE.md/SECURITY.md",
+        "target/debug/decapod (0.148.13) rpc --op specs.refresh & project-check projection refresh"
+      ]
     }
   ],
   "intents": {
@@ -669,11 +679,25 @@
       "schema_version": "1.1.0",
       "spec_reviews": [
         {
+          "disposition": "unchanged_with_reason",
+          "path": ".decapod/managed/specs/ARCHITECTURE.md",
+          "reason": "Verified src/decapod/cli.rs, plugins/policy.rs, and core/validate.rs: #1782 aligns warning text via plugins::policy::missing_riskmap_warning() without altering CLI subcommand hierarchy, module ownership, or storage boundaries.",
+          "reviewed_code_fingerprint": "9b4d9d1420e68806ef58dbfcb61d9e61853f73eecc981c9b2422d39704a689d6",
+          "spec_material_hash": "080e1e015d867051ec4ecbb1f18aca92a2d62a05798377057e563aaa5a3764e0"
+        },
+        {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
           "reason": "Merged origin/master c5bafce6 (v0.148.13) and reconciled reviewed_sources_digest; Risk-map warning CLI contract (#1782) prose and source/test bytes unchanged.",
           "reviewed_code_fingerprint": "9b4d9d1420e68806ef58dbfcb61d9e61853f73eecc981c9b2422d39704a689d6",
           "spec_material_hash": "6698eaf9f32bd46fcff1c24d105be4944677927b486675acd9def2db154557c8"
+        },
+        {
+          "disposition": "unchanged_with_reason",
+          "path": ".decapod/managed/specs/SECURITY.md",
+          "reason": "Verified RiskmapSubcommand::Verify stays read-only without policy.control bypass and RiskmapSubcommand::Init preserves enforce_broker_mutation_policy(..., policy.control) core trust gate; warning text change introduces no privilege or trust change.",
+          "reviewed_code_fingerprint": "9b4d9d1420e68806ef58dbfcb61d9e61853f73eecc981c9b2422d39704a689d6",
+          "spec_material_hash": "735ae6e95c6b18ff2ccc718fbadaa4d7ae483d632aee2fb071d4f9ae6daa23de"
         }
       ],
       "state": "APPROVED",
@@ -684,13 +708,13 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795012332Z"
+      "updated_at": "1795013502Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:862f3a532f23a2f136b0a87e8b904920f732b70a94f1b3354b00410a39f88675",
+      "artifact_hash": "sha256:83a2e297b7263ac39f3a6baff702979013f111c422d3d325258d581f2ab045dd",
       "checks": [
         {
           "name": "cli_contract_enforcement_riskmap",
@@ -722,6 +746,10 @@
         },
         {
           "name": "validate_tests",
+          "status": "passed"
+        },
+        {
+          "name": "verify_checkpoints_publication_material",
           "status": "passed"
         }
       ],
@@ -767,10 +795,17 @@
             "intent_id": "intent:change_01M7QC4ST58WGCQ5JNZKJPCTF1",
             "kind": "trajectory_step_recorded",
             "sequence": 7
+          },
+          {
+            "detail": "trajectory:branch_01M7QC4T0FX5CFADGN7WFGBTNQ",
+            "event_id": "event:8",
+            "intent_id": "intent:change_01M7QC4ST58WGCQ5JNZKJPCTF1",
+            "kind": "trajectory_step_recorded",
+            "sequence": 8
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 7,
+        "next_sequence": 8,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M7QC4T0FX5CFADGN7WFGBTNQ": {
@@ -865,6 +900,27 @@
                 ],
                 "sequence": 7,
                 "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:8",
+                "observations": [
+                  ".decapod/managed/Dockerfile.decapod",
+                  ".decapod/managed/specs/ARCHITECTURE.md",
+                  ".decapod/managed/specs/SECURITY.md",
+                  ".decapod/managed/Dockerfile.decapod",
+                  "Refreshed v0.148.13 Dockerfile.decapod and .manifest.json with workspace-built 0.148.13 decapod binary and recorded ARCHITECTURE.md / SECURITY.md spec reviews for publication-material."
+                ],
+                "proof_refs": [
+                  "verify_checkpoints_publication_material"
+                ],
+                "scope": [
+                  "\".decapod/managed/specs\"]",
+                  "\"tests\"",
+                  "paths:[\"src/decapod\""
+                ],
+                "sequence": 8,
+                "validation_findings": []
               }
             ]
           }
@@ -873,6 +929,7 @@
       "declared_commands": [],
       "destination": "pull request",
       "evidence": [
+        "Refreshed v0.148.13 Dockerfile.decapod and .manifest.json with workspace-built 0.148.13 decapod binary and recorded ARCHITECTURE.md / SECURITY.md spec reviews for publication-material.",
         "Reviewed git diff 9c7e6cff..7bd0a915 (Cargo.toml, Cargo.lock, CHANGELOG.md only for v0.148.12) and reconciled proof.required_profile.reviewed_sources_digest to sha256:bd7eec7e7edaa9a427dea5c3d6b4de42e885b23d2b1911f3602527686e366c4e",
         "Reviewed git diff caeeaba8..c5bafce6 (Cargo.toml, Cargo.lock, CHANGELOG.md only for v0.148.13) and reconciled proof.required_profile.reviewed_sources_digest to sha256:f2c1d189ee0c96f6afb66185229233bd0436015d0ddd21dc56deb4f58709b2b2",
         "Verified clap mounts PolicyCli under GovernCommand::Policy (decapod govern policy riskmap init/verify), whereas validate.rs emitted unsupported 'decapod riskmap init' and policy.rs emitted unsupported 'decapod policy riskmap init'.",
@@ -880,6 +937,9 @@
       ],
       "inspected_files": [
         ".decapod/config.toml",
+        ".decapod/managed/Dockerfile.decapod",
+        ".decapod/managed/specs/ARCHITECTURE.md",
+        ".decapod/managed/specs/SECURITY.md",
         "src/decapod/cli.rs",
         "src/decapod/core/validate.rs",
         "src/decapod/plugins/policy.rs",
@@ -891,6 +951,7 @@
       "intent_id": "intent:change_01M7QC4ST58WGCQ5JNZKJPCTF1",
       "modified_files": [
         ".decapod/config.toml",
+        ".decapod/managed/Dockerfile.decapod",
         ".decapod/managed/specs/INTERFACES.md",
         "src/decapod/core/validate.rs",
         "src/decapod/plugins/policy.rs",
