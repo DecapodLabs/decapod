@@ -121,6 +121,36 @@ fn admitted_cli_source_file_pass_cannot_mint_verified_workunit() {
         &workspace,
         &[
             "govern",
+            "capsule",
+            "query",
+            "--topic",
+            "canonical observed workunit proof",
+            "--scope",
+            "interfaces",
+            "--task-id",
+            id,
+            "--workunit-id",
+            id,
+            "--write",
+        ],
+    );
+    let capsule_ref = format!(".decapod/managed/context/{id}.json");
+    ok(
+        &workspace,
+        &[
+            "govern",
+            "workunit",
+            "attach-state",
+            "--task-id",
+            id,
+            "--ref",
+            &capsule_ref,
+        ],
+    );
+    ok(
+        &workspace,
+        &[
+            "govern",
             "workunit",
             "set-proof-plan",
             "--task-id",

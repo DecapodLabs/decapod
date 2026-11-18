@@ -2,6 +2,14 @@
 
 ## Actual-boundary workunit proof controls (#1660, #1735)
 
+The ordinary recovery path must retain the workunit's genuine task-bound
+context capsule and policy lineage. The source-file counterexample prepares
+that capsule through the public query and attach-state commands before
+requesting proof, so missing context cannot substitute for the producer test.
+Full validation uses its current runtime observation while the workunit is
+CLAIMED; it does not require a prior VERIFIED projection. A generic terminal
+rule refusal is not evidence of a circular proof dependency.
+
 An agent-declared passing result and a real source file's digest must remain
 diagnostic declarations. The existing canonical full-validation producer owns
 VERIFIED admission. The campaign's actual-binary control reaches an admitted
@@ -442,7 +450,7 @@ These declarations select authoring and proof obligations; they do not attest im
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `f83bf824db90af102863ef3e10ceb795364b81e02331a3cf94ed5b62d8836696`
+- Repository signal fingerprint: `bf481c94bb120cd612e1567b645024642a415c5498216b1f55045914f08167b3`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (236 files), `tests/` (235 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

@@ -593,6 +593,11 @@
         "/private/tmp/attack-gaps-1660-recovery-resume-3.json",
         "/private/tmp/attack-gaps-1660-source-file-pass.json"
       ]
+    },
+    {
+      "id": "workunit-capsule-recovery-1660",
+      "summary": "Bind genuine context lineage before counterfeit workunit proof; preserve terminal refusal and lawful recovery",
+      "input_digest": "sha256:317f112269eb79606f25101e95b3cf233568f2ed357c04514094c3e56d595661"
     }
   ],
   "intents": {
@@ -667,7 +672,7 @@
         "Current claimed task and isolated work branch",
         "No gate-skip variables; authentic original task and canonical shared runtime; no fabricated execution evidence or status rewrite."
       ],
-      "artifact_hash": "sha256:1011079f7cfd7bef379e88dbe0c34e4dbb4f9546b24ac23fb335491073014239",
+      "artifact_hash": "sha256:8f5e3a8085bf4540f36854ab8e057250f944a7d67e8b7c7dca2ed4fee07b1b57",
       "checks": [
         {
           "name": "counterfeit_hash_declared_pass",
@@ -680,6 +685,10 @@
         {
           "name": "current_binary_counterfeit_denial",
           "status": "passed"
+        },
+        {
+          "name": "native-full-validation",
+          "status": "failed"
         },
         {
           "name": "source_file_declared_pass",
@@ -714,10 +723,24 @@
             "intent_id": "intent:change_01M7P04Q5RZB944BR5SYSDARTZ",
             "kind": "trajectory_step_recorded",
             "sequence": 5
+          },
+          {
+            "detail": "trajectory:branch_01M7P04Q8GWB2CF2GZZZEJR5K4",
+            "event_id": "event:6",
+            "intent_id": "intent:change_01M7P04Q5RZB944BR5SYSDARTZ",
+            "kind": "trajectory_step_recorded",
+            "sequence": 6
+          },
+          {
+            "detail": "trajectory:branch_01M7P04Q8GWB2CF2GZZZEJR5K4",
+            "event_id": "event:7",
+            "intent_id": "intent:change_01M7P04Q5RZB944BR5SYSDARTZ",
+            "kind": "trajectory_step_recorded",
+            "sequence": 7
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 5,
+        "next_sequence": 7,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M7P04Q8GWB2CF2GZZZEJR5K4": {
@@ -762,6 +785,38 @@
                 ],
                 "sequence": 5,
                 "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:6",
+                "observations": [
+                  "Correction to provisional cycle hypothesis: source evaluate_workunit_rule explicitly accepts CLAIMED plus opaque complete runtime proof before canonical append. Actual workunit has no capsule state_ref, violating verify_capsule_policy_lineage_for_task. Resolve genuine capsule dependency via existing query/attach-state and checkpoint; do not relax validation or treat diagnostic fail as test failure."
+                ],
+                "proof_refs": [],
+                "scope": [
+                  "issue-1660"
+                ],
+                "sequence": 6,
+                "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:7",
+                "observations": [
+                  "tests/consumer_readiness.rs",
+                  ".decapod/managed/specs/INTENT.md",
+                  ".decapod/managed/specs/ARCHITECTURE.md",
+                  ".decapod/managed/specs/INTERFACES.md",
+                  "Official0.148.9 validation-3 reached authenticated provider collection and refused terminal workunit completion; missing capsule state_ref independently confirmed in workunit get. Existing evaluate_workunit_rule already accepts opaque current complete proof from CLAIMED. Genuine query/attach-state/checkpoint recovered the required capsule. Extend actual CLI regression to prepare capsule before counterfeit proof; new revision not yet executed. No validator, policy or proof-plan weakening."
+                ],
+                "proof_refs": [
+                  "native-full-validation"
+                ],
+                "scope": [
+                  "issue-1660"
+                ],
+                "sequence": 7,
+                "validation_findings": []
               }
             ]
           }
@@ -772,7 +827,9 @@
       "evidence": [
         "/private/tmp/attack-gaps-1660-counterfeit-execution.json; sha256:abc refused at artifact observation. /private/tmp/attack-gaps-1660-source-file-pass.json; real source-file pass declaration recorded, VERIFIED refused by canonical full validation history; remained CLAIMED, journal current and resumable generation7. These are tested denials, not independent host proof or successful completion.",
         "/private/tmp/attack-gaps-1660-source-file-pass.json proves the actual declaration/VERIFIED distinction. /private/tmp/attack-gaps-1660-old-checkpoint-resume.json preserves EXECUTION_STATE_CHANGED; obsolete-pass discard then checkpoint generation9 and resume generation10 succeeded. Fail marker is diagnostic claim discard, not an executed failing suite. Canonical full proof and hosted positive VERIFIED remain unproven. Added replayable no-skip CLI regression on existing consumer fixture; not yet executed.",
-        "Independently remeasured all105 source-inventory inputs; byte-identical to reviewed #871 inputs; only accepted package-version0.148.7 to0.148.9 differs from edbfc00d. No check, executor, helper, workflow or toolchain change."
+        "Correction to provisional cycle hypothesis: source evaluate_workunit_rule explicitly accepts CLAIMED plus opaque complete runtime proof before canonical append. Actual workunit has no capsule state_ref, violating verify_capsule_policy_lineage_for_task. Resolve genuine capsule dependency via existing query/attach-state and checkpoint; do not relax validation or treat diagnostic fail as test failure.",
+        "Independently remeasured all105 source-inventory inputs; byte-identical to reviewed #871 inputs; only accepted package-version0.148.7 to0.148.9 differs from edbfc00d. No check, executor, helper, workflow or toolchain change.",
+        "Official0.148.9 validation-3 reached authenticated provider collection and refused terminal workunit completion; missing capsule state_ref independently confirmed in workunit get. Existing evaluate_workunit_rule already accepts opaque current complete proof from CLAIMED. Genuine query/attach-state/checkpoint recovered the required capsule. Extend actual CLI regression to prepare capsule before counterfeit proof; new revision not yet executed. No validator, policy or proof-plan weakening."
       ],
       "inspected_files": [],
       "intent_id": "intent:change_01M7P04Q5RZB944BR5SYSDARTZ",

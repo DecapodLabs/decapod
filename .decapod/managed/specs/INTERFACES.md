@@ -2,6 +2,12 @@
 
 ## Workunit proof and continuity semantics (#1660)
 
+Before full proof, use `govern capsule query --task-id <id> --workunit-id <id>
+--scope interfaces --topic <topic> --write`, then attach its emitted task
+capsule path using `workunit attach-state`. Creating a capsule does not itself
+prove execution. A fresh workunit checkpoint binds the resulting context;
+full validation and the canonical VERIFIED transition remain separate steps.
+
 `record-proof --status pass` may retain an agent declaration about an existing
 artifact. Success does not authorize `transition --to verified`; that operation
 requires a current canonical full-validation record. Readback preserves the
@@ -1229,7 +1235,7 @@ field. Nothing in this operation authorizes a mutation, approval or completion.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `f83bf824db90af102863ef3e10ceb795364b81e02331a3cf94ed5b62d8836696`
+- Repository signal fingerprint: `bf481c94bb120cd612e1567b645024642a415c5498216b1f55045914f08167b3`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (236 files), `tests/` (235 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
