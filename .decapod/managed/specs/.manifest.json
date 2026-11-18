@@ -1,7 +1,7 @@
 {
   "schema_version": "1.1.0",
   "template_version": "scaffold-v5",
-  "generated_at": "1795036476Z",
+  "generated_at": "1795037770Z",
   "repo_signal_fingerprint": "4ffe6185b604d6788b614e88ea63a07ed597779d64ffe40b295712cdd0d7bbeb",
   "declared_capabilities": [
     "agent-helper",
@@ -18,31 +18,31 @@
   "capability_definition_version": "1.0.0",
   "config_input_hash": "1a8fa732fd380cb0ef8a5f1bc33be6464b88e4837011b8e5660bdf7624d450be",
   "spec_input_hash": "d564951bbe1a444ed1de47be8217941fae1c27ed009f25d1fc5a7c3874b5daed",
-  "decapod_release": "0.149.0",
+  "decapod_release": "0.149.1",
   "entrypoints": [
     {
       "path": "AGENTS.md",
-      "template_hash": "82541c5e87e1528d7446daf305aecd423fe70a4ec2ed0d1d3f35bb2adb1ac577",
+      "template_hash": "0216d13bd4bbe8b3b335b7ff336a54f49b6e290ca9fca82848dbb12dcd90c784",
       "content_hash": "a24c6b304ce03eb82c2205566a26f3b8293400c39fa5554cfab213494aabd490",
-      "fingerprint": "fed616e3312f3ef1ab626d0dc2c5cd220aec7c26375e42482b028d95c4cc9ec7"
+      "fingerprint": "56036b56147910f7eb56fe56af04e1736c187a2342d20bd99799e56c88adfc87"
     },
     {
       "path": "CLAUDE.md",
-      "template_hash": "8cf9d92158342fa4105a8007ba16fd87507d9c50d009f3b783209f5fc7060984",
+      "template_hash": "3164afddc6e8aefeea4981426ed42e82053303ac637c87224695e43ffaa09d0e",
       "content_hash": "c9670258ed745c6a4776bd3713d7ca10843b45bde914eb1817967d71dfaacafc",
-      "fingerprint": "60f7bb85b7f563a4b849869beb269cf5338b20439e7e529ba12cb63fc171b450"
+      "fingerprint": "559b6e47189f4de1a6ac3be4af586c5f173f48756df4895a4429ed42659200d3"
     },
     {
       "path": "GEMINI.md",
-      "template_hash": "36278762225b266c5305c4f188c86f9b16a47650a3ef92ee185a1ae7bb828112",
+      "template_hash": "cf2c42d5bda3fc7bfc7a50111586095fe89a726f47295690e6702aacea4c4e12",
       "content_hash": "d5236bd959fb5b5bdf5cc41e5b436b06f09503d772d6aaea03dc681c0021aef6",
-      "fingerprint": "4cef64a7e08f79f7e2825041b16da198f787e0f6ce97ce1f082802787fc0763d"
+      "fingerprint": "24c5096b8df7eaadc367534a51588b05f548657d234e4daf46983a3c34d159a5"
     },
     {
       "path": "CODEX.md",
-      "template_hash": "0a5e5c818db3db790214b957eafbf6812d5712f349c9c0873bb412eb96e8c308",
+      "template_hash": "bcba7ec7f805a8cb5f161c72ab08a859705b2a4cb8a1625fff9483f497595074",
       "content_hash": "cb29ed95d0a8b9c6fdecaa87d9e1b117ce1e9ac746fef60d9593089c03fb6068",
-      "fingerprint": "a99c9fe467bacc9733e91caaebe89b244ea7a15e7d136957c4cf4fc6bfd5a90a"
+      "fingerprint": "7bad198e1372def81c3f17bf2b53bd1e2733f9b8f34e5f36f408d6ea0d2b7397"
     }
   ],
   "files": [
