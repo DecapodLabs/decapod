@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.148.13](https://github.com/DecapodLabs/decapod/compare/v0.148.12...v0.148.13) - 2026-11-18
+
+### Fixed
+
+- *(workunit)* integrate accepted strict RPC source for fresh proof
+- *(workunit)* recognize negative validation journal snapshots
+- *(workunit)* preserve recovery disposition and canonical-domain guidance
+- *(workunit)* reauthor currentness correction with governed history
+
+### Other
+
+- *(workunit)* integrate accepted release 0.148.12
+- *(workunit)* bind failing capture to its required check
+
 ## [0.148.12](https://github.com/DecapodLabs/decapod/compare/v0.148.11...v0.148.12) - 2026-11-18
 
 ### Fixed
