@@ -629,6 +629,11 @@
       "id": "cp-1739-7",
       "summary": "Record updated 0.149.0 spec reviews for INTERFACES.md, ARCHITECTURE.md, and SECURITY.md",
       "input_digest": "sha256:ae303982dd619d4b14995b99590b24f78390a8006a6ff386d18be073667c7842"
+    },
+    {
+      "id": "cp-1739-8",
+      "summary": "Reconcile origin/master 205d4e8d (v0.149.1), update reviewed_sources_digest, refresh Dockerfile/specs projections, record spec reviews, and verify fmt/clippy/unit and datastore integration suites",
+      "input_digest": "sha256:b1017658ccb8e3f4e3e524f7a8591bd18ed95f6f8dfee85779c71178c3bdf28a"
     }
   ],
   "intents": {
@@ -671,22 +676,22 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Reconciled with origin/master v0.149.0 and verified storage_compaction / migration / events v2 compatibility floor design",
-          "reviewed_code_fingerprint": "88960a830064920a111cc79bb7758707f7311be1951e076a027795e5bf33ab63",
+          "reason": "Reconciled origin/master 205d4e8d (v0.149.1) and verified storage_compaction / migration / events v2 compatibility floor design",
+          "reviewed_code_fingerprint": "58b16593fa982cee567bdfbfd8a6beef48ec82599d8e637b17d55053605bf9eb",
           "spec_material_hash": "e94b6cc9c5f061ffb5c7e3035c288d954dece7de272a07b42abc1e6df240eee7"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Reconciled with origin/master v0.149.0 and verified v2 storage compatibility floor (0.144.2) and _ce_v1/read/write boundary notes",
-          "reviewed_code_fingerprint": "88960a830064920a111cc79bb7758707f7311be1951e076a027795e5bf33ab63",
+          "reason": "Reconciled origin/master 205d4e8d (v0.149.1) and verified v2 storage compatibility floor specs",
+          "reviewed_code_fingerprint": "58b16593fa982cee567bdfbfd8a6beef48ec82599d8e637b17d55053605bf9eb",
           "spec_material_hash": "989baceaed8446ee995868f59caf6ed759bf36a70c7d685b80eae57ea7239f9d"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Reconciled with origin/master v0.149.0 and verified v2 storage read/write guard and pre-codec binary epistemic limits",
-          "reviewed_code_fingerprint": "88960a830064920a111cc79bb7758707f7311be1951e076a027795e5bf33ab63",
+          "reason": "Reconciled origin/master 205d4e8d (v0.149.1) and verified v2 storage read/write guard and pre-codec binary epistemic limits",
+          "reviewed_code_fingerprint": "58b16593fa982cee567bdfbfd8a6beef48ec82599d8e637b17d55053605bf9eb",
           "spec_material_hash": "64234c0ee96c7afcd7c64d7ba0de6a80e01076c5587eb213906b84add3005fc5"
         }
       ],
@@ -698,7 +703,7 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795033767Z"
+      "updated_at": "1795037398Z"
     },
     "trajectory": {
       "active_boundaries": [
