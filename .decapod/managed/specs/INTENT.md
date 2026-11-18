@@ -1,5 +1,41 @@
 # Intent
 
+## Autonomous safe config recovery and privilege custody (#1771, #1776)
+
+The cloud boundary suite treats embedded schema discovery as file-only recovery,
+including CLI and RPC reads. `tests/common/cloud_managed_scenarios.rs` compares
+the complete project and private machine file inventories before and after each
+read, and requires zero HTTP requests. Unsupported operational `store.query`
+still exercises the cloud startup guard and must refuse local SQLite fallback;
+schema availability does not authorize operational persistence.
+
+First adoption on a verified accepted Git tree that predates repository policy
+uses the compiled global approval defaults for ordinary operations. The resolver
+confirms absence in that exact accepted tree, never an older ref or candidate
+fallback. Candidate RBAC, shared-claim and maintenance grants remain denied.
+Failure to read or verify accepted policy remains an error. Test fixtures must
+establish their accepted baseline before executing candidate-branch operations.
+
+PR #1779 previously used an explicit user exception for draft creation before
+full validation on 2026-11-17. That historical exception does not authorize
+another workstream, establish current admission or grant merge authority.
+
+Agents must be able to discover the embedded configuration contract even when
+their proposal is malformed, repair it in governed isolation, and resume
+ordinary work. They cannot use schema validity, a repinned candidate policy,
+or a changed base selector to acquire new exceptional authority. This change
+reuses existing parser, branch-safe maintenance policy and publication owners.
+It preserves accepted-policy rotation and revocation without repetitive human
+confirmation. Real-host activation (#880), unified diagnostic (#1071), and
+real-forge current admission (#1763) remain separate executable acceptance
+obligations; parser/RBAC regression results cannot stand in for those results.
+
+The proof-source inventory is reconciled against its last reviewed source
+`edbfc00d`: only the package version in `Cargo.toml` and `Cargo.lock` advanced
+from 0.148.7 to 0.148.9. The candidate preserves every workflow, command,
+coverage obligation and configured execution provider while acknowledging
+those release metadata bytes. Reconciliation does not establish test success.
+
 ## Actual-boundary workunit proof controls (#1660, #1735)
 
 The ordinary recovery path must retain the workunit's genuine task-bound
@@ -450,7 +486,7 @@ These declarations select authoring and proof obligations; they do not attest im
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `bf481c94bb120cd612e1567b645024642a415c5498216b1f55045914f08167b3`
+- Repository signal fingerprint: `1e67e79dbad02067bd3eac2c5bc229262fcaad2054da02395bf7a4b90ed063ae`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (236 files), `tests/` (235 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

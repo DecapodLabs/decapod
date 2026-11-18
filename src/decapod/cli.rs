@@ -472,6 +472,7 @@ pub enum InitDiagramStyle {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct DecapodProjectConfig {
+    #[serde(deserialize_with = "deserialize_config_schema_version")]
     pub schema_version: String,
     pub init: InitConfigSection,
     pub repo: RepoContext,
@@ -490,6 +491,21 @@ pub struct DecapodProjectConfig {
         skip_serializing_if = "crate::core::laya_readiness::Configuration::is_default"
     )]
     pub laya: crate::core::laya_readiness::Configuration,
+}
+
+const CONFIG_SCHEMA_VERSION: &str = "1.0.0";
+
+fn deserialize_config_schema_version<'de, D>(deserializer: D) -> Result<String, D::Error>
+where
+    D: serde::Deserializer<'de>,
+{
+    let version = String::deserialize(deserializer)?;
+    if version != CONFIG_SCHEMA_VERSION {
+        return Err(serde::de::Error::custom(format!(
+            "unsupported schema_version {version:?}; expected {CONFIG_SCHEMA_VERSION:?}"
+        )));
+    }
+    Ok(version)
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -860,6 +876,14 @@ fn default_container_workspaces_true() -> bool {
 }
 
 impl DecapodProjectConfig {
+    pub(crate) fn parse(content: &str) -> Result<Self, crate::error::DecapodError> {
+        toml::from_str(content).map_err(|error| {
+            crate::error::DecapodError::Config(format!(
+                "INVALID_CONFIG_SCHEMA: Invalid .decapod/config.toml schema: {error}\nAgent recovery: read `decapod docs show config-schema --source embedded` and `decapod data schema --deterministic`; correct the candidate configuration and retry. Schema validity does not grant policy authority."
+            ))
+        })
+    }
+
     pub fn load(repo_root: &std::path::Path) -> Result<Self, crate::error::DecapodError> {
         let config_path = repo_root.join(".decapod").join("config.toml");
         if !config_path.exists() {
@@ -868,10 +892,7 @@ impl DecapodProjectConfig {
             ));
         }
         let content = std::fs::read_to_string(config_path)?;
-        let config: Self = toml::from_str(&content).map_err(|e| {
-            crate::error::DecapodError::Config(format!("Failed to parse config.toml: {e}"))
-        })?;
-        Ok(config)
+        Self::parse(&content)
     }
 }
 

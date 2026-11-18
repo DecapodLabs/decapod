@@ -565,6 +565,112 @@ struct ClaimedAgentWorktree {
     worktree_dir: PathBuf,
 }
 
+#[test]
+fn unaccepted_root_rbac_proposal_cannot_authorize_its_own_bypass() {
+    let fixture = GovernedRepoFixture::new();
+    let alpha = fixture.spawn_claimed_agent("policy-alpha", "policy-alpha");
+    let beta = fixture.spawn_claimed_agent("policy-beta", "policy-beta");
+    let path = fixture.repo_root.join(".decapod/config.toml");
+    let original = fs::read_to_string(&path).unwrap();
+    let proposal = format!(
+        "{original}\n[governance.rbac]\nvalidation_bypass_roles = [\"reviewed\"]\n[governance.rbac.actor_roles]\npolicy-alpha = [\"reviewed\"]\npolicy-beta = [\"reviewed\"]\n"
+    );
+    let git = |args: &[&str]| {
+        let out = Command::new("git")
+            .current_dir(&fixture.repo_root)
+            .args(args)
+            .output()
+            .unwrap();
+        assert!(
+            out.status.success(),
+            "{}",
+            String::from_utf8_lossy(&out.stderr)
+        );
+    };
+    let bypass = |agent: &ClaimedAgentWorktree| {
+        fixture
+            .decapod_cmd(&agent.worktree_dir, &agent.agent_id, Some(&agent.password))
+            .args([
+                "validate",
+                "--bypass-validation",
+                "--bypass-reason",
+                "exercise current accepted scoped grant",
+                "--format",
+                "json",
+            ])
+            .output()
+            .unwrap()
+    };
+    for agent in [&alpha, &beta] {
+        let denied = bypass(agent);
+        assert!(!denied.status.success());
+        assert!(String::from_utf8_lossy(&denied.stderr).contains("RBAC_PERMISSION_DENIED"));
+    }
+    git(&["checkout", "-b", "unaccepted-policy-proposal"]);
+    fs::write(&path, &proposal).unwrap();
+    for agent in [&alpha, &beta] {
+        let denied = bypass(agent);
+        assert!(
+            !denied.status.success(),
+            "unaccepted main-root proposal authorized {}: {}",
+            agent.agent_id,
+            String::from_utf8_lossy(&denied.stdout)
+        );
+        assert!(String::from_utf8_lossy(&denied.stderr).contains("RBAC_PERMISSION_DENIED"));
+    }
+    // A renamed base selector is itself a candidate proposal, never authority.
+    let mut renamed: toml::Value = toml::from_str(&proposal).unwrap();
+    renamed["repo"]["base_branch"] = "unaccepted-policy-proposal".into();
+    fs::write(&path, toml::to_string(&renamed).unwrap()).unwrap();
+    let denied = bypass(&alpha);
+    assert!(
+        !denied.status.success(),
+        "candidate base selector authorized its own grant"
+    );
+    // Independent fixture owner accepts the bounded grant on the protected base.
+    fs::write(&path, &original).unwrap();
+    git(&["checkout", "master"]);
+    fs::write(&path, &proposal).unwrap();
+    git(&["add", ".decapod/config.toml"]);
+    git(&["commit", "-m", "fixture: accept scoped bypass policy"]);
+    for agent in [&alpha, &beta] {
+        let allowed = bypass(agent);
+        assert!(
+            allowed.status.success(),
+            "{}",
+            String::from_utf8_lossy(&allowed.stderr)
+        );
+        let report: serde_json::Value = serde_json::from_slice(&allowed.stdout).unwrap();
+        assert_eq!(report["status"], "bypassed");
+        assert_eq!(report["proof_ready"], false);
+        assert_eq!(report["publication_ready"], false);
+    }
+    fs::write(&path, &original).unwrap();
+    git(&["add", ".decapod/config.toml"]);
+    git(&["commit", "-m", "fixture: revoke scoped bypass policy"]);
+    for agent in [&alpha, &beta] {
+        let denied = bypass(agent);
+        assert!(!denied.status.success());
+        assert!(String::from_utf8_lossy(&denied.stderr).contains("RBAC_PERMISSION_DENIED"));
+        let ordinary = fixture
+            .decapod_cmd(&agent.worktree_dir, &agent.agent_id, Some(&agent.password))
+            .args([
+                "todo",
+                "add",
+                &format!("ordinary-after-revocation-{}", agent.agent_id),
+                "--format",
+                "json",
+            ])
+            .output()
+            .unwrap();
+        assert!(
+            ordinary.status.success(),
+            "{}",
+            String::from_utf8_lossy(&ordinary.stderr)
+        );
+    }
+}
+
 impl GovernedRepoFixture {
     fn new() -> Self {
         let temp = tempdir().expect("governed repo fixture");

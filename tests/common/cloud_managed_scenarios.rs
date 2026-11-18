@@ -936,9 +936,65 @@ fn fixture_origin_requires_explicit_test_mode_and_literal_loopback() {
 fn unsupported_cloud_startup_cannot_create_a_local_database_and_activate_is_file_only() {
     let fixture = Fixture::new("example/managed-proof");
     fixture.proof();
-    // Schema reaches normal startup without first requiring an authoring
-    // worktree or session; the cloud guard itself must stop local startup.
-    let unsupported = fixture.run(&["data", "schema"]);
+    fn files(root: &Path) -> BTreeMap<std::path::PathBuf, Option<Vec<u8>>> {
+        fn visit(
+            root: &Path,
+            path: &Path,
+            out: &mut BTreeMap<std::path::PathBuf, Option<Vec<u8>>>,
+        ) {
+            for entry in std::fs::read_dir(path).unwrap() {
+                let entry = entry.unwrap();
+                if entry.file_name() == ".git" {
+                    continue;
+                }
+                let path = entry.path();
+                let key = path.strip_prefix(root).unwrap().to_path_buf();
+                if entry.file_type().unwrap().is_dir() {
+                    out.insert(key, None);
+                    visit(root, &path, out);
+                } else {
+                    out.insert(key, Some(std::fs::read(path).unwrap()));
+                }
+            }
+        }
+        let mut out = BTreeMap::new();
+        visit(root, root, &mut out);
+        out
+    }
+    let project_before = files(fixture.project.path());
+    let machine_before = files(fixture.machine.path());
+    // Embedded schema repair references bypass operational startup for every
+    // backend. Success must not create sessions, credentials or local storage.
+    for args in [
+        vec!["data", "schema", "--deterministic"],
+        vec![
+            "rpc",
+            "--op",
+            "schema.get",
+            "--params",
+            r#"{"entity":"todo"}"#,
+        ],
+    ] {
+        let schema = fixture.run(&args);
+        assert!(schema.status.success(), "{}", output(&schema));
+        let value: Value = serde_json::from_slice(&schema.stdout).unwrap();
+        assert!(value.is_object());
+        if args[0] == "rpc" {
+            assert_eq!(value["success"], true);
+        }
+        assert_eq!(files(fixture.project.path()), project_before);
+        assert_eq!(files(fixture.machine.path()), machine_before);
+        assert!(fixture.requests.lock().unwrap().is_empty());
+    }
+    // Exercise unsupported operational startup through a sessionless RPC
+    // carrier, rather than relying on schema lookup to touch the datastore.
+    let unsupported = fixture.run(&[
+        "rpc",
+        "--op",
+        "store.query",
+        "--params",
+        r#"{"entity":"knowledge"}"#,
+    ]);
     assert!(!unsupported.status.success());
     assert!(
         output(&unsupported).contains("cloud mode never falls back to local SQLite"),

@@ -598,6 +598,11 @@
       "id": "workunit-capsule-recovery-1660",
       "summary": "Bind genuine context lineage before counterfeit workunit proof; preserve terminal refusal and lawful recovery",
       "input_digest": "sha256:317f112269eb79606f25101e95b3cf233568f2ed357c04514094c3e56d595661"
+    },
+    {
+      "id": "workunit-accepted-base-c47137ad-1660",
+      "summary": "Reconcile accepted policy fixes and preserve genuine observed-workunit controls in the combined candidate",
+      "input_digest": "sha256:7d5b31f8af1870d34226ff3eca5cba45778bf41e381d9df611c34fe1abb577bc"
     }
   ],
   "intents": {
@@ -638,16 +643,16 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Existing canonical validation producer and atomic task/workunit domain retained; add actual CLI admission regression without another proof owner.",
-          "reviewed_code_fingerprint": "f83bf824db90af102863ef3e10ceb795364b81e02331a3cf94ed5b62d8836696",
-          "spec_material_hash": "c7c42bfbf52a1d4681ae783dbbd7fdfd76d47395868b2d51f1319cb21ff7486e"
+          "reason": "Retain canonical runtime producer, genuine capsule lineage and atomic workunit acceptance while incorporating accepted1779 parser and privilege-custody fixes; no new proof subsystem.",
+          "reviewed_code_fingerprint": "1e67e79dbad02067bd3eac2c5bc229262fcaad2054da02395bf7a4b90ed063ae",
+          "spec_material_hash": "d233cbb406c4dd580d2dd1b1767c42bedb43bd18f90f19b4a153c4ab2d56c85c"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Describe declaration versus canonical proof and lawful continuity recovery, distinguishing diagnostic fail markers from executed tests.",
-          "reviewed_code_fingerprint": "f83bf824db90af102863ef3e10ceb795364b81e02331a3cf94ed5b62d8836696",
-          "spec_material_hash": "e30e7ce5a0e657ac370bb5793196098244b7d521f90a4128131db19b18bb0c18"
+          "reason": "Retain accepted schema-repair and privilege-denial contract alongside real capsule preparation and declared-versus-observed workunit proof; preserve canonical validation requirements.",
+          "reviewed_code_fingerprint": "1e67e79dbad02067bd3eac2c5bc229262fcaad2054da02395bf7a4b90ed063ae",
+          "spec_material_hash": "6f1496bae0bede67763604fe3cadbf147971570eeadd1c3a9fc3e7936eed72f5"
         },
         {
           "disposition": "unchanged_with_reason",
@@ -665,14 +670,14 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1794962020Z"
+      "updated_at": "1794981564Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch",
         "No gate-skip variables; authentic original task and canonical shared runtime; no fabricated execution evidence or status rewrite."
       ],
-      "artifact_hash": "sha256:8f5e3a8085bf4540f36854ab8e057250f944a7d67e8b7c7dca2ed4fee07b1b57",
+      "artifact_hash": "sha256:622ff07272e98c397e6406d90b462e7567774e22f1e51bb42fa7506378523a2d",
       "checks": [
         {
           "name": "counterfeit_hash_declared_pass",
@@ -685,6 +690,10 @@
         {
           "name": "current_binary_counterfeit_denial",
           "status": "passed"
+        },
+        {
+          "name": "native-current-base",
+          "status": "failed"
         },
         {
           "name": "native-full-validation",
@@ -737,10 +746,17 @@
             "intent_id": "intent:change_01M7P04Q5RZB944BR5SYSDARTZ",
             "kind": "trajectory_step_recorded",
             "sequence": 7
+          },
+          {
+            "detail": "trajectory:branch_01M7P04Q8GWB2CF2GZZZEJR5K4",
+            "event_id": "event:8",
+            "intent_id": "intent:change_01M7P04Q5RZB944BR5SYSDARTZ",
+            "kind": "trajectory_step_recorded",
+            "sequence": 8
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 7,
+        "next_sequence": 8,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M7P04Q8GWB2CF2GZZZEJR5K4": {
@@ -817,6 +833,21 @@
                 ],
                 "sequence": 7,
                 "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:8",
+                "observations": [
+                  "Validation4 at a20e15e7 rejected accepted base or transport ref changed; independent remote readback showed master c47137adae825aeaaede4473f91ec21c6bd4b853 after accepted1779. Reviewed two-parent merge includes accepted code/tests and preserves authored1660 regression. Preserved exact active governance from first parent through Git conflict resolution rather than combine unrelated trajectories; current checkpoint generated natively before merge commit. Source specs retain accepted parser/RBAC meaning and scope historical1779 draft exception only to that prior workstream. No readiness inherited."
+                ],
+                "proof_refs": [
+                  "native-current-base"
+                ],
+                "scope": [
+                  "issue-1660"
+                ],
+                "sequence": 8,
+                "validation_findings": []
               }
             ]
           }
@@ -829,7 +860,8 @@
         "/private/tmp/attack-gaps-1660-source-file-pass.json proves the actual declaration/VERIFIED distinction. /private/tmp/attack-gaps-1660-old-checkpoint-resume.json preserves EXECUTION_STATE_CHANGED; obsolete-pass discard then checkpoint generation9 and resume generation10 succeeded. Fail marker is diagnostic claim discard, not an executed failing suite. Canonical full proof and hosted positive VERIFIED remain unproven. Added replayable no-skip CLI regression on existing consumer fixture; not yet executed.",
         "Correction to provisional cycle hypothesis: source evaluate_workunit_rule explicitly accepts CLAIMED plus opaque complete runtime proof before canonical append. Actual workunit has no capsule state_ref, violating verify_capsule_policy_lineage_for_task. Resolve genuine capsule dependency via existing query/attach-state and checkpoint; do not relax validation or treat diagnostic fail as test failure.",
         "Independently remeasured all105 source-inventory inputs; byte-identical to reviewed #871 inputs; only accepted package-version0.148.7 to0.148.9 differs from edbfc00d. No check, executor, helper, workflow or toolchain change.",
-        "Official0.148.9 validation-3 reached authenticated provider collection and refused terminal workunit completion; missing capsule state_ref independently confirmed in workunit get. Existing evaluate_workunit_rule already accepts opaque current complete proof from CLAIMED. Genuine query/attach-state/checkpoint recovered the required capsule. Extend actual CLI regression to prepare capsule before counterfeit proof; new revision not yet executed. No validator, policy or proof-plan weakening."
+        "Official0.148.9 validation-3 reached authenticated provider collection and refused terminal workunit completion; missing capsule state_ref independently confirmed in workunit get. Existing evaluate_workunit_rule already accepts opaque current complete proof from CLAIMED. Genuine query/attach-state/checkpoint recovered the required capsule. Extend actual CLI regression to prepare capsule before counterfeit proof; new revision not yet executed. No validator, policy or proof-plan weakening.",
+        "Validation4 at a20e15e7 rejected accepted base or transport ref changed; independent remote readback showed master c47137adae825aeaaede4473f91ec21c6bd4b853 after accepted1779. Reviewed two-parent merge includes accepted code/tests and preserves authored1660 regression. Preserved exact active governance from first parent through Git conflict resolution rather than combine unrelated trajectories; current checkpoint generated natively before merge commit. Source specs retain accepted parser/RBAC meaning and scope historical1779 draft exception only to that prior workstream. No readiness inherited."
       ],
       "inspected_files": [],
       "intent_id": "intent:change_01M7P04Q5RZB944BR5SYSDARTZ",
