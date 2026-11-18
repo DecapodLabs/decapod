@@ -599,6 +599,15 @@
         "cargo test --test cli_contract_enforcement risk_map_warnings (1 passed)",
         "cargo test --test plugins_policy_tests (21 passed)"
       ]
+    },
+    {
+      "id": "cp-1782-3",
+      "summary": "Reconcile reviewed_sources_digest for v0.148.12 release bump (7bd0a915)",
+      "input_digest": "sha256:96d1598c4aa83f6d388f8ed36bda178a593d6c1cccc16694cc0ee16f0e408253",
+      "proof_refs": [
+        "agent.init inventory_digest sha256:bd7eec7e7edaa9a427dea5c3d6b4de42e885b23d2b1911f3602527686e366c4e",
+        "git diff 9c7e6cff..7bd0a915 (Cargo.toml/Cargo.lock/CHANGELOG.md only)"
+      ]
     }
   ],
   "intents": {
@@ -660,7 +669,7 @@
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:28f5f6f2511785bd7417d7c9cb15d4f19395553c0f0d42a8d18c99f24dea42aa",
+      "artifact_hash": "sha256:854d0c8ef7a22a8cd56e38b2ed0c83642edcbf9cbf19166a800bc8521067fd0b",
       "checks": [
         {
           "name": "cli_contract_enforcement_riskmap",
@@ -676,6 +685,10 @@
         },
         {
           "name": "gatling_t070_policy",
+          "status": "passed"
+        },
+        {
+          "name": "inventory_digest",
           "status": "passed"
         },
         {
@@ -715,10 +728,17 @@
             "intent_id": "intent:change_01M7QC4ST58WGCQ5JNZKJPCTF1",
             "kind": "trajectory_step_recorded",
             "sequence": 5
+          },
+          {
+            "detail": "trajectory:branch_01M7QC4T0FX5CFADGN7WFGBTNQ",
+            "event_id": "event:6",
+            "intent_id": "intent:change_01M7QC4ST58WGCQ5JNZKJPCTF1",
+            "kind": "trajectory_step_recorded",
+            "sequence": 6
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 5,
+        "next_sequence": 6,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M7QC4T0FX5CFADGN7WFGBTNQ": {
@@ -775,6 +795,25 @@
                 ],
                 "sequence": 5,
                 "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:6",
+                "observations": [
+                  ".decapod/config.toml",
+                  ".decapod/config.toml",
+                  "Reviewed git diff 9c7e6cff..7bd0a915 (Cargo.toml, Cargo.lock, CHANGELOG.md only for v0.148.12) and reconciled proof.required_profile.reviewed_sources_digest to sha256:bd7eec7e7edaa9a427dea5c3d6b4de42e885b23d2b1911f3602527686e366c4e"
+                ],
+                "proof_refs": [
+                  "inventory_digest"
+                ],
+                "scope": [
+                  "\".decapod/managed/specs\"]",
+                  "\"tests\"",
+                  "paths:[\"src/decapod\""
+                ],
+                "sequence": 6,
+                "validation_findings": []
               }
             ]
           }
@@ -783,10 +822,12 @@
       "declared_commands": [],
       "destination": "pull request",
       "evidence": [
+        "Reviewed git diff 9c7e6cff..7bd0a915 (Cargo.toml, Cargo.lock, CHANGELOG.md only for v0.148.12) and reconciled proof.required_profile.reviewed_sources_digest to sha256:bd7eec7e7edaa9a427dea5c3d6b4de42e885b23d2b1911f3602527686e366c4e",
         "Verified clap mounts PolicyCli under GovernCommand::Policy (decapod govern policy riskmap init/verify), whereas validate.rs emitted unsupported 'decapod riskmap init' and policy.rs emitted unsupported 'decapod policy riskmap init'.",
         "cargo fmt --check ok; CLIPPY_CONF_DIR=.config cargo clippy --all-targets --all-features -- -D warnings ok; cargo test --lib core::validate::tests (61 passed); cargo test --test plugins_policy_tests (21 passed); cargo test --test cli_contract_enforcement risk_map_warnings (1 passed); cargo test --test gatling t070_policy (1 passed)"
       ],
       "inspected_files": [
+        ".decapod/config.toml",
         "src/decapod/cli.rs",
         "src/decapod/core/validate.rs",
         "src/decapod/plugins/policy.rs",
@@ -797,6 +838,7 @@
       ],
       "intent_id": "intent:change_01M7QC4ST58WGCQ5JNZKJPCTF1",
       "modified_files": [
+        ".decapod/config.toml",
         ".decapod/managed/specs/INTERFACES.md",
         "src/decapod/core/validate.rs",
         "src/decapod/plugins/policy.rs",
