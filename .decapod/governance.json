@@ -606,6 +606,11 @@
       "proof_refs": [
         "/private/tmp/decapod-boundary-red-c30w2kjb/evidence/candidate-init-reconciliation.json"
       ]
+    },
+    {
+      "id": "first-adoption-recovery-04",
+      "summary": "Preserve ordinary first-adoption approval defaults without candidate grants; establish accepted fixture policy and trace real RPC mutations. Targeted policy, workunit, RPC and task-transfer checks pass; complete CI remains required.",
+      "input_digest": "sha256:78c09092de976b4d89512c8021ccdbf8aad2798ea3606faa5eaf33e63ed5b54e"
     }
   ],
   "intents": {
@@ -646,22 +651,22 @@
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Reviewed exact content against parser, schema-bootstrap routing and shared branch-safe policy consumers. Architecture continues to use existing CLI/RPC, maintenance resolver, broker, proof and publication owners; current candidate tests and full validation are required; this review is not human authentication or real-host acceptance.",
-          "reviewed_code_fingerprint": "35e382f0466ac77fba889e68f37b0d5d29cb65d938cb538c973d8b96cb162535",
+          "reason": "Reviewed first-adoption recovery: verified absent accepted policy uses global approval defaults only; candidate exceptional grants remain denied. Existing authority, repair interface and publication boundaries remain accurate.",
+          "reviewed_code_fingerprint": "29aae8095f277a3e9b84231921887eaf1bdec28298c467ba7d2f6523c2ecfb14",
           "spec_material_hash": "0b7738e450b1038116cd3fce2e9660a615fbea502d988760d54dbf8c314f9146"
         },
         {
-          "disposition": "updated",
+          "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Reviewed exact content against parser, schema-bootstrap routing and shared branch-safe policy consumers. Architecture continues to use existing CLI/RPC, maintenance resolver, broker, proof and publication owners; current candidate tests and full validation are required; this review is not human authentication or real-host acceptance.",
-          "reviewed_code_fingerprint": "35e382f0466ac77fba889e68f37b0d5d29cb65d938cb538c973d8b96cb162535",
+          "reason": "Recovery preserves ordinary approval defaults only after accepted-tree absence is verified; candidate privilege grants remain denied. Existing CLI and RPC repair interfaces remain accurate.",
+          "reviewed_code_fingerprint": "29aae8095f277a3e9b84231921887eaf1bdec28298c467ba7d2f6523c2ecfb14",
           "spec_material_hash": "060bb3be1c58675e825374cf10d34d04b38688f5cd88e6d2c5f7fcd91e2fd690"
         },
         {
-          "disposition": "updated",
+          "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Reviewed exact content against parser, schema-bootstrap routing and shared branch-safe policy consumers. Architecture continues to use existing CLI/RPC, maintenance resolver, broker, proof and publication owners; current candidate tests and full validation are required; this review is not human authentication or real-host acceptance.",
-          "reviewed_code_fingerprint": "35e382f0466ac77fba889e68f37b0d5d29cb65d938cb538c973d8b96cb162535",
+          "reason": "First adoption requires independently verified absence at the accepted tree and retains compiled policy. Unresolved refs, I/O failure and candidate exceptional grants stay denied; draft creation is external forge publication without admission.",
+          "reviewed_code_fingerprint": "29aae8095f277a3e9b84231921887eaf1bdec28298c467ba7d2f6523c2ecfb14",
           "spec_material_hash": "cdc863757905c53f4f176284c72744f0575184c65a059b7edf6239b47c4fc644"
         }
       ],
@@ -673,14 +678,19 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1794956461Z"
+      "updated_at": "1794960193Z"
     },
     "trajectory": {
       "active_boundaries": [
-        "Current claimed task and isolated work branch"
+        "Current claimed task and isolated work branch",
+        "User explicitly authorizes draft PR creation before validation; no admission or merge authority follows"
       ],
-      "artifact_hash": "sha256:c196394459fb5bc41ed5f982bf410c368c831e98cc53b1ea7af970ae11105e15",
+      "artifact_hash": "sha256:06663d626a25965880082bebea2c863436c876e849ae73932e3aa3489e507a0e",
       "checks": [
+        {
+          "name": "buildkite-11921",
+          "status": "failed"
+        },
         {
           "name": "config_version_actual_binary",
           "status": "failed"
@@ -694,11 +704,31 @@
           "status": "failed"
         },
         {
+          "name": "native-interop-suite",
+          "status": "partial"
+        },
+        {
+          "name": "native-policy-tests",
+          "status": "passed"
+        },
+        {
+          "name": "native-rpc-suite",
+          "status": "passed"
+        },
+        {
+          "name": "native-task-transfer",
+          "status": "passed"
+        },
+        {
+          "name": "native-workunit-observation",
+          "status": "passed"
+        },
+        {
           "name": "rbac_self_grant_original_binary",
           "status": "failed"
         }
       ],
-      "current_phase": "intent",
+      "current_phase": "implementation",
       "custody": {
         "events": [
           {
@@ -733,10 +763,24 @@
             "intent_id": "intent:change_01M7NR0Z9M2Q4AQQFBP1ZPD07Q",
             "kind": "trajectory_step_recorded",
             "sequence": 6
+          },
+          {
+            "detail": "trajectory:branch_01M7NR0ZCNHC7YZKZ9SYWWDDVJ",
+            "event_id": "event:7",
+            "intent_id": "intent:change_01M7NR0Z9M2Q4AQQFBP1ZPD07Q",
+            "kind": "trajectory_step_recorded",
+            "sequence": 7
+          },
+          {
+            "detail": "trajectory:branch_01M7NR0ZCNHC7YZKZ9SYWWDDVJ",
+            "event_id": "event:8",
+            "intent_id": "intent:change_01M7NR0Z9M2Q4AQQFBP1ZPD07Q",
+            "kind": "trajectory_step_recorded",
+            "sequence": 8
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 6,
+        "next_sequence": 8,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M7NR0ZCNHC7YZKZ9SYWWDDVJ": {
@@ -802,6 +846,50 @@
                 ],
                 "sequence": 6,
                 "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:7",
+                "observations": [
+                  "src/decapod/core/db_maintenance.rs",
+                  "src/decapod/plugins/policy.rs",
+                  "tests/agent_rpc_suite.rs",
+                  "tests/cli_contract_enforcement.rs",
+                  "tests/support/interop_harness.rs",
+                  "RPC suite: 5 passed; workunit observation: 6 passed; policy tests: 8 passed including first-adoption denial control",
+                  "https://buildkite.com/decapodlabs/decapod/builds/11921",
+                  "https://github.com/DecapodLabs/decapod/pull/1779"
+                ],
+                "proof_refs": [
+                  "native-rpc-suite",
+                  "native-workunit-observation",
+                  "native-policy-tests",
+                  "buildkite-11921"
+                ],
+                "scope": [
+                  "root"
+                ],
+                "sequence": 7,
+                "validation_findings": [
+                  "Remaining fixture repairs require executable checks and fresh full validation"
+                ]
+              },
+              {
+                "action": "implementation",
+                "custody_event_id": "event:8",
+                "observations": [
+                  "public_task_transfer_preserves_identity_without_importing_a_live_lease: 1 passed; interop approval_roundtrip passed, suite still running",
+                  "User directly authorized exception to pre-PR requirement; direct forge draft 1779 is external and not admitted"
+                ],
+                "proof_refs": [
+                  "native-task-transfer",
+                  "native-interop-suite"
+                ],
+                "scope": [
+                  "root"
+                ],
+                "sequence": 8,
+                "validation_findings": []
               }
             ]
           }
@@ -812,7 +900,12 @@
       "evidence": [
         "/private/tmp/decapod-boundary-red-c30w2kjb/evidence",
         "/private/tmp/decapod-boundary-red-c30w2kjb/evidence/candidate-init-reconciliation.json",
-        "/private/tmp/decapod-boundary-red-c30w2kjb/evidence/rbac-main-unaccepted.json"
+        "/private/tmp/decapod-boundary-red-c30w2kjb/evidence/rbac-main-unaccepted.json",
+        "RPC suite: 5 passed; workunit observation: 6 passed; policy tests: 8 passed including first-adoption denial control",
+        "User directly authorized exception to pre-PR requirement; direct forge draft 1779 is external and not admitted",
+        "https://buildkite.com/decapodlabs/decapod/builds/11921",
+        "https://github.com/DecapodLabs/decapod/pull/1779",
+        "public_task_transfer_preserves_identity_without_importing_a_live_lease: 1 passed; interop approval_roundtrip passed, suite still running"
       ],
       "inspected_files": [
         "Cargo.lock",
@@ -829,10 +922,14 @@
         "src/decapod/core/db_maintenance.rs",
         "src/decapod/lib.rs",
         "src/decapod/plugins/policy.rs",
+        "tests/agent_rpc_suite.rs",
+        "tests/cli_contract_enforcement.rs",
         "tests/init_config_behavior.rs",
-        "tests/sqlite_maintenance.rs"
+        "tests/sqlite_maintenance.rs",
+        "tests/support/interop_harness.rs"
       ],
       "next_transitions": [
+        "Push recovery commit to draft PR 1779, then run fresh complete validation",
         "Refine plan and declare falsifiable checks"
       ],
       "repo_scope": [
@@ -843,7 +940,9 @@
       "shortcut_risk_signals": [],
       "task_id": "bugs_01m7nqz8dxaz801k",
       "tool_calls": [],
-      "unresolved_assumptions": []
+      "unresolved_assumptions": [
+        "Remaining fixture repairs require executable checks and fresh full validation"
+      ]
     }
   },
   "legacy_digests": {

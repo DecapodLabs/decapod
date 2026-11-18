@@ -2,6 +2,18 @@
 
 ## Autonomous safe config recovery and privilege custody (#1771, #1776)
 
+First adoption on a verified accepted Git tree that predates repository policy
+uses the compiled global approval defaults for ordinary operations. The resolver
+confirms absence in that exact accepted tree, never an older ref or candidate
+fallback. Candidate RBAC, shared-claim and maintenance grants remain denied.
+Failure to read or verify accepted policy remains an error. Test fixtures must
+establish their accepted baseline before executing candidate-branch operations.
+
+The user explicitly authorized creation of a draft review PR before full
+validation on 2026-11-17. This exception concerns the forge creation operation
+only; the draft has no current admission or merge authority and failing required
+checks remain delivery blockers.
+
 Agents must be able to discover the embedded configuration contract even when
 their proposal is malformed, repair it in governed isolation, and resume
 ordinary work. They cannot use schema validity, a repinned candidate policy,
@@ -448,7 +460,7 @@ These declarations select authoring and proof obligations; they do not attest im
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `35e382f0466ac77fba889e68f37b0d5d29cb65d938cb538c973d8b96cb162535`
+- Repository signal fingerprint: `29aae8095f277a3e9b84231921887eaf1bdec28298c467ba7d2f6523c2ecfb14`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (236 files), `tests/` (235 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

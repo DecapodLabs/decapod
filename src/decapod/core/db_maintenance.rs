@@ -560,12 +560,29 @@ fn resolve_branch_safe_policy(
         "refs/heads/main".to_string(),
     ]);
     for git_ref in candidate_refs {
-        if let Some(base_oid) = git_stdout(main_root, &["rev-parse", "--verify", &git_ref])
-            && let Some(blob) = git_bytes(
+        if let Some(base_oid) = git_stdout(main_root, &["rev-parse", "--verify", &git_ref]) {
+            let Some(blob) = git_bytes(
                 main_root,
                 &["show", &format!("{base_oid}:.decapod/config.toml")],
-            )
-        {
+            ) else {
+                // First adoption may have an accepted source tree without any
+                // repository policy. Confirm absence from that exact tree;
+                // I/O failure must not fall back to another ref or a proposal.
+                if git_bytes(
+                    main_root,
+                    &["ls-tree", "-z", &base_oid, "--", ".decapod/config.toml"],
+                )
+                .is_some_and(|tree| tree.is_empty())
+                {
+                    return Err((
+                        "ACCEPTED_POLICY_ABSENT",
+                        format!(
+                            "accepted ref {git_ref} at {base_oid} has no repository policy; candidate grants remain unaccepted"
+                        ),
+                    ));
+                }
+                return Err(("INVALID_CANONICAL_POLICY","accepted policy could not be read; no older ref or candidate fallback is permitted".into()));
+            };
             if blob.len() as u64 > MAX_CANONICAL_POLICY_BYTES {
                 return Err((
                     "INVALID_CANONICAL_POLICY",

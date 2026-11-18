@@ -804,6 +804,16 @@ fn configured_approval_categories_at_project(
     let config = if main_root.join(".git").exists() {
         crate::core::db_maintenance::resolve_repository_policy(main_root)
             .map(|(_, config, _, _)| config)
+            .or_else(|(code, message)| {
+                if code == "ACCEPTED_POLICY_ABSENT" {
+                    // Verified first adoption has no accepted project-specific
+                    // approval additions. Immutable kernel trust/risk/approval
+                    // requirements still apply; candidate RBAC grants do not.
+                    Ok(crate::cli::DecapodProjectConfig::default())
+                } else {
+                    Err((code, message))
+                }
+            })
             .map_err(|(code, message)| {
                 error::DecapodError::Config(format!(
                     "Unable to load approval policy: {code}: {message}"
@@ -1484,6 +1494,65 @@ mod tests {
             toml::to_string(&config).unwrap(),
         )
         .unwrap();
+    }
+
+    #[test]
+    fn verified_first_adoption_uses_global_defaults_without_candidate_grants() {
+        let repo = tempfile::tempdir().unwrap();
+        let git = |args: &[&str]| {
+            let output = std::process::Command::new("git")
+                .current_dir(repo.path())
+                .env("GIT_AUTHOR_NAME", "Policy fixture")
+                .env("GIT_COMMITTER_NAME", "Policy fixture")
+                .env("GIT_AUTHOR_EMAIL", "fixture@example.invalid")
+                .env("GIT_COMMITTER_EMAIL", "fixture@example.invalid")
+                .args(args)
+                .output()
+                .unwrap();
+            assert!(
+                output.status.success(),
+                "{}",
+                String::from_utf8_lossy(&output.stderr)
+            );
+        };
+        git(&["init", "-b", "main"]);
+        std::fs::write(
+            repo.path().join("README.md"),
+            "Accepted source predates Decapod\n",
+        )
+        .unwrap();
+        git(&["add", "README.md"]);
+        git(&[
+            "commit",
+            "-m",
+            "fixture: accept source before policy adoption",
+        ]);
+        git(&["checkout", "-b", "candidate-policy"]);
+        write_shared_policy(repo.path(), true);
+        let path = repo.path().join(".decapod/config.toml");
+        let mut config = crate::cli::DecapodProjectConfig::load(repo.path()).unwrap();
+        config
+            .governance
+            .rbac
+            .actor_roles
+            .insert("candidate".into(), vec!["owner".into()]);
+        config.governance.rbac.validation_bypass_roles = vec!["owner".into()];
+        std::fs::write(path, toml::to_string(&config).unwrap()).unwrap();
+        let store = repo.path().join(".decapod/data");
+        std::fs::create_dir_all(&store).unwrap();
+        assert!(configured_approval_categories(&store).unwrap().is_empty());
+        assert!(
+            authorize_rbac_exception(&store, "candidate", "validate.bypass")
+                .unwrap_err()
+                .to_string()
+                .contains("ACCEPTED_POLICY_ABSENT")
+        );
+        assert!(
+            basic_shared_claim_policy_digest(&store)
+                .unwrap_err()
+                .to_string()
+                .contains("ACCEPTED_POLICY_ABSENT")
+        );
     }
 
     #[test]
