@@ -1,5 +1,53 @@
 # Intent
 
+## Truthful conformance discovery (#871, #1735)
+
+Compatibility discovery must preserve required semantics at the parser boundary.
+Discovery also reports the existing session requirements for context bundle
+export/import, mentor obligations and assurance evaluation. Automatic session
+acquisition does not make an operation session-free. Every RPC descriptor is
+checked against the existing entry guards; read-only database inspection retains
+its earlier bounded session-free route. No enforcement permission is changed.
+
+The official 0.148.10 counterexample refused a valid unsupported extension but
+accepted its trailing-comma flag form after silently replacing the parameters
+with an empty object. Flag parameters now fail on invalid JSON before startup;
+omitted parameters still mean an empty object. Ordinary supported negotiation
+and valid unsupported-extension refusal remain available. This is an input
+interpretation correction, not authority or executed-conformance attestation.
+
+The combined candidate incorporates accepted release `34f837d4` (0.148.10).
+All 105 verification-source inputs were independently remeasured: only the
+root package versions in Cargo.toml and Cargo.lock changed from 0.148.9;
+the remaining 103 inputs, workflows, required graph and toolchain are intact.
+The reviewed inventory is reconciled accordingly. A scoped 0.148.10 controller,
+installed through the official session updater, owns current projection refresh
+and validation. Its actual binary digest is retained separately from candidate
+evidence. Controller installation and release integration are not test proof.
+
+The current RPC surface must also advertise `intent.reconcile`, `state.resolve`
+and `state.diff`. The real entry boundary rejects unregistered operation names
+with `unknown_op` before project/session startup. Registration and metadata
+come from one declaration in the existing interop catalog; registration grants
+no authority and preserves every registered operation's own gates. This bounds
+undiscoverable additions without claiming an authenticated conformance producer.
+
+The source-inventory review compared all 105 discovered inputs against the last
+accepted review `edbfc00d`. Only the root package version in Cargo.toml and
+Cargo.lock changed, from 0.148.7 to 0.148.9. The reviewed digest acknowledges
+those release inputs; workflows, helpers, toolchains and required coverage are
+unchanged. This review is not evidence that any required check executed.
+
+Harnesses may discover implemented operations and their source test coverage
+without an execution claim. The built-in interoperability manifest reports
+`not_run` even where a registered conformance test and source location exist.
+`core::interop::validate_manifest` rejects declared `verified` and `failed`
+results with `unobserved_conformance`: the current manifest format supplies no
+authenticated producer receipt. Ordinary negotiation remains available.
+This closes the static-label counterexample only. Current binary-bound observed
+conformance, independent consumers and the rest of the campaign remain required
+before #871 or #1735 can be considered complete.
+
 ## Observed proof remains current only within its execution contract
 
 A genuine prior success must remain inspectable as history while a newer full
@@ -507,7 +555,7 @@ These declarations select authoring and proof obligations; they do not attest im
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `41fec954716289bf8ca4a8e5793182653636f392efdbad6bd478d0462f460f91`
+- Repository signal fingerprint: `8329b3b5ce4583b23d4494b51aa06d90ad119dee12728af34006411b98aa2e43`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (236 files), `tests/` (235 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
