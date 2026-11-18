@@ -21,6 +21,20 @@ value but does not assert that a policy transition or principal decision ran.
 
 ## Source coverage and execution observations (#871)
 
+The recursive unique-key JSON decoder previously local to
+`core::derived_release_profile` now lives in shared internal `core::json`.
+Existing release-manifest readers and RPC framing reuse it. Callers retain
+their framing budgets and typed schema/diagnostic owners. The extraction adds
+no proof authority. Actual-binary controls refuse nested and escaped duplicate
+keys on both RPC transports, then recover ordinary negotiation; a separate
+Python implementation checks the focused JSON meaning on the same host.
+
+The Bazel interoperability target declares the included Python source as
+compile data, matching Cargo's direct include dependency. Required test targets,
+commands and budgets are unchanged. The first Bazel run correctly failed to
+build when that input was undeclared; no interoperability execution is claimed
+for that failed build.
+
 The required broker preparation probe measures the competing mutation's elapsed
 time before releasing the mock preparation and awaiting its client cleanup.
 It retains the strict ten-second bound and explicitly checks that preparation
@@ -1049,8 +1063,8 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `5f2f74a6ceb61e3c6aa4e7912c83443dd19a46d0f3dd1c137c8fcf09a2bb19ff`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (236 files), `tests/` (235 files)
+- Repository signal fingerprint: `9f2de0a4aeb9a8202741b3eb75fb9f4b8c9fbd90cba33d4426db94b3828cbd7e`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (237 files), `tests/` (236 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 

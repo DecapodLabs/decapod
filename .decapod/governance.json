@@ -610,6 +610,11 @@
         "https://github.com/DecapodLabs/decapod/issues/1726",
         "sha256:f637728be842e3581181af24cd0740004b9b6d838cb01598ca0150ac13c45667"
       ]
+    },
+    {
+      "id": "reporting-accepted12-integration-20261118",
+      "summary": "Integrate accepted release12 with reviewed report provenance; preserve actual failures and canonical proof boundary",
+      "input_digest": "sha256:9f0ecabb2c008f7f87c5b8a34dedbefbdafefb2e7b8be3fe9c66b4f6dc7b94ba"
     }
   ],
   "intents": {
@@ -650,23 +655,23 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Existing pure RPC result now marks caller-supplied input and canonical_state_verified=false after parsing; spoofed input labels cannot override constants. Status remains reported data and canonical policy/proof owners remain unchanged.",
-          "reviewed_code_fingerprint": "5f2f74a6ceb61e3c6aa4e7912c83443dd19a46d0f3dd1c137c8fcf09a2bb19ff",
-          "spec_material_hash": "702520bd1bc42124cd2c44f47abe1205111bb98abbb2a1a58d90a8368297467c"
+          "reason": "Reviewed accepted strict-JSON decoder and reporting input provenance together at accepted 7bd0a915 release0.148.12. Pure projections retain caller origin and cannot authenticate current execution or policy authority.",
+          "reviewed_code_fingerprint": "9f2de0a4aeb9a8202741b3eb75fb9f4b8c9fbd90cba33d4426db94b3828cbd7e",
+          "spec_material_hash": "1033dc8ac29b7ec8da8ff860cbac91f57d30beafe70af776d8f541da8ead867c"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Optional additive origin/no-canonical-verification fields apply to every projection kind; existing source string identifies input type only. Actual caller-boolean policy misreport remediation now says reported and unverified. No scope/approval/authority transition is synthesized.",
-          "reviewed_code_fingerprint": "5f2f74a6ceb61e3c6aa4e7912c83443dd19a46d0f3dd1c137c8fcf09a2bb19ff",
-          "spec_material_hash": "3336d1ef24949d5da281128918f4919367a9d3e11b84e09f2649038929f3aac4"
+          "reason": "Reviewed preserved strict decoder rejection/optional Unicode behavior plus additive input_origin and canonical_state_verified fields; no new canonical proof or policy authority.",
+          "reviewed_code_fingerprint": "9f2de0a4aeb9a8202741b3eb75fb9f4b8c9fbd90cba33d4426db94b3828cbd7e",
+          "spec_material_hash": "e02840520007fec8bdf4ab5480bd288e92e6dabe2eabe70ceaafdf0881f4f084"
         },
         {
-          "disposition": "unchanged_with_reason",
+          "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "No new trust root, parser interpreter, authorizer or store. Explicit caller provenance prevents display data masquerading as independently observed execution/policy. Actual native validation, authorization and publication retain their canonical owners.",
-          "reviewed_code_fingerprint": "5f2f74a6ceb61e3c6aa4e7912c83443dd19a46d0f3dd1c137c8fcf09a2bb19ff",
-          "spec_material_hash": "cdc863757905c53f4f176284c72744f0575184c65a059b7edf6239b47c4fc644"
+          "reason": "Reviewed current released12 counterfeit projection controls, failed local preparation, accepted source scanner findings, and unchanged canonical admission authority; no merge or completion claim.",
+          "reviewed_code_fingerprint": "9f2de0a4aeb9a8202741b3eb75fb9f4b8c9fbd90cba33d4426db94b3828cbd7e",
+          "spec_material_hash": "9d11c08d69c5a99641a0d006db91d357c43458787eb442f659ffe7ac04be2a7e"
         }
       ],
       "state": "APPROVED",
@@ -677,16 +682,20 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795005699Z"
+      "updated_at": "1795009644Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:05ca7368fd35a59e32f05ed0277bd66b90d8ec61f64e0f82a882b475a5e3fea9",
+      "artifact_hash": "sha256:5a1cfabc2ef396166fe9b57ac1525daf2e036202e36249d70928b410d9f53e1a",
       "checks": [
         {
           "name": "diff-whitespace",
+          "status": "passed"
+        },
+        {
+          "name": "formatting",
           "status": "passed"
         },
         {
@@ -708,6 +717,14 @@
         {
           "name": "local-project-prerequisites",
           "status": "failed"
+        },
+        {
+          "name": "project-preparation",
+          "status": "failed"
+        },
+        {
+          "name": "released12-counterexamples",
+          "status": "passed"
         },
         {
           "name": "rustfmt",
@@ -756,10 +773,17 @@
             "intent_id": "intent:change_01M7Q97QD8Z4RM9340YANFM396",
             "kind": "trajectory_step_recorded",
             "sequence": 7
+          },
+          {
+            "detail": "trajectory:branch_01M7Q97QGBQF64V09927P0590A",
+            "event_id": "event:8",
+            "intent_id": "intent:change_01M7Q97QD8Z4RM9340YANFM396",
+            "kind": "trajectory_step_recorded",
+            "sequence": 8
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 7,
+        "next_sequence": 8,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M7Q97QGBQF64V09927P0590A": {
@@ -852,14 +876,45 @@
                 "sequence": 7,
                 "tool": "Actual official11 caller-approval false policy-observation text is corrected without changing reported statuses or policy authority. Existing RPC result adds optional input_origin/canonical_state_verified, fixed caller_supplied/false. Real CLI controls spoof trusted-origin/verified labels and preserve approval/denial/pending display; genuine existing store mutation projection preserves success/correlation while explicitly not reauthenticating input. Required source Actions pending; graph/inventory unchanged.",
                 "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "command": "Integrate actual accepted 7bd0a915 release12, retaining both parents and authored strict JSON/reporting contracts. All105 tool inputs remeasured, only Cargo version inputs changed vs accepted prior release. Released12 still falsely projects caller report proof and approval; six duplicate controls reject before startup and legitimate Unicode optional negotiation succeeds. Native preparation208pass5fail9skip, including host container, unrelated done task, precommit ancestry/dirty count and scanner23 findings whose lines all exist verbatim in accepted target. No scanner bypass, manual build, Buildkite waiver in config, admission or merge. User explicitly authorizes publication and Actions focus.",
+                "custody_event_id": "event:8",
+                "observations": [
+                  "src/decapod/lib.rs",
+                  "tests/interop_conformance.rs",
+                  ".decapod/managed/specs/INTENT.md",
+                  "/private/tmp/attack-gaps-release12-rpc-controls.json",
+                  "/private/tmp/attack-gaps-1793-release12-project-check.json",
+                  "/private/tmp/attack-gaps-1793-release12-gatekeeper-review.json",
+                  "/private/tmp/attack-gaps-1793-release12-inventory-review.json"
+                ],
+                "proof_refs": [
+                  "formatting",
+                  "project-preparation",
+                  "released12-counterexamples"
+                ],
+                "scope": [
+                  "issue-1726"
+                ],
+                "sequence": 8,
+                "validation_findings": []
               }
             ]
           }
         }
       },
-      "declared_commands": [],
+      "declared_commands": [
+        "Integrate actual accepted 7bd0a915 release12, retaining both parents and authored strict JSON/reporting contracts. All105 tool inputs remeasured, only Cargo version inputs changed vs accepted prior release. Released12 still falsely projects caller report proof and approval; six duplicate controls reject before startup and legitimate Unicode optional negotiation succeeds. Native preparation208pass5fail9skip, including host container, unrelated done task, precommit ancestry/dirty count and scanner23 findings whose lines all exist verbatim in accepted target. No scanner bypass, manual build, Buildkite waiver in config, admission or merge. User explicitly authorizes publication and Actions focus."
+      ],
       "destination": "pull request",
-      "evidence": [],
+      "evidence": [
+        "/private/tmp/attack-gaps-1793-release12-gatekeeper-review.json",
+        "/private/tmp/attack-gaps-1793-release12-inventory-review.json",
+        "/private/tmp/attack-gaps-1793-release12-project-check.json",
+        "/private/tmp/attack-gaps-release12-rpc-controls.json"
+      ],
       "inspected_files": [
         "src/decapod/core/governed_transition.rs",
         "src/decapod/core/projection.rs",
