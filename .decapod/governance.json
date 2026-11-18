@@ -596,6 +596,15 @@
         "tests/contract_conformance.rs",
         "tests/doc_alignment.rs"
       ]
+    },
+    {
+      "id": "ckpt-byoa-docs-1789-merge-v01491",
+      "summary": "Integrate accepted master v0.149.1 (#1052) and refresh v0.149.0 projections (#1789)",
+      "input_digest": "sha256:5e5ce4fc4646f5532dcb0c7586651d342ed36ccacd93257e59a3bc1820f71253",
+      "proof_refs": [
+        "tests/contract_conformance.rs",
+        "tests/doc_alignment.rs"
+      ]
     }
   ],
   "intents": {
@@ -638,22 +647,22 @@
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Refreshed v0.149.0 Dockerfile pin and specs manifest; #1789 ARCHITECTURE.md authored content unchanged since eb63cc19",
-          "reviewed_code_fingerprint": "47845a9aec1b11182a24a3b1c74d3fd554473953ab308fed7d33b9b4a68b1668",
+          "reason": "Integrated origin/master 205d4e8da (PR #1805 + PR #1806 v0.149.1); #1789 architecture spec unchanged",
+          "reviewed_code_fingerprint": "4ffe6185b604d6788b614e88ea63a07ed597779d64ffe40b295712cdd0d7bbeb",
           "spec_material_hash": "08d8b55a59f075e87e839424935874ac5976524805468dba8d29d27bd0bb2d22"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Refreshed v0.149.0 projections; docs-only #1789 PR leaves CLI/RPC interfaces unchanged",
-          "reviewed_code_fingerprint": "47845a9aec1b11182a24a3b1c74d3fd554473953ab308fed7d33b9b4a68b1668",
+          "reason": "Integrated origin/master 205d4e8da (v0.149.1); #1789 docs-only PR leaves CLI/RPC interfaces unchanged",
+          "reviewed_code_fingerprint": "4ffe6185b604d6788b614e88ea63a07ed597779d64ffe40b295712cdd0d7bbeb",
           "spec_material_hash": "1445e13fa7ccfa6c4a68850bd794b6b1ba7379c0148b570c3a7605b6a26beb25"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Refreshed v0.149.0 projections; docs-only #1789 PR leaves security invariants unchanged",
-          "reviewed_code_fingerprint": "47845a9aec1b11182a24a3b1c74d3fd554473953ab308fed7d33b9b4a68b1668",
+          "reason": "Integrated origin/master 205d4e8da (v0.149.1); #1789 docs-only PR leaves security invariants unchanged",
+          "reviewed_code_fingerprint": "4ffe6185b604d6788b614e88ea63a07ed597779d64ffe40b295712cdd0d7bbeb",
           "spec_material_hash": "735ae6e95c6b18ff2ccc718fbadaa4d7ae483d632aee2fb071d4f9ae6daa23de"
         }
       ],
@@ -665,13 +674,13 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795036349Z"
+      "updated_at": "1795036551Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:2b3777b853921d0d918a5ebebe21ee78a8fb3e7764b1d8b2cccdb3c62b9019f7",
+      "artifact_hash": "sha256:f77f60695dc3c840650b33cf46ac00a1fa7df248cf44202681f0ab706047046f",
       "checks": [
         {
           "name": "contract_conformance",
@@ -730,10 +739,17 @@
             "intent_id": "intent:change_01M7R4ZAHNJFT5PGD1R58DDXC5",
             "kind": "trajectory_step_recorded",
             "sequence": 5
+          },
+          {
+            "detail": "trajectory:branch_01M7R4ZAS8A2D6PMN4WRWVY4S3",
+            "event_id": "event:6",
+            "intent_id": "intent:change_01M7R4ZAHNJFT5PGD1R58DDXC5",
+            "kind": "trajectory_step_recorded",
+            "sequence": 6
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 5,
+        "next_sequence": 6,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M7R4ZAS8A2D6PMN4WRWVY4S3": {
@@ -804,6 +820,21 @@
                 ],
                 "sequence": 5,
                 "validation_findings": []
+              },
+              {
+                "action": "verification",
+                "custody_event_id": "event:6",
+                "observations": [
+                  "Merged origin/master 205d4e8da (PR #1805 + PR #1806 v0.149.1) and refreshed projections with 0.149.0 controller"
+                ],
+                "proof_refs": [],
+                "scope": [
+                  "\".decapod/managed/specs\"]",
+                  "\"README.md\"",
+                  "paths:[\"docs/book/src\""
+                ],
+                "sequence": 6,
+                "validation_findings": []
               }
             ]
           }
@@ -812,6 +843,7 @@
       "declared_commands": [],
       "destination": "pull request",
       "evidence": [
+        "Merged origin/master 205d4e8da (PR #1805 + PR #1806 v0.149.1) and refreshed projections with 0.149.0 controller",
         "Refreshed v0.149.0 Dockerfile.decapod and .manifest.json with /private/tmp/swarm-controller-0.149.0/bin/decapod",
         "cargo test --test doc_alignment (4/4 passed); --test contract_conformance (12/12 passed); --test trajectory_docs (5/5 passed); python3 relative link + SUMMARY + stale-phrase check passed; docs_sync_checkpoint_boundary 11/12 passed (1 macOS APFS EILSEQ); specs_refresh_docs 6/7 passed (pre-existing docs_cli.rs); mdbook not installed locally"
       ],
