@@ -1378,8 +1378,8 @@ field. Nothing in this operation authorizes a mutation, approval or completion.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `560a7c9e2963c1b168927c64981b568858ae09d16ddd3da3f4ff40046496a94b`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (240 files), `tests/` (235 files)
+- Repository signal fingerprint: `7c2aa1c1818ef0a68ee4c404bcb92f0cb047946bdf4a0ff7a813018a2a2b6952`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (241 files), `tests/` (236 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 
@@ -1904,3 +1904,7 @@ manual or imported/self-hosted execution cannot grant Cachix publication.
 An accepted `proof.repository_contract.canonical_local_target = true` uses ordinary CLI/RPC validation against the canonical local branch. `readiness.ready` refers to that exact local subject with `scope=repository_local_git_readiness`; `publication_ready` stays false. `qa verify commit` inspects canonical historical proof. `workspace publish` and the independent final PR gate reject local-only target authority before remote publication. Omitted/false mode retains existing digests and GitHub behavior. Candidate-only mode, changed branch, strict profile and cloud selection cannot activate the local host.
 
 Revoked-custody acceptance exposed a diagnostic mismatch: validation denied a registered managed checkout but called it external. `validate_git_workspace_context` now preserves the workspace owner's exact blocker and recovery instruction for canonical paths. External worktrees retain their distinct context diagnostic. Both routes remain refused; no authoring or publication authority is added.
+
+## Accepted interoperability refinement
+
+Both RPC transports reject malformed JSON, duplicate keys including escaped-equivalent names, and nested duplicates before invoking operation semantics. Valid JSON remains subject to each operation schema; ordinary supported negotiation still succeeds. `tests/interop_conformance.rs` and `tests/fixtures/interop_strict_json.py` exercise refusal and normal recovery through the actual binary. The Bazel integration target includes that fixture. This upstream contract changes the reviewed source inventory, which requires explicit review and fresh native proof; neither matching digests nor the separate 7b48 pending-decision guard capture establishes current admission.

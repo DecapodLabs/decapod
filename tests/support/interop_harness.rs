@@ -16,7 +16,7 @@ use std::time::Duration;
 /// Bounded, deadlock-free child wait: stdout and stderr are drained on
 /// separate threads (a chatty child must never block on a full pipe while the
 /// parent waits), and the wait never exceeds the conformance bound.
-fn wait_bounded(mut child: Child) -> Output {
+pub(super) fn wait_bounded(mut child: Child) -> Output {
     use std::io::Read;
     let mut stdout = child.stdout.take().expect("stdout");
     let mut stderr = child.stderr.take().expect("stderr");

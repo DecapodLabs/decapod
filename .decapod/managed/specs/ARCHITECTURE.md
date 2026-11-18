@@ -1165,8 +1165,8 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `560a7c9e2963c1b168927c64981b568858ae09d16ddd3da3f4ff40046496a94b`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (240 files), `tests/` (235 files)
+- Repository signal fingerprint: `7c2aa1c1818ef0a68ee4c404bcb92f0cb047946bdf4a0ff7a813018a2a2b6952`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (241 files), `tests/` (236 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 
@@ -1570,3 +1570,7 @@ the reconciled candidate.
 ## Canonical local Git proof (#1069)
 
 The existing `repository_profile::RepositoryContract` review digest optionally binds canonical local Git target authority. `workspace::resolve_readiness_repository` keeps that identity distinct from cloud GitHub identity, requiring a reviewed local contract already committed on the canonical accepted branch. `RepositoryHost::canonical_local` reuses the sealed snapshot verifier and fresh ref observations; no daemon, parallel policy engine or datastore is added. `validation_history` preserves exact local scope and checks target movement. Native strict source proof and provider requirements remain intact.
+
+## Shared trust-boundary JSON decoding
+
+Accepted upstream `core/json.rs::unique_value` rejects duplicate object keys at every nesting level before typed schema checks. `lib.rs::parse_rpc_request` uses the same decoder for stdin requests and explicit params; `core/derived_release_profile.rs` reuses it for release manifests instead of keeping a second parser. This preserves required negotiation fields against duplicate or escaped-key overwrite. The Python differential fixture is a same-host parsing control, not independent execution or custody authority. The active workstream governance journal is retained whole when integrating accepted history; Git retains the accepted journal in the merge parent.

@@ -558,8 +558,8 @@ These declarations select authoring and proof obligations; they do not attest im
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `560a7c9e2963c1b168927c64981b568858ae09d16ddd3da3f4ff40046496a94b`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (240 files), `tests/` (235 files)
+- Repository signal fingerprint: `7c2aa1c1818ef0a68ee4c404bcb92f0cb047946bdf4a0ff7a813018a2a2b6952`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (241 files), `tests/` (236 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 
@@ -1089,3 +1089,7 @@ concise and unchanged by this deeper technical explanation.
 ## Current issue-contract recovery workstream
 
 The authorized request remains issues #1761, #1762, #1763, #1764, #1767, #1768 and #1770, with the existing PR #1766 retained as the review record. Native history assessment of immutable source `1d5b9e59` reports twenty original base/identity history findings after accepted target `34f837d4` changed governance identity. This fresh claimed workstream reauthors the inspected implementation and documentation through the supported recovery path. The original branch, source commits, journal and failures remain in Git; a native present-time recovery observation grants neither historical proof nor an exception. The new source must earn its own complete current validation and accepted behavioral/path evidence. No replacement PR, protected-main edit, force push, gate waiver or merge is authorized.
+
+## Accepted upstream continuity
+
+The combined issue-contract implementation incorporates the accepted strict-JSON interoperability repair from PR #1791 and release v0.148.12 at 7bd0a915. Required decisions survive same-task plan initialization and remain blockers until the supported resolution transition; resolution invalidates acceptance and phase evidence rather than authenticating human identity. Earlier failed validation and original PR #1766 history remain auditable. Exact-source native validation and required CI must be repeated after this accepted-target change.

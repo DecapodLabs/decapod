@@ -56,6 +56,7 @@ pub mod intent_reconcile;
 pub mod interop;
 pub mod interview;
 pub(crate) mod jev_history;
+pub(crate) mod json;
 pub mod mentor;
 pub mod migration;
 pub mod native_proof;
