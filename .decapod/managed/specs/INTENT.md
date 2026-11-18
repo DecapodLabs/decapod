@@ -1,5 +1,17 @@
 # Intent
 
+## Observed proof remains current only within its execution contract
+
+A genuine prior success must remain inspectable as history while a newer full
+not-ready judgment withdraws current workunit verification. Safe repair must
+remain available: fresh complete proof for the exact current task and renewed
+custody can restore VERIFIED. This correction uses the existing validation
+history and workunit journal; it adds no alternative proof producer. The CLI
+regression executes real required Python checks and an explicitly declared
+external failure control. It proves bounded currentness and recovery, without
+claiming complete external-input closure, forge publication admission, or an
+independent agent/host.
+
 ## Autonomous safe config recovery and privilege custody (#1771, #1776)
 
 The cloud boundary suite treats embedded schema discovery as file-only recovery,
@@ -495,7 +507,7 @@ These declarations select authoring and proof obligations; they do not attest im
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `287dcb5d62f31d02dba09fb7a788ec1bbb01ecd4ee72a2bb301fa7796c105ea9`
+- Repository signal fingerprint: `2db17653fae8b2be41ccd0390d5d67bbd3a1dec72e94e0fc165a60f6619ab959`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (236 files), `tests/` (235 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

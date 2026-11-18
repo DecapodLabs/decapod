@@ -844,6 +844,35 @@ fn append_snapshot(
     binding: Option<crate::core::trajectory::ExecutionStateBinding>,
     proof_hashes: std::collections::BTreeMap<String, String>,
 ) -> Result<WorkUnitJournalRecord, error::DecapodError> {
+    append_snapshot_with_custody(
+        root,
+        manifest,
+        operation_id,
+        kind,
+        AppendPrecondition {
+            generation: expected_generation,
+            custody: None,
+        },
+        binding,
+        proof_hashes,
+    )
+}
+
+struct AppendPrecondition<'a> {
+    generation: u64,
+    custody: Option<&'a crate::core::todo::HistoricalTaskBinding>,
+}
+
+fn append_snapshot_with_custody(
+    root: &Path,
+    manifest: &WorkUnitManifest,
+    operation_id: &str,
+    kind: &str,
+    precondition: AppendPrecondition<'_>,
+    binding: Option<crate::core::trajectory::ExecutionStateBinding>,
+    proof_hashes: std::collections::BTreeMap<String, String>,
+) -> Result<WorkUnitJournalRecord, error::DecapodError> {
+    let expected_generation = precondition.generation;
     validate_operation_id(operation_id)?;
     validate_task_id(&manifest.task_id)?;
     if serde_json::to_vec_pretty(manifest)
@@ -867,8 +896,9 @@ fn append_snapshot(
         |conn| {
             let records = journal_records_on_conn(conn, &manifest.task_id)?;
             let latest = records.last();
-            if manifest.status == WorkUnitStatus::Verified
-                && (binding.is_some() || !matches!(kind, "initialized" | "legacy_baseline"))
+            let verified = manifest.status == WorkUnitStatus::Verified
+                && (binding.is_some() || !matches!(kind, "initialized" | "legacy_baseline"));
+            if verified || precondition.custody.is_some()
             {
                 let canonical = crate::core::store::find_governance_root(root).join(".decapod/data");
                 if crate::core::events::canonical_db_path(&data).canonicalize()?
@@ -877,7 +907,12 @@ fn append_snapshot(
                     return Err(journal_error("WORKUNIT_PROOF_ATOMIC_DOMAIN_UNSUPPORTED",
                         "workspace-local workunit state and canonical task proof use different databases; no cross-store atomic acceptance is asserted"));
                 }
-                crate::core::validation_history::check_workunit_append_on_conn(conn, manifest)?;
+                if verified {
+                    crate::core::validation_history::check_workunit_append_on_conn(conn, manifest)?;
+                }
+                if let Some(custody) = precondition.custody {
+                    crate::core::todo::check_validation_binding_on_conn(conn, custody, false)?;
+                }
             }
             let manifest_hash = manifest
                 .canonical_hash_hex()
@@ -941,6 +976,56 @@ fn append_snapshot(
             Ok(record)
         },
     )
+}
+
+/// Withdraw current proof after a full validator judgment. This grants no
+/// success and preserves the original observations in the append-only journal.
+pub(crate) fn invalidate_current_validation(
+    root: &Path,
+    custody: &crate::core::todo::HistoricalTaskBinding,
+    subject: &WorkUnitValidationSubject,
+) -> Result<(), error::DecapodError> {
+    with_workunit_lock(root, || {
+        let previous = journal_records(root, &custody.task_id)?
+            .pop()
+            .ok_or_else(|| {
+                journal_error(
+                    "WORKUNIT_GENERATION_CONFLICT",
+                    "observed workunit is missing",
+                )
+            })?;
+        if previous.generation != subject.generation
+            || previous.manifest_hash != subject.manifest_digest
+            || validation_contract_digest(&previous.manifest)? != subject.contract_digest
+        {
+            return Err(journal_error(
+                "WORKUNIT_GENERATION_CONFLICT",
+                "workunit changed during full validation",
+            ));
+        }
+        let mut manifest = previous.manifest;
+        if manifest.status == WorkUnitStatus::Verified {
+            manifest.status = WorkUnitStatus::Claimed;
+        }
+        manifest.proof_results.clear();
+        manifest.validation_epoch = None;
+        manifest.validation_record = None;
+        // Advance even if no proof was promoted: a prior successful record
+        // must not become applicable again after this newer judgment.
+        let record = append_snapshot_with_custody(
+            root,
+            &manifest,
+            &crate::core::ulid::new_ulid(),
+            "validation_not_ready",
+            AppendPrecondition {
+                generation: subject.generation,
+                custody: Some(custody),
+            },
+            previous.binding,
+            Default::default(),
+        )?;
+        publish_projection(root, &record.manifest)
+    })
 }
 
 fn baseline_if_needed(

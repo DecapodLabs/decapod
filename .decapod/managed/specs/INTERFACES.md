@@ -29,6 +29,20 @@ Discarding obsolete passing declarations allows a fresh checkpoint and resume;
 the explicit diagnostic fail marker used to discard a claim is not an
 independently executed failed test. Historical journal entries remain intact.
 
+A completed task-bound full validation with a not-ready judgment withdraws
+current workunit verification through the existing journal. It clears the
+current proof results, validation epoch and producer selector, downgrades
+VERIFIED to CLAIMED, and advances the journal even if promotion had not yet
+occurred. The event is `validation_not_ready`: it does not assert that every
+check executed or failed. Partial CI-local and preparation scopes do not have
+this authority. Earlier successful observations remain historical records.
+
+Fresh full proof under a renewed lease can restore VERIFIED. The implicit
+workunit selector chooses the newest canonical success for the exact current
+task contract and custody; every epoch, source, execution, input and workunit
+subject check still applies. Generic `qa verify commit` inspection retains its
+mixed-custody ambiguity error and requires explicit historical selection.
+
 ## Internal source currency agreement (#1753)
 
 The existing private config-only source policy now also governs version-only
@@ -1247,7 +1261,7 @@ field. Nothing in this operation authorizes a mutation, approval or completion.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `287dcb5d62f31d02dba09fb7a788ec1bbb01ecd4ee72a2bb301fa7796c105ea9`
+- Repository signal fingerprint: `2db17653fae8b2be41ccd0390d5d67bbd3a1dec72e94e0fc165a60f6619ab959`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (236 files), `tests/` (235 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

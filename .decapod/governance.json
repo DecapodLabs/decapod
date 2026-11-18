@@ -573,6 +573,11 @@
     "target_base": "origin/master"
   },
   "claims": {
+    "current-validation-withdrawal": {
+      "statement": "A newer task-bound full not-ready judgment withdraws current workunit verification, preserves genuine historical success, and permits fresh current-custody proof recovery.",
+      "falsifier": "An actual newer required failure leaves old VERIFIED authority current, an old subject promotes after withdrawal, or fresh canonical proof under renewed custody cannot restore VERIFIED.",
+      "status": "open"
+    },
     "workunit-declaration-native-guard": {
       "statement": "In the actual admitted current-binary control, recording a source-file pass does not mint VERIFIED; changed continuity is refused and explicit obsolete-claim discard permits fresh checkpoint/resume.",
       "falsifier": "The existing-source-file declaration reaches VERIFIED without canonical full proof, or the old checkpoint resumes after governing trajectory changes, or lawful fresh checkpoint/resume cannot proceed after obsolete passing claims are discarded.",
@@ -613,6 +618,11 @@
       "id": "workunit-controller10-projections-1660",
       "summary": "Regenerate release10 metadata through official isolated controller and retain canonical workunit proof requirements",
       "input_digest": "sha256:3983ecd797499c5a9f730a0d6728f2dbe5937ff009a4a044c96791f127d50d1f"
+    },
+    {
+      "id": "currentness-withdrawal-and-renewed-custody",
+      "summary": "Actual official0.148.10 exposed old VERIFIED after newer required failure and blocked promotion after fresh renewed-custody success. Correct existing history/journal paths; retain all positive producer and currentness checks. Add real CLI failure/recovery and atomic race/split-store regressions; new source execution pending Actions.",
+      "input_digest": "sha256:6e5e34883db50b92f912bd18380caf03b038bd0ff1365263a0f119615997b59e"
     }
   ],
   "intents": {
@@ -643,7 +653,7 @@
       },
       "deferred_questions": [],
       "human_questions": [],
-      "intent": "Adversarial actual-binary audit of #1660 under #1735: in this genuinely claimed admitted worktree, a fabricated pass and artifact hash must not mint VERIFIED; preserve canonical proof, journal history and legitimate current completion. Reuse merged #1681; classify unsupported split-store domains explicitly; no gate-skip variables, raw datastore edits, new proof engine or premature closure.",
+      "intent": "Extend PR1788 using actual official-binary falsifiers: withdraw current workunit verification on a newer task-bound full not-ready judgment through its existing atomic journal; retain historical successes and never label unexecuted checks failed. Select proof for exact current task and custody so fresh successful validation after lease renewal restores legitimate operation. Preserve generic history ambiguity, producer integrity, all currentness fences and split-store refusal. Use GitHub Actions for source verification under the explicit user publication exception; native publication admission remains unproven.",
       "phases": [],
       "proof_hooks": [
         "decapod validate"
@@ -653,23 +663,23 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Current genuine capsule, runtime proof and canonical workunit append architecture is preserved; matching official0.148.10 controller regenerates release metadata without changing the proof owner.",
-          "reviewed_code_fingerprint": "287dcb5d62f31d02dba09fb7a788ec1bbb01ecd4ee72a2bb301fa7796c105ea9",
-          "spec_material_hash": "d233cbb406c4dd580d2dd1b1767c42bedb43bd18f90f19b4a153c4ab2d56c85c"
+          "reason": "Reviewed final currentness withdrawal and exact-custody selection in existing history/journal owners; source execution remains pending on Actions.",
+          "reviewed_code_fingerprint": "2db17653fae8b2be41ccd0390d5d67bbd3a1dec72e94e0fc165a60f6619ab959",
+          "spec_material_hash": "601a399687f8bf9e937ee043bfb05c5e20914070e9413ecfbdb452999489ef2c"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Retain diagnostic declarations, current full-validation requirement and genuine capsule lineage; projection refresh cannot certify execution or promote proof.",
-          "reviewed_code_fingerprint": "287dcb5d62f31d02dba09fb7a788ec1bbb01ecd4ee72a2bb301fa7796c105ea9",
-          "spec_material_hash": "6f1496bae0bede67763604fe3cadbf147971570eeadd1c3a9fc3e7936eed72f5"
+          "reason": "Reviewed truthful full not-ready journal semantics, historical ambiguity and renewed-custody recovery without new success authority.",
+          "reviewed_code_fingerprint": "2db17653fae8b2be41ccd0390d5d67bbd3a1dec72e94e0fc165a60f6619ab959",
+          "spec_material_hash": "2f97ab2be6c259d4365f5a71017b15d0e74407feab0624c71337ecbe1c38b716"
         },
         {
-          "disposition": "unchanged_with_reason",
+          "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Current source retains accepted canonical policy and atomic proof custody; private official session update does not modify these privilege or trust boundaries.",
-          "reviewed_code_fingerprint": "287dcb5d62f31d02dba09fb7a788ec1bbb01ecd4ee72a2bb301fa7796c105ea9",
-          "spec_material_hash": "cdc863757905c53f4f176284c72744f0575184c65a059b7edf6239b47c4fc644"
+          "reason": "Reviewed atomic custody/generation refusal, preserved producer validation and explicit split-store unsupported boundary.",
+          "reviewed_code_fingerprint": "2db17653fae8b2be41ccd0390d5d67bbd3a1dec72e94e0fc165a60f6619ab959",
+          "spec_material_hash": "01c40f1a3b54a8c42ac8c5de455ecacfcc3a5572861212f46f5055589eaffc87"
         }
       ],
       "state": "APPROVED",
@@ -680,15 +690,31 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1794984324Z"
+      "updated_at": "1794996884Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch",
         "No gate-skip variables; authentic original task and canonical shared runtime; no fabricated execution evidence or status rewrite."
       ],
-      "artifact_hash": "sha256:41235e570e467a4cfd0b4646db6ac7c282715cebd0c3a5df6096cfad858f3dda",
+      "artifact_hash": "sha256:dcfab1dcbfd1e5e1c4478af5f3a28f85eb04def934881550422a671be66cf7cf",
       "checks": [
+        {
+          "name": "actual-official-binary-canonical-positive",
+          "status": "passed"
+        },
+        {
+          "name": "actual-official-binary-currentness-falsifier",
+          "status": "failed"
+        },
+        {
+          "name": "actual-official-binary-renewed-lease-recovery",
+          "status": "failed"
+        },
+        {
+          "name": "candidate-source-execution",
+          "status": "unavailable"
+        },
         {
           "name": "counterfeit_hash_declared_pass",
           "status": "failed"
@@ -777,10 +803,17 @@
             "intent_id": "intent:change_01M7P04Q5RZB944BR5SYSDARTZ",
             "kind": "trajectory_step_recorded",
             "sequence": 10
+          },
+          {
+            "detail": "trajectory:branch_01M7P04Q8GWB2CF2GZZZEJR5K4",
+            "event_id": "event:11",
+            "intent_id": "intent:change_01M7P04Q5RZB944BR5SYSDARTZ",
+            "kind": "trajectory_step_recorded",
+            "sequence": 11
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 10,
+        "next_sequence": 11,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M7P04Q8GWB2CF2GZZZEJR5K4": {
@@ -898,16 +931,48 @@
                 ],
                 "sequence": 10,
                 "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "command": "Actual official0.148.10 full local Git validation and native workunit transitions preserved in freshness fixture evidence 055-076; initial PR1788 Actions success remains historical after this source extension.",
+                "custody_event_id": "event:11",
+                "observations": [
+                  "src/decapod/core/validation_history.rs",
+                  "src/decapod/core/workunit.rs",
+                  "src/decapod/core/validation_history.rs",
+                  "src/decapod/core/workunit.rs",
+                  "tests/entrypoint_correctness.rs",
+                  "tests/support/fresh_docs_readiness.rs",
+                  "tests/unit/core/validation_history_workunit_tests.rs",
+                  "tests/unit/core/workunit_journal_tests.rs",
+                  "/private/tmp/attack-gaps-1660-freshness-state.json",
+                  "/private/tmp/attack-gaps-current-actions-evidence.json"
+                ],
+                "proof_refs": [
+                  "actual-official-binary-currentness-falsifier",
+                  "actual-official-binary-renewed-lease-recovery",
+                  "actual-official-binary-canonical-positive",
+                  "candidate-source-execution"
+                ],
+                "scope": [
+                  "issue-1660"
+                ],
+                "sequence": 11,
+                "validation_findings": []
               }
             ]
           }
         }
       },
-      "declared_commands": [],
+      "declared_commands": [
+        "Actual official0.148.10 full local Git validation and native workunit transitions preserved in freshness fixture evidence 055-076; initial PR1788 Actions success remains historical after this source extension."
+      ],
       "destination": "pull request",
       "evidence": [
         "/private/tmp/attack-gaps-1660-counterfeit-execution.json; sha256:abc refused at artifact observation. /private/tmp/attack-gaps-1660-source-file-pass.json; real source-file pass declaration recorded, VERIFIED refused by canonical full validation history; remained CLAIMED, journal current and resumable generation7. These are tested denials, not independent host proof or successful completion.",
+        "/private/tmp/attack-gaps-1660-freshness-state.json",
         "/private/tmp/attack-gaps-1660-source-file-pass.json proves the actual declaration/VERIFIED distinction. /private/tmp/attack-gaps-1660-old-checkpoint-resume.json preserves EXECUTION_STATE_CHANGED; obsolete-pass discard then checkpoint generation9 and resume generation10 succeeded. Fail marker is diagnostic claim discard, not an executed failing suite. Canonical full proof and hosted positive VERIFIED remain unproven. Added replayable no-skip CLI regression on existing consumer fixture; not yet executed.",
+        "/private/tmp/attack-gaps-current-actions-evidence.json",
         "Accepted target advanced again to34f837d4 through ordinary0.148.10 release; merge preserves real parents and existing checkpoints. Independently hashed all105 inventory inputs in this worktree and matched official agent.init discovery: sha256:e1a242381f7411a8facfe285e2945040dafa93c46dd48c11a86ebd55d9a95b3f. Only Cargo package versions0.148.9 to0.148.10 changed;103 other sources identical. Backed up editable config before reconciliation; no workflow, carrier, required graph, toolchain, controller or policy weakening. Previous context/spec-review failures retained. Refreshed security as well as architecture/interface reviews after current source inspection. cargo fmt used only to format authored source; no local build or shadow proof suite.",
         "Correction to provisional cycle hypothesis: source evaluate_workunit_rule explicitly accepts CLAIMED plus opaque complete runtime proof before canonical append. Actual workunit has no capsule state_ref, violating verify_capsule_policy_lineage_for_task. Resolve genuine capsule dependency via existing query/attach-state and checkpoint; do not relax validation or treat diagnostic fail as test failure.",
         "Independently remeasured all105 source-inventory inputs; byte-identical to reviewed #871 inputs; only accepted package-version0.148.7 to0.148.9 differs from edbfc00d. No check, executor, helper, workflow or toolchain change.",
@@ -915,16 +980,26 @@
         "Official0.148.9 validation-3 reached authenticated provider collection and refused terminal workunit completion; missing capsule state_ref independently confirmed in workunit get. Existing evaluate_workunit_rule already accepts opaque current complete proof from CLAIMED. Genuine query/attach-state/checkpoint recovered the required capsule. Extend actual CLI regression to prepare capsule before counterfeit proof; new revision not yet executed. No validator, policy or proof-plan weakening.",
         "Validation4 at a20e15e7 rejected accepted base or transport ref changed; independent remote readback showed master c47137adae825aeaaede4473f91ec21c6bd4b853 after accepted1779. Reviewed two-parent merge includes accepted code/tests and preserves authored1660 regression. Preserved exact active governance from first parent through Git conflict resolution rather than combine unrelated trajectories; current checkpoint generated natively before merge commit. Source specs retain accepted parser/RBAC meaning and scope historical1779 draft exception only to that prior workstream. No readiness inherited."
       ],
-      "inspected_files": [],
+      "inspected_files": [
+        "src/decapod/core/validation_history.rs",
+        "src/decapod/core/workunit.rs"
+      ],
       "intent_id": "intent:change_01M7P04Q5RZB944BR5SYSDARTZ",
       "modified_files": [
         ".decapod/config.toml",
         ".decapod/managed/specs/ARCHITECTURE.md",
         ".decapod/managed/specs/INTENT.md",
         ".decapod/managed/specs/INTERFACES.md",
-        "tests/consumer_readiness.rs"
+        "src/decapod/core/validation_history.rs",
+        "src/decapod/core/workunit.rs",
+        "tests/consumer_readiness.rs",
+        "tests/entrypoint_correctness.rs",
+        "tests/support/fresh_docs_readiness.rs",
+        "tests/unit/core/validation_history_workunit_tests.rs",
+        "tests/unit/core/workunit_journal_tests.rs"
       ],
       "next_transitions": [
+        "Checkpoint source and semantic specs, push existing PR1788, execute GitHub Actions under explicit user publication exception; no Buildkite wait or native admission claim.",
         "Refine plan and declare falsifiable checks"
       ],
       "repo_scope": [

@@ -1,5 +1,22 @@
 # Architecture
 
+## Current workunit validation judgments
+
+`core::validation_history::finish_archive` retains immutable successful
+observations and separately withdraws current workunit proof after a completed
+task-bound full not-ready judgment. `core::workunit` appends the withdrawal to
+its existing canonical journal, checking the observed generation and current
+task/custody inside the same database transaction before publishing the cache
+projection. The generation advances even when no proof had been promoted, so
+an earlier success cannot later authorize that subject. Recovery restores the
+journal's narrowed state; it does not reconstruct a success from diagnostics.
+
+Current workunit selection filters canonical history by exact current task
+binding before applying the existing proof and currentness checks. It never
+falls back to older custody or skips a newer matching stale observation.
+General historical lookup preserves its ambiguity contract. Separate stores
+remain explicitly unsupported for atomic proof acceptance or withdrawal.
+
 ## Workunit declarations retain their proof owner (#1660)
 
 `validation_rules::evaluate_workunit_rule` accepts the opaque, complete current
@@ -1006,7 +1023,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `287dcb5d62f31d02dba09fb7a788ec1bbb01ecd4ee72a2bb301fa7796c105ea9`
+- Repository signal fingerprint: `2db17653fae8b2be41ccd0390d5d67bbd3a1dec72e94e0fc165a60f6619ab959`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (236 files), `tests/` (235 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
