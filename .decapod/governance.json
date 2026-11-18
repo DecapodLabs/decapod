@@ -627,6 +627,11 @@
       "id": "accepted-conformance-release11-integration",
       "summary": "Checkpoint accepted conformance/RPC guards and release0.148.11 with unchanged observer; refresh official native projections and source inventory after target invalidated earlier admission; require fresh complete proof",
       "input_digest": "sha256:1e1fa4f1e4ab8f01b214ab58df58fb6b1975b44e03e6b7b8ba639d63327136b9"
+    },
+    {
+      "id": "release11-tag-currency-and-native-pin",
+      "summary": "Checkpoint native0.148.11 Docker pin after read-only release tag fetch; preserve failed14 and require full15 without any tag publication or proof import",
+      "input_digest": "sha256:0f5e8ed8ce937f21d072d630d3690f0d733a1dc6606bdde64948e6999f885eab"
     }
   ],
   "intents": {
@@ -667,21 +672,21 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Preserve accepted source-versus-execution conformance and strict RPC registration/parameter/session guards alongside unchanged read-only observer; official0.148.11 controller,105 source definitions reviewed, full current-candidate proof remains required",
+          "reason": "Native0.148.11 regenerated current Docker pin; read-only tag fetch repairs release-history currency after validation14 stopped before CI; preserve accepted conformance and observer source, all required graph checks and fresh-evidence boundary",
           "reviewed_code_fingerprint": "7923ecd8b88929f0423f533f7837ced19bd932a774458551fd20b74cd670c9dc",
           "spec_material_hash": "3b63516a8cf4a08e90043eae356dfd2a0eca06f8b98e599615ba708c6154119a"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Preserve accepted source-versus-execution conformance and strict RPC registration/parameter/session guards alongside unchanged read-only observer; official0.148.11 controller,105 source definitions reviewed, full current-candidate proof remains required",
+          "reason": "Native0.148.11 regenerated current Docker pin; read-only tag fetch repairs release-history currency after validation14 stopped before CI; preserve accepted conformance and observer source, all required graph checks and fresh-evidence boundary",
           "reviewed_code_fingerprint": "7923ecd8b88929f0423f533f7837ced19bd932a774458551fd20b74cd670c9dc",
           "spec_material_hash": "81514c33f3601499867670f91f4d8a8ba8bfc955107a6354b68ff91b9fbe0c69"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Preserve accepted source-versus-execution conformance and strict RPC registration/parameter/session guards alongside unchanged read-only observer; official0.148.11 controller,105 source definitions reviewed, full current-candidate proof remains required",
+          "reason": "Native0.148.11 regenerated current Docker pin; read-only tag fetch repairs release-history currency after validation14 stopped before CI; preserve accepted conformance and observer source, all required graph checks and fresh-evidence boundary",
           "reviewed_code_fingerprint": "7923ecd8b88929f0423f533f7837ced19bd932a774458551fd20b74cd670c9dc",
           "spec_material_hash": "e4f5f7980dc0644082f18f5ed99f3829acf1179c4b3e556b13cfd7390ab5cd20"
         }
@@ -694,7 +699,7 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1794999086Z"
+      "updated_at": "1794999397Z"
     },
     "trajectory": {
       "active_boundaries": [
