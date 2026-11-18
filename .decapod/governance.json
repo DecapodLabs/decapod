@@ -593,6 +593,15 @@
       "proof_refs": [
         "post-merge cargo test --test governance_fault_detection_1795: 4 passed; 0 failed (850.62s)"
       ]
+    },
+    {
+      "id": "integrate-master-v01491-1795",
+      "summary": "Integrate origin/master 205d4e8da (v0.149.1) and refresh v0.149.1 specs and Dockerfile",
+      "input_digest": "sha256:073f7f184fd9611c685421e5cf199d8e9aa9940386b497827072119137569767",
+      "proof_refs": [
+        ".decapod/managed/specs/SEMANTICS.md",
+        "tests/governance_fault_detection_1795.rs"
+      ]
     }
   ],
   "intents": {
@@ -634,22 +643,22 @@
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Integrated origin/master 0b6ce0a8 (PR #1799); scope of #1795 remains bounded to tests/governance_fault_detection_1795.rs and SEMANTICS.md.",
-          "reviewed_code_fingerprint": "6d18ee96fe4bd077edf94c84003dd17e9a257992a9f400431322a88ac6b0e617",
+          "reason": "Reconciled #1795 branch with origin/master 205d4e8da (v0.149.1); only tests/governance_fault_detection_1795.rs and SEMANTICS.md authored by #1795",
+          "reviewed_code_fingerprint": "856ca8f50edff2cb1a5ebd9b9cbb7e9ce23f65f1414e0a8f320d5df5e24e3f71",
           "spec_material_hash": "080e1e015d867051ec4ecbb1f18aca92a2d62a05798377057e563aaa5a3764e0"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Integrated origin/master 0b6ce0a8 (PR #1799); scope of #1795 remains bounded to tests/governance_fault_detection_1795.rs and SEMANTICS.md.",
-          "reviewed_code_fingerprint": "6d18ee96fe4bd077edf94c84003dd17e9a257992a9f400431322a88ac6b0e617",
-          "spec_material_hash": "3baf7067b96d8fad41fcf9ff69aa2866b99b9bc631a1132df1daf96de9c82ab7"
+          "reason": "Reconciled #1795 branch with origin/master 205d4e8da (v0.149.1); no interface changes in #1795",
+          "reviewed_code_fingerprint": "856ca8f50edff2cb1a5ebd9b9cbb7e9ce23f65f1414e0a8f320d5df5e24e3f71",
+          "spec_material_hash": "1445e13fa7ccfa6c4a68850bd794b6b1ba7379c0148b570c3a7605b6a26beb25"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Integrated origin/master 0b6ce0a8 (PR #1799); scope of #1795 remains bounded to tests/governance_fault_detection_1795.rs and SEMANTICS.md.",
-          "reviewed_code_fingerprint": "6d18ee96fe4bd077edf94c84003dd17e9a257992a9f400431322a88ac6b0e617",
+          "reason": "Reconciled #1795 branch with origin/master 205d4e8da (v0.149.1); #1795 adds adversarial test suite and semantics prose without changing security controls",
+          "reviewed_code_fingerprint": "856ca8f50edff2cb1a5ebd9b9cbb7e9ce23f65f1414e0a8f320d5df5e24e3f71",
           "spec_material_hash": "735ae6e95c6b18ff2ccc718fbadaa4d7ae483d632aee2fb071d4f9ae6daa23de"
         }
       ],
@@ -661,20 +670,32 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795022532Z"
+      "updated_at": "1795038310Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:e54aa3795573f6571bde385d309765a71fedc46958152e4cf3d55fa3030865ad",
+      "artifact_hash": "sha256:e170b4469c6022100fdf1324fcf14ba145c1850569fb36df39bad705a4b1d404",
       "checks": [
         {
           "name": "cargo-fmt",
           "status": "passed"
         },
         {
+          "name": "clippy",
+          "status": "passed"
+        },
+        {
           "name": "clippy-test-1795",
+          "status": "passed"
+        },
+        {
+          "name": "fault_detection_fast_tests",
+          "status": "passed"
+        },
+        {
+          "name": "fmt",
           "status": "passed"
         },
         {
@@ -722,10 +743,17 @@
             "intent_id": "intent:change_01M7QN04YE8S7HSJ4C7NA5VKRV",
             "kind": "trajectory_step_recorded",
             "sequence": 5
+          },
+          {
+            "detail": "trajectory:branch_01M7QN05164G5FSGX020W1AAKJ",
+            "event_id": "event:6",
+            "intent_id": "intent:change_01M7QN04YE8S7HSJ4C7NA5VKRV",
+            "kind": "trajectory_step_recorded",
+            "sequence": 6
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 5,
+        "next_sequence": 6,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M7QN05164G5FSGX020W1AAKJ": {
@@ -783,6 +811,24 @@
                 ],
                 "sequence": 5,
                 "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:6",
+                "observations": [
+                  "Merged origin/master 205d4e8da (v0.149.1); fmt, clippy, and 3 fast fault-detection tests passed; full 4/4 suite passed on b2d65e9d"
+                ],
+                "proof_refs": [
+                  "fmt",
+                  "clippy",
+                  "fault_detection_fast_tests"
+                ],
+                "scope": [
+                  "\".decapod/managed/specs/SEMANTICS.md\"]",
+                  "paths:[\"tests/governance_fault_detection_1795.rs\""
+                ],
+                "sequence": 6,
+                "validation_findings": []
               }
             ]
           }
@@ -792,7 +838,8 @@
       "destination": "pull request",
       "evidence": [
         "4/4 tests passed in 750.39s; 5/5 isolated rule faults reach Detected (RULE-CUSTODY-004 survived unchanged suite and caught by expired_lease_renew_negative_and_positive_fixture)",
-        "Merged origin/master 0b6ce0a8 (PR #1799); specs.refresh + review-spec completed; cargo fmt --all -- --check, clippy -D warnings, and cargo test --test governance_fault_detection_1795 passed 4/4 in 850.62s"
+        "Merged origin/master 0b6ce0a8 (PR #1799); specs.refresh + review-spec completed; cargo fmt --all -- --check, clippy -D warnings, and cargo test --test governance_fault_detection_1795 passed 4/4 in 850.62s",
+        "Merged origin/master 205d4e8da (v0.149.1); fmt, clippy, and 3 fast fault-detection tests passed; full 4/4 suite passed on b2d65e9d"
       ],
       "inspected_files": [
         "src/decapod/core/group_broker.rs",
