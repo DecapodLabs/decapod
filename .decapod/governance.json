@@ -668,6 +668,22 @@
         "exact_candidate_governance_1052",
         "validation_scope"
       ]
+    },
+    {
+      "id": "cp-1740-2",
+      "summary": "Refresh specs and spec reviews for final #1740 code fingerprint after reconciling tests/exact_candidate_governance_1052.rs on v0.149.1.",
+      "input_digest": "sha256:250e521e9d1d341266dbcec4b9fc7c2b4c3d25e2fd2ec4ecab26925a41b358b4",
+      "proof_refs": [
+        "cargo_clippy",
+        "cargo_fmt",
+        "consumer_readiness",
+        "core_repository_profile",
+        "core_validation_history",
+        "core_validation_runtime",
+        "doc_alignment",
+        "exact_candidate_governance_1052",
+        "validation_scope"
+      ]
     }
   ],
   "intents": {
@@ -708,22 +724,22 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Document target closure resolution, shared_inputs diff expansion, and target-bound receipt history for #1740",
-          "reviewed_code_fingerprint": "1c79591693b4afd49851a82a02704ef65c2353b3b287b89bf09603eea9b58e7c",
+          "reason": "Document target closure resolution, shared_inputs diff expansion, and target-bound receipt history for #1740 (code reconciled with exact_candidate_governance_1052)",
+          "reviewed_code_fingerprint": "b44086f641734e1e341b6c43fc677babd6284c24bc499c642115e8041e830a03",
           "spec_material_hash": "e8d00d685b21659476795212b211594118e1acfe49b1a4fdac9904348c6bbe65"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Document --target CLI/RPC readiness flags, RepositoryContract.targets schema, and target-scoped proof boundaries for #1740",
-          "reviewed_code_fingerprint": "1c79591693b4afd49851a82a02704ef65c2353b3b287b89bf09603eea9b58e7c",
+          "reason": "Document --target CLI/RPC readiness flags, RepositoryContract.targets schema, and target-scoped proof boundaries for #1740 (code reconciled with exact_candidate_governance_1052)",
+          "reviewed_code_fingerprint": "b44086f641734e1e341b6c43fc677babd6284c24bc499c642115e8041e830a03",
           "spec_material_hash": "3d2e11acd9c14bea4b45b77931af5aed1eef385f53bc87092713c59b4296901c"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Document fail-closed target contract preservation, target receipt scope isolation, and incompatible executor checks for #1740",
-          "reviewed_code_fingerprint": "1c79591693b4afd49851a82a02704ef65c2353b3b287b89bf09603eea9b58e7c",
+          "reason": "Document fail-closed target contract preservation, target receipt scope isolation, and incompatible executor checks for #1740 (code reconciled with exact_candidate_governance_1052)",
+          "reviewed_code_fingerprint": "b44086f641734e1e341b6c43fc677babd6284c24bc499c642115e8041e830a03",
           "spec_material_hash": "a8fc49a6589b9b8889199ddc871d5c64cc823ce7e79ca3306284a98d4425ee11"
         }
       ],
@@ -735,7 +751,7 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795036333Z"
+      "updated_at": "1795039626Z"
     },
     "trajectory": {
       "active_boundaries": [
