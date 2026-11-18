@@ -580,6 +580,14 @@
       "proof_refs": [
         "/private/tmp/attack-gaps-871-before.json"
       ]
+    },
+    {
+      "id": "interop-inventory-release-871",
+      "summary": "Review all105 inputs against last accepted declaration; acknowledge only Cargo package-version changes0.148.7 to0.148.9; retain required graph and previous failure.",
+      "input_digest": "sha256:6e22366ad069ceaeb5e8404a21a25ee8016c27e3458807e735d2d6dc6f47acfd",
+      "proof_refs": [
+        "/private/tmp/attack-gaps-871-inventory-review.json"
+      ]
     }
   ],
   "intents": {
@@ -621,21 +629,21 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Keep full-validation and workunit proof owners; static conformance discovery cannot infer test-specific execution from their existence.",
+          "reason": "Conformance still uses existing proof owners. Reviewed all105 source inputs against accepted edbfc00d; only package version changed; no adapter or required graph change.",
           "reviewed_code_fingerprint": "8d3a83eb6e973692366d0bc6921e498f21e64aa289a5eda3bcdae3779945f46d",
           "spec_material_hash": "c238d7dfb20c2c4da1cb9972dd628627c335f8a148e33990376fd6629a775dca"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Same v1 wire shape and existing enum values; correct false default execution labels, preserve historical JSON parsing and source coverage references without admitting them as proof.",
+          "reason": "Preserve v1 wire shape and coverage; source-inventory acknowledgment changes no RPC, executable recipe, requiredness, transport or producer authority.",
           "reviewed_code_fingerprint": "8d3a83eb6e973692366d0bc6921e498f21e64aa289a5eda3bcdae3779945f46d",
           "spec_material_hash": "cb50da1c20b7a2b46fb4159558869344ca818e55b2208059ebe303e4fd5813b0"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "No authority expansion, producer import, policy weakening, raw datastore access, or changed security boundary; verification declarations now fail closed.",
+          "reason": "Package-version-only inventory review grants no new authority or bypass; existing policy, workflow and all required checks preserved.",
           "reviewed_code_fingerprint": "8d3a83eb6e973692366d0bc6921e498f21e64aa289a5eda3bcdae3779945f46d",
           "spec_material_hash": "0c791a6100ed5aec7fe4cedfa16680988dd1e48d50d00af272ef9dff372c3d4d"
         }
@@ -648,17 +656,21 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1794960377Z"
+      "updated_at": "1794960554Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch",
         "Linked worktree admission and execution-ready verified separately after backup denial; maintenance policy unchanged. No source/PR changes in other owners."
       ],
-      "artifact_hash": "sha256:ef6dbb8c843346a0d4117ee25dc8aee6dc35fd3d6954a7b5b6a19b37a03e2e9b",
+      "artifact_hash": "sha256:d4fb348a35e0b1455505d4d766b312aa15a8751ae3dec06b46d5979fda37b107",
       "checks": [
         {
           "name": "baseline_counterexample",
+          "status": "failed"
+        },
+        {
+          "name": "initial_full_validation",
           "status": "failed"
         },
         {
@@ -666,7 +678,7 @@
           "status": "failed"
         }
       ],
-      "current_phase": "implementation",
+      "current_phase": "validation",
       "custody": {
         "events": [
           {
@@ -694,10 +706,17 @@
             "intent_id": "intent:change_01M7NWVMEADM6FS731H2AKEVZM",
             "kind": "trajectory_step_recorded",
             "sequence": 5
+          },
+          {
+            "detail": "trajectory:branch_01M7NWVMHPED3ZZQ4W9D4A0ZJ6",
+            "event_id": "event:6",
+            "intent_id": "intent:change_01M7NWVMEADM6FS731H2AKEVZM",
+            "kind": "trajectory_step_recorded",
+            "sequence": 6
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 5,
+        "next_sequence": 6,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M7NWVMHPED3ZZQ4W9D4A0ZJ6": {
@@ -742,6 +761,25 @@
                 ],
                 "sequence": 5,
                 "validation_findings": []
+              },
+              {
+                "action": "validation",
+                "custody_event_id": "event:6",
+                "observations": [
+                  ".decapod/config.toml",
+                  "tests/golden/rpc/v1/interop_manifest.response.json",
+                  "tests/rpc_golden_vectors.rs",
+                  "/private/tmp/attack-gaps-871-validation-1.json; PROOF_PROFILE_RECONCILIATION_REQUIRED before provider tests. Review:/private/tmp/attack-gaps-871-inventory-review.json;105 inputs compared to accepted edbfc00d; only root version0.148.7 to0.148.9 in Cargo.toml/Cargo.lock. Config backup outside Git. No graph, adapter, toolchain, worker, workflow or requiredness change."
+                ],
+                "proof_refs": [
+                  "initial_full_validation"
+                ],
+                "scope": [
+                  "src/decapod/core/interop.rs",
+                  "tests/interop_conformance.rs"
+                ],
+                "sequence": 6,
+                "validation_findings": []
               }
             ]
           }
@@ -751,17 +789,21 @@
       "destination": "pull request",
       "evidence": [
         "/private/tmp/attack-gaps-871-before.json; no passing Rust test or repaired-binary execution yet. Official validation owns fresh build and required checks.",
-        "/private/tmp/attack-gaps-871-before.json; official binary0.148.9;12 false Verified labels; no executed identity. Snapshot container entry refused POLICY_OPT_IN_DISABLED. Session release cleared custody; re-read and reclaimed existing task without optional claim autorun; rebind before any source mutation."
+        "/private/tmp/attack-gaps-871-before.json; official binary0.148.9;12 false Verified labels; no executed identity. Snapshot container entry refused POLICY_OPT_IN_DISABLED. Session release cleared custody; re-read and reclaimed existing task without optional claim autorun; rebind before any source mutation.",
+        "/private/tmp/attack-gaps-871-validation-1.json; PROOF_PROFILE_RECONCILIATION_REQUIRED before provider tests. Review:/private/tmp/attack-gaps-871-inventory-review.json;105 inputs compared to accepted edbfc00d; only root version0.148.7 to0.148.9 in Cargo.toml/Cargo.lock. Config backup outside Git. No graph, adapter, toolchain, worker, workflow or requiredness change."
       ],
       "inspected_files": [
         "src/decapod/core/validation_history.rs"
       ],
       "intent_id": "intent:change_01M7NWVMEADM6FS731H2AKEVZM",
       "modified_files": [
+        ".decapod/config.toml",
         ".decapod/managed/specs/INTENT.md",
         ".decapod/managed/specs/INTERFACES.md",
         "src/decapod/core/interop.rs",
+        "tests/golden/rpc/v1/interop_manifest.response.json",
         "tests/interop_conformance.rs",
+        "tests/rpc_golden_vectors.rs",
         "tests/unit/core/interop_tests.rs"
       ],
       "next_transitions": [

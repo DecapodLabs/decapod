@@ -2,6 +2,12 @@
 
 ## Truthful conformance discovery (#871, #1735)
 
+The source-inventory review compared all 105 discovered inputs against the last
+accepted review `edbfc00d`. Only the root package version in Cargo.toml and
+Cargo.lock changed, from 0.148.7 to 0.148.9. The reviewed digest acknowledges
+those release inputs; workflows, helpers, toolchains and required coverage are
+unchanged. This review is not evidence that any required check executed.
+
 Harnesses may discover implemented operations and their source test coverage
 without an execution claim. The built-in interoperability manifest reports
 `not_run` even where a registered conformance test and source location exist.
