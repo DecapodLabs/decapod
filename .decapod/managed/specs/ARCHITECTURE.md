@@ -1079,7 +1079,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `380b2556b1ce63d6c12b41fb4babda52cba9eb1d2d0f8da3ee6f525aef843493`
+- Repository signal fingerprint: `47845a9aec1b11182a24a3b1c74d3fd554473953ab308fed7d33b9b4a68b1668`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (237 files), `tests/` (236 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
@@ -1484,3 +1484,29 @@ the reconciled candidate.
 ## Canonical local Git proof (#1069)
 
 The existing `repository_profile::RepositoryContract` review digest optionally binds canonical local Git target authority. `workspace::resolve_readiness_repository` keeps that identity distinct from cloud GitHub identity, requiring a reviewed local contract already committed on the canonical accepted branch. `RepositoryHost::canonical_local` reuses the sealed snapshot verifier and fresh ref observations; no daemon, parallel policy engine or datastore is added. `validation_history` preserves exact local scope and checks target movement. Native strict source proof and provider requirements remain intact.
+
+## Public BYOA, metacognition, and coordination book narrative (#1789)
+
+The public mdBook documentation under `docs/book/src/` (`index.md`,
+`introduction.md`, `mental-model.md`, `quickstart.md`, `concepts/agent-first.md`,
+`concepts/interoperability.md`, `concepts/constitution.md`, `concepts/mcp.md`,
+`workflows/single-agent.md`, `workflows/multi-agent.md`, `SUMMARY.md`) and the
+corresponding pointer in `README.md` document Decapod's existing repo-native
+governance kernel architecture without adding runtime code or altering
+`docs/agent/*` contracts.
+
+Every documented boundary maps directly to existing binary surfaces and tests:
+BYOA discovery and negotiation via `decapod rpc --op interop.manifest`,
+`interop.negotiate`, and `interop.project` (`src/decapod/core/interop.rs`,
+`tests/interop_conformance.rs`); Human -> Agent -> Kernel custody via
+`eval`, `docs ingest`, `session acquire`, `session handshake`, `todo`,
+`workspace`, `govern`, and `validate` (`tests/doc_alignment.rs`,
+`tests/contract_conformance.rs`); lease/overlap coordination via `todo claim`,
+`todo renew`, `todo handoff`, `todo yield`, and `todo fleet`
+(`tests/unit/core/fleet_coord_tests.rs`); decision-time orientation and
+bounded reflection via `infer orientation --reflection` and `mentor.obligations`
+(`tests/infer_precision.rs`); subordinate reference usage of the embedded
+Constitution (`decapod constitution get/search`, `decapod govern capsule query`);
+and repo-native Local (`decapod.db`) vs Cloud (Dactyl-routed task custody,
+`tests/cloud_managed_session.rs`) parity. No automatic merge arbitration,
+always-on daemon, or unimplemented MCP server capability is claimed.

@@ -1,7 +1,7 @@
 {
   "schema_version": "1.0.0",
   "baseline": {
-    "accepted_commit": "9c7e6cff94908dbfe87f4e4c0dbb1f1e0f4b12d5",
+    "accepted_commit": "a5a1edadb5ff96b0e2509bb17d111b227d156558",
     "policy": {
       "change_control": {
         "requires_human_review": true,
@@ -573,95 +573,40 @@
     }
   },
   "change": {
-    "id": "change_01M7QC2E2V4CN87W5CNH5D2MQN",
-    "base_commit": "9c7e6cff94908dbfe87f4e4c0dbb1f1e0f4b12d5",
+    "id": "change_01M7R4ZAHNJFT5PGD1R58DDXC5",
+    "base_commit": "a5a1edadb5ff96b0e2509bb17d111b227d156558",
     "target_base": "origin/master"
   },
   "checkpoints": [
     {
-      "id": "cp-1744-1",
-      "summary": "Expose read-only decapod system migrations CLI, non-initializing worktree-aware doctor check, resolved decapod_root migration notices, and docs/specs/tests (#1744)",
-      "input_digest": "sha256:68a224d996e90f08dbc38a57977fcb15d75901d2975cd4f26f544e2bd22fb99f",
+      "id": "ckpt-byoa-docs-1789",
+      "summary": "Rewrite mdBook and README pointer for BYOA, Human->Agent->Kernel, metacognition, concurrency, subordinate Constitution, and Local/Cloud parity (#1789)",
+      "input_digest": "sha256:5fdef5320b50c59c9690ce79cdf7c19fe42d7a63ab6b6cec7204ee0ab8bc5f2b",
       "proof_refs": [
-        "docs/agent/command-contracts.md",
-        "src/decapod/cli.rs",
-        "src/decapod/core/docs_cli.rs",
-        "src/decapod/core/migration.rs",
-        "src/decapod/lib.rs",
-        "src/decapod/plugins/doctor.rs",
-        "tests/cli_contract_enforcement.rs",
-        "tests/trajectory_cli.rs",
-        "tests/unit/core/migration_tests.rs",
-        "tests/unit/plugins/doctor_tests.rs"
-      ]
-    },
-    {
-      "id": "cp-1744-2",
-      "summary": "Merge origin/master caeeaba8 (#1792), refresh specs, and pass post-merge fmt/clippy/unit/CLI tests",
-      "input_digest": "sha256:d6c2d708fb44c6712ce96a24d03e9ef9626b62aa9d1c35d16d49d99e278ad9bf",
-      "proof_refs": [
-        "src/decapod/core/migration.rs",
-        "tests/cli_contract_enforcement.rs",
-        "tests/trajectory_cli.rs"
-      ]
-    },
-    {
-      "id": "cp-1744-3",
-      "summary": "Sync origin/master c5bafce6 (v0.148.13) and reconcile proof inventory",
-      "input_digest": "sha256:f240a733fe5166f908a0c0642f1309fc3386b118857eb629ba12b854813a2e46",
-      "proof_refs": [
-        ".decapod/config.toml",
-        ".decapod/managed/specs/.manifest.json"
-      ]
-    },
-    {
-      "id": "cp-1744-4",
-      "summary": "Refresh v0.148.13 Dockerfile pin and specs manifest projections",
-      "input_digest": "sha256:b09c43a8e402036c7d3b97f301cfb1c80cabd9326808fbace8e0677c1f522803",
-      "proof_refs": [
-        ".decapod/managed/Dockerfile.decapod",
-        ".decapod/managed/specs/.manifest.json"
-      ]
-    },
-    {
-      "id": "cp-1744-5",
-      "summary": "Merge origin/master 0b6ce0a8 (#1799), refresh specs, and pass fmt/clippy/unit/trajectory checks",
-      "input_digest": "sha256:a443e63a77042abaeaf57e4b29a5169670b5d1968a0362f4c5e65b7d6f65f6fb",
-      "proof_refs": [
-        ".decapod/managed/specs/INTERFACES.md",
-        "src/decapod/core/migration.rs",
-        "tests/trajectory_cli.rs"
-      ]
-    },
-    {
-      "id": "cp-1744-6",
-      "summary": "Merge origin/master 2f12638a (v0.148.14), refresh Dockerfile/manifest projections, and reconcile proof digest",
-      "input_digest": "sha256:af9b9bcc7e42c7633892109a8a9f589d29c55f3355d3080402efe23ccb2b17c2",
-      "proof_refs": [
-        ".decapod/config.toml",
-        ".decapod/managed/Dockerfile.decapod",
-        ".decapod/managed/specs/.manifest.json"
+        "tests/contract_conformance.rs",
+        "tests/doc_alignment.rs",
+        "tests/trajectory_docs.rs"
       ]
     }
   ],
   "intents": {
-    "intent:change_01M7QC2E2V4CN87W5CNH5D2MQN": {
+    "intent:change_01M7R4ZAHNJFT5PGD1R58DDXC5": {
       "acceptance_criteria": [],
       "assumptions": [],
       "boundaries": [
         "Current claimed task and isolated work branch"
       ],
       "constraints": [
-        "paths:[\"src/decapod\"",
-        "\"tests\"",
+        "paths:[\"docs/book/src\"",
+        "\"README.md\"",
         "\".decapod/managed/specs\"]"
       ],
       "created_sequence": 1,
-      "id": "intent:change_01M7QC2E2V4CN87W5CNH5D2MQN",
+      "id": "intent:change_01M7R4ZAHNJFT5PGD1R58DDXC5",
       "out_of_scope": [],
       "proof_requirements": [],
-      "raw_intent": "Fix #1744: expose read-only migration notice inspection and resolved root\n\nExpose migration notice details via read-only non-initializing CLI and resolve actual decapod_root across worktrees per Alex's CLI design",
-      "refined_intent": "Fix #1744: expose read-only migration notice inspection and resolved root\n\nExpose migration notice details via read-only non-initializing CLI and resolve actual decapod_root across worktrees per Alex's CLI design",
+      "raw_intent": "Docs #1789: make BYOA, agent-invoked metacognition and cross-agent coordination first-class",
+      "refined_intent": "Docs #1789: make BYOA, agent-invoked metacognition and cross-agent coordination first-class",
       "status": "refined",
       "updated_sequence": 3
     }
@@ -674,7 +619,7 @@
       },
       "deferred_questions": [],
       "human_questions": [],
-      "intent": "Fix #1744: expose read-only migration notice inspection and resolved root\n\nExpose migration notice details via read-only non-initializing CLI and resolve actual decapod_root across worktrees per Alex's CLI design",
+      "intent": "Docs #1789: make BYOA, agent-invoked metacognition and cross-agent coordination first-class",
       "phases": [],
       "proof_hooks": [
         "decapod validate"
@@ -682,57 +627,45 @@
       "schema_version": "1.1.0",
       "spec_reviews": [
         {
-          "disposition": "unchanged_with_reason",
+          "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Scope #1744 unchanged across v0.148.14 release bump",
-          "reviewed_code_fingerprint": "380b2556b1ce63d6c12b41fb4babda52cba9eb1d2d0f8da3ee6f525aef843493",
-          "spec_material_hash": "080e1e015d867051ec4ecbb1f18aca92a2d62a05798377057e563aaa5a3764e0"
+          "reason": "Document #1789 public mdBook BYOA, Human->Agent->Kernel, metacognitive decision-time loop, concurrency boundaries, subordinate Constitution, and Local/Cloud parity coverage",
+          "reviewed_code_fingerprint": "47845a9aec1b11182a24a3b1c74d3fd554473953ab308fed7d33b9b4a68b1668",
+          "spec_material_hash": "08d8b55a59f075e87e839424935874ac5976524805468dba8d29d27bd0bb2d22"
         },
         {
-          "disposition": "updated",
+          "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Synced origin/master 2f12638a (v0.148.14) alongside #1744 migration inspection interfaces",
-          "reviewed_code_fingerprint": "380b2556b1ce63d6c12b41fb4babda52cba9eb1d2d0f8da3ee6f525aef843493",
+          "reason": "Docs-only #1789 PR; inspected CLI/RPC interface contracts and tests — no interface code or docs/agent/* contracts changed",
+          "reviewed_code_fingerprint": "47845a9aec1b11182a24a3b1c74d3fd554473953ab308fed7d33b9b4a68b1668",
           "spec_material_hash": "1445e13fa7ccfa6c4a68850bd794b6b1ba7379c0148b570c3a7605b6a26beb25"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Read-only inspection security posture unchanged across v0.148.14 release bump",
-          "reviewed_code_fingerprint": "380b2556b1ce63d6c12b41fb4babda52cba9eb1d2d0f8da3ee6f525aef843493",
+          "reason": "Docs-only #1789 PR; inspected security and trust-boundary specs — no auth, custody, or runtime security invariants changed",
+          "reviewed_code_fingerprint": "47845a9aec1b11182a24a3b1c74d3fd554473953ab308fed7d33b9b4a68b1668",
           "spec_material_hash": "735ae6e95c6b18ff2ccc718fbadaa4d7ae483d632aee2fb071d4f9ae6daa23de"
         }
       ],
       "state": "APPROVED",
       "stop_conditions": [],
-      "title": "Fix #1744: expose read-only migration notice inspection and resolved root",
+      "title": "Docs #1789: make BYOA, agent-invoked metacognition and cross-agent coordination first-class",
       "todo_ids": [
-        "bugs_01m7qbm33farx8qs"
+        "docs_01m7r4vfv7498zkx"
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795025550Z"
+      "updated_at": "1795033671Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:92a37d1179cd7e9dbaaa04436f32a70a854c783f876f4d4fc7b498453fbf3975",
+      "artifact_hash": "sha256:054a149013a056963ce04be8dc40fc41a9c69e5d8247e290a92e8671c0f5596a",
       "checks": [
         {
-          "name": "cargo_clippy",
-          "status": "passed"
-        },
-        {
-          "name": "cargo_fmt",
-          "status": "passed"
-        },
-        {
-          "name": "cli_contract_enforcement",
-          "status": "passed"
-        },
-        {
-          "name": "core_migration_tests",
+          "name": "contract_conformance",
           "status": "passed"
         },
         {
@@ -740,11 +673,23 @@
           "status": "passed"
         },
         {
-          "name": "plugins_doctor_tests",
+          "name": "docs_sync_checkpoint_boundary",
+          "status": "partial"
+        },
+        {
+          "name": "mdbook_build",
+          "status": "unavailable"
+        },
+        {
+          "name": "relative_markdown_links",
           "status": "passed"
         },
         {
-          "name": "trajectory_cli",
+          "name": "specs_refresh_docs",
+          "status": "partial"
+        },
+        {
+          "name": "trajectory_docs",
           "status": "passed"
         }
       ],
@@ -753,256 +698,132 @@
         "events": [
           {
             "event_id": "event:2",
-            "intent_id": "intent:change_01M7QC2E2V4CN87W5CNH5D2MQN",
+            "intent_id": "intent:change_01M7R4ZAHNJFT5PGD1R58DDXC5",
             "kind": "created",
             "sequence": 2
           },
           {
             "event_id": "event:3",
-            "intent_id": "intent:change_01M7QC2E2V4CN87W5CNH5D2MQN",
+            "intent_id": "intent:change_01M7R4ZAHNJFT5PGD1R58DDXC5",
             "kind": "refined",
             "sequence": 3
           },
           {
-            "detail": "trajectory:branch_01M7QC2E68VSP1Z3HCFJF9168A",
+            "detail": "trajectory:branch_01M7R4ZAS8A2D6PMN4WRWVY4S3",
             "event_id": "event:4",
-            "intent_id": "intent:change_01M7QC2E2V4CN87W5CNH5D2MQN",
+            "intent_id": "intent:change_01M7R4ZAHNJFT5PGD1R58DDXC5",
             "kind": "trajectory_step_recorded",
             "sequence": 4
-          },
-          {
-            "detail": "trajectory:branch_01M7QC2E68VSP1Z3HCFJF9168A",
-            "event_id": "event:5",
-            "intent_id": "intent:change_01M7QC2E2V4CN87W5CNH5D2MQN",
-            "kind": "trajectory_step_recorded",
-            "sequence": 5
-          },
-          {
-            "detail": "trajectory:branch_01M7QC2E68VSP1Z3HCFJF9168A",
-            "event_id": "event:6",
-            "intent_id": "intent:change_01M7QC2E2V4CN87W5CNH5D2MQN",
-            "kind": "trajectory_step_recorded",
-            "sequence": 6
-          },
-          {
-            "detail": "trajectory:branch_01M7QC2E68VSP1Z3HCFJF9168A",
-            "event_id": "event:7",
-            "intent_id": "intent:change_01M7QC2E2V4CN87W5CNH5D2MQN",
-            "kind": "trajectory_step_recorded",
-            "sequence": 7
-          },
-          {
-            "detail": "trajectory:branch_01M7QC2E68VSP1Z3HCFJF9168A",
-            "event_id": "event:8",
-            "intent_id": "intent:change_01M7QC2E2V4CN87W5CNH5D2MQN",
-            "kind": "trajectory_step_recorded",
-            "sequence": 8
-          },
-          {
-            "detail": "trajectory:branch_01M7QC2E68VSP1Z3HCFJF9168A",
-            "event_id": "event:9",
-            "intent_id": "intent:change_01M7QC2E2V4CN87W5CNH5D2MQN",
-            "kind": "trajectory_step_recorded",
-            "sequence": 9
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 9,
+        "next_sequence": 4,
         "schema_version": "1.0.0",
         "trajectories": {
-          "branch_01M7QC2E68VSP1Z3HCFJF9168A": {
+          "branch_01M7R4ZAS8A2D6PMN4WRWVY4S3": {
             "evidence_only": true,
-            "id": "branch_01M7QC2E68VSP1Z3HCFJF9168A",
-            "intent_id": "intent:change_01M7QC2E2V4CN87W5CNH5D2MQN",
+            "id": "branch_01M7R4ZAS8A2D6PMN4WRWVY4S3",
+            "intent_id": "intent:change_01M7R4ZAHNJFT5PGD1R58DDXC5",
             "steps": [
               {
-                "action": "implementation",
+                "action": "verification",
                 "custody_event_id": "event:4",
                 "observations": [
-                  "src/decapod/core/migration.rs",
-                  "src/decapod/plugins/doctor.rs",
+                  "src/decapod/core/interop.rs",
                   "src/decapod/lib.rs",
-                  "src/decapod/cli.rs",
-                  "src/decapod/core/docs_cli.rs",
-                  "src/decapod/core/store.rs",
-                  "tests/unit/core/migration_tests.rs",
-                  "tests/unit/plugins/doctor_tests.rs",
-                  "tests/trajectory_cli.rs"
-                ],
-                "proof_refs": [],
-                "scope": [
-                  "\".decapod/managed/specs\"]",
-                  "\"tests\"",
-                  "paths:[\"src/decapod\""
-                ],
-                "sequence": 4,
-                "validation_findings": []
-              },
-              {
-                "action": "verification",
-                "command": "cargo fmt --check",
-                "custody_event_id": "event:5",
-                "observations": [
-                  "tests/cli_contract_enforcement.rs",
-                  "src/decapod/core/migration.rs",
-                  "src/decapod/plugins/doctor.rs",
-                  "src/decapod/cli.rs",
-                  "src/decapod/lib.rs",
-                  "src/decapod/core/docs_cli.rs",
-                  "docs/agent/command-contracts.md",
-                  ".decapod/managed/specs/INTERFACES.md",
-                  ".decapod/managed/specs/OPERATIONS.md",
-                  "tests/unit/core/migration_tests.rs",
-                  "tests/unit/plugins/doctor_tests.rs",
-                  "tests/trajectory_cli.rs",
-                  "tests/cli_contract_enforcement.rs",
-                  "13/13 core::migration, 6/6 plugins::doctor, 4/4 doc_alignment, 10/10 trajectory_cli, 23/23 cli_contract_enforcement (--test-threads=1), clippy and fmt clean on 7bd0a915"
+                  "tests/doc_alignment.rs",
+                  "tests/contract_conformance.rs",
+                  "tests/interop_conformance.rs",
+                  "tests/infer_precision.rs",
+                  "tests/unit/core/fleet_coord_tests.rs",
+                  ".decapod/contracts/README_CONTRACTS.json",
+                  "docs/book/src/index.md",
+                  "docs/book/src/introduction.md",
+                  "docs/book/src/mental-model.md",
+                  "docs/book/src/quickstart.md",
+                  "docs/book/src/SUMMARY.md",
+                  "docs/book/src/concepts/agent-first.md",
+                  "docs/book/src/concepts/interoperability.md",
+                  "docs/book/src/concepts/constitution.md",
+                  "docs/book/src/concepts/mcp.md",
+                  "docs/book/src/workflows/single-agent.md",
+                  "docs/book/src/workflows/multi-agent.md",
+                  "README.md",
+                  ".decapod/managed/specs/ARCHITECTURE.md",
+                  ".decapod/managed/specs/INTENT.md",
+                  "cargo test --test doc_alignment (4/4 passed); --test contract_conformance (12/12 passed); --test trajectory_docs (5/5 passed); python3 relative link + SUMMARY + stale-phrase check passed; docs_sync_checkpoint_boundary 11/12 passed (1 macOS APFS EILSEQ); specs_refresh_docs 6/7 passed (pre-existing docs_cli.rs); mdbook not installed locally"
                 ],
                 "proof_refs": [
-                  "cargo_fmt",
-                  "cargo_clippy",
-                  "core_migration_tests",
-                  "plugins_doctor_tests",
                   "doc_alignment",
-                  "trajectory_cli",
-                  "cli_contract_enforcement"
+                  "contract_conformance",
+                  "trajectory_docs",
+                  "relative_markdown_links",
+                  "docs_sync_checkpoint_boundary",
+                  "specs_refresh_docs",
+                  "mdbook_build"
                 ],
                 "scope": [
                   "\".decapod/managed/specs\"]",
-                  "\"tests\"",
-                  "paths:[\"src/decapod\""
+                  "\"README.md\"",
+                  "paths:[\"docs/book/src\""
                 ],
-                "sequence": 5,
-                "validation_findings": []
-              },
-              {
-                "action": "trajectory.record",
-                "custody_event_id": "event:6",
-                "observations": [
-                  ".decapod/config.toml",
-                  "Merged origin/master c5bafce6 (v0.148.13: CHANGELOG.md, Cargo.toml, Cargo.lock only) and reconciled reviewed_sources_digest to sha256:f2c1d189ee0c96f6afb66185229233bd0436015d0ddd21dc56deb4f58709b2b2"
-                ],
-                "proof_refs": [],
-                "scope": [
-                  "\".decapod/managed/specs\"]",
-                  "\"tests\"",
-                  "paths:[\"src/decapod\""
-                ],
-                "sequence": 6,
-                "validation_findings": []
-              },
-              {
-                "action": "trajectory.record",
-                "custody_event_id": "event:7",
-                "observations": [
-                  ".decapod/managed/Dockerfile.decapod",
-                  ".decapod/managed/specs/.manifest.json",
-                  "Refreshed v0.148.13 Dockerfile.decapod and .manifest.json with workspace 0.148.13 binary"
-                ],
-                "proof_refs": [],
-                "scope": [
-                  "\".decapod/managed/specs\"]",
-                  "\"tests\"",
-                  "paths:[\"src/decapod\""
-                ],
-                "sequence": 7,
-                "validation_findings": []
-              },
-              {
-                "action": "trajectory.record",
-                "custody_event_id": "event:8",
-                "observations": [
-                  "Merged origin/master 0b6ce0a8 (#1799) cleanly after Buildkite 12565 passed all checks on 04e9711b before base advanced"
-                ],
-                "proof_refs": [],
-                "scope": [
-                  "\".decapod/managed/specs\"]",
-                  "\"tests\"",
-                  "paths:[\"src/decapod\""
-                ],
-                "sequence": 8,
-                "validation_findings": []
-              },
-              {
-                "action": "trajectory.record",
-                "custody_event_id": "event:9",
-                "observations": [
-                  "Merged origin/master 2f12638a (v0.148.14: CHANGELOG.md, Cargo.toml, Cargo.lock only), reconciled reviewed_sources_digest to sha256:e7e434a726822ced1a8b5ddfa51502c7f3932d4e373acfbef4f06f7a2c697051, refreshed v0.148.14 Dockerfile.decapod and .manifest.json"
-                ],
-                "proof_refs": [],
-                "scope": [
-                  "\".decapod/managed/specs\"]",
-                  "\"tests\"",
-                  "paths:[\"src/decapod\""
-                ],
-                "sequence": 9,
-                "validation_findings": []
+                "sequence": 4,
+                "validation_findings": [
+                  "mdBook site build (docs-build CI check) will execute on Linux CI with mdbook 0.4.40"
+                ]
               }
             ]
           }
         }
       },
-      "declared_commands": [
-        "CLIPPY_CONF_DIR=.config cargo clippy --all-targets --all-features -- -D warnings",
-        "cargo fmt --check",
-        "cargo test --lib core::migration",
-        "cargo test --lib plugins::doctor",
-        "cargo test --test cli_contract_enforcement -- --test-threads=1",
-        "cargo test --test doc_alignment",
-        "cargo test --test trajectory_cli"
-      ],
+      "declared_commands": [],
       "destination": "pull request",
       "evidence": [
-        "13/13 core::migration, 6/6 plugins::doctor, 4/4 doc_alignment, 10/10 trajectory_cli, 23/23 cli_contract_enforcement (--test-threads=1), clippy and fmt clean on 7bd0a915",
-        "Merged origin/master 0b6ce0a8 (#1799) cleanly after Buildkite 12565 passed all checks on 04e9711b before base advanced",
-        "Merged origin/master 2f12638a (v0.148.14: CHANGELOG.md, Cargo.toml, Cargo.lock only), reconciled reviewed_sources_digest to sha256:e7e434a726822ced1a8b5ddfa51502c7f3932d4e373acfbef4f06f7a2c697051, refreshed v0.148.14 Dockerfile.decapod and .manifest.json",
-        "Merged origin/master c5bafce6 (v0.148.13: CHANGELOG.md, Cargo.toml, Cargo.lock only) and reconciled reviewed_sources_digest to sha256:f2c1d189ee0c96f6afb66185229233bd0436015d0ddd21dc56deb4f58709b2b2",
-        "Refreshed v0.148.13 Dockerfile.decapod and .manifest.json with workspace 0.148.13 binary"
+        "cargo test --test doc_alignment (4/4 passed); --test contract_conformance (12/12 passed); --test trajectory_docs (5/5 passed); python3 relative link + SUMMARY + stale-phrase check passed; docs_sync_checkpoint_boundary 11/12 passed (1 macOS APFS EILSEQ); specs_refresh_docs 6/7 passed (pre-existing docs_cli.rs); mdbook not installed locally"
       ],
       "inspected_files": [
-        "src/decapod/cli.rs",
-        "src/decapod/core/docs_cli.rs",
-        "src/decapod/core/migration.rs",
-        "src/decapod/core/store.rs",
+        ".decapod/contracts/README_CONTRACTS.json",
+        "src/decapod/core/interop.rs",
         "src/decapod/lib.rs",
-        "src/decapod/plugins/doctor.rs",
-        "tests/cli_contract_enforcement.rs",
-        "tests/trajectory_cli.rs",
-        "tests/unit/core/migration_tests.rs",
-        "tests/unit/plugins/doctor_tests.rs"
+        "tests/contract_conformance.rs",
+        "tests/doc_alignment.rs",
+        "tests/infer_precision.rs",
+        "tests/interop_conformance.rs",
+        "tests/unit/core/fleet_coord_tests.rs"
       ],
-      "intent_id": "intent:change_01M7QC2E2V4CN87W5CNH5D2MQN",
+      "intent_id": "intent:change_01M7R4ZAHNJFT5PGD1R58DDXC5",
       "modified_files": [
-        ".decapod/config.toml",
-        ".decapod/managed/Dockerfile.decapod",
-        ".decapod/managed/specs/.manifest.json",
-        ".decapod/managed/specs/INTERFACES.md",
-        ".decapod/managed/specs/OPERATIONS.md",
-        "docs/agent/command-contracts.md",
-        "src/decapod/cli.rs",
-        "src/decapod/core/docs_cli.rs",
-        "src/decapod/core/migration.rs",
-        "src/decapod/lib.rs",
-        "src/decapod/plugins/doctor.rs",
-        "tests/cli_contract_enforcement.rs",
-        "tests/trajectory_cli.rs",
-        "tests/unit/core/migration_tests.rs",
-        "tests/unit/plugins/doctor_tests.rs"
+        ".decapod/managed/specs/ARCHITECTURE.md",
+        ".decapod/managed/specs/INTENT.md",
+        "README.md",
+        "docs/book/src/SUMMARY.md",
+        "docs/book/src/concepts/agent-first.md",
+        "docs/book/src/concepts/constitution.md",
+        "docs/book/src/concepts/interoperability.md",
+        "docs/book/src/concepts/mcp.md",
+        "docs/book/src/index.md",
+        "docs/book/src/introduction.md",
+        "docs/book/src/mental-model.md",
+        "docs/book/src/quickstart.md",
+        "docs/book/src/workflows/multi-agent.md",
+        "docs/book/src/workflows/single-agent.md"
       ],
       "next_transitions": [
         "Refine plan and declare falsifiable checks"
       ],
       "repo_scope": [
         "\".decapod/managed/specs\"]",
-        "\"tests\"",
-        "paths:[\"src/decapod\""
+        "\"README.md\"",
+        "paths:[\"docs/book/src\""
       ],
-      "run_id": "branch_01M7QC2E68VSP1Z3HCFJF9168A",
+      "run_id": "branch_01M7R4ZAS8A2D6PMN4WRWVY4S3",
       "schema_version": "1.1.0",
       "shortcut_risk_signals": [],
-      "task_id": "bugs_01m7qbm33farx8qs",
+      "task_id": "docs_01m7r4vfv7498zkx",
       "tool_calls": [],
-      "unresolved_assumptions": []
+      "unresolved_assumptions": [
+        "mdBook site build (docs-build CI check) will execute on Linux CI with mdbook 0.4.40"
+      ]
     }
   },
   "legacy_digests": {

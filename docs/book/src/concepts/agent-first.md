@@ -1,37 +1,41 @@
 # Agent-First Architecture
 
-Decapod exposes a machine-facing governance contract for agents. The human expresses intent and applies judgment; the agent calls the kernel while performing the work.
+Decapod exposes a machine-facing governance contract for **coding agents**. The human supplies engineering intent and judgment through their chosen editor or harness; **the coding agent invokes Decapod** at decision, coordination, and verification boundaries while performing the work.
+
+Because the contract lives at the repository boundary rather than inside a vendor-specific runtime, **Codex, Claude Code, Cursor, Antigravity, and custom CLI harnesses** can operate on the same repository through the same kernel interface (see [BYOA & Interoperability](interoperability.md)).
 
 ## The Agentic Lifecycle
 
-Decapod structures agent work into a predictable, machine-readable lifecycle:
+Decapod structures agent work into an explicit, resumable decision-time lifecycle:
 
-1.  **Ingestion & Orientation:** The agent reads `docs/agent/` and queries the shared [Decapod Constitution](constitution.md) for relevant engineering practice and research, then resolves the repository's own rules and available tools.
-2.  **Task Claiming:** The agent claims a `todo` to establish exclusive custody and prevent collisions (see [Single-Agent Workflow](../workflows/single-agent.md)).
-3.  **Context Resolution:** The agent uses `rpc --op context.resolve` or `infer orientation` to gather the precise context needed for the specific task.
-4.  **Implementation:** The agent works in an isolated `workspace` (see [Workspace Sandboxing](workspaces.md)).
-5.  **Validation and Recovery:** The agent runs `decapod validate`, follows supported remediation, updates the affected artifact, and revalidates until the work passes or reaches a blocker (see [Proof & Validation](proof.md)).
-6.  **Publication:** Passing gates and evidence permit a governed publication transition. Marking a task `done` records completion against that proof surface (see [Artifacts Reference](../reference/artifacts.md)).
+1. **Prompt Gate & Ingestion:** The agent checks untrusted input (`decapod eval --stdin --format json`), reads embedded command contracts (`decapod docs ingest`), and acquires a local or cloud-backed session (`decapod session acquire`).
+2. **Task Claiming & Isolation:** The agent claims a `todo` with an explicit lease (`decapod todo claim --id <id> --lease-seconds 3600`) and creates an isolated worktree (`decapod workspace ensure --branch ...`) so overlapping work stays visible and isolated (see [Single-Agent Workflow](../workflows/single-agent.md) and [Multi-Agent Workflow](../workflows/multi-agent.md)).
+3. **Decision-Time Orientation & Reflection:** Inside the worktree, the agent calls `decapod infer orientation --task-id <id>` and `decapod rpc --op context.resolve` to load plan constraints, living specs, and task scope. At consequential boundaries, it may pass `--reflection '<json>'` or invoke `decapod rpc --op mentor.obligations` for bounded three-round challenge checks, and query the embedded [Constitution](constitution.md) for engineering reference context.
+4. **Implementation & Trajectory Custody:** The agent edits code and living specifications (`.decapod/managed/specs/*`) inside its isolated workspace, records trajectory observations (`decapod govern trajectory record`), reviews changed contracts (`decapod govern plan review-spec`), and checkpoints staged material (`decapod govern artifacts checkpoint`) before committing.
+5. **Validation & Exact-Commit Recovery:** The agent runs `decapod validate` on the committed candidate. Failures return typed blockers and recovery guidance rather than passing silently; the agent repairs the branch, commits a new checkpoint, and re-runs `decapod validate` on the exact revised commit (see [Proof](proof.md)).
+6. **Publication & Completion:** Passing gates permit `decapod workspace publish` and `decapod todo done --id <id> --validated` (see [Artifacts Reference](../reference/artifacts.md)).
 
 ## Key Agent-First Concepts
 
-### 1. Deterministic Context
-AI models are sensitive to context pollution. Decapod's **Context Capsules** ensure that every agent sees exactly what it needs, and nothing more. This reduces hallucinations and token waste.
+### 1. Deterministic Context Capsules
+Models degrade when flooded with stale or irrelevant prose. Decapod's **Context Capsules** (`decapod govern capsule query`, `decapod rpc --op context.resolve`) select bounded, provenance-tagged slices of doctrine and project state so different harnesses start from the same constraints.
 
 ### 2. Living Specifications
-Living specifications (`.decapod/managed/specs/*`) are the acting agent's explicit interpretation of the repository. The agent authors and maintains them; Decapod requires and validates them. Decapod may refresh supported attestations or projections, but it does not invent the specifications' semantic claims (see [Explicit Intent](intent.md)).
+Living specifications (`.decapod/managed/specs/*`) are the acting agent's explicit interpretation of the repository. The agent authors and maintains their semantic prose; Decapod requires and validates them (`decapod rpc --op specs.refresh` or `decapod validate --refresh-specs` refreshes supported fingerprints and manifests without inventing authored claims; see [Intent](intent.md)).
 
-An incorrect specification exposes the agent's misunderstanding before publication. That is a successful governance outcome: a visible misunderstanding can be reviewed and corrected, while one hidden in transient model context cannot. A stale specification generally means the governed work remains incomplete.
+An incorrect specification surfaces a misunderstanding before publication. A stale specification means governed work remains incomplete.
 
-### 3. Aptitude & Memory
-Shared memory allows agents to learn from each other. If one agent discovers an obscure bug in a library, it can record that observation in Aptitude, which subsequent agents will automatically retrieve during context resolution.
+### 3. Aptitude & Federated Knowledge
+Agents can preserve learned repository conventions and procedural observations across sessions using `decapod data aptitude` and `decapod data federation`, while task custody and unresolved obligations persist in `todo` and `.decapod/governance.json`.
 
-### 4. Protocol-Native (MCP)
-Decapod reserves an adapter boundary for the **Model Context Protocol (MCP)** so future integrations can expose the repository as a structured resource graph (see [Model Context Protocol (MCP)](mcp.md)). The current binary provides a Decapod-specific RPC interface; it does not itself implement MCP.
+### 4. Structured RPC and Adapter Boundaries (MCP)
+Decapod exposes a CLI and a Decapod-specific structured RPC interface (`decapod rpc --op <op>`). It reserves an adapter boundary for the **Model Context Protocol (MCP)** so future adapters can expose repository operations over MCP; the current binary does not itself implement an MCP server (see [Model Context Protocol (MCP)](mcp.md) and [BYOA & Interoperability](interoperability.md)).
 
+## Decision-Time Negative Cases
 
-## Design Patterns for Agents
+Agent-first governance fails closed rather than smoothing over broken preconditions:
 
-- **Pressure Points:** Call Decapod at decision boundaries (e.g., before choosing a library).
-- **Epistemic Custody:** Preserve the "Why" behind a change in the `INTENT.md` spec.
-- **Follow validation:** Use `decapod validate` early, remediate supported failures, and re-run it before publication.
+- **Unregistered or malformed RPC:** Unknown ops return `unknown_op` without initializing project state; malformed or duplicate-key JSON parameters are rejected before dispatch (`tests/interop_conformance.rs`).
+- **Missing session or expired claim:** Mutating commands refuse unauthenticated or expired custody rather than silently reassigning ownership (`decapod todo renew` or `decapod todo handoff` is required).
+- **Reflection stagnation or blocked escalation:** Repeating an unchanged forbidden-path proposal or asking a routine discoverable question returns `reflect` / `blocked` rather than manufacturing human approval (`tests/infer_precision.rs`).
+- **Stale proof or Cloud denial:** Editing files invalidates prior validation; in `backend = "cloud"` mode, `repository_denied` or `action_required` halts without falling back to local SQLite (`tests/cloud_managed_session.rs`).
