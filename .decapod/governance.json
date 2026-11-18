@@ -584,6 +584,11 @@
       "id": "context-integration-v1",
       "summary": "Integrate authority-aware scoped context, executable corpus admission, advisory knowledge recovery and reproducible public chronology; preserve legacy identity and require complete-context budgets/current live intent. Native full proof remains pending.",
       "input_digest": "sha256:abef5b6cff8244d7960f8da1ad9e3c75fbea8893758e875ceffd9c041ea4c29b"
+    },
+    {
+      "id": "context-bundle-fixture-config",
+      "summary": "Provide required default fixture config for live bundle identity regression; all10 knowledge and49 admission/capsule regressions pass; fresh full native proof required.",
+      "input_digest": "sha256:1fb4e2bc4869d252064886dc4effa52d0d87f5bc4e88465fabba3319315d403a"
     }
   ],
   "intents": {
@@ -657,7 +662,7 @@
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:62c1e3a0f2922cc79eb6de283844a0d37df11154c326c6f73ce4c49bb9d9811b",
+      "artifact_hash": "sha256:0d384c3864901599b644eab44dd6ef222fc6a8921f01fdf6e56b56e43efaf954",
       "checks": [
         {
           "name": "admission-and-history-focused",
@@ -669,11 +674,15 @@
         },
         {
           "name": "complete-context-regressions",
-          "status": "partial"
+          "status": "passed"
         },
         {
           "name": "full-native-readiness",
           "status": "unavailable"
+        },
+        {
+          "name": "knowledge-regressions",
+          "status": "passed"
         }
       ],
       "current_phase": "implementation",
@@ -704,10 +713,17 @@
             "intent_id": "intent:change_01M7P2GCQ3JMEQAX9NZH2W9386",
             "kind": "trajectory_step_recorded",
             "sequence": 5
+          },
+          {
+            "detail": "trajectory:branch_01M7P2GCTKA3ZSV0EZESM31FG5",
+            "event_id": "event:6",
+            "intent_id": "intent:change_01M7P2GCQ3JMEQAX9NZH2W9386",
+            "kind": "trajectory_step_recorded",
+            "sequence": 6
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 5,
+        "next_sequence": 6,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M7P2GCTKA3ZSV0EZESM31FG5": {
@@ -753,6 +769,23 @@
                 ],
                 "sequence": 5,
                 "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:6",
+                "observations": [
+                  "Integrated current source:35 scaffolding/admission/history,7 real capsule RPC,7 capsule schema and10 knowledge tests passed. New bundle regression initially failed because fixture omitted required config.toml; added normal default fixture configuration, then all10 passed. Cancelled earlier exact-head full controller dc604df5 before claiming any proof; native report validation cancelled/SNAPSHOT_NOT_READY at snapshot9HatTM. New candidate must earn fresh full native proof; no old provider receipt inherited."
+                ],
+                "proof_refs": [
+                  "complete-context-regressions",
+                  "knowledge-regressions",
+                  "full-native-readiness"
+                ],
+                "scope": [
+                  "constitution-context-integration"
+                ],
+                "sequence": 6,
+                "validation_findings": []
               }
             ]
           }
@@ -762,7 +795,8 @@
       "destination": "pull request",
       "evidence": [
         "Combined 4 claims and35 scaffolding tests passed. Actual new RPC negative-first tests reproduced uncapped project summary and absent canonical intent. Reused existing plan projection; whole pretty-serialized context/capsule/bundle cap262144, unchanged legacy identity; live bundle refresh required for current knowledge/intent. Fixed test expectation to existing ordinary RPC success=false envelope semantics, without changing exit conventions. Inventory107:102 identical accepted master;3 reviewed changed build declaration/Cargo/compression;2 new reviewed admission/history helpers. Reviewed digest695cc3afe06a3637d639c6489ba38a3febb5089f2ecdbd556cbfd76b67c02fec. Config backup private. Bounded local project-check failed container custody, dirty test-vector scan and unrelated historical proof; not full native proof and no bypass. Fresh exact source-CI remains required.",
-        "Fresh combined source from own preserved checkpoint heads: retrieval2cb8b7ae1bcd8ba602eb295105008fbc1440e6fa; admission/history90296129a44572b49249e855d5482b9dc2c479a4; knowledge0a06ecae1f0db3997d6d2cc5ba2c95f374a0c40c. Applied authored source/tests/docs only; no prior governance, machine projections or readiness copied. Resolved Rust capsule/RPC conflicts retaining both selection and knowledge fields, explicit new1.4.0 and legacy1.2 default. Authored spec sections combined; generated blocks remain CLI-owned. New full integrated proof pending."
+        "Fresh combined source from own preserved checkpoint heads: retrieval2cb8b7ae1bcd8ba602eb295105008fbc1440e6fa; admission/history90296129a44572b49249e855d5482b9dc2c479a4; knowledge0a06ecae1f0db3997d6d2cc5ba2c95f374a0c40c. Applied authored source/tests/docs only; no prior governance, machine projections or readiness copied. Resolved Rust capsule/RPC conflicts retaining both selection and knowledge fields, explicit new1.4.0 and legacy1.2 default. Authored spec sections combined; generated blocks remain CLI-owned. New full integrated proof pending.",
+        "Integrated current source:35 scaffolding/admission/history,7 real capsule RPC,7 capsule schema and10 knowledge tests passed. New bundle regression initially failed because fixture omitted required config.toml; added normal default fixture configuration, then all10 passed. Cancelled earlier exact-head full controller dc604df5 before claiming any proof; native report validation cancelled/SNAPSHOT_NOT_READY at snapshot9HatTM. New candidate must earn fresh full native proof; no old provider receipt inherited."
       ],
       "inspected_files": [
         "src/decapod/core/context_capsule.rs",

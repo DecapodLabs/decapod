@@ -252,6 +252,11 @@ fn bundle_import_rejects_corrected_knowledge_and_legacy_omission() {
         .output()
         .unwrap();
     assert!(git.status.success());
+    std::fs::write(
+        temp.path().join(".decapod/config.toml"),
+        toml::to_string_pretty(&crate::cli::DecapodProjectConfig::default()).unwrap(),
+    )
+    .unwrap();
     add_knowledge(&store, add("B", "previous design B")).unwrap();
     let capsule = context_capsule::query_embedded_capsule(
         temp.path(),
