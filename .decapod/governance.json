@@ -609,6 +609,15 @@
         "https://github.com/DecapodLabs/decapod/actions/runs/44292400157/job/134761459192",
         "sha256:5b4e36a94d5b09b8cc78c596293168ec4af32ba1ad9e1597d990737c06ad70cd"
       ]
+    },
+    {
+      "id": "workunit-currentness-failure-check-identity-20261118",
+      "summary": "Bind CLI negative execution to its actual required check rather than capture ordinal; retain strict rejection/recovery assertions",
+      "input_digest": "sha256:243754c2034df5093cd8d39e018f15b432dcd27f0b0f3954f0b4360779c136b3",
+      "proof_refs": [
+        "https://github.com/DecapodLabs/decapod/actions/runs/44296749390/job/134777427412",
+        "sha256:788c87fbbd46f81c47885388d6b575be2dbbca33348e837d37cb3009de20397a"
+      ]
     }
   ],
   "intents": {
@@ -649,22 +658,22 @@
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "The existing append-only workunit architecture is unchanged. Actions exposed omission of the already-authored validation_not_ready event kind from the same journal reader inventory; recognition retains every identity, hash, generation and custody check.",
-          "reviewed_code_fingerprint": "b668ade4d12d58ecc42ffa36fd237442fe59d1da69d79c5564896df9da31dd59",
+          "reason": "Runtime journal withdrawal, canonical custody selection and transaction fences are unchanged. Actual CLI failed a test ordinal assumption; bind existing native diagnostic capture to exact declared inspect-source check instead of native-0.",
+          "reviewed_code_fingerprint": "e27b964f5bd25b96d878b5ab1d2d2ecd0d49995feec75e847130ce2235122289",
           "spec_material_hash": "fc3e0ad37051b50ab9b60e66722518c47b241e10788e5c2aa11882bc2142cd4c"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Specify readable negative snapshot and unchanged journal identity/hash/predecessor validation. Existing full-not-ready regression failed on actual Actions readback; this correction recognizes its exact event kind without widening unsupported kinds.",
-          "reviewed_code_fingerprint": "b668ade4d12d58ecc42ffa36fd237442fe59d1da69d79c5564896df9da31dd59",
-          "spec_material_hash": "5a2a3e8e63fce15d8754a90d0dcaddb631f22eb9e54daf1542af5e1249820ef2"
+          "reason": "Negative execution evidence must identify the selected required check, not merely a numbered capture. Require full native inspect-source check identity, actual exited step1 and assertion marker; preserve every withdrawal/recovery assertion.",
+          "reviewed_code_fingerprint": "e27b964f5bd25b96d878b5ab1d2d2ecd0d49995feec75e847130ce2235122289",
+          "spec_material_hash": "9ccbcf1a4b5de2a8c93f75ee58b44c6c645fe5e965961fb510e9fbe85c809b38"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Only existing negative judgment event kind inventory is corrected. Canonical task custody, atomic transaction, journal CAS, hashes and positive proof authority remain enforced.",
-          "reviewed_code_fingerprint": "b668ade4d12d58ecc42ffa36fd237442fe59d1da69d79c5564896df9da31dd59",
+          "reason": "No authority, validator, required check or timing threshold changes. The test now correlates actual native failure to its declared check identity; it cannot substitute inspect-second success for observed failure.",
+          "reviewed_code_fingerprint": "e27b964f5bd25b96d878b5ab1d2d2ecd0d49995feec75e847130ce2235122289",
           "spec_material_hash": "01c40f1a3b54a8c42ac8c5de455ecacfcc3a5572861212f46f5055589eaffc87"
         }
       ],
@@ -676,14 +685,18 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795001976Z"
+      "updated_at": "1795005213Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:60ff17ead8e58c139ae7c4d9a46067322ec153b34069e40ed1dae748bc5f6356",
+      "artifact_hash": "sha256:01f742620cd4e6c8693a196544649d28aa643a17535775d685b4bd68bab0f416",
       "checks": [
+        {
+          "name": "actions-cli-required-failure-capture",
+          "status": "failed"
+        },
         {
           "name": "actions-currentness-readback",
           "status": "failed"
@@ -798,10 +811,24 @@
             "intent_id": "intent:change_01M7Q44RVCTZPBYQ12A8MB3C5Y",
             "kind": "trajectory_step_recorded",
             "sequence": 8
+          },
+          {
+            "detail": "trajectory:branch_01M7Q44RYMGVJGZ2JGB3YZ9VP7",
+            "event_id": "event:9",
+            "intent_id": "intent:change_01M7Q44RVCTZPBYQ12A8MB3C5Y",
+            "kind": "trajectory_step_recorded",
+            "sequence": 9
+          },
+          {
+            "detail": "trajectory:branch_01M7Q44RYMGVJGZ2JGB3YZ9VP7",
+            "event_id": "event:10",
+            "intent_id": "intent:change_01M7Q44RVCTZPBYQ12A8MB3C5Y",
+            "kind": "trajectory_step_recorded",
+            "sequence": 10
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 8,
+        "next_sequence": 10,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M7Q44RYMGVJGZ2JGB3YZ9VP7": {
@@ -914,6 +941,42 @@
                 "sequence": 8,
                 "tool": "Added only validation_not_ready to the existing recognized journal kinds. No source tests executed manually; unchanged actual negative/full-proof readback regression will run on required GitHub Actions.",
                 "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:9",
+                "observations": [
+                  "tests/support/fresh_docs_readiness.rs",
+                  "tests/common/consumer_readiness_fixture.rs",
+                  "src/decapod/core/validation_runtime.rs"
+                ],
+                "proof_refs": [
+                  "actions-cli-required-failure-capture"
+                ],
+                "scope": [
+                  "issue-1660"
+                ],
+                "sequence": 9,
+                "tool": "Exact82a1c098 PR CLI job134777427412 executed41 entrypoint cases passed,1 failed,5 ignored. Initial real full proof and VERIFIED succeeded and newer full validation returned not-ready. Test then wrongly read native-0 exit0, but fixture canonically sorts inspect-second before inspect-source. Existing native-N.diagnostic.json binds each capture to CheckKey; select exact inspect-source identity, still require actual step exit1 and stderr observed required failure. Raw log SHA256788c87fbbd46f81c47885388d6b575be2dbbca33348e837d37cb3009de20397a. Product proof contracts, source check, required graph and timing limits unchanged.",
+                "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:10",
+                "observations": [
+                  "tests/support/fresh_docs_readiness.rs",
+                  ".decapod/managed/specs/INTERFACES.md"
+                ],
+                "proof_refs": [
+                  "rustfmt",
+                  "diff-whitespace"
+                ],
+                "scope": [
+                  "issue-1660"
+                ],
+                "sequence": 10,
+                "tool": "Selected the negative capture by schema and all CheckKey fields from existing native diagnostic metadata; retained exit1 and expected stderr, additionally require Exited and no per-step execution error. Preserve current canonical ordering and every later withdrawal/old-proof refusal/recovery/lease assertion. No runtime or source-CI graph changes. Prior82 PR broker timing failure remains failed; fresh exact-source Actions will exercise unchanged strict probe.",
+                "validation_findings": []
               }
             ]
           }
@@ -936,7 +999,10 @@
       ],
       "inspected_files": [
         "src/decapod/core/validation_history.rs",
+        "src/decapod/core/validation_runtime.rs",
         "src/decapod/core/workunit.rs",
+        "tests/common/consumer_readiness_fixture.rs",
+        "tests/support/fresh_docs_readiness.rs",
         "tests/unit/core/validation_history_workunit_tests.rs"
       ],
       "intent_id": "intent:change_01M7Q44RVCTZPBYQ12A8MB3C5Y",
@@ -965,7 +1031,9 @@
       "task_id": "bugs_01m7q41y4d66h98s",
       "tool_calls": [
         "Added only validation_not_ready to the existing recognized journal kinds. No source tests executed manually; unchanged actual negative/full-proof readback regression will run on required GitHub Actions.",
-        "GitHub Actions Supabase job 134761459192: 1803 library tests passed, 1 failed, 8 ignored. Withdrawal regression rejected its own validation_not_ready journal kind. Raw log SHA256 5b4e36a94d5b09b8cc78c596293168ec4af32ba1ad9e1597d990737c06ad70cd. Correct existing reader inventory only; preserve hashes and CAS/custody fences."
+        "Exact82a1c098 PR CLI job134777427412 executed41 entrypoint cases passed,1 failed,5 ignored. Initial real full proof and VERIFIED succeeded and newer full validation returned not-ready. Test then wrongly read native-0 exit0, but fixture canonically sorts inspect-second before inspect-source. Existing native-N.diagnostic.json binds each capture to CheckKey; select exact inspect-source identity, still require actual step exit1 and stderr observed required failure. Raw log SHA256788c87fbbd46f81c47885388d6b575be2dbbca33348e837d37cb3009de20397a. Product proof contracts, source check, required graph and timing limits unchanged.",
+        "GitHub Actions Supabase job 134761459192: 1803 library tests passed, 1 failed, 8 ignored. Withdrawal regression rejected its own validation_not_ready journal kind. Raw log SHA256 5b4e36a94d5b09b8cc78c596293168ec4af32ba1ad9e1597d990737c06ad70cd. Correct existing reader inventory only; preserve hashes and CAS/custody fences.",
+        "Selected the negative capture by schema and all CheckKey fields from existing native diagnostic metadata; retained exit1 and expected stderr, additionally require Exited and no per-step execution error. Preserve current canonical ordering and every later withdrawal/old-proof refusal/recovery/lease assertion. No runtime or source-CI graph changes. Prior82 PR broker timing failure remains failed; fresh exact-source Actions will exercise unchanged strict probe."
       ],
       "unresolved_assumptions": []
     }

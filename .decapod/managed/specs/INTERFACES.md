@@ -28,6 +28,12 @@ the resulting CLAIMED snapshot must remain readable for repair. Partial CI-local
 and preparation scopes do not have this authority. Earlier successful
 observations remain historical records.
 
+The executable negative control selects the native capture by its full check
+identity (`inspect-source`), then requires an exited process with code 1 and the
+expected assertion diagnostic. Canonical ordering places the independent
+`inspect-second` check first; its successful result cannot substitute for the
+required failure or be mistaken for evidence that the control failed to execute.
+
 Fresh full proof under a renewed lease can restore VERIFIED. The implicit
 workunit selector chooses the newest canonical success for the exact current
 task contract and custody; every epoch, source, execution, input and workunit
@@ -1305,7 +1311,7 @@ field. Nothing in this operation authorizes a mutation, approval or completion.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `b668ade4d12d58ecc42ffa36fd237442fe59d1da69d79c5564896df9da31dd59`
+- Repository signal fingerprint: `e27b964f5bd25b96d878b5ab1d2d2ecd0d49995feec75e847130ce2235122289`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (236 files), `tests/` (235 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

@@ -622,11 +622,40 @@ fn prove_current_workunit(
     fs::write(failure_flag, "operator-owned external failure control\n").unwrap();
     let failed = validate(false);
     let evidence = PathBuf::from(failed["readiness"]["evidence_path"].as_str().unwrap());
-    let steps: serde_json::Value =
-        serde_json::from_slice(&fs::read(evidence.join("native-0.steps.json")).unwrap()).unwrap();
+    // Captures follow canonical check order, not declaration insertion order.
+    // Bind the failure assertion to its actual check instead of accepting an
+    // unrelated check's result or assuming that inspect-source is native-0.
+    let captures: Vec<_> = (0..2)
+        .filter(|index| {
+            let path = evidence.join(format!("native-{index}.diagnostic.json"));
+            if !path.exists() {
+                return false;
+            }
+            let diagnostic: serde_json::Value =
+                serde_json::from_slice(&fs::read(path).unwrap()).unwrap();
+            diagnostic["schema_version"] == "1.0.0"
+                && diagnostic["check"]["job"] == "inspect-source"
+                && diagnostic["check"]["provider"] == "native"
+                && diagnostic["check"]["workflow"] == ".decapod/config.toml"
+                && diagnostic["check"]["profile"] == "repo.pr-readiness.v1"
+                && diagnostic["check"]["matrix"] == serde_json::json!({})
+        })
+        .collect();
+    assert_eq!(
+        captures.len(),
+        1,
+        "failure control must have one bound capture"
+    );
+    let capture = captures[0];
+    let steps: serde_json::Value = serde_json::from_slice(
+        &fs::read(evidence.join(format!("native-{capture}.steps.json"))).unwrap(),
+    )
+    .unwrap();
     assert_eq!(steps[0]["exit_code"], 1, "{steps}");
+    assert_eq!(steps[0]["termination"], "Exited", "{steps}");
+    assert!(steps[0]["error"].is_null(), "{steps}");
     assert!(
-        fs::read_to_string(evidence.join("native-0.stderr"))
+        fs::read_to_string(evidence.join(format!("native-{capture}.stderr")))
             .unwrap()
             .contains("observed required failure")
     );
