@@ -1,5 +1,51 @@
 # Interfaces
 
+## Workunit proof and continuity semantics (#1660)
+
+Before full proof, use `govern capsule query --task-id <id> --workunit-id <id>
+--scope interfaces --topic <topic> --write`, then attach its emitted task
+capsule path using `workunit attach-state`. Creating a capsule does not itself
+prove execution. A fresh workunit checkpoint binds the resulting context;
+full validation and the canonical VERIFIED transition remain separate steps.
+
+`record-proof --status pass` may retain an agent declaration about an existing
+artifact. Success does not authorize `transition --to verified`; that operation
+requires a current canonical full-validation record. Readback preserves the
+unproven declaration without a validation epoch or producer reference.
+After relevant trajectory changes, resume refuses the old execution binding.
+Discarding obsolete passing declarations allows a fresh checkpoint and resume;
+the explicit diagnostic fail marker used to discard a claim is not an
+independently executed failed test. Historical journal entries remain intact.
+
+A completed task-bound full validation with a not-ready judgment withdraws
+current workunit verification through the existing journal. It clears the
+current proof results, validation epoch and producer selector, downgrades
+VERIFIED to CLAIMED, and advances the journal even if promotion had not yet
+occurred. The event is `validation_not_ready`: it does not assert that every
+check executed or failed. The journal reader recognizes this event kind while
+retaining the same identity, manifest hash, record hash and predecessor checks;
+the resulting CLAIMED snapshot must remain readable for repair. Partial CI-local
+and preparation scopes do not have this authority. Earlier successful
+observations remain historical records.
+
+The executable negative control selects the native capture by its full check
+identity (`inspect-source`), then requires an exited process with code 1 and the
+expected assertion diagnostic. Canonical ordering places the independent
+`inspect-second` check first; its successful result cannot substitute for the
+required failure or be mistaken for evidence that the control failed to execute.
+
+Fresh full proof under a renewed lease can restore VERIFIED. The implicit
+workunit selector chooses the newest canonical success for the exact current
+task contract and custody; every epoch, source, execution, input and workunit
+subject check still applies. Generic `qa verify commit` inspection retains its
+mixed-custody ambiguity error and requires explicit historical selection.
+
+The split-store refusal now gives a bounded recovery path: preserve both stores,
+claim a fresh task from the repository root, use a managed workspace sharing
+the canonical runtime, reauthor its obligations and obtain new full proof.
+This is not in-place store convergence or historical-proof authentication;
+that migration remains unsupported.
+
 ## Config repair and accepted authority (#1771, #1776)
 
 Configuration errors use `INVALID_CONFIG_SCHEMA` with the original parser
@@ -1297,7 +1343,7 @@ field. Nothing in this operation authorizes a mutation, approval or completion.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `0efa373226ebec751160acf37526015d6deae3089ef98b4228bcb2af4e8821ea`
+- Repository signal fingerprint: `fe8b047baf9de01a3389df981aceae129c392c22e025897718bc3052f75ce497`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (237 files), `tests/` (236 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

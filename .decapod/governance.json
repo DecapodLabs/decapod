@@ -594,6 +594,16 @@
         "tests/unit/core/migration_tests.rs",
         "tests/unit/plugins/doctor_tests.rs"
       ]
+    },
+    {
+      "id": "cp-1744-2",
+      "summary": "Merge origin/master caeeaba8 (#1792), refresh specs, and pass post-merge fmt/clippy/unit/CLI tests",
+      "input_digest": "sha256:d6c2d708fb44c6712ce96a24d03e9ef9626b62aa9d1c35d16d49d99e278ad9bf",
+      "proof_refs": [
+        "src/decapod/core/migration.rs",
+        "tests/cli_contract_enforcement.rs",
+        "tests/trajectory_cli.rs"
+      ]
     }
   ],
   "intents": {
@@ -636,9 +646,9 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Document read-only decapod system migrations CLI, non-initializing doctor check, and resolved decapod_root migration notices (#1744)",
-          "reviewed_code_fingerprint": "0efa373226ebec751160acf37526015d6deae3089ef98b4228bcb2af4e8821ea",
-          "spec_material_hash": "4b0814cbf5cfbd656c4acaa0e252cd9f0baeb270c8d4098c7665f6ee707048fc"
+          "reason": "Merged origin/master (caeeaba8) #1660 interfaces and #1744 migration inspection interfaces",
+          "reviewed_code_fingerprint": "fe8b047baf9de01a3389df981aceae129c392c22e025897718bc3052f75ce497",
+          "spec_material_hash": "3ee42482c4c6deea54ef3a21e4bf4d479bd967c6b1ee36b46bfdb40b39e8bc16"
         }
       ],
       "state": "APPROVED",
@@ -649,7 +659,7 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795011454Z"
+      "updated_at": "1795011707Z"
     },
     "trajectory": {
       "active_boundaries": [

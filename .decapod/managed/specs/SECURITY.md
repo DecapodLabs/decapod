@@ -11,6 +11,17 @@ CLI RPC boundary only; it does not authenticate an imported proof or establish
 host-wide observation. Same-host Python differential parsing is distinct from
 independent trusted execution.
 
+## Withdrawal and fresh custody
+
+A full validator not-ready judgment only narrows current workunit authority;
+it never creates a successful observation or relabels unexecuted checks as
+failed. Withdrawal checks the captured workunit generation and task custody
+atomically in the existing canonical database. A concurrent journal or lease
+change refuses the append. Historical successful records retain their original
+identity. Renewal does not transfer their authority: promotion requires fresh
+matching current proof, including the existing tool/input/source and epoch
+checks. Split-store atomicity remains unsupported and fails explicitly.
+
 ## Configuration validity and accepted privilege proposals (#1771, #1776)
 
 `cli::DecapodProjectConfig` rejects unsupported schema versions during typed
@@ -695,7 +706,7 @@ execution evidence remains required before publication readiness.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `0efa373226ebec751160acf37526015d6deae3089ef98b4228bcb2af4e8821ea`
+- Repository signal fingerprint: `fe8b047baf9de01a3389df981aceae129c392c22e025897718bc3052f75ce497`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (237 files), `tests/` (236 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
