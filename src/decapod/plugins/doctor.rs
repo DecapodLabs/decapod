@@ -96,6 +96,12 @@ pub fn run_doctor_cli(
 }
 
 fn run_preflight_checks(store: &Store, project_root: &Path) -> Result<DoctorReport, DecapodError> {
+    let governance_root = crate::core::store::find_governance_root(project_root);
+    let decapod_root = store
+        .root
+        .parent()
+        .map(Path::to_path_buf)
+        .unwrap_or_else(|| governance_root.join(".decapod"));
     let mut checks = Vec::new();
 
     // 1. Git status
@@ -105,18 +111,25 @@ fn run_preflight_checks(store: &Store, project_root: &Path) -> Result<DoctorRepo
     checks.extend(check_required_files(project_root));
 
     // 3. .decapod directory
-    checks.push(check_decapod_dir(project_root));
+    checks.push(check_decapod_dir_for_store(project_root, &store.root));
 
     // 4. Database files
     checks.extend(check_databases(&store.root));
 
-    // 5. Version check
+    // 5. Migrations (read-only)
+    checks.push(check_migrations(
+        project_root,
+        &governance_root,
+        &decapod_root,
+    ));
+
+    // 6. Version check
     checks.push(check_version());
 
-    // 6. Rust toolchain
+    // 7. Rust toolchain
     checks.push(check_rust_toolchain(project_root));
 
-    // 7. Config validation
+    // 8. Config validation
     checks.push(check_config(project_root));
 
     let passed = checks
@@ -214,21 +227,34 @@ fn check_required_files(project_root: &Path) -> Vec<CheckResult> {
         .collect()
 }
 
+#[cfg_attr(not(test), allow(dead_code))]
 fn check_decapod_dir(project_root: &Path) -> CheckResult {
+    check_decapod_dir_for_store(project_root, &project_root.join(".decapod").join("data"))
+}
+
+fn check_decapod_dir_for_store(project_root: &Path, store_root: &Path) -> CheckResult {
     let decapod_dir = project_root.join(".decapod");
     if decapod_dir.is_dir() {
-        let data_dir = decapod_dir.join("data");
-        if data_dir.is_dir() {
+        if store_root.is_dir() {
+            let local_data = decapod_dir.join("data");
+            let message = if store_root == local_data {
+                ".decapod/data directory present".to_string()
+            } else {
+                format!("{} directory present", store_root.display())
+            };
             CheckResult {
                 name: ".decapod".to_string(),
                 status: CheckStatus::Pass,
-                message: ".decapod/data directory present".to_string(),
+                message,
             }
         } else {
             CheckResult {
                 name: ".decapod".to_string(),
-                status: CheckStatus::Fail,
-                message: ".decapod exists but data/ subdirectory missing".to_string(),
+                status: CheckStatus::Warn,
+                message: format!(
+                    ".decapod exists; {} not yet initialized (run an initializing command)",
+                    store_root.display()
+                ),
             }
         }
     } else {
@@ -237,6 +263,65 @@ fn check_decapod_dir(project_root: &Path) -> CheckResult {
             status: CheckStatus::Fail,
             message: "Not initialized (run `decapod init`)".to_string(),
         }
+    }
+}
+
+fn check_migrations(
+    workspace_root: &Path,
+    governance_root: &Path,
+    decapod_root: &Path,
+) -> CheckResult {
+    if !decapod_root.is_dir() {
+        return CheckResult {
+            name: "Migrations".to_string(),
+            status: CheckStatus::Warn,
+            message: format!(
+                "No .decapod directory at {}; run `decapod init` first",
+                decapod_root.display()
+            ),
+        };
+    }
+
+    match migration::inspect_migration_state_at(workspace_root, governance_root, decapod_root) {
+        Ok(report) if report.has_blocking_or_corrupt_artifact() => {
+            let headline = report
+                .instructions
+                .first()
+                .map(String::as_str)
+                .unwrap_or("Corrupt or unreadable migration artifact");
+            CheckResult {
+                name: "Migrations".to_string(),
+                status: CheckStatus::Fail,
+                message: format!(
+                    "{headline} (decapod_root: {}; reasons: {}; run `decapod system migrations --format json`)",
+                    report.decapod_root,
+                    report.reason_codes.join(", "),
+                ),
+            }
+        }
+        Ok(report) if report.action_required => CheckResult {
+            name: "Migrations".to_string(),
+            status: CheckStatus::Warn,
+            message: format!(
+                "Action required at {} ({} pending migration(s), reasons: {}); run `decapod system migrations --format json`",
+                report.decapod_root,
+                report.pending_migrations.len(),
+                report.reason_codes.join(", "),
+            ),
+        },
+        Ok(report) => CheckResult {
+            name: "Migrations".to_string(),
+            status: CheckStatus::Pass,
+            message: format!(
+                "Up to date at v{} ({} applied, 0 pending; decapod_root: {})",
+                report.current_binary_version, report.applied.count, report.decapod_root,
+            ),
+        },
+        Err(e) => CheckResult {
+            name: "Migrations".to_string(),
+            status: CheckStatus::Fail,
+            message: format!("Migration inspection failed: {e}"),
+        },
     }
 }
 

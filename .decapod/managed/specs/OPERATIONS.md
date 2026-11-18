@@ -216,8 +216,15 @@ authority. Human-authored overrides are validated, never mechanically rewritten.
 Conflicts preserve source artifacts and stop with an actionable error.
 
 When a migration notice appears, inspect the managed ledger and catalog through
-Decapod and confirm completion and verification. The notice alone is not proof.
-Failed migration follows supported backup/restore diagnostics; unresolved
+`decapod system migrations --format json` (and `decapod system doctor check`)
+instead of directly opening `.decapod/managed/*` files or inferring cwd-relative
+paths from a governed worktree. `MigrationReport::agent_instruction` and
+`inspect_migration_state_at` (`src/decapod/core/migration.rs`) report the actual
+resolved `decapod_root` alongside pending migrations, applied entries, catalog
+entries, legacy database/recovery checks, and concrete remediation instructions
+without consuming the pending transition counter or initializing storage. Confirm
+completion and verification from that inspection output; the notice alone is not
+proof. Failed migration follows supported backup/restore diagnostics; unresolved
 corruption or unsupported recovery requires human judgment.
 
 Release artifact jobs use `assets/tools/release_cpu.rs` through the scoped
@@ -374,7 +381,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `42d7b60e9c005456ac44735ad2b3e420eb3d1a699b39448cbe600d42ccd43fdd`
+- Repository signal fingerprint: `1ca686ebed33d352f182a9bbeeebb6ce468f2a901dbc1cb121d667061adeaf60`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (237 files), `tests/` (236 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

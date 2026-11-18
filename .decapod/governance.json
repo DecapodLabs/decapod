@@ -592,6 +592,15 @@
         "tests/crash_consistency.rs",
         "tests/unit/core/broker_tests.rs"
       ]
+    },
+    {
+      "id": "cp-1783-2",
+      "summary": "chore(merge): sync origin/master v0.149.0 and refresh broker provenance specs/proof (#1783)",
+      "input_digest": "sha256:62daee046ee7da8df691d924f05f76758bfb3dd4a81f6def7b229cb80d5f719a",
+      "proof_refs": [
+        "tests/crash_consistency.rs",
+        "tests/unit/core/broker_tests.rs"
+      ]
     }
   ],
   "intents": {
@@ -632,22 +641,22 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Document #1783 OS probe and liveness correlation architecture",
-          "reviewed_code_fingerprint": "42d7b60e9c005456ac44735ad2b3e420eb3d1a699b39448cbe600d42ccd43fdd",
+          "reason": "Reconcile #1783 broker provenance architecture spec with origin/master v0.149.0",
+          "reviewed_code_fingerprint": "1ca686ebed33d352f182a9bbeeebb6ce468f2a901dbc1cb121d667061adeaf60",
           "spec_material_hash": "4929deadf9cb8583650d9f9c3d2cb84acc645960aad1662857d3510b50ae1e23"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Document #1783 broker writer incarnation provenance and --acknowledge-unknown-writer",
-          "reviewed_code_fingerprint": "42d7b60e9c005456ac44735ad2b3e420eb3d1a699b39448cbe600d42ccd43fdd",
-          "spec_material_hash": "d81ced6cec8ddf9c1fb346fd84d32762827cfa9992d8b5a5ba053d5f356af69f"
+          "reason": "Reconcile #1783 broker provenance spec with origin/master v0.149.0",
+          "reviewed_code_fingerprint": "1ca686ebed33d352f182a9bbeeebb6ce468f2a901dbc1cb121d667061adeaf60",
+          "spec_material_hash": "0c810d04c62a55d1935a9c59c78cea79cf0a28477ed58589c6898d16fd4c6a5a"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Document #1783 fail-closed orphan acknowledgment and active-writer refusal",
-          "reviewed_code_fingerprint": "42d7b60e9c005456ac44735ad2b3e420eb3d1a699b39448cbe600d42ccd43fdd",
+          "reason": "Reconcile #1783 fail-closed broker recovery security spec with origin/master v0.149.0",
+          "reviewed_code_fingerprint": "1ca686ebed33d352f182a9bbeeebb6ce468f2a901dbc1cb121d667061adeaf60",
           "spec_material_hash": "0662955287aed3e33e71a27b537cba0673fafeb47f65465b3e197c1cb5b762a3"
         }
       ],
@@ -659,13 +668,13 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795031296Z"
+      "updated_at": "1795034028Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:3ec53cabb35b60bc0fbb4456cbee2ac3f5fb76d76be242c0f99ff455730aad15",
+      "artifact_hash": "sha256:9ca49b62983c15ecc407262d77f01385bc22d13b6a2806a1dd01b052c71403e2",
       "checks": [
         {
           "name": "cargo_clippy",
@@ -684,6 +693,10 @@
           "status": "passed"
         },
         {
+          "name": "core_tests_broker",
+          "status": "passed"
+        },
+        {
           "name": "crash_consistency",
           "status": "passed"
         },
@@ -693,6 +706,10 @@
         },
         {
           "name": "single_datastore",
+          "status": "passed"
+        },
+        {
+          "name": "v0_149_0_merge",
           "status": "passed"
         }
       ],
@@ -717,10 +734,17 @@
             "intent_id": "intent:change_01M7R1CWXC45KTFHQQ66YZABEX",
             "kind": "trajectory_step_recorded",
             "sequence": 4
+          },
+          {
+            "detail": "trajectory:branch_01M7R1CX1G0E1K1F07ZPNJDYTA",
+            "event_id": "event:5",
+            "intent_id": "intent:change_01M7R1CWXC45KTFHQQ66YZABEX",
+            "kind": "trajectory_step_recorded",
+            "sequence": 5
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 4,
+        "next_sequence": 5,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M7R1CX1G0E1K1F07ZPNJDYTA": {
@@ -764,6 +788,28 @@
                 ],
                 "sequence": 4,
                 "validation_findings": []
+              },
+              {
+                "action": "verification",
+                "custody_event_id": "event:5",
+                "observations": [
+                  "Merged origin/master a5a1edad (v0.149.0) cleanly; core::broker::tests 7/7, crash_consistency 8/8, doc_alignment 4/4, single_datastore 9/9, core_tests broker 4/4, fmt, clippy all passed"
+                ],
+                "proof_refs": [
+                  "v0_149_0_merge",
+                  "cargo_fmt",
+                  "cargo_clippy",
+                  "core_broker_unit",
+                  "crash_consistency",
+                  "doc_alignment",
+                  "single_datastore",
+                  "core_tests_broker"
+                ],
+                "scope": [
+                  "root"
+                ],
+                "sequence": 5,
+                "validation_findings": []
               }
             ]
           }
@@ -772,6 +818,7 @@
       "declared_commands": [],
       "destination": "pull request",
       "evidence": [
+        "Merged origin/master a5a1edad (v0.149.0) cleanly; core::broker::tests 7/7, crash_consistency 8/8, doc_alignment 4/4, single_datastore 9/9, core_tests broker 4/4, fmt, clippy all passed",
         "core::broker::tests 7/7 passed; crash_consistency 8/8 passed; cli_contract_enforcement 22/22 passed; doc_alignment 4/4 passed; single_datastore 9/9 passed; clippy and fmt clean"
       ],
       "inspected_files": [

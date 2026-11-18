@@ -658,6 +658,9 @@ fn build_docs(touched: Vec<PathBuf>) -> Result<(), error::DecapodError> {
                     writeln!(file, "\n{}", db_maintenance_command_contract())?;
                     writeln!(file, "\n{}", broker_audit_command_contract())?;
                 }
+                "system" => {
+                    writeln!(file, "\n{}", system_command_contract())?;
+                }
                 _ => {}
             }
             writeln!(file)?;
@@ -734,6 +737,13 @@ fn broker_audit_command_contract() -> &'static str {
 - **Writer incarnation provenance:** New `pending` broker audit events record optional OS writer provenance (`writer_pid`, `writer_start_id`, `writer_boot_id`, `writer_host_id`, and Linux `writer_pid_ns`).
 - **Liveness classification:** `decapod data broker verify` and `decapod data broker repair` establish `writer_liveness = "stopped"` only when provenance proves either (a) same host/boot/PID-namespace with an absent PID or a different observed `writer_start_id` (PID reuse), or (b) a different prior boot on the same verified host. Event age alone and bare PID checks without start-identity/boot correlation never establish writer termination.
 - **Fail-closed unknown handling:** Active writers (`writer_liveness = "active"`) are always refused. Legacy provenance-free, cross-host, or unverifiable pending events report `writer_liveness = "unknown"` (`human_review_required = true`) in `verify` and `repair` preview, and `decapod data broker repair --apply` refuses unless `--acknowledge-unknown-writer` is explicitly provided after human review."#
+}
+
+fn system_command_contract() -> &'static str {
+    r#"### Read-Only System & Migration Inspection (`decapod system ...`)
+
+- **Non-initializing diagnostics (`decapod system migrations`, `decapod system doctor check`, `decapod system version`, `decapod system capabilities`):** Run without requiring `DECAPOD_SESSION_PASSWORD`, without creating `.decapod/data/`, without modifying `version_counter.json`, `applied.json`, or `catalog.json`, and without consuming a pending migration notice.
+- **Migration inspection (`decapod system migrations --format {json,text}`):** Resolves `workspace_root`, `governance_root`, and `decapod_root` (following the main repository `.decapod` from governed worktrees) and exposes `version_counter`, `applied`, compiled/on-disk `catalog`, `pending_migrations`, `action_required`, `reason_codes`, and actionable `instructions`."#
 }
 
 fn shared_claim_config_contract() -> &'static str {
