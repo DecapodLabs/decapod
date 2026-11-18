@@ -1,7 +1,7 @@
 {
   "schema_version": "1.0.0",
   "baseline": {
-    "accepted_commit": "352d892958e1cdf692299927f7c2f3c0c36fc639",
+    "accepted_commit": "c5bafce62bf9120b590436e7d18ce61651037206",
     "policy": {
       "change_control": {
         "requires_human_review": true,
@@ -176,6 +176,11 @@
       "claim:current-task-proof": {
         "falsifier": "A stale or unbound pass completes a work claim, unlocks dependency admission, bypasses aggregate verification, or stale verifier overwrites newer evidence",
         "statement": "Persisted task pass cannot authorize a different task revision, and stale verification cannot overwrite a changed baseline",
+        "status": "open"
+      },
+      "claim:current-validation-withdrawal": {
+        "falsifier": "A newer observed required failure leaves old VERIFIED applicable, an old subject promotes after withdrawal, or fresh complete current-custody validation cannot recover after renewal.",
+        "statement": "A newer task-bound full not-ready judgment withdraws current workunit proof, preserves historical success, and fresh current-custody proof restores legitimate VERIFIED operation.",
         "status": "open"
       },
       "claim:dagger-removed": {
@@ -568,96 +573,54 @@
     }
   },
   "change": {
-    "id": "change_01M7QBGV59Y7MXFNYG75MBZDQ9",
-    "base_commit": "352d892958e1cdf692299927f7c2f3c0c36fc639",
+    "id": "change_01M7QN04YE8S7HSJ4C7NA5VKRV",
+    "base_commit": "c5bafce62bf9120b590436e7d18ce61651037206",
     "target_base": "origin/master"
   },
   "checkpoints": [
     {
-      "id": "exact-candidate-1052-v1",
-      "summary": "Add #1052 actual-binary exact-candidate governance regression suite and OPERATIONS.md documentation",
-      "input_digest": "sha256:c498a6bed79ebf6e1f139d2c158baf39187692f7b8548bafa2a0c97169fd666a",
+      "id": "fault-detection-1795",
+      "summary": "Prove governance test suite detects weakened enforcement rules across five admission boundaries (#1795)",
+      "input_digest": "sha256:002b90f519c6f0379b651f74fa9f97fa93e710d8a143584c95f96262d8b50e6c",
       "proof_refs": [
-        "cargo clippy --test exact_candidate_governance_1052 --all-features -- -D warnings (exit 0)",
-        "cargo test --test exact_candidate_governance_1052 (4 passed; 0 failed)",
-        "rustfmt --check tests/exact_candidate_governance_1052.rs (exit 0)"
+        "cargo test --test governance_fault_detection_1795: 4 passed; 0 failed (750.39s)"
       ]
     },
     {
-      "id": "exact-candidate-1052-release13",
-      "summary": "Integrate accepted release 0.148.13 (origin/master c5bafce6) into #1052",
-      "input_digest": "sha256:56c69ba137bfb9c987b282832076f602179d48b4c0e86a53c55b2333106c3c4c",
+      "id": "integrate-master-1799-1795",
+      "summary": "Integrate accepted master 0b6ce0a8 with #1795 fault detection suite",
+      "input_digest": "sha256:46e956d784c528f09e7072b225106edc4133d697757e2b5acc651090b03e51c0",
       "proof_refs": [
-        "CLIPPY_CONF_DIR=.config cargo clippy --test exact_candidate_governance_1052 --all-features -- -D warnings (exit 0)",
-        "cargo test --test exact_candidate_governance_1052 (4 passed; 0 failed in 250.33s)",
-        "rustfmt --check tests/exact_candidate_governance_1052.rs (exit 0)"
+        "post-merge cargo test --test governance_fault_detection_1795: 4 passed; 0 failed (850.62s)"
       ]
     },
     {
-      "id": "exact-candidate-1052-fmt",
-      "summary": "Format tests/exact_candidate_governance_1052.rs with cargo fmt --all (Edition 2024)",
-      "input_digest": "sha256:333623103bc1dd4c404a1c5f784b1ab8d8e50071ef83063941db07de9bf9768a",
+      "id": "integrate-master-v01491-1795",
+      "summary": "Integrate origin/master 205d4e8da (v0.149.1) and refresh v0.149.1 specs and Dockerfile",
+      "input_digest": "sha256:073f7f184fd9611c685421e5cf199d8e9aa9940386b497827072119137569767",
       "proof_refs": [
-        "CLIPPY_CONF_DIR=.config cargo clippy --test exact_candidate_governance_1052 --all-features -- -D warnings (exit 0)",
-        "cargo fmt --all -- --check (exit 0)",
-        "cargo test --test exact_candidate_governance_1052 (4 passed; 0 failed in 198.35s)"
-      ]
-    },
-    {
-      "id": "exact-candidate-1052-master-0b6ce0a8",
-      "summary": "Integrate accepted master 0b6ce0a8 (PR #1799) with #1052 exact-candidate suite",
-      "input_digest": "sha256:1ea3ced218461a89524248d54300fbddf1c24dd15769b0f21ceb47b3b7ab532f",
-      "proof_refs": [
-        "CLIPPY_CONF_DIR=.config cargo clippy --test exact_candidate_governance_1052 --all-features -- -D warnings (exit 0)",
-        "cargo fmt --all -- --check (exit 0)",
-        "cargo test --test exact_candidate_governance_1052 (4 passed; 0 failed in 218.98s)"
-      ]
-    },
-    {
-      "id": "exact-candidate-1052-interfaces-review",
-      "summary": "Record honest unchanged-with-reason review for INTERFACES.md vs origin/master 0b6ce0a8 (#1052)",
-      "input_digest": "sha256:7a06df251c334030b1c05f590a4fb3a81aa2b0509cff0f542b75601eddb7bb2e",
-      "proof_refs": [
-        "cargo test --test exact_candidate_governance_1052 (4 passed; 0 failed in 218.98s)"
-      ]
-    },
-    {
-      "id": "exact-candidate-1052-v014900",
-      "summary": "Integrate accepted master v0.149.0 (a5a1edadb, PR #1802 + #1804) with #1052 exact-candidate suite",
-      "input_digest": "sha256:61efba699f099e7c81b01c272ce39e75c910f84652b1ba96189f8bc77f0f5d74",
-      "proof_refs": [
-        "CLIPPY_CONF_DIR=.config cargo clippy --test exact_candidate_governance_1052 --all-features -- -D warnings (exit 0)",
-        "cargo fmt --all -- --check (exit 0)",
-        "cargo test --test exact_candidate_governance_1052 (4 passed; 0 failed in 362.42s)"
-      ]
-    },
-    {
-      "id": "exact-candidate-1052-v014900-projections",
-      "summary": "Refresh Dockerfile.decapod and specs manifest to v0.149.0 (#1052)",
-      "input_digest": "sha256:49952f5caeb5e7f1288619484f08e16cc7939c5ac15575360f886df5e58c3e19",
-      "proof_refs": [
-        "CLIPPY_CONF_DIR=.config cargo clippy --test exact_candidate_governance_1052 --all-features -- -D warnings (exit 0)",
-        "cargo fmt --all -- --check (exit 0)",
-        "cargo test --test exact_candidate_governance_1052 (4 passed; 0 failed in 362.42s)"
+        ".decapod/managed/specs/SEMANTICS.md",
+        "tests/governance_fault_detection_1795.rs"
       ]
     }
   ],
   "intents": {
-    "intent:change_01M7QBGV59Y7MXFNYG75MBZDQ9": {
+    "intent:change_01M7QN04YE8S7HSJ4C7NA5VKRV": {
       "acceptance_criteria": [],
       "assumptions": [],
       "boundaries": [
         "Current claimed task and isolated work branch"
       ],
       "constraints": [
-        "validation-kernel"
+        "paths:[\"tests/governance_fault_detection_1795.rs\"",
+        "\".decapod/managed/specs/SEMANTICS.md\"]"
       ],
       "created_sequence": 1,
-      "id": "intent:change_01M7QBGV59Y7MXFNYG75MBZDQ9",
+      "id": "intent:change_01M7QN04YE8S7HSJ4C7NA5VKRV",
       "out_of_scope": [],
       "proof_requirements": [],
-      "raw_intent": "Strengthen exact-candidate governance and continuous proof validity\n\nImplement the continuous-governance mandate tracked by DecapodLabs/decapod#1052: audit existing code and tests; preserve exact candidate/base/integration/policy/task/custody/evidence applicability, reject false green and stale proof, demonstrate actual-binary local assurance and unmet external scope, supported runtime contract and ten-worker concurrency/recovery. Prioritize P0 policy/proof integrity (#1658) after the isolated #1657 bootstrap repair. Preserve strict Decapod validation, independent publication and human merge authority. Coordinate Dactyl #85 and Propodus #71/#124 without unrelated billing or hosted runners.",
-      "refined_intent": "Strengthen exact-candidate governance and continuous proof validity\n\nImplement the continuous-governance mandate tracked by DecapodLabs/decapod#1052: audit existing code and tests; preserve exact candidate/base/integration/policy/task/custody/evidence applicability, reject false green and stale proof, demonstrate actual-binary local assurance and unmet external scope, supported runtime contract and ten-worker concurrency/recovery. Prioritize P0 policy/proof integrity (#1658) after the isolated #1657 bootstrap repair. Preserve strict Decapod validation, independent publication and human merge authority. Coordinate Dactyl #85 and Propodus #71/#124 without unrelated billing or hosted runners.",
+      "raw_intent": "P0: Prove governance test suite detects weakened enforcement rules (#1795)",
+      "refined_intent": "P0: Prove governance test suite detects weakened enforcement rules (#1795)",
       "status": "refined",
       "updated_sequence": 3
     }
@@ -670,11 +633,9 @@
       },
       "deferred_questions": [],
       "human_questions": [],
-      "intent": "Verify exact-candidate SHA/tree/base/task/lease_generation proof bindings and continuous invalidation via actual-binary integration tests in tests/exact_candidate_governance_1052.rs, and document the operational contract in OPERATIONS.md.",
+      "intent": "P0: Prove governance test suite detects weakened enforcement rules (#1795)",
       "phases": [],
       "proof_hooks": [
-        "cargo test --test exact_candidate_governance_1052",
-        "decapod govern project-check",
         "decapod validate"
       ],
       "schema_version": "1.1.0",
@@ -682,83 +643,75 @@
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Refreshed v0.149.0 Dockerfile.decapod and .manifest.json with v0.149.0 binary; architecture unchanged.",
-          "reviewed_code_fingerprint": "0cd6f9ff0f09a73293db451761b3a2b1366a7b5ec837ea33428f8c549f6e25cd",
+          "reason": "Reconciled #1795 branch with origin/master 205d4e8da (v0.149.1); only tests/governance_fault_detection_1795.rs and SEMANTICS.md authored by #1795",
+          "reviewed_code_fingerprint": "856ca8f50edff2cb1a5ebd9b9cbb7e9ce23f65f1414e0a8f320d5df5e24e3f71",
           "spec_material_hash": "080e1e015d867051ec4ecbb1f18aca92a2d62a05798377057e563aaa5a3764e0"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Refreshed v0.149.0 Dockerfile.decapod and .manifest.json with v0.149.0 binary; interfaces unchanged.",
-          "reviewed_code_fingerprint": "0cd6f9ff0f09a73293db451761b3a2b1366a7b5ec837ea33428f8c549f6e25cd",
+          "reason": "Reconciled #1795 branch with origin/master 205d4e8da (v0.149.1); no interface changes in #1795",
+          "reviewed_code_fingerprint": "856ca8f50edff2cb1a5ebd9b9cbb7e9ce23f65f1414e0a8f320d5df5e24e3f71",
           "spec_material_hash": "1445e13fa7ccfa6c4a68850bd794b6b1ba7379c0148b570c3a7605b6a26beb25"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Refreshed v0.149.0 Dockerfile.decapod and .manifest.json with v0.149.0 binary; security unchanged.",
-          "reviewed_code_fingerprint": "0cd6f9ff0f09a73293db451761b3a2b1366a7b5ec837ea33428f8c549f6e25cd",
+          "reason": "Reconciled #1795 branch with origin/master 205d4e8da (v0.149.1); #1795 adds adversarial test suite and semantics prose without changing security controls",
+          "reviewed_code_fingerprint": "856ca8f50edff2cb1a5ebd9b9cbb7e9ce23f65f1414e0a8f320d5df5e24e3f71",
           "spec_material_hash": "735ae6e95c6b18ff2ccc718fbadaa4d7ae483d632aee2fb071d4f9ae6daa23de"
         }
       ],
       "state": "APPROVED",
       "stop_conditions": [],
-      "title": "Exact-candidate governance and continuous proof validity (#1052)",
+      "title": "P0: Prove governance test suite detects weakened enforcement rules (#1795)",
       "todo_ids": [
-        "code_01m79j3db4bd4tdd"
+        "test_01m7qkyrt6x4cw4r"
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795034623Z"
+      "updated_at": "1795038310Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:a4bac92972a76743bdd754f6420ec0cbd9ff6e079df359af5794f636f2b1e137",
+      "artifact_hash": "sha256:e170b4469c6022100fdf1324fcf14ba145c1850569fb36df39bad705a4b1d404",
       "checks": [
         {
-          "name": "cargo-fmt-all",
+          "name": "cargo-fmt",
           "status": "passed"
         },
         {
-          "name": "cargo-test-exact-candidate-1052",
+          "name": "clippy",
           "status": "passed"
         },
         {
-          "name": "ci_local_project_check_and_publish_freshness",
+          "name": "clippy-test-1795",
           "status": "passed"
         },
         {
-          "name": "clippy-exact-candidate-1052",
+          "name": "fault_detection_fast_tests",
           "status": "passed"
         },
         {
-          "name": "exact_candidate_binding_and_invalidations",
+          "name": "fmt",
           "status": "passed"
         },
         {
-          "name": "merge-master-0b6ce0a8",
+          "name": "governance_fault_detection_1795",
           "status": "passed"
         },
         {
-          "name": "merge-master-v0.149.0",
+          "name": "post-merge-clippy",
           "status": "passed"
         },
         {
-          "name": "release-0.148.13-inventory-review",
+          "name": "post-merge-fmt",
           "status": "passed"
         },
         {
-          "name": "rustfmt-exact-candidate-1052",
-          "status": "passed"
-        },
-        {
-          "name": "task_lease_renewal_and_workunit_custody",
-          "status": "passed"
-        },
-        {
-          "name": "v0.149.0-projection-refresh",
+          "name": "post-merge-governance_fault_detection_1795",
           "status": "passed"
         }
       ],
@@ -767,98 +720,70 @@
         "events": [
           {
             "event_id": "event:2",
-            "intent_id": "intent:change_01M7QBGV59Y7MXFNYG75MBZDQ9",
+            "intent_id": "intent:change_01M7QN04YE8S7HSJ4C7NA5VKRV",
             "kind": "created",
             "sequence": 2
           },
           {
             "event_id": "event:3",
-            "intent_id": "intent:change_01M7QBGV59Y7MXFNYG75MBZDQ9",
+            "intent_id": "intent:change_01M7QN04YE8S7HSJ4C7NA5VKRV",
             "kind": "refined",
             "sequence": 3
           },
           {
-            "detail": "trajectory:branch_01M7QBGV8G7Y7EZGFJBVX1KFM7",
+            "detail": "trajectory:branch_01M7QN05164G5FSGX020W1AAKJ",
             "event_id": "event:4",
-            "intent_id": "intent:change_01M7QBGV59Y7MXFNYG75MBZDQ9",
+            "intent_id": "intent:change_01M7QN04YE8S7HSJ4C7NA5VKRV",
             "kind": "trajectory_step_recorded",
             "sequence": 4
           },
           {
-            "detail": "trajectory:branch_01M7QBGV8G7Y7EZGFJBVX1KFM7",
+            "detail": "trajectory:branch_01M7QN05164G5FSGX020W1AAKJ",
             "event_id": "event:5",
-            "intent_id": "intent:change_01M7QBGV59Y7MXFNYG75MBZDQ9",
+            "intent_id": "intent:change_01M7QN04YE8S7HSJ4C7NA5VKRV",
             "kind": "trajectory_step_recorded",
             "sequence": 5
           },
           {
-            "detail": "trajectory:branch_01M7QBGV8G7Y7EZGFJBVX1KFM7",
+            "detail": "trajectory:branch_01M7QN05164G5FSGX020W1AAKJ",
             "event_id": "event:6",
-            "intent_id": "intent:change_01M7QBGV59Y7MXFNYG75MBZDQ9",
+            "intent_id": "intent:change_01M7QN04YE8S7HSJ4C7NA5VKRV",
             "kind": "trajectory_step_recorded",
             "sequence": 6
-          },
-          {
-            "detail": "trajectory:branch_01M7QBGV8G7Y7EZGFJBVX1KFM7",
-            "event_id": "event:7",
-            "intent_id": "intent:change_01M7QBGV59Y7MXFNYG75MBZDQ9",
-            "kind": "trajectory_step_recorded",
-            "sequence": 7
-          },
-          {
-            "detail": "trajectory:branch_01M7QBGV8G7Y7EZGFJBVX1KFM7",
-            "event_id": "event:8",
-            "intent_id": "intent:change_01M7QBGV59Y7MXFNYG75MBZDQ9",
-            "kind": "trajectory_step_recorded",
-            "sequence": 8
-          },
-          {
-            "detail": "trajectory:branch_01M7QBGV8G7Y7EZGFJBVX1KFM7",
-            "event_id": "event:9",
-            "intent_id": "intent:change_01M7QBGV59Y7MXFNYG75MBZDQ9",
-            "kind": "trajectory_step_recorded",
-            "sequence": 9
-          },
-          {
-            "detail": "trajectory:branch_01M7QBGV8G7Y7EZGFJBVX1KFM7",
-            "event_id": "event:10",
-            "intent_id": "intent:change_01M7QBGV59Y7MXFNYG75MBZDQ9",
-            "kind": "trajectory_step_recorded",
-            "sequence": 10
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 10,
+        "next_sequence": 6,
         "schema_version": "1.0.0",
         "trajectories": {
-          "branch_01M7QBGV8G7Y7EZGFJBVX1KFM7": {
+          "branch_01M7QN05164G5FSGX020W1AAKJ": {
             "evidence_only": true,
-            "id": "branch_01M7QBGV8G7Y7EZGFJBVX1KFM7",
-            "intent_id": "intent:change_01M7QBGV59Y7MXFNYG75MBZDQ9",
+            "id": "branch_01M7QN05164G5FSGX020W1AAKJ",
+            "intent_id": "intent:change_01M7QN04YE8S7HSJ4C7NA5VKRV",
             "steps": [
               {
                 "action": "trajectory.record",
                 "custody_event_id": "event:4",
                 "observations": [
-                  "src/decapod/core/validation_history.rs",
-                  "src/decapod/plugins/verify.rs",
-                  "src/decapod/core/workspace.rs",
-                  "src/decapod/core/workspace_publication.rs",
-                  "src/decapod/core/validate.rs",
                   "src/decapod/core/workunit.rs",
-                  "src/decapod/core/task_journal.rs",
+                  "src/decapod/core/workspace.rs",
+                  "src/decapod/core/readiness_profile.rs",
                   "src/decapod/core/todo.rs",
-                  "tests/exact_candidate_governance_1052.rs",
-                  ".decapod/managed/specs/OPERATIONS.md",
-                  "Actual-binary tests in tests/exact_candidate_governance_1052.rs verified exact SHA/tree/base/task/lease_generation binding, invalidation on edit/amend/rebase/target-advance/lease-renewal, ci_local and project-check non-readiness, workspace publish refusals, and immutable qa verify commit lookup"
+                  "src/decapod/core/group_broker.rs",
+                  "tests/governance_fault_detection_1795.rs",
+                  ".decapod/managed/specs/SEMANTICS.md",
+                  ".decapod/managed/specs/.manifest.json",
+                  ".decapod/managed/Dockerfile.decapod",
+                  "4/4 tests passed in 750.39s; 5/5 isolated rule faults reach Detected (RULE-CUSTODY-004 survived unchanged suite and caught by expired_lease_renew_negative_and_positive_fixture)"
                 ],
                 "proof_refs": [
-                  "exact_candidate_binding_and_invalidations",
-                  "task_lease_renewal_and_workunit_custody",
-                  "ci_local_project_check_and_publish_freshness"
+                  "cargo-fmt",
+                  "clippy-test-1795",
+                  "governance_fault_detection_1795"
                 ],
                 "scope": [
-                  "validation-kernel"
+                  "\".decapod/managed/specs/SEMANTICS.md\"]",
+                  "paths:[\"tests/governance_fault_detection_1795.rs\""
                 ],
                 "sequence": 4,
                 "validation_findings": []
@@ -867,16 +792,22 @@
                 "action": "trajectory.record",
                 "custody_event_id": "event:5",
                 "observations": [
+                  "src/decapod/plugins/verify.rs",
                   ".decapod/config.toml",
                   ".decapod/managed/Dockerfile.decapod",
-                  ".decapod/managed/specs/OPERATIONS.md",
-                  "Merged origin/master c5bafce6 (v0.148.13), verified only version metadata changed in proof sources, updated reviewed_sources_digest, refreshed Dockerfile/specs via controller 0.148.13"
+                  ".decapod/managed/specs/.manifest.json",
+                  ".decapod/managed/specs/INTERFACES.md",
+                  ".decapod/managed/specs/SEMANTICS.md",
+                  "Merged origin/master 0b6ce0a8 (PR #1799); specs.refresh + review-spec completed; cargo fmt --all -- --check, clippy -D warnings, and cargo test --test governance_fault_detection_1795 passed 4/4 in 850.62s"
                 ],
                 "proof_refs": [
-                  "release-0.148.13-inventory-review"
+                  "post-merge-fmt",
+                  "post-merge-clippy",
+                  "post-merge-governance_fault_detection_1795"
                 ],
                 "scope": [
-                  "validation-kernel"
+                  "\".decapod/managed/specs/SEMANTICS.md\"]",
+                  "paths:[\"tests/governance_fault_detection_1795.rs\""
                 ],
                 "sequence": 5,
                 "validation_findings": []
@@ -885,90 +816,18 @@
                 "action": "trajectory.record",
                 "custody_event_id": "event:6",
                 "observations": [
-                  "On merged origin/master c5bafce6 (v0.148.13): rustfmt --check exit 0; clippy -D warnings exit 0; cargo test --test exact_candidate_governance_1052: 4 passed, 0 failed in 250.33s"
+                  "Merged origin/master 205d4e8da (v0.149.1); fmt, clippy, and 3 fast fault-detection tests passed; full 4/4 suite passed on b2d65e9d"
                 ],
                 "proof_refs": [
-                  "rustfmt-exact-candidate-1052",
-                  "clippy-exact-candidate-1052",
-                  "cargo-test-exact-candidate-1052"
+                  "fmt",
+                  "clippy",
+                  "fault_detection_fast_tests"
                 ],
                 "scope": [
-                  "validation-kernel"
+                  "\".decapod/managed/specs/SEMANTICS.md\"]",
+                  "paths:[\"tests/governance_fault_detection_1795.rs\""
                 ],
                 "sequence": 6,
-                "validation_findings": []
-              },
-              {
-                "action": "trajectory.record",
-                "custody_event_id": "event:7",
-                "observations": [
-                  "tests/exact_candidate_governance_1052.rs",
-                  "Formatted tests/exact_candidate_governance_1052.rs with cargo fmt --all (Edition 2024); cargo fmt --all -- --check exit 0; clippy -D warnings exit 0; cargo test --test exact_candidate_governance_1052: 4 passed, 0 failed in 198.35s"
-                ],
-                "proof_refs": [
-                  "cargo-fmt-all",
-                  "clippy-exact-candidate-1052",
-                  "cargo-test-exact-candidate-1052"
-                ],
-                "scope": [
-                  "validation-kernel"
-                ],
-                "sequence": 7,
-                "validation_findings": []
-              },
-              {
-                "action": "trajectory.record",
-                "custody_event_id": "event:8",
-                "observations": [
-                  "Merged origin/master 0b6ce0a8 (PR #1799 verify.rs fix); cargo fmt --all -- --check exit 0; clippy -D warnings exit 0; cargo test --test exact_candidate_governance_1052: 4 passed, 0 failed in 218.98s"
-                ],
-                "proof_refs": [
-                  "merge-master-0b6ce0a8",
-                  "cargo-fmt-all",
-                  "clippy-exact-candidate-1052",
-                  "cargo-test-exact-candidate-1052"
-                ],
-                "scope": [
-                  "validation-kernel"
-                ],
-                "sequence": 8,
-                "validation_findings": []
-              },
-              {
-                "action": "trajectory.record",
-                "custody_event_id": "event:9",
-                "observations": [
-                  ".decapod/config.toml",
-                  ".decapod/managed/Dockerfile.decapod",
-                  ".decapod/managed/specs/OPERATIONS.md",
-                  "Merged origin/master a5a1edadb (v0.149.0, PR #1802 + #1804); refreshed Dockerfile/manifest/specs with v0.149.0; cargo fmt --all -- --check exit 0; clippy -D warnings exit 0; cargo test --test exact_candidate_governance_1052: 4 passed, 0 failed in 362.42s"
-                ],
-                "proof_refs": [
-                  "merge-master-v0.149.0",
-                  "cargo-fmt-all",
-                  "clippy-exact-candidate-1052",
-                  "cargo-test-exact-candidate-1052"
-                ],
-                "scope": [
-                  "validation-kernel"
-                ],
-                "sequence": 9,
-                "validation_findings": []
-              },
-              {
-                "action": "trajectory.record",
-                "custody_event_id": "event:10",
-                "observations": [
-                  ".decapod/managed/Dockerfile.decapod",
-                  "Refreshed Dockerfile.decapod (v0.149.0) and .manifest.json (decapod_release=0.149.0) using built v0.149.0 binary"
-                ],
-                "proof_refs": [
-                  "v0.149.0-projection-refresh"
-                ],
-                "scope": [
-                  "validation-kernel"
-                ],
-                "sequence": 10,
                 "validation_findings": []
               }
             ]
@@ -978,41 +837,38 @@
       "declared_commands": [],
       "destination": "pull request",
       "evidence": [
-        "Actual-binary tests in tests/exact_candidate_governance_1052.rs verified exact SHA/tree/base/task/lease_generation binding, invalidation on edit/amend/rebase/target-advance/lease-renewal, ci_local and project-check non-readiness, workspace publish refusals, and immutable qa verify commit lookup",
-        "Formatted tests/exact_candidate_governance_1052.rs with cargo fmt --all (Edition 2024); cargo fmt --all -- --check exit 0; clippy -D warnings exit 0; cargo test --test exact_candidate_governance_1052: 4 passed, 0 failed in 198.35s",
-        "Merged origin/master 0b6ce0a8 (PR #1799 verify.rs fix); cargo fmt --all -- --check exit 0; clippy -D warnings exit 0; cargo test --test exact_candidate_governance_1052: 4 passed, 0 failed in 218.98s",
-        "Merged origin/master a5a1edadb (v0.149.0, PR #1802 + #1804); refreshed Dockerfile/manifest/specs with v0.149.0; cargo fmt --all -- --check exit 0; clippy -D warnings exit 0; cargo test --test exact_candidate_governance_1052: 4 passed, 0 failed in 362.42s",
-        "Merged origin/master c5bafce6 (v0.148.13), verified only version metadata changed in proof sources, updated reviewed_sources_digest, refreshed Dockerfile/specs via controller 0.148.13",
-        "On merged origin/master c5bafce6 (v0.148.13): rustfmt --check exit 0; clippy -D warnings exit 0; cargo test --test exact_candidate_governance_1052: 4 passed, 0 failed in 250.33s",
-        "Refreshed Dockerfile.decapod (v0.149.0) and .manifest.json (decapod_release=0.149.0) using built v0.149.0 binary"
+        "4/4 tests passed in 750.39s; 5/5 isolated rule faults reach Detected (RULE-CUSTODY-004 survived unchanged suite and caught by expired_lease_renew_negative_and_positive_fixture)",
+        "Merged origin/master 0b6ce0a8 (PR #1799); specs.refresh + review-spec completed; cargo fmt --all -- --check, clippy -D warnings, and cargo test --test governance_fault_detection_1795 passed 4/4 in 850.62s",
+        "Merged origin/master 205d4e8da (v0.149.1); fmt, clippy, and 3 fast fault-detection tests passed; full 4/4 suite passed on b2d65e9d"
       ],
       "inspected_files": [
-        "src/decapod/core/task_journal.rs",
+        "src/decapod/core/group_broker.rs",
+        "src/decapod/core/readiness_profile.rs",
         "src/decapod/core/todo.rs",
-        "src/decapod/core/validate.rs",
-        "src/decapod/core/validation_history.rs",
         "src/decapod/core/workspace.rs",
-        "src/decapod/core/workspace_publication.rs",
         "src/decapod/core/workunit.rs",
         "src/decapod/plugins/verify.rs"
       ],
-      "intent_id": "intent:change_01M7QBGV59Y7MXFNYG75MBZDQ9",
+      "intent_id": "intent:change_01M7QN04YE8S7HSJ4C7NA5VKRV",
       "modified_files": [
         ".decapod/config.toml",
         ".decapod/managed/Dockerfile.decapod",
-        ".decapod/managed/specs/OPERATIONS.md",
-        "tests/exact_candidate_governance_1052.rs"
+        ".decapod/managed/specs/.manifest.json",
+        ".decapod/managed/specs/INTERFACES.md",
+        ".decapod/managed/specs/SEMANTICS.md",
+        "tests/governance_fault_detection_1795.rs"
       ],
       "next_transitions": [
         "Refine plan and declare falsifiable checks"
       ],
       "repo_scope": [
-        "validation-kernel"
+        "\".decapod/managed/specs/SEMANTICS.md\"]",
+        "paths:[\"tests/governance_fault_detection_1795.rs\""
       ],
-      "run_id": "branch_01M7QBGV8G7Y7EZGFJBVX1KFM7",
+      "run_id": "branch_01M7QN05164G5FSGX020W1AAKJ",
       "schema_version": "1.1.0",
       "shortcut_risk_signals": [],
-      "task_id": "code_01m79j3db4bd4tdd",
+      "task_id": "test_01m7qkyrt6x4cw4r",
       "tool_calls": [],
       "unresolved_assumptions": []
     }
