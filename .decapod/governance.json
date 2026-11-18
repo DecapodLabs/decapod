@@ -695,6 +695,17 @@
         "core_repository_profile",
         "doc_alignment"
       ]
+    },
+    {
+      "id": "cp-1740-4",
+      "summary": "Merge origin/master e0f6aec81 (v0.149.2) cleanly in a single checkpointed merge commit with updated reviewed_sources_digest, refreshed v0.149.2 projections/spec reviews, and passing fmt/clippy/tests (#1740).",
+      "input_digest": "sha256:8c49a4e8693ea850b75217e765511adecbedcb82660df9ebfc75e1ef75fc2c7c",
+      "proof_refs": [
+        "cargo_clippy",
+        "cargo_fmt",
+        "core_repository_profile",
+        "doc_alignment"
+      ]
     }
   ],
   "intents": {
@@ -735,22 +746,22 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Document target closure resolution, shared_inputs diff expansion, and target-bound receipt history for #1740 (merged origin/master 6658384fb)",
-          "reviewed_code_fingerprint": "643bf74272a136c6aea601604a59ff31333ab7c1fbaeb57143e0720023bf5216",
+          "reason": "Document target closure resolution, shared_inputs diff expansion, and target-bound receipt history for #1740 (merged origin/master e0f6aec81 v0.149.2)",
+          "reviewed_code_fingerprint": "3b1f0796604fd83418742329157fc11056b6b30d3bad1f8da12d1c1ff2459931",
           "spec_material_hash": "e8d00d685b21659476795212b211594118e1acfe49b1a4fdac9904348c6bbe65"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Document --target CLI/RPC readiness flags, RepositoryContract.targets schema, and target-scoped proof boundaries for #1740 (merged origin/master 6658384fb)",
-          "reviewed_code_fingerprint": "643bf74272a136c6aea601604a59ff31333ab7c1fbaeb57143e0720023bf5216",
+          "reason": "Document --target CLI/RPC readiness flags, RepositoryContract.targets schema, and target-scoped proof boundaries for #1740 (merged origin/master e0f6aec81 v0.149.2)",
+          "reviewed_code_fingerprint": "3b1f0796604fd83418742329157fc11056b6b30d3bad1f8da12d1c1ff2459931",
           "spec_material_hash": "3d2e11acd9c14bea4b45b77931af5aed1eef385f53bc87092713c59b4296901c"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Document fail-closed target contract preservation, target receipt scope isolation, and incompatible executor checks for #1740 (merged origin/master 6658384fb)",
-          "reviewed_code_fingerprint": "643bf74272a136c6aea601604a59ff31333ab7c1fbaeb57143e0720023bf5216",
+          "reason": "Document fail-closed target contract preservation, target receipt scope isolation, and incompatible executor checks for #1740 (merged origin/master e0f6aec81 v0.149.2)",
+          "reviewed_code_fingerprint": "3b1f0796604fd83418742329157fc11056b6b30d3bad1f8da12d1c1ff2459931",
           "spec_material_hash": "a8fc49a6589b9b8889199ddc871d5c64cc823ce7e79ca3306284a98d4425ee11"
         }
       ],
@@ -762,13 +773,13 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795041710Z"
+      "updated_at": "1795046225Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:37207140572ca28921dbbba9b7c67c6fe38d5d7ee593b62cf40d348e766d907a",
+      "artifact_hash": "sha256:5805c9bcee1fc13cc407fd35ac57142fd5a15384fcb12104ab57b7c6075b967d",
       "checks": [
         {
           "name": "cargo-fmt-all",
@@ -859,7 +870,7 @@
           "status": "passed"
         }
       ],
-      "current_phase": "reconcile_6658384fb",
+      "current_phase": "reconcile_v0.149.2_merge",
       "custody": {
         "events": [
           {
@@ -936,10 +947,17 @@
             "intent_id": "intent:change_01M7QBGV59Y7MXFNYG75MBZDQ9",
             "kind": "trajectory_step_recorded",
             "sequence": 12
+          },
+          {
+            "detail": "trajectory:branch_01M7QBGV8G7Y7EZGFJBVX1KFM7",
+            "event_id": "event:13",
+            "intent_id": "intent:change_01M7QBGV59Y7MXFNYG75MBZDQ9",
+            "kind": "trajectory_step_recorded",
+            "sequence": 13
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 12,
+        "next_sequence": 13,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M7QBGV8G7Y7EZGFJBVX1KFM7": {
@@ -1119,6 +1137,19 @@
                 ],
                 "sequence": 12,
                 "validation_findings": []
+              },
+              {
+                "action": "reconcile_v0.149.2_merge",
+                "custody_event_id": "event:13",
+                "observations": [
+                  "Single checkpointed merge of origin/master e0f6aec81 (v0.149.2), updated reviewed_sources_digest (sha256:2b238251b5e4d8f0d92584af379413fbfbdb9a3fd2ae312205874aae97a79f85), refreshed specs/reviews, verified fmt/clippy/core::repository_profile (15/15)/doc_alignment (4/4)."
+                ],
+                "proof_refs": [],
+                "scope": [
+                  "validation-kernel"
+                ],
+                "sequence": 13,
+                "validation_findings": []
               }
             ]
           }
@@ -1135,7 +1166,8 @@
         "Merged origin/master a5a1edadb (v0.149.0, PR #1802 + #1804); refreshed Dockerfile/manifest/specs with v0.149.0; cargo fmt --all -- --check exit 0; clippy -D warnings exit 0; cargo test --test exact_candidate_governance_1052: 4 passed, 0 failed in 362.42s",
         "Merged origin/master c5bafce6 (v0.148.13), verified only version metadata changed in proof sources, updated reviewed_sources_digest, refreshed Dockerfile/specs via controller 0.148.13",
         "On merged origin/master c5bafce6 (v0.148.13): rustfmt --check exit 0; clippy -D warnings exit 0; cargo test --test exact_candidate_governance_1052: 4 passed, 0 failed in 250.33s",
-        "Refreshed Dockerfile.decapod (v0.149.0) and .manifest.json (decapod_release=0.149.0) using built v0.149.0 binary"
+        "Refreshed Dockerfile.decapod (v0.149.0) and .manifest.json (decapod_release=0.149.0) using built v0.149.0 binary",
+        "Single checkpointed merge of origin/master e0f6aec81 (v0.149.2), updated reviewed_sources_digest (sha256:2b238251b5e4d8f0d92584af379413fbfbdb9a3fd2ae312205874aae97a79f85), refreshed specs/reviews, verified fmt/clippy/core::repository_profile (15/15)/doc_alignment (4/4)."
       ],
       "inspected_files": [
         "src/decapod/core/task_journal.rs",
