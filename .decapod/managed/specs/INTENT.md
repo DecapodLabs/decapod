@@ -1,5 +1,15 @@
 # Intent
 
+## Accepted release source review
+
+This currentness candidate incorporates accepted `352d8929` (0.148.11)
+through a real two-parent merge. All 105 verification-source inputs were
+independently measured, including declared symlink target bytes and their
+separately inventoried regular target. Only the root package versions in
+Cargo.toml/Cargo.lock changed from 0.148.10; the remaining 103, required
+workflow/executor graph and declared toolchain are unchanged. Reconciliation
+retains the full configured proof policy and does not establish execution.
+
 ## Truthful conformance discovery (#871, #1735)
 
 Compatibility discovery must preserve required semantics at the parser boundary.
@@ -555,7 +565,7 @@ These declarations select authoring and proof obligations; they do not attest im
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `8329b3b5ce4583b23d4494b51aa06d90ad119dee12728af34006411b98aa2e43`
+- Repository signal fingerprint: `6ba5edc87a1fbb3102291f95f24cdefb06d9d0a220a5cdd93b9dcad62c4061a5`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (236 files), `tests/` (235 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
