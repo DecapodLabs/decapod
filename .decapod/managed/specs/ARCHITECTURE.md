@@ -1,5 +1,13 @@
 # Architecture
 
+## Workspace diagnostic composition (#1071)
+
+`src/decapod/core/workspace_diagnostic.rs` composes the canonical repository
+policy resolver, checkout and task custody readers, governance artifact
+inventory, historical validation reader, and optional GitHub readback.
+It projects local operation eligibility and proof applicability from those
+owners without introducing another admission authority.
+
 ## Source-policy currency continuity (#1753)
 
 `entrypoint_integrity::preserves_source_entrypoint_versions` reuses the existing
@@ -988,8 +996,8 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `7b88d5d3e68ce397408f69e5635bceee4071a1c57b84cab441c0b3083ee7e3a7`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (236 files), `tests/` (235 files)
+- Repository signal fingerprint: `45d6f87dc033e11d5fe64c41d5b933fe99877e10b19541a5066f9e60c3294ffe`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (237 files), `tests/` (235 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 

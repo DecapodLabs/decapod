@@ -108,6 +108,17 @@ pub(crate) enum WorkspaceCommand {
     },
     /// Show current workspace status
     Status,
+    /// Inspect effective authority and workspace prerequisites without mutation
+    Diagnose {
+        #[clap(long)]
+        json: bool,
+        #[clap(long)]
+        offline: bool,
+        #[clap(long)]
+        pr: Option<u64>,
+        #[clap(long, default_value = "workspace.publish")]
+        operation: String,
+    },
     /// Publish workspace changes as a patch/PR bundle
     Publish {
         /// Title for the change

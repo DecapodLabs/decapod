@@ -342,6 +342,14 @@ pub fn get_workspace_status(repo_root: &Path) -> Result<WorkspaceStatus, Decapod
     })
 }
 
+pub(crate) fn observe_pr_for_diagnostic(
+    repo: &Path,
+    slug: &str,
+    number: u64,
+) -> Result<serde_json::Value, DecapodError> {
+    publication::diagnostic_read_pr(repo, slug, number)
+}
+
 fn check_git_status(repo_root: &Path) -> Result<GitStatus, DecapodError> {
     if !repo_root.join(".git").exists() {
         return Ok(GitStatus {

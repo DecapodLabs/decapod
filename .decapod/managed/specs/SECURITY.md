@@ -1,5 +1,13 @@
 # Security
 
+## Diagnostic trust and redaction (#1071)
+
+Workspace diagnosis treats proposed config and binding overrides as candidate
+material. Only the existing policy resolver supplies accepted authority,
+with its local assurance level visible. Raw parser and transport errors,
+credential values, and task intent text stay out of the diagnostic. Current
+forge checks alone cannot establish Decapod admission.
+
 ## Configuration validity and accepted privilege proposals (#1771, #1776)
 
 `cli::DecapodProjectConfig` rejects unsupported schema versions during typed
@@ -684,8 +692,8 @@ execution evidence remains required before publication readiness.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `7b88d5d3e68ce397408f69e5635bceee4071a1c57b84cab441c0b3083ee7e3a7`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (236 files), `tests/` (235 files)
+- Repository signal fingerprint: `45d6f87dc033e11d5fe64c41d5b933fe99877e10b19541a5066f9e60c3294ffe`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (237 files), `tests/` (235 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 

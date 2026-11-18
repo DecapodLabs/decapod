@@ -922,6 +922,56 @@ pub(crate) struct HistoricalValidationProof {
     store_root: PathBuf,
 }
 impl HistoricalValidationProof {
+    /// Read-only applicability projection. Historical evidence never becomes a
+    /// live PublicationReadiness object, even when its current inputs match.
+    pub(crate) fn diagnostic_summary(&self, root: &Path, offline: bool) -> Value {
+        let source = &self.record.proof.material;
+        let current = || -> Result<(), DecapodError> {
+            let (governance, trajectory, _) = governance(root)?;
+            self.record
+                .proof
+                .verify_current(source, &governance, &trajectory)?;
+            if validation_epoch::active_validation_epoch_bounded(root)?
+                != self.record.validation_epoch
+            {
+                return Err(invalid("diagnostic observed a changed validation epoch"));
+            }
+            self.record
+                .proof
+                .current_inputs
+                .as_ref()
+                .ok_or_else(|| invalid("no retained current input witness"))?
+                .verify_current(root, source)?;
+            let task = todo::capture_execution_custody(
+                &self.store_root,
+                &self.record.task_binding.task_id,
+                &crate::current_agent_id(),
+            )?;
+            if task["revision"].as_i64() != Some(self.record.task_binding.revision)
+                || task["lease_generation"].as_i64()
+                    != Some(self.record.task_binding.lease_generation)
+                || task["assignee"].as_str() != Some(self.record.task_binding.assignee.as_str())
+            {
+                return Err(invalid("diagnostic observed changed task custody"));
+            }
+            Ok(())
+        };
+        let status = if current().is_err() {
+            "stale_or_unproven"
+        } else if offline && !source.repository.starts_with("local-git:") {
+            "historical_target_unverified"
+        } else {
+            "current_historical_inputs"
+        };
+        serde_json::json!({"status":status,"source":"canonical_full_validation_history",
+            "record_id":self.record_id(),"record_digest":self.record_digest(),
+            "candidate":source.head_revision,"accepted_base":source.accepted_base_revision,
+            "configuration_digest":source.configuration_digest,"scope":self.record.proof.scope,
+            "required_plan_digest":self.record.proof.expected_plan.digest().ok(),
+            "publication_ready":false,"latest_provider_attempt":"requires_live_verification",
+            "next_action":"Use workspace publish for live current-attempt validation and final readback; this diagnostic does not recreate admission"})
+    }
+
     pub(crate) fn task_binding(&self) -> &HistoricalTaskBinding {
         &self.record.task_binding
     }

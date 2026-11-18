@@ -1,5 +1,14 @@
 # Interfaces
 
+## Workspace diagnosis (#1071)
+
+`decapod workspace diagnose --json` returns
+`decapod.workspace-diagnostic.v1` and a deterministic exit status.
+`--operation workspace.authoring` selects a local eligibility check.
+`--offline` reports remote dimensions unavailable without contacting the
+forge. The default publication diagnosis lists blockers and sends agents
+to the live publisher for exact validation and readback.
+
 ## Config repair and accepted authority (#1771, #1776)
 
 Configuration errors use `INVALID_CONFIG_SCHEMA` with the original parser
@@ -1230,8 +1239,8 @@ field. Nothing in this operation authorizes a mutation, approval or completion.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `7b88d5d3e68ce397408f69e5635bceee4071a1c57b84cab441c0b3083ee7e3a7`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (236 files), `tests/` (235 files)
+- Repository signal fingerprint: `45d6f87dc033e11d5fe64c41d5b933fe99877e10b19541a5066f9e60c3294ffe`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (237 files), `tests/` (235 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 

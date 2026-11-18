@@ -369,6 +369,85 @@ fn gh(repo: &Path, args: &[&str]) -> Result<Vec<u8>, DecapodError> {
     run(repo, "gh", args, "GitHub PR publication/readback")
 }
 
+/// Projection through the existing forge reader. PR existence is not admission.
+pub(super) fn diagnostic_read_pr(
+    repo: &Path,
+    slug: &str,
+    number: u64,
+) -> Result<serde_json::Value, DecapodError> {
+    let read = || {
+        json::<PullRequest>(&gh(
+            repo,
+            &[
+                "api",
+                "--method",
+                "GET",
+                &format!("repos/{slug}/pulls/{number}"),
+            ],
+        )?)
+    };
+    let pr = read()?;
+    if pr.number != number
+        || !pr
+            .head
+            .repo
+            .as_ref()
+            .is_some_and(|r| r.full_name.eq_ignore_ascii_case(slug))
+        || !pr
+            .base
+            .repo
+            .as_ref()
+            .is_some_and(|r| r.full_name.eq_ignore_ascii_case(slug))
+    {
+        return Err(failure(
+            "PR_TARGET_MISMATCH: diagnostic readback returned another repository or PR",
+        ));
+    }
+    // A failed or pending check is valid observation output. Read the PR
+    // again to ensure the forge still associates this rollup with the head.
+    let checks = Command::new("gh")
+        .current_dir(repo)
+        .args([
+            "pr",
+            "checks",
+            &number.to_string(),
+            "--repo",
+            slug,
+            "--required",
+            "--json",
+            "name,state,bucket",
+        ])
+        .bounded_output(std::time::Duration::from_secs(10))
+        .ok()
+        .and_then(|output| json::<Vec<DiagnosticCheck>>(&output.stdout).ok())
+        .filter(|checks| checks.len() <= 256);
+    let current = read()?;
+    if current.number != pr.number
+        || current.head.sha != pr.head.sha
+        || current.base.sha != pr.base.sha
+        || current.head.branch != pr.head.branch
+        || current.base.branch != pr.base.branch
+        || current.state != pr.state
+    {
+        return Err(failure(
+            "PR_TARGET_CHANGED: diagnostic PR changed during readback",
+        ));
+    }
+    Ok(
+        serde_json::json!({"number":pr.number,"url":format!("https://github.com/{slug}/pull/{number}"),
+        "state":pr.state,"draft":pr.draft,"head":pr.head.sha,"head_branch":pr.head.branch,
+        "base":pr.base.sha,"base_branch":pr.base.branch,"required_forge_checks":checks,
+        "admission":"not_established_by_pr_existence"}),
+    )
+}
+
+#[derive(serde::Deserialize, serde::Serialize)]
+struct DiagnosticCheck {
+    name: String,
+    state: String,
+    bucket: String,
+}
+
 fn find_pr(
     call: &mut impl FnMut(&[&str]) -> Result<Vec<u8>, DecapodError>,
     slug: &str,

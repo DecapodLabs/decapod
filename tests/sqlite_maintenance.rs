@@ -566,6 +566,142 @@ struct ClaimedAgentWorktree {
 }
 
 #[test]
+fn workspace_diagnostic_uses_accepted_authority_and_preserves_state() {
+    use sha2::{Digest, Sha256};
+    let fixture = GovernedRepoFixture::new();
+    let alpha = fixture.spawn_claimed_agent("diagnostic-alpha", "diagnostic-alpha");
+    let beta = fixture.spawn_claimed_agent("diagnostic-beta", "diagnostic-beta");
+    let path = alpha.worktree_dir.join(".decapod/config.toml");
+    let original = fs::read_to_string(&path).unwrap();
+    let proposal = format!(
+        "{original}\n[governance.rbac]\nvalidation_bypass_roles = [\"reviewed\"]\n[governance.rbac.actor_roles]\ndiagnostic-alpha = [\"reviewed\"]\ndiagnostic-beta = [\"reviewed\"]\n[extension]\npassword = \"diagnostic-secret-value\"\n"
+    );
+    fs::write(&path, &proposal).unwrap();
+    let diagnose = |agent: &ClaimedAgentWorktree| {
+        fixture
+            .decapod_cmd(&agent.worktree_dir, &agent.agent_id, Some(&agent.password))
+            .args([
+                "workspace",
+                "diagnose",
+                "--json",
+                "--offline",
+                "--operation",
+                "validate.bypass",
+            ])
+            .output()
+            .unwrap()
+    };
+    let db = fixture.repo_root.join(".decapod/data/decapod.db");
+    let before = fs::read(&db).unwrap();
+    let first = diagnose(&alpha);
+    assert_eq!(
+        first.status.code(),
+        Some(1),
+        "{}",
+        String::from_utf8_lossy(&first.stderr)
+    );
+    let a: serde_json::Value = serde_json::from_slice(&first.stdout).unwrap();
+    assert_eq!(a["schema_version"], "decapod.workspace-diagnostic.v1");
+    assert_eq!(a["operation"]["allowed_by_policy"], false);
+    assert_eq!(a["candidate_config"]["status"], "proposed");
+    assert_eq!(a["publication_readiness"]["can_publish"], false);
+    assert_eq!(a["merge_authorized"], false);
+    assert!(!String::from_utf8_lossy(&first.stdout).contains("diagnostic-secret-value"));
+    assert!(!String::from_utf8_lossy(&first.stdout).contains(&alpha.password));
+    assert_eq!(
+        fs::read(&db).unwrap(),
+        before,
+        "read-only diagnostic must not migrate, log, acquire or repair state"
+    );
+    assert_eq!(fs::read_to_string(&path).unwrap(), proposal);
+    let b: serde_json::Value = serde_json::from_slice(&diagnose(&beta).stdout).unwrap();
+    assert_eq!(
+        a["effective_authority"]["digest"],
+        b["effective_authority"]["digest"]
+    );
+    let denied = fixture
+        .decapod_cmd(&alpha.worktree_dir, &alpha.agent_id, Some(&alpha.password))
+        .args([
+            "validate",
+            "--bypass-validation",
+            "--bypass-reason",
+            "candidate self-grant must agree with diagnosis",
+        ])
+        .output()
+        .unwrap();
+    assert!(!denied.status.success());
+
+    // Accept the exact bounded grant independently on the protected fixture
+    // target. The diagnosis and the real mutating endpoint must agree.
+    fs::write(fixture.repo_root.join(".decapod/config.toml"), &proposal).unwrap();
+    for args in [
+        vec!["add", ".decapod/config.toml"],
+        vec!["commit", "-m", "fixture: accept diagnostic grant"],
+    ] {
+        assert!(
+            Command::new("git")
+                .current_dir(&fixture.repo_root)
+                .args(args)
+                .status()
+                .unwrap()
+                .success()
+        );
+    }
+    let allowed = diagnose(&alpha);
+    assert_eq!(
+        allowed.status.code(),
+        Some(0),
+        "{}",
+        String::from_utf8_lossy(&allowed.stderr)
+    );
+    let accepted: serde_json::Value = serde_json::from_slice(&allowed.stdout).unwrap();
+    assert_eq!(accepted["operation"]["allowed_by_policy"], true);
+    assert_ne!(
+        accepted["effective_authority"]["digest"],
+        a["effective_authority"]["digest"]
+    );
+    assert_eq!(
+        accepted["effective_authority"]["independently_authenticated_human"],
+        false
+    );
+    let actual = fixture
+        .decapod_cmd(&alpha.worktree_dir, &alpha.agent_id, Some(&alpha.password))
+        .args([
+            "validate",
+            "--bypass-validation",
+            "--bypass-reason",
+            "accepted grant agrees with diagnosis",
+        ])
+        .output()
+        .unwrap();
+    assert!(
+        actual.status.success(),
+        "{}",
+        String::from_utf8_lossy(&actual.stderr)
+    );
+    fs::write(&path, "[broken").unwrap();
+    let broken = diagnose(&alpha);
+    assert_eq!(broken.status.code(), Some(2));
+    let report: serde_json::Value = serde_json::from_slice(&broken.stdout).unwrap();
+    assert_eq!(report["candidate_config"]["status"], "invalid");
+    assert_eq!(
+        report["operation"]["allowed_by_policy"], true,
+        "syntactic candidate errors are distinct from accepted policy grants"
+    );
+    assert_eq!(report["operation"]["ready"], false);
+    assert_eq!(report["publication_readiness"]["can_publish"], false);
+    fs::write(&path, &proposal).unwrap();
+    let repaired = diagnose(&alpha);
+    assert_eq!(repaired.status.code(), Some(0));
+    let hash = format!(
+        "sha256:{:x}",
+        Sha256::digest(fs::read(fixture.repo_root.join(".decapod/config.toml")).unwrap())
+    );
+    let report: serde_json::Value = serde_json::from_slice(&repaired.stdout).unwrap();
+    assert_eq!(report["effective_authority"]["digest"], hash);
+}
+
+#[test]
 fn unaccepted_root_rbac_proposal_cannot_authorize_its_own_bypass() {
     let fixture = GovernedRepoFixture::new();
     let alpha = fixture.spawn_claimed_agent("policy-alpha", "policy-alpha");
