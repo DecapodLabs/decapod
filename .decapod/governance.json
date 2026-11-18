@@ -600,6 +600,14 @@
       "proof_refs": [
         "claim-1737-actor-custody"
       ]
+    },
+    {
+      "id": "cp-1737-3",
+      "summary": "Reconcile origin/master baa25a054 (PR #1805) merge and updated spec reviews for #1737",
+      "input_digest": "sha256:6cd2a631460fdcacfb6a3c78a2320f526fc51bea3622da4364fe41b1b6f67e50",
+      "proof_refs": [
+        "claim-1737-actor-custody"
+      ]
     }
   ],
   "intents": {
@@ -640,22 +648,22 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Reconcile #1737 spec with origin/master a5a1edad (v0.149.0)",
-          "reviewed_code_fingerprint": "2b69ef8cfbcb0e3a285de9451f97707beeb75d7798bf1201ef8d004584fc5cfe",
+          "reason": "Reconcile #1737 spec with origin/master baa25a054",
+          "reviewed_code_fingerprint": "9f442b9f6776a95d72d41487349c626d594a469cabac59a3266bc38055801efc",
           "spec_material_hash": "d7a2ca3605cb67e0ecc981daca8a52721e418fc1ab0d559923ddd917e5896a79"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Reconcile #1737 spec with origin/master a5a1edad (v0.149.0)",
-          "reviewed_code_fingerprint": "2b69ef8cfbcb0e3a285de9451f97707beeb75d7798bf1201ef8d004584fc5cfe",
+          "reason": "Reconcile #1737 spec with origin/master baa25a054",
+          "reviewed_code_fingerprint": "9f442b9f6776a95d72d41487349c626d594a469cabac59a3266bc38055801efc",
           "spec_material_hash": "b6e078abfa4f1231dddaaffe281c48e79ee89b2a01608b6c3fd393ca29b4dc92"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Reconcile #1737 spec with origin/master a5a1edad (v0.149.0)",
-          "reviewed_code_fingerprint": "2b69ef8cfbcb0e3a285de9451f97707beeb75d7798bf1201ef8d004584fc5cfe",
+          "reason": "Reconcile #1737 spec with origin/master baa25a054",
+          "reviewed_code_fingerprint": "9f442b9f6776a95d72d41487349c626d594a469cabac59a3266bc38055801efc",
           "spec_material_hash": "0204e052ed0a3a4bfe1c645bf1d0f34ec5ac5ccf30e19c5949501e64d9136bbf"
         }
       ],
@@ -667,7 +675,7 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795034441Z"
+      "updated_at": "1795035420Z"
     },
     "trajectory": {
       "active_boundaries": [
