@@ -612,6 +612,14 @@
         "cargo fmt --all -- --check (exit 0)",
         "cargo test --test exact_candidate_governance_1052 (4 passed; 0 failed in 218.98s)"
       ]
+    },
+    {
+      "id": "exact-candidate-1052-interfaces-review",
+      "summary": "Record honest unchanged-with-reason review for INTERFACES.md vs origin/master 0b6ce0a8 (#1052)",
+      "input_digest": "sha256:7a06df251c334030b1c05f590a4fb3a81aa2b0509cff0f542b75601eddb7bb2e",
+      "proof_refs": [
+        "cargo test --test exact_candidate_governance_1052 (4 passed; 0 failed in 218.98s)"
+      ]
     }
   ],
   "intents": {
@@ -659,9 +667,9 @@
           "spec_material_hash": "080e1e015d867051ec4ecbb1f18aca92a2d62a05798377057e563aaa5a3764e0"
         },
         {
-          "disposition": "updated",
+          "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Merged origin/master 0b6ce0a8 (PR #1799 INTERFACES.md verify deadlock updates); exact-candidate interfaces preserved.",
+          "reason": "PR #1799 INTERFACES.md updates are already on origin/master 0b6ce0a8; #1052 branch adds zero interface changes.",
           "reviewed_code_fingerprint": "2a2db2a28520e66a72c7a0f4fa65683503f039f25f0e3ccf826ff60ac7df6cf8",
           "spec_material_hash": "3baf7067b96d8fad41fcf9ff69aa2866b99b9bc631a1132df1daf96de9c82ab7"
         },
@@ -681,7 +689,7 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795022441Z"
+      "updated_at": "1795022932Z"
     },
     "trajectory": {
       "active_boundaries": [
