@@ -683,6 +683,11 @@
       "id": "incorporate-accepted-policy-boundary",
       "summary": "Incorporate accepted master c47137ad including PR1779 without modifying protected main; retain active task journal whole and other owner history in Git, regenerate current projections. Previous 3e full proof historical; scope and policy composition await fresh complete validation.",
       "input_digest": "sha256:490925fc26fe8174d0cce37e13a02a692c3ed8a6d98b98183d71dfea9b825342"
+    },
+    {
+      "id": "incorporate-accepted-release10",
+      "summary": "Accepted target advanced during b3b proof: preserve SNAPSHOT_NOT_READY denial, incorporate accepted 34f837d4 release v0.148.10 and regenerate source inventory; no protected ref modification or proof waiver.",
+      "input_digest": "sha256:e94d7187e75f9ca097e68f70346d60770fcd6c6af5cb68e55d0b127fc8b4aeb8"
     }
   ],
   "intents": {
@@ -727,22 +732,22 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Compose accepted PR1779 policy and schema boundary through existing owners; preserve complete active task journal and accepted predecessor ancestry, no field merge or privilege waiver",
-          "reviewed_code_fingerprint": "6b10cc9b8f96e7778890e9ebf9a44a5c6ef73ba7ebd51beb64a9fac72ad0f9b9",
+          "reason": "Accepted v0.148.10 release inputs incorporated through Git; implementation and trust boundaries unchanged; regenerate source fingerprint and require fresh complete proof",
+          "reviewed_code_fingerprint": "e6c3e0206fe0b7064bf750bd23f688ae01f6cc4d085448bc6a952ffa9f936354",
           "spec_material_hash": "68902808d64fc0f419f2489074024da71e72bc9a8da546995d7c0520d90d76e5"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Compose accepted PR1779 policy and schema boundary through existing owners; preserve complete active task journal and accepted predecessor ancestry, no field merge or privilege waiver",
-          "reviewed_code_fingerprint": "6b10cc9b8f96e7778890e9ebf9a44a5c6ef73ba7ebd51beb64a9fac72ad0f9b9",
+          "reason": "Accepted v0.148.10 release inputs incorporated through Git; implementation and trust boundaries unchanged; regenerate source fingerprint and require fresh complete proof",
+          "reviewed_code_fingerprint": "e6c3e0206fe0b7064bf750bd23f688ae01f6cc4d085448bc6a952ffa9f936354",
           "spec_material_hash": "d76740eb7a4062fd23a8dcce5547f881ada3c2e14c89b3a8ca64a2cc90922b83"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Compose accepted PR1779 policy and schema boundary through existing owners; preserve complete active task journal and accepted predecessor ancestry, no field merge or privilege waiver",
-          "reviewed_code_fingerprint": "6b10cc9b8f96e7778890e9ebf9a44a5c6ef73ba7ebd51beb64a9fac72ad0f9b9",
+          "reason": "Accepted v0.148.10 release inputs incorporated through Git; implementation and trust boundaries unchanged; regenerate source fingerprint and require fresh complete proof",
+          "reviewed_code_fingerprint": "e6c3e0206fe0b7064bf750bd23f688ae01f6cc4d085448bc6a952ffa9f936354",
           "spec_material_hash": "0f80a7bae9c396f6ef79bcb1674252d853c5fe192cb7baba382a05919875407b"
         }
       ],
@@ -754,7 +759,7 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1794982356Z"
+      "updated_at": "1794982597Z"
     },
     "trajectory": {
       "active_boundaries": [
