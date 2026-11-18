@@ -602,6 +602,11 @@
       "id": "record-recovery-disposition",
       "summary": "Reference the committed current recovery archive while retaining the original unproven history and requiring fresh source-CI admission",
       "input_digest": "sha256:14f9768feee40894a229596770663eb3f09d9898a17f48d6d9e8c569b7730a6f"
+    },
+    {
+      "id": "accepted-policy-target-integration",
+      "summary": "Preserve accepted policy-boundary implementation and observer source, checkpoint the exact integration merge before commit and invalidate prior target applicability",
+      "input_digest": "sha256:a655e7a7d6d4f5094a90243bdfa8f34a65479019de030f4ac03f0348f67f9557"
     }
   ],
   "intents": {
@@ -642,23 +647,23 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Reviewed exact reauthored final observer and native recovery boundary; actual model requests and feedback join native receipts and independent GitHub subject readback; export grants no publication or merge authority",
-          "reviewed_code_fingerprint": "a269664c29b640341bbf72fde90903eec511a3efe0a64c145f38b33b4b8c1e52",
-          "spec_material_hash": "ee51ab44d2b4722b6a57c79cf3c5167270ff908803bc3377630386e4f7de6341"
+          "reason": "Preserve newly accepted c47137ad configuration repair, explicit operator policy and first-adoption recovery boundaries alongside the unchanged read-only acceptance observer; current source reviewed after target advancement",
+          "reviewed_code_fingerprint": "315095ce32d28c036a44caeb4bc219cc0e720ccbb1037f9b048ab586d8d3e36f",
+          "spec_material_hash": "ff25bc69c21d3dc98b8d66dc5bae62f1c01d8bd9e3e4dd82d3689991a9930d59"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Reviewed exact reauthored final observer and native recovery boundary; actual model requests and feedback join native receipts and independent GitHub subject readback; export grants no publication or merge authority",
-          "reviewed_code_fingerprint": "a269664c29b640341bbf72fde90903eec511a3efe0a64c145f38b33b4b8c1e52",
-          "spec_material_hash": "7bfbbf44436b18dfb78b943a8a994fed517bf14e615dec530945abf70dbdfd23"
+          "reason": "Preserve newly accepted c47137ad configuration repair, explicit operator policy and first-adoption recovery boundaries alongside the unchanged read-only acceptance observer; current source reviewed after target advancement",
+          "reviewed_code_fingerprint": "315095ce32d28c036a44caeb4bc219cc0e720ccbb1037f9b048ab586d8d3e36f",
+          "spec_material_hash": "666f7aabd9b0d0f529f03a2a5ecbbcad4f8dc10be0bd9de5e49bcca6bd945f31"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Reviewed exact reauthored final observer and native recovery boundary; actual model requests and feedback join native receipts and independent GitHub subject readback; export grants no publication or merge authority",
-          "reviewed_code_fingerprint": "a269664c29b640341bbf72fde90903eec511a3efe0a64c145f38b33b4b8c1e52",
-          "spec_material_hash": "10419fe1e75d99f1a1fdd9bcd4f406d874c168e8e31288143f62aa79d338d3fe"
+          "reason": "Preserve newly accepted c47137ad configuration repair, explicit operator policy and first-adoption recovery boundaries alongside the unchanged read-only acceptance observer; current source reviewed after target advancement",
+          "reviewed_code_fingerprint": "315095ce32d28c036a44caeb4bc219cc0e720ccbb1037f9b048ab586d8d3e36f",
+          "spec_material_hash": "e4f5f7980dc0644082f18f5ed99f3829acf1179c4b3e556b13cfd7390ab5cd20"
         }
       ],
       "state": "APPROVED",
@@ -669,13 +674,13 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1794977551Z"
+      "updated_at": "1794982048Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:e1bb4df1572050bd948cc0b5411afd7361072802c9a33a03f52ee4f16deaa7f3",
+      "artifact_hash": "sha256:3943fcf49170186b6cbbcb56df108e4825e450367a275c577ad8faaeaf041be1",
       "checks": [
         {
           "name": "actual-pi-capture",
@@ -683,6 +688,10 @@
         },
         {
           "name": "historical-source-checkpoints",
+          "status": "failed"
+        },
+        {
+          "name": "previous-target-applicability",
           "status": "failed"
         }
       ],
@@ -707,10 +716,17 @@
             "intent_id": "intent:change_01M7P3W97HA4M2MRGMQ0TYNRBB",
             "kind": "trajectory_step_recorded",
             "sequence": 4
+          },
+          {
+            "detail": "trajectory:branch_01M7P3W9AX80HN9XVHYSAD8B7C",
+            "event_id": "event:5",
+            "intent_id": "intent:change_01M7P3W97HA4M2MRGMQ0TYNRBB",
+            "kind": "trajectory_step_recorded",
+            "sequence": 5
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 4,
+        "next_sequence": 5,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M7P3W9AX80HN9XVHYSAD8B7C": {
@@ -733,6 +749,21 @@
                 ],
                 "sequence": 4,
                 "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:5",
+                "observations": [
+                  "Master advanced from6ab6de31 to c47137ad after native PR1784 admission. That admission remains historical, with no merge authorization. PR moved to draft; accepted policy-boundary changes merged without auto-commit, source/spec conflicts resolved preserving both responsibilities, and this exact integration tree will be checkpointed before commit. Fresh complete native validation is required."
+                ],
+                "proof_refs": [
+                  "previous-target-applicability"
+                ],
+                "scope": [
+                  "root"
+                ],
+                "sequence": 5,
+                "validation_findings": []
               }
             ]
           }
@@ -741,6 +772,7 @@
       "declared_commands": [],
       "destination": "pull request",
       "evidence": [
+        "Master advanced from6ab6de31 to c47137ad after native PR1784 admission. That admission remains historical, with no merge authorization. PR moved to draft; accepted policy-boundary changes merged without auto-commit, source/spec conflicts resolved preserving both responsibilities, and this exact integration tree will be checkpointed before commit. Fresh complete native validation is required.",
         "Preserved dad525d4 failed history including uncheckpointed integration c31d039f; native present-time recovery observation recorded. Reauthored five implementation files byte-for-byte; retained fresh identity. Real Pi archive3c6c373 and publication receipt remain historical observations, never imported readiness. Original source-CI deadline expired with SNAPSHOT_NOT_READY; fresh source requires complete validation."
       ],
       "inspected_files": [],

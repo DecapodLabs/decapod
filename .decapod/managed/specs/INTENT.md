@@ -1,15 +1,41 @@
 # Intent
 
-## Independently observed autonomous engineering (#1757, #1758)
+## Autonomous safe config recovery and privilege custody (#1771, #1776)
 
-An external coding agent's statement of completion does not prove its actions.
-The existing flight recorder gains a read-only, digest-bound acceptance export
-over actual host, kernel, Git and forge observations. The objective is a real
-unattended failure, kernel rejection, agent diagnosis/correction, fresh required
-proof and exact-subject publication. Scripted coverage, kernel authority,
-cooperative observation and independent GitHub policy remain distinct. Safe
-exports can drive website-owned launch media; the kernel never renders video,
-authenticates arbitrary capture labels or imports publication authority.
+The cloud boundary suite treats embedded schema discovery as file-only recovery,
+including CLI and RPC reads. `tests/common/cloud_managed_scenarios.rs` compares
+the complete project and private machine file inventories before and after each
+read, and requires zero HTTP requests. Unsupported operational `store.query`
+still exercises the cloud startup guard and must refuse local SQLite fallback;
+schema availability does not authorize operational persistence.
+
+First adoption on a verified accepted Git tree that predates repository policy
+uses the compiled global approval defaults for ordinary operations. The resolver
+confirms absence in that exact accepted tree, never an older ref or candidate
+fallback. Candidate RBAC, shared-claim and maintenance grants remain denied.
+Failure to read or verify accepted policy remains an error. Test fixtures must
+establish their accepted baseline before executing candidate-branch operations.
+
+The user explicitly authorized creation of a draft review PR before full
+validation on 2026-11-17. This exception concerns the forge creation operation
+only; the draft has no current admission or merge authority and failing required
+checks remain delivery blockers.
+
+Agents must be able to discover the embedded configuration contract even when
+their proposal is malformed, repair it in governed isolation, and resume
+ordinary work. They cannot use schema validity, a repinned candidate policy,
+or a changed base selector to acquire new exceptional authority. This change
+reuses existing parser, branch-safe maintenance policy and publication owners.
+It preserves accepted-policy rotation and revocation without repetitive human
+confirmation. Real-host activation (#880), unified diagnostic (#1071), and
+real-forge current admission (#1763) remain separate executable acceptance
+obligations; parser/RBAC regression results cannot stand in for those results.
+
+The proof-source inventory is reconciled against its last reviewed source
+`edbfc00d`: only the package version in `Cargo.toml` and `Cargo.lock` advanced
+from 0.148.7 to 0.148.9. The candidate preserves every workflow, command,
+coverage obligation and configured execution provider while acknowledging
+those release metadata bytes. Reconciliation does not establish test success.
 
 ## Complete scoped source currency (#1753)
 
@@ -400,10 +426,6 @@ fail explicitly rather than silently discarding a required check.
 
 ## Continuous Intent Traceability
 
-## Real-agent acceptance and release-bound projections
-
-The issue1758 Pi experiment is actual inference, not a deterministic repair imitation. The read-only observer must preserve its real required-check failure, new model-requested repair after returned feedback, fresh exact-subject native proof and independent GitHub readback. Subsequent source/base controls retain historical admission while clearing current applicability. Operator probes, PR creation, observed admission and merge authorization remain distinct. Source implementation readiness is separately required; a successful fixture export cannot excuse a stale managed container pin or failed source CI. Regenerate release-bound surfaces through native Decapod, checkpoint and rerun full configured validation after release movement.
-
 <!-- decapod:requirement REQ-INTENT-TRACEABILITY -->
 The agent must preserve the human-originated change intent while proposing
 updates to living specifications and implementation. Explicit requirement
@@ -421,6 +443,55 @@ commit, without permitting source observations to rewrite human intent. An
 unmapped code change remains explicitly unmapped, incomplete or unsupported
 inputs remain unproven, and the harness owns any proposed code/spec repair.
 The kernel retains independent review, validation and publication authority.
+
+## Independently observed autonomous engineering (#1757, #1758)
+An external coding agent's statement of completion does not prove its actions.
+The existing flight recorder gains a read-only, digest-bound acceptance export
+over actual host, kernel, Git and forge observations. The objective is a real
+unattended failure, kernel rejection, agent diagnosis/correction, fresh required
+proof and exact-subject publication. Scripted coverage, kernel authority,
+cooperative observation and independent GitHub policy remain distinct. Safe
+exports can drive website-owned launch media; the kernel never renders video,
+authenticates arbitrary capture labels or imports publication authority.
+
+## Real-agent acceptance and release-bound projections
+The issue1758 Pi experiment is actual inference, not a deterministic repair imitation. The read-only observer must preserve its real required-check failure, new model-requested repair after returned feedback, fresh exact-subject native proof and independent GitHub readback. Subsequent source/base controls retain historical admission while clearing current applicability. Operator probes, PR creation, observed admission and merge authorization remain distinct. Source implementation readiness is separately required; a successful fixture export cannot excuse a stale managed container pin or failed source CI. Regenerate release-bound surfaces through native Decapod, checkpoint and rerun full configured validation after release movement.
+
+<!-- decapod:requirement REQ-INTENT-TRACEABILITY -->
+The agent must preserve the human-originated change intent while proposing
+updates to living specifications and implementation. Explicit requirement
+identities may be attached to authored specs across changes. The read-only
+reconciliation report exposes missing or orphaned references, unresolved
+questions, and outdated source/spec snapshots without declaring semantic
+alignment or granting publication authority.
+
+<!-- decapod:declared-capabilities:start -->
+
+## Declared Capability Surfaces
+
+These declarations select authoring and proof obligations; they do not attest implemented runtime guarantees.
+
+- `agent-helper`
+- `authentication`
+- `authorization`
+- `background-processing`
+- `control-plane`
+- `event-driven`
+- `external-integrations`
+- `governance-kernel`
+- `persistent-state`
+- `scheduled-jobs`
+
+<!-- decapod:declared-capabilities:end -->
+
+<!-- decapod:codebase-attestation:start -->
+
+## Codebase Attestation
+
+- Repository signal fingerprint: `315095ce32d28c036a44caeb4bc219cc0e720ccbb1037f9b048ab586d8d3e36f`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (237 files), `tests/` (236 files)
+- Refreshed from the current codebase by `decapod rpc --op specs.refresh`
+<!-- decapod:codebase-attestation:end -->
 
 ## Bounded native storage inventory (#1630)
 
@@ -850,31 +921,3 @@ The report's manifest and managed Docker pin must be generated by the actual
 0.148.7 evaluating binary. An earlier CI-local pass with 0.148.6 projections was
 not full readiness. Only supported CLI regeneration repairs that metadata;
 the current candidate still requires complete fresh proof before publication.
-
-<!-- decapod:declared-capabilities:start -->
-
-## Declared Capability Surfaces
-
-These declarations select authoring and proof obligations; they do not attest implemented runtime guarantees.
-
-- `agent-helper`
-- `authentication`
-- `authorization`
-- `background-processing`
-- `control-plane`
-- `event-driven`
-- `external-integrations`
-- `governance-kernel`
-- `persistent-state`
-- `scheduled-jobs`
-
-<!-- decapod:declared-capabilities:end -->
-
-<!-- decapod:codebase-attestation:start -->
-
-## Codebase Attestation
-
-- Repository signal fingerprint: `a269664c29b640341bbf72fde90903eec511a3efe0a64c145f38b33b4b8c1e52`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (237 files), `tests/` (236 files)
-- Refreshed from the current codebase by `decapod rpc --op specs.refresh`
-<!-- decapod:codebase-attestation:end -->

@@ -1,15 +1,27 @@
 # Security
 
-## Acceptance presentation boundary (#1757)
+## Configuration validity and accepted privilege proposals (#1771, #1776)
 
-The read-only flight-recorder acceptance exporter neither executes agent work
-nor modifies kernel verdicts. It rejects sibling-file escapes, symlinks, altered
-digests and unsafe public text. Raw tool arguments, reasoning, local paths,
-credentials and environment stay private. Only reviewed objective text and
-allowlisted facts are emitted. Host source labels are assertions, not producer
-authentication; uncaptured unrestricted shell/forge activity remains unknown.
-Wrong subjects, incomplete checks, missing custody, controller-only repair,
-interventions and created-but-not-admitted PRs cannot become autonomous success.
+`cli::DecapodProjectConfig` rejects unsupported schema versions during typed
+deserialization, including consumers that deserialize accepted policy directly.
+Its canonical parser returns `INVALID_CONFIG_SCHEMA` with an embedded reference
+and a retry path. `lib.rs` serves CLI schema and RPC `schema.get` before config,
+session and migration startup so malformed configuration cannot block repair.
+
+`core::db_maintenance::resolve_repository_policy` is the shared branch-safe
+source for maintenance, exceptional RBAC, shared-claim opt-in and Git-backed
+approval categories. A proposed main-root feature checkout cannot supply its
+own grant or protect itself by changing `repo.base_branch`. Accepted grants
+remain prospective and revocable. A validation bypass remains explicitly
+non-proof and cannot authorize publication. Local protected-root/Git administrator
+access and explicitly mounted host policy retain their cooperative host trust
+boundary; this does not authenticate a human or intercept unrestricted shell.
+
+The original v0.148.9 binary admitted an unsupported config version and an
+unaccepted root RBAC bypass; it denied malformed TOML but blocked schema repair
+access. Public-command regression controls cover denial, corrected ordinary
+operations, independently accepted bounded grants and revocation. Candidate
+test execution and exact-head full validation remain required before delivery.
 
 ## Scoped currency authorization (#1753)
 
@@ -139,10 +151,6 @@ the next `readdir`; EOF and read errors remain distinct. No trust, task custody,
 cloud authorization or validation gate changes.
 
 ## Advisory intent reconciliation access
-
-## Fail-closed host attribution
-
-Missing provider-requested tool identities and kernel calls outside an actual in-flight bash interval prevent an autonomous-admission classification. Express these rejection conditions directly, without lint exceptions or weakening missing-input behavior. Source CI must pass both the mandatory core/library regression owner and lint before publication.
 
 <!-- decapod:requirement REQ-INTENT-TRACEABILITY -->
 `intent.reconcile` is a sessionless local inspection RPC over the existing
@@ -672,6 +680,42 @@ No credential, daemon registration, new external audience, or remote service
 is introduced. These are candidate invariants with regression coverage authored;
 execution evidence remains required before publication readiness.
 
+## Acceptance presentation boundary (#1757)
+The read-only flight-recorder acceptance exporter neither executes agent work
+nor modifies kernel verdicts. It rejects sibling-file escapes, symlinks, altered
+digests and unsafe public text. Raw tool arguments, reasoning, local paths,
+credentials and environment stay private. Only reviewed objective text and
+allowlisted facts are emitted. Host source labels are assertions, not producer
+authentication; uncaptured unrestricted shell/forge activity remains unknown.
+Wrong subjects, incomplete checks, missing custody, controller-only repair,
+interventions and created-but-not-admitted PRs cannot become autonomous success.
+
+## Fail-closed host attribution
+Missing provider-requested tool identities and kernel calls outside an actual in-flight bash interval prevent an autonomous-admission classification. Express these rejection conditions directly, without lint exceptions or weakening missing-input behavior. Source CI must pass both the mandatory core/library regression owner and lint before publication.
+
+<!-- decapod:requirement REQ-INTENT-TRACEABILITY -->
+`intent.reconcile` is a sessionless local inspection RPC over the existing
+repository plan, canonical specs and source fingerprints. It bypasses mutation
+custody and startup datastore writes, accepts an empty object or an optional
+full immutable Git base commit ID, and adds no network access, credential
+access or persistence. Filesystem read
+permissions remain the access boundary. Reports expose repository paths,
+requirement IDs, hashes and unresolved plan questions; callers must treat those
+questions as repository content when sharing output. A digest is provenance for
+observed bytes, not authenticated human approval. Markers, matching hashes and
+review records cannot establish semantic correctness, resolve a pending human
+decision or authorize validation/publication; `semantic_alignment` remains
+`not_proven`. The existing mutation and publication gates remain authoritative.
+
+<!-- decapod:codebase-attestation:start -->
+
+## Codebase Attestation
+
+- Repository signal fingerprint: `315095ce32d28c036a44caeb4bc219cc0e720ccbb1037f9b048ab586d8d3e36f`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (237 files), `tests/` (236 files)
+- Refreshed from the current codebase by `decapod rpc --op specs.refresh`
+<!-- decapod:codebase-attestation:end -->
+
 ## Inventory privacy and authority
 
 Native inspection uses caller OS authority, the existing lifecycle lock and a
@@ -1147,12 +1191,3 @@ exercise real secrets nor prove actual native cache publication.
 ## Canonical local Git proof (#1069)
 
 Canonical local proof shares the OS user trust domain with source, policy, tools and SQLite; it is not cryptographic authentication or OS isolation. The local authority is accepted on canonical Git rather than supplied by a candidate report, and cannot act as cloud/forge identity. Target reads disable ambient Git redirects, transport and replacement objects. Material/policy/target changes invalidate applicability without rewriting historical success. Supported forge publication rejects local-only authority; unrestricted shell/Git remains outside that enforcement boundary. No keys, credentials or machine-local logs belong in tracked state.
-
-<!-- decapod:codebase-attestation:start -->
-
-## Codebase Attestation
-
-- Repository signal fingerprint: `a269664c29b640341bbf72fde90903eec511a3efe0a64c145f38b33b4b8c1e52`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (237 files), `tests/` (236 files)
-- Refreshed from the current codebase by `decapod rpc --op specs.refresh`
-<!-- decapod:codebase-attestation:end -->

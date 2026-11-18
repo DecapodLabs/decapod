@@ -1,15 +1,16 @@
 # Interfaces
 
-## Acceptance observation export (#1757)
+## Config repair and accepted authority (#1771, #1776)
 
-`decapod trace flight-recorder acceptance --capture <private-index>` reads
-`decapod.agent-acceptance.v1` capture data and prints a redacted, versioned event
-manifest. It reports observed autonomous admission, historical PR identity,
-current applicability, interventions, source classes and unresolved findings.
-Both publication_ready and merge_authorized are always false. Captured original
-objective identity, executable/repository binding and evidence hashes are
-mandatory; agent declarations cannot stand in for tool/kernel observations.
-Consumers must preserve private-capture and cooperative-host assurance limits.
+Configuration errors use `INVALID_CONFIG_SCHEMA` with the original parser
+location/type/expected-value diagnostic and embedded repair commands. Supported
+schema version is 1.0.0; root extension compatibility remains unchanged.
+`data schema` and `rpc --op schema.get` expose their existing schemas without
+config parsing or datastore/session mutation, including on malformed projects.
+Ordinary mutations resume after a valid correction. Valid syntax alone never
+grants exceptional permission. RBAC bypass keeps `proof_ready=false` and
+`publication_ready=false`; unaccepted root policy proposals return
+`RBAC_PERMISSION_DENIED`, and unresolved accepted sources fail closed.
 
 ## Internal source currency agreement (#1753)
 
@@ -1225,6 +1226,25 @@ Invalid symbolic, absent or non-ancestor bases return a validation error.
 The original empty-parameter report stays version 1.0.0 without an impact
 field. Nothing in this operation authorizes a mutation, approval or completion.
 
+## Acceptance observation export (#1757)
+`decapod trace flight-recorder acceptance --capture <private-index>` reads
+`decapod.agent-acceptance.v1` capture data and prints a redacted, versioned event
+manifest. It reports observed autonomous admission, historical PR identity,
+current applicability, interventions, source classes and unresolved findings.
+Both publication_ready and merge_authorized are always false. Captured original
+objective identity, executable/repository binding and evidence hashes are
+mandatory; agent declarations cannot stand in for tool/kernel observations.
+Consumers must preserve private-capture and cooperative-host assurance limits.
+
+<!-- decapod:codebase-attestation:start -->
+
+## Codebase Attestation
+
+- Repository signal fingerprint: `315095ce32d28c036a44caeb4bc219cc0e720ccbb1037f9b048ab586d8d3e36f`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (237 files), `tests/` (236 files)
+- Refreshed from the current codebase by `decapod rpc --op specs.refresh`
+<!-- decapod:codebase-attestation:end -->
+
 ## Bounded local storage inspection
 
 CLI `data database inspect` and RPC `data.database.inspect` expose
@@ -1744,12 +1764,3 @@ manual or imported/self-hosted execution cannot grant Cachix publication.
 ## Canonical local Git proof (#1069)
 
 An accepted `proof.repository_contract.canonical_local_target = true` uses ordinary CLI/RPC validation against the canonical local branch. `readiness.ready` refers to that exact local subject with `scope=repository_local_git_readiness`; `publication_ready` stays false. `qa verify commit` inspects canonical historical proof. `workspace publish` and the independent final PR gate reject local-only target authority before remote publication. Omitted/false mode retains existing digests and GitHub behavior. Candidate-only mode, changed branch, strict profile and cloud selection cannot activate the local host.
-
-<!-- decapod:codebase-attestation:start -->
-
-## Codebase Attestation
-
-- Repository signal fingerprint: `a269664c29b640341bbf72fde90903eec511a3efe0a64c145f38b33b4b8c1e52`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (237 files), `tests/` (236 files)
-- Refreshed from the current codebase by `decapod rpc --op specs.refresh`
-<!-- decapod:codebase-attestation:end -->

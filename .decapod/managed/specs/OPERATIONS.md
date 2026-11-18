@@ -329,44 +329,6 @@ host-specific `LD_LIBRARY_PATH`; when no library is found, the
 `LOCAL_SQLITE_RUNTIME_REQUIRED` error names this flake output as the supported
 setup alongside the OS package and the `SQLITE_LIBRARY_ENV` override.
 
-## Source validation and documentation delivery
-
-Constitution schema validation in `.github/workflows/constitution-sync.yml` runs
-on ordinary branch pushes and pull requests. A release tag names an already
-validated source commit; it does not provide a branch comparison range. The
-workflow excludes tag pushes while retaining the immutable source-context
-verifier and both ordinary and accepted-tip schema checks.
-
-Documentation builds remain measured source checks on GitHub Actions and
-Buildkite. In `.github/workflows/docs.yml`, the build job records a positive
-native hosted-runner identity before uploading a Pages artifact. The deployment
-job requires that output and the master branch before it can be scheduled.
-GitHub-compatible environment variables or missing Buildkite markers alone do
-not establish native ownership. Imported builds retain a generic site artifact
-and validation custody, without starting the GitHub Pages deployment job.
-
-## Recover work from immutable checkpoint gaps
-
-First use `govern artifacts verify-checkpoints --base-branch <accepted-sha>
---head-ref <source-sha> --target-base <branch> --format json`. Preserve the source
-branch/task and returned failures. A later checkpoint cannot prove a checkpoint
-existed in an earlier immutable commit. Unavailable input is not a proven gap.
-
-Create and claim a new task, use normal `workspace ensure` from the accepted
-target, and enter its returned verified checkout. Before advancing that branch,
-run `govern artifacts record-history-recovery --source-ref <source-sha> --reason
-<reviewed-rationale>`. Review/reauthor selected source without importing old
-governance or invalid ancestry. Run `govern plan review-spec` for current
-interfaces/architecture/security, refresh projections, then stage, checkpoint
-and commit the present observation. Resolve its returned `history-recovery:<sha>`
-obligation with the archived observation and relevant current evidence references;
-checkpoint/commit that resolution and run complete independent validation.
-This recovers current work. It leaves old history unproven and enables no waiver.
-
-## PR1663 integrated storage behavior
-
-Do not install or run the compaction candidate against the machine coordination store while repairing this PR. Existing forward migration, backup/parity and format guards are part of the proposed behavior and must be exercised on disposable hosted fixtures. VACUUM remains explicit-only; historical benchmark percentages are not a new production measurement.
-
 <!-- decapod:capability-overlay:background-processing:start -->
 
 Generated capability obligations: `background-processing` is declared for this project. These are decisions and proof requirements, not claims of implemented behavior. Resolve each against project source and tests; record unsupported or non-applicable mechanisms explicitly.
@@ -412,7 +374,45 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `a269664c29b640341bbf72fde90903eec511a3efe0a64c145f38b33b4b8c1e52`
+- Repository signal fingerprint: `315095ce32d28c036a44caeb4bc219cc0e720ccbb1037f9b048ab586d8d3e36f`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (237 files), `tests/` (236 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
+
+## Source validation and documentation delivery
+
+Constitution schema validation in `.github/workflows/constitution-sync.yml` runs
+on ordinary branch pushes and pull requests. A release tag names an already
+validated source commit; it does not provide a branch comparison range. The
+workflow excludes tag pushes while retaining the immutable source-context
+verifier and both ordinary and accepted-tip schema checks.
+
+Documentation builds remain measured source checks on GitHub Actions and
+Buildkite. In `.github/workflows/docs.yml`, the build job records a positive
+native hosted-runner identity before uploading a Pages artifact. The deployment
+job requires that output and the master branch before it can be scheduled.
+GitHub-compatible environment variables or missing Buildkite markers alone do
+not establish native ownership. Imported builds retain a generic site artifact
+and validation custody, without starting the GitHub Pages deployment job.
+
+## Recover work from immutable checkpoint gaps
+
+First use `govern artifacts verify-checkpoints --base-branch <accepted-sha>
+--head-ref <source-sha> --target-base <branch> --format json`. Preserve the source
+branch/task and returned failures. A later checkpoint cannot prove a checkpoint
+existed in an earlier immutable commit. Unavailable input is not a proven gap.
+
+Create and claim a new task, use normal `workspace ensure` from the accepted
+target, and enter its returned verified checkout. Before advancing that branch,
+run `govern artifacts record-history-recovery --source-ref <source-sha> --reason
+<reviewed-rationale>`. Review/reauthor selected source without importing old
+governance or invalid ancestry. Run `govern plan review-spec` for current
+interfaces/architecture/security, refresh projections, then stage, checkpoint
+and commit the present observation. Resolve its returned `history-recovery:<sha>`
+obligation with the archived observation and relevant current evidence references;
+checkpoint/commit that resolution and run complete independent validation.
+This recovers current work. It leaves old history unproven and enables no waiver.
+
+## PR1663 integrated storage behavior
+
+Do not install or run the compaction candidate against the machine coordination store while repairing this PR. Existing forward migration, backup/parity and format guards are part of the proposed behavior and must be exercised on disposable hosted fixtures. VACUUM remains explicit-only; historical benchmark percentages are not a new production measurement.

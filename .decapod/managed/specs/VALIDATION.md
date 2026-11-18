@@ -1414,16 +1414,70 @@ inventory are advisory: none may satisfy a proof gate or change
 `semantic_alignment: not_proven`.
 
 ## Recovery archive disposition
-
 The selected-source reauthoring and present-time history observation are committed together at fafe6138db68a0d450cc01513b628c17cc40aa3e. The subsequent recovery disposition references that immutable archive. It does not establish the missing historical checkpoint or replace full current-candidate validation.
 
 ## Preserved failed source history
-
 The prior source branch at dad525d46feb9daf09f498c3d2934cd6560fc87b contains integration merge c31d039f without an exact-material checkpoint. That history remains preserved and unproven. The current workstream records the native present-time recovery observation, reauthors the reviewed source in a fresh claimed workspace, and requires independent full validation of its new commits. No retrospective checkpoint or inherited readiness is asserted.
 
 ## Acceptance observer delivery checks
-
 The mandatory offline core suite exercises actual source attribution, failed-check feedback followed by a new model repair action, receipt subject matching and later source/base invalidation. The ignored live export remains separate from those deterministic tests. A passing code suite does not supersede current-content publication-spec review: CI rejects a stale review even when a final lint-only edit preserves behavior. Refresh the affected reviews and obtain a fresh full exact-candidate validation before publication.
+
+## Current accepted policy integration
+
+Publication at102c638e against6ab6de31 was valid at its observed admission. Master subsequently advanced to c47137ad through accepted policy-boundary work. Preserve those new initializer, operator-consent and recovery boundaries, checkpoint the exact integration merge before committing, and collect fresh whole-profile proof; the earlier green result grants no integration authority for this new context.
+
+<!-- decapod:capability-overlay:background-processing:start -->
+
+Generated capability obligations: `background-processing` is declared for this project. These are decisions and proof requirements, not claims of implemented behavior. Resolve each against project source and tests; record unsupported or non-applicable mechanisms explicitly.
+
+## Background Processing Validation Overlay
+
+### Duplicate Delivery Tests
+- Test repeated delivery against the declared duplicate-handling semantics, including side effects and limitations
+- Idempotency key verification
+- Verify the declared delivery guarantee; do not claim exactly-once behavior without proof
+
+### Retry Tests
+- Configured retry/backoff policy verified
+- Configured retry bound or unbounded policy verified
+- Poison-work handling verified when the project declares it
+
+### Shutdown Tests
+- Graceful drain on signal
+- In-flight job completion or safe requeue
+- Verify the declared durability and loss boundary on forced termination; record unsupported guarantees
+<!-- decapod:capability-overlay:background-processing:end -->
+
+<!-- decapod:capability-overlay:persistent-state:start -->
+
+Generated capability obligations: `persistent-state` is declared for this project. These are decisions and proof requirements, not claims of implemented behavior. Resolve each against project source and tests; record unsupported or non-applicable mechanisms explicitly.
+
+## Persistent State Validation Overlay
+
+### Migration Proof Command
+- Configure `repo.migration_validation.command` and its arguments as the executable migration proof; file presence is not proof
+- The configured command MUST define its working directory, timeout, expected exit code, and evidence output
+
+### Migration Tests
+- All migrations MUST have integration tests
+- Rollback procedures MUST be tested
+- Data integrity checks post-migration
+
+### Persistence Integration Tests
+- Repository abstraction tested against real database
+- Transaction boundary tests
+- Concurrency conflict tests
+- Data integrity validation after recovery
+<!-- decapod:capability-overlay:persistent-state:end -->
+
+<!-- decapod:codebase-attestation:start -->
+
+## Codebase Attestation
+
+- Repository signal fingerprint: `315095ce32d28c036a44caeb4bc219cc0e720ccbb1037f9b048ab586d8d3e36f`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (237 files), `tests/` (236 files)
+- Refreshed from the current codebase by `decapod rpc --op specs.refresh`
+<!-- decapod:codebase-attestation:end -->
 
 ## Native inventory qualification
 
@@ -2268,56 +2322,3 @@ The showcase kernel PR must not introduce a new GitHub Actions workflow, shadow
 the website's renderer or suppress the existing living-spec material gate.
 Independent native source validation and complete candidate readiness remain
 necessary before merging.
-
-<!-- decapod:capability-overlay:background-processing:start -->
-
-Generated capability obligations: `background-processing` is declared for this project. These are decisions and proof requirements, not claims of implemented behavior. Resolve each against project source and tests; record unsupported or non-applicable mechanisms explicitly.
-
-## Background Processing Validation Overlay
-
-### Duplicate Delivery Tests
-- Test repeated delivery against the declared duplicate-handling semantics, including side effects and limitations
-- Idempotency key verification
-- Verify the declared delivery guarantee; do not claim exactly-once behavior without proof
-
-### Retry Tests
-- Configured retry/backoff policy verified
-- Configured retry bound or unbounded policy verified
-- Poison-work handling verified when the project declares it
-
-### Shutdown Tests
-- Graceful drain on signal
-- In-flight job completion or safe requeue
-- Verify the declared durability and loss boundary on forced termination; record unsupported guarantees
-<!-- decapod:capability-overlay:background-processing:end -->
-
-<!-- decapod:capability-overlay:persistent-state:start -->
-
-Generated capability obligations: `persistent-state` is declared for this project. These are decisions and proof requirements, not claims of implemented behavior. Resolve each against project source and tests; record unsupported or non-applicable mechanisms explicitly.
-
-## Persistent State Validation Overlay
-
-### Migration Proof Command
-- Configure `repo.migration_validation.command` and its arguments as the executable migration proof; file presence is not proof
-- The configured command MUST define its working directory, timeout, expected exit code, and evidence output
-
-### Migration Tests
-- All migrations MUST have integration tests
-- Rollback procedures MUST be tested
-- Data integrity checks post-migration
-
-### Persistence Integration Tests
-- Repository abstraction tested against real database
-- Transaction boundary tests
-- Concurrency conflict tests
-- Data integrity validation after recovery
-<!-- decapod:capability-overlay:persistent-state:end -->
-
-<!-- decapod:codebase-attestation:start -->
-
-## Codebase Attestation
-
-- Repository signal fingerprint: `a269664c29b640341bbf72fde90903eec511a3efe0a64c145f38b33b4b8c1e52`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (237 files), `tests/` (236 files)
-- Refreshed from the current codebase by `decapod rpc --op specs.refresh`
-<!-- decapod:codebase-attestation:end -->
