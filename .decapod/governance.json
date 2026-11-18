@@ -613,6 +613,15 @@
         ".decapod/config.toml",
         ".decapod/managed/specs/.manifest.json"
       ]
+    },
+    {
+      "id": "cp-1744-4",
+      "summary": "Refresh v0.148.13 Dockerfile pin and specs manifest projections",
+      "input_digest": "sha256:b09c43a8e402036c7d3b97f301cfb1c80cabd9326808fbace8e0677c1f522803",
+      "proof_refs": [
+        ".decapod/managed/Dockerfile.decapod",
+        ".decapod/managed/specs/.manifest.json"
+      ]
     }
   ],
   "intents": {
@@ -662,7 +671,7 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Document read-only decapod system migrations CLI, non-initializing doctor check, and resolved decapod_root migration notices (#1744)",
+          "reason": "Refreshed v0.148.13 projections for #1744 migration inspection and resolved root interfaces",
           "reviewed_code_fingerprint": "90d4b929a7bcdc74ef6911bbdf1777f70eaf917821b9391afdf66badf08102bf",
           "spec_material_hash": "3ee42482c4c6deea54ef3a21e4bf4d479bd967c6b1ee36b46bfdb40b39e8bc16"
         },
@@ -682,13 +691,13 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795013196Z"
+      "updated_at": "1795014143Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:23b89963ed4dadcc00763362de91586d661d06db0f45a389fd5222a5d28543f6",
+      "artifact_hash": "sha256:c83086c5d1a239b425b1239971d8d49424e3e4bd8e55aeeadc4e98569a005bea",
       "checks": [
         {
           "name": "cargo_clippy",
@@ -754,10 +763,17 @@
             "intent_id": "intent:change_01M7QC2E2V4CN87W5CNH5D2MQN",
             "kind": "trajectory_step_recorded",
             "sequence": 6
+          },
+          {
+            "detail": "trajectory:branch_01M7QC2E68VSP1Z3HCFJF9168A",
+            "event_id": "event:7",
+            "intent_id": "intent:change_01M7QC2E2V4CN87W5CNH5D2MQN",
+            "kind": "trajectory_step_recorded",
+            "sequence": 7
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 6,
+        "next_sequence": 7,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M7QC2E68VSP1Z3HCFJF9168A": {
@@ -840,6 +856,23 @@
                 ],
                 "sequence": 6,
                 "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:7",
+                "observations": [
+                  ".decapod/managed/Dockerfile.decapod",
+                  ".decapod/managed/specs/.manifest.json",
+                  "Refreshed v0.148.13 Dockerfile.decapod and .manifest.json with workspace 0.148.13 binary"
+                ],
+                "proof_refs": [],
+                "scope": [
+                  "\".decapod/managed/specs\"]",
+                  "\"tests\"",
+                  "paths:[\"src/decapod\""
+                ],
+                "sequence": 7,
+                "validation_findings": []
               }
             ]
           }
@@ -857,7 +890,8 @@
       "destination": "pull request",
       "evidence": [
         "13/13 core::migration, 6/6 plugins::doctor, 4/4 doc_alignment, 10/10 trajectory_cli, 23/23 cli_contract_enforcement (--test-threads=1), clippy and fmt clean on 7bd0a915",
-        "Merged origin/master c5bafce6 (v0.148.13: CHANGELOG.md, Cargo.toml, Cargo.lock only) and reconciled reviewed_sources_digest to sha256:f2c1d189ee0c96f6afb66185229233bd0436015d0ddd21dc56deb4f58709b2b2"
+        "Merged origin/master c5bafce6 (v0.148.13: CHANGELOG.md, Cargo.toml, Cargo.lock only) and reconciled reviewed_sources_digest to sha256:f2c1d189ee0c96f6afb66185229233bd0436015d0ddd21dc56deb4f58709b2b2",
+        "Refreshed v0.148.13 Dockerfile.decapod and .manifest.json with workspace 0.148.13 binary"
       ],
       "inspected_files": [
         "src/decapod/cli.rs",
@@ -874,6 +908,8 @@
       "intent_id": "intent:change_01M7QC2E2V4CN87W5CNH5D2MQN",
       "modified_files": [
         ".decapod/config.toml",
+        ".decapod/managed/Dockerfile.decapod",
+        ".decapod/managed/specs/.manifest.json",
         ".decapod/managed/specs/INTERFACES.md",
         ".decapod/managed/specs/OPERATIONS.md",
         "docs/agent/command-contracts.md",
