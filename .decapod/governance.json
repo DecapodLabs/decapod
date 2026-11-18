@@ -1,7 +1,7 @@
 {
   "schema_version": "1.0.0",
   "baseline": {
-    "accepted_commit": "9d1aed2795dae5b9345d9ec3ad1d3fcfe1d770d8",
+    "accepted_commit": "6ab6de3134286a790d78d370ca3fb43c0d92f834",
     "policy": {
       "change_control": {
         "requires_human_review": true,
@@ -466,6 +466,128 @@
         "statement": "Workunit generation-fenced mutations have durable event snapshots before JSON publication; interrupted projection publication is explicitly recoverable without inventing current proof.",
         "status": "open"
       },
+      "history-recovery:dad525d46feb9daf09f498c3d2934cd6560fc87b": {
+        "actor": "codex-launch-1757",
+        "assessment": {
+          "base_commit": "18cbb30ca4d16a80810d8f3c0cecfc4073a83cbc",
+          "disposition": "unproven_history",
+          "findings": [
+            {
+              "code": "GOVERNANCE_CHECKPOINT_MISSING",
+              "commit": "4661155e65a93882f18ac38e19dc172c7d6c3e9a",
+              "detail": "GOVERNANCE_CHECKPOINT_MISSING: commit 4661155e65a93882f18ac38e19dc172c7d6c3e9a needs a new checkpoint bound to its exact material tree and governance inputs",
+              "disposition": "unproven_history",
+              "expected_input_digest": "sha256:94ed7e93650eb7cd566960f6f030f82da282e78a22933cb54033922310444a33",
+              "obligation": "checkpoint_for_material",
+              "prior_event_can_be_regenerated": false,
+              "recovery": "A checkpoint written now cannot establish that this immutable commit carried a checkpoint. Preserve the source ref and evidence; create a fresh claimed workspace from the accepted target, reauthor the reviewed material with current intent/spec reviews and checkpoints, and rerun independent validation. No current policy authorizes a candidate-local history waiver.",
+              "tree": "16de40d85f9dcdd6111c82764e04b425e9e2e9e5"
+            },
+            {
+              "code": "GOVERNANCE_CHECKPOINT_MISSING",
+              "commit": "edd46f738da6f6c880b2d8e3aeb5d0e1d948c5d8",
+              "detail": "GOVERNANCE_CHECKPOINT_MISSING: commit edd46f738da6f6c880b2d8e3aeb5d0e1d948c5d8 needs a new checkpoint bound to its exact material tree and governance inputs",
+              "disposition": "unproven_history",
+              "expected_input_digest": "sha256:d9a50d76ec1003c84c96980c2b938489e04577da945d59415322366a22d905b7",
+              "obligation": "checkpoint_for_material",
+              "prior_event_can_be_regenerated": false,
+              "recovery": "A checkpoint written now cannot establish that this immutable commit carried a checkpoint. Preserve the source ref and evidence; create a fresh claimed workspace from the accepted target, reauthor the reviewed material with current intent/spec reviews and checkpoints, and rerun independent validation. No current policy authorizes a candidate-local history waiver.",
+              "tree": "e1d60ca2890c6c99345fde38275e7d7b7f4f03b5"
+            },
+            {
+              "code": "GOVERNANCE_CHECKPOINT_MISSING",
+              "commit": "cac93252c2a5f99e87481f6b806c515b19824523",
+              "detail": "GOVERNANCE_CHECKPOINT_MISSING: commit cac93252c2a5f99e87481f6b806c515b19824523 needs a new checkpoint bound to its exact material tree and governance inputs",
+              "disposition": "unproven_history",
+              "expected_input_digest": "sha256:23033d7af46a9622c2abe1dc1f803650b94fac3d3cc8c37223c39cf9be39d57f",
+              "obligation": "checkpoint_for_material",
+              "prior_event_can_be_regenerated": false,
+              "recovery": "A checkpoint written now cannot establish that this immutable commit carried a checkpoint. Preserve the source ref and evidence; create a fresh claimed workspace from the accepted target, reauthor the reviewed material with current intent/spec reviews and checkpoints, and rerun independent validation. No current policy authorizes a candidate-local history waiver.",
+              "tree": "2b13c5b2a00516036b138b66e0e899723d919051"
+            },
+            {
+              "code": "GOVERNANCE_CHECKPOINT_MISSING",
+              "commit": "52c9a169e36a4adac4795044150135f9d2bc11c1",
+              "detail": "GOVERNANCE_CHECKPOINT_MISSING: commit 52c9a169e36a4adac4795044150135f9d2bc11c1 needs a new checkpoint bound to its exact material tree and governance inputs",
+              "disposition": "unproven_history",
+              "expected_input_digest": "sha256:7b1466a3478850793a1ac152106bc28f74e5fa1d7efaf382af1d3bcebb1fa069",
+              "obligation": "checkpoint_for_material",
+              "prior_event_can_be_regenerated": false,
+              "recovery": "A checkpoint written now cannot establish that this immutable commit carried a checkpoint. Preserve the source ref and evidence; create a fresh claimed workspace from the accepted target, reauthor the reviewed material with current intent/spec reviews and checkpoints, and rerun independent validation. No current policy authorizes a candidate-local history waiver.",
+              "tree": "d36094536201c74e3b3ee57e798ca84dfd6c0718"
+            },
+            {
+              "code": "GOVERNANCE_CHECKPOINT_MISSING",
+              "commit": "ab4abe0593ddd8fd15186001558b79addd08aebc",
+              "detail": "GOVERNANCE_CHECKPOINT_MISSING: commit ab4abe0593ddd8fd15186001558b79addd08aebc needs a new checkpoint bound to its exact material tree and governance inputs",
+              "disposition": "unproven_history",
+              "expected_input_digest": "sha256:7b1466a3478850793a1ac152106bc28f74e5fa1d7efaf382af1d3bcebb1fa069",
+              "obligation": "checkpoint_for_material",
+              "prior_event_can_be_regenerated": false,
+              "recovery": "A checkpoint written now cannot establish that this immutable commit carried a checkpoint. Preserve the source ref and evidence; create a fresh claimed workspace from the accepted target, reauthor the reviewed material with current intent/spec reviews and checkpoints, and rerun independent validation. No current policy authorizes a candidate-local history waiver.",
+              "tree": "d36094536201c74e3b3ee57e798ca84dfd6c0718"
+            },
+            {
+              "code": "GOVERNANCE_CHECKPOINT_MISSING",
+              "commit": "bddd69fa9cd3c49f9db4ca95d8329e03ebc95ef3",
+              "detail": "GOVERNANCE_CHECKPOINT_MISSING: commit bddd69fa9cd3c49f9db4ca95d8329e03ebc95ef3 needs a new checkpoint bound to its exact material tree and governance inputs",
+              "disposition": "unproven_history",
+              "expected_input_digest": "sha256:7d93caa755193f599d4e2f1a1fa72762d376dc5755517d76f247a018a46ea397",
+              "obligation": "checkpoint_for_material",
+              "prior_event_can_be_regenerated": false,
+              "recovery": "A checkpoint written now cannot establish that this immutable commit carried a checkpoint. Preserve the source ref and evidence; create a fresh claimed workspace from the accepted target, reauthor the reviewed material with current intent/spec reviews and checkpoints, and rerun independent validation. No current policy authorizes a candidate-local history waiver.",
+              "tree": "96c5e870427672779720dad5a71cc47800a82eb2"
+            },
+            {
+              "code": "GOVERNANCE_CHECKPOINT_MISSING",
+              "commit": "6ab6de3134286a790d78d370ca3fb43c0d92f834",
+              "detail": "GOVERNANCE_CHECKPOINT_MISSING: commit 6ab6de3134286a790d78d370ca3fb43c0d92f834 needs a new checkpoint bound to its exact material tree and governance inputs",
+              "disposition": "unproven_history",
+              "expected_input_digest": "sha256:7d93caa755193f599d4e2f1a1fa72762d376dc5755517d76f247a018a46ea397",
+              "obligation": "checkpoint_for_material",
+              "prior_event_can_be_regenerated": false,
+              "recovery": "A checkpoint written now cannot establish that this immutable commit carried a checkpoint. Preserve the source ref and evidence; create a fresh claimed workspace from the accepted target, reauthor the reviewed material with current intent/spec reviews and checkpoints, and rerun independent validation. No current policy authorizes a candidate-local history waiver.",
+              "tree": "96c5e870427672779720dad5a71cc47800a82eb2"
+            },
+            {
+              "code": "GOVERNANCE_CHECKPOINT_MISSING",
+              "commit": "c31d039f1e242cb847a7f8c7d530f16d651b5076",
+              "detail": "GOVERNANCE_CHECKPOINT_MISSING: commit c31d039f1e242cb847a7f8c7d530f16d651b5076 needs a new checkpoint bound to its exact material tree and governance inputs",
+              "disposition": "unproven_history",
+              "expected_input_digest": "sha256:410f76fb130f0d1a97480919b03d777698bc3e3451831ac08ce92819a48a98f4",
+              "obligation": "checkpoint_for_material",
+              "prior_event_can_be_regenerated": false,
+              "recovery": "A checkpoint written now cannot establish that this immutable commit carried a checkpoint. Preserve the source ref and evidence; create a fresh claimed workspace from the accepted target, reauthor the reviewed material with current intent/spec reviews and checkpoints, and rerun independent validation. No current policy authorizes a candidate-local history waiver.",
+              "tree": "2b258a6ad0bc4f34522bc70944b4e281a89012f8"
+            }
+          ],
+          "head_commit": "dad525d46feb9daf09f498c3d2934cd6560fc87b",
+          "history_proven": false,
+          "inspection_complete": true,
+          "publication_ready": false,
+          "schema": "decapod.checkpoint-history.v1",
+          "scope": "checkpoint_history",
+          "verified_commits": [
+            "186b0b65437a110519dd3444cd50629c5c2d0bea",
+            "b374cae0346ef40cbfa2a7a6ff458b170725e946",
+            "ebf206dbdc173509e08ef5789a5d8cb74165e016",
+            "16bb669d1130ea0df1fd84eb00ed1869aab2b752",
+            "6b92b5cf73cc1e83581922cb2644f3b230362161",
+            "dad525d46feb9daf09f498c3d2934cd6560fc87b"
+          ]
+        },
+        "authority": "current_task_custody_only",
+        "destination_base": "6ab6de3134286a790d78d370ca3fb43c0d92f834",
+        "destination_change": "change_01M7P3W97HA4M2MRGMQ0TYNRBB",
+        "exception_authorized": false,
+        "historical_proof": "not_proven",
+        "reason": "Actual governance CI rejected historical merge c31d039f without an exact-material checkpoint. Preserve that branch and failed reports; review and reauthor the final observer in this fresh claimed workstream. No historical proof is fabricated or imported.",
+        "recovery": "reauthor_and_obtain_fresh_proof",
+        "schema": "decapod.history-recovery.v1",
+        "source_commit": "dad525d46feb9daf09f498c3d2934cd6560fc87b",
+        "source_governance_blob": "8dcb336df05c19c2e00aeeea1e69d3706127f4eb",
+        "source_tree": "ebd4df6da5f6e0a787190f8210bc9eec8394ac35"
+      },
       "plan:3109ff52b1ce422e": "Determine the smallest existing-provider execution boundary that keeps candidate build/test code from modifying trusted measurement or final-verdict authority.",
       "plan:5dbe0918f5d72eb4": "Buildkite collection excluded by user; no full native publication receipt is claimed",
       "plan:7f9060fac006b60a": "An already shipped controller cannot retroactively implement this code; distinguish one-time controller rollout from future older-catalog compatibility proof.",
@@ -568,44 +690,33 @@
     }
   },
   "change": {
-    "id": "admission-postmerge-proof",
-    "base_commit": "9d1aed2795dae5b9345d9ec3ad1d3fcfe1d770d8",
+    "id": "change_01M7P3W97HA4M2MRGMQ0TYNRBB",
+    "base_commit": "6ab6de3134286a790d78d370ca3fb43c0d92f834",
     "target_base": "origin/master"
   },
   "checkpoints": [
     {
-      "id": "admission-postmerge-record",
-      "summary": "Record externally accepted source tree and release 0.148.7, preserve actual stale-target CI rejection and all immutable live evidence, distinguish native admission from human forge integration, and require fresh exact-report head/base validation without runtime or check-policy changes",
-      "input_digest": "sha256:1a915f556f29fdda21f7dd819a38400c10e72131164a84deac747626338a3f43"
-    },
-    {
-      "id": "admission-postmerge-source-review",
-      "summary": "Re-review the two accepted 0.148.7 Cargo package-version inputs, reconcile source inventory only, preserve complete check graph and executor definitions, and require fresh exact-subject validation for the final report",
-      "input_digest": "sha256:1bbc48e66d4fe797c9d47c9a5857ee3730938f50113de3216dfabf7c0c68c051"
-    },
-    {
-      "id": "source-currency-1753-complete",
-      "summary": "Complete config-only exact-source version policy through publication currency without changing agent entrypoints; preserve generated-pin upgrade requirements and all integrity/execution checks; add real-Git cross-boundary regressions; record strict live 07 receipts and CLI-generated evaluating-0.148.7 metadata. Tests require configured execution.",
-      "input_digest": "sha256:7a0c8bec403859b8453c3de5f382628b2414a87dbf55e7c26b71724dffbf2c29"
+      "id": "reauthored-observer-and-history-custody",
+      "summary": "Fresh claimed observer implementation and material specs with native present-time custody of preserved failed source history; no retrospective checkpoint or readiness import",
+      "input_digest": "sha256:681802f9bc964b230f807b147976e2e9bb6b613787aa35e496f5aef4ad67df4e"
     }
   ],
   "intents": {
-    "intent:admission-postmerge-proof": {
+    "intent:change_01M7P3W97HA4M2MRGMQ0TYNRBB": {
       "acceptance_criteria": [],
       "assumptions": [],
       "boundaries": [
-        "No merge or release; historical proof never authorizes another present artifact; do not weaken required checks"
+        "Current claimed task and isolated work branch"
       ],
       "constraints": [
-        "docs",
-        ".decapod/managed/specs"
+        "root"
       ],
       "created_sequence": 1,
-      "id": "intent:admission-postmerge-proof",
+      "id": "intent:change_01M7P3W97HA4M2MRGMQ0TYNRBB",
       "out_of_scope": [],
       "proof_requirements": [],
-      "raw_intent": "Prove exact-evidence PR admission, finish implementation and close relevant issues only with reproducible enforcement evidence",
-      "refined_intent": "Preserve strict real GitHub acceptance and externally merged implementation, record stale-target rejection of the prior source candidate, and earn fresh exact-head/base admission for the final verification report on accepted 0.148.7",
+      "raw_intent": "Recover observer delivery from preserved failed checkpoint history (#1757)\n\nPreserve dad525d4 and its failed c31d039f merge checkpoint. Fresh governed source workstream from accepted master; record native present-time recovery observation, reauthor reviewed final observer source and specs, regenerate projections, validate complete exact candidate and publish. Historical failure is never promoted to proof.",
+      "refined_intent": "Recover observer delivery from preserved failed checkpoint history (#1757)\n\nPreserve dad525d4 and its failed c31d039f merge checkpoint. Fresh governed source workstream from accepted master; record native present-time recovery observation, reauthor reviewed final observer source and specs, regenerate projections, validate complete exact candidate and publish. Historical failure is never promoted to proof.",
       "status": "refined",
       "updated_sequence": 3
     }
@@ -618,148 +729,106 @@
       },
       "deferred_questions": [],
       "human_questions": [],
-      "intent": "Finish the original exact-proof admission deliverable after externally accepted integration. Complete issue 1753 by honoring the existing config-only, exact canonical source-repository version policy in publication currency without rewriting valid historical agent entrypoints; preserve Docker and manifest provenance, file presence, body/fingerprint checks, immutable ancestry and all required execution. Retain actual strict live acceptance 07 on 0.148.7 and every historical failure. Add meaningful real-Git currency regressions to the required library lane, regenerate only managed projections through the evaluating CLI, then require fresh full exact-head/base validation and governed publication before closing 1753 and finalizing the task. No merge, release or general bypass is authorized.",
+      "intent": "Recover preserved observer source through a fresh governed workstream; read-only Rust correlation of real Pi failure, autonomous repair, fresh receipt-bound admission and current applicability; preserve failed history and original fixture archive; all media remains website-owned",
       "phases": [],
       "proof_hooks": [
-        "decapod validate"
+        "Full exact-candidate native source-CI graph, mandatory offline core/library observer regressions and independently observed real Pi/GitHub evidence; no historical proof imported"
       ],
       "schema_version": "1.1.0",
       "spec_reviews": [
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Currency reuses existing scoped source-body authorization and generated-manifest provenance; all four headers must remain valid and Docker/manifest upgrade requirements remain",
-          "reviewed_code_fingerprint": "59302b283273f65193215ee22c7b207943d8077e5105c464f9f5a2e7ac6faa43",
-          "spec_material_hash": "0b7738e450b1038116cd3fce2e9660a615fbea502d988760d54dbf8c314f9146"
+          "reason": "Reviewed exact reauthored final observer and native recovery boundary; actual model requests and feedback join native receipts and independent GitHub subject readback; export grants no publication or merge authority",
+          "reviewed_code_fingerprint": "a269664c29b640341bbf72fde90903eec511a3efe0a64c145f38b33b4b8c1e52",
+          "spec_material_hash": "ee51ab44d2b4722b6a57c79cf3c5167270ff908803bc3377630386e4f7de6341"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "No new public option; only configured canonical source can preserve historical header versions through currency; default and foreign rules remain strict",
-          "reviewed_code_fingerprint": "59302b283273f65193215ee22c7b207943d8077e5105c464f9f5a2e7ac6faa43",
-          "spec_material_hash": "4d418dbaac3da584c5524670003c9fbd33db02090e4d402c3b390502ec8bd5fa"
+          "reason": "Reviewed exact reauthored final observer and native recovery boundary; actual model requests and feedback join native receipts and independent GitHub subject readback; export grants no publication or merge authority",
+          "reviewed_code_fingerprint": "a269664c29b640341bbf72fde90903eec511a3efe0a64c145f38b33b4b8c1e52",
+          "spec_material_hash": "7bfbbf44436b18dfb78b943a8a994fed517bf14e615dec530945abf70dbdfd23"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Bounded regular files, all canonical bodies/fingerprints, exact sole push slug and immutable ungrafted ancestry gate preservation; malformed provenance falls back conservatively and other checks remain",
-          "reviewed_code_fingerprint": "59302b283273f65193215ee22c7b207943d8077e5105c464f9f5a2e7ac6faa43",
-          "spec_material_hash": "0c791a6100ed5aec7fe4cedfa16680988dd1e48d50d00af272ef9dff372c3d4d"
+          "reason": "Reviewed exact reauthored final observer and native recovery boundary; actual model requests and feedback join native receipts and independent GitHub subject readback; export grants no publication or merge authority",
+          "reviewed_code_fingerprint": "a269664c29b640341bbf72fde90903eec511a3efe0a64c145f38b33b4b8c1e52",
+          "spec_material_hash": "10419fe1e75d99f1a1fdd9bcd4f406d874c168e8e31288143f62aa79d338d3fe"
         }
       ],
       "state": "APPROVED",
       "stop_conditions": [],
-      "title": "Finish admission proof after accepted integration",
+      "title": "Recover observer delivery from preserved failed checkpoint history (#1757)",
       "todo_ids": [
-        "feat_01m7m3mmz5mejx0g"
+        "bend_01m7p3rf73bh99q5"
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1794922423Z"
+      "updated_at": "1794977551Z"
     },
     "trajectory": {
       "active_boundaries": [
-        "No merge or release; historical proof never authorizes another present artifact; do not weaken required checks"
+        "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:b7deab4b6b0ae9e654139a51f2bc9afbad439fe5a8260ef037559adabc40ab95",
+      "artifact_hash": "sha256:e1bb4df1572050bd948cc0b5411afd7361072802c9a33a03f52ee4f16deaa7f3",
       "checks": [
         {
-          "name": "live_1487_acceptance",
+          "name": "actual-pi-capture",
           "status": "passed"
         },
         {
-          "name": "prior_source_admission",
+          "name": "historical-source-checkpoints",
           "status": "failed"
-        },
-        {
-          "name": "scoped_currency_regression",
-          "status": "partial"
-        },
-        {
-          "name": "strict_live_acceptance",
-          "status": "passed"
         }
       ],
+      "current_phase": "intent",
       "custody": {
         "events": [
           {
             "event_id": "event:2",
-            "intent_id": "intent:admission-postmerge-proof",
+            "intent_id": "intent:change_01M7P3W97HA4M2MRGMQ0TYNRBB",
             "kind": "created",
             "sequence": 2
           },
           {
             "event_id": "event:3",
-            "intent_id": "intent:admission-postmerge-proof",
+            "intent_id": "intent:change_01M7P3W97HA4M2MRGMQ0TYNRBB",
             "kind": "refined",
             "sequence": 3
           },
           {
-            "detail": "trajectory:admission-postmerge-proof",
+            "detail": "trajectory:branch_01M7P3W9AX80HN9XVHYSAD8B7C",
             "event_id": "event:4",
-            "intent_id": "intent:admission-postmerge-proof",
+            "intent_id": "intent:change_01M7P3W97HA4M2MRGMQ0TYNRBB",
             "kind": "trajectory_step_recorded",
             "sequence": 4
-          },
-          {
-            "detail": "trajectory:admission-postmerge-proof",
-            "event_id": "event:5",
-            "intent_id": "intent:admission-postmerge-proof",
-            "kind": "trajectory_step_recorded",
-            "sequence": 5
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 5,
+        "next_sequence": 4,
         "schema_version": "1.0.0",
         "trajectories": {
-          "admission-postmerge-proof": {
+          "branch_01M7P3W9AX80HN9XVHYSAD8B7C": {
             "evidence_only": true,
-            "id": "admission-postmerge-proof",
-            "intent_id": "intent:admission-postmerge-proof",
+            "id": "branch_01M7P3W9AX80HN9XVHYSAD8B7C",
+            "intent_id": "intent:change_01M7P3W97HA4M2MRGMQ0TYNRBB",
             "steps": [
               {
                 "action": "trajectory.record",
                 "custody_event_id": "event:4",
                 "observations": [
-                  "docs/publication-admission-acceptance.md",
-                  "docs/publication-admission-acceptance.md",
-                  ".decapod/managed/specs/INTENT.md",
-                  ".decapod/managed/specs/VALIDATION.md",
-                  "Strict actual GitHub acceptance 06 passed for controller fc52356f; immutable archive ae15eeffd6812002fbda2a2adaca23b006de0ba6 independently compared by tree IDs and downloaded contents; source c35 admission remained non-ready after independent master integration",
-                  "GitHub records alexhraber merge 41e7e152 at 12:03:09 UTC, exact tree equality with c35; release 9d1aed27 advances source package only; stale source Buildkite 11596 rejected comparison before required test lanes. Focused issues auto-closed by the external merge. Fresh current report proof remains required."
+                  "Preserved dad525d4 failed history including uncheckpointed integration c31d039f; native present-time recovery observation recorded. Reauthored five implementation files byte-for-byte; retained fresh identity. Real Pi archive3c6c373 and publication receipt remain historical observations, never imported readiness. Original source-CI deadline expired with SNAPSHOT_NOT_READY; fresh source requires complete validation."
                 ],
                 "proof_refs": [
-                  "strict_live_acceptance",
-                  "prior_source_admission"
+                  "historical-source-checkpoints",
+                  "actual-pi-capture"
                 ],
                 "scope": [
-                  ".decapod/managed/specs",
-                  "docs"
+                  "root"
                 ],
                 "sequence": 4,
-                "validation_findings": []
-              },
-              {
-                "action": "trajectory.record",
-                "custody_event_id": "event:5",
-                "observations": [
-                  "src/decapod/core/validate.rs",
-                  "src/decapod/core/validate.rs",
-                  "src/decapod/core/entrypoint_integrity.rs",
-                  "tests/unit/core/validate_tests.rs",
-                  "Reopened 1753 after actual PUBLICATION_BUNDLE_CURRENCY conflict. Central scoped validation now feeds currency; generated-manifest provenance replaces old source-header release only under the existing exact source policy. Real Git fixture covers canonical preservation, default/disabled/fork/ambiguity/tamper, missing artifacts and generator upgrades. New tests require first configured execution.",
-                  "Strict live 07 passed 1/0 in 317.35s on edbfc00d evaluating 0.148.7; all nine archive contents independently compared with GitHub native bytes at 63c75155ad087bbbf786680b729621debd8f3dd8. This is its scoped fixture evidence, not authority for the current source changes."
-                ],
-                "proof_refs": [
-                  "scoped_currency_regression",
-                  "live_1487_acceptance"
-                ],
-                "scope": [
-                  ".decapod/managed/specs",
-                  "docs"
-                ],
-                "sequence": 5,
                 "validation_findings": []
               }
             ]
@@ -767,36 +836,23 @@
         }
       },
       "declared_commands": [],
+      "destination": "pull request",
       "evidence": [
-        "GitHub records alexhraber merge 41e7e152 at 12:03:09 UTC, exact tree equality with c35; release 9d1aed27 advances source package only; stale source Buildkite 11596 rejected comparison before required test lanes. Focused issues auto-closed by the external merge. Fresh current report proof remains required.",
-        "Reopened 1753 after actual PUBLICATION_BUNDLE_CURRENCY conflict. Central scoped validation now feeds currency; generated-manifest provenance replaces old source-header release only under the existing exact source policy. Real Git fixture covers canonical preservation, default/disabled/fork/ambiguity/tamper, missing artifacts and generator upgrades. New tests require first configured execution.",
-        "Strict actual GitHub acceptance 06 passed for controller fc52356f; immutable archive ae15eeffd6812002fbda2a2adaca23b006de0ba6 independently compared by tree IDs and downloaded contents; source c35 admission remained non-ready after independent master integration",
-        "Strict live 07 passed 1/0 in 317.35s on edbfc00d evaluating 0.148.7; all nine archive contents independently compared with GitHub native bytes at 63c75155ad087bbbf786680b729621debd8f3dd8. This is its scoped fixture evidence, not authority for the current source changes."
+        "Preserved dad525d4 failed history including uncheckpointed integration c31d039f; native present-time recovery observation recorded. Reauthored five implementation files byte-for-byte; retained fresh identity. Real Pi archive3c6c373 and publication receipt remain historical observations, never imported readiness. Original source-CI deadline expired with SNAPSHOT_NOT_READY; fresh source requires complete validation."
       ],
-      "inspected_files": [
-        "docs/publication-admission-acceptance.md",
-        "src/decapod/core/validate.rs"
-      ],
-      "intent_id": "intent:admission-postmerge-proof",
-      "modified_files": [
-        ".decapod/managed/specs/INTENT.md",
-        ".decapod/managed/specs/VALIDATION.md",
-        "docs/publication-admission-acceptance.md",
-        "src/decapod/core/entrypoint_integrity.rs",
-        "src/decapod/core/validate.rs",
-        "tests/unit/core/validate_tests.rs"
+      "inspected_files": [],
+      "intent_id": "intent:change_01M7P3W97HA4M2MRGMQ0TYNRBB",
+      "modified_files": [],
+      "next_transitions": [
+        "Refine plan and declare falsifiable checks"
       ],
       "repo_scope": [
-        ".decapod/config.toml",
-        ".decapod/managed/specs",
-        "docs",
-        "src/decapod/core",
-        "tests/unit/core"
+        "root"
       ],
-      "run_id": "admission-postmerge-proof",
+      "run_id": "branch_01M7P3W9AX80HN9XVHYSAD8B7C",
       "schema_version": "1.1.0",
       "shortcut_risk_signals": [],
-      "task_id": "feat_01m7m3mmz5mejx0g",
+      "task_id": "bend_01m7p3rf73bh99q5",
       "tool_calls": [],
       "unresolved_assumptions": []
     }

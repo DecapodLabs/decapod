@@ -1,5 +1,21 @@
 # Architecture
 
+## Read-only acceptance correlation (#1757)
+
+`core::flight_recorder::acceptance` extends the current flight recorder rather
+than adding a governor or agent runtime. Bounded sibling-file reads verify
+artifact digests and event ordering. Source-specific reducers correlate actual
+Pi calls, native plan/observations/receipt material, task/workspace custody and
+separate Git/GitHub subject snapshots. The existing readiness-evidence verifier
+checks captured suite consistency. Trusted host provenance remains explicit;
+source labels and hashes do not authenticate a producer.
+Essential kernel calls join actual in-flight Pi bash calls, and actual tool IDs
+must match provider tool requests. Repair requires a new model request and tool
+start after the failed tool's feedback returned; controller work and prewritten
+same-call repair cannot establish autonomous correction. New validation clears
+prior publisher applicability; later source/base movement preserves history
+while requiring new applicable publication evidence. Output grants no authority.
+
 ## Source-policy currency continuity (#1753)
 
 `entrypoint_integrity::preserves_source_entrypoint_versions` reuses the existing
@@ -962,37 +978,6 @@ and whitespace. Oversized, unsupported or unavailable observations fail closed
 or explicitly mark the impact incomplete. No new persistence, scheduler, proof
 record or cross-document authority is introduced.
 
-<!-- decapod:capability-overlay:persistent-state:start -->
-
-Generated capability obligations: `persistent-state` is declared for this project. These are decisions and proof requirements, not claims of implemented behavior. Resolve each against project source and tests; record unsupported or non-applicable mechanisms explicitly.
-
-## Persistent State Architecture Overlay
-
-### State Ownership
-- Each entity type MUST have a designated state owner
-- State ownership boundaries MUST be explicitly documented
-- Cross-boundary state access MUST go through defined interfaces
-
-### Transaction Boundaries
-- Multi-entity mutation atomicity and partial-failure treatment MUST be documented and proven for the selected store
-- Transaction boundaries MUST be documented in ARCHITECTURE.md
-- Document compensation or other partial-failure treatment if distributed operations exist
-
-### Storage Abstraction
-- Storage ownership, consistency behavior, and access boundaries MUST be explicit
-- Portability or swappable implementations are project decisions, not universal requirements
-- Migration and rollback treatment MUST match the selected storage technology
-<!-- decapod:capability-overlay:persistent-state:end -->
-
-<!-- decapod:codebase-attestation:start -->
-
-## Codebase Attestation
-
-- Repository signal fingerprint: `59302b283273f65193215ee22c7b207943d8077e5105c464f9f5a2e7ac6faa43`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (236 files), `tests/` (235 files)
-- Refreshed from the current codebase by `decapod rpc --op specs.refresh`
-<!-- decapod:codebase-attestation:end -->
-
 ## Native inventory boundary
 
 `core::storage_inventory` owns semantic measurement, sampling and redaction;
@@ -1393,3 +1378,34 @@ the reconciled candidate.
 ## Canonical local Git proof (#1069)
 
 The existing `repository_profile::RepositoryContract` review digest optionally binds canonical local Git target authority. `workspace::resolve_readiness_repository` keeps that identity distinct from cloud GitHub identity, requiring a reviewed local contract already committed on the canonical accepted branch. `RepositoryHost::canonical_local` reuses the sealed snapshot verifier and fresh ref observations; no daemon, parallel policy engine or datastore is added. `validation_history` preserves exact local scope and checks target movement. Native strict source proof and provider requirements remain intact.
+
+<!-- decapod:capability-overlay:persistent-state:start -->
+
+Generated capability obligations: `persistent-state` is declared for this project. These are decisions and proof requirements, not claims of implemented behavior. Resolve each against project source and tests; record unsupported or non-applicable mechanisms explicitly.
+
+## Persistent State Architecture Overlay
+
+### State Ownership
+- Each entity type MUST have a designated state owner
+- State ownership boundaries MUST be explicitly documented
+- Cross-boundary state access MUST go through defined interfaces
+
+### Transaction Boundaries
+- Multi-entity mutation atomicity and partial-failure treatment MUST be documented and proven for the selected store
+- Transaction boundaries MUST be documented in ARCHITECTURE.md
+- Document compensation or other partial-failure treatment if distributed operations exist
+
+### Storage Abstraction
+- Storage ownership, consistency behavior, and access boundaries MUST be explicit
+- Portability or swappable implementations are project decisions, not universal requirements
+- Migration and rollback treatment MUST match the selected storage technology
+<!-- decapod:capability-overlay:persistent-state:end -->
+
+<!-- decapod:codebase-attestation:start -->
+
+## Codebase Attestation
+
+- Repository signal fingerprint: `a269664c29b640341bbf72fde90903eec511a3efe0a64c145f38b33b4b8c1e52`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (237 files), `tests/` (236 files)
+- Refreshed from the current codebase by `decapod rpc --op specs.refresh`
+<!-- decapod:codebase-attestation:end -->

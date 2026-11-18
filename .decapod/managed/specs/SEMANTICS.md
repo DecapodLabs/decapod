@@ -273,6 +273,10 @@ unsupported recovery path leaves a visible blocker.
 - Invocations and owned subprocesses remain bounded; persistent state carries
   task continuity after they exit
 
+## PR1663 integrated storage behavior
+
+Keep lossless decoded event and task projection semantics across compaction, v1/v2 journals and self-contained transfers. A changed encoding or schema never grants task ownership, publication authority or successful proof; current evidence remains bound to its actual candidate and accepted target.
+
 <!-- decapod:capability-overlay:background-processing:start -->
 
 Generated capability obligations: `background-processing` is declared for this project. These are decisions and proof requirements, not claims of implemented behavior. Resolve each against project source and tests; record unsupported or non-applicable mechanisms explicitly.
@@ -321,11 +325,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `59302b283273f65193215ee22c7b207943d8077e5105c464f9f5a2e7ac6faa43`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (236 files), `tests/` (235 files)
+- Repository signal fingerprint: `a269664c29b640341bbf72fde90903eec511a3efe0a64c145f38b33b4b8c1e52`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (237 files), `tests/` (236 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
-
-## PR1663 integrated storage behavior
-
-Keep lossless decoded event and task projection semantics across compaction, v1/v2 journals and self-contained transfers. A changed encoding or schema never grants task ownership, publication authority or successful proof; current evidence remains bound to its actual candidate and accepted target.
