@@ -123,6 +123,33 @@ fn execution_checkpoint_commit_resume_is_deterministic_and_read_only() {
 }
 
 #[test]
+fn ignored_external_action_policy_cannot_replay_execution_binding() {
+    // The real external-action owner may read an ignored canonical policy file.
+    // Git source equality alone must not certify that policy after it changes.
+    let temp = fixture();
+    let root = temp.path();
+    let ignore = root.join(".gitignore");
+    let before = fs::read_to_string(&ignore).unwrap();
+    fs::write(
+        &ignore,
+        format!("{before}\n.decapod/EXTERNAL_ACTIONS.json\n"),
+    )
+    .unwrap();
+    commit(root);
+    let binding = capture_execution_binding(root, "task_execution").unwrap();
+    fs::write(
+        root.join(".decapod/EXTERNAL_ACTIONS.json"),
+        r#"{"rules":[{"capability":"proof_exec","allowed_bins":[]}]}"#,
+    )
+    .unwrap();
+    assert!(git(root, &["status", "--porcelain"]).is_empty());
+    assert!(
+        verify_execution_binding(root, "task_execution", &binding).is_err(),
+        "A changed effective native authorization policy must revoke the previous binding"
+    );
+}
+
+#[test]
 fn recorded_clarification_revokes_old_checkpoint_then_allows_fresh_authorized_repair() {
     use crate::core::custody::{
         InstructionRevisionInput, RecordedInstructionKind, ReportedInstructionSource,

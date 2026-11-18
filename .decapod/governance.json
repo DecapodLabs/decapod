@@ -658,6 +658,11 @@
       "id": "owned-native-path-and-fixture-repair-20261117",
       "summary": "Separate actual owned native-path conformance from artifact and unknown host coverage; enforce only accepted required observation policy; bind current invocation, plan, instructions, lease and source/base; repair TOML fixture insertion and unborn ancestry. All new material requires full current proof.",
       "input_digest": "sha256:c53b3047285db8528e264eed64099b386e28f8c30a59ac0c7032b7f9d777a5a7"
+    },
+    {
+      "id": "native-policy-replay-audit-20261118",
+      "summary": "Repair lib-test module qualification and add a negative against the existing execution-binding owner for ignored external-action policy changes. This audits the boundary before any production policy inventory change; no proof or exploit result is inferred.",
+      "input_digest": "sha256:8c399168e5b0a68886221619ea5bd353b4ec24626c91742271ee5599d4ee5e7b"
     }
   ],
   "intents": {
@@ -700,24 +705,24 @@
       "schema_version": "1.1.0",
       "spec_reviews": [
         {
-          "disposition": "updated",
+          "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Review current native-path adapters, owned evidence, invocation/plan/source/custody binding and canonical completed-proof retention; scope is native proof calls, not whole-host or human authority.",
-          "reviewed_code_fingerprint": "06244de7858eb13ee70407277326b6bc7d02f7d891a61bcd9557a6640f36fa4f",
+          "reason": "Runtime architecture is unchanged by the lib-test qualification fix; audit the existing execution-binding owner for ignored external-action policy replay before adding a production policy mechanism.",
+          "reviewed_code_fingerprint": "b8ba776cbbfb04dda0031ed4ec7d0c7a576128202cd644764f64a2695c01669c",
           "spec_material_hash": "92fb0017a849356459362e2ae2468d557830e2e01bc2b132e62a1cc89db2098f"
         },
         {
-          "disposition": "updated",
+          "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Document accepted native observation policy, typed current judgments, opaque live evidence versus serialized readback, and explicit anonymous source reads selected before auth errors.",
-          "reviewed_code_fingerprint": "06244de7858eb13ee70407277326b6bc7d02f7d891a61bcd9557a6640f36fa4f",
+          "reason": "Public native-path and source-ingress contracts are unchanged; the pending regression exercises the existing binding API and preserves typed unknown/stale boundaries.",
+          "reviewed_code_fingerprint": "b8ba776cbbfb04dda0031ed4ec7d0c7a576128202cd644764f64a2695c01669c",
           "spec_material_hash": "c35563bd5d42bc92de2ede3ee57d8a3088b9b9f7f07075293c499cd82c68e55d"
         },
         {
-          "disposition": "updated",
+          "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Review observed-native trust domain, no JSON witness constructor, strict required scope, bounded replay checks and unknown full-host/human authority; retain independent acceptance requirements.",
-          "reviewed_code_fingerprint": "06244de7858eb13ee70407277326b6bc7d02f7d891a61bcd9557a6640f36fa4f",
+          "reason": "Retain existing policy ownership; a new negative checks ignored canonical external-action policy movement without asserting a reproduced exploit or changing authority.",
+          "reviewed_code_fingerprint": "b8ba776cbbfb04dda0031ed4ec7d0c7a576128202cd644764f64a2695c01669c",
           "spec_material_hash": "b56b277f45086b5f2cf92d7fe4ae618f98d52ef0db2f432c432e18adbbe5bd94"
         }
       ],
@@ -729,13 +734,13 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1794959380Z"
+      "updated_at": "1794960070Z"
     },
     "trajectory": {
       "active_boundaries": [
         "No protected root edits, force push, merge, gate waiver or fabricated evidence"
       ],
-      "artifact_hash": "sha256:1a4d9881fb98cdae49830c9eba72bb28e24755f234e99d24d7fa96aaed46e806",
+      "artifact_hash": "sha256:f252ae15651dd84e12edb0d1973b979c580d1d411ea8d4e3c7795d64e85150a2",
       "checks": [
         {
           "name": "candidate_986_cli_compile",
@@ -747,6 +752,10 @@
         },
         {
           "name": "clippy_97ef93f6",
+          "status": "failed"
+        },
+        {
+          "name": "d0_lib_test_compile",
           "status": "failed"
         },
         {
@@ -856,10 +865,17 @@
             "intent_id": "intent:todo:bugs_01m7nm3pnpc3be76",
             "kind": "trajectory_step_recorded",
             "sequence": 11
+          },
+          {
+            "detail": "trajectory:issues-1761-1770-20261117",
+            "event_id": "event:12",
+            "intent_id": "intent:todo:bugs_01m7nm3pnpc3be76",
+            "kind": "trajectory_step_recorded",
+            "sequence": 12
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 11,
+        "next_sequence": 12,
         "schema_version": "1.0.0",
         "trajectories": {
           "issues-1761-1770-20261117": {
@@ -1078,6 +1094,30 @@
                 "validation_findings": [
                   "Owned native proof-call observations are scoped kernel evidence, not independent whole-host or human attestation. Native ARM candidate artifact startup is a prerequisite, not successful acceptance. New path code and fixture repairs remain unverified."
                 ]
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:12",
+                "observations": [
+                  "src/decapod/core/validation_history.rs",
+                  "tests/unit/core/execution_checkpoint_tests.rs",
+                  "https://github.com/DecapodLabs/decapod/actions/runs/44203259346/job/134462866270",
+                  "https://github.com/DecapodLabs/decapod/issues/1776#issuecomment-6964621038"
+                ],
+                "proof_refs": [
+                  "d0_lib_test_compile"
+                ],
+                "scope": [
+                  ".decapod/managed/specs",
+                  "README.md",
+                  "docs",
+                  "src/decapod",
+                  "tests"
+                ],
+                "sequence": 12,
+                "validation_findings": [
+                  "The new ignored external-action policy replay control audits an existing owner; no bypass or successful protection is asserted before execution. Native-path positive CLI acceptance remains pending."
+                ]
               }
             ]
           }
@@ -1098,7 +1138,9 @@
         "https://github.com/DecapodLabs/decapod/actions/runs/44186574654/job/134406250356",
         "https://github.com/DecapodLabs/decapod/actions/runs/44196295665/job/134439168067",
         "https://github.com/DecapodLabs/decapod/actions/runs/44198555328/job/134447435222",
-        "https://github.com/DecapodLabs/decapod/actions/runs/44198555328/job/134447435393"
+        "https://github.com/DecapodLabs/decapod/actions/runs/44198555328/job/134447435393",
+        "https://github.com/DecapodLabs/decapod/actions/runs/44203259346/job/134462866270",
+        "https://github.com/DecapodLabs/decapod/issues/1776#issuecomment-6964621038"
       ],
       "inspected_files": [
         "src/decapod/core/governance_document.rs",
@@ -1136,7 +1178,8 @@
         "tests/cli_contracts.rs",
         "tests/common/consumer_readiness_fixture.rs",
         "tests/consumer_readiness.rs",
-        "tests/infer_precision.rs"
+        "tests/infer_precision.rs",
+        "tests/unit/core/execution_checkpoint_tests.rs"
       ],
       "repo_scope": [
         ".decapod/managed/specs",
@@ -1156,7 +1199,8 @@
         "Instruction origin authentication, accepted root coverage, typed global consistency, independent behavior controls and genuine path observation remain open acceptance obligations.",
         "Owned native proof-call observations are scoped kernel evidence, not independent whole-host or human attestation. Native ARM candidate artifact startup is a prerequisite, not successful acceptance. New path code and fixture repairs remain unverified.",
         "Provider-observed account metadata does not authenticate a human or grant operation authority; current ingress and phase repairs require actual source execution.",
-        "Selected-root/typed-relation fixtures are scripted local-policy/native controls and remain unverified until source CI executes them. No authenticated prompt capture or external witness is claimed."
+        "Selected-root/typed-relation fixtures are scripted local-policy/native controls and remain unverified until source CI executes them. No authenticated prompt capture or external witness is claimed.",
+        "The new ignored external-action policy replay control audits an existing owner; no bypass or successful protection is asserted before execution. Native-path positive CLI acceptance remains pending."
       ]
     }
   },

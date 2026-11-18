@@ -2091,7 +2091,7 @@ mod tests {
             workunit_subject: None,
         };
         let mut report = ValidationReport {
-            observed_path: super::trajectory::path::Judgment::unavailable(
+            observed_path: crate::core::trajectory::path::Judgment::unavailable(
                 false,
                 "fixture has no path witness",
             ),

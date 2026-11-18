@@ -1,5 +1,15 @@
 # Validation
 
+## Native authorization-policy replay audit
+
+Candidate d0ebc2c8 compiled the runtime slice, but the lib-test build found one
+test-only qualification error for `trajectory::path::Judgment`; it now uses its
+crate-qualified module path. A new negative execution-binding fixture changes an
+ignored canonical `EXTERNAL_ACTIONS.json` after capture and asks the real existing
+binding owner to refuse replay. This is an audit of existing protection before
+any production inventory change, not proof of a bypass or a new policy resolver.
+The fixture and runtime changes still require actual validation execution.
+
 ## Native path conformance qualification
 
 Scripted native consumer cases distinguish a genuinely executed green artifact
@@ -1634,7 +1644,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `06244de7858eb13ee70407277326b6bc7d02f7d891a61bcd9557a6640f36fa4f`
+- Repository signal fingerprint: `b8ba776cbbfb04dda0031ed4ec7d0c7a576128202cd644764f64a2695c01669c`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (239 files), `tests/` (235 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
