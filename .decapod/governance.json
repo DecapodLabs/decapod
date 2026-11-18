@@ -474,428 +474,6 @@
         "statement": "Workunit generation-fenced mutations have durable event snapshots before JSON publication; interrupted projection publication is explicitly recoverable without inventing current proof.",
         "status": "open"
       },
-      "history-recovery:1d5b9e59cd357fc75c25ecacf3d5167d5c46eee8": {
-        "actor": "codex-issue-contracts-20261117",
-        "assessment": {
-          "base_commit": "9d1aed2795dae5b9345d9ec3ad1d3fcfe1d770d8",
-          "disposition": "invalid_history",
-          "findings": [
-            {
-              "code": "GOVERNANCE_HISTORY_INVALID",
-              "commit": "83268ec94bff35d423e312230970b26404999a26",
-              "detail": "GOVERNANCE_PR_BASE_MISMATCH: base identity changed inside the PR",
-              "disposition": "invalid_history",
-              "obligation": "accepted_base",
-              "prior_event_can_be_regenerated": false,
-              "recovery": "Preserve the invalid commit and genuine prior evidence. Do not overwrite checkpoints or relabel provenance; inspect the affected obligation and reauthor in a fresh governed workspace if authentic historical evidence is unavailable.",
-              "tree": "389a88e471d6d2fee9d0afd3c20daa98734e009c"
-            },
-            {
-              "code": "GOVERNANCE_HISTORY_INVALID",
-              "commit": "002c9a44cd03aef91cc00196f9fd54e19c7f9980",
-              "detail": "GOVERNANCE_PR_BASE_MISMATCH: base identity changed inside the PR",
-              "disposition": "invalid_history",
-              "obligation": "accepted_base",
-              "prior_event_can_be_regenerated": false,
-              "recovery": "Preserve the invalid commit and genuine prior evidence. Do not overwrite checkpoints or relabel provenance; inspect the affected obligation and reauthor in a fresh governed workspace if authentic historical evidence is unavailable.",
-              "tree": "a1f7d8bf9e2e6663e07c1252cfff70251c4f43f1"
-            },
-            {
-              "code": "GOVERNANCE_HISTORY_INVALID",
-              "commit": "137198af509cfa732fe21557a779d48575b10498",
-              "detail": "GOVERNANCE_PR_BASE_MISMATCH: base identity changed inside the PR",
-              "disposition": "invalid_history",
-              "obligation": "accepted_base",
-              "prior_event_can_be_regenerated": false,
-              "recovery": "Preserve the invalid commit and genuine prior evidence. Do not overwrite checkpoints or relabel provenance; inspect the affected obligation and reauthor in a fresh governed workspace if authentic historical evidence is unavailable.",
-              "tree": "1504d775545545b87d8d7dd5395196d9e1d0a4bb"
-            },
-            {
-              "code": "GOVERNANCE_HISTORY_INVALID",
-              "commit": "c6fa3ac410d60a3d94a069ee665fc898bfc25750",
-              "detail": "GOVERNANCE_PR_BASE_MISMATCH: base identity changed inside the PR",
-              "disposition": "invalid_history",
-              "obligation": "accepted_base",
-              "prior_event_can_be_regenerated": false,
-              "recovery": "Preserve the invalid commit and genuine prior evidence. Do not overwrite checkpoints or relabel provenance; inspect the affected obligation and reauthor in a fresh governed workspace if authentic historical evidence is unavailable.",
-              "tree": "4c24afdd550cdc8db514b19db44fd69d174fa204"
-            },
-            {
-              "code": "GOVERNANCE_HISTORY_INVALID",
-              "commit": "d41e85d4d5bd4a2fc78d826ea11f8dd87e3d87d7",
-              "detail": "GOVERNANCE_PR_BASE_MISMATCH: base identity changed inside the PR",
-              "disposition": "invalid_history",
-              "obligation": "accepted_base",
-              "prior_event_can_be_regenerated": false,
-              "recovery": "Preserve the invalid commit and genuine prior evidence. Do not overwrite checkpoints or relabel provenance; inspect the affected obligation and reauthor in a fresh governed workspace if authentic historical evidence is unavailable.",
-              "tree": "3c03491a0f6cc8fe8aeac1b9b208c74517b8ba4f"
-            },
-            {
-              "code": "GOVERNANCE_HISTORY_INVALID",
-              "commit": "89625b2d5e41795bc9c56e8a7a3f221b6a07ba25",
-              "detail": "GOVERNANCE_PR_BASE_MISMATCH: base identity changed inside the PR",
-              "disposition": "invalid_history",
-              "obligation": "accepted_base",
-              "prior_event_can_be_regenerated": false,
-              "recovery": "Preserve the invalid commit and genuine prior evidence. Do not overwrite checkpoints or relabel provenance; inspect the affected obligation and reauthor in a fresh governed workspace if authentic historical evidence is unavailable.",
-              "tree": "8f61817ce393788cf4bb933d7aa196ea156ce2e4"
-            },
-            {
-              "code": "GOVERNANCE_HISTORY_INVALID",
-              "commit": "b650e0a925f034db4d606b9b09f3626cbbe93277",
-              "detail": "GOVERNANCE_PR_BASE_MISMATCH: base identity changed inside the PR",
-              "disposition": "invalid_history",
-              "obligation": "accepted_base",
-              "prior_event_can_be_regenerated": false,
-              "recovery": "Preserve the invalid commit and genuine prior evidence. Do not overwrite checkpoints or relabel provenance; inspect the affected obligation and reauthor in a fresh governed workspace if authentic historical evidence is unavailable.",
-              "tree": "38c27fa9367aa3b07611a62b04eea802bf8e699f"
-            },
-            {
-              "code": "GOVERNANCE_HISTORY_INVALID",
-              "commit": "bdc2d8bb4918cbcfd4ee18a54a7bfe3e6f5f58d4",
-              "detail": "GOVERNANCE_PR_BASE_MISMATCH: base identity changed inside the PR",
-              "disposition": "invalid_history",
-              "obligation": "accepted_base",
-              "prior_event_can_be_regenerated": false,
-              "recovery": "Preserve the invalid commit and genuine prior evidence. Do not overwrite checkpoints or relabel provenance; inspect the affected obligation and reauthor in a fresh governed workspace if authentic historical evidence is unavailable.",
-              "tree": "c741d65d39c8b064a3cb2c3c0ee6ccf3caedcc7c"
-            },
-            {
-              "code": "GOVERNANCE_HISTORY_INVALID",
-              "commit": "1d6a1351d34fb0e65cb2c0f1c4b831f2622ba2db",
-              "detail": "GOVERNANCE_PR_BASE_MISMATCH: base identity changed inside the PR",
-              "disposition": "invalid_history",
-              "obligation": "accepted_base",
-              "prior_event_can_be_regenerated": false,
-              "recovery": "Preserve the invalid commit and genuine prior evidence. Do not overwrite checkpoints or relabel provenance; inspect the affected obligation and reauthor in a fresh governed workspace if authentic historical evidence is unavailable.",
-              "tree": "57eab1a33cdd1f399bcd442792c3a0c4f6f3f19c"
-            },
-            {
-              "code": "GOVERNANCE_HISTORY_INVALID",
-              "commit": "bee9f594851ac5dd132982968d508ac5cd748014",
-              "detail": "GOVERNANCE_PR_BASE_MISMATCH: base identity changed inside the PR",
-              "disposition": "invalid_history",
-              "obligation": "accepted_base",
-              "prior_event_can_be_regenerated": false,
-              "recovery": "Preserve the invalid commit and genuine prior evidence. Do not overwrite checkpoints or relabel provenance; inspect the affected obligation and reauthor in a fresh governed workspace if authentic historical evidence is unavailable.",
-              "tree": "4e0614757d3229482bb29b838a60a2e83a5f4a8c"
-            },
-            {
-              "code": "GOVERNANCE_HISTORY_INVALID",
-              "commit": "60dac93ff0be8274f6840d7005dea669c6d4076c",
-              "detail": "GOVERNANCE_PR_BASE_MISMATCH: base identity changed inside the PR",
-              "disposition": "invalid_history",
-              "obligation": "accepted_base",
-              "prior_event_can_be_regenerated": false,
-              "recovery": "Preserve the invalid commit and genuine prior evidence. Do not overwrite checkpoints or relabel provenance; inspect the affected obligation and reauthor in a fresh governed workspace if authentic historical evidence is unavailable.",
-              "tree": "f65ead7bd7f098f9977acf4882750c6079229e2c"
-            },
-            {
-              "code": "GOVERNANCE_HISTORY_INVALID",
-              "commit": "ce644ebefd707419a03de6f72bbb9d1556739c77",
-              "detail": "GOVERNANCE_PR_BASE_MISMATCH: base identity changed inside the PR",
-              "disposition": "invalid_history",
-              "obligation": "accepted_base",
-              "prior_event_can_be_regenerated": false,
-              "recovery": "Preserve the invalid commit and genuine prior evidence. Do not overwrite checkpoints or relabel provenance; inspect the affected obligation and reauthor in a fresh governed workspace if authentic historical evidence is unavailable.",
-              "tree": "a859914b53db9c18e585af9208e34d010e511380"
-            },
-            {
-              "code": "GOVERNANCE_HISTORY_INVALID",
-              "commit": "f286b9bee202774241ad2cb3e8ee7ff5dac43a35",
-              "detail": "GOVERNANCE_PR_BASE_MISMATCH: base identity changed inside the PR",
-              "disposition": "invalid_history",
-              "obligation": "accepted_base",
-              "prior_event_can_be_regenerated": false,
-              "recovery": "Preserve the invalid commit and genuine prior evidence. Do not overwrite checkpoints or relabel provenance; inspect the affected obligation and reauthor in a fresh governed workspace if authentic historical evidence is unavailable.",
-              "tree": "488805c422a6703b3a2d76cf0498d74aeef0b951"
-            },
-            {
-              "code": "GOVERNANCE_HISTORY_INVALID",
-              "commit": "c5c45f82e64f2199db9536bbfafd372763d4042c",
-              "detail": "GOVERNANCE_PR_BASE_MISMATCH: base identity changed inside the PR",
-              "disposition": "invalid_history",
-              "obligation": "accepted_base",
-              "prior_event_can_be_regenerated": false,
-              "recovery": "Preserve the invalid commit and genuine prior evidence. Do not overwrite checkpoints or relabel provenance; inspect the affected obligation and reauthor in a fresh governed workspace if authentic historical evidence is unavailable.",
-              "tree": "6f37d3ff6ebb4a55ba93b9e96e156eeeabf65969"
-            },
-            {
-              "code": "GOVERNANCE_HISTORY_INVALID",
-              "commit": "2b12fd13e82ebbe720ef6d2c086dd739e1d3b943",
-              "detail": "GOVERNANCE_PR_BASE_MISMATCH: base identity changed inside the PR",
-              "disposition": "invalid_history",
-              "obligation": "accepted_base",
-              "prior_event_can_be_regenerated": false,
-              "recovery": "Preserve the invalid commit and genuine prior evidence. Do not overwrite checkpoints or relabel provenance; inspect the affected obligation and reauthor in a fresh governed workspace if authentic historical evidence is unavailable.",
-              "tree": "f22ea0fbce06fc56c0afaa928bbef6d30b1273e8"
-            },
-            {
-              "code": "GOVERNANCE_HISTORY_INVALID",
-              "commit": "a2371460d960305a4a93addc26f8a5210b530a4a",
-              "detail": "GOVERNANCE_PR_BASE_MISMATCH: base identity changed inside the PR",
-              "disposition": "invalid_history",
-              "obligation": "accepted_base",
-              "prior_event_can_be_regenerated": false,
-              "recovery": "Preserve the invalid commit and genuine prior evidence. Do not overwrite checkpoints or relabel provenance; inspect the affected obligation and reauthor in a fresh governed workspace if authentic historical evidence is unavailable.",
-              "tree": "623b71244e4048dab8df1a91f65fa21171b32327"
-            },
-            {
-              "code": "GOVERNANCE_HISTORY_INVALID",
-              "commit": "ed03d58952d32e17d82de4d5bb4f9bd14d14f6dd",
-              "detail": "GOVERNANCE_PR_BASE_MISMATCH: base identity changed inside the PR",
-              "disposition": "invalid_history",
-              "obligation": "accepted_base",
-              "prior_event_can_be_regenerated": false,
-              "recovery": "Preserve the invalid commit and genuine prior evidence. Do not overwrite checkpoints or relabel provenance; inspect the affected obligation and reauthor in a fresh governed workspace if authentic historical evidence is unavailable.",
-              "tree": "76b0c9ea9b0cd4395cc92132465dadf4245087f1"
-            },
-            {
-              "code": "GOVERNANCE_CHECKPOINT_MISSING",
-              "commit": "dbb622f6f2a140cf6746c4f8cefa4e7f86952c8a",
-              "detail": "GOVERNANCE_CHECKPOINT_MISSING: commit dbb622f6f2a140cf6746c4f8cefa4e7f86952c8a needs a new checkpoint bound to its exact material tree and governance inputs",
-              "disposition": "unproven_history",
-              "expected_input_digest": "sha256:823bb540ade558da6a03259ba9b186a576b857ac476167c1dc8081db0f3438f2",
-              "obligation": "checkpoint_for_material",
-              "prior_event_can_be_regenerated": false,
-              "recovery": "A checkpoint written now cannot establish that this immutable commit carried a checkpoint. Preserve the source ref and evidence; create a fresh claimed workspace from the accepted target, reauthor the reviewed material with current intent/spec reviews and checkpoints, and rerun independent validation. No current policy authorizes a candidate-local history waiver.",
-              "tree": "b59d8dc8f9d34dad776ac9c08c805d206170d7e7"
-            },
-            {
-              "code": "GOVERNANCE_CHECKPOINT_MISSING",
-              "commit": "18cbb30ca4d16a80810d8f3c0cecfc4073a83cbc",
-              "detail": "GOVERNANCE_CHECKPOINT_MISSING: commit 18cbb30ca4d16a80810d8f3c0cecfc4073a83cbc needs a new checkpoint bound to its exact material tree and governance inputs",
-              "disposition": "unproven_history",
-              "expected_input_digest": "sha256:823bb540ade558da6a03259ba9b186a576b857ac476167c1dc8081db0f3438f2",
-              "obligation": "checkpoint_for_material",
-              "prior_event_can_be_regenerated": false,
-              "recovery": "A checkpoint written now cannot establish that this immutable commit carried a checkpoint. Preserve the source ref and evidence; create a fresh claimed workspace from the accepted target, reauthor the reviewed material with current intent/spec reviews and checkpoints, and rerun independent validation. No current policy authorizes a candidate-local history waiver.",
-              "tree": "b59d8dc8f9d34dad776ac9c08c805d206170d7e7"
-            },
-            {
-              "code": "GOVERNANCE_HISTORY_INVALID",
-              "commit": "12d403ac0d791c4eea375c46daa6e7825ccdf6d6",
-              "detail": "GOVERNANCE_PR_IDENTITY_CONFLICT: commit 12d403ac0d791c4eea375c46daa6e7825ccdf6d6 changed identity inside an unaccepted lineage",
-              "disposition": "invalid_history",
-              "obligation": "workstream_identity",
-              "prior_event_can_be_regenerated": false,
-              "recovery": "Preserve the invalid commit and genuine prior evidence. Do not overwrite checkpoints or relabel provenance; inspect the affected obligation and reauthor in a fresh governed workspace if authentic historical evidence is unavailable.",
-              "tree": "153feba3265bc824b58f82f39bbfd3647d71a416"
-            },
-            {
-              "code": "GOVERNANCE_CHECKPOINT_MISSING",
-              "commit": "4661155e65a93882f18ac38e19dc172c7d6c3e9a",
-              "detail": "GOVERNANCE_CHECKPOINT_MISSING: commit 4661155e65a93882f18ac38e19dc172c7d6c3e9a needs a new checkpoint bound to its exact material tree and governance inputs",
-              "disposition": "unproven_history",
-              "expected_input_digest": "sha256:94ed7e93650eb7cd566960f6f030f82da282e78a22933cb54033922310444a33",
-              "obligation": "checkpoint_for_material",
-              "prior_event_can_be_regenerated": false,
-              "recovery": "A checkpoint written now cannot establish that this immutable commit carried a checkpoint. Preserve the source ref and evidence; create a fresh claimed workspace from the accepted target, reauthor the reviewed material with current intent/spec reviews and checkpoints, and rerun independent validation. No current policy authorizes a candidate-local history waiver.",
-              "tree": "16de40d85f9dcdd6111c82764e04b425e9e2e9e5"
-            },
-            {
-              "code": "GOVERNANCE_CHECKPOINT_MISSING",
-              "commit": "edd46f738da6f6c880b2d8e3aeb5d0e1d948c5d8",
-              "detail": "GOVERNANCE_CHECKPOINT_MISSING: commit edd46f738da6f6c880b2d8e3aeb5d0e1d948c5d8 needs a new checkpoint bound to its exact material tree and governance inputs",
-              "disposition": "unproven_history",
-              "expected_input_digest": "sha256:d9a50d76ec1003c84c96980c2b938489e04577da945d59415322366a22d905b7",
-              "obligation": "checkpoint_for_material",
-              "prior_event_can_be_regenerated": false,
-              "recovery": "A checkpoint written now cannot establish that this immutable commit carried a checkpoint. Preserve the source ref and evidence; create a fresh claimed workspace from the accepted target, reauthor the reviewed material with current intent/spec reviews and checkpoints, and rerun independent validation. No current policy authorizes a candidate-local history waiver.",
-              "tree": "e1d60ca2890c6c99345fde38275e7d7b7f4f03b5"
-            },
-            {
-              "code": "GOVERNANCE_CHECKPOINT_MISSING",
-              "commit": "cac93252c2a5f99e87481f6b806c515b19824523",
-              "detail": "GOVERNANCE_CHECKPOINT_MISSING: commit cac93252c2a5f99e87481f6b806c515b19824523 needs a new checkpoint bound to its exact material tree and governance inputs",
-              "disposition": "unproven_history",
-              "expected_input_digest": "sha256:23033d7af46a9622c2abe1dc1f803650b94fac3d3cc8c37223c39cf9be39d57f",
-              "obligation": "checkpoint_for_material",
-              "prior_event_can_be_regenerated": false,
-              "recovery": "A checkpoint written now cannot establish that this immutable commit carried a checkpoint. Preserve the source ref and evidence; create a fresh claimed workspace from the accepted target, reauthor the reviewed material with current intent/spec reviews and checkpoints, and rerun independent validation. No current policy authorizes a candidate-local history waiver.",
-              "tree": "2b13c5b2a00516036b138b66e0e899723d919051"
-            },
-            {
-              "code": "GOVERNANCE_CHECKPOINT_MISSING",
-              "commit": "52c9a169e36a4adac4795044150135f9d2bc11c1",
-              "detail": "GOVERNANCE_CHECKPOINT_MISSING: commit 52c9a169e36a4adac4795044150135f9d2bc11c1 needs a new checkpoint bound to its exact material tree and governance inputs",
-              "disposition": "unproven_history",
-              "expected_input_digest": "sha256:7b1466a3478850793a1ac152106bc28f74e5fa1d7efaf382af1d3bcebb1fa069",
-              "obligation": "checkpoint_for_material",
-              "prior_event_can_be_regenerated": false,
-              "recovery": "A checkpoint written now cannot establish that this immutable commit carried a checkpoint. Preserve the source ref and evidence; create a fresh claimed workspace from the accepted target, reauthor the reviewed material with current intent/spec reviews and checkpoints, and rerun independent validation. No current policy authorizes a candidate-local history waiver.",
-              "tree": "d36094536201c74e3b3ee57e798ca84dfd6c0718"
-            },
-            {
-              "code": "GOVERNANCE_CHECKPOINT_MISSING",
-              "commit": "ab4abe0593ddd8fd15186001558b79addd08aebc",
-              "detail": "GOVERNANCE_CHECKPOINT_MISSING: commit ab4abe0593ddd8fd15186001558b79addd08aebc needs a new checkpoint bound to its exact material tree and governance inputs",
-              "disposition": "unproven_history",
-              "expected_input_digest": "sha256:7b1466a3478850793a1ac152106bc28f74e5fa1d7efaf382af1d3bcebb1fa069",
-              "obligation": "checkpoint_for_material",
-              "prior_event_can_be_regenerated": false,
-              "recovery": "A checkpoint written now cannot establish that this immutable commit carried a checkpoint. Preserve the source ref and evidence; create a fresh claimed workspace from the accepted target, reauthor the reviewed material with current intent/spec reviews and checkpoints, and rerun independent validation. No current policy authorizes a candidate-local history waiver.",
-              "tree": "d36094536201c74e3b3ee57e798ca84dfd6c0718"
-            },
-            {
-              "code": "GOVERNANCE_CHECKPOINT_MISSING",
-              "commit": "bddd69fa9cd3c49f9db4ca95d8329e03ebc95ef3",
-              "detail": "GOVERNANCE_CHECKPOINT_MISSING: commit bddd69fa9cd3c49f9db4ca95d8329e03ebc95ef3 needs a new checkpoint bound to its exact material tree and governance inputs",
-              "disposition": "unproven_history",
-              "expected_input_digest": "sha256:7d93caa755193f599d4e2f1a1fa72762d376dc5755517d76f247a018a46ea397",
-              "obligation": "checkpoint_for_material",
-              "prior_event_can_be_regenerated": false,
-              "recovery": "A checkpoint written now cannot establish that this immutable commit carried a checkpoint. Preserve the source ref and evidence; create a fresh claimed workspace from the accepted target, reauthor the reviewed material with current intent/spec reviews and checkpoints, and rerun independent validation. No current policy authorizes a candidate-local history waiver.",
-              "tree": "96c5e870427672779720dad5a71cc47800a82eb2"
-            },
-            {
-              "code": "GOVERNANCE_CHECKPOINT_MISSING",
-              "commit": "6ab6de3134286a790d78d370ca3fb43c0d92f834",
-              "detail": "GOVERNANCE_CHECKPOINT_MISSING: commit 6ab6de3134286a790d78d370ca3fb43c0d92f834 needs a new checkpoint bound to its exact material tree and governance inputs",
-              "disposition": "unproven_history",
-              "expected_input_digest": "sha256:7d93caa755193f599d4e2f1a1fa72762d376dc5755517d76f247a018a46ea397",
-              "obligation": "checkpoint_for_material",
-              "prior_event_can_be_regenerated": false,
-              "recovery": "A checkpoint written now cannot establish that this immutable commit carried a checkpoint. Preserve the source ref and evidence; create a fresh claimed workspace from the accepted target, reauthor the reviewed material with current intent/spec reviews and checkpoints, and rerun independent validation. No current policy authorizes a candidate-local history waiver.",
-              "tree": "96c5e870427672779720dad5a71cc47800a82eb2"
-            },
-            {
-              "code": "GOVERNANCE_CHECKPOINT_MISSING",
-              "commit": "515d39abad41edacf3ed556c1c62d695484301b9",
-              "detail": "GOVERNANCE_CHECKPOINT_MISSING: commit 515d39abad41edacf3ed556c1c62d695484301b9 needs a new checkpoint bound to its exact material tree and governance inputs",
-              "disposition": "unproven_history",
-              "expected_input_digest": "sha256:71429636ce421031aea83e5ce0ffe9f32224041de23a2263d212b41cb228b3f9",
-              "obligation": "checkpoint_for_material",
-              "prior_event_can_be_regenerated": false,
-              "recovery": "A checkpoint written now cannot establish that this immutable commit carried a checkpoint. Preserve the source ref and evidence; create a fresh claimed workspace from the accepted target, reauthor the reviewed material with current intent/spec reviews and checkpoints, and rerun independent validation. No current policy authorizes a candidate-local history waiver.",
-              "tree": "d3160a90ba8fe99c5f69e29165d6aa053f88bdfe"
-            },
-            {
-              "code": "GOVERNANCE_CHECKPOINT_MISSING",
-              "commit": "0f2e520d115b8512d4158a89084dccaae87546c6",
-              "detail": "GOVERNANCE_CHECKPOINT_MISSING: commit 0f2e520d115b8512d4158a89084dccaae87546c6 needs a new checkpoint bound to its exact material tree and governance inputs",
-              "disposition": "unproven_history",
-              "expected_input_digest": "sha256:087a8514dd64dc83cd787412cc4ca22b950f2834236425fc5df164f50b9249f4",
-              "obligation": "checkpoint_for_material",
-              "prior_event_can_be_regenerated": false,
-              "recovery": "A checkpoint written now cannot establish that this immutable commit carried a checkpoint. Preserve the source ref and evidence; create a fresh claimed workspace from the accepted target, reauthor the reviewed material with current intent/spec reviews and checkpoints, and rerun independent validation. No current policy authorizes a candidate-local history waiver.",
-              "tree": "2b750950db7c51c744425d822d10745a5b67eeea"
-            },
-            {
-              "code": "GOVERNANCE_HISTORY_INVALID",
-              "commit": "d6fa03bc68d7a843061885e8ae20c3a9f910e7d6",
-              "detail": "GOVERNANCE_PR_BASE_MISMATCH: imported commit d6fa03bc68d7a843061885e8ae20c3a9f910e7d6 has an unaccepted base",
-              "disposition": "invalid_history",
-              "obligation": "accepted_base",
-              "prior_event_can_be_regenerated": false,
-              "recovery": "Preserve the invalid commit and genuine prior evidence. Do not overwrite checkpoints or relabel provenance; inspect the affected obligation and reauthor in a fresh governed workspace if authentic historical evidence is unavailable.",
-              "tree": "09362b76ef915e3a96e6e32f6a92ee08df164a6d"
-            },
-            {
-              "code": "GOVERNANCE_HISTORY_INVALID",
-              "commit": "563e6f7e02b99618daaf0ddacb88d5414e9a9cd2",
-              "detail": "GOVERNANCE_PR_BASE_MISMATCH: imported commit 563e6f7e02b99618daaf0ddacb88d5414e9a9cd2 has an unaccepted base",
-              "disposition": "invalid_history",
-              "obligation": "accepted_base",
-              "prior_event_can_be_regenerated": false,
-              "recovery": "Preserve the invalid commit and genuine prior evidence. Do not overwrite checkpoints or relabel provenance; inspect the affected obligation and reauthor in a fresh governed workspace if authentic historical evidence is unavailable.",
-              "tree": "b2bdfa39b9609e2635299e7ff8517297763915e9"
-            },
-            {
-              "code": "GOVERNANCE_HISTORY_INVALID",
-              "commit": "cb4b87b12f1ff0818073fbec86752c5c7b2f39e0",
-              "detail": "GOVERNANCE_PR_BASE_MISMATCH: imported commit cb4b87b12f1ff0818073fbec86752c5c7b2f39e0 has an unaccepted base",
-              "disposition": "invalid_history",
-              "obligation": "accepted_base",
-              "prior_event_can_be_regenerated": false,
-              "recovery": "Preserve the invalid commit and genuine prior evidence. Do not overwrite checkpoints or relabel provenance; inspect the affected obligation and reauthor in a fresh governed workspace if authentic historical evidence is unavailable.",
-              "tree": "ec95dc3cd106336a9b2f98de66c2a83b1c6156aa"
-            },
-            {
-              "code": "GOVERNANCE_HISTORY_INVALID",
-              "commit": "96d5ac16993c31f90df23d79397e3218610e21d3",
-              "detail": "GOVERNANCE_PR_BASE_MISMATCH: imported commit 96d5ac16993c31f90df23d79397e3218610e21d3 has an unaccepted base",
-              "disposition": "invalid_history",
-              "obligation": "accepted_base",
-              "prior_event_can_be_regenerated": false,
-              "recovery": "Preserve the invalid commit and genuine prior evidence. Do not overwrite checkpoints or relabel provenance; inspect the affected obligation and reauthor in a fresh governed workspace if authentic historical evidence is unavailable.",
-              "tree": "b59f7fb25800c1b36258f6d70c2fafbf11b9e2ca"
-            },
-            {
-              "code": "GOVERNANCE_HISTORY_INVALID",
-              "commit": "c47137adae825aeaaede4473f91ec21c6bd4b853",
-              "detail": "GOVERNANCE_PR_BASE_MISMATCH: imported commit c47137adae825aeaaede4473f91ec21c6bd4b853 has an unaccepted base",
-              "disposition": "invalid_history",
-              "obligation": "accepted_base",
-              "prior_event_can_be_regenerated": false,
-              "recovery": "Preserve the invalid commit and genuine prior evidence. Do not overwrite checkpoints or relabel provenance; inspect the affected obligation and reauthor in a fresh governed workspace if authentic historical evidence is unavailable.",
-              "tree": "b59f7fb25800c1b36258f6d70c2fafbf11b9e2ca"
-            },
-            {
-              "code": "GOVERNANCE_HISTORY_INVALID",
-              "commit": "07c75f4cfde82198e5b66fd3eac2043e5f2a1dbe",
-              "detail": "GOVERNANCE_PR_BASE_MISMATCH: imported commit 07c75f4cfde82198e5b66fd3eac2043e5f2a1dbe has an unaccepted base",
-              "disposition": "invalid_history",
-              "obligation": "accepted_base",
-              "prior_event_can_be_regenerated": false,
-              "recovery": "Preserve the invalid commit and genuine prior evidence. Do not overwrite checkpoints or relabel provenance; inspect the affected obligation and reauthor in a fresh governed workspace if authentic historical evidence is unavailable.",
-              "tree": "02b1e6fc08ac1ab0935b65cdd1ce18c418a044bc"
-            },
-            {
-              "code": "GOVERNANCE_HISTORY_INVALID",
-              "commit": "34f837d4dbb2a611c0d68a2cf14845cbe6823367",
-              "detail": "GOVERNANCE_PR_BASE_MISMATCH: imported commit 34f837d4dbb2a611c0d68a2cf14845cbe6823367 has an unaccepted base",
-              "disposition": "invalid_history",
-              "obligation": "accepted_base",
-              "prior_event_can_be_regenerated": false,
-              "recovery": "Preserve the invalid commit and genuine prior evidence. Do not overwrite checkpoints or relabel provenance; inspect the affected obligation and reauthor in a fresh governed workspace if authentic historical evidence is unavailable.",
-              "tree": "02b1e6fc08ac1ab0935b65cdd1ce18c418a044bc"
-            }
-          ],
-          "head_commit": "1d5b9e59cd357fc75c25ecacf3d5167d5c46eee8",
-          "history_proven": false,
-          "inspection_complete": true,
-          "publication_ready": false,
-          "schema": "decapod.checkpoint-history.v1",
-          "scope": "checkpoint_history",
-          "verified_commits": [
-            "4a94d3c2f3465f418c97f7bf041838533e215937",
-            "edbfc00ddfd4c24458a2277176762c6924de13cc",
-            "f6e5855b7ec288085ddad0583c2271e98104f57b",
-            "6bf9683e5f6cff8f22a03363b8a55a651d822c19",
-            "36ede3fd859b706f6c0be066c3987e3ac63478ce",
-            "0a8350c9c3d63b5f51d182873645decb19ab4f68",
-            "a55c1de8b6e0539afe0121fb0f208151993710d3",
-            "986dd194c082fa0cd5f6433500e92cd9e0732493",
-            "12ccde2656e1539338673cd41a2680ac3c1fccf8",
-            "7849e0c8a443ac823a27f09a84786a7461407b81",
-            "fb20e3bd7394f18d3ce62744b6ddffa80fd20740",
-            "e3a06926a4616ab8dba72b18e624c314e573798f",
-            "97ef93f611a95fd71dad75d17a59347f3f41b35a",
-            "277982791abac211291e77e7af8745a1223c482e",
-            "d0ebc2c899d6c5bc643cb984ab4126610898b07c",
-            "7b4c14a0e02fde5c32be8df80900a6f671f7d071",
-            "2aff33363c2ddcfb5580cf2e9314fbf0eeb0c57d",
-            "3e5bf009239349253668d6a8674d668d92572e13",
-            "15f511574acdcc862a6db2d27b644436a76cf44a",
-            "b3b6f0cca3be075d9973ee33445f474d721b1e46",
-            "8dbcb957d324b3e84d66b7734173698293617226",
-            "90448d89fc9a0d652c0acecde8ba9948063bbca2",
-            "1d5b9e59cd357fc75c25ecacf3d5167d5c46eee8"
-          ]
-        },
-        "authority": "current_task_custody_only",
-        "destination_base": "34f837d4dbb2a611c0d68a2cf14845cbe6823367",
-        "destination_change": "change_01M7PQMA9DG5FG2QMC9WPR3ZCJ",
-        "exception_authorized": false,
-        "historical_proof": "not_proven",
-        "reason": "Native immutable assessment reports20 original lineage/base findings after accepted target changed identity. Preserve PR1766 and old branch exactly; reauthor reviewed implementation on this fresh claimed34f837d4 workstream and obtain new complete proof. This observation grants no exception and no historical or merge authority.",
-        "recovery": "reauthor_and_obtain_fresh_proof",
-        "schema": "decapod.history-recovery.v1",
-        "source_commit": "1d5b9e59cd357fc75c25ecacf3d5167d5c46eee8",
-        "source_governance_blob": "d2af12667f99b99f3c74a5e5cb6dbcc642dbd551",
-        "source_tree": "b7ed46350d806a6716a2fcbf25f80c1bd8d0fbe3"
-      },
       "plan:3109ff52b1ce422e": "Determine the smallest existing-provider execution boundary that keeps candidate build/test code from modifying trusted measurement or final-verdict authority.",
       "plan:5dbe0918f5d72eb4": "Buildkite collection excluded by user; no full native publication receipt is claimed",
       "plan:7f9060fac006b60a": "An already shipped controller cannot retroactively implement this code; distinguish one-time controller rollout from future older-catalog compatibility proof.",
@@ -1054,11 +632,26 @@
       ]
     }
   },
+  "resolutions": {
+    "history-recovery:1d5b9e59cd357fc75c25ecacf3d5167d5c46eee8": {
+      "obligation_digest": "sha256:a97ee6af7c540f72d1231c179a9d003d09e453add5986d2dd30fd433a271378c",
+      "resolution": "Reviewed implementation and authored documentation were reauthored in fresh task feat_01m7pqj9rg9p2w2p against independently captured34f837d4. Original source, PR1766 and failed history remain preserved. This disposes the current recovery workflow only: old historical proof remains not_proven, no exception or merge is authorized, and the new exact candidate still requires complete native/CI and acceptance evidence.",
+      "proof_refs": [
+        "git:1d5b9e59cd357fc75c25ecacf3d5167d5c46eee8",
+        "git:8ac775e0"
+      ]
+    }
+  },
   "checkpoints": [
     {
       "id": "reauthor-contracts-with-present-history-observation",
       "summary": "Reauthor66 reviewed material paths from immutable1d5b9e59 against accepted34f837d4; preserve PR1766, original commits/0f2e520d, active old journal and actual20-finding assessment in native recovery record. New current task/plan and falsifiable claims; no past proof, exception, admission or merge is granted. Native source verification and actual candidate tests remain required.",
       "input_digest": "sha256:da26c698ca1998a2425cabd83bdb2129700b417dc4a89eb051b1a557ed57f860"
+    },
+    {
+      "id": "preserve-history-disposition-and-current-proof-obligations",
+      "summary": "Separately dispose archived present-time history observation after authentic source8ac775e0 checkpoint. Original1d5b9e59 history remains not_proven and preserved; no exception/retroactive proof. This exact new workstream still requires complete native validation and current acceptance; native first-commit history verifier passed only its narrow checkpoint scope.",
+      "input_digest": "sha256:796bea89e7490af2b363e2ad96712e520e70aebec8de45ebda388b7bc35b653d"
     }
   ],
   "intents": {
@@ -1107,21 +700,21 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Reauthor reviewed finite issue-contract changes in fresh claimed workstream; preserve source1d5b9e59 and native historical-gap observation, do not relabel history or infer completed proof; retain accepted policy and all required source checks",
+          "reason": "Archive present history observation before separate current-workflow disposition; old proof remains unproven, fresh source retains all required behavioral, policy, custody and complete CI obligations",
           "reviewed_code_fingerprint": "b3ab0860271f59e3bd8b813a35975cd9df65e64e146793c67939b9ef37cc6c75",
           "spec_material_hash": "68902808d64fc0f419f2489074024da71e72bc9a8da546995d7c0520d90d76e5"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Reauthor reviewed finite issue-contract changes in fresh claimed workstream; preserve source1d5b9e59 and native historical-gap observation, do not relabel history or infer completed proof; retain accepted policy and all required source checks",
+          "reason": "Archive present history observation before separate current-workflow disposition; old proof remains unproven, fresh source retains all required behavioral, policy, custody and complete CI obligations",
           "reviewed_code_fingerprint": "b3ab0860271f59e3bd8b813a35975cd9df65e64e146793c67939b9ef37cc6c75",
           "spec_material_hash": "bdd74b3fa4e4e791114d721dfba217bfbfb15f1d21ae0c832042eea2e0a3e16e"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Reauthor reviewed finite issue-contract changes in fresh claimed workstream; preserve source1d5b9e59 and native historical-gap observation, do not relabel history or infer completed proof; retain accepted policy and all required source checks",
+          "reason": "Archive present history observation before separate current-workflow disposition; old proof remains unproven, fresh source retains all required behavioral, policy, custody and complete CI obligations",
           "reviewed_code_fingerprint": "b3ab0860271f59e3bd8b813a35975cd9df65e64e146793c67939b9ef37cc6c75",
           "spec_material_hash": "0f80a7bae9c396f6ef79bcb1674252d853c5fe192cb7baba382a05919875407b"
         }
@@ -1134,7 +727,7 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1794986086Z"
+      "updated_at": "1794986408Z"
     },
     "trajectory": {
       "active_boundaries": [
