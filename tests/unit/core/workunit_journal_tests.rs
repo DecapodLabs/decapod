@@ -990,6 +990,8 @@ fn separately_initialized_workspace_cannot_replay_main_store_verified_authority(
     );
     assert_eq!(journal_records(&workspace, task).unwrap().len(), 1);
     assert!(validate_verified_manifest(&workspace, &previous.manifest).is_err());
+    assert!(error.to_string().contains("claim a fresh task"), "{error}");
+    assert!(error.to_string().contains("does not migrate"), "{error}");
     let custody =
         crate::core::todo::capture_validation_binding(&root.join(".decapod/data"), task).unwrap();
     let subject = WorkUnitValidationSubject {

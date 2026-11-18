@@ -905,7 +905,7 @@ fn append_snapshot_with_custody(
                     != crate::core::events::canonical_db_path(&canonical).canonicalize()?
                 {
                     return Err(journal_error("WORKUNIT_PROOF_ATOMIC_DOMAIN_UNSUPPORTED",
-                        "workspace-local workunit state and canonical task proof use different databases; no cross-store atomic acceptance is asserted"));
+                        "workspace-local workunit state and canonical task proof use different databases; no cross-store atomic acceptance or withdrawal is asserted. Preserve both stores and histories. From the repository root, claim a fresh task and use decapod workspace ensure without separately initializing workspace storage; reauthor its required intent/spec/proof plan and obtain fresh full validation in one canonical domain. This does not migrate or authenticate the prior store."));
                 }
                 if verified {
                     crate::core::validation_history::check_workunit_append_on_conn(conn, manifest)?;

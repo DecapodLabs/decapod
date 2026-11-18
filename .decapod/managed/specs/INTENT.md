@@ -10,6 +10,13 @@ earlier authored commits passed that same inspection. The native assessment
 of the older original baseline is retained separately with its complete
 findings. Neither assessment is relabelled as a passing history.
 
+After the present-time recovery archive was committed, the native resolver
+accepted only its current archive/reauthoring disposition. The original gap
+remains historical and unproven. Official 0.148.11 refreshes the current managed
+Docker pin and manifest release metadata; its installation used the supported
+session updater in a private location. Shared-host prerequisites are not
+publication proof, and fresh applicable Actions execution is still required.
+
 The source branch and failures remain preserved. This task reauthors only
 reviewed workunit code, meaningful execution tests, source inventory and
 semantic prose from the accepted target, with a present-time native history
@@ -19,8 +26,9 @@ current checkpoints and independent execution must establish this candidate.
 
 ## Accepted release source review
 
-This currentness candidate incorporates accepted `352d8929` (0.148.11)
-through a real two-parent merge. All 105 verification-source inputs were
+This currentness workstream starts from accepted `352d8929` (0.148.11).
+The preserved original branch integrated that release through a real
+two-parent merge. All 105 verification-source inputs were
 independently measured, including declared symlink target bytes and their
 separately inventoried regular target. Only the root package versions in
 Cargo.toml/Cargo.lock changed from 0.148.10; the remaining 103, required
@@ -582,7 +590,7 @@ These declarations select authoring and proof obligations; they do not attest im
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `6ba5edc87a1fbb3102291f95f24cdefb06d9d0a220a5cdd93b9dcad62c4061a5`
+- Repository signal fingerprint: `2c65a95b548e7d6cb0bdbe3a329e5bb147cd5941234ba053cf5ae8e720e0b8b6`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (236 files), `tests/` (235 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

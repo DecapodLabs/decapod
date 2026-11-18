@@ -466,123 +466,6 @@
         "statement": "Workunit generation-fenced mutations have durable event snapshots before JSON publication; interrupted projection publication is explicitly recoverable without inventing current proof.",
         "status": "open"
       },
-      "history-recovery:d53835ad2ee573996edcc31ef1ce2ef577a9a7cc": {
-        "actor": "codex-attack-gaps-1735",
-        "assessment": {
-          "base_commit": "6ab6de3134286a790d78d370ca3fb43c0d92f834",
-          "disposition": "invalid_history",
-          "findings": [
-            {
-              "code": "GOVERNANCE_CHECKPOINT_MISSING",
-              "commit": "07c75f4cfde82198e5b66fd3eac2043e5f2a1dbe",
-              "detail": "GOVERNANCE_CHECKPOINT_MISSING: commit 07c75f4cfde82198e5b66fd3eac2043e5f2a1dbe needs a new checkpoint bound to its exact material tree and governance inputs",
-              "disposition": "unproven_history",
-              "expected_input_digest": "sha256:551512c046eff33acb17e2c8d47a872d523ac7ecd1557de1e98994b4270c39c0",
-              "obligation": "checkpoint_for_material",
-              "prior_event_can_be_regenerated": false,
-              "recovery": "A checkpoint written now cannot establish that this immutable commit carried a checkpoint. Preserve the source ref and evidence; create a fresh claimed workspace from the accepted target, reauthor the reviewed material with current intent/spec reviews and checkpoints, and rerun independent validation. No current policy authorizes a candidate-local history waiver.",
-              "tree": "02b1e6fc08ac1ab0935b65cdd1ce18c418a044bc"
-            },
-            {
-              "code": "GOVERNANCE_CHECKPOINT_MISSING",
-              "commit": "34f837d4dbb2a611c0d68a2cf14845cbe6823367",
-              "detail": "GOVERNANCE_CHECKPOINT_MISSING: commit 34f837d4dbb2a611c0d68a2cf14845cbe6823367 needs a new checkpoint bound to its exact material tree and governance inputs",
-              "disposition": "unproven_history",
-              "expected_input_digest": "sha256:551512c046eff33acb17e2c8d47a872d523ac7ecd1557de1e98994b4270c39c0",
-              "obligation": "checkpoint_for_material",
-              "prior_event_can_be_regenerated": false,
-              "recovery": "A checkpoint written now cannot establish that this immutable commit carried a checkpoint. Preserve the source ref and evidence; create a fresh claimed workspace from the accepted target, reauthor the reviewed material with current intent/spec reviews and checkpoints, and rerun independent validation. No current policy authorizes a candidate-local history waiver.",
-              "tree": "02b1e6fc08ac1ab0935b65cdd1ce18c418a044bc"
-            },
-            {
-              "code": "GOVERNANCE_HISTORY_INVALID",
-              "commit": "e44ae7c6e37676d30f658ed01770f5ef83760f5f",
-              "detail": "GOVERNANCE_PR_IDENTITY_CONFLICT: commit e44ae7c6e37676d30f658ed01770f5ef83760f5f changed identity inside an unaccepted lineage",
-              "disposition": "invalid_history",
-              "obligation": "workstream_identity",
-              "prior_event_can_be_regenerated": false,
-              "recovery": "Preserve the invalid commit and genuine prior evidence. Do not overwrite checkpoints or relabel provenance; inspect the affected obligation and reauthor in a fresh governed workspace if authentic historical evidence is unavailable.",
-              "tree": "a1858c90562159d5220098312b31e44da768c9ef"
-            },
-            {
-              "code": "GOVERNANCE_CHECKPOINT_MISSING",
-              "commit": "14e5d8d8b6192b950ebb051b6695ed5d4c93c0d7",
-              "detail": "GOVERNANCE_CHECKPOINT_MISSING: commit 14e5d8d8b6192b950ebb051b6695ed5d4c93c0d7 needs a new checkpoint bound to its exact material tree and governance inputs",
-              "disposition": "unproven_history",
-              "expected_input_digest": "sha256:202ee9a1f0002127a7d65c736bf8387cd66c463c938361a63e948db59a123aaf",
-              "obligation": "checkpoint_for_material",
-              "prior_event_can_be_regenerated": false,
-              "recovery": "A checkpoint written now cannot establish that this immutable commit carried a checkpoint. Preserve the source ref and evidence; create a fresh claimed workspace from the accepted target, reauthor the reviewed material with current intent/spec reviews and checkpoints, and rerun independent validation. No current policy authorizes a candidate-local history waiver.",
-              "tree": "4a9469b32f9c3c9992864b9e5b04995bd48449d0"
-            },
-            {
-              "code": "GOVERNANCE_CHECKPOINT_MISSING",
-              "commit": "352d892958e1cdf692299927f7c2f3c0c36fc639",
-              "detail": "GOVERNANCE_CHECKPOINT_MISSING: commit 352d892958e1cdf692299927f7c2f3c0c36fc639 needs a new checkpoint bound to its exact material tree and governance inputs",
-              "disposition": "unproven_history",
-              "expected_input_digest": "sha256:202ee9a1f0002127a7d65c736bf8387cd66c463c938361a63e948db59a123aaf",
-              "obligation": "checkpoint_for_material",
-              "prior_event_can_be_regenerated": false,
-              "recovery": "A checkpoint written now cannot establish that this immutable commit carried a checkpoint. Preserve the source ref and evidence; create a fresh claimed workspace from the accepted target, reauthor the reviewed material with current intent/spec reviews and checkpoints, and rerun independent validation. No current policy authorizes a candidate-local history waiver.",
-              "tree": "4a9469b32f9c3c9992864b9e5b04995bd48449d0"
-            },
-            {
-              "code": "GOVERNANCE_CHECKPOINT_MISSING",
-              "commit": "d53835ad2ee573996edcc31ef1ce2ef577a9a7cc",
-              "detail": "GOVERNANCE_CHECKPOINT_MISSING: commit d53835ad2ee573996edcc31ef1ce2ef577a9a7cc needs a new checkpoint bound to its exact material tree and governance inputs",
-              "disposition": "unproven_history",
-              "expected_input_digest": "sha256:25986d74232b99c69a79f2a8a34438dca327eaad19c5ca31a607a780b518647f",
-              "obligation": "checkpoint_for_material",
-              "prior_event_can_be_regenerated": false,
-              "recovery": "A checkpoint written now cannot establish that this immutable commit carried a checkpoint. Preserve the source ref and evidence; create a fresh claimed workspace from the accepted target, reauthor the reviewed material with current intent/spec reviews and checkpoints, and rerun independent validation. No current policy authorizes a candidate-local history waiver.",
-              "tree": "3feb1bd1e614f754a5e54e53309e95c36bff860d"
-            }
-          ],
-          "head_commit": "d53835ad2ee573996edcc31ef1ce2ef577a9a7cc",
-          "history_proven": false,
-          "inspection_complete": true,
-          "publication_ready": false,
-          "schema": "decapod.checkpoint-history.v1",
-          "scope": "checkpoint_history",
-          "verified_commits": [
-            "2f0a5ac37d95d226036235b35a78acaf4fa41418",
-            "a20e15e7de7cd67dcfcf0a5afbe19ea71be1187d",
-            "d6fa03bc68d7a843061885e8ae20c3a9f910e7d6",
-            "563e6f7e02b99618daaf0ddacb88d5414e9a9cd2",
-            "cb4b87b12f1ff0818073fbec86752c5c7b2f39e0",
-            "96d5ac16993c31f90df23d79397e3218610e21d3",
-            "c47137adae825aeaaede4473f91ec21c6bd4b853",
-            "6cd1239d2e22fbb850106469aa6c831bb354ea00",
-            "186cd543498885b49b4efe616fe41eab4d4d982b",
-            "f515078125c78f009a1a36f61fca305c9d2727d5",
-            "818e376c5f03164704440cf36c3603e628e37ed2",
-            "76aae18a43c78fedb94a1d47988c57d8fe41d792",
-            "49c8a6bc92cffbc4896a300f509a58f1fc89da05",
-            "ddcefa86e71be657022ac8e64862995677a17b0f",
-            "e212ad7589b9549e8b520f16e1a07d3f873cb2eb",
-            "ddbed5d2bd9187042e98c3c03f87a43509250dc1",
-            "f6879957504337c59aa1a077b41a082f6975d5a3",
-            "f837e11415c133b2c4ea18034da4deb6f243a20b",
-            "52faeb34b4b414fcb63845e7d6650b3fec3d1c61",
-            "894a62cfc0e853e0e846c7649e62004831d9d93e",
-            "17307cd640b5e00feeff9f7430a448ef62e466e9",
-            "8f7480b770333f5c78205f7956b76b4f2506bc7e",
-            "89869b947fe0bab27fab886559ae705cf8d3483d",
-            "49c8494c920355ccc26ae3aee1dfb7c73daeb176"
-          ]
-        },
-        "authority": "current_task_custody_only",
-        "destination_base": "352d892958e1cdf692299927f7c2f3c0c36fc639",
-        "destination_change": "change_01M7Q44RVCTZPBYQ12A8MB3C5Y",
-        "exception_authorized": false,
-        "historical_proof": "not_proven",
-        "reason": "Exact native checkpoint-history inspection found d538 missing checkpoint: the asynchronous native append completed after the agent committed it. Prior event cannot be regenerated. Preserve original branch1788, source/failure evidence and all eight prior verified commits. This fresh governed task reauthors selected reviewed source with current checkpoints; this present-time recovery record imports no past authority, success, history waiver or proof.",
-        "recovery": "reauthor_and_obtain_fresh_proof",
-        "schema": "decapod.history-recovery.v1",
-        "source_commit": "d53835ad2ee573996edcc31ef1ce2ef577a9a7cc",
-        "source_governance_blob": "d0bb4848940332b519efc621bc2a881c13b3beb1",
-        "source_tree": "3feb1bd1e614f754a5e54e53309e95c36bff860d"
-      },
       "plan:3109ff52b1ce422e": "Determine the smallest existing-provider execution boundary that keeps candidate build/test code from modifying trusted measurement or final-verdict authority.",
       "plan:5dbe0918f5d72eb4": "Buildkite collection excluded by user; no full native publication receipt is claimed",
       "plan:7f9060fac006b60a": "An already shipped controller cannot retroactively implement this code; distinguish one-time controller rollout from future older-catalog compatibility proof.",
@@ -696,11 +579,27 @@
       "status": "open"
     }
   },
+  "resolutions": {
+    "history-recovery:d53835ad2ee573996edcc31ef1ce2ef577a9a7cc": {
+      "obligation_digest": "sha256:46d50bc226cf5c02f8cfcb3d95320c330751c606d4f830434c49b9a03525842c",
+      "resolution": "Original historical proof remains not_proven; no exception, prior event or native admission is created. Present-time archive de9c8b68bc05ca0893295b6b97b5ca52039234c9 commits the complete native source assessment and immutable d538 reference, reviewed selected source/tests/config and authored semantics in fresh task custody from accepted352. This resolves only the current recovery archive/reauthoring disposition. Current checkpoint history and independent full applicable source execution must still pass; old1788 remains blocked and preserved.",
+      "proof_refs": [
+        "/private/tmp/attack-gaps-1660-release11-checkpoint-inspection-exact.json",
+        "git:de9c8b68bc05ca0893295b6b97b5ca52039234c9:.decapod/governance.json",
+        "https://github.com/DecapodLabs/decapod/pull/1788"
+      ]
+    }
+  },
   "checkpoints": [
     {
       "id": "currentness-present-recovery-archive",
       "summary": "Fresh source reauthoring from accepted352 after immutable d538 gap. Preserve full native source history assessment and actual-binary counterexamples; current code/specs and all105 reviewed source inputs bound. This checkpoint completes before the archive commit; source execution remains pending.",
       "input_digest": "sha256:df5c1fad9925f4b78c07fa9f6b8121fabd16467cd826935f4483bb83d8b0d82c"
+    },
+    {
+      "id": "official11-present-recovery-disposition",
+      "summary": "Only after de9 archive, resolve current recovery disposition without blessing original history. Bind official11 release projections and actionable split-store refusal; preserve actual current11 counterexamples and every producer/currentness fence. Native checkpoint completes before commit.",
+      "input_digest": "sha256:4592c4eb84a2ddd9efb1bec7db42df8103cedc85e5941021fa17a78acb663fbc"
     }
   ],
   "intents": {
@@ -741,22 +640,22 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Reauthored existing canonical history/journal correction with atomic generation/custody withdrawal and exact-current-custody selection; preserve all producer/currentness checks. No old governance/proof imported.",
-          "reviewed_code_fingerprint": "6ba5edc87a1fbb3102291f95f24cdefb06d9d0a220a5cdd93b9dcad62c4061a5",
+          "reason": "Reviewed exact-current-custody selection, existing journal withdrawal and atomic generation/task fence; official11 projections and present recovery preserve historical provenance without old governance import.",
+          "reviewed_code_fingerprint": "2c65a95b548e7d6cb0bdbe3a329e5bb147cd5941234ba053cf5ae8e720e0b8b6",
           "spec_material_hash": "fc3e0ad37051b50ab9b60e66722518c47b241e10788e5c2aa11882bc2142cd4c"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Full not-ready current proof withdrawal is distinct from executed failure; fresh proof and renewed-custody recovery preserve general historical ambiguity and split-store refusal.",
-          "reviewed_code_fingerprint": "6ba5edc87a1fbb3102291f95f24cdefb06d9d0a220a5cdd93b9dcad62c4061a5",
-          "spec_material_hash": "550cba8760aa0f6b17de2eb060193d24740221cd7aaa98a07c83d118edb56f62"
+          "reason": "Reviewed real failure withdrawal, lawful fresh proof/lease recovery, unchanged generic ambiguity and actionable split-store refusal. Fresh workspace guidance is not migration or old-proof authentication.",
+          "reviewed_code_fingerprint": "2c65a95b548e7d6cb0bdbe3a329e5bb147cd5941234ba053cf5ae8e720e0b8b6",
+          "spec_material_hash": "937d43c761e5818e6f27aa227f93167b97b4ae1527a16cb4391206a3917c2878"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Current proof narrowing checks canonical task custody and journal generation in one transaction, preserves old observations and cannot bless cross-store or self-authored success.",
-          "reviewed_code_fingerprint": "6ba5edc87a1fbb3102291f95f24cdefb06d9d0a220a5cdd93b9dcad62c4061a5",
+          "reason": "No producer, source, epoch, input, custody, partial-scope or unsupported-domain fence weakened. Original d538 remains unproven; current recovery is independently checkpointed and still awaits executed source checks.",
+          "reviewed_code_fingerprint": "2c65a95b548e7d6cb0bdbe3a329e5bb147cd5941234ba053cf5ae8e720e0b8b6",
           "spec_material_hash": "01c40f1a3b54a8c42ac8c5de455ecacfcc3a5572861212f46f5055589eaffc87"
         }
       ],
@@ -768,16 +667,20 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1794998979Z"
+      "updated_at": "1795000125Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:9e8bf605880bed8b8eb4457454b410379595c989916bb60538413d7d044267e7",
+      "artifact_hash": "sha256:a1800e0195692f97b36c010bb01bda4eaee3dd9c448d85742f85f9ad91547b14",
       "checks": [
         {
           "name": "current-candidate-execution",
+          "status": "unavailable"
+        },
+        {
+          "name": "current-source-execution",
           "status": "unavailable"
         },
         {
@@ -799,6 +702,30 @@
         {
           "name": "official10-renewed-custody-recovery",
           "status": "failed"
+        },
+        {
+          "name": "official11-canonical-positive",
+          "status": "passed"
+        },
+        {
+          "name": "official11-current-lease-proof-recovery",
+          "status": "failed"
+        },
+        {
+          "name": "official11-host-project-prerequisites",
+          "status": "unavailable"
+        },
+        {
+          "name": "official11-latest-required-failure-currentness",
+          "status": "failed"
+        },
+        {
+          "name": "recovery-archive-disposition",
+          "status": "passed"
+        },
+        {
+          "name": "recovery-observation-archived",
+          "status": "passed"
         }
       ],
       "current_phase": "intent",
@@ -822,10 +749,24 @@
             "intent_id": "intent:change_01M7Q44RVCTZPBYQ12A8MB3C5Y",
             "kind": "trajectory_step_recorded",
             "sequence": 4
+          },
+          {
+            "detail": "trajectory:branch_01M7Q44RYMGVJGZ2JGB3YZ9VP7",
+            "event_id": "event:5",
+            "intent_id": "intent:change_01M7Q44RVCTZPBYQ12A8MB3C5Y",
+            "kind": "trajectory_step_recorded",
+            "sequence": 5
+          },
+          {
+            "detail": "trajectory:branch_01M7Q44RYMGVJGZ2JGB3YZ9VP7",
+            "event_id": "event:6",
+            "intent_id": "intent:change_01M7Q44RVCTZPBYQ12A8MB3C5Y",
+            "kind": "trajectory_step_recorded",
+            "sequence": 6
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 4,
+        "next_sequence": 6,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M7Q44RYMGVJGZ2JGB3YZ9VP7": {
@@ -864,19 +805,64 @@
                 ],
                 "sequence": 4,
                 "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "command": "Only after de9 archive committed, native resolver accepts current recovery disposition. Historical d538 remains not_proven, no exception authorized. Current runtime and metadata checks still pending; official session updater installing11 privately after actual Actions drift failure.",
+                "custody_event_id": "event:5",
+                "observations": [
+                  "git:de9c8b68bc05ca0893295b6b97b5ca52039234c9:.decapod/governance.json"
+                ],
+                "proof_refs": [
+                  "recovery-observation-archived",
+                  "current-source-execution"
+                ],
+                "scope": [
+                  "issue-1660"
+                ],
+                "sequence": 5,
+                "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "command": "Repeated actual current official11 controls: c339 candidate genuine full local proof mnOf3s, native VERIFIED; newer actual required failure EqRhuK leaves old VERIFIED/resumable and resume0. Fresh repair proof t39rpO succeeds; after lease renewal old resume denied, fresh full N3xuMN succeeds but promotion incorrectly refuses mixed-custody history. Bounded external flag remains outside captured source/tool bytes; no forge admission. Native split-store refusal now supplies fresh-task/canonical-workspace/new-proof recovery without claiming migration. Official11 projections refreshed; host project-check lock failure preserved, not a pass.",
+                "custody_event_id": "event:6",
+                "observations": [
+                  "/private/tmp/attack-gaps-1660-native11-falsifiers-summary.json",
+                  "/private/tmp/attack-gaps-1660-recovery-present-resolution.json",
+                  "/private/tmp/attack-gaps-controller11-install.json"
+                ],
+                "proof_refs": [
+                  "official11-canonical-positive",
+                  "official11-latest-required-failure-currentness",
+                  "official11-current-lease-proof-recovery",
+                  "recovery-archive-disposition",
+                  "official11-host-project-prerequisites"
+                ],
+                "scope": [
+                  "issue-1660"
+                ],
+                "sequence": 6,
+                "validation_findings": []
               }
             ]
           }
         }
       },
       "declared_commands": [
-        "Native-prescribed present-time recovery only: preserve blocked1788 and d538 immutable gap, reauthor reviewed code/tests/config and selected semantic prose from accepted352. Import no prior governance/custody/proof, retain complete native recovery assessment. Current validation withdrawal uses existing journal atomic custody/generation fence; exact-current-custody history selection retains all producer/input checks. Real CLI/unit source execution pending."
+        "Native-prescribed present-time recovery only: preserve blocked1788 and d538 immutable gap, reauthor reviewed code/tests/config and selected semantic prose from accepted352. Import no prior governance/custody/proof, retain complete native recovery assessment. Current validation withdrawal uses existing journal atomic custody/generation fence; exact-current-custody history selection retains all producer/input checks. Real CLI/unit source execution pending.",
+        "Only after de9 archive committed, native resolver accepts current recovery disposition. Historical d538 remains not_proven, no exception authorized. Current runtime and metadata checks still pending; official session updater installing11 privately after actual Actions drift failure.",
+        "Repeated actual current official11 controls: c339 candidate genuine full local proof mnOf3s, native VERIFIED; newer actual required failure EqRhuK leaves old VERIFIED/resumable and resume0. Fresh repair proof t39rpO succeeds; after lease renewal old resume denied, fresh full N3xuMN succeeds but promotion incorrectly refuses mixed-custody history. Bounded external flag remains outside captured source/tool bytes; no forge admission. Native split-store refusal now supplies fresh-task/canonical-workspace/new-proof recovery without claiming migration. Official11 projections refreshed; host project-check lock failure preserved, not a pass."
       ],
       "destination": "pull request",
       "evidence": [
         "/private/tmp/attack-gaps-1660-freshness-state.json",
+        "/private/tmp/attack-gaps-1660-native11-falsifiers-summary.json",
+        "/private/tmp/attack-gaps-1660-recovery-present-resolution.json",
         "/private/tmp/attack-gaps-1660-recovery-source-review.json",
-        "/private/tmp/attack-gaps-1660-release11-checkpoint-inspection-exact.json"
+        "/private/tmp/attack-gaps-1660-release11-checkpoint-inspection-exact.json",
+        "/private/tmp/attack-gaps-controller11-install.json",
+        "git:de9c8b68bc05ca0893295b6b97b5ca52039234c9:.decapod/governance.json"
       ],
       "inspected_files": [
         "src/decapod/core/validation_history.rs",
@@ -893,8 +879,10 @@
         "tests/unit/core/workunit_journal_tests.rs"
       ],
       "next_transitions": [
+        "Finish current semantic review and native checkpoint before second commit; require exact-head native history proof, push and publish recovery PR, run applicable Actions.",
         "Refine plan and declare falsifiable checks",
-        "Refresh/review semantic specs, archive present recovery with native checkpoint completed before commit, then resolve only current recovery disposition with archive proof; no historical waiver."
+        "Refresh/review semantic specs, archive present recovery with native checkpoint completed before commit, then resolve only current recovery disposition with archive proof; no historical waiver.",
+        "Use supported official11 projections, checkpoint this present resolution before committing, inspect every new commit natively, then publish recovery PR and run Actions."
       ],
       "repo_scope": [
         "issue-1660"
