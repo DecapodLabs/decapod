@@ -568,94 +568,76 @@
     }
   },
   "change": {
-    "id": "change_01M7Q44RVCTZPBYQ12A8MB3C5Y",
+    "id": "change_01M7QBP48AQ173W18SNDHSF9D8",
     "base_commit": "352d892958e1cdf692299927f7c2f3c0c36fc639",
     "target_base": "origin/master"
   },
   "claims": {
-    "current-validation-withdrawal": {
-      "statement": "A newer task-bound full not-ready judgment withdraws current workunit proof, preserves historical success, and fresh current-custody proof restores legitimate VERIFIED operation.",
-      "falsifier": "A newer observed required failure leaves old VERIFIED applicable, an old subject promotes after withdrawal, or fresh complete current-custody validation cannot recover after renewal.",
-      "status": "open"
-    }
-  },
-  "resolutions": {
-    "history-recovery:d53835ad2ee573996edcc31ef1ce2ef577a9a7cc": {
-      "obligation_digest": "sha256:46d50bc226cf5c02f8cfcb3d95320c330751c606d4f830434c49b9a03525842c",
-      "resolution": "Original historical proof remains not_proven; no exception, prior event or native admission is created. Present-time archive de9c8b68bc05ca0893295b6b97b5ca52039234c9 commits the complete native source assessment and immutable d538 reference, reviewed selected source/tests/config and authored semantics in fresh task custody from accepted352. This resolves only the current recovery archive/reauthoring disposition. Current checkpoint history and independent full applicable source execution must still pass; old1788 remains blocked and preserved.",
+    "claim:scoped-recovery-diagnostics": {
+      "statement": "Scoped qa verify recover and regen surface bounded allowlisted blocker labels and structured stage/scope diagnostics without bypassing PROOF_HOOK_FAILED or leaking untrusted child output",
+      "falsifier": "Any failing snapshot writes task_verification or mutates task state, any child text/URL/credential/note leaks into diagnostics or JSON, or token substring collision emits READINESS_BLOCKED from LAYA_READINESS_BLOCKED",
+      "status": "supported",
       "proof_refs": [
-        "/private/tmp/attack-gaps-1660-release11-checkpoint-inspection-exact.json",
-        "git:de9c8b68bc05ca0893295b6b97b5ca52039234c9:.decapod/governance.json",
-        "https://github.com/DecapodLabs/decapod/pull/1788"
+        "tests/unit/plugins/verify_tests.rs",
+        "tests/verify_deadlock_regression.rs"
       ]
     }
   },
   "checkpoints": [
     {
-      "id": "currentness-present-recovery-archive",
-      "summary": "Fresh source reauthoring from accepted352 after immutable d538 gap. Preserve full native source history assessment and actual-binary counterexamples; current code/specs and all105 reviewed source inputs bound. This checkpoint completes before the archive commit; source execution remains pending.",
-      "input_digest": "sha256:df5c1fad9925f4b78c07fa9f6b8121fabd16467cd826935f4483bb83d8b0d82c"
-    },
-    {
-      "id": "official11-present-recovery-disposition",
-      "summary": "Only after de9 archive, resolve current recovery disposition without blessing original history. Bind official11 release projections and actionable split-store refusal; preserve actual current11 counterexamples and every producer/currentness fence. Native checkpoint completes before commit.",
-      "input_digest": "sha256:4592c4eb84a2ddd9efb1bec7db42df8103cedc85e5941021fa17a78acb663fbc"
-    },
-    {
-      "id": "workunit-currentness-negative-event-readback-20261118",
-      "summary": "Recognize the native validation_not_ready journal snapshot after real Actions failure; retain all integrity and authority fences",
-      "input_digest": "sha256:4cfd74be7b05bf308b3a6120ab256ce3bfad52405478e69aa6f1bec197e87053",
+      "id": "cp-1781-1",
+      "summary": "Implement safe scoped validation blocker diagnostics and --json failure output in qa verify recover and regen",
+      "input_digest": "sha256:ebd0700469678de70eef31a60d5006f4ef7c3a5bbd1f8a319b67e5203273b747",
       "proof_refs": [
-        "https://github.com/DecapodLabs/decapod/actions/runs/44292400157/job/134761459192",
-        "sha256:5b4e36a94d5b09b8cc78c596293168ec4af32ba1ad9e1597d990737c06ad70cd"
+        "tests/unit/plugins/verify_tests.rs",
+        "tests/verify_deadlock_regression.rs"
       ]
     },
     {
-      "id": "workunit-currentness-failure-check-identity-20261118",
-      "summary": "Bind CLI negative execution to its actual required check rather than capture ordinal; retain strict rejection/recovery assertions",
-      "input_digest": "sha256:243754c2034df5093cd8d39e018f15b432dcd27f0b0f3954f0b4360779c136b3",
+      "id": "cp-1781-2",
+      "summary": "Merge origin/master caeeaba8 (PR #1792) and verify fmt, clippy, and verify tests",
+      "input_digest": "sha256:f4a9ef80ead389ac51811fca6cf64f8bf1f23818a7cb79c885ec55e27ace32b0",
       "proof_refs": [
-        "https://github.com/DecapodLabs/decapod/actions/runs/44296749390/job/134777427412",
-        "sha256:788c87fbbd46f81c47885388d6b575be2dbbca33348e837d37cb3009de20397a"
+        "tests/unit/plugins/verify_tests.rs",
+        "tests/verify_deadlock_regression.rs"
       ]
     },
     {
-      "id": "workunit-currentness-accepted9c-integration-20261118",
-      "summary": "Integrate accepted9c strict JSON source and contracts with current workunit proof correction; preserve both histories and require fresh combined proof",
-      "input_digest": "sha256:d82c06ad37c49bd59532ef80095ac2de0d26be5efbde938622e11507a9c81beb",
+      "id": "cp-1781-3",
+      "summary": "Merge origin/master c5bafce6 (v0.148.13) and reconcile proof source inventory",
+      "input_digest": "sha256:fd6f16d17721235851d370fbb7fc4e224c2307fdcc4826f93932722c3c7ddab8",
       "proof_refs": [
-        "/private/tmp/attack-gaps-1792-9c-inventory-review.json",
-        "git:9c7e6cff94908dbfe87f4e4c0dbb1f1e0f4b12d5",
-        "https://github.com/DecapodLabs/decapod/actions/runs/44305150424/job/134806810318"
+        "tests/unit/plugins/verify_tests.rs",
+        "tests/verify_deadlock_regression.rs"
       ]
     },
     {
-      "id": "workunit-currentness-accepted12-release-integration-20261118",
-      "summary": "Integrate accepted release12 metadata with current workunit and strict JSON source, regenerate via scoped official12 and require fresh proof",
-      "input_digest": "sha256:13b9263c64b1c3faf9191c927cc868cc7f8bd58003745890666cbbf8e47dc3d8",
+      "id": "cp-1781-4",
+      "summary": "Refresh v0.148.13 Dockerfile.decapod and specs manifest projections and re-verify spec reviews",
+      "input_digest": "sha256:df763eaf4d13b2e43d46caf5e0c98f8bbf66ce54ca1f63771457927c00137386",
       "proof_refs": [
-        "/private/tmp/attack-gaps-1792-release12-inventory-review.json",
-        "/private/tmp/attack-gaps-controller12-install.json",
-        "git:7bd0a915dc87b796fdffba1b8a2b613b5dff1a3a"
+        "v0.148.13-projections=passed"
       ]
     }
   ],
   "intents": {
-    "intent:change_01M7Q44RVCTZPBYQ12A8MB3C5Y": {
+    "intent:change_01M7QBP48AQ173W18SNDHSF9D8": {
       "acceptance_criteria": [],
       "assumptions": [],
       "boundaries": [
         "Current claimed task and isolated work branch"
       ],
       "constraints": [
-        "issue-1660"
+        "paths:[\"src/decapod\"",
+        "\"tests\"",
+        "\".decapod/managed/specs\"]"
       ],
       "created_sequence": 1,
-      "id": "intent:change_01M7Q44RVCTZPBYQ12A8MB3C5Y",
+      "id": "intent:change_01M7QBP48AQ173W18SNDHSF9D8",
       "out_of_scope": [],
       "proof_requirements": [],
-      "raw_intent": "test: recover workunit currentness correction with proven checkpoint history\n\nContinue #1660/#1070/#1735 after native exact-head checkpoint audit found one missing checkpoint on d53835ad due agent committing before asynchronous native checkpoint completed. Preserve blocked PR1788 and all original source/checkpoints/failures. Native report forbids retroactive repair and prescribes a fresh claimed worktree from accepted target, reviewed source reauthoring, current intent/spec/checkpoints and independent execution. Carry only actual workunit correction and meaningful tests/config/prose; no old governance/custody/proof import, force push, bypass or merge. User explicitly selects GitHub Actions and publication exception, ignoring Buildkite; all other authority/proof remains strict.",
-      "refined_intent": "test: recover workunit currentness correction with proven checkpoint history\n\nContinue #1660/#1070/#1735 after native exact-head checkpoint audit found one missing checkpoint on d53835ad due agent committing before asynchronous native checkpoint completed. Preserve blocked PR1788 and all original source/checkpoints/failures. Native report forbids retroactive repair and prescribes a fresh claimed worktree from accepted target, reviewed source reauthoring, current intent/spec/checkpoints and independent execution. Carry only actual workunit correction and meaningful tests/config/prose; no old governance/custody/proof import, force push, bypass or merge. User explicitly selects GitHub Actions and publication exception, ignoring Buildkite; all other authority/proof remains strict.",
+      "raw_intent": "Fix #1781: surface safe scoped validation blocker diagnostics in qa verify recover\n\nSurface bounded, non-leaking allowlisted blocker labels in qa verify recover/regen without bypassing verification safety per Alex's design",
+      "refined_intent": "Fix #1781: surface safe scoped validation blocker diagnostics in qa verify recover\n\nSurface bounded, non-leaking allowlisted blocker labels in qa verify recover/regen without bypassing verification safety per Alex's design",
       "status": "refined",
       "updated_sequence": 3
     }
@@ -668,7 +650,7 @@
       },
       "deferred_questions": [],
       "human_questions": [],
-      "intent": "test: recover workunit currentness correction with proven checkpoint history\n\nContinue #1660/#1070/#1735 after native exact-head checkpoint audit found one missing checkpoint on d53835ad due agent committing before asynchronous native checkpoint completed. Preserve blocked PR1788 and all original source/checkpoints/failures. Native report forbids retroactive repair and prescribes a fresh claimed worktree from accepted target, reviewed source reauthoring, current intent/spec/checkpoints and independent execution. Carry only actual workunit correction and meaningful tests/config/prose; no old governance/custody/proof import, force push, bypass or merge. User explicitly selects GitHub Actions and publication exception, ignoring Buildkite; all other authority/proof remains strict.",
+      "intent": "Fix #1781: surface safe scoped validation blocker diagnostics in qa verify recover\n\nSurface bounded, non-leaking allowlisted blocker labels in qa verify recover/regen without bypassing verification safety per Alex's design",
       "phases": [],
       "proof_hooks": [
         "decapod validate"
@@ -678,399 +660,248 @@
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Accepted12 changes only root package/changelog metadata after accepted9c; workunit currentness and strict JSON operative contracts are preserved. Official12 refreshes release-bound projections for combined source; no prior proof is transferred.",
-          "reviewed_code_fingerprint": "0ff17b4704e12feca628cd1d431b4a0f459c108afaf2223718b48870f9896a42",
+          "reason": "No architectural changes beyond scoped qa verify recover/regen diagnostic extraction in src/decapod/plugins/verify.rs",
+          "reviewed_code_fingerprint": "7e6122e7165b1cd3d1789eade7b28cd2734b1f2633d9df865448c87e71c846a8",
           "spec_material_hash": "080e1e015d867051ec4ecbb1f18aca92a2d62a05798377057e563aaa5a3764e0"
         },
         {
-          "disposition": "unchanged_with_reason",
+          "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "All workunit rejection/recovery/check-identity and accepted strict JSON contracts remain unchanged across release12; fresh combined source/base execution is required after actual target movement.",
-          "reviewed_code_fingerprint": "0ff17b4704e12feca628cd1d431b4a0f459c108afaf2223718b48870f9896a42",
-          "spec_material_hash": "ef090be85af851796f2ae92f9d6a6e992d59a452a8fff4918836cc689f020cdd"
+          "reason": "Verified INTERFACES.md scoped qa verify recover/regen diagnostic contract aligns with v0.148.13 refreshed projections",
+          "reviewed_code_fingerprint": "7e6122e7165b1cd3d1789eade7b28cd2734b1f2633d9df865448c87e71c846a8",
+          "spec_material_hash": "3baf7067b96d8fad41fcf9ff69aa2866b99b9bc631a1132df1daf96de9c82ab7"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "No permission, validation, timing or provider-policy change. Scoped official12 install preserved old/shared binaries, restored opt-in config and has measured binary hash; native proof admission remains unproven.",
-          "reviewed_code_fingerprint": "0ff17b4704e12feca628cd1d431b4a0f459c108afaf2223718b48870f9896a42",
+          "reason": "Fail-closed verification boundary and redaction invariants preserved without changes to SECURITY.md",
+          "reviewed_code_fingerprint": "7e6122e7165b1cd3d1789eade7b28cd2734b1f2633d9df865448c87e71c846a8",
           "spec_material_hash": "735ae6e95c6b18ff2ccc718fbadaa4d7ae483d632aee2fb071d4f9ae6daa23de"
         }
       ],
       "state": "APPROVED",
       "stop_conditions": [],
-      "title": "test: recover workunit currentness correction with proven checkpoint history",
+      "title": "Fix #1781: surface safe scoped validation blocker diagnostics in qa verify recover",
       "todo_ids": [
-        "bugs_01m7q41y4d66h98s"
+        "bugs_01m7qbjm2x2nsptt"
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795008929Z"
+      "updated_at": "1795013937Z"
     },
     "trajectory": {
       "active_boundaries": [
-        "Current claimed task and isolated work branch"
+        "Current claimed task and isolated work branch",
+        "Fail-closed verification: never bypass PROOF_HOOK_FAILED, admit failing snapshots, or leak untrusted child text/paths/URLs"
       ],
-      "artifact_hash": "sha256:c2ce633dec13e57e9d58dbe9fc98f412d40646bc2e9c938f302306400cb74919",
+      "artifact_hash": "sha256:665196d859295d189d7502d6518049e57639f52bdf8f25c36709f887ee7d52a1",
       "checks": [
         {
-          "name": "accepted-9c-source-inventory",
+          "name": "cargo_clippy",
           "status": "passed"
         },
         {
-          "name": "actions-cli-required-failure-capture",
-          "status": "failed"
-        },
-        {
-          "name": "actions-currentness-readback",
-          "status": "failed"
-        },
-        {
-          "name": "controller12-install",
+          "name": "cargo_fmt",
           "status": "passed"
         },
         {
-          "name": "current-candidate-execution",
-          "status": "unavailable"
-        },
-        {
-          "name": "current-source-execution",
-          "status": "unavailable"
-        },
-        {
-          "name": "diff-whitespace",
+          "name": "plugins_verify_tests",
           "status": "passed"
         },
         {
-          "name": "historical-d538-checkpoint",
-          "status": "failed"
-        },
-        {
-          "name": "independently-reviewed-source-inputs",
+          "name": "v0.148.13-projections",
           "status": "passed"
         },
         {
-          "name": "native-project-preparation",
-          "status": "failed"
-        },
-        {
-          "name": "official10-canonical-positive",
+          "name": "verify_deadlock_cli_regression",
           "status": "passed"
-        },
-        {
-          "name": "official10-newer-failure-currentness",
-          "status": "failed"
-        },
-        {
-          "name": "official10-renewed-custody-recovery",
-          "status": "failed"
-        },
-        {
-          "name": "official11-canonical-positive",
-          "status": "passed"
-        },
-        {
-          "name": "official11-current-lease-proof-recovery",
-          "status": "failed"
-        },
-        {
-          "name": "official11-host-project-prerequisites",
-          "status": "unavailable"
-        },
-        {
-          "name": "official11-latest-required-failure-currentness",
-          "status": "failed"
-        },
-        {
-          "name": "recovery-archive-disposition",
-          "status": "passed"
-        },
-        {
-          "name": "recovery-observation-archived",
-          "status": "passed"
-        },
-        {
-          "name": "rustfmt",
-          "status": "passed"
-        },
-        {
-          "name": "source12-inventory",
-          "status": "passed"
-        },
-        {
-          "name": "stale-accepted-target-ci-context",
-          "status": "failed"
         }
       ],
-      "current_phase": "intent",
+      "current_phase": "verify",
       "custody": {
         "events": [
           {
             "event_id": "event:2",
-            "intent_id": "intent:change_01M7Q44RVCTZPBYQ12A8MB3C5Y",
+            "intent_id": "intent:change_01M7QBP48AQ173W18SNDHSF9D8",
             "kind": "created",
             "sequence": 2
           },
           {
             "event_id": "event:3",
-            "intent_id": "intent:change_01M7Q44RVCTZPBYQ12A8MB3C5Y",
+            "intent_id": "intent:change_01M7QBP48AQ173W18SNDHSF9D8",
             "kind": "refined",
             "sequence": 3
           },
           {
-            "detail": "trajectory:branch_01M7Q44RYMGVJGZ2JGB3YZ9VP7",
+            "detail": "trajectory:branch_01M7QBP4CC8XKHSQ4J53W8A0K5",
             "event_id": "event:4",
-            "intent_id": "intent:change_01M7Q44RVCTZPBYQ12A8MB3C5Y",
+            "intent_id": "intent:change_01M7QBP48AQ173W18SNDHSF9D8",
             "kind": "trajectory_step_recorded",
             "sequence": 4
           },
           {
-            "detail": "trajectory:branch_01M7Q44RYMGVJGZ2JGB3YZ9VP7",
+            "detail": "trajectory:branch_01M7QBP4CC8XKHSQ4J53W8A0K5",
             "event_id": "event:5",
-            "intent_id": "intent:change_01M7Q44RVCTZPBYQ12A8MB3C5Y",
+            "intent_id": "intent:change_01M7QBP48AQ173W18SNDHSF9D8",
             "kind": "trajectory_step_recorded",
             "sequence": 5
           },
           {
-            "detail": "trajectory:branch_01M7Q44RYMGVJGZ2JGB3YZ9VP7",
+            "detail": "trajectory:branch_01M7QBP4CC8XKHSQ4J53W8A0K5",
             "event_id": "event:6",
-            "intent_id": "intent:change_01M7Q44RVCTZPBYQ12A8MB3C5Y",
+            "intent_id": "intent:change_01M7QBP48AQ173W18SNDHSF9D8",
             "kind": "trajectory_step_recorded",
             "sequence": 6
           },
           {
-            "detail": "trajectory:branch_01M7Q44RYMGVJGZ2JGB3YZ9VP7",
+            "detail": "trajectory:branch_01M7QBP4CC8XKHSQ4J53W8A0K5",
             "event_id": "event:7",
-            "intent_id": "intent:change_01M7Q44RVCTZPBYQ12A8MB3C5Y",
+            "intent_id": "intent:change_01M7QBP48AQ173W18SNDHSF9D8",
             "kind": "trajectory_step_recorded",
             "sequence": 7
           },
           {
-            "detail": "trajectory:branch_01M7Q44RYMGVJGZ2JGB3YZ9VP7",
+            "detail": "trajectory:branch_01M7QBP4CC8XKHSQ4J53W8A0K5",
             "event_id": "event:8",
-            "intent_id": "intent:change_01M7Q44RVCTZPBYQ12A8MB3C5Y",
+            "intent_id": "intent:change_01M7QBP48AQ173W18SNDHSF9D8",
             "kind": "trajectory_step_recorded",
             "sequence": 8
-          },
-          {
-            "detail": "trajectory:branch_01M7Q44RYMGVJGZ2JGB3YZ9VP7",
-            "event_id": "event:9",
-            "intent_id": "intent:change_01M7Q44RVCTZPBYQ12A8MB3C5Y",
-            "kind": "trajectory_step_recorded",
-            "sequence": 9
-          },
-          {
-            "detail": "trajectory:branch_01M7Q44RYMGVJGZ2JGB3YZ9VP7",
-            "event_id": "event:10",
-            "intent_id": "intent:change_01M7Q44RVCTZPBYQ12A8MB3C5Y",
-            "kind": "trajectory_step_recorded",
-            "sequence": 10
-          },
-          {
-            "detail": "trajectory:branch_01M7Q44RYMGVJGZ2JGB3YZ9VP7",
-            "event_id": "event:11",
-            "intent_id": "intent:change_01M7Q44RVCTZPBYQ12A8MB3C5Y",
-            "kind": "trajectory_step_recorded",
-            "sequence": 11
-          },
-          {
-            "detail": "trajectory:branch_01M7Q44RYMGVJGZ2JGB3YZ9VP7",
-            "event_id": "event:12",
-            "intent_id": "intent:change_01M7Q44RVCTZPBYQ12A8MB3C5Y",
-            "kind": "trajectory_step_recorded",
-            "sequence": 12
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 12,
+        "next_sequence": 8,
         "schema_version": "1.0.0",
         "trajectories": {
-          "branch_01M7Q44RYMGVJGZ2JGB3YZ9VP7": {
+          "branch_01M7QBP4CC8XKHSQ4J53W8A0K5": {
             "evidence_only": true,
-            "id": "branch_01M7Q44RYMGVJGZ2JGB3YZ9VP7",
-            "intent_id": "intent:change_01M7Q44RVCTZPBYQ12A8MB3C5Y",
+            "id": "branch_01M7QBP4CC8XKHSQ4J53W8A0K5",
+            "intent_id": "intent:change_01M7QBP48AQ173W18SNDHSF9D8",
             "steps": [
               {
-                "action": "trajectory.record",
-                "command": "Native-prescribed present-time recovery only: preserve blocked1788 and d538 immutable gap, reauthor reviewed code/tests/config and selected semantic prose from accepted352. Import no prior governance/custody/proof, retain complete native recovery assessment. Current validation withdrawal uses existing journal atomic custody/generation fence; exact-current-custody history selection retains all producer/input checks. Real CLI/unit source execution pending.",
+                "action": "plan",
+                "command": "decapod govern plan approve",
                 "custody_event_id": "event:4",
                 "observations": [
-                  "src/decapod/core/validation_history.rs",
-                  "src/decapod/core/workunit.rs",
-                  "src/decapod/core/validation_history.rs",
-                  "src/decapod/core/workunit.rs",
-                  "tests/consumer_readiness.rs",
-                  "tests/entrypoint_correctness.rs",
-                  "tests/support/fresh_docs_readiness.rs",
-                  "tests/unit/core/validation_history_workunit_tests.rs",
-                  "tests/unit/core/workunit_journal_tests.rs",
-                  "/private/tmp/attack-gaps-1660-release11-checkpoint-inspection-exact.json",
-                  "/private/tmp/attack-gaps-1660-recovery-source-review.json",
-                  "/private/tmp/attack-gaps-1660-freshness-state.json"
+                  "src/decapod/plugins/verify.rs",
+                  "tests/unit/plugins/verify_tests.rs",
+                  "tests/verify_deadlock_regression.rs",
+                  "src/decapod/lib.rs",
+                  "src/decapod/core/readiness_profile.rs",
+                  "src/decapod/core/repository_profile.rs",
+                  "src/decapod/core/validation_runtime.rs",
+                  "src/decapod/core/workspace_publication.rs",
+                  "src/decapod/core/workspace.rs",
+                  ".decapod/managed/specs/INTERFACES.md"
                 ],
-                "proof_refs": [
-                  "historical-d538-checkpoint",
-                  "official10-canonical-positive",
-                  "official10-newer-failure-currentness",
-                  "official10-renewed-custody-recovery",
-                  "independently-reviewed-source-inputs",
-                  "current-candidate-execution"
-                ],
+                "proof_refs": [],
                 "scope": [
-                  "issue-1660"
+                  "\".decapod/managed/specs\"]",
+                  "\"tests\"",
+                  "paths:[\"src/decapod\""
                 ],
                 "sequence": 4,
                 "validation_findings": []
               },
               {
-                "action": "trajectory.record",
-                "command": "Only after de9 archive committed, native resolver accepts current recovery disposition. Historical d538 remains not_proven, no exception authorized. Current runtime and metadata checks still pending; official session updater installing11 privately after actual Actions drift failure.",
+                "action": "verify",
                 "custody_event_id": "event:5",
                 "observations": [
-                  "git:de9c8b68bc05ca0893295b6b97b5ca52039234c9:.decapod/governance.json"
+                  "src/decapod/plugins/verify.rs",
+                  "tests/unit/plugins/verify_tests.rs",
+                  "tests/verify_deadlock_regression.rs",
+                  ".decapod/managed/specs/INTERFACES.md",
+                  "cargo test --lib plugins::verify::tests: 11 passed; 0 failed",
+                  "cargo test --test verify_deadlock_regression test_verify_recover_and_regen_json_surface_scoped_blockers_without_leaking: ok",
+                  "CLIPPY_CONF_DIR=.config cargo clippy --all-targets --all-features -- -D warnings: ok (0 warnings)"
                 ],
                 "proof_refs": [
-                  "recovery-observation-archived",
-                  "current-source-execution"
+                  "cargo_fmt",
+                  "cargo_clippy",
+                  "plugins_verify_tests",
+                  "verify_deadlock_cli_regression"
                 ],
                 "scope": [
-                  "issue-1660"
+                  "\".decapod/managed/specs\"]",
+                  "\"tests\"",
+                  ".decapod/managed/specs/INTERFACES.md",
+                  "paths:[\"src/decapod\"",
+                  "src/decapod/plugins/verify.rs",
+                  "tests/unit/plugins/verify_tests.rs",
+                  "tests/verify_deadlock_regression.rs"
                 ],
                 "sequence": 5,
                 "validation_findings": []
               },
               {
-                "action": "trajectory.record",
-                "command": "Repeated actual current official11 controls: c339 candidate genuine full local proof mnOf3s, native VERIFIED; newer actual required failure EqRhuK leaves old VERIFIED/resumable and resume0. Fresh repair proof t39rpO succeeds; after lease renewal old resume denied, fresh full N3xuMN succeeds but promotion incorrectly refuses mixed-custody history. Bounded external flag remains outside captured source/tool bytes; no forge admission. Native split-store refusal now supplies fresh-task/canonical-workspace/new-proof recovery without claiming migration. Official11 projections refreshed; host project-check lock failure preserved, not a pass.",
+                "action": "verify",
                 "custody_event_id": "event:6",
                 "observations": [
-                  "/private/tmp/attack-gaps-1660-native11-falsifiers-summary.json",
-                  "/private/tmp/attack-gaps-1660-recovery-present-resolution.json",
-                  "/private/tmp/attack-gaps-controller11-install.json"
+                  "Post-merge caeeaba8: cargo fmt --check ok; clippy --all-targets --all-features -- -D warnings ok; plugins::verify::tests 11/11 passed; test_verify_recover_and_regen_json_surface_scoped_blockers_without_leaking ok"
                 ],
                 "proof_refs": [
-                  "official11-canonical-positive",
-                  "official11-latest-required-failure-currentness",
-                  "official11-current-lease-proof-recovery",
-                  "recovery-archive-disposition",
-                  "official11-host-project-prerequisites"
+                  "cargo_fmt",
+                  "cargo_clippy",
+                  "plugins_verify_tests",
+                  "verify_deadlock_cli_regression"
                 ],
                 "scope": [
-                  "issue-1660"
+                  "\".decapod/managed/specs\"]",
+                  "\"tests\"",
+                  ".decapod/managed/specs/INTERFACES.md",
+                  "paths:[\"src/decapod\"",
+                  "src/decapod/plugins/verify.rs",
+                  "tests/unit/plugins/verify_tests.rs",
+                  "tests/verify_deadlock_regression.rs"
                 ],
                 "sequence": 6,
                 "validation_findings": []
               },
               {
-                "action": "trajectory.record",
+                "action": "verify",
                 "custody_event_id": "event:7",
                 "observations": [
-                  "src/decapod/core/workunit.rs",
-                  "tests/unit/core/validation_history_workunit_tests.rs"
+                  ".decapod/config.toml",
+                  "Merged origin/master c5bafce6 (v0.148.13 Cargo/CHANGELOG-only bump) and reconciled reviewed_sources_digest to sha256:f2c1d189ee0c96f6afb66185229233bd0436015d0ddd21dc56deb4f58709b2b2"
                 ],
                 "proof_refs": [
-                  "actions-currentness-readback"
+                  "cargo_fmt",
+                  "cargo_clippy",
+                  "plugins_verify_tests",
+                  "verify_deadlock_cli_regression"
                 ],
                 "scope": [
-                  "issue-1660"
+                  "\".decapod/managed/specs\"]",
+                  "\"tests\"",
+                  ".decapod/managed/specs/INTERFACES.md",
+                  "paths:[\"src/decapod\"",
+                  "src/decapod/plugins/verify.rs",
+                  "tests/unit/plugins/verify_tests.rs",
+                  "tests/verify_deadlock_regression.rs"
                 ],
                 "sequence": 7,
-                "tool": "GitHub Actions Supabase job 134761459192: 1803 library tests passed, 1 failed, 8 ignored. Withdrawal regression rejected its own validation_not_ready journal kind. Raw log SHA256 5b4e36a94d5b09b8cc78c596293168ec4af32ba1ad9e1597d990737c06ad70cd. Correct existing reader inventory only; preserve hashes and CAS/custody fences.",
                 "validation_findings": []
               },
               {
                 "action": "trajectory.record",
+                "command": "decapod govern project-check --refresh-specs (v0.148.13)",
                 "custody_event_id": "event:8",
                 "observations": [
-                  "src/decapod/core/workunit.rs",
-                  ".decapod/managed/specs/INTERFACES.md"
+                  ".decapod/managed/Dockerfile.decapod",
+                  ".decapod/managed/specs/.manifest.json"
                 ],
                 "proof_refs": [
-                  "rustfmt",
-                  "diff-whitespace"
+                  "v0.148.13-projections"
                 ],
                 "scope": [
-                  "issue-1660"
+                  "\".decapod/managed/specs\"]",
+                  "\"tests\"",
+                  ".decapod/managed/specs/INTERFACES.md",
+                  "paths:[\"src/decapod\"",
+                  "src/decapod/plugins/verify.rs",
+                  "tests/unit/plugins/verify_tests.rs",
+                  "tests/verify_deadlock_regression.rs"
                 ],
                 "sequence": 8,
-                "tool": "Added only validation_not_ready to the existing recognized journal kinds. No source tests executed manually; unchanged actual negative/full-proof readback regression will run on required GitHub Actions.",
-                "validation_findings": []
-              },
-              {
-                "action": "trajectory.record",
-                "custody_event_id": "event:9",
-                "observations": [
-                  "tests/support/fresh_docs_readiness.rs",
-                  "tests/common/consumer_readiness_fixture.rs",
-                  "src/decapod/core/validation_runtime.rs"
-                ],
-                "proof_refs": [
-                  "actions-cli-required-failure-capture"
-                ],
-                "scope": [
-                  "issue-1660"
-                ],
-                "sequence": 9,
-                "tool": "Exact82a1c098 PR CLI job134777427412 executed41 entrypoint cases passed,1 failed,5 ignored. Initial real full proof and VERIFIED succeeded and newer full validation returned not-ready. Test then wrongly read native-0 exit0, but fixture canonically sorts inspect-second before inspect-source. Existing native-N.diagnostic.json binds each capture to CheckKey; select exact inspect-source identity, still require actual step exit1 and stderr observed required failure. Raw log SHA256788c87fbbd46f81c47885388d6b575be2dbbca33348e837d37cb3009de20397a. Product proof contracts, source check, required graph and timing limits unchanged.",
-                "validation_findings": []
-              },
-              {
-                "action": "trajectory.record",
-                "custody_event_id": "event:10",
-                "observations": [
-                  "tests/support/fresh_docs_readiness.rs",
-                  ".decapod/managed/specs/INTERFACES.md"
-                ],
-                "proof_refs": [
-                  "rustfmt",
-                  "diff-whitespace"
-                ],
-                "scope": [
-                  "issue-1660"
-                ],
-                "sequence": 10,
-                "tool": "Selected the negative capture by schema and all CheckKey fields from existing native diagnostic metadata; retained exit1 and expected stderr, additionally require Exited and no per-step execution error. Preserve current canonical ordering and every later withdrawal/old-proof refusal/recovery/lease assertion. No runtime or source-CI graph changes. Prior82 PR broker timing failure remains failed; fresh exact-source Actions will exercise unchanged strict probe.",
-                "validation_findings": []
-              },
-              {
-                "action": "trajectory.record",
-                "custody_event_id": "event:11",
-                "observations": [
-                  ".config/build/decapod.BUILD.bzl",
-                  ".decapod/managed/specs/INTENT.md",
-                  ".decapod/managed/specs/ARCHITECTURE.md",
-                  ".decapod/managed/specs/INTERFACES.md",
-                  ".decapod/managed/specs/SECURITY.md"
-                ],
-                "proof_refs": [
-                  "stale-accepted-target-ci-context",
-                  "accepted-9c-source-inventory"
-                ],
-                "scope": [
-                  "issue-1660"
-                ],
-                "sequence": 11,
-                "tool": "External merge1791 advanced live master9c7e6cff at12:56:40UTC; this agent did not merge or assert admission. Old2f push jobs134806810318/134806810211 correctly refused Git merge-base context before tests; raw hashes54bab00c5c0479e878b62a0c27c9dc1a1e2ac2fba9042c1e426096153664b309 and82880faeb9a7241d21123440fc5b09576efc6b2ceefaaef44202837e050c806b. Preserve native active governance/manifest via Git ours, accepted config via Git theirs after backup, all authored operative paragraphs from both parents. Rehash all105 merged source-CI inputs to acceptedac2. Native refresh owns projections; no source test manually run and no old success transferred.",
-                "validation_findings": []
-              },
-              {
-                "action": "trajectory.record",
-                "custody_event_id": "event:12",
-                "observations": [
-                  ".decapod/managed/specs/INTENT.md"
-                ],
-                "proof_refs": [
-                  "rustfmt",
-                  "diff-whitespace",
-                  "source12-inventory",
-                  "controller12-install",
-                  "native-project-preparation"
-                ],
-                "scope": [
-                  "issue-1660"
-                ],
-                "sequence": 12,
-                "tool": "Accepted master advanced7bd0a915 via external release1794 at13:10:39UTC; only package/changelog changed. Current workbranch merge parent7bd pinned. All105 source-CI inputs independently rehashed tobd7eec7e7edaa9a427dea5c3d6b4de42e885b23d2b1911f3602527686e366c4e; only2 Cargo version bytes changed,103 unchanged. Official11 session acquire opt-in installed scoped12 binary SHA1fb9e592076c937f0be049f2329b287e22f2e6a346b8f351ec863bfc92a6d7d3; original config and old/shared binaries preserved. Native prep attempt1 unavailable storage contention; supported retry209passed4failed: host container proof, unrelated done task proof, pending merge ancestry and not-yet-committed Docker12. No passing admission claimed; commit addresses the two pending-material conditions, source Actions must re-execute.",
                 "validation_findings": []
               }
             ]
@@ -1078,64 +909,56 @@
         }
       },
       "declared_commands": [
-        "Native-prescribed present-time recovery only: preserve blocked1788 and d538 immutable gap, reauthor reviewed code/tests/config and selected semantic prose from accepted352. Import no prior governance/custody/proof, retain complete native recovery assessment. Current validation withdrawal uses existing journal atomic custody/generation fence; exact-current-custody history selection retains all producer/input checks. Real CLI/unit source execution pending.",
-        "Only after de9 archive committed, native resolver accepts current recovery disposition. Historical d538 remains not_proven, no exception authorized. Current runtime and metadata checks still pending; official session updater installing11 privately after actual Actions drift failure.",
-        "Repeated actual current official11 controls: c339 candidate genuine full local proof mnOf3s, native VERIFIED; newer actual required failure EqRhuK leaves old VERIFIED/resumable and resume0. Fresh repair proof t39rpO succeeds; after lease renewal old resume denied, fresh full N3xuMN succeeds but promotion incorrectly refuses mixed-custody history. Bounded external flag remains outside captured source/tool bytes; no forge admission. Native split-store refusal now supplies fresh-task/canonical-workspace/new-proof recovery without claiming migration. Official11 projections refreshed; host project-check lock failure preserved, not a pass."
+        "decapod govern plan approve",
+        "decapod govern project-check --refresh-specs (v0.148.13)"
       ],
       "destination": "pull request",
       "evidence": [
-        "/private/tmp/attack-gaps-1660-freshness-state.json",
-        "/private/tmp/attack-gaps-1660-native11-falsifiers-summary.json",
-        "/private/tmp/attack-gaps-1660-recovery-present-resolution.json",
-        "/private/tmp/attack-gaps-1660-recovery-source-review.json",
-        "/private/tmp/attack-gaps-1660-release11-checkpoint-inspection-exact.json",
-        "/private/tmp/attack-gaps-controller11-install.json",
-        "git:de9c8b68bc05ca0893295b6b97b5ca52039234c9:.decapod/governance.json"
+        "CLIPPY_CONF_DIR=.config cargo clippy --all-targets --all-features -- -D warnings: ok (0 warnings)",
+        "Merged origin/master c5bafce6 (v0.148.13 Cargo/CHANGELOG-only bump) and reconciled reviewed_sources_digest to sha256:f2c1d189ee0c96f6afb66185229233bd0436015d0ddd21dc56deb4f58709b2b2",
+        "Post-merge caeeaba8: cargo fmt --check ok; clippy --all-targets --all-features -- -D warnings ok; plugins::verify::tests 11/11 passed; test_verify_recover_and_regen_json_surface_scoped_blockers_without_leaking ok",
+        "cargo test --lib plugins::verify::tests: 11 passed; 0 failed",
+        "cargo test --test verify_deadlock_regression test_verify_recover_and_regen_json_surface_scoped_blockers_without_leaking: ok"
       ],
       "inspected_files": [
-        ".config/build/decapod.BUILD.bzl",
-        "src/decapod/core/validation_history.rs",
-        "src/decapod/core/validation_runtime.rs",
-        "src/decapod/core/workunit.rs",
-        "tests/common/consumer_readiness_fixture.rs",
-        "tests/support/fresh_docs_readiness.rs",
-        "tests/unit/core/validation_history_workunit_tests.rs"
-      ],
-      "intent_id": "intent:change_01M7Q44RVCTZPBYQ12A8MB3C5Y",
-      "modified_files": [
-        ".decapod/managed/specs/ARCHITECTURE.md",
-        ".decapod/managed/specs/INTENT.md",
         ".decapod/managed/specs/INTERFACES.md",
-        ".decapod/managed/specs/SECURITY.md",
-        "src/decapod/core/validation_history.rs",
-        "src/decapod/core/workunit.rs",
-        "tests/consumer_readiness.rs",
-        "tests/entrypoint_correctness.rs",
-        "tests/support/fresh_docs_readiness.rs",
-        "tests/unit/core/validation_history_workunit_tests.rs",
-        "tests/unit/core/workunit_journal_tests.rs"
+        "src/decapod/core/readiness_profile.rs",
+        "src/decapod/core/repository_profile.rs",
+        "src/decapod/core/validation_runtime.rs",
+        "src/decapod/core/workspace.rs",
+        "src/decapod/core/workspace_publication.rs",
+        "src/decapod/lib.rs",
+        "src/decapod/plugins/verify.rs",
+        "tests/unit/plugins/verify_tests.rs",
+        "tests/verify_deadlock_regression.rs"
+      ],
+      "intent_id": "intent:change_01M7QBP48AQ173W18SNDHSF9D8",
+      "modified_files": [
+        ".decapod/config.toml",
+        ".decapod/managed/Dockerfile.decapod",
+        ".decapod/managed/specs/.manifest.json",
+        ".decapod/managed/specs/INTERFACES.md",
+        "src/decapod/plugins/verify.rs",
+        "tests/unit/plugins/verify_tests.rs",
+        "tests/verify_deadlock_regression.rs"
       ],
       "next_transitions": [
-        "Finish current semantic review and native checkpoint before second commit; require exact-head native history proof, push and publish recovery PR, run applicable Actions.",
-        "Refine plan and declare falsifiable checks",
-        "Refresh/review semantic specs, archive present recovery with native checkpoint completed before commit, then resolve only current recovery disposition with archive proof; no historical waiver.",
-        "Use supported official11 projections, checkpoint this present resolution before committing, inspect every new commit natively, then publish recovery PR and run Actions."
+        "Refine plan and declare falsifiable checks"
       ],
       "repo_scope": [
-        "issue-1660"
+        "\".decapod/managed/specs\"]",
+        "\"tests\"",
+        ".decapod/managed/specs/INTERFACES.md",
+        "paths:[\"src/decapod\"",
+        "src/decapod/plugins/verify.rs",
+        "tests/unit/plugins/verify_tests.rs",
+        "tests/verify_deadlock_regression.rs"
       ],
-      "run_id": "branch_01M7Q44RYMGVJGZ2JGB3YZ9VP7",
+      "run_id": "branch_01M7QBP4CC8XKHSQ4J53W8A0K5",
       "schema_version": "1.1.0",
       "shortcut_risk_signals": [],
-      "task_id": "bugs_01m7q41y4d66h98s",
-      "tool_calls": [
-        "Accepted master advanced7bd0a915 via external release1794 at13:10:39UTC; only package/changelog changed. Current workbranch merge parent7bd pinned. All105 source-CI inputs independently rehashed tobd7eec7e7edaa9a427dea5c3d6b4de42e885b23d2b1911f3602527686e366c4e; only2 Cargo version bytes changed,103 unchanged. Official11 session acquire opt-in installed scoped12 binary SHA1fb9e592076c937f0be049f2329b287e22f2e6a346b8f351ec863bfc92a6d7d3; original config and old/shared binaries preserved. Native prep attempt1 unavailable storage contention; supported retry209passed4failed: host container proof, unrelated done task proof, pending merge ancestry and not-yet-committed Docker12. No passing admission claimed; commit addresses the two pending-material conditions, source Actions must re-execute.",
-        "Added only validation_not_ready to the existing recognized journal kinds. No source tests executed manually; unchanged actual negative/full-proof readback regression will run on required GitHub Actions.",
-        "Exact82a1c098 PR CLI job134777427412 executed41 entrypoint cases passed,1 failed,5 ignored. Initial real full proof and VERIFIED succeeded and newer full validation returned not-ready. Test then wrongly read native-0 exit0, but fixture canonically sorts inspect-second before inspect-source. Existing native-N.diagnostic.json binds each capture to CheckKey; select exact inspect-source identity, still require actual step exit1 and stderr observed required failure. Raw log SHA256788c87fbbd46f81c47885388d6b575be2dbbca33348e837d37cb3009de20397a. Product proof contracts, source check, required graph and timing limits unchanged.",
-        "External merge1791 advanced live master9c7e6cff at12:56:40UTC; this agent did not merge or assert admission. Old2f push jobs134806810318/134806810211 correctly refused Git merge-base context before tests; raw hashes54bab00c5c0479e878b62a0c27c9dc1a1e2ac2fba9042c1e426096153664b309 and82880faeb9a7241d21123440fc5b09576efc6b2ceefaaef44202837e050c806b. Preserve native active governance/manifest via Git ours, accepted config via Git theirs after backup, all authored operative paragraphs from both parents. Rehash all105 merged source-CI inputs to acceptedac2. Native refresh owns projections; no source test manually run and no old success transferred.",
-        "GitHub Actions Supabase job 134761459192: 1803 library tests passed, 1 failed, 8 ignored. Withdrawal regression rejected its own validation_not_ready journal kind. Raw log SHA256 5b4e36a94d5b09b8cc78c596293168ec4af32ba1ad9e1597d990737c06ad70cd. Correct existing reader inventory only; preserve hashes and CAS/custody fences.",
-        "Selected the negative capture by schema and all CheckKey fields from existing native diagnostic metadata; retained exit1 and expected stderr, additionally require Exited and no per-step execution error. Preserve current canonical ordering and every later withdrawal/old-proof refusal/recovery/lease assertion. No runtime or source-CI graph changes. Prior82 PR broker timing failure remains failed; fresh exact-source Actions will exercise unchanged strict probe."
-      ],
+      "task_id": "bugs_01m7qbjm2x2nsptt",
+      "tool_calls": [],
       "unresolved_assumptions": []
     }
   },
