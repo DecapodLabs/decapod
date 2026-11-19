@@ -585,6 +585,14 @@
       "proof_refs": [
         "tests/shared_state_semantics_1247.rs"
       ]
+    },
+    {
+      "id": "cp-1247-2",
+      "summary": "chore(concurrency): integrate accepted master cfe2565da (#1247)",
+      "input_digest": "sha256:aa6d64aa88cfe9fe0d38835c71581270e66de02683f9954e2215db53e9f12d39",
+      "proof_refs": [
+        "tests/shared_state_semantics_1247.rs"
+      ]
     }
   ],
   "intents": {
@@ -631,23 +639,23 @@
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Reviewed against #1247; shared-state architecture boundaries unchanged while transition invariants are recorded in SEMANTICS.md.",
-          "reviewed_code_fingerprint": "f598bff928c15cf8991c4d27b7933adaa3fff80e85e2d5f6e30ea84c65f2d812",
+          "reason": "Re-reviewed after integrating accepted origin/master cfe2565da (PR #1816 / #1776); #1247 shared-state architecture boundaries unchanged while transition invariants remain in SEMANTICS.md.",
+          "reviewed_code_fingerprint": "897a92878c2750c578c7613e1a7746689faaf5988960db0baf763af3807edb01",
           "spec_material_hash": "080e1e015d867051ec4ecbb1f18aca92a2d62a05798377057e563aaa5a3764e0"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Reviewed against #1247; no CLI or RPC wire contract changed, only internal Dactyl/todo atomicity and attribution hardening.",
-          "reviewed_code_fingerprint": "f598bff928c15cf8991c4d27b7933adaa3fff80e85e2d5f6e30ea84c65f2d812",
+          "reason": "Re-reviewed after integrating accepted origin/master cfe2565da (PR #1816 / #1776); no #1247 CLI or RPC wire contract changed.",
+          "reviewed_code_fingerprint": "897a92878c2750c578c7613e1a7746689faaf5988960db0baf763af3807edb01",
           "spec_material_hash": "1445e13fa7ccfa6c4a68850bd794b6b1ba7379c0148b570c3a7605b6a26beb25"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Reviewed against #1247; fail-closed session, approval, and cloud denial semantics are proven in tests/shared_state_semantics_1247.rs without relaxing any security gate.",
-          "reviewed_code_fingerprint": "f598bff928c15cf8991c4d27b7933adaa3fff80e85e2d5f6e30ea84c65f2d812",
-          "spec_material_hash": "735ae6e95c6b18ff2ccc718fbadaa4d7ae483d632aee2fb071d4f9ae6daa23de"
+          "reason": "Re-reviewed after integrating accepted origin/master cfe2565da (PR #1816 / #1776); #1776 SECURITY.md updates preserved verbatim while #1247 fail-closed session/approval/cloud tests pass.",
+          "reviewed_code_fingerprint": "897a92878c2750c578c7613e1a7746689faaf5988960db0baf763af3807edb01",
+          "spec_material_hash": "49c7d1428d860804f8fc7f436c5da22483d385c9ce4be90f7db52f1cf4b362ee"
         }
       ],
       "state": "DRAFT",
@@ -658,13 +666,13 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795050793Z"
+      "updated_at": "1795052982Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Work only inside isolated worktree; never mutate root master or fake live hosted Propodus Postgres passes"
       ],
-      "artifact_hash": "sha256:efb1a4e9bdcd4f98c77d8a78d38bfa231546987b513be6c252698df3cca81d9a",
+      "artifact_hash": "sha256:2b641442900400ce60ff13c18e0264672a51bf05400acd001cfacf97ad3b22a0",
       "checks": [
         {
           "name": "cargo_clippy_all_targets_all_features",
@@ -705,6 +713,10 @@
         {
           "name": "test_todo_enforcement",
           "status": "passed"
+        },
+        {
+          "name": "test_validation_scope",
+          "status": "passed"
         }
       ],
       "custody": {
@@ -727,10 +739,17 @@
             "intent_id": "intent:run-1247-shared-state",
             "kind": "trajectory_step_recorded",
             "sequence": 4
+          },
+          {
+            "detail": "trajectory:run-1247-shared-state",
+            "event_id": "event:5",
+            "intent_id": "intent:run-1247-shared-state",
+            "kind": "trajectory_step_recorded",
+            "sequence": 5
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 4,
+        "next_sequence": 5,
         "schema_version": "1.0.0",
         "trajectories": {
           "run-1247-shared-state": {
@@ -772,6 +791,27 @@
                 "validation_findings": [
                   "Live hosted Propodus Postgres execution remains externally bounded when hosted credentials and live Propodus endpoints are absent; verified against local SQLite and mock/denial Dactyl HTTP boundaries."
                 ]
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:5",
+                "observations": [
+                  "Post-merge cfe2565da (v0.149.3): cargo fmt --all -- --check exit 0, shared_state_semantics_1247 10/10 (21.68s), core::dactyl_todo 6/6 (0.05s), validation_scope 9/9 (0.04s)"
+                ],
+                "proof_refs": [
+                  "cargo_fmt",
+                  "test_shared_state_semantics_1247",
+                  "test_core_dactyl_todo",
+                  "test_validation_scope"
+                ],
+                "scope": [
+                  ".decapod/managed/specs/SEMANTICS.md",
+                  "src/decapod/core/dactyl_todo.rs",
+                  "src/decapod/core/todo.rs",
+                  "tests/shared_state_semantics_1247.rs"
+                ],
+                "sequence": 5,
+                "validation_findings": []
               }
             ]
           }
@@ -779,6 +819,7 @@
       },
       "declared_commands": [],
       "evidence": [
+        "Post-merge cfe2565da (v0.149.3): cargo fmt --all -- --check exit 0, shared_state_semantics_1247 10/10 (21.68s), core::dactyl_todo 6/6 (0.05s), validation_scope 9/9 (0.04s)",
         "cargo fmt --all -- --check: exit 0 on v0.149.3 102d6eb22 tree; clippy --all-targets --all-features -D warnings (0 warnings), core::todo (92/92), cloud_todo_resume_wire (3/3), cloud_command_path (1/1), cloud_dactyl_boundary (1/1), todo_enforcement (4/4), group_broker (16/16) passed on identical #1247 src/ and test code",
         "core::dactyl_todo: 6 passed; 0 failed on v0.149.3 102d6eb22 tree",
         "tests/shared_state_semantics_1247.rs: 10 passed; 0 failed on v0.149.3 102d6eb22 tree"
