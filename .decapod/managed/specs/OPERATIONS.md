@@ -216,6 +216,25 @@ candidate commit SHA (`head_revision`), canonical tracked `tree_digest`,
   incrementing `lease_generation`) immediately invalidates prior completion history
   and workunit checkpoints (`VALIDATION_HISTORY_TASK_STALE` on `todo done --validated
   --commit`, `govern workunit transition --to verified`, and `govern workunit resume`).
+  To surface avoidable mid-validation lease expiration before long provider runs,
+  `validation_history::capture_task_binding_with_budget` calls the read-only
+  `todo::ensure_validation_lease_ttl` guard *before* freezing `HistoricalTaskBinding`.
+  Because renewal rotates custody, validation never renews implicitly. The mode is
+  selected by `DECAPOD_VALIDATE_LEASE_TTL`: `warn` (default) emits a
+  `VALIDATION_LEASE_TTL_LOW` stderr advisory with the exact `decapod todo renew`
+  command and continues with custody untouched; `strict` fails fast with
+  `VALIDATION_LEASE_TTL_INSUFFICIENT`; `renew` is an explicit operator opt-in that
+  renews the claiming agent's lease first and therefore requires refreshing any
+  existing workunit/governance checkpoint. The safe path is to claim or renew with
+  a lease longer than the expected run (`--lease-seconds`) *before* checkpointing.
+- **Open file descriptor limits (`RLIMIT_NOFILE`):** On Unix hosts with restrictive
+  default soft limits (such as macOS `ulimit -n 256`), `bounded_process::configure_child_nofile_limit`
+  and `raise_nofile_soft_limit_in_child` raise the soft `RLIMIT_NOFILE` of spawned
+  `validate` / `govern project-check` workers and child test/tooling harnesses toward
+  `min(hard_limit, 65536)` with graceful fallbacks (`10240`, `4096`) without failing
+  spawn. `system doctor check` warns when the shell soft limit is below `4096`, and
+  `validate_open_file_limits` emits a non-blocking `RLIMIT_NOFILE_LOW` advisory when
+  hard caps keep the worker below `4096`.
 - **Partial and local scopes:** `GITHUB_ACTIONS=true` / `BUILDKITE=true` runs
   (`scope=ci_local`, `publication_ready=false`, `readiness=null`), `govern
   project-check` (`publication_ready=false`), and `validate --snapshot-prepare`
@@ -415,8 +434,8 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `41ed68335cd4f7ab6089d4378ed848b734b0440922eabfa56636ae50ad3e54f8`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (238 files), `tests/` (244 files)
+- Repository signal fingerprint: `818241e1cc81217dca3a918bac6df8638414bbea5a1beb8f0653ee01bec882fb`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (238 files), `tests/` (245 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 

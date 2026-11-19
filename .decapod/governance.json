@@ -599,6 +599,15 @@
         "src/decapod/core/projection_budget.rs",
         "tests/projection_performance_budgets_1734.rs"
       ]
+    },
+    {
+      "id": "ckpt-1734-integrate-master-45369197e",
+      "summary": "Integrate accepted master 45369197e (v0.149.3) cleanly with preserved #1247/#1469/#1659/#1776/#1795/#1807/#1810/#1734 living specs",
+      "input_digest": "sha256:b480f64f81c0dce9f41c7e244382fbd1b5792f37018f468478a63fe3ceb85aa9",
+      "proof_refs": [
+        "src/decapod/core/projection_budget.rs",
+        "tests/projection_performance_budgets_1734.rs"
+      ]
     }
   ],
   "intents": {

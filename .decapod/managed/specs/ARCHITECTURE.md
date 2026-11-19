@@ -1079,8 +1079,8 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `41ed68335cd4f7ab6089d4378ed848b734b0440922eabfa56636ae50ad3e54f8`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (238 files), `tests/` (244 files)
+- Repository signal fingerprint: `818241e1cc81217dca3a918bac6df8638414bbea5a1beb8f0653ee01bec882fb`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (238 files), `tests/` (245 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 
@@ -1387,9 +1387,17 @@ No new connector policy interpreter, daemon, HTTP/3 or hosted runner is added.
 for full claims. The runtime invokes it before prerequisites or selection; CLI
 and RPC full dispatch, workspace publication and current/historical validated
 completion invoke the same owner. The originating local completion process checks
-before broker handoff. `group_broker::CallerContext` carries and clears diagnostic
-flags per request so worker scope cannot come from another caller. Partial
-project-prerequisite and CI-local routes do not gain publication authority.
+before broker handoff, and for `todo done --validated` prepares verification
+evidence outside the exclusive group-broker lock (`todo::prepare_validated_done_handoff`
+-> mode-`0600` request-bound handoff under `broker-runtime/` -> `verify::consume_prepared_done_handoff`
+re-verified against canonical `validation_history` / local Git objects before the
+transactional status update). `group_broker::CallerContext` carries and clears
+diagnostic flags per request so worker scope cannot come from another caller, and
+brokered child execution honors the caller's bounded `deadline_ms` rather than a
+15s control clamp. `bounded_process::configure_child_nofile_limit` elevates soft
+`RLIMIT_NOFILE` on Unix across `__project-check-worker`, migration validation,
+tooling gates, and `CaptureWithCeiling` subprocesses. Partial project-prerequisite
+and CI-local routes do not gain publication authority.
 
 ## Preserve accepted local verification policy (#1658)
 
@@ -1497,6 +1505,6 @@ Concurrent authoring across isolated worktrees separates task custody, isolated 
 
 Read-only source, event, and worktree projections remain strictly decoupled from visualization concerns (zero UI dependencies or display-specific state machines in the Decapod kernel) and never disrupt concurrent governed writers:
 
-1. **Covering SQLite indexes and bounded read access:** `core/schemas.rs::EVENTS_TABLE_STREAM_SUBJECT_SEQ_INDEX` (`idx_events_stream_subject_seq` on `events(stream, subject_kind, subject_id, seq)`) installed by `core/events.rs::ensure_tables` eliminates SQLite temp B-tree sorts and cross-subject stream scans for subject-scoped cursor replay, complementing `idx_events_stream_seq_unique(stream, seq)`. `core/events.rs::actors` executes `SELECT DISTINCT actor FROM events WHERE stream = ?1 ORDER BY actor ASC` directly instead of materializing full stream payloads. `core/db.rs::db_connect_readonly_bounded` opens strictly read-only (`AccessMode::ReadOnly`, `StorageLockMode::Shared`) fail-fast observer connections without long retry loops so read clients never queue behind or starve governed writers.
-2. **Measured-baseline budgets and explicit degraded mode:** `core/projection_budget.rs` (re-exported via `core/projection.rs`) enforces `ProjectionBudget` (`max_rows`, `max_response_bytes`, `max_scan_rows`, `max_worktrees`, `max_files_per_worktree`, `max_wall_time_ms`, `reader_lock_timeout_ms`) with hard kernel safety ceilings (`HARD_MAX_*`) and defaults calibrated from real measured runs (`tests/projection_performance_budgets_1734.rs::projection_performance_baseline_benchmark_1734`: 10,000-event store bounded to 179 KiB / 146 KiB peak batch at p50 = 3.93 ms vs 7.04 MiB / 33 ms unbounded; 4 concurrent WAL writers shifted p50 62 us -> 77 us with zero writer errors alongside 4 continuous read clients; 25-worktree dirty sweep at 462 ms -> default `max_worktrees = 24` under 500 ms wall budget). Exceeding any budget, encountering reader lock contention, or presenting a cursor behind the retention floor transitions the page to `ProjectionStatus::Degraded` with typed `DegradedReason` diagnostics (`ResponseByteBudgetExceeded`, `ScanBudgetExceeded`, `WorktreeBudgetExceeded`, `FileEnumerationBudgetExceeded`, `WallTimeBudgetExceeded`, `CursorBehindRetentionFloor`, `ReaderContentionDeferred`) without silent truncation or false completeness.
+1. **Covering SQLite indexes and bounded read access:** `core/schemas.rs::EVENTS_TABLE_STREAM_SUBJECT_SEQ_INDEX` (`idx_events_stream_subject_seq` on `events(stream, subject_kind, subject_id, seq) WHERE subject_kind IS NOT NULL AND subject_id IS NOT NULL`) installed by `core/events.rs::ensure_tables` eliminates SQLite temp B-tree sorts and cross-subject stream scans for subject-scoped cursor replay while omitting NULL-subject streams from the B-tree, complementing `idx_events_stream_seq_unique(stream, seq)`. `core/events.rs::actors` executes `SELECT DISTINCT actor FROM events WHERE stream = ?1 ORDER BY actor ASC` directly instead of materializing full stream payloads. `core/db.rs::db_connect_readonly_bounded` opens strictly read-only (`AccessMode::ReadOnly`, `StorageLockMode::Shared`) fail-fast observer connections without long retry loops so read clients never queue behind or starve governed writers.
+2. **Measured-baseline budgets and explicit degraded mode:** `core/projection_budget.rs` (re-exported via `core/projection.rs`) enforces `ProjectionBudget` (`max_rows`, `max_response_bytes`, `max_scan_rows`, `max_worktrees`, `max_files_per_worktree`, `max_wall_time_ms`, `reader_lock_timeout_ms`) with hard kernel safety ceilings (`HARD_MAX_*`) and defaults calibrated from real measured runs (`tests/projection_performance_budgets_1734.rs::projection_performance_baseline_benchmark_1734`: 10,000-event store bounded to 179 KiB / 146 KiB peak batch at p50 = 3.93–4.99 ms vs 7.04 MiB / 33–44 ms unbounded; indexed subject query p50 = 743 us vs 1210 us unindexed; 4 concurrent WAL writers shifted p50 58–62 us -> 70–77 us with zero writer errors alongside 4 continuous read clients; 25-worktree dirty sweep hit the 500 ms wall budget at 19 worktrees / 517 ms -> default `max_worktrees = 24`). Exceeding any budget, encountering reader lock contention, or presenting a cursor behind the retention floor transitions the page to `ProjectionStatus::Degraded` with typed `DegradedReason` diagnostics (`ResponseByteBudgetExceeded`, `ScanBudgetExceeded`, `WorktreeBudgetExceeded`, `FileEnumerationBudgetExceeded`, `WallTimeBudgetExceeded`, `CursorBehindRetentionFloor`, `ReaderContentionDeferred`) without silent truncation or false completeness.
 3. **Retention-stable logical receipts and lock-free worktree enumeration:** `core/projection_budget.rs::{project_events_read_only, project_events_on_conn}` hashes recursively key-sorted canonical reconstructed logical events (`canonical_json_bytes`), making `content_sha256` and `window_receipt_sha256` bit-for-bit invariant across `core/storage_compaction.rs::{apply_v2_compaction_migration, gc_unreferenced_components, reclaim_pages_explicit}` and across `apply_bounded_event_retention` for retained windows. Explicit cold-window retention writes a chained cryptographic `EventRetentionAnchor` under `meta(namespace='event_retention', key=<stream>)` without renumbering surviving sequences, and `core/events.rs::append_on_conn` consults that floor only when a stream is empty so post-retention appends stay strictly monotonic with zero hot-path query overhead. `project_worktrees_read_only` runs all Git commands with `GIT_OPTIONAL_LOCKS=0` and bounded timeouts so multi-worktree observation never acquires index locks against concurrent agents.
