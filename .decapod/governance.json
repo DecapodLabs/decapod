@@ -650,6 +650,11 @@
       "id": "cp-1782-7",
       "summary": "Sync origin/master ef6c2003d (v0.150.7), reconcile governance journal, refresh specs, and verify #1782 risk-map warning paths",
       "input_digest": "sha256:c487e2e29bd6d09003fc2db0e71db84351a8f111a52ede2fad1201a993464792"
+    },
+    {
+      "id": "cp-1782-8",
+      "summary": "Use literal include_str! path in tests/unit/core/validate_tests.rs for gatekeeper decapod.scope.protected_paths verification (#1782)",
+      "input_digest": "sha256:8356af2ccabb1136298b2827b7df24879f611e2ff3f1a3f9dec7cbda9927cd3b"
     }
   ],
   "intents": {
@@ -692,22 +697,22 @@
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "PR #1800 aligns risk-map warning strings with existing CLI command paths only; no architecture changes versus accepted master v0.150.7.",
-          "reviewed_code_fingerprint": "7d6de6d2486978d74cc2af061b3a7c7278a7b5860f2005910a9c535c7e592dd1",
+          "reason": "PR #1800 aligns risk-map warning paths and uses literal include_str! in validate_tests.rs only; no architecture changes versus v0.150.7.",
+          "reviewed_code_fingerprint": "04433919372718290246cdf1affb76b9e70e6cbf4c0d99ad09a9772b3bfdc951",
           "spec_material_hash": "5d2e6751d609aaeb9afa2c54fad585ebc6f60c75516d099a28cc0a6eed7bc008"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Preserved the authored Risk-map warning CLI contract (#1782) section in INTERFACES.md alongside all upstream v0.150.7 interface specs.",
-          "reviewed_code_fingerprint": "7d6de6d2486978d74cc2af061b3a7c7278a7b5860f2005910a9c535c7e592dd1",
+          "reason": "Preserved Risk-map warning CLI contract (#1782) in INTERFACES.md alongside v0.150.7 upstream specs; updated validate_tests.rs include_str! to literal path for gatekeeper scanning.",
+          "reviewed_code_fingerprint": "04433919372718290246cdf1affb76b9e70e6cbf4c0d99ad09a9772b3bfdc951",
           "spec_material_hash": "a67a65f193d9cf38634f7141d45b6abe342bc3ff50b6488a38f37f869c9b9b17"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "PR #1800 updates missing-riskmap warning paths while preserving existing policy.control trust gates; no security boundary changes versus accepted master v0.150.7.",
-          "reviewed_code_fingerprint": "7d6de6d2486978d74cc2af061b3a7c7278a7b5860f2005910a9c535c7e592dd1",
+          "reason": "PR #1800 satisfies gatekeeper literal include_str! scanning without altering security boundaries or policy.control trust gates.",
+          "reviewed_code_fingerprint": "04433919372718290246cdf1affb76b9e70e6cbf4c0d99ad09a9772b3bfdc951",
           "spec_material_hash": "127c65866657d2dd15434ca52f6e3a97b8f20aa4dd97f9d3190e1cd98edac3ac"
         }
       ],
@@ -719,13 +724,13 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795127298Z"
+      "updated_at": "1795127863Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:0c5c7b3152c5143be4d65375f82d5855f24d13b119732df8cd57f354ee58aa1d",
+      "artifact_hash": "sha256:7e463e22554a427593049079e3d9210e55d842a65eddd9d73b813b43da10a30c",
       "checks": [
         {
           "name": "cargo_fmt",
@@ -761,6 +766,10 @@
         },
         {
           "name": "plugins_policy_tests",
+          "status": "passed"
+        },
+        {
+          "name": "project_check",
           "status": "passed"
         },
         {
@@ -832,10 +841,17 @@
             "intent_id": "intent:change_01M7QC4ST58WGCQ5JNZKJPCTF1",
             "kind": "trajectory_step_recorded",
             "sequence": 9
+          },
+          {
+            "detail": "trajectory:branch_01M7QC4T0FX5CFADGN7WFGBTNQ",
+            "event_id": "event:10",
+            "intent_id": "intent:change_01M7QC4ST58WGCQ5JNZKJPCTF1",
+            "kind": "trajectory_step_recorded",
+            "sequence": 10
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 9,
+        "next_sequence": 10,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M7QC4T0FX5CFADGN7WFGBTNQ": {
@@ -976,6 +992,27 @@
                 ],
                 "sequence": 9,
                 "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:10",
+                "observations": [
+                  "tests/unit/core/validate_tests.rs",
+                  "src/decapod/core/gatekeeper/source_dependencies.rs",
+                  "tests/unit/core/validate_tests.rs",
+                  "Replaced non-literal include_str!(concat!(env!(\"CARGO_MANIFEST_DIR\"), ...)) in tests/unit/core/validate_tests.rs:24 with literal include_str!(\"../../../src/decapod/core/validate.rs\") so gatekeeper::source_dependencies::expand verifies decapod.scope.protected_paths cleanly."
+                ],
+                "proof_refs": [
+                  "targeted_tests",
+                  "project_check"
+                ],
+                "scope": [
+                  "\".decapod/managed/specs\"]",
+                  "\"tests\"",
+                  "paths:[\"src/decapod\""
+                ],
+                "sequence": 10,
+                "validation_findings": []
               }
             ]
           }
@@ -986,6 +1023,7 @@
       "evidence": [
         "Merged origin/master ef6c2003d (v0.150.7) cleanly with 0 code conflicts, reconciled governance via reconcile-merge, rebuilt v0.150.7 candidate binary, verified docs build (0 diff), cargo fmt, and targeted #1782 tests (validate_tests, plugins_policy_tests, cli_contract_enforcement).",
         "Refreshed v0.148.13 Dockerfile.decapod and .manifest.json with workspace-built 0.148.13 decapod binary and recorded ARCHITECTURE.md / SECURITY.md spec reviews for publication-material.",
+        "Replaced non-literal include_str!(concat!(env!(\"CARGO_MANIFEST_DIR\"), ...)) in tests/unit/core/validate_tests.rs:24 with literal include_str!(\"../../../src/decapod/core/validate.rs\") so gatekeeper::source_dependencies::expand verifies decapod.scope.protected_paths cleanly.",
         "Reviewed git diff 9c7e6cff..7bd0a915 (Cargo.toml, Cargo.lock, CHANGELOG.md only for v0.148.12) and reconciled proof.required_profile.reviewed_sources_digest to sha256:bd7eec7e7edaa9a427dea5c3d6b4de42e885b23d2b1911f3602527686e366c4e",
         "Reviewed git diff caeeaba8..c5bafce6 (Cargo.toml, Cargo.lock, CHANGELOG.md only for v0.148.13) and reconciled proof.required_profile.reviewed_sources_digest to sha256:f2c1d189ee0c96f6afb66185229233bd0436015d0ddd21dc56deb4f58709b2b2",
         "Verified clap mounts PolicyCli under GovernCommand::Policy (decapod govern policy riskmap init/verify), whereas validate.rs emitted unsupported 'decapod riskmap init' and policy.rs emitted unsupported 'decapod policy riskmap init'.",
@@ -998,6 +1036,7 @@
         ".decapod/managed/specs/INTERFACES.md",
         ".decapod/managed/specs/SECURITY.md",
         "src/decapod/cli.rs",
+        "src/decapod/core/gatekeeper/source_dependencies.rs",
         "src/decapod/core/validate.rs",
         "src/decapod/plugins/policy.rs",
         "tests/cli_contract_enforcement.rs",

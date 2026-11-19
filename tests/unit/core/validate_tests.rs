@@ -21,10 +21,7 @@ use tempfile::tempdir;
 fn branch_file_validation_dispatch_uses_working_root() {
     // Check the dispatcher as well as each gate's behavior below: a gate can
     // work correctly in isolation while its caller supplies the host store root.
-    let source = include_str!(concat!(
-        env!("CARGO_MANIFEST_DIR"),
-        "/src/decapod/core/validate.rs"
-    ));
+    let source = include_str!("../../../src/decapod/core/validate.rs");
     let dispatch = source.split("pub fn run_validation(").nth(1).unwrap();
     for call in [
         "validate_docs_templates_bucket(ctx, working_root)",
