@@ -9,7 +9,7 @@ Repositories preserve state.
 Decapod governs the transition from intent to proof.
 ```
 
-Decapod is a **daemonless, repo-native metacognitive governance kernel** invoked **by coding agents** as part of their engineering work. Humans describe goals and apply judgment through their preferred agent interface; coding agents call Decapod at decision and execution boundaries for task custody, shared context, coordination, scoped authority, validation, and proof.
+Decapod is an **agent-agnostic, daemonless metacognitive governance kernel application**. Coding agents invoke its CLI and structured RPC interface to orient decisions against human intent, coordinate task custody, isolate workspaces, and validate exact candidate commits. Each call exits; `.decapod/` and Git preserve governance state and proof across agents and sessions.
 
 ## Bring Your Own Coding Agents (BYOA)
 

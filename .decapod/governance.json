@@ -578,6 +578,17 @@
     "target_base": "origin/master"
   },
   "claims": {
+    "claim-pr-1847-docs": {
+      "statement": "docs/book/src/{index,introduction,mental-model}.md and INTENT.md align on Decapod's agent-agnostic, daemonless kernel application model",
+      "falsifier": "Any of docs/book/src/{index,introduction,mental-model}.md or .decapod/managed/specs/INTENT.md diverges from the agent-agnostic, daemonless CLI/RPC kernel framing or fails material-specs / project-check gates",
+      "status": "supported",
+      "proof_refs": [
+        ".decapod/managed/specs/INTENT.md",
+        "docs/book/src/index.md",
+        "docs/book/src/introduction.md",
+        "docs/book/src/mental-model.md"
+      ]
+    },
     "claim:release-v0-150-3-projections": {
       "statement": "Release v0.150.3 aligns Cargo.toml, Cargo.lock, managed Dockerfile pin, and specs manifest release metadata.",
       "falsifier": "Managed Dockerfile or specs manifest release metadata diverges from Cargo.toml 0.150.3.",
@@ -626,6 +637,11 @@
       "proof_refs": [
         ".decapod/managed/specs/.manifest.json"
       ]
+    },
+    {
+      "id": "ckpt-pr-1847-v01503",
+      "summary": "Merge accepted master v0.150.3, update INTENT.md living spec, and record governance continuation for PR #1847",
+      "input_digest": "sha256:70105f9461eca32babaa8666a3795cbccf6e00d282720176fb5bf4c39923dfc2"
     }
   ],
   "intents": {
@@ -656,48 +672,52 @@
       },
       "deferred_questions": [],
       "human_questions": [],
-      "intent": "Refresh release-bound Dockerfile and specs manifest projections for v0.150.3 on PR #1846",
+      "intent": "Align docs/book/src/{index,introduction,mental-model}.md and INTENT.md on Decapod's agent-agnostic, daemonless kernel application model",
       "phases": [],
-      "proof_hooks": [],
+      "proof_hooks": [
+        "decapod govern artifacts verify-checkpoints --base-branch 683873fc2b865e1cef84c85c042670136d47f905 --head-ref HEAD --target-base master --publication-material",
+        "bash assets/tools/source_ci/material-specs.sh",
+        "decapod govern project-check --refresh-specs"
+      ],
       "schema_version": "1.1.0",
       "spec_reviews": [
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "v0.150.3 version-only release cut does not alter system architecture",
+          "reason": "PR #1847 clarifies existing daemonless CLI/RPC execution in docs/book/src without changing runtime architecture.",
           "reviewed_code_fingerprint": "d026d97a91315fe73d7f48c348bf178f47580bbb9f163a6718588c167ccf9de4",
           "spec_material_hash": "ec45705fd9a9a5f29fbe43fb55f7a3b69a802f298ae14eb88118bc42161f71e6"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "v0.150.3 version-only release cut does not alter CLI or RPC interfaces",
+          "reason": "PR #1847 clarifies docs/book/src prose and INTENT.md without changing CLI or RPC interface contracts.",
           "reviewed_code_fingerprint": "d026d97a91315fe73d7f48c348bf178f47580bbb9f163a6718588c167ccf9de4",
           "spec_material_hash": "e8142264a4caae5b7271e2bc25e80ee249e14c3d36ec70fd32c86f9e87dddcae"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "v0.150.3 version-only release cut does not alter security boundaries",
+          "reason": "PR #1847 updates documentation wording only without changing security boundaries or proof gates.",
           "reviewed_code_fingerprint": "d026d97a91315fe73d7f48c348bf178f47580bbb9f163a6718588c167ccf9de4",
           "spec_material_hash": "127c65866657d2dd15434ca52f6e3a97b8f20aa4dd97f9d3190e1cd98edac3ac"
         }
       ],
       "state": "APPROVED",
       "stop_conditions": [],
-      "title": "Align release v0.150.3 projections and governance (#1846)",
+      "title": "Clarify agent-agnostic, daemonless kernel model in the docs book (#1847)",
       "todo_ids": [
-        "code_01m7srddt2dc4pyp"
+        "docs_01m7tcv9xh8hw1z3"
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795106213Z"
+      "updated_at": "1795108843Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Isolated Decapod worktree only; preserve WorkspaceCommand::Publish slice for validation_scope.rs; preserve PublishResult/WorkspacePublishResult/ValidationGuidance wire shapes; zero blocked literal wildcard shell commands"
       ],
-      "artifact_hash": "sha256:b1efe882e24a97bfe8534f9b08a8df425d34b987c12dd0c499ecc336e52b2a80",
+      "artifact_hash": "sha256:3e0058802352c52cd182284afa3aa04d5e3a6a73b500bb72264cd7000a36f6ba",
       "checks": [
         {
           "name": "cargo_build_locked_v01500",
@@ -765,6 +785,10 @@
         },
         {
           "name": "docs_build_v01502",
+          "status": "passed"
+        },
+        {
+          "name": "project_check",
           "status": "passed"
         },
         {
@@ -844,10 +868,17 @@
             "intent_id": "intent:run-tmpclean-1798-v01493",
             "kind": "trajectory_step_recorded",
             "sequence": 8
+          },
+          {
+            "detail": "trajectory:run-tmpclean-1798-v01493",
+            "event_id": "event:9",
+            "intent_id": "intent:run-tmpclean-1798-v01493",
+            "kind": "trajectory_step_recorded",
+            "sequence": 9
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 8,
+        "next_sequence": 9,
         "schema_version": "1.0.0",
         "trajectories": {
           "run-tmpclean-1798-v01493": {
@@ -972,6 +1003,24 @@
                 ],
                 "sequence": 8,
                 "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:9",
+                "observations": [
+                  "docs/book/src/index.md",
+                  "docs/book/src/introduction.md",
+                  "docs/book/src/mental-model.md",
+                  ".decapod/managed/specs/INTENT.md"
+                ],
+                "proof_refs": [
+                  "project_check"
+                ],
+                "scope": [
+                  "src/decapod/core/validate.rs,src/decapod/core/validation_runtime.rs,src/decapod/core/workspace.rs,src/decapod/lib.rs,src/decapod/plugins/verify.rs,src/decapod/core/docs_cli.rs,docs/agent/command-contracts.md,docs/agent/state-model.md,tests/tmp_build_cleanup_guidance_1798.rs,tests/unit/plugins/verify_tests.rs,.decapod/managed/specs/INTERFACES.md"
+                ],
+                "sequence": 9,
+                "validation_findings": []
               }
             ]
           }
@@ -989,6 +1038,9 @@
         ".decapod/managed/specs/INTERFACES.md",
         "docs/agent/command-contracts.md",
         "docs/agent/state-model.md",
+        "docs/book/src/index.md",
+        "docs/book/src/introduction.md",
+        "docs/book/src/mental-model.md",
         "src/decapod/core/docs_cli.rs",
         "src/decapod/core/validate.rs",
         "src/decapod/core/validation_runtime.rs",
@@ -1001,6 +1053,7 @@
       "modified_files": [
         ".decapod/managed/Dockerfile.decapod",
         ".decapod/managed/specs/.manifest.json",
+        ".decapod/managed/specs/INTENT.md",
         ".decapod/managed/specs/INTERFACES.md",
         ".decapod/managed/specs/OPERATIONS.md",
         "docs/agent/command-contracts.md",
@@ -1020,7 +1073,7 @@
       "run_id": "run-tmpclean-1798-v01493",
       "schema_version": "1.1.0",
       "shortcut_risk_signals": [],
-      "task_id": "code_01m7srddt2dc4pyp",
+      "task_id": "docs_01m7tcv9xh8hw1z3",
       "tool_calls": [],
       "unresolved_assumptions": []
     }

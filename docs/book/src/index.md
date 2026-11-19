@@ -5,9 +5,9 @@
 
 <div class="decapod-docs-hero">
   <div class="decapod-docs-hero-copy">
-    <div class="decapod-docs-kicker">BRING YOUR OWN CODING AGENT · REPO-NATIVE GOVERNANCE KERNEL</div>
+    <div class="decapod-docs-kicker">AGENT-AGNOSTIC · DAEMONLESS · REPO-NATIVE</div>
     <h1>HARNESS AI <em class="decapod-docs-metacognition">METACOGNITION.</em></h1>
-    <p><strong>Coding agents invoke Decapod</strong> — across <strong>Codex, Claude Code, Cursor, Antigravity, and other harnesses</strong> — to bind human intent, coordinate shared custody and isolated workspaces, run decision-time context and reflection checks, and require exact-commit validation proof before completion.</p>
+    <p>Decapod is an <strong>agent-agnostic, daemonless metacognitive governance kernel application</strong>. Codex, Claude Code, Cursor, Antigravity, and other compatible agents call it through CLI or structured RPC to orient decisions, claim tasks, isolate work, and validate exact commits before publication. Each call ends; governance state persists across sessions.</p>
     <div class="decapod-docs-actions">
       <a class="decapod-docs-btn primary" href="quickstart.html">Get started <span aria-hidden="true">↗</span></a>
       <a class="decapod-docs-btn secondary" href="introduction.html">Understand the kernel <span aria-hidden="true">↗</span></a>
@@ -18,18 +18,18 @@
 
 ## Who invokes Decapod — and how agents coexist
 
-Decapod is **not** a proprietary chat UI, model router, or background orchestrator. Humans talk to their preferred coding agents; **coding agents invoke Decapod** through its CLI and structured RPC boundary at decision and execution boundaries:
+Engineers work in their preferred coding agent. The agent calls the Decapod application through its CLI or structured RPC interface at decision, workspace, and validation boundaries. Decapod runs, returns a result, and exits:
 
 ```text
 Human (intent & judgment)
   └─▶ Coding Agent (Codex / Claude Code / Cursor / Antigravity / custom harness)
-        └─▶ Decapod Kernel (CLI / `decapod rpc`: orientation, claims, workspaces, validation, proof)
+        └─▶ Decapod application / kernel (CLI / `decapod rpc`: orientation, claims, workspaces, validation, proof)
               └─▶ Repository (`.decapod/`: plans, specs, custody, trajectory, commit-bound evidence)
 ```
 
 - **Any compatible agent on the same repo:** One engineer can switch between two agents mid-task; multiple engineers can run different agents in parallel against the same repository and governance substrate.
 - **No manual command choreography:** You run `decapod init` once per repository (local `.decapod/data/decapod.db` or `--backend cloud` for shared team task custody). Your coding agent handles `eval`, `session`, `todo`, `workspace`, `infer`, `govern`, and `validate`.
-- **Decision-time metacognition, not magic:** Before editing, agents orient against recorded intent, policy, and bounded reflection challenges. When validation fails, they use kernel diagnostics to repair the branch and recheck the exact revised commit.
+- **Orientation and recovery:** Before editing, agents consult recorded intent, policy, and bounded reflection checks. When validation fails, they use diagnostics to repair the branch and revalidate the exact revised commit.
 
 <div class="decapod-docs-video">
   <video controls autoplay muted loop playsinline preload="metadata" poster="https://decapodlabs.github.io/assets/decapod-poster.png" aria-label="Decapod product introduction, including persistent state, enforced boundaries, and commit-bound proof">
