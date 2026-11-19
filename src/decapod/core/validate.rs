@@ -4928,7 +4928,7 @@ fn validate_risk_map(store: &Store, ctx: &ValidationContext) -> Result<(), error
     if map_path.exists() {
         pass("Risk map (blast-radius) is present", ctx);
     } else {
-        warn("Risk map missing (run `decapod riskmap init`)", ctx);
+        warn(&crate::plugins::policy::missing_riskmap_warning(), ctx);
     }
     Ok(())
 }
