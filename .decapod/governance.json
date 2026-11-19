@@ -622,6 +622,11 @@
       "id": "cp-cloud-wave-slot3-clippy-fix",
       "summary": "Gate KEYSTORE_SERVICE constant in src/decapod/core/cloud_dpop.rs to #[cfg(target_os = \"macos\")] for Linux clippy -D warnings parity",
       "input_digest": "sha256:f424b019e807e9a8fd4cd99baced327ce35f49106137661c85c076b4e126ef4e"
+    },
+    {
+      "id": "cp-cloud-wave-slot3-spec-review",
+      "summary": "Refresh spec reviews for ARCHITECTURE/INTERFACES/SECURITY against final code fingerprint after macOS cfg clippy fix",
+      "input_digest": "sha256:59fea46e315ded6aff906147995974d1c7c4d3d271defc7e8d44818f681770ac"
     }
   ],
   "intents": {
@@ -662,22 +667,22 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Updated ARCHITECTURE.md for Dactyl 0.18.0, cloud control-plane custody (#1809, #1590, #1777, #1778, #1066), Local/Cloud branding (#1808, #1769), and reviewed source inventory reconciliation",
-          "reviewed_code_fingerprint": "996145a2b243d6c4dbe964df0a2b99ccfe04fc83d2dceee9a21f3ec59833ba5c",
+          "reason": "Re-reviewed ARCHITECTURE.md against current code fingerprint after macOS cfg guard on KEYSTORE_SERVICE in cloud_dpop.rs",
+          "reviewed_code_fingerprint": "6b5e5d034af2129f4cda8289669b311c51046f2eed18382538697f6ebb949dbb",
           "spec_material_hash": "eea767e816c43693064ee73b838425f7a154fd6e56cf0552669d971d1e5001ea"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Updated INTERFACES.md for Dactyl 0.18.0, cloud control-plane custody (#1809, #1590, #1777, #1778, #1066), Local/Cloud branding (#1808, #1769), and reviewed source inventory reconciliation",
-          "reviewed_code_fingerprint": "996145a2b243d6c4dbe964df0a2b99ccfe04fc83d2dceee9a21f3ec59833ba5c",
+          "reason": "Re-reviewed INTERFACES.md against current code fingerprint after macOS cfg guard on KEYSTORE_SERVICE in cloud_dpop.rs",
+          "reviewed_code_fingerprint": "6b5e5d034af2129f4cda8289669b311c51046f2eed18382538697f6ebb949dbb",
           "spec_material_hash": "982b2bfb9cc87a1ef9bc74dd945db13a428723ee146c46da64f6fdf16a038023"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Updated SECURITY.md for Dactyl 0.18.0, cloud control-plane custody (#1809, #1590, #1777, #1778, #1066), Local/Cloud branding (#1808, #1769), and reviewed source inventory reconciliation",
-          "reviewed_code_fingerprint": "996145a2b243d6c4dbe964df0a2b99ccfe04fc83d2dceee9a21f3ec59833ba5c",
+          "reason": "Re-reviewed SECURITY.md against current code fingerprint after macOS cfg guard on KEYSTORE_SERVICE in cloud_dpop.rs",
+          "reviewed_code_fingerprint": "6b5e5d034af2129f4cda8289669b311c51046f2eed18382538697f6ebb949dbb",
           "spec_material_hash": "5142f990d1f15f6839a51c5453fd5ba4e4274e1f7e31a8f1c1cd87618c887e35"
         }
       ],
@@ -689,7 +694,7 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795067837Z"
+      "updated_at": "1795070771Z"
     },
     "trajectory": {
       "active_boundaries": [
