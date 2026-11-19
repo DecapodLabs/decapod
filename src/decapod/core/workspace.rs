@@ -1473,10 +1473,24 @@ pub fn resolve_base_branch(repo_root: &Path, explicit: Option<&str>) -> String {
         .filter(|branch| !branch.trim().is_empty())
         .map(str::to_string)
         .or_else(|| {
-            crate::cli::DecapodProjectConfig::load(repo_root)
+            crate::core::db_maintenance::resolve_accepted_project_config(repo_root)
                 .ok()
-                .and_then(|config| config.repo.base_branch)
+                .and_then(|(_main_root, config, _unmerged)| config.repo.base_branch)
                 .filter(|branch| !branch.trim().is_empty())
+        })
+        .or_else(|| {
+            let main_root =
+                get_main_repo_root(repo_root).unwrap_or_else(|_| repo_root.to_path_buf());
+            let on_worktree =
+                std::fs::canonicalize(repo_root).ok() != std::fs::canonicalize(&main_root).ok();
+            if on_worktree {
+                detect_base_branch(&main_root)
+            } else {
+                crate::cli::DecapodProjectConfig::load(repo_root)
+                    .ok()
+                    .and_then(|config| config.repo.base_branch)
+                    .filter(|branch| !branch.trim().is_empty())
+            }
         })
         .or_else(|| detect_base_branch(repo_root))
         .unwrap_or_else(|| "master".to_string())
