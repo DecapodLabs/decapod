@@ -1,5 +1,55 @@
 # Intent
 
+## Cloud control-plane, Dactyl 0.18.0 adoption, and Decapod Local/Cloud unification (#1809, #1808, #1769, #1667, #1777, #1778, #1590, #1033, #1034, #1038, #1040, #1066, #1158, #1369, #1376, #1377, #1380)
+
+Decapod adopts published registry crate `dactyl-db = "=0.18.0"` (SHA-256
+`6c26eaf28272a50517d7fe300b56940ac03627477b48579293b231c33de905b4`, preserving
+`quinn-proto >= 0.11.19` and synchronized `Cargo.lock` + Bazel `MODULE.bazel.lock`)
+without path or Git overrides, and unifies all user- and agent-facing CLI,
+capabilities, embedded docs, and human book documentation around **Decapod Local**
+(`local`, free, offline, no account required) and **Decapod Cloud** (`cloud`,
+account required):
+
+- **Decapod Local/Cloud branding & docs (#1808, #1769)**: Retires the legacy
+  Vercel preview URL default so unconfigured explicit `neon`/`supabase`
+  datastores fail closed with `DECAPOD_CLOUD_API_URL` guidance. Introduces
+  canonical `DECAPOD_CLOUD_*` env vars while retaining `DECAPOD_PROPODUS_API_URL`
+  as a backwards-compatible alias emitting structured `decapod.deprecation.v1`
+  notices, recognizes `decapod.cloud.store` (`v1`) envelopes and `Decapod-Cloud-*`
+  diagnostic headers, and adds a responsive **Decapod Local** vs **Decapod Cloud**
+  offerings section on `docs/book/src/index.md` linking to
+  `https://decapodlabs.github.io/offerings.html` without public pricing or
+  checkout routes.
+- **Mixed-worktree routing & inline cloud parity (#1777, #1034, #1158)**: CLI
+  and inline todo helpers resolve backend selection (`local` vs `cloud`) and
+  canonical repository identity strictly from the invoking worktree rather than
+  falling back to the root checkout's SQLite store in either direction
+  (local-root/cloud-worktree or cloud-root/local-worktree), while honoring
+  `#1776` accepted-cloud fail-closed enforcement against unaccepted local downgrades.
+- **Device-bound DPoP custody & container signer broker (#1778, #1033, #1040, #1066)**:
+  Dedicated per-origin/per-repository Ed25519 device keys are persisted outside
+  Git (OS Keychain where available, otherwise mode-0600 `O_NOFOLLOW` external
+  private file), wired into `dactyl-db 0.18.0` `RequestProofSigner` (RFC 9449
+  `DPoP`) and `AccountOperation::{DeviceChallenge, DeviceEnroll, DeviceStepUp, DeviceRevoke}`,
+  plus `decapod cloud logout|revoke` and a bounded host-side Unix-socket
+  container request-signer broker (`[workspace.credentials]`) so container
+  workspaces never receive private keys or raw bearer/refresh secrets.
+- **Repository access tiers & owner repair (#1590)**: Local `db.recover`
+  requires merged canonical `owner_repair_enabled = true` and RBAC `owner`
+  authority; cloud repair queries `propodus_repository_access_v1` (`Read` +
+  audited `Write`) via `CloudConnector::control_request` and executes
+  `owner_repair_v1` atomically via `DactylBridge::atomic` with zero local
+  SQLite fallback.
+- **Hosted lease fencing & 5-state proof acceptance (#1809, #1038)**: Removes
+  the `RESOURCE_CUSTODY_PROFILE_UNSUPPORTED` placeholder in favor of hosted
+  exclusive lease fencing/renewal/release and wires `propodus_proof_acceptance_v1`
+  / `propodus_proof_acceptance_get_v1` (`captured -> independently_verified ->
+  currently_admissible -> published -> historically_accepted`) with safe
+  `outcome_unknown` reconciliation and distinct `403`/`413`/`429` error types.
+  Offline/loopback and local PG17 + PostgREST runs prove client wire and native
+  database contracts without claiming hosted production acceptance or unrun Nix
+  builds on hosts where `nix` is absent.
+
 ## Accepted release12 continuity
 
 The accepted target advanced again to `7bd0a915` (0.148.12), which changes only the root package versions and changelog after9c. The prior9c merge remains a real parent with its own checkpoint; this release integration gets a new native checkpoint. All105 verification-source inputs were independently remeasured: Cargo.toml/Cargo.lock version bytes changed and103 remained identical. Required helpers, graph, commands and toolchain remain unchanged. Official session acquire installed a private0.148.12 controller (SHA256 `1fb9e592076c937f0be049f2329b287e22f2e6a346b8f351ec863bfc92a6d7d3`) and restored the temporary config opt-in; old/shared binaries remain intact. Native projection refresh does not transfer earlier Actions success or establish current admission.
@@ -627,8 +677,8 @@ These declarations select authoring and proof obligations; they do not attest im
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `1e807a1bd4eeb189d67126867259e22ea5adec88f6f95d8609b879a9c099911d`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (237 files), `tests/` (245 files)
+- Repository signal fingerprint: `a1ede1af6849dea6c580536d38b9627950dba8c4f9db598deb6f8c35379c0e8f`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (240 files), `tests/` (250 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 

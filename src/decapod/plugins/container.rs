@@ -378,6 +378,7 @@ Agent must clear the disable marker through Decapod self-heal before retrying.",
             ),
         ],
     );
+    let _signer_server = prepare_container_signer_server(&repo, agent, &mut spec)?;
 
     let start = Instant::now();
     let output = execute_container_with_timeout(&docker, &spec.args, timeout_seconds).map_err(
@@ -2171,12 +2172,81 @@ fn build_docker_spec(
 fn inherited_env_vars() -> BTreeMap<String, String> {
     let mut vars = BTreeMap::new();
     for (k, v) in std::env::vars() {
-        if k == "PATH" || k.starts_with("BASH_FUNC_") {
+        if k == "PATH"
+            || k.starts_with("BASH_FUNC_")
+            || crate::core::container_signer::is_secret_env_key(&k)
+        {
             continue;
         }
         vars.insert(k, v);
     }
     vars
+}
+
+fn prepare_container_signer_server(
+    repo_root: &Path,
+    agent: &str,
+    spec: &mut DockerSpec,
+) -> Result<Option<crate::core::container_signer::HostContainerSignerServer>, error::DecapodError> {
+    let Ok(config) = crate::cli::DecapodProjectConfig::load(repo_root) else {
+        return Ok(None);
+    };
+    let creds = &config.workspace.credentials;
+    let enabled = creds
+        .propodus_cloud
+        .as_deref()
+        .is_some_and(|v| v == "signer-broker" || v == "propodus-token");
+    if !enabled {
+        return Ok(None);
+    }
+    let origin = crate::core::cloud_client::selected_origin().unwrap_or_default();
+    let repo_id = crate::core::repo_identity::resolve_repository_identity(repo_root)
+        .map(|id| id.canonical_name)
+        .unwrap_or_default();
+    if origin.is_empty() || repo_id.is_empty() {
+        return Ok(None);
+    }
+    let key_store =
+        crate::core::cloud_dpop::DeviceKeyStore::for_project(&origin, &repo_id, repo_root)?;
+    let sock_name = format!(
+        "signer-{}.sock",
+        crate::core::ulid::new_ulid().to_lowercase()
+    );
+    let data_dir = repo_root.join(".decapod/data");
+    let sock_path = if data_dir.is_dir() {
+        crate::core::local_socket::path(&data_dir, &sock_name)
+            .map_err(error::DecapodError::IoError)?
+    } else {
+        std::env::temp_dir()
+            .join("decapod-container-signer")
+            .join(&sock_name)
+    };
+    let policy = crate::core::container_signer::ContainerSignerPolicy {
+        allowed_repository: repo_id.clone(),
+        allowed_origin: origin,
+        allowed_agent_id: agent.to_string(),
+        credentials: creds.clone(),
+        session_expires_at: 0,
+        revoked: std::sync::Arc::new(std::sync::atomic::AtomicBool::new(false)),
+        device_key_store: Some(key_store),
+        access_token_digest: None,
+    };
+    let server =
+        crate::core::container_signer::HostContainerSignerServer::bind(&sock_path, policy)?;
+    let sock_str = server.socket_path().to_string_lossy().to_string();
+    let insert_idx = spec.args.len().saturating_sub(3);
+    spec.args.splice(
+        insert_idx..insert_idx,
+        [
+            "-v".to_string(),
+            format!("{sock_str}:{sock_str}"),
+            "-e".to_string(),
+            format!("DECAPOD_CONTAINER_SIGNER_SOCKET={sock_str}"),
+            "-e".to_string(),
+            format!("DECAPOD_CONTAINER_SIGNER_REPO={repo_id}"),
+        ],
+    );
+    Ok(Some(server))
 }
 
 #[allow(clippy::too_many_arguments)]
