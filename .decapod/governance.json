@@ -592,6 +592,15 @@
         "tests/reversible_integration_removal_1704.rs (5/5 passed)",
         "tests/trajectory_docs.rs (5/5 passed)"
       ]
+    },
+    "claim:release-v0-150-6-projections": {
+      "statement": "Release v0.150.6 aligns Cargo.toml, Cargo.lock, managed Dockerfile pin, and specs manifest release metadata.",
+      "falsifier": "Managed Dockerfile or specs manifest release metadata diverges from Cargo.toml 0.150.6.",
+      "status": "supported",
+      "proof_refs": [
+        ".decapod/managed/Dockerfile.decapod",
+        ".decapod/managed/specs/.manifest.json"
+      ]
     }
   },
   "checkpoints": [
@@ -651,6 +660,14 @@
         "v0.150.5 candidate build + docs build zero drift + v0.150.5 projection refresh",
         "zero src/docs/tests conflicts with 78cdbd54e"
       ]
+    },
+    {
+      "id": "ckpt-release-v0-150-6",
+      "summary": "Refresh v0.150.6 release projections and governance",
+      "input_digest": "sha256:1cb0747b51a005c51e5221d20309e09b9efc88711a4d2696bed91db84ba219c8",
+      "proof_refs": [
+        ".decapod/managed/specs/.manifest.json"
+      ]
     }
   ],
   "intents": {
@@ -681,50 +698,48 @@
       },
       "deferred_questions": [],
       "human_questions": [],
-      "intent": "Provide reversible repository integration removal without deleting project state (#1704)",
+      "intent": "Refresh release-bound Dockerfile and specs manifest projections for v0.150.6 on PR #1851",
       "phases": [],
-      "proof_hooks": [
-        "decapod validate"
-      ],
+      "proof_hooks": [],
       "schema_version": "1.1.0",
       "spec_reviews": [
         {
-          "disposition": "updated",
+          "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Preserved #1704 integration_removal architecture spec alongside accepted master v0.150.5 (#1849/#1850)",
-          "reviewed_code_fingerprint": "4f025b222f2576b0089100c1462003d8dd943193ccc9e1a00d2358a8db108299",
+          "reason": "v0.150.6 version-only release cut does not alter system architecture",
+          "reviewed_code_fingerprint": "d0edc1cd8b6c9f8f06e485f66244912037f2d61b5c3b4808cc55d658e0a5d6ca",
           "spec_material_hash": "500648ab6fa0296f255a6b4eb94d29e5e695c2213e11512e036b9f950a18f0d4"
         },
         {
-          "disposition": "updated",
+          "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Preserved #1704 reversible integration removal interface spec alongside accepted master v0.150.5 (#1849/#1850)",
-          "reviewed_code_fingerprint": "4f025b222f2576b0089100c1462003d8dd943193ccc9e1a00d2358a8db108299",
+          "reason": "v0.150.6 version-only release cut does not alter CLI or RPC interfaces",
+          "reviewed_code_fingerprint": "d0edc1cd8b6c9f8f06e485f66244912037f2d61b5c3b4808cc55d658e0a5d6ca",
           "spec_material_hash": "7f1c7214e2a0ef42c44ca5d9eab399d4dcb3b5e672918eba81ffb946f85f19b2"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Preserved accepted master v0.150.5 SECURITY.md prose; #1704 fail-closed security boundaries remain documented in INTERFACES.md, ARCHITECTURE.md, and SEMANTICS.md",
-          "reviewed_code_fingerprint": "4f025b222f2576b0089100c1462003d8dd943193ccc9e1a00d2358a8db108299",
+          "reason": "v0.150.6 version-only release cut does not alter security boundaries",
+          "reviewed_code_fingerprint": "d0edc1cd8b6c9f8f06e485f66244912037f2d61b5c3b4808cc55d658e0a5d6ca",
           "spec_material_hash": "127c65866657d2dd15434ca52f6e3a97b8f20aa4dd97f9d3190e1cd98edac3ac"
         }
       ],
       "state": "APPROVED",
       "stop_conditions": [],
-      "title": "Provide reversible repository integration removal without deleting project state (#1704)",
+      "title": "Align release v0.150.6 projections and governance (#1851)",
       "todo_ids": [
-        "test_01m7rdbba5k3gv7t"
+        "code_01m7srddt2dc4pyp"
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795116656Z"
+      "updated_at": "1795120038Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:057377f7a20dc26082bb587a61dc1579d0559328ffc156d26c4cdf5e18b364e0",
+      "artifact_hash": "sha256:41b1cfcd5bd8fb65bce5f5162beb200a9438d38f0ca127f90b415856d611cb32",
       "checks": [
         {
           "name": "cargo_clippy",
@@ -748,6 +763,10 @@
         },
         {
           "name": "docs_build_zero_drift",
+          "status": "passed"
+        },
+        {
+          "name": "project_check_0_150_6",
           "status": "passed"
         },
         {
@@ -852,10 +871,17 @@
             "intent_id": "intent:change_01M7RDHPBCTTR2P740KETNH4B7",
             "kind": "trajectory_step_recorded",
             "sequence": 8
+          },
+          {
+            "detail": "trajectory:branch_01M7RDHPF6HWPQTE54PN8Q2BM7",
+            "event_id": "event:9",
+            "intent_id": "intent:change_01M7RDHPBCTTR2P740KETNH4B7",
+            "kind": "trajectory_step_recorded",
+            "sequence": 9
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 8,
+        "next_sequence": 9,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M7RDHPF6HWPQTE54PN8Q2BM7": {
@@ -993,6 +1019,24 @@
                 ],
                 "sequence": 8,
                 "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:9",
+                "observations": [
+                  ".decapod/managed/Dockerfile.decapod",
+                  ".decapod/managed/specs/OPERATIONS.md",
+                  ".decapod/managed/specs/.manifest.json",
+                  ".decapod/managed/specs/.manifest.json"
+                ],
+                "proof_refs": [
+                  "project_check_0_150_6"
+                ],
+                "scope": [
+                  "root"
+                ],
+                "sequence": 9,
+                "validation_findings": []
               }
             ]
           }
@@ -1000,7 +1044,9 @@
       },
       "declared_commands": [],
       "destination": "pull request",
-      "evidence": [],
+      "evidence": [
+        ".decapod/managed/specs/.manifest.json"
+      ],
       "inspected_files": [
         ".decapod/managed/Dockerfile.decapod",
         ".decapod/managed/specs/ARCHITECTURE.md",
@@ -1042,7 +1088,7 @@
       "run_id": "branch_01M7RDHPF6HWPQTE54PN8Q2BM7",
       "schema_version": "1.1.0",
       "shortcut_risk_signals": [],
-      "task_id": "test_01m7rdbba5k3gv7t",
+      "task_id": "code_01m7srddt2dc4pyp",
       "tool_calls": [],
       "unresolved_assumptions": []
     }

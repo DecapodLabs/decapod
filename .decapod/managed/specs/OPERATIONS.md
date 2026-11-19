@@ -301,14 +301,14 @@ job cap and the four declared artifact targets remain separate from this
 release-job override. Only observed artifact builds can establish a throughput
 improvement; source validation alone makes no four-platform packaging claim.
 
-### Current Release Alignment (v0.150.4)
+### Current Release Alignment (v0.150.6)
 
-The `v0.150.4` release cut aligns the package version in `Cargo.toml`,
+The `v0.150.6` release cut aligns the package version in `Cargo.toml`,
 root package entry in `Cargo.lock`, and release notes in `CHANGELOG.md` with
-managed projections refreshed by the `0.150.4` binary:
-`.decapod/managed/Dockerfile.decapod` pins `DECAPOD_IMAGE=ghcr.io/decapodlabs/decapod:v0.150.4-debian`
-and `DECAPOD_VERSION=0.150.4`, and `.decapod/managed/specs/.manifest.json`
-records `decapod_release` `0.150.4` alongside current codebase attestations.
+managed projections refreshed by the `0.150.6` binary:
+`.decapod/managed/Dockerfile.decapod` pins `DECAPOD_IMAGE=ghcr.io/decapodlabs/decapod:v0.150.6-debian`
+and `DECAPOD_VERSION=0.150.6`, and `.decapod/managed/specs/.manifest.json`
+records `decapod_release` `0.150.6` alongside current codebase attestations.
 Repository entrypoints (`AGENTS.md`, `CLAUDE.md`, `CODEX.md`, `GEMINI.md`)
 remain intentionally pinned at `0.148.0` under
 `[repo]._allow_entrypoint_version_drift = true` in `.decapod/config.toml`.
@@ -458,7 +458,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `4f025b222f2576b0089100c1462003d8dd943193ccc9e1a00d2358a8db108299`
+- Repository signal fingerprint: `d0edc1cd8b6c9f8f06e485f66244912037f2d61b5c3b4808cc55d658e0a5d6ca`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (243 files), `tests/` (254 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
