@@ -102,6 +102,96 @@ pub(crate) fn capture_validation_binding(
     )
 }
 
+/// Guard against mid-validation `VALIDATION_HISTORY_TASK_STALE` by checking the
+/// remaining exclusive lease TTL before expensive validation starts and, when
+/// permitted, renewing the claiming agent's active lease beforehand.
+pub(crate) fn ensure_validation_lease_ttl(
+    store_root: &Path,
+    task_id: &str,
+    min_remaining_secs: u64,
+    auto_renew: bool,
+) -> Result<u64, error::DecapodError> {
+    let broker = DbBroker::new(store_root);
+    if broker.is_cloud() {
+        return Err(error::DecapodError::NotImplemented(
+            "VALIDATION_HISTORY_BACKEND_UNSUPPORTED: historical task proof requires the local canonical journal".into(),
+        ));
+    }
+    let agent_id = crate::current_agent_id();
+    let now_ts = now_iso();
+    let now_secs = parse_epoch_z(&now_ts).unwrap_or_else(now_unix_secs);
+    let required_secs = min_remaining_secs.clamp(1, MAX_CLAIM_LEASE_SECS);
+    let (status, remaining_secs) = broker.with_conn(
+        &todo_db_path(store_root),
+        "decapod",
+        None,
+        "validation.history.lease_ttl_check",
+        |conn| {
+            let row: Option<(String, String, Option<String>, i64, String)> = conn
+                .query_row(
+                    "SELECT status, assigned_to, lease_expires_at, COALESCE(lease_generation, 0),
+                            COALESCE(lease_lifecycle, '')
+                     FROM tasks WHERE id = ?1",
+                    [task_id],
+                    |row| {
+                        Ok((
+                            row.get(0)?,
+                            row.get(1)?,
+                            row.get(2)?,
+                            row.get(3)?,
+                            row.get(4)?,
+                        ))
+                    },
+                )
+                .optional()
+                .map_err(error::DecapodError::StorageError)?;
+            let Some((status, assigned_to, lease_expires_at, lease_generation, lease_lifecycle)) =
+                row
+            else {
+                return Err(error::DecapodError::ValidationError(
+                    "VALIDATION_HISTORY_TASK_UNBOUND: validation requires current exclusive task custody".into(),
+                ));
+            };
+            if assigned_to.is_empty()
+                || assigned_to != agent_id
+                || !matches!(status.as_str(), "open" | "in_progress" | "done")
+                || lease_generation <= 0
+                || !LeaseLifecycle::parse(Some(&lease_lifecycle)).holds_exclusive_custody()
+                || fleet_coord::lease_state(lease_expires_at.as_deref(), &now_ts)
+                    != fleet_coord::LeaseState::Active
+            {
+                return Err(error::DecapodError::ValidationError(
+                    "VALIDATION_HISTORY_TASK_UNBOUND: validation requires current exclusive task custody".into(),
+                ));
+            }
+            let expires_secs = lease_expires_at
+                .as_deref()
+                .and_then(fleet_coord::parse_epoch_z)
+                .unwrap_or(0);
+            Ok((status, expires_secs.saturating_sub(now_secs)))
+        },
+    )?;
+    if remaining_secs >= required_secs {
+        return Ok(remaining_secs);
+    }
+    if !auto_renew || status == "done" {
+        return Err(error::DecapodError::ValidationError(format!(
+            "VALIDATION_LEASE_TTL_INSUFFICIENT: remaining task claim lease ({remaining_secs}s) for '{task_id}' is shorter than validation budget ({required_secs}s); run `decapod todo renew --id {task_id} --lease-seconds {required_secs}` before running validation"
+        )));
+    }
+    let renew_secs = required_secs.clamp(DEFAULT_CLAIM_LEASE_SECS, MAX_CLAIM_LEASE_SECS);
+    let renewed = renew_claim_lease(store_root, task_id, &agent_id, Some(renew_secs))?;
+    if renewed.get("status").and_then(|v| v.as_str()) != Some("ok") {
+        let detail = renewed["result"]["message"]
+            .as_str()
+            .unwrap_or("unable to extend active claim lease");
+        return Err(error::DecapodError::ValidationError(format!(
+            "VALIDATION_LEASE_TTL_INSUFFICIENT: remaining task claim lease ({remaining_secs}s) for '{task_id}' is shorter than validation budget ({required_secs}s) and automatic renewal failed: {detail}"
+        )));
+    }
+    Ok(renew_secs)
+}
+
 pub(crate) fn ensure_task_full_validation_plan_on_conn(
     conn: &Connection,
     task_id: &str,
@@ -8220,7 +8310,18 @@ pub fn run_todo_cli_with_cloud_factory<F: CloudTodoStoreFactory>(
                     "Historical completion requires --validated and cannot capture replacement --artifact inputs".into(),
                 ));
             }
-            let prepared = if let Some(sha) = commit {
+            let prepared = if crate::core::group_broker::is_internal_invocation()
+                && *validated
+                && let Ok(request_id) = std::env::var("DECAPOD_GROUP_BROKER_REQUEST_ID")
+                && let Some(handoff) = verify::consume_prepared_done_handoff(
+                    store,
+                    &project_root,
+                    &task_id,
+                    commit.as_deref(),
+                    &request_id,
+                )? {
+                Some(handoff)
+            } else if let Some(sha) = commit {
                 Some(verify::prepare_historical_completion(
                     store,
                     &project_root,
@@ -8279,6 +8380,19 @@ pub fn run_todo_cli_with_cloud_factory<F: CloudTodoStoreFactory>(
             }
             if !*validated && out.get("status").and_then(|v| v.as_str()) == Some("ok") {
                 mark_todo_claimed_pending_proof(store, &task_id)?;
+                let remediation = if let Some(sha) =
+                    crate::core::validation_history::latest_candidate_for_task(store, &task_id)
+                {
+                    format!(
+                        "Task closed without --validated (status=CLAIMED); subsequent `decapod validate` runs will require proof. Recover with `decapod todo done {task_id} --validated --commit {sha}` (if integrated into the accepted branch), `decapod qa verify regen {task_id}`, or `decapod qa verify recover --artifact {task_id}=<file>`."
+                    )
+                } else {
+                    format!(
+                        "Task closed without --validated (status=CLAIMED); subsequent `decapod validate` runs will require proof. Recover with `decapod qa verify regen {task_id}` or `decapod qa verify recover --artifact {task_id}=<file>` (or `decapod todo done {task_id} --validated --commit <sha>` once validated)."
+                    )
+                };
+                out["verification_status"] = serde_json::json!("CLAIMED");
+                out["remediation"] = serde_json::json!(remediation);
             }
             out
         }
@@ -8748,7 +8862,7 @@ fn mark_todo_claimed_pending_proof(
                     "[\"validate_passes\"]",
                     ts,
                     "CLAIMED",
-                    "Claimed complete; proof hooks not yet verified. Run `decapod qa verify todo <id>`.",
+                    "Claimed complete; proof hooks not yet verified. Run `decapod todo done <id> --validated --commit <sha>`, `decapod qa verify regen <id>`, or `decapod qa verify recover --artifact <id>=<file>`.",
                 ],
             )
             .map_err(error::DecapodError::StorageError)?;
@@ -8777,6 +8891,57 @@ pub(crate) fn is_validated_completion(cli: &TodoCli) -> bool {
             ..
         }
     )
+}
+
+/// Run slow historical/QA completion verification outside the exclusive
+/// group-broker lock and persist a request-bound handoff for the short
+/// transactional completion inside the brokered child.
+pub(crate) fn prepare_validated_done_handoff(
+    store: &Store,
+    cli: &TodoCli,
+    request_id: &str,
+) -> Result<Option<PathBuf>, error::DecapodError> {
+    let TodoCommand::Done {
+        id,
+        id_positional,
+        validated: true,
+        artifact,
+        commit,
+    } = &cli.command
+    else {
+        return Ok(None);
+    };
+    let task_id = resolve_task_id_arg(id, id_positional, "todo done")?;
+    let project_root = crate::core::store::find_decapod_project_root(
+        &std::env::current_dir().map_err(error::DecapodError::IoError)?,
+    )
+    .unwrap_or_else(|_| {
+        store
+            .root
+            .parent()
+            .and_then(|p| p.parent())
+            .map(|p| p.to_path_buf())
+            .unwrap_or(std::env::current_dir().unwrap())
+    });
+    if commit.is_none() && crate::plan_governance::load_plan(&project_root)?.is_some() {
+        crate::plan_governance::ensure_execute_ready(crate::plan_governance::ExecuteCheckInput {
+            project_root: &project_root,
+            store_root: &store.root,
+            todo_id: Some(&task_id),
+        })?;
+    }
+    if commit.is_some() && !artifact.is_empty() {
+        return Err(error::DecapodError::ValidationError(
+            "Historical completion requires --validated and cannot capture replacement --artifact inputs".into(),
+        ));
+    }
+    let prepared = if let Some(sha) = commit {
+        verify::prepare_historical_completion(store, &project_root, &task_id, sha)?
+    } else {
+        verify::prepare_verified_completion(store, &project_root, &task_id, artifact.clone())?
+    };
+    let path = verify::write_prepared_done_handoff(store, request_id, &prepared)?;
+    Ok(Some(path))
 }
 
 pub fn is_heartbeat_command(cli: &TodoCli) -> bool {

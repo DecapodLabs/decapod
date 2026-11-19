@@ -132,6 +132,9 @@ fn run_preflight_checks(store: &Store, project_root: &Path) -> Result<DoctorRepo
     // 8. Config validation
     checks.push(check_config(project_root));
 
+    // 9. Open file descriptor limits (RLIMIT_NOFILE)
+    checks.push(check_nofile_limit());
+
     let passed = checks
         .iter()
         .filter(|c| c.status == CheckStatus::Pass)
@@ -428,6 +431,41 @@ fn check_config(project_root: &Path) -> CheckResult {
             name: "Config".to_string(),
             status: CheckStatus::Pass,
             message: "No config file (using defaults)".to_string(),
+        }
+    }
+}
+
+fn check_nofile_limit() -> CheckResult {
+    match crate::core::bounded_process::current_nofile_limits() {
+        Ok(limits) => evaluate_nofile_limit(limits),
+        Err(err) => CheckResult {
+            name: "Open File Limit (RLIMIT_NOFILE)".to_string(),
+            status: CheckStatus::Pass,
+            message: format!("Skipped on this platform ({err})"),
+        },
+    }
+}
+
+fn evaluate_nofile_limit(limits: crate::core::bounded_process::NofileLimits) -> CheckResult {
+    let hard_display = limits.hard_display();
+    if limits.soft < crate::core::bounded_process::LOW_NOFILE_WARNING_THRESHOLD {
+        CheckResult {
+            name: "Open File Limit (RLIMIT_NOFILE)".to_string(),
+            status: CheckStatus::Warn,
+            message: format!(
+                "Soft limit is {} (hard={}); below recommended {}. `decapod validate` and `project-check` raise child harness soft RLIMIT_NOFILE toward min(hard, {}); run `ulimit -n {}` before manual high-concurrency suites.",
+                limits.soft,
+                hard_display,
+                crate::core::bounded_process::LOW_NOFILE_WARNING_THRESHOLD,
+                crate::core::bounded_process::RECOMMENDED_NOFILE_CEILING,
+                crate::core::bounded_process::RECOMMENDED_NOFILE_CEILING,
+            ),
+        }
+    } else {
+        CheckResult {
+            name: "Open File Limit (RLIMIT_NOFILE)".to_string(),
+            status: CheckStatus::Pass,
+            message: format!("soft={} (hard={})", limits.soft, hard_display),
         }
     }
 }

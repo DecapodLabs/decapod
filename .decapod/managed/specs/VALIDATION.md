@@ -479,6 +479,22 @@ proof and journal state. Subsequent QA inspection must preserve this historical
 meaning after unrelated work and epoch changes. Publication continues requiring
 fresh complete proof and cannot consume this historical completion permission.
 
+Additional ergonomics and private-repository regressions (#1807, #1810) cover:
+- Authenticated read-only private-repo accepted-target resolution via mock
+  `OfficialCli` `GithubGet` (`validation_history::integration_tests`) and redacted
+  error reporting when unauthenticated and authenticated transports are unavailable;
+- Pre-capture lease TTL verification and automatic renewal before freezing
+  `HistoricalTaskBinding` (`validation_history::archive_tests::capture_task_binding_with_budget_auto_renews_short_lease_and_respects_opt_out`);
+- Request-bound pre-broker `todo done --validated` handoff validation and cleanup
+  (`plugins::verify::historical_tests::prepared_done_handoff_roundtrips_and_rejects_mismatched_commit_or_request`
+  and `tests/validate_ergonomics_1807_1810.rs::todo_done_validated_decouples_broker_and_cleans_handoff`);
+- Unverified `done` (`CLAIMED`) self-service recovery via `qa verify regen` without
+  self-deadlock (`tests/validate_ergonomics_1807_1810.rs::unverified_done_todo_recovers_via_qa_verify_regen_without_self_deadlock`);
+- Unix `RLIMIT_NOFILE` diagnostics in `system doctor check` and `validate_open_file_limits`
+  plus automatic soft-limit elevation for spawned harnesses
+  (`core::bounded_process::tests`, `plugins::doctor::tests`, and
+  `tests/validate_ergonomics_1807_1810.rs::rlimit_nofile_diagnosed_in_doctor_and_raised_for_validate_harnesses`).
+
 The inline Rust regressions are part of the library unit suite selected by the
 complete source profile. Their presence and source review are not execution
 evidence; the exact candidate still requires configured full validation.
@@ -1461,8 +1477,8 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `1e60a57374c12fbc63b20f06f1a9155450ef756ec54a285d4e5641154c3468ef`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (237 files), `tests/` (239 files)
+- Repository signal fingerprint: `8698ac5dcf3abd8211921007ebc16383711361f1e6b859ed4d0536c1c5bf56e2`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (237 files), `tests/` (240 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 

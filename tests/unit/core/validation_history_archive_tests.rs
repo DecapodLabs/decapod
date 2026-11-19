@@ -310,3 +310,57 @@ fn native_and_provider_capture_archive_and_lookup_survive_evidence_directory_del
         );
     }
 }
+
+#[test]
+fn capture_task_binding_with_budget_auto_renews_short_lease_and_respects_opt_out() {
+    let (_temp, repo, store, _base) = fixture();
+    let now_secs = crate::core::time::now_epoch_z()
+        .trim_end_matches('Z')
+        .parse::<u64>()
+        .unwrap();
+    let agent_id = crate::current_agent_id();
+    let shortened = todo::renew_claim_lease(&store.root, TASK, &agent_id, Some(60)).unwrap();
+    assert_eq!(shortened.get("status").and_then(|v| v.as_str()), Some("ok"));
+    let shortened_gen = todo::capture_validation_binding(&store.root, TASK)
+        .unwrap()
+        .lease_generation;
+
+    // With auto-renew disabled, a 60s remaining lease fails fast against a 1800s budget.
+    let err = todo::ensure_validation_lease_ttl(&store.root, TASK, 1800, false).unwrap_err();
+    assert!(
+        err.to_string()
+            .contains("VALIDATION_LEASE_TTL_INSUFFICIENT")
+    );
+
+    // With auto-renew enabled, the active claiming agent's lease is extended
+    // before capture_task_binding freezes revision & lease_generation.
+    let binding = capture_task_binding_with_budget(&store, &repo, Duration::from_secs(1800))
+        .unwrap()
+        .unwrap();
+    assert!(binding.task.lease_generation > shortened_gen);
+    let updated = todo::get_task(&store.root, TASK).unwrap().unwrap();
+    assert_eq!(updated.revision, binding.task.revision);
+    let refreshed_exp_raw: Option<String> = DbBroker::new(&store.root)
+        .with_conn(
+            &todo::todo_db_path(&store.root),
+            "test",
+            None,
+            "test.validation_history.read_lease",
+            |conn| {
+                conn.query_row(
+                    "SELECT lease_expires_at FROM tasks WHERE id = ?1",
+                    db::params![TASK],
+                    |row| row.get(0),
+                )
+                .map_err(crate::core::error::DecapodError::from)
+            },
+        )
+        .unwrap();
+    let refreshed_exp = refreshed_exp_raw
+        .as_deref()
+        .unwrap()
+        .trim_end_matches('Z')
+        .parse::<u64>()
+        .unwrap();
+    assert!(refreshed_exp >= now_secs + 1800);
+}

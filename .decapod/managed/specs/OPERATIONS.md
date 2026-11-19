@@ -216,6 +216,20 @@ candidate commit SHA (`head_revision`), canonical tracked `tree_digest`,
   incrementing `lease_generation`) immediately invalidates prior completion history
   and workunit checkpoints (`VALIDATION_HISTORY_TASK_STALE` on `todo done --validated
   --commit`, `govern workunit transition --to verified`, and `govern workunit resume`).
+  To prevent avoidable mid-validation lease expiration during long provider runs,
+  `validation_history::capture_task_binding_with_budget` calls
+  `todo::ensure_validation_lease_ttl` *before* freezing `HistoricalTaskBinding`,
+  automatically extending the active claiming agent's lease when remaining TTL is
+  shorter than the validation budget (unless `DECAPOD_VALIDATE_AUTO_RENEW_LEASE=0`,
+  which fails fast with `VALIDATION_LEASE_TTL_INSUFFICIENT`).
+- **Open file descriptor limits (`RLIMIT_NOFILE`):** On Unix hosts with restrictive
+  default soft limits (such as macOS `ulimit -n 256`), `bounded_process::configure_child_nofile_limit`
+  and `raise_nofile_soft_limit_in_child` raise the soft `RLIMIT_NOFILE` of spawned
+  `validate` / `govern project-check` workers and child test/tooling harnesses toward
+  `min(hard_limit, 65536)` with graceful fallbacks (`10240`, `4096`) without failing
+  spawn. `system doctor check` warns when the shell soft limit is below `4096`, and
+  `validate_open_file_limits` emits a non-blocking `RLIMIT_NOFILE_LOW` advisory when
+  hard caps keep the worker below `4096`.
 - **Partial and local scopes:** `GITHUB_ACTIONS=true` / `BUILDKITE=true` runs
   (`scope=ci_local`, `publication_ready=false`, `readiness=null`), `govern
   project-check` (`publication_ready=false`), and `validate --snapshot-prepare`
@@ -415,8 +429,8 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `1e60a57374c12fbc63b20f06f1a9155450ef756ec54a285d4e5641154c3468ef`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (237 files), `tests/` (239 files)
+- Repository signal fingerprint: `8698ac5dcf3abd8211921007ebc16383711361f1e6b859ed4d0536c1c5bf56e2`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (237 files), `tests/` (240 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 

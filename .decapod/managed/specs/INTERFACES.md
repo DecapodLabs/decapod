@@ -419,7 +419,15 @@ other gates. This option does not apply to cloud-backed claims.
 The internal Unix-socket broker request in
 `src/decapod/core/group_broker.rs` uses protocol version 3. Alongside
 request ID, arguments and an absolute queue/execution deadline, each request carries a canonical absolute working
-directory and an explicitly allowlisted caller context. Agent identity, session,
+directory and an explicitly allowlisted caller context. The broker leader honors
+the caller's bounded `request.deadline_ms` (capped by `BUILD_TIMEOUT`) instead of
+clamping `todo claim` or `workspace status|prune` control mutations to 15s
+`CONTROL_TIMEOUT`. For `todo done --validated`, slow historical/QA verification
+executes outside the exclusive group-broker lock via
+`todo::prepare_validated_done_handoff` before broker dispatch, handing off a
+mode-`0600` request-bound token that the brokered worker re-verifies against
+canonical storage (`verify::consume_prepared_done_handoff`) before the short
+transactional status commit. Agent identity, session,
 task, correlation, causation, idempotency and claim-autorun inputs replace—not
 merge with—the elected leader's corresponding environment. The child executable
 is resolved independently of either working directory.
@@ -948,9 +956,16 @@ Proof references remain historical references rather than renewed permission.
 is global and applies to every `qa verify` subcommand, including
 `qa verify recover --stale`: it lists stale done tasks (with
 `last_verified_at` and `verification_policy_days`) and returns without
-running any child validation (#1527). Explicit recapture
-runs real validation before binding new evidence. Batch recovery first leaves
-its refreshed evidence `CLAIMED` and requires per-task and aggregate proof.
+running any child validation (#1527). Closing a task via `todo done` without
+`--validated` records `verification_status: "CLAIMED"` and actionable `remediation`
+pointing to `todo done <id> --validated --commit <sha>` (when a recorded candidate
+exists via `validation_history::latest_candidate_for_task`), `qa verify regen <id>`,
+or `qa verify recover --artifact <id>=<file>`. `PROOF_HOOK_FAILED` and
+`verify_target` surface the same self-service recovery paths, and `qa verify regen <id>`
+enters `VerifyingTodosGuard` around its baseline capture so regenerating proof for
+an unverified `done` task cannot self-deadlock on its own `CLAIMED` entry. Explicit
+recapture runs real validation before binding new evidence. Batch recovery first
+leaves its refreshed evidence `CLAIMED` and requires per-task and aggregate proof.
 
 `STALE_TASK_VERIFICATION` reports a task or verification baseline changed while
 verification was running. The stale result is discarded without replacing the
@@ -1359,8 +1374,8 @@ field. Nothing in this operation authorizes a mutation, approval or completion.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `1e60a57374c12fbc63b20f06f1a9155450ef756ec54a285d4e5641154c3468ef`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (237 files), `tests/` (239 files)
+- Repository signal fingerprint: `8698ac5dcf3abd8211921007ebc16383711361f1e6b859ed4d0536c1c5bf56e2`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (237 files), `tests/` (240 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 
