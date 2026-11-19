@@ -573,47 +573,72 @@
     }
   },
   "change": {
-    "id": "feat_01m7r6pxxakene2e",
+    "id": "pr-1247-shared-state",
     "base_commit": "102d6eb22046032e7214ee821ab166f06271585c",
     "target_base": "origin/master"
   },
   "checkpoints": [
     {
-      "id": "conc-1469-v01493",
-      "summary": "Prove concurrent isolated authoring and combined candidate admission (#1469)",
-      "input_digest": "sha256:798670d4b0d1d20a10b4d847a3c76d8127e2c08ff04dba6b283e67166eb94920",
+      "id": "cp-1247-1",
+      "summary": "feat(concurrency): harden and prove shared-state transition semantics (#1247)",
+      "input_digest": "sha256:9884a8504cfaf3a871ab1c74f645b5a4b01f0954f7dfc7dc414fc4a39e67933b",
       "proof_refs": [
-        ".decapod/managed/specs/ARCHITECTURE.md",
-        "tests/concurrent_worktree_integration_1469.rs"
+        "tests/shared_state_semantics_1247.rs"
       ]
     },
     {
-      "id": "conc-1469-merge-cfe2565d",
-      "summary": "Integrate accepted master cfe2565da (#1776) and refresh v0.149.3 projections (#1469)",
-      "input_digest": "sha256:e6908e7fc47c3b2f273ca34d32ea40dcd8c1b8c0ce00351b585477be4851ab6b",
+      "id": "cp-1247-2",
+      "summary": "chore(concurrency): integrate accepted master cfe2565da (#1247)",
+      "input_digest": "sha256:aa6d64aa88cfe9fe0d38835c71581270e66de02683f9954e2215db53e9f12d39",
       "proof_refs": [
-        ".decapod/managed/specs/ARCHITECTURE.md",
-        "tests/concurrent_worktree_integration_1469.rs"
+        "tests/shared_state_semantics_1247.rs"
+      ]
+    },
+    {
+      "id": "cp-1247-3",
+      "summary": "chore(concurrency): integrate accepted master 845ff9799 (#1247)",
+      "input_digest": "sha256:d842dd1cd5be686b67a86e0aaf4dc8b60ee48d6b962e92b1974a9e8ab2dd91d2",
+      "proof_refs": [
+        "tests/shared_state_semantics_1247.rs"
+      ]
+    },
+    {
+      "id": "cp-1247-4",
+      "summary": "fix(concurrency): keep Dactyl atomic_mutation event SQL static for sql_context gate (#1247)",
+      "input_digest": "sha256:1888e0f3a06b9d24a694b928599800281e80fa3911c238ea5507c8cb5ee98b48",
+      "proof_refs": [
+        "src/decapod/core/gatekeeper/sql_context.rs",
+        "tests/shared_state_semantics_1247.rs"
+      ]
+    },
+    {
+      "id": "cp-1247-5",
+      "summary": "test(cloud): align supabase batch event SQL assertion with #1247 post-condition guard",
+      "input_digest": "sha256:b03ffdd98e0d4676591b1fd5dd0e342c7a296d7601fc44b8d69f948894d6eacc",
+      "proof_refs": [
+        "tests/cloud_supabase_boundary.rs"
       ]
     }
   ],
   "intents": {
-    "intent:conc-1469-run": {
+    "intent:run-1247-shared-state": {
       "acceptance_criteria": [],
       "assumptions": [],
       "boundaries": [
-        "Isolated worktree only; hold git push and gh pr create"
+        "Work only inside isolated worktree; never mutate root master or fake live hosted Propodus Postgres passes"
       ],
       "constraints": [
-        "tests/concurrent_worktree_integration_1469.rs",
-        ".decapod/managed/specs/ARCHITECTURE.md"
+        "src/decapod/core/dactyl_todo.rs",
+        "src/decapod/core/todo.rs",
+        "tests/shared_state_semantics_1247.rs",
+        ".decapod/managed/specs/SEMANTICS.md"
       ],
       "created_sequence": 1,
-      "id": "intent:conc-1469-run",
+      "id": "intent:run-1247-shared-state",
       "out_of_scope": [],
       "proof_requirements": [],
-      "raw_intent": "Allow concurrent implementation in isolated worktrees without broad source-claim serialization (#1469)",
-      "refined_intent": "Add actual-binary CLI + worktree regression suite tests/concurrent_worktree_integration_1469.rs covering all 3 #1469 scenarios and update ARCHITECTURE.md",
+      "raw_intent": "Define and prove shared-state transition semantics across local and Propodus backends (#1247)",
+      "refined_intent": "Harden Dactyl atomic state+event post-condition/timestamp fencing and todo attribution/edit guards, update SEMANTICS.md, and add adversarial 5-case conformance suite tests/shared_state_semantics_1247.rs",
       "status": "refined",
       "updated_sequence": 3
     }
@@ -626,53 +651,53 @@
       },
       "deferred_questions": [],
       "human_questions": [],
-      "intent": "Prove disjoint/advisory path overlap allows concurrent authoring across isolated worktrees while strictly fencing exclusive custody/integration resources, combined-candidate interface+behavior checks block admission until repaired, and target advancement marks earlier receipts stale (STALE_*)",
+      "intent": "Define and prove shared-state transition semantics across local and Propodus backends (#1247)",
       "phases": [],
       "proof_hooks": [
-        "cargo fmt --all -- --check",
-        "CLIPPY_CONF_DIR=.config cargo clippy --all-targets --all-features -- -D warnings",
-        "cargo test --test concurrent_worktree_integration_1469 -- --test-threads=1",
-        "cargo test --test consumer_readiness two_isolated_worktrees_require_combined_candidate_validation_and_target_freshness"
+        "cargo test --test shared_state_semantics_1247",
+        "cargo test --lib core::dactyl_todo",
+        "cargo test --lib core::todo",
+        "CLIPPY_CONF_DIR=.config cargo clippy --all-targets --all-features -- -D warnings"
       ],
       "schema_version": "1.1.0",
       "spec_reviews": [
         {
-          "disposition": "updated",
+          "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Documented concurrent isolated authoring, advisory vs enforced custody overlaps, and combined-candidate admission (#1469)",
-          "reviewed_code_fingerprint": "75fb25073525c9e4ea6a2a4df7a58ef89cb21325047985833122f88b53fd1e4a",
+          "reason": "Re-reviewed after aligning tests/cloud_supabase_boundary.rs expected batch event SQL with #1247 static post-condition guard.",
+          "reviewed_code_fingerprint": "e6446e3c3225d20a825f0568cfd51476c7ebf6c48e5aaae866af11a2f19f5c5a",
           "spec_material_hash": "b5e1e3c343de9ed9ba501e7a48d61b43dfed92d7678b3126d1195c9c1cdb9d08"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "No CLI, RPC, or external schema signatures were added or altered; PR #1469 adds regression coverage and architecture documentation",
-          "reviewed_code_fingerprint": "75fb25073525c9e4ea6a2a4df7a58ef89cb21325047985833122f88b53fd1e4a",
+          "reason": "Re-reviewed after aligning tests/cloud_supabase_boundary.rs expected batch event SQL; no CLI or wire interface changed.",
+          "reviewed_code_fingerprint": "e6446e3c3225d20a825f0568cfd51476c7ebf6c48e5aaae866af11a2f19f5c5a",
           "spec_material_hash": "1445e13fa7ccfa6c4a68850bd794b6b1ba7379c0148b570c3a7605b6a26beb25"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Preserved #1776 accepted-policy security prose from origin/master cfe2565d; PR #1469 adds regression coverage and architecture documentation only",
-          "reviewed_code_fingerprint": "75fb25073525c9e4ea6a2a4df7a58ef89cb21325047985833122f88b53fd1e4a",
+          "reason": "Re-reviewed after aligning tests/cloud_supabase_boundary.rs expected batch event SQL; supabase-cloud consumer test suite now asserts the #1247 static post-condition guard.",
+          "reviewed_code_fingerprint": "e6446e3c3225d20a825f0568cfd51476c7ebf6c48e5aaae866af11a2f19f5c5a",
           "spec_material_hash": "49c7d1428d860804f8fc7f436c5da22483d385c9ce4be90f7db52f1cf4b362ee"
         }
       ],
-      "state": "APPROVED",
+      "state": "DRAFT",
       "stop_conditions": [],
-      "title": "Prove concurrent isolated worktree authoring and combined candidate admission (#1469)",
+      "title": "Shared-state transition semantics (#1247)",
       "todo_ids": [
-        "feat_01m7r6pxxakene2e"
+        "bend_01m7r94mgkz3xdpb"
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795052632Z"
+      "updated_at": "1795057867Z"
     },
     "trajectory": {
       "active_boundaries": [
-        "Isolated worktree only; hold git push and gh pr create"
+        "Work only inside isolated worktree; never mutate root master or fake live hosted Propodus Postgres passes"
       ],
-      "artifact_hash": "sha256:a1b2a41c2bfdefe2fe2db8298d6092901d51b7d436b5f83ef2b16573ac0e7a44",
+      "artifact_hash": "sha256:2c98cb2d440df6af9f74bccb8c94495d05f04ab36086af13dffbea137e65e2f9",
       "checks": [
         {
           "name": "cargo_clippy_all_targets_all_features",
@@ -683,11 +708,47 @@
           "status": "passed"
         },
         {
-          "name": "cargo_test_concurrent_worktree_integration_1469",
+          "name": "test_cloud_command_path",
           "status": "passed"
         },
         {
-          "name": "cargo_test_consumer_readiness_two_isolated_worktrees",
+          "name": "test_cloud_dactyl_boundary",
+          "status": "passed"
+        },
+        {
+          "name": "test_cloud_todo_resume_wire",
+          "status": "passed"
+        },
+        {
+          "name": "test_core_dactyl_todo",
+          "status": "passed"
+        },
+        {
+          "name": "test_core_todo",
+          "status": "passed"
+        },
+        {
+          "name": "test_gatekeeper_sql_context",
+          "status": "passed"
+        },
+        {
+          "name": "test_group_broker",
+          "status": "passed"
+        },
+        {
+          "name": "test_shared_state_semantics_1247",
+          "status": "passed"
+        },
+        {
+          "name": "test_supabase_cloud_consumer_suite",
+          "status": "passed"
+        },
+        {
+          "name": "test_todo_enforcement",
+          "status": "passed"
+        },
+        {
+          "name": "test_validation_scope",
           "status": "passed"
         }
       ],
@@ -695,59 +756,151 @@
         "events": [
           {
             "event_id": "event:2",
-            "intent_id": "intent:conc-1469-run",
+            "intent_id": "intent:run-1247-shared-state",
             "kind": "created",
             "sequence": 2
           },
           {
             "event_id": "event:3",
-            "intent_id": "intent:conc-1469-run",
+            "intent_id": "intent:run-1247-shared-state",
             "kind": "refined",
             "sequence": 3
           },
           {
-            "detail": "trajectory:conc-1469-run",
+            "detail": "trajectory:run-1247-shared-state",
             "event_id": "event:4",
-            "intent_id": "intent:conc-1469-run",
+            "intent_id": "intent:run-1247-shared-state",
             "kind": "trajectory_step_recorded",
             "sequence": 4
+          },
+          {
+            "detail": "trajectory:run-1247-shared-state",
+            "event_id": "event:5",
+            "intent_id": "intent:run-1247-shared-state",
+            "kind": "trajectory_step_recorded",
+            "sequence": 5
+          },
+          {
+            "detail": "trajectory:run-1247-shared-state",
+            "event_id": "event:6",
+            "intent_id": "intent:run-1247-shared-state",
+            "kind": "trajectory_step_recorded",
+            "sequence": 6
+          },
+          {
+            "detail": "trajectory:run-1247-shared-state",
+            "event_id": "event:7",
+            "intent_id": "intent:run-1247-shared-state",
+            "kind": "trajectory_step_recorded",
+            "sequence": 7
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 4,
+        "next_sequence": 7,
         "schema_version": "1.0.0",
         "trajectories": {
-          "conc-1469-run": {
+          "run-1247-shared-state": {
             "evidence_only": true,
-            "id": "conc-1469-run",
-            "intent_id": "intent:conc-1469-run",
+            "id": "run-1247-shared-state",
+            "intent_id": "intent:run-1247-shared-state",
             "steps": [
               {
                 "action": "trajectory.record",
                 "custody_event_id": "event:4",
                 "observations": [
-                  "src/decapod/core/fleet_coord.rs",
+                  "src/decapod/core/dactyl_todo.rs",
                   "src/decapod/core/todo.rs",
-                  "src/decapod/core/authoring.rs",
-                  "src/decapod/core/workspace.rs",
-                  "src/decapod/core/validation_runtime.rs",
-                  "src/decapod/core/validation_history.rs",
-                  "tests/consumer_readiness.rs",
-                  "tests/concurrent_worktree_integration_1469.rs",
-                  ".decapod/managed/specs/ARCHITECTURE.md",
-                  "task-927 on 102d6eb22 v0.149.3: fmt exit 0, clippy exit 0, concurrent_worktree_integration_1469 3/3 passed (760.30s), consumer_readiness::two_isolated_worktrees_require_combined_candidate_validation_and_target_freshness 1/1 passed (23.77s)"
+                  "tests/shared_state_semantics_1247.rs",
+                  ".decapod/managed/specs/SEMANTICS.md",
+                  "tests/shared_state_semantics_1247.rs: 10 passed; 0 failed on v0.149.3 102d6eb22 tree",
+                  "core::dactyl_todo: 6 passed; 0 failed on v0.149.3 102d6eb22 tree",
+                  "cargo fmt --all -- --check: exit 0 on v0.149.3 102d6eb22 tree; clippy --all-targets --all-features -D warnings (0 warnings), core::todo (92/92), cloud_todo_resume_wire (3/3), cloud_command_path (1/1), cloud_dactyl_boundary (1/1), todo_enforcement (4/4), group_broker (16/16) passed on identical #1247 src/ and test code"
                 ],
                 "proof_refs": [
                   "cargo_fmt",
                   "cargo_clippy_all_targets_all_features",
-                  "cargo_test_concurrent_worktree_integration_1469",
-                  "cargo_test_consumer_readiness_two_isolated_worktrees"
+                  "test_shared_state_semantics_1247",
+                  "test_core_dactyl_todo",
+                  "test_core_todo",
+                  "test_cloud_todo_resume_wire",
+                  "test_cloud_command_path",
+                  "test_cloud_dactyl_boundary",
+                  "test_todo_enforcement",
+                  "test_group_broker"
                 ],
                 "scope": [
-                  ".decapod/managed/specs/ARCHITECTURE.md",
-                  "tests/concurrent_worktree_integration_1469.rs"
+                  ".decapod/managed/specs/SEMANTICS.md",
+                  "src/decapod/core/dactyl_todo.rs",
+                  "src/decapod/core/todo.rs",
+                  "tests/shared_state_semantics_1247.rs"
                 ],
                 "sequence": 4,
+                "validation_findings": [
+                  "Live hosted Propodus Postgres execution remains externally bounded when hosted credentials and live Propodus endpoints are absent; verified against local SQLite and mock/denial Dactyl HTTP boundaries."
+                ]
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:5",
+                "observations": [
+                  "Post-merge cfe2565da (v0.149.3): cargo fmt --all -- --check exit 0, shared_state_semantics_1247 10/10 (21.68s), core::dactyl_todo 6/6 (0.05s), validation_scope 9/9 (0.04s)"
+                ],
+                "proof_refs": [
+                  "cargo_fmt",
+                  "test_shared_state_semantics_1247",
+                  "test_core_dactyl_todo",
+                  "test_validation_scope"
+                ],
+                "scope": [
+                  ".decapod/managed/specs/SEMANTICS.md",
+                  "src/decapod/core/dactyl_todo.rs",
+                  "src/decapod/core/todo.rs",
+                  "tests/shared_state_semantics_1247.rs"
+                ],
+                "sequence": 5,
+                "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:6",
+                "observations": [
+                  "src/decapod/core/dactyl_todo.rs",
+                  ".decapod/managed/specs/SEMANTICS.md",
+                  "Replaced format! in DactylTodoStore::atomic_mutation with static event_type-dispatched SQL literal; passed core::gatekeeper::sql_context 16/16 (incl. actual_dactyl_todo_matches_have_consumed_sql_evidence), core::dactyl_todo 6/6, shared_state_semantics_1247 10/10, cargo fmt exit 0"
+                ],
+                "proof_refs": [
+                  "cargo_fmt",
+                  "test_gatekeeper_sql_context",
+                  "test_core_dactyl_todo",
+                  "test_shared_state_semantics_1247"
+                ],
+                "scope": [
+                  ".decapod/managed/specs/SEMANTICS.md",
+                  "src/decapod/core/dactyl_todo.rs",
+                  "src/decapod/core/todo.rs",
+                  "tests/shared_state_semantics_1247.rs"
+                ],
+                "sequence": 6,
+                "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:7",
+                "observations": [
+                  "tests/cloud_supabase_boundary.rs",
+                  "Aligned tests/cloud_supabase_boundary.rs:548 expected event SQL with #1247 static post-condition guard; passed full --features supabase-cloud consumer suite (cloud_supabase_boundary 41/41, cloud_cli_boundary 1/1, cloud_command_path 1/1, cloud_dactyl_boundary 1/1, cloud_todo_resume_wire 3/3, propodus_contract 6/6, release_dependency_policy 4/4, supabase_service 3/3) and cargo fmt exit 0"
+                ],
+                "proof_refs": [
+                  "cargo_fmt",
+                  "test_supabase_cloud_consumer_suite"
+                ],
+                "scope": [
+                  ".decapod/managed/specs/SEMANTICS.md",
+                  "src/decapod/core/dactyl_todo.rs",
+                  "src/decapod/core/todo.rs",
+                  "tests/shared_state_semantics_1247.rs"
+                ],
+                "sequence": 7,
                 "validation_findings": []
               }
             ]
@@ -756,32 +909,36 @@
       },
       "declared_commands": [],
       "evidence": [
-        "task-927 on 102d6eb22 v0.149.3: fmt exit 0, clippy exit 0, concurrent_worktree_integration_1469 3/3 passed (760.30s), consumer_readiness::two_isolated_worktrees_require_combined_candidate_validation_and_target_freshness 1/1 passed (23.77s)"
+        "Aligned tests/cloud_supabase_boundary.rs:548 expected event SQL with #1247 static post-condition guard; passed full --features supabase-cloud consumer suite (cloud_supabase_boundary 41/41, cloud_cli_boundary 1/1, cloud_command_path 1/1, cloud_dactyl_boundary 1/1, cloud_todo_resume_wire 3/3, propodus_contract 6/6, release_dependency_policy 4/4, supabase_service 3/3) and cargo fmt exit 0",
+        "Post-merge cfe2565da (v0.149.3): cargo fmt --all -- --check exit 0, shared_state_semantics_1247 10/10 (21.68s), core::dactyl_todo 6/6 (0.05s), validation_scope 9/9 (0.04s)",
+        "Replaced format! in DactylTodoStore::atomic_mutation with static event_type-dispatched SQL literal; passed core::gatekeeper::sql_context 16/16 (incl. actual_dactyl_todo_matches_have_consumed_sql_evidence), core::dactyl_todo 6/6, shared_state_semantics_1247 10/10, cargo fmt exit 0",
+        "cargo fmt --all -- --check: exit 0 on v0.149.3 102d6eb22 tree; clippy --all-targets --all-features -D warnings (0 warnings), core::todo (92/92), cloud_todo_resume_wire (3/3), cloud_command_path (1/1), cloud_dactyl_boundary (1/1), todo_enforcement (4/4), group_broker (16/16) passed on identical #1247 src/ and test code",
+        "core::dactyl_todo: 6 passed; 0 failed on v0.149.3 102d6eb22 tree",
+        "tests/shared_state_semantics_1247.rs: 10 passed; 0 failed on v0.149.3 102d6eb22 tree"
       ],
-      "inspected_files": [
-        "src/decapod/core/authoring.rs",
-        "src/decapod/core/fleet_coord.rs",
-        "src/decapod/core/todo.rs",
-        "src/decapod/core/validation_history.rs",
-        "src/decapod/core/validation_runtime.rs",
-        "src/decapod/core/workspace.rs",
-        "tests/consumer_readiness.rs"
-      ],
-      "intent_id": "intent:conc-1469-run",
+      "inspected_files": [],
+      "intent_id": "intent:run-1247-shared-state",
       "modified_files": [
-        ".decapod/managed/specs/ARCHITECTURE.md",
-        "tests/concurrent_worktree_integration_1469.rs"
+        ".decapod/managed/specs/SEMANTICS.md",
+        "src/decapod/core/dactyl_todo.rs",
+        "src/decapod/core/todo.rs",
+        "tests/cloud_supabase_boundary.rs",
+        "tests/shared_state_semantics_1247.rs"
       ],
       "repo_scope": [
-        ".decapod/managed/specs/ARCHITECTURE.md",
-        "tests/concurrent_worktree_integration_1469.rs"
+        ".decapod/managed/specs/SEMANTICS.md",
+        "src/decapod/core/dactyl_todo.rs",
+        "src/decapod/core/todo.rs",
+        "tests/shared_state_semantics_1247.rs"
       ],
-      "run_id": "conc-1469-run",
+      "run_id": "run-1247-shared-state",
       "schema_version": "1.1.0",
       "shortcut_risk_signals": [],
-      "task_id": "feat_01m7r6pxxakene2e",
+      "task_id": "bend_01m7r94mgkz3xdpb",
       "tool_calls": [],
-      "unresolved_assumptions": []
+      "unresolved_assumptions": [
+        "Live hosted Propodus Postgres execution remains externally bounded when hosted credentials and live Propodus endpoints are absent; verified against local SQLite and mock/denial Dactyl HTTP boundaries."
+      ]
     }
   },
   "legacy_digests": {
