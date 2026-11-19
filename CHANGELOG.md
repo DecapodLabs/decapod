@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.150.7](https://github.com/DecapodLabs/decapod/compare/v0.150.6...v0.150.7) - 2026-11-19
+
+### Added
+
+- *(projection)* enforce measured-baseline performance budgets, degraded mode, and retention-stable receipts ([#1734](https://github.com/DecapodLabs/decapod/pull/1734))
+
+### Other
+
+- *(projection)* sync accepted master d0ca8eb36 (v0.150.6) ([#1734](https://github.com/DecapodLabs/decapod/pull/1734))
+- *(projection)* integrate accepted master 1332f4ecd (v0.150.0) ([#1734](https://github.com/DecapodLabs/decapod/pull/1734))
+- *(governance)* record content-bound spec reviews for #1734
+- *(projection)* integrate accepted master 45369197e (v0.149.3) ([#1734](https://github.com/DecapodLabs/decapod/pull/1734))
+
 ## [0.150.6](https://github.com/DecapodLabs/decapod/compare/v0.150.5...v0.150.6) - 2026-11-19
 
 ### Added
