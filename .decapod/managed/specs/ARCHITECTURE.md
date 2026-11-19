@@ -1132,8 +1132,8 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `c1341531d9fead81f36aa6afadf7e7e30db482f2f7b5b5989f498ddd2b2cb364`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (241 files), `tests/` (251 files)
+- Repository signal fingerprint: `156d22a7643395f7e85258f39dd8b67ec9fc3adb3b56cc2a675728410f1e2655`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (242 files), `tests/` (252 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 
@@ -1579,3 +1579,29 @@ Constitution (`decapod constitution get/search`, `decapod govern capsule query`)
 and repo-native Local (`decapod.db`) vs Cloud (Dactyl-routed task custody,
 `tests/cloud_managed_session.rs`) parity. No automatic merge arbitration,
 always-on daemon, or unimplemented MCP server capability is claimed.
+
+## Integrity-preserving merged journal reconciliation (#1780)
+
+`src/decapod/core/governance_document/merge_reconcile.rs` implements
+`core::governance_document::reconcile_merge`, exposed via
+`ArtifactsCommand::ReconcileMerge` in `cli.rs` and `lib.rs`. Instead of parsing
+potentially mixed working-tree JSON after a line-based Git merge, it reads
+canonical `.decapod/governance.json` blobs directly from immutable `HEAD`,
+`MERGE_HEAD`, and `merge-base --all` commits under `with_lock` after checking
+`ensure_ungrafted`.
+
+Two ancestry modes are supported:
+- **Same PR workstream** (matching `change.id`, `base_commit`, and normalized
+  `target_base`): 3-way merges `baseline`, `claims`, `resolutions`, `epochs`,
+  `recursive_passes`, `legacy_*`, `plan`, `checkpoints`, `trajectory`, and
+  `custody` events/trajectories, re-validates loops, clears changed or
+  trajectory-invalidated `validation` receipts, and recomputes canonical
+  `proof_status`, `verdicts`, and `artifact_hash`.
+- **Accepted target merge** (distinct `change.id` or no `change` where
+  `MERGE_HEAD` is an ancestor of the accepted `target_base` ref): retains
+  `ours`'s complete active workstream journal and proof posture while 3-way
+  merging newly accepted `baseline.policy` and unretired `baseline.unresolved`
+  entries and clearing stale `validation` receipts when trees differ.
+Any conflicting unaccepted PR identity, mismatched `base_commit` / `target_base`,
+deleted active journal, or conflicting check status fails closed without
+mutating `.decapod/governance.json`.

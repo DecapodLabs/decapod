@@ -1,7 +1,7 @@
 {
   "schema_version": "1.0.0",
   "baseline": {
-    "accepted_commit": "a5a1edadb5ff96b0e2509bb17d111b227d156558",
+    "accepted_commit": "205d4e8dad2e7690100eb401e12ea6d6f8e23665",
     "policy": {
       "change_control": {
         "requires_human_review": true,
@@ -573,97 +573,68 @@
     }
   },
   "change": {
-    "id": "change_01M7R4ZAHNJFT5PGD1R58DDXC5",
-    "base_commit": "a5a1edadb5ff96b0e2509bb17d111b227d156558",
+    "id": "change_01M7R7VACDQHPCHHFJXFXXETKM",
+    "base_commit": "205d4e8dad2e7690100eb401e12ea6d6f8e23665",
     "target_base": "origin/master"
-  },
-  "claims": {
-    "claim:release-v0-150-1-projections": {
-      "statement": "Release v0.150.1 aligns Cargo.toml, Cargo.lock, managed Dockerfile pin, and specs manifest release metadata.",
-      "falsifier": "Managed Dockerfile or specs manifest release metadata diverges from Cargo.toml 0.150.1.",
-      "status": "supported",
-      "proof_refs": [
-        ".decapod/managed/Dockerfile.decapod",
-        ".decapod/managed/specs/.manifest.json"
-      ]
-    }
   },
   "checkpoints": [
     {
-      "id": "ckpt-byoa-docs-1789",
-      "summary": "Rewrite mdBook and README pointer for BYOA, Human->Agent->Kernel, metacognition, concurrency, subordinate Constitution, and Local/Cloud parity (#1789)",
-      "input_digest": "sha256:5fdef5320b50c59c9690ce79cdf7c19fe42d7a63ab6b6cec7204ee0ab8bc5f2b",
-      "proof_refs": [
-        "tests/contract_conformance.rs",
-        "tests/doc_alignment.rs",
-        "tests/trajectory_docs.rs"
-      ]
+      "id": "ckpt-journal-1780-impl",
+      "summary": "Implement integrity-preserving merged governance journal reconciliation (#1780) with unit and CLI regression suites",
+      "input_digest": "sha256:e57439390a1b91390c2c5f28d4635131edce10dda113a90ddd1cd1b763f7d374"
     },
     {
-      "id": "ckpt-byoa-docs-1789-v0149",
-      "summary": "Refresh v0.149.0 projections and Dockerfile pin (#1789)",
-      "input_digest": "sha256:804d201e97955c647df0ab925974db5e575b00aadcaa04d41de23232ca7413d1",
-      "proof_refs": [
-        "tests/contract_conformance.rs",
-        "tests/doc_alignment.rs"
-      ]
+      "id": "ckpt-journal-1780-merge-v01493",
+      "summary": "Integrate accepted master v0.149.3 (102d6eb22) using reconcile-merge and refresh v0.149.3 projections",
+      "input_digest": "sha256:41cd3f958d436cf11c33e25ef8874ae1748b68c02732e15099a0344a0c9e9f29"
     },
     {
-      "id": "ckpt-byoa-docs-1789-merge-v01491",
-      "summary": "Integrate accepted master v0.149.1 (#1052) and refresh v0.149.0 projections (#1789)",
-      "input_digest": "sha256:5e5ce4fc4646f5532dcb0c7586651d342ed36ccacd93257e59a3bc1820f71253",
-      "proof_refs": [
-        "tests/contract_conformance.rs",
-        "tests/doc_alignment.rs"
-      ]
+      "id": "ckpt-journal-1780-sync-1b3ca1b89",
+      "summary": "Pre-sync origin/master 1b3ca1b89 (#1760, v0.149.3) using reconcile-merge and refresh specs",
+      "input_digest": "sha256:a48330281b35e93a1f7e198f53b8ddbca7da6bbb5a1cfb4467d3407a884526de"
     },
     {
-      "id": "ckpt-byoa-docs-1789-v01491",
-      "summary": "Refresh v0.149.1 projections and Dockerfile pin (#1789)",
-      "input_digest": "sha256:ca7c8813270fdd17d21732d9f49715e0118addc5d373ec3a956e5cec87eda843",
-      "proof_refs": [
-        "tests/contract_conformance.rs",
-        "tests/doc_alignment.rs",
-        "tests/trajectory_docs.rs"
-      ]
+      "id": "ckpt-journal-1780-sync-c845ae1d0",
+      "summary": "Pre-sync origin/master c845ae1d0 (#1831, v0.149.3) using reconcile-merge and refresh specs",
+      "input_digest": "sha256:6e1f6ec8b8dea8a33abeb602e312d48e654e6bd829e53ea54d348726e79e4311"
     },
     {
-      "id": "ckpt-byoa-docs-1789-merge-v01500",
-      "summary": "Integrate accepted master v0.150.0 (1332f4ecd) and refresh v0.150.0 projections (#1789)",
-      "input_digest": "sha256:dacc17de041a8c620920bb5e39b38440c60c0a88638179c760d5dc891fb45d45",
-      "proof_refs": [
-        "tests/contract_conformance.rs",
-        "tests/doc_alignment.rs",
-        "tests/trajectory_docs.rs"
-      ]
+      "id": "ckpt-journal-1780-sync-e63599e3c",
+      "summary": "Integrate origin/master e63599e3c (#1820, v0.149.3) using reconcile-merge and refresh specs",
+      "input_digest": "sha256:b5650a8db54147f59cee8f7133fa21b4fe891d7e1ea264d8ebbfa8cb338f3e4a"
     },
     {
-      "id": "ckpt-release-v0-150-1",
-      "summary": "Refresh v0.150.1 release projections and governance",
-      "input_digest": "sha256:f6714753f81e44ee44e2866b18375177d3594388773cc9f16dcd43182f518aa4",
-      "proof_refs": [
-        ".decapod/managed/specs/.manifest.json"
-      ]
+      "id": "ckpt-journal-1780-sync-v01500",
+      "summary": "Integrate accepted master v0.150.0 (1332f4ecd) using reconcile-merge and refresh v0.150.0 projections",
+      "input_digest": "sha256:dd8a493724aea090a10ce5f2c96d57409e8aa15516d63fc3e15c3fd9fdcc0246"
+    },
+    {
+      "id": "ckpt-journal-1780-git-identity-test-fix",
+      "summary": "Pass explicit git identity to reconcile-merge unit fixtures for sanitized CI environments",
+      "input_digest": "sha256:edcc3fddda562d79799e19c1f36d53fcc98e5f2684468b52d28e0fea1c7d6577"
+    },
+    {
+      "id": "ckpt-journal-1780-sync-v01501",
+      "summary": "Integrate accepted master v0.150.1 (f3f83b4f4, #1789) using reconcile-merge and refresh v0.150.1 projections",
+      "input_digest": "sha256:32f41ef76436a32c35e7b7b135208d3a25682cecc97eac69b85baaa214d9cd15"
     }
   ],
   "intents": {
-    "intent:change_01M7R4ZAHNJFT5PGD1R58DDXC5": {
+    "intent:change_01M7R7VACDQHPCHHFJXFXXETKM": {
       "acceptance_criteria": [],
       "assumptions": [],
       "boundaries": [
         "Current claimed task and isolated work branch"
       ],
       "constraints": [
-        "paths:[\"docs/book/src\"",
-        "\"README.md\"",
-        "\".decapod/managed/specs\"]"
+        "root"
       ],
       "created_sequence": 1,
-      "id": "intent:change_01M7R4ZAHNJFT5PGD1R58DDXC5",
+      "id": "intent:change_01M7R7VACDQHPCHHFJXFXXETKM",
       "out_of_scope": [],
       "proof_requirements": [],
-      "raw_intent": "Docs #1789: make BYOA, agent-invoked metacognition and cross-agent coordination first-class",
-      "refined_intent": "Docs #1789: make BYOA, agent-invoked metacognition and cross-agent coordination first-class",
+      "raw_intent": "Provide integrity-preserving reconciliation for merged governance journals (#1780)\n\nIssue #1780: support integrity-preserving reconciliation for Git-merged .decapod/governance.json journals",
+      "refined_intent": "Provide integrity-preserving reconciliation for merged governance journals (#1780)\n\nIssue #1780: support integrity-preserving reconciliation for Git-merged .decapod/governance.json journals",
       "status": "refined",
       "updated_sequence": 3
     }
@@ -676,51 +647,65 @@
       },
       "deferred_questions": [],
       "human_questions": [],
-      "intent": "Refresh release-bound Dockerfile and specs manifest projections for v0.150.1 on PR #1844",
+      "intent": "Provide integrity-preserving reconciliation for merged governance journals (#1780)\n\nIssue #1780: support integrity-preserving reconciliation for Git-merged .decapod/governance.json journals",
       "phases": [],
-      "proof_hooks": [],
+      "proof_hooks": [
+        "decapod validate"
+      ],
       "schema_version": "1.1.0",
       "spec_reviews": [
         {
-          "disposition": "unchanged_with_reason",
+          "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "v0.150.1 version-only release cut does not alter system architecture",
-          "reviewed_code_fingerprint": "c1341531d9fead81f36aa6afadf7e7e30db482f2f7b5b5989f498ddd2b2cb364",
-          "spec_material_hash": "222ad0bd9ae163a09c07ab5e392be697b10db614d48755997eaab76b5a143fad"
+          "reason": "Synced origin/master f3f83b4f4 (v0.150.1, #1789) preserving #1789, #1469, and #1780 architecture",
+          "reviewed_code_fingerprint": "156d22a7643395f7e85258f39dd8b67ec9fc3adb3b56cc2a675728410f1e2655",
+          "spec_material_hash": "ec45705fd9a9a5f29fbe43fb55f7a3b69a802f298ae14eb88118bc42161f71e6"
         },
         {
-          "disposition": "unchanged_with_reason",
+          "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "v0.150.1 version-only release cut does not alter CLI or RPC interfaces",
-          "reviewed_code_fingerprint": "c1341531d9fead81f36aa6afadf7e7e30db482f2f7b5b5989f498ddd2b2cb364",
-          "spec_material_hash": "f9f2f5fc909f60cbbdabb0bf48b53c6c70f1f3d4193f73bbccf2d1108675005f"
+          "reason": "Synced origin/master f3f83b4f4 (v0.150.1) preserving #1780 reconcile-merge interface",
+          "reviewed_code_fingerprint": "156d22a7643395f7e85258f39dd8b67ec9fc3adb3b56cc2a675728410f1e2655",
+          "spec_material_hash": "66e7884fe1f331bc5b1adda1c614e8b4deab92d07627491e5435648e1467f489"
         },
         {
-          "disposition": "unchanged_with_reason",
+          "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "v0.150.1 version-only release cut does not alter security boundaries",
-          "reviewed_code_fingerprint": "c1341531d9fead81f36aa6afadf7e7e30db482f2f7b5b5989f498ddd2b2cb364",
-          "spec_material_hash": "fe2a57654bc0079c8ae5d4226c46ba7f1ea50f4246a8c19d826f2e660dc56f81"
+          "reason": "Synced origin/master f3f83b4f4 (v0.150.1) preserving #1780 proof boundary",
+          "reviewed_code_fingerprint": "156d22a7643395f7e85258f39dd8b67ec9fc3adb3b56cc2a675728410f1e2655",
+          "spec_material_hash": "127c65866657d2dd15434ca52f6e3a97b8f20aa4dd97f9d3190e1cd98edac3ac"
         }
       ],
-      "state": "APPROVED",
+      "state": "DRAFT",
       "stop_conditions": [],
-      "title": "Align release v0.150.1 projections and governance (#1844)",
+      "title": "Provide integrity-preserving reconciliation for merged governance journals (#1780)",
       "todo_ids": [
-        "code_01m7srddt2dc4pyp"
+        "bugs_01m7r4w7sdw700hq"
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795095673Z"
+      "updated_at": "1795097048Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:8339f798faa6ec65b711c64598396393181cd70e5371c876a97f166a1437ef43",
+      "artifact_hash": "sha256:2e0c32d90a8c08355444951fcc9ddead9e10a6b86c8de467975b25a44d2c90d0",
       "checks": [
         {
+          "name": "cli_contract_enforcement",
+          "status": "passed"
+        },
+        {
+          "name": "clippy",
+          "status": "passed"
+        },
+        {
           "name": "contract_conformance",
+          "status": "passed"
+        },
+        {
+          "name": "core_governance_document_tests",
           "status": "passed"
         },
         {
@@ -728,204 +713,364 @@
           "status": "passed"
         },
         {
-          "name": "docs_sync_checkpoint_boundary",
-          "status": "partial"
-        },
-        {
-          "name": "mdbook_build",
-          "status": "unavailable"
-        },
-        {
-          "name": "project_check_0_150_1",
+          "name": "fmt",
           "status": "passed"
         },
         {
-          "name": "relative_markdown_links",
+          "name": "governance_artifacts_cli",
           "status": "passed"
         },
         {
-          "name": "specs_refresh_docs",
-          "status": "partial"
+          "name": "merged_governance_journal_1780",
+          "status": "passed"
+        },
+        {
+          "name": "post_merge_fmt",
+          "status": "passed"
+        },
+        {
+          "name": "post_merge_merged_governance_journal_1780",
+          "status": "passed"
+        },
+        {
+          "name": "post_merge_reconcile_merge_unit",
+          "status": "passed"
+        },
+        {
+          "name": "post_merge_validation_scope",
+          "status": "passed"
+        },
+        {
+          "name": "sanitized_git_merged_governance_journal_1780",
+          "status": "passed"
+        },
+        {
+          "name": "sanitized_git_reconcile_merge_unit",
+          "status": "passed"
+        },
+        {
+          "name": "sync_1b3ca1b89_contract_conformance",
+          "status": "passed"
+        },
+        {
+          "name": "sync_1b3ca1b89_doc_alignment",
+          "status": "passed"
+        },
+        {
+          "name": "sync_1b3ca1b89_docs_build_zero_diff",
+          "status": "passed"
+        },
+        {
+          "name": "sync_1b3ca1b89_fmt",
+          "status": "passed"
+        },
+        {
+          "name": "sync_1b3ca1b89_merged_governance_journal_1780",
+          "status": "passed"
+        },
+        {
+          "name": "sync_1b3ca1b89_reconcile_merge_unit",
+          "status": "passed"
+        },
+        {
+          "name": "sync_1b3ca1b89_trajectory_docs",
+          "status": "passed"
+        },
+        {
+          "name": "sync_1b3ca1b89_validation_scope",
+          "status": "passed"
+        },
+        {
+          "name": "sync_c845ae1d0_contract_conformance",
+          "status": "passed"
+        },
+        {
+          "name": "sync_c845ae1d0_doc_alignment",
+          "status": "passed"
+        },
+        {
+          "name": "sync_c845ae1d0_docs_build_zero_diff",
+          "status": "passed"
+        },
+        {
+          "name": "sync_c845ae1d0_fmt",
+          "status": "passed"
+        },
+        {
+          "name": "sync_c845ae1d0_reconcile_merge_unit",
+          "status": "passed"
+        },
+        {
+          "name": "sync_c845ae1d0_trajectory_docs",
+          "status": "passed"
+        },
+        {
+          "name": "sync_c845ae1d0_validation_scope",
+          "status": "passed"
+        },
+        {
+          "name": "sync_e63599e3c_contract_conformance",
+          "status": "passed"
+        },
+        {
+          "name": "sync_e63599e3c_doc_alignment",
+          "status": "passed"
+        },
+        {
+          "name": "sync_e63599e3c_docs_build_converged",
+          "status": "passed"
+        },
+        {
+          "name": "sync_e63599e3c_fmt",
+          "status": "passed"
+        },
+        {
+          "name": "sync_e63599e3c_reconcile_merge_unit",
+          "status": "passed"
+        },
+        {
+          "name": "sync_e63599e3c_trajectory_docs",
+          "status": "passed"
+        },
+        {
+          "name": "sync_e63599e3c_validation_scope",
+          "status": "passed"
+        },
+        {
+          "name": "sync_v01500_build_locked",
+          "status": "passed"
+        },
+        {
+          "name": "sync_v01500_docs_build_zero_diff",
+          "status": "passed"
+        },
+        {
+          "name": "sync_v01500_fmt",
+          "status": "passed"
+        },
+        {
+          "name": "sync_v01501_build_locked",
+          "status": "passed"
+        },
+        {
+          "name": "sync_v01501_docs_build_zero_diff",
+          "status": "passed"
+        },
+        {
+          "name": "sync_v01501_fmt",
+          "status": "passed"
         },
         {
           "name": "trajectory_docs",
           "status": "passed"
+        },
+        {
+          "name": "workbranch_governance",
+          "status": "passed"
         }
       ],
-      "current_phase": "verification",
+      "current_phase": "intent",
       "custody": {
         "events": [
           {
             "event_id": "event:2",
-            "intent_id": "intent:change_01M7R4ZAHNJFT5PGD1R58DDXC5",
+            "intent_id": "intent:change_01M7R7VACDQHPCHHFJXFXXETKM",
             "kind": "created",
             "sequence": 2
           },
           {
             "event_id": "event:3",
-            "intent_id": "intent:change_01M7R4ZAHNJFT5PGD1R58DDXC5",
+            "intent_id": "intent:change_01M7R7VACDQHPCHHFJXFXXETKM",
             "kind": "refined",
             "sequence": 3
           },
           {
-            "detail": "trajectory:branch_01M7R4ZAS8A2D6PMN4WRWVY4S3",
+            "detail": "trajectory:branch_01M7R7VAJ3PX8MBT1WEFTNTXQA",
             "event_id": "event:4",
-            "intent_id": "intent:change_01M7R4ZAHNJFT5PGD1R58DDXC5",
+            "intent_id": "intent:change_01M7R7VACDQHPCHHFJXFXXETKM",
             "kind": "trajectory_step_recorded",
             "sequence": 4
           },
           {
-            "detail": "trajectory:branch_01M7R4ZAS8A2D6PMN4WRWVY4S3",
+            "detail": "trajectory:branch_01M7R7VAJ3PX8MBT1WEFTNTXQA",
             "event_id": "event:5",
-            "intent_id": "intent:change_01M7R4ZAHNJFT5PGD1R58DDXC5",
+            "intent_id": "intent:change_01M7R7VACDQHPCHHFJXFXXETKM",
             "kind": "trajectory_step_recorded",
             "sequence": 5
           },
           {
-            "detail": "trajectory:branch_01M7R4ZAS8A2D6PMN4WRWVY4S3",
+            "detail": "trajectory:branch_01M7R7VAJ3PX8MBT1WEFTNTXQA",
             "event_id": "event:6",
-            "intent_id": "intent:change_01M7R4ZAHNJFT5PGD1R58DDXC5",
+            "intent_id": "intent:change_01M7R7VACDQHPCHHFJXFXXETKM",
             "kind": "trajectory_step_recorded",
             "sequence": 6
           },
           {
-            "detail": "trajectory:branch_01M7R4ZAS8A2D6PMN4WRWVY4S3",
+            "detail": "trajectory:branch_01M7R7VAJ3PX8MBT1WEFTNTXQA",
             "event_id": "event:7",
-            "intent_id": "intent:change_01M7R4ZAHNJFT5PGD1R58DDXC5",
+            "intent_id": "intent:change_01M7R7VACDQHPCHHFJXFXXETKM",
             "kind": "trajectory_step_recorded",
             "sequence": 7
           },
           {
-            "detail": "trajectory:branch_01M7R4ZAS8A2D6PMN4WRWVY4S3",
+            "detail": "trajectory:branch_01M7R7VAJ3PX8MBT1WEFTNTXQA",
             "event_id": "event:8",
-            "intent_id": "intent:change_01M7R4ZAHNJFT5PGD1R58DDXC5",
+            "intent_id": "intent:change_01M7R7VACDQHPCHHFJXFXXETKM",
             "kind": "trajectory_step_recorded",
             "sequence": 8
           },
           {
-            "detail": "trajectory:branch_01M7R4ZAS8A2D6PMN4WRWVY4S3",
+            "detail": "trajectory:branch_01M7R7VAJ3PX8MBT1WEFTNTXQA",
             "event_id": "event:9",
-            "intent_id": "intent:change_01M7R4ZAHNJFT5PGD1R58DDXC5",
+            "intent_id": "intent:change_01M7R7VACDQHPCHHFJXFXXETKM",
             "kind": "trajectory_step_recorded",
             "sequence": 9
+          },
+          {
+            "detail": "trajectory:branch_01M7R7VAJ3PX8MBT1WEFTNTXQA",
+            "event_id": "event:10",
+            "intent_id": "intent:change_01M7R7VACDQHPCHHFJXFXXETKM",
+            "kind": "trajectory_step_recorded",
+            "sequence": 10
+          },
+          {
+            "detail": "trajectory:branch_01M7R7VAJ3PX8MBT1WEFTNTXQA",
+            "event_id": "event:11",
+            "intent_id": "intent:change_01M7R7VACDQHPCHHFJXFXXETKM",
+            "kind": "trajectory_step_recorded",
+            "sequence": 11
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 9,
+        "next_sequence": 11,
         "schema_version": "1.0.0",
         "trajectories": {
-          "branch_01M7R4ZAS8A2D6PMN4WRWVY4S3": {
+          "branch_01M7R7VAJ3PX8MBT1WEFTNTXQA": {
             "evidence_only": true,
-            "id": "branch_01M7R4ZAS8A2D6PMN4WRWVY4S3",
-            "intent_id": "intent:change_01M7R4ZAHNJFT5PGD1R58DDXC5",
+            "id": "branch_01M7R7VAJ3PX8MBT1WEFTNTXQA",
+            "intent_id": "intent:change_01M7R7VACDQHPCHHFJXFXXETKM",
             "steps": [
               {
-                "action": "verification",
+                "action": "trajectory.record",
                 "custody_event_id": "event:4",
                 "observations": [
-                  "src/decapod/core/interop.rs",
+                  "src/decapod/core/governance_document.rs",
+                  "src/decapod/core/trajectory.rs",
+                  "src/decapod/cli.rs",
                   "src/decapod/lib.rs",
-                  "tests/doc_alignment.rs",
-                  "tests/contract_conformance.rs",
-                  "tests/interop_conformance.rs",
-                  "tests/infer_precision.rs",
-                  "tests/unit/core/fleet_coord_tests.rs",
-                  ".decapod/contracts/README_CONTRACTS.json",
-                  "docs/book/src/index.md",
-                  "docs/book/src/introduction.md",
-                  "docs/book/src/mental-model.md",
-                  "docs/book/src/quickstart.md",
-                  "docs/book/src/SUMMARY.md",
-                  "docs/book/src/concepts/agent-first.md",
-                  "docs/book/src/concepts/interoperability.md",
-                  "docs/book/src/concepts/constitution.md",
-                  "docs/book/src/concepts/mcp.md",
-                  "docs/book/src/workflows/single-agent.md",
-                  "docs/book/src/workflows/multi-agent.md",
-                  "README.md",
+                  "src/decapod/core/docs_cli.rs",
+                  "src/decapod/core/governance_document/merge_reconcile.rs",
+                  "src/decapod/core/governance_document.rs",
+                  "src/decapod/cli.rs",
+                  "src/decapod/lib.rs",
+                  "src/decapod/core/docs_cli.rs",
+                  "docs/agent/command-contracts.md",
+                  "docs/agent/error-recovery.md",
+                  "docs/book/src/reference/cli.md",
+                  "docs/book/src/reference/governance-artifacts.md",
+                  "tests/merged_governance_journal_1780.rs",
+                  "tests/unit/core/governance_document_tests.rs",
                   ".decapod/managed/specs/ARCHITECTURE.md",
-                  ".decapod/managed/specs/INTENT.md",
-                  "cargo test --test doc_alignment (4/4 passed); --test contract_conformance (12/12 passed); --test trajectory_docs (5/5 passed); python3 relative link + SUMMARY + stale-phrase check passed; docs_sync_checkpoint_boundary 11/12 passed (1 macOS APFS EILSEQ); specs_refresh_docs 6/7 passed (pre-existing docs_cli.rs); mdbook not installed locally"
+                  ".decapod/managed/specs/INTERFACES.md",
+                  ".decapod/managed/specs/SECURITY.md",
+                  "fmt exit 0; clippy -D warnings exit 0; core::governance_document 76/76; merged_governance_journal_1780 2/2; governance_artifacts_cli 4/4; trajectory_docs 5/5; workbranch_governance 10/10; cli_contract_enforcement 23/23; contract_conformance 12/12; doc_alignment 4/4"
                 ],
                 "proof_refs": [
-                  "doc_alignment",
+                  "fmt",
+                  "clippy",
+                  "core_governance_document_tests",
+                  "merged_governance_journal_1780",
+                  "governance_artifacts_cli",
+                  "workbranch_governance",
+                  "cli_contract_enforcement",
                   "contract_conformance",
-                  "trajectory_docs",
-                  "relative_markdown_links",
-                  "docs_sync_checkpoint_boundary",
-                  "specs_refresh_docs",
-                  "mdbook_build"
+                  "doc_alignment",
+                  "trajectory_docs"
                 ],
                 "scope": [
-                  "\".decapod/managed/specs\"]",
-                  "\"README.md\"",
-                  "paths:[\"docs/book/src\""
+                  "root"
                 ],
                 "sequence": 4,
-                "validation_findings": [
-                  "mdBook site build (docs-build CI check) will execute on Linux CI with mdbook 0.4.40"
-                ]
+                "validation_findings": []
               },
               {
-                "action": "verification",
+                "action": "trajectory.record",
                 "custody_event_id": "event:5",
                 "observations": [
-                  ".decapod/managed/Dockerfile.decapod",
-                  ".decapod/managed/specs/.manifest.json",
-                  "Refreshed v0.149.0 Dockerfile.decapod and .manifest.json with /private/tmp/swarm-controller-0.149.0/bin/decapod"
+                  "Merged origin/master 102d6eb22 (v0.149.3) dogfooding reconcile-merge; post-merge fmt exit 0, cargo build --bin decapod ok, validation_scope 9/9, reconcile_merge unit 2/2, merged_governance_journal_1780 2/2"
                 ],
-                "proof_refs": [],
+                "proof_refs": [
+                  "post_merge_fmt",
+                  "post_merge_validation_scope",
+                  "post_merge_reconcile_merge_unit",
+                  "post_merge_merged_governance_journal_1780"
+                ],
                 "scope": [
-                  "\".decapod/managed/specs\"]",
-                  "\"README.md\"",
-                  "paths:[\"docs/book/src\""
+                  "root"
                 ],
                 "sequence": 5,
                 "validation_findings": []
               },
               {
-                "action": "verification",
+                "action": "trajectory.record",
                 "custody_event_id": "event:6",
                 "observations": [
-                  "Merged origin/master 205d4e8da (PR #1805 + PR #1806 v0.149.1) and refreshed projections with 0.149.0 controller"
+                  "Pre-synced origin/master 1b3ca1b89 (#1760, dactyl-db 0.18.0, v0.149.3) dogfooding reconcile-merge; candidate docs build 0 diff, fmt ok, validation_scope 9/9, reconcile_merge 2/2, contract_conformance 12/12, doc_alignment 5/5, trajectory_docs 5/5, merged_governance_journal_1780 2/2"
                 ],
-                "proof_refs": [],
+                "proof_refs": [
+                  "sync_1b3ca1b89_fmt",
+                  "sync_1b3ca1b89_docs_build_zero_diff",
+                  "sync_1b3ca1b89_validation_scope",
+                  "sync_1b3ca1b89_reconcile_merge_unit",
+                  "sync_1b3ca1b89_doc_alignment",
+                  "sync_1b3ca1b89_contract_conformance",
+                  "sync_1b3ca1b89_trajectory_docs",
+                  "sync_1b3ca1b89_merged_governance_journal_1780"
+                ],
                 "scope": [
-                  "\".decapod/managed/specs\"]",
-                  "\"README.md\"",
-                  "paths:[\"docs/book/src\""
+                  "root"
                 ],
                 "sequence": 6,
                 "validation_findings": []
               },
               {
-                "action": "verification",
+                "action": "trajectory.record",
                 "custody_event_id": "event:7",
                 "observations": [
-                  ".decapod/managed/Dockerfile.decapod",
-                  ".decapod/managed/specs/.manifest.json",
-                  "Refreshed v0.149.1 Dockerfile.decapod and .manifest.json with /private/tmp/swarm-controller-0.149.1/bin/decapod"
+                  "Pre-synced origin/master c845ae1d0 (#1831, v0.149.3) dogfooding reconcile-merge; candidate docs build 0 diff, fmt ok, validation_scope 9/9, reconcile_merge 2/2, doc_alignment 5/5, contract_conformance 12/12, trajectory_docs 5/5"
                 ],
-                "proof_refs": [],
+                "proof_refs": [
+                  "sync_c845ae1d0_fmt",
+                  "sync_c845ae1d0_docs_build_zero_diff",
+                  "sync_c845ae1d0_validation_scope",
+                  "sync_c845ae1d0_reconcile_merge_unit",
+                  "sync_c845ae1d0_doc_alignment",
+                  "sync_c845ae1d0_contract_conformance",
+                  "sync_c845ae1d0_trajectory_docs"
+                ],
                 "scope": [
-                  "\".decapod/managed/specs\"]",
-                  "\"README.md\"",
-                  "paths:[\"docs/book/src\""
+                  "root"
                 ],
                 "sequence": 7,
                 "validation_findings": []
               },
               {
-                "action": "verification",
+                "action": "trajectory.record",
                 "custody_event_id": "event:8",
                 "observations": [
-                  "Merged origin/master 1332f4ecd (v0.150.0), preserved upstream Decapod Local/Cloud offerings + #1469 specs, refreshed v0.150.0 projections with /private/tmp/swarm-controller-0.150.0/bin/decapod"
+                  "Integrated origin/master e63599e3c (#1820, v0.149.3) dogfooding reconcile-merge; rebuilt candidate binary, converged docs build, fmt ok, validation_scope 9/9, reconcile_merge 2/2, doc_alignment 5/5, contract_conformance 12/12, trajectory_docs 5/5"
                 ],
-                "proof_refs": [],
+                "proof_refs": [
+                  "sync_e63599e3c_fmt",
+                  "sync_e63599e3c_docs_build_converged",
+                  "sync_e63599e3c_validation_scope",
+                  "sync_e63599e3c_reconcile_merge_unit",
+                  "sync_e63599e3c_doc_alignment",
+                  "sync_e63599e3c_contract_conformance",
+                  "sync_e63599e3c_trajectory_docs"
+                ],
                 "scope": [
-                  "\".decapod/managed/specs\"]",
-                  "\"README.md\"",
-                  "paths:[\"docs/book/src\""
+                  "root"
                 ],
                 "sequence": 8,
                 "validation_findings": []
@@ -934,20 +1079,50 @@
                 "action": "trajectory.record",
                 "custody_event_id": "event:9",
                 "observations": [
-                  ".decapod/managed/Dockerfile.decapod",
-                  ".decapod/managed/specs/OPERATIONS.md",
-                  ".decapod/managed/specs/.manifest.json",
-                  ".decapod/managed/specs/.manifest.json"
+                  "Synced origin/master 1332f4ecd (v0.150.0) dogfooding reconcile-merge; rebuilt locked v0.150.0 candidate binary, docs build 0 diff, refreshed v0.150.0 projections and specs"
                 ],
                 "proof_refs": [
-                  "project_check_0_150_1"
+                  "sync_v01500_fmt",
+                  "sync_v01500_build_locked",
+                  "sync_v01500_docs_build_zero_diff"
                 ],
                 "scope": [
-                  "\".decapod/managed/specs\"]",
-                  "\"README.md\"",
-                  "paths:[\"docs/book/src\""
+                  "root"
                 ],
                 "sequence": 9,
+                "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:10",
+                "observations": [
+                  "Passed explicit git user.name/user.email to unit merge fixtures; verified reconcile_merge unit (2/2) and merged_governance_journal_1780 (2/2) under GIT_CONFIG_GLOBAL=/dev/null GIT_CONFIG_NOSYSTEM=1"
+                ],
+                "proof_refs": [
+                  "sanitized_git_reconcile_merge_unit",
+                  "sanitized_git_merged_governance_journal_1780"
+                ],
+                "scope": [
+                  "root"
+                ],
+                "sequence": 10,
+                "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:11",
+                "observations": [
+                  "Synced origin/master f3f83b4f4 (v0.150.1, #1789) dogfooding reconcile-merge; rebuilt locked v0.150.1 candidate binary, docs build 0 diff, refreshed v0.150.1 projections and specs"
+                ],
+                "proof_refs": [
+                  "sync_v01501_fmt",
+                  "sync_v01501_build_locked",
+                  "sync_v01501_docs_build_zero_diff"
+                ],
+                "scope": [
+                  "root"
+                ],
+                "sequence": 11,
                 "validation_findings": []
               }
             ]
@@ -957,59 +1132,51 @@
       "declared_commands": [],
       "destination": "pull request",
       "evidence": [
-        ".decapod/managed/specs/.manifest.json",
-        "Merged origin/master 1332f4ecd (v0.150.0), preserved upstream Decapod Local/Cloud offerings + #1469 specs, refreshed v0.150.0 projections with /private/tmp/swarm-controller-0.150.0/bin/decapod",
-        "Merged origin/master 205d4e8da (PR #1805 + PR #1806 v0.149.1) and refreshed projections with 0.149.0 controller",
-        "Refreshed v0.149.0 Dockerfile.decapod and .manifest.json with /private/tmp/swarm-controller-0.149.0/bin/decapod",
-        "Refreshed v0.149.1 Dockerfile.decapod and .manifest.json with /private/tmp/swarm-controller-0.149.1/bin/decapod",
-        "cargo test --test doc_alignment (4/4 passed); --test contract_conformance (12/12 passed); --test trajectory_docs (5/5 passed); python3 relative link + SUMMARY + stale-phrase check passed; docs_sync_checkpoint_boundary 11/12 passed (1 macOS APFS EILSEQ); specs_refresh_docs 6/7 passed (pre-existing docs_cli.rs); mdbook not installed locally"
+        "Integrated origin/master e63599e3c (#1820, v0.149.3) dogfooding reconcile-merge; rebuilt candidate binary, converged docs build, fmt ok, validation_scope 9/9, reconcile_merge 2/2, doc_alignment 5/5, contract_conformance 12/12, trajectory_docs 5/5",
+        "Merged origin/master 102d6eb22 (v0.149.3) dogfooding reconcile-merge; post-merge fmt exit 0, cargo build --bin decapod ok, validation_scope 9/9, reconcile_merge unit 2/2, merged_governance_journal_1780 2/2",
+        "Passed explicit git user.name/user.email to unit merge fixtures; verified reconcile_merge unit (2/2) and merged_governance_journal_1780 (2/2) under GIT_CONFIG_GLOBAL=/dev/null GIT_CONFIG_NOSYSTEM=1",
+        "Pre-synced origin/master 1b3ca1b89 (#1760, dactyl-db 0.18.0, v0.149.3) dogfooding reconcile-merge; candidate docs build 0 diff, fmt ok, validation_scope 9/9, reconcile_merge 2/2, contract_conformance 12/12, doc_alignment 5/5, trajectory_docs 5/5, merged_governance_journal_1780 2/2",
+        "Pre-synced origin/master c845ae1d0 (#1831, v0.149.3) dogfooding reconcile-merge; candidate docs build 0 diff, fmt ok, validation_scope 9/9, reconcile_merge 2/2, doc_alignment 5/5, contract_conformance 12/12, trajectory_docs 5/5",
+        "Synced origin/master 1332f4ecd (v0.150.0) dogfooding reconcile-merge; rebuilt locked v0.150.0 candidate binary, docs build 0 diff, refreshed v0.150.0 projections and specs",
+        "Synced origin/master f3f83b4f4 (v0.150.1, #1789) dogfooding reconcile-merge; rebuilt locked v0.150.1 candidate binary, docs build 0 diff, refreshed v0.150.1 projections and specs",
+        "fmt exit 0; clippy -D warnings exit 0; core::governance_document 76/76; merged_governance_journal_1780 2/2; governance_artifacts_cli 4/4; trajectory_docs 5/5; workbranch_governance 10/10; cli_contract_enforcement 23/23; contract_conformance 12/12; doc_alignment 4/4"
       ],
       "inspected_files": [
-        ".decapod/contracts/README_CONTRACTS.json",
-        "src/decapod/core/interop.rs",
-        "src/decapod/lib.rs",
-        "tests/contract_conformance.rs",
-        "tests/doc_alignment.rs",
-        "tests/infer_precision.rs",
-        "tests/interop_conformance.rs",
-        "tests/unit/core/fleet_coord_tests.rs"
+        "src/decapod/cli.rs",
+        "src/decapod/core/docs_cli.rs",
+        "src/decapod/core/governance_document.rs",
+        "src/decapod/core/trajectory.rs",
+        "src/decapod/lib.rs"
       ],
-      "intent_id": "intent:change_01M7R4ZAHNJFT5PGD1R58DDXC5",
+      "intent_id": "intent:change_01M7R7VACDQHPCHHFJXFXXETKM",
       "modified_files": [
-        ".decapod/managed/Dockerfile.decapod",
-        ".decapod/managed/specs/.manifest.json",
         ".decapod/managed/specs/ARCHITECTURE.md",
-        ".decapod/managed/specs/INTENT.md",
-        ".decapod/managed/specs/OPERATIONS.md",
-        "README.md",
-        "docs/book/src/SUMMARY.md",
-        "docs/book/src/concepts/agent-first.md",
-        "docs/book/src/concepts/constitution.md",
-        "docs/book/src/concepts/interoperability.md",
-        "docs/book/src/concepts/mcp.md",
-        "docs/book/src/index.md",
-        "docs/book/src/introduction.md",
-        "docs/book/src/mental-model.md",
-        "docs/book/src/quickstart.md",
-        "docs/book/src/workflows/multi-agent.md",
-        "docs/book/src/workflows/single-agent.md"
+        ".decapod/managed/specs/INTERFACES.md",
+        ".decapod/managed/specs/SECURITY.md",
+        "docs/agent/command-contracts.md",
+        "docs/agent/error-recovery.md",
+        "docs/book/src/reference/cli.md",
+        "docs/book/src/reference/governance-artifacts.md",
+        "src/decapod/cli.rs",
+        "src/decapod/core/docs_cli.rs",
+        "src/decapod/core/governance_document.rs",
+        "src/decapod/core/governance_document/merge_reconcile.rs",
+        "src/decapod/lib.rs",
+        "tests/merged_governance_journal_1780.rs",
+        "tests/unit/core/governance_document_tests.rs"
       ],
       "next_transitions": [
         "Refine plan and declare falsifiable checks"
       ],
       "repo_scope": [
-        "\".decapod/managed/specs\"]",
-        "\"README.md\"",
-        "paths:[\"docs/book/src\""
+        "root"
       ],
-      "run_id": "branch_01M7R4ZAS8A2D6PMN4WRWVY4S3",
+      "run_id": "branch_01M7R7VAJ3PX8MBT1WEFTNTXQA",
       "schema_version": "1.1.0",
       "shortcut_risk_signals": [],
-      "task_id": "code_01m7srddt2dc4pyp",
+      "task_id": "bugs_01m7r4w7sdw700hq",
       "tool_calls": [],
-      "unresolved_assumptions": [
-        "mdBook site build (docs-build CI check) will execute on Linux CI with mdbook 0.4.40"
-      ]
+      "unresolved_assumptions": []
     }
   },
   "legacy_digests": {

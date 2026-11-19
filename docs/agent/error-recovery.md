@@ -280,6 +280,16 @@ and record a new checkpoint ID before committing. An identical retry with the
 same material and summary and the same proof-reference set is a no-op. Do not
 rewrite a published commit or remove prior records to reuse its ID.
 
+`Trajectory artifact hash mismatch` after a Git 3-way merge (`MERGE_HEAD`
+present) means line-based merging mixed `.decapod/governance.json` trajectory or
+custody fields across two commits. Do not hand-edit hashes or clear failed
+checks. Run `decapod govern artifacts reconcile-merge`, which reads only the
+immutable Git parents (`HEAD`, `MERGE_HEAD`, `merge-base --all`), refuses
+unaccepted conflicting-PR authority (`GOVERNANCE_MERGE_AUTHORITY_CONFLICT`) or
+conflicting check proofs (`GOVERNANCE_MERGE_PROOF_CONFLICT`), preserves complete
+active journal history and failed/missing proof states, and writes a valid
+canonical document ready for a follow-up checkpoint before committing the merge.
+
 ### Orphan broker audit entries (`data broker verify`)
 
 `data broker verify` checks audit lifecycle evidence, not SQLite structural

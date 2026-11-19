@@ -1220,6 +1220,9 @@ pub(crate) enum ArtifactsCommand {
         #[clap(long)]
         reason: String,
     },
+    /// Reconcile a Git-merged `.decapod/governance.json` journal from immutable commit
+    /// ancestry without turning failed or missing proof into a passing result
+    ReconcileMerge,
     /// Read the governance document without modifying repository state
     Status,
     /// Verify checkpoint coverage of every authored commit in a PR

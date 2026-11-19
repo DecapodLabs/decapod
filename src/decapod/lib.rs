@@ -8813,6 +8813,14 @@ fn run_govern_command(
                         .map_err(|error| error::DecapodError::ValidationError(error.to_string()))?
                 );
             }
+            ArtifactsCommand::ReconcileMerge => {
+                let document = core::governance_document::reconcile_merge(workspace_root)?;
+                println!(
+                    "{}",
+                    serde_json::to_string_pretty(&document)
+                        .map_err(|error| error::DecapodError::ValidationError(error.to_string()))?
+                );
+            }
             ArtifactsCommand::Status => {
                 let document = core::governance_document::load(workspace_root)?;
                 println!(
