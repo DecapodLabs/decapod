@@ -1,7 +1,7 @@
 {
   "schema_version": "1.0.0",
   "baseline": {
-    "accepted_commit": "205d4e8dad2e7690100eb401e12ea6d6f8e23665",
+    "accepted_commit": "a5a1edadb5ff96b0e2509bb17d111b227d156558",
     "policy": {
       "change_control": {
         "requires_human_review": true,
@@ -184,6 +184,11 @@
           "PR source diff and pending remote validation"
         ],
         "statement": "No Dagger-specific engine execution or authorization capability remains; generic proof custody is retained",
+        "status": "open"
+      },
+      "claim:duplicate-key-required-semantics": {
+        "falsifier": "Duplicate or escaped-equivalent required_extensions erases the unsupported requirement, nested ambiguous JSON is accepted, or legitimate unique-key negotiation fails after refusal.",
+        "statement": "Both RPC routes reject duplicate decoded JSON keys before startup; later fields cannot erase required extension semantics and unique-key ordinary negotiation can recover.",
         "status": "open"
       },
       "claim:durable-artifact-publication": {
@@ -568,88 +573,88 @@
     }
   },
   "change": {
-    "id": "change_01M7RAMDCVQ83Q2KXQCCHVHTJ5",
-    "base_commit": "205d4e8dad2e7690100eb401e12ea6d6f8e23665",
+    "id": "change_01M7R53QBGMV407MHXT3BSNNGX",
+    "base_commit": "a5a1edadb5ff96b0e2509bb17d111b227d156558",
     "target_base": "origin/master"
   },
   "checkpoints": [
     {
-      "id": "cp-cloud-wave-1",
-      "summary": "Consolidate #1808/#1769 Decapod Local/Cloud branding with dactyl-db 0.18.0 Cloud Control-Plane & Custody wave",
-      "input_digest": "sha256:37e5c9626c2449998c69766087e7b2d306f17974d645945799bb8490b991d83c",
+      "id": "ckpt-scope-1760-1",
+      "summary": "Preserve explicit paths:[...] scopes and add archive-gated scope reconciliation (#1760)",
+      "input_digest": "sha256:5a19ba4ec71444bb1c2f18be552e3486ec337ee96c53b693c4630a15f1c413f4",
       "proof_refs": [
-        "tests/cli_contract_enforcement.rs",
-        "tests/cloud_mixed_worktree.rs",
-        "tests/cloud_supabase_boundary.rs",
-        "tests/cloud_wave_parity.rs",
-        "tests/doc_alignment.rs"
+        "test:cli_contract_enforcement",
+        "test:doc_alignment",
+        "test:explicit_path_scope_1760",
+        "test:workbranch_governance"
       ]
     },
     {
-      "id": "cp-cloud-wave-final",
-      "summary": "Adopt dactyl-db 0.18.0, Cloud Control-Plane custody wave (#1809, #1667, #1777, #1778, #1590, #1033, #1034, #1038, #1040, #1066, #1158, #1369, #1377, #1380), and Local/Cloud branding (#1808, #1769)",
-      "input_digest": "sha256:da55162f36b81e4a231969ad32af8a05613d6f8ec39e1ec72fbb0f622b6d863f",
+      "id": "ckpt-scope-1760-2",
+      "summary": "Reconcile worktree fragmented scope projections via govern trajectory reconcile-scope (#1760)",
+      "input_digest": "sha256:ff6dc324c4817c1906c1c61e3b8e1b67bb333dd57cc6b3f3cab5e07df68bfcec",
       "proof_refs": [
-        "tests/cli_contract_enforcement.rs",
-        "tests/cloud_mixed_worktree.rs",
-        "tests/cloud_supabase_boundary.rs",
-        "tests/cloud_wave_parity.rs",
-        "tests/doc_alignment.rs",
-        "tests/release_dependency_policy.rs",
-        "tests/shared_state_semantics_1247.rs"
+        "test:explicit_path_scope_1760"
       ]
     },
     {
-      "id": "cp-cloud-wave-slot3",
-      "summary": "Adopt dactyl-db 0.18.0, Cloud Control-Plane custody wave (#1809, #1667, #1777, #1778, #1590, #1033, #1034, #1038, #1040, #1066, #1158, #1369, #1377, #1380), and Local/Cloud branding (#1808, #1769)",
-      "input_digest": "sha256:b3abd7da25cd6cc6f9cabb5c310f97dea62ffb73558b9e18ce5dc9366af032d8",
+      "id": "ckpt-scope-1760-3",
+      "summary": "Integrate origin/master v0.149.1 (205d4e8da) and refresh v0.149.1 specs and Dockerfile (#1760)",
+      "input_digest": "sha256:8f0f37b99bdbfefc816e97b2dec983da5354fb0660d13b2cf77b4978ba21c019",
       "proof_refs": [
-        "tests/cli_contract_enforcement.rs",
-        "tests/cloud_mixed_worktree.rs",
-        "tests/cloud_supabase_boundary.rs",
-        "tests/cloud_wave_parity.rs",
-        "tests/doc_alignment.rs",
-        "tests/release_dependency_policy.rs",
-        "tests/shared_state_semantics_1247.rs"
+        "lint:clippy",
+        "lint:fmt",
+        "test:explicit_path_scope_1760"
       ]
     },
     {
-      "id": "cp-cloud-wave-slot3-reconciled",
-      "summary": "Adopt dactyl-db 0.18.0, cloud control-plane custody (#1809/#1590/#1777/#1778/#1066/#1158/#1377), Local/Cloud branding (#1808/#1769), and reconciled reviewed_sources_digest",
-      "input_digest": "sha256:70a6250bfee10916afb1540d9cc1f5aa8ee59da9af44935bbfa6b914f0ea1b3f"
+      "id": "ckpt-scope-1760-4",
+      "summary": "Record post-merge SECURITY.md spec review fingerprint for v0.149.1 (#1760)",
+      "input_digest": "sha256:7ebe1bc296b26035bb3a96ead8f5781f1c2519916d89c0a1068c2120f8b66f9c",
+      "proof_refs": [
+        "spec:.decapod/managed/specs/SECURITY.md"
+      ]
     },
     {
-      "id": "cp-cloud-wave-slot3-clippy-fix",
-      "summary": "Gate KEYSTORE_SERVICE constant in src/decapod/core/cloud_dpop.rs to #[cfg(target_os = \"macos\")] for Linux clippy -D warnings parity",
-      "input_digest": "sha256:f424b019e807e9a8fd4cd99baced327ce35f49106137661c85c076b4e126ef4e"
+      "id": "ckpt-scope-1760-5",
+      "summary": "Integrate origin/master 89906b666 (v0.149.3) and refresh projections for #1760",
+      "input_digest": "sha256:0da4fe92628628a60cc4175950a5af66a0b711d57ffa1214fea8ca1a3d6a5235"
     },
     {
-      "id": "cp-cloud-wave-slot3-spec-review",
-      "summary": "Refresh spec reviews for ARCHITECTURE/INTERFACES/SECURITY against final code fingerprint after macOS cfg clippy fix",
-      "input_digest": "sha256:59fea46e315ded6aff906147995974d1c7c4d3d271defc7e8d44818f681770ac"
+      "id": "ckpt-scope-1760-6",
+      "summary": "Integrate origin/master 45369197e (#1825, v0.149.3) and refresh projections for #1760",
+      "input_digest": "sha256:c8d7ef0c1cc3f25a29176e7c9f2bd0e00ccf4823b6a028b00deecc50bd0c8205"
     },
     {
-      "id": "cp-cloud-wave-slot3-merge-84f967382",
-      "summary": "Integrate accepted master 84f967382 (PR #1823 workunit convergence) and refresh spec reviews",
-      "input_digest": "sha256:5a56341bef85f4c4009f82caac91d345968b3f4bcc379c1b4d41243cde023263"
+      "id": "ckpt-scope-1760-7",
+      "summary": "Integrate origin/master 84f967382 (#1660, v0.149.3) and refresh projections for #1760",
+      "input_digest": "sha256:fc517b1bbeecfb229c75f075bb87028f5e7e795203c86b4fb3fc0cb46f1994c4"
+    },
+    {
+      "id": "ckpt-scope-1760-8",
+      "summary": "Integrate origin/master 755bbac6e (#1828, v0.149.3) and refresh projections for #1760",
+      "input_digest": "sha256:046643cd609976ae619559e01fe35fbfc0d48ad269bf4c51f59a551000ec07a0"
     }
   ],
   "intents": {
-    "intent:change_01M7RAMDCVQ83Q2KXQCCHVHTJ5": {
+    "intent:change_01M7R53QBGMV407MHXT3BSNNGX": {
       "acceptance_criteria": [],
       "assumptions": [],
       "boundaries": [
         "Current claimed task and isolated work branch"
       ],
       "constraints": [
-        "cloud-control-plane-sdk"
+        ".decapod/managed/specs",
+        "src/decapod/core",
+        "src/decapod/lib.rs",
+        "tests"
       ],
       "created_sequence": 1,
-      "id": "intent:change_01M7RAMDCVQ83Q2KXQCCHVHTJ5",
+      "id": "intent:change_01M7R53QBGMV407MHXT3BSNNGX",
       "out_of_scope": [],
       "proof_requirements": [],
-      "raw_intent": "Cloud Control-Plane & SDK Wave (#1809, #1667, #1777, #1778, #1590, #1033, #1034, #1038, #1040, #1066, #1158, #1247, #1369, #1376, #1377, #1380)",
-      "refined_intent": "Cloud Control-Plane & SDK Wave (#1809, #1667, #1777, #1778, #1590, #1033, #1034, #1038, #1040, #1066, #1158, #1247, #1369, #1376, #1377, #1380)",
+      "raw_intent": "Preserve explicit path scopes when generating plan and trajectory records (#1760)",
+      "refined_intent": "Preserve explicit path scopes when generating plan and trajectory records (#1760)",
       "status": "refined",
       "updated_sequence": 3
     }
@@ -662,7 +667,7 @@
       },
       "deferred_questions": [],
       "human_questions": [],
-      "intent": "Cloud Control-Plane & SDK Wave (#1809, #1667, #1777, #1778, #1590, #1033, #1034, #1038, #1040, #1066, #1158, #1247, #1369, #1376, #1377, #1380)",
+      "intent": "Preserve explicit path scopes when generating plan and trajectory records (#1760)",
       "phases": [],
       "proof_hooks": [
         "decapod validate"
@@ -670,170 +675,433 @@
       "schema_version": "1.1.0",
       "spec_reviews": [
         {
-          "disposition": "updated",
+          "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Re-reviewed ARCHITECTURE.md after integrating accepted master 84f967382 (PR #1823)",
-          "reviewed_code_fingerprint": "17bb01252165722740df7102ca6093fa9d4462a5accf2edc0b69bba1c60ac6e4",
+          "reason": "Preserved origin/master #1828/#1469 architecture prose; #1760 does not alter architecture beyond interface scope parsing and reconciliation.",
+          "reviewed_code_fingerprint": "cb3052a6ae4a248a0c8a89778db0217d1ca0d6656dfdbf0af27b4d713e0b1365",
           "spec_material_hash": "eea767e816c43693064ee73b838425f7a154fd6e56cf0552669d971d1e5001ea"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Re-reviewed INTERFACES.md after integrating accepted master 84f967382 (PR #1823)",
-          "reviewed_code_fingerprint": "17bb01252165722740df7102ca6093fa9d4462a5accf2edc0b69bba1c60ac6e4",
-          "spec_material_hash": "133eff6eb96038a64e0bad61a1e524319afc1a5c0c4c9753c9238efc1615e846"
+          "reason": "Preserved #1760 explicit path scope parsing and govern trajectory reconcile-scope contract alongside origin/master #1828 (755bbac6e) Local/Cloud CLI updates and #1660 workunit semantics.",
+          "reviewed_code_fingerprint": "cb3052a6ae4a248a0c8a89778db0217d1ca0d6656dfdbf0af27b4d713e0b1365",
+          "spec_material_hash": "33a050432f94a2f5792cfa30f496bf03326f73eab76dbcf35cbc611a93b264aa"
         },
         {
-          "disposition": "updated",
+          "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Re-reviewed SECURITY.md after integrating accepted master 84f967382 (PR #1823)",
-          "reviewed_code_fingerprint": "17bb01252165722740df7102ca6093fa9d4462a5accf2edc0b69bba1c60ac6e4",
+          "reason": "Preserved origin/master #1828/#1776 security prose; #1760 keeps fail-closed explicit path scope validation and archive-gated reconciliation.",
+          "reviewed_code_fingerprint": "cb3052a6ae4a248a0c8a89778db0217d1ca0d6656dfdbf0af27b4d713e0b1365",
           "spec_material_hash": "5142f990d1f15f6839a51c5453fd5ba4e4274e1f7e31a8f1c1cd87618c887e35"
         }
       ],
       "state": "APPROVED",
       "stop_conditions": [],
-      "title": "Cloud Control-Plane & SDK Wave (#1809, #1667, #1777, #1778, #1590, #1033, #1034, #1038, #1040, #1066, #1158, #1247, #1369, #1376, #1377, #1380)",
+      "title": "Preserve explicit path scopes when generating plan and trajectory records (#1760)",
       "todo_ids": [
-        "code_01m7r9mg6gqp6gyx"
+        "bugs_01m7r50vhcx7h3pw"
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795073147Z"
+      "updated_at": "1795077165Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:7fe98dac44798cd607470808e273465ccbc97a15e9efcdae48651104e4286441",
+      "artifact_hash": "sha256:dd2b8660c0456259c09fb2c516ecd19f5b2aaabaf5119bfad6399760199a9ffd",
       "checks": [
         {
-          "name": "bazel_cargo_inputs_policy",
+          "name": "candidate_docs_build_zero_diff",
           "status": "passed"
         },
         {
-          "name": "branding_1808_1769_and_docs_build",
+          "name": "candidate_docs_build_zero_diff_45369197",
           "status": "passed"
         },
         {
-          "name": "clippy_all_targets_all_features",
+          "name": "candidate_docs_build_zero_diff_755bbac6",
           "status": "passed"
         },
         {
-          "name": "dactyl_018_unit_and_integration",
+          "name": "candidate_docs_build_zero_diff_84f96738",
           "status": "passed"
         },
         {
-          "name": "pg17_postgrest_conformance",
+          "name": "cargo_fmt_45369197",
           "status": "passed"
         },
         {
-          "name": "shared_state_semantics_1247",
+          "name": "cargo_fmt_755bbac6",
+          "status": "passed"
+        },
+        {
+          "name": "cargo_fmt_84f96738",
+          "status": "passed"
+        },
+        {
+          "name": "cargo_fmt_v01493",
+          "status": "passed"
+        },
+        {
+          "name": "cli_contract_enforcement",
+          "status": "passed"
+        },
+        {
+          "name": "clippy",
+          "status": "passed"
+        },
+        {
+          "name": "doc_and_contract_tests_21",
+          "status": "passed"
+        },
+        {
+          "name": "doc_and_contract_tests_21_45369197",
+          "status": "passed"
+        },
+        {
+          "name": "doc_and_contract_tests_21_84f96738",
+          "status": "passed"
+        },
+        {
+          "name": "doc_and_contract_tests_22_755bbac6",
+          "status": "passed"
+        },
+        {
+          "name": "docs_and_contracts",
+          "status": "passed"
+        },
+        {
+          "name": "explicit_path_scope_1760",
+          "status": "passed"
+        },
+        {
+          "name": "explicit_path_scope_1760_integration_3",
+          "status": "passed"
+        },
+        {
+          "name": "explicit_path_scope_1760_integration_3_45369197",
+          "status": "passed"
+        },
+        {
+          "name": "explicit_path_scope_1760_integration_3_755bbac6",
+          "status": "passed"
+        },
+        {
+          "name": "explicit_path_scope_1760_integration_3_84f96738",
+          "status": "passed"
+        },
+        {
+          "name": "fleet_coord_unit",
+          "status": "passed"
+        },
+        {
+          "name": "fleet_coord_unit_tests_15",
+          "status": "passed"
+        },
+        {
+          "name": "fleet_coord_unit_tests_15_45369197",
+          "status": "passed"
+        },
+        {
+          "name": "fleet_coord_unit_tests_15_755bbac6",
+          "status": "passed"
+        },
+        {
+          "name": "fleet_coord_unit_tests_15_84f96738",
+          "status": "passed"
+        },
+        {
+          "name": "fmt",
+          "status": "passed"
+        },
+        {
+          "name": "validation_scope_unit_tests_9",
+          "status": "passed"
+        },
+        {
+          "name": "validation_scope_unit_tests_9_45369197",
+          "status": "passed"
+        },
+        {
+          "name": "validation_scope_unit_tests_9_755bbac6",
+          "status": "passed"
+        },
+        {
+          "name": "validation_scope_unit_tests_9_84f96738",
+          "status": "passed"
+        },
+        {
+          "name": "workbranch_governance",
           "status": "passed"
         }
       ],
-      "current_phase": "intent",
+      "current_phase": "implementation",
       "custody": {
         "events": [
           {
             "event_id": "event:2",
-            "intent_id": "intent:change_01M7RAMDCVQ83Q2KXQCCHVHTJ5",
+            "intent_id": "intent:change_01M7R53QBGMV407MHXT3BSNNGX",
             "kind": "created",
             "sequence": 2
           },
           {
             "event_id": "event:3",
-            "intent_id": "intent:change_01M7RAMDCVQ83Q2KXQCCHVHTJ5",
+            "intent_id": "intent:change_01M7R53QBGMV407MHXT3BSNNGX",
             "kind": "refined",
             "sequence": 3
           },
           {
-            "detail": "trajectory:branch_01M7RAMDK5N3QK7311T671SXB0",
+            "detail": "trajectory:branch_01M7R53QHQGEZPR24WRJ6ZSZ39",
             "event_id": "event:4",
-            "intent_id": "intent:change_01M7RAMDCVQ83Q2KXQCCHVHTJ5",
+            "intent_id": "intent:change_01M7R53QBGMV407MHXT3BSNNGX",
             "kind": "trajectory_step_recorded",
             "sequence": 4
+          },
+          {
+            "detail": "trajectory:branch_01M7R53QHQGEZPR24WRJ6ZSZ39",
+            "event_id": "event:5",
+            "intent_id": "intent:change_01M7R53QBGMV407MHXT3BSNNGX",
+            "kind": "trajectory_step_recorded",
+            "sequence": 5
+          },
+          {
+            "detail": "trajectory:branch_01M7R53QHQGEZPR24WRJ6ZSZ39",
+            "event_id": "event:6",
+            "intent_id": "intent:change_01M7R53QBGMV407MHXT3BSNNGX",
+            "kind": "trajectory_step_recorded",
+            "sequence": 6
+          },
+          {
+            "detail": "trajectory:branch_01M7R53QHQGEZPR24WRJ6ZSZ39",
+            "event_id": "event:7",
+            "intent_id": "intent:change_01M7R53QBGMV407MHXT3BSNNGX",
+            "kind": "trajectory_step_recorded",
+            "sequence": 7
+          },
+          {
+            "detail": "trajectory:branch_01M7R53QHQGEZPR24WRJ6ZSZ39",
+            "event_id": "event:8",
+            "intent_id": "intent:change_01M7R53QBGMV407MHXT3BSNNGX",
+            "kind": "trajectory_step_recorded",
+            "sequence": 8
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 4,
+        "next_sequence": 8,
         "schema_version": "1.0.0",
         "trajectories": {
-          "branch_01M7RAMDK5N3QK7311T671SXB0": {
+          "branch_01M7R53QHQGEZPR24WRJ6ZSZ39": {
             "evidence_only": true,
-            "id": "branch_01M7RAMDK5N3QK7311T671SXB0",
-            "intent_id": "intent:change_01M7RAMDCVQ83Q2KXQCCHVHTJ5",
+            "id": "branch_01M7R53QHQGEZPR24WRJ6ZSZ39",
+            "intent_id": "intent:change_01M7R53QBGMV407MHXT3BSNNGX",
             "steps": [
               {
-                "action": "trajectory.record",
+                "action": "implementation",
+                "command": "cargo fmt --all -- --check",
                 "custody_event_id": "event:4",
                 "observations": [
-                  "Cargo.toml",
-                  "Cargo.lock",
-                  "MODULE.bazel.lock",
+                  "src/decapod/core/fleet_coord.rs",
+                  "src/decapod/core/workspace.rs",
+                  "src/decapod/core/trajectory.rs",
+                  "src/decapod/core/governance_document.rs",
+                  "src/decapod/core/docs_cli.rs",
+                  "src/decapod/lib.rs",
+                  "src/decapod/core/fleet_coord.rs",
+                  "src/decapod/core/workspace.rs",
+                  "src/decapod/core/trajectory.rs",
+                  "src/decapod/core/governance_document.rs",
+                  "src/decapod/core/governance_document/scope_reconciliation.rs",
                   "src/decapod/cli.rs",
                   "src/decapod/lib.rs",
-                  "src/decapod/core/cloud_dpop.rs",
-                  "src/decapod/core/cloud_proof.rs",
-                  "src/decapod/core/container_signer.rs",
-                  "src/decapod/core/cloud_client.rs",
-                  "src/decapod/core/dactyl.rs",
-                  "src/decapod/core/dactyl_todo.rs",
-                  "src/decapod/core/db_maintenance.rs",
-                  "src/decapod/core/todo.rs",
-                  "src/decapod/core/propodus.rs",
-                  "src/decapod/core/rpc.rs"
+                  "src/decapod/core/docs_cli.rs",
+                  "docs/agent/command-contracts.md",
+                  "tests/unit/core/fleet_coord_tests.rs",
+                  "tests/explicit_path_scope_1760.rs",
+                  ".decapod/managed/specs/INTERFACES.md",
+                  ".decapod/managed/specs/INTERFACES.md",
+                  "tests/explicit_path_scope_1760.rs"
                 ],
                 "proof_refs": [
-                  "dactyl_018_unit_and_integration",
-                  "branding_1808_1769_and_docs_build",
-                  "shared_state_semantics_1247",
-                  "bazel_cargo_inputs_policy",
-                  "clippy_all_targets_all_features",
-                  "pg17_postgrest_conformance"
+                  "fmt",
+                  "clippy",
+                  "explicit_path_scope_1760",
+                  "docs_and_contracts",
+                  "workbranch_governance",
+                  "cli_contract_enforcement",
+                  "fleet_coord_unit"
                 ],
                 "scope": [
-                  "cloud-control-plane-sdk"
+                  "\".decapod/managed/specs\"]",
+                  "\"src/decapod/lib.rs\"",
+                  "\"tests\"",
+                  "paths:[\"src/decapod/core\""
                 ],
                 "sequence": 4,
+                "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "command": "git merge --no-commit --no-ff origin/master (89906b666)",
+                "custody_event_id": "event:5",
+                "observations": [
+                  "Merged origin/master 89906b6662cccc1576cd7b67522b9ade2ea27415 (v0.149.3) with zero src/tests/docs conflicts; verified fmt, candidate docs build (0 diff), fleet_coord (15/15), validation_scope (9/9), explicit_path_scope_1760 (3/3), contract_conformance (12/12), doc_alignment (4/4), trajectory_docs (5/5)."
+                ],
+                "proof_refs": [
+                  "cargo_fmt_v01493",
+                  "candidate_docs_build_zero_diff",
+                  "fleet_coord_unit_tests_15",
+                  "validation_scope_unit_tests_9",
+                  "explicit_path_scope_1760_integration_3",
+                  "doc_and_contract_tests_21"
+                ],
+                "scope": [
+                  ".decapod/managed/specs",
+                  "src/decapod/core",
+                  "src/decapod/lib.rs",
+                  "tests"
+                ],
+                "sequence": 5,
+                "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "command": "git merge --no-commit --no-ff origin/master (45369197e)",
+                "custody_event_id": "event:6",
+                "observations": [
+                  "Merged origin/master 45369197e848054126b36c1a3bbeb7806f094a38 (#1825, v0.149.3) with zero src/tests/docs/config.toml conflicts; candidate docs build 0 diff, manifest config_input_hash=e640496b4240426e1b4fdf07aa93295f77ad0c1fe6cb39572d09c531d2ad697d, all 48 tests passed."
+                ],
+                "proof_refs": [
+                  "cargo_fmt_45369197",
+                  "candidate_docs_build_zero_diff_45369197",
+                  "fleet_coord_unit_tests_15_45369197",
+                  "validation_scope_unit_tests_9_45369197",
+                  "explicit_path_scope_1760_integration_3_45369197",
+                  "doc_and_contract_tests_21_45369197"
+                ],
+                "scope": [
+                  ".decapod/managed/specs",
+                  "src/decapod/core",
+                  "src/decapod/lib.rs",
+                  "tests"
+                ],
+                "sequence": 6,
+                "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "command": "git merge --no-commit --no-ff origin/master (84f967382)",
+                "custody_event_id": "event:7",
+                "observations": [
+                  "Merged origin/master 84f9673824ba0b60ee0e87449f2cbb23387f5717 (#1660, v0.149.3) with zero src/tests/docs/config.toml conflicts; candidate docs build converged both #1660 and #1760 with 0 repeat diff; manifest config_input_hash=e640496b4240426e1b4fdf07aa93295f77ad0c1fe6cb39572d09c531d2ad697d; all 48 tests passed."
+                ],
+                "proof_refs": [
+                  "cargo_fmt_84f96738",
+                  "candidate_docs_build_zero_diff_84f96738",
+                  "fleet_coord_unit_tests_15_84f96738",
+                  "validation_scope_unit_tests_9_84f96738",
+                  "doc_and_contract_tests_21_84f96738",
+                  "explicit_path_scope_1760_integration_3_84f96738"
+                ],
+                "scope": [
+                  ".decapod/managed/specs",
+                  "src/decapod/core",
+                  "src/decapod/lib.rs",
+                  "tests"
+                ],
+                "sequence": 7,
+                "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "command": "git merge --no-commit --no-ff origin/master (755bbac6e)",
+                "custody_event_id": "event:8",
+                "observations": [
+                  "Merged origin/master 755bbac6e0af03c5dde4bd555cd749c426ae6472 (#1828, v0.149.3) with zero src/tests/docs/config.toml conflicts; candidate docs build converged with 0 repeat diff; manifest config_input_hash=6bb17b82e0f53047e8029f6eabfc25673a83975da7d033a54c4efe12d804388a; all 49 tests passed."
+                ],
+                "proof_refs": [
+                  "cargo_fmt_755bbac6",
+                  "candidate_docs_build_zero_diff_755bbac6",
+                  "fleet_coord_unit_tests_15_755bbac6",
+                  "validation_scope_unit_tests_9_755bbac6",
+                  "doc_and_contract_tests_22_755bbac6",
+                  "explicit_path_scope_1760_integration_3_755bbac6"
+                ],
+                "scope": [
+                  ".decapod/managed/specs",
+                  "src/decapod/core",
+                  "src/decapod/lib.rs",
+                  "tests"
+                ],
+                "sequence": 8,
                 "validation_findings": []
               }
             ]
           }
         }
       },
-      "declared_commands": [],
+      "declared_commands": [
+        "CLIPPY_CONF_DIR=.config cargo clippy --all-targets --all-features -- -D warnings",
+        "cargo fmt --all -- --check",
+        "cargo fmt --all -- --check && candidate decapod docs build && candidate decapod rpc --op specs.refresh && cargo test --lib core::fleet_coord && cargo test --lib validation_scope && cargo test --test doc_alignment --test trajectory_docs --test contract_conformance && cargo test --test explicit_path_scope_1760",
+        "cargo fmt --all -- --check && candidate decapod docs build && candidate decapod rpc --op specs.refresh && cargo test --lib core::fleet_coord && cargo test --lib validation_scope && cargo test --test explicit_path_scope_1760 && cargo test --test doc_alignment --test trajectory_docs --test contract_conformance",
+        "cargo fmt --all -- --check && decapod docs build && cargo test --lib core::fleet_coord && cargo test --lib validation_scope && cargo test --test explicit_path_scope_1760 && cargo test --test doc_alignment --test trajectory_docs --test contract_conformance",
+        "cargo test --lib core::fleet_coord",
+        "cargo test --test cli_contract_enforcement -- --test-threads=1",
+        "cargo test --test doc_alignment --test trajectory_docs --test contract_conformance",
+        "cargo test --test explicit_path_scope_1760",
+        "cargo test --test workbranch_governance",
+        "git merge --no-commit --no-ff origin/master (45369197e)",
+        "git merge --no-commit --no-ff origin/master (755bbac6e)",
+        "git merge --no-commit --no-ff origin/master (84f967382)",
+        "git merge --no-commit --no-ff origin/master (89906b666)"
+      ],
       "destination": "pull request",
-      "evidence": [],
-      "inspected_files": [],
-      "intent_id": "intent:change_01M7RAMDCVQ83Q2KXQCCHVHTJ5",
-      "modified_files": [
-        "Cargo.lock",
-        "Cargo.toml",
-        "MODULE.bazel.lock",
-        "src/decapod/cli.rs",
-        "src/decapod/core/cloud_client.rs",
-        "src/decapod/core/cloud_dpop.rs",
-        "src/decapod/core/cloud_proof.rs",
-        "src/decapod/core/container_signer.rs",
-        "src/decapod/core/dactyl.rs",
-        "src/decapod/core/dactyl_todo.rs",
-        "src/decapod/core/db_maintenance.rs",
-        "src/decapod/core/propodus.rs",
-        "src/decapod/core/rpc.rs",
-        "src/decapod/core/todo.rs",
+      "evidence": [
+        ".decapod/managed/specs/INTERFACES.md",
+        "Merged origin/master 45369197e848054126b36c1a3bbeb7806f094a38 (#1825, v0.149.3) with zero src/tests/docs/config.toml conflicts; candidate docs build 0 diff, manifest config_input_hash=e640496b4240426e1b4fdf07aa93295f77ad0c1fe6cb39572d09c531d2ad697d, all 48 tests passed.",
+        "Merged origin/master 755bbac6e0af03c5dde4bd555cd749c426ae6472 (#1828, v0.149.3) with zero src/tests/docs/config.toml conflicts; candidate docs build converged with 0 repeat diff; manifest config_input_hash=6bb17b82e0f53047e8029f6eabfc25673a83975da7d033a54c4efe12d804388a; all 49 tests passed.",
+        "Merged origin/master 84f9673824ba0b60ee0e87449f2cbb23387f5717 (#1660, v0.149.3) with zero src/tests/docs/config.toml conflicts; candidate docs build converged both #1660 and #1760 with 0 repeat diff; manifest config_input_hash=e640496b4240426e1b4fdf07aa93295f77ad0c1fe6cb39572d09c531d2ad697d; all 48 tests passed.",
+        "Merged origin/master 89906b6662cccc1576cd7b67522b9ade2ea27415 (v0.149.3) with zero src/tests/docs conflicts; verified fmt, candidate docs build (0 diff), fleet_coord (15/15), validation_scope (9/9), explicit_path_scope_1760 (3/3), contract_conformance (12/12), doc_alignment (4/4), trajectory_docs (5/5).",
+        "tests/explicit_path_scope_1760.rs"
+      ],
+      "inspected_files": [
+        "src/decapod/core/docs_cli.rs",
+        "src/decapod/core/fleet_coord.rs",
+        "src/decapod/core/governance_document.rs",
+        "src/decapod/core/trajectory.rs",
+        "src/decapod/core/workspace.rs",
         "src/decapod/lib.rs"
+      ],
+      "intent_id": "intent:change_01M7R53QBGMV407MHXT3BSNNGX",
+      "modified_files": [
+        ".decapod/managed/specs/INTERFACES.md",
+        "docs/agent/command-contracts.md",
+        "src/decapod/cli.rs",
+        "src/decapod/core/docs_cli.rs",
+        "src/decapod/core/fleet_coord.rs",
+        "src/decapod/core/governance_document.rs",
+        "src/decapod/core/governance_document/scope_reconciliation.rs",
+        "src/decapod/core/trajectory.rs",
+        "src/decapod/core/workspace.rs",
+        "src/decapod/lib.rs",
+        "tests/explicit_path_scope_1760.rs",
+        "tests/unit/core/fleet_coord_tests.rs"
       ],
       "next_transitions": [
         "Refine plan and declare falsifiable checks"
       ],
       "repo_scope": [
-        "cloud-control-plane-sdk"
+        ".decapod/managed/specs",
+        "src/decapod/core",
+        "src/decapod/lib.rs",
+        "tests"
       ],
-      "run_id": "branch_01M7RAMDK5N3QK7311T671SXB0",
+      "run_id": "branch_01M7R53QHQGEZPR24WRJ6ZSZ39",
       "schema_version": "1.1.0",
       "shortcut_risk_signals": [],
-      "task_id": "code_01m7r9mg6gqp6gyx",
+      "task_id": "bugs_01m7r50vhcx7h3pw",
       "tool_calls": [],
       "unresolved_assumptions": []
     }
