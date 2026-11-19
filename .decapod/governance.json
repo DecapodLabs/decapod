@@ -603,6 +603,11 @@
       "id": "cp-1736-4",
       "summary": "Sync origin/master d60a639c8 (v0.150.8), refresh v0.150.8 projections, reconcile governance journal, and verify #1736 per-platform readiness",
       "input_digest": "sha256:c6e79399adea09871cfe00d09734ed1e8e741a534fe5e004c05473ab5d4ce589"
+    },
+    {
+      "id": "cp-1736-5",
+      "summary": "Initialize RepositoryExecution::platforms in 6 upstream integration test fixtures and verify clippy --all-targets (#1736)",
+      "input_digest": "sha256:3b2c36eb5b83a3633f4f8101e118aecdf6c470bc7e88b43d1693334292f6865f"
     }
   ],
   "intents": {
@@ -646,22 +651,22 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Preserved per-platform execution resolution and host selection architecture (#1736) in ARCHITECTURE.md alongside upstream v0.150.8 specs.",
-          "reviewed_code_fingerprint": "262addd93ef2b2c8054a0ce5cf01b0a67022f7e835cc6609ca96a8aaf972eb56",
+          "reason": "Preserved per-platform execution resolution and host selection architecture (#1736) in ARCHITECTURE.md; updated 6 upstream integration test initializers.",
+          "reviewed_code_fingerprint": "dba081c4a82d40f68b8b15619d246a47289fe147cbef8b23b9621b05c31d8734",
           "spec_material_hash": "485749bf431dc4b4aa717c250e5428a56bf618728a2e01fd01f7f155fb4e13bb"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Preserved per-platform execution contract (#1736) in INTERFACES.md alongside all upstream v0.150.8 interface specs.",
-          "reviewed_code_fingerprint": "262addd93ef2b2c8054a0ce5cf01b0a67022f7e835cc6609ca96a8aaf972eb56",
+          "reason": "Preserved per-platform execution contract (#1736) in INTERFACES.md alongside v0.150.8 specs; initialized platforms: BTreeMap::new() in 6 upstream integration test fixtures.",
+          "reviewed_code_fingerprint": "dba081c4a82d40f68b8b15619d246a47289fe147cbef8b23b9621b05c31d8734",
           "spec_material_hash": "941a88d1fa1de50c6bec4148dcc301de28db3e5d1ecfad031a8732a632d7dc5f"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Preserved Per-platform execution selection boundary (#1736) in SECURITY.md alongside upstream v0.150.8 security specs.",
-          "reviewed_code_fingerprint": "262addd93ef2b2c8054a0ce5cf01b0a67022f7e835cc6609ca96a8aaf972eb56",
+          "reason": "Preserved Per-platform execution selection boundary (#1736) in SECURITY.md; single-platform test fixtures initialize empty platforms map.",
+          "reviewed_code_fingerprint": "dba081c4a82d40f68b8b15619d246a47289fe147cbef8b23b9621b05c31d8734",
           "spec_material_hash": "5d5e6d393e35b9d5b1987ca692fbdd18b0b238b96d5e62181e43480d0fea8aee"
         }
       ],
@@ -673,13 +678,13 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795131064Z"
+      "updated_at": "1795131986Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:575666744bdf56708630aa69339cdbe4682863242ed2828b620781f61943ba15",
+      "artifact_hash": "sha256:cb75cc3ecc5f70885fe570379b5bb78d9cfd0034613f65a85217cff2e3717533",
       "checks": [
         {
           "name": "cargo_clippy",
@@ -687,6 +692,10 @@
         },
         {
           "name": "cargo_fmt",
+          "status": "passed"
+        },
+        {
+          "name": "clippy_all_targets",
           "status": "passed"
         },
         {
@@ -761,10 +770,17 @@
             "intent_id": "intent:change_01M7QNGXR8M0YARA25DCX9933Z",
             "kind": "trajectory_step_recorded",
             "sequence": 6
+          },
+          {
+            "detail": "trajectory:branch_01M7QNGXVG2P2VB3JGMXQRF1NC",
+            "event_id": "event:7",
+            "intent_id": "intent:change_01M7QNGXR8M0YARA25DCX9933Z",
+            "kind": "trajectory_step_recorded",
+            "sequence": 7
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 6,
+        "next_sequence": 7,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M7QNGXVG2P2VB3JGMXQRF1NC": {
@@ -861,6 +877,37 @@
                 ],
                 "sequence": 6,
                 "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:7",
+                "observations": [
+                  "tests/workunit_verified_proof_1660.rs",
+                  "tests/policy_self_authorization_1776.rs",
+                  "tests/validate_ergonomics_1807_1810.rs",
+                  "tests/concurrent_worktree_integration_1469.rs",
+                  "tests/exact_candidate_governance_1052.rs",
+                  "tests/gate_skip_override_readiness_1659.rs",
+                  "tests/workunit_verified_proof_1660.rs",
+                  "tests/policy_self_authorization_1776.rs",
+                  "tests/validate_ergonomics_1807_1810.rs",
+                  "tests/concurrent_worktree_integration_1469.rs",
+                  "tests/exact_candidate_governance_1052.rs",
+                  "tests/gate_skip_override_readiness_1659.rs",
+                  "Initialized platforms: BTreeMap::new() in all 6 upstream integration test files (7 RepositoryExecution struct literals) added on master after #1803; verified CLIPPY_CONF_DIR=.config cargo clippy --all-targets --all-features -- -D warnings passes with 0 errors and 0 warnings."
+                ],
+                "proof_refs": [
+                  "clippy_all_targets",
+                  "cargo_fmt"
+                ],
+                "scope": [
+                  "\".decapod/managed/specs\"]",
+                  "\"docs\"",
+                  "\"tests\"",
+                  "paths:[\"src/decapod\""
+                ],
+                "sequence": 7,
+                "validation_findings": []
               }
             ]
           }
@@ -870,6 +917,7 @@
       "destination": "pull request",
       "evidence": [
         "17 repository_profile unit tests passed, 6 repository_host unit tests passed, 27 consumer_readiness integration tests passed, 4 doc_alignment tests passed, 12 contract_conformance tests passed, clippy -D warnings and cargo fmt --check passed.",
+        "Initialized platforms: BTreeMap::new() in all 6 upstream integration test files (7 RepositoryExecution struct literals) added on master after #1803; verified CLIPPY_CONF_DIR=.config cargo clippy --all-targets --all-features -- -D warnings passes with 0 errors and 0 warnings.",
         "Merged origin/master d60a639c8 (v0.150.8) with 0 code conflicts, reconciled governance via reconcile-merge, refreshed Dockerfile.decapod and .manifest.json to v0.150.8, rebuilt v0.150.8 candidate binary, verified docs build, cargo fmt, and targeted tests (17/17 repository_profile, 6/6 repository_host, 3/3 consumer_readiness per_platform).",
         "Post-12595 local verification passed entrypoint_correctness (42/42) and all 11 core_full test binaries (71/71); merged origin/master 2f12638a (v0.148.14) cleanly with zero source conflicts."
       ],
@@ -882,7 +930,13 @@
         "src/decapod/core/native_proof.rs",
         "src/decapod/core/repository_profile.rs",
         "src/decapod/core/validation_runtime.rs",
-        "src/decapod/core/validation_runtime/repository_host.rs"
+        "src/decapod/core/validation_runtime/repository_host.rs",
+        "tests/concurrent_worktree_integration_1469.rs",
+        "tests/exact_candidate_governance_1052.rs",
+        "tests/gate_skip_override_readiness_1659.rs",
+        "tests/policy_self_authorization_1776.rs",
+        "tests/validate_ergonomics_1807_1810.rs",
+        "tests/workunit_verified_proof_1660.rs"
       ],
       "intent_id": "intent:change_01M7QNGXR8M0YARA25DCX9933Z",
       "modified_files": [
@@ -897,8 +951,14 @@
         "src/decapod/core/validation_runtime/repository_host.rs",
         "tests/acceptance/publication_admission.rs",
         "tests/common/consumer_readiness_fixture.rs",
+        "tests/concurrent_worktree_integration_1469.rs",
         "tests/consumer_readiness.rs",
-        "tests/unit/core/repository_profile_tests.rs"
+        "tests/exact_candidate_governance_1052.rs",
+        "tests/gate_skip_override_readiness_1659.rs",
+        "tests/policy_self_authorization_1776.rs",
+        "tests/unit/core/repository_profile_tests.rs",
+        "tests/validate_ergonomics_1807_1810.rs",
+        "tests/workunit_verified_proof_1660.rs"
       ],
       "next_transitions": [
         "Refine plan and declare falsifiable checks"

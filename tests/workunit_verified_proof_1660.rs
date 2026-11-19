@@ -261,6 +261,7 @@ impl GovernedRepoFixture {
         let execution = RepositoryExecution {
             program,
             toolchain_files,
+            platforms: BTreeMap::new(),
             environment: BTreeMap::from([(
                 "WU1660_FAIL_FLAG".into(),
                 failure_flag.to_string_lossy().into_owned(),
