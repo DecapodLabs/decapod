@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.150.1](https://github.com/DecapodLabs/decapod/compare/v0.150.0...v0.150.1) - 2026-11-19
+
+### Other
+
+- *(docs)* integrate accepted master v0.150.0 ([#1789](https://github.com/DecapodLabs/decapod/pull/1789))
+- *(docs)* refresh v0.149.1 projections ([#1789](https://github.com/DecapodLabs/decapod/pull/1789))
+- *(docs)* integrate accepted master v0.149.1 ([#1052](https://github.com/DecapodLabs/decapod/pull/1052)) ([#1789](https://github.com/DecapodLabs/decapod/pull/1789))
+- *(docs)* refresh v0.149.0 projections ([#1789](https://github.com/DecapodLabs/decapod/pull/1789))
+- *(book)* center BYOA and metacognitive kernel architecture ([#1789](https://github.com/DecapodLabs/decapod/pull/1789))
+
 ## [0.150.0](https://github.com/DecapodLabs/decapod/compare/v0.149.3...v0.150.0) - 2026-11-19
 
 ### Added

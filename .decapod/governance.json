@@ -577,6 +577,17 @@
     "base_commit": "a5a1edadb5ff96b0e2509bb17d111b227d156558",
     "target_base": "origin/master"
   },
+  "claims": {
+    "claim:release-v0-150-1-projections": {
+      "statement": "Release v0.150.1 aligns Cargo.toml, Cargo.lock, managed Dockerfile pin, and specs manifest release metadata.",
+      "falsifier": "Managed Dockerfile or specs manifest release metadata diverges from Cargo.toml 0.150.1.",
+      "status": "supported",
+      "proof_refs": [
+        ".decapod/managed/Dockerfile.decapod",
+        ".decapod/managed/specs/.manifest.json"
+      ]
+    }
+  },
   "checkpoints": [
     {
       "id": "ckpt-byoa-docs-1789",
@@ -625,6 +636,14 @@
         "tests/doc_alignment.rs",
         "tests/trajectory_docs.rs"
       ]
+    },
+    {
+      "id": "ckpt-release-v0-150-1",
+      "summary": "Refresh v0.150.1 release projections and governance",
+      "input_digest": "sha256:f6714753f81e44ee44e2866b18375177d3594388773cc9f16dcd43182f518aa4",
+      "proof_refs": [
+        ".decapod/managed/specs/.manifest.json"
+      ]
     }
   ],
   "intents": {
@@ -657,50 +676,48 @@
       },
       "deferred_questions": [],
       "human_questions": [],
-      "intent": "Docs #1789: make BYOA, agent-invoked metacognition and cross-agent coordination first-class",
+      "intent": "Refresh release-bound Dockerfile and specs manifest projections for v0.150.1 on PR #1844",
       "phases": [],
-      "proof_hooks": [
-        "decapod validate"
-      ],
+      "proof_hooks": [],
       "schema_version": "1.1.0",
       "spec_reviews": [
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Integrated origin/master 1332f4ecd (v0.150.0); preserved upstream #1469 section alongside #1789 public mdBook narrative section",
-          "reviewed_code_fingerprint": "66afe827c300d4279204c072d535fa9d97041867fdc924d798dd84d4f31e4163",
+          "reason": "v0.150.1 version-only release cut does not alter system architecture",
+          "reviewed_code_fingerprint": "c1341531d9fead81f36aa6afadf7e7e30db482f2f7b5b5989f498ddd2b2cb364",
           "spec_material_hash": "222ad0bd9ae163a09c07ab5e392be697b10db614d48755997eaab76b5a143fad"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Integrated origin/master 1332f4ecd (v0.150.0); docs-only #1789 PR leaves CLI/RPC interfaces unchanged",
-          "reviewed_code_fingerprint": "66afe827c300d4279204c072d535fa9d97041867fdc924d798dd84d4f31e4163",
+          "reason": "v0.150.1 version-only release cut does not alter CLI or RPC interfaces",
+          "reviewed_code_fingerprint": "c1341531d9fead81f36aa6afadf7e7e30db482f2f7b5b5989f498ddd2b2cb364",
           "spec_material_hash": "f9f2f5fc909f60cbbdabb0bf48b53c6c70f1f3d4193f73bbccf2d1108675005f"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Integrated origin/master 1332f4ecd (v0.150.0); docs-only #1789 PR leaves security invariants unchanged",
-          "reviewed_code_fingerprint": "66afe827c300d4279204c072d535fa9d97041867fdc924d798dd84d4f31e4163",
+          "reason": "v0.150.1 version-only release cut does not alter security boundaries",
+          "reviewed_code_fingerprint": "c1341531d9fead81f36aa6afadf7e7e30db482f2f7b5b5989f498ddd2b2cb364",
           "spec_material_hash": "fe2a57654bc0079c8ae5d4226c46ba7f1ea50f4246a8c19d826f2e660dc56f81"
         }
       ],
       "state": "APPROVED",
       "stop_conditions": [],
-      "title": "Docs #1789: make BYOA, agent-invoked metacognition and cross-agent coordination first-class",
+      "title": "Align release v0.150.1 projections and governance (#1844)",
       "todo_ids": [
-        "docs_01m7r4vfv7498zkx"
+        "code_01m7srddt2dc4pyp"
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795089941Z"
+      "updated_at": "1795095673Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:e9fa1be8e118af2dbb2c7dc5bb5233c828f42801a797a2a70664bb086233c4c5",
+      "artifact_hash": "sha256:8339f798faa6ec65b711c64598396393181cd70e5371c876a97f166a1437ef43",
       "checks": [
         {
           "name": "contract_conformance",
@@ -717,6 +734,10 @@
         {
           "name": "mdbook_build",
           "status": "unavailable"
+        },
+        {
+          "name": "project_check_0_150_1",
+          "status": "passed"
         },
         {
           "name": "relative_markdown_links",
@@ -780,10 +801,17 @@
             "intent_id": "intent:change_01M7R4ZAHNJFT5PGD1R58DDXC5",
             "kind": "trajectory_step_recorded",
             "sequence": 8
+          },
+          {
+            "detail": "trajectory:branch_01M7R4ZAS8A2D6PMN4WRWVY4S3",
+            "event_id": "event:9",
+            "intent_id": "intent:change_01M7R4ZAHNJFT5PGD1R58DDXC5",
+            "kind": "trajectory_step_recorded",
+            "sequence": 9
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 8,
+        "next_sequence": 9,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M7R4ZAS8A2D6PMN4WRWVY4S3": {
@@ -901,6 +929,26 @@
                 ],
                 "sequence": 8,
                 "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:9",
+                "observations": [
+                  ".decapod/managed/Dockerfile.decapod",
+                  ".decapod/managed/specs/OPERATIONS.md",
+                  ".decapod/managed/specs/.manifest.json",
+                  ".decapod/managed/specs/.manifest.json"
+                ],
+                "proof_refs": [
+                  "project_check_0_150_1"
+                ],
+                "scope": [
+                  "\".decapod/managed/specs\"]",
+                  "\"README.md\"",
+                  "paths:[\"docs/book/src\""
+                ],
+                "sequence": 9,
+                "validation_findings": []
               }
             ]
           }
@@ -909,6 +957,7 @@
       "declared_commands": [],
       "destination": "pull request",
       "evidence": [
+        ".decapod/managed/specs/.manifest.json",
         "Merged origin/master 1332f4ecd (v0.150.0), preserved upstream Decapod Local/Cloud offerings + #1469 specs, refreshed v0.150.0 projections with /private/tmp/swarm-controller-0.150.0/bin/decapod",
         "Merged origin/master 205d4e8da (PR #1805 + PR #1806 v0.149.1) and refreshed projections with 0.149.0 controller",
         "Refreshed v0.149.0 Dockerfile.decapod and .manifest.json with /private/tmp/swarm-controller-0.149.0/bin/decapod",
@@ -931,6 +980,7 @@
         ".decapod/managed/specs/.manifest.json",
         ".decapod/managed/specs/ARCHITECTURE.md",
         ".decapod/managed/specs/INTENT.md",
+        ".decapod/managed/specs/OPERATIONS.md",
         "README.md",
         "docs/book/src/SUMMARY.md",
         "docs/book/src/concepts/agent-first.md",
@@ -955,7 +1005,7 @@
       "run_id": "branch_01M7R4ZAS8A2D6PMN4WRWVY4S3",
       "schema_version": "1.1.0",
       "shortcut_risk_signals": [],
-      "task_id": "docs_01m7r4vfv7498zkx",
+      "task_id": "code_01m7srddt2dc4pyp",
       "tool_calls": [],
       "unresolved_assumptions": [
         "mdBook site build (docs-build CI check) will execute on Linux CI with mdbook 0.4.40"
