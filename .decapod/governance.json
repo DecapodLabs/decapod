@@ -639,6 +639,11 @@
       "id": "cp-1739-9",
       "summary": "Merge origin/master 102d6eb22 (v0.149.3, PR #1811-#1814), refresh reviewed_sources_digest, Dockerfile.decapod, specs.refresh (daff7057), review-spec x3, and verify fmt/clippy/targeted tests",
       "input_digest": "sha256:5703ea447d24da97bc461082285d242e2f4a8372349f6730c24c689584ae992e"
+    },
+    {
+      "id": "cp-1739-10",
+      "summary": "Refresh managed Dockerfile.decapod release pin to v0.149.3-debian / 0.149.3 (#1739)",
+      "input_digest": "sha256:0eac681499bc8646caddba28c81262124f234ceb318a0afafdf6a6586d12581c"
     }
   ],
   "intents": {
