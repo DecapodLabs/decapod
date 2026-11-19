@@ -112,3 +112,21 @@ fn test_check_migrations_reports_warn_when_action_required_and_fail_on_corrupt_l
             .contains("decapod system migrations --format json")
     );
 }
+
+#[test]
+fn test_evaluate_nofile_limit_warns_below_threshold_and_passes_above() {
+    let low = evaluate_nofile_limit(crate::core::bounded_process::NofileLimits {
+        soft: 256,
+        hard: None,
+    });
+    assert_eq!(low.status, CheckStatus::Warn);
+    assert!(low.message.contains("256"));
+    assert!(low.message.contains("65536"));
+
+    let ok = evaluate_nofile_limit(crate::core::bounded_process::NofileLimits {
+        soft: 65_536,
+        hard: Some(65_536),
+    });
+    assert_eq!(ok.status, CheckStatus::Pass);
+    assert!(ok.message.contains("65536"));
+}

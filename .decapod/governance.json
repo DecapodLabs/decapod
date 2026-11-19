@@ -592,6 +592,11 @@
       "id": "ckpt-tmpclean-1798-taskbind",
       "summary": "Bind trajectory task_id bugs_01m7r4tqkjg4a8nh to match governed plan for publication-material verification (#1798)",
       "input_digest": "sha256:de4cbe9f1cc68e5d56e9f624036cfb9a7a71d0fc98b8968ce0a30ea5b632d221"
+    },
+    {
+      "id": "ckpt-tmpclean-1798-sync-e63599e3c",
+      "summary": "Pre-sync accepted master e63599e3c (v0.149.3), add credentials: None to verify_tests fixture, verify candidate docs build (0 diff) and #1798 + contract tests",
+      "input_digest": "sha256:f220fa5d539a1b7457a5f34fbbc23a2f6b98e75288b04ce7baa35688835060e5"
     }
   ],
   "intents": {
@@ -639,23 +644,23 @@
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Master v0.149.3 integration introduces no architectural changes for #1798.",
-          "reviewed_code_fingerprint": "f9010632c465a9785b87cc45cb4122a4797861acbe85fbd6061415ed5d12cc0a",
-          "spec_material_hash": "080e1e015d867051ec4ecbb1f18aca92a2d62a05798377057e563aaa5a3764e0"
+          "reason": "Pre-sync with accepted master e63599e3c introduces no architectural changes for #1798.",
+          "reviewed_code_fingerprint": "2fe3e21a78bbb4ecb0828ad725e11f39dc46e2b52d3c85f2d9867406742e2859",
+          "spec_material_hash": "eea767e816c43693064ee73b838425f7a154fd6e56cf0552669d971d1e5001ea"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Preserved todo-scoped /tmp cleanup guidance (#1798) in INTERFACES.md while integrating accepted master v0.149.3 (PR #1813 + PR #1814).",
-          "reviewed_code_fingerprint": "f9010632c465a9785b87cc45cb4122a4797861acbe85fbd6061415ed5d12cc0a",
-          "spec_material_hash": "e010a9f6000621455e8879adf4079ab0cce8dbb2075d3fcbb949689cdaba1a3d"
+          "reason": "Preserved #1798 todo-scoped /tmp cleanup guidance in INTERFACES.md alongside all upstream master e63599e3c (#1820, #1831, #1760, #1809/#1808/#1769, #1660, #1469, #1776, #1659, #1247, #1795) living-spec updates.",
+          "reviewed_code_fingerprint": "2fe3e21a78bbb4ecb0828ad725e11f39dc46e2b52d3c85f2d9867406742e2859",
+          "spec_material_hash": "95f43a38c0d4cd59ae0f541d254b554873881bd3083837b63fa1028f86220d93"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Master v0.149.3 integration introduces no security boundary changes for #1798; prompt safety gate regression passes.",
-          "reviewed_code_fingerprint": "f9010632c465a9785b87cc45cb4122a4797861acbe85fbd6061415ed5d12cc0a",
-          "spec_material_hash": "735ae6e95c6b18ff2ccc718fbadaa4d7ae483d632aee2fb071d4f9ae6daa23de"
+          "reason": "Pre-sync with accepted master e63599e3c preserves #1798 advisory safety boundaries and prompt safety gate allow verdict.",
+          "reviewed_code_fingerprint": "2fe3e21a78bbb4ecb0828ad725e11f39dc46e2b52d3c85f2d9867406742e2859",
+          "spec_material_hash": "fe2a57654bc0079c8ae5d4226c46ba7f1ea50f4246a8c19d826f2e660dc56f81"
         }
       ],
       "state": "APPROVED",
@@ -666,13 +671,13 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795050163Z"
+      "updated_at": "1795086522Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Isolated Decapod worktree only; preserve WorkspaceCommand::Publish slice for validation_scope.rs; preserve PublishResult/WorkspacePublishResult/ValidationGuidance wire shapes; zero blocked literal wildcard shell commands"
       ],
-      "artifact_hash": "sha256:9660518561149247574b5ed78b068e94f22dcb3d9d5f2ed23c28dbd43de7967e",
+      "artifact_hash": "sha256:450f6ce89d5bd9967096ac7f88b9473b4b044fdb730a0c428432a01e7b35ad27",
       "checks": [
         {
           "name": "cargo_clippy_all_targets_all_features",
@@ -680,6 +685,10 @@
         },
         {
           "name": "cargo_fmt",
+          "status": "passed"
+        },
+        {
+          "name": "cargo_fmt_e63599e3c",
           "status": "passed"
         },
         {
@@ -691,7 +700,15 @@
           "status": "passed"
         },
         {
+          "name": "contract_conformance_e63599e3c",
+          "status": "passed"
+        },
+        {
           "name": "diagnose_task_tmp_cleanup_unit",
+          "status": "passed"
+        },
+        {
+          "name": "diagnose_task_tmp_cleanup_unit_e63599e3c",
           "status": "passed"
         },
         {
@@ -699,7 +716,19 @@
           "status": "passed"
         },
         {
+          "name": "doc_alignment_e63599e3c",
+          "status": "passed"
+        },
+        {
+          "name": "docs_build_e63599e3c",
+          "status": "passed"
+        },
+        {
           "name": "tmp_build_cleanup_guidance_1798",
+          "status": "passed"
+        },
+        {
+          "name": "tmp_build_cleanup_guidance_1798_e63599e3c",
           "status": "passed"
         },
         {
@@ -707,7 +736,15 @@
           "status": "passed"
         },
         {
+          "name": "trajectory_docs_e63599e3c",
+          "status": "passed"
+        },
+        {
           "name": "validation_scope",
+          "status": "passed"
+        },
+        {
+          "name": "validation_scope_e63599e3c",
           "status": "passed"
         }
       ],
@@ -731,10 +768,17 @@
             "intent_id": "intent:run-tmpclean-1798-v01493",
             "kind": "trajectory_step_recorded",
             "sequence": 4
+          },
+          {
+            "detail": "trajectory:run-tmpclean-1798-v01493",
+            "event_id": "event:5",
+            "intent_id": "intent:run-tmpclean-1798-v01493",
+            "kind": "trajectory_step_recorded",
+            "sequence": 5
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 4,
+        "next_sequence": 5,
         "schema_version": "1.0.0",
         "trajectories": {
           "run-tmpclean-1798-v01493": {
@@ -785,6 +829,28 @@
                 ],
                 "sequence": 4,
                 "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:5",
+                "observations": [
+                  "Pre-synced accepted master e63599e3c (v0.149.3); updated WorkspaceStatus test fixture with credentials: None; rebuilt candidate binary + candidate docs build (0 diff); cargo fmt exit 0, validation_scope 9/9, diagnose_task unit 1/1, tmp_build_cleanup_guidance_1798 5/5, contract_conformance 12/12, doc_alignment 5/5, trajectory_docs 5/5."
+                ],
+                "proof_refs": [
+                  "cargo_fmt_e63599e3c",
+                  "docs_build_e63599e3c",
+                  "validation_scope_e63599e3c",
+                  "diagnose_task_tmp_cleanup_unit_e63599e3c",
+                  "tmp_build_cleanup_guidance_1798_e63599e3c",
+                  "doc_alignment_e63599e3c",
+                  "contract_conformance_e63599e3c",
+                  "trajectory_docs_e63599e3c"
+                ],
+                "scope": [
+                  "src/decapod/core/validate.rs,src/decapod/core/validation_runtime.rs,src/decapod/core/workspace.rs,src/decapod/lib.rs,src/decapod/plugins/verify.rs,src/decapod/core/docs_cli.rs,docs/agent/command-contracts.md,docs/agent/state-model.md,tests/tmp_build_cleanup_guidance_1798.rs,tests/unit/plugins/verify_tests.rs,.decapod/managed/specs/INTERFACES.md"
+                ],
+                "sequence": 5,
+                "validation_findings": []
               }
             ]
           }
@@ -792,7 +858,8 @@
       },
       "declared_commands": [],
       "evidence": [
-        "Merged origin/master 102d6eb22 (v0.149.3, PR #1813 + #1814) with zero code conflicts; cargo fmt (exit 0), cargo clippy --all-targets --all-features -- -D warnings (exit 0), tmp_build_cleanup_guidance_1798 (5/5 including decapod eval prompt safety gate allow), validation_scope (9/9), diagnose_task_includes_todo_scoped_tmp_cleanup_when_ready_to_publish (1/1), doc_alignment (4/4), contract_conformance (12/12), trajectory_docs (5/5), cli_contract_enforcement (23/23)."
+        "Merged origin/master 102d6eb22 (v0.149.3, PR #1813 + #1814) with zero code conflicts; cargo fmt (exit 0), cargo clippy --all-targets --all-features -- -D warnings (exit 0), tmp_build_cleanup_guidance_1798 (5/5 including decapod eval prompt safety gate allow), validation_scope (9/9), diagnose_task_includes_todo_scoped_tmp_cleanup_when_ready_to_publish (1/1), doc_alignment (4/4), contract_conformance (12/12), trajectory_docs (5/5), cli_contract_enforcement (23/23).",
+        "Pre-synced accepted master e63599e3c (v0.149.3); updated WorkspaceStatus test fixture with credentials: None; rebuilt candidate binary + candidate docs build (0 diff); cargo fmt exit 0, validation_scope 9/9, diagnose_task unit 1/1, tmp_build_cleanup_guidance_1798 5/5, contract_conformance 12/12, doc_alignment 5/5, trajectory_docs 5/5."
       ],
       "inspected_files": [
         ".decapod/managed/specs/INTERFACES.md",

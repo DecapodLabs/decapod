@@ -144,6 +144,18 @@ noninteractive `podman machine start --quiet --no-info --update-connection=false
 path, followed by another service probe. This does not launch Podman Desktop or
 change the default connection.
 
+On Linux hosts running rootless Podman with the `cgroupfs` manager on cgroup v2
+without a user systemd instance (`#1820`), `decapod auto container run` (and
+claim-triggered container preparation via `src/decapod/plugins/container.rs`)
+retains full `--cpus`, `--memory`, and `--pids-limit` enforcement and never
+disables cgroups. Operators or agents may specify a validated delegated parent
+through `--cgroup-parent` or `DECAPOD_CONTAINER_CGROUP_PARENT`, or run inside a
+delegated cgroup v2 subtree whose writable non-root ancestor enables `cpu`,
+`memory`, and `pids` in `cgroup.subtree_control` for automatic selection.
+Invalid values fail closed with `container_invalid_cgroup_parent` before runtime
+invocation, and OCI/cgroupfs creation or limit-enforcement permission errors emit
+`container_cgroup_permission_denied` rather than `container_workspace_permission_denied`.
+
 The explicit container-workspace launch hint makes a verified online backup in a
 private temporary directory, mounts it read-only and seeds container-local tmpfs.
 Backup failure prevents launch. Container-copy writes are ephemeral and are not
@@ -216,6 +228,25 @@ candidate commit SHA (`head_revision`), canonical tracked `tree_digest`,
   incrementing `lease_generation`) immediately invalidates prior completion history
   and workunit checkpoints (`VALIDATION_HISTORY_TASK_STALE` on `todo done --validated
   --commit`, `govern workunit transition --to verified`, and `govern workunit resume`).
+  To surface avoidable mid-validation lease expiration before long provider runs,
+  `validation_history::capture_task_binding_with_budget` calls the read-only
+  `todo::ensure_validation_lease_ttl` guard *before* freezing `HistoricalTaskBinding`.
+  Because renewal rotates custody, validation never renews implicitly. The mode is
+  selected by `DECAPOD_VALIDATE_LEASE_TTL`: `warn` (default) emits a
+  `VALIDATION_LEASE_TTL_LOW` stderr advisory with the exact `decapod todo renew`
+  command and continues with custody untouched; `strict` fails fast with
+  `VALIDATION_LEASE_TTL_INSUFFICIENT`; `renew` is an explicit operator opt-in that
+  renews the claiming agent's lease first and therefore requires refreshing any
+  existing workunit/governance checkpoint. The safe path is to claim or renew with
+  a lease longer than the expected run (`--lease-seconds`) *before* checkpointing.
+- **Open file descriptor limits (`RLIMIT_NOFILE`):** On Unix hosts with restrictive
+  default soft limits (such as macOS `ulimit -n 256`), `bounded_process::configure_child_nofile_limit`
+  and `raise_nofile_soft_limit_in_child` raise the soft `RLIMIT_NOFILE` of spawned
+  `validate` / `govern project-check` workers and child test/tooling harnesses toward
+  `min(hard_limit, 65536)` with graceful fallbacks (`10240`, `4096`) without failing
+  spawn. `system doctor check` warns when the shell soft limit is below `4096`, and
+  `validate_open_file_limits` emits a non-blocking `RLIMIT_NOFILE_LOW` advisory when
+  hard caps keep the worker below `4096`.
 - **Partial and local scopes:** `GITHUB_ACTIONS=true` / `BUILDKITE=true` runs
   (`scope=ci_local`, `publication_ready=false`, `readiness=null`), `govern
   project-check` (`publication_ready=false`), and `validate --snapshot-prepare`
@@ -415,8 +446,8 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `f9010632c465a9785b87cc45cb4122a4797861acbe85fbd6061415ed5d12cc0a`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (237 files), `tests/` (240 files)
+- Repository signal fingerprint: `2fe3e21a78bbb4ecb0828ad725e11f39dc46e2b52d3c85f2d9867406742e2859`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (241 files), `tests/` (252 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 

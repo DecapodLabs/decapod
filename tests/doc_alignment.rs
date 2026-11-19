@@ -140,3 +140,26 @@ fn test_public_docs_do_not_overclaim_protocol_or_identity_boundaries() {
     assert!(agent_mcp.contains("does not authenticate a model provider"));
     assert!(agent_mcp.contains("does not currently implement an MCP server"));
 }
+
+#[test]
+fn test_docs_landing_page_links_local_and_coming_soon_cloud_offerings() {
+    let index = fs::read_to_string("docs/book/src/index.md").expect("read docs/book/src/index.md");
+    assert!(index.contains("https://decapodlabs.github.io/offerings.html"));
+    assert!(index.contains("Decapod Local"));
+    assert!(index.contains("Free · Offline · No signup"));
+    assert!(index.contains("Decapod Cloud"));
+    assert!(index.contains("Coming soon"));
+    assert!(index.contains("no public pricing or active purchase route"));
+    assert!(!index.contains("/checkout"));
+    assert!(!index.contains("/buy"));
+    assert!(index.contains("quickstart.html"));
+    assert!(index.contains("HARNESS AI"));
+
+    let css =
+        fs::read_to_string("docs/book/src/custom.css").expect("read docs/book/src/custom.css");
+    assert!(css.contains(".decapod-docs-offerings"));
+    assert!(css.contains(".decapod-offerings-grid"));
+    assert!(css.contains("@media(max-width:760px)"));
+    assert!(css.contains(":focus-visible"));
+    assert!(css.contains("prefers-reduced-motion:reduce"));
+}

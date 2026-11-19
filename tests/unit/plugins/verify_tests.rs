@@ -472,6 +472,7 @@ fn diagnose_task_includes_todo_scoped_tmp_cleanup_when_ready_to_publish() {
         blockers: Vec::new(),
         required_actions: Vec::new(),
         root_isolation: None,
+        credentials: None,
     };
 
     // Before verification baseline exists, cleanup_guidance is null.

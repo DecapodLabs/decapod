@@ -356,6 +356,41 @@ fn run_cloud_command(cloud_cli: CloudCli) -> Result<(), error::DecapodError> {
             );
             Ok(())
         }
+        CloudCommand::Logout => {
+            let project_root = find_decapod_project_root(&std::env::current_dir()?)?;
+            let identity = core::repo_identity::resolve_repository_identity(&project_root)?;
+            let report = core::cloud_client::logout(&project_root, &identity)?;
+            if format == "json" {
+                println!(
+                    "{}",
+                    serde_json::to_string_pretty(&report).map_err(std::io::Error::other)?
+                );
+            } else {
+                println!(
+                    "Cleared saved cloud session for {} (device key preserved).",
+                    identity.canonical_name
+                );
+            }
+            Ok(())
+        }
+        CloudCommand::Revoke { all, device_id } => {
+            let project_root = find_decapod_project_root(&std::env::current_dir()?)?;
+            let identity = core::repo_identity::resolve_repository_identity(&project_root)?;
+            let report =
+                core::cloud_client::revoke(&project_root, &identity, all, device_id.as_deref())?;
+            if format == "json" {
+                println!(
+                    "{}",
+                    serde_json::to_string_pretty(&report).map_err(std::io::Error::other)?
+                );
+            } else {
+                println!(
+                    "Revoked device key and cleared saved cloud credentials for {}.",
+                    identity.canonical_name
+                );
+            }
+            Ok(())
+        }
     }
 }
 
@@ -1873,7 +1908,7 @@ fn config_from_init_with(init: &InitWithCli, repo: RepoContext) -> DecapodProjec
         context: DeclaredContextConfig {
             declared_sources: declared_context_sources,
         },
-
+        workspace: crate::cli::WorkspaceConfigSection::default(),
         laya: init.existing_laya.clone(),
     }
 }
@@ -2012,9 +2047,9 @@ fn setup_review_rows(repo: &RepoContext, init: &InitWithCli) -> Vec<(&'static st
         (
             "Storage",
             if init.backend.is_cloud() {
-                "Decapod Cloud · experimental · account required".into()
+                "Decapod Cloud (cloud) · experimental · account required".into()
             } else {
-                "Local · no account needed".into()
+                "Decapod Local (local) · free · no account needed".into()
             },
         ),
     ];
@@ -2139,15 +2174,15 @@ fn customize_setup(
             "Connections" => {
                 let storage = prompt_setup_choice(
                     "Where should work state live?",
-                    &["Local", "Decapod Cloud"],
+                    &["Decapod Local", "Decapod Cloud"],
                     &[
-                        "On this machine. No account needed.",
+                        "On this machine. Free, offline, no account needed.",
                         "Repository tasks in the cloud. Account and authorized access required.",
                     ],
                     if init.backend.is_cloud() {
                         "Decapod Cloud"
                     } else {
-                        "Local"
+                        "Decapod Local"
                     },
                 )?;
                 init.backend = if storage == "Decapod Cloud" {
@@ -3215,9 +3250,17 @@ pub fn run() -> Result<(), error::DecapodError> {
             // For other commands, ensure .decapod exists in the GOVERNANCE root
             let decapod_root_path = governance_root.join(".decapod");
             store_root = decapod_root_path.join("data");
-            let configured_backend = load_project_config_if_present(&workspace_root)?
-                .map(|config| config.repo.effective_backend())
-                .unwrap_or_default();
+            let accepted_cloud =
+                core::db_maintenance::resolve_accepted_project_config(&workspace_root)
+                    .ok()
+                    .is_some_and(|(_main, cfg, _)| cfg.repo.effective_backend().is_cloud());
+            let configured_backend = if accepted_cloud {
+                cli::BackendType::Cloud
+            } else {
+                load_project_config_if_present(&workspace_root)?
+                    .map(|config| config.repo.effective_backend())
+                    .unwrap_or_default()
+            };
             let cloud_todo_command = is_cloud_todo_command(&cli.command, &workspace_root)?;
             if configured_backend.is_cloud()
                 && !cloud_todo_command
@@ -3262,6 +3305,66 @@ pub fn run() -> Result<(), error::DecapodError> {
             }
 
             if local_storage_startup && should_route_via_group_broker(&cli.command, &argv) {
+                struct PreparedDoneGuard {
+                    store_root: PathBuf,
+                    request_id: String,
+                    previous_env: Option<std::ffi::OsString>,
+                    active: bool,
+                }
+                impl Drop for PreparedDoneGuard {
+                    fn drop(&mut self) {
+                        if self.active {
+                            plugins::verify::remove_prepared_done_handoff(
+                                &self.store_root,
+                                &self.request_id,
+                            );
+                            unsafe {
+                                if let Some(prev) = &self.previous_env {
+                                    std::env::set_var("DECAPOD_GROUP_BROKER_REQUEST_ID", prev);
+                                } else {
+                                    std::env::remove_var("DECAPOD_GROUP_BROKER_REQUEST_ID");
+                                }
+                            }
+                        }
+                    }
+                }
+                let mut _prepared_done_guard = PreparedDoneGuard {
+                    store_root: store_root.clone(),
+                    request_id: String::new(),
+                    previous_env: None,
+                    active: false,
+                };
+                if !core::group_broker::is_internal_invocation()
+                    && !core::group_broker::is_disabled()
+                    && let Command::Todo(todo_cli) = &cli.command
+                    && todo::is_validated_completion(todo_cli)
+                {
+                    let previous_env = std::env::var_os("DECAPOD_GROUP_BROKER_REQUEST_ID");
+                    let request_id = previous_env
+                        .as_ref()
+                        .and_then(|v| v.to_str())
+                        .filter(|v| !v.is_empty())
+                        .map(str::to_owned)
+                        .unwrap_or_else(core::ulid::new_ulid);
+                    if !core::group_broker::has_dedupe_record(&store_root, &request_id)
+                        && todo::prepare_validated_done_handoff(
+                            &project_store,
+                            todo_cli,
+                            &request_id,
+                        )?
+                        .is_some()
+                    {
+                        unsafe {
+                            std::env::set_var("DECAPOD_GROUP_BROKER_REQUEST_ID", &request_id);
+                        }
+                        _prepared_done_guard = PreparedDoneGuard {
+                            store_root: store_root.clone(),
+                            request_id,
+                            previous_env,
+                            active: true,
+                        };
+                    }
+                }
                 let mut finish = |stdout: &str, request_id: &str| match &cli.command {
                     Command::Todo(todo_cli) => todo::finish_broker_claim_response(
                         &project_store,
@@ -3361,7 +3464,9 @@ pub fn run() -> Result<(), error::DecapodError> {
                         mark_core_constitution_ingested(&governance_root, "docs.ingest")?;
                     }
                 }
-                Command::Todo(todo_cli) => todo::run_todo_cli(&project_store, todo_cli)?,
+                Command::Todo(todo_cli) => {
+                    todo::run_todo_cli_in_workspace(&project_store, &workspace_root, todo_cli)?
+                }
                 Command::Obligation(obligation_cli) => {
                     obligation::run_obligation_cli(&project_store, obligation_cli)?
                 }
@@ -3538,6 +3643,7 @@ fn is_cloud_file_only_command(command: &Command) -> bool {
         | Command::Capabilities(_)
         | Command::Constitution(_)
         | Command::Docs(_) => true,
+        Command::Workspace(ws_cli) => matches!(ws_cli.command, WorkspaceCommand::Status),
         Command::Rpc(rpc_cli) => matches!(
             rpc_cli.op.as_deref(),
             Some("specs.refresh" | "intent.reconcile")
@@ -7312,10 +7418,13 @@ fn run_current_workbranch_readiness_with(
             kind: StoreKind::Repo,
             root: store_root.clone(),
         };
-        // Capture task custody before the potentially long proof run. A later
-        // task edit or ownership transition must not inherit its successful result.
-        let history_binding =
-            core::validation_history::capture_task_binding(&history_store, workspace_root)?;
+        // Guard against mid-validation lease expiry, then capture task custody
+        // before the potentially long proof run.
+        let history_binding = core::validation_history::capture_task_binding_with_budget(
+            &history_store,
+            workspace_root,
+            options.timeout,
+        )?;
         let authorize = |action: runtime::NativeAction<'_>| -> std::io::Result<()> {
             use core::external_action::{self, ExternalCapability};
             let result = match action {
@@ -7936,6 +8045,7 @@ fn run_validation_in_child_process(
         "DECAPOD_VALIDATE_PROGRESS_PATH",
         progress_path.to_string_lossy().as_ref(),
     );
+    core::bounded_process::configure_child_nofile_limit(&mut command);
     let child = command.spawn().map_err(error::DecapodError::IoError)?;
     match supervise_piped_child(child, timeout)? {
         PipedChildOutput::Exited { stdout, stderr } => {
@@ -8895,6 +9005,7 @@ fn run_workunit_command(
         WorkunitCommand::Status { task_id } => {
             let manifest = core::workunit::load_workunit(project_root, &task_id)?;
             let path = core::workunit::workunit_path(project_root, &task_id)?;
+            let journal = core::workunit::workunit_journal_status(project_root, &task_id)?;
             let hash = manifest.canonical_hash_hex().map_err(|e| {
                 error::DecapodError::ValidationError(format!(
                     "failed to compute workunit hash: {e}"
@@ -8906,6 +9017,9 @@ fn run_workunit_command(
                     "status": "ok",
                     "task_id": manifest.task_id,
                     "workunit_status": manifest.status,
+                    "proof_status": journal.proof_status,
+                    "split_store": journal.split_store,
+                    "atomic_domain_supported": journal.atomic_domain_supported,
                     "manifest_hash": hash,
                     "path": path,
                 }))
@@ -8942,6 +9056,14 @@ fn run_workunit_command(
         WorkunitCommand::Transition { task_id, to } => {
             let manifest = core::workunit::transition_status(project_root, &task_id, to.into())?;
             println!("{}", serde_json::to_string_pretty(&manifest).unwrap());
+        }
+        WorkunitCommand::Converge { task_id, dry_run } => {
+            let report = core::workunit::converge_split_workunit_store(
+                project_root,
+                task_id.as_deref(),
+                dry_run,
+            )?;
+            println!("{}", serde_json::to_string_pretty(&report).unwrap());
         }
     }
 
@@ -9097,6 +9219,18 @@ fn run_trajectory_command(
                 }))
                 .unwrap()
             );
+        }
+        TrajectoryCommand::ReconcileScope { task_id, run_id } => {
+            let store_root = core::store::find_governance_root(workspace_root)
+                .join(".decapod")
+                .join("data");
+            let report = core::governance_document::reconcile_scope_projections(
+                workspace_root,
+                &store_root,
+                task_id.as_deref(),
+                run_id.as_deref(),
+            )?;
+            println!("{}", serde_json::to_string_pretty(&report).unwrap());
         }
     }
     Ok(())
@@ -10081,7 +10215,7 @@ fn run_governed_database_cli(
                 |policy, _| db_maintenance::run_maintain_backup(policy, &destination),
             )?,
             DatabaseMaintainCommand::Recover {
-                preserve_original_at: _,
+                preserve_original_at,
                 operation_id,
                 expected_policy_sha256,
                 actor,
@@ -10093,12 +10227,12 @@ fn run_governed_database_cli(
                 expected_policy_sha256.as_deref(),
                 &verify_strict_local_agent_session,
                 vec!["tier=owner".to_string()],
-                |_, _| {
-                    Err((
-                        "OWNER_REPAIR_AUTHORITY_REQUIRED",
-                        "db.recover requires explicit repository owner repair authority (#1590)"
-                            .to_string(),
-                    ))
+                |policy, verified_actor| {
+                    db_maintenance::run_maintain_recover(
+                        policy,
+                        verified_actor,
+                        Some(preserve_original_at.as_path()),
+                    )
                 },
             )?,
         },
@@ -10134,7 +10268,7 @@ fn run_governed_database_cli(
             |policy, _| db_maintenance::run_maintain_backup(policy, &destination),
         )?,
         DatabaseCommand::Recover {
-            preserve_original_at: _,
+            preserve_original_at,
             operation_id,
             expected_policy_sha256,
             actor,
@@ -10147,12 +10281,12 @@ fn run_governed_database_cli(
             expected_policy_sha256.as_deref(),
             &verify_strict_local_agent_session,
             vec!["tier=owner".to_string()],
-            |_, _| {
-                Err((
-                    "OWNER_REPAIR_AUTHORITY_REQUIRED",
-                    "db.recover requires explicit repository owner repair authority (#1590)"
-                        .to_string(),
-                ))
+            |policy, verified_actor| {
+                db_maintenance::run_maintain_recover(
+                    policy,
+                    verified_actor,
+                    Some(preserve_original_at.as_path()),
+                )
             },
         )?,
     };
@@ -10309,7 +10443,6 @@ fn run_governed_database_rpc(
         "data.database.recover" => {
             let params: DatabaseRecoverParams =
                 parse_required_governed_rpc_params(&request.params)?;
-            let _ = &params.preserve_original_at;
             db_maintenance::execute_governed_capability(
                 invocation_dir,
                 "db.recover",
@@ -10318,12 +10451,12 @@ fn run_governed_database_rpc(
                 params.expected_policy_sha256.as_deref(),
                 &verify_strict_local_agent_session,
                 vec!["tier=owner".to_string()],
-                |_, _| {
-                    Err((
-                        "OWNER_REPAIR_AUTHORITY_REQUIRED",
-                        "db.recover requires explicit repository owner repair authority (#1590)"
-                            .to_string(),
-                    ))
+                |policy, verified_actor| {
+                    db_maintenance::run_maintain_recover(
+                        policy,
+                        verified_actor,
+                        Some(params.preserve_original_at.as_path()),
+                    )
                 },
             )
         }
@@ -13695,6 +13828,18 @@ fn run_capabilities_command(cli: CapabilitiesCli) -> Result<(), error::DecapodEr
             println!("Decapod {}", report.version);
             println!("==================\n");
 
+            if !report.backends.is_empty() {
+                println!("Backends:");
+                for backend in &report.backends {
+                    let default_tag = if backend.default { ", default" } else { "" };
+                    println!(
+                        "  {} ({}{}) - {}",
+                        backend.name, backend.id, default_tag, backend.description
+                    );
+                }
+                println!();
+            }
+
             println!("Capabilities:");
             for cap in &report.capabilities {
                 println!("  {} [{}] - {}", cap.name, cap.stability, cap.description);
@@ -14213,12 +14358,9 @@ fn run_infer_orientation(
                     .known_unknowns
                     .push(format!("Task detail: {}", task.description));
             }
-            if !task.scope.is_empty() {
-                packet.allowed_scope = task
-                    .scope
-                    .split(',')
-                    .map(|s| s.trim().to_string())
-                    .collect();
+            if !task.scope.trim().is_empty() {
+                packet.allowed_scope = crate::core::fleet_coord::parse_scope_entries(&task.scope)
+                    .map_err(error::DecapodError::ValidationError)?;
             }
         }
     }

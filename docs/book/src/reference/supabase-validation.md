@@ -1,10 +1,10 @@
 # Supabase consumer validation
 
-Ordinary project users select only `repo.backend = "local" | "cloud"`.
+Ordinary project users select only `repo.backend = "local" | "cloud"` (**Decapod Local** or **Decapod Cloud**).
 The managed cloud flow goes through Dactyl public discovery, sign-in, account
 completion, and native data transport. Setup does not require a deployment
 URL, physical driver selector, copied credential, or project-level provider
-configuration. See [Cloud sign-in and task access](propodus.md) for the human
+configuration. See [Decapod Cloud sign-in and task access](propodus.md) for the human
 flow, headless continuation, private custody, and explicit recovery.
 
 ## Package and implementation prerequisites
@@ -66,8 +66,8 @@ access; their endpoint/token environment variables cannot select the managed
 origin or establish private custody. The retained fixtures, commands and
 assertions describe the real-service acceptance contract that a separately
 reviewed managed fixture must restore, not a runnable or completed proof. The
-explicit `PropodusClient` test in `propodus_live` still targets its declared
-legacy endpoint and does not establish managed CLI behavior. Native RPC and
+legacy explicit `PropodusClient` test in `propodus_live` still targets its declared
+endpoint and does not establish managed CLI behavior. Native RPC and
 managed-account hosted acceptance remain independent requirements; loopback
 fixtures and the expected preflight failure do not satisfy them.
 
