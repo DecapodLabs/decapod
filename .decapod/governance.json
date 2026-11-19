@@ -1,7 +1,7 @@
 {
   "schema_version": "1.0.0",
   "baseline": {
-    "accepted_commit": "845ff9799128a1fd0fd449f100f13fb3a89a8aa8",
+    "accepted_commit": "a5a1edadb5ff96b0e2509bb17d111b227d156558",
     "policy": {
       "change_control": {
         "requires_human_review": true,
@@ -573,120 +573,78 @@
     }
   },
   "change": {
-    "id": "change_1820_podman_cgroup_parent",
-    "base_commit": "845ff9799128a1fd0fd449f100f13fb3a89a8aa8",
+    "id": "change_01M7R4ZAHNJFT5PGD1R58DDXC5",
+    "base_commit": "a5a1edadb5ff96b0e2509bb17d111b227d156558",
     "target_base": "origin/master"
-  },
-  "claims": {
-    "claim:container-cgroup-permission-diagnostic": {
-      "statement": "Container launcher classifies OCI/cgroupfs permission errors (crun/runc cannot set limits without cgroups or /sys/fs/cgroup permission denied) as container_cgroup_permission_denied with delegated cgroup parent remediation while keeping real workspace permission failures under container_workspace_permission_denied.",
-      "falsifier": "A crun/runc /sys/fs/cgroup permission error is reported as container_workspace_permission_denied, or a real workspace index.lock/file permission error is misclassified as container_cgroup_permission_denied.",
-      "status": "supported",
-      "proof_refs": [
-        "tests/podman_cgroup_parent_1820.rs",
-        "tests/unit/plugins/container_tests.rs"
-      ]
-    },
-    "claim:podman-delegated-cgroup-parent": {
-      "statement": "decapod auto container run accepts a validated --cgroup-parent or DECAPOD_CONTAINER_CGROUP_PARENT and detects a writable delegated cgroup v2 subtree with cpu/memory/pids controllers for local rootless Podman cgroupfs runs, passing --cgroup-parent to the runtime while keeping --cpus, --memory, and --pids-limit enforced and rejecting unsafe/traversal values fail-closed.",
-      "falsifier": "An invalid/traversal/metacharacter cgroup parent reaches the runtime, CPU/memory/PID limits are relaxed or cgroups are disabled, or a valid delegated cgroup parent is omitted from podman run argv.",
-      "status": "supported",
-      "proof_refs": [
-        "tests/podman_cgroup_parent_1820.rs",
-        "tests/unit/plugins/container_tests.rs"
-      ]
-    },
-    "claim:release-v0-150-0-projections": {
-      "statement": "Release v0.150.0 aligns Cargo.toml, Cargo.lock, managed Dockerfile pin, and specs manifest release metadata.",
-      "falsifier": "Managed Dockerfile or specs manifest release metadata diverges from Cargo.toml 0.150.0.",
-      "status": "supported",
-      "proof_refs": [
-        ".decapod/managed/Dockerfile.decapod",
-        ".decapod/managed/specs/.manifest.json"
-      ]
-    }
   },
   "checkpoints": [
     {
-      "id": "chk-1820-podman-cgroup-parent",
-      "summary": "Add validated delegated cgroup parent selection (--cgroup-parent, DECAPOD_CONTAINER_CGROUP_PARENT, rootless Podman cgroupfs v2 subtree detection) preserving CPU/memory/PID limits, distinguish container_cgroup_permission_denied from workspace permission errors, update docs/specs, record spec reviews, and add unit+integration tests (#1820)",
-      "input_digest": "sha256:bf1f635a75bb476da7ea33a0402a4a2d50b2d3059b231f73658c7a3adc903791",
+      "id": "ckpt-byoa-docs-1789",
+      "summary": "Rewrite mdBook and README pointer for BYOA, Human->Agent->Kernel, metacognition, concurrency, subordinate Constitution, and Local/Cloud parity (#1789)",
+      "input_digest": "sha256:5fdef5320b50c59c9690ce79cdf7c19fe42d7a63ab6b6cec7204ee0ab8bc5f2b",
       "proof_refs": [
-        "tests/cli_contracts.rs",
-        "tests/podman_cgroup_parent_1820.rs",
-        "tests/unit/plugins/container_tests.rs"
+        "tests/contract_conformance.rs",
+        "tests/doc_alignment.rs",
+        "tests/trajectory_docs.rs"
       ]
     },
     {
-      "id": "chk-1820-sync-84f967382",
-      "summary": "Merge accepted origin/master 84f967382 (v0.149.3), refresh specs projections and docs build, preserve all living specs, and re-verify #1820",
-      "input_digest": "sha256:ab719934570c727a78022e8ce89089b25df6003aed5b9a80c718e245944da54f",
+      "id": "ckpt-byoa-docs-1789-v0149",
+      "summary": "Refresh v0.149.0 projections and Dockerfile pin (#1789)",
+      "input_digest": "sha256:804d201e97955c647df0ab925974db5e575b00aadcaa04d41de23232ca7413d1",
       "proof_refs": [
-        "tests/cli_contracts.rs",
-        "tests/podman_cgroup_parent_1820.rs",
-        "tests/unit/plugins/container_tests.rs"
+        "tests/contract_conformance.rs",
+        "tests/doc_alignment.rs"
       ]
     },
     {
-      "id": "chk-1820-sync-755bbac6e",
-      "summary": "Merge accepted origin/master 755bbac6e (v0.149.3, #1828), refresh specs projections and docs build, preserve all living specs, and re-verify #1820",
-      "input_digest": "sha256:d4bf4b6ab5ce91cca76b35c76b6e0c81e574842cbc7cafef0d655a11b0b71817",
+      "id": "ckpt-byoa-docs-1789-merge-v01491",
+      "summary": "Integrate accepted master v0.149.1 (#1052) and refresh v0.149.0 projections (#1789)",
+      "input_digest": "sha256:5e5ce4fc4646f5532dcb0c7586651d342ed36ccacd93257e59a3bc1820f71253",
       "proof_refs": [
-        "tests/cli_contracts.rs",
-        "tests/podman_cgroup_parent_1820.rs",
-        "tests/unit/plugins/container_tests.rs"
+        "tests/contract_conformance.rs",
+        "tests/doc_alignment.rs"
       ]
     },
     {
-      "id": "chk-1820-sync-1b3ca1b89",
-      "summary": "Merge accepted origin/master 1b3ca1b89 (v0.149.3, #1760), converge docs build and specs.refresh, preserve all living specs, and prepare PR 9 (#1820)",
-      "input_digest": "sha256:437be3cbbb50ff2bca6bc172e3c75ceead0141374f5dc708fb63b062f8e11094",
+      "id": "ckpt-byoa-docs-1789-v01491",
+      "summary": "Refresh v0.149.1 projections and Dockerfile pin (#1789)",
+      "input_digest": "sha256:ca7c8813270fdd17d21732d9f49715e0118addc5d373ec3a956e5cec87eda843",
       "proof_refs": [
-        "tests/cli_contracts.rs",
-        "tests/podman_cgroup_parent_1820.rs",
-        "tests/unit/plugins/container_tests.rs"
+        "tests/contract_conformance.rs",
+        "tests/doc_alignment.rs",
+        "tests/trajectory_docs.rs"
       ]
     },
     {
-      "id": "chk-1820-sync-c845ae1d0",
-      "summary": "Merge accepted origin/master c845ae1d0 (v0.149.3, PR #1831), refresh specs projections and docs build, preserve all living specs for PR #1830 (#1820)",
-      "input_digest": "sha256:6acd114d9bf514ef374bfa8dd0fda7aeb1b9e7ff644d1c8c44320701c249246f",
+      "id": "ckpt-byoa-docs-1789-merge-v01500",
+      "summary": "Integrate accepted master v0.150.0 (1332f4ecd) and refresh v0.150.0 projections (#1789)",
+      "input_digest": "sha256:dacc17de041a8c620920bb5e39b38440c60c0a88638179c760d5dc891fb45d45",
       "proof_refs": [
-        "tests/cli_contracts.rs",
-        "tests/podman_cgroup_parent_1820.rs",
-        "tests/unit/plugins/container_tests.rs"
-      ]
-    },
-    {
-      "id": "ckpt-release-v0-150-0",
-      "summary": "Refresh v0.150.0 release projections and governance",
-      "input_digest": "sha256:37323d194826bc9ef526ceeb639fd6ede8c5798ec1ca229efeae8f6d93bfe9a0",
-      "proof_refs": [
-        ".decapod/managed/specs/.manifest.json"
+        "tests/contract_conformance.rs",
+        "tests/doc_alignment.rs",
+        "tests/trajectory_docs.rs"
       ]
     }
   ],
   "intents": {
-    "intent:run_1820_podman_cgroup_parent": {
+    "intent:change_01M7R4ZAHNJFT5PGD1R58DDXC5": {
       "acceptance_criteria": [],
       "assumptions": [],
       "boundaries": [
-        "Keep --cpus, --memory, and --pids-limit enforced; never disable cgroups",
-        "Reject invalid/traversal/unsafe cgroup parent values fail-closed before runtime launch"
+        "Current claimed task and isolated work branch"
       ],
       "constraints": [
-        "src/decapod/plugins/container.rs",
-        "src/decapod/core/docs_cli.rs",
-        "docs/agent/",
-        ".decapod/managed/specs/",
-        "tests/"
+        "paths:[\"docs/book/src\"",
+        "\"README.md\"",
+        "\".decapod/managed/specs\"]"
       ],
       "created_sequence": 1,
-      "id": "intent:run_1820_podman_cgroup_parent",
+      "id": "intent:change_01M7R4ZAHNJFT5PGD1R58DDXC5",
       "out_of_scope": [],
       "proof_requirements": [],
-      "raw_intent": "Fix rootless Podman delegated cgroup parent selection and cgroup permission diagnostics (#1820)",
-      "refined_intent": "Add fail-closed validated --cgroup-parent CLI/env support and rootless Podman cgroupfs v2 delegated subtree detection without relaxing CPU/memory/PID limits, and emit dedicated container_cgroup_permission_denied diagnostics instead of misattributing cgroup failures to workspace permissions.",
+      "raw_intent": "Docs #1789: make BYOA, agent-invoked metacognition and cross-agent coordination first-class",
+      "refined_intent": "Docs #1789: make BYOA, agent-invoked metacognition and cross-agent coordination first-class",
       "status": "refined",
       "updated_sequence": 3
     }
@@ -699,302 +657,249 @@
       },
       "deferred_questions": [],
       "human_questions": [],
-      "intent": "Refresh release-bound Dockerfile and specs manifest projections for v0.150.0 on PR #1817",
+      "intent": "Docs #1789: make BYOA, agent-invoked metacognition and cross-agent coordination first-class",
       "phases": [],
-      "proof_hooks": [],
+      "proof_hooks": [
+        "decapod validate"
+      ],
       "schema_version": "1.1.0",
       "spec_reviews": [
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "v0.150.0 version-only release cut does not alter system architecture",
-          "reviewed_code_fingerprint": "fcad9485a7b65422163338761a74226edcf31b90af5e76284a3921ab16d8dc22",
-          "spec_material_hash": "eea767e816c43693064ee73b838425f7a154fd6e56cf0552669d971d1e5001ea"
+          "reason": "Integrated origin/master 1332f4ecd (v0.150.0); preserved upstream #1469 section alongside #1789 public mdBook narrative section",
+          "reviewed_code_fingerprint": "66afe827c300d4279204c072d535fa9d97041867fdc924d798dd84d4f31e4163",
+          "spec_material_hash": "222ad0bd9ae163a09c07ab5e392be697b10db614d48755997eaab76b5a143fad"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "v0.150.0 version-only release cut does not alter CLI or RPC interfaces",
-          "reviewed_code_fingerprint": "fcad9485a7b65422163338761a74226edcf31b90af5e76284a3921ab16d8dc22",
+          "reason": "Integrated origin/master 1332f4ecd (v0.150.0); docs-only #1789 PR leaves CLI/RPC interfaces unchanged",
+          "reviewed_code_fingerprint": "66afe827c300d4279204c072d535fa9d97041867fdc924d798dd84d4f31e4163",
           "spec_material_hash": "f9f2f5fc909f60cbbdabb0bf48b53c6c70f1f3d4193f73bbccf2d1108675005f"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "v0.150.0 version-only release cut does not alter security boundaries",
-          "reviewed_code_fingerprint": "fcad9485a7b65422163338761a74226edcf31b90af5e76284a3921ab16d8dc22",
+          "reason": "Integrated origin/master 1332f4ecd (v0.150.0); docs-only #1789 PR leaves security invariants unchanged",
+          "reviewed_code_fingerprint": "66afe827c300d4279204c072d535fa9d97041867fdc924d798dd84d4f31e4163",
           "spec_material_hash": "fe2a57654bc0079c8ae5d4226c46ba7f1ea50f4246a8c19d826f2e660dc56f81"
         }
       ],
       "state": "APPROVED",
       "stop_conditions": [],
-      "title": "Align release v0.150.0 projections and governance (#1817)",
+      "title": "Docs #1789: make BYOA, agent-invoked metacognition and cross-agent coordination first-class",
       "todo_ids": [
-        "code_01m7srddt2dc4pyp"
+        "docs_01m7r4vfv7498zkx"
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795088333Z"
+      "updated_at": "1795089941Z"
     },
     "trajectory": {
       "active_boundaries": [
-        "Keep --cpus, --memory, and --pids-limit enforced; never disable cgroups",
-        "Reject invalid/traversal/unsafe cgroup parent values fail-closed before runtime launch"
+        "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:e4952408288a10557350c1049e44e32d8a7292cf5e19c5d16da432451f734349",
+      "artifact_hash": "sha256:e9fa1be8e118af2dbb2c7dc5bb5233c828f42801a797a2a70664bb086233c4c5",
       "checks": [
         {
-          "name": "cargo_clippy_all_targets",
+          "name": "contract_conformance",
           "status": "passed"
         },
         {
-          "name": "cargo_fmt_check",
+          "name": "doc_alignment",
           "status": "passed"
         },
         {
-          "name": "cli_contract_enforcement_23",
+          "name": "docs_sync_checkpoint_boundary",
+          "status": "partial"
+        },
+        {
+          "name": "mdbook_build",
+          "status": "unavailable"
+        },
+        {
+          "name": "relative_markdown_links",
           "status": "passed"
         },
         {
-          "name": "cli_contracts_container_sync_1",
-          "status": "passed"
+          "name": "specs_refresh_docs",
+          "status": "partial"
         },
         {
-          "name": "contract_conformance_12",
-          "status": "passed"
-        },
-        {
-          "name": "core_container_runtime_7",
-          "status": "passed"
-        },
-        {
-          "name": "decapod_eval_docs_and_diff",
-          "status": "passed"
-        },
-        {
-          "name": "doc_alignment_4",
-          "status": "passed"
-        },
-        {
-          "name": "plugins_container_unit_65",
-          "status": "passed"
-        },
-        {
-          "name": "podman_cgroup_parent_1820_4",
-          "status": "passed"
-        },
-        {
-          "name": "project_check_0_150_0",
-          "status": "passed"
-        },
-        {
-          "name": "trajectory_docs_5",
-          "status": "passed"
-        },
-        {
-          "name": "validation_scope_9",
+          "name": "trajectory_docs",
           "status": "passed"
         }
       ],
-      "current_phase": "publication_audit",
+      "current_phase": "verification",
       "custody": {
         "events": [
           {
             "event_id": "event:2",
-            "intent_id": "intent:run_1820_podman_cgroup_parent",
+            "intent_id": "intent:change_01M7R4ZAHNJFT5PGD1R58DDXC5",
             "kind": "created",
             "sequence": 2
           },
           {
             "event_id": "event:3",
-            "intent_id": "intent:run_1820_podman_cgroup_parent",
+            "intent_id": "intent:change_01M7R4ZAHNJFT5PGD1R58DDXC5",
             "kind": "refined",
             "sequence": 3
           },
           {
-            "detail": "trajectory:run_1820_podman_cgroup_parent",
+            "detail": "trajectory:branch_01M7R4ZAS8A2D6PMN4WRWVY4S3",
             "event_id": "event:4",
-            "intent_id": "intent:run_1820_podman_cgroup_parent",
+            "intent_id": "intent:change_01M7R4ZAHNJFT5PGD1R58DDXC5",
             "kind": "trajectory_step_recorded",
             "sequence": 4
           },
           {
-            "detail": "trajectory:run_1820_podman_cgroup_parent",
+            "detail": "trajectory:branch_01M7R4ZAS8A2D6PMN4WRWVY4S3",
             "event_id": "event:5",
-            "intent_id": "intent:run_1820_podman_cgroup_parent",
+            "intent_id": "intent:change_01M7R4ZAHNJFT5PGD1R58DDXC5",
             "kind": "trajectory_step_recorded",
             "sequence": 5
           },
           {
-            "detail": "trajectory:run_1820_podman_cgroup_parent",
+            "detail": "trajectory:branch_01M7R4ZAS8A2D6PMN4WRWVY4S3",
             "event_id": "event:6",
-            "intent_id": "intent:run_1820_podman_cgroup_parent",
+            "intent_id": "intent:change_01M7R4ZAHNJFT5PGD1R58DDXC5",
             "kind": "trajectory_step_recorded",
             "sequence": 6
           },
           {
-            "detail": "trajectory:run_1820_podman_cgroup_parent",
+            "detail": "trajectory:branch_01M7R4ZAS8A2D6PMN4WRWVY4S3",
             "event_id": "event:7",
-            "intent_id": "intent:run_1820_podman_cgroup_parent",
+            "intent_id": "intent:change_01M7R4ZAHNJFT5PGD1R58DDXC5",
             "kind": "trajectory_step_recorded",
             "sequence": 7
           },
           {
-            "detail": "trajectory:run_1820_podman_cgroup_parent",
+            "detail": "trajectory:branch_01M7R4ZAS8A2D6PMN4WRWVY4S3",
             "event_id": "event:8",
-            "intent_id": "intent:run_1820_podman_cgroup_parent",
+            "intent_id": "intent:change_01M7R4ZAHNJFT5PGD1R58DDXC5",
             "kind": "trajectory_step_recorded",
             "sequence": 8
-          },
-          {
-            "detail": "trajectory:run_1820_podman_cgroup_parent",
-            "event_id": "event:9",
-            "intent_id": "intent:run_1820_podman_cgroup_parent",
-            "kind": "trajectory_step_recorded",
-            "sequence": 9
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 9,
+        "next_sequence": 8,
         "schema_version": "1.0.0",
         "trajectories": {
-          "run_1820_podman_cgroup_parent": {
+          "branch_01M7R4ZAS8A2D6PMN4WRWVY4S3": {
             "evidence_only": true,
-            "id": "run_1820_podman_cgroup_parent",
-            "intent_id": "intent:run_1820_podman_cgroup_parent",
+            "id": "branch_01M7R4ZAS8A2D6PMN4WRWVY4S3",
+            "intent_id": "intent:change_01M7R4ZAHNJFT5PGD1R58DDXC5",
             "steps": [
               {
                 "action": "verification",
                 "custody_event_id": "event:4",
                 "observations": [
-                  "src/decapod/plugins/container.rs",
-                  "src/decapod/core/container_runtime.rs",
-                  "src/decapod/core/docs_cli.rs",
-                  "tests/unit/plugins/container_tests.rs",
-                  "tests/cli_contracts.rs",
-                  "src/decapod/plugins/container.rs",
-                  "src/decapod/core/docs_cli.rs",
-                  "docs/agent/command-contracts.md",
-                  "docs/agent/error-recovery.md",
-                  ".decapod/managed/specs/INTERFACES.md",
-                  ".decapod/managed/specs/OPERATIONS.md",
-                  "tests/unit/plugins/container_tests.rs",
-                  "tests/cli_contracts.rs",
-                  "tests/podman_cgroup_parent_1820.rs",
-                  "All targeted unit, contract, doc alignment, clippy -D warnings, and #1820 integration tests passed; decapod eval allow on docs ingest and full diff."
+                  "src/decapod/core/interop.rs",
+                  "src/decapod/lib.rs",
+                  "tests/doc_alignment.rs",
+                  "tests/contract_conformance.rs",
+                  "tests/interop_conformance.rs",
+                  "tests/infer_precision.rs",
+                  "tests/unit/core/fleet_coord_tests.rs",
+                  ".decapod/contracts/README_CONTRACTS.json",
+                  "docs/book/src/index.md",
+                  "docs/book/src/introduction.md",
+                  "docs/book/src/mental-model.md",
+                  "docs/book/src/quickstart.md",
+                  "docs/book/src/SUMMARY.md",
+                  "docs/book/src/concepts/agent-first.md",
+                  "docs/book/src/concepts/interoperability.md",
+                  "docs/book/src/concepts/constitution.md",
+                  "docs/book/src/concepts/mcp.md",
+                  "docs/book/src/workflows/single-agent.md",
+                  "docs/book/src/workflows/multi-agent.md",
+                  "README.md",
+                  ".decapod/managed/specs/ARCHITECTURE.md",
+                  ".decapod/managed/specs/INTENT.md",
+                  "cargo test --test doc_alignment (4/4 passed); --test contract_conformance (12/12 passed); --test trajectory_docs (5/5 passed); python3 relative link + SUMMARY + stale-phrase check passed; docs_sync_checkpoint_boundary 11/12 passed (1 macOS APFS EILSEQ); specs_refresh_docs 6/7 passed (pre-existing docs_cli.rs); mdbook not installed locally"
                 ],
                 "proof_refs": [
-                  "cargo_fmt_check",
-                  "cargo_clippy_all_targets",
-                  "plugins_container_unit_65",
-                  "podman_cgroup_parent_1820_4",
-                  "core_container_runtime_7",
-                  "validation_scope_9",
-                  "cli_contract_enforcement_23",
-                  "contract_conformance_12",
-                  "doc_alignment_4",
-                  "trajectory_docs_5",
-                  "cli_contracts_container_sync_1",
-                  "decapod_eval_docs_and_diff"
+                  "doc_alignment",
+                  "contract_conformance",
+                  "trajectory_docs",
+                  "relative_markdown_links",
+                  "docs_sync_checkpoint_boundary",
+                  "specs_refresh_docs",
+                  "mdbook_build"
                 ],
                 "scope": [
-                  ".decapod/managed/specs/",
-                  "docs/agent/",
-                  "src/decapod/core/docs_cli.rs",
-                  "src/decapod/plugins/container.rs",
-                  "tests/"
+                  "\".decapod/managed/specs\"]",
+                  "\"README.md\"",
+                  "paths:[\"docs/book/src\""
                 ],
                 "sequence": 4,
-                "validation_findings": []
+                "validation_findings": [
+                  "mdBook site build (docs-build CI check) will execute on Linux CI with mdbook 0.4.40"
+                ]
               },
               {
-                "action": "pre_sync",
+                "action": "verification",
                 "custody_event_id": "event:5",
                 "observations": [
-                  "Merged origin/master 84f9673824ba0b60ee0e87449f2cbb23387f5717 (v0.149.3), rebuilt candidate decapod binary, ran docs build (0 diff) and specs.refresh, preserved all living specs, and re-recorded spec reviews."
+                  ".decapod/managed/Dockerfile.decapod",
+                  ".decapod/managed/specs/.manifest.json",
+                  "Refreshed v0.149.0 Dockerfile.decapod and .manifest.json with /private/tmp/swarm-controller-0.149.0/bin/decapod"
                 ],
                 "proof_refs": [],
                 "scope": [
-                  ".decapod/managed/specs/",
-                  "docs/agent/",
-                  "src/decapod/core/docs_cli.rs",
-                  "src/decapod/plugins/container.rs",
-                  "tests/"
+                  "\".decapod/managed/specs\"]",
+                  "\"README.md\"",
+                  "paths:[\"docs/book/src\""
                 ],
                 "sequence": 5,
                 "validation_findings": []
               },
               {
-                "action": "pre_sync",
+                "action": "verification",
                 "custody_event_id": "event:6",
                 "observations": [
-                  "Merged origin/master 755bbac6e0af03c5dde4bd555cd749c426ae6472 (v0.149.3, #1828), rebuilt candidate decapod binary with dactyl-db 0.18.0, ran docs build (0 diff) and specs.refresh (config_input_hash 6bb17b82...), preserved all living specs, and re-recorded spec reviews."
+                  "Merged origin/master 205d4e8da (PR #1805 + PR #1806 v0.149.1) and refreshed projections with 0.149.0 controller"
                 ],
                 "proof_refs": [],
                 "scope": [
-                  ".decapod/managed/specs/",
-                  "docs/agent/",
-                  "src/decapod/core/docs_cli.rs",
-                  "src/decapod/plugins/container.rs",
-                  "tests/"
+                  "\".decapod/managed/specs\"]",
+                  "\"README.md\"",
+                  "paths:[\"docs/book/src\""
                 ],
                 "sequence": 6,
                 "validation_findings": []
               },
               {
-                "action": "publication_audit",
+                "action": "verification",
                 "custody_event_id": "event:7",
                 "observations": [
-                  "Merged origin/master 1b3ca1b8919367c113732ddbe820dbd729eab432 (v0.149.3, PR #1827/#1760), rebuilt candidate decapod binary, converged docs build (0 repeat diff), refreshed specs.refresh, preserved all living specs, and re-recorded spec reviews."
+                  ".decapod/managed/Dockerfile.decapod",
+                  ".decapod/managed/specs/.manifest.json",
+                  "Refreshed v0.149.1 Dockerfile.decapod and .manifest.json with /private/tmp/swarm-controller-0.149.1/bin/decapod"
                 ],
                 "proof_refs": [],
                 "scope": [
-                  ".decapod/managed/specs/",
-                  "docs/agent/",
-                  "src/decapod/core/docs_cli.rs",
-                  "src/decapod/plugins/container.rs",
-                  "tests/"
+                  "\".decapod/managed/specs\"]",
+                  "\"README.md\"",
+                  "paths:[\"docs/book/src\""
                 ],
                 "sequence": 7,
                 "validation_findings": []
               },
               {
-                "action": "publication_audit",
+                "action": "verification",
                 "custody_event_id": "event:8",
                 "observations": [
-                  "Merged external origin/master c845ae1d0cf14ea2d5859af8e50511eb9f74be6c (PR #1831, v0.149.3), rebuilt candidate decapod binary, ran docs build (0 diff) and specs.refresh, and re-recorded spec reviews."
+                  "Merged origin/master 1332f4ecd (v0.150.0), preserved upstream Decapod Local/Cloud offerings + #1469 specs, refreshed v0.150.0 projections with /private/tmp/swarm-controller-0.150.0/bin/decapod"
                 ],
                 "proof_refs": [],
                 "scope": [
-                  ".decapod/managed/specs/",
-                  "docs/agent/",
-                  "src/decapod/core/docs_cli.rs",
-                  "src/decapod/plugins/container.rs",
-                  "tests/"
+                  "\".decapod/managed/specs\"]",
+                  "\"README.md\"",
+                  "paths:[\"docs/book/src\""
                 ],
                 "sequence": 8,
-                "validation_findings": []
-              },
-              {
-                "action": "trajectory.record",
-                "custody_event_id": "event:9",
-                "observations": [
-                  ".decapod/managed/Dockerfile.decapod",
-                  ".decapod/managed/specs/OPERATIONS.md",
-                  ".decapod/managed/specs/.manifest.json",
-                  ".decapod/managed/specs/.manifest.json"
-                ],
-                "proof_refs": [
-                  "project_check_0_150_0"
-                ],
-                "scope": [
-                  ".decapod/managed/specs/",
-                  "docs/agent/",
-                  "src/decapod/core/docs_cli.rs",
-                  "src/decapod/plugins/container.rs",
-                  "tests/"
-                ],
-                "sequence": 9,
                 "validation_findings": []
               }
             ]
@@ -1002,55 +907,59 @@
         }
       },
       "declared_commands": [],
+      "destination": "pull request",
       "evidence": [
-        ".decapod/managed/specs/.manifest.json",
-        "All targeted unit, contract, doc alignment, clippy -D warnings, and #1820 integration tests passed; decapod eval allow on docs ingest and full diff.",
-        "Merged external origin/master c845ae1d0cf14ea2d5859af8e50511eb9f74be6c (PR #1831, v0.149.3), rebuilt candidate decapod binary, ran docs build (0 diff) and specs.refresh, and re-recorded spec reviews.",
-        "Merged origin/master 1b3ca1b8919367c113732ddbe820dbd729eab432 (v0.149.3, PR #1827/#1760), rebuilt candidate decapod binary, converged docs build (0 repeat diff), refreshed specs.refresh, preserved all living specs, and re-recorded spec reviews.",
-        "Merged origin/master 755bbac6e0af03c5dde4bd555cd749c426ae6472 (v0.149.3, #1828), rebuilt candidate decapod binary with dactyl-db 0.18.0, ran docs build (0 diff) and specs.refresh (config_input_hash 6bb17b82...), preserved all living specs, and re-recorded spec reviews.",
-        "Merged origin/master 84f9673824ba0b60ee0e87449f2cbb23387f5717 (v0.149.3), rebuilt candidate decapod binary, ran docs build (0 diff) and specs.refresh, preserved all living specs, and re-recorded spec reviews."
+        "Merged origin/master 1332f4ecd (v0.150.0), preserved upstream Decapod Local/Cloud offerings + #1469 specs, refreshed v0.150.0 projections with /private/tmp/swarm-controller-0.150.0/bin/decapod",
+        "Merged origin/master 205d4e8da (PR #1805 + PR #1806 v0.149.1) and refreshed projections with 0.149.0 controller",
+        "Refreshed v0.149.0 Dockerfile.decapod and .manifest.json with /private/tmp/swarm-controller-0.149.0/bin/decapod",
+        "Refreshed v0.149.1 Dockerfile.decapod and .manifest.json with /private/tmp/swarm-controller-0.149.1/bin/decapod",
+        "cargo test --test doc_alignment (4/4 passed); --test contract_conformance (12/12 passed); --test trajectory_docs (5/5 passed); python3 relative link + SUMMARY + stale-phrase check passed; docs_sync_checkpoint_boundary 11/12 passed (1 macOS APFS EILSEQ); specs_refresh_docs 6/7 passed (pre-existing docs_cli.rs); mdbook not installed locally"
       ],
       "inspected_files": [
-        "src/decapod/core/container_runtime.rs",
-        "src/decapod/core/docs_cli.rs",
-        "src/decapod/plugins/container.rs",
-        "tests/cli_contracts.rs",
-        "tests/unit/plugins/container_tests.rs"
+        ".decapod/contracts/README_CONTRACTS.json",
+        "src/decapod/core/interop.rs",
+        "src/decapod/lib.rs",
+        "tests/contract_conformance.rs",
+        "tests/doc_alignment.rs",
+        "tests/infer_precision.rs",
+        "tests/interop_conformance.rs",
+        "tests/unit/core/fleet_coord_tests.rs"
       ],
-      "intent_id": "intent:run_1820_podman_cgroup_parent",
+      "intent_id": "intent:change_01M7R4ZAHNJFT5PGD1R58DDXC5",
       "modified_files": [
         ".decapod/managed/Dockerfile.decapod",
         ".decapod/managed/specs/.manifest.json",
-        ".decapod/managed/specs/INTERFACES.md",
-        ".decapod/managed/specs/OPERATIONS.md",
-        "docs/agent/command-contracts.md",
-        "docs/agent/error-recovery.md",
-        "src/decapod/core/docs_cli.rs",
-        "src/decapod/plugins/container.rs",
-        "tests/cli_contracts.rs",
-        "tests/podman_cgroup_parent_1820.rs",
-        "tests/unit/plugins/container_tests.rs"
+        ".decapod/managed/specs/ARCHITECTURE.md",
+        ".decapod/managed/specs/INTENT.md",
+        "README.md",
+        "docs/book/src/SUMMARY.md",
+        "docs/book/src/concepts/agent-first.md",
+        "docs/book/src/concepts/constitution.md",
+        "docs/book/src/concepts/interoperability.md",
+        "docs/book/src/concepts/mcp.md",
+        "docs/book/src/index.md",
+        "docs/book/src/introduction.md",
+        "docs/book/src/mental-model.md",
+        "docs/book/src/quickstart.md",
+        "docs/book/src/workflows/multi-agent.md",
+        "docs/book/src/workflows/single-agent.md"
       ],
       "next_transitions": [
-        "Hold for verifier-2 audit before push/PR",
-        "Hold git push/PR until PR #1827 merges",
-        "Hold git push/PR until PR 8 (#1760) merges",
-        "Tag verifier-3 for <60s fast delta sign-off; hold git push until approved",
-        "Tag verifier-3 for <60s fast merge delta sign-off before pushing to PR #1830"
+        "Refine plan and declare falsifiable checks"
       ],
       "repo_scope": [
-        ".decapod/managed/specs/",
-        "docs/agent/",
-        "src/decapod/core/docs_cli.rs",
-        "src/decapod/plugins/container.rs",
-        "tests/"
+        "\".decapod/managed/specs\"]",
+        "\"README.md\"",
+        "paths:[\"docs/book/src\""
       ],
-      "run_id": "run_1820_podman_cgroup_parent",
+      "run_id": "branch_01M7R4ZAS8A2D6PMN4WRWVY4S3",
       "schema_version": "1.1.0",
       "shortcut_risk_signals": [],
-      "task_id": "code_01m7srddt2dc4pyp",
+      "task_id": "docs_01m7r4vfv7498zkx",
       "tool_calls": [],
-      "unresolved_assumptions": []
+      "unresolved_assumptions": [
+        "mdBook site build (docs-build CI check) will execute on Linux CI with mdbook 0.4.40"
+      ]
     }
   },
   "legacy_digests": {
