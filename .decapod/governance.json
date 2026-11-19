@@ -609,6 +609,11 @@
       "id": "ckpt-wu1660-merge-4536919",
       "summary": "Reconcile PR #1823 (#1660) with origin/master 45369197e (#1825), preserving all #1825 and #1660 code, specs, and refreshed v0.149.3 projections",
       "input_digest": "sha256:2f62d6028ea52ae00932296d189d23839c280b3d60dcb6026c7451bdf50ef506"
+    },
+    {
+      "id": "ckpt-wu1660-review-4536919",
+      "summary": "Record unchanged-with-reason spec reviews for ARCHITECTURE.md and SECURITY.md relative to origin/master 45369197e (#1660)",
+      "input_digest": "sha256:af33c8408e13b2af9ffd7af272239f39b4f8bc8e8e7c496533e7df0f1fa1e853"
     }
   ],
   "intents": {
@@ -659,9 +664,9 @@
       "schema_version": "1.1.0",
       "spec_reviews": [
         {
-          "disposition": "updated",
+          "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Preserved #1825 architecture updates from origin/master 45369197e alongside #1660 split-store convergence.",
+          "reason": "ARCHITECTURE.md matches origin/master 45369197e (#1825); #1660 workunit split-store convergence changes are documented in INTERFACES.md and VALIDATION.md.",
           "reviewed_code_fingerprint": "47caca47da7db39490c92a99c4e985ab837239e7cd1a5fd55a4c7d65fe503073",
           "spec_material_hash": "26b2b6a9a136ac955ea41c945b7a1c660c15d0ee6584ee29568d80bc520eaf4c"
         },
@@ -673,9 +678,9 @@
           "spec_material_hash": "d6e2e15de20261ea7292518e24d2e98e182a704c1941a406bfeda6c8044f20d4"
         },
         {
-          "disposition": "updated",
+          "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Preserved #1825 security updates from origin/master 45369197e alongside #1660 fail-closed split-store guards.",
+          "reason": "SECURITY.md matches origin/master 45369197e (#1825); #1660 fail-closed split-store proof guards are documented in VALIDATION.md.",
           "reviewed_code_fingerprint": "47caca47da7db39490c92a99c4e985ab837239e7cd1a5fd55a4c7d65fe503073",
           "spec_material_hash": "9c15cdf421a538d0e8fa06a154d96acaf41fc3d8ec15872b2c6016f0ebb908e1"
         }
@@ -688,7 +693,7 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795068925Z"
+      "updated_at": "1795069045Z"
     },
     "trajectory": {
       "active_boundaries": [
