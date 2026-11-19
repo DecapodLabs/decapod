@@ -451,6 +451,24 @@ fn split_store_audit_dir(root: &Path) -> PathBuf {
     root.join(".decapod").join("data").join("split-store-audit")
 }
 
+/// In a split store where `<worktree>/.decapod/data` was explicitly initialized
+/// with its own policy tables (`runtime_data_dir(root) == split.local_dir`),
+/// non-VERIFIED local workunit declarations stay isolated in the workspace-local
+/// datastore and cannot mint VERIFIED or leak into the canonical main store.
+/// When a partial/corrupt split store would route writes to the canonical main
+/// store (`runtime_data_dir(root) != split.local_dir`), fail closed immediately.
+fn ensure_non_verified_split_write_isolated(root: &Path) -> Result<(), error::DecapodError> {
+    if let Some(split) = split_store_dirs(root)?
+        && runtime_data_dir(root) != split.local_dir
+    {
+        return Err(journal_error(
+            "WORKUNIT_PROOF_ATOMIC_DOMAIN_UNSUPPORTED",
+            SPLIT_STORE_UNSUPPORTED_DETAIL,
+        ));
+    }
+    Ok(())
+}
+
 fn split_store_dirs(root: &Path) -> Result<Option<SplitStoreDirs>, error::DecapodError> {
     if !root.join(".git").is_file() {
         return Ok(None);
@@ -1383,6 +1401,12 @@ fn verify_resume_record(
         ));
     }
     if record.manifest.status == WorkUnitStatus::Verified {
+        if split_store_dirs(root)?.is_some() {
+            return Err(journal_error(
+                "WORKUNIT_PROOF_ATOMIC_DOMAIN_UNSUPPORTED",
+                SPLIT_STORE_UNSUPPORTED_DETAIL,
+            ));
+        }
         validate_observed_workunit_proof(root, &record.manifest)?;
         ensure_living_specs_bound_for_proof(root, &record.manifest)?;
         if record.legacy_baseline && record.kind == "legacy_baseline" {
@@ -1675,12 +1699,7 @@ fn mutate_workunit_with_proof_gate(
     mutate: impl FnOnce(&mut WorkUnitManifest) -> Result<(), error::DecapodError>,
 ) -> Result<WorkUnitManifest, error::DecapodError> {
     with_workunit_lock(root, || {
-        if split_store_dirs(root)?.is_some() {
-            return Err(journal_error(
-                "WORKUNIT_PROOF_ATOMIC_DOMAIN_UNSUPPORTED",
-                SPLIT_STORE_UNSUPPORTED_DETAIL,
-            ));
-        }
+        ensure_non_verified_split_write_isolated(root)?;
         let previous = baseline_if_needed(root, task_id)?;
         if !projection_matches(root, &previous)? {
             return Err(journal_error(
@@ -1898,12 +1917,7 @@ pub fn checkpoint_workunit(
     expected_generation: Option<u64>,
 ) -> Result<WorkUnitJournalStatus, error::DecapodError> {
     with_workunit_lock(root, || {
-        if split_store_dirs(root)?.is_some() {
-            return Err(journal_error(
-                "WORKUNIT_PROOF_ATOMIC_DOMAIN_UNSUPPORTED",
-                SPLIT_STORE_UNSUPPORTED_DETAIL,
-            ));
-        }
+        ensure_non_verified_split_write_isolated(root)?;
         let previous = baseline_if_needed(root, task_id)?;
         let records = journal_records(root, task_id)?;
         if let Some(existing) = records
@@ -2079,12 +2093,7 @@ pub fn write_workunit_checked(
     expected_generation: u64,
 ) -> Result<PathBuf, error::DecapodError> {
     with_workunit_lock(root, || {
-        if split_store_dirs(root)?.is_some() {
-            return Err(journal_error(
-                "WORKUNIT_PROOF_ATOMIC_DOMAIN_UNSUPPORTED",
-                SPLIT_STORE_UNSUPPORTED_DETAIL,
-            ));
-        }
+        ensure_non_verified_split_write_isolated(root)?;
         let previous = baseline_if_needed(root, &manifest.task_id)?;
         if manifest.intent_ref != previous.manifest.intent_ref
             || manifest.proof_plan != previous.manifest.proof_plan
@@ -2154,12 +2163,7 @@ pub fn init_workunit(
     intent_ref: &str,
 ) -> Result<WorkUnitManifest, error::DecapodError> {
     with_workunit_lock(project_root, || {
-        if split_store_dirs(project_root)?.is_some() {
-            return Err(journal_error(
-                "WORKUNIT_PROOF_ATOMIC_DOMAIN_UNSUPPORTED",
-                SPLIT_STORE_UNSUPPORTED_DETAIL,
-            ));
-        }
+        ensure_non_verified_split_write_isolated(project_root)?;
         if workunit_path(project_root, task_id)?.exists()
             || !journal_records(project_root, task_id)?.is_empty()
         {

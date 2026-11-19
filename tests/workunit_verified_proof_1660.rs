@@ -1468,9 +1468,30 @@ fn falsifier_5_and_6_split_store_retained_as_not_proven_audit_and_converged_task
         .to_string()
         .contains("WORKUNIT_PROOF_ATOMIC_DOMAIN_UNSUPPORTED")
     );
-    // Mutations on the split store must fail with WORKUNIT_PROOF_ATOMIC_DOMAIN_UNSUPPORTED
-    // instead of leaking into the canonical main store.
-    let err_split_init = governed_err(
+    // Resume on a split store must fail closed with WORKUNIT_PROOF_ATOMIC_DOMAIN_UNSUPPORTED.
+    let err_split_resume = governed_err(
+        &workspace,
+        &fixture.storage,
+        agent,
+        &password,
+        &[
+            "govern",
+            "workunit",
+            "resume",
+            "--task-id",
+            split_verified_task,
+            "--operation-id",
+            "split-resume-blocked",
+        ],
+    );
+    assert!(
+        err_split_resume.contains("WORKUNIT_PROOF_ATOMIC_DOMAIN_UNSUPPORTED"),
+        "{err_split_resume}"
+    );
+    // Non-VERIFIED declarations on an explicitly initialized workspace-local
+    // datastore stay isolated in `<workspace>/.decapod/data` (never leaking into
+    // the canonical main store) and still cannot transition to VERIFIED.
+    governed_ok(
         &workspace,
         &fixture.storage,
         agent,
@@ -1480,14 +1501,22 @@ fn falsifier_5_and_6_split_store_retained_as_not_proven_audit_and_converged_task
             "workunit",
             "init",
             "--task-id",
-            "bugs_split_blocked_new",
+            "bugs_split_local_only",
             "--intent-ref",
-            "intent:split-blocked",
+            "intent:split-local-only",
         ],
     );
     assert!(
-        err_split_init.contains("WORKUNIT_PROOF_ATOMIC_DOMAIN_UNSUPPORTED"),
-        "{err_split_init}"
+        workspace
+            .join(".decapod/data/workunits/bugs_split_local_only.json")
+            .is_file()
+    );
+    assert!(
+        !fixture
+            .root
+            .join(".decapod/data/workunits/bugs_split_local_only.json")
+            .exists(),
+        "split-store local workunit must never leak into the canonical main store"
     );
 
     // Inspection must flag split store as not_proven with WORKUNIT_PROOF_ATOMIC_DOMAIN_UNSUPPORTED.

@@ -594,6 +594,11 @@
         "tests/unit/core/workunit_journal_tests.rs",
         "tests/workunit_verified_proof_1660.rs"
       ]
+    },
+    {
+      "id": "ckpt-wu1660-split-iso",
+      "summary": "Isolate non-VERIFIED split-store declarations in explicitly initialized workspace-local datastores while keeping VERIFIED transitions, resume, validate_verified_manifest, and partial-store leaks blocked with WORKUNIT_PROOF_ATOMIC_DOMAIN_UNSUPPORTED (#1660)",
+      "input_digest": "sha256:e2bfa630f369347dfbdfc066230a63584bd07b99fb8d2d62f49cb8b8293667d8"
     }
   ],
   "intents": {
@@ -679,10 +684,22 @@
       "active_boundaries": [
         "Isolated Decapod worktree only; never mutate root checkout, host cargo bin, PR #1788, or pre-existing claimed todos; hold git push and gh pr create for verifier sign-off and merge queue."
       ],
-      "artifact_hash": "sha256:6c60fae1f00060e73be1c537db3be19c2d2e1a02e42526f27da770eed745ca47",
+      "artifact_hash": "sha256:481010da78ac0a042314b510fcd67a8fd48f3f2ec7be60bd836e45a82e229f74",
       "checks": [
         {
+          "name": "cargo_fmt",
+          "status": "passed"
+        },
+        {
           "name": "clippy",
+          "status": "passed"
+        },
+        {
+          "name": "clippy_strict",
+          "status": "passed"
+        },
+        {
+          "name": "core_workunit",
           "status": "passed"
         },
         {
@@ -691,6 +708,10 @@
         },
         {
           "name": "docs_and_contracts",
+          "status": "passed"
+        },
+        {
+          "name": "entrypoint_correctness_fresh_docs_cli",
           "status": "passed"
         },
         {
@@ -735,10 +756,17 @@
             "intent_id": "intent:wu1660-v01493",
             "kind": "trajectory_step_recorded",
             "sequence": 4
+          },
+          {
+            "detail": "trajectory:wu1660-v01493",
+            "event_id": "event:5",
+            "intent_id": "intent:wu1660-v01493",
+            "kind": "trajectory_step_recorded",
+            "sequence": 5
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 4,
+        "next_sequence": 5,
         "schema_version": "1.0.0",
         "trajectories": {
           "wu1660-v01493": {
@@ -796,6 +824,40 @@
                 ],
                 "sequence": 4,
                 "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:5",
+                "observations": [
+                  "tests/support/fresh_docs_readiness.rs",
+                  "src/decapod/core/workunit.rs",
+                  "tests/workunit_verified_proof_1660.rs",
+                  ".decapod/managed/specs/VALIDATION.md",
+                  "Allow isolated non-VERIFIED local split-store declarations when runtime_data_dir matches local_dir while keeping VERIFIED transitions, resume, validate_verified_manifest, and partial-store leaks blocked with WORKUNIT_PROOF_ATOMIC_DOMAIN_UNSUPPORTED"
+                ],
+                "proof_refs": [
+                  "entrypoint_correctness_fresh_docs_cli",
+                  "workunit_verified_proof_1660",
+                  "core_workunit",
+                  "validation_scope",
+                  "workunit_cli",
+                  "workunit_publish_gate",
+                  "clippy_strict",
+                  "cargo_fmt"
+                ],
+                "scope": [
+                  ".decapod/managed/specs/INTERFACES.md",
+                  ".decapod/managed/specs/VALIDATION.md",
+                  "docs/agent/command-contracts.md",
+                  "src/decapod/cli.rs",
+                  "src/decapod/core/docs_cli.rs",
+                  "src/decapod/core/workunit.rs",
+                  "src/decapod/lib.rs",
+                  "tests/unit/core/workunit_journal_tests.rs",
+                  "tests/workunit_verified_proof_1660.rs"
+                ],
+                "sequence": 5,
+                "validation_findings": []
               }
             ]
           }
@@ -812,6 +874,7 @@
       "evidence": [
         ".decapod/managed/specs/INTERFACES.md",
         ".decapod/managed/specs/VALIDATION.md",
+        "Allow isolated non-VERIFIED local split-store declarations when runtime_data_dir matches local_dir while keeping VERIFIED transitions, resume, validate_verified_manifest, and partial-store leaks blocked with WORKUNIT_PROOF_ATOMIC_DOMAIN_UNSUPPORTED",
         "tests/unit/core/workunit_journal_tests.rs",
         "tests/workunit_verified_proof_1660.rs"
       ],
@@ -821,6 +884,7 @@
         "src/decapod/core/docs_cli.rs",
         "src/decapod/core/workunit.rs",
         "src/decapod/lib.rs",
+        "tests/support/fresh_docs_readiness.rs",
         "tests/unit/core/workunit_journal_tests.rs",
         "tests/workunit_cli.rs",
         "tests/workunit_publish_gate.rs"

@@ -1461,7 +1461,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `abf3266b5a85d3b88c4d58a5fab6c2ba2df45d2595a8701be77617d4150c6e44`
+- Repository signal fingerprint: `43b67847219e3556a18258ca11f844d09f2c2956e9d55ea473b4a2221abfaa04`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (237 files), `tests/` (243 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
@@ -2336,10 +2336,13 @@ enforces single-domain canonical custody and kernel-observed proof for all
 - Any separately initialized workspace-local datastore (`<worktree>/.decapod/data/todo.db`
   or `decapod.db` containing policy tables `agents`/`risk_zones`, `workunit`
   events, or corrupt/unreadable state, while permitting benign `traces`-only
-  RPC logs) returns `WORKUNIT_PROOF_ATOMIC_DOMAIN_UNSUPPORTED` on workunit
-  mutations, `VERIFIED` transitions, `validate_verified_manifest`, `resume_workunit`,
-  and `journal-status` (`split_store: true`, `atomic_domain_supported: false`,
-  `proof_status: "not_proven"`).
+  RPC logs) returns `WORKUNIT_PROOF_ATOMIC_DOMAIN_UNSUPPORTED` on `VERIFIED`
+  transitions, `validate_verified_manifest`, `resume_workunit`, partial or
+  uninitialized split-store writes that would otherwise leak into the canonical
+  main store, and `journal-status` (`split_store: true`,
+  `atomic_domain_supported: false`, `proof_status: "not_proven"`), while
+  keeping explicitly initialized non-`VERIFIED` local declarations isolated
+  inside the workspace-local datastore until converged.
 - `decapod govern workunit converge [--task-id <id>] [--dry-run]` inspects or
   archives workspace-local database files and split-only projections into
   `.decapod/data/split-store-audit/<archive_id>/audit.json` as `not_proven` audit
