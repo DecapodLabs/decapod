@@ -95,6 +95,12 @@ impl DactylTodoStore {
              SELECT 1 FROM tasks
              WHERE tasks.id = event_params.task_id
                AND tasks.updated_at = event_params.event_ts
+               AND (
+                   (event_params.event_type = 'task.add' AND tasks.version = 1)
+                   OR (event_params.event_type = 'task.claim' AND tasks.status = 'in_progress' AND tasks.assigned_to = event_params.event_actor)
+                   OR (event_params.event_type = 'task.release' AND tasks.status = 'open' AND (tasks.assigned_to = '' OR tasks.assigned_to IS NULL))
+                   OR (event_params.event_type = 'task.done' AND tasks.status = 'completed' AND tasks.assigned_to = event_params.event_actor)
+               )
          )",
                     event_parameters,
                 ),
@@ -148,11 +154,28 @@ impl DactylTodoStore {
 
     fn operation_timestamp() -> String {
         // The timestamp is also the transaction marker used by the portable
-        // state-plus-event batch. Millisecond precision allowed a fast stale
-        // mutation to observe the winning mutation's marker after Dactyl's
-        // positional SQLite binding was tightened in v0.10.0.
-        crate::core::time::format_rfc3339_nanos(OffsetDateTime::now_utc())
-            .expect("system UTC timestamp is formattable")
+        // state-plus-event batch. Millisecond precision (and microsecond wall-clock
+        // granularity on macOS) allowed fast concurrent mutations to observe the
+        // winning mutation's marker; combine monotonic nanosecond uniqueness with
+        // post-state predicates in `atomic_mutation`.
+        static LAST_NANOS: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
+        let wall = u64::try_from(OffsetDateTime::now_utc().unix_timestamp_nanos()).unwrap_or(0);
+        let mut prev = LAST_NANOS.load(std::sync::atomic::Ordering::Relaxed);
+        let next = loop {
+            let candidate = wall.max(prev.saturating_add(1));
+            match LAST_NANOS.compare_exchange_weak(
+                prev,
+                candidate,
+                std::sync::atomic::Ordering::SeqCst,
+                std::sync::atomic::Ordering::Relaxed,
+            ) {
+                Ok(_) => break candidate,
+                Err(actual) => prev = actual,
+            }
+        };
+        let ts = OffsetDateTime::from_unix_timestamp_nanos(i128::from(next))
+            .expect("monotonic UTC timestamp is in range");
+        crate::core::time::format_rfc3339_nanos(ts).expect("system UTC timestamp is formattable")
     }
 
     fn task_from_rows(&self, rows: Rows) -> Result<Task> {
