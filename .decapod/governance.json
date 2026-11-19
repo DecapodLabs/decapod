@@ -615,6 +615,14 @@
       "proof_refs": [
         "inventory_digest=5730a9cf904d257da473edc37599aca56591a4f0a07beac2c76b0f10fd31b3c2"
       ]
+    },
+    {
+      "id": "ckpt-dockerfile-0-149-3",
+      "summary": "Commit v0.149.3 managed Dockerfile and spec header refresh emitted by decapod validate",
+      "input_digest": "sha256:611feb85485fa7f88547b8b11a4f3245483075c6071351aa1dd73bb9ab312fd7",
+      "proof_refs": [
+        "dockerfile_refresh=0.149.3"
+      ]
     }
   ],
   "intents": {
