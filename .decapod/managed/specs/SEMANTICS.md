@@ -273,6 +273,58 @@ unsupported recovery path leaves a visible blocker.
 - Invocations and owned subprocesses remain bounded; persistent state carries
   task continuity after they exit
 
+## Fault-Detection Semantics (#1795)
+
+`tests/governance_fault_detection_1795.rs` measures whether existing and
+remediation tests force Decapod's shipped enforcement rules to act rather than
+passing trivially. It does not weaken shipped `src/`, does not add a second
+policy interpreter, and makes no general formal-soundness claim.
+
+The suite inventories seven critical admission boundaries (`task_lease_custody`,
+`accepted_policy_precedence`, `required_proof_producer_binding`,
+`exact_candidate_base_freshness`, `approval_scope`, `retry_on_unknown`, and
+`final_pr_eligibility`), mapping each to an existing kernel rule, test, and
+lawful acceptance control. In an isolated temporary copy of the repository, one
+bounded fault is injected per rule across five rules covering the required
+attack classes:
+
+1. `RULE-PROOF-001` (`src/decapod/core/workunit.rs::validate_verified_manifest`):
+   dropping the `WORKUNIT_CHECKPOINT_REQUIRED` check against manually declared
+   `Verified` manifests is detected by
+   `workunit_publish_gate::publish_gate_rejects_manually_declared_verified_passes`.
+2. `RULE-FRESHNESS-002` (`src/decapod/core/workspace.rs::verify_validation_artifacts_for_publish`):
+   ignoring stale `validation_epoch` / `repo_signal_fingerprint` /
+   `decapod_release` checks is detected by
+   `core::workspace::publication::tests::current_receipt_accepts_proof_commit_but_rejects_stale_code_epoch_task_and_revision`.
+3. `RULE-POLICY-003` (`src/decapod/core/readiness_profile.rs::required_source_catalog_with_executor`):
+   relaxing `reviewed_workflow_digests` and `carrier_files` checks when
+   `reviewed_sources_digest` is recomputed to match altered files is detected by
+   `core::readiness_profile::tests::accepted_executor_never_authorizes_changed_candidate_workflows_or_carriers`.
+4. `RULE-CUSTODY-004` (`src/decapod/core/todo.rs::renew_claim_lease`):
+   bypassing `fleet_coord::lease_allows_reclaim` on expired-lease renewal
+   initially **survived** the unchanged existing suite (`plugins_todo_tests`)
+   because prior tests exercised cross-agent reclaim rather than same-owner
+   `todo renew` after expiry.
+   `expired_lease_renew_negative_and_positive_fixture_against_shipped_binary`
+   and the isolated faulted-binary check exercise real CLI `todo claim
+   --lease-seconds 1` -> expiry -> `todo renew`, proving active leases renew
+   (`status = "ok"`, `lease_lifecycle = "extended"`, `lease_generation = 2`)
+   while expired leases are rejected (`status = "conflict"`,
+   `lease_state = "expired"`) and catching the injected fault.
+5. `RULE-RETRY-005` (`src/decapod/core/group_broker.rs::execute_request`):
+   skipping `dedupe_lookup` so an `UNKNOWN` receipt blindly re-executes is
+   detected by
+   `core::group_broker::tests::durable_started_receipt_prevents_reexecution_and_binds_caller`.
+
+Every fault execution classifies outcomes strictly into `detected`, `survived`,
+`unexercised`, `build_invalid`, and `equivalent_fault`. Missing, filtered-out,
+aborted (`0` executed tests), or uncompiled (`build_invalid`) runs and no-op
+patches (`equivalent_fault`) are never counted as `detected`. The resulting
+versioned JSON report (`schema_version = "1.0.0"`,
+`kind = "governance_fault_detection_report"`) is emitted to
+`target/governance-fault-detection/report-1795.json` (or
+`$GOVERNANCE_FAULT_REPORT_PATH`).
+
 <!-- decapod:capability-overlay:background-processing:start -->
 
 Generated capability obligations: `background-processing` is declared for this project. These are decisions and proof requirements, not claims of implemented behavior. Resolve each against project source and tests; record unsupported or non-applicable mechanisms explicitly.
@@ -321,8 +373,8 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `c02cf851e20d3856ec6b7bce9c9aef052a42470540e47837862ba0a75b920d1c`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (238 files), `tests/` (238 files)
+- Repository signal fingerprint: `28bf025a3bf3cc499da11c46f876e8a75291f9e7a8755af6b93793a9db6e3347`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (238 files), `tests/` (240 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 

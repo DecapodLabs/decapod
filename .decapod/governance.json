@@ -186,6 +186,11 @@
         "statement": "No Dagger-specific engine execution or authorization capability remains; generic proof custody is retained",
         "status": "open"
       },
+      "claim:duplicate-key-required-semantics": {
+        "falsifier": "Duplicate or escaped-equivalent required_extensions erases the unsupported requirement, nested ambiguous JSON is accepted, or legitimate unique-key negotiation fails after refusal.",
+        "statement": "Both RPC routes reject duplicate decoded JSON keys before startup; later fields cannot erase required extension semantics and unique-key ordinary negotiation can recover.",
+        "status": "open"
+      },
       "claim:durable-artifact-publication": {
         "falsifier": "Parent sync failure reports success, recovery follows a substituted parent symlink, a partial history is returned as complete, or admitted append crosses its recovery size bound.",
         "proof_refs": [
@@ -577,6 +582,11 @@
       "id": "ckpt-journal-1780-impl",
       "summary": "Implement integrity-preserving merged governance journal reconciliation (#1780) with unit and CLI regression suites",
       "input_digest": "sha256:e57439390a1b91390c2c5f28d4635131edce10dda113a90ddd1cd1b763f7d374"
+    },
+    {
+      "id": "ckpt-journal-1780-merge-v01493",
+      "summary": "Integrate accepted master v0.149.3 (102d6eb22) using reconcile-merge and refresh v0.149.3 projections",
+      "input_digest": "sha256:41cd3f958d436cf11c33e25ef8874ae1748b68c02732e15099a0344a0c9e9f29"
     }
   ],
   "intents": {
@@ -617,22 +627,22 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Documented core::governance_document::reconcile_merge ancestry-based merge reconciliation for #1780",
-          "reviewed_code_fingerprint": "c02cf851e20d3856ec6b7bce9c9aef052a42470540e47837862ba0a75b920d1c",
+          "reason": "Refreshed v0.149.3 projections preserving #1780 merge_reconcile architecture",
+          "reviewed_code_fingerprint": "28bf025a3bf3cc499da11c46f876e8a75291f9e7a8755af6b93793a9db6e3347",
           "spec_material_hash": "6b2fac2262e7441727727bea0d4840643600d7a589780d63196bf883f5740090"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Documented decapod govern artifacts reconcile-merge CLI surface and error codes for #1780",
-          "reviewed_code_fingerprint": "c02cf851e20d3856ec6b7bce9c9aef052a42470540e47837862ba0a75b920d1c",
+          "reason": "Refreshed v0.149.3 projections preserving #1780 reconcile-merge interface",
+          "reviewed_code_fingerprint": "28bf025a3bf3cc499da11c46f876e8a75291f9e7a8755af6b93793a9db6e3347",
           "spec_material_hash": "7869802b08c78f794dd2b2706e89fd84288f272ce54194e36b457e35fa798ef4"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Documented fail-closed proof non-promotion and authority boundaries for #1780",
-          "reviewed_code_fingerprint": "c02cf851e20d3856ec6b7bce9c9aef052a42470540e47837862ba0a75b920d1c",
+          "reason": "Refreshed v0.149.3 projections preserving #1780 fail-closed proof boundary",
+          "reviewed_code_fingerprint": "28bf025a3bf3cc499da11c46f876e8a75291f9e7a8755af6b93793a9db6e3347",
           "spec_material_hash": "fd726912c6a1a2e1fcc4f02c949c2b4035dec61130d8bbbf9e737710c698544f"
         }
       ],
@@ -644,13 +654,13 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795048053Z"
+      "updated_at": "1795049910Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:e0e973c1521701f39186d84c01a3e19e0819f10c385dfc7c03b6de913a86c0d9",
+      "artifact_hash": "sha256:f10dd48231f8157ba711bd814b14aa3adc20ac49e6e631f7352748cfd80788da",
       "checks": [
         {
           "name": "cli_contract_enforcement",
@@ -685,6 +695,22 @@
           "status": "passed"
         },
         {
+          "name": "post_merge_fmt",
+          "status": "passed"
+        },
+        {
+          "name": "post_merge_merged_governance_journal_1780",
+          "status": "passed"
+        },
+        {
+          "name": "post_merge_reconcile_merge_unit",
+          "status": "passed"
+        },
+        {
+          "name": "post_merge_validation_scope",
+          "status": "passed"
+        },
+        {
           "name": "trajectory_docs",
           "status": "passed"
         },
@@ -714,10 +740,17 @@
             "intent_id": "intent:change_01M7R7VACDQHPCHHFJXFXXETKM",
             "kind": "trajectory_step_recorded",
             "sequence": 4
+          },
+          {
+            "detail": "trajectory:branch_01M7R7VAJ3PX8MBT1WEFTNTXQA",
+            "event_id": "event:5",
+            "intent_id": "intent:change_01M7R7VACDQHPCHHFJXFXXETKM",
+            "kind": "trajectory_step_recorded",
+            "sequence": 5
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 4,
+        "next_sequence": 5,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M7R7VAJ3PX8MBT1WEFTNTXQA": {
@@ -767,6 +800,24 @@
                 ],
                 "sequence": 4,
                 "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:5",
+                "observations": [
+                  "Merged origin/master 102d6eb22 (v0.149.3) dogfooding reconcile-merge; post-merge fmt exit 0, cargo build --bin decapod ok, validation_scope 9/9, reconcile_merge unit 2/2, merged_governance_journal_1780 2/2"
+                ],
+                "proof_refs": [
+                  "post_merge_fmt",
+                  "post_merge_validation_scope",
+                  "post_merge_reconcile_merge_unit",
+                  "post_merge_merged_governance_journal_1780"
+                ],
+                "scope": [
+                  "root"
+                ],
+                "sequence": 5,
+                "validation_findings": []
               }
             ]
           }
@@ -775,6 +826,7 @@
       "declared_commands": [],
       "destination": "pull request",
       "evidence": [
+        "Merged origin/master 102d6eb22 (v0.149.3) dogfooding reconcile-merge; post-merge fmt exit 0, cargo build --bin decapod ok, validation_scope 9/9, reconcile_merge unit 2/2, merged_governance_journal_1780 2/2",
         "fmt exit 0; clippy -D warnings exit 0; core::governance_document 76/76; merged_governance_journal_1780 2/2; governance_artifacts_cli 4/4; trajectory_docs 5/5; workbranch_governance 10/10; cli_contract_enforcement 23/23; contract_conformance 12/12; doc_alignment 4/4"
       ],
       "inspected_files": [
