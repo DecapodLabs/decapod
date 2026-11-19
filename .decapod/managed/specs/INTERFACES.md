@@ -1359,8 +1359,8 @@ field. Nothing in this operation authorizes a mutation, approval or completion.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `ef39d7ffe5a4415bee9f83fbd43eb55d85f24909ece395d7b860a3622e380a35`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (237 files), `tests/` (240 files)
+- Repository signal fingerprint: `61e9a3f1259510e236e3fc06246b4467ec029fe64044ac38b73c793a323c433b`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (237 files), `tests/` (241 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 
@@ -1810,15 +1810,25 @@ these declarations are not a successful validation observation.
 
 ## Canonical workunit validation contract (#1660)
 
-Existing workunit CLI operations remain the request surface. `record-proof`
-records a declaration; requesting VERIFIED requires a current canonical full
-observation for exactly one supported `validate_passes`/`validated_commit`
-obligation. The kernel derives the result, epoch and optional validation-record
-selector. Caller-supplied selectors cannot import producer success. File artifact
-paths retain byte-integrity semantics. Historical JSON omits the optional field;
-Rust manifest literals add `validation_record: None`, and verification consumers
-pass repository context to `validate_verified_manifest(root, manifest)`.
-Publication and human merge authorization remain independent operations.
+Existing workunit CLI operations remain the request surface, extended with
+`decapod govern workunit converge [--task-id <id>] [--dry-run]` and typed
+`proof_status` (`proven` | `not_proven` | `stale` | `absent`), `split_store`,
+`atomic_domain_supported`, `audit_records`, and `convergence_hint` fields on
+`WorkUnitJournalStatus` (and `proof_status`/`split_store`/`atomic_domain_supported`
+on `govern workunit status`). `record-proof` records a declaration; requesting
+VERIFIED requires a current canonical full observation for exactly one supported
+`validate_passes`/`validated_commit` obligation. The kernel derives the result,
+epoch and optional validation-record selector. Caller-supplied selectors cannot
+import producer success. File artifact paths retain byte-integrity semantics.
+Separately initialized workspace-local datastores return
+`WORKUNIT_PROOF_ATOMIC_DOMAIN_UNSUPPORTED`; explicit `converge` archives
+workspace-local records into `.decapod/data/split-store-audit/` as `not_proven`
+audit history without promoting split records to `VERIFIED`, restoring atomic
+canonical-store execution for fresh validation. Historical JSON omits the
+optional field; Rust manifest literals add `validation_record: None`, and
+verification consumers pass repository context to
+`validate_verified_manifest(root, manifest)`. Publication and human merge
+authorization remain independent operations.
 
 ## Scoped container-runtime recovery during prerequisites
 
