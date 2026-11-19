@@ -587,10 +587,15 @@
       "id": "ckpt-tmpclean-1798-v01493",
       "summary": "Integrate accepted master v0.149.3 (102d6eb22, PR #1813 + #1814) with refreshed v0.149.3 pins/specs and re-verified #1798 test suite",
       "input_digest": "sha256:88f8f8510dca95e5ed2a049abb78151f5c14eba8ddaae41da0f9f5df42c38324"
+    },
+    {
+      "id": "ckpt-tmpclean-1798-taskbind",
+      "summary": "Bind trajectory task_id bugs_01m7r4tqkjg4a8nh to match governed plan for publication-material verification (#1798)",
+      "input_digest": "sha256:de4cbe9f1cc68e5d56e9f624036cfb9a7a71d0fc98b8968ce0a30ea5b632d221"
     }
   ],
   "intents": {
-    "intent:run-tmpclean-1798-v01492": {
+    "intent:run-tmpclean-1798-v01493": {
       "acceptance_criteria": [],
       "assumptions": [],
       "boundaries": [
@@ -600,7 +605,7 @@
         "src/decapod/core/validate.rs,src/decapod/core/validation_runtime.rs,src/decapod/core/workspace.rs,src/decapod/lib.rs,src/decapod/plugins/verify.rs,src/decapod/core/docs_cli.rs,docs/agent/command-contracts.md,docs/agent/state-model.md,tests/tmp_build_cleanup_guidance_1798.rs,tests/unit/plugins/verify_tests.rs,.decapod/managed/specs/INTERFACES.md"
       ],
       "created_sequence": 1,
-      "id": "intent:run-tmpclean-1798-v01492",
+      "id": "intent:run-tmpclean-1798-v01493",
       "out_of_scope": [],
       "proof_requirements": [],
       "raw_intent": "Issue #1798: Decapod needs to tell agents to delete their /tmp path for decapod builds",
@@ -667,7 +672,7 @@
       "active_boundaries": [
         "Isolated Decapod worktree only; preserve WorkspaceCommand::Publish slice for validation_scope.rs; preserve PublishResult/WorkspacePublishResult/ValidationGuidance wire shapes; zero blocked literal wildcard shell commands"
       ],
-      "artifact_hash": "sha256:10697ea5ea8bfd728b514940f48db564011a0ff7a29717112c10b6846e1476d3",
+      "artifact_hash": "sha256:9660518561149247574b5ed78b068e94f22dcb3d9d5f2ed23c28dbd43de7967e",
       "checks": [
         {
           "name": "cargo_clippy_all_targets_all_features",
@@ -675,10 +680,6 @@
         },
         {
           "name": "cargo_fmt",
-          "status": "passed"
-        },
-        {
-          "name": "cargo_fmt_v01493",
           "status": "passed"
         },
         {
@@ -694,19 +695,11 @@
           "status": "passed"
         },
         {
-          "name": "diagnose_task_tmp_cleanup_unit_v01493",
-          "status": "passed"
-        },
-        {
           "name": "doc_alignment",
           "status": "passed"
         },
         {
           "name": "tmp_build_cleanup_guidance_1798",
-          "status": "passed"
-        },
-        {
-          "name": "tmp_build_cleanup_guidance_1798_v01493",
           "status": "passed"
         },
         {
@@ -716,49 +709,38 @@
         {
           "name": "validation_scope",
           "status": "passed"
-        },
-        {
-          "name": "validation_scope_v01493",
-          "status": "passed"
         }
       ],
       "custody": {
         "events": [
           {
             "event_id": "event:2",
-            "intent_id": "intent:run-tmpclean-1798-v01492",
+            "intent_id": "intent:run-tmpclean-1798-v01493",
             "kind": "created",
             "sequence": 2
           },
           {
             "event_id": "event:3",
-            "intent_id": "intent:run-tmpclean-1798-v01492",
+            "intent_id": "intent:run-tmpclean-1798-v01493",
             "kind": "refined",
             "sequence": 3
           },
           {
-            "detail": "trajectory:run-tmpclean-1798-v01492",
+            "detail": "trajectory:run-tmpclean-1798-v01493",
             "event_id": "event:4",
-            "intent_id": "intent:run-tmpclean-1798-v01492",
+            "intent_id": "intent:run-tmpclean-1798-v01493",
             "kind": "trajectory_step_recorded",
             "sequence": 4
-          },
-          {
-            "detail": "trajectory:run-tmpclean-1798-v01492",
-            "event_id": "event:5",
-            "intent_id": "intent:run-tmpclean-1798-v01492",
-            "kind": "trajectory_step_recorded",
-            "sequence": 5
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 5,
+        "next_sequence": 4,
         "schema_version": "1.0.0",
         "trajectories": {
-          "run-tmpclean-1798-v01492": {
+          "run-tmpclean-1798-v01493": {
             "evidence_only": true,
-            "id": "run-tmpclean-1798-v01492",
-            "intent_id": "intent:run-tmpclean-1798-v01492",
+            "id": "run-tmpclean-1798-v01493",
+            "intent_id": "intent:run-tmpclean-1798-v01493",
             "steps": [
               {
                 "action": "trajectory.record",
@@ -785,7 +767,7 @@
                   "tests/tmp_build_cleanup_guidance_1798.rs",
                   "tests/unit/plugins/verify_tests.rs",
                   ".decapod/managed/specs/INTERFACES.md",
-                  "cargo fmt --all -- --check (exit 0); CLIPPY_CONF_DIR=.config cargo clippy --all-targets --all-features -- -D warnings (exit 0); cargo test --test tmp_build_cleanup_guidance_1798 (5/5 passed including decapod eval prompt safety gate allow); cargo test --lib validation_scope (9/9 passed); cargo test --lib diagnose_task_includes_todo_scoped_tmp_cleanup_when_ready_to_publish (1/1 passed); cargo test --test doc_alignment --test contract_conformance --test trajectory_docs (4/4, 12/12, 5/5 passed); cargo test --test cli_contract_enforcement (23/23 passed)"
+                  "Merged origin/master 102d6eb22 (v0.149.3, PR #1813 + #1814) with zero code conflicts; cargo fmt (exit 0), cargo clippy --all-targets --all-features -- -D warnings (exit 0), tmp_build_cleanup_guidance_1798 (5/5 including decapod eval prompt safety gate allow), validation_scope (9/9), diagnose_task_includes_todo_scoped_tmp_cleanup_when_ready_to_publish (1/1), doc_alignment (4/4), contract_conformance (12/12), trajectory_docs (5/5), cli_contract_enforcement (23/23)."
                 ],
                 "proof_refs": [
                   "cargo_fmt",
@@ -803,24 +785,6 @@
                 ],
                 "sequence": 4,
                 "validation_findings": []
-              },
-              {
-                "action": "trajectory.record",
-                "custody_event_id": "event:5",
-                "observations": [
-                  "Merged origin/master 102d6eb22 (v0.149.3, PR #1813 + #1814) cleanly with zero code conflicts; cargo fmt (exit 0), validation_scope (9/9), diagnose_task_includes_todo_scoped_tmp_cleanup_when_ready_to_publish (1/1), tmp_build_cleanup_guidance_1798 (5/5 including decapod eval allow)."
-                ],
-                "proof_refs": [
-                  "cargo_fmt_v01493",
-                  "validation_scope_v01493",
-                  "diagnose_task_tmp_cleanup_unit_v01493",
-                  "tmp_build_cleanup_guidance_1798_v01493"
-                ],
-                "scope": [
-                  "src/decapod/core/validate.rs,src/decapod/core/validation_runtime.rs,src/decapod/core/workspace.rs,src/decapod/lib.rs,src/decapod/plugins/verify.rs,src/decapod/core/docs_cli.rs,docs/agent/command-contracts.md,docs/agent/state-model.md,tests/tmp_build_cleanup_guidance_1798.rs,tests/unit/plugins/verify_tests.rs,.decapod/managed/specs/INTERFACES.md"
-                ],
-                "sequence": 5,
-                "validation_findings": []
               }
             ]
           }
@@ -828,8 +792,7 @@
       },
       "declared_commands": [],
       "evidence": [
-        "Merged origin/master 102d6eb22 (v0.149.3, PR #1813 + #1814) cleanly with zero code conflicts; cargo fmt (exit 0), validation_scope (9/9), diagnose_task_includes_todo_scoped_tmp_cleanup_when_ready_to_publish (1/1), tmp_build_cleanup_guidance_1798 (5/5 including decapod eval allow).",
-        "cargo fmt --all -- --check (exit 0); CLIPPY_CONF_DIR=.config cargo clippy --all-targets --all-features -- -D warnings (exit 0); cargo test --test tmp_build_cleanup_guidance_1798 (5/5 passed including decapod eval prompt safety gate allow); cargo test --lib validation_scope (9/9 passed); cargo test --lib diagnose_task_includes_todo_scoped_tmp_cleanup_when_ready_to_publish (1/1 passed); cargo test --test doc_alignment --test contract_conformance --test trajectory_docs (4/4, 12/12, 5/5 passed); cargo test --test cli_contract_enforcement (23/23 passed)"
+        "Merged origin/master 102d6eb22 (v0.149.3, PR #1813 + #1814) with zero code conflicts; cargo fmt (exit 0), cargo clippy --all-targets --all-features -- -D warnings (exit 0), tmp_build_cleanup_guidance_1798 (5/5 including decapod eval prompt safety gate allow), validation_scope (9/9), diagnose_task_includes_todo_scoped_tmp_cleanup_when_ready_to_publish (1/1), doc_alignment (4/4), contract_conformance (12/12), trajectory_docs (5/5), cli_contract_enforcement (23/23)."
       ],
       "inspected_files": [
         ".decapod/managed/specs/INTERFACES.md",
@@ -843,7 +806,7 @@
         "src/decapod/plugins/verify.rs",
         "src/decapod/validation_scope.rs"
       ],
-      "intent_id": "intent:run-tmpclean-1798-v01492",
+      "intent_id": "intent:run-tmpclean-1798-v01493",
       "modified_files": [
         ".decapod/managed/specs/INTERFACES.md",
         "docs/agent/command-contracts.md",
@@ -860,9 +823,10 @@
       "repo_scope": [
         "src/decapod/core/validate.rs,src/decapod/core/validation_runtime.rs,src/decapod/core/workspace.rs,src/decapod/lib.rs,src/decapod/plugins/verify.rs,src/decapod/core/docs_cli.rs,docs/agent/command-contracts.md,docs/agent/state-model.md,tests/tmp_build_cleanup_guidance_1798.rs,tests/unit/plugins/verify_tests.rs,.decapod/managed/specs/INTERFACES.md"
       ],
-      "run_id": "run-tmpclean-1798-v01492",
+      "run_id": "run-tmpclean-1798-v01493",
       "schema_version": "1.1.0",
       "shortcut_risk_signals": [],
+      "task_id": "bugs_01m7r4tqkjg4a8nh",
       "tool_calls": [],
       "unresolved_assumptions": []
     }
