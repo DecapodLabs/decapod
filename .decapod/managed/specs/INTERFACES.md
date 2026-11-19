@@ -30,7 +30,10 @@
   (`read` | `write` | `owner`). `db.recover` requires merged canonical policy
   and `owner` authority on local stores (dump/reload via Dactyl on Linux,
   explicit typed `Capability` refusal on non-Linux hosts) and
-  `propodus_repository_access_v1` + `owner_repair_v1` on cloud stores.
+  `propodus_repository_access_v1` + `owner_repair_v1` on cloud stores, where
+  `OWNER_REPAIR_V1_SQL` transmits strictly the registered wire marker
+  `SELECT propodus.owner_repair_v1($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)`
+  inside `DactylBridge::atomic` (never server-internal SQL expansion).
 - **Cloud todo & proof capture**: `todo claim`, `todo renew`, `todo yield`, and
   `todo done --validated` route through Dactyl without `RESOURCE_CUSTODY_PROFILE_UNSUPPORTED`.
   `todo done --validated` fails closed locally with `"proof-capture"` when
@@ -1416,7 +1419,7 @@ field. Nothing in this operation authorizes a mutation, approval or completion.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `17bb01252165722740df7102ca6093fa9d4462a5accf2edc0b69bba1c60ac6e4`
+- Repository signal fingerprint: `9fdd0ef44e3961a3ea71cda1195f6b09174aae71806051d17f2a1e4de72b02ba`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (240 files), `tests/` (249 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

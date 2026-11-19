@@ -1,7 +1,7 @@
 {
   "schema_version": "1.0.0",
   "baseline": {
-    "accepted_commit": "205d4e8dad2e7690100eb401e12ea6d6f8e23665",
+    "accepted_commit": "755bbac6e0af03c5dde4bd555cd749c426ae6472",
     "policy": {
       "change_control": {
         "requires_human_review": true,
@@ -568,88 +568,38 @@
     }
   },
   "change": {
-    "id": "change_01M7RAMDCVQ83Q2KXQCCHVHTJ5",
-    "base_commit": "205d4e8dad2e7690100eb401e12ea6d6f8e23665",
+    "id": "pr-cloud-redact-owner-repair-marker",
+    "base_commit": "755bbac6e0af03c5dde4bd555cd749c426ae6472",
     "target_base": "origin/master"
   },
   "checkpoints": [
     {
-      "id": "cp-cloud-wave-1",
-      "summary": "Consolidate #1808/#1769 Decapod Local/Cloud branding with dactyl-db 0.18.0 Cloud Control-Plane & Custody wave",
-      "input_digest": "sha256:37e5c9626c2449998c69766087e7b2d306f17974d645945799bb8490b991d83c",
-      "proof_refs": [
-        "tests/cli_contract_enforcement.rs",
-        "tests/cloud_mixed_worktree.rs",
-        "tests/cloud_supabase_boundary.rs",
-        "tests/cloud_wave_parity.rs",
-        "tests/doc_alignment.rs"
-      ]
+      "id": "cp-cloud-redact-owner-repair-marker",
+      "summary": "Fix OWNER_REPAIR_V1_SQL to registered public wire marker and scrub private repo filenames/SQL references from cloud_proof.rs, db_maintenance.rs, and VALIDATION.md",
+      "input_digest": "sha256:d1ff6b35830f2ed927de92c91bec67c64bffd7fdfdf7d8e393aefc5c6f0d760e"
     },
     {
-      "id": "cp-cloud-wave-final",
-      "summary": "Adopt dactyl-db 0.18.0, Cloud Control-Plane custody wave (#1809, #1667, #1777, #1778, #1590, #1033, #1034, #1038, #1040, #1066, #1158, #1369, #1377, #1380), and Local/Cloud branding (#1808, #1769)",
-      "input_digest": "sha256:da55162f36b81e4a231969ad32af8a05613d6f8ec39e1ec72fbb0f622b6d863f",
-      "proof_refs": [
-        "tests/cli_contract_enforcement.rs",
-        "tests/cloud_mixed_worktree.rs",
-        "tests/cloud_supabase_boundary.rs",
-        "tests/cloud_wave_parity.rs",
-        "tests/doc_alignment.rs",
-        "tests/release_dependency_policy.rs",
-        "tests/shared_state_semantics_1247.rs"
-      ]
-    },
-    {
-      "id": "cp-cloud-wave-slot3",
-      "summary": "Adopt dactyl-db 0.18.0, Cloud Control-Plane custody wave (#1809, #1667, #1777, #1778, #1590, #1033, #1034, #1038, #1040, #1066, #1158, #1369, #1377, #1380), and Local/Cloud branding (#1808, #1769)",
-      "input_digest": "sha256:b3abd7da25cd6cc6f9cabb5c310f97dea62ffb73558b9e18ce5dc9366af032d8",
-      "proof_refs": [
-        "tests/cli_contract_enforcement.rs",
-        "tests/cloud_mixed_worktree.rs",
-        "tests/cloud_supabase_boundary.rs",
-        "tests/cloud_wave_parity.rs",
-        "tests/doc_alignment.rs",
-        "tests/release_dependency_policy.rs",
-        "tests/shared_state_semantics_1247.rs"
-      ]
-    },
-    {
-      "id": "cp-cloud-wave-slot3-reconciled",
-      "summary": "Adopt dactyl-db 0.18.0, cloud control-plane custody (#1809/#1590/#1777/#1778/#1066/#1158/#1377), Local/Cloud branding (#1808/#1769), and reconciled reviewed_sources_digest",
-      "input_digest": "sha256:70a6250bfee10916afb1540d9cc1f5aa8ee59da9af44935bbfa6b914f0ea1b3f"
-    },
-    {
-      "id": "cp-cloud-wave-slot3-clippy-fix",
-      "summary": "Gate KEYSTORE_SERVICE constant in src/decapod/core/cloud_dpop.rs to #[cfg(target_os = \"macos\")] for Linux clippy -D warnings parity",
-      "input_digest": "sha256:f424b019e807e9a8fd4cd99baced327ce35f49106137661c85c076b4e126ef4e"
-    },
-    {
-      "id": "cp-cloud-wave-slot3-spec-review",
-      "summary": "Refresh spec reviews for ARCHITECTURE/INTERFACES/SECURITY against final code fingerprint after macOS cfg clippy fix",
-      "input_digest": "sha256:59fea46e315ded6aff906147995974d1c7c4d3d271defc7e8d44818f681770ac"
-    },
-    {
-      "id": "cp-cloud-wave-slot3-merge-84f967382",
-      "summary": "Integrate accepted master 84f967382 (PR #1823 workunit convergence) and refresh spec reviews",
-      "input_digest": "sha256:5a56341bef85f4c4009f82caac91d345968b3f4bcc379c1b4d41243cde023263"
+      "id": "cp-cloud-redact-owner-repair-marker-final",
+      "summary": "Fix OWNER_REPAIR_V1_SQL to registered public wire marker and scrub private repo filenames/SQL references from cloud_proof.rs, db_maintenance.rs, and VALIDATION.md",
+      "input_digest": "sha256:d6d424f730f744fec6fbc0ecd4322aba3c315e9f63adcf248a303d311c8cad25"
     }
   ],
   "intents": {
-    "intent:change_01M7RAMDCVQ83Q2KXQCCHVHTJ5": {
+    "intent:run-cloud-redact-data_01m7sdqvtpj0kyx3": {
       "acceptance_criteria": [],
       "assumptions": [],
       "boundaries": [
-        "Current claimed task and isolated work branch"
+        "Public repo DecapodLabs/decapod only; zero private filenames/schemas; governed worktree isolation"
       ],
       "constraints": [
-        "cloud-control-plane-sdk"
+        "src/decapod/core/cloud_proof.rs,src/decapod/core/db_maintenance.rs,.decapod/managed/specs/*"
       ],
       "created_sequence": 1,
-      "id": "intent:change_01M7RAMDCVQ83Q2KXQCCHVHTJ5",
+      "id": "intent:run-cloud-redact-data_01m7sdqvtpj0kyx3",
       "out_of_scope": [],
       "proof_requirements": [],
-      "raw_intent": "Cloud Control-Plane & SDK Wave (#1809, #1667, #1777, #1778, #1590, #1033, #1034, #1038, #1040, #1066, #1158, #1247, #1369, #1376, #1377, #1380)",
-      "refined_intent": "Cloud Control-Plane & SDK Wave (#1809, #1667, #1777, #1778, #1590, #1033, #1034, #1038, #1040, #1066, #1158, #1247, #1369, #1376, #1377, #1380)",
+      "raw_intent": "Align OWNER_REPAIR_V1_SQL wire marker and scrub private server references from public repository (#1590, #1809)",
+      "refined_intent": "Set OWNER_REPAIR_V1_SQL to SELECT propodus.owner_repair_v1($1..$11), add unit assertions, and remove private repo filenames/SQL references from cloud_proof.rs, db_maintenance.rs, and VALIDATION.md",
       "status": "refined",
       "updated_sequence": 3
     }
@@ -662,95 +612,84 @@
       },
       "deferred_questions": [],
       "human_questions": [],
-      "intent": "Cloud Control-Plane & SDK Wave (#1809, #1667, #1777, #1778, #1590, #1033, #1034, #1038, #1040, #1066, #1158, #1247, #1369, #1376, #1377, #1380)",
+      "intent": "Bind OWNER_REPAIR_V1_SQL strictly to public wire marker SELECT propodus.owner_repair_v1($1..$11) and remove private repo filenames/SQL references from cloud_proof.rs, db_maintenance.rs, and VALIDATION.md",
       "phases": [],
-      "proof_hooks": [
-        "decapod validate"
-      ],
+      "proof_hooks": [],
       "schema_version": "1.1.0",
       "spec_reviews": [
         {
-          "disposition": "updated",
+          "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Re-reviewed ARCHITECTURE.md after integrating accepted master 84f967382 (PR #1823)",
-          "reviewed_code_fingerprint": "17bb01252165722740df7102ca6093fa9d4462a5accf2edc0b69bba1c60ac6e4",
+          "reason": "Module topology and architectural boundaries are unchanged; wire marker constant alignment and public-repo redaction are documented in INTERFACES.md, SECURITY.md, and VALIDATION.md",
+          "reviewed_code_fingerprint": "9fdd0ef44e3961a3ea71cda1195f6b09174aae71806051d17f2a1e4de72b02ba",
           "spec_material_hash": "eea767e816c43693064ee73b838425f7a154fd6e56cf0552669d971d1e5001ea"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Re-reviewed INTERFACES.md after integrating accepted master 84f967382 (PR #1823)",
-          "reviewed_code_fingerprint": "17bb01252165722740df7102ca6093fa9d4462a5accf2edc0b69bba1c60ac6e4",
-          "spec_material_hash": "133eff6eb96038a64e0bad61a1e524319afc1a5c0c4c9753c9238efc1615e846"
+          "reason": "Reviewed INTERFACES.md for OWNER_REPAIR_V1_SQL wire marker fix and private reference redaction (#1590, #1809)",
+          "reviewed_code_fingerprint": "9fdd0ef44e3961a3ea71cda1195f6b09174aae71806051d17f2a1e4de72b02ba",
+          "spec_material_hash": "213a354f1298948eda3afd551143c6b249e029f1ff8f15843a61f4a9f4c53310"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Re-reviewed SECURITY.md after integrating accepted master 84f967382 (PR #1823)",
-          "reviewed_code_fingerprint": "17bb01252165722740df7102ca6093fa9d4462a5accf2edc0b69bba1c60ac6e4",
-          "spec_material_hash": "5142f990d1f15f6839a51c5453fd5ba4e4274e1f7e31a8f1c1cd87618c887e35"
+          "reason": "Reviewed SECURITY.md for OWNER_REPAIR_V1_SQL wire marker fix and private reference redaction (#1590, #1809)",
+          "reviewed_code_fingerprint": "9fdd0ef44e3961a3ea71cda1195f6b09174aae71806051d17f2a1e4de72b02ba",
+          "spec_material_hash": "fe2a57654bc0079c8ae5d4226c46ba7f1ea50f4246a8c19d826f2e660dc56f81"
         }
       ],
       "state": "APPROVED",
       "stop_conditions": [],
-      "title": "Cloud Control-Plane & SDK Wave (#1809, #1667, #1777, #1778, #1590, #1033, #1034, #1038, #1040, #1066, #1158, #1247, #1369, #1376, #1377, #1380)",
+      "title": "Align OWNER_REPAIR_V1_SQL wire marker and scrub private references (#1590, #1809)",
       "todo_ids": [
-        "code_01m7r9mg6gqp6gyx"
+        "data_01m7sdqvtpj0kyx3"
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795073147Z"
+      "updated_at": "1795077558Z"
     },
     "trajectory": {
       "active_boundaries": [
-        "Current claimed task and isolated work branch"
+        "Public repo DecapodLabs/decapod only; zero private filenames/schemas; governed worktree isolation"
       ],
-      "artifact_hash": "sha256:7fe98dac44798cd607470808e273465ccbc97a15e9efcdae48651104e4286441",
+      "artifact_hash": "sha256:3ca1d8d5db2857bfbef3e4fae3c86fd827a0cb5405284b0396ec0b497b2c4a6d",
       "checks": [
         {
-          "name": "bazel_cargo_inputs_policy",
+          "name": "cargo_fmt",
           "status": "passed"
         },
         {
-          "name": "branding_1808_1769_and_docs_build",
+          "name": "public_redaction_scan",
           "status": "passed"
         },
         {
-          "name": "clippy_all_targets_all_features",
+          "name": "unit_cloud_proof",
           "status": "passed"
         },
         {
-          "name": "dactyl_018_unit_and_integration",
-          "status": "passed"
-        },
-        {
-          "name": "pg17_postgrest_conformance",
-          "status": "passed"
-        },
-        {
-          "name": "shared_state_semantics_1247",
+          "name": "unit_db_maintenance",
           "status": "passed"
         }
       ],
-      "current_phase": "intent",
       "custody": {
         "events": [
           {
             "event_id": "event:2",
-            "intent_id": "intent:change_01M7RAMDCVQ83Q2KXQCCHVHTJ5",
+            "intent_id": "intent:run-cloud-redact-data_01m7sdqvtpj0kyx3",
             "kind": "created",
             "sequence": 2
           },
           {
             "event_id": "event:3",
-            "intent_id": "intent:change_01M7RAMDCVQ83Q2KXQCCHVHTJ5",
+            "intent_id": "intent:run-cloud-redact-data_01m7sdqvtpj0kyx3",
             "kind": "refined",
             "sequence": 3
           },
           {
-            "detail": "trajectory:branch_01M7RAMDK5N3QK7311T671SXB0",
+            "detail": "trajectory:run-cloud-redact-data_01m7sdqvtpj0kyx3",
             "event_id": "event:4",
-            "intent_id": "intent:change_01M7RAMDCVQ83Q2KXQCCHVHTJ5",
+            "intent_id": "intent:run-cloud-redact-data_01m7sdqvtpj0kyx3",
             "kind": "trajectory_step_recorded",
             "sequence": 4
           }
@@ -759,41 +698,31 @@
         "next_sequence": 4,
         "schema_version": "1.0.0",
         "trajectories": {
-          "branch_01M7RAMDK5N3QK7311T671SXB0": {
+          "run-cloud-redact-data_01m7sdqvtpj0kyx3": {
             "evidence_only": true,
-            "id": "branch_01M7RAMDK5N3QK7311T671SXB0",
-            "intent_id": "intent:change_01M7RAMDCVQ83Q2KXQCCHVHTJ5",
+            "id": "run-cloud-redact-data_01m7sdqvtpj0kyx3",
+            "intent_id": "intent:run-cloud-redact-data_01m7sdqvtpj0kyx3",
             "steps": [
               {
                 "action": "trajectory.record",
                 "custody_event_id": "event:4",
                 "observations": [
-                  "Cargo.toml",
-                  "Cargo.lock",
-                  "MODULE.bazel.lock",
-                  "src/decapod/cli.rs",
-                  "src/decapod/lib.rs",
-                  "src/decapod/core/cloud_dpop.rs",
                   "src/decapod/core/cloud_proof.rs",
-                  "src/decapod/core/container_signer.rs",
-                  "src/decapod/core/cloud_client.rs",
-                  "src/decapod/core/dactyl.rs",
-                  "src/decapod/core/dactyl_todo.rs",
                   "src/decapod/core/db_maintenance.rs",
-                  "src/decapod/core/todo.rs",
-                  "src/decapod/core/propodus.rs",
-                  "src/decapod/core/rpc.rs"
+                  "src/decapod/core/cloud_proof.rs",
+                  "src/decapod/core/db_maintenance.rs",
+                  ".decapod/managed/specs/VALIDATION.md",
+                  ".decapod/managed/specs/INTERFACES.md",
+                  ".decapod/managed/specs/SECURITY.md"
                 ],
                 "proof_refs": [
-                  "dactyl_018_unit_and_integration",
-                  "branding_1808_1769_and_docs_build",
-                  "shared_state_semantics_1247",
-                  "bazel_cargo_inputs_policy",
-                  "clippy_all_targets_all_features",
-                  "pg17_postgrest_conformance"
+                  "cargo_fmt",
+                  "unit_db_maintenance",
+                  "unit_cloud_proof",
+                  "public_redaction_scan"
                 ],
                 "scope": [
-                  "cloud-control-plane-sdk"
+                  "src/decapod/core/cloud_proof.rs,src/decapod/core/db_maintenance.rs,.decapod/managed/specs/*"
                 ],
                 "sequence": 4,
                 "validation_findings": []
@@ -803,37 +732,26 @@
         }
       },
       "declared_commands": [],
-      "destination": "pull request",
       "evidence": [],
-      "inspected_files": [],
-      "intent_id": "intent:change_01M7RAMDCVQ83Q2KXQCCHVHTJ5",
-      "modified_files": [
-        "Cargo.lock",
-        "Cargo.toml",
-        "MODULE.bazel.lock",
-        "src/decapod/cli.rs",
-        "src/decapod/core/cloud_client.rs",
-        "src/decapod/core/cloud_dpop.rs",
+      "inspected_files": [
         "src/decapod/core/cloud_proof.rs",
-        "src/decapod/core/container_signer.rs",
-        "src/decapod/core/dactyl.rs",
-        "src/decapod/core/dactyl_todo.rs",
-        "src/decapod/core/db_maintenance.rs",
-        "src/decapod/core/propodus.rs",
-        "src/decapod/core/rpc.rs",
-        "src/decapod/core/todo.rs",
-        "src/decapod/lib.rs"
+        "src/decapod/core/db_maintenance.rs"
       ],
-      "next_transitions": [
-        "Refine plan and declare falsifiable checks"
+      "intent_id": "intent:run-cloud-redact-data_01m7sdqvtpj0kyx3",
+      "modified_files": [
+        ".decapod/managed/specs/INTERFACES.md",
+        ".decapod/managed/specs/SECURITY.md",
+        ".decapod/managed/specs/VALIDATION.md",
+        "src/decapod/core/cloud_proof.rs",
+        "src/decapod/core/db_maintenance.rs"
       ],
       "repo_scope": [
-        "cloud-control-plane-sdk"
+        "src/decapod/core/cloud_proof.rs,src/decapod/core/db_maintenance.rs,.decapod/managed/specs/*"
       ],
-      "run_id": "branch_01M7RAMDK5N3QK7311T671SXB0",
+      "run_id": "run-cloud-redact-data_01m7sdqvtpj0kyx3",
       "schema_version": "1.1.0",
       "shortcut_risk_signals": [],
-      "task_id": "code_01m7r9mg6gqp6gyx",
+      "task_id": "data_01m7sdqvtpj0kyx3",
       "tool_calls": [],
       "unresolved_assumptions": []
     }

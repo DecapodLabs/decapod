@@ -1,7 +1,6 @@
 //! Cloud candidate proof acceptance lifecycle and hosted lease-fence client (#1809, #1038).
 //!
-//! Aligns byte-for-byte with `propodus` `proof_capture_contract.go`, `proof_acceptance.go`,
-//! and `029_candidate_proof_acceptance.sql`:
+//! Implements the public Decapod Cloud v1 commit-bound proof acceptance lifecycle:
 //! `captured -> independently_verified -> currently_admissible -> published -> historically_accepted`.
 //!
 //! Never fabricates local SQLite receipts on cloud denial, preserves `outcome_unknown`

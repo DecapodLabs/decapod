@@ -27,10 +27,17 @@
   `policy_self_authorization_1776::candidate_worktree_cannot_switch_cloud_backend_to_local`,
   `decapod docs build` embedded docs sync, `cargo fmt --all -- --check`, and
   `clippy --all-targets --all-features -- -D warnings`.
+- **Owner repair wire marker & public-repo redaction (#1590, #1809)**:
+  `src/decapod/core/db_maintenance.rs` binds `OWNER_REPAIR_V1_SQL` strictly to
+  the public registered wire marker
+  `SELECT propodus.owner_repair_v1($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)`
+  with unit regression checks verifying exact wire marker equality and zero
+  internal table/CTE expansion, and `src/decapod/core/cloud_proof.rs` /
+  `db_maintenance.rs` omit private repository filenames and migration ranges.
 - **Local PostgreSQL 17 + PostgREST conformance (#1377, #1369)**: Executed
-  disposable local PG17 + PostgREST provisioned with `propodus` migrations
-  `001`..`029` + `propodus_auth_bridge`, passing `supabase_service::local_native_managed_project_contract`
-  and `local_native_managed_project_revocation` (with independent PG17 ledger
+  disposable local PG17 + PostgREST conformance harness, passing
+  `supabase_service::local_native_managed_project_contract` and
+  `local_native_managed_project_revocation` (with independent PG17 ledger
   observation and revocation enforcement) against the `dactyl-db 0.18.0` binary.
   Managed Auth OAuth issuance and hosted production verification remain separate
   external acceptance gates (`#1378`, `#1379`).
@@ -1516,7 +1523,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `17bb01252165722740df7102ca6093fa9d4462a5accf2edc0b69bba1c60ac6e4`
+- Repository signal fingerprint: `9fdd0ef44e3961a3ea71cda1195f6b09174aae71806051d17f2a1e4de72b02ba`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (240 files), `tests/` (249 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
