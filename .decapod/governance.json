@@ -1,7 +1,7 @@
 {
   "schema_version": "1.0.0",
   "baseline": {
-    "accepted_commit": "352d892958e1cdf692299927f7c2f3c0c36fc639",
+    "accepted_commit": "102d6eb22046032e7214ee821ab166f06271585c",
     "policy": {
       "change_control": {
         "requires_human_review": true,
@@ -184,6 +184,11 @@
           "PR source diff and pending remote validation"
         ],
         "statement": "No Dagger-specific engine execution or authorization capability remains; generic proof custody is retained",
+        "status": "open"
+      },
+      "claim:duplicate-key-required-semantics": {
+        "falsifier": "Duplicate or escaped-equivalent required_extensions erases the unsupported requirement, nested ambiguous JSON is accepted, or legitimate unique-key negotiation fails after refusal.",
+        "statement": "Both RPC routes reject duplicate decoded JSON keys before startup; later fields cannot erase required extension semantics and unique-key ordinary negotiation can recover.",
         "status": "open"
       },
       "claim:durable-artifact-publication": {
@@ -568,76 +573,47 @@
     }
   },
   "change": {
-    "id": "change_01M7QBJ2W09CY5REY9D4DX2CGZ",
-    "base_commit": "352d892958e1cdf692299927f7c2f3c0c36fc639",
+    "id": "feat_01m7r6pxxakene2e",
+    "base_commit": "102d6eb22046032e7214ee821ab166f06271585c",
     "target_base": "origin/master"
   },
   "checkpoints": [
     {
-      "id": "policy-redteam-1776-v1",
-      "summary": "Harden cross-surface accepted-policy resolution for #1776 and add 9-test actual-binary adversarial suite",
-      "input_digest": "sha256:4ceca9c67b26a7ab4e1e3cb313692ae9278cf03b09a99b57b32d20c49ab20f15",
+      "id": "conc-1469-v01493",
+      "summary": "Prove concurrent isolated authoring and combined candidate admission (#1469)",
+      "input_digest": "sha256:798670d4b0d1d20a10b4d847a3c76d8127e2c08ff04dba6b283e67166eb94920",
       "proof_refs": [
-        "tests/policy_self_authorization_1776.rs (9/9 passed); clippy -D warnings ok"
+        ".decapod/managed/specs/ARCHITECTURE.md",
+        "tests/concurrent_worktree_integration_1469.rs"
       ]
     },
     {
-      "id": "policy-redteam-1776-v014813-merge",
-      "summary": "Integrate accepted release 0.148.13 (c5bafce6) and verify 9/9 policy_self_authorization_1776 tests",
-      "input_digest": "sha256:e88dd9b48541e6cee5871cbf31643098223e929ed96cee996f16f568844c4ae2",
+      "id": "conc-1469-merge-cfe2565d",
+      "summary": "Integrate accepted master cfe2565da (#1776) and refresh v0.149.3 projections (#1469)",
+      "input_digest": "sha256:e6908e7fc47c3b2f273ca34d32ea40dcd8c1b8c0ce00351b585477be4851ab6b",
       "proof_refs": [
-        "tests/policy_self_authorization_1776.rs (9/9 passed); clippy -D warnings ok"
-      ]
-    },
-    {
-      "id": "policy-redteam-1776-spec-review",
-      "summary": "Record SECURITY.md spec review for #1776 publication material verification",
-      "input_digest": "sha256:18c7fbd7b039bdf1affcd39438e2dfe514c04a3e2082116c67bc7f4c36e41437",
-      "proof_refs": [
-        "tests/policy_self_authorization_1776.rs (9/9 passed); clippy -D warnings ok"
-      ]
-    },
-    {
-      "id": "integrate-master-1799-1776",
-      "summary": "Integrate accepted master 0b6ce0a8 with #1776 accepted-policy hardening",
-      "input_digest": "sha256:f3bc51cb47ca3037a37418fec52e676de5332d78cc36c8579f0513ea303eaa6d",
-      "proof_refs": [
-        "tests/policy_self_authorization_1776.rs (9/9 passed); clippy --all-targets -D warnings ok"
-      ]
-    },
-    {
-      "id": "integrate-master-v01492-1776",
-      "summary": "Integrate accepted master e0f6aec81 (v0.149.2) with #1776 accepted-policy hardening",
-      "input_digest": "sha256:7217027aee57a3d84e2ffa23cc31d020b0050cd0105486a26e8e3ba47722ddd3",
-      "proof_refs": [
-        "tests/policy_self_authorization_1776.rs (9/9 passed); validation_scope (9/9 passed); clippy --all-targets -D warnings ok"
-      ]
-    },
-    {
-      "id": "integrate-master-v01493-1776",
-      "summary": "Integrate accepted master 102d6eb22 (v0.149.3 + #1659) with #1776 accepted-policy hardening",
-      "input_digest": "sha256:57f8332924e3197a5c8345d2ea61e3c6a79a257e353e333f26672226014ec1a8",
-      "proof_refs": [
-        "tests/policy_self_authorization_1776.rs (9/9 passed); validation_scope (9/9 passed)"
+        ".decapod/managed/specs/ARCHITECTURE.md",
+        "tests/concurrent_worktree_integration_1469.rs"
       ]
     }
   ],
   "intents": {
-    "intent:change_01M7QBJ2W09CY5REY9D4DX2CGZ": {
+    "intent:conc-1469-run": {
       "acceptance_criteria": [],
       "assumptions": [],
       "boundaries": [
-        "Current claimed task and isolated work branch"
+        "Isolated worktree only; hold git push and gh pr create"
       ],
       "constraints": [
-        "root"
+        "tests/concurrent_worktree_integration_1469.rs",
+        ".decapod/managed/specs/ARCHITECTURE.md"
       ],
       "created_sequence": 1,
-      "id": "intent:change_01M7QBJ2W09CY5REY9D4DX2CGZ",
+      "id": "intent:conc-1469-run",
       "out_of_scope": [],
       "proof_requirements": [],
-      "raw_intent": "Verify accepted-policy protection and ordinary recovery for GitHub #1776\n\nPreserve the accepted-policy protection and verify existing native regression, current review and independent gate dispositions.",
-      "refined_intent": "Verify accepted-policy protection and ordinary recovery for GitHub #1776\n\nPreserve the accepted-policy protection and verify existing native regression, current review and independent gate dispositions.",
+      "raw_intent": "Allow concurrent implementation in isolated worktrees without broad source-claim serialization (#1469)",
+      "refined_intent": "Add actual-binary CLI + worktree regression suite tests/concurrent_worktree_integration_1469.rs covering all 3 #1469 scenarios and update ARCHITECTURE.md",
       "status": "refined",
       "updated_sequence": 3
     }
@@ -650,309 +626,128 @@
       },
       "deferred_questions": [],
       "human_questions": [],
-      "intent": "Verify accepted-policy protection and ordinary recovery for GitHub #1776\n\nPreserve the accepted-policy protection and verify existing native regression, current review and independent gate dispositions.",
+      "intent": "Prove disjoint/advisory path overlap allows concurrent authoring across isolated worktrees while strictly fencing exclusive custody/integration resources, combined-candidate interface+behavior checks block admission until repaired, and target advancement marks earlier receipts stale (STALE_*)",
       "phases": [],
       "proof_hooks": [
-        "decapod validate"
+        "cargo fmt --all -- --check",
+        "CLIPPY_CONF_DIR=.config cargo clippy --all-targets --all-features -- -D warnings",
+        "cargo test --test concurrent_worktree_integration_1469 -- --test-threads=1",
+        "cargo test --test consumer_readiness two_isolated_worktrees_require_combined_candidate_validation_and_target_freshness"
       ],
       "schema_version": "1.1.0",
       "spec_reviews": [
         {
-          "disposition": "unchanged_with_reason",
+          "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Merged origin/master 102d6eb22 (v0.149.3 + #1659); #1776 remains bounded to cross-surface accepted-policy resolution.",
-          "reviewed_code_fingerprint": "ef39d7ffe5a4415bee9f83fbd43eb55d85f24909ece395d7b860a3622e380a35",
-          "spec_material_hash": "080e1e015d867051ec4ecbb1f18aca92a2d62a05798377057e563aaa5a3764e0"
+          "reason": "Documented concurrent isolated authoring, advisory vs enforced custody overlaps, and combined-candidate admission (#1469)",
+          "reviewed_code_fingerprint": "75fb25073525c9e4ea6a2a4df7a58ef89cb21325047985833122f88b53fd1e4a",
+          "spec_material_hash": "b5e1e3c343de9ed9ba501e7a48d61b43dfed92d7678b3126d1195c9c1cdb9d08"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Merged origin/master 102d6eb22 (v0.149.3 + #1659); #1776 preserves existing interface contracts.",
-          "reviewed_code_fingerprint": "ef39d7ffe5a4415bee9f83fbd43eb55d85f24909ece395d7b860a3622e380a35",
+          "reason": "No CLI, RPC, or external schema signatures were added or altered; PR #1469 adds regression coverage and architecture documentation",
+          "reviewed_code_fingerprint": "75fb25073525c9e4ea6a2a4df7a58ef89cb21325047985833122f88b53fd1e4a",
           "spec_material_hash": "1445e13fa7ccfa6c4a68850bd794b6b1ba7379c0148b570c3a7605b6a26beb25"
         },
         {
-          "disposition": "updated",
+          "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Documented cross-surface accepted-policy resolution and #1776 repairs on merged origin/master 102d6eb22 (v0.149.3).",
-          "reviewed_code_fingerprint": "ef39d7ffe5a4415bee9f83fbd43eb55d85f24909ece395d7b860a3622e380a35",
+          "reason": "Preserved #1776 accepted-policy security prose from origin/master cfe2565d; PR #1469 adds regression coverage and architecture documentation only",
+          "reviewed_code_fingerprint": "75fb25073525c9e4ea6a2a4df7a58ef89cb21325047985833122f88b53fd1e4a",
           "spec_material_hash": "49c7d1428d860804f8fc7f436c5da22483d385c9ce4be90f7db52f1cf4b362ee"
         }
       ],
       "state": "APPROVED",
       "stop_conditions": [],
-      "title": "Verify accepted-policy protection and ordinary recovery for GitHub #1776",
+      "title": "Prove concurrent isolated worktree authoring and combined candidate admission (#1469)",
       "todo_ids": [
-        "code_01m7ppcyb4f07yr8"
+        "feat_01m7r6pxxakene2e"
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795049463Z"
+      "updated_at": "1795052632Z"
     },
     "trajectory": {
       "active_boundaries": [
-        "Current claimed task and isolated work branch"
+        "Isolated worktree only; hold git push and gh pr create"
       ],
-      "artifact_hash": "sha256:6759f0db55105c06281434081f9b14d936465765808c7f45dfb942669477df5e",
+      "artifact_hash": "sha256:a1b2a41c2bfdefe2fe2db8298d6092901d51b7d436b5f83ef2b16573ac0e7a44",
       "checks": [
+        {
+          "name": "cargo_clippy_all_targets_all_features",
+          "status": "passed"
+        },
         {
           "name": "cargo_fmt",
           "status": "passed"
         },
         {
-          "name": "clippy_all_targets",
+          "name": "cargo_test_concurrent_worktree_integration_1469",
           "status": "passed"
         },
         {
-          "name": "clippy_lib_and_test",
-          "status": "passed"
-        },
-        {
-          "name": "consumer_readiness",
-          "status": "passed"
-        },
-        {
-          "name": "core_db_maintenance",
-          "status": "passed"
-        },
-        {
-          "name": "core_gatekeeper",
-          "status": "passed"
-        },
-        {
-          "name": "core_validate",
-          "status": "passed"
-        },
-        {
-          "name": "core_validation_rules",
-          "status": "passed"
-        },
-        {
-          "name": "plugins_policy",
-          "status": "passed"
-        },
-        {
-          "name": "policy_self_authorization_1776",
-          "status": "passed"
-        },
-        {
-          "name": "sqlite_maintenance",
-          "status": "passed"
-        },
-        {
-          "name": "substrate_integrity",
-          "status": "passed"
-        },
-        {
-          "name": "validate_termination",
-          "status": "passed"
-        },
-        {
-          "name": "validation_scope",
+          "name": "cargo_test_consumer_readiness_two_isolated_worktrees",
           "status": "passed"
         }
       ],
-      "current_phase": "validation",
       "custody": {
         "events": [
           {
             "event_id": "event:2",
-            "intent_id": "intent:change_01M7QBJ2W09CY5REY9D4DX2CGZ",
+            "intent_id": "intent:conc-1469-run",
             "kind": "created",
             "sequence": 2
           },
           {
             "event_id": "event:3",
-            "intent_id": "intent:change_01M7QBJ2W09CY5REY9D4DX2CGZ",
+            "intent_id": "intent:conc-1469-run",
             "kind": "refined",
             "sequence": 3
           },
           {
-            "detail": "trajectory:branch_01M7QBJ2ZYCMN2HENQJSH4ZZW7",
+            "detail": "trajectory:conc-1469-run",
             "event_id": "event:4",
-            "intent_id": "intent:change_01M7QBJ2W09CY5REY9D4DX2CGZ",
+            "intent_id": "intent:conc-1469-run",
             "kind": "trajectory_step_recorded",
             "sequence": 4
-          },
-          {
-            "detail": "trajectory:branch_01M7QBJ2ZYCMN2HENQJSH4ZZW7",
-            "event_id": "event:5",
-            "intent_id": "intent:change_01M7QBJ2W09CY5REY9D4DX2CGZ",
-            "kind": "trajectory_step_recorded",
-            "sequence": 5
-          },
-          {
-            "detail": "trajectory:branch_01M7QBJ2ZYCMN2HENQJSH4ZZW7",
-            "event_id": "event:6",
-            "intent_id": "intent:change_01M7QBJ2W09CY5REY9D4DX2CGZ",
-            "kind": "trajectory_step_recorded",
-            "sequence": 6
-          },
-          {
-            "detail": "trajectory:branch_01M7QBJ2ZYCMN2HENQJSH4ZZW7",
-            "event_id": "event:7",
-            "intent_id": "intent:change_01M7QBJ2W09CY5REY9D4DX2CGZ",
-            "kind": "trajectory_step_recorded",
-            "sequence": 7
-          },
-          {
-            "detail": "trajectory:branch_01M7QBJ2ZYCMN2HENQJSH4ZZW7",
-            "event_id": "event:8",
-            "intent_id": "intent:change_01M7QBJ2W09CY5REY9D4DX2CGZ",
-            "kind": "trajectory_step_recorded",
-            "sequence": 8
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 8,
+        "next_sequence": 4,
         "schema_version": "1.0.0",
         "trajectories": {
-          "branch_01M7QBJ2ZYCMN2HENQJSH4ZZW7": {
+          "conc-1469-run": {
             "evidence_only": true,
-            "id": "branch_01M7QBJ2ZYCMN2HENQJSH4ZZW7",
-            "intent_id": "intent:change_01M7QBJ2W09CY5REY9D4DX2CGZ",
+            "id": "conc-1469-run",
+            "intent_id": "intent:conc-1469-run",
             "steps": [
               {
-                "action": "validation",
+                "action": "trajectory.record",
                 "custody_event_id": "event:4",
                 "observations": [
-                  "src/decapod/core/db_maintenance.rs",
+                  "src/decapod/core/fleet_coord.rs",
+                  "src/decapod/core/todo.rs",
+                  "src/decapod/core/authoring.rs",
                   "src/decapod/core/workspace.rs",
-                  "src/decapod/core/gatekeeper.rs",
-                  "src/decapod/plugins/policy.rs",
-                  "src/decapod/core/validation_rules.rs",
-                  "src/decapod/core/validate.rs",
-                  "src/decapod/lib.rs",
-                  "tests/policy_self_authorization_1776.rs",
-                  ".decapod/managed/specs/SECURITY.md",
-                  "policy_self_authorization_1776 9/9 passed (92.39s); clippy -D warnings ok; unit & regression suites passed"
+                  "src/decapod/core/validation_runtime.rs",
+                  "src/decapod/core/validation_history.rs",
+                  "tests/consumer_readiness.rs",
+                  "tests/concurrent_worktree_integration_1469.rs",
+                  ".decapod/managed/specs/ARCHITECTURE.md",
+                  "task-927 on 102d6eb22 v0.149.3: fmt exit 0, clippy exit 0, concurrent_worktree_integration_1469 3/3 passed (760.30s), consumer_readiness::two_isolated_worktrees_require_combined_candidate_validation_and_target_freshness 1/1 passed (23.77s)"
                 ],
                 "proof_refs": [
-                  "policy_self_authorization_1776",
                   "cargo_fmt",
-                  "clippy_lib_and_test",
-                  "core_db_maintenance",
-                  "core_validation_rules",
-                  "core_gatekeeper",
-                  "core_validate",
-                  "plugins_policy",
-                  "consumer_readiness",
-                  "sqlite_maintenance",
-                  "substrate_integrity",
-                  "validate_termination"
+                  "cargo_clippy_all_targets_all_features",
+                  "cargo_test_concurrent_worktree_integration_1469",
+                  "cargo_test_consumer_readiness_two_isolated_worktrees"
                 ],
                 "scope": [
-                  "root"
+                  ".decapod/managed/specs/ARCHITECTURE.md",
+                  "tests/concurrent_worktree_integration_1469.rs"
                 ],
                 "sequence": 4,
-                "validation_findings": []
-              },
-              {
-                "action": "validation",
-                "custody_event_id": "event:5",
-                "observations": [
-                  ".decapod/config.toml",
-                  ".decapod/managed/specs/SECURITY.md",
-                  "src/decapod/core/db_maintenance.rs",
-                  "src/decapod/core/workspace.rs",
-                  "src/decapod/core/gatekeeper.rs",
-                  "src/decapod/plugins/policy.rs",
-                  "src/decapod/core/validation_rules.rs",
-                  "src/decapod/core/validate.rs",
-                  "src/decapod/lib.rs",
-                  "tests/policy_self_authorization_1776.rs",
-                  "Merged origin/master release 0.148.13 (c5bafce6); policy_self_authorization_1776 9/9 passed (213.03s); cargo fmt & clippy -D warnings ok"
-                ],
-                "proof_refs": [
-                  "policy_self_authorization_1776",
-                  "cargo_fmt",
-                  "clippy_lib_and_test"
-                ],
-                "scope": [
-                  "root"
-                ],
-                "sequence": 5,
-                "validation_findings": []
-              },
-              {
-                "action": "validation",
-                "custody_event_id": "event:6",
-                "observations": [
-                  ".decapod/config.toml",
-                  ".decapod/managed/specs/SECURITY.md",
-                  "src/decapod/core/db_maintenance.rs",
-                  "src/decapod/core/workspace.rs",
-                  "src/decapod/core/gatekeeper.rs",
-                  "src/decapod/plugins/policy.rs",
-                  "src/decapod/core/validation_rules.rs",
-                  "src/decapod/core/validate.rs",
-                  "src/decapod/lib.rs",
-                  "tests/policy_self_authorization_1776.rs",
-                  "Merged origin/master 0b6ce0a8 (PR #1799); cargo fmt --all -- --check ok; clippy --all-targets --all-features -D warnings ok; policy_self_authorization_1776 9/9 passed (198.79s)"
-                ],
-                "proof_refs": [
-                  "policy_self_authorization_1776",
-                  "cargo_fmt",
-                  "clippy_all_targets"
-                ],
-                "scope": [
-                  "root"
-                ],
-                "sequence": 6,
-                "validation_findings": []
-              },
-              {
-                "action": "validation",
-                "custody_event_id": "event:7",
-                "observations": [
-                  ".decapod/config.toml",
-                  ".decapod/managed/specs/SECURITY.md",
-                  "src/decapod/core/db_maintenance.rs",
-                  "src/decapod/core/workspace.rs",
-                  "src/decapod/core/gatekeeper.rs",
-                  "src/decapod/plugins/policy.rs",
-                  "src/decapod/core/validation_rules.rs",
-                  "src/decapod/core/validate.rs",
-                  "src/decapod/lib.rs",
-                  "tests/policy_self_authorization_1776.rs",
-                  "Merged origin/master e0f6aec81 (v0.149.2); cargo fmt --all -- --check ok; clippy --all-targets --all-features -D warnings ok; validation_scope 9/9 passed (0.10s); policy_self_authorization_1776 9/9 passed (313.66s)"
-                ],
-                "proof_refs": [
-                  "policy_self_authorization_1776",
-                  "validation_scope",
-                  "cargo_fmt",
-                  "clippy_all_targets"
-                ],
-                "scope": [
-                  "root"
-                ],
-                "sequence": 7,
-                "validation_findings": []
-              },
-              {
-                "action": "validation",
-                "custody_event_id": "event:8",
-                "observations": [
-                  ".decapod/managed/specs/SECURITY.md",
-                  "src/decapod/core/db_maintenance.rs",
-                  "src/decapod/core/workspace.rs",
-                  "src/decapod/core/gatekeeper.rs",
-                  "src/decapod/plugins/policy.rs",
-                  "src/decapod/core/validation_rules.rs",
-                  "src/decapod/core/validate.rs",
-                  "src/decapod/lib.rs",
-                  "tests/policy_self_authorization_1776.rs",
-                  "Merged origin/master 102d6eb22 (v0.149.3 + #1659); cargo fmt --all -- --check ok; validation_scope 9/9 passed (0.04s); policy_self_authorization_1776 9/9 passed (271.61s)"
-                ],
-                "proof_refs": [
-                  "policy_self_authorization_1776",
-                  "validation_scope",
-                  "cargo_fmt"
-                ],
-                "scope": [
-                  "root"
-                ],
-                "sequence": 8,
                 "validation_findings": []
               }
             ]
@@ -960,38 +755,31 @@
         }
       },
       "declared_commands": [],
-      "destination": "pull request",
       "evidence": [
-        "Merged origin/master 0b6ce0a8 (PR #1799); cargo fmt --all -- --check ok; clippy --all-targets --all-features -D warnings ok; policy_self_authorization_1776 9/9 passed (198.79s)",
-        "Merged origin/master 102d6eb22 (v0.149.3 + #1659); cargo fmt --all -- --check ok; validation_scope 9/9 passed (0.04s); policy_self_authorization_1776 9/9 passed (271.61s)",
-        "Merged origin/master e0f6aec81 (v0.149.2); cargo fmt --all -- --check ok; clippy --all-targets --all-features -D warnings ok; validation_scope 9/9 passed (0.10s); policy_self_authorization_1776 9/9 passed (313.66s)",
-        "Merged origin/master release 0.148.13 (c5bafce6); policy_self_authorization_1776 9/9 passed (213.03s); cargo fmt & clippy -D warnings ok",
-        "policy_self_authorization_1776 9/9 passed (92.39s); clippy -D warnings ok; unit & regression suites passed"
+        "task-927 on 102d6eb22 v0.149.3: fmt exit 0, clippy exit 0, concurrent_worktree_integration_1469 3/3 passed (760.30s), consumer_readiness::two_isolated_worktrees_require_combined_candidate_validation_and_target_freshness 1/1 passed (23.77s)"
       ],
-      "inspected_files": [],
-      "intent_id": "intent:change_01M7QBJ2W09CY5REY9D4DX2CGZ",
-      "modified_files": [
-        ".decapod/config.toml",
-        ".decapod/managed/specs/SECURITY.md",
-        "src/decapod/core/db_maintenance.rs",
-        "src/decapod/core/gatekeeper.rs",
-        "src/decapod/core/validate.rs",
-        "src/decapod/core/validation_rules.rs",
+      "inspected_files": [
+        "src/decapod/core/authoring.rs",
+        "src/decapod/core/fleet_coord.rs",
+        "src/decapod/core/todo.rs",
+        "src/decapod/core/validation_history.rs",
+        "src/decapod/core/validation_runtime.rs",
         "src/decapod/core/workspace.rs",
-        "src/decapod/lib.rs",
-        "src/decapod/plugins/policy.rs",
-        "tests/policy_self_authorization_1776.rs"
+        "tests/consumer_readiness.rs"
       ],
-      "next_transitions": [
-        "Refine plan and declare falsifiable checks"
+      "intent_id": "intent:conc-1469-run",
+      "modified_files": [
+        ".decapod/managed/specs/ARCHITECTURE.md",
+        "tests/concurrent_worktree_integration_1469.rs"
       ],
       "repo_scope": [
-        "root"
+        ".decapod/managed/specs/ARCHITECTURE.md",
+        "tests/concurrent_worktree_integration_1469.rs"
       ],
-      "run_id": "branch_01M7QBJ2ZYCMN2HENQJSH4ZZW7",
+      "run_id": "conc-1469-run",
       "schema_version": "1.1.0",
       "shortcut_risk_signals": [],
-      "task_id": "code_01m7ppcyb4f07yr8",
+      "task_id": "feat_01m7r6pxxakene2e",
       "tool_calls": [],
       "unresolved_assumptions": []
     }
