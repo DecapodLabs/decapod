@@ -27,10 +27,20 @@
   `policy_self_authorization_1776::candidate_worktree_cannot_switch_cloud_backend_to_local`,
   `decapod docs build` embedded docs sync, `cargo fmt --all -- --check`, and
   `clippy --all-targets --all-features -- -D warnings`.
+- **Owner repair wire marker & public-repo redaction (#1590, #1809)**:
+  `src/decapod/core/db_maintenance.rs` binds `OWNER_REPAIR_V1_SQL` strictly to
+  the public registered wire marker
+  `SELECT propodus.owner_repair_v1($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)`
+  with unit regression checks verifying exact wire marker equality and zero
+  internal table/CTE expansion, and `src/decapod/core/cloud_proof.rs` /
+  `db_maintenance.rs` omit private repository filenames and migration ranges.
+  (Buildkite build `13224` passed 74+ checks and hit an unrelated transient
+  Linux `ETXTBSY` runner flake in `podman_machine_start_captures_output_without_reading_terminal_input`;
+  retried cleanly with fresh Buildkite validation.)
 - **Local PostgreSQL 17 + PostgREST conformance (#1377, #1369)**: Executed
-  disposable local PG17 + PostgREST provisioned with `propodus` migrations
-  `001`..`029` + `propodus_auth_bridge`, passing `supabase_service::local_native_managed_project_contract`
-  and `local_native_managed_project_revocation` (with independent PG17 ledger
+  disposable local PG17 + PostgREST conformance harness, passing
+  `supabase_service::local_native_managed_project_contract` and
+  `local_native_managed_project_revocation` (with independent PG17 ledger
   observation and revocation enforcement) against the `dactyl-db 0.18.0` binary.
   Managed Auth OAuth issuance and hosted production verification remain separate
   external acceptance gates (`#1378`, `#1379`).
@@ -1516,7 +1526,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `0886b9de1c286a3bb2caaad9ae3a6623609e36112ed911601121ee77f2d6db42`
+- Repository signal fingerprint: `6026d851ab6f819e0d7014dafa322075371b739865c9ea7be4512311ea30ed15`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (241 files), `tests/` (251 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

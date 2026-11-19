@@ -262,10 +262,10 @@ pub struct CloudRepositoryAccessStatus {
     pub repair_eligible: bool,
 }
 
-/// Exact canonical SQL statement recognized by `propodus.rpc_owner_repair_profile`
-/// (`016_repository_owner_repair_policy.sql`). Submitted strictly as one `Operation::write`
-/// inside `Connection::atomic`.
-pub const OWNER_REPAIR_V1_SQL: &str = "WITH prior AS MATERIALIZED (SELECT id,title,description,status,assigned_to,assigned_at,completed_at,version FROM propodus.tasks WHERE id = $1 AND repo_id = current_setting('propodus.repo_id',true) FOR UPDATE), changed AS (UPDATE propodus.tasks AS t SET title = $2, description = $3, status = $4, assigned_to = $5, assigned_at = $6, completed_at = $7, updated_at = $8, version = t.version + 1 FROM prior AS p WHERE t.id = p.id AND t.version = p.version AND p.version = $9::bigint RETURNING t.id,p.title AS old_title,p.description AS old_description,p.status AS old_status,p.assigned_to AS old_assigned_to,p.assigned_at AS old_assigned_at,p.completed_at AS old_completed_at,p.version AS old_version,t.title AS new_title,t.description AS new_description,t.status AS new_status,t.assigned_to AS new_assigned_to,t.assigned_at AS new_assigned_at,t.completed_at AS new_completed_at,t.version AS new_version), logged AS (INSERT INTO propodus.events(org_id,repo_id,event_id,ts,seq,stream,subject_kind,subject_id,event_type,payload,actor) SELECT current_setting('propodus.org_id',true),current_setting('propodus.repo_id',true),$11,$8,COALESCE((SELECT MAX(seq) FROM propodus.events WHERE stream='todo'),0)+1,'todo','task',c.id,'task.repair',jsonb_build_object('operation','owner_repair_v1','repository',current_setting('propodus.repo_id',true),'actor_session',NULLIF(current_setting('request.jwt.claims',true),'')::jsonb->>'session_id','reason',$10,'policy_revision',NULLIF(current_setting('propodus.policy_revision',true),'')::bigint,'policy_hash',NULLIF(current_setting('propodus.policy_hash',true),''),'accepted_commit',NULLIF(current_setting('propodus.accepted_commit',true),''),'authority_generation',NULLIF(current_setting('propodus.authority_generation',true),'')::bigint,'before',jsonb_build_object('title',c.old_title,'description',c.old_description,'status',c.old_status,'assigned_to',c.old_assigned_to,'assigned_at',c.old_assigned_at,'completed_at',c.old_completed_at,'version',c.old_version),'after',jsonb_build_object('title',c.new_title,'description',c.new_description,'status',c.new_status,'assigned_to',c.new_assigned_to,'assigned_at',c.new_assigned_at,'completed_at',c.new_completed_at,'version',c.new_version))::text,current_setting('propodus.user_id',true) FROM changed c RETURNING event_id) SELECT count(*)::bigint FROM logged";
+/// Public registered wire marker for the `owner_repair_v1` cloud repair operation.
+/// Submitted strictly as one `Operation::write` inside `Connection::atomic`.
+pub const OWNER_REPAIR_V1_SQL: &str =
+    "SELECT propodus.owner_repair_v1($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)";
 
 #[derive(Debug, Clone)]
 pub struct OwnerRepairBatchParams {
@@ -3221,7 +3221,13 @@ mod tests {
         }
         .to_dactyl_operation()
         .expect("valid owner_repair_v1 op");
+        assert_eq!(
+            repair_op.sql(),
+            "SELECT propodus.owner_repair_v1($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)"
+        );
         assert_eq!(repair_op.sql(), OWNER_REPAIR_V1_SQL);
+        assert!(!repair_op.sql().contains("WITH "));
+        assert!(!repair_op.sql().contains("INSERT INTO"));
     }
 
     #[test]
