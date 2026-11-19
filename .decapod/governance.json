@@ -604,6 +604,11 @@
       "id": "ckpt-wu1660-spec-review",
       "summary": "Record current-content-bound spec reviews for ARCHITECTURE, INTERFACES, and SECURITY after split-store non-VERIFIED write isolation fix (#1660)",
       "input_digest": "sha256:0fd41d77a78bd29f79ee3eab45c0d870c5c6a11c213a5fa18ad969633368d4f5"
+    },
+    {
+      "id": "ckpt-wu1660-merge-4536919",
+      "summary": "Reconcile PR #1823 (#1660) with origin/master 45369197e (#1825), preserving all #1825 and #1660 code, specs, and refreshed v0.149.3 projections",
+      "input_digest": "sha256:2f62d6028ea52ae00932296d189d23839c280b3d60dcb6026c7451bdf50ef506"
     }
   ],
   "intents": {
@@ -654,25 +659,25 @@
       "schema_version": "1.1.0",
       "spec_reviews": [
         {
-          "disposition": "unchanged_with_reason",
+          "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Isolated non-VERIFIED workspace-local split-store writes preserve canonical architecture and single-domain VERIFIED proof boundary.",
-          "reviewed_code_fingerprint": "43b67847219e3556a18258ca11f844d09f2c2956e9d55ea473b4a2221abfaa04",
-          "spec_material_hash": "b5e1e3c343de9ed9ba501e7a48d61b43dfed92d7678b3126d1195c9c1cdb9d08"
+          "reason": "Preserved #1825 architecture updates from origin/master 45369197e alongside #1660 split-store convergence.",
+          "reviewed_code_fingerprint": "47caca47da7db39490c92a99c4e985ab837239e7cd1a5fd55a4c7d65fe503073",
+          "spec_material_hash": "26b2b6a9a136ac955ea41c945b7a1c660c15d0ee6584ee29568d80bc520eaf4c"
         },
         {
-          "disposition": "unchanged_with_reason",
+          "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "CLI and RPC interfaces unchanged by split-store non-VERIFIED write isolation fix.",
-          "reviewed_code_fingerprint": "43b67847219e3556a18258ca11f844d09f2c2956e9d55ea473b4a2221abfaa04",
-          "spec_material_hash": "3f197b0f57bb0c7f8276899703455772d0e0a22f93fb9d5961126765657b693e"
+          "reason": "Preserved #1825 interfaces updates from origin/master 45369197e alongside #1660 govern workunit converge CLI and proof_status contract.",
+          "reviewed_code_fingerprint": "47caca47da7db39490c92a99c4e985ab837239e7cd1a5fd55a4c7d65fe503073",
+          "spec_material_hash": "d6e2e15de20261ea7292518e24d2e98e182a704c1941a406bfeda6c8044f20d4"
         },
         {
-          "disposition": "unchanged_with_reason",
+          "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "VERIFIED transitions, resume, validate_verified_manifest, and partial split-store leaks remain fail-closed with WORKUNIT_PROOF_ATOMIC_DOMAIN_UNSUPPORTED.",
-          "reviewed_code_fingerprint": "43b67847219e3556a18258ca11f844d09f2c2956e9d55ea473b4a2221abfaa04",
-          "spec_material_hash": "49c7d1428d860804f8fc7f436c5da22483d385c9ce4be90f7db52f1cf4b362ee"
+          "reason": "Preserved #1825 security updates from origin/master 45369197e alongside #1660 fail-closed split-store guards.",
+          "reviewed_code_fingerprint": "47caca47da7db39490c92a99c4e985ab837239e7cd1a5fd55a4c7d65fe503073",
+          "spec_material_hash": "9c15cdf421a538d0e8fa06a154d96acaf41fc3d8ec15872b2c6016f0ebb908e1"
         }
       ],
       "state": "APPROVED",
@@ -683,13 +688,13 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795065134Z"
+      "updated_at": "1795068925Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Isolated Decapod worktree only; never mutate root checkout, host cargo bin, PR #1788, or pre-existing claimed todos; hold git push and gh pr create for verifier sign-off and merge queue."
       ],
-      "artifact_hash": "sha256:481010da78ac0a042314b510fcd67a8fd48f3f2ec7be60bd836e45a82e229f74",
+      "artifact_hash": "sha256:1cc753556fb2b3d72ae3a9ac198d85d6e8edb40fad5b16c30b6085faa8c0837b",
       "checks": [
         {
           "name": "cargo_fmt",
@@ -721,6 +726,34 @@
         },
         {
           "name": "fmt",
+          "status": "passed"
+        },
+        {
+          "name": "merge_45369197e_clippy",
+          "status": "passed"
+        },
+        {
+          "name": "merge_45369197e_core_workunit",
+          "status": "passed"
+        },
+        {
+          "name": "merge_45369197e_entrypoint_correctness",
+          "status": "passed"
+        },
+        {
+          "name": "merge_45369197e_fmt",
+          "status": "passed"
+        },
+        {
+          "name": "merge_45369197e_validation_scope",
+          "status": "passed"
+        },
+        {
+          "name": "merge_45369197e_workunit_cli",
+          "status": "passed"
+        },
+        {
+          "name": "merge_45369197e_workunit_publish_gate",
           "status": "passed"
         },
         {
@@ -768,10 +801,17 @@
             "intent_id": "intent:wu1660-v01493",
             "kind": "trajectory_step_recorded",
             "sequence": 5
+          },
+          {
+            "detail": "trajectory:wu1660-v01493",
+            "event_id": "event:6",
+            "intent_id": "intent:wu1660-v01493",
+            "kind": "trajectory_step_recorded",
+            "sequence": 6
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 5,
+        "next_sequence": 6,
         "schema_version": "1.0.0",
         "trajectories": {
           "wu1660-v01493": {
@@ -863,6 +903,35 @@
                 ],
                 "sequence": 5,
                 "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:6",
+                "observations": [
+                  "Merged origin/master 45369197e (#1825) cleanly with zero code conflicts; rebuilt candidate decapod binary; docs build produced zero diff; specs refreshed and re-reviewed."
+                ],
+                "proof_refs": [
+                  "merge_45369197e_fmt",
+                  "merge_45369197e_clippy",
+                  "merge_45369197e_core_workunit",
+                  "merge_45369197e_validation_scope",
+                  "merge_45369197e_workunit_cli",
+                  "merge_45369197e_workunit_publish_gate",
+                  "merge_45369197e_entrypoint_correctness"
+                ],
+                "scope": [
+                  ".decapod/managed/specs/INTERFACES.md",
+                  ".decapod/managed/specs/VALIDATION.md",
+                  "docs/agent/command-contracts.md",
+                  "src/decapod/cli.rs",
+                  "src/decapod/core/docs_cli.rs",
+                  "src/decapod/core/workunit.rs",
+                  "src/decapod/lib.rs",
+                  "tests/unit/core/workunit_journal_tests.rs",
+                  "tests/workunit_verified_proof_1660.rs"
+                ],
+                "sequence": 6,
+                "validation_findings": []
               }
             ]
           }
@@ -880,6 +949,7 @@
         ".decapod/managed/specs/INTERFACES.md",
         ".decapod/managed/specs/VALIDATION.md",
         "Allow isolated non-VERIFIED local split-store declarations when runtime_data_dir matches local_dir while keeping VERIFIED transitions, resume, validate_verified_manifest, and partial-store leaks blocked with WORKUNIT_PROOF_ATOMIC_DOMAIN_UNSUPPORTED",
+        "Merged origin/master 45369197e (#1825) cleanly with zero code conflicts; rebuilt candidate decapod binary; docs build produced zero diff; specs refreshed and re-reviewed.",
         "tests/unit/core/workunit_journal_tests.rs",
         "tests/workunit_verified_proof_1660.rs"
       ],

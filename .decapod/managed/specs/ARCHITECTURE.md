@@ -1079,8 +1079,8 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `43b67847219e3556a18258ca11f844d09f2c2956e9d55ea473b4a2221abfaa04`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (237 files), `tests/` (243 files)
+- Repository signal fingerprint: `47caca47da7db39490c92a99c4e985ab837239e7cd1a5fd55a4c7d65fe503073`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (237 files), `tests/` (244 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 
@@ -1387,9 +1387,17 @@ No new connector policy interpreter, daemon, HTTP/3 or hosted runner is added.
 for full claims. The runtime invokes it before prerequisites or selection; CLI
 and RPC full dispatch, workspace publication and current/historical validated
 completion invoke the same owner. The originating local completion process checks
-before broker handoff. `group_broker::CallerContext` carries and clears diagnostic
-flags per request so worker scope cannot come from another caller. Partial
-project-prerequisite and CI-local routes do not gain publication authority.
+before broker handoff, and for `todo done --validated` prepares verification
+evidence outside the exclusive group-broker lock (`todo::prepare_validated_done_handoff`
+-> mode-`0600` request-bound handoff under `broker-runtime/` -> `verify::consume_prepared_done_handoff`
+re-verified against canonical `validation_history` / local Git objects before the
+transactional status update). `group_broker::CallerContext` carries and clears
+diagnostic flags per request so worker scope cannot come from another caller, and
+brokered child execution honors the caller's bounded `deadline_ms` rather than a
+15s control clamp. `bounded_process::configure_child_nofile_limit` elevates soft
+`RLIMIT_NOFILE` on Unix across `__project-check-worker`, migration validation,
+tooling gates, and `CaptureWithCeiling` subprocesses. Partial project-prerequisite
+and CI-local routes do not gain publication authority.
 
 ## Preserve accepted local verification policy (#1658)
 

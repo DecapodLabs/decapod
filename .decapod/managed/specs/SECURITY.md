@@ -210,6 +210,15 @@ task lineage. Reassignment, renewed custody, intent edits later reverted,
 missing history and concurrent task mutations cannot inherit an older pass.
 It does not trust commit messages, branch names, a provider badge, or the legacy
 tracked prerequisite receipt as proof of integration and successful execution.
+When unauthenticated public HTTPS branch-tip inspection is rejected for a private
+repository, `src/decapod/core/validation_history.rs::accepted_target_for_repository`
+may fall back to reviewed host-user authenticated read-only transport — first via
+`snapshot_provider::OfficialCli` (`gh api` GET `repos/{owner}/{repo}/git/ref/heads/...`
+authorized through `external_action::authorize_official_github_read`), and then via
+an isolated host-user `git ls-remote` in an empty scratch directory with
+`GIT_TERMINAL_PROMPT=0` and disabled redirects. No credentials or raw transport
+diagnostics are persisted in `.decapod/`, logs, or worktrees, and local no-graft /
+no-alternate ancestry verification (`reject_history_overrides`) remains mandatory.
 Historical authority is limited to completing its original task; new publication
 still requires current full validation. These local records retain Decapod's
 cooperative same-user trust model: hashes detect inconsistent evidence but do
@@ -761,8 +770,8 @@ execution evidence remains required before publication readiness.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `43b67847219e3556a18258ca11f844d09f2c2956e9d55ea473b4a2221abfaa04`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (237 files), `tests/` (243 files)
+- Repository signal fingerprint: `47caca47da7db39490c92a99c4e985ab837239e7cd1a5fd55a4c7d65fe503073`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (237 files), `tests/` (244 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 
