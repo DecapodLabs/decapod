@@ -495,6 +495,26 @@ proof and journal state. Subsequent QA inspection must preserve this historical
 meaning after unrelated work and epoch changes. Publication continues requiring
 fresh complete proof and cannot consume this historical completion permission.
 
+Additional ergonomics and private-repository regressions (#1807, #1810) cover:
+- Authenticated read-only private-repo accepted-target resolution via mock
+  `OfficialCli` `GithubGet` (`validation_history::integration_tests`) and redacted
+  error reporting when unauthenticated and authenticated transports are unavailable;
+- Pre-capture, custody-preserving lease TTL verification before freezing
+  `HistoricalTaskBinding`: default advisory and `strict` modes leave `revision` and
+  `lease_generation` untouched, only explicit `renew` rotates custody
+  (`validation_history::archive_tests::capture_task_binding_with_budget_never_rotates_custody_unless_renew_is_explicit`;
+  end-to-end custody stability across workunit checkpoints is covered by
+  `entrypoint_correctness::canonical_workunit_withdraws_superseded_proof_and_recovers_after_lease_renewal`);
+- Request-bound pre-broker `todo done --validated` handoff validation and cleanup
+  (`plugins::verify::historical_tests::prepared_done_handoff_roundtrips_and_rejects_mismatched_commit_or_request`
+  and `tests/validate_ergonomics_1807_1810.rs::todo_done_validated_decouples_broker_and_cleans_handoff`);
+- Unverified `done` (`CLAIMED`) self-service recovery via `qa verify regen` without
+  self-deadlock (`tests/validate_ergonomics_1807_1810.rs::unverified_done_todo_recovers_via_qa_verify_regen_without_self_deadlock`);
+- Unix `RLIMIT_NOFILE` diagnostics in `system doctor check` and `validate_open_file_limits`
+  plus automatic soft-limit elevation for spawned harnesses
+  (`core::bounded_process::tests`, `plugins::doctor::tests`, and
+  `tests/validate_ergonomics_1807_1810.rs::rlimit_nofile_diagnosed_in_doctor_and_raised_for_validate_harnesses`).
+
 The inline Rust regressions are part of the library unit suite selected by the
 complete source profile. Their presence and source review are not execution
 evidence; the exact candidate still requires configured full validation.
@@ -1477,8 +1497,8 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `e659a9aa5b4d2cb8cb64334a8581c86e7e5f54d42e83a17cb29979aba665b511`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (237 files), `tests/` (242 files)
+- Repository signal fingerprint: `a372ed576e4bc37e6fe0e4a274eabb4cd8dffcd8e0014166e343e87d2aa32325`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (237 files), `tests/` (243 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 
