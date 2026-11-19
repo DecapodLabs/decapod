@@ -1,5 +1,22 @@
 # Semantics
 
+## Reversible integration removal invariants (#1704)
+
+- **Preview purity:** `decapod integration preview` never creates `.lock`, `-wal`,
+  `-shm`, session, Git, or temporary files in the repository or `XDG_CONFIG_HOME`.
+- **Ownership requirement:** Filename resemblance or body similarity without
+  ownership evidence never authorizes deletion.
+- **Fail-closed custody and symlink boundaries:** Any active todo lease,
+  `authoring_binding`, registered/non-empty workspace directory, held storage
+  or workspace lease lock, symlink component, or corrupt manifest aborts
+  removal before any mutation.
+- **Idempotence:** Repeating `remove --authorize` after removal or interruption
+  preserves the restoration manifest and converges cleanly; repeating `restore`
+  on already-restored matching files is a no-op; `restore` refuses to overwrite
+  divergent newly authored files.
+- **Boundary separation:** Bounded integration removal never deletes
+  `.decapod/data/`, `.decapod/governance.json`, `*.bak`, or global credentials.
+
 ## Reflection, progress and authority
 
 Distinct recorded human questions and spec-review decisions retain distinct
@@ -373,8 +390,8 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `6e67e35ae0dbae953045c6ac5b11faf2fbf77e794d31add64192d3db292a7754`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (242 files), `tests/` (253 files)
+- Repository signal fingerprint: `1eac132db69588e37e37b80985be23e500a98a20fc47135b2ad43450047c3edd`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (244 files), `tests/` (256 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 

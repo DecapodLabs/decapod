@@ -1,5 +1,32 @@
 # Architecture
 
+## Reversible integration lifecycle (`core::integration_removal`)
+
+`src/decapod/core/integration_removal.rs` separates repository integration
+scaffolding from project-authored instructions and retained governance/datastore
+history:
+
+- **Ownership provenance (`integration_ownership.json`):** `decapod init`
+  (`lib.rs::run_init_apply` + `record_init_ownership`) and `decapod setup hook`
+  (`lib.rs::run_hook_install` + `record_hook_ownership`) record SHA-256 digests,
+  file modes, and pre-existing exclusions in
+  `.decapod/managed/integration_ownership.json`. Uninitialized or legacy repos
+  without that manifest require cryptographic release/fingerprint header proof
+  on entrypoints and template/manifest hashes on specs; byte-identical authored
+  files without ownership evidence (such as unowned `AGENTS.md` or hooks) are
+  classified as `authored` and preserved.
+- **Non-mutating inspection:** `Command::Integration` dispatches in `lib.rs::run`
+  before session acquisition, migrations, or root-isolation guards, using
+  `StorageLock::diagnose` and lock-free `dactyl_db::AccessMode::ReadOnly`
+  probes alongside `fs::symlink_metadata` traversal.
+- **Crash-safe restoration manifest:** `remove_integration` atomically persists
+  `.decapod/integration-restore-manifest.json` (`status: "in_progress"`) with
+  exact file bytes and `.gitignore` delta before unlinking any owned file, then
+  transitions to `"applied"` and prunes only empty `.decapod/managed/`
+  directories. Re-init (`decapod init`) detects absent
+  `.decapod/managed/specs/.manifest.json` and regenerates missing scaffold specs
+  without overwriting authored spec prose.
+
 ## Cloud control-plane, DPoP custody, Dactyl 0.18.0, and Local/Cloud branding (#1809, #1808, #1769, #1667, #1777, #1778, #1590, #1066, #1158)
 
 - **Registry & Bazel lock alignment**: `Cargo.toml` pins
@@ -1132,8 +1159,8 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `6e67e35ae0dbae953045c6ac5b11faf2fbf77e794d31add64192d3db292a7754`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (242 files), `tests/` (253 files)
+- Repository signal fingerprint: `1eac132db69588e37e37b80985be23e500a98a20fc47135b2ad43450047c3edd`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (244 files), `tests/` (256 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 
@@ -1553,6 +1580,58 @@ Concurrent authoring across isolated worktrees separates task custody, isolated 
 1. **Advisory source overlap vs. enforced custody/resource fencing:** `core/fleet_coord.rs::detect_overlaps` emits `enforced = false` (`advisory_category_overlap`, `advisory_scope_overlap`, `advisory_path_overlap`) for source categories and repository path declarations, while setting `enforced = true` (`resource_reservation`) only for named shared resources (`resource:release`, `resource:integration`, `resource:integration:<branch>`). `core/todo.rs::claim_task_with_lease` admits distinct tasks across overlapping source footprints with `integration_readiness = "combined_candidate_reconciliation_required"` while rejecting duplicate exclusive claims on an active task lease (`status = "conflict"`, `lease_state = "active"`) and competing shared-resource reservations (`conflict_class = "shared_resource"`, `resolution = "wait_for_resource_custody"`).
 2. **Checkout custody without transcript trust:** `core/workspace.rs::claim_branch_scoped_open_tasks` and `core/authoring.rs::{admit_authoring, check_authoring}` bind each active lease to at most one registered worktree (`AUTHORING_CHECKOUT_OCCUPIED`, `AUTHORING_TASK_ALREADY_BOUND`, `AUTHORING_CUSTODY_STALE`, `WORKSPACE_SECONDARY_CUSTODY`). A fresh actor without the first agent's transcript observes live claims via `decapod todo fleet` / `decapod todo list`, cannot hijack A's task or worktree, and either claims a separate permitted task or yields with a typed blocker. `core/authoring.rs::enforce_shared_resource_available` fences `workspace.publish` and `release.lineage_sync` (`SHARED_RESOURCE_OCCUPIED`) without blocking unrelated isolated worktree authoring.
 3. **Combined-candidate execution and target freshness:** Locally green isolated worktrees and clean textual Git merges never discharge joint proof. `core/validation_runtime.rs` and `core/validation_history.rs` execute required source checks against the exact combined head and accepted target, withholding `native-readiness-receipt.json` and blocking `todo done --validated` / `workspace publish` on incompatible producer/consumer interfaces or contradictory shared behavior until repaired and revalidated on the exact combined commit. When another branch lands first and advances the accepted target, prior receipts become stale (`STALE_ACCEPTED_BASE`, `WORKUNIT_PROOF_STALE`) until rebased/merged onto the new accepted target and revalidated. `tests/concurrent_worktree_integration_1469.rs` exercises all three scenarios end-to-end through the actual `decapod` binary and isolated Git worktrees.
+
+## Public BYOA, metacognition, and coordination book narrative (#1789)
+
+The public mdBook documentation under `docs/book/src/` (`index.md`,
+`introduction.md`, `mental-model.md`, `quickstart.md`, `concepts/agent-first.md`,
+`concepts/interoperability.md`, `concepts/constitution.md`, `concepts/mcp.md`,
+`workflows/single-agent.md`, `workflows/multi-agent.md`, `SUMMARY.md`) and the
+corresponding pointer in `README.md` document Decapod's existing repo-native
+governance kernel architecture without adding runtime code or altering
+`docs/agent/*` contracts.
+
+Every documented boundary maps directly to existing binary surfaces and tests:
+BYOA discovery and negotiation via `decapod rpc --op interop.manifest`,
+`interop.negotiate`, and `interop.project` (`src/decapod/core/interop.rs`,
+`tests/interop_conformance.rs`); Human -> Agent -> Kernel custody via
+`eval`, `docs ingest`, `session acquire`, `session handshake`, `todo`,
+`workspace`, `govern`, and `validate` (`tests/doc_alignment.rs`,
+`tests/contract_conformance.rs`); lease/overlap coordination via `todo claim`,
+`todo renew`, `todo handoff`, `todo yield`, and `todo fleet`
+(`tests/unit/core/fleet_coord_tests.rs`); decision-time orientation and
+bounded reflection via `infer orientation --reflection` and `mentor.obligations`
+(`tests/infer_precision.rs`); subordinate reference usage of the embedded
+Constitution (`decapod constitution get/search`, `decapod govern capsule query`);
+and repo-native Local (`decapod.db`) vs Cloud (Dactyl-routed task custody,
+`tests/cloud_managed_session.rs`) parity. No automatic merge arbitration,
+always-on daemon, or unimplemented MCP server capability is claimed.
+
+## Integrity-preserving merged journal reconciliation (#1780)
+
+`src/decapod/core/governance_document/merge_reconcile.rs` implements
+`core::governance_document::reconcile_merge`, exposed via
+`ArtifactsCommand::ReconcileMerge` in `cli.rs` and `lib.rs`. Instead of parsing
+potentially mixed working-tree JSON after a line-based Git merge, it reads
+canonical `.decapod/governance.json` blobs directly from immutable `HEAD`,
+`MERGE_HEAD`, and `merge-base --all` commits under `with_lock` after checking
+`ensure_ungrafted`.
+
+Two ancestry modes are supported:
+- **Same PR workstream** (matching `change.id`, `base_commit`, and normalized
+  `target_base`): 3-way merges `baseline`, `claims`, `resolutions`, `epochs`,
+  `recursive_passes`, `legacy_*`, `plan`, `checkpoints`, `trajectory`, and
+  `custody` events/trajectories, re-validates loops, clears changed or
+  trajectory-invalidated `validation` receipts, and recomputes canonical
+  `proof_status`, `verdicts`, and `artifact_hash`.
+- **Accepted target merge** (distinct `change.id` or no `change` where
+  `MERGE_HEAD` is an ancestor of the accepted `target_base` ref): retains
+  `ours`'s complete active workstream journal and proof posture while 3-way
+  merging newly accepted `baseline.policy` and unretired `baseline.unresolved`
+  entries and clearing stale `validation` receipts when trees differ.
+Any conflicting unaccepted PR identity, mismatched `base_commit` / `target_base`,
+deleted active journal, or conflicting check status fails closed without
+mutating `.decapod/governance.json`.
 
 ## Projection performance budgets, degraded mode, and retention-stable receipts (#1734)
 

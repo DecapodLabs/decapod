@@ -73,6 +73,7 @@ This document defines the normative operational contracts for the Decapod CLI.
 - **Automatic provider execution:** With Buildkite validation enabled outside CI, `validate` pushes or reuses the exact current workspace branch commit, waits for every required imported Buildkite workflow, collects authenticated execution artifacts once, and rechecks the candidate, accepted target and provider attempt identities before returning success. The required project checks execute on Buildkite; this route neither runs a duplicate local prerequisite suite nor requires a fresh local validation receipt before submission. It uses already configured official Git access, repository check URLs only to locate Buildkite runs, and the reviewed Buildkite reader; missing tools, access denial, timeout, cancellation, failed jobs or incomplete custody return nonzero. It never installs credentials or falls back after an authorization failure.
 - **Host handoff:** `validate --snapshot-prepare` prepares private metadata for the existing workspace branch and returns nonzero while proof is pending. An authorized host may push only the same exact candidate commit to that branch. `validate --snapshot-resume <HANDOFF> --snapshot-adopt <H>` independently verifies the unchanged source/tree/target and the exact remote branch tip; it cannot accept a different commit or a temporary branch. If a host object API changes commit identity, first checkpoint and review that real source identity before preparing a new handoff. Never edit a handoff to assert success. `validate --snapshot-resume <HANDOFF>` independently verifies Buildkite identities, raw artifact digests and execution evidence. No per-run branch or synthetic commit is created, and validation cleanup never deletes the workspace branch. Existing GitHub workflows may run independently; their results and artifacts neither satisfy nor block this Buildkite profile. This is not a compatibility claim for a separate `bk preflight` command.
 - **Boundaries:** Validation may perform the authorized non-forced push of its existing workspace branch. It does not open a PR, create a release/tag, upload a package/image or deploy. Remote CI submission needs existing authorized access and remains subject to external-action policy. The core source-PR profile requires actual compile, test and build execution. Release-only packaging is outside this profile and has no packaging-assurance claim; publish/deploy dispositions describe simulation only, never actual delivery.
+- **Todo-scoped `/tmp` cleanup:** Once validation passes and PR creation completes (`decapod workspace publish` or post-validation PR creation), flush ONLY the current todo's `/tmp` build and scratch directories (such as `/tmp/decapod_validate/<task-id>` and any todo-scoped `CARGO_TARGET_DIR` under `/tmp`). Never perform wildcard or root-level deletion of `/tmp`, never delete another concurrent agent's or sibling todo's `/tmp` path, and never remove shared `/tmp/decapod` controller sockets/state or active sibling directories.
 - **Recovery:** Do not ask again before an already-authorized configured validation push or a supported, safely replayable retry to the same repository and workspace branch. Recheck the exact source and accepted target; stop on explicit cancellation, access or authorization denial, or a change that requires new authority. Follow the validation report's actionable recovery instructions, preserve blockers requiring human input, repair root causes or missing proof, and rerun against the exact candidate. For supported remote source-CI contracts, validation uses the accepted target’s independently verified executor to build and test the candidate, even when candidate helper bytes change. The controller keeps the required graph and final verdict; candidate output cannot authorize itself. `CONTROLLER_CONTRACT_UNSUPPORTED` identifies an unsupported carrier, protocol or accepted executor. Rerunning the same controller, repinning configuration or running a manual build cannot resolve that blocker; use an independently supported controller for this exact contract, and preserve the blocker if none is available. No automatic controller replacement is performed. Do not mark unexecuted checks green, weaken the required profile to pass, or replace unavailable provider evidence with a local receipt.
 
 ## Living-spec refresh surfaces
@@ -177,6 +178,7 @@ This document defines the normative operational contracts for the Decapod CLI.
 - **Preconditions:** Task must be claimed.
 - **State Transition:** Creates git worktrees/containers.
 - **Publication:** Publication is a governed transition and remains blocked while required validation or evidence is unsatisfied.
+- **Scratch cleanup:** When PR creation succeeds (`workspace publish`), flush ONLY that todo's `/tmp` build and scratch directories (such as `/tmp/decapod_validate/<task-id>` and any todo-scoped `CARGO_TARGET_DIR` under `/tmp`). Never perform wildcard or root-level deletion of `/tmp`, never delete another concurrent agent's or sibling todo's `/tmp` path, and never remove shared `/tmp/decapod` controller sockets/state or active sibling directories.
 
 ## `decapod rpc`
 - **Intent:** Decapod-specific structured RPC interface for agents
@@ -203,6 +205,16 @@ This document defines the normative operational contracts for the Decapod CLI.
 
 ## `decapod context`
 - **Intent:** Context: infer, lcm, internalize, preflight, impact
+
+## `decapod integration`
+- **Intent:** Preview, reversibly remove, or restore repository integration without deleting project state
+
+### Reversible Repository Integration Removal (`decapod integration ...`)
+
+- **Read-only preview (`decapod integration preview`):** Makes zero filesystem, Git, SQLite, session, or network mutations. Classifies `generated`, `edited`, `authored`, `unknown`, and `active` resources separately using ownership and digest evidence. A file is never classified as `generated` solely by filename.
+- **Bounded apply (`decapod integration remove --authorize`):** Requires explicit `--authorize`. Removes only positively owned, unchanged generated entrypoints, hooks, CI workflows, `.gitignore` rules, and untouched scaffolds while preserving edited/shared/unknown entries, authored instructions/overrides/specs, `.decapod/data/`, `.decapod/governance.json`, `*.bak` backups, global config, and credentials. Refuses uncertain ownership, symlink replacement, and active-custody conflicts (active todo leases, authoring bindings, registered/dirty worktrees, storage locks) with non-zero exit. Writes `.decapod/integration-restore-manifest.json` atomically before removal so interrupted or repeated invocations remain idempotent.
+- **Restore (`decapod integration restore`):** Restores removed generated files and `.gitignore` entries byte-for-byte from the restoration manifest while refusing to overwrite conflicting newly authored files or symlinks.
+- **Authority boundaries:** Permanent deletion of `.decapod/data` (`--purge-state`) and protected governance removal (`--remove-protected-governance`) are refused by integration removal and remain separate explicit authority boundaries.
 
 # RPC Operations (Auto-generated)
 
@@ -359,6 +371,13 @@ reauthor selected source, review specs, checkpoint and commit the observation.
 Only after that archive exists may `resolve-obligation` record the current
 recovery disposition with evidence references. Preserve the old unproven
 history; never fabricate its checkpoints or treat a decision label as authority.
+When a Git merge (`MERGE_HEAD` present) leaves `.decapod/governance.json`
+conflicted or with a trajectory/custody hash mismatch, run
+`decapod govern artifacts reconcile-merge` before committing the merge. It
+reads immutable commit states (`HEAD`, `MERGE_HEAD`, `merge-base --all`),
+refuses non-merge states or conflicting unaccepted PR authority, preserves
+complete active journal history and failed/missing proof states, and recomputes
+canonical trajectory hashes without fabricating passing proof.
 `inventory --claims-note "..."` records a current-PR checkpoint, not a fake claim
 or a policy-history append. `inventory --compact` performs lossless legacy
 normalization. Neither surface repairs malformed evidence by overwriting it.

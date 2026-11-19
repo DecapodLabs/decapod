@@ -178,6 +178,11 @@
         "statement": "Persisted task pass cannot authorize a different task revision, and stale verification cannot overwrite a changed baseline",
         "status": "open"
       },
+      "claim:current-validation-withdrawal": {
+        "falsifier": "A newer observed required failure leaves old VERIFIED applicable, an old subject promotes after withdrawal, or fresh complete current-custody validation cannot recover after renewal.",
+        "statement": "A newer task-bound full not-ready judgment withdraws current workunit proof, preserves historical success, and fresh current-custody proof restores legitimate VERIFIED operation.",
+        "status": "open"
+      },
       "claim:dagger-removed": {
         "falsifier": "A Dagger engine can execute through the core adapter or generic receipt custody is weakened",
         "proof_refs": [
@@ -626,6 +631,15 @@
         "src/decapod/core/projection_budget.rs",
         "tests/projection_performance_budgets_1734.rs"
       ]
+    },
+    {
+      "id": "ckpt-1734-sync-v01506-d0ca8eb36",
+      "summary": "Sync accepted master d0ca8eb36 (v0.150.6), refresh 0.150.6 specs/manifest/Dockerfile, and record content-bound spec reviews (#1734)",
+      "input_digest": "sha256:80d25bc5c056c364bc760ae6963eef5d4578275e9dacd92ee5e3bd1ae171e452",
+      "proof_refs": [
+        "src/decapod/core/projection_budget.rs",
+        "tests/projection_performance_budgets_1734.rs"
+      ]
     }
   ],
   "intents": {
@@ -667,23 +681,23 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Documented idx_events_stream_subject_seq partial covering index, fail-fast db_connect_readonly_bounded, measured-baseline budgets, degraded mode, and retention-stable logical receipts for #1734 on v0.150.0 while preserving all upstream architecture specs.",
-          "reviewed_code_fingerprint": "6e67e35ae0dbae953045c6ac5b11faf2fbf77e794d31add64192d3db292a7754",
-          "spec_material_hash": "78b2d6794271ec30cbdec03150d6bb8e7dea391bdb966c1b85a33119325fde1e"
+          "reason": "Documented idx_events_stream_subject_seq partial covering index, fail-fast db_connect_readonly_bounded, measured-baseline budgets, degraded mode, and retention-stable logical receipts for #1734 on v0.150.6 while preserving all upstream architecture specs.",
+          "reviewed_code_fingerprint": "1eac132db69588e37e37b80985be23e500a98a20fc47135b2ad43450047c3edd",
+          "spec_material_hash": "5d2e6751d609aaeb9afa2c54fad585ebc6f60c75516d099a28cc0a6eed7bc008"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Documented decapod.projection-budget.v1 read-only event/worktree projection envelopes, EventRetentionAnchor, and cursor/degraded-mode contract for #1734 on v0.150.0 while preserving all upstream interface specs.",
-          "reviewed_code_fingerprint": "6e67e35ae0dbae953045c6ac5b11faf2fbf77e794d31add64192d3db292a7754",
-          "spec_material_hash": "64a14f635f7ccec73ca222bfd2fb144cf356fb29607352b28f9654418ec9d313"
+          "reason": "Documented decapod.projection-budget.v1 read-only event/worktree projection envelopes, EventRetentionAnchor, and cursor/degraded-mode contract for #1734 on v0.150.6 while preserving all upstream interface specs (#1704, #1780, #1798).",
+          "reviewed_code_fingerprint": "1eac132db69588e37e37b80985be23e500a98a20fc47135b2ad43450047c3edd",
+          "spec_material_hash": "a9503e7adec04ac9331e0214f3c42a4e149ac85aaa5e963f4f85c2bae40de085"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Read-only projection surfaces enforce AccessMode::ReadOnly, StorageLockMode::Shared, GIT_OPTIONAL_LOCKS=0, read_only=true, authoritative=false, and introduce no privilege, secret, or mutation surfaces on v0.150.0.",
-          "reviewed_code_fingerprint": "6e67e35ae0dbae953045c6ac5b11faf2fbf77e794d31add64192d3db292a7754",
-          "spec_material_hash": "fe2a57654bc0079c8ae5d4226c46ba7f1ea50f4246a8c19d826f2e660dc56f81"
+          "reason": "Read-only projection surfaces enforce AccessMode::ReadOnly, StorageLockMode::Shared, GIT_OPTIONAL_LOCKS=0, read_only=true, authoritative=false, and introduce no privilege, secret, or mutation surfaces on v0.150.6.",
+          "reviewed_code_fingerprint": "1eac132db69588e37e37b80985be23e500a98a20fc47135b2ad43450047c3edd",
+          "spec_material_hash": "127c65866657d2dd15434ca52f6e3a97b8f20aa4dd97f9d3190e1cd98edac3ac"
         }
       ],
       "state": "APPROVED",
@@ -694,13 +708,13 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795090151Z"
+      "updated_at": "1795121821Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:7836d7ddbce72ebcafbbe4293382997273db981ab6bbf37f500f1156ac4ae80b",
+      "artifact_hash": "sha256:4011911e7c1d01df77dbfadb74f6e7dbf3381bdeca9346a8f02249225cc755e7",
       "checks": [
         {
           "name": "cli_contract_conformance_doc_trajectory",
@@ -736,6 +750,10 @@
         },
         {
           "name": "unit_projection_budget",
+          "status": "passed"
+        },
+        {
+          "name": "v01506_candidate_build_docs_refresh",
           "status": "passed"
         },
         {
@@ -786,10 +804,17 @@
             "intent_id": "intent:change_01M7S423XPJM4AHMVC6J51TV2P",
             "kind": "trajectory_step_recorded",
             "sequence": 6
+          },
+          {
+            "detail": "trajectory:branch_01M7S4240XFBTPQ43E2BAB68NJ",
+            "event_id": "event:7",
+            "intent_id": "intent:change_01M7S423XPJM4AHMVC6J51TV2P",
+            "kind": "trajectory_step_recorded",
+            "sequence": 7
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 6,
+        "next_sequence": 7,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M7S4240XFBTPQ43E2BAB68NJ": {
@@ -870,6 +895,21 @@
                 ],
                 "sequence": 6,
                 "validation_findings": []
+              },
+              {
+                "action": "verification",
+                "custody_event_id": "event:7",
+                "observations": [
+                  "Merged origin/master d0ca8eb36d016976e80fde9280e80ed58c0bb6ea (v0.150.6), reconciled governance.json via reconcile-merge, rebuilt 0.150.6 candidate binary, verified docs build 0 diff, refreshed 0.150.6 specs/manifest/Dockerfile."
+                ],
+                "proof_refs": [
+                  "v01506_candidate_build_docs_refresh"
+                ],
+                "scope": [
+                  "root"
+                ],
+                "sequence": 7,
+                "validation_findings": []
               }
             ]
           }
@@ -880,6 +920,7 @@
       "evidence": [
         "CLIPPY_CONF_DIR=.config cargo clippy --all-targets --all-features -- -D warnings passed",
         "Merged origin/master 1332f4ecd73ec75cc76e76dbff52f4c9b471cf94 (v0.150.0), refreshed 0.150.0 specs/manifest/Dockerfile, verified cargo fmt --check, core::projection_budget (6/6), and projection_performance_budgets_1734 (5/5)",
+        "Merged origin/master d0ca8eb36d016976e80fde9280e80ed58c0bb6ea (v0.150.6), reconciled governance.json via reconcile-merge, rebuilt 0.150.6 candidate binary, verified docs build 0 diff, refreshed 0.150.6 specs/manifest/Dockerfile.",
         "cargo fmt --all -- --check passed",
         "cargo test --test datastore_efficiency (7 passed), datastore_relational_compaction (13 passed), single_datastore (9 passed), cli_contract_enforcement (23 passed), contract_conformance (12 passed), doc_alignment (4 passed), trajectory_docs (5 passed), validation_scope (9 passed)",
         "cargo test --test projection_performance_budgets_1734 (5 passed) and --ignored benchmark (1 passed: 10K events indexed p50 743us vs 1210us unindexed, 179KiB vs 7.04MiB unbounded, 4 WAL writers + 4 readers 0 errors/0 deferrals, 25 worktrees degraded cleanly at 517ms)",

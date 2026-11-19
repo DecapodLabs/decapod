@@ -797,8 +797,8 @@ execution evidence remains required before publication readiness.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `6e67e35ae0dbae953045c6ac5b11faf2fbf77e794d31add64192d3db292a7754`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (242 files), `tests/` (253 files)
+- Repository signal fingerprint: `1eac132db69588e37e37b80985be23e500a98a20fc47135b2ad43450047c3edd`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (244 files), `tests/` (256 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 
@@ -1277,3 +1277,25 @@ exercise real secrets nor prove actual native cache publication.
 ## Canonical local Git proof (#1069)
 
 Canonical local proof shares the OS user trust domain with source, policy, tools and SQLite; it is not cryptographic authentication or OS isolation. The local authority is accepted on canonical Git rather than supplied by a candidate report, and cannot act as cloud/forge identity. Target reads disable ambient Git redirects, transport and replacement objects. Material/policy/target changes invalidate applicability without rewriting historical success. Supported forge publication rejects local-only authority; unrestricted shell/Git remains outside that enforcement boundary. No keys, credentials or machine-local logs belong in tracked state.
+
+## Merge reconciliation fail-closed proof boundary (#1780)
+
+`core::governance_document::reconcile_merge` enforces three invariants to prevent
+Git merge reconciliation from laundering invalid or partial proof:
+1. **Immutable parent authority**: Inputs come exclusively from `HEAD`,
+   `MERGE_HEAD`, and `merge-base --all` blobs with graft and replace-object
+   protections; corrupted or tampered working-tree `.decapod/governance.json`
+   files outside an active Git merge (`MERGE_HEAD` absent) are rejected with
+   `GOVERNANCE_MERGE_NOT_IN_PROGRESS`.
+2. **Non-promotion of proof**: Merging a branch with failed or missing checks
+   retains every failed check and missing proof hook, forces `proof_status` and
+   `verdicts` recomputation via `TrajectoryArtifact::with_recomputed_hash()`, and
+   strips stale `validation` receipts whenever trajectory or validation state
+   changes. Contradictory statuses for the same named check fail closed with
+   `GOVERNANCE_MERGE_PROOF_CONFLICT`.
+3. **Authority disambiguation**: Unaccepted distinct workstreams (`change.id`
+   mismatch where `MERGE_HEAD` is not an ancestor of the accepted `target_base`
+   ref), conflicting `target_base` or `base_commit` values, or conflicting
+   non-additive edits fail closed with `GOVERNANCE_MERGE_AUTHORITY_CONFLICT`.
+   Full merge-commit checkpoint verification (`verify-checkpoints`) remains
+   independently enforced after committing the merge.
