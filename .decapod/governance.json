@@ -624,6 +624,11 @@
       "id": "cp-1783-6",
       "summary": "Reconcile origin/master 102d6eb22 (v0.149.3), refresh specs/Dockerfile/reviewed_sources_digest, and record review-spec x3 for #1783",
       "input_digest": "sha256:ab8d18d06099a5246e14284a89177b7c38dc7462a71825749bacff31fe52f1eb"
+    },
+    {
+      "id": "cp-1783-7",
+      "summary": "Reconcile origin/master cfe2565da (PR #1816, v0.149.3), refresh specs, and record review-spec x3 for #1783",
+      "input_digest": "sha256:8fec17237e26e40256522e51bf6e8a6df659655d19e10549b72d2a793b919378"
     }
   ],
   "intents": {
@@ -664,23 +669,23 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Reconciled on origin/master 102d6eb22 (v0.149.3): verified WriterIncarnation provenance capture and cross-boot/PID-reuse liveness correlation.",
-          "reviewed_code_fingerprint": "468fdafb56aaadf97433f701f4e7cb39ac88d9024a5d0cf8a3827384c5d5b4e2",
+          "reason": "Reconciled on origin/master cfe2565da (PR #1816, v0.149.3): verified WriterIncarnation provenance capture and cross-boot/PID-reuse liveness correlation.",
+          "reviewed_code_fingerprint": "84ea03f3d7e9a748139c03a498012525481630d544f75abb8d6c2ab358dba037",
           "spec_material_hash": "4929deadf9cb8583650d9f9c3d2cb84acc645960aad1662857d3510b50ae1e23"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Reconciled on origin/master 102d6eb22 (v0.149.3): verified broker verify/repair --acknowledge-unknown-writer CLI and provenance contracts.",
-          "reviewed_code_fingerprint": "468fdafb56aaadf97433f701f4e7cb39ac88d9024a5d0cf8a3827384c5d5b4e2",
+          "reason": "Reconciled on origin/master cfe2565da (PR #1816, v0.149.3): verified broker verify/repair --acknowledge-unknown-writer CLI and provenance contracts.",
+          "reviewed_code_fingerprint": "84ea03f3d7e9a748139c03a498012525481630d544f75abb8d6c2ab358dba037",
           "spec_material_hash": "0c810d04c62a55d1935a9c59c78cea79cf0a28477ed58589c6898d16fd4c6a5a"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Reconciled on origin/master 102d6eb22 (v0.149.3): verified fail-closed unknown-writer orphan recovery and explicit human review gate.",
-          "reviewed_code_fingerprint": "468fdafb56aaadf97433f701f4e7cb39ac88d9024a5d0cf8a3827384c5d5b4e2",
-          "spec_material_hash": "0662955287aed3e33e71a27b537cba0673fafeb47f65465b3e197c1cb5b762a3"
+          "reason": "Reconciled on origin/master cfe2565da (PR #1816, v0.149.3): preserved #1776 policy hardening alongside #1783 fail-closed unknown-writer orphan recovery.",
+          "reviewed_code_fingerprint": "84ea03f3d7e9a748139c03a498012525481630d544f75abb8d6c2ab358dba037",
+          "spec_material_hash": "4368481217d44d7913768939bf5b66594c3a6004cb510e8090a922d78b97f2b8"
         }
       ],
       "state": "APPROVED",
@@ -691,7 +696,7 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795049869Z"
+      "updated_at": "1795053695Z"
     },
     "trajectory": {
       "active_boundaries": [

@@ -165,9 +165,24 @@ pub fn run_gatekeeper(
 impl GatekeeperConfig {
     pub fn from_repo_config(repo_root: &Path) -> Self {
         let mut config = Self::default();
-        if let Ok(project) = crate::cli::DecapodProjectConfig::load(repo_root) {
-            config.protected_paths = project.governance.protected_paths;
+        let mut paths = Vec::new();
+        if let Ok((_main_root, accepted, _unmerged)) =
+            crate::core::db_maintenance::resolve_accepted_project_config(repo_root)
+        {
+            for path in accepted.governance.protected_paths {
+                if !paths.contains(&path) {
+                    paths.push(path);
+                }
+            }
         }
+        if let Ok(project) = crate::cli::DecapodProjectConfig::load(repo_root) {
+            for path in project.governance.protected_paths {
+                if !paths.contains(&path) {
+                    paths.push(path);
+                }
+            }
+        }
+        config.protected_paths = paths;
         config
     }
 }
