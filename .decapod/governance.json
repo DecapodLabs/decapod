@@ -627,6 +627,11 @@
       "id": "cp-cloud-wave-slot3-spec-review",
       "summary": "Refresh spec reviews for ARCHITECTURE/INTERFACES/SECURITY against final code fingerprint after macOS cfg clippy fix",
       "input_digest": "sha256:59fea46e315ded6aff906147995974d1c7c4d3d271defc7e8d44818f681770ac"
+    },
+    {
+      "id": "cp-cloud-wave-slot3-merge-84f967382",
+      "summary": "Integrate accepted master 84f967382 (PR #1823 workunit convergence) and refresh spec reviews",
+      "input_digest": "sha256:5a56341bef85f4c4009f82caac91d345968b3f4bcc379c1b4d41243cde023263"
     }
   ],
   "intents": {
@@ -667,22 +672,22 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Re-reviewed ARCHITECTURE.md against current code fingerprint after macOS cfg guard on KEYSTORE_SERVICE in cloud_dpop.rs",
-          "reviewed_code_fingerprint": "6b5e5d034af2129f4cda8289669b311c51046f2eed18382538697f6ebb949dbb",
+          "reason": "Re-reviewed ARCHITECTURE.md after integrating accepted master 84f967382 (PR #1823)",
+          "reviewed_code_fingerprint": "17bb01252165722740df7102ca6093fa9d4462a5accf2edc0b69bba1c60ac6e4",
           "spec_material_hash": "eea767e816c43693064ee73b838425f7a154fd6e56cf0552669d971d1e5001ea"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Re-reviewed INTERFACES.md against current code fingerprint after macOS cfg guard on KEYSTORE_SERVICE in cloud_dpop.rs",
-          "reviewed_code_fingerprint": "6b5e5d034af2129f4cda8289669b311c51046f2eed18382538697f6ebb949dbb",
-          "spec_material_hash": "982b2bfb9cc87a1ef9bc74dd945db13a428723ee146c46da64f6fdf16a038023"
+          "reason": "Re-reviewed INTERFACES.md after integrating accepted master 84f967382 (PR #1823)",
+          "reviewed_code_fingerprint": "17bb01252165722740df7102ca6093fa9d4462a5accf2edc0b69bba1c60ac6e4",
+          "spec_material_hash": "133eff6eb96038a64e0bad61a1e524319afc1a5c0c4c9753c9238efc1615e846"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Re-reviewed SECURITY.md against current code fingerprint after macOS cfg guard on KEYSTORE_SERVICE in cloud_dpop.rs",
-          "reviewed_code_fingerprint": "6b5e5d034af2129f4cda8289669b311c51046f2eed18382538697f6ebb949dbb",
+          "reason": "Re-reviewed SECURITY.md after integrating accepted master 84f967382 (PR #1823)",
+          "reviewed_code_fingerprint": "17bb01252165722740df7102ca6093fa9d4462a5accf2edc0b69bba1c60ac6e4",
           "spec_material_hash": "5142f990d1f15f6839a51c5453fd5ba4e4274e1f7e31a8f1c1cd87618c887e35"
         }
       ],
@@ -694,7 +699,7 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795070771Z"
+      "updated_at": "1795073147Z"
     },
     "trajectory": {
       "active_boundaries": [

@@ -1516,8 +1516,8 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `6b5e5d034af2129f4cda8289669b311c51046f2eed18382538697f6ebb949dbb`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (240 files), `tests/` (248 files)
+- Repository signal fingerprint: `17bb01252165722740df7102ca6093fa9d4462a5accf2edc0b69bba1c60ac6e4`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (240 files), `tests/` (249 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 
@@ -2379,3 +2379,41 @@ completion:
 - **Partial diagnostics and non-reusable receipts:** `ValidationScope::CiLocal` (`GITHUB_ACTIONS=true` / `BUILDKITE=true`) and `ValidationScope::ProjectPrerequisites` (`decapod govern project-check`) preserve `publication_ready = false` and never record `validation.completed` history (`core::validation_history::finish_archive`) or full native readiness artifacts (`observations.json`, `completion/`, `historical-proof.json`). Removing an override after an overridden or partial `govern project-check` receipt write (`sections.validation` in `.decapod/governance.json`) does not authorize `validate`, `workspace publish`, `qa verify commit`, or `todo done --validated [--commit]`.
 - **Group broker isolation (`src/decapod/core/group_broker.rs`):** `CALLER_ENV_KEYS` clears/replaces all three `DECAPOD_VALIDATE_SKIP_*` variables per caller request so an override-tainted broker leader cannot taint a clean `todo done --validated` client, while override-tainted clients fail in `lib.rs::run()` before mutating todo state.
 - **Regression suite and verification scope:** `tests/gate_skip_override_readiness_1659.rs` exercises all of the above end-to-end against the compiled `decapod` binary in isolated canonical local-Git repositories (`repository_profile::REQUIRED_PROFILE`, `canonical_local_target = true`). Full hosted Buildkite/GitHub source-CI acceptance for this branch remains governed by the repository's configured proof profile and is not substituted by local test execution.
+
+## Split-store convergence and all-6 #1660 VERIFIED workunit falsifiers
+
+`src/decapod/core/workunit.rs` (`converge_split_workunit_store`,
+`workunit_journal_status`, `validate_verified_manifest`, `transition_status`,
+`resume_workunit`, `init_workunit`, `checkpoint_workunit`, `mutate_workunit_with_proof_gate`)
+enforces single-domain canonical custody and kernel-observed proof for all
+`VERIFIED` workunit transitions and publication gates:
+
+- Any separately initialized workspace-local datastore (`<worktree>/.decapod/data/todo.db`
+  or `decapod.db` containing policy tables `agents`/`risk_zones`, `workunit`
+  events, or corrupt/unreadable state, while permitting benign `traces`-only
+  RPC logs) returns `WORKUNIT_PROOF_ATOMIC_DOMAIN_UNSUPPORTED` on `VERIFIED`
+  transitions, `validate_verified_manifest`, `resume_workunit`, partial or
+  uninitialized split-store writes that would otherwise leak into the canonical
+  main store, and `journal-status` (`split_store: true`,
+  `atomic_domain_supported: false`, `proof_status: "not_proven"`), while
+  keeping explicitly initialized non-`VERIFIED` local declarations isolated
+  inside the workspace-local datastore until converged.
+- `decapod govern workunit converge [--task-id <id>] [--dry-run]` inspects or
+  archives workspace-local database files and split-only projections into
+  `.decapod/data/split-store-audit/<archive_id>/audit.json` as `not_proven` audit
+  history (`classification: "WORKUNIT_PROOF_ATOMIC_DOMAIN_UNSUPPORTED"`), never
+  promoting or importing unattested or self-declared `sha256:abc` rows into the
+  canonical store. After convergence, `journal-status` continues retaining
+  `audit_records` as `not_proven` while allowing current tasks in the worktree
+  to execute canonical `decapod validate` and transition atomically to `VERIFIED`.
+- Actual-binary suite `tests/workunit_verified_proof_1660.rs` (zero
+  `DECAPOD_VALIDATE_SKIP_*` gate-skip variables) exercises all 6 `#1660`
+  falsifiers: (1) self-authored `record-proof` pass + `sha256:abc` never mints
+  `VERIFIED` or publication; (2) quick-scope/skipped, failed, or unavailable-tool
+  attempts stay `not_proven`; (3) source mutation, accepted-base movement,
+  changed `proof_plan`, and newer failed validation downgrade/mark receipts
+  `stale`; (4) authentic proof copied across tasks, custody generations (including
+  ABA lease reclaim), or repositories is rejected; (5) split-store records stay
+  `not_proven` audit history with `WORKUNIT_PROOF_ATOMIC_DOMAIN_UNSUPPORTED`;
+  and (6) repaired canonical tasks complete `VERIFIED` atomically and pass
+  `verify_workunit_gate_for_publish`.

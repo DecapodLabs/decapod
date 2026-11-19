@@ -954,12 +954,18 @@ missing or partial policy store fails before any workunit journal append.
   sealing is local cooperative enforcement, not global exclusivity across clones.
 - `decapod govern workunit checkpoint --task-id <id> --operation-id <id>`
   records a checkpoint, with optional `--expected-generation <n>`
-- `decapod govern workunit journal-status --task-id <id>` inspects the journal
-  and JSON projection; `recover --task-id <id>` restores the exact recorded
-  manifest without refreshing verification
+- `decapod govern workunit journal-status --task-id <id>` inspects the journal,
+  JSON projection, `proof_status` (`proven`, `not_proven`, `stale`, `absent`),
+  and split-store audit records; `recover --task-id <id>` restores the exact
+  recorded manifest without refreshing verification
 - `decapod govern workunit resume --task-id <id> --operation-id <id>` checks
   current execution authority before continuing, with the same optional
   generation precondition
+- `decapod govern workunit converge [--task-id <id>] [--dry-run]` inspects or
+  archives a separately initialized workspace-local datastore as `not_proven`
+  audit history (`WORKUNIT_PROOF_ATOMIC_DOMAIN_UNSUPPORTED`) without promoting
+  split-store records to `VERIFIED`, converging the workspace onto the canonical
+  atomic store
 
 - `decapod govern trajectory checkpoint --run-id <id> --checkpoint-id <id>`
   records bounded source, intent, plan, trajectory, task custody, and policy
