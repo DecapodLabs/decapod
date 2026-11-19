@@ -20,6 +20,7 @@ use std::path::{Path, PathBuf};
 use std::os::unix::fs::{OpenOptionsExt, PermissionsExt};
 
 const DEVICE_KEY_SCHEMA_VERSION: u32 = 1;
+#[cfg(target_os = "macos")]
 const KEYSTORE_SERVICE: &str = "com.decapod.cloud.device-key";
 pub const MAX_DPOP_CLOCK_SKEW_SECONDS: i64 = 300;
 

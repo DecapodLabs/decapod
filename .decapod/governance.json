@@ -617,6 +617,11 @@
       "id": "cp-cloud-wave-slot3-reconciled",
       "summary": "Adopt dactyl-db 0.18.0, cloud control-plane custody (#1809/#1590/#1777/#1778/#1066/#1158/#1377), Local/Cloud branding (#1808/#1769), and reconciled reviewed_sources_digest",
       "input_digest": "sha256:70a6250bfee10916afb1540d9cc1f5aa8ee59da9af44935bbfa6b914f0ea1b3f"
+    },
+    {
+      "id": "cp-cloud-wave-slot3-clippy-fix",
+      "summary": "Gate KEYSTORE_SERVICE constant in src/decapod/core/cloud_dpop.rs to #[cfg(target_os = \"macos\")] for Linux clippy -D warnings parity",
+      "input_digest": "sha256:f424b019e807e9a8fd4cd99baced327ce35f49106137661c85c076b4e126ef4e"
     }
   ],
   "intents": {
