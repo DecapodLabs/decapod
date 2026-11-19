@@ -144,6 +144,18 @@ noninteractive `podman machine start --quiet --no-info --update-connection=false
 path, followed by another service probe. This does not launch Podman Desktop or
 change the default connection.
 
+On Linux hosts running rootless Podman with the `cgroupfs` manager on cgroup v2
+without a user systemd instance (`#1820`), `decapod auto container run` (and
+claim-triggered container preparation via `src/decapod/plugins/container.rs`)
+retains full `--cpus`, `--memory`, and `--pids-limit` enforcement and never
+disables cgroups. Operators or agents may specify a validated delegated parent
+through `--cgroup-parent` or `DECAPOD_CONTAINER_CGROUP_PARENT`, or run inside a
+delegated cgroup v2 subtree whose writable non-root ancestor enables `cpu`,
+`memory`, and `pids` in `cgroup.subtree_control` for automatic selection.
+Invalid values fail closed with `container_invalid_cgroup_parent` before runtime
+invocation, and OCI/cgroupfs creation or limit-enforcement permission errors emit
+`container_cgroup_permission_denied` rather than `container_workspace_permission_denied`.
+
 The explicit container-workspace launch hint makes a verified online backup in a
 private temporary directory, mounts it read-only and seeds container-local tmpfs.
 Backup failure prevents launch. Container-copy writes are ephemeral and are not
@@ -434,8 +446,8 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `7391e2038f1254eac57bcf1e94ab559cc4a9a0be26a85678148eeed50aaa8301`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (241 files), `tests/` (250 files)
+- Repository signal fingerprint: `6026d851ab6f819e0d7014dafa322075371b739865c9ea7be4512311ea30ed15`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (241 files), `tests/` (251 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 
