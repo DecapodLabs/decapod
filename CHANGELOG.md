@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.150.5](https://github.com/DecapodLabs/decapod/compare/v0.150.4...v0.150.5) - 2026-11-19
+
+### Other
+
+- *(govern)* align living specs and governance continuation ([#1849](https://github.com/DecapodLabs/decapod/pull/1849))
+- remove duplicate Welcome header and give every page breathing room
+
 ## [0.150.4](https://github.com/DecapodLabs/decapod/compare/v0.150.3...v0.150.4) - 2026-11-19
 
 ### Other
