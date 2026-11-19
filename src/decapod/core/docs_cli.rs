@@ -667,6 +667,9 @@ fn build_docs(touched: Vec<PathBuf>) -> Result<(), error::DecapodError> {
                 "data" => {
                     writeln!(file, "\n{}", db_maintenance_command_contract())?;
                 }
+                "auto" => {
+                    writeln!(file, "\n{}", auto_container_command_contract())?;
+                }
                 "system" => {
                     writeln!(file, "\n{}", system_command_contract())?;
                 }
@@ -1188,6 +1191,15 @@ mod validation_contract_tests {
             assert!(body.contains("No automatic controller replacement is performed"));
         }
     }
+}
+
+fn auto_container_command_contract() -> &'static str {
+    r#"### `decapod auto container run`
+
+- **Delegated cgroup parent (`#1820`):** Accepts an optional `--cgroup-parent <path-or-slice>` flag (or `DECAPOD_CONTAINER_CGROUP_PARENT` environment variable; CLI flag takes precedence) and passes `--cgroup-parent` to the container runtime while keeping `--cpus`, `--memory`, and `--pids-limit` enforced. Cgroups are never disabled.
+- **Fail-closed validation:** Only canonical absolute cgroup hierarchy paths (e.g. `/delegated/decapod`, without the `/sys/fs/cgroup` mount prefix, trailing slashes, empty segments, `.` or `..` traversal, whitespace, control characters, or metacharacters) and systemd slice names (`*.slice`) are accepted. Invalid values fail closed with `container_invalid_cgroup_parent` before touching the container runtime.
+- **Rootless Podman `cgroupfs` auto-detection:** When neither `--cgroup-parent` nor `DECAPOD_CONTAINER_CGROUP_PARENT` is set and local `podman info` reports rootless `cgroupfs` on cgroup v2 (`serviceIsRemote: false`), Decapod inspects `/proc/self/cgroup` and selects the deepest non-root writable ancestor under `/sys/fs/cgroup` whose `cgroup.subtree_control` enables `cpu`, `memory`, and `pids` without traversing symlinks.
+- **Diagnostics:** OCI/cgroupfs permission errors (`crun`/`runc` `cannot set limits without cgroups`, `/sys/fs/cgroup` permission denied) return `container_cgroup_permission_denied` with delegated cgroup parent remediation, distinct from `container_workspace_permission_denied`."#
 }
 
 fn legacy_todo_recovery_contract() -> &'static str {
