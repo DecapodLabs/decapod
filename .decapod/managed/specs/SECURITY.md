@@ -1,5 +1,30 @@
 # Security
 
+## Device key custody, container signing isolation, and fail-closed cloud boundaries (#1778, #1066, #1590, #1809, #1808)
+
+- **Key custody outside repositories**: `DeviceKeyStore` rejects any key path
+  that resolves inside the repository checkout (including through non-existent
+  path tails on macOS `/var` -> `/private/var`), rejects symlinks, enforces
+  mode `0600` (`O_NOFOLLOW`), and zeroizes PKCS#8 key material on drop. DPoP
+  verifiers reject private JWK parameters (`d`, `p`, `q`, `dp`, `dq`, `qi`,
+  `oth`, `k`) and bind `htm`, canonical `htu`, `iat`, `ath`, `nonce`, and `aud`.
+- **Container isolation**: `filter_container_environment` strips raw tokens,
+  service-role keys, refresh secrets, and `SSH_AUTH_SOCK` before container
+  launch. `HostContainerSignerServer` mounts only a mode-0600 Unix socket and
+  denies wrong repository, mismatched agent ID, foreign origin, non-allowlisted
+  operations (including `device-enroll`, `device-revoke`, billing, and owner
+  tier mutations), cross-capability misuse, expired sessions, and revoked keys.
+- **No silent local fallback or unmerged privilege escalation**: Cloud auth,
+  entitlement (`403`), payload bound (`413`), quota (`429`), or owner-repair
+  denials never create, read, or mutate `.decapod/data/decapod.db`. Unconfigured
+  explicit `neon`/`supabase` datastores fail closed without falling back to the
+  retired legacy preview endpoint. Unmerged worktree config never enables
+  `owner` repair locally or remotely, and `#1776` accepted-cloud enforcement
+  continues to block unaccepted local downgrades.
+- **Public repository hygiene**: All code, tests, fixtures, docs, and specs in
+  this wave use synthetic `example.invalid` / loopback fixtures only — zero live
+  hostnames, merchant identifiers, private database schemas, or raw secrets.
+
 ## Ambiguous RPC JSON
 
 Duplicate decoded keys are invalid at every nesting level, including Unicode
@@ -770,8 +795,8 @@ execution evidence remains required before publication readiness.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `3940d05249f2fbf02dcf9dd597f419771fb87456380edb04bd51dcdedcbb954d`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (238 files), `tests/` (245 files)
+- Repository signal fingerprint: `cb3052a6ae4a248a0c8a89778db0217d1ca0d6656dfdbf0af27b4d713e0b1365`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (241 files), `tests/` (250 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 

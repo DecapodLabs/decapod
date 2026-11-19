@@ -25,7 +25,7 @@ Perform methodology compliance checks.
 
 ### `init` (alias: `i`)
 Bootstrap or manage the Decapod lifecycle.
-- `--backend local|cloud`: Select the logical backend. Cloud starts or resumes
+- `--backend local|cloud`: Select the logical backend: `local` (**Decapod Local**, default, free and offline) or `cloud` (**Decapod Cloud**, account required). Cloud starts or resumes
   managed sign-in through Dactyl and reports pending/account-action/denied
   outcomes as non-success. Setup readiness requires current server authorization.
 - `--restart-cloud-signin`: Explicitly start a new flow after an interrupted
@@ -42,8 +42,8 @@ Bootstrap or manage the Decapod lifecycle.
 Discover the features supported by the current Decapod binary.
 
 ### `cloud`
-Optional cloud credential operations. These commands do not enable cloud
-storage or change the local SQLite default.
+Optional **Decapod Cloud** credential and project operations. These commands do
+not enable cloud storage or change the **Decapod Local** (`local`) SQLite default.
 
 - `cloud login`: the agent starts or resumes the repository's saved sign-in
   flow and checks current repository access. The human runs init once.
@@ -52,7 +52,7 @@ storage or change the local SQLite default.
   and its operation ID. An uncertain exchange is never replayed.
 - `cloud status`: inspect private phase, credential presence, and expiry without
   network I/O or printing a token. `server_readiness` remains `not_checked`.
-  See [Cloud sign-in and task access](propodus.md) for live confirmation.
+  See [Decapod Cloud sign-in and task access](propodus.md) for live confirmation.
 
 ### Local database maintenance
 

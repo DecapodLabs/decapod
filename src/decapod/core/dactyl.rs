@@ -317,7 +317,7 @@ impl DactylBridge {
         context.validate()?;
         match context.route() {
             BackendRoute::Local { path } => Self::open_local(path, access_mode),
-            BackendRoute::Cloud { uri, .. } => {
+            BackendRoute::Cloud { uri, repository } => {
                 let bearer = context.bearer().ok_or_else(|| {
                     DecapodError::CloudAuth(CloudAuthDiagnostic::new(
                         CloudAuthStatus::Missing,
@@ -331,9 +331,19 @@ impl DactylBridge {
                         {
                             // Resolve the physical connector inside Dactyl.
                             // Discovery is public and never receives this bearer.
-                            dactyl_db::CloudConnector::discover(uri)
-                                .map_err(crate::core::cloud_client::transport_error)?
-                                .route(Some(bearer.to_owned()))
+                            let mut connector = dactyl_db::CloudConnector::discover(uri)
+                                .map_err(crate::core::cloud_client::transport_error)?;
+                            if let Ok(cwd) = std::env::current_dir()
+                                && let Some(signer) =
+                                    crate::core::cloud_dpop::active_request_proof_signer(
+                                        connector.origin(),
+                                        &repository.canonical_name,
+                                        &cwd,
+                                    )
+                            {
+                                connector = connector.with_proof_signer(signer);
+                            }
+                            connector.route(Some(bearer.to_owned()))
                         }
                         #[cfg(not(feature = "supabase-cloud"))]
                         {

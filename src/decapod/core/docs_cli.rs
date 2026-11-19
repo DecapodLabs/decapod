@@ -720,6 +720,7 @@ fn build_docs(touched: Vec<PathBuf>) -> Result<(), error::DecapodError> {
             writeln!(file, "```rust\n{fields}\n```")?;
         }
         writeln!(file, "\n{}", shared_claim_config_contract())?;
+        writeln!(file, "\n{}", backend_selection_config_contract())?;
         writeln!(file, "\n{}", readiness_config_contract())?;
         writeln!(file, "\n{}", repository_readiness_contract().trim_end())?;
         writeln!(
@@ -745,6 +746,14 @@ fn system_command_contract() -> &'static str {
 
 - **Non-initializing diagnostics (`decapod system migrations`, `decapod system doctor check`, `decapod system version`, `decapod system capabilities`):** Run without requiring `DECAPOD_SESSION_PASSWORD`, without creating `.decapod/data/`, without modifying `version_counter.json`, `applied.json`, or `catalog.json`, and without consuming a pending migration notice.
 - **Migration inspection (`decapod system migrations --format {json,text}`):** Resolves `workspace_root`, `governance_root`, and `decapod_root` (following the main repository `.decapod` from governed worktrees) and exposes `version_counter`, `applied`, compiled/on-disk `catalog`, `pending_migrations`, `action_required`, `reason_codes`, and actionable `instructions`."#
+}
+
+fn backend_selection_config_contract() -> &'static str {
+    r#"## Repository Backends: Decapod Local and Decapod Cloud
+
+- **Decapod Local (`repo.backend = "local"`, default):** Local-first SQLite and Git governance runtime stored under `.decapod/`. Works offline with no account or external endpoint required.
+- **Decapod Cloud (`repo.backend = "cloud"`):** Optional hosted repository-bound backend via Dactyl (`decapod init --backend cloud`, `decapod cloud login|status|projects|project`). Cloud mode never falls back to local SQLite.
+- **Explicit cloud adapter environment:** Explicit adapter/test callers configure `DECAPOD_CLOUD_API_URL`, `DECAPOD_CLOUD_DATASTORE`, and `DECAPOD_CLOUD_PROVIDER` (`DECAPOD_PROPODUS_API_URL` remains a deprecated backwards-compatible alias that emits a structured deprecation warning; no obsolete preview URL default is assumed when unconfigured)."#
 }
 
 fn shared_claim_config_contract() -> &'static str {
@@ -785,7 +794,7 @@ worktree may invoke the allowlisted safe capability slice (`db.inspect`,
 `db.backup` under `.decapod/backups/`). Worktree or unmerged-branch config edits
 cannot self-elevate, `db.recover` remains reserved for repository `owner` repair
 authority (`#1590`), `backend = "cloud"` fails closed (`CLOUD_PRINCIPAL_UNVERIFIED`)
-until Propodus `#88` verifies a repository-privileged human principal, raw SQL /
+until Decapod Cloud verifies a repository-privileged human principal, raw SQL /
 `sqlite3` / vacuum / restore remain unmodeled, and every attempt writes a
 redacted NDJSON audit entry (`implies_validation_ready = false`).
 
