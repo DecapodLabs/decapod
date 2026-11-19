@@ -606,6 +606,15 @@
         "cli_contract_enforcement (23/23), contract_conformance (12/12), doc_alignment (4/4), trajectory_docs (5/5)",
         "tests/reversible_integration_removal_1704.rs (5/5 passed)"
       ]
+    },
+    {
+      "id": "cp-1704-v01493-sync",
+      "summary": "Integrate accepted master v0.149.3 (102d6eb22) and refresh v0.149.3 projections and spec reviews for #1704",
+      "input_digest": "sha256:a15a6e83ea11c1e2bcddc7fe75974f78f58bf07807c2ed006c21c8c848927d83",
+      "proof_refs": [
+        "v0.149.3 projections refreshed via /private/tmp/swarm-controller-0.149.3/bin/decapod",
+        "zero src/tests/docs conflicts with 102d6eb22"
+      ]
     }
   ],
   "intents": {
@@ -646,22 +655,22 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Documented integration_removal module ownership manifest, restoration manifest, and bounded apply/restore architecture for #1704",
-          "reviewed_code_fingerprint": "32778a2092364352fcfcc7b2722008aad8edf20c3e52af6e5bfb2646eb06ccc9",
+          "reason": "Verified #1704 integration removal architecture spec preserved after integrating accepted master v0.149.3",
+          "reviewed_code_fingerprint": "cca2e8d761cbe530a769e2bc9097e01cf5af2c55914547a4213187e5e5fb2300",
           "spec_material_hash": "785a8badbcec8927a206d2a2ea5a5d6bf5bc2eb365b133f3ffb2c7e821df7a03"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Documented decapod integration preview, remove/uninstall, and restore CLI interfaces, authority boundaries, and fail-closed error codes for #1704",
-          "reviewed_code_fingerprint": "32778a2092364352fcfcc7b2722008aad8edf20c3e52af6e5bfb2646eb06ccc9",
+          "reason": "Verified #1704 integration removal interface spec preserved after integrating accepted master v0.149.3",
+          "reviewed_code_fingerprint": "cca2e8d761cbe530a769e2bc9097e01cf5af2c55914547a4213187e5e5fb2300",
           "spec_material_hash": "104dea31013427e7d7c513bb3316c1aeb59617648bc6b4908f8faffcd983d329"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Security trust boundaries for integration removal (fail-closed symlink, active-custody, and separate state/governance authority gates) are documented in INTERFACES.md, ARCHITECTURE.md, and SEMANTICS.md; SECURITY.md prose required no change beyond v0.149.2 attestation refresh",
-          "reviewed_code_fingerprint": "32778a2092364352fcfcc7b2722008aad8edf20c3e52af6e5bfb2646eb06ccc9",
+          "reason": "Verified SECURITY.md prose unchanged after integrating accepted master v0.149.3; #1704 security boundaries remain documented in INTERFACES.md, ARCHITECTURE.md, and SEMANTICS.md",
+          "reviewed_code_fingerprint": "cca2e8d761cbe530a769e2bc9097e01cf5af2c55914547a4213187e5e5fb2300",
           "spec_material_hash": "735ae6e95c6b18ff2ccc718fbadaa4d7ae483d632aee2fb071d4f9ae6daa23de"
         }
       ],
@@ -673,7 +682,7 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795049324Z"
+      "updated_at": "1795049793Z"
     },
     "trajectory": {
       "active_boundaries": [
