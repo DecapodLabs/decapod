@@ -2100,6 +2100,63 @@ pub(crate) enum Command {
     /// Context: infer, lcm, internalize, preflight, impact
     #[clap(name = "context")]
     Context(ContextGroupCli),
+
+    /// Preview, reversibly remove, or restore repository integration without deleting project state
+    #[clap(name = "integration")]
+    Integration(IntegrationCli),
+}
+
+#[derive(clap::Args, Debug)]
+pub(crate) struct IntegrationCli {
+    #[clap(subcommand)]
+    pub command: IntegrationCommand,
+}
+
+#[derive(Subcommand, Debug)]
+pub(crate) enum IntegrationCommand {
+    /// Read-only preview of Decapod repository integration ownership, edits, and active blockers.
+    Preview {
+        /// Repository root directory (defaults to current working directory).
+        #[clap(short, long)]
+        dir: Option<PathBuf>,
+        /// Output format: text or json.
+        #[clap(long, default_value = "text")]
+        format: String,
+    },
+    /// Remove positively owned, unchanged Decapod repository integration while preserving project state.
+    #[clap(alias = "uninstall")]
+    Remove {
+        /// Repository root directory (defaults to current working directory).
+        #[clap(short, long)]
+        dir: Option<PathBuf>,
+        /// Explicitly authorize bounded removal of unchanged generated integration.
+        #[clap(long)]
+        authorize: bool,
+        /// Reject mutations and direct caller to `decapod integration preview`.
+        #[clap(long)]
+        dry_run: bool,
+        /// Output format: text or json.
+        #[clap(long, default_value = "text")]
+        format: String,
+        /// Separate authority boundary flag for permanent state deletion (refused).
+        #[clap(long)]
+        purge_state: bool,
+        /// Separate authority boundary flag for protected governance removal (refused).
+        #[clap(long)]
+        remove_protected_governance: bool,
+    },
+    /// Restore previously removed Decapod repository integration from a restoration manifest.
+    Restore {
+        /// Repository root directory (defaults to current working directory).
+        #[clap(short, long)]
+        dir: Option<PathBuf>,
+        /// Optional path to a restoration manifest JSON file.
+        #[clap(long)]
+        manifest: Option<PathBuf>,
+        /// Output format: text or json.
+        #[clap(long, default_value = "text")]
+        format: String,
+    },
 }
 
 #[derive(clap::Args, Debug)]

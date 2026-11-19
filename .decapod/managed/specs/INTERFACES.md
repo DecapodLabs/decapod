@@ -1,5 +1,39 @@
 # Interfaces
 
+## Reversible repository integration removal (#1704)
+
+`decapod integration {preview, remove, restore}` exposes a repository-level
+removal lifecycle grounded in `src/decapod/core/integration_removal.rs` and
+dispatched before session/migration startup in `src/decapod/lib.rs`:
+
+- **Read-only preview (`decapod integration preview [--dir <path>] [--format text|json]`):**
+  Performs zero filesystem, Git, SQLite, session, or network mutations. Returns
+  `IntegrationPreviewReport` listing `generated`, `edited`, `authored`,
+  `unknown`, and `active` resources separately, plus actionable `blockers` and
+  `authority_boundaries`.
+- **Bounded removal (`decapod integration remove --authorize [--dir <path>] [--format text|json]`):**
+  Requires explicit `--authorize` (and refuses `--dry-run` with guidance to use
+  `preview`). Fails closed (`exit != 0`) on symlink replacement
+  (`INTEGRATION_SYMLINK_REFUSED`), active custody (`INTEGRATION_ACTIVE_CUSTODY`:
+  todo leases, `authoring_bindings`, registered/non-empty `.decapod/workspaces/`,
+  held workspace/storage locks), or uncertain ownership
+  (`INTEGRATION_UNCERTAIN_OWNERSHIP`). Removes only positively owned,
+  unchanged generated files (via `.decapod/managed/integration_ownership.json`
+  or verified release/fingerprint markers on legacy repos) and owned
+  `DECAPOD_GITIGNORE_RULES` lines in `.gitignore`. Preserves edited/authored/unknown
+  files, `*.bak` backups, `.decapod/data/`, `.decapod/governance.json`, global
+  config, and credentials. Writes `.decapod/integration-restore-manifest.json`
+  atomically (`status = "in_progress"` -> `"applied"`) before deleting files so
+  interrupted or repeated removals remain idempotent.
+- **Restore (`decapod integration restore [--dir <path>] [--manifest <path>] [--format text|json]`):**
+  Losslessly restores captured files (including Unix file modes) and
+  `.gitignore` entries from `.decapod/integration-restore-manifest.json`, while
+  failing closed if the manifest is missing/unsupported or if a destination
+  became a symlink or holds conflicting authored content.
+- **Separate authority boundaries:** `--purge-state`
+  (`PERMANENT_STATE_DELETION_BOUNDARY`) and `--remove-protected-governance`
+  (`PROTECTED_GOVERNANCE_REMOVAL_BLOCKED`) are refused by integration removal.
+
 ## Workunit proof and continuity semantics (#1660)
 
 Before full proof, use `govern capsule query --task-id <id> --workunit-id <id>
@@ -1359,8 +1393,8 @@ field. Nothing in this operation authorizes a mutation, approval or completion.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `856ca8f50edff2cb1a5ebd9b9cbb7e9ce23f65f1414e0a8f320d5df5e24e3f71`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (237 files), `tests/` (238 files)
+- Repository signal fingerprint: `32778a2092364352fcfcc7b2722008aad8edf20c3e52af6e5bfb2646eb06ccc9`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (238 files), `tests/` (239 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 

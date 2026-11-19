@@ -2456,7 +2456,7 @@ fn run_init_apply(
     // scaffold layer preserves authored material using manifest provenance.
     let generate_specs = init_with.specs
         && (!target_dir
-            .join(core::project_specs::LOCAL_PROJECT_SPECS_DIR)
+            .join(core::project_specs::LOCAL_PROJECT_SPECS_MANIFEST)
             .exists()
             || init_with.force);
     let scaffold_summary = scaffold::scaffold_project_entrypoints(&scaffold::ScaffoldOptions {
@@ -2724,6 +2724,9 @@ pub fn run() -> Result<(), error::DecapodError> {
                 root: governance_root.join(".decapod").join("data"),
             };
             return doctor::run_doctor_cli(&project_store, &workspace_root, doctor_cli);
+        }
+        Command::Integration(integration_cli) => {
+            return run_integration_command(integration_cli);
         }
         command => command,
     };
@@ -3018,6 +3021,21 @@ pub fn run() -> Result<(), error::DecapodError> {
             if is_interactive {
                 prepare_init_directory_and_git(&init_target, &init_with)?;
             }
+            let gitignore_existed_before_init = init_target.join(".gitignore").exists();
+            let mut pre_existing_for_ownership = Vec::new();
+            if init_target
+                .join(".github/workflows/decapod-validate.yml")
+                .exists()
+            {
+                pre_existing_for_ownership
+                    .push(".github/workflows/decapod-validate.yml".to_string());
+            }
+            if init_target.join(".decapod/OVERRIDE.md").exists() {
+                pre_existing_for_ownership.push(".decapod/OVERRIDE.md".to_string());
+            }
+            if existing_config.is_some() {
+                pre_existing_for_ownership.push(".decapod/config.toml".to_string());
+            }
             let target_dir = run_init_apply(&init_with, &current_dir, &repo_ctx, is_interactive)?;
             let mut config = config_from_init_with(&init_with, repo_ctx);
             if let Some(existing) = existing_config.as_ref() {
@@ -3050,6 +3068,52 @@ pub fn run() -> Result<(), error::DecapodError> {
                 )?;
             }
             seed_init_generated_state(&target_dir, init_with.dry_run, is_interactive)?;
+            if !init_with.dry_run {
+                let created_gitignore =
+                    !gitignore_existed_before_init && target_dir.join(".gitignore").exists();
+                let generated_entrypoints = if init_with.all {
+                    vec![
+                        "AGENTS.md".to_string(),
+                        "CLAUDE.md".to_string(),
+                        "GEMINI.md".to_string(),
+                        "CODEX.md".to_string(),
+                    ]
+                } else {
+                    let mut eps = Vec::new();
+                    if init_with.claude {
+                        eps.push("CLAUDE.md".to_string());
+                    }
+                    if init_with.gemini {
+                        eps.push("GEMINI.md".to_string());
+                    }
+                    if init_with.cdx_ep {
+                        eps.push("CODEX.md".to_string());
+                    }
+                    if init_with.agents {
+                        eps.push("AGENTS.md".to_string());
+                    }
+                    if eps.is_empty() {
+                        vec![
+                            "AGENTS.md".to_string(),
+                            "CLAUDE.md".to_string(),
+                            "GEMINI.md".to_string(),
+                            "CODEX.md".to_string(),
+                        ]
+                    } else {
+                        if !eps.iter().any(|e| e == "AGENTS.md") {
+                            eps.push("AGENTS.md".to_string());
+                        }
+                        eps
+                    }
+                };
+                core::integration_removal::record_init_ownership(
+                    &target_dir,
+                    &generated_entrypoints,
+                    init_with.ci,
+                    created_gitignore,
+                    &pre_existing_for_ownership,
+                )?;
+            }
             let reconciliation = core::init_reconciliation::inspect(
                 &target_dir,
                 &config.proof,
@@ -3599,6 +3663,7 @@ fn command_requires_worktree(command: &Command) -> bool {
         | Command::Release(_)
         | Command::Todo(_)
         | Command::System(_)
+        | Command::Integration(_)
         | Command::Qa(_) => false,
         Command::Data(data_cli) => !matches!(data_cli.command, DataCommand::Schema(_)),
         Command::Rpc(_) => false,
@@ -3852,7 +3917,8 @@ fn requires_session_token(command: &Command) -> bool {
         | Command::Capabilities(_)
         | Command::Release(_)
         | Command::Trace(_)
-        | Command::System(_) => false,
+        | Command::System(_)
+        | Command::Integration(_) => false,
         Command::Context(ContextGroupCli {
             command: ContextGroupCommand::Preflight(_) | ContextGroupCommand::Impact(_),
         }) => false,
@@ -10936,6 +11002,94 @@ fn run_qa_command(
     Ok(())
 }
 
+fn run_integration_command(cli: IntegrationCli) -> Result<(), error::DecapodError> {
+    match cli.command {
+        IntegrationCommand::Preview { dir, format } => {
+            let report = core::integration_removal::preview_integration(dir)?;
+            match format.as_str() {
+                "json" => {
+                    println!(
+                        "{}",
+                        serde_json::to_string_pretty(&report).map_err(io::Error::other)?
+                    );
+                }
+                "text" => {
+                    print!(
+                        "{}",
+                        core::integration_removal::format_preview_text(&report)
+                    );
+                }
+                other => {
+                    return Err(error::DecapodError::ValidationError(format!(
+                        "Unsupported --format '{other}'; expected 'text' or 'json'"
+                    )));
+                }
+            }
+            Ok(())
+        }
+        IntegrationCommand::Remove {
+            dir,
+            authorize,
+            dry_run,
+            format,
+            purge_state,
+            remove_protected_governance,
+        } => {
+            let report = core::integration_removal::remove_integration(
+                dir,
+                authorize,
+                dry_run,
+                purge_state,
+                remove_protected_governance,
+            )?;
+            match format.as_str() {
+                "json" => {
+                    println!(
+                        "{}",
+                        serde_json::to_string_pretty(&report).map_err(io::Error::other)?
+                    );
+                }
+                "text" => {
+                    print!("{}", core::integration_removal::format_apply_text(&report));
+                }
+                other => {
+                    return Err(error::DecapodError::ValidationError(format!(
+                        "Unsupported --format '{other}'; expected 'text' or 'json'"
+                    )));
+                }
+            }
+            Ok(())
+        }
+        IntegrationCommand::Restore {
+            dir,
+            manifest,
+            format,
+        } => {
+            let report = core::integration_removal::restore_integration(dir, manifest)?;
+            match format.as_str() {
+                "json" => {
+                    println!(
+                        "{}",
+                        serde_json::to_string_pretty(&report).map_err(io::Error::other)?
+                    );
+                }
+                "text" => {
+                    print!(
+                        "{}",
+                        core::integration_removal::format_restore_text(&report)
+                    );
+                }
+                other => {
+                    return Err(error::DecapodError::ValidationError(format!(
+                        "Unsupported --format '{other}'; expected 'text' or 'json'"
+                    )));
+                }
+            }
+            Ok(())
+        }
+    }
+}
+
 fn run_hook_install(
     commit_msg: bool,
     pre_commit: bool,
@@ -10957,6 +11111,13 @@ fn run_hook_install(
         .to_string();
     let hooks_dir = PathBuf::from(git_dir).join("hooks");
     fs::create_dir_all(&hooks_dir).map_err(error::DecapodError::IoError)?;
+    let repo_root = std::process::Command::new("git")
+        .args(["rev-parse", "--show-toplevel"])
+        .output()
+        .ok()
+        .filter(|o| o.status.success())
+        .map(|o| PathBuf::from(String::from_utf8_lossy(&o.stdout).trim()))
+        .unwrap_or_else(|| std::env::current_dir().unwrap_or_else(|_| PathBuf::from(".")));
 
     if uninstall {
         let commit_msg_path = hooks_dir.join("commit-msg");
@@ -10965,11 +11126,23 @@ fn run_hook_install(
 
         if commit_msg_path.exists() {
             fs::remove_file(&commit_msg_path).map_err(error::DecapodError::IoError)?;
+            let _ = core::integration_removal::record_hook_ownership(
+                &repo_root,
+                "commit-msg",
+                &commit_msg_path,
+                false,
+            );
             println!("✓ Removed commit-msg hook");
             removed_any = true;
         }
         if pre_commit_path.exists() {
             fs::remove_file(&pre_commit_path).map_err(error::DecapodError::IoError)?;
+            let _ = core::integration_removal::record_hook_ownership(
+                &repo_root,
+                "pre-commit",
+                &pre_commit_path,
+                false,
+            );
             println!("✓ Removed pre-commit hook");
             removed_any = true;
         }
@@ -10994,6 +11167,12 @@ fn run_hook_install(
             perms.set_mode(0o755);
             fs::set_permissions(&hook_path, perms).map_err(error::DecapodError::IoError)?;
         }
+        let _ = core::integration_removal::record_hook_ownership(
+            &repo_root,
+            "commit-msg",
+            &hook_path,
+            true,
+        );
         println!("✓ Installed commit-msg hook for conventional commits");
     }
 
@@ -11016,6 +11195,12 @@ cargo clippy --all-targets --all-features -- -D warnings
             perms.set_mode(0o755);
             fs::set_permissions(&hook_path, perms).map_err(error::DecapodError::IoError)?;
         }
+        let _ = core::integration_removal::record_hook_ownership(
+            &repo_root,
+            "pre-commit",
+            &hook_path,
+            true,
+        );
         println!("✓ Installed pre-commit hook (fmt + clippy)");
     }
 
