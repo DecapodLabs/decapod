@@ -583,6 +583,17 @@
         "tests/unit/core/workunit_journal_tests.rs",
         "tests/workunit_verified_proof_1660.rs"
       ]
+    },
+    {
+      "id": "ckpt-wu1660-merge-89906b6",
+      "summary": "chore(workunit): integrate accepted master 89906b666 (#1660)",
+      "input_digest": "sha256:00690b0e50fafa45340291702a34b78ead8b6e1fd92a47d54bb6edd2be5180ff",
+      "proof_refs": [
+        ".decapod/managed/specs/INTERFACES.md",
+        ".decapod/managed/specs/VALIDATION.md",
+        "tests/unit/core/workunit_journal_tests.rs",
+        "tests/workunit_verified_proof_1660.rs"
+      ]
     }
   ],
   "intents": {
@@ -635,22 +646,22 @@
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Workunit split-store convergence and #1660 falsifier regression preserve existing system architecture while retaining #1776/#1659 baseline",
-          "reviewed_code_fingerprint": "61e9a3f1259510e236e3fc06246b4467ec029fe64044ac38b73c793a323c433b",
-          "spec_material_hash": "080e1e015d867051ec4ecbb1f18aca92a2d62a05798377057e563aaa5a3764e0"
+          "reason": "Preserved #1469 architecture spec from origin/master 89906b666 alongside #1660 workunit convergence",
+          "reviewed_code_fingerprint": "abf3266b5a85d3b88c4d58a5fab6c2ba2df45d2595a8701be77617d4150c6e44",
+          "spec_material_hash": "b5e1e3c343de9ed9ba501e7a48d61b43dfed92d7678b3126d1195c9c1cdb9d08"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Documented govern workunit converge CLI, typed proof_status/split-store fields, and WORKUNIT_PROOF_ATOMIC_DOMAIN_UNSUPPORTED boundary (#1660)",
-          "reviewed_code_fingerprint": "61e9a3f1259510e236e3fc06246b4467ec029fe64044ac38b73c793a323c433b",
+          "reason": "Reconciled #1660 govern workunit converge CLI and proof_status contract with origin/master 89906b666 (#1469/#1247)",
+          "reviewed_code_fingerprint": "abf3266b5a85d3b88c4d58a5fab6c2ba2df45d2595a8701be77617d4150c6e44",
           "spec_material_hash": "3f197b0f57bb0c7f8276899703455772d0e0a22f93fb9d5961126765657b693e"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Fail-closed WORKUNIT_PROOF_ATOMIC_DOMAIN_UNSUPPORTED enforcement preserves #1776 accepted-policy and authority boundaries without relaxing security guarantees",
-          "reviewed_code_fingerprint": "61e9a3f1259510e236e3fc06246b4467ec029fe64044ac38b73c793a323c433b",
+          "reason": "Preserved #1776 security spec from origin/master 89906b666 alongside #1660 fail-closed split-store guards",
+          "reviewed_code_fingerprint": "abf3266b5a85d3b88c4d58a5fab6c2ba2df45d2595a8701be77617d4150c6e44",
           "spec_material_hash": "49c7d1428d860804f8fc7f436c5da22483d385c9ce4be90f7db52f1cf4b362ee"
         }
       ],
@@ -662,7 +673,7 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795053856Z"
+      "updated_at": "1795060615Z"
     },
     "trajectory": {
       "active_boundaries": [
