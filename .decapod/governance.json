@@ -593,6 +593,14 @@
       "proof_refs": [
         "tests/shared_state_semantics_1247.rs"
       ]
+    },
+    {
+      "id": "cp-1247-3",
+      "summary": "chore(concurrency): integrate accepted master 845ff9799 (#1247)",
+      "input_digest": "sha256:d842dd1cd5be686b67a86e0aaf4dc8b60ee48d6b962e92b1974a9e8ab2dd91d2",
+      "proof_refs": [
+        "tests/shared_state_semantics_1247.rs"
+      ]
     }
   ],
   "intents": {
@@ -639,22 +647,22 @@
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Re-reviewed after integrating accepted origin/master cfe2565da (PR #1816 / #1776); #1247 shared-state architecture boundaries unchanged while transition invariants remain in SEMANTICS.md.",
-          "reviewed_code_fingerprint": "897a92878c2750c578c7613e1a7746689faaf5988960db0baf763af3807edb01",
-          "spec_material_hash": "080e1e015d867051ec4ecbb1f18aca92a2d62a05798377057e563aaa5a3764e0"
+          "reason": "Re-reviewed after integrating accepted origin/master 845ff9799 (PR #1818 / #1469); #1469 ARCHITECTURE.md updates preserved verbatim while #1247 invariants remain in SEMANTICS.md.",
+          "reviewed_code_fingerprint": "3d7ac69f2e1c8b1b57ec394bddef4d4b31f4d0bcc40c9e42170ab04244fce44e",
+          "spec_material_hash": "b5e1e3c343de9ed9ba501e7a48d61b43dfed92d7678b3126d1195c9c1cdb9d08"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Re-reviewed after integrating accepted origin/master cfe2565da (PR #1816 / #1776); no #1247 CLI or RPC wire contract changed.",
-          "reviewed_code_fingerprint": "897a92878c2750c578c7613e1a7746689faaf5988960db0baf763af3807edb01",
+          "reason": "Re-reviewed after integrating accepted origin/master 845ff9799 (PR #1818 / #1469); no #1247 CLI or RPC wire contract changed.",
+          "reviewed_code_fingerprint": "3d7ac69f2e1c8b1b57ec394bddef4d4b31f4d0bcc40c9e42170ab04244fce44e",
           "spec_material_hash": "1445e13fa7ccfa6c4a68850bd794b6b1ba7379c0148b570c3a7605b6a26beb25"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Re-reviewed after integrating accepted origin/master cfe2565da (PR #1816 / #1776); #1776 SECURITY.md updates preserved verbatim while #1247 fail-closed session/approval/cloud tests pass.",
-          "reviewed_code_fingerprint": "897a92878c2750c578c7613e1a7746689faaf5988960db0baf763af3807edb01",
+          "reason": "Re-reviewed after integrating accepted origin/master 845ff9799 (PR #1818 / #1469); #1776 SECURITY.md updates preserved verbatim while #1247 fail-closed session/approval/cloud tests pass.",
+          "reviewed_code_fingerprint": "3d7ac69f2e1c8b1b57ec394bddef4d4b31f4d0bcc40c9e42170ab04244fce44e",
           "spec_material_hash": "49c7d1428d860804f8fc7f436c5da22483d385c9ce4be90f7db52f1cf4b362ee"
         }
       ],
@@ -666,7 +674,7 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795052982Z"
+      "updated_at": "1795054359Z"
     },
     "trajectory": {
       "active_boundaries": [
