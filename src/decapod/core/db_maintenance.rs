@@ -455,6 +455,150 @@ pub fn resolve_canonical_policy(
     })
 }
 
+/// Resolve the main repository's accepted project config from protected branch or
+/// base ref, never trusting candidate worktree or unmerged-branch edits.
+pub(crate) fn resolve_accepted_project_config(
+    repo_root: &Path,
+) -> Result<(PathBuf, DecapodProjectConfig, Option<String>), PolicyResolutionError> {
+    let main_root = crate::core::workspace::get_main_repo_root(repo_root)
+        .unwrap_or_else(|_| repo_root.to_path_buf());
+    let (_, config, _, unmerged_violation) = resolve_repository_policy(&main_root)?;
+    Ok((main_root, config, unmerged_violation))
+}
+
+/// Resolve the accepted `.decapod/OVERRIDE.md` contents from protected root or
+/// committed accepted base ref, ignoring unaccepted root-branch or worktree edits.
+pub(crate) fn resolve_repository_override(
+    repo_root: &Path,
+) -> Result<Option<String>, PolicyResolutionError> {
+    let main_root = crate::core::workspace::get_main_repo_root(repo_root)
+        .unwrap_or_else(|_| repo_root.to_path_buf());
+    let override_path = main_root.join(".decapod").join("OVERRIDE.md");
+    if !main_root.join(".git").exists() {
+        return Err((
+            "CANONICAL_GIT_BOUNDARY_REQUIRED",
+            "canonical repository override resolution requires a Git boundary".to_string(),
+        ));
+    }
+    let main_config_path = main_root.join(".decapod").join("config.toml");
+    if !main_config_path.exists() {
+        let head_branch = git_stdout(&main_root, &["symbolic-ref", "--quiet", "--short", "HEAD"]);
+        if head_branch
+            .as_deref()
+            .is_some_and(|b| matches!(b, "master" | "main"))
+        {
+            if !override_path.exists() {
+                return Ok(None);
+            }
+            let bytes = read_regular_policy_bytes(&override_path)?;
+            let text = String::from_utf8(bytes).map_err(|_| {
+                (
+                    "INVALID_CANONICAL_OVERRIDE",
+                    "canonical .decapod/OVERRIDE.md is not valid UTF-8".to_string(),
+                )
+            })?;
+            return Ok(Some(text));
+        }
+        for ref_name in [
+            "refs/remotes/origin/master",
+            "refs/remotes/origin/main",
+            "refs/heads/master",
+            "refs/heads/main",
+        ] {
+            if let Some(blob) = git_bytes(
+                &main_root,
+                &["show", &format!("{ref_name}:.decapod/OVERRIDE.md")],
+            ) {
+                let text = String::from_utf8(blob).map_err(|_| {
+                    (
+                        "INVALID_CANONICAL_OVERRIDE",
+                        "accepted base .decapod/OVERRIDE.md is not valid UTF-8".to_string(),
+                    )
+                })?;
+                return Ok(Some(text));
+            }
+        }
+        return Ok(None);
+    }
+
+    let (_, _, canonical_revision, unmerged_violation) = match resolve_repository_policy(&main_root)
+    {
+        Ok(resolved) => resolved,
+        Err(("ACCEPTED_POLICY_ABSENT" | "INVALID_CANONICAL_POLICY", _)) => {
+            let head_branch =
+                git_stdout(&main_root, &["symbolic-ref", "--quiet", "--short", "HEAD"]);
+            if head_branch
+                .as_deref()
+                .is_some_and(|b| matches!(b, "master" | "main"))
+            {
+                if !override_path.exists() {
+                    return Ok(None);
+                }
+                let bytes = read_regular_policy_bytes(&override_path)?;
+                let text = String::from_utf8(bytes).map_err(|_| {
+                    (
+                        "INVALID_CANONICAL_OVERRIDE",
+                        "canonical .decapod/OVERRIDE.md is not valid UTF-8".to_string(),
+                    )
+                })?;
+                return Ok(Some(text));
+            }
+            for ref_name in [
+                "refs/remotes/origin/master",
+                "refs/remotes/origin/main",
+                "refs/heads/master",
+                "refs/heads/main",
+            ] {
+                if let Some(blob) = git_bytes(
+                    &main_root,
+                    &["show", &format!("{ref_name}:.decapod/OVERRIDE.md")],
+                ) {
+                    let text = String::from_utf8(blob).map_err(|_| {
+                        (
+                            "INVALID_CANONICAL_OVERRIDE",
+                            "accepted base .decapod/OVERRIDE.md is not valid UTF-8".to_string(),
+                        )
+                    })?;
+                    return Ok(Some(text));
+                }
+            }
+            return Ok(None);
+        }
+        Err(err) => return Err(err),
+    };
+    if unmerged_violation.is_none() && !canonical_revision.ends_with(":accepted-ref") {
+        if !override_path.exists() {
+            return Ok(None);
+        }
+        let bytes = read_regular_policy_bytes(&override_path)?;
+        let text = String::from_utf8(bytes).map_err(|_| {
+            (
+                "INVALID_CANONICAL_OVERRIDE",
+                "canonical .decapod/OVERRIDE.md is not valid UTF-8".to_string(),
+            )
+        })?;
+        return Ok(Some(text));
+    }
+
+    let base_oid = canonical_revision.split(':').next().unwrap_or("");
+    if base_oid.is_empty() || canonical_revision.ends_with(":unborn-bootstrap") {
+        return Ok(None);
+    }
+    let Some(blob) = git_bytes(
+        &main_root,
+        &["show", &format!("{base_oid}:.decapod/OVERRIDE.md")],
+    ) else {
+        return Ok(None);
+    };
+    let text = String::from_utf8(blob).map_err(|_| {
+        (
+            "INVALID_CANONICAL_OVERRIDE",
+            "accepted base .decapod/OVERRIDE.md is not valid UTF-8".to_string(),
+        )
+    })?;
+    Ok(Some(text))
+}
+
 /// Shared accepted-policy source for privileged consumers. Candidate checkout
 /// bytes can propose a grant, but only a protected root or independently
 /// selected accepted ref supplies cooperative local authority.

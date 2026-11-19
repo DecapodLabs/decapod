@@ -45,6 +45,61 @@ access. Public-command regression controls cover denial, corrected ordinary
 operations, independently accepted bounded grants and revocation. Candidate
 test execution and exact-head full validation remain required before delivery.
 
+### Cross-surface effective-authority enforcement and #1776 repairs
+
+Cross-surface red-team verification against the compiled `decapod` binary (`0.148.11`)
+reproduced four candidate / unaccepted-branch self-authorization vectors and verified
+canonical enforcement across the remaining privilege and schema surfaces:
+
+1. **Base branch self-selection (`workspace::resolve_base_branch`, `validate::validate_project_config_toml`)**:
+   Candidate worktrees and unaccepted branches could previously set `repo.base_branch`
+   to their own branch, collapsing diff comparisons and target-policy baselines to self
+   under `govern project-check` and `validate`. `workspace::resolve_base_branch` now
+   prefers `core::db_maintenance::resolve_accepted_project_config` (falling back to
+   `detect_base_branch(&main_root)` for worktrees rather than candidate TOML), and
+   `validate_project_config_toml` explicitly rejects candidate/unmerged divergence from
+   the accepted base branch (`BASE_BRANCH_SELF_AUTHORIZATION_DENIED`) as well as
+   candidate weakening of `[laya] mode = "required"` (`LAYA_POLICY_DOWNGRADE`),
+   `proof.required_profile = "decapod.pr-readiness.v1"` (`REQUIRED_PROFILE_DOWNGRADE`),
+   and `repo.backend = "cloud"` (`BACKEND_POLICY_DOWNGRADE`). `lib.rs` likewise
+   preserves canonical `BackendType::Cloud` before entering local storage startup.
+2. **Protected paths erasure (`core::gatekeeper::GatekeeperConfig::from_repo_config`, `validate_gatekeeper_gate`)**:
+   Removing `governance.protected_paths` entries in a candidate worktree previously
+   bypassed `govern gatekeeper check` and `decapod.scope.protected_paths` rule evaluation.
+   `GatekeeperConfig::from_repo_config` now computes the deduplicated union of canonical
+   accepted `protected_paths` and task-local paths, preserving stricter task-local guards
+   while forbidding candidate removal of accepted protections. `validate_gatekeeper_gate`
+   also reports `ViolationKind::ProtectedPath` counts cleanly.
+3. **Container custody & isolation downgrade (`validate::is_container_workspaces_disabled`, `validate_git_workspace_context`)**:
+   Raw substring scanning (`.contains("container_workspaces = false")`) allowed comments
+   and unaccepted main-root checkouts to bypass container isolation, and candidate
+   worktrees could downgrade `repo.container_workspaces` or `custody.isolation` to
+   `"worktree"`. `is_container_workspaces_disabled` now evaluates parsed canonical
+   accepted config via `resolve_accepted_project_config` (refusing unmerged branches and
+   comment strings), and `validate_git_workspace_context` rejects candidate or unmerged
+   downgrades (`CUSTODY_ISOLATION_DOWNGRADE`).
+4. **`.decapod/OVERRIDE.md` rule and HITL boundaries (`core::db_maintenance::resolve_repository_override`, `core::validation_rules`, `plugins::policy::is_hitl_disabled_by_override`)**:
+   `resolve_repository_override` binds `OVERRIDE.md` resolution to the accepted base
+   commit (`:accepted-ref` SHA blob) whenever `main_root` is off a protected branch—even
+   if `.decapod/config.toml` itself was not modified—closing `HITL_DISABLE` bypasses on
+   unaccepted root checkouts as well as candidate worktrees. `validate_validation_rules`
+   loads accepted rules via `resolve_repository_override` while separately validating any
+   candidate/unmerged `OVERRIDE.md` against `RuleRegistry::load_project_rules_from_content`.
+   `apply_rule_override`, `build_and_cache_rules`, and `extend_requirements` enforce
+   `OverrideEligibility::NonOverridable` rejection across all fields (`OVERRIDE_NOT_PERMITTED`)
+   and forbid `TightenOnly` / `ConfigurableOnly` rules (`decapod.evidence.required_and_fresh`)
+   from lowering `severity` or relaxing (increasing) `evidence_max_age_seconds`.
+
+Already-enforced controls covered by actual-binary regression in `tests/policy_self_authorization_1776.rs`
+include default-deny `[governance.db_maintenance]`, `[governance.rbac]`, `main_merge`
+unknown-field `INVALID_CONFIG_SCHEMA`, `[governance].allow_basic_shared_claims`,
+`POLICY_SNAPSHOT_STALE` TOCTOU rejection across base-policy rotation, stale-target/proof
+invalidation on `validate` + `todo done --validated`, bounded accepted rotation and
+revocation with intact `data db audit` history, and pre-config read-only repair via
+`decapod docs show` and `decapod data schema --deterministic`. Cooperative host-local
+root/Git admin access and remote forge/Buildkite acceptance remain external trust
+boundaries and are never fabricated by local kernel checks.
+
 ## Scoped currency authorization (#1753)
 
 Currency preservation requires the same explicit config, sole exact canonical
@@ -706,8 +761,8 @@ execution evidence remains required before publication readiness.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `5cdb0b8f2e9954eb4b70c960caabae69da65b6a66b9826bb1193527c66a941b8`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (238 files), `tests/` (238 files)
+- Repository signal fingerprint: `cc2db555bb75cdba31e9bf76218f5983cb5bb69a90e01e0a8e3b345d287ab6bd`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (238 files), `tests/` (243 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 
