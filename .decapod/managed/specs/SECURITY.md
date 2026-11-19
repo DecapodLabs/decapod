@@ -22,8 +22,10 @@
   `owner` repair locally or remotely, and `#1776` accepted-cloud enforcement
   continues to block unaccepted local downgrades.
 - **Public repository hygiene**: All code, tests, fixtures, docs, and specs in
-  this wave use synthetic `example.invalid` / loopback fixtures only — zero live
-  hostnames, merchant identifiers, private database schemas, or raw secrets.
+  this wave use synthetic `example.invalid` / loopback fixtures and public
+  registered wire markers (`OWNER_REPAIR_V1_SQL = "SELECT propodus.owner_repair_v1($1, ..., $11)"`)
+  only — zero live hostnames, merchant identifiers, private repository source
+  filenames, private database schemas/CTE expansions, or raw secrets.
 
 ## Ambiguous RPC JSON
 
@@ -795,7 +797,7 @@ execution evidence remains required before publication readiness.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `c0806f274ca803f2d176c81cb6fbfeefd06795db5046e78a6d1376b615e6f841`
+- Repository signal fingerprint: `c81863dc6c226d665bedadcdd8648899e8f2ab33d737e43341cfd89e8a14ea8a`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (242 files), `tests/` (251 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
