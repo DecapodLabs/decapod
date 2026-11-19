@@ -7,6 +7,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.149.3](https://github.com/DecapodLabs/decapod/compare/v0.149.2...v0.149.3) - 2026-11-19
+
+### Fixed
+
+- *(readiness)* enforce gate-skip override rejection on publish and qa verify ([#1659](https://github.com/DecapodLabs/decapod/pull/1659))
+
+### Other
+
+- *(validate)* integrate accepted master v0.149.2 ([#1659](https://github.com/DecapodLabs/decapod/pull/1659))
+- *(validate)* integrate accepted master v0.149.1 ([#1659](https://github.com/DecapodLabs/decapod/pull/1659))
+- *(validate)* integrate accepted master 0b6ce0a8 ([#1659](https://github.com/DecapodLabs/decapod/pull/1659))
+- *(specs)* refresh manifest config_input_hash for 0.148.13
+- *(validate)* integrate accepted release 0.148.13
+
+## [0.149.2](https://github.com/DecapodLabs/decapod/compare/v0.149.1...v0.149.2) - 2026-11-18
+
+### Other
+
+- *(governance)* integrate accepted master v0.149.1 ([#1052](https://github.com/DecapodLabs/decapod/pull/1052)) ([#1795](https://github.com/DecapodLabs/decapod/pull/1795))
+- *(governance)* integrate accepted master 0b6ce0a8 ([#1795](https://github.com/DecapodLabs/decapod/pull/1795))
+- *(governance)* prove fault detection across five admission boundaries ([#1795](https://github.com/DecapodLabs/decapod/pull/1795))
+
 ## [0.149.1](https://github.com/DecapodLabs/decapod/compare/v0.149.0...v0.149.1) - 2026-11-18
 
 ### Other

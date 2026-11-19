@@ -619,6 +619,11 @@
         "tests/crash_consistency.rs",
         "tests/unit/core/broker_tests.rs"
       ]
+    },
+    {
+      "id": "cp-1783-6",
+      "summary": "Reconcile origin/master 102d6eb22 (v0.149.3), refresh specs/Dockerfile/reviewed_sources_digest, and record review-spec x3 for #1783",
+      "input_digest": "sha256:ab8d18d06099a5246e14284a89177b7c38dc7462a71825749bacff31fe52f1eb"
     }
   ],
   "intents": {
@@ -659,22 +664,22 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Reconcile #1783 broker provenance architecture spec with origin/master v0.149.1",
-          "reviewed_code_fingerprint": "dea5560f01355cbd79d52d90808013cf833725df5c4d03fbdd67d75022a18692",
+          "reason": "Reconciled on origin/master 102d6eb22 (v0.149.3): verified WriterIncarnation provenance capture and cross-boot/PID-reuse liveness correlation.",
+          "reviewed_code_fingerprint": "468fdafb56aaadf97433f701f4e7cb39ac88d9024a5d0cf8a3827384c5d5b4e2",
           "spec_material_hash": "4929deadf9cb8583650d9f9c3d2cb84acc645960aad1662857d3510b50ae1e23"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Reconcile #1783 broker provenance spec with origin/master v0.149.1",
-          "reviewed_code_fingerprint": "dea5560f01355cbd79d52d90808013cf833725df5c4d03fbdd67d75022a18692",
+          "reason": "Reconciled on origin/master 102d6eb22 (v0.149.3): verified broker verify/repair --acknowledge-unknown-writer CLI and provenance contracts.",
+          "reviewed_code_fingerprint": "468fdafb56aaadf97433f701f4e7cb39ac88d9024a5d0cf8a3827384c5d5b4e2",
           "spec_material_hash": "0c810d04c62a55d1935a9c59c78cea79cf0a28477ed58589c6898d16fd4c6a5a"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Reconcile #1783 fail-closed broker recovery security spec with origin/master v0.149.1",
-          "reviewed_code_fingerprint": "dea5560f01355cbd79d52d90808013cf833725df5c4d03fbdd67d75022a18692",
+          "reason": "Reconciled on origin/master 102d6eb22 (v0.149.3): verified fail-closed unknown-writer orphan recovery and explicit human review gate.",
+          "reviewed_code_fingerprint": "468fdafb56aaadf97433f701f4e7cb39ac88d9024a5d0cf8a3827384c5d5b4e2",
           "spec_material_hash": "0662955287aed3e33e71a27b537cba0673fafeb47f65465b3e197c1cb5b762a3"
         }
       ],
@@ -686,7 +691,7 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795037062Z"
+      "updated_at": "1795049869Z"
     },
     "trajectory": {
       "active_boundaries": [
