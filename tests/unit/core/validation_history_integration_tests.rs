@@ -491,3 +491,135 @@ fn repeated_commit_validation_is_unambiguous_only_for_the_same_task_contract() {
         repeated.record_digest()
     );
 }
+
+struct MockGhRunner {
+    exit_code: i32,
+    stdout: Vec<u8>,
+    captured_paths: Vec<String>,
+}
+
+impl crate::core::snapshot_provider::Runner for MockGhRunner {
+    fn execute(
+        &mut self,
+        command: &crate::core::snapshot_provider::CommandSpec,
+        _budget: &crate::core::snapshot_provider::Budget<'_>,
+    ) -> std::io::Result<crate::core::snapshot_provider::Reply> {
+        if let Some(crate::core::snapshot_provider::ProviderRequest::GithubGet { path }) =
+            command.provider_request()
+        {
+            self.captured_paths.push(path.clone());
+        }
+        Ok(crate::core::snapshot_provider::Reply {
+            exit_code: self.exit_code,
+            stdout: self.stdout.clone(),
+        })
+    }
+}
+
+#[test]
+fn github_ref_api_endpoint_encodes_nested_branches_and_rejects_invalid_inputs() {
+    assert_eq!(
+        github_ref_api_endpoint("DecapodLabs", "private-repo", "refs/heads/master").unwrap(),
+        "repos/DecapodLabs/private-repo/git/ref/heads/master"
+    );
+    assert_eq!(
+        github_ref_api_endpoint("DecapodLabs", "private-repo", "refs/heads/release/v1.0").unwrap(),
+        "repos/DecapodLabs/private-repo/git/ref/heads/release/v1.0"
+    );
+    assert!(github_ref_api_endpoint("DecapodLabs", "private-repo", "master").is_err());
+    assert!(github_ref_api_endpoint("../bad", "repo", "refs/heads/master").is_err());
+}
+
+#[test]
+fn private_repo_accepted_target_uses_authenticated_gh_runner_and_rejects_bad_replies() {
+    let (dir, material) = fixture();
+    let root = dir.path();
+    let accepted = material.head_revision.clone();
+    let body = serde_json::json!({
+        "ref": "refs/heads/master",
+        "object": {
+            "sha": accepted,
+            "type": "commit"
+        }
+    });
+    let mut runner = MockGhRunner {
+        exit_code: 0,
+        stdout: serde_json::to_vec(&body).unwrap(),
+        captured_paths: Vec::new(),
+    };
+    let line = accepted_target_via_gh_runner(
+        &mut runner,
+        root,
+        "DecapodLabs",
+        "decapod",
+        "refs/heads/master",
+    )
+    .unwrap();
+    assert_eq!(line, format!("{accepted}\trefs/heads/master"));
+    assert_eq!(
+        runner.captured_paths,
+        vec!["repos/DecapodLabs/decapod/git/ref/heads/master"]
+    );
+    let witness = integration_for_target(root, &material, &accepted).unwrap();
+    witness.recheck_local(root).unwrap();
+
+    for bad in [
+        serde_json::json!({"ref": "refs/heads/other", "object": {"sha": accepted, "type": "commit"}}),
+        serde_json::json!({"ref": "refs/heads/master", "object": {"sha": accepted, "type": "tag"}}),
+        serde_json::json!({"ref": "refs/heads/master", "object": {"sha": "not-a-sha", "type": "commit"}}),
+    ] {
+        let mut runner = MockGhRunner {
+            exit_code: 0,
+            stdout: serde_json::to_vec(&bad).unwrap(),
+            captured_paths: Vec::new(),
+        };
+        assert!(
+            accepted_target_via_gh_runner(
+                &mut runner,
+                root,
+                "DecapodLabs",
+                "decapod",
+                "refs/heads/master",
+            )
+            .is_err()
+        );
+    }
+    let mut failing_runner = MockGhRunner {
+        exit_code: 1,
+        stdout: b"{\"message\":\"Bad credentials\"}".to_vec(),
+        captured_paths: Vec::new(),
+    };
+    assert!(
+        accepted_target_via_gh_runner(
+            &mut failing_runner,
+            root,
+            "DecapodLabs",
+            "decapod",
+            "refs/heads/master",
+        )
+        .is_err()
+    );
+}
+
+#[test]
+fn authenticated_private_repo_transport_redacts_errors_when_unavailable() {
+    let (dir, _) = fixture();
+    let root = dir.path();
+    let store_root = root.join(".decapod/data");
+    std::fs::create_dir_all(&store_root).unwrap();
+    let missing_bin = root.join("nonexistent-git");
+    let repo = workspace::ReadinessRepository {
+        canonical_name: "DecapodLabs/private-test".into(),
+        owner: "DecapodLabs".into(),
+        repository: "private-test".into(),
+        remote_url: "https://github.com/DecapodLabs/private-test.git".into(),
+        local_target_root: None,
+    };
+    let err =
+        accepted_target_for_repository(root, &store_root, &missing_bin, &repo, "refs/heads/master")
+            .unwrap_err();
+    let msg = err.to_string();
+    assert!(msg.contains("isolated host-user authenticated transport"));
+    assert!(!msg.contains("ghp_"));
+    assert!(!msg.contains("github_pat_"));
+}
