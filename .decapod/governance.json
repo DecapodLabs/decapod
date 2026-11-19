@@ -629,6 +629,11 @@
       "id": "cp-1783-7",
       "summary": "Reconcile origin/master cfe2565da (PR #1816, v0.149.3), refresh specs, and record review-spec x3 for #1783",
       "input_digest": "sha256:8fec17237e26e40256522e51bf6e8a6df659655d19e10549b72d2a793b919378"
+    },
+    {
+      "id": "cp-1783-8",
+      "summary": "Reconcile origin/master 845ff9799 (PR #1818, v0.149.3), refresh specs, and record review-spec x3 for #1783",
+      "input_digest": "sha256:652f10e791b7da9251ee3608e9f7cc4a604c33c9639fb62832b1bd9be296611b"
     }
   ],
   "intents": {
@@ -669,22 +674,22 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Reconciled on origin/master cfe2565da (PR #1816, v0.149.3): verified WriterIncarnation provenance capture and cross-boot/PID-reuse liveness correlation.",
-          "reviewed_code_fingerprint": "84ea03f3d7e9a748139c03a498012525481630d544f75abb8d6c2ab358dba037",
-          "spec_material_hash": "4929deadf9cb8583650d9f9c3d2cb84acc645960aad1662857d3510b50ae1e23"
+          "reason": "Reconciled on origin/master 845ff9799 (PR #1818, v0.149.3): preserved #1469 concurrent worktree architecture alongside #1783 WriterIncarnation provenance.",
+          "reviewed_code_fingerprint": "72dade1f9117fe8da6553750ca899564a7066cc8618e15593b791f4de63ce277",
+          "spec_material_hash": "3f309dd2e6f9633c7e26e5b04268efc4c27ba7d2471f7b6b16a115925f616580"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Reconciled on origin/master cfe2565da (PR #1816, v0.149.3): verified broker verify/repair --acknowledge-unknown-writer CLI and provenance contracts.",
-          "reviewed_code_fingerprint": "84ea03f3d7e9a748139c03a498012525481630d544f75abb8d6c2ab358dba037",
+          "reason": "Reconciled on origin/master 845ff9799 (PR #1818, v0.149.3): verified broker verify/repair --acknowledge-unknown-writer CLI and provenance contracts.",
+          "reviewed_code_fingerprint": "72dade1f9117fe8da6553750ca899564a7066cc8618e15593b791f4de63ce277",
           "spec_material_hash": "0c810d04c62a55d1935a9c59c78cea79cf0a28477ed58589c6898d16fd4c6a5a"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Reconciled on origin/master cfe2565da (PR #1816, v0.149.3): preserved #1776 policy hardening alongside #1783 fail-closed unknown-writer orphan recovery.",
-          "reviewed_code_fingerprint": "84ea03f3d7e9a748139c03a498012525481630d544f75abb8d6c2ab358dba037",
+          "reason": "Reconciled on origin/master 845ff9799 (PR #1818, v0.149.3): verified fail-closed unknown-writer orphan recovery and explicit human review gate.",
+          "reviewed_code_fingerprint": "72dade1f9117fe8da6553750ca899564a7066cc8618e15593b791f4de63ce277",
           "spec_material_hash": "4368481217d44d7913768939bf5b66594c3a6004cb510e8090a922d78b97f2b8"
         }
       ],
@@ -696,7 +701,7 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795053695Z"
+      "updated_at": "1795054291Z"
     },
     "trajectory": {
       "active_boundaries": [
