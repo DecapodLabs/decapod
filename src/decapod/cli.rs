@@ -276,10 +276,11 @@ pub(crate) struct InitGroupCli {
     /// Both providers execute the full required proof suite; omission preserves existing settings.
     #[clap(long, num_args = 0..=1, default_missing_value = "true", action = clap::ArgAction::Set)]
     pub validation_buildkite_preflights: Option<bool>,
-    /// Init storage backend: 'local' (default) or 'cloud' (experimental, account required).
+    /// Storage backend: 'local' (Decapod Local, default) or 'cloud' (Decapod Cloud, account required).
     ///
-    /// Cloud backend records non-secret Decapod Cloud intent in `.decapod/config.toml`.
-    /// Init starts or resumes managed sign-in through Dactyl and reports readiness only after service confirmation.
+    /// Decapod Local stores governed state locally in `.decapod/` with no account required.
+    /// Decapod Cloud records non-secret cloud intent in `.decapod/config.toml`;
+    /// init starts or resumes managed sign-in through Dactyl and reports readiness only after service confirmation.
     #[clap(long, value_enum, default_value_t = BackendType::Local)]
     pub backend: BackendType,
     /// Explicitly restart an interrupted cloud sign-in or refresh without
@@ -445,10 +446,11 @@ pub(crate) struct InitWithCli {
     /// Both providers execute the full required proof suite; omission preserves existing settings.
     #[clap(long, num_args = 0..=1, default_missing_value = "true", action = clap::ArgAction::Set)]
     pub validation_buildkite_preflights: Option<bool>,
-    /// Init storage backend: 'local' (default) or 'cloud' (experimental, account required).
+    /// Storage backend: 'local' (Decapod Local, default) or 'cloud' (Decapod Cloud, account required).
     ///
-    /// Cloud backend records non-secret Decapod Cloud intent in `.decapod/config.toml`.
-    /// Init starts or resumes managed sign-in through Dactyl and reports readiness only after service confirmation.
+    /// Decapod Local stores governed state locally in `.decapod/` with no account required.
+    /// Decapod Cloud records non-secret cloud intent in `.decapod/config.toml`;
+    /// init starts or resumes managed sign-in through Dactyl and reports readiness only after service confirmation.
     #[clap(long, value_enum, default_value_t = BackendType::Local)]
     pub backend: BackendType,
     /// Explicitly restart an interrupted cloud sign-in or refresh without
@@ -486,11 +488,29 @@ pub struct DecapodProjectConfig {
     pub tracker: TrackerConfig,
     #[serde(default)]
     pub context: DeclaredContextConfig,
+    #[serde(default, skip_serializing_if = "WorkspaceConfigSection::is_default")]
+    pub workspace: WorkspaceConfigSection,
     #[serde(
         default,
         skip_serializing_if = "crate::core::laya_readiness::Configuration::is_default"
     )]
     pub laya: crate::core::laya_readiness::Configuration,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, Default, PartialEq, Eq)]
+#[serde(deny_unknown_fields)]
+pub struct WorkspaceConfigSection {
+    #[serde(
+        default,
+        skip_serializing_if = "crate::core::container_signer::WorkspaceCredentialsConfig::is_default"
+    )]
+    pub credentials: crate::core::container_signer::WorkspaceCredentialsConfig,
+}
+
+impl WorkspaceConfigSection {
+    pub fn is_default(&self) -> bool {
+        self.credentials.is_default()
+    }
 }
 
 const CONFIG_SCHEMA_VERSION: &str = "1.0.0";
@@ -724,17 +744,70 @@ impl From<CloudRuntimeConfigInput> for CloudRuntimeConfig {
     }
 }
 
-/// Binary-owned production origin for the Propodus Vercel/Neon service.
-/// Explicit environment overrides remain available to controlled test and
-/// development harnesses, but project configuration never stores this route.
-pub const PROPODUS_VERCEL_NEON_ENTRYPOINT: &str = "https://project-oqn7i.vercel.app";
+/// Canonical environment variable for the explicit Decapod Cloud service API URL.
+pub const CLOUD_API_URL_ENV: &str = "DECAPOD_CLOUD_API_URL";
+/// Deprecated legacy alias for `DECAPOD_CLOUD_API_URL`.
+pub const LEGACY_PROPODUS_API_URL_ENV: &str = "DECAPOD_PROPODUS_API_URL";
+/// Canonical environment variable for the explicit Decapod Cloud provider override.
+pub const CLOUD_PROVIDER_ENV: &str = "DECAPOD_CLOUD_PROVIDER";
+/// Canonical environment variable for the explicit Decapod Cloud datastore selector.
+pub const CLOUD_DATASTORE_ENV: &str = "DECAPOD_CLOUD_DATASTORE";
+
+#[derive(Debug, Clone, Serialize, PartialEq, Eq)]
+pub struct CloudEnvDeprecationNotice {
+    pub schema_version: &'static str,
+    pub level: &'static str,
+    pub code: &'static str,
+    pub deprecated: String,
+    pub replacement: String,
+    pub message: String,
+}
+
+pub fn resolve_cloud_env_var_with<F>(
+    canonical: &str,
+    legacy: &str,
+    get_var: F,
+) -> (Option<String>, Option<CloudEnvDeprecationNotice>)
+where
+    F: Fn(&str) -> Option<String>,
+{
+    if let Some(value) = get_var(canonical).filter(|v| !v.trim().is_empty()) {
+        return (Some(value), None);
+    }
+    if let Some(value) = get_var(legacy).filter(|v| !v.trim().is_empty()) {
+        return (
+            Some(value),
+            Some(CloudEnvDeprecationNotice {
+                schema_version: "decapod.deprecation.v1",
+                level: "warn",
+                code: "DEPRECATED_ENV_VAR",
+                deprecated: legacy.to_string(),
+                replacement: canonical.to_string(),
+                message: format!("{legacy} is deprecated; use {canonical} instead"),
+            }),
+        );
+    }
+    (None, None)
+}
+
+fn emit_env_deprecation_once(notice: &CloudEnvDeprecationNotice) {
+    static EMITTED: std::sync::Once = std::sync::Once::new();
+    EMITTED.call_once(|| {
+        if let Ok(line) = serde_json::to_string(notice) {
+            eprintln!("{line}");
+        }
+    });
+}
 
 fn default_cloud_provider() -> String {
-    "vercel".to_string()
+    std::env::var(CLOUD_PROVIDER_ENV)
+        .ok()
+        .filter(|value| !value.trim().is_empty())
+        .unwrap_or_else(|| "vercel".to_string())
 }
 
 fn default_cloud_datastore() -> String {
-    std::env::var("DECAPOD_CLOUD_DATASTORE").unwrap_or_else(|_| "supabase".to_string())
+    std::env::var(CLOUD_DATASTORE_ENV).unwrap_or_else(|_| "supabase".to_string())
 }
 
 impl CloudRuntimeConfig {
@@ -760,11 +833,14 @@ impl CloudRuntimeConfig {
         use crate::core::backend::CloudDatastore;
         let datastore = CloudDatastore::parse(&self.datastore)?;
         datastore.validate_available()?;
-        if datastore == CloudDatastore::Supabase
-            && (self.api_url.trim().is_empty() || self.api_url == PROPODUS_VERCEL_NEON_ENTRYPOINT)
-        {
+        if datastore == CloudDatastore::Supabase && self.api_url.trim().is_empty() {
             return Err(crate::core::error::DecapodError::Config(
-                "Supabase cloud requires an explicit authenticated service endpoint via DECAPOD_PROPODUS_API_URL; select DECAPOD_CLOUD_DATASTORE=neon only for the explicit Neon alternative".to_string(),
+                "Decapod Cloud (supabase datastore) requires an explicit authenticated service endpoint via DECAPOD_CLOUD_API_URL; select DECAPOD_CLOUD_DATASTORE=neon only for an explicit Neon endpoint".to_string(),
+            ));
+        }
+        if datastore == CloudDatastore::Neon && self.api_url.trim().is_empty() {
+            return Err(crate::core::error::DecapodError::Config(
+                "Decapod Cloud (neon datastore) requires an explicit service endpoint via DECAPOD_CLOUD_API_URL; the legacy preview default has been retired".to_string(),
             ));
         }
         #[cfg(feature = "supabase-cloud")]
@@ -777,17 +853,15 @@ impl CloudRuntimeConfig {
     }
 }
 
-fn default_cloud_api_url(datastore: &str) -> String {
-    std::env::var("DECAPOD_PROPODUS_API_URL")
-        .ok()
-        .filter(|value| !value.trim().is_empty())
-        .unwrap_or_else(|| {
-            if datastore == "neon" {
-                PROPODUS_VERCEL_NEON_ENTRYPOINT.to_string()
-            } else {
-                String::new()
-            }
-        })
+fn default_cloud_api_url(_datastore: &str) -> String {
+    let (value, notice) =
+        resolve_cloud_env_var_with(CLOUD_API_URL_ENV, LEGACY_PROPODUS_API_URL_ENV, |key| {
+            std::env::var(key).ok()
+        });
+    if let Some(notice) = notice {
+        emit_env_deprecation_once(&notice);
+    }
+    value.unwrap_or_default()
 }
 
 impl Default for CloudRuntimeConfig {
@@ -917,6 +991,7 @@ impl Default for DecapodProjectConfig {
             custody: CustodyConfig::default(),
             tracker: TrackerConfig::default(),
             context: DeclaredContextConfig::default(),
+            workspace: WorkspaceConfigSection::default(),
             laya: crate::core::laya_readiness::Configuration::default(),
         }
     }
@@ -947,6 +1022,17 @@ pub(crate) enum CloudCommand {
     },
     /// Inspect private managed-session state without network I/O or a live readiness claim.
     Status,
+    /// Clear the local repository-scoped cloud session without exposing tokens.
+    Logout,
+    /// Revoke the enrolled device key and clear local cloud credentials for this repository.
+    Revoke {
+        /// Clear saved sessions across all repositories for this device store.
+        #[clap(long)]
+        all: bool,
+        /// Optional device key thumbprint (`jkt`) or device ID to target.
+        #[clap(long)]
+        device_id: Option<String>,
+    },
     /// List managed projects by name, with numbered choices saved privately.
     Projects,
     /// Explicitly select or create the managed project used by this checkout.
@@ -2021,7 +2107,7 @@ pub(crate) enum Command {
     #[clap(name = "session", visible_alias = "s")]
     Session(SessionCli),
 
-    /// Optional cloud credential and Propodus integration commands
+    /// Optional Decapod Cloud credential and project commands
     #[clap(name = "cloud")]
     Cloud(CloudCli),
 

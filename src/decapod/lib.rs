@@ -356,6 +356,41 @@ fn run_cloud_command(cloud_cli: CloudCli) -> Result<(), error::DecapodError> {
             );
             Ok(())
         }
+        CloudCommand::Logout => {
+            let project_root = find_decapod_project_root(&std::env::current_dir()?)?;
+            let identity = core::repo_identity::resolve_repository_identity(&project_root)?;
+            let report = core::cloud_client::logout(&project_root, &identity)?;
+            if format == "json" {
+                println!(
+                    "{}",
+                    serde_json::to_string_pretty(&report).map_err(std::io::Error::other)?
+                );
+            } else {
+                println!(
+                    "Cleared saved cloud session for {} (device key preserved).",
+                    identity.canonical_name
+                );
+            }
+            Ok(())
+        }
+        CloudCommand::Revoke { all, device_id } => {
+            let project_root = find_decapod_project_root(&std::env::current_dir()?)?;
+            let identity = core::repo_identity::resolve_repository_identity(&project_root)?;
+            let report =
+                core::cloud_client::revoke(&project_root, &identity, all, device_id.as_deref())?;
+            if format == "json" {
+                println!(
+                    "{}",
+                    serde_json::to_string_pretty(&report).map_err(std::io::Error::other)?
+                );
+            } else {
+                println!(
+                    "Revoked device key and cleared saved cloud credentials for {}.",
+                    identity.canonical_name
+                );
+            }
+            Ok(())
+        }
     }
 }
 
@@ -1873,7 +1908,7 @@ fn config_from_init_with(init: &InitWithCli, repo: RepoContext) -> DecapodProjec
         context: DeclaredContextConfig {
             declared_sources: declared_context_sources,
         },
-
+        workspace: crate::cli::WorkspaceConfigSection::default(),
         laya: init.existing_laya.clone(),
     }
 }
@@ -2012,9 +2047,9 @@ fn setup_review_rows(repo: &RepoContext, init: &InitWithCli) -> Vec<(&'static st
         (
             "Storage",
             if init.backend.is_cloud() {
-                "Decapod Cloud · experimental · account required".into()
+                "Decapod Cloud (cloud) · experimental · account required".into()
             } else {
-                "Local · no account needed".into()
+                "Decapod Local (local) · free · no account needed".into()
             },
         ),
     ];
@@ -2139,15 +2174,15 @@ fn customize_setup(
             "Connections" => {
                 let storage = prompt_setup_choice(
                     "Where should work state live?",
-                    &["Local", "Decapod Cloud"],
+                    &["Decapod Local", "Decapod Cloud"],
                     &[
-                        "On this machine. No account needed.",
+                        "On this machine. Free, offline, no account needed.",
                         "Repository tasks in the cloud. Account and authorized access required.",
                     ],
                     if init.backend.is_cloud() {
                         "Decapod Cloud"
                     } else {
-                        "Local"
+                        "Decapod Local"
                     },
                 )?;
                 init.backend = if storage == "Decapod Cloud" {
@@ -3429,7 +3464,9 @@ pub fn run() -> Result<(), error::DecapodError> {
                         mark_core_constitution_ingested(&governance_root, "docs.ingest")?;
                     }
                 }
-                Command::Todo(todo_cli) => todo::run_todo_cli(&project_store, todo_cli)?,
+                Command::Todo(todo_cli) => {
+                    todo::run_todo_cli_in_workspace(&project_store, &workspace_root, todo_cli)?
+                }
                 Command::Obligation(obligation_cli) => {
                     obligation::run_obligation_cli(&project_store, obligation_cli)?
                 }
@@ -3606,6 +3643,7 @@ fn is_cloud_file_only_command(command: &Command) -> bool {
         | Command::Capabilities(_)
         | Command::Constitution(_)
         | Command::Docs(_) => true,
+        Command::Workspace(ws_cli) => matches!(ws_cli.command, WorkspaceCommand::Status),
         Command::Rpc(rpc_cli) => matches!(
             rpc_cli.op.as_deref(),
             Some("specs.refresh" | "intent.reconcile")
@@ -10139,7 +10177,7 @@ fn run_governed_database_cli(
                 |policy, _| db_maintenance::run_maintain_backup(policy, &destination),
             )?,
             DatabaseMaintainCommand::Recover {
-                preserve_original_at: _,
+                preserve_original_at,
                 operation_id,
                 expected_policy_sha256,
                 actor,
@@ -10151,12 +10189,12 @@ fn run_governed_database_cli(
                 expected_policy_sha256.as_deref(),
                 &verify_strict_local_agent_session,
                 vec!["tier=owner".to_string()],
-                |_, _| {
-                    Err((
-                        "OWNER_REPAIR_AUTHORITY_REQUIRED",
-                        "db.recover requires explicit repository owner repair authority (#1590)"
-                            .to_string(),
-                    ))
+                |policy, verified_actor| {
+                    db_maintenance::run_maintain_recover(
+                        policy,
+                        verified_actor,
+                        Some(preserve_original_at.as_path()),
+                    )
                 },
             )?,
         },
@@ -10192,7 +10230,7 @@ fn run_governed_database_cli(
             |policy, _| db_maintenance::run_maintain_backup(policy, &destination),
         )?,
         DatabaseCommand::Recover {
-            preserve_original_at: _,
+            preserve_original_at,
             operation_id,
             expected_policy_sha256,
             actor,
@@ -10205,12 +10243,12 @@ fn run_governed_database_cli(
             expected_policy_sha256.as_deref(),
             &verify_strict_local_agent_session,
             vec!["tier=owner".to_string()],
-            |_, _| {
-                Err((
-                    "OWNER_REPAIR_AUTHORITY_REQUIRED",
-                    "db.recover requires explicit repository owner repair authority (#1590)"
-                        .to_string(),
-                ))
+            |policy, verified_actor| {
+                db_maintenance::run_maintain_recover(
+                    policy,
+                    verified_actor,
+                    Some(preserve_original_at.as_path()),
+                )
             },
         )?,
     };
@@ -10367,7 +10405,6 @@ fn run_governed_database_rpc(
         "data.database.recover" => {
             let params: DatabaseRecoverParams =
                 parse_required_governed_rpc_params(&request.params)?;
-            let _ = &params.preserve_original_at;
             db_maintenance::execute_governed_capability(
                 invocation_dir,
                 "db.recover",
@@ -10376,12 +10413,12 @@ fn run_governed_database_rpc(
                 params.expected_policy_sha256.as_deref(),
                 &verify_strict_local_agent_session,
                 vec!["tier=owner".to_string()],
-                |_, _| {
-                    Err((
-                        "OWNER_REPAIR_AUTHORITY_REQUIRED",
-                        "db.recover requires explicit repository owner repair authority (#1590)"
-                            .to_string(),
-                    ))
+                |policy, verified_actor| {
+                    db_maintenance::run_maintain_recover(
+                        policy,
+                        verified_actor,
+                        Some(params.preserve_original_at.as_path()),
+                    )
                 },
             )
         }
@@ -13748,6 +13785,18 @@ fn run_capabilities_command(cli: CapabilitiesCli) -> Result<(), error::DecapodEr
         _ => {
             println!("Decapod {}", report.version);
             println!("==================\n");
+
+            if !report.backends.is_empty() {
+                println!("Backends:");
+                for backend in &report.backends {
+                    let default_tag = if backend.default { ", default" } else { "" };
+                    println!(
+                        "  {} ({}{}) - {}",
+                        backend.name, backend.id, default_tag, backend.description
+                    );
+                }
+                println!();
+            }
 
             println!("Capabilities:");
             for cap in &report.capabilities {

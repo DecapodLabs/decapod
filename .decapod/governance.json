@@ -568,110 +568,73 @@
     }
   },
   "change": {
-    "id": "change_01M7RA3VFPTEG0RS8XB2SA5NH9",
+    "id": "change_01M7RAMDCVQ83Q2KXQCCHVHTJ5",
     "base_commit": "205d4e8dad2e7690100eb401e12ea6d6f8e23665",
     "target_base": "origin/master"
   },
   "checkpoints": [
     {
-      "id": "ckpt-slot1-1807-1810",
-      "summary": "Implement #1807 (authenticated private-repo target verification, pre-broker validated done handoff, CLAIMED done recovery/regen guard) and #1810 (pre-capture lease TTL guard/auto-renew, broker deadline respect, Unix RLIMIT_NOFILE elevation and doctor diagnostics) with unit/integration tests and living specs",
-      "input_digest": "sha256:60248c005d1f6ee94fddb33a729c7662ba3abe1a1191dd17ee723084b1edefcd",
+      "id": "cp-cloud-wave-1",
+      "summary": "Consolidate #1808/#1769 Decapod Local/Cloud branding with dactyl-db 0.18.0 Cloud Control-Plane & Custody wave",
+      "input_digest": "sha256:37e5c9626c2449998c69766087e7b2d306f17974d645945799bb8490b991d83c",
       "proof_refs": [
-        "cargo_clippy=passed",
-        "cargo_fmt=passed",
-        "integration_tests=passed",
-        "unit_tests=passed"
+        "tests/cli_contract_enforcement.rs",
+        "tests/cloud_mixed_worktree.rs",
+        "tests/cloud_supabase_boundary.rs",
+        "tests/cloud_wave_parity.rs",
+        "tests/doc_alignment.rs"
       ]
     },
     {
-      "id": "ckpt-01493-refresh",
-      "summary": "Refresh managed Dockerfile and release-bound projections for decapod 0.149.3",
-      "input_digest": "sha256:60248c005d1f6ee94fddb33a729c7662ba3abe1a1191dd17ee723084b1edefcd",
+      "id": "cp-cloud-wave-final",
+      "summary": "Adopt dactyl-db 0.18.0, Cloud Control-Plane custody wave (#1809, #1667, #1777, #1778, #1590, #1033, #1034, #1038, #1040, #1066, #1158, #1369, #1377, #1380), and Local/Cloud branding (#1808, #1769)",
+      "input_digest": "sha256:da55162f36b81e4a231969ad32af8a05613d6f8ec39e1ec72fbb0f622b6d863f",
       "proof_refs": [
-        "specs_refresh=passed"
+        "tests/cli_contract_enforcement.rs",
+        "tests/cloud_mixed_worktree.rs",
+        "tests/cloud_supabase_boundary.rs",
+        "tests/cloud_wave_parity.rs",
+        "tests/doc_alignment.rs",
+        "tests/release_dependency_policy.rs",
+        "tests/shared_state_semantics_1247.rs"
       ]
     },
     {
-      "id": "ckpt-reconcile-0-149-3",
-      "summary": "Reconcile reviewed_sources_digest and managed Dockerfile pin for v0.149.3",
-      "input_digest": "sha256:e087d584c1244bd463ff6af8bcabb21961f101d3511f0ea3e34e1fefa0f1f7e4",
+      "id": "cp-cloud-wave-slot3",
+      "summary": "Adopt dactyl-db 0.18.0, Cloud Control-Plane custody wave (#1809, #1667, #1777, #1778, #1590, #1033, #1034, #1038, #1040, #1066, #1158, #1369, #1377, #1380), and Local/Cloud branding (#1808, #1769)",
+      "input_digest": "sha256:b3abd7da25cd6cc6f9cabb5c310f97dea62ffb73558b9e18ce5dc9366af032d8",
       "proof_refs": [
-        "agent_init_inventory=reviewed"
+        "tests/cli_contract_enforcement.rs",
+        "tests/cloud_mixed_worktree.rs",
+        "tests/cloud_supabase_boundary.rs",
+        "tests/cloud_wave_parity.rs",
+        "tests/doc_alignment.rs",
+        "tests/release_dependency_policy.rs",
+        "tests/shared_state_semantics_1247.rs"
       ]
     },
     {
-      "id": "ckpt-reconcile-0-149-3-exact",
-      "summary": "Set exact v0.149.3 reviewed_sources_digest matching Cargo.toml/Cargo.lock bump",
-      "input_digest": "sha256:984844d10290d7aad358152e0eba95bd619a2c8f784c1018d050b8fe664c3f9d",
-      "proof_refs": [
-        "agent_init_inventory=44353e47024468941263087d2e820f24d4f177c2f3fb0a9e0363f2a57333290e"
-      ]
-    },
-    {
-      "id": "ckpt-inventory-0-149-3",
-      "summary": "Update proof.required_profile.reviewed_sources_digest to reviewed v0.149.3 inventory digest 5730a9cf...",
-      "input_digest": "sha256:611feb85485fa7f88547b8b11a4f3245483075c6071351aa1dd73bb9ab312fd7",
-      "proof_refs": [
-        "inventory_digest=5730a9cf904d257da473edc37599aca56591a4f0a07beac2c76b0f10fd31b3c2"
-      ]
-    },
-    {
-      "id": "ckpt-dockerfile-0-149-3",
-      "summary": "Commit v0.149.3 managed Dockerfile and spec header refresh emitted by decapod validate",
-      "input_digest": "sha256:611feb85485fa7f88547b8b11a4f3245483075c6071351aa1dd73bb9ab312fd7",
-      "proof_refs": [
-        "dockerfile_refresh=0.149.3"
-      ]
-    },
-    {
-      "id": "ckpt-dockerfile-0-149-3-pin",
-      "summary": "Update managed Dockerfile.decapod release pin to v0.149.3 via decapod refresh",
-      "input_digest": "sha256:c9c242fc25e1a3d75cde5c3c59532864113762efa3fc4f0e6ff24c20a08ae2d2",
-      "proof_refs": [
-        "project_check_refresh_specs=applied"
-      ]
-    },
-    {
-      "id": "ckpt-merge-cfe2565da",
-      "summary": "Integrate accepted master cfe2565da (PR #1816, v0.149.3) and refresh spec reviews",
-      "input_digest": "sha256:88c1c4b7492be7d7fdf30daf539622e0d5a32c060825b7d2bea9af52b148d16f",
-      "proof_refs": [
-        "merge_base=cfe2565da"
-      ]
-    },
-    {
-      "id": "ckpt-fix-lease-ttl-readonly",
-      "summary": "Make pre-capture lease TTL guard read-only by default (DECAPOD_VALIDATE_LEASE_TTL=warn|strict|renew) so validate never rotates workunit custody implicitly (#1810)",
-      "input_digest": "sha256:f65a88da4483c784430fb3eb68fa817c0e0beeab2286d4bd9a1a86f7ad6deeea"
-    },
-    {
-      "id": "ckpt-merge-845ff9799",
-      "summary": "Integrate accepted master 845ff9799 (PR #1818 / #1469) preserving #1469 ARCHITECTURE.md prose and refreshing specs",
-      "input_digest": "sha256:03a12f576ec75bd46505f3fe1552ef962f5f4ef05e00ea7a7ab74fc61bc73ed0"
-    },
-    {
-      "id": "ckpt-merge-89906b666",
-      "summary": "Integrate accepted master 89906b666 (PR #1819 / #1247) preserving #1247 SEMANTICS.md prose, re-claimed 4h task lease, and refreshed specs",
-      "input_digest": "sha256:de601434b9dbc50c2968a249f0aff2d806bad8175f7e5e7a0265f270850437b0"
+      "id": "cp-cloud-wave-slot3-reconciled",
+      "summary": "Adopt dactyl-db 0.18.0, cloud control-plane custody (#1809/#1590/#1777/#1778/#1066/#1158/#1377), Local/Cloud branding (#1808/#1769), and reconciled reviewed_sources_digest",
+      "input_digest": "sha256:70a6250bfee10916afb1540d9cc1f5aa8ee59da9af44935bbfa6b914f0ea1b3f"
     }
   ],
   "intents": {
-    "intent:change_01M7RA3VFPTEG0RS8XB2SA5NH9": {
+    "intent:change_01M7RAMDCVQ83Q2KXQCCHVHTJ5": {
       "acceptance_criteria": [],
       "assumptions": [],
       "boundaries": [
         "Current claimed task and isolated work branch"
       ],
       "constraints": [
-        "root"
+        "cloud-control-plane-sdk"
       ],
       "created_sequence": 1,
-      "id": "intent:change_01M7RA3VFPTEG0RS8XB2SA5NH9",
+      "id": "intent:change_01M7RAMDCVQ83Q2KXQCCHVHTJ5",
       "out_of_scope": [],
       "proof_requirements": [],
-      "raw_intent": "Implement #1807 (private-repo historical verification, broker lock decoupling, stale done deadlock fix) and #1810 (lease TTL/heartbeat guard and RLIMIT_NOFILE elevation)",
-      "refined_intent": "Implement #1807 (private-repo historical verification, broker lock decoupling, stale done deadlock fix) and #1810 (lease TTL/heartbeat guard and RLIMIT_NOFILE elevation)",
+      "raw_intent": "Cloud Control-Plane & SDK Wave (#1809, #1667, #1777, #1778, #1590, #1033, #1034, #1038, #1040, #1066, #1158, #1247, #1369, #1376, #1377, #1380)",
+      "refined_intent": "Cloud Control-Plane & SDK Wave (#1809, #1667, #1777, #1778, #1590, #1033, #1034, #1038, #1040, #1066, #1158, #1247, #1369, #1376, #1377, #1380)",
       "status": "refined",
       "updated_sequence": 3
     }
@@ -684,7 +647,7 @@
       },
       "deferred_questions": [],
       "human_questions": [],
-      "intent": "Resolve #1807 (authenticated private-repo target verification, broker lock decoupling on todo done --validated, unverified done recovery/regen self-deadlock prevention) and #1810 (pre-capture lease TTL guard/auto-renew, broker deadline respect for control ops, Unix RLIMIT_NOFILE elevation & doctor diagnostics).",
+      "intent": "Cloud Control-Plane & SDK Wave (#1809, #1667, #1777, #1778, #1590, #1033, #1034, #1038, #1040, #1066, #1158, #1247, #1369, #1376, #1377, #1380)",
       "phases": [],
       "proof_hooks": [
         "decapod validate"
@@ -694,55 +657,63 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Preserved #1469 concurrent worktree admission prose alongside #1807/#1810 architecture updates",
-          "reviewed_code_fingerprint": "6fb70a420a3ee052b2631c896dc4f899bd5b20c3a587f4120bbcb0be921fe445",
-          "spec_material_hash": "26b2b6a9a136ac955ea41c945b7a1c660c15d0ee6584ee29568d80bc520eaf4c"
+          "reason": "Updated ARCHITECTURE.md for Dactyl 0.18.0, cloud control-plane custody (#1809, #1590, #1777, #1778, #1066), Local/Cloud branding (#1808, #1769), and reviewed source inventory reconciliation",
+          "reviewed_code_fingerprint": "996145a2b243d6c4dbe964df0a2b99ccfe04fc83d2dceee9a21f3ec59833ba5c",
+          "spec_material_hash": "eea767e816c43693064ee73b838425f7a154fd6e56cf0552669d971d1e5001ea"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Documented broker deadline_ms, pre-broker validated-done handoff, CLAIMED remediation, and qa verify regen guard (#1807, #1810)",
-          "reviewed_code_fingerprint": "6fb70a420a3ee052b2631c896dc4f899bd5b20c3a587f4120bbcb0be921fe445",
-          "spec_material_hash": "faca9a6dcb80b59f8da63babe461f29f23e74f0606733972d402396e814a0143"
+          "reason": "Updated INTERFACES.md for Dactyl 0.18.0, cloud control-plane custody (#1809, #1590, #1777, #1778, #1066), Local/Cloud branding (#1808, #1769), and reviewed source inventory reconciliation",
+          "reviewed_code_fingerprint": "996145a2b243d6c4dbe964df0a2b99ccfe04fc83d2dceee9a21f3ec59833ba5c",
+          "spec_material_hash": "982b2bfb9cc87a1ef9bc74dd945db13a428723ee146c46da64f6fdf16a038023"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Preserved #1776 policy hardening and documented credential-safe private-repo fallback (#1807)",
-          "reviewed_code_fingerprint": "6fb70a420a3ee052b2631c896dc4f899bd5b20c3a587f4120bbcb0be921fe445",
-          "spec_material_hash": "9c15cdf421a538d0e8fa06a154d96acaf41fc3d8ec15872b2c6016f0ebb908e1"
+          "reason": "Updated SECURITY.md for Dactyl 0.18.0, cloud control-plane custody (#1809, #1590, #1777, #1778, #1066), Local/Cloud branding (#1808, #1769), and reviewed source inventory reconciliation",
+          "reviewed_code_fingerprint": "996145a2b243d6c4dbe964df0a2b99ccfe04fc83d2dceee9a21f3ec59833ba5c",
+          "spec_material_hash": "5142f990d1f15f6839a51c5453fd5ba4e4274e1f7e31a8f1c1cd87618c887e35"
         }
       ],
       "state": "APPROVED",
       "stop_conditions": [],
-      "title": "Private-repo historical verification, broker decoupling, and validation ergonomics (#1807, #1810)",
+      "title": "Cloud Control-Plane & SDK Wave (#1809, #1667, #1777, #1778, #1590, #1033, #1034, #1038, #1040, #1066, #1158, #1247, #1369, #1376, #1377, #1380)",
       "todo_ids": [
-        "feat_01m7r9k90ekvj2nf"
+        "code_01m7r9mg6gqp6gyx"
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795061433Z"
+      "updated_at": "1795067837Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:e5d7543efbef079e977a58cfd7672dfdd652c01fa7f60ba28ffbc4ea7fb8f263",
+      "artifact_hash": "sha256:7fe98dac44798cd607470808e273465ccbc97a15e9efcdae48651104e4286441",
       "checks": [
         {
-          "name": "cargo_clippy",
+          "name": "bazel_cargo_inputs_policy",
           "status": "passed"
         },
         {
-          "name": "cargo_fmt",
+          "name": "branding_1808_1769_and_docs_build",
           "status": "passed"
         },
         {
-          "name": "integration_tests",
+          "name": "clippy_all_targets_all_features",
           "status": "passed"
         },
         {
-          "name": "unit_tests",
+          "name": "dactyl_018_unit_and_integration",
+          "status": "passed"
+        },
+        {
+          "name": "pg17_postgrest_conformance",
+          "status": "passed"
+        },
+        {
+          "name": "shared_state_semantics_1247",
           "status": "passed"
         }
       ],
@@ -751,20 +722,20 @@
         "events": [
           {
             "event_id": "event:2",
-            "intent_id": "intent:change_01M7RA3VFPTEG0RS8XB2SA5NH9",
+            "intent_id": "intent:change_01M7RAMDCVQ83Q2KXQCCHVHTJ5",
             "kind": "created",
             "sequence": 2
           },
           {
             "event_id": "event:3",
-            "intent_id": "intent:change_01M7RA3VFPTEG0RS8XB2SA5NH9",
+            "intent_id": "intent:change_01M7RAMDCVQ83Q2KXQCCHVHTJ5",
             "kind": "refined",
             "sequence": 3
           },
           {
-            "detail": "trajectory:branch_01M7RA3VZCT592NB915X6Y0QW0",
+            "detail": "trajectory:branch_01M7RAMDK5N3QK7311T671SXB0",
             "event_id": "event:4",
-            "intent_id": "intent:change_01M7RA3VFPTEG0RS8XB2SA5NH9",
+            "intent_id": "intent:change_01M7RAMDCVQ83Q2KXQCCHVHTJ5",
             "kind": "trajectory_step_recorded",
             "sequence": 4
           }
@@ -773,43 +744,41 @@
         "next_sequence": 4,
         "schema_version": "1.0.0",
         "trajectories": {
-          "branch_01M7RA3VZCT592NB915X6Y0QW0": {
+          "branch_01M7RAMDK5N3QK7311T671SXB0": {
             "evidence_only": true,
-            "id": "branch_01M7RA3VZCT592NB915X6Y0QW0",
-            "intent_id": "intent:change_01M7RA3VFPTEG0RS8XB2SA5NH9",
+            "id": "branch_01M7RAMDK5N3QK7311T671SXB0",
+            "intent_id": "intent:change_01M7RAMDCVQ83Q2KXQCCHVHTJ5",
             "steps": [
               {
                 "action": "trajectory.record",
                 "custody_event_id": "event:4",
                 "observations": [
-                  "src/decapod/core/bounded_process.rs",
-                  "src/decapod/core/group_broker.rs",
-                  "src/decapod/core/todo.rs",
-                  "src/decapod/core/validate.rs",
-                  "src/decapod/core/validation_history.rs",
+                  "Cargo.toml",
+                  "Cargo.lock",
+                  "MODULE.bazel.lock",
+                  "src/decapod/cli.rs",
                   "src/decapod/lib.rs",
-                  "src/decapod/plugins/doctor.rs",
-                  "src/decapod/plugins/verify.rs",
-                  "tests/unit/core/bounded_process_tests.rs",
-                  "tests/unit/core/validation_history_archive_tests.rs",
-                  "tests/unit/core/validation_history_integration_tests.rs",
-                  "tests/unit/plugins/doctor_tests.rs",
-                  "tests/unit/plugins/verify_historical_tests.rs",
-                  "tests/validate_ergonomics_1807_1810.rs",
-                  ".decapod/managed/specs/SECURITY.md",
-                  ".decapod/managed/specs/OPERATIONS.md",
-                  ".decapod/managed/specs/INTERFACES.md",
-                  ".decapod/managed/specs/ARCHITECTURE.md",
-                  ".decapod/managed/specs/VALIDATION.md"
+                  "src/decapod/core/cloud_dpop.rs",
+                  "src/decapod/core/cloud_proof.rs",
+                  "src/decapod/core/container_signer.rs",
+                  "src/decapod/core/cloud_client.rs",
+                  "src/decapod/core/dactyl.rs",
+                  "src/decapod/core/dactyl_todo.rs",
+                  "src/decapod/core/db_maintenance.rs",
+                  "src/decapod/core/todo.rs",
+                  "src/decapod/core/propodus.rs",
+                  "src/decapod/core/rpc.rs"
                 ],
                 "proof_refs": [
-                  "cargo_fmt",
-                  "cargo_clippy",
-                  "unit_tests",
-                  "integration_tests"
+                  "dactyl_018_unit_and_integration",
+                  "branding_1808_1769_and_docs_build",
+                  "shared_state_semantics_1247",
+                  "bazel_cargo_inputs_policy",
+                  "clippy_all_targets_all_features",
+                  "pg17_postgrest_conformance"
                 ],
                 "scope": [
-                  "root"
+                  "cloud-control-plane-sdk"
                 ],
                 "sequence": 4,
                 "validation_findings": []
@@ -822,38 +791,34 @@
       "destination": "pull request",
       "evidence": [],
       "inspected_files": [],
-      "intent_id": "intent:change_01M7RA3VFPTEG0RS8XB2SA5NH9",
+      "intent_id": "intent:change_01M7RAMDCVQ83Q2KXQCCHVHTJ5",
       "modified_files": [
-        ".decapod/managed/specs/ARCHITECTURE.md",
-        ".decapod/managed/specs/INTERFACES.md",
-        ".decapod/managed/specs/OPERATIONS.md",
-        ".decapod/managed/specs/SECURITY.md",
-        ".decapod/managed/specs/VALIDATION.md",
-        "src/decapod/core/bounded_process.rs",
-        "src/decapod/core/group_broker.rs",
+        "Cargo.lock",
+        "Cargo.toml",
+        "MODULE.bazel.lock",
+        "src/decapod/cli.rs",
+        "src/decapod/core/cloud_client.rs",
+        "src/decapod/core/cloud_dpop.rs",
+        "src/decapod/core/cloud_proof.rs",
+        "src/decapod/core/container_signer.rs",
+        "src/decapod/core/dactyl.rs",
+        "src/decapod/core/dactyl_todo.rs",
+        "src/decapod/core/db_maintenance.rs",
+        "src/decapod/core/propodus.rs",
+        "src/decapod/core/rpc.rs",
         "src/decapod/core/todo.rs",
-        "src/decapod/core/validate.rs",
-        "src/decapod/core/validation_history.rs",
-        "src/decapod/lib.rs",
-        "src/decapod/plugins/doctor.rs",
-        "src/decapod/plugins/verify.rs",
-        "tests/unit/core/bounded_process_tests.rs",
-        "tests/unit/core/validation_history_archive_tests.rs",
-        "tests/unit/core/validation_history_integration_tests.rs",
-        "tests/unit/plugins/doctor_tests.rs",
-        "tests/unit/plugins/verify_historical_tests.rs",
-        "tests/validate_ergonomics_1807_1810.rs"
+        "src/decapod/lib.rs"
       ],
       "next_transitions": [
         "Refine plan and declare falsifiable checks"
       ],
       "repo_scope": [
-        "root"
+        "cloud-control-plane-sdk"
       ],
-      "run_id": "branch_01M7RA3VZCT592NB915X6Y0QW0",
+      "run_id": "branch_01M7RAMDK5N3QK7311T671SXB0",
       "schema_version": "1.1.0",
       "shortcut_risk_signals": [],
-      "task_id": "feat_01m7r9k90ekvj2nf",
+      "task_id": "code_01m7r9mg6gqp6gyx",
       "tool_calls": [],
       "unresolved_assumptions": []
     }

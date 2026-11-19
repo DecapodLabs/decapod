@@ -1310,3 +1310,52 @@ mod documented_bootstrap {
         fixture.close().expect("remove isolated bootstrap fixture");
     }
 }
+
+#[test]
+fn cli_help_capabilities_and_docs_unify_decapod_local_and_cloud_branding() {
+    let (_tmp, dir) = setup_repo();
+
+    let root_help = run_decapod(dir, &["--help"]);
+    assert!(root_help.status.success());
+    let root_help_text = String::from_utf8_lossy(&root_help.stdout);
+    assert!(root_help_text.contains("Decapod Cloud"));
+    assert!(!root_help_text.contains("Propodus"));
+
+    let init_help = run_decapod(dir, &["init", "--help"]);
+    assert!(init_help.status.success());
+    let init_help_text = String::from_utf8_lossy(&init_help.stdout);
+    assert!(init_help_text.contains("Decapod Local"));
+    assert!(init_help_text.contains("Decapod Cloud"));
+    assert!(!init_help_text.contains("Propodus"));
+
+    let caps_out = run_decapod(dir, &["capabilities", "--format", "json"]);
+    assert!(caps_out.status.success());
+    let caps: serde_json::Value = serde_json::from_slice(&caps_out.stdout).expect("valid JSON");
+    let backends = caps["backends"].as_array().expect("backends array");
+    assert!(
+        backends
+            .iter()
+            .any(|b| b["id"] == "local" && b["name"] == "Decapod Local" && b["default"] == true)
+    );
+    assert!(
+        backends
+            .iter()
+            .any(|b| b["id"] == "cloud" && b["name"] == "Decapod Cloud" && b["default"] == false)
+    );
+    let cap_names: Vec<&str> = caps["capabilities"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .filter_map(|c| c["name"].as_str())
+        .collect();
+    assert!(cap_names.contains(&"backend.local"));
+    assert!(cap_names.contains(&"backend.cloud"));
+
+    let ingest_out = run_decapod(dir, &["docs", "ingest"]);
+    assert!(ingest_out.status.success());
+    let ingest_text = String::from_utf8_lossy(&ingest_out.stdout);
+    assert!(ingest_text.contains("Decapod Local"));
+    assert!(ingest_text.contains("Decapod Cloud"));
+    assert!(ingest_text.contains("DECAPOD_CLOUD_API_URL"));
+    assert!(!ingest_text.contains("project-oqn7i"));
+}

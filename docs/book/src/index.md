@@ -29,6 +29,42 @@
   <a class="decapod-docs-tile tile-ink" href="concepts/proof.html"><span class="tile-mark">✓</span><strong>Commit-bound proof</strong><span>Know what was actually checked.</span></a>
 </div>
 
+<section class="decapod-docs-offerings" aria-labelledby="decapod-offerings-heading">
+  <div class="decapod-offerings-head">
+    <div>
+      <div class="decapod-offerings-kicker">DEPLOYMENT OFFERINGS</div>
+      <h2 id="decapod-offerings-heading">Decapod Local &amp; Decapod Cloud</h2>
+    </div>
+    <a class="decapod-offerings-compare" href="https://decapodlabs.github.io/offerings.html">Compare Local &amp; Cloud <span aria-hidden="true">↗</span></a>
+  </div>
+  <div class="decapod-offerings-grid">
+    <article class="decapod-offering-card offering-local">
+      <div class="decapod-offering-meta">
+        <h3>Decapod Local</h3>
+        <span class="decapod-offering-badge badge-free">Free · Offline · No signup</span>
+      </div>
+      <p>Run the full governance kernel in your repository using local SQLite and Git state. No account, hosted service, or network sign-in required.</p>
+      <ul class="decapod-offering-points">
+        <li><code>decapod init</code> (<code>backend = "local"</code>, default)</li>
+        <li>Embedded Constitution, governed plans, isolated workspaces, and proof gates</li>
+      </ul>
+      <a class="decapod-offering-action" href="quickstart.html">Start locally <span aria-hidden="true">↗</span></a>
+    </article>
+    <article class="decapod-offering-card offering-cloud">
+      <div class="decapod-offering-meta">
+        <h3>Decapod Cloud</h3>
+        <span class="decapod-offering-badge badge-soon">Coming soon</span>
+      </div>
+      <p>Planned hosted coordination for shared team task custody, repository-scoped access control, and cross-session multi-agent continuity.</p>
+      <ul class="decapod-offering-points">
+        <li>Repository-bound sessions and shared coordination (<code>backend = "cloud"</code>)</li>
+        <li>Planned offerings overview only — no public pricing or active purchase route</li>
+      </ul>
+      <a class="decapod-offering-action secondary" href="https://decapodlabs.github.io/offerings.html">Explore planned Cloud <span aria-hidden="true">↗</span></a>
+    </article>
+  </div>
+</section>
+
 ## Start with your existing agents
 
 Install and initialize in your project:
