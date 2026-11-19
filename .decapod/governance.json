@@ -632,6 +632,14 @@
       "proof_refs": [
         "claim-1737-actor-custody"
       ]
+    },
+    {
+      "id": "cp-1737-7",
+      "summary": "Reconcile origin/master 845ff9799 (PR #1818 #1469) merge and updated spec reviews for #1737",
+      "input_digest": "sha256:aa4d21719aae90aa45d20c327040a0219fd65a2665536a61935ff9ef8619779b",
+      "proof_refs": [
+        "claim-1737-actor-custody"
+      ]
     }
   ],
   "intents": {
@@ -672,22 +680,22 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Reconcile #1737 spec with origin/master cfe2565da (PR #1816)",
-          "reviewed_code_fingerprint": "2f13f5d349f9ae1febabbbdf64d577565832571561b91f106d2248b78ffeac6c",
-          "spec_material_hash": "d7a2ca3605cb67e0ecc981daca8a52721e418fc1ab0d559923ddd917e5896a79"
+          "reason": "Reconcile #1737 spec with origin/master 845ff9799 (PR #1818, preserving #1469 and #1737)",
+          "reviewed_code_fingerprint": "1214daa5a6f07407b6d564e3f607406669f75b08ad821bed6179a4091970b5cb",
+          "spec_material_hash": "e5e498a03a7693482a9c303cfa71c02008221b927496afccb3f3b8d9fc2df187"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Reconcile #1737 spec with origin/master cfe2565da (PR #1816)",
-          "reviewed_code_fingerprint": "2f13f5d349f9ae1febabbbdf64d577565832571561b91f106d2248b78ffeac6c",
+          "reason": "Reconcile #1737 spec with origin/master 845ff9799 (PR #1818)",
+          "reviewed_code_fingerprint": "1214daa5a6f07407b6d564e3f607406669f75b08ad821bed6179a4091970b5cb",
           "spec_material_hash": "b6e078abfa4f1231dddaaffe281c48e79ee89b2a01608b6c3fd393ca29b4dc92"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Reconcile #1737 spec with origin/master cfe2565da (PR #1816)",
-          "reviewed_code_fingerprint": "2f13f5d349f9ae1febabbbdf64d577565832571561b91f106d2248b78ffeac6c",
+          "reason": "Reconcile #1737 spec with origin/master 845ff9799 (PR #1818)",
+          "reviewed_code_fingerprint": "1214daa5a6f07407b6d564e3f607406669f75b08ad821bed6179a4091970b5cb",
           "spec_material_hash": "ad6576de6a64636013aea5fc3b36ac3824eda0d6cde6cf52faaea20b1b69fa98"
         }
       ],
@@ -699,13 +707,13 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795053976Z"
+      "updated_at": "1795054278Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:af8302cc189f12efc8042fc16933aced324ab51420a8649cd7d7bb18f173510f",
+      "artifact_hash": "sha256:9614d86d84bc27734591f361ce4bccdc5aa57fb1421c2739bc8da4bab2f639dc",
       "checks": [
         {
           "name": "cargo_clippy_all_targets",
@@ -801,10 +809,17 @@
             "intent_id": "intent:change_01M7QXTS2XBE1SK835T05MEJCV",
             "kind": "trajectory_step_recorded",
             "sequence": 8
+          },
+          {
+            "detail": "trajectory:branch_01M7QXTS6XVVV8NKSX2EE61TB7",
+            "event_id": "event:9",
+            "intent_id": "intent:change_01M7QXTS2XBE1SK835T05MEJCV",
+            "kind": "trajectory_step_recorded",
+            "sequence": 9
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 8,
+        "next_sequence": 9,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M7QXTS6XVVV8NKSX2EE61TB7": {
@@ -925,6 +940,22 @@
                 ],
                 "sequence": 8,
                 "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:9",
+                "observations": [
+                  "Merged origin/master 845ff9799 (PR #1818 #1469 test-only + ARCHITECTURE.md, v0.149.3, zero src/ changes): specs.refresh ok, fmt --check ok, doc_alignment 4/4 passed"
+                ],
+                "proof_refs": [
+                  "cargo_fmt_check",
+                  "cargo_test_doc_alignment"
+                ],
+                "scope": [
+                  "root"
+                ],
+                "sequence": 9,
+                "validation_findings": []
               }
             ]
           }
@@ -935,6 +966,7 @@
       "evidence": [
         "Merged origin/master 102d6eb22 (v0.149.3) and fixed builds/12775 failures (docs ingest after init in tests/todo_enforcement.rs; cloud TodoCommand::Claim --agent handling in src/decapod/core/todo.rs + tests/cloud_cli_boundary.rs): fmt --check ok, clippy --all-targets --all-features -- -D warnings ok, claim_task_* 2/2, todo_enforcement 5/5, cloud_cli_boundary 1/1 passed",
         "Merged origin/master 205d4e8da (v0.149.1): fmt --check ok, clippy --all-targets --all-features -- -D warnings ok, core::todo::tests::claim_task_* 2/2, todo_enforcement 5/5 passed",
+        "Merged origin/master 845ff9799 (PR #1818 #1469 test-only + ARCHITECTURE.md, v0.149.3, zero src/ changes): specs.refresh ok, fmt --check ok, doc_alignment 4/4 passed",
         "Merged origin/master a5a1edad (v0.149.0): fmt --check ok, clippy --all-targets --all-features -- -D warnings ok, core::todo::tests::claim_task_* 2/2, core::mentor::reflection::* 33/33, todo_enforcement 5/5, cli_contract_enforcement 23/23, doc_alignment 4/4 passed",
         "Merged origin/master cfe2565da (PR #1816, v0.149.3): fmt --check ok, clippy --all-targets --all-features -- -D warnings ok, claim_task_* 2/2, todo_enforcement 5/5, cloud_cli_boundary 1/1, policy_self_authorization_1776 passed",
         "core::todo::* 94/94, core::mentor::reflection::* 33/33, todo_enforcement 5/5, plugins_todo_tests 40/40 (39/39 + autorun), cli_contract_enforcement 22/22, doc_alignment 4/4, agent_rpc_suite 5/5, context_capsule_rpc 5/5, infer_precision 7/7, spec_conformance 15/15, workspace_interlock 1/1, clippy & fmt clean"
