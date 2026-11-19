@@ -599,6 +599,11 @@
       "id": "ckpt-wu1660-split-iso",
       "summary": "Isolate non-VERIFIED split-store declarations in explicitly initialized workspace-local datastores while keeping VERIFIED transitions, resume, validate_verified_manifest, and partial-store leaks blocked with WORKUNIT_PROOF_ATOMIC_DOMAIN_UNSUPPORTED (#1660)",
       "input_digest": "sha256:e2bfa630f369347dfbdfc066230a63584bd07b99fb8d2d62f49cb8b8293667d8"
+    },
+    {
+      "id": "ckpt-wu1660-spec-review",
+      "summary": "Record current-content-bound spec reviews for ARCHITECTURE, INTERFACES, and SECURITY after split-store non-VERIFIED write isolation fix (#1660)",
+      "input_digest": "sha256:0fd41d77a78bd29f79ee3eab45c0d870c5c6a11c213a5fa18ad969633368d4f5"
     }
   ],
   "intents": {
@@ -651,22 +656,22 @@
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Preserved #1469 architecture spec from origin/master 89906b666 alongside #1660 workunit convergence",
-          "reviewed_code_fingerprint": "abf3266b5a85d3b88c4d58a5fab6c2ba2df45d2595a8701be77617d4150c6e44",
+          "reason": "Isolated non-VERIFIED workspace-local split-store writes preserve canonical architecture and single-domain VERIFIED proof boundary.",
+          "reviewed_code_fingerprint": "43b67847219e3556a18258ca11f844d09f2c2956e9d55ea473b4a2221abfaa04",
           "spec_material_hash": "b5e1e3c343de9ed9ba501e7a48d61b43dfed92d7678b3126d1195c9c1cdb9d08"
         },
         {
-          "disposition": "updated",
+          "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Reconciled #1660 govern workunit converge CLI and proof_status contract with origin/master 89906b666 (#1469/#1247)",
-          "reviewed_code_fingerprint": "abf3266b5a85d3b88c4d58a5fab6c2ba2df45d2595a8701be77617d4150c6e44",
+          "reason": "CLI and RPC interfaces unchanged by split-store non-VERIFIED write isolation fix.",
+          "reviewed_code_fingerprint": "43b67847219e3556a18258ca11f844d09f2c2956e9d55ea473b4a2221abfaa04",
           "spec_material_hash": "3f197b0f57bb0c7f8276899703455772d0e0a22f93fb9d5961126765657b693e"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Preserved #1776 security spec from origin/master 89906b666 alongside #1660 fail-closed split-store guards",
-          "reviewed_code_fingerprint": "abf3266b5a85d3b88c4d58a5fab6c2ba2df45d2595a8701be77617d4150c6e44",
+          "reason": "VERIFIED transitions, resume, validate_verified_manifest, and partial split-store leaks remain fail-closed with WORKUNIT_PROOF_ATOMIC_DOMAIN_UNSUPPORTED.",
+          "reviewed_code_fingerprint": "43b67847219e3556a18258ca11f844d09f2c2956e9d55ea473b4a2221abfaa04",
           "spec_material_hash": "49c7d1428d860804f8fc7f436c5da22483d385c9ce4be90f7db52f1cf4b362ee"
         }
       ],
@@ -678,7 +683,7 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795060615Z"
+      "updated_at": "1795065134Z"
     },
     "trajectory": {
       "active_boundaries": [
