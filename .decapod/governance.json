@@ -583,6 +583,14 @@
         "integration_tests=passed",
         "unit_tests=passed"
       ]
+    },
+    {
+      "id": "ckpt-01493-refresh",
+      "summary": "Refresh managed Dockerfile and release-bound projections for decapod 0.149.3",
+      "input_digest": "sha256:60248c005d1f6ee94fddb33a729c7662ba3abe1a1191dd17ee723084b1edefcd",
+      "proof_refs": [
+        "specs_refresh=passed"
+      ]
     }
   ],
   "intents": {
