@@ -95,12 +95,20 @@ fn container_signal_reasons(repo_root: &Path) -> Vec<&'static str> {
 }
 
 fn is_container_workspaces_disabled(repo_root: &Path) -> bool {
-    let config_path = repo_root.join(".decapod").join("config.toml");
-    if !config_path.exists() {
-        return false;
-    }
-    match std::fs::read_to_string(config_path) {
-        Ok(content) => content.contains("container_workspaces = false"),
+    match crate::core::db_maintenance::resolve_accepted_project_config(repo_root) {
+        Ok((_main_root, accepted_cfg, unmerged_violation)) => {
+            unmerged_violation.is_none()
+                && !accepted_cfg.repo.container_workspaces
+                && accepted_cfg.custody.isolation != crate::cli::IsolationMode::Container
+        }
+        Err(("CANONICAL_GIT_BOUNDARY_REQUIRED", _)) => {
+            crate::cli::DecapodProjectConfig::load(repo_root)
+                .map(|cfg| {
+                    !cfg.repo.container_workspaces
+                        && cfg.custody.isolation != crate::cli::IsolationMode::Container
+                })
+                .unwrap_or(false)
+        }
         Err(_) => false,
     }
 }
@@ -1931,6 +1939,65 @@ fn validate_project_config_toml(
         );
     }
 
+    if is_inside_git_work_tree(repo_root)
+        && let Ok((main_root, accepted_cfg, unmerged_violation)) =
+            crate::core::db_maintenance::resolve_accepted_project_config(repo_root)
+    {
+        let same_root =
+            std::fs::canonicalize(repo_root).ok() == std::fs::canonicalize(&main_root).ok();
+        let is_candidate = !same_root || unmerged_violation.is_some();
+        if is_candidate {
+            let accepted_base = crate::core::workspace::resolve_base_branch(&main_root, None);
+            if let Some(cand_base) = typed_config
+                .repo
+                .base_branch
+                .as_deref()
+                .map(str::trim)
+                .filter(|s| !s.is_empty())
+                && cand_base != accepted_base
+            {
+                fail(
+                    &format!(
+                        "BASE_BRANCH_SELF_AUTHORIZATION_DENIED: candidate repo.base_branch '{cand_base}' cannot override accepted base branch '{accepted_base}'"
+                    ),
+                    ctx,
+                );
+            }
+            if accepted_cfg.laya.mode == crate::core::laya_readiness::Mode::Required
+                && typed_config.laya.mode != crate::core::laya_readiness::Mode::Required
+            {
+                fail(
+                    "LAYA_POLICY_DOWNGRADE: candidate cannot weaken accepted [laya] mode = \"required\"",
+                    ctx,
+                );
+            }
+            if accepted_cfg
+                .proof
+                .required_profile
+                .as_ref()
+                .is_some_and(|p| p.id == "decapod.pr-readiness.v1")
+                && typed_config
+                    .proof
+                    .required_profile
+                    .as_ref()
+                    .is_none_or(|p| p.id != "decapod.pr-readiness.v1")
+            {
+                fail(
+                    "REQUIRED_PROFILE_DOWNGRADE: candidate cannot downgrade accepted proof.required_profile 'decapod.pr-readiness.v1'",
+                    ctx,
+                );
+            }
+            if accepted_cfg.repo.effective_backend().is_cloud()
+                && !typed_config.repo.effective_backend().is_cloud()
+            {
+                fail(
+                    "BACKEND_POLICY_DOWNGRADE: candidate cannot switch accepted cloud backend to local",
+                    ctx,
+                );
+            }
+        }
+    }
+
     let proof_names: Vec<_> = typed_config
         .proof
         .commands
@@ -3745,9 +3812,45 @@ fn validate_validation_rules(
         terminal_evidence: None,
     };
 
-    // Create and populate rule registry
+    // Create and populate rule registry from accepted policy only.
     let mut registry = RuleRegistry::new();
-    registry.load_project_rules(main_root)?;
+    let accepted_override =
+        match crate::core::db_maintenance::resolve_repository_override(main_root) {
+            Ok(text) => text,
+            Err(("CANONICAL_GIT_BOUNDARY_REQUIRED", _)) => {
+                let p = main_root.join(".decapod").join("OVERRIDE.md");
+                p.exists().then(|| std::fs::read_to_string(p)).transpose()?
+            }
+            Err((code, msg)) => {
+                return Err(error::DecapodError::ValidationError(format!(
+                    "{code}: {msg}"
+                )));
+            }
+        };
+    if let Some(content) = accepted_override.as_deref() {
+        registry.load_project_rules_from_content(content)?;
+    }
+    // Validate candidate/unmerged OVERRIDE.md separately so forbidden/weakening
+    // rule overrides fail explicitly instead of passing unnoticed.
+    let cand_override_path = working_root.join(".decapod").join("OVERRIDE.md");
+    let main_override_path = main_root.join(".decapod").join("OVERRIDE.md");
+    let same_root =
+        std::fs::canonicalize(working_root).ok() == std::fs::canonicalize(main_root).ok();
+    for path in [
+        (!same_root).then_some(cand_override_path),
+        Some(main_override_path),
+    ]
+    .into_iter()
+    .flatten()
+    {
+        if path.exists() {
+            let candidate_text = std::fs::read_to_string(&path)?;
+            if accepted_override.as_deref() != Some(candidate_text.as_str()) {
+                let mut probe = RuleRegistry::new();
+                probe.load_project_rules_from_content(&candidate_text)?;
+            }
+        }
+    }
     registry.load_task_rules(working_root)?;
 
     // Evaluate all applicable rules
@@ -5786,6 +5889,34 @@ fn validate_git_workspace_context(
     let container_reasons = container_signal_reasons(repo_root);
     let is_non_code = is_non_code_change(repo_root);
 
+    if let Ok((_resolved_main, accepted_cfg, unmerged_violation)) =
+        crate::core::db_maintenance::resolve_accepted_project_config(repo_root)
+    {
+        let accepted_requires_container = accepted_cfg.repo.container_workspaces
+            || accepted_cfg.custody.isolation == crate::cli::IsolationMode::Container;
+        if accepted_requires_container {
+            if let Ok(working_cfg) = crate::cli::DecapodProjectConfig::load(repo_root)
+                && (!working_cfg.repo.container_workspaces
+                    || working_cfg.custody.isolation != crate::cli::IsolationMode::Container)
+            {
+                fail(
+                    "CUSTODY_ISOLATION_DOWNGRADE: candidate cannot disable container_workspaces or downgrade custody.isolation below accepted policy",
+                    ctx,
+                );
+            }
+            if unmerged_violation.is_some()
+                && let Ok(main_cfg) = crate::cli::DecapodProjectConfig::load(main_root)
+                && (!main_cfg.repo.container_workspaces
+                    || main_cfg.custody.isolation != crate::cli::IsolationMode::Container)
+            {
+                fail(
+                    "CUSTODY_ISOLATION_DOWNGRADE: unaccepted main-root branch cannot disable container_workspaces or downgrade custody.isolation",
+                    ctx,
+                );
+            }
+        }
+    }
+
     if is_container_workspaces_disabled(main_root) {
         skip(
             "Container workspace requirement disabled (container_workspaces = false in .decapod/config.toml). This is only safe for single-agent workflows; multi-agent concurrent runs require container isolation.",
@@ -7675,6 +7806,12 @@ fn validate_gatekeeper_gate(
             .filter(|v| v.kind == crate::core::gatekeeper::ViolationKind::DangerousPattern)
             .count();
 
+        let protected_count = result
+            .violations
+            .iter()
+            .filter(|v| v.kind == crate::core::gatekeeper::ViolationKind::ProtectedPath)
+            .count();
+
         let mut parts = Vec::new();
         if secret_count > 0 {
             parts.push(format!("{secret_count} secret(s)"));
@@ -7684,6 +7821,9 @@ fn validate_gatekeeper_gate(
         }
         if dangerous_count > 0 {
             parts.push(format!("{dangerous_count} dangerous pattern(s)"));
+        }
+        if protected_count > 0 {
+            parts.push(format!("{protected_count} protected path(s)"));
         }
         fail(&format!("Gatekeeper violations: {}", parts.join(", ")), ctx);
     }
