@@ -624,6 +624,11 @@
       "id": "ckpt-scope-1760-6",
       "summary": "Integrate origin/master 45369197e (#1825, v0.149.3) and refresh projections for #1760",
       "input_digest": "sha256:c8d7ef0c1cc3f25a29176e7c9f2bd0e00ccf4823b6a028b00deecc50bd0c8205"
+    },
+    {
+      "id": "ckpt-scope-1760-7",
+      "summary": "Integrate origin/master 84f967382 (#1660, v0.149.3) and refresh projections for #1760",
+      "input_digest": "sha256:fc517b1bbeecfb229c75f075bb87028f5e7e795203c86b4fb3fc0cb46f1994c4"
     }
   ],
   "intents": {
@@ -667,22 +672,22 @@
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Preserved origin/master #1469/#1825 architecture prose; #1760 does not alter architecture beyond interface scope parsing and reconciliation.",
-          "reviewed_code_fingerprint": "f46a7210f4bf82048130505b4c6a15760f0718546fc8f21ebfd05b0067d2dbc0",
+          "reason": "Preserved origin/master #1469/#1825/#1660 architecture prose; #1760 does not alter architecture beyond interface scope parsing and reconciliation.",
+          "reviewed_code_fingerprint": "3940d05249f2fbf02dcf9dd597f419771fb87456380edb04bd51dcdedcbb954d",
           "spec_material_hash": "26b2b6a9a136ac955ea41c945b7a1c660c15d0ee6584ee29568d80bc520eaf4c"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Preserved #1760 explicit path scope parsing and govern trajectory reconcile-scope contract alongside origin/master #1825 (45369197e) updates.",
-          "reviewed_code_fingerprint": "f46a7210f4bf82048130505b4c6a15760f0718546fc8f21ebfd05b0067d2dbc0",
-          "spec_material_hash": "425ba1914dc431dc90e2addfc87f42a982430f47b1339dd2f69aff2e6e878081"
+          "reason": "Preserved #1760 explicit path scope parsing and govern trajectory reconcile-scope contract alongside origin/master #1660 (84f967382) workunit updates.",
+          "reviewed_code_fingerprint": "3940d05249f2fbf02dcf9dd597f419771fb87456380edb04bd51dcdedcbb954d",
+          "spec_material_hash": "c64fede5ab57e051978d3c6206116773797bd8fc22fd1ff429055d5bf96cffe2"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Preserved origin/master #1776/#1825 security prose; #1760 keeps fail-closed explicit path scope validation and archive-gated reconciliation.",
-          "reviewed_code_fingerprint": "f46a7210f4bf82048130505b4c6a15760f0718546fc8f21ebfd05b0067d2dbc0",
+          "reason": "Preserved origin/master #1776/#1825/#1660 security prose; #1760 keeps fail-closed explicit path scope validation and archive-gated reconciliation.",
+          "reviewed_code_fingerprint": "3940d05249f2fbf02dcf9dd597f419771fb87456380edb04bd51dcdedcbb954d",
           "spec_material_hash": "9c15cdf421a538d0e8fa06a154d96acaf41fc3d8ec15872b2c6016f0ebb908e1"
         }
       ],
@@ -694,13 +699,13 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795069816Z"
+      "updated_at": "1795073457Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:76725aa0ba134d11b7ac736c6ac0d56977bb18b419536c201d070e66da271bcd",
+      "artifact_hash": "sha256:ce0a7bbb47e20596239131b60ea102bcfd366bbb269466cb1b9b9d32a3c165bd",
       "checks": [
         {
           "name": "candidate_docs_build_zero_diff",
@@ -711,7 +716,15 @@
           "status": "passed"
         },
         {
+          "name": "candidate_docs_build_zero_diff_84f96738",
+          "status": "passed"
+        },
+        {
           "name": "cargo_fmt_45369197",
+          "status": "passed"
+        },
+        {
+          "name": "cargo_fmt_84f96738",
           "status": "passed"
         },
         {
@@ -735,6 +748,10 @@
           "status": "passed"
         },
         {
+          "name": "doc_and_contract_tests_21_84f96738",
+          "status": "passed"
+        },
+        {
           "name": "docs_and_contracts",
           "status": "passed"
         },
@@ -751,6 +768,10 @@
           "status": "passed"
         },
         {
+          "name": "explicit_path_scope_1760_integration_3_84f96738",
+          "status": "passed"
+        },
+        {
           "name": "fleet_coord_unit",
           "status": "passed"
         },
@@ -763,6 +784,10 @@
           "status": "passed"
         },
         {
+          "name": "fleet_coord_unit_tests_15_84f96738",
+          "status": "passed"
+        },
+        {
           "name": "fmt",
           "status": "passed"
         },
@@ -772,6 +797,10 @@
         },
         {
           "name": "validation_scope_unit_tests_9_45369197",
+          "status": "passed"
+        },
+        {
+          "name": "validation_scope_unit_tests_9_84f96738",
           "status": "passed"
         },
         {
@@ -814,10 +843,17 @@
             "intent_id": "intent:change_01M7R53QBGMV407MHXT3BSNNGX",
             "kind": "trajectory_step_recorded",
             "sequence": 6
+          },
+          {
+            "detail": "trajectory:branch_01M7R53QHQGEZPR24WRJ6ZSZ39",
+            "event_id": "event:7",
+            "intent_id": "intent:change_01M7R53QBGMV407MHXT3BSNNGX",
+            "kind": "trajectory_step_recorded",
+            "sequence": 7
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 6,
+        "next_sequence": 7,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M7R53QHQGEZPR24WRJ6ZSZ39": {
@@ -916,6 +952,30 @@
                 ],
                 "sequence": 6,
                 "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "command": "git merge --no-commit --no-ff origin/master (84f967382)",
+                "custody_event_id": "event:7",
+                "observations": [
+                  "Merged origin/master 84f9673824ba0b60ee0e87449f2cbb23387f5717 (#1660, v0.149.3) with zero src/tests/docs/config.toml conflicts; candidate docs build converged both #1660 and #1760 with 0 repeat diff; manifest config_input_hash=e640496b4240426e1b4fdf07aa93295f77ad0c1fe6cb39572d09c531d2ad697d; all 48 tests passed."
+                ],
+                "proof_refs": [
+                  "cargo_fmt_84f96738",
+                  "candidate_docs_build_zero_diff_84f96738",
+                  "fleet_coord_unit_tests_15_84f96738",
+                  "validation_scope_unit_tests_9_84f96738",
+                  "doc_and_contract_tests_21_84f96738",
+                  "explicit_path_scope_1760_integration_3_84f96738"
+                ],
+                "scope": [
+                  ".decapod/managed/specs",
+                  "src/decapod/core",
+                  "src/decapod/lib.rs",
+                  "tests"
+                ],
+                "sequence": 7,
+                "validation_findings": []
               }
             ]
           }
@@ -924,6 +984,7 @@
       "declared_commands": [
         "CLIPPY_CONF_DIR=.config cargo clippy --all-targets --all-features -- -D warnings",
         "cargo fmt --all -- --check",
+        "cargo fmt --all -- --check && candidate decapod docs build && candidate decapod rpc --op specs.refresh && cargo test --lib core::fleet_coord && cargo test --lib validation_scope && cargo test --test doc_alignment --test trajectory_docs --test contract_conformance && cargo test --test explicit_path_scope_1760",
         "cargo fmt --all -- --check && candidate decapod docs build && candidate decapod rpc --op specs.refresh && cargo test --lib core::fleet_coord && cargo test --lib validation_scope && cargo test --test explicit_path_scope_1760 && cargo test --test doc_alignment --test trajectory_docs --test contract_conformance",
         "cargo fmt --all -- --check && decapod docs build && cargo test --lib core::fleet_coord && cargo test --lib validation_scope && cargo test --test explicit_path_scope_1760 && cargo test --test doc_alignment --test trajectory_docs --test contract_conformance",
         "cargo test --lib core::fleet_coord",
@@ -932,12 +993,14 @@
         "cargo test --test explicit_path_scope_1760",
         "cargo test --test workbranch_governance",
         "git merge --no-commit --no-ff origin/master (45369197e)",
+        "git merge --no-commit --no-ff origin/master (84f967382)",
         "git merge --no-commit --no-ff origin/master (89906b666)"
       ],
       "destination": "pull request",
       "evidence": [
         ".decapod/managed/specs/INTERFACES.md",
         "Merged origin/master 45369197e848054126b36c1a3bbeb7806f094a38 (#1825, v0.149.3) with zero src/tests/docs/config.toml conflicts; candidate docs build 0 diff, manifest config_input_hash=e640496b4240426e1b4fdf07aa93295f77ad0c1fe6cb39572d09c531d2ad697d, all 48 tests passed.",
+        "Merged origin/master 84f9673824ba0b60ee0e87449f2cbb23387f5717 (#1660, v0.149.3) with zero src/tests/docs/config.toml conflicts; candidate docs build converged both #1660 and #1760 with 0 repeat diff; manifest config_input_hash=e640496b4240426e1b4fdf07aa93295f77ad0c1fe6cb39572d09c531d2ad697d; all 48 tests passed.",
         "Merged origin/master 89906b6662cccc1576cd7b67522b9ade2ea27415 (v0.149.3) with zero src/tests/docs conflicts; verified fmt, candidate docs build (0 diff), fleet_coord (15/15), validation_scope (9/9), explicit_path_scope_1760 (3/3), contract_conformance (12/12), doc_alignment (4/4), trajectory_docs (5/5).",
         "tests/explicit_path_scope_1760.rs"
       ],
