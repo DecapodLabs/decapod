@@ -595,6 +595,15 @@
         "tests/podman_cgroup_parent_1820.rs",
         "tests/unit/plugins/container_tests.rs"
       ]
+    },
+    "claim:release-v0-150-0-projections": {
+      "statement": "Release v0.150.0 aligns Cargo.toml, Cargo.lock, managed Dockerfile pin, and specs manifest release metadata.",
+      "falsifier": "Managed Dockerfile or specs manifest release metadata diverges from Cargo.toml 0.150.0.",
+      "status": "supported",
+      "proof_refs": [
+        ".decapod/managed/Dockerfile.decapod",
+        ".decapod/managed/specs/.manifest.json"
+      ]
     }
   },
   "checkpoints": [
@@ -647,6 +656,14 @@
         "tests/podman_cgroup_parent_1820.rs",
         "tests/unit/plugins/container_tests.rs"
       ]
+    },
+    {
+      "id": "ckpt-release-v0-150-0",
+      "summary": "Refresh v0.150.0 release projections and governance",
+      "input_digest": "sha256:37323d194826bc9ef526ceeb639fd6ede8c5798ec1ca229efeae8f6d93bfe9a0",
+      "proof_refs": [
+        ".decapod/managed/specs/.manifest.json"
+      ]
     }
   ],
   "intents": {
@@ -682,55 +699,49 @@
       },
       "deferred_questions": [],
       "human_questions": [],
-      "intent": "Support validated delegated cgroup parent selection (--cgroup-parent, DECAPOD_CONTAINER_CGROUP_PARENT, and rootless Podman cgroupfs v2 subtree detection) while keeping --cpus, --memory, and --pids-limit enforced, and classify cgroup permission failures distinctly from workspace permission errors (#1820).",
+      "intent": "Refresh release-bound Dockerfile and specs manifest projections for v0.150.0 on PR #1817",
       "phases": [],
-      "proof_hooks": [
-        "cargo test --lib plugins::container",
-        "cargo test --test podman_cgroup_parent_1820",
-        "cargo test --test cli_contracts",
-        "cargo fmt --all -- --check",
-        "CLIPPY_CONF_DIR=.config cargo clippy --all-targets --all-features -- -D warnings"
-      ],
+      "proof_hooks": [],
       "schema_version": "1.1.0",
       "spec_reviews": [
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Re-reviewed ARCHITECTURE.md after merging origin/master c845ae1d0 (#1831): #1820 remains inside plugins::container.",
-          "reviewed_code_fingerprint": "6026d851ab6f819e0d7014dafa322075371b739865c9ea7be4512311ea30ed15",
+          "reason": "v0.150.0 version-only release cut does not alter system architecture",
+          "reviewed_code_fingerprint": "fcad9485a7b65422163338761a74226edcf31b90af5e76284a3921ab16d8dc22",
           "spec_material_hash": "eea767e816c43693064ee73b838425f7a154fd6e56cf0552669d971d1e5001ea"
         },
         {
-          "disposition": "updated",
+          "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Re-reviewed INTERFACES.md after merging origin/master c845ae1d0 (#1831): preserved #1820 delegated cgroup parent/diagnostics alongside all accepted prose.",
-          "reviewed_code_fingerprint": "6026d851ab6f819e0d7014dafa322075371b739865c9ea7be4512311ea30ed15",
+          "reason": "v0.150.0 version-only release cut does not alter CLI or RPC interfaces",
+          "reviewed_code_fingerprint": "fcad9485a7b65422163338761a74226edcf31b90af5e76284a3921ab16d8dc22",
           "spec_material_hash": "f9f2f5fc909f60cbbdabb0bf48b53c6c70f1f3d4193f73bbccf2d1108675005f"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Re-reviewed SECURITY.md after merging origin/master c845ae1d0 (#1831): #1820 preserves fail-closed cgroup parent validation and resource limits.",
-          "reviewed_code_fingerprint": "6026d851ab6f819e0d7014dafa322075371b739865c9ea7be4512311ea30ed15",
+          "reason": "v0.150.0 version-only release cut does not alter security boundaries",
+          "reviewed_code_fingerprint": "fcad9485a7b65422163338761a74226edcf31b90af5e76284a3921ab16d8dc22",
           "spec_material_hash": "fe2a57654bc0079c8ae5d4226c46ba7f1ea50f4246a8c19d826f2e660dc56f81"
         }
       ],
       "state": "APPROVED",
       "stop_conditions": [],
-      "title": "Fix rootless Podman delegated cgroup parent selection and cgroup permission diagnostics (#1820)",
+      "title": "Align release v0.150.0 projections and governance (#1817)",
       "todo_ids": [
-        "bugs_01m7rv155s5w9wf9"
+        "code_01m7srddt2dc4pyp"
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795082896Z"
+      "updated_at": "1795088333Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Keep --cpus, --memory, and --pids-limit enforced; never disable cgroups",
         "Reject invalid/traversal/unsafe cgroup parent values fail-closed before runtime launch"
       ],
-      "artifact_hash": "sha256:c14e98d46bc193e0a6f07530a91f507984833036eb07e44ddcf7aa7523bd75dd",
+      "artifact_hash": "sha256:e4952408288a10557350c1049e44e32d8a7292cf5e19c5d16da432451f734349",
       "checks": [
         {
           "name": "cargo_clippy_all_targets",
@@ -770,6 +781,10 @@
         },
         {
           "name": "podman_cgroup_parent_1820_4",
+          "status": "passed"
+        },
+        {
+          "name": "project_check_0_150_0",
           "status": "passed"
         },
         {
@@ -830,10 +845,17 @@
             "intent_id": "intent:run_1820_podman_cgroup_parent",
             "kind": "trajectory_step_recorded",
             "sequence": 8
+          },
+          {
+            "detail": "trajectory:run_1820_podman_cgroup_parent",
+            "event_id": "event:9",
+            "intent_id": "intent:run_1820_podman_cgroup_parent",
+            "kind": "trajectory_step_recorded",
+            "sequence": 9
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 8,
+        "next_sequence": 9,
         "schema_version": "1.0.0",
         "trajectories": {
           "run_1820_podman_cgroup_parent": {
@@ -952,6 +974,28 @@
                 ],
                 "sequence": 8,
                 "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:9",
+                "observations": [
+                  ".decapod/managed/Dockerfile.decapod",
+                  ".decapod/managed/specs/OPERATIONS.md",
+                  ".decapod/managed/specs/.manifest.json",
+                  ".decapod/managed/specs/.manifest.json"
+                ],
+                "proof_refs": [
+                  "project_check_0_150_0"
+                ],
+                "scope": [
+                  ".decapod/managed/specs/",
+                  "docs/agent/",
+                  "src/decapod/core/docs_cli.rs",
+                  "src/decapod/plugins/container.rs",
+                  "tests/"
+                ],
+                "sequence": 9,
+                "validation_findings": []
               }
             ]
           }
@@ -959,6 +1003,7 @@
       },
       "declared_commands": [],
       "evidence": [
+        ".decapod/managed/specs/.manifest.json",
         "All targeted unit, contract, doc alignment, clippy -D warnings, and #1820 integration tests passed; decapod eval allow on docs ingest and full diff.",
         "Merged external origin/master c845ae1d0cf14ea2d5859af8e50511eb9f74be6c (PR #1831, v0.149.3), rebuilt candidate decapod binary, ran docs build (0 diff) and specs.refresh, and re-recorded spec reviews.",
         "Merged origin/master 1b3ca1b8919367c113732ddbe820dbd729eab432 (v0.149.3, PR #1827/#1760), rebuilt candidate decapod binary, converged docs build (0 repeat diff), refreshed specs.refresh, preserved all living specs, and re-recorded spec reviews.",
@@ -974,6 +1019,8 @@
       ],
       "intent_id": "intent:run_1820_podman_cgroup_parent",
       "modified_files": [
+        ".decapod/managed/Dockerfile.decapod",
+        ".decapod/managed/specs/.manifest.json",
         ".decapod/managed/specs/INTERFACES.md",
         ".decapod/managed/specs/OPERATIONS.md",
         "docs/agent/command-contracts.md",
@@ -1001,7 +1048,7 @@
       "run_id": "run_1820_podman_cgroup_parent",
       "schema_version": "1.1.0",
       "shortcut_risk_signals": [],
-      "task_id": "bugs_01m7rv155s5w9wf9",
+      "task_id": "code_01m7srddt2dc4pyp",
       "tool_calls": [],
       "unresolved_assumptions": []
     }
