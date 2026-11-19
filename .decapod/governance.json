@@ -706,6 +706,17 @@
         "core_repository_profile",
         "doc_alignment"
       ]
+    },
+    {
+      "id": "cp-1740-5",
+      "summary": "Refresh .decapod/managed/Dockerfile.decapod pin to v0.149.2-debian / 0.149.2 via v0.149.2 project-check (#1740).",
+      "input_digest": "sha256:43ae963811b7ae9794dbee50be9adcf7257e06a565d9fa7f7b6c2038c276ebf3",
+      "proof_refs": [
+        "cargo_clippy",
+        "cargo_fmt",
+        "core_repository_profile",
+        "doc_alignment"
+      ]
     }
   ],
   "intents": {
