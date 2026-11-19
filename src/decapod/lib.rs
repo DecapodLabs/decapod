@@ -3215,9 +3215,17 @@ pub fn run() -> Result<(), error::DecapodError> {
             // For other commands, ensure .decapod exists in the GOVERNANCE root
             let decapod_root_path = governance_root.join(".decapod");
             store_root = decapod_root_path.join("data");
-            let configured_backend = load_project_config_if_present(&workspace_root)?
-                .map(|config| config.repo.effective_backend())
-                .unwrap_or_default();
+            let accepted_cloud =
+                core::db_maintenance::resolve_accepted_project_config(&workspace_root)
+                    .ok()
+                    .is_some_and(|(_main, cfg, _)| cfg.repo.effective_backend().is_cloud());
+            let configured_backend = if accepted_cloud {
+                cli::BackendType::Cloud
+            } else {
+                load_project_config_if_present(&workspace_root)?
+                    .map(|config| config.repo.effective_backend())
+                    .unwrap_or_default()
+            };
             let cloud_todo_command = is_cloud_todo_command(&cli.command, &workspace_root)?;
             if configured_backend.is_cloud()
                 && !cloud_todo_command

@@ -729,6 +729,11 @@
         "doc_alignment",
         "gate_skip_override_readiness_1659"
       ]
+    },
+    {
+      "id": "cp-1740-7",
+      "summary": "Merged origin/master cfe2565da (v0.149.3, PR #1816 #1776), updated tests/policy_self_authorization_1776.rs for RepositoryContract.targets and runtime::Options.target, refreshed v0.149.3 specs and spec reviews, and verified fmt/clippy/repository_profile/doc_alignment/policy_self_authorization_1776.",
+      "input_digest": "sha256:9b2bdd8b99ac754acb8257ce1285f1f89a0079afc0c28bd7dd495bad958f03b2"
     }
   ],
   "intents": {
@@ -769,23 +774,23 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Document target closure resolution, shared_inputs diff expansion, and target-bound receipt history for #1740 (merged origin/master 102d6eb22 v0.149.3)",
-          "reviewed_code_fingerprint": "e5c6f14b6ce8112baf269e287df3a8abcabfccede51f7ee2b33bdf4750b776bf",
+          "reason": "Merged origin/master cfe2565da (v0.149.3, PR #1816 #1776), preserved all #1776 policy hardening and SECURITY.md prose alongside #1740 target-scoped proof specs, and updated policy_self_authorization_1776 struct literals.",
+          "reviewed_code_fingerprint": "40eed059fcbc030961720f8f3b6ebf0c5bf0cf5e69596cdce7933de554085fde",
           "spec_material_hash": "e8d00d685b21659476795212b211594118e1acfe49b1a4fdac9904348c6bbe65"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Document --target CLI/RPC readiness flags, RepositoryContract.targets schema, and target-scoped proof boundaries for #1740 (merged origin/master 102d6eb22 v0.149.3)",
-          "reviewed_code_fingerprint": "e5c6f14b6ce8112baf269e287df3a8abcabfccede51f7ee2b33bdf4750b776bf",
+          "reason": "Merged origin/master cfe2565da (v0.149.3, PR #1816 #1776), preserved all #1776 policy hardening and SECURITY.md prose alongside #1740 target-scoped proof specs, and updated policy_self_authorization_1776 struct literals.",
+          "reviewed_code_fingerprint": "40eed059fcbc030961720f8f3b6ebf0c5bf0cf5e69596cdce7933de554085fde",
           "spec_material_hash": "3d2e11acd9c14bea4b45b77931af5aed1eef385f53bc87092713c59b4296901c"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Document fail-closed target contract preservation, target receipt scope isolation, and incompatible executor checks for #1740 (merged origin/master 102d6eb22 v0.149.3)",
-          "reviewed_code_fingerprint": "e5c6f14b6ce8112baf269e287df3a8abcabfccede51f7ee2b33bdf4750b776bf",
-          "spec_material_hash": "a8fc49a6589b9b8889199ddc871d5c64cc823ce7e79ca3306284a98d4425ee11"
+          "reason": "Merged origin/master cfe2565da (v0.149.3, PR #1816 #1776), preserved all #1776 policy hardening and SECURITY.md prose alongside #1740 target-scoped proof specs, and updated policy_self_authorization_1776 struct literals.",
+          "reviewed_code_fingerprint": "40eed059fcbc030961720f8f3b6ebf0c5bf0cf5e69596cdce7933de554085fde",
+          "spec_material_hash": "377d56bde376aa27b0d266a4a36a701aeea3283328bd26731247681d8b5564ea"
         }
       ],
       "state": "APPROVED",
@@ -796,7 +801,7 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795048868Z"
+      "updated_at": "1795053623Z"
     },
     "trajectory": {
       "active_boundaries": [
