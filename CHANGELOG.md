@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.150.3](https://github.com/DecapodLabs/decapod/compare/v0.150.2...v0.150.3) - 2026-11-19
+
+### Added
+
+- *(lifecycle)* instruct agents to clean todo-scoped /tmp paths on PR creation ([#1798](https://github.com/DecapodLabs/decapod/pull/1798))
+
+### Other
+
+- *(govern)* sync accepted master v0.150.2 ([#1798](https://github.com/DecapodLabs/decapod/pull/1798))
+- *(lifecycle)* integrate accepted master v0.150.0 ([#1798](https://github.com/DecapodLabs/decapod/pull/1798))
+- *(lifecycle)* pre-sync accepted master e63599e3c ([#1798](https://github.com/DecapodLabs/decapod/pull/1798))
+- *(govern)* bind trajectory task id for publication material ([#1798](https://github.com/DecapodLabs/decapod/pull/1798))
+- *(lifecycle)* integrate accepted master v0.149.3 ([#1798](https://github.com/DecapodLabs/decapod/pull/1798))
+
 ## [0.150.2](https://github.com/DecapodLabs/decapod/compare/v0.150.1...v0.150.2) - 2026-11-19
 
 ### Fixed
