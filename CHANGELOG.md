@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.150.6](https://github.com/DecapodLabs/decapod/compare/v0.150.5...v0.150.6) - 2026-11-19
+
+### Added
+
+- *(integration)* add reversible repository integration removal ([#1704](https://github.com/DecapodLabs/decapod/pull/1704))
+
+### Other
+
+- *(govern)* sync accepted master v0.150.5 ([#1704](https://github.com/DecapodLabs/decapod/pull/1704))
+- *(govern)* sync accepted master v0.150.4 ([#1704](https://github.com/DecapodLabs/decapod/pull/1704))
+- *(govern)* sync accepted master v0.150.3 ([#1704](https://github.com/DecapodLabs/decapod/pull/1704))
+- *(integration)* integrate accepted master v0.150.0 ([#1704](https://github.com/DecapodLabs/decapod/pull/1704))
+- *(integration)* integrate accepted master v0.149.3 ([#1704](https://github.com/DecapodLabs/decapod/pull/1704))
+
 ## [0.150.5](https://github.com/DecapodLabs/decapod/compare/v0.150.4...v0.150.5) - 2026-11-19
 
 ### Other
