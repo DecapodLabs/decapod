@@ -11,7 +11,7 @@
 //!   its SHA-256 digest + revision are bound to every admission decision and
 //!   append-only audit entry.
 //! - Cloud backends (`backend = "cloud"`) always fail closed (`CLOUD_PRINCIPAL_UNVERIFIED`
-//!   or `POLICY_OPT_IN_DISABLED`) until Propodus #88 supplies verified repository-privileged
+//!   or `POLICY_OPT_IN_DISABLED`) until Decapod Cloud supplies verified repository-privileged
 //!   human delegation; client-provided environment variables or actor claims never
 //!   grant cloud authority.
 //! - Higher-risk repair (`db.recover`) belongs to the repository `owner` repair
@@ -220,6 +220,415 @@ impl RetryTargetCapability {
 }
 
 /// Project-level configuration in `[governance.db_maintenance]`.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
+#[serde(rename_all = "lowercase")]
+pub enum RepoAccessTier {
+    Read,
+    Write,
+    Owner,
+}
+
+impl RepoAccessTier {
+    pub fn parse_str(raw: &str) -> Option<Self> {
+        match raw.trim().to_ascii_lowercase().as_str() {
+            "read" => Some(Self::Read),
+            "write" => Some(Self::Write),
+            "owner" => Some(Self::Owner),
+            _ => None,
+        }
+    }
+
+    pub fn as_str(self) -> &'static str {
+        match self {
+            Self::Read => "read",
+            Self::Write => "write",
+            Self::Owner => "owner",
+        }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct CloudRepositoryAccessStatus {
+    pub repository: String,
+    pub effective_tier: RepoAccessTier,
+    pub seat_authorized: bool,
+    pub policy_bound: bool,
+    pub policy_revision: Option<i64>,
+    pub policy_hash: Option<String>,
+    pub accepted_commit: Option<String>,
+    pub max_delegated_tier: RepoAccessTier,
+    pub require_owner_for_repair: bool,
+    pub authority_generation: Option<i64>,
+    pub repair_eligible: bool,
+}
+
+/// Public registered wire marker for the `owner_repair_v1` cloud repair operation.
+/// Submitted strictly as one `Operation::write` inside `Connection::atomic`.
+pub const OWNER_REPAIR_V1_SQL: &str =
+    "SELECT propodus.owner_repair_v1($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)";
+
+#[derive(Debug, Clone)]
+pub struct OwnerRepairBatchParams {
+    pub task_id: String,
+    pub title: String,
+    pub description: Option<String>,
+    pub status: String,
+    pub assigned_to: String,
+    pub assigned_at: Option<String>,
+    pub completed_at: Option<String>,
+    pub updated_at: String,
+    pub expected_version: i64,
+    pub reason: String,
+    pub event_id: String,
+}
+
+impl OwnerRepairBatchParams {
+    pub fn to_dactyl_operation(&self) -> Result<dactyl_db::Operation, (&'static str, String)> {
+        if self.expected_version < 1 || self.reason.trim().is_empty() {
+            return Err((
+                "OWNER_REPAIR_INVALID_REQUEST",
+                "owner_repair_v1 requires positive expected_version and non-empty reason"
+                    .to_string(),
+            ));
+        }
+        if !matches!(
+            self.status.as_str(),
+            "open" | "pending" | "in_progress" | "completed"
+        ) {
+            return Err((
+                "OWNER_REPAIR_INVALID_STATUS",
+                format!("unsupported owner_repair_v1 task status {:?}", self.status),
+            ));
+        }
+        Ok(dactyl_db::Operation::write(
+            OWNER_REPAIR_V1_SQL,
+            vec![
+                dactyl_db::Parameter::Text(self.task_id.clone()),
+                dactyl_db::Parameter::Text(self.title.clone()),
+                match &self.description {
+                    Some(d) => dactyl_db::Parameter::Text(d.clone()),
+                    None => dactyl_db::Parameter::Null,
+                },
+                dactyl_db::Parameter::Text(self.status.clone()),
+                dactyl_db::Parameter::Text(self.assigned_to.clone()),
+                match &self.assigned_at {
+                    Some(ts) => dactyl_db::Parameter::Text(ts.clone()),
+                    None => dactyl_db::Parameter::Null,
+                },
+                match &self.completed_at {
+                    Some(ts) => dactyl_db::Parameter::Text(ts.clone()),
+                    None => dactyl_db::Parameter::Null,
+                },
+                dactyl_db::Parameter::Text(self.updated_at.clone()),
+                dactyl_db::Parameter::Integer(self.expected_version),
+                dactyl_db::Parameter::Text(self.reason.clone()),
+                dactyl_db::Parameter::Text(self.event_id.clone()),
+            ],
+        ))
+    }
+}
+
+/// Execute the exact `owner_repair_v1` batch operation through `DactylBridge::atomic`
+/// without falling back to local SQLite.
+pub fn execute_cloud_owner_repair_batch(
+    bridge: &crate::core::dactyl::DactylBridge,
+    access: &CloudRepositoryAccessStatus,
+    policy: &CanonicalMaintenancePolicy,
+    params: &OwnerRepairBatchParams,
+) -> Result<serde_json::Value, (&'static str, String)> {
+    let (dec, code, msg) = evaluate_cloud_capability_decision_with_access(
+        policy,
+        DbMaintenanceCapability::Recover,
+        None,
+        Some(access),
+    );
+    if dec != CapabilityDecision::Allowed {
+        return Err((code, msg));
+    }
+    let op = params.to_dactyl_operation()?;
+    let result = bridge
+        .atomic(&[op])
+        .map_err(|e| classify_dactyl_op_error("CLOUD_OWNER_REPAIR_FAILED", &e))?;
+    let affected = match result.results.first() {
+        Some(dactyl_db::OperationResult::Write(w)) => w.affected_rows,
+        Some(dactyl_db::OperationResult::Rows(rows)) => rows
+            .as_slice()
+            .first()
+            .and_then(|row| row.get::<usize, i64>(0).ok())
+            .and_then(|n| u64::try_from(n).ok())
+            .unwrap_or(0),
+        None => 0,
+    };
+    if affected != 1 {
+        return Err((
+            "OWNER_REPAIR_CAS_CONFLICT",
+            format!(
+                "owner_repair_v1 affected {affected} rows (expected 1); state and event history remain unchanged"
+            ),
+        ));
+    }
+    Ok(serde_json::json!({
+        "status": "ok",
+        "operation": "owner_repair_v1",
+        "task_id": params.task_id,
+        "event_id": params.event_id,
+        "affected": affected,
+        "automatic_repair": false,
+    }))
+}
+
+pub const REPOSITORY_ACCESS_CONTROL_OP: &str = "propodus_repository_access_v1";
+
+/// Query current repository access tier and owner-repair policy via `dactyl-db 0.18.0`
+/// `CloudConnector::control_request("propodus_repository_access_v1", ..., Read)` (`#1590`, `dactyl#123`).
+#[cfg(feature = "supabase-cloud")]
+pub fn fetch_cloud_repository_access_status(
+    connector: &dactyl_db::CloudConnector,
+    bearer: &str,
+    project_id: &str,
+) -> Result<CloudRepositoryAccessStatus, DecapodError> {
+    let payload = serde_json::json!({
+        "version": 1,
+        "action": "status",
+        "project_id": project_id,
+    });
+    let resp = connector
+        .control_request(
+            REPOSITORY_ACCESS_CONTROL_OP,
+            &payload,
+            Some(bearer),
+            dactyl_db::OperationKind::Read,
+            dactyl_db::ResourceBudget::default(),
+        )
+        .map_err(crate::core::cloud_client::transport_error)?;
+    parse_cloud_repository_access_status(&resp)
+}
+
+/// Evaluate audited owner-repair authority on the hosted control plane via
+/// `CloudConnector::control_request("propodus_repository_access_v1", ..., Write)` (`#1590`, `dactyl#123`).
+/// Always uses `OperationKind::Write` because server policy writes a durable audit entry.
+#[cfg(feature = "supabase-cloud")]
+pub fn evaluate_cloud_repair_authority(
+    connector: &dactyl_db::CloudConnector,
+    bearer: &str,
+    project_id: &str,
+    request_id: &str,
+    worktree_unmerged: bool,
+    reason: &str,
+) -> Result<serde_json::Value, DecapodError> {
+    let payload = serde_json::json!({
+        "version": 1,
+        "action": "evaluate_repair_authority",
+        "project_id": project_id,
+        "request_id": request_id,
+        "worktree_unmerged": worktree_unmerged,
+        "reason": reason,
+    });
+    connector
+        .control_request(
+            REPOSITORY_ACCESS_CONTROL_OP,
+            &payload,
+            Some(bearer),
+            dactyl_db::OperationKind::Write,
+            dactyl_db::ResourceBudget::default(),
+        )
+        .map_err(crate::core::cloud_client::transport_error)
+}
+
+/// Delegate or revoke a repository access tier (`read`/`write`/`owner`) via
+/// `CloudConnector::control_request("propodus_repository_access_v1", ..., Write)` (`#1590`, `dactyl#123`).
+#[cfg(feature = "supabase-cloud")]
+#[allow(clippy::too_many_arguments)]
+pub fn mutate_cloud_repository_tier(
+    connector: &dactyl_db::CloudConnector,
+    bearer: &str,
+    action: &str,
+    project_id: &str,
+    target_account_id: &str,
+    tier: Option<RepoAccessTier>,
+    request_id: &str,
+    reason: &str,
+) -> Result<serde_json::Value, DecapodError> {
+    if action != "delegate_tier" && action != "revoke_tier" {
+        return Err(DecapodError::ValidationError(format!(
+            "unsupported repository tier mutation action '{action}'"
+        )));
+    }
+    let mut payload = serde_json::json!({
+        "version": 1,
+        "action": action,
+        "project_id": project_id,
+        "request_id": request_id,
+        "target_account_id": target_account_id,
+        "reason": reason,
+    });
+    if let Some(t) = tier
+        && let Some(obj) = payload.as_object_mut()
+    {
+        obj.insert("tier".to_string(), serde_json::json!(t.as_str()));
+    }
+    connector
+        .control_request(
+            REPOSITORY_ACCESS_CONTROL_OP,
+            &payload,
+            Some(bearer),
+            dactyl_db::OperationKind::Write,
+            dactyl_db::ResourceBudget::default(),
+        )
+        .map_err(crate::core::cloud_client::transport_error)
+}
+
+/// Full fail-closed hosted owner repair flow (`#1590`, `dactyl#123`):
+/// 1) Queries `propodus_repository_access_v1` `status` (`Read`),
+/// 2) Evaluates audited `evaluate_repair_authority` (`Write`),
+/// 3) Executes `owner_repair_v1` via `DactylBridge::atomic` only when server
+///    confirmed `decision == "allowed"` and `effective_tier == "owner"`.
+///
+/// Never falls back to local SQLite.
+#[cfg(feature = "supabase-cloud")]
+#[allow(clippy::too_many_arguments)]
+pub fn execute_cloud_owner_repair(
+    connector: &dactyl_db::CloudConnector,
+    bearer: &str,
+    bridge: &crate::core::dactyl::DactylBridge,
+    policy: &CanonicalMaintenancePolicy,
+    project_id: &str,
+    request_id: &str,
+    reason: &str,
+    params: &OwnerRepairBatchParams,
+) -> Result<serde_json::Value, (&'static str, String)> {
+    let access = fetch_cloud_repository_access_status(connector, bearer, project_id)
+        .map_err(|e| ("CLOUD_REPOSITORY_ACCESS_FAILED", e.to_string()))?;
+    let eval = evaluate_cloud_repair_authority(
+        connector,
+        bearer,
+        project_id,
+        request_id,
+        policy.unmerged_branch_violation.is_some(),
+        reason,
+    )
+    .map_err(|e| ("CLOUD_REPAIR_AUTHORITY_DENIED", e.to_string()))?;
+    let allowed = eval.get("decision").and_then(|v| v.as_str()) == Some("allowed");
+    if !allowed {
+        let denial = eval
+            .get("reason")
+            .or_else(|| eval.get("code"))
+            .and_then(|v| v.as_str())
+            .unwrap_or("owner repair denied by repository access policy");
+        return Err(("CLOUD_REPAIR_AUTHORITY_DENIED", denial.to_string()));
+    }
+    execute_cloud_owner_repair_batch(bridge, &access, policy, params)
+}
+
+pub fn parse_cloud_repository_access_status(
+    value: &serde_json::Value,
+) -> Result<CloudRepositoryAccessStatus, DecapodError> {
+    let repository = value
+        .get("repository")
+        .or_else(|| value.get("project_id"))
+        .and_then(|v| v.as_str())
+        .unwrap_or_default()
+        .to_string();
+    let effective_tier = value
+        .get("effective_tier")
+        .or_else(|| value.get("tier"))
+        .and_then(|v| v.as_str())
+        .and_then(RepoAccessTier::parse_str)
+        .unwrap_or(RepoAccessTier::Read);
+    let max_delegated_tier = value
+        .get("max_delegated_tier")
+        .and_then(|v| v.as_str())
+        .or_else(|| {
+            value
+                .get("policy")
+                .and_then(|p| p.get("max_delegated_tier"))
+                .and_then(|v| v.as_str())
+        })
+        .and_then(RepoAccessTier::parse_str)
+        .unwrap_or(RepoAccessTier::Owner);
+    let seat_authorized = value
+        .get("seat_authorized")
+        .and_then(|v| v.as_bool())
+        .unwrap_or(true);
+    let policy_bound = value
+        .get("policy_bound")
+        .or_else(|| value.get("policy_active"))
+        .and_then(|v| v.as_bool())
+        .or_else(|| {
+            value
+                .get("policy")
+                .and_then(|p| p.get("installation_active"))
+                .and_then(|v| v.as_bool())
+        })
+        .unwrap_or(false);
+    let policy_revision = value
+        .get("policy_revision")
+        .and_then(|v| v.as_i64())
+        .or_else(|| {
+            value
+                .get("policy")
+                .and_then(|p| p.get("policy_revision"))
+                .and_then(|v| v.as_i64())
+        });
+    let policy_hash = value
+        .get("policy_hash")
+        .and_then(|v| v.as_str())
+        .or_else(|| {
+            value
+                .get("policy")
+                .and_then(|p| p.get("policy_hash"))
+                .and_then(|v| v.as_str())
+        })
+        .map(str::to_string);
+    let accepted_commit = value
+        .get("accepted_commit")
+        .and_then(|v| v.as_str())
+        .or_else(|| {
+            value
+                .get("policy")
+                .and_then(|p| p.get("accepted_commit"))
+                .and_then(|v| v.as_str())
+        })
+        .map(str::to_string);
+    let require_owner_for_repair = value
+        .get("require_owner_for_repair")
+        .and_then(|v| v.as_bool())
+        .or_else(|| {
+            value
+                .get("policy")
+                .and_then(|p| p.get("require_owner_for_repair"))
+                .and_then(|v| v.as_bool())
+        })
+        .unwrap_or(true);
+    let authority_generation = value
+        .get("authority_generation")
+        .and_then(|v| v.as_i64())
+        .or_else(|| {
+            value
+                .get("policy")
+                .and_then(|p| p.get("authority_generation"))
+                .and_then(|v| v.as_i64())
+        });
+    let repair_eligible = value
+        .get("repair_eligible")
+        .or_else(|| value.get("owner_repair_enabled"))
+        .and_then(|v| v.as_bool())
+        .unwrap_or(policy_bound && effective_tier == RepoAccessTier::Owner);
+    Ok(CloudRepositoryAccessStatus {
+        repository,
+        effective_tier,
+        seat_authorized,
+        policy_bound,
+        policy_revision,
+        policy_hash,
+        accepted_commit,
+        max_delegated_tier,
+        require_owner_for_repair,
+        authority_generation,
+        repair_eligible,
+    })
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize, Default, PartialEq, Eq)]
 #[serde(deny_unknown_fields)]
 pub struct DbMaintenanceConfig {
@@ -229,11 +638,20 @@ pub struct DbMaintenanceConfig {
     /// Optional explicit subset of modeled capabilities; defaults to safe diagnostics + backup when `enabled = true`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub allowed: Option<Vec<DbMaintenanceCapability>>,
+    /// Explicit canonical project opt-in for repository-owner `db.recover` (#1590).
+    #[serde(default, skip_serializing_if = "is_false")]
+    pub owner_repair_enabled: bool,
+    /// Minimum delegated repository tier (`read`, `write`, `owner`).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub required_tier: Option<RepoAccessTier>,
 }
 
 impl DbMaintenanceConfig {
     pub fn is_default(&self) -> bool {
-        !self.enabled && self.allowed.is_none()
+        !self.enabled
+            && self.allowed.is_none()
+            && !self.owner_repair_enabled
+            && self.required_tier.is_none()
     }
 
     pub fn effective_safe_allowlist(&self) -> BTreeSet<DbMaintenanceCapability> {
@@ -453,6 +871,150 @@ pub fn resolve_canonical_policy(
         config: effective_cfg.governance.db_maintenance,
         unmerged_branch_violation: unmerged_violation,
     })
+}
+
+/// Resolve the main repository's accepted project config from protected branch or
+/// base ref, never trusting candidate worktree or unmerged-branch edits.
+pub(crate) fn resolve_accepted_project_config(
+    repo_root: &Path,
+) -> Result<(PathBuf, DecapodProjectConfig, Option<String>), PolicyResolutionError> {
+    let main_root = crate::core::workspace::get_main_repo_root(repo_root)
+        .unwrap_or_else(|_| repo_root.to_path_buf());
+    let (_, config, _, unmerged_violation) = resolve_repository_policy(&main_root)?;
+    Ok((main_root, config, unmerged_violation))
+}
+
+/// Resolve the accepted `.decapod/OVERRIDE.md` contents from protected root or
+/// committed accepted base ref, ignoring unaccepted root-branch or worktree edits.
+pub(crate) fn resolve_repository_override(
+    repo_root: &Path,
+) -> Result<Option<String>, PolicyResolutionError> {
+    let main_root = crate::core::workspace::get_main_repo_root(repo_root)
+        .unwrap_or_else(|_| repo_root.to_path_buf());
+    let override_path = main_root.join(".decapod").join("OVERRIDE.md");
+    if !main_root.join(".git").exists() {
+        return Err((
+            "CANONICAL_GIT_BOUNDARY_REQUIRED",
+            "canonical repository override resolution requires a Git boundary".to_string(),
+        ));
+    }
+    let main_config_path = main_root.join(".decapod").join("config.toml");
+    if !main_config_path.exists() {
+        let head_branch = git_stdout(&main_root, &["symbolic-ref", "--quiet", "--short", "HEAD"]);
+        if head_branch
+            .as_deref()
+            .is_some_and(|b| matches!(b, "master" | "main"))
+        {
+            if !override_path.exists() {
+                return Ok(None);
+            }
+            let bytes = read_regular_policy_bytes(&override_path)?;
+            let text = String::from_utf8(bytes).map_err(|_| {
+                (
+                    "INVALID_CANONICAL_OVERRIDE",
+                    "canonical .decapod/OVERRIDE.md is not valid UTF-8".to_string(),
+                )
+            })?;
+            return Ok(Some(text));
+        }
+        for ref_name in [
+            "refs/remotes/origin/master",
+            "refs/remotes/origin/main",
+            "refs/heads/master",
+            "refs/heads/main",
+        ] {
+            if let Some(blob) = git_bytes(
+                &main_root,
+                &["show", &format!("{ref_name}:.decapod/OVERRIDE.md")],
+            ) {
+                let text = String::from_utf8(blob).map_err(|_| {
+                    (
+                        "INVALID_CANONICAL_OVERRIDE",
+                        "accepted base .decapod/OVERRIDE.md is not valid UTF-8".to_string(),
+                    )
+                })?;
+                return Ok(Some(text));
+            }
+        }
+        return Ok(None);
+    }
+
+    let (_, _, canonical_revision, unmerged_violation) = match resolve_repository_policy(&main_root)
+    {
+        Ok(resolved) => resolved,
+        Err(("ACCEPTED_POLICY_ABSENT" | "INVALID_CANONICAL_POLICY", _)) => {
+            let head_branch =
+                git_stdout(&main_root, &["symbolic-ref", "--quiet", "--short", "HEAD"]);
+            if head_branch
+                .as_deref()
+                .is_some_and(|b| matches!(b, "master" | "main"))
+            {
+                if !override_path.exists() {
+                    return Ok(None);
+                }
+                let bytes = read_regular_policy_bytes(&override_path)?;
+                let text = String::from_utf8(bytes).map_err(|_| {
+                    (
+                        "INVALID_CANONICAL_OVERRIDE",
+                        "canonical .decapod/OVERRIDE.md is not valid UTF-8".to_string(),
+                    )
+                })?;
+                return Ok(Some(text));
+            }
+            for ref_name in [
+                "refs/remotes/origin/master",
+                "refs/remotes/origin/main",
+                "refs/heads/master",
+                "refs/heads/main",
+            ] {
+                if let Some(blob) = git_bytes(
+                    &main_root,
+                    &["show", &format!("{ref_name}:.decapod/OVERRIDE.md")],
+                ) {
+                    let text = String::from_utf8(blob).map_err(|_| {
+                        (
+                            "INVALID_CANONICAL_OVERRIDE",
+                            "accepted base .decapod/OVERRIDE.md is not valid UTF-8".to_string(),
+                        )
+                    })?;
+                    return Ok(Some(text));
+                }
+            }
+            return Ok(None);
+        }
+        Err(err) => return Err(err),
+    };
+    if unmerged_violation.is_none() && !canonical_revision.ends_with(":accepted-ref") {
+        if !override_path.exists() {
+            return Ok(None);
+        }
+        let bytes = read_regular_policy_bytes(&override_path)?;
+        let text = String::from_utf8(bytes).map_err(|_| {
+            (
+                "INVALID_CANONICAL_OVERRIDE",
+                "canonical .decapod/OVERRIDE.md is not valid UTF-8".to_string(),
+            )
+        })?;
+        return Ok(Some(text));
+    }
+
+    let base_oid = canonical_revision.split(':').next().unwrap_or("");
+    if base_oid.is_empty() || canonical_revision.ends_with(":unborn-bootstrap") {
+        return Ok(None);
+    }
+    let Some(blob) = git_bytes(
+        &main_root,
+        &["show", &format!("{base_oid}:.decapod/OVERRIDE.md")],
+    ) else {
+        return Ok(None);
+    };
+    let text = String::from_utf8(blob).map_err(|_| {
+        (
+            "INVALID_CANONICAL_OVERRIDE",
+            "accepted base .decapod/OVERRIDE.md is not valid UTF-8".to_string(),
+        )
+    })?;
+    Ok(Some(text))
 }
 
 /// Shared accepted-policy source for privileged consumers. Candidate checkout
@@ -799,7 +1361,8 @@ pub fn evaluate_capability_decision(
     }
 
     if let Some(ref violation) = policy.unmerged_branch_violation
-        && !policy.config.enabled
+        && (!policy.config.enabled
+            || capability.authority_tier() == MaintenanceAuthorityTier::Owner)
     {
         return (
             CapabilityDecision::Denied,
@@ -809,29 +1372,37 @@ pub fn evaluate_capability_decision(
     }
 
     if policy.backend.is_cloud() {
-        if !policy.config.enabled {
-            return (
-                CapabilityDecision::Denied,
-                "POLICY_OPT_IN_DISABLED",
-                "canonical [governance.db_maintenance].enabled is false and backend is cloud"
-                    .to_string(),
-            );
-        }
-        return (
-            CapabilityDecision::Denied,
-            "CLOUD_PRINCIPAL_UNVERIFIED",
-            "cloud database maintenance requires both canonical project opt-in and a server-verified repository-privileged human principal via Propodus #88; client config or environment never grants cloud authority"
-                .to_string(),
+        return evaluate_cloud_capability_decision_with_access(
+            policy,
+            capability,
+            expected_policy_sha256,
+            None,
         );
     }
 
     if capability.authority_tier() == MaintenanceAuthorityTier::Owner {
+        let recover_listed = policy
+            .config
+            .allowed
+            .as_ref()
+            .is_some_and(|list| list.contains(&DbMaintenanceCapability::Recover));
+        if !(policy.config.enabled && policy.config.owner_repair_enabled && recover_listed) {
+            return (
+                CapabilityDecision::Denied,
+                "OWNER_REPAIR_AUTHORITY_REQUIRED",
+                format!(
+                    "'{}' performs destructive/replacement repair and requires explicit repository owner authority (#1590); [governance.db_maintenance] never grants it alone",
+                    capability.as_str()
+                ),
+            );
+        }
         return (
-            CapabilityDecision::Denied,
-            "OWNER_REPAIR_AUTHORITY_REQUIRED",
+            CapabilityDecision::Allowed,
+            "LOCAL_OWNER_REPAIR_OPT_IN_ALLOWED",
             format!(
-                "'{}' performs destructive/replacement repair and requires explicit repository owner authority (#1590); [governance.db_maintenance] never grants it alone",
-                capability.as_str()
+                "owner repair '{}' authorized by canonical local owner policy {}",
+                capability.as_str(),
+                policy.policy_sha256
             ),
         );
     }
@@ -1412,6 +1983,200 @@ pub fn run_maintain_backup(
             "automatic_repair": false,
         }),
         Some(redacted_dest),
+    ))
+}
+
+/// Evaluate cloud database maintenance admission against server-verified repository
+/// access tiers (`read` / `write` / `owner`). Fails closed when unverified,
+/// mismatched to canonical policy, unmerged, or lacking the required tier.
+pub fn evaluate_cloud_capability_decision_with_access(
+    policy: &CanonicalMaintenancePolicy,
+    capability: DbMaintenanceCapability,
+    expected_policy_sha256: Option<&str>,
+    server_access: Option<&CloudRepositoryAccessStatus>,
+) -> (CapabilityDecision, &'static str, String) {
+    if let Some(expected) = expected_policy_sha256
+        && expected.trim() != policy.policy_sha256
+    {
+        return (
+            CapabilityDecision::Denied,
+            "POLICY_SNAPSHOT_STALE",
+            format!(
+                "expected canonical policy {} differs from current canonical policy {}",
+                expected.trim(),
+                policy.policy_sha256
+            ),
+        );
+    }
+    if let Some(ref violation) = policy.unmerged_branch_violation {
+        return (
+            CapabilityDecision::Denied,
+            "UNMERGED_BRANCH_POLICY_UNTRUSTED",
+            violation.clone(),
+        );
+    }
+    if !policy.config.enabled {
+        return (
+            CapabilityDecision::Denied,
+            "POLICY_OPT_IN_DISABLED",
+            "canonical [governance.db_maintenance].enabled is false and backend is cloud"
+                .to_string(),
+        );
+    }
+    let Some(access) = server_access else {
+        return (
+            CapabilityDecision::Denied,
+            "CLOUD_PRINCIPAL_UNVERIFIED",
+            "cloud database maintenance requires both canonical project opt-in and a server-verified repository-privileged human principal via Decapod Cloud; client config or environment never grants cloud authority"
+                .to_string(),
+        );
+    };
+    if access.repository != policy.repo_identity {
+        return (
+            CapabilityDecision::Denied,
+            "CROSS_REPO_AUTHORITY_DENIED",
+            format!(
+                "server access scope '{}' does not match canonical repository '{}'",
+                access.repository, policy.repo_identity
+            ),
+        );
+    }
+    if !access.seat_authorized || !access.policy_bound {
+        return (
+            CapabilityDecision::Denied,
+            "CLOUD_PRINCIPAL_UNVERIFIED",
+            "server rejected seat authorization or repository policy binding".to_string(),
+        );
+    }
+    if let Some(server_hash) = access.policy_hash.as_deref()
+        && format!("sha256:{server_hash}") != policy.policy_sha256
+        && server_hash != policy.policy_sha256
+    {
+        return (
+            CapabilityDecision::Denied,
+            "POLICY_SNAPSHOT_STALE",
+            "canonical policy digest does not match server-bound repository policy".to_string(),
+        );
+    }
+    if capability.is_mutating() && access.effective_tier == RepoAccessTier::Read {
+        return (
+            CapabilityDecision::Denied,
+            "CLOUD_READ_TIER_DENIED",
+            "read tier cannot execute mutating maintenance or task operations".to_string(),
+        );
+    }
+    if capability.authority_tier() == MaintenanceAuthorityTier::Owner {
+        let recover_listed = policy
+            .config
+            .allowed
+            .as_ref()
+            .is_some_and(|list| list.contains(&DbMaintenanceCapability::Recover));
+        if access.effective_tier != RepoAccessTier::Owner
+            || !access.repair_eligible
+            || !policy.config.owner_repair_enabled
+            || !recover_listed
+        {
+            return (
+                CapabilityDecision::Denied,
+                "OWNER_REPAIR_AUTHORITY_REQUIRED",
+                "cloud db.recover requires server-verified owner tier, repair eligibility, and canonical owner_repair_enabled".to_string(),
+            );
+        }
+        return (
+            CapabilityDecision::Allowed,
+            "CLOUD_OWNER_REPAIR_ALLOWED",
+            format!(
+                "cloud owner repair '{}' authorized for {}",
+                capability.as_str(),
+                policy.repo_identity
+            ),
+        );
+    }
+    if !policy
+        .config
+        .effective_safe_allowlist()
+        .contains(&capability)
+    {
+        return (
+            CapabilityDecision::Denied,
+            "CAPABILITY_NOT_ALLOWLISTED",
+            format!(
+                "capability '{}' is not included in canonical [governance.db_maintenance].allowed",
+                capability.as_str()
+            ),
+        );
+    }
+    (
+        CapabilityDecision::Allowed,
+        "CLOUD_TIER_ALLOWED",
+        format!(
+            "cloud capability '{}' authorized at tier {}",
+            capability.as_str(),
+            access.effective_tier.as_str()
+        ),
+    )
+}
+
+/// Execute `db.recover` under explicit repository owner authority (#1590).
+/// Local backend validates RBAC owner role when configured, captures a bounded
+/// pre-recovery backup, and runs Dactyl dump/reload recovery. Cloud backend
+/// refuses any local SQLite fallback and requires authenticated `owner_repair_v1`.
+pub fn run_maintain_recover(
+    policy: &CanonicalMaintenancePolicy,
+    actor: &VerifiedMaintenanceActor,
+    preserve_original_at: Option<&Path>,
+) -> Result<(serde_json::Value, Option<String>), (&'static str, String)> {
+    if policy.backend.is_cloud() {
+        return Err((
+            "CLOUD_OWNER_REPAIR_RPC_REQUIRED",
+            "cloud db.recover executes exclusively via propodus_repository_access_v1 + owner_repair_v1 atomic transport; no local SQLite fallback occurred".to_string(),
+        ));
+    }
+    crate::core::dactyl::ensure_local_sqlite_runtime()
+        .map_err(|e| ("SQLITE_RUNTIME_UNAVAILABLE", e.to_string()))?;
+    if let Ok(cfg) = crate::cli::DecapodProjectConfig::load(&policy.main_root)
+        && !cfg.governance.rbac.actor_roles.is_empty()
+        && !cfg
+            .governance
+            .rbac
+            .actor_roles
+            .get(&actor.agent_id)
+            .is_some_and(|roles| roles.iter().any(|r| r == "owner"))
+    {
+        return Err((
+            "OWNER_REPAIR_AUTHORITY_REQUIRED",
+            format!(
+                "actor '{}' lacks canonical 'owner' role required for db.recover",
+                actor.agent_id
+            ),
+        ));
+    }
+
+    let archive_name = format!(
+        ".decapod/backups/pre_recover_{}.db",
+        crate::core::ulid::new_ulid().to_lowercase()
+    );
+    let archive_target = preserve_original_at.unwrap_or_else(|| Path::new(&archive_name));
+    let resolved_archive = validate_agent_backup_destination(policy, archive_target)?;
+    let mut bridge = crate::core::dactyl::DactylBridge::open_canonical(
+        &policy.main_store_root,
+        AccessMode::ReadWrite,
+    )
+    .map_err(|e| classify_dactyl_op_error("RECOVER_OPEN_FAILED", &e))?;
+    let report = bridge
+        .recover_from_dump_reload(&resolved_archive)
+        .map_err(|e| classify_dactyl_op_error("RECOVER_FAILED", &e))?;
+    let redacted_archive = redact_for_repo(&resolved_archive.to_string_lossy(), &policy.main_root);
+    Ok((
+        serde_json::json!({
+            "status": "ok",
+            "operation": "recover",
+            "database": crate::core::schemas::LOCAL_DB_NAME,
+            "preserved_archive": redacted_archive,
+            "recovery": format!("{report:?}"),
+            "automatic_repair": false,
+        }),
+        Some(redacted_archive),
     ))
 }
 
@@ -2233,6 +2998,8 @@ mod tests {
         let cfg = DbMaintenanceConfig {
             enabled: true,
             allowed: None,
+            owner_repair_enabled: false,
+            required_tier: None,
         };
         let allow = cfg.effective_safe_allowlist();
         assert!(allow.contains(&DbMaintenanceCapability::Inspect));
@@ -2251,6 +3018,8 @@ mod tests {
                 DbMaintenanceCapability::LockReleaseOwn,
                 DbMaintenanceCapability::Recover,
             ]),
+            owner_repair_enabled: false,
+            required_tier: None,
         };
         let policy = CanonicalMaintenancePolicy {
             main_root: PathBuf::from("/tmp/repo"),
@@ -2294,6 +3063,8 @@ mod tests {
             config: DbMaintenanceConfig {
                 enabled: true,
                 allowed: None,
+                owner_repair_enabled: false,
+                required_tier: None,
             },
             unmerged_branch_violation: None,
         };
@@ -2302,6 +3073,161 @@ mod tests {
             assert_eq!(dec, CapabilityDecision::Denied);
             assert_eq!(code, "CLOUD_PRINCIPAL_UNVERIFIED");
         }
+    }
+
+    #[test]
+    fn cloud_repository_access_tiers_enforce_read_write_owner_and_unmerged_fail_closed() {
+        let policy_owner = CanonicalMaintenancePolicy {
+            main_root: PathBuf::from("/tmp/repo"),
+            workspace_root: PathBuf::from("/tmp/repo/.decapod/workspaces/wt"),
+            main_store_root: PathBuf::from("/tmp/repo/.decapod/data"),
+            repo_identity: "DecapodLabs/decapod".to_string(),
+            backend: BackendType::Cloud,
+            policy_sha256: "sha256:aaaa".to_string(),
+            canonical_revision: "deadbeef:clean".to_string(),
+            config: DbMaintenanceConfig {
+                enabled: true,
+                allowed: Some(vec![
+                    DbMaintenanceCapability::Verify,
+                    DbMaintenanceCapability::Backup,
+                    DbMaintenanceCapability::Recover,
+                ]),
+                owner_repair_enabled: true,
+                required_tier: Some(RepoAccessTier::Owner),
+            },
+            unmerged_branch_violation: None,
+        };
+
+        let make_access = |tier: RepoAccessTier, repo: &str, hash: &str, repair: bool| {
+            CloudRepositoryAccessStatus {
+                repository: repo.to_string(),
+                effective_tier: tier,
+                seat_authorized: true,
+                policy_bound: true,
+                policy_revision: Some(1),
+                policy_hash: Some(hash.to_string()),
+                accepted_commit: Some("a".repeat(40)),
+                max_delegated_tier: RepoAccessTier::Owner,
+                require_owner_for_repair: true,
+                authority_generation: Some(1),
+                repair_eligible: repair,
+            }
+        };
+
+        // Reader cannot mutate (Backup denied, Verify allowed).
+        let read_access = make_access(RepoAccessTier::Read, "DecapodLabs/decapod", "aaaa", false);
+        assert_eq!(
+            evaluate_cloud_capability_decision_with_access(
+                &policy_owner,
+                DbMaintenanceCapability::Verify,
+                None,
+                Some(&read_access)
+            )
+            .0,
+            CapabilityDecision::Allowed
+        );
+        let (dec, code, _) = evaluate_cloud_capability_decision_with_access(
+            &policy_owner,
+            DbMaintenanceCapability::Backup,
+            None,
+            Some(&read_access),
+        );
+        assert_eq!(dec, CapabilityDecision::Denied);
+        assert_eq!(code, "CLOUD_READ_TIER_DENIED");
+
+        // Writer can run allowlisted safe maintenance, denied on db.recover.
+        let write_access = make_access(RepoAccessTier::Write, "DecapodLabs/decapod", "aaaa", false);
+        assert_eq!(
+            evaluate_cloud_capability_decision_with_access(
+                &policy_owner,
+                DbMaintenanceCapability::Backup,
+                None,
+                Some(&write_access)
+            )
+            .0,
+            CapabilityDecision::Allowed
+        );
+        let (dec, code, _) = evaluate_cloud_capability_decision_with_access(
+            &policy_owner,
+            DbMaintenanceCapability::Recover,
+            None,
+            Some(&write_access),
+        );
+        assert_eq!(dec, CapabilityDecision::Denied);
+        assert_eq!(code, "OWNER_REPAIR_AUTHORITY_REQUIRED");
+
+        // Cross-repo and stale policy hash fail closed even for owner tier.
+        let cross_repo = make_access(RepoAccessTier::Owner, "OtherOrg/other", "aaaa", true);
+        assert_eq!(
+            evaluate_cloud_capability_decision_with_access(
+                &policy_owner,
+                DbMaintenanceCapability::Recover,
+                None,
+                Some(&cross_repo)
+            )
+            .1,
+            "CROSS_REPO_AUTHORITY_DENIED"
+        );
+        let stale_hash = make_access(RepoAccessTier::Owner, "DecapodLabs/decapod", "bbbb", true);
+        assert_eq!(
+            evaluate_cloud_capability_decision_with_access(
+                &policy_owner,
+                DbMaintenanceCapability::Recover,
+                None,
+                Some(&stale_hash)
+            )
+            .1,
+            "POLICY_SNAPSHOT_STALE"
+        );
+
+        // Unmerged config change denies owner repair even on local or cloud.
+        let mut unmerged_policy = policy_owner.clone();
+        unmerged_policy.unmerged_branch_violation = Some("config modified on branch".to_string());
+        let valid_owner = make_access(RepoAccessTier::Owner, "DecapodLabs/decapod", "aaaa", true);
+        assert_eq!(
+            evaluate_cloud_capability_decision_with_access(
+                &unmerged_policy,
+                DbMaintenanceCapability::Recover,
+                None,
+                Some(&valid_owner)
+            )
+            .1,
+            "UNMERGED_BRANCH_POLICY_UNTRUSTED"
+        );
+
+        // Eligible owner with matching repo + canonical policy is allowed, and owner_repair_v1 builds exact SQL op.
+        assert_eq!(
+            evaluate_cloud_capability_decision_with_access(
+                &policy_owner,
+                DbMaintenanceCapability::Recover,
+                None,
+                Some(&valid_owner)
+            )
+            .0,
+            CapabilityDecision::Allowed
+        );
+        let repair_op = OwnerRepairBatchParams {
+            task_id: "todo_01".to_string(),
+            title: "Repaired".to_string(),
+            description: Some("Recovered".to_string()),
+            status: "open".to_string(),
+            assigned_to: String::new(),
+            assigned_at: None,
+            completed_at: None,
+            updated_at: "1760000000Z".to_string(),
+            expected_version: 2,
+            reason: "corrupt status repair".to_string(),
+            event_id: "evt_01".to_string(),
+        }
+        .to_dactyl_operation()
+        .expect("valid owner_repair_v1 op");
+        assert_eq!(
+            repair_op.sql(),
+            "SELECT propodus.owner_repair_v1($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)"
+        );
+        assert_eq!(repair_op.sql(), OWNER_REPAIR_V1_SQL);
+        assert!(!repair_op.sql().contains("WITH "));
+        assert!(!repair_op.sql().contains("INSERT INTO"));
     }
 
     #[test]
@@ -2317,6 +3243,8 @@ mod tests {
             config: DbMaintenanceConfig {
                 enabled: true,
                 allowed: None,
+                owner_repair_enabled: false,
+                required_tier: None,
             },
             unmerged_branch_violation: None,
         };

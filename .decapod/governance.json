@@ -191,6 +191,11 @@
         "statement": "No Dagger-specific engine execution or authorization capability remains; generic proof custody is retained",
         "status": "open"
       },
+      "claim:duplicate-key-required-semantics": {
+        "falsifier": "Duplicate or escaped-equivalent required_extensions erases the unsupported requirement, nested ambiguous JSON is accepted, or legitimate unique-key negotiation fails after refusal.",
+        "statement": "Both RPC routes reject duplicate decoded JSON keys before startup; later fields cannot erase required extension semantics and unique-key ordinary negotiation can recover.",
+        "status": "open"
+      },
       "claim:durable-artifact-publication": {
         "falsifier": "Parent sync failure reports success, recovery follows a substituted parent symlink, a partial history is returned as complete, or admitted append crosses its recovery size bound.",
         "proof_refs": [
@@ -482,6 +487,7 @@
       "trajectory:150b60dea853e3ba": "Real native measurements and separate holdout risk/coverage are required; current source CI success is insufficient. Evaluation criteria recorded before model outputs; no readiness fitting or holdout evaluation executed.",
       "trajectory:17139f4701f494a5": "Hosted verification and exact-candidate publication readiness remain pending; no local tests run.",
       "trajectory:17669a7d73b8ecb7": "RPC download403 is runner-specific; same pinned URL succeeded on another fresh runner. Policy fixture exit126 OS detail is unknown because stderr was discarded.",
+      "trajectory:1922e307ad9422d0": "Live hosted Propodus Postgres execution remains externally bounded when hosted credentials and live Propodus endpoints are absent; verified against local SQLite and mock/denial Dactyl HTTP boundaries.",
       "trajectory:19c255ade3d72661": "25unit tests and actualMetal8elementprobe passed; one138tokenCPU inference matches independent scalar subset, memory chunks inactive, same-author/shared-infrastructure limits remain. Metal model reset failed; holdout not executed. New owned-model discard, reuse assertion, real alternate-API fallback diagnostics, nonempty-chunk fixture and independent four-phase collector are authored repairs awaiting fresh validation. No 5percent production calibration claim.",
       "trajectory:22ceeec9cc8afae2": "Validmodeluncertaintyyes0.573/two-labelsetcausedcalibrationpositiveabstainbothbackends; frozenexpectedacceptmismatchpreservednotrelabeled. Workingmeaningfulmodelapprovalsareobservedgate/prompt; alladversecontrolsnonready. We donotknowwhythemodelabstained. Independentcoverageauditdemonstratedmetadatafixtureclaimedorderbutonlyinvalidlength/namechecked; addcanonical+all23permutationchecksandtruthfulobservationacrossfamily. Currentvalidatedworkandactualcheckinventoryexpand; no question/threshold/weight/calibration/labeltuning. Userclarificationonsafeabstentionpending; strictallpositive ruleunchanged. Fullnewcandidatevalidate,donotclaimpreviousfullreportgreen or domainaccuracy. Sameoriginaltaskbranch/custody/noPRmerge release.",
       "trajectory:2318b54d5863154f": "Confirmed pinned CUDA dynamic links can prevent worker startup before its CPU path. Prepare optional separately pinned CPU executable in private local binding; model-free GPU startup before exposing model/state, typed hardware-only fallback, exact immutable pins and same deadline. Negative/abstaining/malformed inference and numerical failures remain non-ready and never trigger a new answer search. No actual Metal/model/reference/holdout evidence exists yet.",
@@ -592,6 +598,11 @@
       "id": "cp-1736-3",
       "summary": "Merge origin/master v0.148.14 (2f12638a) and align config digest, Dockerfile, and specs manifest",
       "input_digest": "sha256:3c4e1cb9fbbde0a003b620835088d0d4322c9b85976f0bc58c8b4e9816d5afb5"
+    },
+    {
+      "id": "cp-1736-4",
+      "summary": "Sync origin/master d60a639c8 (v0.150.8), refresh v0.150.8 projections, reconcile governance journal, and verify #1736 per-platform readiness",
+      "input_digest": "sha256:c6e79399adea09871cfe00d09734ed1e8e741a534fe5e004c05473ab5d4ce589"
     }
   ],
   "intents": {
@@ -635,23 +646,23 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Documented PlatformExecution, RepositoryExecution::resolve_for_platform, and repository_host per-platform selection on v0.148.14.",
-          "reviewed_code_fingerprint": "80aedc3e948bbb238d051257eac1472a780eb0f5694f5f209a2c7e1e7833e7fb",
-          "spec_material_hash": "94363f192c09525bcd8e7dab2a5fd641d5a985ae490736808a2f2739f43169a1"
+          "reason": "Preserved per-platform execution resolution and host selection architecture (#1736) in ARCHITECTURE.md alongside upstream v0.150.8 specs.",
+          "reviewed_code_fingerprint": "262addd93ef2b2c8054a0ce5cf01b0a67022f7e835cc6609ca96a8aaf972eb56",
+          "spec_material_hash": "485749bf431dc4b4aa717c250e5428a56bf618728a2e01fd01f7f155fb4e13bb"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Preserved #1781 and #1736 per-platform repo.pr-readiness.v1 contract prose across origin/master v0.148.14 merge.",
-          "reviewed_code_fingerprint": "80aedc3e948bbb238d051257eac1472a780eb0f5694f5f209a2c7e1e7833e7fb",
-          "spec_material_hash": "a86f59b5dbee3b46b311f8d9318eb81b8c5323058c125046ad2dbe6b621160ac"
+          "reason": "Preserved per-platform execution contract (#1736) in INTERFACES.md alongside all upstream v0.150.8 interface specs.",
+          "reviewed_code_fingerprint": "262addd93ef2b2c8054a0ce5cf01b0a67022f7e835cc6609ca96a8aaf972eb56",
+          "spec_material_hash": "941a88d1fa1de50c6bec4148dcc301de28db3e5d1ecfad031a8732a632d7dc5f"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Documented #1736 fail-closed host platform selection boundary and accepted-target preservation on v0.148.14.",
-          "reviewed_code_fingerprint": "80aedc3e948bbb238d051257eac1472a780eb0f5694f5f209a2c7e1e7833e7fb",
-          "spec_material_hash": "92963aba58aa4edd11c0484e1bb750c7c0e51e1f74aa2bfa0d4c3821d1123123"
+          "reason": "Preserved Per-platform execution selection boundary (#1736) in SECURITY.md alongside upstream v0.150.8 security specs.",
+          "reviewed_code_fingerprint": "262addd93ef2b2c8054a0ce5cf01b0a67022f7e835cc6609ca96a8aaf972eb56",
+          "spec_material_hash": "5d5e6d393e35b9d5b1987ca692fbdd18b0b238b96d5e62181e43480d0fea8aee"
         }
       ],
       "state": "APPROVED",
@@ -662,13 +673,13 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795025807Z"
+      "updated_at": "1795131064Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:1c7cd6a37749cc0c83f19851c146740e1c9d7fa3a2b597828399b38ff535ddf9",
+      "artifact_hash": "sha256:575666744bdf56708630aa69339cdbe4682863242ed2828b620781f61943ba15",
       "checks": [
         {
           "name": "cargo_clippy",
@@ -695,6 +706,10 @@
           "status": "passed"
         },
         {
+          "name": "docs_build",
+          "status": "passed"
+        },
+        {
           "name": "entrypoint_correctness",
           "status": "passed"
         },
@@ -704,6 +719,10 @@
         },
         {
           "name": "repository_profile_unit_tests",
+          "status": "passed"
+        },
+        {
+          "name": "targeted_tests",
           "status": "passed"
         }
       ],
@@ -735,10 +754,17 @@
             "intent_id": "intent:change_01M7QNGXR8M0YARA25DCX9933Z",
             "kind": "trajectory_step_recorded",
             "sequence": 5
+          },
+          {
+            "detail": "trajectory:branch_01M7QNGXVG2P2VB3JGMXQRF1NC",
+            "event_id": "event:6",
+            "intent_id": "intent:change_01M7QNGXR8M0YARA25DCX9933Z",
+            "kind": "trajectory_step_recorded",
+            "sequence": 6
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 5,
+        "next_sequence": 6,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M7QNGXVG2P2VB3JGMXQRF1NC": {
@@ -805,6 +831,36 @@
                 ],
                 "sequence": 5,
                 "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:6",
+                "observations": [
+                  ".decapod/managed/specs/INTERFACES.md",
+                  ".decapod/managed/specs/ARCHITECTURE.md",
+                  ".decapod/managed/specs/SECURITY.md",
+                  "docs/agent/config-schema.md",
+                  "docs/agent/repository-readiness.md",
+                  ".decapod/managed/Dockerfile.decapod",
+                  ".decapod/managed/specs/.manifest.json",
+                  ".decapod/managed/specs/INTERFACES.md",
+                  ".decapod/managed/specs/ARCHITECTURE.md",
+                  ".decapod/managed/specs/SECURITY.md",
+                  "Merged origin/master d60a639c8 (v0.150.8) with 0 code conflicts, reconciled governance via reconcile-merge, refreshed Dockerfile.decapod and .manifest.json to v0.150.8, rebuilt v0.150.8 candidate binary, verified docs build, cargo fmt, and targeted tests (17/17 repository_profile, 6/6 repository_host, 3/3 consumer_readiness per_platform)."
+                ],
+                "proof_refs": [
+                  "targeted_tests",
+                  "docs_build",
+                  "cargo_fmt"
+                ],
+                "scope": [
+                  "\".decapod/managed/specs\"]",
+                  "\"docs\"",
+                  "\"tests\"",
+                  "paths:[\"src/decapod\""
+                ],
+                "sequence": 6,
+                "validation_findings": []
               }
             ]
           }
@@ -814,9 +870,13 @@
       "destination": "pull request",
       "evidence": [
         "17 repository_profile unit tests passed, 6 repository_host unit tests passed, 27 consumer_readiness integration tests passed, 4 doc_alignment tests passed, 12 contract_conformance tests passed, clippy -D warnings and cargo fmt --check passed.",
+        "Merged origin/master d60a639c8 (v0.150.8) with 0 code conflicts, reconciled governance via reconcile-merge, refreshed Dockerfile.decapod and .manifest.json to v0.150.8, rebuilt v0.150.8 candidate binary, verified docs build, cargo fmt, and targeted tests (17/17 repository_profile, 6/6 repository_host, 3/3 consumer_readiness per_platform).",
         "Post-12595 local verification passed entrypoint_correctness (42/42) and all 11 core_full test binaries (71/71); merged origin/master 2f12638a (v0.148.14) cleanly with zero source conflicts."
       ],
       "inspected_files": [
+        ".decapod/managed/specs/ARCHITECTURE.md",
+        ".decapod/managed/specs/INTERFACES.md",
+        ".decapod/managed/specs/SECURITY.md",
         "docs/agent/config-schema.md",
         "docs/agent/repository-readiness.md",
         "src/decapod/core/native_proof.rs",
@@ -826,6 +886,8 @@
       ],
       "intent_id": "intent:change_01M7QNGXR8M0YARA25DCX9933Z",
       "modified_files": [
+        ".decapod/managed/Dockerfile.decapod",
+        ".decapod/managed/specs/.manifest.json",
         ".decapod/managed/specs/ARCHITECTURE.md",
         ".decapod/managed/specs/INTERFACES.md",
         ".decapod/managed/specs/SECURITY.md",

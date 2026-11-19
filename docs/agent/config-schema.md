@@ -16,6 +16,8 @@ pub struct DecapodProjectConfig {
     pub tracker: TrackerConfig,
     #[serde(default)]
     pub context: DeclaredContextConfig,
+    #[serde(default, skip_serializing_if = "WorkspaceConfigSection::is_default")]
+    pub workspace: WorkspaceConfigSection,
     #[serde(
         default,
         skip_serializing_if = "crate::core::laya_readiness::Configuration::is_default"
@@ -61,7 +63,7 @@ worktree may invoke the allowlisted safe capability slice (`db.inspect`,
 `db.backup` under `.decapod/backups/`). Worktree or unmerged-branch config edits
 cannot self-elevate, `db.recover` remains reserved for repository `owner` repair
 authority (`#1590`), `backend = "cloud"` fails closed (`CLOUD_PRINCIPAL_UNVERIFIED`)
-until Propodus `#88` verifies a repository-privileged human principal, raw SQL /
+until Decapod Cloud verifies a repository-privileged human principal, raw SQL /
 `sqlite3` / vacuum / restore remain unmodeled, and every attempt writes a
 redacted NDJSON audit entry (`implies_validation_ready = false`).
 
@@ -97,6 +99,12 @@ a change after that snapshot may not stop an in-flight claim. Turning the flag
 off prevents later uses but does not remove existing secondary owners. This is
 not an audited grant of verified trust or proof of human approval.
 
+
+## Repository Backends: Decapod Local and Decapod Cloud
+
+- **Decapod Local (`repo.backend = "local"`, default):** Local-first SQLite and Git governance runtime stored under `.decapod/`. Works offline with no account or external endpoint required.
+- **Decapod Cloud (`repo.backend = "cloud"`):** Optional hosted repository-bound backend via Dactyl (`decapod init --backend cloud`, `decapod cloud login|status|projects|project`). Cloud mode never falls back to local SQLite.
+- **Explicit cloud adapter environment:** Explicit adapter/test callers configure `DECAPOD_CLOUD_API_URL`, `DECAPOD_CLOUD_DATASTORE`, and `DECAPOD_CLOUD_PROVIDER` (`DECAPOD_PROPODUS_API_URL` remains a deprecated backwards-compatible alias that emits a structured deprecation warning; no obsolete preview URL default is assumed when unconfigured).
 
 ## Required proof and execution provider
 
