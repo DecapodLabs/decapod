@@ -631,6 +631,14 @@
       "proof_refs": [
         "project_check_refresh_specs=applied"
       ]
+    },
+    {
+      "id": "ckpt-merge-cfe2565da",
+      "summary": "Integrate accepted master cfe2565da (PR #1816, v0.149.3) and refresh spec reviews",
+      "input_digest": "sha256:88c1c4b7492be7d7fdf30daf539622e0d5a32c060825b7d2bea9af52b148d16f",
+      "proof_refs": [
+        "merge_base=cfe2565da"
+      ]
     }
   ],
   "intents": {
@@ -670,10 +678,24 @@
       "spec_reviews": [
         {
           "disposition": "updated",
+          "path": ".decapod/managed/specs/ARCHITECTURE.md",
+          "reason": "Documented pre-broker validated-done handoff architecture, broker timeout handling, and RLIMIT_NOFILE child elevation (#1807, #1810)",
+          "reviewed_code_fingerprint": "69c206182c9bbbd1f84bcaf8a0e7eafefe7b9f7197fd401fd20b40597786becb",
+          "spec_material_hash": "9f6bb83d9be39e2db6c3337931494d81c2d42733ae5b0a2a85731222531f1375"
+        },
+        {
+          "disposition": "updated",
+          "path": ".decapod/managed/specs/INTERFACES.md",
+          "reason": "Documented group_broker deadline_ms handling, pre-broker validated-done handoff, CLAIMED remediation, and qa verify regen guard (#1807, #1810)",
+          "reviewed_code_fingerprint": "69c206182c9bbbd1f84bcaf8a0e7eafefe7b9f7197fd401fd20b40597786becb",
+          "spec_material_hash": "faca9a6dcb80b59f8da63babe461f29f23e74f0606733972d402396e814a0143"
+        },
+        {
+          "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Documented credential-safe authenticated private-repo fallback for accepted target verification (#1807)",
-          "reviewed_code_fingerprint": "8698ac5dcf3abd8211921007ebc16383711361f1e6b859ed4d0536c1c5bf56e2",
-          "spec_material_hash": "97424079923ea96e9d64b4997314956fa555deae4e256584bc556dc16bd64318"
+          "reason": "Preserved #1776 policy hardening and documented credential-safe authenticated private-repo fallback (#1807)",
+          "reviewed_code_fingerprint": "69c206182c9bbbd1f84bcaf8a0e7eafefe7b9f7197fd401fd20b40597786becb",
+          "spec_material_hash": "9c15cdf421a538d0e8fa06a154d96acaf41fc3d8ec15872b2c6016f0ebb908e1"
         }
       ],
       "state": "APPROVED",
@@ -684,7 +706,7 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795048783Z"
+      "updated_at": "1795052421Z"
     },
     "trajectory": {
       "active_boundaries": [
