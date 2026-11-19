@@ -734,6 +734,11 @@
       "id": "cp-1740-7",
       "summary": "Merged origin/master cfe2565da (v0.149.3, PR #1816 #1776), updated tests/policy_self_authorization_1776.rs for RepositoryContract.targets and runtime::Options.target, refreshed v0.149.3 specs and spec reviews, and verified fmt/clippy/repository_profile/doc_alignment/policy_self_authorization_1776.",
       "input_digest": "sha256:9b2bdd8b99ac754acb8257ce1285f1f89a0079afc0c28bd7dd495bad958f03b2"
+    },
+    {
+      "id": "cp-1740-8",
+      "summary": "Merged origin/master 845ff9799 (v0.149.3, PR #1818 #1469), updated tests/concurrent_worktree_integration_1469.rs for RepositoryContract.targets and runtime::Options.target, refreshed v0.149.3 specs and spec reviews, and verified fmt + clippy.",
+      "input_digest": "sha256:2067d16596d652002958fc40d05e6bd6e97069c9bfb4722cf4e5c25116a07bb4"
     }
   ],
   "intents": {
@@ -774,22 +779,22 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Merged origin/master cfe2565da (v0.149.3, PR #1816 #1776), preserved all #1776 policy hardening and SECURITY.md prose alongside #1740 target-scoped proof specs, and updated policy_self_authorization_1776 struct literals.",
-          "reviewed_code_fingerprint": "40eed059fcbc030961720f8f3b6ebf0c5bf0cf5e69596cdce7933de554085fde",
-          "spec_material_hash": "e8d00d685b21659476795212b211594118e1acfe49b1a4fdac9904348c6bbe65"
+          "reason": "Merged origin/master 845ff9799 (v0.149.3, PR #1818 #1469), preserved both #1469 and #1740 prose in ARCHITECTURE.md, and updated tests/concurrent_worktree_integration_1469.rs struct literals.",
+          "reviewed_code_fingerprint": "485cdd57aeedaf5d3a1bb2e76758ec99139cb8c67e6fe0b09d9c266baa199121",
+          "spec_material_hash": "c2b5c2d695625760c162a7d4ed6522cb71b3926a3a4a0e3fbc66fb81fe439339"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Merged origin/master cfe2565da (v0.149.3, PR #1816 #1776), preserved all #1776 policy hardening and SECURITY.md prose alongside #1740 target-scoped proof specs, and updated policy_self_authorization_1776 struct literals.",
-          "reviewed_code_fingerprint": "40eed059fcbc030961720f8f3b6ebf0c5bf0cf5e69596cdce7933de554085fde",
+          "reason": "Merged origin/master 845ff9799 (v0.149.3, PR #1818 #1469), preserved both #1469 and #1740 prose in ARCHITECTURE.md, and updated tests/concurrent_worktree_integration_1469.rs struct literals.",
+          "reviewed_code_fingerprint": "485cdd57aeedaf5d3a1bb2e76758ec99139cb8c67e6fe0b09d9c266baa199121",
           "spec_material_hash": "3d2e11acd9c14bea4b45b77931af5aed1eef385f53bc87092713c59b4296901c"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Merged origin/master cfe2565da (v0.149.3, PR #1816 #1776), preserved all #1776 policy hardening and SECURITY.md prose alongside #1740 target-scoped proof specs, and updated policy_self_authorization_1776 struct literals.",
-          "reviewed_code_fingerprint": "40eed059fcbc030961720f8f3b6ebf0c5bf0cf5e69596cdce7933de554085fde",
+          "reason": "Merged origin/master 845ff9799 (v0.149.3, PR #1818 #1469), preserved both #1469 and #1740 prose in ARCHITECTURE.md, and updated tests/concurrent_worktree_integration_1469.rs struct literals.",
+          "reviewed_code_fingerprint": "485cdd57aeedaf5d3a1bb2e76758ec99139cb8c67e6fe0b09d9c266baa199121",
           "spec_material_hash": "377d56bde376aa27b0d266a4a36a701aeea3283328bd26731247681d8b5564ea"
         }
       ],
@@ -801,7 +806,7 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795053623Z"
+      "updated_at": "1795054242Z"
     },
     "trajectory": {
       "active_boundaries": [
