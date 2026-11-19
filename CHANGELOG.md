@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.150.8](https://github.com/DecapodLabs/decapod/compare/v0.150.7...v0.150.8) - 2026-11-19
+
+### Fixed
+
+- *(test)* use literal include_str path in validate_tests for gatekeeper scanning ([#1782](https://github.com/DecapodLabs/decapod/pull/1782))
+- *(risk)* align risk-map warning paths with supported CLI commands
+
+### Other
+
+- *(govern)* sync accepted master v0.150.7 ([#1782](https://github.com/DecapodLabs/decapod/pull/1782))
+- *(proof)* refresh v0.148.13 projections and complete spec reviews
+- *(merge)* sync origin/master c5bafce6 (v0.148.13) and reconcile proof
+- *(merge)* sync origin/master caeeaba8 ([#1792](https://github.com/DecapodLabs/decapod/pull/1792))
+- *(proof)* reconcile reviewed source inventory for v0.148.12
+- *(merge)* sync origin/master v0.148.12
+
 ## [0.150.7](https://github.com/DecapodLabs/decapod/compare/v0.150.6...v0.150.7) - 2026-11-19
 
 ### Added
