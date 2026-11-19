@@ -678,6 +678,9 @@ fn build_docs(touched: Vec<PathBuf>) -> Result<(), error::DecapodError> {
                 "system" => {
                     writeln!(file, "\n{}", system_command_contract())?;
                 }
+                "integration" => {
+                    writeln!(file, "\n{}", integration_removal_contract())?;
+                }
                 _ => {}
             }
             writeln!(file)?;
@@ -747,6 +750,15 @@ fn db_maintenance_command_contract() -> &'static str {
 - **Read-only inventory (ungated):** `decapod data database inspect` / RPC `data.database.inspect` remains non-initializing and read-only.
 - **Governed capabilities (default-deny):** `decapod data db capabilities`, `decapod data db lock {diagnose,retry,release-own}`, `decapod data db maintain {inspect,verify,backup,recover}`, and `decapod data db audit` (plus `data.database.{capabilities,maintain.inspect,verify,backup,recover,lock.diagnose,lock.retry,lock.release_own,audit}`) require an authenticated local `DECAPOD_AGENT_ID` + `DECAPOD_SESSION_PASSWORD` inside the agent's claimed `.decapod/workspaces/*` worktree and canonical main-repository `[governance.db_maintenance] enabled = true`.
 - **Boundaries:** `db.backup` writes only to non-existing paths under `.decapod/backups/` (`<= 512 MiB`) and never implies `db.recover`; `db.recover` requires repository `owner` repair authority (`#1590`); `backend = "cloud"` fails closed (`CLOUD_PRINCIPAL_UNVERIFIED`); raw SQL, `sqlite3`, vacuum, and restore are unmodeled (`CAPABILITY_UNSUPPORTED`)."#
+}
+
+fn integration_removal_contract() -> &'static str {
+    r#"### Reversible Repository Integration Removal (`decapod integration ...`)
+
+- **Read-only preview (`decapod integration preview`):** Makes zero filesystem, Git, SQLite, session, or network mutations. Classifies `generated`, `edited`, `authored`, `unknown`, and `active` resources separately using ownership and digest evidence. A file is never classified as `generated` solely by filename.
+- **Bounded apply (`decapod integration remove --authorize`):** Requires explicit `--authorize`. Removes only positively owned, unchanged generated entrypoints, hooks, CI workflows, `.gitignore` rules, and untouched scaffolds while preserving edited/shared/unknown entries, authored instructions/overrides/specs, `.decapod/data/`, `.decapod/governance.json`, `*.bak` backups, global config, and credentials. Refuses uncertain ownership, symlink replacement, and active-custody conflicts (active todo leases, authoring bindings, registered/dirty worktrees, storage locks) with non-zero exit. Writes `.decapod/integration-restore-manifest.json` atomically before removal so interrupted or repeated invocations remain idempotent.
+- **Restore (`decapod integration restore`):** Restores removed generated files and `.gitignore` entries byte-for-byte from the restoration manifest while refusing to overwrite conflicting newly authored files or symlinks.
+- **Authority boundaries:** Permanent deletion of `.decapod/data` (`--purge-state`) and protected governance removal (`--remove-protected-governance`) are refused by integration removal and remain separate explicit authority boundaries."#
 }
 
 fn system_command_contract() -> &'static str {

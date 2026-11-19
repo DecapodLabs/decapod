@@ -206,6 +206,16 @@ This document defines the normative operational contracts for the Decapod CLI.
 ## `decapod context`
 - **Intent:** Context: infer, lcm, internalize, preflight, impact
 
+## `decapod integration`
+- **Intent:** Preview, reversibly remove, or restore repository integration without deleting project state
+
+### Reversible Repository Integration Removal (`decapod integration ...`)
+
+- **Read-only preview (`decapod integration preview`):** Makes zero filesystem, Git, SQLite, session, or network mutations. Classifies `generated`, `edited`, `authored`, `unknown`, and `active` resources separately using ownership and digest evidence. A file is never classified as `generated` solely by filename.
+- **Bounded apply (`decapod integration remove --authorize`):** Requires explicit `--authorize`. Removes only positively owned, unchanged generated entrypoints, hooks, CI workflows, `.gitignore` rules, and untouched scaffolds while preserving edited/shared/unknown entries, authored instructions/overrides/specs, `.decapod/data/`, `.decapod/governance.json`, `*.bak` backups, global config, and credentials. Refuses uncertain ownership, symlink replacement, and active-custody conflicts (active todo leases, authoring bindings, registered/dirty worktrees, storage locks) with non-zero exit. Writes `.decapod/integration-restore-manifest.json` atomically before removal so interrupted or repeated invocations remain idempotent.
+- **Restore (`decapod integration restore`):** Restores removed generated files and `.gitignore` entries byte-for-byte from the restoration manifest while refusing to overwrite conflicting newly authored files or symlinks.
+- **Authority boundaries:** Permanent deletion of `.decapod/data` (`--purge-state`) and protected governance removal (`--remove-protected-governance`) are refused by integration removal and remain separate explicit authority boundaries.
+
 # RPC Operations (Auto-generated)
 
 ### Operation: `AgentInit`

@@ -1,5 +1,32 @@
 # Architecture
 
+## Reversible integration lifecycle (`core::integration_removal`)
+
+`src/decapod/core/integration_removal.rs` separates repository integration
+scaffolding from project-authored instructions and retained governance/datastore
+history:
+
+- **Ownership provenance (`integration_ownership.json`):** `decapod init`
+  (`lib.rs::run_init_apply` + `record_init_ownership`) and `decapod setup hook`
+  (`lib.rs::run_hook_install` + `record_hook_ownership`) record SHA-256 digests,
+  file modes, and pre-existing exclusions in
+  `.decapod/managed/integration_ownership.json`. Uninitialized or legacy repos
+  without that manifest require cryptographic release/fingerprint header proof
+  on entrypoints and template/manifest hashes on specs; byte-identical authored
+  files without ownership evidence (such as unowned `AGENTS.md` or hooks) are
+  classified as `authored` and preserved.
+- **Non-mutating inspection:** `Command::Integration` dispatches in `lib.rs::run`
+  before session acquisition, migrations, or root-isolation guards, using
+  `StorageLock::diagnose` and lock-free `dactyl_db::AccessMode::ReadOnly`
+  probes alongside `fs::symlink_metadata` traversal.
+- **Crash-safe restoration manifest:** `remove_integration` atomically persists
+  `.decapod/integration-restore-manifest.json` (`status: "in_progress"`) with
+  exact file bytes and `.gitignore` delta before unlinking any owned file, then
+  transitions to `"applied"` and prunes only empty `.decapod/managed/`
+  directories. Re-init (`decapod init`) detects absent
+  `.decapod/managed/specs/.manifest.json` and regenerates missing scaffold specs
+  without overwriting authored spec prose.
+
 ## Cloud control-plane, DPoP custody, Dactyl 0.18.0, and Local/Cloud branding (#1809, #1808, #1769, #1667, #1777, #1778, #1590, #1066, #1158)
 
 - **Registry & Bazel lock alignment**: `Cargo.toml` pins
@@ -1132,8 +1159,8 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `4e96d8dce5ca4942ea48836f723dcfbc12cc3a3f79a3e06a0e7ccfeb906b267a`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (242 files), `tests/` (253 files)
+- Repository signal fingerprint: `4f025b222f2576b0089100c1462003d8dd943193ccc9e1a00d2358a8db108299`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (243 files), `tests/` (254 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 
