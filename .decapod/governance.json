@@ -627,6 +627,16 @@
         "tests/podman_cgroup_parent_1820.rs",
         "tests/unit/plugins/container_tests.rs"
       ]
+    },
+    {
+      "id": "chk-1820-sync-1b3ca1b89",
+      "summary": "Merge accepted origin/master 1b3ca1b89 (v0.149.3, #1760), converge docs build and specs.refresh, preserve all living specs, and prepare PR 9 (#1820)",
+      "input_digest": "sha256:437be3cbbb50ff2bca6bc172e3c75ceead0141374f5dc708fb63b062f8e11094",
+      "proof_refs": [
+        "tests/cli_contracts.rs",
+        "tests/podman_cgroup_parent_1820.rs",
+        "tests/unit/plugins/container_tests.rs"
+      ]
     }
   ],
   "intents": {
@@ -676,22 +686,22 @@
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Re-reviewed ARCHITECTURE.md after merging origin/master 755bbac6e: #1820 remains inside plugins::container without architectural boundary changes.",
-          "reviewed_code_fingerprint": "a1ede1af6849dea6c580536d38b9627950dba8c4f9db598deb6f8c35379c0e8f",
+          "reason": "Re-reviewed ARCHITECTURE.md after merging origin/master 1b3ca1b89 (#1760): #1820 stays inside plugins::container without architectural boundary changes.",
+          "reviewed_code_fingerprint": "0886b9de1c286a3bb2caaad9ae3a6623609e36112ed911601121ee77f2d6db42",
           "spec_material_hash": "eea767e816c43693064ee73b838425f7a154fd6e56cf0552669d971d1e5001ea"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Re-reviewed INTERFACES.md after merging origin/master 755bbac6e (#1828/#1809/#1808/#1769): preserved all accepted prose alongside #1820 delegated cgroup parent and cgroup permission diagnostic contract.",
-          "reviewed_code_fingerprint": "a1ede1af6849dea6c580536d38b9627950dba8c4f9db598deb6f8c35379c0e8f",
-          "spec_material_hash": "36d116a2d05640c251da42d4238a617e3d77c3d502cb16a478a8b561850d7736"
+          "reason": "Re-reviewed INTERFACES.md after merging origin/master 1b3ca1b89 (#1760): preserved #1820 delegated cgroup parent/diagnostics and #1760 explicit path scope preservation sections alongside all accepted prose.",
+          "reviewed_code_fingerprint": "0886b9de1c286a3bb2caaad9ae3a6623609e36112ed911601121ee77f2d6db42",
+          "spec_material_hash": "0c9f50ba3eeacfd97de182dfb857a5bc36c5e350eefa0478aabda749d0180f54"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Re-reviewed SECURITY.md after merging origin/master 755bbac6e: #1820 preserves fail-closed cgroup parent validation and full CPU/memory/PID resource limits.",
-          "reviewed_code_fingerprint": "a1ede1af6849dea6c580536d38b9627950dba8c4f9db598deb6f8c35379c0e8f",
+          "reason": "Re-reviewed SECURITY.md after merging origin/master 1b3ca1b89 (#1760): #1820 preserves fail-closed cgroup parent validation and full CPU/memory/PID resource limits.",
+          "reviewed_code_fingerprint": "0886b9de1c286a3bb2caaad9ae3a6623609e36112ed911601121ee77f2d6db42",
           "spec_material_hash": "5142f990d1f15f6839a51c5453fd5ba4e4274e1f7e31a8f1c1cd87618c887e35"
         }
       ],
@@ -703,14 +713,14 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795077650Z"
+      "updated_at": "1795080746Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Keep --cpus, --memory, and --pids-limit enforced; never disable cgroups",
         "Reject invalid/traversal/unsafe cgroup parent values fail-closed before runtime launch"
       ],
-      "artifact_hash": "sha256:a221c4442a2b98df5bc37f85c60210df758e5078b8a368143b4347f83015d6c2",
+      "artifact_hash": "sha256:ecbafa75f0806338b84362ebd12d7c8ecd3ab87d08a6fa6cc1dd0a7ce7a240e1",
       "checks": [
         {
           "name": "cargo_clippy_all_targets",
@@ -761,7 +771,7 @@
           "status": "passed"
         }
       ],
-      "current_phase": "pre_sync",
+      "current_phase": "publication_audit",
       "custody": {
         "events": [
           {
@@ -796,10 +806,17 @@
             "intent_id": "intent:run_1820_podman_cgroup_parent",
             "kind": "trajectory_step_recorded",
             "sequence": 6
+          },
+          {
+            "detail": "trajectory:run_1820_podman_cgroup_parent",
+            "event_id": "event:7",
+            "intent_id": "intent:run_1820_podman_cgroup_parent",
+            "kind": "trajectory_step_recorded",
+            "sequence": 7
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 6,
+        "next_sequence": 7,
         "schema_version": "1.0.0",
         "trajectories": {
           "run_1820_podman_cgroup_parent": {
@@ -884,6 +901,23 @@
                 ],
                 "sequence": 6,
                 "validation_findings": []
+              },
+              {
+                "action": "publication_audit",
+                "custody_event_id": "event:7",
+                "observations": [
+                  "Merged origin/master 1b3ca1b8919367c113732ddbe820dbd729eab432 (v0.149.3, PR #1827/#1760), rebuilt candidate decapod binary, converged docs build (0 repeat diff), refreshed specs.refresh, preserved all living specs, and re-recorded spec reviews."
+                ],
+                "proof_refs": [],
+                "scope": [
+                  ".decapod/managed/specs/",
+                  "docs/agent/",
+                  "src/decapod/core/docs_cli.rs",
+                  "src/decapod/plugins/container.rs",
+                  "tests/"
+                ],
+                "sequence": 7,
+                "validation_findings": []
               }
             ]
           }
@@ -892,6 +926,7 @@
       "declared_commands": [],
       "evidence": [
         "All targeted unit, contract, doc alignment, clippy -D warnings, and #1820 integration tests passed; decapod eval allow on docs ingest and full diff.",
+        "Merged origin/master 1b3ca1b8919367c113732ddbe820dbd729eab432 (v0.149.3, PR #1827/#1760), rebuilt candidate decapod binary, converged docs build (0 repeat diff), refreshed specs.refresh, preserved all living specs, and re-recorded spec reviews.",
         "Merged origin/master 755bbac6e0af03c5dde4bd555cd749c426ae6472 (v0.149.3, #1828), rebuilt candidate decapod binary with dactyl-db 0.18.0, ran docs build (0 diff) and specs.refresh (config_input_hash 6bb17b82...), preserved all living specs, and re-recorded spec reviews.",
         "Merged origin/master 84f9673824ba0b60ee0e87449f2cbb23387f5717 (v0.149.3), rebuilt candidate decapod binary, ran docs build (0 diff) and specs.refresh, preserved all living specs, and re-recorded spec reviews."
       ],
@@ -917,7 +952,8 @@
       "next_transitions": [
         "Hold for verifier-2 audit before push/PR",
         "Hold git push/PR until PR #1827 merges",
-        "Hold git push/PR until PR 8 (#1760) merges"
+        "Hold git push/PR until PR 8 (#1760) merges",
+        "Tag verifier-3 for <60s fast delta sign-off; hold git push until approved"
       ],
       "repo_scope": [
         ".decapod/managed/specs/",
