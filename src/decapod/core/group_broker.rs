@@ -1,4 +1,4 @@
-use crate::core::bounded_process::{BUILD_TIMEOUT, BoundedCommand, CONTROL_TIMEOUT};
+use crate::core::bounded_process::{BUILD_TIMEOUT, BoundedCommand};
 use crate::core::db;
 use crate::core::db::OptionalExtension;
 use crate::core::error;
@@ -160,6 +160,34 @@ pub fn is_internal_invocation() -> bool {
     std::env::var(BROKER_INTERNAL_ENV)
         .map(|v| v == "1")
         .unwrap_or(false)
+}
+
+pub(crate) fn is_disabled() -> bool {
+    std::env::var(BROKER_DISABLE_ENV)
+        .map(|v| v == "1")
+        .unwrap_or(false)
+}
+
+pub(crate) fn has_dedupe_record(broker_root: &Path, request_id: &str) -> bool {
+    let db_path = dedupe_db_path(broker_root);
+    if !db_path.exists() {
+        return false;
+    }
+    let Ok(conn) = db::db_connect(&db_path.to_string_lossy()) else {
+        return false;
+    };
+    if ensure_dedupe_schema(&conn).is_err() {
+        return false;
+    }
+    conn.query_row(
+        "SELECT 1 FROM request_dedupe WHERE request_id = ?1 LIMIT 1",
+        [request_id],
+        |_| Ok(true),
+    )
+    .optional()
+    .ok()
+    .flatten()
+    .unwrap_or(false)
 }
 
 /// An isolated child may use the schema initialized by its foreground owner.
@@ -544,18 +572,9 @@ fn execute_request(
     // Resolve the running binary independently of either caller's working directory.
     let exe = std::env::current_exe()?;
     emit_phase_hook("pre_exec", &request.request_id);
-    let claim_request = request.argv.iter().any(|arg| arg == "todo")
-        && request.argv.iter().any(|arg| arg == "claim");
-    let timeout = if claim_request
-        || request.argv.windows(2).any(|args| {
-            (args[0] == "todo" && args[1] == "claim")
-                || (args[0] == "workspace" && matches!(args[1].as_str(), "status" | "prune"))
-        }) {
-        CONTROL_TIMEOUT
-    } else {
-        BUILD_TIMEOUT
-    };
-    let timeout = timeout.min(Duration::from_millis(
+    // Honor the caller's bounded request deadline (up to MAX_REQUEST_BUDGET)
+    // instead of clamping todo claim / workspace status / prune to 15s CONTROL_TIMEOUT.
+    let timeout = BUILD_TIMEOUT.min(Duration::from_millis(
         request.deadline_ms.saturating_sub(epoch_ms()).max(1),
     ));
     let mut command = Command::new(exe);

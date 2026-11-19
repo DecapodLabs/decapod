@@ -24,7 +24,8 @@ ambiguous authority fails closed.
 
 ## 2. Repository Initialization (Human, once per repo)
 
-Initialize your repository. Use `--backend local` (the default) to store task custody locally in `.decapod/data/decapod.db`, or `--backend cloud` when teams on separate machines should share live task claims through the managed cloud task connector. Both modes keep specs, plans, trajectories, worktrees, and Git proof repo-native.
+Initialize your repository. This is the only human-facing setup command: use
+`--backend local` (**Decapod Local**, default, free and offline) to store task custody locally in `.decapod/data/decapod.db`, or `--backend cloud` (**Decapod Cloud**) when teams on separate machines should share live task claims through the managed cloud task service. Both modes keep specs, plans, trajectories, worktrees, and Git proof repo-native.
 
 Initialization creates `.decapod/` and scaffolds the agent entrypoints (`AGENTS.md`, `CLAUDE.md`, `CODEX.md`, `GEMINI.md`) so whichever coding agent you open knows how to invoke the kernel. Agents later run `decapod init --proof` during validation for non-interactive upgrades (see [Configuration](configuration.md) and [Constitution](concepts/constitution.md)).
 
@@ -51,11 +52,12 @@ credential or maintain an access roster in TOML.
 Cloud initialization may return `onboarding_pending` with a one-time browser
 URL. Continue with your coding agent: it shares the link, resumes the saved
 connection with `decapod cloud login`, and continues your task after sign-in.
-Setup is ready only when the service confirms account completion and an
+The human runs init once per repository; later Decapod operations belong to the
+agent. Setup is ready only when the service confirms account completion and an
 authenticated repository read succeeds. The `--proof` flag prepares cloud
 configuration only; it does not authenticate or establish readiness. See
-[Cloud sign-in and task access](reference/propodus.md) for private custody,
-account requirements, and explicit interrupted-flow recovery.
+[Decapod Cloud sign-in and task access](reference/propodus.md) for private
+custody, account requirements, and explicit interrupted-flow recovery.
 
 Once `decapod init` completes, **open your preferred coding agent** in the project and describe the engineering goal. You do not need to run the remaining kernel commands by hand.
 

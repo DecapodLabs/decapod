@@ -1,5 +1,108 @@
 # Interfaces
 
+## Delegated cgroup parent selection and cgroup diagnostics (#1820)
+
+`decapod auto container run` (`src/decapod/plugins/container.rs::ContainerCommand::Run`)
+accepts an optional `--cgroup-parent <path-or-slice>` flag and honors the
+`DECAPOD_CONTAINER_CGROUP_PARENT` environment variable (CLI flag takes precedence;
+`container::schema()` exposes both `"cgroup_parent"` and `"cgroup_parent_env"`).
+All explicit and detected values pass `validate_cgroup_parent` fail-closed before
+any runtime probe or workspace clone: only canonical absolute cgroup hierarchy
+paths (`/delegated/parent`, without `/sys/fs/cgroup` mount prefixes, root `/`,
+trailing slashes, empty segments, `.` or `..` traversal, whitespace, control
+characters, leading `-`, or metacharacters) and systemd slice names (`*.slice`)
+are accepted; invalid values fail with `container_invalid_cgroup_parent`.
+
+When no explicit parent is supplied and local `podman info` reports rootless
+`cgroupfs` on cgroup v2 (`serviceIsRemote: false`), `detect_delegated_cgroup_v2_parent_from`
+reads `/proc/self/cgroup` (`0::<path>`) and walks upward from the caller's cgroup
+to the deepest non-root ancestor under `/sys/fs/cgroup` that is a real directory
+(no symlink traversal), writable by the current user, and enables `cpu`, `memory`,
+and `pids` in `cgroup.subtree_control`. `build_docker_spec` injects
+`--cgroup-parent <validated-parent>` while preserving `--pids-limit 512`,
+`--memory`, and `--cpus` unchanged; cgroups are never disabled.
+
+`classify_container_failure` distinguishes OCI/cgroupfs permission errors
+(`crun`/`runc` `cannot set limits without cgroups`, `/sys/fs/cgroup` permission
+denied, `unable to apply cgroup configuration`, `cgroup.subtree_control`/`cgroup.procs`
+errors) as `container_cgroup_permission_denied` with delegated cgroup parent
+remediation, leaving actual workspace ownership and Git lockfile failures under
+`container_workspace_permission_denied`. `RunSummary` exposes the resolved
+`cgroup_parent` field for observability.
+
+## Explicit path scope preservation and reconciliation (#1760)
+
+Explicit task path declarations (`--scope 'paths:[...]'`) are parsed once via
+`core::fleet_coord::parse_scope_entries` (delegating `paths:` prefixes to
+`core::fleet_coord::declared_paths`) rather than naive comma splitting. That
+single bounded JSON-array parser preserves both JSON array separators and commas
+embedded inside literal relative paths (such as `docs/a,b.md`) across
+`infer orientation` (`allowed_scope`), `workspace::initialize_workbranch_governance_at`
+(`BranchWorkContext.scope`), `trajectory::fresh_trajectory` / `record_trajectory`
+(`repo_scope`), and `custody::bootstrap_intent` (`intent.constraints`), keeping
+`todo get`, `infer orientation`, `govern trajectory get`, and `govern state resolve`
+consistent without weakening `declared_paths` validation or modifying legacy
+comma-separated scopes.
+
+Already-generated fragmented scope projections in `.decapod/governance.json`
+are repaired through `decapod govern trajectory reconcile-scope [--task-id <id>] [--run-id <id>]`
+(`core::governance_document::reconcile_scope_projections`). Before mutating any
+projection, reconciliation resolves a single unambiguous task binding
+(`SCOPE_RECONCILIATION_AMBIGUOUS_TASK` / `SCOPE_RECONCILIATION_TASK_REQUIRED`),
+verifies that existing fragments match the task's legacy comma-split projection
+(`SCOPE_RECONCILIATION_AMBIGUOUS`), and requires the prior governance document to
+be committed in Git (`SCOPE_RECONCILIATION_ARCHIVE_REQUIRED` via `recoverable_in_git`).
+Repair restores canonical sorted paths in both `sections.trajectory.repo_scope`
+and `intents.<id>.constraints`, recomputes `trajectory.artifact_hash`, invalidates
+`sections.plan.state` back to `DRAFT` when changes occur, preserves original
+recorded intent, prior custody events, checks, loops, and checkpoints, and is
+idempotent (`SCOPE_ALREADY_CANONICAL`) on repeat invocations.
+
+## Unified Local/Cloud CLI, auth, container credentials, repository tiers, and proof acceptance (#1809, #1808, #1769, #1778, #1590, #1033, #1040, #1066)
+
+- **Unified Local/Cloud CLI, env, and store envelopes (#1808, #1769)**:
+  `src/decapod/cli.rs` exposes `DECAPOD_CLOUD_API_URL`, `DECAPOD_CLOUD_PROVIDER`,
+  `DECAPOD_CLOUD_DATASTORE`, and legacy `DECAPOD_PROPODUS_API_URL` (emitting
+  structured `decapod.deprecation.v1` notices on stderr). `CapabilitiesReport`
+  exposes `backends` (`local` / `Decapod Local`, `cloud` / `Decapod Cloud`),
+  `backend.local`/`backend.cloud`, and the `cloud` subsystem. `propodus.rs`
+  accepts `decapod.cloud.store` (`v1`) envelopes and `Decapod-Cloud-*` headers
+  alongside legacy compatibility envelopes. `docs/book/src/index.md` and
+  `docs/book/src/custom.css` present **Decapod Local** vs **Decapod Cloud**
+  linking to `https://decapodlabs.github.io/offerings.html` without public
+  prices or checkout routes.
+- **CLI `decapod cloud`**: Adds `logout` (clears session state while preserving
+  the enrolled device key) and `revoke [--all] [--device-id <jkt>]` (calls
+  `AccountOperation::DeviceRevoke` when an active session is present and wipes
+  local device key + session). `decapod cloud status` reports
+  `device_key_present`, `device_jkt`, and `device_keystore` without exposing
+  private key bytes or tokens. `CloudAuthStatus` adds `DeviceRevoked`,
+  `KeyLost`, `MfaRequired`, `PaymentPending`, and `EntitlementDenied`.
+- **Container credential config (`[workspace.credentials]`)**: Adds optional
+  `git_transport`, `github_api`, and `propodus_cloud` fields on
+  `DecapodProjectConfig`. `decapod workspace status` works under `backend = "cloud"`
+  and emits redacted `credentials` capability readiness (`available`,
+  `unconfigured`, `absent`, `expired`, `unauthorized`) without touching SQLite.
+- **Database maintenance & owner repair (`[governance.db_maintenance]`)**:
+  Adds optional `owner_repair_enabled` (default `false`) and `required_tier`
+  (`read` | `write` | `owner`). `db.recover` requires merged canonical policy
+  and `owner` authority on local stores (dump/reload via Dactyl on Linux,
+  explicit typed `Capability` refusal on non-Linux hosts) and
+  `propodus_repository_access_v1` + `owner_repair_v1` on cloud stores, where
+  `OWNER_REPAIR_V1_SQL` transmits strictly the registered wire marker
+  `SELECT propodus.owner_repair_v1($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)`
+  inside `DactylBridge::atomic` (never server-internal SQL expansion).
+- **Cloud todo & proof capture**: `todo claim`, `todo renew`, `todo yield`, and
+  `todo done --validated` route through Dactyl without `RESOURCE_CUSTODY_PROFILE_UNSUPPORTED`.
+  `todo done --validated` fails closed locally with `"proof-capture"` when
+  candidate commit/evidence bounds are absent; when valid evidence is supplied,
+  it submits `propodus_proof_acceptance_v1` `capture` (`status = "captured"`,
+  `acceptance_supported = false`) and reconciles `outcome_unknown` through
+  read-only `propodus_proof_acceptance_get_v1` `get_operation` rather than
+  auto-replaying mutations. Typed HTTP/control denials surface distinct
+  `CLOUD_ENTITLEMENT_DENIED` (`403`), `CLOUD_PAYLOAD_BOUND_EXCEEDED` (`413`),
+  `CLOUD_QUOTA_EXCEEDED` (`429`), and `CLOUD_OUTCOME_UNKNOWN`.
+
 ## Workunit proof and continuity semantics (#1660)
 
 Before full proof, use `govern capsule query --task-id <id> --workunit-id <id>
@@ -419,7 +522,15 @@ other gates. This option does not apply to cloud-backed claims.
 The internal Unix-socket broker request in
 `src/decapod/core/group_broker.rs` uses protocol version 3. Alongside
 request ID, arguments and an absolute queue/execution deadline, each request carries a canonical absolute working
-directory and an explicitly allowlisted caller context. Agent identity, session,
+directory and an explicitly allowlisted caller context. The broker leader honors
+the caller's bounded `request.deadline_ms` (capped by `BUILD_TIMEOUT`) instead of
+clamping `todo claim` or `workspace status|prune` control mutations to 15s
+`CONTROL_TIMEOUT`. For `todo done --validated`, slow historical/QA verification
+executes outside the exclusive group-broker lock via
+`todo::prepare_validated_done_handoff` before broker dispatch, handing off a
+mode-`0600` request-bound token that the brokered worker re-verifies against
+canonical storage (`verify::consume_prepared_done_handoff`) before the short
+transactional status commit. Agent identity, session,
 task, correlation, causation, idempotency and claim-autorun inputs replace—not
 merge with—the elected leader's corresponding environment. The child executable
 is resolved independently of either working directory.
@@ -948,9 +1059,16 @@ Proof references remain historical references rather than renewed permission.
 is global and applies to every `qa verify` subcommand, including
 `qa verify recover --stale`: it lists stale done tasks (with
 `last_verified_at` and `verification_policy_days`) and returns without
-running any child validation (#1527). Explicit recapture
-runs real validation before binding new evidence. Batch recovery first leaves
-its refreshed evidence `CLAIMED` and requires per-task and aggregate proof.
+running any child validation (#1527). Closing a task via `todo done` without
+`--validated` records `verification_status: "CLAIMED"` and actionable `remediation`
+pointing to `todo done <id> --validated --commit <sha>` (when a recorded candidate
+exists via `validation_history::latest_candidate_for_task`), `qa verify regen <id>`,
+or `qa verify recover --artifact <id>=<file>`. `PROOF_HOOK_FAILED` and
+`verify_target` surface the same self-service recovery paths, and `qa verify regen <id>`
+enters `VerifyingTodosGuard` around its baseline capture so regenerating proof for
+an unverified `done` task cannot self-deadlock on its own `CLAIMED` entry. Explicit
+recapture runs real validation before binding new evidence. Batch recovery first
+leaves its refreshed evidence `CLAIMED` and requires per-task and aggregate proof.
 
 `STALE_TASK_VERIFICATION` reports a task or verification baseline changed while
 verification was running. The stale result is discarded without replacing the
@@ -1359,8 +1477,8 @@ field. Nothing in this operation authorizes a mutation, approval or completion.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `4ffe6185b604d6788b614e88ea63a07ed597779d64ffe40b295712cdd0d7bbeb`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (237 files), `tests/` (237 files)
+- Repository signal fingerprint: `66afe827c300d4279204c072d535fa9d97041867fdc924d798dd84d4f31e4163`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (241 files), `tests/` (251 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 
@@ -1810,15 +1928,25 @@ these declarations are not a successful validation observation.
 
 ## Canonical workunit validation contract (#1660)
 
-Existing workunit CLI operations remain the request surface. `record-proof`
-records a declaration; requesting VERIFIED requires a current canonical full
-observation for exactly one supported `validate_passes`/`validated_commit`
-obligation. The kernel derives the result, epoch and optional validation-record
-selector. Caller-supplied selectors cannot import producer success. File artifact
-paths retain byte-integrity semantics. Historical JSON omits the optional field;
-Rust manifest literals add `validation_record: None`, and verification consumers
-pass repository context to `validate_verified_manifest(root, manifest)`.
-Publication and human merge authorization remain independent operations.
+Existing workunit CLI operations remain the request surface, extended with
+`decapod govern workunit converge [--task-id <id>] [--dry-run]` and typed
+`proof_status` (`proven` | `not_proven` | `stale` | `absent`), `split_store`,
+`atomic_domain_supported`, `audit_records`, and `convergence_hint` fields on
+`WorkUnitJournalStatus` (and `proof_status`/`split_store`/`atomic_domain_supported`
+on `govern workunit status`). `record-proof` records a declaration; requesting
+VERIFIED requires a current canonical full observation for exactly one supported
+`validate_passes`/`validated_commit` obligation. The kernel derives the result,
+epoch and optional validation-record selector. Caller-supplied selectors cannot
+import producer success. File artifact paths retain byte-integrity semantics.
+Separately initialized workspace-local datastores return
+`WORKUNIT_PROOF_ATOMIC_DOMAIN_UNSUPPORTED`; explicit `converge` archives
+workspace-local records into `.decapod/data/split-store-audit/` as `not_proven`
+audit history without promoting split records to `VERIFIED`, restoring atomic
+canonical-store execution for fresh validation. Historical JSON omits the
+optional field; Rust manifest literals add `validation_record: None`, and
+verification consumers pass repository context to
+`validate_verified_manifest(root, manifest)`. Publication and human merge
+authorization remain independent operations.
 
 ## Scoped container-runtime recovery during prerequisites
 

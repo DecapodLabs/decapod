@@ -615,6 +615,16 @@
         "tests/doc_alignment.rs",
         "tests/trajectory_docs.rs"
       ]
+    },
+    {
+      "id": "ckpt-byoa-docs-1789-merge-v01500",
+      "summary": "Integrate accepted master v0.150.0 (1332f4ecd) and refresh v0.150.0 projections (#1789)",
+      "input_digest": "sha256:dacc17de041a8c620920bb5e39b38440c60c0a88638179c760d5dc891fb45d45",
+      "proof_refs": [
+        "tests/contract_conformance.rs",
+        "tests/doc_alignment.rs",
+        "tests/trajectory_docs.rs"
+      ]
     }
   ],
   "intents": {
@@ -657,23 +667,23 @@
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Refreshed v0.149.1 Dockerfile pin and specs manifest; #1789 architecture spec unchanged",
-          "reviewed_code_fingerprint": "4ffe6185b604d6788b614e88ea63a07ed597779d64ffe40b295712cdd0d7bbeb",
-          "spec_material_hash": "08d8b55a59f075e87e839424935874ac5976524805468dba8d29d27bd0bb2d22"
+          "reason": "Integrated origin/master 1332f4ecd (v0.150.0); preserved upstream #1469 section alongside #1789 public mdBook narrative section",
+          "reviewed_code_fingerprint": "66afe827c300d4279204c072d535fa9d97041867fdc924d798dd84d4f31e4163",
+          "spec_material_hash": "222ad0bd9ae163a09c07ab5e392be697b10db614d48755997eaab76b5a143fad"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Refreshed v0.149.1 projections; #1789 docs-only PR leaves CLI/RPC interfaces unchanged",
-          "reviewed_code_fingerprint": "4ffe6185b604d6788b614e88ea63a07ed597779d64ffe40b295712cdd0d7bbeb",
-          "spec_material_hash": "1445e13fa7ccfa6c4a68850bd794b6b1ba7379c0148b570c3a7605b6a26beb25"
+          "reason": "Integrated origin/master 1332f4ecd (v0.150.0); docs-only #1789 PR leaves CLI/RPC interfaces unchanged",
+          "reviewed_code_fingerprint": "66afe827c300d4279204c072d535fa9d97041867fdc924d798dd84d4f31e4163",
+          "spec_material_hash": "f9f2f5fc909f60cbbdabb0bf48b53c6c70f1f3d4193f73bbccf2d1108675005f"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Refreshed v0.149.1 projections; #1789 docs-only PR leaves security invariants unchanged",
-          "reviewed_code_fingerprint": "4ffe6185b604d6788b614e88ea63a07ed597779d64ffe40b295712cdd0d7bbeb",
-          "spec_material_hash": "735ae6e95c6b18ff2ccc718fbadaa4d7ae483d632aee2fb071d4f9ae6daa23de"
+          "reason": "Integrated origin/master 1332f4ecd (v0.150.0); docs-only #1789 PR leaves security invariants unchanged",
+          "reviewed_code_fingerprint": "66afe827c300d4279204c072d535fa9d97041867fdc924d798dd84d4f31e4163",
+          "spec_material_hash": "fe2a57654bc0079c8ae5d4226c46ba7f1ea50f4246a8c19d826f2e660dc56f81"
         }
       ],
       "state": "APPROVED",
@@ -684,13 +694,13 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795038024Z"
+      "updated_at": "1795089941Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:c4bb92ac95dda83eba8796864d7ae82fa6f4302fd4c8ffcdd88a1bdd91adafc5",
+      "artifact_hash": "sha256:e9fa1be8e118af2dbb2c7dc5bb5233c828f42801a797a2a70664bb086233c4c5",
       "checks": [
         {
           "name": "contract_conformance",
@@ -763,10 +773,17 @@
             "intent_id": "intent:change_01M7R4ZAHNJFT5PGD1R58DDXC5",
             "kind": "trajectory_step_recorded",
             "sequence": 7
+          },
+          {
+            "detail": "trajectory:branch_01M7R4ZAS8A2D6PMN4WRWVY4S3",
+            "event_id": "event:8",
+            "intent_id": "intent:change_01M7R4ZAHNJFT5PGD1R58DDXC5",
+            "kind": "trajectory_step_recorded",
+            "sequence": 8
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 7,
+        "next_sequence": 8,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M7R4ZAS8A2D6PMN4WRWVY4S3": {
@@ -869,6 +886,21 @@
                 ],
                 "sequence": 7,
                 "validation_findings": []
+              },
+              {
+                "action": "verification",
+                "custody_event_id": "event:8",
+                "observations": [
+                  "Merged origin/master 1332f4ecd (v0.150.0), preserved upstream Decapod Local/Cloud offerings + #1469 specs, refreshed v0.150.0 projections with /private/tmp/swarm-controller-0.150.0/bin/decapod"
+                ],
+                "proof_refs": [],
+                "scope": [
+                  "\".decapod/managed/specs\"]",
+                  "\"README.md\"",
+                  "paths:[\"docs/book/src\""
+                ],
+                "sequence": 8,
+                "validation_findings": []
               }
             ]
           }
@@ -877,6 +909,7 @@
       "declared_commands": [],
       "destination": "pull request",
       "evidence": [
+        "Merged origin/master 1332f4ecd (v0.150.0), preserved upstream Decapod Local/Cloud offerings + #1469 specs, refreshed v0.150.0 projections with /private/tmp/swarm-controller-0.150.0/bin/decapod",
         "Merged origin/master 205d4e8da (PR #1805 + PR #1806 v0.149.1) and refreshed projections with 0.149.0 controller",
         "Refreshed v0.149.0 Dockerfile.decapod and .manifest.json with /private/tmp/swarm-controller-0.149.0/bin/decapod",
         "Refreshed v0.149.1 Dockerfile.decapod and .manifest.json with /private/tmp/swarm-controller-0.149.1/bin/decapod",
