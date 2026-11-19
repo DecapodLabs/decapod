@@ -1079,8 +1079,8 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `1e60a57374c12fbc63b20f06f1a9155450ef756ec54a285d4e5641154c3468ef`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (237 files), `tests/` (239 files)
+- Repository signal fingerprint: `9ba032bd0bdc2cf86f77409b27db92b28f2678d31d02b7b0e76d08ca17c45669`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (237 files), `tests/` (240 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 
@@ -1484,3 +1484,11 @@ the reconciled candidate.
 ## Canonical local Git proof (#1069)
 
 The existing `repository_profile::RepositoryContract` review digest optionally binds canonical local Git target authority. `workspace::resolve_readiness_repository` keeps that identity distinct from cloud GitHub identity, requiring a reviewed local contract already committed on the canonical accepted branch. `RepositoryHost::canonical_local` reuses the sealed snapshot verifier and fresh ref observations; no daemon, parallel policy engine or datastore is added. `validation_history` preserves exact local scope and checks target movement. Native strict source proof and provider requirements remain intact.
+
+## Concurrent isolated authoring and combined-candidate admission (#1469)
+
+Concurrent authoring across isolated worktrees separates task custody, isolated editing, and shared integration/release admission without introducing a global source lock:
+
+1. **Advisory source overlap vs. enforced custody/resource fencing:** `core/fleet_coord.rs::detect_overlaps` emits `enforced = false` (`advisory_category_overlap`, `advisory_scope_overlap`, `advisory_path_overlap`) for source categories and repository path declarations, while setting `enforced = true` (`resource_reservation`) only for named shared resources (`resource:release`, `resource:integration`, `resource:integration:<branch>`). `core/todo.rs::claim_task_with_lease` admits distinct tasks across overlapping source footprints with `integration_readiness = "combined_candidate_reconciliation_required"` while rejecting duplicate exclusive claims on an active task lease (`status = "conflict"`, `lease_state = "active"`) and competing shared-resource reservations (`conflict_class = "shared_resource"`, `resolution = "wait_for_resource_custody"`).
+2. **Checkout custody without transcript trust:** `core/workspace.rs::claim_branch_scoped_open_tasks` and `core/authoring.rs::{admit_authoring, check_authoring}` bind each active lease to at most one registered worktree (`AUTHORING_CHECKOUT_OCCUPIED`, `AUTHORING_TASK_ALREADY_BOUND`, `AUTHORING_CUSTODY_STALE`, `WORKSPACE_SECONDARY_CUSTODY`). A fresh actor without the first agent's transcript observes live claims via `decapod todo fleet` / `decapod todo list`, cannot hijack A's task or worktree, and either claims a separate permitted task or yields with a typed blocker. `core/authoring.rs::enforce_shared_resource_available` fences `workspace.publish` and `release.lineage_sync` (`SHARED_RESOURCE_OCCUPIED`) without blocking unrelated isolated worktree authoring.
+3. **Combined-candidate execution and target freshness:** Locally green isolated worktrees and clean textual Git merges never discharge joint proof. `core/validation_runtime.rs` and `core/validation_history.rs` execute required source checks against the exact combined head and accepted target, withholding `native-readiness-receipt.json` and blocking `todo done --validated` / `workspace publish` on incompatible producer/consumer interfaces or contradictory shared behavior until repaired and revalidated on the exact combined commit. When another branch lands first and advances the accepted target, prior receipts become stale (`STALE_ACCEPTED_BASE`, `WORKUNIT_PROOF_STALE`) until rebased/merged onto the new accepted target and revalidated. `tests/concurrent_worktree_integration_1469.rs` exercises all three scenarios end-to-end through the actual `decapod` binary and isolated Git worktrees.
