@@ -144,6 +144,18 @@ noninteractive `podman machine start --quiet --no-info --update-connection=false
 path, followed by another service probe. This does not launch Podman Desktop or
 change the default connection.
 
+On Linux hosts running rootless Podman with the `cgroupfs` manager on cgroup v2
+without a user systemd instance (`#1820`), `decapod auto container run` (and
+claim-triggered container preparation via `src/decapod/plugins/container.rs`)
+retains full `--cpus`, `--memory`, and `--pids-limit` enforcement and never
+disables cgroups. Operators or agents may specify a validated delegated parent
+through `--cgroup-parent` or `DECAPOD_CONTAINER_CGROUP_PARENT`, or run inside a
+delegated cgroup v2 subtree whose writable non-root ancestor enables `cpu`,
+`memory`, and `pids` in `cgroup.subtree_control` for automatic selection.
+Invalid values fail closed with `container_invalid_cgroup_parent` before runtime
+invocation, and OCI/cgroupfs creation or limit-enforcement permission errors emit
+`container_cgroup_permission_denied` rather than `container_workspace_permission_denied`.
+
 The explicit container-workspace launch hint makes a verified online backup in a
 private temporary directory, mounts it read-only and seeds container-local tmpfs.
 Backup failure prevents launch. Container-copy writes are ephemeral and are not
@@ -288,6 +300,18 @@ Hidden resource limits and memory pressure are not inferred. The ordinary Cargo
 job cap and the four declared artifact targets remain separate from this
 release-job override. Only observed artifact builds can establish a throughput
 improvement; source validation alone makes no four-platform packaging claim.
+
+### Current Release Alignment (v0.150.0)
+
+The `v0.150.0` release cut aligns the package version in `Cargo.toml`,
+root package entry in `Cargo.lock`, and release notes in `CHANGELOG.md` with
+managed projections refreshed by the `0.150.0` binary:
+`.decapod/managed/Dockerfile.decapod` pins `DECAPOD_IMAGE=ghcr.io/decapodlabs/decapod:v0.150.0-debian`
+and `DECAPOD_VERSION=0.150.0`, and `.decapod/managed/specs/.manifest.json`
+records `decapod_release` `0.150.0` alongside current codebase attestations.
+Repository entrypoints (`AGENTS.md`, `CLAUDE.md`, `CODEX.md`, `GEMINI.md`)
+remain intentionally pinned at `0.148.0` under
+`[repo]._allow_entrypoint_version_drift = true` in `.decapod/config.toml`.
 
 ## Incident Response
 
@@ -434,8 +458,8 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `818241e1cc81217dca3a918bac6df8638414bbea5a1beb8f0653ee01bec882fb`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (238 files), `tests/` (245 files)
+- Repository signal fingerprint: `6e67e35ae0dbae953045c6ac5b11faf2fbf77e794d31add64192d3db292a7754`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (242 files), `tests/` (253 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 

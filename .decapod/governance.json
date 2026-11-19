@@ -617,6 +617,15 @@
         ".decapod/managed/specs/ARCHITECTURE.md",
         ".decapod/managed/specs/INTERFACES.md"
       ]
+    },
+    {
+      "id": "ckpt-1734-integrate-v0150-1332f4ecd",
+      "summary": "Integrate accepted master 1332f4ecd (v0.150.0), refresh 0.150.0 projections, record content-bound spec reviews, and verify #1734 suite",
+      "input_digest": "sha256:8ef654b74166beb1bd280563cff8442aa2f69fac13c2f3483cabe04399a594e5",
+      "proof_refs": [
+        "src/decapod/core/projection_budget.rs",
+        "tests/projection_performance_budgets_1734.rs"
+      ]
     }
   ],
   "intents": {
@@ -658,23 +667,23 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Documented idx_events_stream_subject_seq partial covering index, fail-fast db_connect_readonly_bounded, measured-baseline budgets, degraded mode, and retention-stable logical receipts for #1734 while preserving #1469/#1659/#1807/#1810 prose.",
-          "reviewed_code_fingerprint": "818241e1cc81217dca3a918bac6df8638414bbea5a1beb8f0653ee01bec882fb",
-          "spec_material_hash": "be3326322285bdb99eff11acffe67112f81c9ba182774fbe8d3e46149c0053b6"
+          "reason": "Documented idx_events_stream_subject_seq partial covering index, fail-fast db_connect_readonly_bounded, measured-baseline budgets, degraded mode, and retention-stable logical receipts for #1734 on v0.150.0 while preserving all upstream architecture specs.",
+          "reviewed_code_fingerprint": "6e67e35ae0dbae953045c6ac5b11faf2fbf77e794d31add64192d3db292a7754",
+          "spec_material_hash": "78b2d6794271ec30cbdec03150d6bb8e7dea391bdb966c1b85a33119325fde1e"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Documented decapod.projection-budget.v1 read-only event/worktree projection envelopes, EventRetentionAnchor, and cursor/degraded-mode contract for #1734 while preserving prior interface specs.",
-          "reviewed_code_fingerprint": "818241e1cc81217dca3a918bac6df8638414bbea5a1beb8f0653ee01bec882fb",
-          "spec_material_hash": "a197e9f9b8b97111f9cdd8710fc911dc29e1ac84801472e68e87567f5b2acd36"
+          "reason": "Documented decapod.projection-budget.v1 read-only event/worktree projection envelopes, EventRetentionAnchor, and cursor/degraded-mode contract for #1734 on v0.150.0 while preserving all upstream interface specs.",
+          "reviewed_code_fingerprint": "6e67e35ae0dbae953045c6ac5b11faf2fbf77e794d31add64192d3db292a7754",
+          "spec_material_hash": "64a14f635f7ccec73ca222bfd2fb144cf356fb29607352b28f9654418ec9d313"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Read-only projection surfaces enforce AccessMode::ReadOnly, StorageLockMode::Shared, GIT_OPTIONAL_LOCKS=0, read_only=true, authoritative=false, and add no privilege, secret, or mutation boundaries; existing SECURITY.md invariants remain accurate.",
-          "reviewed_code_fingerprint": "818241e1cc81217dca3a918bac6df8638414bbea5a1beb8f0653ee01bec882fb",
-          "spec_material_hash": "9c15cdf421a538d0e8fa06a154d96acaf41fc3d8ec15872b2c6016f0ebb908e1"
+          "reason": "Read-only projection surfaces enforce AccessMode::ReadOnly, StorageLockMode::Shared, GIT_OPTIONAL_LOCKS=0, read_only=true, authoritative=false, and introduce no privilege, secret, or mutation surfaces on v0.150.0.",
+          "reviewed_code_fingerprint": "6e67e35ae0dbae953045c6ac5b11faf2fbf77e794d31add64192d3db292a7754",
+          "spec_material_hash": "fe2a57654bc0079c8ae5d4226c46ba7f1ea50f4246a8c19d826f2e660dc56f81"
         }
       ],
       "state": "APPROVED",
@@ -685,13 +694,13 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795068388Z"
+      "updated_at": "1795090151Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:27df779e1bd4e346de84594a06897ab8d66bcb24cf3eeef7951497db27f451cd",
+      "artifact_hash": "sha256:7836d7ddbce72ebcafbbe4293382997273db981ab6bbf37f500f1156ac4ae80b",
       "checks": [
         {
           "name": "cli_contract_conformance_doc_trajectory",
@@ -728,6 +737,18 @@
         {
           "name": "unit_projection_budget",
           "status": "passed"
+        },
+        {
+          "name": "v0150_fmt",
+          "status": "passed"
+        },
+        {
+          "name": "v0150_projection_performance_budgets_1734",
+          "status": "passed"
+        },
+        {
+          "name": "v0150_unit_projection_budget",
+          "status": "passed"
         }
       ],
       "current_phase": "verification",
@@ -758,10 +779,17 @@
             "intent_id": "intent:change_01M7S423XPJM4AHMVC6J51TV2P",
             "kind": "trajectory_step_recorded",
             "sequence": 5
+          },
+          {
+            "detail": "trajectory:branch_01M7S4240XFBTPQ43E2BAB68NJ",
+            "event_id": "event:6",
+            "intent_id": "intent:change_01M7S423XPJM4AHMVC6J51TV2P",
+            "kind": "trajectory_step_recorded",
+            "sequence": 6
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 5,
+        "next_sequence": 6,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M7S4240XFBTPQ43E2BAB68NJ": {
@@ -825,6 +853,23 @@
                 ],
                 "sequence": 5,
                 "validation_findings": []
+              },
+              {
+                "action": "verification",
+                "custody_event_id": "event:6",
+                "observations": [
+                  "Merged origin/master 1332f4ecd73ec75cc76e76dbff52f4c9b471cf94 (v0.150.0), refreshed 0.150.0 specs/manifest/Dockerfile, verified cargo fmt --check, core::projection_budget (6/6), and projection_performance_budgets_1734 (5/5)"
+                ],
+                "proof_refs": [
+                  "v0150_fmt",
+                  "v0150_unit_projection_budget",
+                  "v0150_projection_performance_budgets_1734"
+                ],
+                "scope": [
+                  "root"
+                ],
+                "sequence": 6,
+                "validation_findings": []
               }
             ]
           }
@@ -834,6 +879,7 @@
       "destination": "pull request",
       "evidence": [
         "CLIPPY_CONF_DIR=.config cargo clippy --all-targets --all-features -- -D warnings passed",
+        "Merged origin/master 1332f4ecd73ec75cc76e76dbff52f4c9b471cf94 (v0.150.0), refreshed 0.150.0 specs/manifest/Dockerfile, verified cargo fmt --check, core::projection_budget (6/6), and projection_performance_budgets_1734 (5/5)",
         "cargo fmt --all -- --check passed",
         "cargo test --test datastore_efficiency (7 passed), datastore_relational_compaction (13 passed), single_datastore (9 passed), cli_contract_enforcement (23 passed), contract_conformance (12 passed), doc_alignment (4 passed), trajectory_docs (5 passed), validation_scope (9 passed)",
         "cargo test --test projection_performance_budgets_1734 (5 passed) and --ignored benchmark (1 passed: 10K events indexed p50 743us vs 1210us unindexed, 179KiB vs 7.04MiB unbounded, 4 WAL writers + 4 readers 0 errors/0 deferrals, 25 worktrees degraded cleanly at 517ms)",

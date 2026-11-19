@@ -23,7 +23,9 @@ ambiguous authority fails closed.
 ## 2. Initialization
 
 Initialize your repository. This is the only human-facing setup command: use
-`--backend cloud` when the repository should use the managed cloud task service.
+`--backend local` (**Decapod Local**, default, free and offline) or
+`--backend cloud` (**Decapod Cloud**) when the repository should use the
+managed cloud task service.
 Initialization creates the `.decapod/` directory and scaffolds the initial
 agent entrypoints (`AGENTS.md`, etc.). `.decapod/` is the repo-native substrate
 where governed agent work records intent, context, custody, boundaries,
@@ -59,7 +61,7 @@ The human runs init once per repository; later Decapod operations belong to the
 agent. Setup is ready only when the service confirms account
 completion and an authenticated repository read succeeds. The `--proof` flag
 prepares cloud configuration only; it does not authenticate or establish
-readiness. See [Cloud sign-in and task access](reference/propodus.md) for
+readiness. See [Decapod Cloud sign-in and task access](reference/propodus.md) for
 private custody, account requirements, and explicit interrupted-flow recovery.
 
 When setup succeeds, open your coding agent in the project and describe the next

@@ -407,6 +407,17 @@ fn explicit_paths_preserve_other_claim_gates_and_reject_aliases() {
         declared_paths(r#"paths:["b","a","a"]"#).unwrap().unwrap(),
         vec!["a", "b"]
     );
+    assert_eq!(
+        parse_scope_entries(r#"paths:["src","docs/a,b.md",".decapod/managed/specs"]"#).unwrap(),
+        vec![".decapod/managed/specs", "docs/a,b.md", "src"]
+    );
+    assert_eq!(
+        parse_scope_entries("src, tests").unwrap(),
+        vec!["src", "tests"]
+    );
+    assert!(parse_scope_entries("").unwrap().is_empty());
+    assert!(parse_scope_entries("paths:invalid").is_err());
+    assert!(declared_resources(r#"paths:["src","docs/a,b.md"]"#).is_empty());
 }
 
 #[test]

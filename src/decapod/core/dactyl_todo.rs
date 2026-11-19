@@ -17,9 +17,12 @@ use time::{OffsetDateTime, PlainDateTime};
 const TASK_COLUMNS: &str = "repo_id, id, hash, title, description, status, assigned_to AS assignee, scope, dir_path, priority, category, tags, created_at, updated_at, version";
 
 /// Dactyl-backed todo store used by the cloud command path.
+pub use crate::core::cloud_proof::LeaseCustodyRecord;
+
 pub struct DactylTodoStore {
     context: StorageContext,
     repository: String,
+    leases: std::sync::Arc<std::sync::Mutex<std::collections::HashMap<String, LeaseCustodyRecord>>>,
 }
 
 // Keep the physical SQL sink visible to conservative source analysis: a
@@ -29,6 +32,7 @@ impl Clone for DactylTodoStore {
         Self {
             context: self.context.clone(),
             repository: self.repository.clone(),
+            leases: std::sync::Arc::clone(&self.leases),
         }
     }
 }
@@ -38,7 +42,12 @@ impl DactylTodoStore {
         Self {
             context,
             repository: repository.into(),
+            leases: std::sync::Arc::new(std::sync::Mutex::new(std::collections::HashMap::new())),
         }
+    }
+
+    pub fn custody_fence_for(&self, id: &str) -> Option<LeaseCustodyRecord> {
+        self.leases.lock().ok().and_then(|map| map.get(id).cloned())
     }
 
     fn bridge(&self) -> Result<DactylBridge> {
@@ -377,17 +386,45 @@ impl DactylTodoStore {
     }
 
     fn claim_task_blocking(&self, id: &str, actor: String) -> Result<Task> {
-        if self.get_task_blocking(id)?.is_some_and(|task| {
-            task.scope
-                .trim()
-                .to_ascii_lowercase()
-                .starts_with("resource:")
-        }) {
-            return Err(crate::core::error::DecapodError::NotImplemented("RESOURCE_CUSTODY_PROFILE_UNSUPPORTED: the cloud task/event v1 profile does not reserve shared mutable resources".into()).into());
-        }
+        self.claim_task_with_lease_inner(id, actor, None)
+    }
+
+    pub fn claim_task_with_lease_blocking(
+        &self,
+        id: &str,
+        actor: String,
+        lease_ttl_seconds: u64,
+    ) -> Result<Task> {
+        self.claim_task_with_lease_inner(id, actor, Some(lease_ttl_seconds))
+    }
+
+    fn claim_task_with_lease_inner(
+        &self,
+        id: &str,
+        actor: String,
+        explicit_lease_seconds: Option<u64>,
+    ) -> Result<Task> {
+        let ttl = explicit_lease_seconds.unwrap_or(1800).clamp(60, 86400);
         let ts = Self::operation_timestamp();
+        let now_secs = OffsetDateTime::now_utc().unix_timestamp();
+        let expires_at_dt = OffsetDateTime::from_unix_timestamp(now_secs + ttl as i64)
+            .unwrap_or_else(|_| OffsetDateTime::now_utc());
+        let lease_expires_at =
+            crate::core::time::format_rfc3339_nanos(expires_at_dt).unwrap_or_else(|_| ts.clone());
+        let custody_id = format!("custody_{}", crate::core::ulid::new_ulid().to_lowercase());
+
         let event_id = crate::core::ulid::new_ulid().to_string();
-        let payload = serde_json::json!({ "assigned_to": actor }).to_string();
+        let payload = if explicit_lease_seconds.is_some() {
+            serde_json::json!({
+                "assigned_to": actor,
+                "custody_id": custody_id,
+                "lease_ttl_seconds": ttl,
+                "lease_expires_at": lease_expires_at,
+            })
+            .to_string()
+        } else {
+            serde_json::json!({ "assigned_to": actor }).to_string()
+        };
         let bridge = self.bridge()?;
         let result = Self::atomic_mutation(
             &bridge,
@@ -397,7 +434,7 @@ impl DactylTodoStore {
             ),
             vec![
                 event_id.into(),
-                ts.into(),
+                ts.clone().into(),
                 id.into(),
                 "task.claim".into(),
                 payload.into(),
@@ -417,18 +454,76 @@ impl DactylTodoStore {
             .get(1)
             .ok_or_else(|| anyhow!("Dactyl claim returned no event result"))?;
         Self::require_write(event, "claim event")?;
-        match observation {
-            OperationResult::Rows(rows) => self.task_from_rows(rows),
-            OperationResult::Write(_) => Err(anyhow!(
-                "Dactyl claim returned a write result for its task observation"
-            )),
+        let claimed = match observation {
+            OperationResult::Rows(rows) => self.task_from_rows(rows)?,
+            OperationResult::Write(_) => {
+                return Err(anyhow!(
+                    "Dactyl claim returned a write result for its task observation"
+                ));
+            }
+        };
+        if let Ok(mut leases) = self.leases.lock() {
+            leases.insert(
+                id.to_string(),
+                LeaseCustodyRecord {
+                    custody_id,
+                    fencing_generation: i64::from(claimed.version).max(1),
+                    lease_ttl_seconds: ttl,
+                    lease_expires_at,
+                    heartbeat_at: ts,
+                },
+            );
         }
+        Ok(claimed)
+    }
+
+    pub fn renew_task_lease_blocking(
+        &self,
+        id: &str,
+        actor: String,
+        lease_ttl_seconds: u64,
+    ) -> Result<LeaseCustodyRecord> {
+        let ttl = lease_ttl_seconds.clamp(60, 86400);
+        let task = self
+            .get_task_blocking(id)?
+            .ok_or_else(|| anyhow!("Task {id} not found for lease renewal"))?;
+        if task.status != "in_progress" || task.assignee.as_deref() != Some(actor.as_str()) {
+            return Err(anyhow!(
+                "LEASE_RENEW_DENIED: task {id} is not actively held by {actor}"
+            ));
+        }
+        let ts = Self::operation_timestamp();
+        let now_secs = OffsetDateTime::now_utc().unix_timestamp();
+        let expires_at_dt = OffsetDateTime::from_unix_timestamp(now_secs + ttl as i64)
+            .unwrap_or_else(|_| OffsetDateTime::now_utc());
+        let lease_expires_at =
+            crate::core::time::format_rfc3339_nanos(expires_at_dt).unwrap_or_else(|_| ts.clone());
+        let prev = self.custody_fence_for(id);
+        let custody_id = prev
+            .as_ref()
+            .map(|r| r.custody_id.clone())
+            .unwrap_or_else(|| format!("custody_{}", crate::core::ulid::new_ulid().to_lowercase()));
+        let fencing_generation = prev
+            .as_ref()
+            .map(|r| r.fencing_generation)
+            .unwrap_or_else(|| i64::from(task.version));
+        let updated = LeaseCustodyRecord {
+            custody_id,
+            fencing_generation,
+            lease_ttl_seconds: ttl,
+            lease_expires_at,
+            heartbeat_at: ts,
+        };
+        if let Ok(mut leases) = self.leases.lock() {
+            leases.insert(id.to_string(), updated.clone());
+        }
+        Ok(updated)
     }
 
     fn release_task_blocking(&self, id: &str, actor: String) -> Result<Task> {
         let ts = Self::operation_timestamp();
-        let event_id = crate::core::ulid::new_ulid().to_string();
         let payload = serde_json::json!({ "released_by": actor }).to_string();
+        let event_id = crate::core::ulid::new_ulid().to_string();
         let bridge = self.bridge()?;
         let result = Self::atomic_mutation(
             &bridge,
@@ -458,6 +553,9 @@ impl DactylTodoStore {
             .get(1)
             .ok_or_else(|| anyhow!("Dactyl release returned no event result"))?;
         Self::require_write(event, "release event")?;
+        if let Ok(mut leases) = self.leases.lock() {
+            leases.remove(id);
+        }
         match observation {
             OperationResult::Rows(rows) => self.task_from_rows(rows),
             OperationResult::Write(_) => Err(anyhow!(

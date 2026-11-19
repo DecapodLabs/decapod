@@ -160,11 +160,14 @@ fn cloud_runtime_deserialization_uses_its_selected_datastore() {
     const CHILD: &str = "DECAPOD_TEST_CLOUD_CONFIG_CHILD";
     if std::env::var_os(CHILD).is_some() {
         use decapod::CloudRuntimeConfig;
-        const PROPODUS_VERCEL_NEON_ENTRYPOINT: &str = "https://project-oqn7i.vercel.app";
         let neon: CloudRuntimeConfig = serde_json::from_str(r#"{"datastore":"neon"}"#).unwrap();
         assert_eq!(neon.datastore, "neon");
-        assert_eq!(neon.api_url, PROPODUS_VERCEL_NEON_ENTRYPOINT);
-        assert!(neon.validate_datastore().is_ok());
+        assert!(neon.api_url.is_empty());
+        assert!(neon.validate_datastore().is_err());
+        let explicit_neon: CloudRuntimeConfig =
+            serde_json::from_str(r#"{"datastore":"neon","api_url":"https://cloud.example.test"}"#)
+                .unwrap();
+        assert!(explicit_neon.validate_datastore().is_ok());
         let supabase: CloudRuntimeConfig =
             serde_json::from_str(r#"{"datastore":"supabase"}"#).unwrap();
         assert_eq!(supabase.datastore, "supabase");
@@ -187,6 +190,7 @@ fn cloud_runtime_deserialization_uses_its_selected_datastore() {
                 "--nocapture",
             ])
             .env(CHILD, "1")
+            .env_remove("DECAPOD_CLOUD_API_URL")
             .env_remove("DECAPOD_PROPODUS_API_URL")
             .env_remove("DECAPOD_CLOUD_DATASTORE");
         if let Some(value) = ambient {
@@ -285,7 +289,9 @@ mod enabled {
                     }
                 };
                 let headers = String::from_utf8_lossy(&bytes[..body_start]).to_lowercase();
-                if headers.starts_with("get /functions/v1/propodus-onboarding/config ") {
+                if headers.starts_with("get /functions/v1/decapod-onboarding/config ")
+                    || headers.starts_with("get /functions/v1/propodus-onboarding/config ")
+                {
                     assert!(!headers.contains("authorization:"));
                     assert!(!headers.contains("apikey:"));
                     let body = json!({"version":1,"project_origin":profile_origin,
@@ -943,14 +949,14 @@ mod enabled {
                 assert!(!request.contains("ambient-token-must-not-be-forwarded"));
                 assert!(!request.to_lowercase().contains("authorization:"));
                 let (status, body) = if public_profile {
-                    assert!(request.starts_with("GET /functions/v1/propodus-onboarding/config "));
+                    assert!(request.starts_with("GET /functions/v1/decapod-onboarding/config "));
                     (
                         200,
                         json!({"version":1,"project_origin":profile_origin,
                         "publishable_key":"sb_publishable_fixture","schema":"dactyl_api"}),
                     )
                 } else {
-                    assert!(request.starts_with("POST /functions/v1/propodus-onboarding/start "));
+                    assert!(request.starts_with("POST /functions/v1/decapod-onboarding/start "));
                     assert!(request.contains("example/supabase-proof"));
                     (
                         401,
