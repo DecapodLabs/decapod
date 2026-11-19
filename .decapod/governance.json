@@ -577,6 +577,17 @@
     "base_commit": "e0f6aec81eb7d8d32015a195bfdf4c8ea739c106",
     "target_base": "origin/master"
   },
+  "claims": {
+    "claim:release-v0-150-3-projections": {
+      "statement": "Release v0.150.3 aligns Cargo.toml, Cargo.lock, managed Dockerfile pin, and specs manifest release metadata.",
+      "falsifier": "Managed Dockerfile or specs manifest release metadata diverges from Cargo.toml 0.150.3.",
+      "status": "supported",
+      "proof_refs": [
+        ".decapod/managed/Dockerfile.decapod",
+        ".decapod/managed/specs/.manifest.json"
+      ]
+    }
+  },
   "checkpoints": [
     {
       "id": "ckpt-tmpclean-1798",
@@ -607,6 +618,14 @@
       "id": "ckpt-tmpclean-1798-v01502",
       "summary": "Sync accepted master v0.150.2 (ea6d8e1c1) using reconcile-merge, rebuild candidate binary, verify candidate docs build (0 diff), and refresh v0.150.2 projections (#1798)",
       "input_digest": "sha256:d6a1d6e0c7d40f5c7c304291d7d5d9d27d116f9fde20a6be6fdb82af613b47c6"
+    },
+    {
+      "id": "ckpt-release-v0-150-3",
+      "summary": "Refresh v0.150.3 release projections and governance",
+      "input_digest": "sha256:7e4439728ca06fcc4b4d092e5d8f76889a9ef5ca3db7589fa3cd4a88935e19a0",
+      "proof_refs": [
+        ".decapod/managed/specs/.manifest.json"
+      ]
     }
   ],
   "intents": {
@@ -637,57 +656,48 @@
       },
       "deferred_questions": [],
       "human_questions": [],
-      "intent": "Surface explicit todo-scoped /tmp build and scratch cleanup guidance on validation pass and PR creation without touching concurrent agent or shared /tmp/decapod state.",
+      "intent": "Refresh release-bound Dockerfile and specs manifest projections for v0.150.3 on PR #1846",
       "phases": [],
-      "proof_hooks": [
-        "cargo fmt --all -- --check",
-        "CLIPPY_CONF_DIR=.config cargo clippy --all-targets --all-features -- -D warnings",
-        "cargo test --test tmp_build_cleanup_guidance_1798",
-        "cargo test --lib validation_scope",
-        "cargo test --lib diagnose_task_includes_todo_scoped_tmp_cleanup_when_ready_to_publish",
-        "cargo test --test doc_alignment --test contract_conformance --test trajectory_docs",
-        "cargo test --test cli_contract_enforcement",
-        "decapod govern artifacts verify-checkpoints --base-branch origin/master --head-ref HEAD --target-base master --publication-material --format json"
-      ],
+      "proof_hooks": [],
       "schema_version": "1.1.0",
       "spec_reviews": [
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Master v0.150.2 integration introduces no architectural changes for #1798.",
-          "reviewed_code_fingerprint": "084a6d7e04bc2d22e11344e26bc50bb10f850a5b9451a0e3e43b4453c715f431",
+          "reason": "v0.150.3 version-only release cut does not alter system architecture",
+          "reviewed_code_fingerprint": "d026d97a91315fe73d7f48c348bf178f47580bbb9f163a6718588c167ccf9de4",
           "spec_material_hash": "ec45705fd9a9a5f29fbe43fb55f7a3b69a802f298ae14eb88118bc42161f71e6"
         },
         {
-          "disposition": "updated",
+          "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Preserved #1798 todo-scoped /tmp cleanup guidance (INTERFACES.md:2041) alongside accepted master v0.150.2 (ea6d8e1c1, #1789 + #1780 + #1845).",
-          "reviewed_code_fingerprint": "084a6d7e04bc2d22e11344e26bc50bb10f850a5b9451a0e3e43b4453c715f431",
+          "reason": "v0.150.3 version-only release cut does not alter CLI or RPC interfaces",
+          "reviewed_code_fingerprint": "d026d97a91315fe73d7f48c348bf178f47580bbb9f163a6718588c167ccf9de4",
           "spec_material_hash": "e8142264a4caae5b7271e2bc25e80ee249e14c3d36ec70fd32c86f9e87dddcae"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Master v0.150.2 integration preserves #1798 advisory safety boundaries and prompt safety gate allow verdict.",
-          "reviewed_code_fingerprint": "084a6d7e04bc2d22e11344e26bc50bb10f850a5b9451a0e3e43b4453c715f431",
+          "reason": "v0.150.3 version-only release cut does not alter security boundaries",
+          "reviewed_code_fingerprint": "d026d97a91315fe73d7f48c348bf178f47580bbb9f163a6718588c167ccf9de4",
           "spec_material_hash": "127c65866657d2dd15434ca52f6e3a97b8f20aa4dd97f9d3190e1cd98edac3ac"
         }
       ],
       "state": "APPROVED",
       "stop_conditions": [],
-      "title": "Instruct agents to clean todo-scoped /tmp build paths on PR creation (#1798)",
+      "title": "Align release v0.150.3 projections and governance (#1846)",
       "todo_ids": [
-        "bugs_01m7r4tqkjg4a8nh"
+        "code_01m7srddt2dc4pyp"
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795102701Z"
+      "updated_at": "1795106213Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Isolated Decapod worktree only; preserve WorkspaceCommand::Publish slice for validation_scope.rs; preserve PublishResult/WorkspacePublishResult/ValidationGuidance wire shapes; zero blocked literal wildcard shell commands"
       ],
-      "artifact_hash": "sha256:25d278295ce95c3ceb4126a0656b1e5a313cc76388b79a2a266a1dfd5239f403",
+      "artifact_hash": "sha256:b1efe882e24a97bfe8534f9b08a8df425d34b987c12dd0c499ecc336e52b2a80",
       "checks": [
         {
           "name": "cargo_build_locked_v01500",
@@ -758,6 +768,10 @@
           "status": "passed"
         },
         {
+          "name": "project_check_0_150_3",
+          "status": "passed"
+        },
+        {
           "name": "tmp_build_cleanup_guidance_1798",
           "status": "passed"
         },
@@ -823,10 +837,17 @@
             "intent_id": "intent:run-tmpclean-1798-v01493",
             "kind": "trajectory_step_recorded",
             "sequence": 7
+          },
+          {
+            "detail": "trajectory:run-tmpclean-1798-v01493",
+            "event_id": "event:8",
+            "intent_id": "intent:run-tmpclean-1798-v01493",
+            "kind": "trajectory_step_recorded",
+            "sequence": 8
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 7,
+        "next_sequence": 8,
         "schema_version": "1.0.0",
         "trajectories": {
           "run-tmpclean-1798-v01493": {
@@ -933,6 +954,24 @@
                 ],
                 "sequence": 7,
                 "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:8",
+                "observations": [
+                  ".decapod/managed/Dockerfile.decapod",
+                  ".decapod/managed/specs/OPERATIONS.md",
+                  ".decapod/managed/specs/.manifest.json",
+                  ".decapod/managed/specs/.manifest.json"
+                ],
+                "proof_refs": [
+                  "project_check_0_150_3"
+                ],
+                "scope": [
+                  "src/decapod/core/validate.rs,src/decapod/core/validation_runtime.rs,src/decapod/core/workspace.rs,src/decapod/lib.rs,src/decapod/plugins/verify.rs,src/decapod/core/docs_cli.rs,docs/agent/command-contracts.md,docs/agent/state-model.md,tests/tmp_build_cleanup_guidance_1798.rs,tests/unit/plugins/verify_tests.rs,.decapod/managed/specs/INTERFACES.md"
+                ],
+                "sequence": 8,
+                "validation_findings": []
               }
             ]
           }
@@ -940,6 +979,7 @@
       },
       "declared_commands": [],
       "evidence": [
+        ".decapod/managed/specs/.manifest.json",
         "Merged origin/master 102d6eb22 (v0.149.3, PR #1813 + #1814) with zero code conflicts; cargo fmt (exit 0), cargo clippy --all-targets --all-features -- -D warnings (exit 0), tmp_build_cleanup_guidance_1798 (5/5 including decapod eval prompt safety gate allow), validation_scope (9/9), diagnose_task_includes_todo_scoped_tmp_cleanup_when_ready_to_publish (1/1), doc_alignment (4/4), contract_conformance (12/12), trajectory_docs (5/5), cli_contract_enforcement (23/23).",
         "Merged origin/master 1332f4ecd (v0.150.0, PR #1817) with zero code conflicts; rebuilt candidate v0.150.0 binary (--locked), ran candidate docs build (0 diff), refreshed v0.150.0 Dockerfile/specs/manifest.",
         "Merged origin/master ea6d8e1c1 (v0.150.2, #1789 + #1780 + #1845) with zero code conflicts; dogfooded reconcile-merge on .decapod/governance.json; rebuilt candidate v0.150.2 binary (--locked), ran candidate docs build (0 diff), refreshed v0.150.2 Dockerfile/specs/manifest.",
@@ -959,7 +999,10 @@
       ],
       "intent_id": "intent:run-tmpclean-1798-v01493",
       "modified_files": [
+        ".decapod/managed/Dockerfile.decapod",
+        ".decapod/managed/specs/.manifest.json",
         ".decapod/managed/specs/INTERFACES.md",
+        ".decapod/managed/specs/OPERATIONS.md",
         "docs/agent/command-contracts.md",
         "docs/agent/state-model.md",
         "src/decapod/core/docs_cli.rs",
@@ -977,7 +1020,7 @@
       "run_id": "run-tmpclean-1798-v01493",
       "schema_version": "1.1.0",
       "shortcut_risk_signals": [],
-      "task_id": "bugs_01m7r4tqkjg4a8nh",
+      "task_id": "code_01m7srddt2dc4pyp",
       "tool_calls": [],
       "unresolved_assumptions": []
     }
