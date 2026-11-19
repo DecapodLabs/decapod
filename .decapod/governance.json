@@ -607,6 +607,11 @@
       "id": "ckpt-journal-1780-sync-v01500",
       "summary": "Integrate accepted master v0.150.0 (1332f4ecd) using reconcile-merge and refresh v0.150.0 projections",
       "input_digest": "sha256:dd8a493724aea090a10ce5f2c96d57409e8aa15516d63fc3e15c3fd9fdcc0246"
+    },
+    {
+      "id": "ckpt-journal-1780-git-identity-test-fix",
+      "summary": "Pass explicit git identity to reconcile-merge unit fixtures for sanitized CI environments",
+      "input_digest": "sha256:edcc3fddda562d79799e19c1f36d53fcc98e5f2684468b52d28e0fea1c7d6577"
     }
   ],
   "intents": {
@@ -647,22 +652,22 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Synced origin/master 1332f4ecd (v0.150.0) preserving #1469 and #1780 merge_reconcile architecture",
-          "reviewed_code_fingerprint": "f58cbb80772dadab9ba0e8dd0550bcad6db1339555a651708eaec36fa6294b98",
+          "reason": "Refreshed fingerprint after sanitized-Git unit test fix preserving #1780 architecture",
+          "reviewed_code_fingerprint": "173f8e078eeaa7ba77df464847bf425623c88fa6080a29a868683fef1a1735ba",
           "spec_material_hash": "3b81779c2b1dfbfd8aae0fcde3c1f888f12b1203aeb1f606901a20af7c888516"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Synced origin/master 1332f4ecd (v0.150.0) preserving #1820/#1760/#1660/#1809/#1831 and #1780 reconcile-merge interface",
-          "reviewed_code_fingerprint": "f58cbb80772dadab9ba0e8dd0550bcad6db1339555a651708eaec36fa6294b98",
+          "reason": "Refreshed fingerprint after sanitized-Git unit test fix preserving #1780 interface",
+          "reviewed_code_fingerprint": "173f8e078eeaa7ba77df464847bf425623c88fa6080a29a868683fef1a1735ba",
           "spec_material_hash": "66e7884fe1f331bc5b1adda1c614e8b4deab92d07627491e5435648e1467f489"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Synced origin/master 1332f4ecd (v0.150.0) preserving #1776/#1831 and #1780 fail-closed proof boundary",
-          "reviewed_code_fingerprint": "f58cbb80772dadab9ba0e8dd0550bcad6db1339555a651708eaec36fa6294b98",
+          "reason": "Refreshed fingerprint after sanitized-Git unit test fix preserving #1780 proof boundary",
+          "reviewed_code_fingerprint": "173f8e078eeaa7ba77df464847bf425623c88fa6080a29a868683fef1a1735ba",
           "spec_material_hash": "127c65866657d2dd15434ca52f6e3a97b8f20aa4dd97f9d3190e1cd98edac3ac"
         }
       ],
@@ -674,13 +679,13 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795090083Z"
+      "updated_at": "1795093955Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:5f8aa3cc1339e9e3bd2c7bcf94bec291ea24efc05105c49b19d209e30c70a2be",
+      "artifact_hash": "sha256:df166651236f30c902267cc679903956a9ae20b270daf167054fbfb3486c2508",
       "checks": [
         {
           "name": "cli_contract_enforcement",
@@ -728,6 +733,14 @@
         },
         {
           "name": "post_merge_validation_scope",
+          "status": "passed"
+        },
+        {
+          "name": "sanitized_git_merged_governance_journal_1780",
+          "status": "passed"
+        },
+        {
+          "name": "sanitized_git_reconcile_merge_unit",
           "status": "passed"
         },
         {
@@ -895,10 +908,17 @@
             "intent_id": "intent:change_01M7R7VACDQHPCHHFJXFXXETKM",
             "kind": "trajectory_step_recorded",
             "sequence": 9
+          },
+          {
+            "detail": "trajectory:branch_01M7R7VAJ3PX8MBT1WEFTNTXQA",
+            "event_id": "event:10",
+            "intent_id": "intent:change_01M7R7VACDQHPCHHFJXFXXETKM",
+            "kind": "trajectory_step_recorded",
+            "sequence": 10
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 9,
+        "next_sequence": 10,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M7R7VAJ3PX8MBT1WEFTNTXQA": {
@@ -1047,6 +1067,22 @@
                 ],
                 "sequence": 9,
                 "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:10",
+                "observations": [
+                  "Passed explicit git user.name/user.email to unit merge fixtures; verified reconcile_merge unit (2/2) and merged_governance_journal_1780 (2/2) under GIT_CONFIG_GLOBAL=/dev/null GIT_CONFIG_NOSYSTEM=1"
+                ],
+                "proof_refs": [
+                  "sanitized_git_reconcile_merge_unit",
+                  "sanitized_git_merged_governance_journal_1780"
+                ],
+                "scope": [
+                  "root"
+                ],
+                "sequence": 10,
+                "validation_findings": []
               }
             ]
           }
@@ -1057,6 +1093,7 @@
       "evidence": [
         "Integrated origin/master e63599e3c (#1820, v0.149.3) dogfooding reconcile-merge; rebuilt candidate binary, converged docs build, fmt ok, validation_scope 9/9, reconcile_merge 2/2, doc_alignment 5/5, contract_conformance 12/12, trajectory_docs 5/5",
         "Merged origin/master 102d6eb22 (v0.149.3) dogfooding reconcile-merge; post-merge fmt exit 0, cargo build --bin decapod ok, validation_scope 9/9, reconcile_merge unit 2/2, merged_governance_journal_1780 2/2",
+        "Passed explicit git user.name/user.email to unit merge fixtures; verified reconcile_merge unit (2/2) and merged_governance_journal_1780 (2/2) under GIT_CONFIG_GLOBAL=/dev/null GIT_CONFIG_NOSYSTEM=1",
         "Pre-synced origin/master 1b3ca1b89 (#1760, dactyl-db 0.18.0, v0.149.3) dogfooding reconcile-merge; candidate docs build 0 diff, fmt ok, validation_scope 9/9, reconcile_merge 2/2, contract_conformance 12/12, doc_alignment 5/5, trajectory_docs 5/5, merged_governance_journal_1780 2/2",
         "Pre-synced origin/master c845ae1d0 (#1831, v0.149.3) dogfooding reconcile-merge; candidate docs build 0 diff, fmt ok, validation_scope 9/9, reconcile_merge 2/2, doc_alignment 5/5, contract_conformance 12/12, trajectory_docs 5/5",
         "Synced origin/master 1332f4ecd (v0.150.0) dogfooding reconcile-merge; rebuilt locked v0.150.0 candidate binary, docs build 0 diff, refreshed v0.150.0 projections and specs",

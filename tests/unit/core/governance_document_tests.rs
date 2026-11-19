@@ -2618,7 +2618,21 @@ fn reconcile_merge_recovers_two_branch_ours_merge_and_preserves_custody_and_proo
     commit_unit_checkpoint(root.path(), "ckpt-a");
 
     // Merge B into A with `-X ours` -> causes Trajectory artifact hash mismatch
-    git(root.path(), &["merge", "--no-commit", "-X", "ours", &b_sha]).unwrap();
+    git(
+        root.path(),
+        &[
+            "-c",
+            "user.name=Governance Tests",
+            "-c",
+            "user.email=test@example.invalid",
+            "merge",
+            "--no-commit",
+            "-X",
+            "ours",
+            &b_sha,
+        ],
+    )
+    .unwrap();
     let load_err = load(root.path()).unwrap_err().to_string();
     assert!(
         load_err.contains("Trajectory artifact hash mismatch"),
@@ -2678,8 +2692,23 @@ fn reconcile_merge_retains_active_journal_on_accepted_target_and_refuses_conflic
     git(root.path(), &["checkout", "-q", "feature"]).unwrap();
     let _ = git(
         root.path(),
-        &["merge", "--no-commit", "-X", "ours", &master_sha],
+        &[
+            "-c",
+            "user.name=Governance Tests",
+            "-c",
+            "user.email=test@example.invalid",
+            "merge",
+            "--no-commit",
+            "-X",
+            "ours",
+            &master_sha,
+        ],
     );
+    git(
+        root.path(),
+        &["rev-parse", "--verify", "MERGE_HEAD^{commit}"],
+    )
+    .unwrap();
     let reconciled = reconcile_merge(root.path()).unwrap();
     assert_eq!(
         reconciled.change.as_ref().map(|c| c.id.as_str()),
