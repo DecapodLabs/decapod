@@ -591,6 +591,14 @@
       "proof_refs": [
         "specs_refresh=passed"
       ]
+    },
+    {
+      "id": "ckpt-reconcile-0-149-3",
+      "summary": "Reconcile reviewed_sources_digest and managed Dockerfile pin for v0.149.3",
+      "input_digest": "sha256:e087d584c1244bd463ff6af8bcabb21961f101d3511f0ea3e34e1fefa0f1f7e4",
+      "proof_refs": [
+        "agent_init_inventory=reviewed"
+      ]
     }
   ],
   "intents": {
