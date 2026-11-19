@@ -27,11 +27,13 @@ Defines the operational policy and metadata for the repository.
 | `detected_surfaces` | list | `[]` | Entrypoints and interfaces detected in the repo (e.g., "cargo", "npm"). |
 | `external_tracker` | bool | `false` | Whether Decapod should expect and validate external issue references. |
 | `container_workspaces` | bool | `true` | If true, Decapod will strongly encourage/enforce Docker isolation for worktrees. |
-| `backend` | enum | `"local"` | Storage backend for the project todo path (`"local"` or `"cloud"`). Cloud uses the binary-owned Propodus endpoint and GitHub origin identity. |
+| `backend` | enum | `"local"` | Storage backend for the project todo path (`"local"` for Decapod Local, or `"cloud"` for Decapod Cloud). Decapod Cloud uses the binary-owned service endpoint and GitHub origin identity. |
 
 Cloud service details are intentionally not project configuration. Decapod
-owns the Propodus deployment defaults in the binary, derives `repo_id` from
-the GitHub `origin`, and keeps credentials machine-local.
+owns the Decapod Cloud deployment defaults in the binary, derives `repo_id` from
+the GitHub `origin`, and keeps credentials machine-local. Explicit overrides
+use `DECAPOD_CLOUD_API_URL` (`DECAPOD_PROPODUS_API_URL` is a deprecated
+compatibility alias).
 
 ## Schema Versioning
 
@@ -71,11 +73,11 @@ cryptographic authentication; the local developer trusts their own workspace, an
 or assert another actor label remains inside the local trust boundary. Protect
 the config with human review and file-system access controls.
 
-In cloud mode, these local role labels never authorize Propodus. The cloud
+In Decapod Cloud mode, these local role labels never authorize remote operations. The cloud
 backend authenticates the session bearer and resolves repository roles using
 server-owned grants. Contributor, maintainer, owner, and expiring contractor
-delegation are backend policy, not self-selected agent names. Local-first
-operation does not require a cloud account.
+delegation are backend policy, not self-selected agent names. Decapod Local
+operation is free, works offline, and does not require a cloud account.
 
 `decapod todo journal checkpoint --accept-historical-gap TASK_A --accept-historical-gap TASK_B --reason "reviewed historical range"`
 requires `todo.journal.repair` permission. The entire batch, each bounded

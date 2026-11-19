@@ -367,6 +367,86 @@ fn system_version_does_not_open_or_repair_project_storage() {
 }
 
 #[test]
+#[cfg(unix)]
+fn system_migrations_and_doctor_do_not_open_or_repair_project_storage() {
+    use std::os::unix::fs::PermissionsExt;
+
+    for mode in [0o700, 0o775, 0o777] {
+        let temp = TempDir::new().unwrap();
+        let storage = temp.path().join(".decapod");
+        std::fs::create_dir(&storage).unwrap();
+        std::fs::set_permissions(&storage, std::fs::Permissions::from_mode(mode)).unwrap();
+        let config = storage.join("config.toml");
+        let invalid_config = b"invalid project configuration [";
+        std::fs::write(&config, invalid_config).unwrap();
+
+        let migrations = Command::new(resolve_decapod_bin())
+            .current_dir(temp.path())
+            .env_remove("DECAPOD_SESSION_PASSWORD")
+            .args(["system", "migrations", "--format", "json"])
+            .output()
+            .unwrap();
+        assert!(
+            migrations.status.success(),
+            "system migrations with storage mode {mode:o}: {}",
+            String::from_utf8_lossy(&migrations.stderr)
+        );
+        assert!(migrations.stderr.is_empty());
+        let report: serde_json::Value =
+            serde_json::from_slice(&migrations.stdout).expect("system migrations JSON output");
+        assert_eq!(report["action_required"], true);
+        assert_eq!(report["version_counter"]["status"], "absent");
+        assert_eq!(report["applied"]["status"], "absent");
+        assert_eq!(report["catalog"]["status"], "absent");
+        assert!(report["catalog"]["compiled_count"].as_u64().unwrap_or(0) > 0);
+        assert_eq!(std::fs::read(&config).unwrap(), invalid_config);
+        assert_eq!(std::fs::read_dir(&storage).unwrap().count(), 1);
+        assert_eq!(
+            std::fs::metadata(&storage).unwrap().permissions().mode() & 0o777,
+            mode
+        );
+    }
+
+    let doc_temp = TempDir::new().unwrap();
+    assert!(
+        Command::new("git")
+            .current_dir(doc_temp.path())
+            .args(["init", "-b", "master"])
+            .output()
+            .unwrap()
+            .status
+            .success()
+    );
+    std::fs::write(doc_temp.path().join("AGENTS.md"), "# Agents\n").unwrap();
+    std::fs::write(doc_temp.path().join("CLAUDE.md"), "# Claude\n").unwrap();
+    let doc_storage = doc_temp.path().join(".decapod");
+    std::fs::create_dir(&doc_storage).unwrap();
+
+    let doctor = Command::new(resolve_decapod_bin())
+        .current_dir(doc_temp.path())
+        .env_remove("DECAPOD_SESSION_PASSWORD")
+        .args(["system", "doctor", "check", "--format", "json"])
+        .output()
+        .unwrap();
+    assert!(
+        doctor.status.success(),
+        "system doctor check failed: stdout={}, stderr={}",
+        String::from_utf8_lossy(&doctor.stdout),
+        String::from_utf8_lossy(&doctor.stderr)
+    );
+    assert!(doctor.stderr.is_empty());
+    let doc_json: serde_json::Value =
+        serde_json::from_slice(&doctor.stdout).expect("doctor JSON output");
+    assert_eq!(doc_json["failed"], 0);
+    let checks = doc_json["checks"].as_array().expect("checks array");
+    assert!(checks.iter().any(|c| c["name"] == "Migrations"));
+    assert!(checks.iter().any(|c| c["name"] == ".decapod"));
+    assert!(!doc_storage.join("data").exists());
+    assert!(!doc_storage.join("managed").exists());
+    assert_eq!(std::fs::read_dir(&doc_storage).unwrap().count(), 0);
+}
+
+#[test]
 fn test_schema_determinism_command() {
     let (_tmp, dir) = setup_repo();
 
@@ -1420,4 +1500,53 @@ mod documented_bootstrap {
 
         fixture.close().expect("remove fixture");
     }
+}
+
+#[test]
+fn cli_help_capabilities_and_docs_unify_decapod_local_and_cloud_branding() {
+    let (_tmp, dir) = setup_repo();
+
+    let root_help = run_decapod(dir, &["--help"]);
+    assert!(root_help.status.success());
+    let root_help_text = String::from_utf8_lossy(&root_help.stdout);
+    assert!(root_help_text.contains("Decapod Cloud"));
+    assert!(!root_help_text.contains("Propodus"));
+
+    let init_help = run_decapod(dir, &["init", "--help"]);
+    assert!(init_help.status.success());
+    let init_help_text = String::from_utf8_lossy(&init_help.stdout);
+    assert!(init_help_text.contains("Decapod Local"));
+    assert!(init_help_text.contains("Decapod Cloud"));
+    assert!(!init_help_text.contains("Propodus"));
+
+    let caps_out = run_decapod(dir, &["capabilities", "--format", "json"]);
+    assert!(caps_out.status.success());
+    let caps: serde_json::Value = serde_json::from_slice(&caps_out.stdout).expect("valid JSON");
+    let backends = caps["backends"].as_array().expect("backends array");
+    assert!(
+        backends
+            .iter()
+            .any(|b| b["id"] == "local" && b["name"] == "Decapod Local" && b["default"] == true)
+    );
+    assert!(
+        backends
+            .iter()
+            .any(|b| b["id"] == "cloud" && b["name"] == "Decapod Cloud" && b["default"] == false)
+    );
+    let cap_names: Vec<&str> = caps["capabilities"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .filter_map(|c| c["name"].as_str())
+        .collect();
+    assert!(cap_names.contains(&"backend.local"));
+    assert!(cap_names.contains(&"backend.cloud"));
+
+    let ingest_out = run_decapod(dir, &["docs", "ingest"]);
+    assert!(ingest_out.status.success());
+    let ingest_text = String::from_utf8_lossy(&ingest_out.stdout);
+    assert!(ingest_text.contains("Decapod Local"));
+    assert!(ingest_text.contains("Decapod Cloud"));
+    assert!(ingest_text.contains("DECAPOD_CLOUD_API_URL"));
+    assert!(!ingest_text.contains("project-oqn7i"));
 }

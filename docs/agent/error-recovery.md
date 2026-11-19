@@ -247,6 +247,14 @@ This supported transition does not waive `TODO_PROJECTION_MISSING`.
   4. Verify with `decapod validate --projections`. Confirm `federation.rebuild_determinism` is green and that a second rebuild makes no further semantic change.
 - **If repair aborts:** The error names the event ID and reason (type/identity mismatch, non-object payload). Preserve the store and request human review; partial unwrap is never committed.
 
+### `container_cgroup_permission_denied` and `container_invalid_cgroup_parent`
+- **Reason:** Rootless Podman (`cgroupfs` manager on cgroup v2 without a user systemd instance) or the OCI runtime (`crun`/`runc`) could not create or configure the container cgroup under `/sys/fs/cgroup` (e.g., `cannot set limits without cgroups: create /sys/fs/cgroup/...: Permission denied`), or an explicit `--cgroup-parent` / `DECAPOD_CONTAINER_CGROUP_PARENT` value failed fail-closed validation. This is distinct from `container_workspace_permission_denied`, which covers workspace directory or Git lockfile ownership failures.
+- **Protocol:**
+  1. Do **not** disable cgroups or relax `--cpus`, `--memory`, or `--pids-limit`.
+  2. Supply a validated delegated cgroup v2 parent whose `cgroup.subtree_control` enables `cpu`, `memory`, and `pids` via `--cgroup-parent /<delegated-path>` (or `DECAPOD_CONTAINER_CGROUP_PARENT=/<delegated-path>`), or place the calling process inside a delegated cgroup v2 subtree so local rootless Podman `cgroupfs` auto-detection selects it.
+  3. Omit the `/sys/fs/cgroup` mount prefix when passing a cgroup hierarchy path, and never use `..`, `.`, trailing slashes, whitespace, control characters, or shell metacharacters (invalid inputs fail closed with `container_invalid_cgroup_parent` before touching the runtime).
+  4. Re-run the `decapod auto container run` command; if the host has not delegated a writable cgroup v2 subtree with `cpu`, `memory`, and `pids` controllers, request that host delegation from the operator.
+
 ## General Strategy
 
 ### Invalid governance document or legacy claim ledger
@@ -271,6 +279,16 @@ and governance document unchanged. Preserve the old record, stage current work,
 and record a new checkpoint ID before committing. An identical retry with the
 same material and summary and the same proof-reference set is a no-op. Do not
 rewrite a published commit or remove prior records to reuse its ID.
+
+`Trajectory artifact hash mismatch` after a Git 3-way merge (`MERGE_HEAD`
+present) means line-based merging mixed `.decapod/governance.json` trajectory or
+custody fields across two commits. Do not hand-edit hashes or clear failed
+checks. Run `decapod govern artifacts reconcile-merge`, which reads only the
+immutable Git parents (`HEAD`, `MERGE_HEAD`, `merge-base --all`), refuses
+unaccepted conflicting-PR authority (`GOVERNANCE_MERGE_AUTHORITY_CONFLICT`) or
+conflicting check proofs (`GOVERNANCE_MERGE_PROOF_CONFLICT`), preserves complete
+active journal history and failed/missing proof states, and writes a valid
+canonical document ready for a follow-up checkpoint before committing the merge.
 
 ### Orphan broker audit entries (`data broker verify`)
 

@@ -178,6 +178,11 @@
         "statement": "Persisted task pass cannot authorize a different task revision, and stale verification cannot overwrite a changed baseline",
         "status": "open"
       },
+      "claim:current-validation-withdrawal": {
+        "falsifier": "A newer observed required failure leaves old VERIFIED applicable, an old subject promotes after withdrawal, or fresh complete current-custody validation cannot recover after renewal.",
+        "statement": "A newer task-bound full not-ready judgment withdraws current workunit proof, preserves historical success, and fresh current-custody proof restores legitimate VERIFIED operation.",
+        "status": "open"
+      },
       "claim:dagger-removed": {
         "falsifier": "A Dagger engine can execute through the core adapter or generic receipt custody is weakened",
         "proof_refs": [
@@ -482,6 +487,7 @@
       "trajectory:150b60dea853e3ba": "Real native measurements and separate holdout risk/coverage are required; current source CI success is insufficient. Evaluation criteria recorded before model outputs; no readiness fitting or holdout evaluation executed.",
       "trajectory:17139f4701f494a5": "Hosted verification and exact-candidate publication readiness remain pending; no local tests run.",
       "trajectory:17669a7d73b8ecb7": "RPC download403 is runner-specific; same pinned URL succeeded on another fresh runner. Policy fixture exit126 OS detail is unknown because stderr was discarded.",
+      "trajectory:1922e307ad9422d0": "Live hosted Propodus Postgres execution remains externally bounded when hosted credentials and live Propodus endpoints are absent; verified against local SQLite and mock/denial Dactyl HTTP boundaries.",
       "trajectory:19c255ade3d72661": "25unit tests and actualMetal8elementprobe passed; one138tokenCPU inference matches independent scalar subset, memory chunks inactive, same-author/shared-infrastructure limits remain. Metal model reset failed; holdout not executed. New owned-model discard, reuse assertion, real alternate-API fallback diagnostics, nonempty-chunk fixture and independent four-phase collector are authored repairs awaiting fresh validation. No 5percent production calibration claim.",
       "trajectory:22ceeec9cc8afae2": "Validmodeluncertaintyyes0.573/two-labelsetcausedcalibrationpositiveabstainbothbackends; frozenexpectedacceptmismatchpreservednotrelabeled. Workingmeaningfulmodelapprovalsareobservedgate/prompt; alladversecontrolsnonready. We donotknowwhythemodelabstained. Independentcoverageauditdemonstratedmetadatafixtureclaimedorderbutonlyinvalidlength/namechecked; addcanonical+all23permutationchecksandtruthfulobservationacrossfamily. Currentvalidatedworkandactualcheckinventoryexpand; no question/threshold/weight/calibration/labeltuning. Userclarificationonsafeabstentionpending; strictallpositive ruleunchanged. Fullnewcandidatevalidate,donotclaimpreviousfullreportgreen or domainaccuracy. Sameoriginaltaskbranch/custody/noPRmerge release.",
       "trajectory:2318b54d5863154f": "Confirmed pinned CUDA dynamic links can prevent worker startup before its CPU path. Prepare optional separately pinned CPU executable in private local binding; model-free GPU startup before exposing model/state, typed hardware-only fallback, exact immutable pins and same deadline. Negative/abstaining/malformed inference and numerical failures remain non-ready and never trigger a new answer search. No actual Metal/model/reference/holdout evidence exists yet.",
@@ -639,6 +645,11 @@
         "govern plan review-spec INTERFACES.md/ARCHITECTURE.md/SECURITY.md",
         "target/debug/decapod (0.148.13) rpc --op specs.refresh & project-check projection refresh"
       ]
+    },
+    {
+      "id": "cp-1782-7",
+      "summary": "Sync origin/master ef6c2003d (v0.150.7), reconcile governance journal, refresh specs, and verify #1782 risk-map warning paths",
+      "input_digest": "sha256:c487e2e29bd6d09003fc2db0e71db84351a8f111a52ede2fad1201a993464792"
     }
   ],
   "intents": {
@@ -681,23 +692,23 @@
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Verified src/decapod/cli.rs, plugins/policy.rs, and core/validate.rs: #1782 aligns warning text via plugins::policy::missing_riskmap_warning() without altering CLI subcommand hierarchy, module ownership, or storage boundaries.",
-          "reviewed_code_fingerprint": "9b4d9d1420e68806ef58dbfcb61d9e61853f73eecc981c9b2422d39704a689d6",
-          "spec_material_hash": "080e1e015d867051ec4ecbb1f18aca92a2d62a05798377057e563aaa5a3764e0"
+          "reason": "PR #1800 aligns risk-map warning strings with existing CLI command paths only; no architecture changes versus accepted master v0.150.7.",
+          "reviewed_code_fingerprint": "7d6de6d2486978d74cc2af061b3a7c7278a7b5860f2005910a9c535c7e592dd1",
+          "spec_material_hash": "5d2e6751d609aaeb9afa2c54fad585ebc6f60c75516d099a28cc0a6eed7bc008"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Merged origin/master c5bafce6 (v0.148.13) and reconciled reviewed_sources_digest; Risk-map warning CLI contract (#1782) prose and source/test bytes unchanged.",
-          "reviewed_code_fingerprint": "9b4d9d1420e68806ef58dbfcb61d9e61853f73eecc981c9b2422d39704a689d6",
-          "spec_material_hash": "6698eaf9f32bd46fcff1c24d105be4944677927b486675acd9def2db154557c8"
+          "reason": "Preserved the authored Risk-map warning CLI contract (#1782) section in INTERFACES.md alongside all upstream v0.150.7 interface specs.",
+          "reviewed_code_fingerprint": "7d6de6d2486978d74cc2af061b3a7c7278a7b5860f2005910a9c535c7e592dd1",
+          "spec_material_hash": "a67a65f193d9cf38634f7141d45b6abe342bc3ff50b6488a38f37f869c9b9b17"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Verified RiskmapSubcommand::Verify stays read-only without policy.control bypass and RiskmapSubcommand::Init preserves enforce_broker_mutation_policy(..., policy.control) core trust gate; warning text change introduces no privilege or trust change.",
-          "reviewed_code_fingerprint": "9b4d9d1420e68806ef58dbfcb61d9e61853f73eecc981c9b2422d39704a689d6",
-          "spec_material_hash": "735ae6e95c6b18ff2ccc718fbadaa4d7ae483d632aee2fb071d4f9ae6daa23de"
+          "reason": "PR #1800 updates missing-riskmap warning paths while preserving existing policy.control trust gates; no security boundary changes versus accepted master v0.150.7.",
+          "reviewed_code_fingerprint": "7d6de6d2486978d74cc2af061b3a7c7278a7b5860f2005910a9c535c7e592dd1",
+          "spec_material_hash": "127c65866657d2dd15434ca52f6e3a97b8f20aa4dd97f9d3190e1cd98edac3ac"
         }
       ],
       "state": "APPROVED",
@@ -708,20 +719,28 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795013502Z"
+      "updated_at": "1795127298Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:83a2e297b7263ac39f3a6baff702979013f111c422d3d325258d581f2ab045dd",
+      "artifact_hash": "sha256:0c5c7b3152c5143be4d65375f82d5855f24d13b119732df8cd57f354ee58aa1d",
       "checks": [
+        {
+          "name": "cargo_fmt",
+          "status": "passed"
+        },
         {
           "name": "cli_contract_enforcement_riskmap",
           "status": "passed"
         },
         {
           "name": "clippy",
+          "status": "passed"
+        },
+        {
+          "name": "docs_build",
           "status": "passed"
         },
         {
@@ -742,6 +761,10 @@
         },
         {
           "name": "plugins_policy_tests",
+          "status": "passed"
+        },
+        {
+          "name": "targeted_tests",
           "status": "passed"
         },
         {
@@ -802,10 +825,17 @@
             "intent_id": "intent:change_01M7QC4ST58WGCQ5JNZKJPCTF1",
             "kind": "trajectory_step_recorded",
             "sequence": 8
+          },
+          {
+            "detail": "trajectory:branch_01M7QC4T0FX5CFADGN7WFGBTNQ",
+            "event_id": "event:9",
+            "intent_id": "intent:change_01M7QC4ST58WGCQ5JNZKJPCTF1",
+            "kind": "trajectory_step_recorded",
+            "sequence": 9
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 8,
+        "next_sequence": 9,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M7QC4T0FX5CFADGN7WFGBTNQ": {
@@ -921,6 +951,31 @@
                 ],
                 "sequence": 8,
                 "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:9",
+                "observations": [
+                  ".decapod/managed/specs/INTERFACES.md",
+                  ".decapod/managed/specs/ARCHITECTURE.md",
+                  ".decapod/managed/specs/SECURITY.md",
+                  "src/decapod/core/validate.rs",
+                  "src/decapod/plugins/policy.rs",
+                  ".decapod/managed/specs/INTERFACES.md",
+                  "Merged origin/master ef6c2003d (v0.150.7) cleanly with 0 code conflicts, reconciled governance via reconcile-merge, rebuilt v0.150.7 candidate binary, verified docs build (0 diff), cargo fmt, and targeted #1782 tests (validate_tests, plugins_policy_tests, cli_contract_enforcement)."
+                ],
+                "proof_refs": [
+                  "targeted_tests",
+                  "docs_build",
+                  "cargo_fmt"
+                ],
+                "scope": [
+                  "\".decapod/managed/specs\"]",
+                  "\"tests\"",
+                  "paths:[\"src/decapod\""
+                ],
+                "sequence": 9,
+                "validation_findings": []
               }
             ]
           }
@@ -929,6 +984,7 @@
       "declared_commands": [],
       "destination": "pull request",
       "evidence": [
+        "Merged origin/master ef6c2003d (v0.150.7) cleanly with 0 code conflicts, reconciled governance via reconcile-merge, rebuilt v0.150.7 candidate binary, verified docs build (0 diff), cargo fmt, and targeted #1782 tests (validate_tests, plugins_policy_tests, cli_contract_enforcement).",
         "Refreshed v0.148.13 Dockerfile.decapod and .manifest.json with workspace-built 0.148.13 decapod binary and recorded ARCHITECTURE.md / SECURITY.md spec reviews for publication-material.",
         "Reviewed git diff 9c7e6cff..7bd0a915 (Cargo.toml, Cargo.lock, CHANGELOG.md only for v0.148.12) and reconciled proof.required_profile.reviewed_sources_digest to sha256:bd7eec7e7edaa9a427dea5c3d6b4de42e885b23d2b1911f3602527686e366c4e",
         "Reviewed git diff caeeaba8..c5bafce6 (Cargo.toml, Cargo.lock, CHANGELOG.md only for v0.148.13) and reconciled proof.required_profile.reviewed_sources_digest to sha256:f2c1d189ee0c96f6afb66185229233bd0436015d0ddd21dc56deb4f58709b2b2",
@@ -939,6 +995,7 @@
         ".decapod/config.toml",
         ".decapod/managed/Dockerfile.decapod",
         ".decapod/managed/specs/ARCHITECTURE.md",
+        ".decapod/managed/specs/INTERFACES.md",
         ".decapod/managed/specs/SECURITY.md",
         "src/decapod/cli.rs",
         "src/decapod/core/validate.rs",

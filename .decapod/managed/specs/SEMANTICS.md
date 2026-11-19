@@ -1,5 +1,22 @@
 # Semantics
 
+## Reversible integration removal invariants (#1704)
+
+- **Preview purity:** `decapod integration preview` never creates `.lock`, `-wal`,
+  `-shm`, session, Git, or temporary files in the repository or `XDG_CONFIG_HOME`.
+- **Ownership requirement:** Filename resemblance or body similarity without
+  ownership evidence never authorizes deletion.
+- **Fail-closed custody and symlink boundaries:** Any active todo lease,
+  `authoring_binding`, registered/non-empty workspace directory, held storage
+  or workspace lease lock, symlink component, or corrupt manifest aborts
+  removal before any mutation.
+- **Idempotence:** Repeating `remove --authorize` after removal or interruption
+  preserves the restoration manifest and converges cleanly; repeating `restore`
+  on already-restored matching files is a no-op; `restore` refuses to overwrite
+  divergent newly authored files.
+- **Boundary separation:** Bounded integration removal never deletes
+  `.decapod/data/`, `.decapod/governance.json`, `*.bak`, or global credentials.
+
 ## Reflection, progress and authority
 
 Distinct recorded human questions and spec-review decisions retain distinct
@@ -273,6 +290,58 @@ unsupported recovery path leaves a visible blocker.
 - Invocations and owned subprocesses remain bounded; persistent state carries
   task continuity after they exit
 
+## Fault-Detection Semantics (#1795)
+
+`tests/governance_fault_detection_1795.rs` measures whether existing and
+remediation tests force Decapod's shipped enforcement rules to act rather than
+passing trivially. It does not weaken shipped `src/`, does not add a second
+policy interpreter, and makes no general formal-soundness claim.
+
+The suite inventories seven critical admission boundaries (`task_lease_custody`,
+`accepted_policy_precedence`, `required_proof_producer_binding`,
+`exact_candidate_base_freshness`, `approval_scope`, `retry_on_unknown`, and
+`final_pr_eligibility`), mapping each to an existing kernel rule, test, and
+lawful acceptance control. In an isolated temporary copy of the repository, one
+bounded fault is injected per rule across five rules covering the required
+attack classes:
+
+1. `RULE-PROOF-001` (`src/decapod/core/workunit.rs::validate_verified_manifest`):
+   dropping the `WORKUNIT_CHECKPOINT_REQUIRED` check against manually declared
+   `Verified` manifests is detected by
+   `workunit_publish_gate::publish_gate_rejects_manually_declared_verified_passes`.
+2. `RULE-FRESHNESS-002` (`src/decapod/core/workspace.rs::verify_validation_artifacts_for_publish`):
+   ignoring stale `validation_epoch` / `repo_signal_fingerprint` /
+   `decapod_release` checks is detected by
+   `core::workspace::publication::tests::current_receipt_accepts_proof_commit_but_rejects_stale_code_epoch_task_and_revision`.
+3. `RULE-POLICY-003` (`src/decapod/core/readiness_profile.rs::required_source_catalog_with_executor`):
+   relaxing `reviewed_workflow_digests` and `carrier_files` checks when
+   `reviewed_sources_digest` is recomputed to match altered files is detected by
+   `core::readiness_profile::tests::accepted_executor_never_authorizes_changed_candidate_workflows_or_carriers`.
+4. `RULE-CUSTODY-004` (`src/decapod/core/todo.rs::renew_claim_lease`):
+   bypassing `fleet_coord::lease_allows_reclaim` on expired-lease renewal
+   initially **survived** the unchanged existing suite (`plugins_todo_tests`)
+   because prior tests exercised cross-agent reclaim rather than same-owner
+   `todo renew` after expiry.
+   `expired_lease_renew_negative_and_positive_fixture_against_shipped_binary`
+   and the isolated faulted-binary check exercise real CLI `todo claim
+   --lease-seconds 1` -> expiry -> `todo renew`, proving active leases renew
+   (`status = "ok"`, `lease_lifecycle = "extended"`, `lease_generation = 2`)
+   while expired leases are rejected (`status = "conflict"`,
+   `lease_state = "expired"`) and catching the injected fault.
+5. `RULE-RETRY-005` (`src/decapod/core/group_broker.rs::execute_request`):
+   skipping `dedupe_lookup` so an `UNKNOWN` receipt blindly re-executes is
+   detected by
+   `core::group_broker::tests::durable_started_receipt_prevents_reexecution_and_binds_caller`.
+
+Every fault execution classifies outcomes strictly into `detected`, `survived`,
+`unexercised`, `build_invalid`, and `equivalent_fault`. Missing, filtered-out,
+aborted (`0` executed tests), or uncompiled (`build_invalid`) runs and no-op
+patches (`equivalent_fault`) are never counted as `detected`. The resulting
+versioned JSON report (`schema_version = "1.0.0"`,
+`kind = "governance_fault_detection_report"`) is emitted to
+`target/governance-fault-detection/report-1795.json` (or
+`$GOVERNANCE_FAULT_REPORT_PATH`).
+
 <!-- decapod:capability-overlay:background-processing:start -->
 
 Generated capability obligations: `background-processing` is declared for this project. These are decisions and proof requirements, not claims of implemented behavior. Resolve each against project source and tests; record unsupported or non-applicable mechanisms explicitly.
@@ -321,11 +390,24 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `9b4d9d1420e68806ef58dbfcb61d9e61853f73eecc981c9b2422d39704a689d6`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (237 files), `tests/` (236 files)
+- Repository signal fingerprint: `7d6de6d2486978d74cc2af061b3a7c7278a7b5860f2005910a9c535c7e592dd1`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (244 files), `tests/` (256 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 
 ## PR1663 integrated storage behavior
 
 Keep lossless decoded event and task projection semantics across compaction, v1/v2 journals and self-contained transfers. A changed encoding or schema never grants task ownership, publication authority or successful proof; current evidence remains bound to its actual candidate and accepted target.
+
+## Shared-State Transition Semantics (#1247)
+
+Decapod enforces single-writer custody, atomic task+event commits, and fail-closed proof/cloud boundaries across both local SQLite (`src/decapod/core/todo.rs`, `src/decapod/core/authoring.rs`, `src/decapod/core/task_journal.rs`) and Dactyl/Propodus HTTP storage (`src/decapod/core/dactyl_todo.rs`, `src/decapod/core/cloud_todo_operation.rs`):
+
+1. **Single-winner exclusive arbitration and shared-claim policy:** Concurrent exclusive claims (`claim_task_with_lease`, `DactylTodoStore::claim_task`) admit at most one durable primary assignee (`tasks.assigned_to` / `task_owners` `claim_type = 'primary'`), returning inspectable conflict/contention outcomes to all losing contenders without emitting phantom claim events. Shared claims (`ClaimMode::Shared`) preserve the primary owner and require verified trust (or an explicit `[governance].allow_basic_shared_claims` main-repo policy digest).
+2. **Monotonic fencing, stale custody, and strict session enforcement:** Exclusive custody advances monotonic `lease_generation` and `tasks.revision` fences across expiry/reclaim, ABA re-claim, owner/recovery handoffs (`handoff_task_as` / `todo.handoff` policy + exact-target bounded approval), and authoring bindings (`admit_authoring` / `check_authoring`). Expired, reclaimed, or handed-off fences fail closed (`stale_task_revision`, `not_assignee`, `AUTHORING_CUSTODY_STALE`), cross-task checkpoint substitution is rejected (`TASK_JOURNAL_CONFLICT` / `WORKUNIT_CHECKPOINT_REQUIRED`), and strict local/cloud session checks (`verify_strict_local_agent_session`, `CloudAuthStatus::Revoked`) refuse forged or revoked credentials.
+3. **Atomic state + event commits and lost-ack reconciliation:**
+   - Local SQLite executes `tasks` updates, `events` insertion, and `task_journal` checkpoints inside one transaction; `edit_task` returns early when `changed == 0` so missing task IDs never emit phantom `task.edit` events, and `claim_task_with_lease` / `renew_claim_lease` / `yield_claim_lease` / `add_task_owner` / `remove_task_owner` attribute journal/owner records to the actual acting agent rather than `"decapod"`.
+   - `DactylTodoStore::operation_timestamp` uses a per-process monotonic `AtomicU64` nanosecond floor, and `DactylTodoStore::atomic_mutation` requires both `tasks.updated_at == event_params.event_ts` and an `event_type`-scoped static SQL post-condition inside the `INSERT INTO events ... WHERE EXISTS (...)` guard so a losing concurrent write cannot emit a phantom event while remaining statically provable by `gatekeeper::sql_context`.
+   - Cloud operations distinguish `Outcome::BlockedBeforeSubmit` (no server write) from `Outcome::OutcomeUnknown` (dispatched batch whose ack/reconcile outcome is uncertain), prohibit unproved auto-replay or payload mutation under an existing `operation_id` (`OperationRecord::new`), and reconcile same-ID retries via event lookup without executing a second write.
+4. **Proof and validation binding:** `judge_completion`, `judge_stored_verification`, `WorkUnitManifest`, and `get_work_claim` bind completion and publication to exact candidate commit SHA (`canonical_head` / `head`), `rules_fingerprint`, `verifier`, reconstructed `file_artifacts` + `receipt_hash`, `task_revision`, `accepted_target`, and checkpoint material. Advancing `HEAD`, altering `rules_fingerprint`, or materially editing a completed task transitions proof to `Stale` / `Blocked` while preserving readable historical `proof_refs` and event records.
+5. **Cloud fail-closed boundary (no local fallback) and hosted boundary:** Cloud authorization denials (`401`/`403`) and transport/provider unavailability (`503` or unreachable endpoint) fail closed in `run_cloud_todo_command_with_store` without creating or mutating local `.decapod/data/{decapod,todo}.db`. Conformance suite `tests/shared_state_semantics_1247.rs` verifies all five invariants against local SQLite and mock/denial Dactyl HTTP boundaries; live hosted Propodus Postgres execution remains externally bounded when hosted credentials and live Propodus endpoints are absent.
