@@ -599,6 +599,14 @@
       "proof_refs": [
         "agent_init_inventory=reviewed"
       ]
+    },
+    {
+      "id": "ckpt-reconcile-0-149-3-exact",
+      "summary": "Set exact v0.149.3 reviewed_sources_digest matching Cargo.toml/Cargo.lock bump",
+      "input_digest": "sha256:984844d10290d7aad358152e0eba95bd619a2c8f784c1018d050b8fe664c3f9d",
+      "proof_refs": [
+        "agent_init_inventory=44353e47024468941263087d2e820f24d4f177c2f3fb0a9e0363f2a57333290e"
+      ]
     }
   ],
   "intents": {
