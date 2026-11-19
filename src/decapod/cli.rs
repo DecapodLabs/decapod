@@ -1578,6 +1578,13 @@ pub(crate) enum WorkunitCommand {
         #[clap(long, value_enum)]
         to: WorkunitStatusArg,
     },
+    /// Inspect or converge a split workspace-local workunit datastore onto the canonical atomic store
+    Converge {
+        #[clap(long)]
+        task_id: Option<String>,
+        #[clap(long)]
+        dry_run: bool,
+    },
 }
 
 #[derive(clap::Args, Debug)]

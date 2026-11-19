@@ -449,7 +449,15 @@ other gates. This option does not apply to cloud-backed claims.
 The internal Unix-socket broker request in
 `src/decapod/core/group_broker.rs` uses protocol version 3. Alongside
 request ID, arguments and an absolute queue/execution deadline, each request carries a canonical absolute working
-directory and an explicitly allowlisted caller context. Agent identity, session,
+directory and an explicitly allowlisted caller context. The broker leader honors
+the caller's bounded `request.deadline_ms` (capped by `BUILD_TIMEOUT`) instead of
+clamping `todo claim` or `workspace status|prune` control mutations to 15s
+`CONTROL_TIMEOUT`. For `todo done --validated`, slow historical/QA verification
+executes outside the exclusive group-broker lock via
+`todo::prepare_validated_done_handoff` before broker dispatch, handing off a
+mode-`0600` request-bound token that the brokered worker re-verifies against
+canonical storage (`verify::consume_prepared_done_handoff`) before the short
+transactional status commit. Agent identity, session,
 task, correlation, causation, idempotency and claim-autorun inputs replace—not
 merge with—the elected leader's corresponding environment. The child executable
 is resolved independently of either working directory.
@@ -978,9 +986,16 @@ Proof references remain historical references rather than renewed permission.
 is global and applies to every `qa verify` subcommand, including
 `qa verify recover --stale`: it lists stale done tasks (with
 `last_verified_at` and `verification_policy_days`) and returns without
-running any child validation (#1527). Explicit recapture
-runs real validation before binding new evidence. Batch recovery first leaves
-its refreshed evidence `CLAIMED` and requires per-task and aggregate proof.
+running any child validation (#1527). Closing a task via `todo done` without
+`--validated` records `verification_status: "CLAIMED"` and actionable `remediation`
+pointing to `todo done <id> --validated --commit <sha>` (when a recorded candidate
+exists via `validation_history::latest_candidate_for_task`), `qa verify regen <id>`,
+or `qa verify recover --artifact <id>=<file>`. `PROOF_HOOK_FAILED` and
+`verify_target` surface the same self-service recovery paths, and `qa verify regen <id>`
+enters `VerifyingTodosGuard` around its baseline capture so regenerating proof for
+an unverified `done` task cannot self-deadlock on its own `CLAIMED` entry. Explicit
+recapture runs real validation before binding new evidence. Batch recovery first
+leaves its refreshed evidence `CLAIMED` and requires per-task and aggregate proof.
 
 `STALE_TASK_VERIFICATION` reports a task or verification baseline changed while
 verification was running. The stale result is discarded without replacing the
@@ -1389,8 +1404,8 @@ field. Nothing in this operation authorizes a mutation, approval or completion.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `baff0181c316ee7bfc4964346420a819a9a26aff3a0e01d3d8d8598cf92d71dd`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (237 files), `tests/` (242 files)
+- Repository signal fingerprint: `1e807a1bd4eeb189d67126867259e22ea5adec88f6f95d8609b879a9c099911d`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (237 files), `tests/` (245 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 
@@ -1840,15 +1855,25 @@ these declarations are not a successful validation observation.
 
 ## Canonical workunit validation contract (#1660)
 
-Existing workunit CLI operations remain the request surface. `record-proof`
-records a declaration; requesting VERIFIED requires a current canonical full
-observation for exactly one supported `validate_passes`/`validated_commit`
-obligation. The kernel derives the result, epoch and optional validation-record
-selector. Caller-supplied selectors cannot import producer success. File artifact
-paths retain byte-integrity semantics. Historical JSON omits the optional field;
-Rust manifest literals add `validation_record: None`, and verification consumers
-pass repository context to `validate_verified_manifest(root, manifest)`.
-Publication and human merge authorization remain independent operations.
+Existing workunit CLI operations remain the request surface, extended with
+`decapod govern workunit converge [--task-id <id>] [--dry-run]` and typed
+`proof_status` (`proven` | `not_proven` | `stale` | `absent`), `split_store`,
+`atomic_domain_supported`, `audit_records`, and `convergence_hint` fields on
+`WorkUnitJournalStatus` (and `proof_status`/`split_store`/`atomic_domain_supported`
+on `govern workunit status`). `record-proof` records a declaration; requesting
+VERIFIED requires a current canonical full observation for exactly one supported
+`validate_passes`/`validated_commit` obligation. The kernel derives the result,
+epoch and optional validation-record selector. Caller-supplied selectors cannot
+import producer success. File artifact paths retain byte-integrity semantics.
+Separately initialized workspace-local datastores return
+`WORKUNIT_PROOF_ATOMIC_DOMAIN_UNSUPPORTED`; explicit `converge` archives
+workspace-local records into `.decapod/data/split-store-audit/` as `not_proven`
+audit history without promoting split records to `VERIFIED`, restoring atomic
+canonical-store execution for fresh validation. Historical JSON omits the
+optional field; Rust manifest literals add `validation_record: None`, and
+verification consumers pass repository context to
+`validate_verified_manifest(root, manifest)`. Publication and human merge
+authorization remain independent operations.
 
 ## Scoped container-runtime recovery during prerequisites
 

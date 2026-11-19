@@ -6119,11 +6119,14 @@ fn run_migration_validation(
     }
 
     let started = Instant::now();
-    let mut child = std::process::Command::new(&config.command)
+    let mut command = std::process::Command::new(&config.command);
+    command
         .args(&config.args)
         .current_dir(&working_path)
         .stdout(Stdio::piped())
-        .stderr(Stdio::piped())
+        .stderr(Stdio::piped());
+    crate::core::bounded_process::configure_child_nofile_limit(&mut command);
+    let mut child = command
         .spawn()
         .map_err(|err| format!("could not start '{}': {err}", config.command))?;
     let stdout = child.stdout.take().expect("stdout was piped");
@@ -6750,11 +6753,28 @@ fn validate_plan_governed_execution_gate(
     let unverified = plan_governance::collect_unverified_done_todos(&store.root)?;
 
     if !unverified.is_empty() {
+        let historical_hints: Vec<String> = unverified
+            .iter()
+            .filter_map(|id| {
+                crate::core::validation_history::latest_candidate_for_task(store, id)
+                    .map(|sha| format!("`decapod todo done {id} --validated --commit {sha}`"))
+            })
+            .take(2)
+            .collect();
+        let historical_clause = if historical_hints.is_empty() {
+            "If a task was already validated before merge, repair it with `decapod todo done <id> --validated --commit <sha>`.".to_string()
+        } else {
+            format!(
+                "For already-validated merged commits, repair directly with {}.",
+                historical_hints.join(" or ")
+            )
+        };
         fail(
             &format!(
-                "PROOF_HOOK_FAILED: {} done TODO(s) are CLAIMED but not VERIFIED: {}. Agent: replay existing proof with `decapod qa verify` or `decapod qa verify todo <id>`. For stale or missing batch evidence, run `decapod qa verify recover`; if it requests current files, repeat `--artifact TODO_ID=FILE` using each reported task ID and an explicitly selected relevant current file. Recovery preserves completion history and still requires actual passing checks; do not prune or reopen tasks to bypass proof.",
+                "PROOF_HOOK_FAILED: {} done TODO(s) are CLAIMED but not VERIFIED: {}. Agent: {} To verify a single task on the current checkout, run `decapod qa verify regen <id>`; to replay existing proof baselines, run `decapod qa verify` or `decapod qa verify todo <id>`. For stale or missing batch evidence, run `decapod qa verify recover`; if it requests current files, repeat `--artifact TODO_ID=FILE` using each reported task ID and an explicitly selected relevant current file. Recovery preserves completion history and still requires actual passing checks; do not prune or reopen tasks to bypass proof.",
                 unverified.len(),
-                output::preview_messages(&unverified, 4, 80)
+                output::preview_messages(&unverified, 4, 80),
+                historical_clause
             ),
             ctx,
         );
@@ -7205,27 +7225,29 @@ fn validate_tooling_gate(
         let fmt_handle = fmt_available.then(|| {
             let root_fmt = repo_root.to_path_buf();
             std::thread::spawn(move || {
-                std::process::Command::new("cargo")
-                    .args(["fmt", "--all", "--", "--check"])
-                    .current_dir(&root_fmt)
-                    .output()
+                let mut cmd = std::process::Command::new("cargo");
+                cmd.args(["fmt", "--all", "--", "--check"])
+                    .current_dir(&root_fmt);
+                crate::core::bounded_process::configure_child_nofile_limit(&mut cmd);
+                cmd.output()
             })
         });
 
         let clippy_handle = clippy_available.then(|| {
             let root_clippy = repo_root.to_path_buf();
             std::thread::spawn(move || {
-                std::process::Command::new("cargo")
-                    .args([
-                        "clippy",
-                        "--all-targets",
-                        "--all-features",
-                        "--",
-                        "-D",
-                        "warnings",
-                    ])
-                    .current_dir(&root_clippy)
-                    .output()
+                let mut cmd = std::process::Command::new("cargo");
+                cmd.args([
+                    "clippy",
+                    "--all-targets",
+                    "--all-features",
+                    "--",
+                    "-D",
+                    "warnings",
+                ])
+                .current_dir(&root_clippy);
+                crate::core::bounded_process::configure_child_nofile_limit(&mut cmd);
+                cmd.output()
             })
         });
 
@@ -7565,12 +7587,43 @@ fn validate_root_dockerfile_seed_detection(
 }
 
 fn cargo_subcommand_available(subcommand: &str) -> bool {
-    std::process::Command::new("cargo")
-        .arg(subcommand)
-        .arg("--version")
-        .output()
+    let mut cmd = std::process::Command::new("cargo");
+    cmd.arg(subcommand).arg("--version");
+    crate::core::bounded_process::configure_child_nofile_limit(&mut cmd);
+    cmd.output()
         .map(|output| output.status.success())
         .unwrap_or(false)
+}
+
+fn validate_open_file_limits(ctx: &ValidationContext) -> Result<(), error::DecapodError> {
+    match crate::core::bounded_process::current_nofile_limits() {
+        Ok(limits) => {
+            if limits.soft < crate::core::bounded_process::LOW_NOFILE_WARNING_THRESHOLD {
+                advisory(
+                    &format!(
+                        "RLIMIT_NOFILE_LOW: parent soft open-file limit is {} (hard={}); spawned validation test harnesses elevate child soft RLIMIT_NOFILE toward min(hard, {}).",
+                        limits.soft,
+                        limits.hard_display(),
+                        crate::core::bounded_process::RECOMMENDED_NOFILE_CEILING,
+                    ),
+                    ctx,
+                );
+            } else {
+                pass(
+                    &format!(
+                        "Open-file limit is sufficient (soft={}, hard={})",
+                        limits.soft,
+                        limits.hard_display()
+                    ),
+                    ctx,
+                );
+            }
+        }
+        Err(_) => {
+            skip("RLIMIT_NOFILE inspection unavailable on this platform", ctx);
+        }
+    }
+    Ok(())
 }
 
 fn validate_state_commit_gate(
@@ -8378,6 +8431,13 @@ pub fn run_validation(
             ctx,
             "validate_tooling_gate",
             validate_tooling_gate(ctx, working_root)
+        );
+        gate!(
+            s,
+            timings,
+            ctx,
+            "validate_open_file_limits",
+            validate_open_file_limits(ctx)
         );
         gate!(
             s,
