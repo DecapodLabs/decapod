@@ -1359,8 +1359,8 @@ field. Nothing in this operation authorizes a mutation, approval or completion.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `0cd6f9ff0f09a73293db451761b3a2b1366a7b5ec837ea33428f8c549f6e25cd`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (237 files), `tests/` (237 files)
+- Repository signal fingerprint: `c02cf851e20d3856ec6b7bce9c9aef052a42470540e47837862ba0a75b920d1c`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (238 files), `tests/` (238 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 
@@ -1883,3 +1883,29 @@ manual or imported/self-hosted execution cannot grant Cachix publication.
 ## Canonical local Git proof (#1069)
 
 An accepted `proof.repository_contract.canonical_local_target = true` uses ordinary CLI/RPC validation against the canonical local branch. `readiness.ready` refers to that exact local subject with `scope=repository_local_git_readiness`; `publication_ready` stays false. `qa verify commit` inspects canonical historical proof. `workspace publish` and the independent final PR gate reject local-only target authority before remote publication. Omitted/false mode retains existing digests and GitHub behavior. Candidate-only mode, changed branch, strict profile and cloud selection cannot activate the local host.
+
+## Merged governance journal reconciliation (#1780)
+
+`decapod govern artifacts reconcile-merge` provides a supported recovery path
+when a Git 3-way merge (`MERGE_HEAD` present, e.g. `git merge --no-commit -X
+ours`) leaves `.decapod/governance.json` conflicted or failing with
+`Trajectory artifact hash mismatch`. The command requires an active merge
+(`GOVERNANCE_MERGE_NOT_IN_PROGRESS` otherwise), reads only immutable Git commit
+objects (`HEAD`, `MERGE_HEAD`, and `merge-base --all`) rather than trusting
+corrupted working-tree bytes, and fails closed on conflicting unaccepted PR
+authority (`GOVERNANCE_MERGE_AUTHORITY_CONFLICT`), ambiguous merge bases
+(`GOVERNANCE_MERGE_AMBIGUOUS_BASE`), or contradictory check proof statuses
+(`GOVERNANCE_MERGE_PROOF_CONFLICT`).
+
+Same-workstream merges reconcile additive `trajectory` sets, merge `claims`,
+`resolutions`, `checkpoints`, `plan`, and `custody` state (re-sequencing
+divergent custody events/steps and remapping `loop.custody_event_id`), clear any
+stale `validation` receipt when trajectory or validation changed, and recompute
+`proof_status`, `verdicts`, and `artifact_hash` via `with_recomputed_hash()` so
+failed or missing proof never becomes passing. Accepted-target merges
+(`origin/<target_base>`) retain the complete active workstream journal while
+carrying forward newly accepted baseline policy and unresolved obligations.
+`tests/merged_governance_journal_1780.rs` exercises the real binary across
+`git merge --no-commit -X ours` recovery, checkpointed merge commit
+verification (`verify-checkpoints --publication-material`), and negative proof
+and authority controls.

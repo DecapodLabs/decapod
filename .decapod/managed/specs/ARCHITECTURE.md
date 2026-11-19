@@ -1079,8 +1079,8 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `0cd6f9ff0f09a73293db451761b3a2b1366a7b5ec837ea33428f8c549f6e25cd`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (237 files), `tests/` (237 files)
+- Repository signal fingerprint: `c02cf851e20d3856ec6b7bce9c9aef052a42470540e47837862ba0a75b920d1c`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (238 files), `tests/` (238 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 
@@ -1484,3 +1484,29 @@ the reconciled candidate.
 ## Canonical local Git proof (#1069)
 
 The existing `repository_profile::RepositoryContract` review digest optionally binds canonical local Git target authority. `workspace::resolve_readiness_repository` keeps that identity distinct from cloud GitHub identity, requiring a reviewed local contract already committed on the canonical accepted branch. `RepositoryHost::canonical_local` reuses the sealed snapshot verifier and fresh ref observations; no daemon, parallel policy engine or datastore is added. `validation_history` preserves exact local scope and checks target movement. Native strict source proof and provider requirements remain intact.
+
+## Integrity-preserving merged journal reconciliation (#1780)
+
+`src/decapod/core/governance_document/merge_reconcile.rs` implements
+`core::governance_document::reconcile_merge`, exposed via
+`ArtifactsCommand::ReconcileMerge` in `cli.rs` and `lib.rs`. Instead of parsing
+potentially mixed working-tree JSON after a line-based Git merge, it reads
+canonical `.decapod/governance.json` blobs directly from immutable `HEAD`,
+`MERGE_HEAD`, and `merge-base --all` commits under `with_lock` after checking
+`ensure_ungrafted`.
+
+Two ancestry modes are supported:
+- **Same PR workstream** (matching `change.id`, `base_commit`, and normalized
+  `target_base`): 3-way merges `baseline`, `claims`, `resolutions`, `epochs`,
+  `recursive_passes`, `legacy_*`, `plan`, `checkpoints`, `trajectory`, and
+  `custody` events/trajectories, re-validates loops, clears changed or
+  trajectory-invalidated `validation` receipts, and recomputes canonical
+  `proof_status`, `verdicts`, and `artifact_hash`.
+- **Accepted target merge** (distinct `change.id` or no `change` where
+  `MERGE_HEAD` is an ancestor of the accepted `target_base` ref): retains
+  `ours`'s complete active workstream journal and proof posture while 3-way
+  merging newly accepted `baseline.policy` and unretired `baseline.unresolved`
+  entries and clearing stale `validation` receipts when trees differ.
+Any conflicting unaccepted PR identity, mismatched `base_commit` / `target_base`,
+deleted active journal, or conflicting check status fails closed without
+mutating `.decapod/governance.json`.

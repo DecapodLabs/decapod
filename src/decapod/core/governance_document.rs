@@ -1989,6 +1989,9 @@ pub use checkpoint_history::{
     CheckpointHistoryReport, HistoryDisposition, HistoryFinding, HistoryObligation,
     inspect_checkpoint_history,
 };
+#[path = "governance_document/merge_reconcile.rs"]
+mod merge_reconcile;
+pub use merge_reconcile::reconcile_merge;
 
 fn verify_pr_checkpoints_inner(
     root: &Path,

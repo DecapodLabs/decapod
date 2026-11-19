@@ -152,6 +152,9 @@ checkpoints. Record meaningful boundaries throughout the work, not only at compl
 - `status`: read current normalized state without creating runtime state.
 - `verify-checkpoints --base-branch <ref> [--head-ref HEAD]`: read-only verification
   of exact-material checkpoints across the full commit graph.
+- `reconcile-merge`: reconcile a Git-merged `.decapod/governance.json` journal from
+  immutable commit ancestry (`HEAD`, `MERGE_HEAD`, `merge-base --all`) without
+  turning failed or missing proof into a passing result.
 - `inventory [--base-branch <branch>]`: inspect logical sections, semantic
   currency, and PR participation. `--repair` initializes absent empty claims;
   `--claims-note <text>` records a current-PR checkpoint; `--compact` preserves
