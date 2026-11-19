@@ -607,6 +607,14 @@
       "proof_refs": [
         "agent_init_inventory=44353e47024468941263087d2e820f24d4f177c2f3fb0a9e0363f2a57333290e"
       ]
+    },
+    {
+      "id": "ckpt-inventory-0-149-3",
+      "summary": "Update proof.required_profile.reviewed_sources_digest to reviewed v0.149.3 inventory digest 5730a9cf...",
+      "input_digest": "sha256:611feb85485fa7f88547b8b11a4f3245483075c6071351aa1dd73bb9ab312fd7",
+      "proof_refs": [
+        "inventory_digest=5730a9cf904d257da473edc37599aca56591a4f0a07beac2c76b0f10fd31b3c2"
+      ]
     }
   ],
   "intents": {
