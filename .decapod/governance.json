@@ -1,7 +1,7 @@
 {
   "schema_version": "1.0.0",
   "baseline": {
-    "accepted_commit": "102d6eb22046032e7214ee821ab166f06271585c",
+    "accepted_commit": "845ff9799128a1fd0fd449f100f13fb3a89a8aa8",
     "policy": {
       "change_control": {
         "requires_human_review": true,
@@ -573,47 +573,63 @@
     }
   },
   "change": {
-    "id": "feat_01m7r6pxxakene2e",
-    "base_commit": "102d6eb22046032e7214ee821ab166f06271585c",
+    "id": "change_1820_podman_cgroup_parent",
+    "base_commit": "845ff9799128a1fd0fd449f100f13fb3a89a8aa8",
     "target_base": "origin/master"
+  },
+  "claims": {
+    "claim:container-cgroup-permission-diagnostic": {
+      "statement": "Container launcher classifies OCI/cgroupfs permission errors (crun/runc cannot set limits without cgroups or /sys/fs/cgroup permission denied) as container_cgroup_permission_denied with delegated cgroup parent remediation while keeping real workspace permission failures under container_workspace_permission_denied.",
+      "falsifier": "A crun/runc /sys/fs/cgroup permission error is reported as container_workspace_permission_denied, or a real workspace index.lock/file permission error is misclassified as container_cgroup_permission_denied.",
+      "status": "supported",
+      "proof_refs": [
+        "tests/podman_cgroup_parent_1820.rs",
+        "tests/unit/plugins/container_tests.rs"
+      ]
+    },
+    "claim:podman-delegated-cgroup-parent": {
+      "statement": "decapod auto container run accepts a validated --cgroup-parent or DECAPOD_CONTAINER_CGROUP_PARENT and detects a writable delegated cgroup v2 subtree with cpu/memory/pids controllers for local rootless Podman cgroupfs runs, passing --cgroup-parent to the runtime while keeping --cpus, --memory, and --pids-limit enforced and rejecting unsafe/traversal values fail-closed.",
+      "falsifier": "An invalid/traversal/metacharacter cgroup parent reaches the runtime, CPU/memory/PID limits are relaxed or cgroups are disabled, or a valid delegated cgroup parent is omitted from podman run argv.",
+      "status": "supported",
+      "proof_refs": [
+        "tests/podman_cgroup_parent_1820.rs",
+        "tests/unit/plugins/container_tests.rs"
+      ]
+    }
   },
   "checkpoints": [
     {
-      "id": "conc-1469-v01493",
-      "summary": "Prove concurrent isolated authoring and combined candidate admission (#1469)",
-      "input_digest": "sha256:798670d4b0d1d20a10b4d847a3c76d8127e2c08ff04dba6b283e67166eb94920",
+      "id": "chk-1820-podman-cgroup-parent",
+      "summary": "Add validated delegated cgroup parent selection (--cgroup-parent, DECAPOD_CONTAINER_CGROUP_PARENT, rootless Podman cgroupfs v2 subtree detection) preserving CPU/memory/PID limits, distinguish container_cgroup_permission_denied from workspace permission errors, update docs/specs, record spec reviews, and add unit+integration tests (#1820)",
+      "input_digest": "sha256:bf1f635a75bb476da7ea33a0402a4a2d50b2d3059b231f73658c7a3adc903791",
       "proof_refs": [
-        ".decapod/managed/specs/ARCHITECTURE.md",
-        "tests/concurrent_worktree_integration_1469.rs"
-      ]
-    },
-    {
-      "id": "conc-1469-merge-cfe2565d",
-      "summary": "Integrate accepted master cfe2565da (#1776) and refresh v0.149.3 projections (#1469)",
-      "input_digest": "sha256:e6908e7fc47c3b2f273ca34d32ea40dcd8c1b8c0ce00351b585477be4851ab6b",
-      "proof_refs": [
-        ".decapod/managed/specs/ARCHITECTURE.md",
-        "tests/concurrent_worktree_integration_1469.rs"
+        "tests/cli_contracts.rs",
+        "tests/podman_cgroup_parent_1820.rs",
+        "tests/unit/plugins/container_tests.rs"
       ]
     }
   ],
   "intents": {
-    "intent:conc-1469-run": {
+    "intent:run_1820_podman_cgroup_parent": {
       "acceptance_criteria": [],
       "assumptions": [],
       "boundaries": [
-        "Isolated worktree only; hold git push and gh pr create"
+        "Keep --cpus, --memory, and --pids-limit enforced; never disable cgroups",
+        "Reject invalid/traversal/unsafe cgroup parent values fail-closed before runtime launch"
       ],
       "constraints": [
-        "tests/concurrent_worktree_integration_1469.rs",
-        ".decapod/managed/specs/ARCHITECTURE.md"
+        "src/decapod/plugins/container.rs",
+        "src/decapod/core/docs_cli.rs",
+        "docs/agent/",
+        ".decapod/managed/specs/",
+        "tests/"
       ],
       "created_sequence": 1,
-      "id": "intent:conc-1469-run",
+      "id": "intent:run_1820_podman_cgroup_parent",
       "out_of_scope": [],
       "proof_requirements": [],
-      "raw_intent": "Allow concurrent implementation in isolated worktrees without broad source-claim serialization (#1469)",
-      "refined_intent": "Add actual-binary CLI + worktree regression suite tests/concurrent_worktree_integration_1469.rs covering all 3 #1469 scenarios and update ARCHITECTURE.md",
+      "raw_intent": "Fix rootless Podman delegated cgroup parent selection and cgroup permission diagnostics (#1820)",
+      "refined_intent": "Add fail-closed validated --cgroup-parent CLI/env support and rootless Podman cgroupfs v2 delegated subtree detection without relaxing CPU/memory/PID limits, and emit dedicated container_cgroup_permission_denied diagnostics instead of misattributing cgroup failures to workspace permissions.",
       "status": "refined",
       "updated_sequence": 3
     }
@@ -626,89 +642,124 @@
       },
       "deferred_questions": [],
       "human_questions": [],
-      "intent": "Prove disjoint/advisory path overlap allows concurrent authoring across isolated worktrees while strictly fencing exclusive custody/integration resources, combined-candidate interface+behavior checks block admission until repaired, and target advancement marks earlier receipts stale (STALE_*)",
+      "intent": "Support validated delegated cgroup parent selection (--cgroup-parent, DECAPOD_CONTAINER_CGROUP_PARENT, and rootless Podman cgroupfs v2 subtree detection) while keeping --cpus, --memory, and --pids-limit enforced, and classify cgroup permission failures distinctly from workspace permission errors (#1820).",
       "phases": [],
       "proof_hooks": [
+        "cargo test --lib plugins::container",
+        "cargo test --test podman_cgroup_parent_1820",
+        "cargo test --test cli_contracts",
         "cargo fmt --all -- --check",
-        "CLIPPY_CONF_DIR=.config cargo clippy --all-targets --all-features -- -D warnings",
-        "cargo test --test concurrent_worktree_integration_1469 -- --test-threads=1",
-        "cargo test --test consumer_readiness two_isolated_worktrees_require_combined_candidate_validation_and_target_freshness"
+        "CLIPPY_CONF_DIR=.config cargo clippy --all-targets --all-features -- -D warnings"
       ],
       "schema_version": "1.1.0",
       "spec_reviews": [
         {
-          "disposition": "updated",
+          "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Documented concurrent isolated authoring, advisory vs enforced custody overlaps, and combined-candidate admission (#1469)",
-          "reviewed_code_fingerprint": "75fb25073525c9e4ea6a2a4df7a58ef89cb21325047985833122f88b53fd1e4a",
+          "reason": "Reviewed ARCHITECTURE.md against #1820: container launcher delegated cgroup parent selection and diagnostics remain inside plugins::container without architectural boundary changes.",
+          "reviewed_code_fingerprint": "baff0181c316ee7bfc4964346420a819a9a26aff3a0e01d3d8d8598cf92d71dd",
           "spec_material_hash": "b5e1e3c343de9ed9ba501e7a48d61b43dfed92d7678b3126d1195c9c1cdb9d08"
         },
         {
-          "disposition": "unchanged_with_reason",
+          "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "No CLI, RPC, or external schema signatures were added or altered; PR #1469 adds regression coverage and architecture documentation",
-          "reviewed_code_fingerprint": "75fb25073525c9e4ea6a2a4df7a58ef89cb21325047985833122f88b53fd1e4a",
-          "spec_material_hash": "1445e13fa7ccfa6c4a68850bd794b6b1ba7379c0148b570c3a7605b6a26beb25"
+          "reason": "Updated INTERFACES.md for #1820: documented --cgroup-parent, DECAPOD_CONTAINER_CGROUP_PARENT, validate_cgroup_parent fail-closed rules, rootless Podman cgroupfs v2 subtree detection, preserved resource limits, and container_cgroup_permission_denied vs container_workspace_permission_denied diagnostics.",
+          "reviewed_code_fingerprint": "baff0181c316ee7bfc4964346420a819a9a26aff3a0e01d3d8d8598cf92d71dd",
+          "spec_material_hash": "bc3168b2497e48d4deec60495971e18aa922bb8e0605f0bff02fccc37578be8f"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Preserved #1776 accepted-policy security prose from origin/master cfe2565d; PR #1469 adds regression coverage and architecture documentation only",
-          "reviewed_code_fingerprint": "75fb25073525c9e4ea6a2a4df7a58ef89cb21325047985833122f88b53fd1e4a",
+          "reason": "Reviewed SECURITY.md against #1820: fail-closed validate_cgroup_parent and preserved --cpus, --memory, and --pids-limit uphold existing container isolation and resource-limit security boundaries.",
+          "reviewed_code_fingerprint": "baff0181c316ee7bfc4964346420a819a9a26aff3a0e01d3d8d8598cf92d71dd",
           "spec_material_hash": "49c7d1428d860804f8fc7f436c5da22483d385c9ce4be90f7db52f1cf4b362ee"
         }
       ],
       "state": "APPROVED",
       "stop_conditions": [],
-      "title": "Prove concurrent isolated worktree authoring and combined candidate admission (#1469)",
+      "title": "Fix rootless Podman delegated cgroup parent selection and cgroup permission diagnostics (#1820)",
       "todo_ids": [
-        "feat_01m7r6pxxakene2e"
+        "bugs_01m7rv155s5w9wf9"
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795052632Z"
+      "updated_at": "1795058768Z"
     },
     "trajectory": {
       "active_boundaries": [
-        "Isolated worktree only; hold git push and gh pr create"
+        "Keep --cpus, --memory, and --pids-limit enforced; never disable cgroups",
+        "Reject invalid/traversal/unsafe cgroup parent values fail-closed before runtime launch"
       ],
-      "artifact_hash": "sha256:a1b2a41c2bfdefe2fe2db8298d6092901d51b7d436b5f83ef2b16573ac0e7a44",
+      "artifact_hash": "sha256:356a543483afc4312bb3d207fd7d5b1ccd0d1b8b25286a61a38f796ee6f9160e",
       "checks": [
         {
-          "name": "cargo_clippy_all_targets_all_features",
+          "name": "cargo_clippy_all_targets",
           "status": "passed"
         },
         {
-          "name": "cargo_fmt",
+          "name": "cargo_fmt_check",
           "status": "passed"
         },
         {
-          "name": "cargo_test_concurrent_worktree_integration_1469",
+          "name": "cli_contract_enforcement_23",
           "status": "passed"
         },
         {
-          "name": "cargo_test_consumer_readiness_two_isolated_worktrees",
+          "name": "cli_contracts_container_sync_1",
+          "status": "passed"
+        },
+        {
+          "name": "contract_conformance_12",
+          "status": "passed"
+        },
+        {
+          "name": "core_container_runtime_7",
+          "status": "passed"
+        },
+        {
+          "name": "decapod_eval_docs_and_diff",
+          "status": "passed"
+        },
+        {
+          "name": "doc_alignment_4",
+          "status": "passed"
+        },
+        {
+          "name": "plugins_container_unit_65",
+          "status": "passed"
+        },
+        {
+          "name": "podman_cgroup_parent_1820_4",
+          "status": "passed"
+        },
+        {
+          "name": "trajectory_docs_5",
+          "status": "passed"
+        },
+        {
+          "name": "validation_scope_9",
           "status": "passed"
         }
       ],
+      "current_phase": "verification",
       "custody": {
         "events": [
           {
             "event_id": "event:2",
-            "intent_id": "intent:conc-1469-run",
+            "intent_id": "intent:run_1820_podman_cgroup_parent",
             "kind": "created",
             "sequence": 2
           },
           {
             "event_id": "event:3",
-            "intent_id": "intent:conc-1469-run",
+            "intent_id": "intent:run_1820_podman_cgroup_parent",
             "kind": "refined",
             "sequence": 3
           },
           {
-            "detail": "trajectory:conc-1469-run",
+            "detail": "trajectory:run_1820_podman_cgroup_parent",
             "event_id": "event:4",
-            "intent_id": "intent:conc-1469-run",
+            "intent_id": "intent:run_1820_podman_cgroup_parent",
             "kind": "trajectory_step_recorded",
             "sequence": 4
           }
@@ -717,35 +768,51 @@
         "next_sequence": 4,
         "schema_version": "1.0.0",
         "trajectories": {
-          "conc-1469-run": {
+          "run_1820_podman_cgroup_parent": {
             "evidence_only": true,
-            "id": "conc-1469-run",
-            "intent_id": "intent:conc-1469-run",
+            "id": "run_1820_podman_cgroup_parent",
+            "intent_id": "intent:run_1820_podman_cgroup_parent",
             "steps": [
               {
-                "action": "trajectory.record",
+                "action": "verification",
                 "custody_event_id": "event:4",
                 "observations": [
-                  "src/decapod/core/fleet_coord.rs",
-                  "src/decapod/core/todo.rs",
-                  "src/decapod/core/authoring.rs",
-                  "src/decapod/core/workspace.rs",
-                  "src/decapod/core/validation_runtime.rs",
-                  "src/decapod/core/validation_history.rs",
-                  "tests/consumer_readiness.rs",
-                  "tests/concurrent_worktree_integration_1469.rs",
-                  ".decapod/managed/specs/ARCHITECTURE.md",
-                  "task-927 on 102d6eb22 v0.149.3: fmt exit 0, clippy exit 0, concurrent_worktree_integration_1469 3/3 passed (760.30s), consumer_readiness::two_isolated_worktrees_require_combined_candidate_validation_and_target_freshness 1/1 passed (23.77s)"
+                  "src/decapod/plugins/container.rs",
+                  "src/decapod/core/container_runtime.rs",
+                  "src/decapod/core/docs_cli.rs",
+                  "tests/unit/plugins/container_tests.rs",
+                  "tests/cli_contracts.rs",
+                  "src/decapod/plugins/container.rs",
+                  "src/decapod/core/docs_cli.rs",
+                  "docs/agent/command-contracts.md",
+                  "docs/agent/error-recovery.md",
+                  ".decapod/managed/specs/INTERFACES.md",
+                  ".decapod/managed/specs/OPERATIONS.md",
+                  "tests/unit/plugins/container_tests.rs",
+                  "tests/cli_contracts.rs",
+                  "tests/podman_cgroup_parent_1820.rs",
+                  "All targeted unit, contract, doc alignment, clippy -D warnings, and #1820 integration tests passed; decapod eval allow on docs ingest and full diff."
                 ],
                 "proof_refs": [
-                  "cargo_fmt",
-                  "cargo_clippy_all_targets_all_features",
-                  "cargo_test_concurrent_worktree_integration_1469",
-                  "cargo_test_consumer_readiness_two_isolated_worktrees"
+                  "cargo_fmt_check",
+                  "cargo_clippy_all_targets",
+                  "plugins_container_unit_65",
+                  "podman_cgroup_parent_1820_4",
+                  "core_container_runtime_7",
+                  "validation_scope_9",
+                  "cli_contract_enforcement_23",
+                  "contract_conformance_12",
+                  "doc_alignment_4",
+                  "trajectory_docs_5",
+                  "cli_contracts_container_sync_1",
+                  "decapod_eval_docs_and_diff"
                 ],
                 "scope": [
-                  ".decapod/managed/specs/ARCHITECTURE.md",
-                  "tests/concurrent_worktree_integration_1469.rs"
+                  ".decapod/managed/specs/",
+                  "docs/agent/",
+                  "src/decapod/core/docs_cli.rs",
+                  "src/decapod/plugins/container.rs",
+                  "tests/"
                 ],
                 "sequence": 4,
                 "validation_findings": []
@@ -756,30 +823,41 @@
       },
       "declared_commands": [],
       "evidence": [
-        "task-927 on 102d6eb22 v0.149.3: fmt exit 0, clippy exit 0, concurrent_worktree_integration_1469 3/3 passed (760.30s), consumer_readiness::two_isolated_worktrees_require_combined_candidate_validation_and_target_freshness 1/1 passed (23.77s)"
+        "All targeted unit, contract, doc alignment, clippy -D warnings, and #1820 integration tests passed; decapod eval allow on docs ingest and full diff."
       ],
       "inspected_files": [
-        "src/decapod/core/authoring.rs",
-        "src/decapod/core/fleet_coord.rs",
-        "src/decapod/core/todo.rs",
-        "src/decapod/core/validation_history.rs",
-        "src/decapod/core/validation_runtime.rs",
-        "src/decapod/core/workspace.rs",
-        "tests/consumer_readiness.rs"
+        "src/decapod/core/container_runtime.rs",
+        "src/decapod/core/docs_cli.rs",
+        "src/decapod/plugins/container.rs",
+        "tests/cli_contracts.rs",
+        "tests/unit/plugins/container_tests.rs"
       ],
-      "intent_id": "intent:conc-1469-run",
+      "intent_id": "intent:run_1820_podman_cgroup_parent",
       "modified_files": [
-        ".decapod/managed/specs/ARCHITECTURE.md",
-        "tests/concurrent_worktree_integration_1469.rs"
+        ".decapod/managed/specs/INTERFACES.md",
+        ".decapod/managed/specs/OPERATIONS.md",
+        "docs/agent/command-contracts.md",
+        "docs/agent/error-recovery.md",
+        "src/decapod/core/docs_cli.rs",
+        "src/decapod/plugins/container.rs",
+        "tests/cli_contracts.rs",
+        "tests/podman_cgroup_parent_1820.rs",
+        "tests/unit/plugins/container_tests.rs"
+      ],
+      "next_transitions": [
+        "Hold for verifier-2 audit before push/PR"
       ],
       "repo_scope": [
-        ".decapod/managed/specs/ARCHITECTURE.md",
-        "tests/concurrent_worktree_integration_1469.rs"
+        ".decapod/managed/specs/",
+        "docs/agent/",
+        "src/decapod/core/docs_cli.rs",
+        "src/decapod/plugins/container.rs",
+        "tests/"
       ],
-      "run_id": "conc-1469-run",
+      "run_id": "run_1820_podman_cgroup_parent",
       "schema_version": "1.1.0",
       "shortcut_risk_signals": [],
-      "task_id": "feat_01m7r6pxxakene2e",
+      "task_id": "bugs_01m7rv155s5w9wf9",
       "tool_calls": [],
       "unresolved_assumptions": []
     }

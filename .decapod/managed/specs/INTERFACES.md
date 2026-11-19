@@ -1,5 +1,35 @@
 # Interfaces
 
+## Delegated cgroup parent selection and cgroup diagnostics (#1820)
+
+`decapod auto container run` (`src/decapod/plugins/container.rs::ContainerCommand::Run`)
+accepts an optional `--cgroup-parent <path-or-slice>` flag and honors the
+`DECAPOD_CONTAINER_CGROUP_PARENT` environment variable (CLI flag takes precedence;
+`container::schema()` exposes both `"cgroup_parent"` and `"cgroup_parent_env"`).
+All explicit and detected values pass `validate_cgroup_parent` fail-closed before
+any runtime probe or workspace clone: only canonical absolute cgroup hierarchy
+paths (`/delegated/parent`, without `/sys/fs/cgroup` mount prefixes, root `/`,
+trailing slashes, empty segments, `.` or `..` traversal, whitespace, control
+characters, leading `-`, or metacharacters) and systemd slice names (`*.slice`)
+are accepted; invalid values fail with `container_invalid_cgroup_parent`.
+
+When no explicit parent is supplied and local `podman info` reports rootless
+`cgroupfs` on cgroup v2 (`serviceIsRemote: false`), `detect_delegated_cgroup_v2_parent_from`
+reads `/proc/self/cgroup` (`0::<path>`) and walks upward from the caller's cgroup
+to the deepest non-root ancestor under `/sys/fs/cgroup` that is a real directory
+(no symlink traversal), writable by the current user, and enables `cpu`, `memory`,
+and `pids` in `cgroup.subtree_control`. `build_docker_spec` injects
+`--cgroup-parent <validated-parent>` while preserving `--pids-limit 512`,
+`--memory`, and `--cpus` unchanged; cgroups are never disabled.
+
+`classify_container_failure` distinguishes OCI/cgroupfs permission errors
+(`crun`/`runc` `cannot set limits without cgroups`, `/sys/fs/cgroup` permission
+denied, `unable to apply cgroup configuration`, `cgroup.subtree_control`/`cgroup.procs`
+errors) as `container_cgroup_permission_denied` with delegated cgroup parent
+remediation, leaving actual workspace ownership and Git lockfile failures under
+`container_workspace_permission_denied`. `RunSummary` exposes the resolved
+`cgroup_parent` field for observability.
+
 ## Workunit proof and continuity semantics (#1660)
 
 Before full proof, use `govern capsule query --task-id <id> --workunit-id <id>
@@ -1359,8 +1389,8 @@ field. Nothing in this operation authorizes a mutation, approval or completion.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `75fb25073525c9e4ea6a2a4df7a58ef89cb21325047985833122f88b53fd1e4a`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (237 files), `tests/` (241 files)
+- Repository signal fingerprint: `baff0181c316ee7bfc4964346420a819a9a26aff3a0e01d3d8d8598cf92d71dd`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (237 files), `tests/` (242 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 
