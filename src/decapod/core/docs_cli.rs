@@ -443,7 +443,17 @@ Explicit `--scope 'resource:<name>'` reservations do not claim repository source
 paths; they exclude conflicting resource claims (`predicate=resource_reservation`)
 and gate shared mutations (`release lineage-sync` on `resource:release`; `workspace publish`
 on `resource:integration` / `resource:integration:<base_branch>`) with `SHARED_RESOURCE_OCCUPIED`
-while leaving isolated worktree authoring and local validation unblocked."#
+while leaving isolated worktree authoring and local validation unblocked.
+
+`infer orientation`, branch governance seeding (`trajectory.repo_scope` and custody
+`intent.constraints`), and `govern trajectory {init,record}` parse explicit `paths:[...]`
+JSON arrays through `fleet_coord::declared_paths` rather than splitting on commas.
+Already-generated fragmented projections in `.decapod/governance.json` can be repaired
+with `decapod govern trajectory reconcile-scope [--task-id <id>] [--run-id <id>]`,
+which requires the prior journal to be archived in Git (`SCOPE_RECONCILIATION_ARCHIVE_REQUIRED`),
+rejects ambiguous task or scope matches (`SCOPE_RECONCILIATION_AMBIGUOUS`), preserves
+original intent, custody events, checks, and checkpoints, resets plan approval to `DRAFT`,
+and is idempotent once canonical."#
 }
 
 pub fn readiness_config_contract() -> &'static str {
@@ -710,6 +720,7 @@ fn build_docs(touched: Vec<PathBuf>) -> Result<(), error::DecapodError> {
             writeln!(file, "```rust\n{fields}\n```")?;
         }
         writeln!(file, "\n{}", shared_claim_config_contract())?;
+        writeln!(file, "\n{}", backend_selection_config_contract())?;
         writeln!(file, "\n{}", readiness_config_contract())?;
         writeln!(file, "\n{}", repository_readiness_contract().trim_end())?;
         writeln!(
@@ -735,6 +746,14 @@ fn system_command_contract() -> &'static str {
 
 - **Non-initializing diagnostics (`decapod system migrations`, `decapod system doctor check`, `decapod system version`, `decapod system capabilities`):** Run without requiring `DECAPOD_SESSION_PASSWORD`, without creating `.decapod/data/`, without modifying `version_counter.json`, `applied.json`, or `catalog.json`, and without consuming a pending migration notice.
 - **Migration inspection (`decapod system migrations --format {json,text}`):** Resolves `workspace_root`, `governance_root`, and `decapod_root` (following the main repository `.decapod` from governed worktrees) and exposes `version_counter`, `applied`, compiled/on-disk `catalog`, `pending_migrations`, `action_required`, `reason_codes`, and actionable `instructions`."#
+}
+
+fn backend_selection_config_contract() -> &'static str {
+    r#"## Repository Backends: Decapod Local and Decapod Cloud
+
+- **Decapod Local (`repo.backend = "local"`, default):** Local-first SQLite and Git governance runtime stored under `.decapod/`. Works offline with no account or external endpoint required.
+- **Decapod Cloud (`repo.backend = "cloud"`):** Optional hosted repository-bound backend via Dactyl (`decapod init --backend cloud`, `decapod cloud login|status|projects|project`). Cloud mode never falls back to local SQLite.
+- **Explicit cloud adapter environment:** Explicit adapter/test callers configure `DECAPOD_CLOUD_API_URL`, `DECAPOD_CLOUD_DATASTORE`, and `DECAPOD_CLOUD_PROVIDER` (`DECAPOD_PROPODUS_API_URL` remains a deprecated backwards-compatible alias that emits a structured deprecation warning; no obsolete preview URL default is assumed when unconfigured)."#
 }
 
 fn shared_claim_config_contract() -> &'static str {
@@ -775,7 +794,7 @@ worktree may invoke the allowlisted safe capability slice (`db.inspect`,
 `db.backup` under `.decapod/backups/`). Worktree or unmerged-branch config edits
 cannot self-elevate, `db.recover` remains reserved for repository `owner` repair
 authority (`#1590`), `backend = "cloud"` fails closed (`CLOUD_PRINCIPAL_UNVERIFIED`)
-until Propodus `#88` verifies a repository-privileged human principal, raw SQL /
+until Decapod Cloud verifies a repository-privileged human principal, raw SQL /
 `sqlite3` / vacuum / restore remain unmodeled, and every attempt writes a
 redacted NDJSON audit entry (`implies_validation_ready = false`).
 
@@ -945,12 +964,18 @@ missing or partial policy store fails before any workunit journal append.
   sealing is local cooperative enforcement, not global exclusivity across clones.
 - `decapod govern workunit checkpoint --task-id <id> --operation-id <id>`
   records a checkpoint, with optional `--expected-generation <n>`
-- `decapod govern workunit journal-status --task-id <id>` inspects the journal
-  and JSON projection; `recover --task-id <id>` restores the exact recorded
-  manifest without refreshing verification
+- `decapod govern workunit journal-status --task-id <id>` inspects the journal,
+  JSON projection, `proof_status` (`proven`, `not_proven`, `stale`, `absent`),
+  and split-store audit records; `recover --task-id <id>` restores the exact
+  recorded manifest without refreshing verification
 - `decapod govern workunit resume --task-id <id> --operation-id <id>` checks
   current execution authority before continuing, with the same optional
   generation precondition
+- `decapod govern workunit converge [--task-id <id>] [--dry-run]` inspects or
+  archives a separately initialized workspace-local datastore as `not_proven`
+  audit history (`WORKUNIT_PROOF_ATOMIC_DOMAIN_UNSUPPORTED`) without promoting
+  split-store records to `VERIFIED`, converging the workspace onto the canonical
+  atomic store
 
 - `decapod govern trajectory checkpoint --run-id <id> --checkpoint-id <id>`
   records bounded source, intent, plan, trajectory, task custody, and policy

@@ -1993,6 +1993,10 @@ pub use checkpoint_history::{
 mod merge_reconcile;
 pub use merge_reconcile::reconcile_merge;
 
+#[path = "governance_document/scope_reconciliation.rs"]
+mod scope_reconciliation;
+pub use scope_reconciliation::{ScopeReconciliationReport, reconcile_scope_projections};
+
 fn verify_pr_checkpoints_inner(
     root: &Path,
     base_ref: &str,

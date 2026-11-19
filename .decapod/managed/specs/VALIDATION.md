@@ -1,5 +1,40 @@
 # Validation
 
+## Cloud control-plane, Dactyl 0.18.0, and Local/Cloud branding verification (#1809, #1808, #1769, #1667, #1777, #1778, #1590, #1377, #1380)
+
+- **Dependency & build locks**: `tests/release_dependency_policy.rs` verifies
+  registry `dactyl-db = "=0.18.0"` (SHA-256
+  `6c26eaf28272a50517d7fe300b56940ac03627477b48579293b231c33de905b4`),
+  `quinn-proto >= 0.11.19`, and preserved `sqlite`/`neon`/`supabase-cloud`
+  features. Bazel `//:cargo_inputs_policy` passes under `--lockfile_mode=error`
+  against the updated `MODULE.bazel.lock`. The reviewed 105-file proof source
+  inventory digest in `.decapod/config.toml` (`[proof.required_profile].reviewed_sources_digest`)
+  is reconciled to `sha256:35d28c6858a245822d6d893e5dc658b5f3bcf47485f2601c4f019d756c82502f`,
+  accounting solely for `Cargo.toml`, `Cargo.lock`, and `MODULE.bazel.lock`
+  with zero workflow, executor, or toolchain changes. Native `nix build` was
+  not executed on this macOS host (`nix` is not installed); Nix CI verifies
+  `flake.nix`.
+- **Unit, branding, docs & integration proofs**: `cloud_dpop` (4/4),
+  `cloud_proof` (2/2), `container_signer` (1/1), `dactyl_todo` (7/7),
+  `db_maintenance` (6/6), `sql_context` (16/16), `backend_tests`,
+  `propodus_tests`, `cloud_supabase_boundary` (41/41), `cloud_wave_parity`
+  (5/5, including `dactyl_018_dpop_signer_and_control_request_wire_contract`
+  verifying canonical `/functions/v1/decapod-onboarding/config`, RFC 9449 `DPoP`
+  headers, `propodus_repository_access_v1`, and `propodus_proof_acceptance_v1`),
+  `cloud_cli_boundary`, `cloud_mixed_worktree` (3/3),
+  `cloud_command_path`, `cloud_dactyl_boundary`, `cli_contract_enforcement`
+  (24/24), `doc_alignment` (5/5), `shared_state_semantics_1247` (10/10),
+  `policy_self_authorization_1776::candidate_worktree_cannot_switch_cloud_backend_to_local`,
+  `decapod docs build` embedded docs sync, `cargo fmt --all -- --check`, and
+  `clippy --all-targets --all-features -- -D warnings`.
+- **Local PostgreSQL 17 + PostgREST conformance (#1377, #1369)**: Executed
+  disposable local PG17 + PostgREST provisioned with `propodus` migrations
+  `001`..`029` + `propodus_auth_bridge`, passing `supabase_service::local_native_managed_project_contract`
+  and `local_native_managed_project_revocation` (with independent PG17 ledger
+  observation and revocation enforcement) against the `dactyl-db 0.18.0` binary.
+  Managed Auth OAuth issuance and hosted production verification remain separate
+  external acceptance gates (`#1378`, `#1379`).
+
 ## Current report validation scope
 
 The current verification boundary begins at accepted release commit 9d1aed27.
@@ -478,6 +513,26 @@ dependency failures and revision races. Failed attempts must preserve task,
 proof and journal state. Subsequent QA inspection must preserve this historical
 meaning after unrelated work and epoch changes. Publication continues requiring
 fresh complete proof and cannot consume this historical completion permission.
+
+Additional ergonomics and private-repository regressions (#1807, #1810) cover:
+- Authenticated read-only private-repo accepted-target resolution via mock
+  `OfficialCli` `GithubGet` (`validation_history::integration_tests`) and redacted
+  error reporting when unauthenticated and authenticated transports are unavailable;
+- Pre-capture, custody-preserving lease TTL verification before freezing
+  `HistoricalTaskBinding`: default advisory and `strict` modes leave `revision` and
+  `lease_generation` untouched, only explicit `renew` rotates custody
+  (`validation_history::archive_tests::capture_task_binding_with_budget_never_rotates_custody_unless_renew_is_explicit`;
+  end-to-end custody stability across workunit checkpoints is covered by
+  `entrypoint_correctness::canonical_workunit_withdraws_superseded_proof_and_recovers_after_lease_renewal`);
+- Request-bound pre-broker `todo done --validated` handoff validation and cleanup
+  (`plugins::verify::historical_tests::prepared_done_handoff_roundtrips_and_rejects_mismatched_commit_or_request`
+  and `tests/validate_ergonomics_1807_1810.rs::todo_done_validated_decouples_broker_and_cleans_handoff`);
+- Unverified `done` (`CLAIMED`) self-service recovery via `qa verify regen` without
+  self-deadlock (`tests/validate_ergonomics_1807_1810.rs::unverified_done_todo_recovers_via_qa_verify_regen_without_self_deadlock`);
+- Unix `RLIMIT_NOFILE` diagnostics in `system doctor check` and `validate_open_file_limits`
+  plus automatic soft-limit elevation for spawned harnesses
+  (`core::bounded_process::tests`, `plugins::doctor::tests`, and
+  `tests/validate_ergonomics_1807_1810.rs::rlimit_nofile_diagnosed_in_doctor_and_raised_for_validate_harnesses`).
 
 The inline Rust regressions are part of the library unit suite selected by the
 complete source profile. Their presence and source review are not execution
@@ -1461,8 +1516,8 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `28bf025a3bf3cc499da11c46f876e8a75291f9e7a8755af6b93793a9db6e3347`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (238 files), `tests/` (240 files)
+- Repository signal fingerprint: `c0806f274ca803f2d176c81cb6fbfeefd06795db5046e78a6d1376b615e6f841`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (242 files), `tests/` (251 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 
@@ -2324,3 +2379,41 @@ completion:
 - **Partial diagnostics and non-reusable receipts:** `ValidationScope::CiLocal` (`GITHUB_ACTIONS=true` / `BUILDKITE=true`) and `ValidationScope::ProjectPrerequisites` (`decapod govern project-check`) preserve `publication_ready = false` and never record `validation.completed` history (`core::validation_history::finish_archive`) or full native readiness artifacts (`observations.json`, `completion/`, `historical-proof.json`). Removing an override after an overridden or partial `govern project-check` receipt write (`sections.validation` in `.decapod/governance.json`) does not authorize `validate`, `workspace publish`, `qa verify commit`, or `todo done --validated [--commit]`.
 - **Group broker isolation (`src/decapod/core/group_broker.rs`):** `CALLER_ENV_KEYS` clears/replaces all three `DECAPOD_VALIDATE_SKIP_*` variables per caller request so an override-tainted broker leader cannot taint a clean `todo done --validated` client, while override-tainted clients fail in `lib.rs::run()` before mutating todo state.
 - **Regression suite and verification scope:** `tests/gate_skip_override_readiness_1659.rs` exercises all of the above end-to-end against the compiled `decapod` binary in isolated canonical local-Git repositories (`repository_profile::REQUIRED_PROFILE`, `canonical_local_target = true`). Full hosted Buildkite/GitHub source-CI acceptance for this branch remains governed by the repository's configured proof profile and is not substituted by local test execution.
+
+## Split-store convergence and all-6 #1660 VERIFIED workunit falsifiers
+
+`src/decapod/core/workunit.rs` (`converge_split_workunit_store`,
+`workunit_journal_status`, `validate_verified_manifest`, `transition_status`,
+`resume_workunit`, `init_workunit`, `checkpoint_workunit`, `mutate_workunit_with_proof_gate`)
+enforces single-domain canonical custody and kernel-observed proof for all
+`VERIFIED` workunit transitions and publication gates:
+
+- Any separately initialized workspace-local datastore (`<worktree>/.decapod/data/todo.db`
+  or `decapod.db` containing policy tables `agents`/`risk_zones`, `workunit`
+  events, or corrupt/unreadable state, while permitting benign `traces`-only
+  RPC logs) returns `WORKUNIT_PROOF_ATOMIC_DOMAIN_UNSUPPORTED` on `VERIFIED`
+  transitions, `validate_verified_manifest`, `resume_workunit`, partial or
+  uninitialized split-store writes that would otherwise leak into the canonical
+  main store, and `journal-status` (`split_store: true`,
+  `atomic_domain_supported: false`, `proof_status: "not_proven"`), while
+  keeping explicitly initialized non-`VERIFIED` local declarations isolated
+  inside the workspace-local datastore until converged.
+- `decapod govern workunit converge [--task-id <id>] [--dry-run]` inspects or
+  archives workspace-local database files and split-only projections into
+  `.decapod/data/split-store-audit/<archive_id>/audit.json` as `not_proven` audit
+  history (`classification: "WORKUNIT_PROOF_ATOMIC_DOMAIN_UNSUPPORTED"`), never
+  promoting or importing unattested or self-declared `sha256:abc` rows into the
+  canonical store. After convergence, `journal-status` continues retaining
+  `audit_records` as `not_proven` while allowing current tasks in the worktree
+  to execute canonical `decapod validate` and transition atomically to `VERIFIED`.
+- Actual-binary suite `tests/workunit_verified_proof_1660.rs` (zero
+  `DECAPOD_VALIDATE_SKIP_*` gate-skip variables) exercises all 6 `#1660`
+  falsifiers: (1) self-authored `record-proof` pass + `sha256:abc` never mints
+  `VERIFIED` or publication; (2) quick-scope/skipped, failed, or unavailable-tool
+  attempts stay `not_proven`; (3) source mutation, accepted-base movement,
+  changed `proof_plan`, and newer failed validation downgrade/mark receipts
+  `stale`; (4) authentic proof copied across tasks, custody generations (including
+  ABA lease reclaim), or repositories is rejected; (5) split-store records stay
+  `not_proven` audit history with `WORKUNIT_PROOF_ATOMIC_DOMAIN_UNSUPPORTED`;
+  and (6) repaired canonical tasks complete `VERIFIED` atomically and pass
+  `verify_workunit_gate_for_publish`.

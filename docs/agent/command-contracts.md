@@ -18,7 +18,7 @@ This document defines the normative operational contracts for the Decapod CLI.
 - **Intent:** Session token management (required for agent operation)
 
 ## `decapod cloud`
-- **Intent:** Optional cloud credential and Propodus integration commands
+- **Intent:** Optional Decapod Cloud credential and project commands
 
 ## `decapod constitution`
 - **Intent:** Embedded Constitution Graph queries and lookups
@@ -266,12 +266,18 @@ missing or partial policy store fails before any workunit journal append.
   sealing is local cooperative enforcement, not global exclusivity across clones.
 - `decapod govern workunit checkpoint --task-id <id> --operation-id <id>`
   records a checkpoint, with optional `--expected-generation <n>`
-- `decapod govern workunit journal-status --task-id <id>` inspects the journal
-  and JSON projection; `recover --task-id <id>` restores the exact recorded
-  manifest without refreshing verification
+- `decapod govern workunit journal-status --task-id <id>` inspects the journal,
+  JSON projection, `proof_status` (`proven`, `not_proven`, `stale`, `absent`),
+  and split-store audit records; `recover --task-id <id>` restores the exact
+  recorded manifest without refreshing verification
 - `decapod govern workunit resume --task-id <id> --operation-id <id>` checks
   current execution authority before continuing, with the same optional
   generation precondition
+- `decapod govern workunit converge [--task-id <id>] [--dry-run]` inspects or
+  archives a separately initialized workspace-local datastore as `not_proven`
+  audit history (`WORKUNIT_PROOF_ATOMIC_DOMAIN_UNSUPPORTED`) without promoting
+  split-store records to `VERIFIED`, converging the workspace onto the canonical
+  atomic store
 
 - `decapod govern trajectory checkpoint --run-id <id> --checkpoint-id <id>`
   records bounded source, intent, plan, trajectory, task custody, and policy
@@ -455,6 +461,16 @@ paths; they exclude conflicting resource claims (`predicate=resource_reservation
 and gate shared mutations (`release lineage-sync` on `resource:release`; `workspace publish`
 on `resource:integration` / `resource:integration:<base_branch>`) with `SHARED_RESOURCE_OCCUPIED`
 while leaving isolated worktree authoring and local validation unblocked.
+
+`infer orientation`, branch governance seeding (`trajectory.repo_scope` and custody
+`intent.constraints`), and `govern trajectory {init,record}` parse explicit `paths:[...]`
+JSON arrays through `fleet_coord::declared_paths` rather than splitting on commas.
+Already-generated fragmented projections in `.decapod/governance.json` can be repaired
+with `decapod govern trajectory reconcile-scope [--task-id <id>] [--run-id <id>]`,
+which requires the prior journal to be archived in Git (`SCOPE_RECONCILIATION_ARCHIVE_REQUIRED`),
+rejects ambiguous task or scope matches (`SCOPE_RECONCILIATION_AMBIGUOUS`), preserves
+original intent, custody events, checks, and checkpoints, resets plan approval to `DRAFT`,
+and is idempotent once canonical.
 
 ## `decapod todo journal reconcile-legacy`
 
