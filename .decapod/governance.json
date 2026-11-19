@@ -577,6 +577,17 @@
     "base_commit": "205d4e8dad2e7690100eb401e12ea6d6f8e23665",
     "target_base": "origin/master"
   },
+  "claims": {
+    "claim:release-v0-150-2-projections": {
+      "statement": "Release v0.150.2 aligns Cargo.toml, Cargo.lock, managed Dockerfile pin, and specs manifest release metadata.",
+      "falsifier": "Managed Dockerfile or specs manifest release metadata diverges from Cargo.toml 0.150.2.",
+      "status": "supported",
+      "proof_refs": [
+        ".decapod/managed/Dockerfile.decapod",
+        ".decapod/managed/specs/.manifest.json"
+      ]
+    }
+  },
   "checkpoints": [
     {
       "id": "ckpt-journal-1780-impl",
@@ -617,6 +628,14 @@
       "id": "ckpt-journal-1780-sync-v01501",
       "summary": "Integrate accepted master v0.150.1 (f3f83b4f4, #1789) using reconcile-merge and refresh v0.150.1 projections",
       "input_digest": "sha256:32f41ef76436a32c35e7b7b135208d3a25682cecc97eac69b85baaa214d9cd15"
+    },
+    {
+      "id": "ckpt-release-v0-150-2",
+      "summary": "Refresh v0.150.2 release projections and governance",
+      "input_digest": "sha256:a63c81d0f7aa664f6861f0aeecf8457f2e47974e13cddac396bc53bda841f8f0",
+      "proof_refs": [
+        ".decapod/managed/specs/.manifest.json"
+      ]
     }
   ],
   "intents": {
@@ -647,50 +666,48 @@
       },
       "deferred_questions": [],
       "human_questions": [],
-      "intent": "Provide integrity-preserving reconciliation for merged governance journals (#1780)\n\nIssue #1780: support integrity-preserving reconciliation for Git-merged .decapod/governance.json journals",
+      "intent": "Refresh release-bound Dockerfile and specs manifest projections for v0.150.2 on PR #1845",
       "phases": [],
-      "proof_hooks": [
-        "decapod validate"
-      ],
+      "proof_hooks": [],
       "schema_version": "1.1.0",
       "spec_reviews": [
         {
-          "disposition": "updated",
+          "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Synced origin/master f3f83b4f4 (v0.150.1, #1789) preserving #1789, #1469, and #1780 architecture",
-          "reviewed_code_fingerprint": "156d22a7643395f7e85258f39dd8b67ec9fc3adb3b56cc2a675728410f1e2655",
+          "reason": "v0.150.2 version-only release cut does not alter system architecture",
+          "reviewed_code_fingerprint": "72c07a44dd5db571aa04e98353e6d57904a2590324499ea977028995476cf2f8",
           "spec_material_hash": "ec45705fd9a9a5f29fbe43fb55f7a3b69a802f298ae14eb88118bc42161f71e6"
         },
         {
-          "disposition": "updated",
+          "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Synced origin/master f3f83b4f4 (v0.150.1) preserving #1780 reconcile-merge interface",
-          "reviewed_code_fingerprint": "156d22a7643395f7e85258f39dd8b67ec9fc3adb3b56cc2a675728410f1e2655",
+          "reason": "v0.150.2 version-only release cut does not alter CLI or RPC interfaces",
+          "reviewed_code_fingerprint": "72c07a44dd5db571aa04e98353e6d57904a2590324499ea977028995476cf2f8",
           "spec_material_hash": "66e7884fe1f331bc5b1adda1c614e8b4deab92d07627491e5435648e1467f489"
         },
         {
-          "disposition": "updated",
+          "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Synced origin/master f3f83b4f4 (v0.150.1) preserving #1780 proof boundary",
-          "reviewed_code_fingerprint": "156d22a7643395f7e85258f39dd8b67ec9fc3adb3b56cc2a675728410f1e2655",
+          "reason": "v0.150.2 version-only release cut does not alter security boundaries",
+          "reviewed_code_fingerprint": "72c07a44dd5db571aa04e98353e6d57904a2590324499ea977028995476cf2f8",
           "spec_material_hash": "127c65866657d2dd15434ca52f6e3a97b8f20aa4dd97f9d3190e1cd98edac3ac"
         }
       ],
-      "state": "DRAFT",
+      "state": "APPROVED",
       "stop_conditions": [],
-      "title": "Provide integrity-preserving reconciliation for merged governance journals (#1780)",
+      "title": "Align release v0.150.2 projections and governance (#1845)",
       "todo_ids": [
-        "bugs_01m7r4w7sdw700hq"
+        "code_01m7srddt2dc4pyp"
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795097048Z"
+      "updated_at": "1795100613Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:2e0c32d90a8c08355444951fcc9ddead9e10a6b86c8de467975b25a44d2c90d0",
+      "artifact_hash": "sha256:79ec18937ab41df5eff1f7b4858b097f4490303e3d77475f87589d15127eef8c",
       "checks": [
         {
           "name": "cli_contract_enforcement",
@@ -738,6 +755,10 @@
         },
         {
           "name": "post_merge_validation_scope",
+          "status": "passed"
+        },
+        {
+          "name": "project_check_0_150_2",
           "status": "passed"
         },
         {
@@ -939,10 +960,17 @@
             "intent_id": "intent:change_01M7R7VACDQHPCHHFJXFXXETKM",
             "kind": "trajectory_step_recorded",
             "sequence": 11
+          },
+          {
+            "detail": "trajectory:branch_01M7R7VAJ3PX8MBT1WEFTNTXQA",
+            "event_id": "event:12",
+            "intent_id": "intent:change_01M7R7VACDQHPCHHFJXFXXETKM",
+            "kind": "trajectory_step_recorded",
+            "sequence": 12
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 11,
+        "next_sequence": 12,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M7R7VAJ3PX8MBT1WEFTNTXQA": {
@@ -1124,6 +1152,24 @@
                 ],
                 "sequence": 11,
                 "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:12",
+                "observations": [
+                  ".decapod/managed/Dockerfile.decapod",
+                  ".decapod/managed/specs/OPERATIONS.md",
+                  ".decapod/managed/specs/.manifest.json",
+                  ".decapod/managed/specs/.manifest.json"
+                ],
+                "proof_refs": [
+                  "project_check_0_150_2"
+                ],
+                "scope": [
+                  "root"
+                ],
+                "sequence": 12,
+                "validation_findings": []
               }
             ]
           }
@@ -1132,6 +1178,7 @@
       "declared_commands": [],
       "destination": "pull request",
       "evidence": [
+        ".decapod/managed/specs/.manifest.json",
         "Integrated origin/master e63599e3c (#1820, v0.149.3) dogfooding reconcile-merge; rebuilt candidate binary, converged docs build, fmt ok, validation_scope 9/9, reconcile_merge 2/2, doc_alignment 5/5, contract_conformance 12/12, trajectory_docs 5/5",
         "Merged origin/master 102d6eb22 (v0.149.3) dogfooding reconcile-merge; post-merge fmt exit 0, cargo build --bin decapod ok, validation_scope 9/9, reconcile_merge unit 2/2, merged_governance_journal_1780 2/2",
         "Passed explicit git user.name/user.email to unit merge fixtures; verified reconcile_merge unit (2/2) and merged_governance_journal_1780 (2/2) under GIT_CONFIG_GLOBAL=/dev/null GIT_CONFIG_NOSYSTEM=1",
@@ -1150,8 +1197,11 @@
       ],
       "intent_id": "intent:change_01M7R7VACDQHPCHHFJXFXXETKM",
       "modified_files": [
+        ".decapod/managed/Dockerfile.decapod",
+        ".decapod/managed/specs/.manifest.json",
         ".decapod/managed/specs/ARCHITECTURE.md",
         ".decapod/managed/specs/INTERFACES.md",
+        ".decapod/managed/specs/OPERATIONS.md",
         ".decapod/managed/specs/SECURITY.md",
         "docs/agent/command-contracts.md",
         "docs/agent/error-recovery.md",
@@ -1174,7 +1224,7 @@
       "run_id": "branch_01M7R7VAJ3PX8MBT1WEFTNTXQA",
       "schema_version": "1.1.0",
       "shortcut_risk_signals": [],
-      "task_id": "bugs_01m7r4w7sdw700hq",
+      "task_id": "code_01m7srddt2dc4pyp",
       "tool_calls": [],
       "unresolved_assumptions": []
     }

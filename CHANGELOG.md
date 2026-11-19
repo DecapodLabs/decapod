@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.150.2](https://github.com/DecapodLabs/decapod/compare/v0.150.1...v0.150.2) - 2026-11-19
+
+### Fixed
+
+- *(govern)* support integrity-preserving merged journal reconciliation ([#1780](https://github.com/DecapodLabs/decapod/pull/1780))
+
+### Other
+
+- *(govern)* sync accepted master v0.150.1 ([#1780](https://github.com/DecapodLabs/decapod/pull/1780))
+- *(govern)* pass explicit git identity in reconcile-merge unit tests ([#1780](https://github.com/DecapodLabs/decapod/pull/1780))
+- *(govern)* sync accepted master v0.150.0 ([#1780](https://github.com/DecapodLabs/decapod/pull/1780))
+- *(govern)* sync accepted master e63599e3c ([#1780](https://github.com/DecapodLabs/decapod/pull/1780))
+- *(govern)* sync accepted master c845ae1d0 ([#1780](https://github.com/DecapodLabs/decapod/pull/1780))
+- *(govern)* sync accepted master 1b3ca1b89 ([#1780](https://github.com/DecapodLabs/decapod/pull/1780))
+- *(govern)* integrate accepted master v0.149.3 ([#1780](https://github.com/DecapodLabs/decapod/pull/1780))
+
 ## [0.150.1](https://github.com/DecapodLabs/decapod/compare/v0.150.0...v0.150.1) - 2026-11-19
 
 ### Other
