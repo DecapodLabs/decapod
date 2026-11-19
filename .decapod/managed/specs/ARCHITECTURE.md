@@ -27,6 +27,59 @@ history:
   `.decapod/managed/specs/.manifest.json` and regenerates missing scaffold specs
   without overwriting authored spec prose.
 
+## Cloud control-plane, DPoP custody, Dactyl 0.18.0, and Local/Cloud branding (#1809, #1808, #1769, #1667, #1777, #1778, #1590, #1066, #1158)
+
+- **Registry & Bazel lock alignment**: `Cargo.toml` pins
+  `dactyl-db = { version = "=0.18.0", features = ["sqlite", "neon"] }` and
+  direct `ring = "0.17"` (locked at `0.17.14`); `Cargo.lock` and
+  `MODULE.bazel.lock` lock `dactyl-db 0.18.0` and `quinn-proto 0.11.19`.
+  `flake.nix` reads `./Cargo.lock` dynamically.
+- **Unified Local/Cloud CLI, capabilities, and store envelopes (`src/decapod/cli.rs`, `src/decapod/core/rpc.rs`, `src/decapod/core/propodus.rs`, `src/decapod/core/docs_cli.rs`, `docs/book/`)**:
+  `resolve_cloud_env_var_with` prefers canonical `DECAPOD_CLOUD_*` env vars and
+  emits once-per-process `CloudEnvDeprecationNotice` for legacy
+  `DECAPOD_PROPODUS_API_URL`; `CloudRuntimeConfig::validate_datastore` fails
+  closed without the retired Vercel preview default. `CapabilitiesReport` adds
+  `backends` (`local`/`cloud`) and the `cloud` subsystem. `propodus.rs`
+  recognizes `decapod.cloud.store` (`v1`) envelopes and `Decapod-Cloud-*`
+  diagnostic headers alongside legacy compatibility envelopes.
+- **Worktree-scoped todo routing (`src/decapod/lib.rs`, `src/decapod/core/todo.rs`)**:
+  `Command::Todo` dispatches through `todo::run_todo_cli_in_workspace(&project_store, &workspace_root, todo_cli)`.
+  Inline helpers (`add_task`, `get_task`, `list_tasks`, `claim_task_with_lease`,
+  `release_task_as_actor`, `get_work_claim`) inspect `cloud_runtime(root)`
+  (defaulting absent `config.toml` to local) and route through
+  `inline_cloud_todo_factory` when `backend = "cloud"` while preserving
+  `*_local` entrypoints for explicit local worktrees. `is_cloud_file_only_command`
+  admits observational `workspace status` under `backend = "cloud"` without
+  initializing local SQLite.
+- **Ed25519 DPoP & host container signer (`src/decapod/core/cloud_dpop.rs`, `src/decapod/core/container_signer.rs`, `src/decapod/core/cloud_client.rs`, `src/decapod/core/dactyl.rs`, `src/decapod/plugins/container.rs`)**:
+  `DeviceKeyMaterial` (zeroize-on-drop Ed25519 PKCS#8 via `ring`) and
+  `DeviceKeyStore` store device keys outside repository paths (OS Keychain or
+  strict mode-0600 `O_NOFOLLOW` file). `DeviceDpopSigner` and
+  `ContainerBrokerDpopSigner` implement `dactyl_db::RequestProofSigner` with
+  `observe_nonce` tracking and plug into `CloudConnector::with_proof_signer`.
+  `HostContainerSignerServer` serves bounded Unix-socket signing for
+  `--container` workspaces (`DECAPOD_CONTAINER_SIGNER_SOCKET`), enforcing
+  origin, repository, agent ID, operation allowlist, capability separation, and
+  immediate revocation while `filter_container_environment` strips raw secrets.
+- **Repository access tiers & owner repair (`src/decapod/core/db_maintenance.rs`)**:
+  Adds `RepoAccessTier` (`read`/`write`/`owner`), `CloudRepositoryAccessStatus`,
+  verbatim `OWNER_REPAIR_V1_SQL`, `execute_cloud_owner_repair_batch`
+  (`DactylBridge::atomic`), `fetch_cloud_repository_access_status` (`Read`),
+  `evaluate_cloud_repair_authority` (`Write`), `mutate_cloud_repository_tier`
+  (`Write`), `execute_cloud_owner_repair`, and local `run_maintain_recover`
+  wired into all three `db.recover` CLI/RPC entrypoints.
+- **Lease fencing & 5-state proof acceptance (`src/decapod/core/cloud_proof.rs`, `src/decapod/core/dactyl_todo.rs`)**:
+  `DactylTodoStore` replaces `RESOURCE_CUSTODY_PROFILE_UNSUPPORTED` with
+  exclusive lease claim/renew/release (`claim_task_with_lease_blocking`,
+  `renew_task_lease_blocking`) while preserving `#1247` static `atomic_mutation`
+  post-condition guards and monotonic nanosecond markers. `cloud_proof.rs` owns
+  `ProofLifecycleState`, `proof_capture_fingerprint`, `CloudControlError`
+  (`403`/`413`/`429`/`outcome_unknown`), `DactylProofControlTransport` over
+  `CloudConnector::control_request`, `custody_bind`/`custody_revoke`,
+  `submit_capture`/`submit_verify`/`submit_admit_or_publish`/`submit_retire_historical`,
+  `reconcile_operation_after_unknown` (`get_operation`), and
+  `reconstruct_attestation`, wired into cloud `todo done --validated`.
+
 ## Current workunit validation judgments
 
 `core::validation_history::finish_archive` retains immutable successful
@@ -1106,8 +1159,8 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `cca2e8d761cbe530a769e2bc9097e01cf5af2c55914547a4213187e5e5fb2300`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (238 files), `tests/` (240 files)
+- Repository signal fingerprint: `f0a8a7754a247a8d4032f869b4da50c736eb0e0d4153945eaadd8d4db0440a2f`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (242 files), `tests/` (252 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 
@@ -1414,9 +1467,17 @@ No new connector policy interpreter, daemon, HTTP/3 or hosted runner is added.
 for full claims. The runtime invokes it before prerequisites or selection; CLI
 and RPC full dispatch, workspace publication and current/historical validated
 completion invoke the same owner. The originating local completion process checks
-before broker handoff. `group_broker::CallerContext` carries and clears diagnostic
-flags per request so worker scope cannot come from another caller. Partial
-project-prerequisite and CI-local routes do not gain publication authority.
+before broker handoff, and for `todo done --validated` prepares verification
+evidence outside the exclusive group-broker lock (`todo::prepare_validated_done_handoff`
+-> mode-`0600` request-bound handoff under `broker-runtime/` -> `verify::consume_prepared_done_handoff`
+re-verified against canonical `validation_history` / local Git objects before the
+transactional status update). `group_broker::CallerContext` carries and clears
+diagnostic flags per request so worker scope cannot come from another caller, and
+brokered child execution honors the caller's bounded `deadline_ms` rather than a
+15s control clamp. `bounded_process::configure_child_nofile_limit` elevates soft
+`RLIMIT_NOFILE` on Unix across `__project-check-worker`, migration validation,
+tooling gates, and `CaptureWithCeiling` subprocesses. Partial project-prerequisite
+and CI-local routes do not gain publication authority.
 
 ## Preserve accepted local verification policy (#1658)
 
@@ -1511,3 +1572,11 @@ the reconciled candidate.
 ## Canonical local Git proof (#1069)
 
 The existing `repository_profile::RepositoryContract` review digest optionally binds canonical local Git target authority. `workspace::resolve_readiness_repository` keeps that identity distinct from cloud GitHub identity, requiring a reviewed local contract already committed on the canonical accepted branch. `RepositoryHost::canonical_local` reuses the sealed snapshot verifier and fresh ref observations; no daemon, parallel policy engine or datastore is added. `validation_history` preserves exact local scope and checks target movement. Native strict source proof and provider requirements remain intact.
+
+## Concurrent isolated authoring and combined-candidate admission (#1469)
+
+Concurrent authoring across isolated worktrees separates task custody, isolated editing, and shared integration/release admission without introducing a global source lock:
+
+1. **Advisory source overlap vs. enforced custody/resource fencing:** `core/fleet_coord.rs::detect_overlaps` emits `enforced = false` (`advisory_category_overlap`, `advisory_scope_overlap`, `advisory_path_overlap`) for source categories and repository path declarations, while setting `enforced = true` (`resource_reservation`) only for named shared resources (`resource:release`, `resource:integration`, `resource:integration:<branch>`). `core/todo.rs::claim_task_with_lease` admits distinct tasks across overlapping source footprints with `integration_readiness = "combined_candidate_reconciliation_required"` while rejecting duplicate exclusive claims on an active task lease (`status = "conflict"`, `lease_state = "active"`) and competing shared-resource reservations (`conflict_class = "shared_resource"`, `resolution = "wait_for_resource_custody"`).
+2. **Checkout custody without transcript trust:** `core/workspace.rs::claim_branch_scoped_open_tasks` and `core/authoring.rs::{admit_authoring, check_authoring}` bind each active lease to at most one registered worktree (`AUTHORING_CHECKOUT_OCCUPIED`, `AUTHORING_TASK_ALREADY_BOUND`, `AUTHORING_CUSTODY_STALE`, `WORKSPACE_SECONDARY_CUSTODY`). A fresh actor without the first agent's transcript observes live claims via `decapod todo fleet` / `decapod todo list`, cannot hijack A's task or worktree, and either claims a separate permitted task or yields with a typed blocker. `core/authoring.rs::enforce_shared_resource_available` fences `workspace.publish` and `release.lineage_sync` (`SHARED_RESOURCE_OCCUPIED`) without blocking unrelated isolated worktree authoring.
+3. **Combined-candidate execution and target freshness:** Locally green isolated worktrees and clean textual Git merges never discharge joint proof. `core/validation_runtime.rs` and `core/validation_history.rs` execute required source checks against the exact combined head and accepted target, withholding `native-readiness-receipt.json` and blocking `todo done --validated` / `workspace publish` on incompatible producer/consumer interfaces or contradictory shared behavior until repaired and revalidated on the exact combined commit. When another branch lands first and advances the accepted target, prior receipts become stale (`STALE_ACCEPTED_BASE`, `WORKUNIT_PROOF_STALE`) until rebased/merged onto the new accepted target and revalidated. `tests/concurrent_worktree_integration_1469.rs` exercises all three scenarios end-to-end through the actual `decapod` binary and isolated Git worktrees.
