@@ -608,6 +608,15 @@
         "src/decapod/core/projection_budget.rs",
         "tests/projection_performance_budgets_1734.rs"
       ]
+    },
+    {
+      "id": "ckpt-1734-spec-reviews",
+      "summary": "Record explicit content-bound spec reviews for INTERFACES.md, ARCHITECTURE.md, and SECURITY.md (#1734)",
+      "input_digest": "sha256:69cd58db464abe23be5c0743fc9dc20b53caa572c124fa2f69cc0192cfa96afa",
+      "proof_refs": [
+        ".decapod/managed/specs/ARCHITECTURE.md",
+        ".decapod/managed/specs/INTERFACES.md"
+      ]
     }
   ],
   "intents": {
@@ -645,6 +654,29 @@
         "decapod validate"
       ],
       "schema_version": "1.1.0",
+      "spec_reviews": [
+        {
+          "disposition": "updated",
+          "path": ".decapod/managed/specs/ARCHITECTURE.md",
+          "reason": "Documented idx_events_stream_subject_seq partial covering index, fail-fast db_connect_readonly_bounded, measured-baseline budgets, degraded mode, and retention-stable logical receipts for #1734 while preserving #1469/#1659/#1807/#1810 prose.",
+          "reviewed_code_fingerprint": "818241e1cc81217dca3a918bac6df8638414bbea5a1beb8f0653ee01bec882fb",
+          "spec_material_hash": "be3326322285bdb99eff11acffe67112f81c9ba182774fbe8d3e46149c0053b6"
+        },
+        {
+          "disposition": "updated",
+          "path": ".decapod/managed/specs/INTERFACES.md",
+          "reason": "Documented decapod.projection-budget.v1 read-only event/worktree projection envelopes, EventRetentionAnchor, and cursor/degraded-mode contract for #1734 while preserving prior interface specs.",
+          "reviewed_code_fingerprint": "818241e1cc81217dca3a918bac6df8638414bbea5a1beb8f0653ee01bec882fb",
+          "spec_material_hash": "a197e9f9b8b97111f9cdd8710fc911dc29e1ac84801472e68e87567f5b2acd36"
+        },
+        {
+          "disposition": "unchanged_with_reason",
+          "path": ".decapod/managed/specs/SECURITY.md",
+          "reason": "Read-only projection surfaces enforce AccessMode::ReadOnly, StorageLockMode::Shared, GIT_OPTIONAL_LOCKS=0, read_only=true, authoritative=false, and add no privilege, secret, or mutation boundaries; existing SECURITY.md invariants remain accurate.",
+          "reviewed_code_fingerprint": "818241e1cc81217dca3a918bac6df8638414bbea5a1beb8f0653ee01bec882fb",
+          "spec_material_hash": "9c15cdf421a538d0e8fa06a154d96acaf41fc3d8ec15872b2c6016f0ebb908e1"
+        }
+      ],
       "state": "APPROVED",
       "stop_conditions": [],
       "title": "Projection performance budgets, bounded degraded mode, and retention-stable receipts (#1734)",
@@ -653,7 +685,7 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795066064Z"
+      "updated_at": "1795068388Z"
     },
     "trajectory": {
       "active_boundaries": [
