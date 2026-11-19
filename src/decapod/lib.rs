@@ -6775,6 +6775,9 @@ fn run_validate_command_remote(
     invocation.validate()?;
     reject_remote_arguments_in_partial_scope(scope, &invocation)?;
     let readiness = run_current_workbranch_readiness_with(workspace_root, &invocation);
+    let tmp_cleanup_guidance = readiness
+        .ready
+        .then(|| core::validate::todo_tmp_cleanup_instruction(workspace_root));
     if cli.format == "json" {
         println!(
             "{}",
@@ -6786,6 +6789,7 @@ fn run_validate_command_remote(
                 "report": serde_json::Value::Null,
                 "self_heal": [],
                 "readiness": readiness,
+                "tmp_cleanup_guidance": tmp_cleanup_guidance,
             }))
             .map_err(|e| error::DecapodError::ValidationError(e.to_string()))?
         );
@@ -6795,6 +6799,9 @@ fn run_validate_command_remote(
         if readiness.ready {
             println!("Complete current-candidate Buildkite proof passed.");
             println!("{}", readiness.agent_guidance.instruction);
+            if let Some(cleanup) = &tmp_cleanup_guidance {
+                println!("{cleanup}");
+            }
         } else {
             for blocker in &readiness.blockers {
                 eprintln!("{}: {}", blocker.code, blocker.detail);
@@ -6995,6 +7002,9 @@ fn run_validate_command_local(
         .as_ref()
         .map(|result| &result.agent_guidance)
         .unwrap_or(&fallback_guidance);
+    let tmp_cleanup_guidance = (scope.requires_publication_proof()
+        && readiness.as_ref().is_some_and(|r| r.ready))
+    .then(|| core::validate::todo_tmp_cleanup_instruction(workspace_root));
     if validate_cli.format == "json" {
         println!(
             "{}",
@@ -7004,6 +7014,7 @@ fn run_validate_command_local(
                 "publication_ready": readiness.as_ref().is_some_and(|r| r.publication_ready()),
                 "agent_guidance": scope.requires_publication_proof().then_some(guidance),
                 "readiness": readiness,
+                "tmp_cleanup_guidance": tmp_cleanup_guidance,
                 "self_heal": heal_actions,
                 "report": report,
             }))
@@ -7021,6 +7032,9 @@ fn run_validate_command_local(
         if scope.requires_publication_proof() {
             println!("{}", guidance.execution);
             println!("{}", guidance.instruction);
+            if let Some(cleanup) = &tmp_cleanup_guidance {
+                println!("{cleanup}");
+            }
             if !readiness.as_ref().is_some_and(|r| r.ready) {
                 println!("{}", guidance.human_input_when);
             }
@@ -12400,6 +12414,9 @@ mod rpc_handlers {
         invocation.validate()?;
         ensure_session_valid()?;
         let readiness = super::run_current_workbranch_readiness_with(ctx.project_root, &invocation);
+        let tmp_cleanup_guidance = readiness
+            .ready
+            .then(|| core::validate::todo_tmp_cleanup_instruction(ctx.project_root));
         let payload = serde_json::json!({
             "success": readiness.ready,
             "report": if readiness.ready { "Complete Buildkite source proof passed" } else { "Buildkite source proof is not ready" },
@@ -12408,6 +12425,7 @@ mod rpc_handlers {
             "local_project_checks": "not_run_provider_owned",
             "checks": serde_json::Value::Null,
             "readiness": readiness,
+            "tmp_cleanup_guidance": tmp_cleanup_guidance,
         });
         let mut response = if readiness.ready {
             success_response(

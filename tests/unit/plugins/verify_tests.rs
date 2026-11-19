@@ -418,3 +418,98 @@ fn scoped_validation_diagnostics_respect_token_boundaries_large_json_and_untrust
     assert!(!capped.labels.contains(&"READINESS_BLOCKED"));
     assert!(capped.message.len() < 1024);
 }
+
+#[test]
+fn diagnose_task_includes_todo_scoped_tmp_cleanup_when_ready_to_publish() {
+    use crate::core::{todo, workspace};
+
+    let task = todo::Task {
+        id: "bugs_01m7r4tqkjg4a8nh".to_string(),
+        hash: "01m7r4".to_string(),
+        title: "Test #1798".to_string(),
+        description: String::new(),
+        tags: String::new(),
+        owner: String::new(),
+        due: None,
+        r#ref: String::new(),
+        status: "open".to_string(),
+        created_at: "1795032963Z".to_string(),
+        updated_at: "1795032963Z".to_string(),
+        completed_at: None,
+        closed_at: None,
+        dir_path: ".".to_string(),
+        scope: "root".to_string(),
+        parent_task_id: None,
+        priority: "medium".to_string(),
+        depends_on: String::new(),
+        blocks: String::new(),
+        category: "bugs".to_string(),
+        component: String::new(),
+        assigned_to: "swarm-tmpclean-1798".to_string(),
+        assigned_at: Some("1795032963Z".to_string()),
+        owners: Vec::new(),
+        comments: Vec::new(),
+        one_shot: 0,
+        revision: 3,
+    };
+    let ws = workspace::WorkspaceStatus {
+        can_work: true,
+        git: workspace::GitStatus {
+            current_branch: "agent/swarm-tmpclean-1798/bugs_01m7r4tqkjg4a8nh-tmp-cleanup"
+                .to_string(),
+            is_protected: false,
+            in_worktree: true,
+            worktree_path: None,
+            is_main_repo: false,
+            has_local_mods: false,
+        },
+        container: workspace::ContainerStatus {
+            in_container: false,
+            container_id: None,
+            image: None,
+            docker_available: false,
+        },
+        blockers: Vec::new(),
+        required_actions: Vec::new(),
+        root_isolation: None,
+    };
+
+    // Before verification baseline exists, cleanup_guidance is null.
+    let unverified = super::diagnose_task(&task, None, &ws, false, "master");
+    assert!(unverified["cleanup_guidance"].is_null());
+    assert_ne!(unverified["next_command"], "decapod workspace publish");
+
+    // Once verification passes, next_command is `decapod workspace publish` and cleanup_guidance is populated.
+    let artifacts = serde_json::json!({
+        "completed_at": "1795033000Z",
+        "task_id": "bugs_01m7r4tqkjg4a8nh",
+        "task_revision": 3,
+        "proof_plan_results": [
+            {
+                "proof_gate": "validate_passes",
+                "command": "decapod validate",
+                "status": "pass",
+                "output_hash": "a".repeat(64)
+            }
+        ]
+    });
+    let target = super::VerifyTarget {
+        todo_id: "bugs_01m7r4tqkjg4a8nh".to_string(),
+        revision: 3,
+        status: "open".to_string(),
+        proof_plan: None,
+        artifacts: Some(artifacts.to_string()),
+        last_verified_at: Some("1795033000Z".to_string()),
+        last_verified_status: Some("pass".to_string()),
+        verification_policy_days: 90,
+    };
+    let ready = super::diagnose_task(&task, Some(&target), &ws, false, "master");
+    assert_eq!(ready["next_command"], "decapod workspace publish");
+    let guidance = ready["cleanup_guidance"]
+        .as_str()
+        .expect("cleanup_guidance must be present when ready to publish");
+    assert!(guidance.contains("bugs_01m7r4tqkjg4a8nh"));
+    assert!(guidance.contains("/tmp/decapod_validate/bugs_01m7r4tqkjg4a8nh"));
+    assert!(guidance.contains("wildcard or root-level deletion of /tmp"));
+    assert!(guidance.contains("/tmp/decapod"));
+}

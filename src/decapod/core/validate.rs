@@ -580,6 +580,46 @@ fn validation_task_id(workspace_root: &Path) -> String {
     "todo-unassigned".to_string()
 }
 
+/// Return the sanitized task identifier used to scope temporary validation
+/// and build scratch paths for `workspace_root`.
+pub fn resolve_validation_task_id(workspace_root: &Path) -> String {
+    validation_task_id(workspace_root)
+}
+
+/// Return the todo-scoped temporary root directory used by validation for
+/// `workspace_root` (i.e. `<temp_dir>/decapod_validate/<task-id>`).
+pub fn validation_temp_root(workspace_root: &Path) -> PathBuf {
+    std::env::temp_dir()
+        .join("decapod_validate")
+        .join(validation_task_id(workspace_root))
+}
+
+/// Return agent-facing cleanup guidance for a specific task ID and optional
+/// validation temp root path.
+///
+/// Instructs the agent to flush ONLY that todo's `/tmp` build/scratch
+/// directory after validation succeeds / PR creation completes, and never
+/// perform wildcard or root-level deletion of `/tmp` or remove concurrent
+/// agents' paths, shared `/tmp/decapod` controller state, or active sibling
+/// directories.
+pub fn todo_tmp_cleanup_instruction_for_task(task_id: &str, temp_root: Option<&Path>) -> String {
+    let sanitized = sanitize_validation_task_id(task_id);
+    let validation_dir = temp_root
+        .map(|path| path.display().to_string())
+        .unwrap_or_else(|| format!("/tmp/decapod_validate/{sanitized}"));
+    format!(
+        "Todo-scoped /tmp cleanup ({sanitized}): after validation succeeds and PR creation completes, flush ONLY this todo's /tmp build and scratch directories (such as `{validation_dir}` and any todo-scoped CARGO_TARGET_DIR or build scratch under /tmp created for `{sanitized}`). Never perform wildcard or root-level deletion of /tmp, never delete another concurrent agent's or sibling todo's /tmp directory, and never remove shared `/tmp/decapod` controller sockets/state or active sibling directories."
+    )
+}
+
+/// Return agent-facing `/tmp` build and scratch cleanup guidance for the todo
+/// associated with `workspace_root`.
+pub fn todo_tmp_cleanup_instruction(workspace_root: &Path) -> String {
+    let task_id = validation_task_id(workspace_root);
+    let temp_root = validation_temp_root(workspace_root);
+    todo_tmp_cleanup_instruction_for_task(&task_id, Some(&temp_root))
+}
+
 /// Return the task-owned temporary directory for this validation workspace.
 ///
 /// The task ID is part of the path by contract. Legacy unscoped `/tmp`
@@ -588,16 +628,11 @@ pub fn create_validation_temp_path(
     workspace_root: &Path,
     kind: &str,
 ) -> Result<PathBuf, error::DecapodError> {
-    let task_root = std::env::temp_dir()
-        .join("decapod_validate")
-        .join(validation_task_id(workspace_root));
+    let task_root = validation_temp_root(workspace_root);
     fs::create_dir_all(&task_root).map_err(error::DecapodError::IoError)?;
-    register_validation_temp_path(task_root);
+    register_validation_temp_path(task_root.clone());
 
-    let path = std::env::temp_dir()
-        .join("decapod_validate")
-        .join(validation_task_id(workspace_root))
-        .join(format!("{kind}_{}", crate::core::ulid::new_ulid()));
+    let path = task_root.join(format!("{kind}_{}", crate::core::ulid::new_ulid()));
     fs::create_dir_all(&path).map_err(error::DecapodError::IoError)?;
     Ok(path)
 }
