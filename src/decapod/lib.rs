@@ -3270,6 +3270,66 @@ pub fn run() -> Result<(), error::DecapodError> {
             }
 
             if local_storage_startup && should_route_via_group_broker(&cli.command, &argv) {
+                struct PreparedDoneGuard {
+                    store_root: PathBuf,
+                    request_id: String,
+                    previous_env: Option<std::ffi::OsString>,
+                    active: bool,
+                }
+                impl Drop for PreparedDoneGuard {
+                    fn drop(&mut self) {
+                        if self.active {
+                            plugins::verify::remove_prepared_done_handoff(
+                                &self.store_root,
+                                &self.request_id,
+                            );
+                            unsafe {
+                                if let Some(prev) = &self.previous_env {
+                                    std::env::set_var("DECAPOD_GROUP_BROKER_REQUEST_ID", prev);
+                                } else {
+                                    std::env::remove_var("DECAPOD_GROUP_BROKER_REQUEST_ID");
+                                }
+                            }
+                        }
+                    }
+                }
+                let mut _prepared_done_guard = PreparedDoneGuard {
+                    store_root: store_root.clone(),
+                    request_id: String::new(),
+                    previous_env: None,
+                    active: false,
+                };
+                if !core::group_broker::is_internal_invocation()
+                    && !core::group_broker::is_disabled()
+                    && let Command::Todo(todo_cli) = &cli.command
+                    && todo::is_validated_completion(todo_cli)
+                {
+                    let previous_env = std::env::var_os("DECAPOD_GROUP_BROKER_REQUEST_ID");
+                    let request_id = previous_env
+                        .as_ref()
+                        .and_then(|v| v.to_str())
+                        .filter(|v| !v.is_empty())
+                        .map(str::to_owned)
+                        .unwrap_or_else(core::ulid::new_ulid);
+                    if !core::group_broker::has_dedupe_record(&store_root, &request_id)
+                        && todo::prepare_validated_done_handoff(
+                            &project_store,
+                            todo_cli,
+                            &request_id,
+                        )?
+                        .is_some()
+                    {
+                        unsafe {
+                            std::env::set_var("DECAPOD_GROUP_BROKER_REQUEST_ID", &request_id);
+                        }
+                        _prepared_done_guard = PreparedDoneGuard {
+                            store_root: store_root.clone(),
+                            request_id,
+                            previous_env,
+                            active: true,
+                        };
+                    }
+                }
                 let mut finish = |stdout: &str, request_id: &str| match &cli.command {
                     Command::Todo(todo_cli) => todo::finish_broker_claim_response(
                         &project_store,
@@ -7306,10 +7366,13 @@ fn run_current_workbranch_readiness_with(
             kind: StoreKind::Repo,
             root: store_root.clone(),
         };
-        // Capture task custody before the potentially long proof run. A later
-        // task edit or ownership transition must not inherit its successful result.
-        let history_binding =
-            core::validation_history::capture_task_binding(&history_store, workspace_root)?;
+        // Guard against mid-validation lease expiry, then capture task custody
+        // before the potentially long proof run.
+        let history_binding = core::validation_history::capture_task_binding_with_budget(
+            &history_store,
+            workspace_root,
+            options.timeout,
+        )?;
         let authorize = |action: runtime::NativeAction<'_>| -> std::io::Result<()> {
             use core::external_action::{self, ExternalCapability};
             let result = match action {
@@ -7930,6 +7993,7 @@ fn run_validation_in_child_process(
         "DECAPOD_VALIDATE_PROGRESS_PATH",
         progress_path.to_string_lossy().as_ref(),
     );
+    core::bounded_process::configure_child_nofile_limit(&mut command);
     let child = command.spawn().map_err(error::DecapodError::IoError)?;
     match supervise_piped_child(child, timeout)? {
         PipedChildOutput::Exited { stdout, stderr } => {
