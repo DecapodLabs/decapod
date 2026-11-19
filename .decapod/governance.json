@@ -612,6 +612,14 @@
       "proof_refs": [
         "tests/policy_self_authorization_1776.rs (9/9 passed); validation_scope (9/9 passed); clippy --all-targets -D warnings ok"
       ]
+    },
+    {
+      "id": "integrate-master-v01493-1776",
+      "summary": "Integrate accepted master 102d6eb22 (v0.149.3 + #1659) with #1776 accepted-policy hardening",
+      "input_digest": "sha256:57f8332924e3197a5c8345d2ea61e3c6a79a257e353e333f26672226014ec1a8",
+      "proof_refs": [
+        "tests/policy_self_authorization_1776.rs (9/9 passed); validation_scope (9/9 passed)"
+      ]
     }
   ],
   "intents": {
@@ -652,22 +660,22 @@
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Merged origin/master e0f6aec81 (v0.149.2); #1776 remains bounded to cross-surface accepted-policy resolution.",
-          "reviewed_code_fingerprint": "0e64f504e4c9ea5409f4a9bc84347a0b7d7b0458ab0ba47ba3277cae26c1573e",
+          "reason": "Merged origin/master 102d6eb22 (v0.149.3 + #1659); #1776 remains bounded to cross-surface accepted-policy resolution.",
+          "reviewed_code_fingerprint": "ef39d7ffe5a4415bee9f83fbd43eb55d85f24909ece395d7b860a3622e380a35",
           "spec_material_hash": "080e1e015d867051ec4ecbb1f18aca92a2d62a05798377057e563aaa5a3764e0"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Merged origin/master e0f6aec81 (v0.149.2); #1776 preserves existing interface contracts.",
-          "reviewed_code_fingerprint": "0e64f504e4c9ea5409f4a9bc84347a0b7d7b0458ab0ba47ba3277cae26c1573e",
+          "reason": "Merged origin/master 102d6eb22 (v0.149.3 + #1659); #1776 preserves existing interface contracts.",
+          "reviewed_code_fingerprint": "ef39d7ffe5a4415bee9f83fbd43eb55d85f24909ece395d7b860a3622e380a35",
           "spec_material_hash": "1445e13fa7ccfa6c4a68850bd794b6b1ba7379c0148b570c3a7605b6a26beb25"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Documented cross-surface accepted-policy resolution and #1776 repairs on merged origin/master e0f6aec81 (v0.149.2).",
-          "reviewed_code_fingerprint": "0e64f504e4c9ea5409f4a9bc84347a0b7d7b0458ab0ba47ba3277cae26c1573e",
+          "reason": "Documented cross-surface accepted-policy resolution and #1776 repairs on merged origin/master 102d6eb22 (v0.149.3).",
+          "reviewed_code_fingerprint": "ef39d7ffe5a4415bee9f83fbd43eb55d85f24909ece395d7b860a3622e380a35",
           "spec_material_hash": "49c7d1428d860804f8fc7f436c5da22483d385c9ce4be90f7db52f1cf4b362ee"
         }
       ],
@@ -679,13 +687,13 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795047047Z"
+      "updated_at": "1795049463Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:4327585aecc1ba3a0a337bbafd743d333628aea45aa1b916d9b24143813e5a68",
+      "artifact_hash": "sha256:6759f0db55105c06281434081f9b14d936465765808c7f45dfb942669477df5e",
       "checks": [
         {
           "name": "cargo_fmt",
@@ -786,10 +794,17 @@
             "intent_id": "intent:change_01M7QBJ2W09CY5REY9D4DX2CGZ",
             "kind": "trajectory_step_recorded",
             "sequence": 7
+          },
+          {
+            "detail": "trajectory:branch_01M7QBJ2ZYCMN2HENQJSH4ZZW7",
+            "event_id": "event:8",
+            "intent_id": "intent:change_01M7QBJ2W09CY5REY9D4DX2CGZ",
+            "kind": "trajectory_step_recorded",
+            "sequence": 8
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 7,
+        "next_sequence": 8,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M7QBJ2ZYCMN2HENQJSH4ZZW7": {
@@ -913,6 +928,32 @@
                 ],
                 "sequence": 7,
                 "validation_findings": []
+              },
+              {
+                "action": "validation",
+                "custody_event_id": "event:8",
+                "observations": [
+                  ".decapod/managed/specs/SECURITY.md",
+                  "src/decapod/core/db_maintenance.rs",
+                  "src/decapod/core/workspace.rs",
+                  "src/decapod/core/gatekeeper.rs",
+                  "src/decapod/plugins/policy.rs",
+                  "src/decapod/core/validation_rules.rs",
+                  "src/decapod/core/validate.rs",
+                  "src/decapod/lib.rs",
+                  "tests/policy_self_authorization_1776.rs",
+                  "Merged origin/master 102d6eb22 (v0.149.3 + #1659); cargo fmt --all -- --check ok; validation_scope 9/9 passed (0.04s); policy_self_authorization_1776 9/9 passed (271.61s)"
+                ],
+                "proof_refs": [
+                  "policy_self_authorization_1776",
+                  "validation_scope",
+                  "cargo_fmt"
+                ],
+                "scope": [
+                  "root"
+                ],
+                "sequence": 8,
+                "validation_findings": []
               }
             ]
           }
@@ -922,6 +963,7 @@
       "destination": "pull request",
       "evidence": [
         "Merged origin/master 0b6ce0a8 (PR #1799); cargo fmt --all -- --check ok; clippy --all-targets --all-features -D warnings ok; policy_self_authorization_1776 9/9 passed (198.79s)",
+        "Merged origin/master 102d6eb22 (v0.149.3 + #1659); cargo fmt --all -- --check ok; validation_scope 9/9 passed (0.04s); policy_self_authorization_1776 9/9 passed (271.61s)",
         "Merged origin/master e0f6aec81 (v0.149.2); cargo fmt --all -- --check ok; clippy --all-targets --all-features -D warnings ok; validation_scope 9/9 passed (0.10s); policy_self_authorization_1776 9/9 passed (313.66s)",
         "Merged origin/master release 0.148.13 (c5bafce6); policy_self_authorization_1776 9/9 passed (213.03s); cargo fmt & clippy -D warnings ok",
         "policy_self_authorization_1776 9/9 passed (92.39s); clippy -D warnings ok; unit & regression suites passed"
