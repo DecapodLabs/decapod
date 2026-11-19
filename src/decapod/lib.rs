@@ -11250,6 +11250,7 @@ fn run_workspace_command(
             snapshot_resume,
             provider_artifacts,
         } => {
+            core::validation_runtime::require_full_readiness_environment()?;
             let workspace_root = project_root;
             if !crate::cli::DecapodProjectConfig::load(workspace_root)?
                 .proof
