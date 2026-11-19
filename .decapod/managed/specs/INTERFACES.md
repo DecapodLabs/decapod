@@ -280,13 +280,33 @@ show client composition only; local mode never falls back from a failed cloud
 authorization. Merge readiness remains governed by the independently
 configured publication and proof gates.
 
-## Version reporting
+## Version reporting and migration inspection
 
 `decapod system version` reports the installed binary version and existing
 update guidance without reading configuration, acquiring a session, initializing
 a datastore or migrating project state. It works in uninitialized, damaged and
 unsafe-permission checkouts. Stateful commands retain storage permission
 rejection and the first normal command still reports a pending migration.
+
+`decapod system migrations --format {json,text}` (dispatched early in
+`src/decapod/lib.rs::run_system_migrations_command` via `SystemCommand::Migrations`
+in `src/decapod/cli.rs`) provides read-only, non-initializing, session-free
+inspection backed by `src/decapod/core/migration.rs::inspect_migration_state` and
+`MigrationInspectionReport`. It resolves `workspace_root`, `governance_root`, and
+the active `decapod_root` (following the main repository `.decapod` from linked
+worktrees via `find_governance_root`) and exposes `version_counter.json`,
+`applied.json`, the compiled and on-disk `catalog.json`, `pending_migrations`,
+`pending_legacy_databases`, `action_required`, `reason_codes`, and
+`instructions` without creating `.decapod/data/`, mutating storage permissions,
+opening SQLite locks, or consuming pending migration notices.
+
+`MigrationReport::agent_instruction` in `src/decapod/core/migration.rs` carries the
+resolved `decapod_root`, directs agents to `decapod system migrations --format json`
+instead of raw disk reads, and prints resolved `applied.json` and `catalog.json`
+paths so notices stay accurate inside governed worktrees. `decapod system doctor
+check` in `src/decapod/plugins/doctor.rs` (`check_decapod_dir_for_store`,
+`check_migrations`) likewise executes in non-initializing mode across worktrees
+and reports pending or corrupt migration artifacts.
 
 ## Publication projection
 
@@ -1339,8 +1359,8 @@ field. Nothing in this operation authorizes a mutation, approval or completion.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `ad01e2305258c4402711d92463c1cf84652f5a7a56093d753246046fee7561be`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (237 files), `tests/` (237 files)
+- Repository signal fingerprint: `0e64f504e4c9ea5409f4a9bc84347a0b7d7b0458ab0ba47ba3277cae26c1573e`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (237 files), `tests/` (239 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 

@@ -7,6 +7,52 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.149.2](https://github.com/DecapodLabs/decapod/compare/v0.149.1...v0.149.2) - 2026-11-18
+
+### Other
+
+- *(governance)* integrate accepted master v0.149.1 ([#1052](https://github.com/DecapodLabs/decapod/pull/1052)) ([#1795](https://github.com/DecapodLabs/decapod/pull/1795))
+- *(governance)* integrate accepted master 0b6ce0a8 ([#1795](https://github.com/DecapodLabs/decapod/pull/1795))
+- *(governance)* prove fault detection across five admission boundaries ([#1795](https://github.com/DecapodLabs/decapod/pull/1795))
+
+## [0.149.1](https://github.com/DecapodLabs/decapod/compare/v0.149.0...v0.149.1) - 2026-11-18
+
+### Other
+
+- *(qa)* refresh v0.149.0 Dockerfile and specs manifest ([#1052](https://github.com/DecapodLabs/decapod/pull/1052))
+- *(qa)* integrate accepted master v0.149.0 ([#1052](https://github.com/DecapodLabs/decapod/pull/1052))
+- *(qa)* record INTERFACES.md unchanged-with-reason review ([#1052](https://github.com/DecapodLabs/decapod/pull/1052))
+- *(qa)* integrate accepted master 0b6ce0a8 ([#1052](https://github.com/DecapodLabs/decapod/pull/1052))
+- *(test)* format exact_candidate_governance_1052 with cargo fmt ([#1052](https://github.com/DecapodLabs/decapod/pull/1052))
+- *(qa)* integrate accepted release 0.148.13
+- *(governance)* add #1052 actual-binary exact-candidate regression suite
+
+## [0.149.0](https://github.com/DecapodLabs/decapod/compare/v0.148.14...v0.149.0) - 2026-11-18
+
+### Added
+
+- *(migration)* expose read-only migration notice inspection and resolved root
+
+### Other
+
+- Merge remote-tracking branch 'origin/master' into agent/wog-issue-1744/bugs_01m7qbm33farx8qs-issue-1744
+- Merge remote-tracking branch 'origin/master' into agent/wog-issue-1744/bugs_01m7qbm33farx8qs-issue-1744
+- *(proof)* refresh v0.148.13 projections and checkpoint
+- Merge remote-tracking branch 'origin/master' into agent/wog-issue-1744/bugs_01m7qbm33farx8qs-issue-1744
+- Merge remote-tracking branch 'origin/master' into agent/wog-issue-1744/bugs_01m7qbm33farx8qs-issue-1744
+
+## [0.148.14](https://github.com/DecapodLabs/decapod/compare/v0.148.13...v0.148.14) - 2026-11-18
+
+### Fixed
+
+- *(verify)* surface safe scoped validation blocker diagnostics ([#1781](https://github.com/DecapodLabs/decapod/pull/1781))
+
+### Other
+
+- *(proof)* refresh v0.148.13 projections and checkpoint
+- *(merge)* sync origin/master c5bafce6 (v0.148.13) and reconcile proof
+- *(merge)* sync origin/master caeeaba8 ([#1792](https://github.com/DecapodLabs/decapod/pull/1792))
+
 ## [0.148.13](https://github.com/DecapodLabs/decapod/compare/v0.148.12...v0.148.13) - 2026-11-18
 
 ### Fixed

@@ -197,6 +197,40 @@ Release-only packaging is outside that profile; simulated publish/deploy steps
 never prove delivery. Validation itself does not open a PR, create a release/tag,
 upload packages or images, or deploy.
 
+### Exact-Candidate Proof Binding and Continuous Invalidation
+
+Full validation binds its recorded proof in `src/decapod/core/validation_history.rs`
+(`CompletionRecord`, `ValidationBinding`, and `HistoricalTaskBinding`) and
+`src/decapod/core/readiness_evidence/material.rs` (`MaterialIdentity`) to the exact
+candidate commit SHA (`head_revision`), canonical tracked `tree_digest`,
+`accepted_base_revision`, repository/workflow/configuration/toolchain digests, active
+`workunit` subject, task ID, and claim `lease_generation`:
+
+- **Source, commit, and history changes:** Uncommitted working-tree edits, new
+  commits, tree-preserving `git commit --amend`, and `git rebase` immediately
+  invalidate earlier candidate readiness; rebased commits lacking a checkpoint
+  bound to their rewritten tree fail `decapod validate` with
+  `GOVERNANCE_CHECKPOINT_MISSING` until re-checkpointed and re-validated.
+- **Target and custody changes:** Advancing the accepted target branch blocks
+  stale completion and publication, and renewing a task lease (`decapod todo renew`,
+  incrementing `lease_generation`) immediately invalidates prior completion history
+  and workunit checkpoints (`VALIDATION_HISTORY_TASK_STALE` on `todo done --validated
+  --commit`, `govern workunit transition --to verified`, and `govern workunit resume`).
+- **Partial and local scopes:** `GITHUB_ACTIONS=true` / `BUILDKITE=true` runs
+  (`scope=ci_local`, `publication_ready=false`, `readiness=null`), `govern
+  project-check` (`publication_ready=false`), and `validate --snapshot-prepare`
+  never record full completion history or satisfy `workspace publish` / `todo done`.
+  `canonical_local_target = true` proves `scope=repository_local_git_readiness`
+  with `publication_ready=false` and blocks `workspace publish` with
+  `LOCAL_TARGET_PUBLICATION_UNSUPPORTED`.
+- **Immutable historical lookup:** `decapod qa verify commit <sha>`
+  (`src/decapod/plugins/verify.rs::VerifyCommand::Commit`,
+  `validation_history::lookup`) inspects only the immutable observation recorded for
+  that exact `<sha>` (`scope=historical_validation`, `publication_ready=false`) and
+  never transfers readiness to amended, rebased, newer, or lease-rotated
+  candidates. Actual-binary end-to-end coverage lives in
+  `tests/exact_candidate_governance_1052.rs`.
+
 ## Monitoring
 
 Agents inspect supported command status, task/workspace state, trajectories,
@@ -216,8 +250,15 @@ authority. Human-authored overrides are validated, never mechanically rewritten.
 Conflicts preserve source artifacts and stop with an actionable error.
 
 When a migration notice appears, inspect the managed ledger and catalog through
-Decapod and confirm completion and verification. The notice alone is not proof.
-Failed migration follows supported backup/restore diagnostics; unresolved
+`decapod system migrations --format json` (and `decapod system doctor check`)
+instead of directly opening `.decapod/managed/*` files or inferring cwd-relative
+paths from a governed worktree. `MigrationReport::agent_instruction` and
+`inspect_migration_state_at` (`src/decapod/core/migration.rs`) report the actual
+resolved `decapod_root` alongside pending migrations, applied entries, catalog
+entries, legacy database/recovery checks, and concrete remediation instructions
+without consuming the pending transition counter or initializing storage. Confirm
+completion and verification from that inspection output; the notice alone is not
+proof. Failed migration follows supported backup/restore diagnostics; unresolved
 corruption or unsupported recovery requires human judgment.
 
 Release artifact jobs use `assets/tools/release_cpu.rs` through the scoped
@@ -374,8 +415,8 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `ad01e2305258c4402711d92463c1cf84652f5a7a56093d753246046fee7561be`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (237 files), `tests/` (237 files)
+- Repository signal fingerprint: `0e64f504e4c9ea5409f4a9bc84347a0b7d7b0458ab0ba47ba3277cae26c1573e`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (237 files), `tests/` (239 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 
