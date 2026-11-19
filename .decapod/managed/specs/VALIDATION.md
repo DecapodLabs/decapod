@@ -34,6 +34,9 @@
   with unit regression checks verifying exact wire marker equality and zero
   internal table/CTE expansion, and `src/decapod/core/cloud_proof.rs` /
   `db_maintenance.rs` omit private repository filenames and migration ranges.
+  (Buildkite build `13224` passed 74+ checks and hit an unrelated transient
+  Linux `ETXTBSY` runner flake in `podman_machine_start_captures_output_without_reading_terminal_input`;
+  retried cleanly with fresh Buildkite validation.)
 - **Local PostgreSQL 17 + PostgREST conformance (#1377, #1369)**: Executed
   disposable local PG17 + PostgREST conformance harness, passing
   `supabase_service::local_native_managed_project_contract` and

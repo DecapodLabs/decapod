@@ -582,6 +582,11 @@
       "id": "cp-cloud-redact-owner-repair-marker-final",
       "summary": "Fix OWNER_REPAIR_V1_SQL to registered public wire marker and scrub private repo filenames/SQL references from cloud_proof.rs, db_maintenance.rs, and VALIDATION.md",
       "input_digest": "sha256:d6d424f730f744fec6fbc0ecd4322aba3c315e9f63adcf248a303d311c8cad25"
+    },
+    {
+      "id": "cp-cloud-redact-retry-buildkite",
+      "summary": "Record transient Buildkite build 13224 Linux ETXTBSY flake in VALIDATION.md and trigger fresh Buildkite validation",
+      "input_digest": "sha256:58fbaa67210aaf640bf74a07f5f8a1e06aa5ebe6287e9fc5cc727ec6c1011081"
     }
   ],
   "intents": {
