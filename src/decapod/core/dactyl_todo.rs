@@ -71,10 +71,13 @@ impl DactylTodoStore {
         mutation: Operation,
         event_parameters: Vec<Parameter>,
         task_id: Parameter,
-        post_condition: &str,
     ) -> Result<AtomicResult> {
-        let event_sql = format!(
-            "WITH event_params(event_id, event_ts, task_id, event_type, event_payload, event_actor) AS (
+        Ok(DactylBridge::atomic(
+            bridge,
+            &[
+                mutation,
+                Operation::write(
+                    "WITH event_params(event_id, event_ts, task_id, event_type, event_payload, event_actor) AS (
              VALUES ($1, $2, $3, $4, $5, $6)
          )
          INSERT INTO events (event_id, ts, seq, stream, subject_kind, subject_id, event_type, payload, actor)
@@ -92,14 +95,15 @@ impl DactylTodoStore {
              SELECT 1 FROM tasks
              WHERE tasks.id = event_params.task_id
                AND tasks.updated_at = event_params.event_ts
-               AND ({post_condition})
-         )"
-        );
-        Ok(DactylBridge::atomic(
-            bridge,
-            &[
-                mutation,
-                Operation::write(event_sql, event_parameters),
+               AND (
+                   (event_params.event_type = 'task.add' AND tasks.version = 1)
+                   OR (event_params.event_type = 'task.claim' AND tasks.status = 'in_progress' AND tasks.assigned_to = event_params.event_actor)
+                   OR (event_params.event_type = 'task.release' AND tasks.status = 'open' AND (tasks.assigned_to = '' OR tasks.assigned_to IS NULL))
+                   OR (event_params.event_type = 'task.done' AND tasks.status = 'completed' AND tasks.assigned_to = event_params.event_actor)
+               )
+         )",
+                    event_parameters,
+                ),
                 Operation::read(Self::get_sql(), ::std::vec::Vec::from([task_id])),
             ],
         )?)
@@ -320,7 +324,6 @@ impl DactylTodoStore {
                 actor.into(),
             ],
             task.id.clone().into(),
-            "tasks.version = 1",
         );
         let result = match result {
             Ok(result) => result,
@@ -401,7 +404,6 @@ impl DactylTodoStore {
                 actor.into(),
             ],
             id.into(),
-            "tasks.status = 'in_progress' AND tasks.assigned_to = event_params.event_actor",
         )?;
         let mut results = result.results;
         let observation = results
@@ -443,7 +445,6 @@ impl DactylTodoStore {
                 actor.into(),
             ],
             id.into(),
-            "tasks.status = 'open' AND (tasks.assigned_to = '' OR tasks.assigned_to IS NULL)",
         )?;
         let mut results = result.results;
         let observation = results
@@ -485,7 +486,6 @@ impl DactylTodoStore {
                 actor.into(),
             ],
             id.into(),
-            "tasks.status = 'completed' AND tasks.assigned_to = event_params.event_actor",
         )?;
         let mut results = result.results;
         let observation = results
