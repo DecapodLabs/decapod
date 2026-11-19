@@ -1,10 +1,10 @@
 # Mental Model
 
-Decapod is a **repo-native governance kernel**, not a prompt framework, model router, agent harness, or background swarm manager.
+Decapod is an **agent-agnostic, repo-native governance application**. Its metacognitive kernel serves coding agents through on-demand CLI and structured RPC calls.
 
 Humans express engineering intent and judgment through the coding agent they already use (Codex, Claude Code, Cursor, Antigravity, or another harness). **The coding agent invokes Decapod** through its CLI or Decapod-specific structured RPC interface (`decapod rpc`) whenever work crosses a custody, decision, boundary, or proof transition.
 
-Each invocation is ephemeral and daemonless. The repository—specifically `.decapod/` and Git history—is the durable execution surface. One engineering task can span many processes, models, sessions, and harnesses without losing its constraints or unresolved obligations.
+Each invocation ends without leaving a resident daemon. The repository—specifically `.decapod/` and Git history—preserves governance state. One engineering task can span processes, models, sessions, and harnesses without losing its recorded constraints or unresolved obligations.
 
 ## The Kernel Analogy
 

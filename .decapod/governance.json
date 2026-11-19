@@ -633,6 +633,15 @@
         "v0.150.3 candidate build + docs build zero drift + specs.refresh",
         "zero src/docs/tests conflicts with 683873fc2"
       ]
+    },
+    {
+      "id": "cp-1704-v01504-sync",
+      "summary": "Sync accepted master v0.150.4 (6adc183ca) preserving #1847 INTENT.md, #1848 v0.150.4 projections, and #1704 reversible integration removal",
+      "input_digest": "sha256:642bdbfa9f3745ea2fd0de83be44611133cf06aed8471533aa3904edeb7aec78",
+      "proof_refs": [
+        "v0.150.4 candidate build + docs build zero drift + specs.refresh",
+        "zero src/docs/tests conflicts with 6adc183ca"
+      ]
     }
   ],
   "intents": {
@@ -673,22 +682,22 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Preserved #1704 integration_removal architecture spec alongside accepted master v0.150.3 (#1780/#1809)",
-          "reviewed_code_fingerprint": "f0e8539cdc77861fe50e8371ab5fe5f723afcab0f967fa8da9099402eb7a06bf",
+          "reason": "Preserved #1704 integration_removal architecture spec alongside accepted master v0.150.4 (#1847/#1848)",
+          "reviewed_code_fingerprint": "72f6aac2dedf4d73f939cef7707fc24b5dd245cef156ea8638d85dd70fc3ee82",
           "spec_material_hash": "500648ab6fa0296f255a6b4eb94d29e5e695c2213e11512e036b9f950a18f0d4"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Preserved #1704 reversible integration removal interface spec alongside accepted master v0.150.3 (#1780/#1798/#1820)",
-          "reviewed_code_fingerprint": "f0e8539cdc77861fe50e8371ab5fe5f723afcab0f967fa8da9099402eb7a06bf",
+          "reason": "Preserved #1704 reversible integration removal interface spec alongside accepted master v0.150.4 (#1847/#1848)",
+          "reviewed_code_fingerprint": "72f6aac2dedf4d73f939cef7707fc24b5dd245cef156ea8638d85dd70fc3ee82",
           "spec_material_hash": "7f1c7214e2a0ef42c44ca5d9eab399d4dcb3b5e672918eba81ffb946f85f19b2"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Preserved accepted master v0.150.3 SECURITY.md prose (including #1780); #1704 security boundaries remain documented in INTERFACES.md, ARCHITECTURE.md, and SEMANTICS.md",
-          "reviewed_code_fingerprint": "f0e8539cdc77861fe50e8371ab5fe5f723afcab0f967fa8da9099402eb7a06bf",
+          "reason": "Preserved accepted master v0.150.4 SECURITY.md prose; #1704 fail-closed security boundaries remain documented in INTERFACES.md, ARCHITECTURE.md, and SEMANTICS.md",
+          "reviewed_code_fingerprint": "72f6aac2dedf4d73f939cef7707fc24b5dd245cef156ea8638d85dd70fc3ee82",
           "spec_material_hash": "127c65866657d2dd15434ca52f6e3a97b8f20aa4dd97f9d3190e1cd98edac3ac"
         }
       ],
@@ -700,13 +709,13 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795107879Z"
+      "updated_at": "1795112193Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:1f3e6147784bd73539f3aedda27542eac26adf29d4569a36039a5b72cf7eed92",
+      "artifact_hash": "sha256:69e6ddf43260e72f2b63a042219082d6d46535192761c8726a55745e5a2c6ef4",
       "checks": [
         {
           "name": "cargo_clippy",
@@ -749,6 +758,10 @@
           "status": "passed"
         },
         {
+          "name": "specs_refresh_v01504",
+          "status": "passed"
+        },
+        {
           "name": "trajectory_docs",
           "status": "passed"
         },
@@ -766,6 +779,10 @@
         },
         {
           "name": "v01503_candidate_build",
+          "status": "passed"
+        },
+        {
+          "name": "v01504_candidate_build",
           "status": "passed"
         }
       ],
@@ -804,10 +821,17 @@
             "intent_id": "intent:change_01M7RDHPBCTTR2P740KETNH4B7",
             "kind": "trajectory_step_recorded",
             "sequence": 6
+          },
+          {
+            "detail": "trajectory:branch_01M7RDHPF6HWPQTE54PN8Q2BM7",
+            "event_id": "event:7",
+            "intent_id": "intent:change_01M7RDHPBCTTR2P740KETNH4B7",
+            "kind": "trajectory_step_recorded",
+            "sequence": 7
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 6,
+        "next_sequence": 7,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M7RDHPF6HWPQTE54PN8Q2BM7": {
@@ -902,6 +926,28 @@
                 ],
                 "sequence": 6,
                 "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:7",
+                "observations": [
+                  ".decapod/managed/specs/INTENT.md",
+                  ".decapod/managed/specs/OPERATIONS.md",
+                  ".decapod/managed/Dockerfile.decapod",
+                  ".decapod/managed/specs/.manifest.json",
+                  ".decapod/managed/specs/INTENT.md",
+                  ".decapod/managed/specs/OPERATIONS.md"
+                ],
+                "proof_refs": [
+                  "v01504_candidate_build",
+                  "docs_build_zero_drift",
+                  "specs_refresh_v01504"
+                ],
+                "scope": [
+                  "root"
+                ],
+                "sequence": 7,
+                "validation_findings": []
               }
             ]
           }
@@ -912,7 +958,9 @@
       "evidence": [],
       "inspected_files": [
         ".decapod/managed/specs/ARCHITECTURE.md",
+        ".decapod/managed/specs/INTENT.md",
         ".decapod/managed/specs/INTERFACES.md",
+        ".decapod/managed/specs/OPERATIONS.md",
         ".decapod/managed/specs/SEMANTICS.md",
         "src/decapod/cli.rs",
         "src/decapod/core/assets.rs",
@@ -926,7 +974,9 @@
         ".decapod/managed/Dockerfile.decapod",
         ".decapod/managed/specs/.manifest.json",
         ".decapod/managed/specs/ARCHITECTURE.md",
+        ".decapod/managed/specs/INTENT.md",
         ".decapod/managed/specs/INTERFACES.md",
+        ".decapod/managed/specs/OPERATIONS.md",
         ".decapod/managed/specs/SEMANTICS.md",
         "docs/agent/command-contracts.md",
         "docs/book/src/reference/cli.md",

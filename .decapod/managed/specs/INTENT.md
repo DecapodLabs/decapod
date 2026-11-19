@@ -1,5 +1,13 @@
 # Intent
 
+## Agent-agnostic, daemonless kernel application positioning in the docs book (#1847)
+
+The public documentation book (`docs/book/src/index.md`, `docs/book/src/introduction.md`, and `docs/book/src/mental-model.md`) explicitly frames Decapod as an **agent-agnostic, daemonless metacognitive governance kernel application** rather than an agent harness, prompt framework, or background daemon:
+
+- Coding agents across harnesses (Codex, Claude Code, Cursor, Antigravity, and other compatible tools) invoke Decapod on demand through its CLI and structured RPC (`decapod rpc`) interface whenever work crosses an orientation, task-custody, workspace-isolation, boundary, or exact-commit validation gate.
+- Each invocation terminates cleanly without leaving a resident background daemon (`INV-DAEMONLESS`), while the repository (`.decapod/` and Git history) preserves durable governance state, intent, constraints, and proof across agents, models, processes, and sessions.
+- This clarification updates human-facing documentation prose only; it introduces no runtime, CLI, RPC, schema, or security-boundary changes.
+
 ## Cloud control-plane, Dactyl 0.18.0 adoption, and Decapod Local/Cloud unification (#1809, #1808, #1769, #1667, #1777, #1778, #1590, #1033, #1034, #1038, #1040, #1066, #1158, #1369, #1376, #1377, #1380)
 
 Decapod adopts published registry crate `dactyl-db = "=0.18.0"` (SHA-256
@@ -677,7 +685,7 @@ These declarations select authoring and proof obligations; they do not attest im
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `f0e8539cdc77861fe50e8371ab5fe5f723afcab0f967fa8da9099402eb7a06bf`
+- Repository signal fingerprint: `72f6aac2dedf4d73f939cef7707fc24b5dd245cef156ea8638d85dd70fc3ee82`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (243 files), `tests/` (254 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

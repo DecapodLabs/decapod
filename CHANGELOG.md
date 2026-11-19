@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.150.4](https://github.com/DecapodLabs/decapod/compare/v0.150.3...v0.150.4) - 2026-11-19
+
+### Other
+
+- *(govern)* sync accepted master v0.150.3 and align living specs ([#1847](https://github.com/DecapodLabs/decapod/pull/1847))
+- clarify agent-invoked Decapod application in docs/book/src/mental-model.md
+- clarify agent-invoked Decapod application in docs/book/src/introduction.md
+- clarify Decapod's agent-invoked application model in docs/book/src/index.md
+
 ## [0.150.3](https://github.com/DecapodLabs/decapod/compare/v0.150.2...v0.150.3) - 2026-11-19
 
 ### Added
