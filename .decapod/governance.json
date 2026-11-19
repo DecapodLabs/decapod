@@ -648,6 +648,14 @@
       "proof_refs": [
         "claim-1737-actor-custody"
       ]
+    },
+    {
+      "id": "cp-1737-9",
+      "summary": "Reconcile origin/master 45369197e (PR #1825 #1807/#1810) merge and updated spec reviews for #1737",
+      "input_digest": "sha256:d5825b21ad008fd64cbb27345401294fd443896496319b64c9a74b43de3be6e8",
+      "proof_refs": [
+        "claim-1737-actor-custody"
+      ]
     }
   ],
   "intents": {
@@ -688,23 +696,23 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Reconcile #1737 spec with origin/master 89906b666 (PR #1819)",
-          "reviewed_code_fingerprint": "749c4ee268a2a014cb6504ab6cfbbdb633758f62b96b04454c438a3c2dc5e4e3",
-          "spec_material_hash": "e5e498a03a7693482a9c303cfa71c02008221b927496afccb3f3b8d9fc2df187"
+          "reason": "Reconcile #1737 spec with origin/master 45369197e (PR #1825)",
+          "reviewed_code_fingerprint": "dfebed1894514e235cd825c75d03c6f373eb5db81fa0c9c73bf4799e7efcb7a8",
+          "spec_material_hash": "3748ae3b3987358e59a89753188fe514838792c60e8f82ee69f4fc94982bef49"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Reconcile #1737 spec with origin/master 89906b666 (PR #1819)",
-          "reviewed_code_fingerprint": "749c4ee268a2a014cb6504ab6cfbbdb633758f62b96b04454c438a3c2dc5e4e3",
-          "spec_material_hash": "b6e078abfa4f1231dddaaffe281c48e79ee89b2a01608b6c3fd393ca29b4dc92"
+          "reason": "Reconcile #1737 spec with origin/master 45369197e (PR #1825)",
+          "reviewed_code_fingerprint": "dfebed1894514e235cd825c75d03c6f373eb5db81fa0c9c73bf4799e7efcb7a8",
+          "spec_material_hash": "0046e073e066454b57caee1137b69f07073ff8d4d4fabefafc824e709222d99f"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Reconcile #1737 spec with origin/master 89906b666 (PR #1819)",
-          "reviewed_code_fingerprint": "749c4ee268a2a014cb6504ab6cfbbdb633758f62b96b04454c438a3c2dc5e4e3",
-          "spec_material_hash": "ad6576de6a64636013aea5fc3b36ac3824eda0d6cde6cf52faaea20b1b69fa98"
+          "reason": "Reconcile #1737 spec with origin/master 45369197e (PR #1825)",
+          "reviewed_code_fingerprint": "dfebed1894514e235cd825c75d03c6f373eb5db81fa0c9c73bf4799e7efcb7a8",
+          "spec_material_hash": "21902398dcd3240361e109812a5b1b73ae17d184b1b2fa5c26d9ad41ee937434"
         }
       ],
       "state": "APPROVED",
@@ -715,13 +723,13 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795063648Z"
+      "updated_at": "1795068865Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:e8d8b858ea156e1203ae77b9e455f97ca1c2ae59ae212d661fe13746f04a0e8f",
+      "artifact_hash": "sha256:ef3adc399c0c51b929aab3bc9dbb9508a415b02f20fc436889adb2aaa29ab3c3",
       "checks": [
         {
           "name": "cargo_clippy_all_targets",
@@ -769,6 +777,10 @@
         },
         {
           "name": "cargo_test_todo_enforcement",
+          "status": "passed"
+        },
+        {
+          "name": "cargo_test_validate_ergonomics_1807_1810",
           "status": "passed"
         }
       ],
@@ -835,10 +847,17 @@
             "intent_id": "intent:change_01M7QXTS2XBE1SK835T05MEJCV",
             "kind": "trajectory_step_recorded",
             "sequence": 10
+          },
+          {
+            "detail": "trajectory:branch_01M7QXTS6XVVV8NKSX2EE61TB7",
+            "event_id": "event:11",
+            "intent_id": "intent:change_01M7QXTS2XBE1SK835T05MEJCV",
+            "kind": "trajectory_step_recorded",
+            "sequence": 11
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 10,
+        "next_sequence": 11,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M7QXTS6XVVV8NKSX2EE61TB7": {
@@ -995,6 +1014,26 @@
                 ],
                 "sequence": 10,
                 "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:11",
+                "observations": [
+                  "Merged origin/master 45369197e (PR #1825 #1807/#1810, v0.149.3): fmt --check ok, clippy --all-targets --all-features -- -D warnings ok, claim_task_* 2/2, cloud_cli_boundary 1/1, validate_ergonomics_1807_1810 passed, todo_enforcement 5/5 passed"
+                ],
+                "proof_refs": [
+                  "cargo_fmt_check",
+                  "cargo_clippy_all_targets",
+                  "cargo_test_core_todo_claim",
+                  "cargo_test_validate_ergonomics_1807_1810",
+                  "cargo_test_todo_enforcement",
+                  "cargo_test_cloud_cli_boundary"
+                ],
+                "scope": [
+                  "root"
+                ],
+                "sequence": 11,
+                "validation_findings": []
               }
             ]
           }
@@ -1005,6 +1044,7 @@
       "evidence": [
         "Merged origin/master 102d6eb22 (v0.149.3) and fixed builds/12775 failures (docs ingest after init in tests/todo_enforcement.rs; cloud TodoCommand::Claim --agent handling in src/decapod/core/todo.rs + tests/cloud_cli_boundary.rs): fmt --check ok, clippy --all-targets --all-features -- -D warnings ok, claim_task_* 2/2, todo_enforcement 5/5, cloud_cli_boundary 1/1 passed",
         "Merged origin/master 205d4e8da (v0.149.1): fmt --check ok, clippy --all-targets --all-features -- -D warnings ok, core::todo::tests::claim_task_* 2/2, todo_enforcement 5/5 passed",
+        "Merged origin/master 45369197e (PR #1825 #1807/#1810, v0.149.3): fmt --check ok, clippy --all-targets --all-features -- -D warnings ok, claim_task_* 2/2, cloud_cli_boundary 1/1, validate_ergonomics_1807_1810 passed, todo_enforcement 5/5 passed",
         "Merged origin/master 845ff9799 (PR #1818 #1469 test-only + ARCHITECTURE.md, v0.149.3, zero src/ changes): specs.refresh ok, fmt --check ok, doc_alignment 4/4 passed",
         "Merged origin/master 89906b666 (PR #1819 #1247, v0.149.3) and updated 2 TodoCommand::Claim fixtures in tests/shared_state_semantics_1247.rs with explicit non-unknown agent: fmt --check ok, clippy --all-targets --all-features -- -D warnings ok, claim_task_* 2/2, cloud_cli_boundary 1/1, shared_state_semantics_1247 10/10, todo_enforcement 5/5 passed",
         "Merged origin/master a5a1edad (v0.149.0): fmt --check ok, clippy --all-targets --all-features -- -D warnings ok, core::todo::tests::claim_task_* 2/2, core::mentor::reflection::* 33/33, todo_enforcement 5/5, cli_contract_enforcement 23/23, doc_alignment 4/4 passed",
