@@ -619,6 +619,15 @@
         "plugins_policy_tests_20",
         "policy_self_authorization_1776_9"
       ]
+    },
+    {
+      "id": "cp-1738-3",
+      "summary": "Merge origin/master 845ff9799 (PR #1818 / #1469, test-only, v0.149.3), refresh specs/reviews, verify fmt and concurrent_worktree_integration_1469 3/3 against #1738 gate",
+      "input_digest": "sha256:3d45eca783413f479ed20b7578e159c67a9ae1f1b628cf89b6a8a91c75889bc9",
+      "proof_refs": [
+        "cargo_fmt",
+        "concurrent_worktree_integration_1469_3"
+      ]
     }
   ],
   "intents": {
@@ -659,22 +668,22 @@
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Reconciled origin/master cfe2565da (PR #1816 / #1776); #1738 reuses existing PolicyCommand::Approve/Revoke policy ledger and validation_runtime/repository_profile/validation_rules boundaries without adding a parallel engine",
-          "reviewed_code_fingerprint": "97532c8a52e07dec0b96e03183075c9ae9713006c67174c3a2a4d06d9637007b",
-          "spec_material_hash": "080e1e015d867051ec4ecbb1f18aca92a2d62a05798377057e563aaa5a3764e0"
+          "reason": "Reconciled origin/master 845ff9799 (PR #1818 / #1469, test-only); ARCHITECTURE.md gains upstream #1469 section; #1738 reuses existing PolicyCommand::Approve/Revoke ledger and validation_runtime/repository_profile/validation_rules boundaries without a parallel engine",
+          "reviewed_code_fingerprint": "8fde8ac3ada8cde0c54c84d293d316b0bd2376a8cb2590c48d4d2fa2d11c2a8a",
+          "spec_material_hash": "b5e1e3c343de9ed9ba501e7a48d61b43dfed92d7678b3126d1195c9c1cdb9d08"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Reconciled origin/master cfe2565da (PR #1816 / #1776); INTERFACES.md documents governed repo.pr-readiness.v1 policy transition approval ID, scope, and admission contract (#1738)",
-          "reviewed_code_fingerprint": "97532c8a52e07dec0b96e03183075c9ae9713006c67174c3a2a4d06d9637007b",
+          "reason": "Reconciled origin/master 845ff9799 (PR #1818 / #1469, test-only); INTERFACES.md documents governed repo.pr-readiness.v1 policy transition approval ID, scope, and admission contract (#1738)",
+          "reviewed_code_fingerprint": "8fde8ac3ada8cde0c54c84d293d316b0bd2376a8cb2590c48d4d2fa2d11c2a8a",
           "spec_material_hash": "92301e404db139f2992ae85f76eda7cd2de7e0b198aab55420ecf8f8e7331cbc"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Reconciled origin/master cfe2565da (PR #1816 / #1776); SECURITY.md preserves all #1776 cross-surface hardening alongside #1738 policy.control core-trust gating, canonical main policy.db lookup, bounded expiry/revocation/staleness fail-closed guarantees, and unconditional REQUIRED_PROFILE_DOWNGRADE block",
-          "reviewed_code_fingerprint": "97532c8a52e07dec0b96e03183075c9ae9713006c67174c3a2a4d06d9637007b",
+          "reason": "Reconciled origin/master 845ff9799 (PR #1818 / #1469, test-only); SECURITY.md preserves #1776 hardening alongside #1738 policy.control core-trust gating, canonical main policy.db lookup, bounded expiry/revocation/staleness fail-closed guarantees, and unconditional REQUIRED_PROFILE_DOWNGRADE block",
+          "reviewed_code_fingerprint": "8fde8ac3ada8cde0c54c84d293d316b0bd2376a8cb2590c48d4d2fa2d11c2a8a",
           "spec_material_hash": "f97da55b94238c6d5bb981424a3ab79e6341db37dc28369b4eeffe7e36de5a12"
         }
       ],
@@ -686,7 +695,7 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795053788Z"
+      "updated_at": "1795054490Z"
     },
     "trajectory": {
       "active_boundaries": [
