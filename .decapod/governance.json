@@ -602,6 +602,11 @@
       "id": "ckpt-tmpclean-1798-v01500",
       "summary": "Integrate accepted master v0.150.0 (1332f4ecd, PR #1817), rebuild candidate binary, verify candidate docs build (0 diff), and refresh v0.150.0 projections (#1798)",
       "input_digest": "sha256:45e1b7e1fd97d532f1a931df1b7718c4040be982c610e760cc4297c0fe779b1d"
+    },
+    {
+      "id": "ckpt-tmpclean-1798-v01502",
+      "summary": "Sync accepted master v0.150.2 (ea6d8e1c1) using reconcile-merge, rebuild candidate binary, verify candidate docs build (0 diff), and refresh v0.150.2 projections (#1798)",
+      "input_digest": "sha256:d6a1d6e0c7d40f5c7c304291d7d5d9d27d116f9fde20a6be6fdb82af613b47c6"
     }
   ],
   "intents": {
@@ -649,23 +654,23 @@
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Master v0.150.0 release cut introduces no architectural changes for #1798.",
-          "reviewed_code_fingerprint": "7f042cc3f57b5f1fd43b88bd035cab395609017c4b91f9bbe088dc4a64932521",
-          "spec_material_hash": "eea767e816c43693064ee73b838425f7a154fd6e56cf0552669d971d1e5001ea"
+          "reason": "Master v0.150.2 integration introduces no architectural changes for #1798.",
+          "reviewed_code_fingerprint": "084a6d7e04bc2d22e11344e26bc50bb10f850a5b9451a0e3e43b4453c715f431",
+          "spec_material_hash": "ec45705fd9a9a5f29fbe43fb55f7a3b69a802f298ae14eb88118bc42161f71e6"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Preserved #1798 todo-scoped /tmp cleanup guidance in INTERFACES.md alongside v0.150.0 (1332f4ecd) release updates.",
-          "reviewed_code_fingerprint": "7f042cc3f57b5f1fd43b88bd035cab395609017c4b91f9bbe088dc4a64932521",
-          "spec_material_hash": "95f43a38c0d4cd59ae0f541d254b554873881bd3083837b63fa1028f86220d93"
+          "reason": "Preserved #1798 todo-scoped /tmp cleanup guidance (INTERFACES.md:2041) alongside accepted master v0.150.2 (ea6d8e1c1, #1789 + #1780 + #1845).",
+          "reviewed_code_fingerprint": "084a6d7e04bc2d22e11344e26bc50bb10f850a5b9451a0e3e43b4453c715f431",
+          "spec_material_hash": "e8142264a4caae5b7271e2bc25e80ee249e14c3d36ec70fd32c86f9e87dddcae"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Master v0.150.0 release cut preserves #1798 advisory safety boundaries and prompt safety gate allow verdict.",
-          "reviewed_code_fingerprint": "7f042cc3f57b5f1fd43b88bd035cab395609017c4b91f9bbe088dc4a64932521",
-          "spec_material_hash": "fe2a57654bc0079c8ae5d4226c46ba7f1ea50f4246a8c19d826f2e660dc56f81"
+          "reason": "Master v0.150.2 integration preserves #1798 advisory safety boundaries and prompt safety gate allow verdict.",
+          "reviewed_code_fingerprint": "084a6d7e04bc2d22e11344e26bc50bb10f850a5b9451a0e3e43b4453c715f431",
+          "spec_material_hash": "127c65866657d2dd15434ca52f6e3a97b8f20aa4dd97f9d3190e1cd98edac3ac"
         }
       ],
       "state": "APPROVED",
@@ -676,16 +681,20 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795090003Z"
+      "updated_at": "1795102701Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Isolated Decapod worktree only; preserve WorkspaceCommand::Publish slice for validation_scope.rs; preserve PublishResult/WorkspacePublishResult/ValidationGuidance wire shapes; zero blocked literal wildcard shell commands"
       ],
-      "artifact_hash": "sha256:45f9640b285f9f1b2e1a9816da757072edd5851342e451d8978b7ed5a60be1ef",
+      "artifact_hash": "sha256:25d278295ce95c3ceb4126a0656b1e5a313cc76388b79a2a266a1dfd5239f403",
       "checks": [
         {
           "name": "cargo_build_locked_v01500",
+          "status": "passed"
+        },
+        {
+          "name": "cargo_build_locked_v01502",
           "status": "passed"
         },
         {
@@ -702,6 +711,10 @@
         },
         {
           "name": "cargo_fmt_v01500",
+          "status": "passed"
+        },
+        {
+          "name": "cargo_fmt_v01502",
           "status": "passed"
         },
         {
@@ -738,6 +751,10 @@
         },
         {
           "name": "docs_build_v01500",
+          "status": "passed"
+        },
+        {
+          "name": "docs_build_v01502",
           "status": "passed"
         },
         {
@@ -799,10 +816,17 @@
             "intent_id": "intent:run-tmpclean-1798-v01493",
             "kind": "trajectory_step_recorded",
             "sequence": 6
+          },
+          {
+            "detail": "trajectory:run-tmpclean-1798-v01493",
+            "event_id": "event:7",
+            "intent_id": "intent:run-tmpclean-1798-v01493",
+            "kind": "trajectory_step_recorded",
+            "sequence": 7
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 6,
+        "next_sequence": 7,
         "schema_version": "1.0.0",
         "trajectories": {
           "run-tmpclean-1798-v01493": {
@@ -892,6 +916,23 @@
                 ],
                 "sequence": 6,
                 "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:7",
+                "observations": [
+                  "Merged origin/master ea6d8e1c1 (v0.150.2, #1789 + #1780 + #1845) with zero code conflicts; dogfooded reconcile-merge on .decapod/governance.json; rebuilt candidate v0.150.2 binary (--locked), ran candidate docs build (0 diff), refreshed v0.150.2 Dockerfile/specs/manifest."
+                ],
+                "proof_refs": [
+                  "cargo_fmt_v01502",
+                  "cargo_build_locked_v01502",
+                  "docs_build_v01502"
+                ],
+                "scope": [
+                  "src/decapod/core/validate.rs,src/decapod/core/validation_runtime.rs,src/decapod/core/workspace.rs,src/decapod/lib.rs,src/decapod/plugins/verify.rs,src/decapod/core/docs_cli.rs,docs/agent/command-contracts.md,docs/agent/state-model.md,tests/tmp_build_cleanup_guidance_1798.rs,tests/unit/plugins/verify_tests.rs,.decapod/managed/specs/INTERFACES.md"
+                ],
+                "sequence": 7,
+                "validation_findings": []
               }
             ]
           }
@@ -901,6 +942,7 @@
       "evidence": [
         "Merged origin/master 102d6eb22 (v0.149.3, PR #1813 + #1814) with zero code conflicts; cargo fmt (exit 0), cargo clippy --all-targets --all-features -- -D warnings (exit 0), tmp_build_cleanup_guidance_1798 (5/5 including decapod eval prompt safety gate allow), validation_scope (9/9), diagnose_task_includes_todo_scoped_tmp_cleanup_when_ready_to_publish (1/1), doc_alignment (4/4), contract_conformance (12/12), trajectory_docs (5/5), cli_contract_enforcement (23/23).",
         "Merged origin/master 1332f4ecd (v0.150.0, PR #1817) with zero code conflicts; rebuilt candidate v0.150.0 binary (--locked), ran candidate docs build (0 diff), refreshed v0.150.0 Dockerfile/specs/manifest.",
+        "Merged origin/master ea6d8e1c1 (v0.150.2, #1789 + #1780 + #1845) with zero code conflicts; dogfooded reconcile-merge on .decapod/governance.json; rebuilt candidate v0.150.2 binary (--locked), ran candidate docs build (0 diff), refreshed v0.150.2 Dockerfile/specs/manifest.",
         "Pre-synced accepted master e63599e3c (v0.149.3); updated WorkspaceStatus test fixture with credentials: None; rebuilt candidate binary + candidate docs build (0 diff); cargo fmt exit 0, validation_scope 9/9, diagnose_task unit 1/1, tmp_build_cleanup_guidance_1798 5/5, contract_conformance 12/12, doc_alignment 5/5, trajectory_docs 5/5."
       ],
       "inspected_files": [

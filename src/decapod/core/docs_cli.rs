@@ -1058,6 +1058,13 @@ reauthor selected source, review specs, checkpoint and commit the observation.
 Only after that archive exists may `resolve-obligation` record the current
 recovery disposition with evidence references. Preserve the old unproven
 history; never fabricate its checkpoints or treat a decision label as authority.
+When a Git merge (`MERGE_HEAD` present) leaves `.decapod/governance.json`
+conflicted or with a trajectory/custody hash mismatch, run
+`decapod govern artifacts reconcile-merge` before committing the merge. It
+reads immutable commit states (`HEAD`, `MERGE_HEAD`, `merge-base --all`),
+refuses non-merge states or conflicting unaccepted PR authority, preserves
+complete active journal history and failed/missing proof states, and recomputes
+canonical trajectory hashes without fabricating passing proof.
 `inventory --claims-note "..."` records a current-PR checkpoint, not a fake claim
 or a policy-history append. `inventory --compact` performs lossless legacy
 normalization. Neither surface repairs malformed evidence by overwriting it.
