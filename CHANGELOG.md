@@ -7,6 +7,46 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.150.3](https://github.com/DecapodLabs/decapod/compare/v0.150.2...v0.150.3) - 2026-11-19
+
+### Added
+
+- *(lifecycle)* instruct agents to clean todo-scoped /tmp paths on PR creation ([#1798](https://github.com/DecapodLabs/decapod/pull/1798))
+
+### Other
+
+- *(govern)* sync accepted master v0.150.2 ([#1798](https://github.com/DecapodLabs/decapod/pull/1798))
+- *(lifecycle)* integrate accepted master v0.150.0 ([#1798](https://github.com/DecapodLabs/decapod/pull/1798))
+- *(lifecycle)* pre-sync accepted master e63599e3c ([#1798](https://github.com/DecapodLabs/decapod/pull/1798))
+- *(govern)* bind trajectory task id for publication material ([#1798](https://github.com/DecapodLabs/decapod/pull/1798))
+- *(lifecycle)* integrate accepted master v0.149.3 ([#1798](https://github.com/DecapodLabs/decapod/pull/1798))
+
+## [0.150.2](https://github.com/DecapodLabs/decapod/compare/v0.150.1...v0.150.2) - 2026-11-19
+
+### Fixed
+
+- *(govern)* support integrity-preserving merged journal reconciliation ([#1780](https://github.com/DecapodLabs/decapod/pull/1780))
+
+### Other
+
+- *(govern)* sync accepted master v0.150.1 ([#1780](https://github.com/DecapodLabs/decapod/pull/1780))
+- *(govern)* pass explicit git identity in reconcile-merge unit tests ([#1780](https://github.com/DecapodLabs/decapod/pull/1780))
+- *(govern)* sync accepted master v0.150.0 ([#1780](https://github.com/DecapodLabs/decapod/pull/1780))
+- *(govern)* sync accepted master e63599e3c ([#1780](https://github.com/DecapodLabs/decapod/pull/1780))
+- *(govern)* sync accepted master c845ae1d0 ([#1780](https://github.com/DecapodLabs/decapod/pull/1780))
+- *(govern)* sync accepted master 1b3ca1b89 ([#1780](https://github.com/DecapodLabs/decapod/pull/1780))
+- *(govern)* integrate accepted master v0.149.3 ([#1780](https://github.com/DecapodLabs/decapod/pull/1780))
+
+## [0.150.1](https://github.com/DecapodLabs/decapod/compare/v0.150.0...v0.150.1) - 2026-11-19
+
+### Other
+
+- *(docs)* integrate accepted master v0.150.0 ([#1789](https://github.com/DecapodLabs/decapod/pull/1789))
+- *(docs)* refresh v0.149.1 projections ([#1789](https://github.com/DecapodLabs/decapod/pull/1789))
+- *(docs)* integrate accepted master v0.149.1 ([#1052](https://github.com/DecapodLabs/decapod/pull/1052)) ([#1789](https://github.com/DecapodLabs/decapod/pull/1789))
+- *(docs)* refresh v0.149.0 projections ([#1789](https://github.com/DecapodLabs/decapod/pull/1789))
+- *(book)* center BYOA and metacognitive kernel architecture ([#1789](https://github.com/DecapodLabs/decapod/pull/1789))
+
 ## [0.150.0](https://github.com/DecapodLabs/decapod/compare/v0.149.3...v0.150.0) - 2026-11-19
 
 ### Added

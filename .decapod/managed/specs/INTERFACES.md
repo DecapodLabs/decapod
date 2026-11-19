@@ -1511,8 +1511,8 @@ field. Nothing in this operation authorizes a mutation, approval or completion.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `f0a8a7754a247a8d4032f869b4da50c736eb0e0d4153945eaadd8d4db0440a2f`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (242 files), `tests/` (252 files)
+- Repository signal fingerprint: `f0e8539cdc77861fe50e8371ab5fe5f723afcab0f967fa8da9099402eb7a06bf`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (243 files), `tests/` (254 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 
@@ -2045,3 +2045,35 @@ manual or imported/self-hosted execution cannot grant Cachix publication.
 ## Canonical local Git proof (#1069)
 
 An accepted `proof.repository_contract.canonical_local_target = true` uses ordinary CLI/RPC validation against the canonical local branch. `readiness.ready` refers to that exact local subject with `scope=repository_local_git_readiness`; `publication_ready` stays false. `qa verify commit` inspects canonical historical proof. `workspace publish` and the independent final PR gate reject local-only target authority before remote publication. Omitted/false mode retains existing digests and GitHub behavior. Candidate-only mode, changed branch, strict profile and cloud selection cannot activate the local host.
+
+## Merged governance journal reconciliation (#1780)
+
+`decapod govern artifacts reconcile-merge` provides a supported recovery path
+when a Git 3-way merge (`MERGE_HEAD` present, e.g. `git merge --no-commit -X
+ours`) leaves `.decapod/governance.json` conflicted or failing with
+`Trajectory artifact hash mismatch`. The command requires an active merge
+(`GOVERNANCE_MERGE_NOT_IN_PROGRESS` otherwise), reads only immutable Git commit
+objects (`HEAD`, `MERGE_HEAD`, and `merge-base --all`) rather than trusting
+corrupted working-tree bytes, and fails closed on conflicting unaccepted PR
+authority (`GOVERNANCE_MERGE_AUTHORITY_CONFLICT`), ambiguous merge bases
+(`GOVERNANCE_MERGE_AMBIGUOUS_BASE`), or contradictory check proof statuses
+(`GOVERNANCE_MERGE_PROOF_CONFLICT`).
+
+Same-workstream merges reconcile additive `trajectory` sets, merge `claims`,
+`resolutions`, `checkpoints`, `plan`, and `custody` state (re-sequencing
+divergent custody events/steps and remapping `loop.custody_event_id`), clear any
+stale `validation` receipt when trajectory or validation changed, and recompute
+`proof_status`, `verdicts`, and `artifact_hash` via `with_recomputed_hash()` so
+failed or missing proof never becomes passing. Accepted-target merges
+(`origin/<target_base>`) retain the complete active workstream journal while
+carrying forward newly accepted baseline policy and unresolved obligations.
+`tests/merged_governance_journal_1780.rs` exercises the real binary across
+`git merge --no-commit -X ours` recovery, checkpointed merge commit
+verification (`verify-checkpoints --publication-material`), and negative proof
+and authority controls.
+
+## Todo-scoped /tmp cleanup guidance (#1798)
+
+`src/decapod/core/validate.rs` exposes `resolve_validation_task_id`, `validation_temp_root`, `todo_tmp_cleanup_instruction_for_task`, and `todo_tmp_cleanup_instruction`, resolving the active todo scope (`DECAPOD_TASK_ID` or branch-encoded task ID) to `<temp_dir>/decapod_validate/<task-id>` without modifying internal `create_validation_temp_path` or `cleanup_validation_temp_paths` ownership semantics.
+
+When validation succeeds (`ValidationGuidance::for_outcome(true)`, `ValidationGuidance::for_readiness_outcome(true, Mode::Required, Decision::Accept)`, `decapod validate`, and `validate.run` remote readiness payloads) and when PR creation completes (`workspace::publish_workspace_with_readiness` warnings via `workspace::pr_admission_warnings` and `decapod qa diagnose` `cleanup_guidance` when `next_command == "decapod workspace publish"`), Decapod instructs the agent to flush ONLY that todo's `/tmp` build and scratch directories (such as `<temp_dir>/decapod_validate/<task-id>` and any todo-scoped `CARGO_TARGET_DIR` under `/tmp`). The instruction explicitly forbids wildcard or root-level deletion of `/tmp`, deleting another concurrent agent's or sibling todo's `/tmp` path, and touching shared `/tmp/decapod` controller sockets/state or active sibling directories. The existing `PublishResult`, `WorkspacePublishResult`, and `ValidationGuidance` wire shapes remain unchanged. `docs/agent/command-contracts.md` (`docs_cli::readiness_contract` and the `decapod workspace` contract) and `docs/agent/state-model.md` document the same todo-scoped `/tmp` cleanup rule, verified by `tests/tmp_build_cleanup_guidance_1798.rs` and `tests/unit/plugins/verify_tests.rs`.

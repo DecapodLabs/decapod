@@ -1989,6 +1989,9 @@ pub use checkpoint_history::{
     CheckpointHistoryReport, HistoryDisposition, HistoryFinding, HistoryObligation,
     inspect_checkpoint_history,
 };
+#[path = "governance_document/merge_reconcile.rs"]
+mod merge_reconcile;
+pub use merge_reconcile::reconcile_merge;
 
 #[path = "governance_document/scope_reconciliation.rs"]
 mod scope_reconciliation;
