@@ -488,12 +488,17 @@ pub(crate) fn capture_task_binding_with_budget(
         .and_then(Value::as_str)
         .filter(|id| !id.is_empty())
         .ok_or_else(|| invalid("full validation requires a task-bound trajectory"))?;
-    let auto_renew = std::env::var("DECAPOD_VALIDATE_AUTO_RENEW_LEASE")
-        .ok()
-        .map(|v| !matches!(v.as_str(), "0" | "false" | "FALSE" | "no" | "NO"))
-        .unwrap_or(true);
+    // Never rotate custody implicitly: renewing bumps `lease_generation`, which
+    // invalidates workunit execution checkpoints. Default is a read-only advisory.
+    let mode = todo::ValidationLeaseTtlMode::from_env_value(
+        std::env::var("DECAPOD_VALIDATE_LEASE_TTL").ok().as_deref(),
+    );
     let min_ttl_secs = validation_budget.as_secs().saturating_add(300);
-    todo::ensure_validation_lease_ttl(&store.root, task_id, min_ttl_secs, auto_renew)?;
+    if let todo::ValidationLeaseTtl::Low { advisory, .. } =
+        todo::ensure_validation_lease_ttl(&store.root, task_id, min_ttl_secs, mode)?
+    {
+        eprintln!("{advisory}");
+    }
     capture_task_binding_inner(store, root, true)
 }
 fn capture_task_binding_inner(

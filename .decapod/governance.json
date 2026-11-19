@@ -639,6 +639,11 @@
       "proof_refs": [
         "merge_base=cfe2565da"
       ]
+    },
+    {
+      "id": "ckpt-fix-lease-ttl-readonly",
+      "summary": "Make pre-capture lease TTL guard read-only by default (DECAPOD_VALIDATE_LEASE_TTL=warn|strict|renew) so validate never rotates workunit custody implicitly (#1810)",
+      "input_digest": "sha256:f65a88da4483c784430fb3eb68fa817c0e0beeab2286d4bd9a1a86f7ad6deeea"
     }
   ],
   "intents": {
@@ -679,22 +684,22 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Documented pre-broker validated-done handoff architecture, broker timeout handling, and RLIMIT_NOFILE child elevation (#1807, #1810)",
-          "reviewed_code_fingerprint": "69c206182c9bbbd1f84bcaf8a0e7eafefe7b9f7197fd401fd20b40597786becb",
+          "reason": "Verified pre-broker validated-done handoff, broker timeout handling, read-only lease-TTL guard, and RLIMIT_NOFILE child elevation (#1807, #1810)",
+          "reviewed_code_fingerprint": "152a61b2785ee44d0253f5b9410b1a61dc0ffcaea421a952e7a2e8778f885bd3",
           "spec_material_hash": "9f6bb83d9be39e2db6c3337931494d81c2d42733ae5b0a2a85731222531f1375"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Documented group_broker deadline_ms handling, pre-broker validated-done handoff, CLAIMED remediation, and qa verify regen guard (#1807, #1810)",
-          "reviewed_code_fingerprint": "69c206182c9bbbd1f84bcaf8a0e7eafefe7b9f7197fd401fd20b40597786becb",
+          "reason": "Verified broker deadline_ms, pre-broker validated-done handoff, CLAIMED remediation, and qa verify regen guard (#1807, #1810)",
+          "reviewed_code_fingerprint": "152a61b2785ee44d0253f5b9410b1a61dc0ffcaea421a952e7a2e8778f885bd3",
           "spec_material_hash": "faca9a6dcb80b59f8da63babe461f29f23e74f0606733972d402396e814a0143"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Preserved #1776 policy hardening and documented credential-safe authenticated private-repo fallback (#1807)",
-          "reviewed_code_fingerprint": "69c206182c9bbbd1f84bcaf8a0e7eafefe7b9f7197fd401fd20b40597786becb",
+          "reason": "Verified #1776 policy hardening and credential-safe private-repo fallback (#1807)",
+          "reviewed_code_fingerprint": "152a61b2785ee44d0253f5b9410b1a61dc0ffcaea421a952e7a2e8778f885bd3",
           "spec_material_hash": "9c15cdf421a538d0e8fa06a154d96acaf41fc3d8ec15872b2c6016f0ebb908e1"
         }
       ],
@@ -706,7 +711,7 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795052421Z"
+      "updated_at": "1795055894Z"
     },
     "trajectory": {
       "active_boundaries": [

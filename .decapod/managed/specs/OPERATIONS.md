@@ -216,12 +216,17 @@ candidate commit SHA (`head_revision`), canonical tracked `tree_digest`,
   incrementing `lease_generation`) immediately invalidates prior completion history
   and workunit checkpoints (`VALIDATION_HISTORY_TASK_STALE` on `todo done --validated
   --commit`, `govern workunit transition --to verified`, and `govern workunit resume`).
-  To prevent avoidable mid-validation lease expiration during long provider runs,
-  `validation_history::capture_task_binding_with_budget` calls
-  `todo::ensure_validation_lease_ttl` *before* freezing `HistoricalTaskBinding`,
-  automatically extending the active claiming agent's lease when remaining TTL is
-  shorter than the validation budget (unless `DECAPOD_VALIDATE_AUTO_RENEW_LEASE=0`,
-  which fails fast with `VALIDATION_LEASE_TTL_INSUFFICIENT`).
+  To surface avoidable mid-validation lease expiration before long provider runs,
+  `validation_history::capture_task_binding_with_budget` calls the read-only
+  `todo::ensure_validation_lease_ttl` guard *before* freezing `HistoricalTaskBinding`.
+  Because renewal rotates custody, validation never renews implicitly. The mode is
+  selected by `DECAPOD_VALIDATE_LEASE_TTL`: `warn` (default) emits a
+  `VALIDATION_LEASE_TTL_LOW` stderr advisory with the exact `decapod todo renew`
+  command and continues with custody untouched; `strict` fails fast with
+  `VALIDATION_LEASE_TTL_INSUFFICIENT`; `renew` is an explicit operator opt-in that
+  renews the claiming agent's lease first and therefore requires refreshing any
+  existing workunit/governance checkpoint. The safe path is to claim or renew with
+  a lease longer than the expected run (`--lease-seconds`) *before* checkpointing.
 - **Open file descriptor limits (`RLIMIT_NOFILE`):** On Unix hosts with restrictive
   default soft limits (such as macOS `ulimit -n 256`), `bounded_process::configure_child_nofile_limit`
   and `raise_nofile_soft_limit_in_child` raise the soft `RLIMIT_NOFILE` of spawned
@@ -429,7 +434,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `69c206182c9bbbd1f84bcaf8a0e7eafefe7b9f7197fd401fd20b40597786becb`
+- Repository signal fingerprint: `152a61b2785ee44d0253f5b9410b1a61dc0ffcaea421a952e7a2e8778f885bd3`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (237 files), `tests/` (241 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

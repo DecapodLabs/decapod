@@ -483,8 +483,12 @@ Additional ergonomics and private-repository regressions (#1807, #1810) cover:
 - Authenticated read-only private-repo accepted-target resolution via mock
   `OfficialCli` `GithubGet` (`validation_history::integration_tests`) and redacted
   error reporting when unauthenticated and authenticated transports are unavailable;
-- Pre-capture lease TTL verification and automatic renewal before freezing
-  `HistoricalTaskBinding` (`validation_history::archive_tests::capture_task_binding_with_budget_auto_renews_short_lease_and_respects_opt_out`);
+- Pre-capture, custody-preserving lease TTL verification before freezing
+  `HistoricalTaskBinding`: default advisory and `strict` modes leave `revision` and
+  `lease_generation` untouched, only explicit `renew` rotates custody
+  (`validation_history::archive_tests::capture_task_binding_with_budget_never_rotates_custody_unless_renew_is_explicit`;
+  end-to-end custody stability across workunit checkpoints is covered by
+  `entrypoint_correctness::canonical_workunit_withdraws_superseded_proof_and_recovers_after_lease_renewal`);
 - Request-bound pre-broker `todo done --validated` handoff validation and cleanup
   (`plugins::verify::historical_tests::prepared_done_handoff_roundtrips_and_rejects_mismatched_commit_or_request`
   and `tests/validate_ergonomics_1807_1810.rs::todo_done_validated_decouples_broker_and_cleans_handoff`);
@@ -1477,7 +1481,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `69c206182c9bbbd1f84bcaf8a0e7eafefe7b9f7197fd401fd20b40597786becb`
+- Repository signal fingerprint: `152a61b2785ee44d0253f5b9410b1a61dc0ffcaea421a952e7a2e8778f885bd3`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (237 files), `tests/` (241 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

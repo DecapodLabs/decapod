@@ -102,15 +102,60 @@ pub(crate) fn capture_validation_binding(
     )
 }
 
+/// How `validate` reacts when the active claim lease is shorter than the
+/// validation budget.
+///
+/// Renewing a lease increments `lease_generation`, which rotates task custody
+/// and invalidates workunit execution checkpoints (`EXECUTION_STATE_CHANGED`).
+/// Validation therefore never renews implicitly: the default is a read-only
+/// advisory, and renewal is an explicit operator opt-in.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub(crate) enum ValidationLeaseTtlMode {
+    /// Read-only: report an advisory and continue without mutating custody.
+    Warn,
+    /// Read-only: fail fast with `VALIDATION_LEASE_TTL_INSUFFICIENT`.
+    Strict,
+    /// Explicit opt-in: renew the claiming agent's lease before capture. This
+    /// rotates custody, so any existing workunit checkpoint must be refreshed.
+    Renew,
+}
+
+impl ValidationLeaseTtlMode {
+    /// Parses `DECAPOD_VALIDATE_LEASE_TTL` (`warn` | `strict` | `renew`).
+    /// Unknown values fall back to the non-mutating `Warn` mode.
+    pub(crate) fn from_env_value(value: Option<&str>) -> Self {
+        match value.map(|v| v.trim().to_ascii_lowercase()).as_deref() {
+            Some("strict") => Self::Strict,
+            Some("renew") => Self::Renew,
+            _ => Self::Warn,
+        }
+    }
+}
+
+/// Outcome of the pre-capture lease TTL guard.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub(crate) enum ValidationLeaseTtl {
+    /// Remaining lease covers the validation budget.
+    Sufficient { remaining_secs: u64 },
+    /// Remaining lease is shorter than the budget; custody was not mutated.
+    Low {
+        remaining_secs: u64,
+        required_secs: u64,
+        advisory: String,
+    },
+    /// Lease was renewed by explicit operator opt-in.
+    Renewed { lease_secs: u64 },
+}
+
 /// Guard against mid-validation `VALIDATION_HISTORY_TASK_STALE` by checking the
-/// remaining exclusive lease TTL before expensive validation starts and, when
-/// permitted, renewing the claiming agent's active lease beforehand.
+/// remaining exclusive lease TTL before expensive validation starts. Only the
+/// explicit `Renew` mode mutates custody.
 pub(crate) fn ensure_validation_lease_ttl(
     store_root: &Path,
     task_id: &str,
     min_remaining_secs: u64,
-    auto_renew: bool,
-) -> Result<u64, error::DecapodError> {
+    mode: ValidationLeaseTtlMode,
+) -> Result<ValidationLeaseTtl, error::DecapodError> {
     let broker = DbBroker::new(store_root);
     if broker.is_cloud() {
         return Err(error::DecapodError::NotImplemented(
@@ -172,24 +217,47 @@ pub(crate) fn ensure_validation_lease_ttl(
         },
     )?;
     if remaining_secs >= required_secs {
-        return Ok(remaining_secs);
+        return Ok(ValidationLeaseTtl::Sufficient { remaining_secs });
     }
-    if !auto_renew || status == "done" {
-        return Err(error::DecapodError::ValidationError(format!(
-            "VALIDATION_LEASE_TTL_INSUFFICIENT: remaining task claim lease ({remaining_secs}s) for '{task_id}' is shorter than validation budget ({required_secs}s); run `decapod todo renew --id {task_id} --lease-seconds {required_secs}` before running validation"
-        )));
+    let renew_hint = format!(
+        "run `decapod todo renew --id {task_id} --lease-seconds {required_secs}` and refresh any workunit/governance checkpoint before running validation"
+    );
+    match mode {
+        ValidationLeaseTtlMode::Warn => {
+            return Ok(ValidationLeaseTtl::Low {
+                remaining_secs,
+                required_secs,
+                advisory: format!(
+                    "VALIDATION_LEASE_TTL_LOW: remaining task claim lease ({remaining_secs}s) for '{task_id}' is shorter than the validation budget ({required_secs}s); validation continues without mutating custody, but a lease that expires mid-run fails with VALIDATION_HISTORY_TASK_STALE; {renew_hint}"
+                ),
+            });
+        }
+        ValidationLeaseTtlMode::Strict => {
+            return Err(error::DecapodError::ValidationError(format!(
+                "VALIDATION_LEASE_TTL_INSUFFICIENT: remaining task claim lease ({remaining_secs}s) for '{task_id}' is shorter than validation budget ({required_secs}s); {renew_hint}"
+            )));
+        }
+        ValidationLeaseTtlMode::Renew if status == "done" => {
+            return Err(error::DecapodError::ValidationError(format!(
+                "VALIDATION_LEASE_TTL_INSUFFICIENT: remaining task claim lease ({remaining_secs}s) for '{task_id}' is shorter than validation budget ({required_secs}s) and a done task cannot be renewed"
+            )));
+        }
+        ValidationLeaseTtlMode::Renew => {}
     }
     let renew_secs = required_secs.clamp(DEFAULT_CLAIM_LEASE_SECS, MAX_CLAIM_LEASE_SECS);
     let renewed = renew_claim_lease(store_root, task_id, &agent_id, Some(renew_secs))?;
     if renewed.get("status").and_then(|v| v.as_str()) != Some("ok") {
         let detail = renewed["result"]["message"]
             .as_str()
+            .or_else(|| renewed["message"].as_str())
             .unwrap_or("unable to extend active claim lease");
         return Err(error::DecapodError::ValidationError(format!(
-            "VALIDATION_LEASE_TTL_INSUFFICIENT: remaining task claim lease ({remaining_secs}s) for '{task_id}' is shorter than validation budget ({required_secs}s) and automatic renewal failed: {detail}"
+            "VALIDATION_LEASE_TTL_INSUFFICIENT: remaining task claim lease ({remaining_secs}s) for '{task_id}' is shorter than validation budget ({required_secs}s) and explicit renewal failed: {detail}"
         )));
     }
-    Ok(renew_secs)
+    Ok(ValidationLeaseTtl::Renewed {
+        lease_secs: renew_secs,
+    })
 }
 
 pub(crate) fn ensure_task_full_validation_plan_on_conn(
