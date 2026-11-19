@@ -1461,8 +1461,8 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `a9f6674f676f41c31cb8f6e497957ea69cb6f96dc1cd8ce3fa78599c541a2b54`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (237 files), `tests/` (237 files)
+- Repository signal fingerprint: `772dd836ffad511dbc285ef2bfa617cc12c47c3640484684a61bbf3d1d849320`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (237 files), `tests/` (239 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 
@@ -2309,3 +2309,18 @@ The showcase kernel PR must not introduce a new GitHub Actions workflow, shadow
 the website's renderer or suppress the existing living-spec material gate.
 Independent native source validation and complete candidate readiness remain
 necessary before merging.
+
+## Readiness Gate-Skip Override Hardening (#1659)
+
+Diagnostic gate-skip overrides (`DECAPOD_VALIDATE_SKIP_GIT_GATES`,
+`DECAPOD_VALIDATE_SKIP_TOOLING_GATES`, and
+`DECAPOD_VALIDATE_SKIP_FINGERPRINT_GATES`) are strictly non-authoritative and
+must never establish full validation, publication readiness, or validated task
+completion:
+
+- **Full-readiness rejection boundary:** `core::validation_runtime::require_full_readiness_environment()` rejects any presence (`var_os().is_some()`) of `DECAPOD_VALIDATE_SKIP_GIT_GATES` or `DECAPOD_VALIDATE_SKIP_TOOLING_GATES`, and any truthy value of `DECAPOD_VALIDATE_SKIP_FINGERPRINT_GATES` (`core::validate::skip_fingerprint_gates()` matching `1`, `true`, `TRUE`, `yes`, `YES`), failing with `READINESS_GATE_OVERRIDE_UNSUPPORTED` across `decapod validate`, `decapod v`, `decapod rpc --op validate.run`, `decapod workspace publish`, `decapod rpc --op workspace.publish`, and `decapod todo done --validated` (live and `--commit` historical paths).
+- **Pre-side-effect enforcement on `WorkspaceCommand::Publish` (`src/decapod/lib.rs`):** When `proof.validation_buildkite_preflights = false`, `WorkspaceCommand::Publish` enforces `require_full_readiness_environment()?` before calling `run_validation_bounded_with_receipt(..., refresh_specs = true, ...)`, ensuring gate-skip overrides reject immediately with `READINESS_GATE_OVERRIDE_UNSUPPORTED` without mutating `.decapod/managed/specs/` or surfacing masked downstream failures.
+- **Verification and recovery isolation (`src/decapod/plugins/verify.rs`):** `run_validate_and_hash` calls `crate::core::validation_runtime::require_full_readiness_environment()?` prior to spawning child `decapod validate --format json`, and `safe_validation_failure_diagnostic` includes `READINESS_GATE_OVERRIDE_UNSUPPORTED` in `MARKERS`. This closes the bypass where `qa verify`, `qa verify todo`, `qa verify recover`, or `todo done --validated` under `GITHUB_ACTIONS=true` or `BUILDKITE=true` with active skip overrides could otherwise enter `CiLocal` and mark tasks verified.
+- **Partial diagnostics and non-reusable receipts:** `ValidationScope::CiLocal` (`GITHUB_ACTIONS=true` / `BUILDKITE=true`) and `ValidationScope::ProjectPrerequisites` (`decapod govern project-check`) preserve `publication_ready = false` and never record `validation.completed` history (`core::validation_history::finish_archive`) or full native readiness artifacts (`observations.json`, `completion/`, `historical-proof.json`). Removing an override after an overridden or partial `govern project-check` receipt write (`sections.validation` in `.decapod/governance.json`) does not authorize `validate`, `workspace publish`, `qa verify commit`, or `todo done --validated [--commit]`.
+- **Group broker isolation (`src/decapod/core/group_broker.rs`):** `CALLER_ENV_KEYS` clears/replaces all three `DECAPOD_VALIDATE_SKIP_*` variables per caller request so an override-tainted broker leader cannot taint a clean `todo done --validated` client, while override-tainted clients fail in `lib.rs::run()` before mutating todo state.
+- **Regression suite and verification scope:** `tests/gate_skip_override_readiness_1659.rs` exercises all of the above end-to-end against the compiled `decapod` binary in isolated canonical local-Git repositories (`repository_profile::REQUIRED_PROFILE`, `canonical_local_target = true`). Full hosted Buildkite/GitHub source-CI acceptance for this branch remains governed by the repository's configured proof profile and is not substituted by local test execution.

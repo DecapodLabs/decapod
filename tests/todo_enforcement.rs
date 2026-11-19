@@ -755,7 +755,7 @@ fn test_issue_1737_unknown_claim_rejected_and_legacy_unknown_recovery_preserves_
             }
         };
 
-    // Eval, docs ingest, and init --proof --no-ci --isolation-mode worktree succeed without DECAPOD_AGENT_ID.
+    // Eval, init --proof --no-ci --isolation-mode worktree, and docs ingest succeed without DECAPOD_AGENT_ID.
     let eval_out = run_isolated(
         &dir,
         &["eval", "--stdin", "--format", "json"],
@@ -766,12 +766,6 @@ fn test_issue_1737_unknown_claim_rejected_and_legacy_unknown_recovery_preserves_
         eval_out.status.success(),
         "eval failed: {}",
         String::from_utf8_lossy(&eval_out.stderr)
-    );
-    let docs_out = run_isolated(&dir, &["docs", "ingest"], None, None);
-    assert!(
-        docs_out.status.success(),
-        "docs ingest failed: {}",
-        String::from_utf8_lossy(&docs_out.stderr)
     );
     let init_out = run_isolated(
         &dir,
@@ -786,6 +780,12 @@ fn test_issue_1737_unknown_claim_rejected_and_legacy_unknown_recovery_preserves_
     );
     git(&dir, &["add", "-A"]);
     git(&dir, &["commit", "-m", "Accept Decapod init baseline"]);
+    let docs_out = run_isolated(&dir, &["docs", "ingest"], None, None);
+    assert!(
+        docs_out.status.success(),
+        "docs ingest failed: {}",
+        String::from_utf8_lossy(&docs_out.stderr)
+    );
 
     // todo add works when DECAPOD_AGENT_ID is unset, as do read-only todo list/get.
     let add_out = run_isolated(

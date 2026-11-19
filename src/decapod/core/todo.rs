@@ -7978,11 +7978,15 @@ async fn run_cloud_todo_command_with_store_async(
             let task_id = resolve_task_id_arg(id, id_positional, "todo show")?;
             cloud_get_task(root, store, &task_id).await?
         }
-        TodoCommand::Claim { id, .. } => {
-            if authoring::is_missing_or_unknown_actor(&actor) {
+        TodoCommand::Claim { id, agent, .. } => {
+            let effective_actor = agent.as_deref().unwrap_or(&actor).to_string();
+            if authoring::is_missing_or_unknown_actor(&effective_actor) {
                 return Err(authoring::authoring_actor_required_error());
             }
-            let task = store.claim_task(id, actor).await.map_err(cloud_error)?;
+            let task = store
+                .claim_task(id, effective_actor)
+                .await
+                .map_err(cloud_error)?;
             serde_json::json!({
                 "ts": now_iso(),
                 "cmd": "todo.claim",
