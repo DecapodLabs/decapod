@@ -586,6 +586,15 @@
         ".decapod/managed/specs/ARCHITECTURE.md",
         "tests/concurrent_worktree_integration_1469.rs"
       ]
+    },
+    {
+      "id": "conc-1469-merge-cfe2565d",
+      "summary": "Integrate accepted master cfe2565da (#1776) and refresh v0.149.3 projections (#1469)",
+      "input_digest": "sha256:e6908e7fc47c3b2f273ca34d32ea40dcd8c1b8c0ce00351b585477be4851ab6b",
+      "proof_refs": [
+        ".decapod/managed/specs/ARCHITECTURE.md",
+        "tests/concurrent_worktree_integration_1469.rs"
+      ]
     }
   ],
   "intents": {
@@ -631,22 +640,22 @@
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
           "reason": "Documented concurrent isolated authoring, advisory vs enforced custody overlaps, and combined-candidate admission (#1469)",
-          "reviewed_code_fingerprint": "9ba032bd0bdc2cf86f77409b27db92b28f2678d31d02b7b0e76d08ca17c45669",
+          "reviewed_code_fingerprint": "75fb25073525c9e4ea6a2a4df7a58ef89cb21325047985833122f88b53fd1e4a",
           "spec_material_hash": "b5e1e3c343de9ed9ba501e7a48d61b43dfed92d7678b3126d1195c9c1cdb9d08"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/INTERFACES.md",
           "reason": "No CLI, RPC, or external schema signatures were added or altered; PR #1469 adds regression coverage and architecture documentation",
-          "reviewed_code_fingerprint": "9ba032bd0bdc2cf86f77409b27db92b28f2678d31d02b7b0e76d08ca17c45669",
+          "reviewed_code_fingerprint": "75fb25073525c9e4ea6a2a4df7a58ef89cb21325047985833122f88b53fd1e4a",
           "spec_material_hash": "1445e13fa7ccfa6c4a68850bd794b6b1ba7379c0148b570c3a7605b6a26beb25"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Existing lease custody, session, and target-freshness security boundaries remain intact and are verified by the new regression suite",
-          "reviewed_code_fingerprint": "9ba032bd0bdc2cf86f77409b27db92b28f2678d31d02b7b0e76d08ca17c45669",
-          "spec_material_hash": "735ae6e95c6b18ff2ccc718fbadaa4d7ae483d632aee2fb071d4f9ae6daa23de"
+          "reason": "Preserved #1776 accepted-policy security prose from origin/master cfe2565d; PR #1469 adds regression coverage and architecture documentation only",
+          "reviewed_code_fingerprint": "75fb25073525c9e4ea6a2a4df7a58ef89cb21325047985833122f88b53fd1e4a",
+          "spec_material_hash": "49c7d1428d860804f8fc7f436c5da22483d385c9ce4be90f7db52f1cf4b362ee"
         }
       ],
       "state": "APPROVED",
@@ -657,7 +666,7 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795051372Z"
+      "updated_at": "1795052632Z"
     },
     "trajectory": {
       "active_boundaries": [
