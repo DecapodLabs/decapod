@@ -1,7 +1,7 @@
 {
   "schema_version": "1.0.0",
   "baseline": {
-    "accepted_commit": "cfe2565daab82c3c7829cf9b83d5121e37dd5e8e",
+    "accepted_commit": "205d4e8dad2e7690100eb401e12ea6d6f8e23665",
     "policy": {
       "change_control": {
         "requires_human_review": true,
@@ -568,78 +568,88 @@
     }
   },
   "change": {
-    "id": "wu1660-v01493",
-    "base_commit": "cfe2565daab82c3c7829cf9b83d5121e37dd5e8e",
+    "id": "change_01M7RAMDCVQ83Q2KXQCCHVHTJ5",
+    "base_commit": "205d4e8dad2e7690100eb401e12ea6d6f8e23665",
     "target_base": "origin/master"
   },
   "checkpoints": [
     {
-      "id": "ckpt-wu1660-v01493",
-      "summary": "fix(workunit): converge split-store audit and prove #1660 VERIFIED transitions",
-      "input_digest": "sha256:eca2d49e52abb41963602f4ad9a06f2469b69c9f6822fb5f9e17391cd7d6fd12",
+      "id": "cp-cloud-wave-1",
+      "summary": "Consolidate #1808/#1769 Decapod Local/Cloud branding with dactyl-db 0.18.0 Cloud Control-Plane & Custody wave",
+      "input_digest": "sha256:37e5c9626c2449998c69766087e7b2d306f17974d645945799bb8490b991d83c",
       "proof_refs": [
-        ".decapod/managed/specs/INTERFACES.md",
-        ".decapod/managed/specs/VALIDATION.md",
-        "tests/unit/core/workunit_journal_tests.rs",
-        "tests/workunit_verified_proof_1660.rs"
+        "tests/cli_contract_enforcement.rs",
+        "tests/cloud_mixed_worktree.rs",
+        "tests/cloud_supabase_boundary.rs",
+        "tests/cloud_wave_parity.rs",
+        "tests/doc_alignment.rs"
       ]
     },
     {
-      "id": "ckpt-wu1660-merge-89906b6",
-      "summary": "chore(workunit): integrate accepted master 89906b666 (#1660)",
-      "input_digest": "sha256:00690b0e50fafa45340291702a34b78ead8b6e1fd92a47d54bb6edd2be5180ff",
+      "id": "cp-cloud-wave-final",
+      "summary": "Adopt dactyl-db 0.18.0, Cloud Control-Plane custody wave (#1809, #1667, #1777, #1778, #1590, #1033, #1034, #1038, #1040, #1066, #1158, #1369, #1377, #1380), and Local/Cloud branding (#1808, #1769)",
+      "input_digest": "sha256:da55162f36b81e4a231969ad32af8a05613d6f8ec39e1ec72fbb0f622b6d863f",
       "proof_refs": [
-        ".decapod/managed/specs/INTERFACES.md",
-        ".decapod/managed/specs/VALIDATION.md",
-        "tests/unit/core/workunit_journal_tests.rs",
-        "tests/workunit_verified_proof_1660.rs"
+        "tests/cli_contract_enforcement.rs",
+        "tests/cloud_mixed_worktree.rs",
+        "tests/cloud_supabase_boundary.rs",
+        "tests/cloud_wave_parity.rs",
+        "tests/doc_alignment.rs",
+        "tests/release_dependency_policy.rs",
+        "tests/shared_state_semantics_1247.rs"
       ]
     },
     {
-      "id": "ckpt-wu1660-split-iso",
-      "summary": "Isolate non-VERIFIED split-store declarations in explicitly initialized workspace-local datastores while keeping VERIFIED transitions, resume, validate_verified_manifest, and partial-store leaks blocked with WORKUNIT_PROOF_ATOMIC_DOMAIN_UNSUPPORTED (#1660)",
-      "input_digest": "sha256:e2bfa630f369347dfbdfc066230a63584bd07b99fb8d2d62f49cb8b8293667d8"
+      "id": "cp-cloud-wave-slot3",
+      "summary": "Adopt dactyl-db 0.18.0, Cloud Control-Plane custody wave (#1809, #1667, #1777, #1778, #1590, #1033, #1034, #1038, #1040, #1066, #1158, #1369, #1377, #1380), and Local/Cloud branding (#1808, #1769)",
+      "input_digest": "sha256:b3abd7da25cd6cc6f9cabb5c310f97dea62ffb73558b9e18ce5dc9366af032d8",
+      "proof_refs": [
+        "tests/cli_contract_enforcement.rs",
+        "tests/cloud_mixed_worktree.rs",
+        "tests/cloud_supabase_boundary.rs",
+        "tests/cloud_wave_parity.rs",
+        "tests/doc_alignment.rs",
+        "tests/release_dependency_policy.rs",
+        "tests/shared_state_semantics_1247.rs"
+      ]
     },
     {
-      "id": "ckpt-wu1660-spec-review",
-      "summary": "Record current-content-bound spec reviews for ARCHITECTURE, INTERFACES, and SECURITY after split-store non-VERIFIED write isolation fix (#1660)",
-      "input_digest": "sha256:0fd41d77a78bd29f79ee3eab45c0d870c5c6a11c213a5fa18ad969633368d4f5"
+      "id": "cp-cloud-wave-slot3-reconciled",
+      "summary": "Adopt dactyl-db 0.18.0, cloud control-plane custody (#1809/#1590/#1777/#1778/#1066/#1158/#1377), Local/Cloud branding (#1808/#1769), and reconciled reviewed_sources_digest",
+      "input_digest": "sha256:70a6250bfee10916afb1540d9cc1f5aa8ee59da9af44935bbfa6b914f0ea1b3f"
     },
     {
-      "id": "ckpt-wu1660-merge-4536919",
-      "summary": "Reconcile PR #1823 (#1660) with origin/master 45369197e (#1825), preserving all #1825 and #1660 code, specs, and refreshed v0.149.3 projections",
-      "input_digest": "sha256:2f62d6028ea52ae00932296d189d23839c280b3d60dcb6026c7451bdf50ef506"
+      "id": "cp-cloud-wave-slot3-clippy-fix",
+      "summary": "Gate KEYSTORE_SERVICE constant in src/decapod/core/cloud_dpop.rs to #[cfg(target_os = \"macos\")] for Linux clippy -D warnings parity",
+      "input_digest": "sha256:f424b019e807e9a8fd4cd99baced327ce35f49106137661c85c076b4e126ef4e"
     },
     {
-      "id": "ckpt-wu1660-review-4536919",
-      "summary": "Record unchanged-with-reason spec reviews for ARCHITECTURE.md and SECURITY.md relative to origin/master 45369197e (#1660)",
-      "input_digest": "sha256:af33c8408e13b2af9ffd7af272239f39b4f8bc8e8e7c496533e7df0f1fa1e853"
+      "id": "cp-cloud-wave-slot3-spec-review",
+      "summary": "Refresh spec reviews for ARCHITECTURE/INTERFACES/SECURITY against final code fingerprint after macOS cfg clippy fix",
+      "input_digest": "sha256:59fea46e315ded6aff906147995974d1c7c4d3d271defc7e8d44818f681770ac"
+    },
+    {
+      "id": "cp-cloud-wave-slot3-merge-84f967382",
+      "summary": "Integrate accepted master 84f967382 (PR #1823 workunit convergence) and refresh spec reviews",
+      "input_digest": "sha256:5a56341bef85f4c4009f82caac91d345968b3f4bcc379c1b4d41243cde023263"
     }
   ],
   "intents": {
-    "intent:wu1660-v01493": {
+    "intent:change_01M7RAMDCVQ83Q2KXQCCHVHTJ5": {
       "acceptance_criteria": [],
       "assumptions": [],
       "boundaries": [
-        "Isolated Decapod worktree only; never mutate root checkout, host cargo bin, PR #1788, or pre-existing claimed todos; hold git push and gh pr create for verifier sign-off and merge queue."
+        "Current claimed task and isolated work branch"
       ],
       "constraints": [
-        "src/decapod/core/workunit.rs",
-        "src/decapod/cli.rs",
-        "src/decapod/lib.rs",
-        "src/decapod/core/docs_cli.rs",
-        "docs/agent/command-contracts.md",
-        "tests/unit/core/workunit_journal_tests.rs",
-        "tests/workunit_verified_proof_1660.rs",
-        ".decapod/managed/specs/VALIDATION.md",
-        ".decapod/managed/specs/INTERFACES.md"
+        "cloud-control-plane-sdk"
       ],
       "created_sequence": 1,
-      "id": "intent:wu1660-v01493",
+      "id": "intent:change_01M7RAMDCVQ83Q2KXQCCHVHTJ5",
       "out_of_scope": [],
       "proof_requirements": [],
-      "raw_intent": "Require observed kernel proof for VERIFIED workunit transitions (#1660)",
-      "refined_intent": "Implement split-store inspection/convergence (govern workunit converge, typed proof_status, WORKUNIT_PROOF_ATOMIC_DOMAIN_UNSUPPORTED fail-closed guards), sync CLI/agent docs, and prove all 6 #1660 falsifiers in tests/workunit_verified_proof_1660.rs without gate-skip env vars.",
+      "raw_intent": "Cloud Control-Plane & SDK Wave (#1809, #1667, #1777, #1778, #1590, #1033, #1034, #1038, #1040, #1066, #1158, #1247, #1369, #1376, #1377, #1380)",
+      "refined_intent": "Cloud Control-Plane & SDK Wave (#1809, #1667, #1777, #1778, #1590, #1033, #1034, #1038, #1040, #1066, #1158, #1247, #1369, #1376, #1377, #1380)",
       "status": "refined",
       "updated_sequence": 3
     }
@@ -652,350 +662,178 @@
       },
       "deferred_questions": [],
       "human_questions": [],
-      "intent": "Deliver split-store inspection and explicit convergence returning WORKUNIT_PROOF_ATOMIC_DOMAIN_UNSUPPORTED and prove all 6 #1660 VERIFIED workunit falsifiers through the real decapod binary without gate-skip overrides.",
+      "intent": "Cloud Control-Plane & SDK Wave (#1809, #1667, #1777, #1778, #1590, #1033, #1034, #1038, #1040, #1066, #1158, #1247, #1369, #1376, #1377, #1380)",
       "phases": [],
       "proof_hooks": [
-        "cargo test --test workunit_verified_proof_1660 -- --test-threads=1",
-        "cargo test --test workunit_cli --test workunit_publish_gate --test doc_alignment --test contract_conformance --test cli_contract_enforcement -- --test-threads=1",
-        "cargo test --lib core::workunit -- --test-threads=1",
-        "CLIPPY_CONF_DIR=.config cargo clippy --all-targets --all-features -- -D warnings",
-        "decapod govern artifacts verify-checkpoints --base-branch origin/master --head-ref HEAD --target-base master --publication-material --format json"
+        "decapod validate"
       ],
       "schema_version": "1.1.0",
       "spec_reviews": [
         {
-          "disposition": "unchanged_with_reason",
+          "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "ARCHITECTURE.md matches origin/master 45369197e (#1825); #1660 workunit split-store convergence changes are documented in INTERFACES.md and VALIDATION.md.",
-          "reviewed_code_fingerprint": "47caca47da7db39490c92a99c4e985ab837239e7cd1a5fd55a4c7d65fe503073",
-          "spec_material_hash": "26b2b6a9a136ac955ea41c945b7a1c660c15d0ee6584ee29568d80bc520eaf4c"
+          "reason": "Re-reviewed ARCHITECTURE.md after integrating accepted master 84f967382 (PR #1823)",
+          "reviewed_code_fingerprint": "17bb01252165722740df7102ca6093fa9d4462a5accf2edc0b69bba1c60ac6e4",
+          "spec_material_hash": "eea767e816c43693064ee73b838425f7a154fd6e56cf0552669d971d1e5001ea"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Preserved #1825 interfaces updates from origin/master 45369197e alongside #1660 govern workunit converge CLI and proof_status contract.",
-          "reviewed_code_fingerprint": "47caca47da7db39490c92a99c4e985ab837239e7cd1a5fd55a4c7d65fe503073",
-          "spec_material_hash": "d6e2e15de20261ea7292518e24d2e98e182a704c1941a406bfeda6c8044f20d4"
+          "reason": "Re-reviewed INTERFACES.md after integrating accepted master 84f967382 (PR #1823)",
+          "reviewed_code_fingerprint": "17bb01252165722740df7102ca6093fa9d4462a5accf2edc0b69bba1c60ac6e4",
+          "spec_material_hash": "133eff6eb96038a64e0bad61a1e524319afc1a5c0c4c9753c9238efc1615e846"
         },
         {
-          "disposition": "unchanged_with_reason",
+          "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "SECURITY.md matches origin/master 45369197e (#1825); #1660 fail-closed split-store proof guards are documented in VALIDATION.md.",
-          "reviewed_code_fingerprint": "47caca47da7db39490c92a99c4e985ab837239e7cd1a5fd55a4c7d65fe503073",
-          "spec_material_hash": "9c15cdf421a538d0e8fa06a154d96acaf41fc3d8ec15872b2c6016f0ebb908e1"
+          "reason": "Re-reviewed SECURITY.md after integrating accepted master 84f967382 (PR #1823)",
+          "reviewed_code_fingerprint": "17bb01252165722740df7102ca6093fa9d4462a5accf2edc0b69bba1c60ac6e4",
+          "spec_material_hash": "5142f990d1f15f6839a51c5453fd5ba4e4274e1f7e31a8f1c1cd87618c887e35"
         }
       ],
       "state": "APPROVED",
       "stop_conditions": [],
-      "title": "Require observed kernel proof for VERIFIED workunit transitions (#1660)",
+      "title": "Cloud Control-Plane & SDK Wave (#1809, #1667, #1777, #1778, #1590, #1033, #1034, #1038, #1040, #1066, #1158, #1247, #1369, #1376, #1377, #1380)",
       "todo_ids": [
-        "test_01m7r6sgsjjzg7gn"
+        "code_01m7r9mg6gqp6gyx"
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795069045Z"
+      "updated_at": "1795073147Z"
     },
     "trajectory": {
       "active_boundaries": [
-        "Isolated Decapod worktree only; never mutate root checkout, host cargo bin, PR #1788, or pre-existing claimed todos; hold git push and gh pr create for verifier sign-off and merge queue."
+        "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:1cc753556fb2b3d72ae3a9ac198d85d6e8edb40fad5b16c30b6085faa8c0837b",
+      "artifact_hash": "sha256:7fe98dac44798cd607470808e273465ccbc97a15e9efcdae48651104e4286441",
       "checks": [
         {
-          "name": "cargo_fmt",
+          "name": "bazel_cargo_inputs_policy",
           "status": "passed"
         },
         {
-          "name": "clippy",
+          "name": "branding_1808_1769_and_docs_build",
           "status": "passed"
         },
         {
-          "name": "clippy_strict",
+          "name": "clippy_all_targets_all_features",
           "status": "passed"
         },
         {
-          "name": "core_workunit",
+          "name": "dactyl_018_unit_and_integration",
           "status": "passed"
         },
         {
-          "name": "core_workunit_unit",
+          "name": "pg17_postgrest_conformance",
           "status": "passed"
         },
         {
-          "name": "docs_and_contracts",
-          "status": "passed"
-        },
-        {
-          "name": "entrypoint_correctness_fresh_docs_cli",
-          "status": "passed"
-        },
-        {
-          "name": "fmt",
-          "status": "passed"
-        },
-        {
-          "name": "merge_45369197e_clippy",
-          "status": "passed"
-        },
-        {
-          "name": "merge_45369197e_core_workunit",
-          "status": "passed"
-        },
-        {
-          "name": "merge_45369197e_entrypoint_correctness",
-          "status": "passed"
-        },
-        {
-          "name": "merge_45369197e_fmt",
-          "status": "passed"
-        },
-        {
-          "name": "merge_45369197e_validation_scope",
-          "status": "passed"
-        },
-        {
-          "name": "merge_45369197e_workunit_cli",
-          "status": "passed"
-        },
-        {
-          "name": "merge_45369197e_workunit_publish_gate",
-          "status": "passed"
-        },
-        {
-          "name": "validation_scope",
-          "status": "passed"
-        },
-        {
-          "name": "workunit_cli",
-          "status": "passed"
-        },
-        {
-          "name": "workunit_publish_gate",
-          "status": "passed"
-        },
-        {
-          "name": "workunit_verified_proof_1660",
+          "name": "shared_state_semantics_1247",
           "status": "passed"
         }
       ],
-      "current_phase": "verification",
+      "current_phase": "intent",
       "custody": {
         "events": [
           {
             "event_id": "event:2",
-            "intent_id": "intent:wu1660-v01493",
+            "intent_id": "intent:change_01M7RAMDCVQ83Q2KXQCCHVHTJ5",
             "kind": "created",
             "sequence": 2
           },
           {
             "event_id": "event:3",
-            "intent_id": "intent:wu1660-v01493",
+            "intent_id": "intent:change_01M7RAMDCVQ83Q2KXQCCHVHTJ5",
             "kind": "refined",
             "sequence": 3
           },
           {
-            "detail": "trajectory:wu1660-v01493",
+            "detail": "trajectory:branch_01M7RAMDK5N3QK7311T671SXB0",
             "event_id": "event:4",
-            "intent_id": "intent:wu1660-v01493",
+            "intent_id": "intent:change_01M7RAMDCVQ83Q2KXQCCHVHTJ5",
             "kind": "trajectory_step_recorded",
             "sequence": 4
-          },
-          {
-            "detail": "trajectory:wu1660-v01493",
-            "event_id": "event:5",
-            "intent_id": "intent:wu1660-v01493",
-            "kind": "trajectory_step_recorded",
-            "sequence": 5
-          },
-          {
-            "detail": "trajectory:wu1660-v01493",
-            "event_id": "event:6",
-            "intent_id": "intent:wu1660-v01493",
-            "kind": "trajectory_step_recorded",
-            "sequence": 6
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 6,
+        "next_sequence": 4,
         "schema_version": "1.0.0",
         "trajectories": {
-          "wu1660-v01493": {
+          "branch_01M7RAMDK5N3QK7311T671SXB0": {
             "evidence_only": true,
-            "id": "wu1660-v01493",
-            "intent_id": "intent:wu1660-v01493",
+            "id": "branch_01M7RAMDK5N3QK7311T671SXB0",
+            "intent_id": "intent:change_01M7RAMDCVQ83Q2KXQCCHVHTJ5",
             "steps": [
               {
-                "action": "verification",
-                "command": "cargo fmt --all -- --check",
+                "action": "trajectory.record",
                 "custody_event_id": "event:4",
                 "observations": [
-                  "src/decapod/core/workunit.rs",
+                  "Cargo.toml",
+                  "Cargo.lock",
+                  "MODULE.bazel.lock",
                   "src/decapod/cli.rs",
                   "src/decapod/lib.rs",
-                  "src/decapod/core/docs_cli.rs",
-                  "docs/agent/command-contracts.md",
-                  "tests/unit/core/workunit_journal_tests.rs",
-                  "tests/workunit_cli.rs",
-                  "tests/workunit_publish_gate.rs",
-                  "src/decapod/core/workunit.rs",
-                  "src/decapod/cli.rs",
-                  "src/decapod/lib.rs",
-                  "src/decapod/core/docs_cli.rs",
-                  "docs/agent/command-contracts.md",
-                  "tests/unit/core/workunit_journal_tests.rs",
-                  "tests/workunit_verified_proof_1660.rs",
-                  ".decapod/managed/specs/VALIDATION.md",
-                  ".decapod/managed/specs/INTERFACES.md",
-                  "tests/workunit_verified_proof_1660.rs",
-                  "tests/unit/core/workunit_journal_tests.rs",
-                  ".decapod/managed/specs/VALIDATION.md",
-                  ".decapod/managed/specs/INTERFACES.md"
+                  "src/decapod/core/cloud_dpop.rs",
+                  "src/decapod/core/cloud_proof.rs",
+                  "src/decapod/core/container_signer.rs",
+                  "src/decapod/core/cloud_client.rs",
+                  "src/decapod/core/dactyl.rs",
+                  "src/decapod/core/dactyl_todo.rs",
+                  "src/decapod/core/db_maintenance.rs",
+                  "src/decapod/core/todo.rs",
+                  "src/decapod/core/propodus.rs",
+                  "src/decapod/core/rpc.rs"
                 ],
                 "proof_refs": [
-                  "fmt",
-                  "clippy",
-                  "workunit_verified_proof_1660",
-                  "workunit_cli",
-                  "workunit_publish_gate",
-                  "core_workunit_unit",
-                  "validation_scope",
-                  "docs_and_contracts"
+                  "dactyl_018_unit_and_integration",
+                  "branding_1808_1769_and_docs_build",
+                  "shared_state_semantics_1247",
+                  "bazel_cargo_inputs_policy",
+                  "clippy_all_targets_all_features",
+                  "pg17_postgrest_conformance"
                 ],
                 "scope": [
-                  ".decapod/managed/specs/INTERFACES.md",
-                  ".decapod/managed/specs/VALIDATION.md",
-                  "docs/agent/command-contracts.md",
-                  "src/decapod/cli.rs",
-                  "src/decapod/core/docs_cli.rs",
-                  "src/decapod/core/workunit.rs",
-                  "src/decapod/lib.rs",
-                  "tests/unit/core/workunit_journal_tests.rs",
-                  "tests/workunit_verified_proof_1660.rs"
+                  "cloud-control-plane-sdk"
                 ],
                 "sequence": 4,
-                "validation_findings": []
-              },
-              {
-                "action": "trajectory.record",
-                "custody_event_id": "event:5",
-                "observations": [
-                  "tests/support/fresh_docs_readiness.rs",
-                  "src/decapod/core/workunit.rs",
-                  "tests/workunit_verified_proof_1660.rs",
-                  ".decapod/managed/specs/VALIDATION.md",
-                  "Allow isolated non-VERIFIED local split-store declarations when runtime_data_dir matches local_dir while keeping VERIFIED transitions, resume, validate_verified_manifest, and partial-store leaks blocked with WORKUNIT_PROOF_ATOMIC_DOMAIN_UNSUPPORTED"
-                ],
-                "proof_refs": [
-                  "entrypoint_correctness_fresh_docs_cli",
-                  "workunit_verified_proof_1660",
-                  "core_workunit",
-                  "validation_scope",
-                  "workunit_cli",
-                  "workunit_publish_gate",
-                  "clippy_strict",
-                  "cargo_fmt"
-                ],
-                "scope": [
-                  ".decapod/managed/specs/INTERFACES.md",
-                  ".decapod/managed/specs/VALIDATION.md",
-                  "docs/agent/command-contracts.md",
-                  "src/decapod/cli.rs",
-                  "src/decapod/core/docs_cli.rs",
-                  "src/decapod/core/workunit.rs",
-                  "src/decapod/lib.rs",
-                  "tests/unit/core/workunit_journal_tests.rs",
-                  "tests/workunit_verified_proof_1660.rs"
-                ],
-                "sequence": 5,
-                "validation_findings": []
-              },
-              {
-                "action": "trajectory.record",
-                "custody_event_id": "event:6",
-                "observations": [
-                  "Merged origin/master 45369197e (#1825) cleanly with zero code conflicts; rebuilt candidate decapod binary; docs build produced zero diff; specs refreshed and re-reviewed."
-                ],
-                "proof_refs": [
-                  "merge_45369197e_fmt",
-                  "merge_45369197e_clippy",
-                  "merge_45369197e_core_workunit",
-                  "merge_45369197e_validation_scope",
-                  "merge_45369197e_workunit_cli",
-                  "merge_45369197e_workunit_publish_gate",
-                  "merge_45369197e_entrypoint_correctness"
-                ],
-                "scope": [
-                  ".decapod/managed/specs/INTERFACES.md",
-                  ".decapod/managed/specs/VALIDATION.md",
-                  "docs/agent/command-contracts.md",
-                  "src/decapod/cli.rs",
-                  "src/decapod/core/docs_cli.rs",
-                  "src/decapod/core/workunit.rs",
-                  "src/decapod/lib.rs",
-                  "tests/unit/core/workunit_journal_tests.rs",
-                  "tests/workunit_verified_proof_1660.rs"
-                ],
-                "sequence": 6,
                 "validation_findings": []
               }
             ]
           }
         }
       },
-      "declared_commands": [
-        "CLIPPY_CONF_DIR=.config cargo clippy --all-targets --all-features -- -D warnings",
-        "cargo fmt --all -- --check",
-        "cargo test --lib core::workunit -- --test-threads=1",
-        "cargo test --lib validation_scope",
-        "cargo test --test workunit_cli --test workunit_publish_gate --test doc_alignment --test contract_conformance --test cli_contract_enforcement -- --test-threads=1",
-        "cargo test --test workunit_verified_proof_1660 -- --test-threads=1"
-      ],
-      "evidence": [
-        ".decapod/managed/specs/INTERFACES.md",
-        ".decapod/managed/specs/VALIDATION.md",
-        "Allow isolated non-VERIFIED local split-store declarations when runtime_data_dir matches local_dir while keeping VERIFIED transitions, resume, validate_verified_manifest, and partial-store leaks blocked with WORKUNIT_PROOF_ATOMIC_DOMAIN_UNSUPPORTED",
-        "Merged origin/master 45369197e (#1825) cleanly with zero code conflicts; rebuilt candidate decapod binary; docs build produced zero diff; specs refreshed and re-reviewed.",
-        "tests/unit/core/workunit_journal_tests.rs",
-        "tests/workunit_verified_proof_1660.rs"
-      ],
-      "inspected_files": [
-        "docs/agent/command-contracts.md",
-        "src/decapod/cli.rs",
-        "src/decapod/core/docs_cli.rs",
-        "src/decapod/core/workunit.rs",
-        "src/decapod/lib.rs",
-        "tests/support/fresh_docs_readiness.rs",
-        "tests/unit/core/workunit_journal_tests.rs",
-        "tests/workunit_cli.rs",
-        "tests/workunit_publish_gate.rs"
-      ],
-      "intent_id": "intent:wu1660-v01493",
+      "declared_commands": [],
+      "destination": "pull request",
+      "evidence": [],
+      "inspected_files": [],
+      "intent_id": "intent:change_01M7RAMDCVQ83Q2KXQCCHVHTJ5",
       "modified_files": [
-        ".decapod/managed/specs/INTERFACES.md",
-        ".decapod/managed/specs/VALIDATION.md",
-        "docs/agent/command-contracts.md",
+        "Cargo.lock",
+        "Cargo.toml",
+        "MODULE.bazel.lock",
         "src/decapod/cli.rs",
-        "src/decapod/core/docs_cli.rs",
-        "src/decapod/core/workunit.rs",
-        "src/decapod/lib.rs",
-        "tests/unit/core/workunit_journal_tests.rs",
-        "tests/workunit_verified_proof_1660.rs"
+        "src/decapod/core/cloud_client.rs",
+        "src/decapod/core/cloud_dpop.rs",
+        "src/decapod/core/cloud_proof.rs",
+        "src/decapod/core/container_signer.rs",
+        "src/decapod/core/dactyl.rs",
+        "src/decapod/core/dactyl_todo.rs",
+        "src/decapod/core/db_maintenance.rs",
+        "src/decapod/core/propodus.rs",
+        "src/decapod/core/rpc.rs",
+        "src/decapod/core/todo.rs",
+        "src/decapod/lib.rs"
+      ],
+      "next_transitions": [
+        "Refine plan and declare falsifiable checks"
       ],
       "repo_scope": [
-        ".decapod/managed/specs/INTERFACES.md",
-        ".decapod/managed/specs/VALIDATION.md",
-        "docs/agent/command-contracts.md",
-        "src/decapod/cli.rs",
-        "src/decapod/core/docs_cli.rs",
-        "src/decapod/core/workunit.rs",
-        "src/decapod/lib.rs",
-        "tests/unit/core/workunit_journal_tests.rs",
-        "tests/workunit_verified_proof_1660.rs"
+        "cloud-control-plane-sdk"
       ],
-      "run_id": "wu1660-v01493",
+      "run_id": "branch_01M7RAMDK5N3QK7311T671SXB0",
       "schema_version": "1.1.0",
       "shortcut_risk_signals": [],
-      "task_id": "test_01m7r6sgsjjzg7gn",
+      "task_id": "code_01m7r9mg6gqp6gyx",
       "tool_calls": [],
       "unresolved_assumptions": []
     }
