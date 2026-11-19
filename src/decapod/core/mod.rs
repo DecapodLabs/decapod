@@ -66,6 +66,7 @@ pub mod path_policy;
 pub mod pool;
 pub mod project_specs;
 pub mod projection;
+pub mod projection_budget;
 pub mod proof;
 pub mod propodus;
 pub mod readiness_evidence;

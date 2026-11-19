@@ -1359,8 +1359,8 @@ field. Nothing in this operation authorizes a mutation, approval or completion.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `e6446e3c3225d20a825f0568cfd51476c7ebf6c48e5aaae866af11a2f19f5c5a`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (237 files), `tests/` (242 files)
+- Repository signal fingerprint: `41ed68335cd4f7ab6089d4378ed848b734b0440922eabfa56636ae50ad3e54f8`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (238 files), `tests/` (244 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 
@@ -1883,3 +1883,9 @@ manual or imported/self-hosted execution cannot grant Cachix publication.
 ## Canonical local Git proof (#1069)
 
 An accepted `proof.repository_contract.canonical_local_target = true` uses ordinary CLI/RPC validation against the canonical local branch. `readiness.ready` refers to that exact local subject with `scope=repository_local_git_readiness`; `publication_ready` stays false. `qa verify commit` inspects canonical historical proof. `workspace publish` and the independent final PR gate reject local-only target authority before remote publication. Omitted/false mode retains existing digests and GitHub behavior. Candidate-only mode, changed branch, strict profile and cloud selection cannot activate the local host.
+
+## Read-only budgeted projection and retention contract (#1734)
+
+- **Schema & Authority Boundary (`decapod.projection-budget.v1`):** `core/projection_budget.rs` (re-exported through `core/projection.rs`) defines strictly read-only, non-authoritative projection envelopes (`EventProjectionPage`, `WorktreeProjectionPage`) carrying `read_only = true`, `authoritative = false`, `status` (`complete` | `partial_has_more` | `degraded`), `degraded_reasons`, `metrics`, `budget`, and deterministic SHA-256 receipts (`content_sha256`, `window_receipt_sha256`, `continuity_receipt_sha256`, `receipt_sha256`). Independent observability clients (such as Darkmatter) consume these contracts without embedding visualization state machines or UI dependencies into Decapod.
+- **Event Cursor & Retention Interface:** `EventProjectionQuery { stream, after_seq, subject_kind, subject_id, event_type, budget }` executes via `project_events_read_only` (using `core/db.rs::db_connect_readonly_bounded`) or `project_events_on_conn`. `EventProjectionCursor` exposes `after_seq`, `next_seq`, `last_event_id`, `retention_floor_seq`, `retention_anchor_sha256`, `disposition` (`continuous` | `starts_at_retention_floor` | `behind_retention_floor`), and `has_more`. `apply_bounded_event_retention` and `read_retention_anchor` manage `decapod.event-retention-anchor.v1` watermarks in `meta(namespace='event_retention')`.
+- **Worktree Inventory Interface:** `WorktreeProjectionQuery { after_worktree_path, include_dirty_summary, budget }` executes via `project_worktrees_read_only` using `GIT_OPTIONAL_LOCKS=0`, returning deterministically sorted `WorktreeProjectionEntry` items with bounded `dirty_file_count`, `dirty_truncated`, `sample_dirty_paths`, and `next_cursor` pagination.

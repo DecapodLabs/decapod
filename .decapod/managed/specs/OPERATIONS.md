@@ -415,8 +415,8 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `e6446e3c3225d20a825f0568cfd51476c7ebf6c48e5aaae866af11a2f19f5c5a`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (237 files), `tests/` (242 files)
+- Repository signal fingerprint: `41ed68335cd4f7ab6089d4378ed848b734b0440922eabfa56636ae50ad3e54f8`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (238 files), `tests/` (244 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 
@@ -457,3 +457,12 @@ This recovers current work. It leaves old history unproven and enables no waiver
 ## PR1663 integrated storage behavior
 
 Do not install or run the compaction candidate against the machine coordination store while repairing this PR. Existing forward migration, backup/parity and format guards are part of the proposed behavior and must be exercised on disposable hosted fixtures. VACUUM remains explicit-only; historical benchmark percentages are not a new production measurement.
+
+## Projection performance budgets and bounded retention operations (#1734)
+
+- **Reproducible baseline measurement:** Run `cargo test --test projection_performance_budgets_1734 -- --ignored --nocapture` (optionally setting `DECAPOD_PROJECTION_BENCH_REPORT=<path>`) against disposable temporary stores to reproduce the measured baselines for indexed vs. unindexed subject cursor queries, unbounded vs. bounded event pages, concurrent WAL writer/reader contention, and multi-worktree enumeration. Always-on CI coverage runs via `cargo test --test projection_performance_budgets_1734` and `cargo test --lib core::projection_budget`.
+- **Degraded-mode triage:** When a read-only observer receives `status = "degraded"` on `EventProjectionPage` or `WorktreeProjectionPage`, inspect `degraded_reasons` rather than treating the response as complete:
+  - `response_byte_budget_exceeded` / `scan_budget_exceeded` / `worktree_budget_exceeded` / `wall_time_budget_exceeded`: resume incrementally from `cursor.next_seq` or `next_cursor`, or raise the caller budget within `HARD_MAX_*` limits. When the very first single event exceeds `max_response_bytes`, `next_seq` stays pinned before that record so no event is silently skipped.
+  - `reader_contention_deferred`: an exclusive maintenance lock or heavy write burst held the datastore beyond `reader_lock_timeout_ms`; retry with backoff without interfering with writers.
+  - `cursor_behind_retention_floor`: explicit bounded retention pruned events through `cursor.retention_floor_seq`; verify `cursor.retention_anchor_sha256` against the prior window and resume from the retained floor.
+- **Explicit bounded event retention:** `core/projection_budget.rs::apply_bounded_event_retention` is explicit-only and never runs implicitly on read paths. It computes a chained SHA-256 `EventRetentionAnchor` in `meta(namespace='event_retention')` inside `BEGIN IMMEDIATE` before deleting cold rows, preserves original surviving `seq` numbers, and ensures future `events::append_on_conn` calls remain strictly monotonic even after a full `keep_latest = 0` prune.
