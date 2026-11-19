@@ -628,6 +628,21 @@
         "cargo_fmt",
         "concurrent_worktree_integration_1469_3"
       ]
+    },
+    {
+      "id": "cp-1738-4",
+      "summary": "Merge origin/master 89906b666 (PR #1819 / #1247, v0.149.3) and preserve zone 'policy.control' requires trust 'core' denial wording for gatling::t070_policy (#1738)",
+      "input_digest": "sha256:2667fd4c86b7da7a9c2e3933b82a7c88ff5bb236986decbb919363bb19ee3a2f",
+      "proof_refs": [
+        "cargo_clippy",
+        "cargo_fmt",
+        "consumer_readiness_30",
+        "core_repository_profile_13",
+        "doc_alignment_4",
+        "gatling_t070_policy_1",
+        "plugins_policy_tests_20",
+        "policy_self_authorization_1776_9"
+      ]
     }
   ],
   "intents": {
@@ -668,22 +683,22 @@
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Reconciled origin/master 845ff9799 (PR #1818 / #1469, test-only); ARCHITECTURE.md gains upstream #1469 section; #1738 reuses existing PolicyCommand::Approve/Revoke ledger and validation_runtime/repository_profile/validation_rules boundaries without a parallel engine",
-          "reviewed_code_fingerprint": "8fde8ac3ada8cde0c54c84d293d316b0bd2376a8cb2590c48d4d2fa2d11c2a8a",
+          "reason": "Reconciled origin/master 89906b666 (PR #1819 / #1247) and fixed policy.control core-trust denial wording for gatling::t070_policy; #1738 reuses existing PolicyCommand::Approve/Revoke ledger and validation_runtime/repository_profile/validation_rules boundaries without a parallel engine",
+          "reviewed_code_fingerprint": "e659a9aa5b4d2cb8cb64334a8581c86e7e5f54d42e83a17cb29979aba665b511",
           "spec_material_hash": "b5e1e3c343de9ed9ba501e7a48d61b43dfed92d7678b3126d1195c9c1cdb9d08"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Reconciled origin/master 845ff9799 (PR #1818 / #1469, test-only); INTERFACES.md documents governed repo.pr-readiness.v1 policy transition approval ID, scope, and admission contract (#1738)",
-          "reviewed_code_fingerprint": "8fde8ac3ada8cde0c54c84d293d316b0bd2376a8cb2590c48d4d2fa2d11c2a8a",
+          "reason": "Reconciled origin/master 89906b666 (PR #1819 / #1247) and fixed policy.control core-trust denial wording for gatling::t070_policy; INTERFACES.md documents governed repo.pr-readiness.v1 policy transition approval ID, scope, and admission contract (#1738)",
+          "reviewed_code_fingerprint": "e659a9aa5b4d2cb8cb64334a8581c86e7e5f54d42e83a17cb29979aba665b511",
           "spec_material_hash": "92301e404db139f2992ae85f76eda7cd2de7e0b198aab55420ecf8f8e7331cbc"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Reconciled origin/master 845ff9799 (PR #1818 / #1469, test-only); SECURITY.md preserves #1776 hardening alongside #1738 policy.control core-trust gating, canonical main policy.db lookup, bounded expiry/revocation/staleness fail-closed guarantees, and unconditional REQUIRED_PROFILE_DOWNGRADE block",
-          "reviewed_code_fingerprint": "8fde8ac3ada8cde0c54c84d293d316b0bd2376a8cb2590c48d4d2fa2d11c2a8a",
+          "reason": "Reconciled origin/master 89906b666 (PR #1819 / #1247) and fixed policy.control core-trust denial wording for gatling::t070_policy; SECURITY.md preserves #1776 hardening alongside #1738 policy.control core-trust gating, canonical main policy.db lookup, bounded expiry/revocation/staleness fail-closed guarantees, and unconditional REQUIRED_PROFILE_DOWNGRADE block",
+          "reviewed_code_fingerprint": "e659a9aa5b4d2cb8cb64334a8581c86e7e5f54d42e83a17cb29979aba665b511",
           "spec_material_hash": "f97da55b94238c6d5bb981424a3ab79e6341db37dc28369b4eeffe7e36de5a12"
         }
       ],
@@ -695,7 +710,7 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795054490Z"
+      "updated_at": "1795061405Z"
     },
     "trajectory": {
       "active_boundaries": [

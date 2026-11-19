@@ -4148,6 +4148,9 @@ pub fn edit_task(
                     crate::core::db::params_from_iter(params.iter().map(|p| p.as_ref())),
                 )?
             };
+            if changed == 0 {
+                return Ok(0usize);
+            }
 
             // Create edit event
             let mut payload = serde_json::Map::new();
@@ -4344,10 +4347,15 @@ pub fn claim_task_with_lease(
     // Do not short-circuit exclusive conflicts from cache: lease expiry must hit the DB
     // so another agent can reclaim an expired ownership lease.
 
+    let journal_actor = if agent_id.trim().is_empty() {
+        "decapod"
+    } else {
+        agent_id
+    };
     let result = with_task_journal(
         &broker,
         &db_path,
-        "decapod",
+        journal_actor,
         None,
         "todo.claim",
         TaskJournalSelection::Ids(vec![id.to_owned()]),
@@ -4879,10 +4887,15 @@ pub fn renew_claim_lease(
     let broker = DbBroker::new(root);
     let db_path = todo_db_path(root);
 
+    let journal_actor = if agent_id.trim().is_empty() {
+        "decapod"
+    } else {
+        agent_id
+    };
     let result = with_task_journal(
         &broker,
         &db_path,
-        "decapod",
+        journal_actor,
         None,
         "todo.renew",
         TaskJournalSelection::Ids(vec![id.to_owned()]),
@@ -5035,10 +5048,15 @@ pub fn yield_claim_lease(
     let broker = DbBroker::new(root);
     let db_path = todo_db_path(root);
 
+    let journal_actor = if agent_id.trim().is_empty() {
+        "decapod"
+    } else {
+        agent_id
+    };
     let result = with_task_journal(
         &broker,
         &db_path,
-        "decapod",
+        journal_actor,
         None,
         "todo.yield",
         TaskJournalSelection::Ids(vec![id.to_owned()]),
@@ -6007,11 +6025,12 @@ fn add_task_owner(
     let ts = now_iso();
     let broker = DbBroker::new(root);
     let db_path = todo_db_path(root);
+    let actor = mutation_actor(None);
 
     with_task_journal(
         &broker,
         &db_path,
-        "decapod",
+        &actor,
         None,
         "todo.add_owner",
         TaskJournalSelection::Ids(vec![task_id.to_owned()]),
@@ -6064,7 +6083,7 @@ fn add_task_owner(
                     agent_id,
                     claim_type,
                     claim_id: &claim_id,
-                    actor: "decapod",
+                    actor: &actor,
                     ts: &ts,
                 },
             )?;
@@ -6091,11 +6110,12 @@ fn remove_task_owner(
     let ts = now_iso();
     let broker = DbBroker::new(root);
     let db_path = todo_db_path(root);
+    let actor = mutation_actor(None);
 
     with_task_journal(
         &broker,
         &db_path,
-        "decapod",
+        &actor,
         None,
         "todo.remove_owner",
         TaskJournalSelection::Ids(vec![task_id.to_owned()]),
@@ -6129,7 +6149,7 @@ fn remove_task_owner(
                 payload: serde_json::json!({
                     "agent_id": agent_id,
                 }),
-                actor: "decapod".to_string(),
+                actor: actor.clone(),
             };
             append_event(conn, &ev)?;
             insert_event(conn, &ev)?;

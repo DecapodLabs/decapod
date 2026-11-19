@@ -992,6 +992,11 @@ pub fn enforce_broker_mutation_policy_for_target(
     let required_trust = required_trust_for_operation(op_name);
     let actor_trust = actor_trust_level_raw(root, actor)?;
     if trust_level_to_int(&actor_trust) < trust_level_to_int(required_trust) {
+        if op_name == "policy.control" {
+            return Err(error::DecapodError::ValidationError(format!(
+                "Policy gate denied for '{op_name}': zone 'policy.control' requires trust '{required_trust}' (actor '{actor}' trust '{actor_trust}' < required '{required_trust}')"
+            )));
+        }
         return Err(error::DecapodError::ValidationError(format!(
             "Policy gate denied for '{op_name}': actor '{actor}' trust '{actor_trust}' < required '{required_trust}'"
         )));
