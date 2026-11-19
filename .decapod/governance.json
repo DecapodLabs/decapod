@@ -656,6 +656,14 @@
       "proof_refs": [
         "claim-1737-actor-custody"
       ]
+    },
+    {
+      "id": "cp-1737-10",
+      "summary": "Reconcile origin/master 84f967382 (PR #1823 #1660), guard archive lease test actor, and speed up todo_enforcement for #1737",
+      "input_digest": "sha256:c950939e6a427bc88aede118891763e7ea49b55286627d756af9f246781cd33f",
+      "proof_refs": [
+        "claim-1737-actor-custody"
+      ]
     }
   ],
   "intents": {
@@ -696,22 +704,22 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Reconcile #1737 spec with origin/master 45369197e (PR #1825)",
-          "reviewed_code_fingerprint": "dfebed1894514e235cd825c75d03c6f373eb5db81fa0c9c73bf4799e7efcb7a8",
+          "reason": "Reconcile #1737 spec with origin/master 84f967382 (PR #1823), archive test actor guard, and todo_enforcement speedup",
+          "reviewed_code_fingerprint": "50188d7e1f90add5af0568b555a96baa4356bfa0e61eb73388349f276cb621f3",
           "spec_material_hash": "3748ae3b3987358e59a89753188fe514838792c60e8f82ee69f4fc94982bef49"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Reconcile #1737 spec with origin/master 45369197e (PR #1825)",
-          "reviewed_code_fingerprint": "dfebed1894514e235cd825c75d03c6f373eb5db81fa0c9c73bf4799e7efcb7a8",
-          "spec_material_hash": "0046e073e066454b57caee1137b69f07073ff8d4d4fabefafc824e709222d99f"
+          "reason": "Reconcile #1737 spec with origin/master 84f967382 (PR #1823), archive test actor guard, and todo_enforcement speedup",
+          "reviewed_code_fingerprint": "50188d7e1f90add5af0568b555a96baa4356bfa0e61eb73388349f276cb621f3",
+          "spec_material_hash": "aa4d1e8e610c2885b0cec34592657a50f1f736a59ad0bf661e7aab1ee4bda35d"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Reconcile #1737 spec with origin/master 45369197e (PR #1825)",
-          "reviewed_code_fingerprint": "dfebed1894514e235cd825c75d03c6f373eb5db81fa0c9c73bf4799e7efcb7a8",
+          "reason": "Reconcile #1737 spec with origin/master 84f967382 (PR #1823), archive test actor guard, and todo_enforcement speedup",
+          "reviewed_code_fingerprint": "50188d7e1f90add5af0568b555a96baa4356bfa0e61eb73388349f276cb621f3",
           "spec_material_hash": "21902398dcd3240361e109812a5b1b73ae17d184b1b2fa5c26d9ad41ee937434"
         }
       ],
@@ -723,13 +731,13 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795068865Z"
+      "updated_at": "1795073911Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:ef3adc399c0c51b929aab3bc9dbb9508a415b02f20fc436889adb2aaa29ab3c3",
+      "artifact_hash": "sha256:5fcd3d65461f167a6a3ebd78a25b08a2ac451dbeac23f571780e98e0bef5ba5e",
       "checks": [
         {
           "name": "cargo_clippy_all_targets",
@@ -741,6 +749,10 @@
         },
         {
           "name": "cargo_test_cli_contract_enforcement",
+          "status": "passed"
+        },
+        {
+          "name": "cargo_test_cloud_boundaries",
           "status": "passed"
         },
         {
@@ -781,6 +793,10 @@
         },
         {
           "name": "cargo_test_validate_ergonomics_1807_1810",
+          "status": "passed"
+        },
+        {
+          "name": "cargo_test_validation_history_archive",
           "status": "passed"
         }
       ],
@@ -854,10 +870,17 @@
             "intent_id": "intent:change_01M7QXTS2XBE1SK835T05MEJCV",
             "kind": "trajectory_step_recorded",
             "sequence": 11
+          },
+          {
+            "detail": "trajectory:branch_01M7QXTS6XVVV8NKSX2EE61TB7",
+            "event_id": "event:12",
+            "intent_id": "intent:change_01M7QXTS2XBE1SK835T05MEJCV",
+            "kind": "trajectory_step_recorded",
+            "sequence": 12
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 11,
+        "next_sequence": 12,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M7QXTS6XVVV8NKSX2EE61TB7": {
@@ -1034,6 +1057,27 @@
                 ],
                 "sequence": 11,
                 "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:12",
+                "observations": [
+                  "Merged origin/master 84f967382 (PR #1823 #1660, v0.149.3), fixed validation_history_archive_tests::capture_task_binding_with_budget_never_rotates_custody_unless_renew_is_explicit with cfg(test) thread-local actor guard, and sped up test_issue_1737 in tests/todo_enforcement.rs (cloned pre-journal baseline): fmt/clippy/archive_tests/claim_task_*/cloud_*/doc_alignment/todo_enforcement all passed"
+                ],
+                "proof_refs": [
+                  "cargo_fmt_check",
+                  "cargo_clippy_all_targets",
+                  "cargo_test_validation_history_archive",
+                  "cargo_test_core_todo_claim",
+                  "cargo_test_cloud_boundaries",
+                  "cargo_test_doc_alignment",
+                  "cargo_test_todo_enforcement"
+                ],
+                "scope": [
+                  "root"
+                ],
+                "sequence": 12,
+                "validation_findings": []
               }
             ]
           }
@@ -1046,6 +1090,7 @@
         "Merged origin/master 205d4e8da (v0.149.1): fmt --check ok, clippy --all-targets --all-features -- -D warnings ok, core::todo::tests::claim_task_* 2/2, todo_enforcement 5/5 passed",
         "Merged origin/master 45369197e (PR #1825 #1807/#1810, v0.149.3): fmt --check ok, clippy --all-targets --all-features -- -D warnings ok, claim_task_* 2/2, cloud_cli_boundary 1/1, validate_ergonomics_1807_1810 passed, todo_enforcement 5/5 passed",
         "Merged origin/master 845ff9799 (PR #1818 #1469 test-only + ARCHITECTURE.md, v0.149.3, zero src/ changes): specs.refresh ok, fmt --check ok, doc_alignment 4/4 passed",
+        "Merged origin/master 84f967382 (PR #1823 #1660, v0.149.3), fixed validation_history_archive_tests::capture_task_binding_with_budget_never_rotates_custody_unless_renew_is_explicit with cfg(test) thread-local actor guard, and sped up test_issue_1737 in tests/todo_enforcement.rs (cloned pre-journal baseline): fmt/clippy/archive_tests/claim_task_*/cloud_*/doc_alignment/todo_enforcement all passed",
         "Merged origin/master 89906b666 (PR #1819 #1247, v0.149.3) and updated 2 TodoCommand::Claim fixtures in tests/shared_state_semantics_1247.rs with explicit non-unknown agent: fmt --check ok, clippy --all-targets --all-features -- -D warnings ok, claim_task_* 2/2, cloud_cli_boundary 1/1, shared_state_semantics_1247 10/10, todo_enforcement 5/5 passed",
         "Merged origin/master a5a1edad (v0.149.0): fmt --check ok, clippy --all-targets --all-features -- -D warnings ok, core::todo::tests::claim_task_* 2/2, core::mentor::reflection::* 33/33, todo_enforcement 5/5, cli_contract_enforcement 23/23, doc_alignment 4/4 passed",
         "Merged origin/master cfe2565da (PR #1816, v0.149.3): fmt --check ok, clippy --all-targets --all-features -- -D warnings ok, claim_task_* 2/2, todo_enforcement 5/5, cloud_cli_boundary 1/1, policy_self_authorization_1776 passed",

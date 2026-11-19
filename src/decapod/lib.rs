@@ -4025,7 +4025,37 @@ fn session_token_matches_backend(token: &str, backend: BackendType) -> bool {
     token.starts_with(session_token_prefix(backend))
 }
 
+#[cfg(test)]
+thread_local! {
+    static TEST_CURRENT_AGENT_ID: std::cell::RefCell<Option<String>> = const { std::cell::RefCell::new(None) };
+}
+
+#[cfg(test)]
+pub(crate) struct TestCurrentAgentIdGuard {
+    previous: Option<String>,
+}
+
+#[cfg(test)]
+impl Drop for TestCurrentAgentIdGuard {
+    fn drop(&mut self) {
+        TEST_CURRENT_AGENT_ID.with(|cell| {
+            *cell.borrow_mut() = self.previous.take();
+        });
+    }
+}
+
+#[cfg(test)]
+pub(crate) fn test_current_agent_id_guard(agent_id: &str) -> TestCurrentAgentIdGuard {
+    let previous =
+        TEST_CURRENT_AGENT_ID.with(|cell| cell.borrow_mut().replace(agent_id.to_string()));
+    TestCurrentAgentIdGuard { previous }
+}
+
 fn current_agent_id() -> String {
+    #[cfg(test)]
+    if let Some(override_id) = TEST_CURRENT_AGENT_ID.with(|cell| cell.borrow().clone()) {
+        return override_id;
+    }
     std::env::var("DECAPOD_AGENT_ID")
         .ok()
         .map(|v| v.trim().to_string())
@@ -8953,6 +8983,7 @@ fn run_workunit_command(
         WorkunitCommand::Status { task_id } => {
             let manifest = core::workunit::load_workunit(project_root, &task_id)?;
             let path = core::workunit::workunit_path(project_root, &task_id)?;
+            let journal = core::workunit::workunit_journal_status(project_root, &task_id)?;
             let hash = manifest.canonical_hash_hex().map_err(|e| {
                 error::DecapodError::ValidationError(format!(
                     "failed to compute workunit hash: {e}"
@@ -8964,6 +8995,9 @@ fn run_workunit_command(
                     "status": "ok",
                     "task_id": manifest.task_id,
                     "workunit_status": manifest.status,
+                    "proof_status": journal.proof_status,
+                    "split_store": journal.split_store,
+                    "atomic_domain_supported": journal.atomic_domain_supported,
                     "manifest_hash": hash,
                     "path": path,
                 }))
@@ -9000,6 +9034,14 @@ fn run_workunit_command(
         WorkunitCommand::Transition { task_id, to } => {
             let manifest = core::workunit::transition_status(project_root, &task_id, to.into())?;
             println!("{}", serde_json::to_string_pretty(&manifest).unwrap());
+        }
+        WorkunitCommand::Converge { task_id, dry_run } => {
+            let report = core::workunit::converge_split_workunit_store(
+                project_root,
+                task_id.as_deref(),
+                dry_run,
+            )?;
+            println!("{}", serde_json::to_string_pretty(&report).unwrap());
         }
     }
 

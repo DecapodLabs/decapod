@@ -313,6 +313,7 @@ fn native_and_provider_capture_archive_and_lookup_survive_evidence_directory_del
 
 #[test]
 fn capture_task_binding_with_budget_never_rotates_custody_unless_renew_is_explicit() {
+    let _agent_guard = crate::test_current_agent_id_guard("archive-boundary-agent");
     let (_temp, repo, store, _base) = fixture();
     let now_secs = crate::core::time::now_epoch_z()
         .trim_end_matches('Z')
