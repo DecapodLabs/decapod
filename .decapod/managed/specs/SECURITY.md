@@ -18,6 +18,31 @@ real `DECAPOD_AGENT_ID` to adopt an `"unknown"` task only when
 to a real actor, holding another real primary owner, or actively claimed by a
 real actor fail closed (`status: "conflict"` / `WORKSPACE_BRANCH_TODO_CLAIM_CONFLICT`).
 
+## Device key custody, container signing isolation, and fail-closed cloud boundaries (#1778, #1066, #1590, #1809, #1808)
+
+- **Key custody outside repositories**: `DeviceKeyStore` rejects any key path
+  that resolves inside the repository checkout (including through non-existent
+  path tails on macOS `/var` -> `/private/var`), rejects symlinks, enforces
+  mode `0600` (`O_NOFOLLOW`), and zeroizes PKCS#8 key material on drop. DPoP
+  verifiers reject private JWK parameters (`d`, `p`, `q`, `dp`, `dq`, `qi`,
+  `oth`, `k`) and bind `htm`, canonical `htu`, `iat`, `ath`, `nonce`, and `aud`.
+- **Container isolation**: `filter_container_environment` strips raw tokens,
+  service-role keys, refresh secrets, and `SSH_AUTH_SOCK` before container
+  launch. `HostContainerSignerServer` mounts only a mode-0600 Unix socket and
+  denies wrong repository, mismatched agent ID, foreign origin, non-allowlisted
+  operations (including `device-enroll`, `device-revoke`, billing, and owner
+  tier mutations), cross-capability misuse, expired sessions, and revoked keys.
+- **No silent local fallback or unmerged privilege escalation**: Cloud auth,
+  entitlement (`403`), payload bound (`413`), quota (`429`), or owner-repair
+  denials never create, read, or mutate `.decapod/data/decapod.db`. Unconfigured
+  explicit `neon`/`supabase` datastores fail closed without falling back to the
+  retired legacy preview endpoint. Unmerged worktree config never enables
+  `owner` repair locally or remotely, and `#1776` accepted-cloud enforcement
+  continues to block unaccepted local downgrades.
+- **Public repository hygiene**: All code, tests, fixtures, docs, and specs in
+  this wave use synthetic `example.invalid` / loopback fixtures only — zero live
+  hostnames, merchant identifiers, private database schemas, or raw secrets.
+
 ## Ambiguous RPC JSON
 
 Duplicate decoded keys are invalid at every nesting level, including Unicode
@@ -788,8 +813,8 @@ execution evidence remains required before publication readiness.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `50188d7e1f90add5af0568b555a96baa4356bfa0e61eb73388349f276cb621f3`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (237 files), `tests/` (244 files)
+- Repository signal fingerprint: `254d1f656b12af774be4ae1f8fe63577df598f58b2f3411a8772f58eccc353f5`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (240 files), `tests/` (249 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 

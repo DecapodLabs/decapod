@@ -25,7 +25,7 @@
 - [Reference]()
   - [Config (config.toml)](reference/config-toml.md)
   - [CLI Reference](reference/cli.md)
-  - [Propodus Todo Boundary](reference/propodus.md)
+  - [Decapod Cloud Boundary](reference/propodus.md)
   - [Managed cloud projects](reference/cloud-projects.md)
   - [Cloud Todo Recovery](reference/cloud-todo-recovery.md)
   - [Supabase Consumer Validation](reference/supabase-validation.md)

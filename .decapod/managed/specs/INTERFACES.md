@@ -21,6 +21,48 @@ task via exclusive `todo claim` or `workspace ensure --branch` when
 no other real primary owner; adoption emits `task.release` with reason
 `unknown_actor_adopted` and advances `lease_generation` (`lease_lifecycle = "reclaimed"`).
 
+## Unified Local/Cloud CLI, auth, container credentials, repository tiers, and proof acceptance (#1809, #1808, #1769, #1778, #1590, #1033, #1040, #1066)
+
+- **Unified Local/Cloud CLI, env, and store envelopes (#1808, #1769)**:
+  `src/decapod/cli.rs` exposes `DECAPOD_CLOUD_API_URL`, `DECAPOD_CLOUD_PROVIDER`,
+  `DECAPOD_CLOUD_DATASTORE`, and legacy `DECAPOD_PROPODUS_API_URL` (emitting
+  structured `decapod.deprecation.v1` notices on stderr). `CapabilitiesReport`
+  exposes `backends` (`local` / `Decapod Local`, `cloud` / `Decapod Cloud`),
+  `backend.local`/`backend.cloud`, and the `cloud` subsystem. `propodus.rs`
+  accepts `decapod.cloud.store` (`v1`) envelopes and `Decapod-Cloud-*` headers
+  alongside legacy compatibility envelopes. `docs/book/src/index.md` and
+  `docs/book/src/custom.css` present **Decapod Local** vs **Decapod Cloud**
+  linking to `https://decapodlabs.github.io/offerings.html` without public
+  prices or checkout routes.
+- **CLI `decapod cloud`**: Adds `logout` (clears session state while preserving
+  the enrolled device key) and `revoke [--all] [--device-id <jkt>]` (calls
+  `AccountOperation::DeviceRevoke` when an active session is present and wipes
+  local device key + session). `decapod cloud status` reports
+  `device_key_present`, `device_jkt`, and `device_keystore` without exposing
+  private key bytes or tokens. `CloudAuthStatus` adds `DeviceRevoked`,
+  `KeyLost`, `MfaRequired`, `PaymentPending`, and `EntitlementDenied`.
+- **Container credential config (`[workspace.credentials]`)**: Adds optional
+  `git_transport`, `github_api`, and `propodus_cloud` fields on
+  `DecapodProjectConfig`. `decapod workspace status` works under `backend = "cloud"`
+  and emits redacted `credentials` capability readiness (`available`,
+  `unconfigured`, `absent`, `expired`, `unauthorized`) without touching SQLite.
+- **Database maintenance & owner repair (`[governance.db_maintenance]`)**:
+  Adds optional `owner_repair_enabled` (default `false`) and `required_tier`
+  (`read` | `write` | `owner`). `db.recover` requires merged canonical policy
+  and `owner` authority on local stores (dump/reload via Dactyl on Linux,
+  explicit typed `Capability` refusal on non-Linux hosts) and
+  `propodus_repository_access_v1` + `owner_repair_v1` on cloud stores.
+- **Cloud todo & proof capture**: `todo claim`, `todo renew`, `todo yield`, and
+  `todo done --validated` route through Dactyl without `RESOURCE_CUSTODY_PROFILE_UNSUPPORTED`.
+  `todo done --validated` fails closed locally with `"proof-capture"` when
+  candidate commit/evidence bounds are absent; when valid evidence is supplied,
+  it submits `propodus_proof_acceptance_v1` `capture` (`status = "captured"`,
+  `acceptance_supported = false`) and reconciles `outcome_unknown` through
+  read-only `propodus_proof_acceptance_get_v1` `get_operation` rather than
+  auto-replaying mutations. Typed HTTP/control denials surface distinct
+  `CLOUD_ENTITLEMENT_DENIED` (`403`), `CLOUD_PAYLOAD_BOUND_EXCEEDED` (`413`),
+  `CLOUD_QUOTA_EXCEEDED` (`429`), and `CLOUD_OUTCOME_UNKNOWN`.
+
 ## Workunit proof and continuity semantics (#1660)
 
 Before full proof, use `govern capsule query --task-id <id> --workunit-id <id>
@@ -1395,8 +1437,8 @@ field. Nothing in this operation authorizes a mutation, approval or completion.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `50188d7e1f90add5af0568b555a96baa4356bfa0e61eb73388349f276cb621f3`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (237 files), `tests/` (244 files)
+- Repository signal fingerprint: `254d1f656b12af774be4ae1f8fe63577df598f58b2f3411a8772f58eccc353f5`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (240 files), `tests/` (249 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 

@@ -18,6 +18,59 @@ rejection across `todo claim` and `workspace ensure`, legacy `"unknown"`
 recovery with and without `authoring_bindings`, and cross-owner isolation
 between real actors.
 
+## Cloud control-plane, DPoP custody, Dactyl 0.18.0, and Local/Cloud branding (#1809, #1808, #1769, #1667, #1777, #1778, #1590, #1066, #1158)
+
+- **Registry & Bazel lock alignment**: `Cargo.toml` pins
+  `dactyl-db = { version = "=0.18.0", features = ["sqlite", "neon"] }` and
+  direct `ring = "0.17"` (locked at `0.17.14`); `Cargo.lock` and
+  `MODULE.bazel.lock` lock `dactyl-db 0.18.0` and `quinn-proto 0.11.19`.
+  `flake.nix` reads `./Cargo.lock` dynamically.
+- **Unified Local/Cloud CLI, capabilities, and store envelopes (`src/decapod/cli.rs`, `src/decapod/core/rpc.rs`, `src/decapod/core/propodus.rs`, `src/decapod/core/docs_cli.rs`, `docs/book/`)**:
+  `resolve_cloud_env_var_with` prefers canonical `DECAPOD_CLOUD_*` env vars and
+  emits once-per-process `CloudEnvDeprecationNotice` for legacy
+  `DECAPOD_PROPODUS_API_URL`; `CloudRuntimeConfig::validate_datastore` fails
+  closed without the retired Vercel preview default. `CapabilitiesReport` adds
+  `backends` (`local`/`cloud`) and the `cloud` subsystem. `propodus.rs`
+  recognizes `decapod.cloud.store` (`v1`) envelopes and `Decapod-Cloud-*`
+  diagnostic headers alongside legacy compatibility envelopes.
+- **Worktree-scoped todo routing (`src/decapod/lib.rs`, `src/decapod/core/todo.rs`)**:
+  `Command::Todo` dispatches through `todo::run_todo_cli_in_workspace(&project_store, &workspace_root, todo_cli)`.
+  Inline helpers (`add_task`, `get_task`, `list_tasks`, `claim_task_with_lease`,
+  `release_task_as_actor`, `get_work_claim`) inspect `cloud_runtime(root)`
+  (defaulting absent `config.toml` to local) and route through
+  `inline_cloud_todo_factory` when `backend = "cloud"` while preserving
+  `*_local` entrypoints for explicit local worktrees. `is_cloud_file_only_command`
+  admits observational `workspace status` under `backend = "cloud"` without
+  initializing local SQLite.
+- **Ed25519 DPoP & host container signer (`src/decapod/core/cloud_dpop.rs`, `src/decapod/core/container_signer.rs`, `src/decapod/core/cloud_client.rs`, `src/decapod/core/dactyl.rs`, `src/decapod/plugins/container.rs`)**:
+  `DeviceKeyMaterial` (zeroize-on-drop Ed25519 PKCS#8 via `ring`) and
+  `DeviceKeyStore` store device keys outside repository paths (OS Keychain or
+  strict mode-0600 `O_NOFOLLOW` file). `DeviceDpopSigner` and
+  `ContainerBrokerDpopSigner` implement `dactyl_db::RequestProofSigner` with
+  `observe_nonce` tracking and plug into `CloudConnector::with_proof_signer`.
+  `HostContainerSignerServer` serves bounded Unix-socket signing for
+  `--container` workspaces (`DECAPOD_CONTAINER_SIGNER_SOCKET`), enforcing
+  origin, repository, agent ID, operation allowlist, capability separation, and
+  immediate revocation while `filter_container_environment` strips raw secrets.
+- **Repository access tiers & owner repair (`src/decapod/core/db_maintenance.rs`)**:
+  Adds `RepoAccessTier` (`read`/`write`/`owner`), `CloudRepositoryAccessStatus`,
+  verbatim `OWNER_REPAIR_V1_SQL`, `execute_cloud_owner_repair_batch`
+  (`DactylBridge::atomic`), `fetch_cloud_repository_access_status` (`Read`),
+  `evaluate_cloud_repair_authority` (`Write`), `mutate_cloud_repository_tier`
+  (`Write`), `execute_cloud_owner_repair`, and local `run_maintain_recover`
+  wired into all three `db.recover` CLI/RPC entrypoints.
+- **Lease fencing & 5-state proof acceptance (`src/decapod/core/cloud_proof.rs`, `src/decapod/core/dactyl_todo.rs`)**:
+  `DactylTodoStore` replaces `RESOURCE_CUSTODY_PROFILE_UNSUPPORTED` with
+  exclusive lease claim/renew/release (`claim_task_with_lease_blocking`,
+  `renew_task_lease_blocking`) while preserving `#1247` static `atomic_mutation`
+  post-condition guards and monotonic nanosecond markers. `cloud_proof.rs` owns
+  `ProofLifecycleState`, `proof_capture_fingerprint`, `CloudControlError`
+  (`403`/`413`/`429`/`outcome_unknown`), `DactylProofControlTransport` over
+  `CloudConnector::control_request`, `custody_bind`/`custody_revoke`,
+  `submit_capture`/`submit_verify`/`submit_admit_or_publish`/`submit_retire_historical`,
+  `reconcile_operation_after_unknown` (`get_operation`), and
+  `reconstruct_attestation`, wired into cloud `todo done --validated`.
+
 ## Current workunit validation judgments
 
 `core::validation_history::finish_archive` retains immutable successful
@@ -1097,8 +1150,8 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `50188d7e1f90add5af0568b555a96baa4356bfa0e61eb73388349f276cb621f3`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (237 files), `tests/` (244 files)
+- Repository signal fingerprint: `254d1f656b12af774be4ae1f8fe63577df598f58b2f3411a8772f58eccc353f5`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (240 files), `tests/` (249 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 

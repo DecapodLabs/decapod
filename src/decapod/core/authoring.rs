@@ -8,6 +8,37 @@ pub(crate) fn is_missing_or_unknown_actor(actor: &str) -> bool {
     trimmed.is_empty() || trimmed.eq_ignore_ascii_case("unknown")
 }
 
+#[cfg(test)]
+thread_local! {
+    static TEST_CURRENT_AGENT_ID: std::cell::RefCell<Option<String>> = const { std::cell::RefCell::new(None) };
+}
+
+#[cfg(test)]
+pub(crate) struct TestCurrentAgentIdGuard {
+    previous: Option<String>,
+}
+
+#[cfg(test)]
+impl Drop for TestCurrentAgentIdGuard {
+    fn drop(&mut self) {
+        TEST_CURRENT_AGENT_ID.with(|cell| {
+            *cell.borrow_mut() = self.previous.take();
+        });
+    }
+}
+
+#[cfg(test)]
+pub(crate) fn test_current_agent_id_guard(agent_id: &str) -> TestCurrentAgentIdGuard {
+    let previous =
+        TEST_CURRENT_AGENT_ID.with(|cell| cell.borrow_mut().replace(agent_id.to_string()));
+    TestCurrentAgentIdGuard { previous }
+}
+
+#[cfg(test)]
+pub(crate) fn test_current_agent_id_override() -> Option<String> {
+    TEST_CURRENT_AGENT_ID.with(|cell| cell.borrow().clone())
+}
+
 /// Canonical fail-closed error when an exclusive claim or authoring action lacks an explicit actor.
 pub(crate) fn authoring_actor_required_error() -> error::DecapodError {
     error::DecapodError::ValidationError(

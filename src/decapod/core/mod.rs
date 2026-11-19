@@ -16,14 +16,17 @@ pub mod capabilities;
 pub mod capsule_policy;
 pub mod cloud_backend;
 pub mod cloud_client;
+pub mod cloud_dpop;
 #[cfg(feature = "supabase-cloud")]
 pub mod cloud_project;
+pub mod cloud_proof;
 pub mod cloud_session;
 pub mod cloud_todo_operation;
 pub mod completion_evidence;
 pub mod constitution_cli;
 pub mod constitution_schema;
 pub mod container_runtime;
+pub mod container_signer;
 pub mod context_bundle;
 pub mod context_capsule;
 pub mod coplayer;

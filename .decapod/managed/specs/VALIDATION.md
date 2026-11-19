@@ -1,5 +1,40 @@
 # Validation
 
+## Cloud control-plane, Dactyl 0.18.0, and Local/Cloud branding verification (#1809, #1808, #1769, #1667, #1777, #1778, #1590, #1377, #1380)
+
+- **Dependency & build locks**: `tests/release_dependency_policy.rs` verifies
+  registry `dactyl-db = "=0.18.0"` (SHA-256
+  `6c26eaf28272a50517d7fe300b56940ac03627477b48579293b231c33de905b4`),
+  `quinn-proto >= 0.11.19`, and preserved `sqlite`/`neon`/`supabase-cloud`
+  features. Bazel `//:cargo_inputs_policy` passes under `--lockfile_mode=error`
+  against the updated `MODULE.bazel.lock`. The reviewed 105-file proof source
+  inventory digest in `.decapod/config.toml` (`[proof.required_profile].reviewed_sources_digest`)
+  is reconciled to `sha256:35d28c6858a245822d6d893e5dc658b5f3bcf47485f2601c4f019d756c82502f`,
+  accounting solely for `Cargo.toml`, `Cargo.lock`, and `MODULE.bazel.lock`
+  with zero workflow, executor, or toolchain changes. Native `nix build` was
+  not executed on this macOS host (`nix` is not installed); Nix CI verifies
+  `flake.nix`.
+- **Unit, branding, docs & integration proofs**: `cloud_dpop` (4/4),
+  `cloud_proof` (2/2), `container_signer` (1/1), `dactyl_todo` (7/7),
+  `db_maintenance` (6/6), `sql_context` (16/16), `backend_tests`,
+  `propodus_tests`, `cloud_supabase_boundary` (41/41), `cloud_wave_parity`
+  (5/5, including `dactyl_018_dpop_signer_and_control_request_wire_contract`
+  verifying canonical `/functions/v1/decapod-onboarding/config`, RFC 9449 `DPoP`
+  headers, `propodus_repository_access_v1`, and `propodus_proof_acceptance_v1`),
+  `cloud_cli_boundary`, `cloud_mixed_worktree` (3/3),
+  `cloud_command_path`, `cloud_dactyl_boundary`, `cli_contract_enforcement`
+  (24/24), `doc_alignment` (5/5), `shared_state_semantics_1247` (10/10),
+  `policy_self_authorization_1776::candidate_worktree_cannot_switch_cloud_backend_to_local`,
+  `decapod docs build` embedded docs sync, `cargo fmt --all -- --check`, and
+  `clippy --all-targets --all-features -- -D warnings`.
+- **Local PostgreSQL 17 + PostgREST conformance (#1377, #1369)**: Executed
+  disposable local PG17 + PostgREST provisioned with `propodus` migrations
+  `001`..`029` + `propodus_auth_bridge`, passing `supabase_service::local_native_managed_project_contract`
+  and `local_native_managed_project_revocation` (with independent PG17 ledger
+  observation and revocation enforcement) against the `dactyl-db 0.18.0` binary.
+  Managed Auth OAuth issuance and hosted production verification remain separate
+  external acceptance gates (`#1378`, `#1379`).
+
 ## Current report validation scope
 
 The current verification boundary begins at accepted release commit 9d1aed27.
@@ -1481,8 +1516,8 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `50188d7e1f90add5af0568b555a96baa4356bfa0e61eb73388349f276cb621f3`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (237 files), `tests/` (244 files)
+- Repository signal fingerprint: `254d1f656b12af774be4ae1f8fe63577df598f58b2f3411a8772f58eccc353f5`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (240 files), `tests/` (249 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 

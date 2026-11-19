@@ -664,6 +664,14 @@
       "proof_refs": [
         "claim-1737-actor-custody"
       ]
+    },
+    {
+      "id": "cp-1737-11",
+      "summary": "Reconcile origin/master 755bbac6e (PR #1828) and move cfg(test) actor guard to authoring.rs for #1737",
+      "input_digest": "sha256:04ab3a109a7c97eda78507d45cfae4cfe4c35624f4d39f4ac4c44f5bb83ae863",
+      "proof_refs": [
+        "claim-1737-actor-custody"
+      ]
     }
   ],
   "intents": {
@@ -704,23 +712,23 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Reconcile #1737 spec with origin/master 84f967382 (PR #1823), archive test actor guard, and todo_enforcement speedup",
-          "reviewed_code_fingerprint": "50188d7e1f90add5af0568b555a96baa4356bfa0e61eb73388349f276cb621f3",
-          "spec_material_hash": "3748ae3b3987358e59a89753188fe514838792c60e8f82ee69f4fc94982bef49"
+          "reason": "Reconcile #1737 spec with origin/master 755bbac6e (PR #1828) and move cfg(test) actor guard to authoring.rs",
+          "reviewed_code_fingerprint": "254d1f656b12af774be4ae1f8fe63577df598f58b2f3411a8772f58eccc353f5",
+          "spec_material_hash": "809019763dc25ef89df74a7bf93deb53da1b550d84cbbfdd5ba55a4c57b68d81"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Reconcile #1737 spec with origin/master 84f967382 (PR #1823), archive test actor guard, and todo_enforcement speedup",
-          "reviewed_code_fingerprint": "50188d7e1f90add5af0568b555a96baa4356bfa0e61eb73388349f276cb621f3",
-          "spec_material_hash": "aa4d1e8e610c2885b0cec34592657a50f1f736a59ad0bf661e7aab1ee4bda35d"
+          "reason": "Reconcile #1737 spec with origin/master 755bbac6e (PR #1828) and move cfg(test) actor guard to authoring.rs",
+          "reviewed_code_fingerprint": "254d1f656b12af774be4ae1f8fe63577df598f58b2f3411a8772f58eccc353f5",
+          "spec_material_hash": "c7dec9f14fc196009259bfabf90dd328a1ea77b58144b88c46521946565eeba0"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Reconcile #1737 spec with origin/master 84f967382 (PR #1823), archive test actor guard, and todo_enforcement speedup",
-          "reviewed_code_fingerprint": "50188d7e1f90add5af0568b555a96baa4356bfa0e61eb73388349f276cb621f3",
-          "spec_material_hash": "21902398dcd3240361e109812a5b1b73ae17d184b1b2fa5c26d9ad41ee937434"
+          "reason": "Reconcile #1737 spec with origin/master 755bbac6e (PR #1828) and move cfg(test) actor guard to authoring.rs",
+          "reviewed_code_fingerprint": "254d1f656b12af774be4ae1f8fe63577df598f58b2f3411a8772f58eccc353f5",
+          "spec_material_hash": "aa296a6463f749b1cc873240a822371b5c0bf65c43d7e185e95203cd4563b335"
         }
       ],
       "state": "APPROVED",
@@ -731,13 +739,13 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795073911Z"
+      "updated_at": "1795078039Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:5fcd3d65461f167a6a3ebd78a25b08a2ac451dbeac23f571780e98e0bef5ba5e",
+      "artifact_hash": "sha256:37047babb95577a2a5c8646b924bf18eec020681c8faaf46f4a84d8a4732803b",
       "checks": [
         {
           "name": "cargo_clippy_all_targets",
@@ -753,6 +761,10 @@
         },
         {
           "name": "cargo_test_cloud_boundaries",
+          "status": "passed"
+        },
+        {
+          "name": "cargo_test_cloud_boundaries_and_parity",
           "status": "passed"
         },
         {
@@ -781,6 +793,10 @@
         },
         {
           "name": "cargo_test_policy_self_authorization_1776",
+          "status": "passed"
+        },
+        {
+          "name": "cargo_test_runtime_credentials",
           "status": "passed"
         },
         {
@@ -877,10 +893,17 @@
             "intent_id": "intent:change_01M7QXTS2XBE1SK835T05MEJCV",
             "kind": "trajectory_step_recorded",
             "sequence": 12
+          },
+          {
+            "detail": "trajectory:branch_01M7QXTS6XVVV8NKSX2EE61TB7",
+            "event_id": "event:13",
+            "intent_id": "intent:change_01M7QXTS2XBE1SK835T05MEJCV",
+            "kind": "trajectory_step_recorded",
+            "sequence": 13
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 12,
+        "next_sequence": 13,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M7QXTS6XVVV8NKSX2EE61TB7": {
@@ -1078,6 +1101,27 @@
                 ],
                 "sequence": 12,
                 "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:13",
+                "observations": [
+                  "Merged origin/master 755bbac6e (PR #1828, dactyl-db 0.18.0, v0.149.3) and moved cfg(test) thread-local actor guard from lib.rs to authoring.rs so runtime_credentials AST proof stays green: fmt, clippy, runtime_credentials 1/1, validation_history::archive_tests 2/2, 1829/1830 --features supabase-cloud --lib (sole macOS host-path test unrelated), cloud_cli_boundary, cloud_mixed_worktree, cloud_wave_parity, cloud_dactyl_boundary, cloud_command_path, doc_alignment, and todo_enforcement 5/5 all passed"
+                ],
+                "proof_refs": [
+                  "cargo_fmt_check",
+                  "cargo_clippy_all_targets",
+                  "cargo_test_runtime_credentials",
+                  "cargo_test_validation_history_archive",
+                  "cargo_test_cloud_boundaries_and_parity",
+                  "cargo_test_doc_alignment",
+                  "cargo_test_todo_enforcement"
+                ],
+                "scope": [
+                  "root"
+                ],
+                "sequence": 13,
+                "validation_findings": []
               }
             ]
           }
@@ -1089,6 +1133,7 @@
         "Merged origin/master 102d6eb22 (v0.149.3) and fixed builds/12775 failures (docs ingest after init in tests/todo_enforcement.rs; cloud TodoCommand::Claim --agent handling in src/decapod/core/todo.rs + tests/cloud_cli_boundary.rs): fmt --check ok, clippy --all-targets --all-features -- -D warnings ok, claim_task_* 2/2, todo_enforcement 5/5, cloud_cli_boundary 1/1 passed",
         "Merged origin/master 205d4e8da (v0.149.1): fmt --check ok, clippy --all-targets --all-features -- -D warnings ok, core::todo::tests::claim_task_* 2/2, todo_enforcement 5/5 passed",
         "Merged origin/master 45369197e (PR #1825 #1807/#1810, v0.149.3): fmt --check ok, clippy --all-targets --all-features -- -D warnings ok, claim_task_* 2/2, cloud_cli_boundary 1/1, validate_ergonomics_1807_1810 passed, todo_enforcement 5/5 passed",
+        "Merged origin/master 755bbac6e (PR #1828, dactyl-db 0.18.0, v0.149.3) and moved cfg(test) thread-local actor guard from lib.rs to authoring.rs so runtime_credentials AST proof stays green: fmt, clippy, runtime_credentials 1/1, validation_history::archive_tests 2/2, 1829/1830 --features supabase-cloud --lib (sole macOS host-path test unrelated), cloud_cli_boundary, cloud_mixed_worktree, cloud_wave_parity, cloud_dactyl_boundary, cloud_command_path, doc_alignment, and todo_enforcement 5/5 all passed",
         "Merged origin/master 845ff9799 (PR #1818 #1469 test-only + ARCHITECTURE.md, v0.149.3, zero src/ changes): specs.refresh ok, fmt --check ok, doc_alignment 4/4 passed",
         "Merged origin/master 84f967382 (PR #1823 #1660, v0.149.3), fixed validation_history_archive_tests::capture_task_binding_with_budget_never_rotates_custody_unless_renew_is_explicit with cfg(test) thread-local actor guard, and sped up test_issue_1737 in tests/todo_enforcement.rs (cloned pre-journal baseline): fmt/clippy/archive_tests/claim_task_*/cloud_*/doc_alignment/todo_enforcement all passed",
         "Merged origin/master 89906b666 (PR #1819 #1247, v0.149.3) and updated 2 TodoCommand::Claim fixtures in tests/shared_state_semantics_1247.rs with explicit non-unknown agent: fmt --check ok, clippy --all-targets --all-features -- -D warnings ok, claim_task_* 2/2, cloud_cli_boundary 1/1, shared_state_semantics_1247 10/10, todo_enforcement 5/5 passed",
