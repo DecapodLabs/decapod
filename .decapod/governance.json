@@ -644,6 +644,11 @@
       "id": "cp-1739-10",
       "summary": "Refresh managed Dockerfile.decapod release pin to v0.149.3-debian / 0.149.3 (#1739)",
       "input_digest": "sha256:0eac681499bc8646caddba28c81262124f234ceb318a0afafdf6a6586d12581c"
+    },
+    {
+      "id": "cp-1739-11",
+      "summary": "Merge origin/master cfe2565da (PR #1816, v0.149.3), refresh specs (0f411241) and review-spec x3, verify fmt and targeted storage tests (#1739)",
+      "input_digest": "sha256:a55687f1f56e640269602eb345f11babb13e05639e6ce2e29d27c224429d1840"
     }
   ],
   "intents": {
@@ -686,23 +691,23 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Reconciled with origin/master 102d6eb22 (v0.149.3) and #1739 v2 storage compatibility floor specs",
-          "reviewed_code_fingerprint": "daff705728c6e7bebddbde11912b5293aa8d2f78646951660d40410a5d34380f",
+          "reason": "Reconciled with origin/master cfe2565da (PR #1816, v0.149.3) and #1739 v2 storage compatibility floor specs",
+          "reviewed_code_fingerprint": "0f4112418a8932e2f1271fb2072de4b4dcc46b458f73c342ac22ef3e2111d8e8",
           "spec_material_hash": "e94b6cc9c5f061ffb5c7e3035c288d954dece7de272a07b42abc1e6df240eee7"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Reconciled with origin/master 102d6eb22 (v0.149.3) and #1739 v2 storage compatibility floor specs",
-          "reviewed_code_fingerprint": "daff705728c6e7bebddbde11912b5293aa8d2f78646951660d40410a5d34380f",
+          "reason": "Reconciled with origin/master cfe2565da (PR #1816, v0.149.3) and #1739 v2 storage compatibility floor specs",
+          "reviewed_code_fingerprint": "0f4112418a8932e2f1271fb2072de4b4dcc46b458f73c342ac22ef3e2111d8e8",
           "spec_material_hash": "989baceaed8446ee995868f59caf6ed759bf36a70c7d685b80eae57ea7239f9d"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Reconciled with origin/master 102d6eb22 (v0.149.3) and #1739 v2 storage compatibility floor specs",
-          "reviewed_code_fingerprint": "daff705728c6e7bebddbde11912b5293aa8d2f78646951660d40410a5d34380f",
-          "spec_material_hash": "64234c0ee96c7afcd7c64d7ba0de6a80e01076c5587eb213906b84add3005fc5"
+          "reason": "Reconciled with origin/master cfe2565da (PR #1816, v0.149.3) and #1739 v2 storage compatibility floor specs",
+          "reviewed_code_fingerprint": "0f4112418a8932e2f1271fb2072de4b4dcc46b458f73c342ac22ef3e2111d8e8",
+          "spec_material_hash": "72faa2a1a5155e2c3be5ae74c6d97c9f0e16104f66d139a5fd9534c1e4e6178b"
         }
       ],
       "state": "APPROVED",
@@ -713,7 +718,7 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795051039Z"
+      "updated_at": "1795052846Z"
     },
     "trajectory": {
       "active_boundaries": [
