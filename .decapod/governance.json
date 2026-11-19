@@ -623,6 +623,14 @@
       "proof_refs": [
         "dockerfile_refresh=0.149.3"
       ]
+    },
+    {
+      "id": "ckpt-dockerfile-0-149-3-pin",
+      "summary": "Update managed Dockerfile.decapod release pin to v0.149.3 via decapod refresh",
+      "input_digest": "sha256:c9c242fc25e1a3d75cde5c3c59532864113762efa3fc4f0e6ff24c20a08ae2d2",
+      "proof_refs": [
+        "project_check_refresh_specs=applied"
+      ]
     }
   ],
   "intents": {
