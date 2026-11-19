@@ -109,6 +109,18 @@ pub fn run_policy_cli_as(
             scope,
             expires_in_seconds,
         } => {
+            if actor.trim().is_empty() || actor.trim().eq_ignore_ascii_case("unknown") {
+                return Err(error::DecapodError::ValidationError(
+                    "POLICY_APPROVAL_ACTOR_INVALID: --actor must identify the approving maintainer, never 'unknown'".into(),
+                ));
+            }
+            if scope == crate::core::repository_profile::POLICY_TRANSITION_SCOPE
+                && (id.len() != 64 || !id.bytes().all(|byte| byte.is_ascii_hexdigit()))
+            {
+                return Err(error::DecapodError::ValidationError(
+                    "POLICY_TRANSITION_ID_INVALID: repo.pr-readiness.v1 approvals require the exact 64-hex-character transition ID".into(),
+                ));
+            }
             let expires_at = expiry_after_seconds(expires_in_seconds)?;
             let approval_id =
                 approve_action_with_expiry(store, &id, None, &actor, &scope, Some(&expires_at))?;
@@ -605,6 +617,9 @@ pub fn is_read_only_operation(op_name: &str) -> bool {
 }
 
 fn required_trust_for_operation(op_name: &str) -> &'static str {
+    if op_name == "policy.control" {
+        return "core";
+    }
     if op_name.starts_with("federation.")
         && (op_name.contains("edit")
             || op_name.contains("supersede")
@@ -1322,6 +1337,53 @@ fn approval_matches(
         }
     }
     Ok(false)
+}
+
+/// Check on a caller-owned read-only connection whether `approvals` contains an
+/// active, non-expired, non-revoked, bounded-lifetime grant matching exact
+/// 64-hex-character `fingerprint` and `scope`, recorded by a valid non-`"unknown"` actor.
+/// Never initializes or mutates database state.
+pub fn has_live_scoped_approval_on_conn(
+    conn: &Connection,
+    fingerprint: &str,
+    scope: &str,
+) -> Result<bool, error::DecapodError> {
+    let table_exists = conn
+        .query_row(
+            "SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = 'approvals'",
+            [],
+            |row| row.get::<_, i64>(0),
+        )
+        .optional()?
+        .is_some();
+    if !table_exists {
+        return Ok(false);
+    }
+    let normalized = fingerprint.trim().to_ascii_lowercase();
+    if normalized.len() != 64 || !normalized.bytes().all(|byte| byte.is_ascii_hexdigit()) {
+        return Ok(false);
+    }
+    let mut stmt = conn.prepare(
+        "SELECT actor, expires_at FROM approvals WHERE scope = ?1 AND action_fingerprint = ?2 ORDER BY ts DESC, approval_id DESC LIMIT 65",
+    )?;
+    let rows = stmt
+        .query_map(params![scope, normalized], |row| {
+            Ok((row.get::<_, String>(0)?, row.get::<_, Option<String>>(1)?))
+        })?
+        .collect::<Result<Vec<_>, _>>()?;
+    if rows.len() > 64 {
+        return Err(error::DecapodError::ValidationError(
+            "POLICY_APPROVAL_LIMIT: scoped approval inventory exceeds bound".into(),
+        ));
+    }
+    Ok(rows.into_iter().any(|(actor, expires_at)| {
+        let actor = actor.trim();
+        !actor.is_empty()
+            && !actor.eq_ignore_ascii_case("unknown")
+            && expires_at
+                .as_deref()
+                .is_some_and(|exp| approval_expiry_is_live(Some(exp)))
+    }))
 }
 
 pub fn list_approvals(store: &Store) -> Result<Vec<Approval>, error::DecapodError> {

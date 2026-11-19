@@ -1313,3 +1313,487 @@ fn two_isolated_worktrees_require_combined_candidate_validation_and_target_fresh
     let refreshed_report = refreshed_fixture.validate(&mut refreshed_host);
     assert!(refreshed_report.ready, "{refreshed_report:?}");
 }
+
+fn save_full_config(fixture: &Fixture) {
+    let config = toml::Value::try_from(serde_json::json!({
+        "schema_version": "1.0.0",
+        "init": {"diagram_style": "ascii", "entrypoints": []},
+        "repo": {"base_branch": "main"},
+        "proof": fixture.proof,
+    }))
+    .unwrap();
+    fs::write(
+        fixture
+            .options
+            .root
+            .join(consumer_readiness_fixture::CONFIG),
+        toml::to_string_pretty(&config).unwrap(),
+    )
+    .unwrap();
+}
+
+fn accept_current_on_main(fixture: &Fixture) {
+    save_full_config(fixture);
+    if !git(&fixture.options.root, &["status", "--porcelain"]).is_empty() {
+        fixture.commit("record full canonical config for accepted policy");
+    }
+    let work_branch = git(
+        &fixture.options.root,
+        &["rev-parse", "--abbrev-ref", "HEAD"],
+    );
+    git(&fixture.options.root, &["checkout", "main"]);
+    git(&fixture.options.root, &["merge", "--ff-only", &work_branch]);
+    git(&fixture.options.root, &["push", "origin", "main"]);
+    git(&fixture.options.root, &["fetch", "origin", "main"]);
+    git(&fixture.options.root, &["checkout", &work_branch]);
+}
+
+fn transition_id_for_fixture(fixture: &Fixture) -> String {
+    let base_sha = git(
+        &fixture.options.root,
+        &["rev-parse", "refs/remotes/origin/main"],
+    );
+    let head_sha = git(&fixture.options.root, &["rev-parse", "HEAD"]);
+    let accepted_toml = git(
+        &fixture.options.root,
+        &["show", "refs/remotes/origin/main:.decapod/config.toml"],
+    );
+    let accepted = runtime::proof_configuration(accepted_toml.as_bytes()).unwrap();
+    let accepted_src = accepted
+        .required_profile
+        .as_ref()
+        .unwrap()
+        .reviewed_sources_digest
+        .as_str();
+    let candidate_src = fixture
+        .proof
+        .required_profile
+        .as_ref()
+        .unwrap()
+        .reviewed_sources_digest
+        .as_str();
+    let accepted_cmd = accepted
+        .repository_contract
+        .as_ref()
+        .map(|contract| contract.reviewed_commands_digest.as_str())
+        .unwrap_or("");
+    let candidate_cmd = fixture
+        .proof
+        .repository_contract
+        .as_ref()
+        .unwrap()
+        .reviewed_commands_digest
+        .as_str();
+    repository_profile::repo_policy_transition_id(
+        &base_sha,
+        &head_sha,
+        accepted_src,
+        candidate_src,
+        accepted_cmd,
+        candidate_cmd,
+    )
+    .unwrap()
+}
+
+fn approve_transition_with_caller(
+    repo_root: &std::path::Path,
+    transition_id: &str,
+    caller: &str,
+    expires_in_seconds: u64,
+) -> Result<String, String> {
+    use clap::Parser;
+    use decapod::core::store::{Store, StoreKind};
+    use decapod::plugins::policy::{PolicyCli, list_approvals, run_policy_cli_as};
+
+    let data_root = repo_root.join(".decapod/data");
+    fs::create_dir_all(&data_root).unwrap();
+    let store = Store {
+        kind: StoreKind::Repo,
+        root: data_root,
+    };
+    let ttl = expires_in_seconds.to_string();
+    run_policy_cli_as(
+        &store,
+        PolicyCli::try_parse_from([
+            "policy",
+            "approve",
+            "--id",
+            transition_id,
+            "--scope",
+            repository_profile::POLICY_TRANSITION_SCOPE,
+            "--expires-in-seconds",
+            &ttl,
+        ])
+        .unwrap(),
+        caller,
+    )
+    .map_err(|e| e.to_string())?;
+    let approvals = list_approvals(&store).map_err(|e| e.to_string())?;
+    Ok(approvals
+        .into_iter()
+        .rev()
+        .find(|row| {
+            row.action_id == transition_id
+                && row.scope == repository_profile::POLICY_TRANSITION_SCOPE
+        })
+        .expect("approved transition row must exist")
+        .approval_id)
+}
+
+#[test]
+fn source_inventory_change_succeeds_after_policy_control_approval_and_full_validation() {
+    let mut fixture = Fixture::new();
+    accept_current_on_main(&fixture);
+    let accepted_src = fixture
+        .proof
+        .required_profile
+        .as_ref()
+        .unwrap()
+        .reviewed_sources_digest
+        .clone();
+
+    let script = fixture.options.root.join("scripts/check_source.py");
+    let original = fs::read_to_string(&script).unwrap();
+    fs::write(
+        script,
+        format!("{original}print('upgraded-source-check-executed')\n"),
+    )
+    .unwrap();
+    let new_src = runtime::discover_source_inventory(&fixture.options, &Cancellation::default())
+        .unwrap()
+        .digest()
+        .unwrap();
+    fixture
+        .proof
+        .required_profile
+        .as_mut()
+        .unwrap()
+        .reviewed_sources_digest = new_src.clone();
+    save_full_config(&fixture);
+    fixture.commit("update inventoried check script and reconcile reviewed_sources_digest");
+
+    let transition_id = transition_id_for_fixture(&fixture);
+    let mut host = fixture.host();
+    let unapproved = fixture.validate(&mut host);
+    blocked(&unapproved, "ACCEPTED_REPOSITORY_CONTRACT_CHANGED");
+    let detail = unapproved
+        .blockers
+        .iter()
+        .map(|b| b.detail.as_str())
+        .collect::<Vec<_>>()
+        .join("\n");
+    assert!(
+        detail.contains(&format!(
+            "decapod govern policy approve --id {transition_id} --scope repo.pr-readiness.v1"
+        )),
+        "expected exact approval command in blocker: {detail}"
+    );
+    assert!(detail.contains(&accepted_src), "{detail}");
+    assert!(detail.contains(&new_src), "{detail}");
+    assert_eq!(host.selections, 0);
+    assert_eq!(host.execution_attempts, 0);
+
+    approve_transition_with_caller(&fixture.options.root, &transition_id, "operator", 900).unwrap();
+
+    let mut host = fixture.host();
+    let approved = fixture.validate(&mut host);
+    assert!(approved.ready, "{approved:?}");
+    assert!(approved.proof_ready);
+    assert_eq!(approved.scope, repository_profile::READINESS_SCOPE);
+    assert_eq!(host.execution_attempts, 1);
+    let dir = approved.evidence_path.unwrap();
+    assert!(
+        dir.join("completion/native-readiness-receipt.json")
+            .is_file()
+    );
+    let stdout = [0, 1]
+        .map(|i| fs::read_to_string(dir.join(format!("native-{i}.stdout"))).unwrap())
+        .join("\n");
+    assert!(stdout.contains("upgraded-source-check-executed"));
+}
+
+#[test]
+fn command_and_execution_upgrade_succeeds_after_policy_control_approval_and_full_validation() {
+    let mut fixture = Fixture::new();
+    accept_current_on_main(&fixture);
+    let accepted_cmd = fixture
+        .proof
+        .repository_contract
+        .as_ref()
+        .unwrap()
+        .reviewed_commands_digest
+        .clone();
+
+    let command = fixture
+        .proof
+        .commands
+        .iter_mut()
+        .find(|c| c.name == "inspect-second")
+        .unwrap();
+    command.args = [
+        "-I",
+        "-S",
+        "-B",
+        "-c",
+        "assert open('second.txt').read() == 'also ready\\n'; print('upgraded-tool-execution-ran')",
+    ]
+    .map(str::to_owned)
+    .into();
+    fixture
+        .proof
+        .repository_contract
+        .as_mut()
+        .unwrap()
+        .executions
+        .get_mut("inspect-second")
+        .unwrap()
+        .timeout_seconds = 20;
+    fixture.review_commands();
+    let new_cmd = fixture
+        .proof
+        .repository_contract
+        .as_ref()
+        .unwrap()
+        .reviewed_commands_digest
+        .clone();
+    save_full_config(&fixture);
+    fixture.commit("upgrade pinned command args and execution timeout");
+
+    let transition_id = transition_id_for_fixture(&fixture);
+    let mut host = fixture.host();
+    let unapproved = fixture.validate(&mut host);
+    blocked(&unapproved, "ACCEPTED_REPOSITORY_CONTRACT_CHANGED");
+    let detail = unapproved
+        .blockers
+        .iter()
+        .map(|b| b.detail.as_str())
+        .collect::<Vec<_>>()
+        .join("\n");
+    assert!(detail.contains(&transition_id), "{detail}");
+    assert!(detail.contains(&accepted_cmd), "{detail}");
+    assert!(detail.contains(&new_cmd), "{detail}");
+    assert_eq!(host.selections, 0);
+
+    approve_transition_with_caller(&fixture.options.root, &transition_id, "operator", 900).unwrap();
+
+    let mut host = fixture.host();
+    let approved = fixture.validate(&mut host);
+    assert!(approved.ready, "{approved:?}");
+    assert!(approved.proof_ready);
+    assert_eq!(host.execution_attempts, 1);
+    let dir = approved.evidence_path.unwrap();
+    let stdout = [0, 1]
+        .map(|i| fs::read_to_string(dir.join(format!("native-{i}.stdout"))).unwrap())
+        .join("\n");
+    assert!(stdout.contains("upgraded-tool-execution-ran"));
+}
+
+#[test]
+fn ordinary_agent_without_policy_control_cannot_approve_policy_transition() {
+    let mut fixture = Fixture::new();
+    accept_current_on_main(&fixture);
+    let script = fixture.options.root.join("scripts/check_source.py");
+    let original = fs::read_to_string(&script).unwrap();
+    fs::write(script, format!("{original}# unauthorized attempt\n")).unwrap();
+    fixture
+        .proof
+        .required_profile
+        .as_mut()
+        .unwrap()
+        .reviewed_sources_digest =
+        runtime::discover_source_inventory(&fixture.options, &Cancellation::default())
+            .unwrap()
+            .digest()
+            .unwrap();
+    save_full_config(&fixture);
+    fixture.commit("candidate policy transition without policy.control");
+
+    let transition_id = transition_id_for_fixture(&fixture);
+    for unauthorized in ["ordinary-agent", "unknown"] {
+        let err = approve_transition_with_caller(
+            &fixture.options.root,
+            &transition_id,
+            unauthorized,
+            900,
+        )
+        .unwrap_err();
+        assert!(
+            err.to_string().contains("Policy gate denied")
+                || err.to_string().contains("requires trust"),
+            "unexpected error for {unauthorized}: {err}"
+        );
+    }
+
+    let mut host = fixture.host();
+    blocked(
+        &fixture.validate(&mut host),
+        "ACCEPTED_REPOSITORY_CONTRACT_CHANGED",
+    );
+    assert_eq!(host.selections, 0);
+}
+
+#[test]
+fn stale_policy_transition_approval_fails_closed_when_base_head_or_digest_changes() {
+    let mut fixture = Fixture::new();
+    accept_current_on_main(&fixture);
+    let script = fixture.options.root.join("scripts/check_source.py");
+    let original = fs::read_to_string(&script).unwrap();
+    fs::write(script, format!("{original}# transition 1\n")).unwrap();
+    fixture
+        .proof
+        .required_profile
+        .as_mut()
+        .unwrap()
+        .reviewed_sources_digest =
+        runtime::discover_source_inventory(&fixture.options, &Cancellation::default())
+            .unwrap()
+            .digest()
+            .unwrap();
+    save_full_config(&fixture);
+    fixture.commit("transition 1");
+
+    let tid1 = transition_id_for_fixture(&fixture);
+    approve_transition_with_caller(&fixture.options.root, &tid1, "operator", 900).unwrap();
+
+    // 1. Candidate head changes -> stale approval fails closed.
+    fs::write(fixture.options.root.join("note.txt"), "extra commit\n").unwrap();
+    fixture.commit("change candidate head SHA");
+    let mut host = fixture.host();
+    blocked(
+        &fixture.validate(&mut host),
+        "ACCEPTED_REPOSITORY_CONTRACT_CHANGED",
+    );
+    assert_eq!(host.selections, 0);
+
+    // Approve for new head, then advance accepted base -> stale approval fails closed.
+    let tid2 = transition_id_for_fixture(&fixture);
+    approve_transition_with_caller(&fixture.options.root, &tid2, "operator", 900).unwrap();
+    let work_branch = git(
+        &fixture.options.root,
+        &["rev-parse", "--abbrev-ref", "HEAD"],
+    );
+    git(&fixture.options.root, &["checkout", "main"]);
+    git(
+        &fixture.options.root,
+        &["commit", "--allow-empty", "-m", "advance accepted base"],
+    );
+    git(&fixture.options.root, &["push", "origin", "main"]);
+    git(&fixture.options.root, &["checkout", &work_branch]);
+    git(
+        &fixture.options.root,
+        &["merge", "--no-edit", "origin/main"],
+    );
+    let mut host = fixture.host();
+    blocked(
+        &fixture.validate(&mut host),
+        "ACCEPTED_REPOSITORY_CONTRACT_CHANGED",
+    );
+    assert_eq!(host.selections, 0);
+
+    // Approve merged head, then change command digest -> stale approval fails closed.
+    let tid3 = transition_id_for_fixture(&fixture);
+    approve_transition_with_caller(&fixture.options.root, &tid3, "operator", 900).unwrap();
+    fixture
+        .proof
+        .repository_contract
+        .as_mut()
+        .unwrap()
+        .executions
+        .get_mut("inspect-second")
+        .unwrap()
+        .timeout_seconds += 5;
+    fixture.review_commands();
+    save_full_config(&fixture);
+    fixture.commit("change command digest after approval");
+    let mut host = fixture.host();
+    blocked(
+        &fixture.validate(&mut host),
+        "ACCEPTED_REPOSITORY_CONTRACT_CHANGED",
+    );
+    assert_eq!(host.selections, 0);
+}
+
+#[test]
+fn revoked_or_expired_policy_transition_approval_fails_closed() {
+    use clap::Parser;
+    use decapod::core::store::{Store, StoreKind};
+    use decapod::plugins::policy::{PolicyCli, policy_db_path, run_policy_cli_as};
+
+    let mut fixture = Fixture::new();
+    accept_current_on_main(&fixture);
+    let script = fixture.options.root.join("scripts/check_source.py");
+    let original = fs::read_to_string(&script).unwrap();
+    fs::write(script, format!("{original}# revoke and expiry check\n")).unwrap();
+    fixture
+        .proof
+        .required_profile
+        .as_mut()
+        .unwrap()
+        .reviewed_sources_digest =
+        runtime::discover_source_inventory(&fixture.options, &Cancellation::default())
+            .unwrap()
+            .digest()
+            .unwrap();
+    save_full_config(&fixture);
+    fixture.commit("transition for revoke/expiry test");
+
+    let tid = transition_id_for_fixture(&fixture);
+    let approval_id =
+        approve_transition_with_caller(&fixture.options.root, &tid, "operator", 900).unwrap();
+
+    let mut host = fixture.host();
+    let ok_report = fixture.validate(&mut host);
+    assert!(ok_report.ready, "{ok_report:?}");
+
+    // Revoke via `decapod govern policy revoke` -> fails closed.
+    let data_root = fixture.options.root.join(".decapod/data");
+    let store = Store {
+        kind: StoreKind::Repo,
+        root: data_root.clone(),
+    };
+    run_policy_cli_as(
+        &store,
+        PolicyCli::try_parse_from(["policy", "revoke", "--id", &approval_id]).unwrap(),
+        "operator",
+    )
+    .unwrap();
+    let mut host = fixture.host();
+    blocked(
+        &fixture.validate(&mut host),
+        "ACCEPTED_REPOSITORY_CONTRACT_CHANGED",
+    );
+    assert_eq!(host.selections, 0);
+
+    // Re-approve, then expire the grant -> fails closed.
+    let expired_id =
+        approve_transition_with_caller(&fixture.options.root, &tid, "operator", 900).unwrap();
+    let conn = decapod::core::db::Connection::open(policy_db_path(&data_root)).unwrap();
+    conn.execute(
+        "UPDATE approvals SET expires_at = '1Z' WHERE approval_id = ?1",
+        decapod::params![expired_id],
+    )
+    .unwrap();
+    drop(conn);
+    let mut host = fixture.host();
+    blocked(
+        &fixture.validate(&mut host),
+        "ACCEPTED_REPOSITORY_CONTRACT_CHANGED",
+    );
+    assert_eq!(host.selections, 0);
+}
+
+#[test]
+fn decapod_strict_profile_downgrade_remains_unconditionally_blocked_even_with_approval() {
+    let fixture = Fixture::with_accepted_config(Some(&format!(
+        "schema_version = \"1.0.0\"\n[init]\ndiagram_style = \"ascii\"\nentrypoints = []\n[repo]\nbase_branch = \"main\"\n[proof.required_profile]\nid = {:?}\nreviewed_sources_digest = {:?}\n",
+        readiness_profile::REQUIRED_PROFILE,
+        format!("sha256:{}", "0".repeat(64)),
+    )));
+    save_full_config(&fixture);
+    fixture.commit("attempt candidate downgrade from strict decapod profile");
+    let tid = transition_id_for_fixture(&fixture);
+    approve_transition_with_caller(&fixture.options.root, &tid, "operator", 900).unwrap();
+    let mut host = fixture.host();
+    blocked(&fixture.validate(&mut host), "REQUIRED_PROFILE_DOWNGRADE");
+    assert_eq!(host.selections, 0);
+}

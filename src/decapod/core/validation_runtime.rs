@@ -691,29 +691,25 @@ fn load_project(options: &Options, budget: &mut RuntimeBudget<'_>) -> io::Result
         .as_ref()
         .is_some_and(|p| p.id == super::repository_profile::REQUIRED_PROFILE)
     {
-        if !repository_local {
-            return Err(invalid(
-                "ACCEPTED_REPOSITORY_CONTRACT_CHANGED: another profile cannot replace accepted repository-local checks",
-            ));
-        }
-        if configuration
-            .required_profile
-            .as_ref()
-            .map(|profile| &profile.reviewed_sources_digest)
-            != accepted
-                .required_profile
-                .as_ref()
-                .map(|profile| &profile.reviewed_sources_digest)
+        if repository_local
+            && let Some(declaration) = configuration.required_profile.as_ref()
+            && sources.digest().map_err(io::Error::other)? != declaration.reviewed_sources_digest
         {
-            return Err(invalid(
-                "ACCEPTED_REPOSITORY_CONTRACT_CHANGED: source definitions changed; preserve the accepted source digest or establish a separately accepted target-policy transition before revalidation",
+            return Err(io::Error::new(
+                io::ErrorKind::InvalidData,
+                profile::PlanningFailure::SourceContractChanged,
             ));
         }
-        super::repository_profile::preserve_accepted(
-            &configuration.commands,
-            configuration.repository_contract.as_ref(),
+        super::repository_profile::verify_accepted_transition(
+            &options.root,
+            &base,
+            &head,
+            accepted.required_profile.as_ref(),
+            configuration.required_profile.as_ref(),
             &accepted.commands,
+            &configuration.commands,
             accepted.repository_contract.as_ref(),
+            configuration.repository_contract.as_ref(),
         )
         .map_err(io::Error::other)?;
     }

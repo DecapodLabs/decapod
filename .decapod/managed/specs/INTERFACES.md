@@ -1359,7 +1359,7 @@ field. Nothing in this operation authorizes a mutation, approval or completion.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `1e60a57374c12fbc63b20f06f1a9155450ef756ec54a285d4e5641154c3468ef`
+- Repository signal fingerprint: `fb54eb5e0aa93d43469aec64f25a9211377fd336103b89fcca33004ec1ecad20`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (237 files), `tests/` (239 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
@@ -1766,25 +1766,43 @@ also remains non-proof. No new command, adapter policy or verdict taxonomy is
 introduced. Older brokers reject unfamiliar context fields; inspect uncertain
 operation outcomes rather than blindly replaying a write.
 
-## Accepted repository-local contract changes (#1658)
+## Accepted repository-local contract changes (#1658, #1738)
 
 The existing validation runtime returns the actionable
 `ACCEPTED_REPOSITORY_CONTRACT_CHANGED` blocker when a candidate removes or replaces
-accepted local obligations, even with internally consistent new review digests.
-The check precedes execution-provider selection. Remove the weakening and retain
-the accepted checks, or first establish a separately accepted policy transition
-on the target. Additional required checks are allowed. Initial local adoption and
-unchanged accepted contracts continue through the existing runtime and receipt
-interfaces; no new command or bypass is exposed.
+accepted local obligations or updates `reviewed_sources_digest`, even with
+internally consistent new review digests. The check precedes execution-provider
+selection. When a legitimate transition is required, `verify_accepted_transition`
+in `src/decapod/core/repository_profile.rs` computes the deterministic
+64-hex-character `repo_policy_transition_id` bound to
+`(accepted_base_sha, candidate_head_sha, accepted_sources_digest,
+candidate_sources_digest, accepted_commands_digest, candidate_commands_digest)`
+under scope `"repo.pr-readiness.v1"` (`POLICY_TRANSITION_SCOPE`), and checks the
+canonical main `.decapod/data` policy ledger (`policy::policy_db_path`,
+checked read-only via `has_live_scoped_approval_on_conn`) for an active,
+bounded-lifetime, non-revoked approval granted via `PolicyCommand::Approve`
+(`"policy.control"`).
+
+When no matching active approval exists, `ACCEPTED_REPOSITORY_CONTRACT_CHANGED`
+includes the old-to-new digests and the exact
+`decapod govern policy approve --id <transition-id> --scope repo.pr-readiness.v1`
+command. Once approved by a `policy.control`-authorized maintainer,
+`validation_runtime` and `workspace::canonical_local_readiness_repository`
+admit the reviewed `repo.pr-readiness.v1` contract into the standard
+`required_catalog` and execution pipeline so all transitioned required checks
+run against the exact candidate before `workspace publish`. Additional required
+checks under an unchanged source inventory and initial local adoption continue
+without transition approval; `REQUIRED_PROFILE_DOWNGRADE` from
+`decapod.pr-readiness.v1` remains unconditionally blocked.
 
 ### Source-definition changes
 
-`ACCEPTED_REPOSITORY_CONTRACT_CHANGED` also identifies replacement of the accepted
-local source-definition digest. Recomputing a candidate digest cannot authorize
-changed inventoried check scripts, build/dependency definitions or provider
-inputs. Retain the accepted inventory or establish the reviewed revision on the
-target before revalidation. Additive commands under that inventory and first
-local adoption remain supported; no override or second policy store is added.
+`ACCEPTED_REPOSITORY_CONTRACT_CHANGED` also identifies unapproved replacement of
+the accepted local source-definition digest. Recomputing a candidate digest
+cannot self-authorize changed inventoried check scripts, build/dependency
+definitions, or provider inputs. Retain the accepted inventory or obtain a
+`policy.control` transition approval bound to the exact base, head, and source/command
+digests before revalidation; no override or second policy store is added.
 
 ## Group broker workload budget
 

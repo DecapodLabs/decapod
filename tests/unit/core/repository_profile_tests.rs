@@ -381,3 +381,194 @@ fn canonical_local_target_is_review_bound_and_cannot_replace_accepted_authority(
     assert!(preserve_accepted(&commands, Some(&accepted), &commands, Some(&local)).is_err());
     preserve_accepted(&commands, Some(&local), &commands, Some(&local)).unwrap();
 }
+
+#[test]
+fn repo_policy_transition_id_is_deterministic_and_binds_all_inputs() {
+    let base = "a".repeat(40);
+    let head = "b".repeat(40);
+    let src_a = digest_of("src-a");
+    let src_b = digest_of("src-b");
+    let cmd_a = digest_of("cmd-a");
+    let cmd_b = digest_of("cmd-b");
+
+    let id1 = repo_policy_transition_id(&base, &head, &src_a, &src_b, &cmd_a, &cmd_b).unwrap();
+    let id2 = repo_policy_transition_id(&base, &head, &src_a, &src_b, &cmd_a, &cmd_b).unwrap();
+    assert_eq!(id1, id2);
+    assert_eq!(id1.len(), 64);
+    assert!(
+        id1.bytes()
+            .all(|b| b.is_ascii_hexdigit() && !b.is_ascii_uppercase())
+    );
+
+    assert_ne!(
+        id1,
+        repo_policy_transition_id(&"c".repeat(40), &head, &src_a, &src_b, &cmd_a, &cmd_b).unwrap()
+    );
+    assert_ne!(
+        id1,
+        repo_policy_transition_id(&base, &"d".repeat(40), &src_a, &src_b, &cmd_a, &cmd_b).unwrap()
+    );
+    assert_ne!(
+        id1,
+        repo_policy_transition_id(&base, &head, &digest_of("src-x"), &src_b, &cmd_a, &cmd_b)
+            .unwrap()
+    );
+    assert_ne!(
+        id1,
+        repo_policy_transition_id(&base, &head, &src_a, &digest_of("src-y"), &cmd_a, &cmd_b)
+            .unwrap()
+    );
+    assert_ne!(
+        id1,
+        repo_policy_transition_id(&base, &head, &src_a, &src_b, &digest_of("cmd-x"), &cmd_b)
+            .unwrap()
+    );
+    assert_ne!(
+        id1,
+        repo_policy_transition_id(&base, &head, &src_a, &src_b, &cmd_a, &digest_of("cmd-y"))
+            .unwrap()
+    );
+}
+
+#[test]
+fn policy_transition_approval_requires_exact_scope_actor_and_live_expiry() {
+    use clap::Parser;
+    use decapod::core::store::{Store, StoreKind};
+    use decapod::plugins::policy::{
+        PolicyCli, approve_action, approve_action_with_expiry, policy_db_path, run_policy_cli_as,
+    };
+
+    let tmp = tempfile::tempdir().unwrap();
+    let repo_root = tmp.path();
+    let run_git = |args: &[&str]| {
+        let out = std::process::Command::new("/usr/bin/git")
+            .current_dir(repo_root)
+            .args(args)
+            .output()
+            .unwrap();
+        assert!(out.status.success(), "git {args:?} failed");
+    };
+    run_git(&["init", "-b", "main"]);
+    let data_root = repo_root.join(".decapod/data");
+    std::fs::create_dir_all(&data_root).unwrap();
+    let store = Store {
+        kind: StoreKind::Repo,
+        root: data_root.clone(),
+    };
+    let transition_id = repo_policy_transition_id(
+        &"1".repeat(40),
+        &"2".repeat(40),
+        &digest_of("s1"),
+        &digest_of("s2"),
+        &digest_of("c1"),
+        &digest_of("c2"),
+    )
+    .unwrap();
+
+    // Missing DB -> false (and never initializes DB during read-only check).
+    assert!(!has_active_policy_transition_approval(repo_root, &transition_id).unwrap());
+    assert!(!policy_db_path(&data_root).exists());
+
+    // Wrong scope ("global") -> false.
+    crate::core::todo::initialize_todo_db(&data_root).unwrap();
+    crate::plugins::policy::initialize_policy_db(&data_root).unwrap();
+    run_policy_cli_as(
+        &store,
+        PolicyCli::try_parse_from([
+            "policy",
+            "approve",
+            "--id",
+            &transition_id,
+            "--scope",
+            "global",
+        ])
+        .unwrap(),
+        "operator",
+    )
+    .unwrap();
+    assert!(!has_active_policy_transition_approval(repo_root, &transition_id).unwrap());
+
+    // Unbounded expiry (expires_at = None) -> false.
+    approve_action(
+        &store,
+        &transition_id,
+        None,
+        "operator",
+        POLICY_TRANSITION_SCOPE,
+    )
+    .unwrap();
+    assert!(!has_active_policy_transition_approval(repo_root, &transition_id).unwrap());
+
+    // Unknown actor -> rejected by CLI and ignored if inserted directly.
+    assert!(
+        run_policy_cli_as(
+            &store,
+            PolicyCli::try_parse_from([
+                "policy",
+                "approve",
+                "--id",
+                &transition_id,
+                "--scope",
+                POLICY_TRANSITION_SCOPE,
+                "--actor",
+                "unknown",
+            ])
+            .unwrap(),
+            "operator",
+        )
+        .is_err()
+    );
+    let future = format!(
+        "{}Z",
+        crate::core::time::now_epoch_z()
+            .trim_end_matches('Z')
+            .parse::<u64>()
+            .unwrap()
+            + 600
+    );
+    assert!(
+        approve_action_with_expiry(
+            &store,
+            &transition_id,
+            None,
+            "unknown",
+            POLICY_TRANSITION_SCOPE,
+            Some(&future),
+        )
+        .is_err()
+    );
+    // Even if an "unknown" actor row is injected directly into SQLite, the
+    // read-side check must reject it fail-closed.
+    let conn = crate::core::db::Connection::open(policy_db_path(&data_root)).unwrap();
+    conn.execute(
+        "INSERT INTO approvals(approval_id, action_fingerprint, actor, ts, scope, expires_at) VALUES(?1, ?2, ?3, ?4, ?5, ?6)",
+        crate::core::db::params![
+            crate::core::ulid::new_ulid(),
+            transition_id,
+            "unknown",
+            crate::core::time::now_epoch_z(),
+            POLICY_TRANSITION_SCOPE,
+            future
+        ],
+    )
+    .unwrap();
+    drop(conn);
+    assert!(!has_active_policy_transition_approval(repo_root, &transition_id).unwrap());
+
+    // Valid policy.control-authorized bounded approval -> true.
+    run_policy_cli_as(
+        &store,
+        PolicyCli::try_parse_from([
+            "policy",
+            "approve",
+            "--id",
+            &transition_id,
+            "--scope",
+            POLICY_TRANSITION_SCOPE,
+        ])
+        .unwrap(),
+        "operator",
+    )
+    .unwrap();
+    assert!(has_active_policy_transition_approval(repo_root, &transition_id).unwrap());
+}

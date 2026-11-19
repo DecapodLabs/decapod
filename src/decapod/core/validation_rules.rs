@@ -890,6 +890,41 @@ impl RuleRegistry {
                 decapod_version: crate::core::entrypoint_integrity::RELEASE_VERSION.to_string(),
             },
         });
+
+        self.register_rule(ValidationRule {
+            id: RuleId::new("decapod.policy.accepted_repository_contract"),
+            description: "Accepted repository proof policies and reviewed source inventories cannot be weakened or replaced without policy.control transition approval"
+                .to_string(),
+            authority: RuleAuthority::KernelInvariant,
+            applicability: RuleApplicability::default(),
+            evaluation_phase: EvaluationPhase::PreExecution,
+            evaluator: "decapod.policy.transition".to_string(),
+            requirements: RuleRequirements::default(),
+            severity: RuleSeverity::Critical,
+            remediation: RuleRemediation {
+                error_code: "ACCEPTED_REPOSITORY_CONTRACT_CHANGED".to_string(),
+                violation_description: "Candidate altered accepted repo.pr-readiness.v1 source inventory, commands, executions, or coverage without an active policy.control transition approval".to_string(),
+                expected_condition: "Accepted repository-local proof policy is preserved, or an active non-expired non-revoked policy.control approval matches the exact base, head, and digest transition under scope repo.pr-readiness.v1".to_string(),
+                observed_condition: "Candidate modified accepted repository proof declarations without a matching policy.control approval".to_string(),
+                affected_paths: vec![".decapod/config.toml".to_string()],
+                required_steps: vec![
+                    "Preserve the accepted repo.pr-readiness.v1 commands, executions, coverage, and reviewed_sources_digest, OR".to_string(),
+                    "Review the exact diff and run `decapod govern policy approve --id <transition-id> --scope repo.pr-readiness.v1` as a policy.control-authorized maintainer".to_string(),
+                ],
+                autonomous_remediation_permitted: false,
+                human_authorization_required: true,
+                evidence_for_revalidation: vec!["policy_transition_approval".to_string()],
+                related_rules: vec![RuleId::new("decapod.publication.fresh_proof")],
+            },
+            override_eligibility: OverrideEligibility::NonOverridable,
+            provenance: RuleProvenance {
+                source: "embedded/constitution.json".to_string(),
+                source_hash: String::new(),
+                body_hash: String::new(),
+                registered_at: crate::core::time::now_epoch_z(),
+                decapod_version: crate::core::entrypoint_integrity::RELEASE_VERSION.to_string(),
+            },
+        });
     }
 
     /// Register a built-in rule.
@@ -1477,6 +1512,7 @@ pub fn evaluate_rule(rule: &ResolvedRule, context: &RuleEvaluationContext) -> Ru
             "decapod.evidence.validator" => evaluate_evidence_rule(rule, context),
             "decapod.workunit" => evaluate_workunit_rule(rule, context),
             "decapod.publication" => evaluate_publication_rule(context),
+            "decapod.policy.transition" => evaluate_policy_transition_rule(context),
             _ => RuleVerdict::Unverifiable,
         }
     };
@@ -1851,6 +1887,72 @@ fn evaluate_publication_rule(context: &RuleEvaluationContext) -> RuleVerdict {
     match &context.terminal_evidence {
         Some(terminal) if terminal.proof.verify().is_ok() => RuleVerdict::Pass,
         _ => RuleVerdict::Unverifiable,
+    }
+}
+
+fn evaluate_policy_transition_rule(context: &RuleEvaluationContext) -> RuleVerdict {
+    let Some(root) = context.repo_root.as_deref() else {
+        return RuleVerdict::Pass;
+    };
+    if !root.join(".git").exists() || !root.join(".decapod/config.toml").is_file() {
+        return RuleVerdict::Pass;
+    }
+    let Ok(candidate_bytes) = std::fs::read(root.join(".decapod/config.toml")) else {
+        return RuleVerdict::Fail;
+    };
+    let Ok(candidate) = crate::core::validation_runtime::proof_configuration(&candidate_bytes)
+    else {
+        return RuleVerdict::Fail;
+    };
+    let base_branch = crate::core::workspace::resolve_base_branch(root, None);
+    let Some(base_ref) = crate::core::workspace::base_ref_for_branch(root, &base_branch) else {
+        return RuleVerdict::Pass;
+    };
+    let git = |args: &[&str]| -> Option<String> {
+        let out = std::process::Command::new("git")
+            .current_dir(root)
+            .args(args)
+            .output()
+            .ok()?;
+        if !out.status.success() {
+            return None;
+        }
+        Some(String::from_utf8_lossy(&out.stdout).trim().to_string())
+    };
+    let Some(base_sha) = git(&["rev-parse", "--verify", &format!("{base_ref}^{{commit}}")]) else {
+        return RuleVerdict::Pass;
+    };
+    let Some(head_sha) = git(&["rev-parse", "--verify", "HEAD^{commit}"]) else {
+        return RuleVerdict::Pass;
+    };
+    let Some(accepted_toml) = git(&["show", &format!("{base_sha}:.decapod/config.toml")]) else {
+        return RuleVerdict::Pass;
+    };
+    let Ok(accepted) =
+        crate::core::validation_runtime::proof_configuration(accepted_toml.as_bytes())
+    else {
+        return RuleVerdict::Fail;
+    };
+    if accepted
+        .required_profile
+        .as_ref()
+        .is_none_or(|p| p.id != crate::core::repository_profile::REQUIRED_PROFILE)
+    {
+        return RuleVerdict::Pass;
+    }
+    match crate::core::repository_profile::verify_accepted_transition(
+        root,
+        &base_sha,
+        &head_sha,
+        accepted.required_profile.as_ref(),
+        candidate.required_profile.as_ref(),
+        &accepted.commands,
+        &candidate.commands,
+        accepted.repository_contract.as_ref(),
+        candidate.repository_contract.as_ref(),
+    ) {
+        Ok(()) => RuleVerdict::Pass,
+        Err(_) => RuleVerdict::Fail,
     }
 }
 

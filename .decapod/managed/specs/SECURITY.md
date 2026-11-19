@@ -706,7 +706,7 @@ execution evidence remains required before publication readiness.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `1e60a57374c12fbc63b20f06f1a9155450ef756ec54a285d4e5641154c3468ef`
+- Repository signal fingerprint: `fb54eb5e0aa93d43469aec64f25a9211377fd336103b89fcca33004ec1ecad20`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (237 files), `tests/` (239 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
@@ -1092,13 +1092,33 @@ guarantees, not OS filesystem isolation or a remote forge merge restriction.
 Forged workunit declarations without overrides remain separately tracked by1660;
 this change does not claim to discharge that independent proof obligation.
 
-## Candidate repinning is not accepted policy (#1658)
+## Candidate repinning and governed policy transitions (#1658, #1738)
 
 The accepted target's local proof requirements remain authoritative even when a
-candidate supplies a valid new digest for different commands, execution inputs
-or coverage. `repository_profile::preserve_accepted` rejects those replacements
-before selection; required failures cannot disappear through candidate review.
-Accepted external limitations cannot become unsupported local-equivalence claims.
+candidate supplies a valid new digest for different commands, execution inputs,
+coverage, or source inventory. `repository_profile::verify_accepted_transition`
+and the built-in `decapod.policy.accepted_repository_contract` kernel rule
+(`RuleAuthority::KernelInvariant`, `EvaluationPhase::PreExecution`,
+`RuleSeverity::Critical`, `autonomous_remediation_permitted = false`) reject
+unapproved replacements before execution selection; required failures cannot
+disappear through candidate review or `governance.json` plan prose.
+
+Legitimate `repo.pr-readiness.v1` transitions reuse Decapod's existing
+`"policy.control"`-gated approval ledger (`src/decapod/plugins/policy.rs`,
+`PolicyCommand::Approve` / `PolicyCommand::Revoke`). `PolicyCommand::Approve`
+unconditionally enforces `core` trust for `"policy.control"` and rejects
+`"unknown"` or empty `--actor` labels and malformed transition IDs. Approvals
+are stored in the canonical main `.decapod/data` datastore (`decapod.db`, never
+a worktree-local copy), carry bounded lifetimes (`expires_at` required), and
+bind to the 64-hex-character `repo_policy_transition_id` covering exact
+`(accepted_base_sha, candidate_head_sha, accepted_sources_digest,
+candidate_sources_digest, accepted_commands_digest, candidate_commands_digest)`
+under scope `"repo.pr-readiness.v1"`. Missing, unauthorized, wrong-scope,
+expired, revoked, or stale approvals fail closed with
+`ACCEPTED_REPOSITORY_CONTRACT_CHANGED`, and downgrading `decapod.pr-readiness.v1`
+remains unconditionally blocked with `REQUIRED_PROFILE_DOWNGRADE`. Local
+cooperative actor labels and host-local SQLite retain their shared-UID trust
+boundary and do not claim cryptographic identity or OS sandboxing.
 
 The regression boundary uses real Git targets and native subprocess checks,
 including a replacement command that only prints claimed success. These tests

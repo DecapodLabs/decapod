@@ -1,5 +1,21 @@
 # Validation
 
+## Governed repository proof-policy migration (#1738)
+
+`tests/unit/core/repository_profile_tests.rs` and `tests/consumer_readiness.rs`
+cover the `repo.pr-readiness.v1` transition contract across source-inventory
+updates (`reviewed_sources_digest`) and command/execution upgrades
+(`reviewed_commands_digest` + `executions`), verifying full native execution and
+readiness receipt generation after `policy.control`-authorized approval in the
+canonical main `.decapod/data` ledger as well as fail-closed rejection for
+missing approvals (`ACCEPTED_REPOSITORY_CONTRACT_CHANGED`), unauthorized callers
+(`ordinary-agent`, `"unknown"`, and `--actor unknown`), stale approvals (moved
+base SHA, moved candidate SHA, or changed policy digest), revoked/expired
+approvals, and unconditional `REQUIRED_PROFILE_DOWNGRADE` enforcement. Local
+unit and integration tests exercise real Git targets, SQLite policy ledgers, and
+native execution; full repository readiness requires Buildkite validation on the
+committed candidate.
+
 ## Current report validation scope
 
 The current verification boundary begins at accepted release commit 9d1aed27.
@@ -1461,7 +1477,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `1e60a57374c12fbc63b20f06f1a9155450ef756ec54a285d4e5641154c3468ef`
+- Repository signal fingerprint: `fb54eb5e0aa93d43469aec64f25a9211377fd336103b89fcca33004ec1ecad20`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (237 files), `tests/` (239 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
