@@ -593,6 +593,15 @@
         "tests/projection_performance_budgets_1734.rs",
         "tests/unit/core/projection_budget_tests.rs"
       ]
+    },
+    "claim:release-v0-150-7-projections": {
+      "statement": "Release v0.150.7 aligns Cargo.toml, Cargo.lock, managed Dockerfile pin, and specs manifest release metadata.",
+      "falsifier": "Managed Dockerfile or specs manifest release metadata diverges from Cargo.toml 0.150.7.",
+      "status": "supported",
+      "proof_refs": [
+        ".decapod/managed/Dockerfile.decapod",
+        ".decapod/managed/specs/.manifest.json"
+      ]
     }
   },
   "checkpoints": [
@@ -640,6 +649,14 @@
         "src/decapod/core/projection_budget.rs",
         "tests/projection_performance_budgets_1734.rs"
       ]
+    },
+    {
+      "id": "ckpt-release-v0-150-7",
+      "summary": "Refresh v0.150.7 release projections and governance",
+      "input_digest": "sha256:43f396b406772c45a8ec934ac4cea72d47fb603930e3e5262c91482d3cbf0cc1",
+      "proof_refs": [
+        ".decapod/managed/specs/.manifest.json"
+      ]
     }
   ],
   "intents": {
@@ -670,51 +687,48 @@
       },
       "deferred_questions": [],
       "human_questions": [],
-      "intent": "Enforce measured-baseline projection performance budgets, indexed cursor replay, bounded worktree enumeration, explicit degraded mode receipts, non-disruptive concurrent read/write WAL behavior, and compaction/retention-stable receipts without UI dependencies (#1734)",
+      "intent": "Refresh release-bound Dockerfile and specs manifest projections for v0.150.7 on PR #1852",
       "phases": [],
-      "proof_hooks": [
-        "cargo test --test projection_performance_budgets_1734",
-        "decapod validate"
-      ],
+      "proof_hooks": [],
       "schema_version": "1.1.0",
       "spec_reviews": [
         {
-          "disposition": "updated",
+          "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Documented idx_events_stream_subject_seq partial covering index, fail-fast db_connect_readonly_bounded, measured-baseline budgets, degraded mode, and retention-stable logical receipts for #1734 on v0.150.6 while preserving all upstream architecture specs.",
-          "reviewed_code_fingerprint": "1eac132db69588e37e37b80985be23e500a98a20fc47135b2ad43450047c3edd",
+          "reason": "v0.150.7 version-only release cut does not alter system architecture",
+          "reviewed_code_fingerprint": "342bca2e5ec68688dbb48d9ffbca55b5fab1f34b0842be83049820fff60fdc50",
           "spec_material_hash": "5d2e6751d609aaeb9afa2c54fad585ebc6f60c75516d099a28cc0a6eed7bc008"
         },
         {
-          "disposition": "updated",
+          "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Documented decapod.projection-budget.v1 read-only event/worktree projection envelopes, EventRetentionAnchor, and cursor/degraded-mode contract for #1734 on v0.150.6 while preserving all upstream interface specs (#1704, #1780, #1798).",
-          "reviewed_code_fingerprint": "1eac132db69588e37e37b80985be23e500a98a20fc47135b2ad43450047c3edd",
+          "reason": "v0.150.7 version-only release cut does not alter CLI or RPC interfaces",
+          "reviewed_code_fingerprint": "342bca2e5ec68688dbb48d9ffbca55b5fab1f34b0842be83049820fff60fdc50",
           "spec_material_hash": "a9503e7adec04ac9331e0214f3c42a4e149ac85aaa5e963f4f85c2bae40de085"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Read-only projection surfaces enforce AccessMode::ReadOnly, StorageLockMode::Shared, GIT_OPTIONAL_LOCKS=0, read_only=true, authoritative=false, and introduce no privilege, secret, or mutation surfaces on v0.150.6.",
-          "reviewed_code_fingerprint": "1eac132db69588e37e37b80985be23e500a98a20fc47135b2ad43450047c3edd",
+          "reason": "v0.150.7 version-only release cut does not alter security boundaries",
+          "reviewed_code_fingerprint": "342bca2e5ec68688dbb48d9ffbca55b5fab1f34b0842be83049820fff60fdc50",
           "spec_material_hash": "127c65866657d2dd15434ca52f6e3a97b8f20aa4dd97f9d3190e1cd98edac3ac"
         }
       ],
       "state": "APPROVED",
       "stop_conditions": [],
-      "title": "Projection performance budgets, bounded degraded mode, and retention-stable receipts (#1734)",
+      "title": "Align release v0.150.7 projections and governance (#1852)",
       "todo_ids": [
-        "perf_01m7s3y4ypga8sjb"
+        "code_01m7srddt2dc4pyp"
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795121821Z"
+      "updated_at": "1795125219Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:4011911e7c1d01df77dbfadb74f6e7dbf3381bdeca9346a8f02249225cc755e7",
+      "artifact_hash": "sha256:5754845d5b9fbcb86a4bba7d6f197487d789941a686f3fb5c51f8553f85125ea",
       "checks": [
         {
           "name": "cli_contract_conformance_doc_trajectory",
@@ -730,6 +744,10 @@
         },
         {
           "name": "fmt",
+          "status": "passed"
+        },
+        {
+          "name": "project_check_0_150_7",
           "status": "passed"
         },
         {
@@ -811,10 +829,17 @@
             "intent_id": "intent:change_01M7S423XPJM4AHMVC6J51TV2P",
             "kind": "trajectory_step_recorded",
             "sequence": 7
+          },
+          {
+            "detail": "trajectory:branch_01M7S4240XFBTPQ43E2BAB68NJ",
+            "event_id": "event:8",
+            "intent_id": "intent:change_01M7S423XPJM4AHMVC6J51TV2P",
+            "kind": "trajectory_step_recorded",
+            "sequence": 8
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 7,
+        "next_sequence": 8,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M7S4240XFBTPQ43E2BAB68NJ": {
@@ -910,6 +935,24 @@
                 ],
                 "sequence": 7,
                 "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:8",
+                "observations": [
+                  ".decapod/managed/Dockerfile.decapod",
+                  ".decapod/managed/specs/OPERATIONS.md",
+                  ".decapod/managed/specs/.manifest.json",
+                  ".decapod/managed/specs/.manifest.json"
+                ],
+                "proof_refs": [
+                  "project_check_0_150_7"
+                ],
+                "scope": [
+                  "root"
+                ],
+                "sequence": 8,
+                "validation_findings": []
               }
             ]
           }
@@ -918,6 +961,7 @@
       "declared_commands": [],
       "destination": "pull request",
       "evidence": [
+        ".decapod/managed/specs/.manifest.json",
         "CLIPPY_CONF_DIR=.config cargo clippy --all-targets --all-features -- -D warnings passed",
         "Merged origin/master 1332f4ecd73ec75cc76e76dbff52f4c9b471cf94 (v0.150.0), refreshed 0.150.0 specs/manifest/Dockerfile, verified cargo fmt --check, core::projection_budget (6/6), and projection_performance_budgets_1734 (5/5)",
         "Merged origin/master d0ca8eb36d016976e80fde9280e80ed58c0bb6ea (v0.150.6), reconciled governance.json via reconcile-merge, rebuilt 0.150.6 candidate binary, verified docs build 0 diff, refreshed 0.150.6 specs/manifest/Dockerfile.",
@@ -937,6 +981,8 @@
       ],
       "intent_id": "intent:change_01M7S423XPJM4AHMVC6J51TV2P",
       "modified_files": [
+        ".decapod/managed/Dockerfile.decapod",
+        ".decapod/managed/specs/.manifest.json",
         ".decapod/managed/specs/ARCHITECTURE.md",
         ".decapod/managed/specs/INTERFACES.md",
         ".decapod/managed/specs/OPERATIONS.md",
@@ -958,7 +1004,7 @@
       "run_id": "branch_01M7S4240XFBTPQ43E2BAB68NJ",
       "schema_version": "1.1.0",
       "shortcut_risk_signals": [],
-      "task_id": "perf_01m7s3y4ypga8sjb",
+      "task_id": "code_01m7srddt2dc4pyp",
       "tool_calls": [],
       "unresolved_assumptions": []
     }
