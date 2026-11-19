@@ -1,5 +1,33 @@
 # Interfaces
 
+## Explicit path scope preservation and reconciliation (#1760)
+
+Explicit task path declarations (`--scope 'paths:[...]'`) are parsed once via
+`core::fleet_coord::parse_scope_entries` (delegating `paths:` prefixes to
+`core::fleet_coord::declared_paths`) rather than naive comma splitting. That
+single bounded JSON-array parser preserves both JSON array separators and commas
+embedded inside literal relative paths (such as `docs/a,b.md`) across
+`infer orientation` (`allowed_scope`), `workspace::initialize_workbranch_governance_at`
+(`BranchWorkContext.scope`), `trajectory::fresh_trajectory` / `record_trajectory`
+(`repo_scope`), and `custody::bootstrap_intent` (`intent.constraints`), keeping
+`todo get`, `infer orientation`, `govern trajectory get`, and `govern state resolve`
+consistent without weakening `declared_paths` validation or modifying legacy
+comma-separated scopes.
+
+Already-generated fragmented scope projections in `.decapod/governance.json`
+are repaired through `decapod govern trajectory reconcile-scope [--task-id <id>] [--run-id <id>]`
+(`core::governance_document::reconcile_scope_projections`). Before mutating any
+projection, reconciliation resolves a single unambiguous task binding
+(`SCOPE_RECONCILIATION_AMBIGUOUS_TASK` / `SCOPE_RECONCILIATION_TASK_REQUIRED`),
+verifies that existing fragments match the task's legacy comma-split projection
+(`SCOPE_RECONCILIATION_AMBIGUOUS`), and requires the prior governance document to
+be committed in Git (`SCOPE_RECONCILIATION_ARCHIVE_REQUIRED` via `recoverable_in_git`).
+Repair restores canonical sorted paths in both `sections.trajectory.repo_scope`
+and `intents.<id>.constraints`, recomputes `trajectory.artifact_hash`, invalidates
+`sections.plan.state` back to `DRAFT` when changes occur, preserves original
+recorded intent, prior custody events, checks, loops, and checkpoints, and is
+idempotent (`SCOPE_ALREADY_CANONICAL`) on repeat invocations.
+
 ## Unified Local/Cloud CLI, auth, container credentials, repository tiers, and proof acceptance (#1809, #1808, #1769, #1778, #1590, #1033, #1040, #1066)
 
 - **Unified Local/Cloud CLI, env, and store envelopes (#1808, #1769)**:
@@ -1419,8 +1447,8 @@ field. Nothing in this operation authorizes a mutation, approval or completion.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `9fdd0ef44e3961a3ea71cda1195f6b09174aae71806051d17f2a1e4de72b02ba`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (240 files), `tests/` (249 files)
+- Repository signal fingerprint: `7391e2038f1254eac57bcf1e94ab559cc4a9a0be26a85678148eeed50aaa8301`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (241 files), `tests/` (250 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 
