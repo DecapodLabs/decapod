@@ -1,5 +1,13 @@
 # Intent
 
+## Single-header docs book layout and viewport page spacing (#1849)
+
+The public documentation book (`docs/book/src/index.md` and `docs/book/src/custom.css`) maintains the shared mdBook navigation bar as the single site header across all pages and viewports:
+
+- Removes the duplicate Welcome-page `.decapod-docs-brand` header strip and its theme-specific `.decapod-docs-brand` CSS overrides so navigation remains unified in the shared `#menu-bar`.
+- Increases top content spacing (`#content main`) and aligns the right reading rail (`.decapod-reading-rail`) padding (`clamp(44px, 4.8vw, 80px)` on desktop, `47px` on tablet, `37px` on mobile) for balanced layout breathing room across viewports.
+- This layout fix modifies human-facing mdBook content and stylesheet rules only; it introduces no runtime, CLI, RPC, schema, or security-boundary changes.
+
 ## Agent-agnostic, daemonless kernel application positioning in the docs book (#1847)
 
 The public documentation book (`docs/book/src/index.md`, `docs/book/src/introduction.md`, and `docs/book/src/mental-model.md`) explicitly frames Decapod as an **agent-agnostic, daemonless metacognitive governance kernel application** rather than an agent harness, prompt framework, or background daemon:
