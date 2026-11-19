@@ -301,6 +301,18 @@ job cap and the four declared artifact targets remain separate from this
 release-job override. Only observed artifact builds can establish a throughput
 improvement; source validation alone makes no four-platform packaging claim.
 
+### Current Release Alignment (v0.150.0)
+
+The `v0.150.0` release cut aligns the package version in `Cargo.toml`,
+root package entry in `Cargo.lock`, and release notes in `CHANGELOG.md` with
+managed projections refreshed by the `0.150.0` binary:
+`.decapod/managed/Dockerfile.decapod` pins `DECAPOD_IMAGE=ghcr.io/decapodlabs/decapod:v0.150.0-debian`
+and `DECAPOD_VERSION=0.150.0`, and `.decapod/managed/specs/.manifest.json`
+records `decapod_release` `0.150.0` alongside current codebase attestations.
+Repository entrypoints (`AGENTS.md`, `CLAUDE.md`, `CODEX.md`, `GEMINI.md`)
+remain intentionally pinned at `0.148.0` under
+`[repo]._allow_entrypoint_version_drift = true` in `.decapod/config.toml`.
+
 ## Incident Response
 
 Preserve the failing operation's diagnostics and affected state. Stop dependent
@@ -446,7 +458,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `2c5eac2d0689b2239a99491c9bd053ebb57bf1566ea48fb698419f7eb3b9d299`
+- Repository signal fingerprint: `f58cbb80772dadab9ba0e8dd0550bcad6db1339555a651708eaec36fa6294b98`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (242 files), `tests/` (252 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

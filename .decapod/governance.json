@@ -602,6 +602,11 @@
       "id": "ckpt-journal-1780-sync-e63599e3c",
       "summary": "Integrate origin/master e63599e3c (#1820, v0.149.3) using reconcile-merge and refresh specs",
       "input_digest": "sha256:b5650a8db54147f59cee8f7133fa21b4fe891d7e1ea264d8ebbfa8cb338f3e4a"
+    },
+    {
+      "id": "ckpt-journal-1780-sync-v01500",
+      "summary": "Integrate accepted master v0.150.0 (1332f4ecd) using reconcile-merge and refresh v0.150.0 projections",
+      "input_digest": "sha256:dd8a493724aea090a10ce5f2c96d57409e8aa15516d63fc3e15c3fd9fdcc0246"
     }
   ],
   "intents": {
@@ -642,22 +647,22 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Synced origin/master e63599e3c (#1820) preserving #1469 and #1780 merge_reconcile architecture",
-          "reviewed_code_fingerprint": "2c5eac2d0689b2239a99491c9bd053ebb57bf1566ea48fb698419f7eb3b9d299",
+          "reason": "Synced origin/master 1332f4ecd (v0.150.0) preserving #1469 and #1780 merge_reconcile architecture",
+          "reviewed_code_fingerprint": "f58cbb80772dadab9ba0e8dd0550bcad6db1339555a651708eaec36fa6294b98",
           "spec_material_hash": "3b81779c2b1dfbfd8aae0fcde3c1f888f12b1203aeb1f606901a20af7c888516"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Synced origin/master e63599e3c preserving #1820/#1760/#1660/#1809/#1831 and #1780 reconcile-merge interface",
-          "reviewed_code_fingerprint": "2c5eac2d0689b2239a99491c9bd053ebb57bf1566ea48fb698419f7eb3b9d299",
+          "reason": "Synced origin/master 1332f4ecd (v0.150.0) preserving #1820/#1760/#1660/#1809/#1831 and #1780 reconcile-merge interface",
+          "reviewed_code_fingerprint": "f58cbb80772dadab9ba0e8dd0550bcad6db1339555a651708eaec36fa6294b98",
           "spec_material_hash": "66e7884fe1f331bc5b1adda1c614e8b4deab92d07627491e5435648e1467f489"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Synced origin/master e63599e3c preserving #1776/#1831 and #1780 fail-closed proof boundary",
-          "reviewed_code_fingerprint": "2c5eac2d0689b2239a99491c9bd053ebb57bf1566ea48fb698419f7eb3b9d299",
+          "reason": "Synced origin/master 1332f4ecd (v0.150.0) preserving #1776/#1831 and #1780 fail-closed proof boundary",
+          "reviewed_code_fingerprint": "f58cbb80772dadab9ba0e8dd0550bcad6db1339555a651708eaec36fa6294b98",
           "spec_material_hash": "127c65866657d2dd15434ca52f6e3a97b8f20aa4dd97f9d3190e1cd98edac3ac"
         }
       ],
@@ -669,13 +674,13 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795086506Z"
+      "updated_at": "1795090083Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:f54b5c54b3d6a875c3cb4081f542eb53ff2dc5ff5643d7faaf7e83c60e142669",
+      "artifact_hash": "sha256:5f8aa3cc1339e9e3bd2c7bcf94bec291ea24efc05105c49b19d209e30c70a2be",
       "checks": [
         {
           "name": "cli_contract_enforcement",
@@ -814,6 +819,18 @@
           "status": "passed"
         },
         {
+          "name": "sync_v01500_build_locked",
+          "status": "passed"
+        },
+        {
+          "name": "sync_v01500_docs_build_zero_diff",
+          "status": "passed"
+        },
+        {
+          "name": "sync_v01500_fmt",
+          "status": "passed"
+        },
+        {
           "name": "trajectory_docs",
           "status": "passed"
         },
@@ -871,10 +888,17 @@
             "intent_id": "intent:change_01M7R7VACDQHPCHHFJXFXXETKM",
             "kind": "trajectory_step_recorded",
             "sequence": 8
+          },
+          {
+            "detail": "trajectory:branch_01M7R7VAJ3PX8MBT1WEFTNTXQA",
+            "event_id": "event:9",
+            "intent_id": "intent:change_01M7R7VACDQHPCHHFJXFXXETKM",
+            "kind": "trajectory_step_recorded",
+            "sequence": 9
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 8,
+        "next_sequence": 9,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M7R7VAJ3PX8MBT1WEFTNTXQA": {
@@ -1006,6 +1030,23 @@
                 ],
                 "sequence": 8,
                 "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:9",
+                "observations": [
+                  "Synced origin/master 1332f4ecd (v0.150.0) dogfooding reconcile-merge; rebuilt locked v0.150.0 candidate binary, docs build 0 diff, refreshed v0.150.0 projections and specs"
+                ],
+                "proof_refs": [
+                  "sync_v01500_fmt",
+                  "sync_v01500_build_locked",
+                  "sync_v01500_docs_build_zero_diff"
+                ],
+                "scope": [
+                  "root"
+                ],
+                "sequence": 9,
+                "validation_findings": []
               }
             ]
           }
@@ -1018,6 +1059,7 @@
         "Merged origin/master 102d6eb22 (v0.149.3) dogfooding reconcile-merge; post-merge fmt exit 0, cargo build --bin decapod ok, validation_scope 9/9, reconcile_merge unit 2/2, merged_governance_journal_1780 2/2",
         "Pre-synced origin/master 1b3ca1b89 (#1760, dactyl-db 0.18.0, v0.149.3) dogfooding reconcile-merge; candidate docs build 0 diff, fmt ok, validation_scope 9/9, reconcile_merge 2/2, contract_conformance 12/12, doc_alignment 5/5, trajectory_docs 5/5, merged_governance_journal_1780 2/2",
         "Pre-synced origin/master c845ae1d0 (#1831, v0.149.3) dogfooding reconcile-merge; candidate docs build 0 diff, fmt ok, validation_scope 9/9, reconcile_merge 2/2, doc_alignment 5/5, contract_conformance 12/12, trajectory_docs 5/5",
+        "Synced origin/master 1332f4ecd (v0.150.0) dogfooding reconcile-merge; rebuilt locked v0.150.0 candidate binary, docs build 0 diff, refreshed v0.150.0 projections and specs",
         "fmt exit 0; clippy -D warnings exit 0; core::governance_document 76/76; merged_governance_journal_1780 2/2; governance_artifacts_cli 4/4; trajectory_docs 5/5; workbranch_governance 10/10; cli_contract_enforcement 23/23; contract_conformance 12/12; doc_alignment 4/4"
       ],
       "inspected_files": [
