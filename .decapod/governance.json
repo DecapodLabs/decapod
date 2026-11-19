@@ -597,6 +597,15 @@
         ".decapod/managed/Dockerfile.decapod",
         ".decapod/managed/specs/.manifest.json"
       ]
+    },
+    "claim:release-v0-150-4-projections": {
+      "statement": "Release v0.150.4 aligns Cargo.toml, Cargo.lock, managed Dockerfile pin, and specs manifest release metadata.",
+      "falsifier": "Managed Dockerfile or specs manifest release metadata diverges from Cargo.toml 0.150.4.",
+      "status": "supported",
+      "proof_refs": [
+        ".decapod/managed/Dockerfile.decapod",
+        ".decapod/managed/specs/.manifest.json"
+      ]
     }
   },
   "checkpoints": [
@@ -642,6 +651,14 @@
       "id": "ckpt-pr-1847-v01503",
       "summary": "Merge accepted master v0.150.3, update INTENT.md living spec, and record governance continuation for PR #1847",
       "input_digest": "sha256:70105f9461eca32babaa8666a3795cbccf6e00d282720176fb5bf4c39923dfc2"
+    },
+    {
+      "id": "ckpt-release-v0-150-4",
+      "summary": "Refresh v0.150.4 release projections and governance",
+      "input_digest": "sha256:fa0e322b9c24ecfa991f32c15abaef17980771da37c6b5e4df06c573f09c2b4a",
+      "proof_refs": [
+        ".decapod/managed/specs/.manifest.json"
+      ]
     }
   ],
   "intents": {
@@ -672,52 +689,48 @@
       },
       "deferred_questions": [],
       "human_questions": [],
-      "intent": "Align docs/book/src/{index,introduction,mental-model}.md and INTENT.md on Decapod's agent-agnostic, daemonless kernel application model",
+      "intent": "Refresh release-bound Dockerfile and specs manifest projections for v0.150.4 on PR #1848",
       "phases": [],
-      "proof_hooks": [
-        "decapod govern artifacts verify-checkpoints --base-branch 683873fc2b865e1cef84c85c042670136d47f905 --head-ref HEAD --target-base master --publication-material",
-        "bash assets/tools/source_ci/material-specs.sh",
-        "decapod govern project-check --refresh-specs"
-      ],
+      "proof_hooks": [],
       "schema_version": "1.1.0",
       "spec_reviews": [
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "PR #1847 clarifies existing daemonless CLI/RPC execution in docs/book/src without changing runtime architecture.",
-          "reviewed_code_fingerprint": "d026d97a91315fe73d7f48c348bf178f47580bbb9f163a6718588c167ccf9de4",
+          "reason": "v0.150.4 version-only release cut does not alter system architecture",
+          "reviewed_code_fingerprint": "4e96d8dce5ca4942ea48836f723dcfbc12cc3a3f79a3e06a0e7ccfeb906b267a",
           "spec_material_hash": "ec45705fd9a9a5f29fbe43fb55f7a3b69a802f298ae14eb88118bc42161f71e6"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "PR #1847 clarifies docs/book/src prose and INTENT.md without changing CLI or RPC interface contracts.",
-          "reviewed_code_fingerprint": "d026d97a91315fe73d7f48c348bf178f47580bbb9f163a6718588c167ccf9de4",
+          "reason": "v0.150.4 version-only release cut does not alter CLI or RPC interfaces",
+          "reviewed_code_fingerprint": "4e96d8dce5ca4942ea48836f723dcfbc12cc3a3f79a3e06a0e7ccfeb906b267a",
           "spec_material_hash": "e8142264a4caae5b7271e2bc25e80ee249e14c3d36ec70fd32c86f9e87dddcae"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "PR #1847 updates documentation wording only without changing security boundaries or proof gates.",
-          "reviewed_code_fingerprint": "d026d97a91315fe73d7f48c348bf178f47580bbb9f163a6718588c167ccf9de4",
+          "reason": "v0.150.4 version-only release cut does not alter security boundaries",
+          "reviewed_code_fingerprint": "4e96d8dce5ca4942ea48836f723dcfbc12cc3a3f79a3e06a0e7ccfeb906b267a",
           "spec_material_hash": "127c65866657d2dd15434ca52f6e3a97b8f20aa4dd97f9d3190e1cd98edac3ac"
         }
       ],
       "state": "APPROVED",
       "stop_conditions": [],
-      "title": "Clarify agent-agnostic, daemonless kernel model in the docs book (#1847)",
+      "title": "Align release v0.150.4 projections and governance (#1848)",
       "todo_ids": [
-        "docs_01m7tcv9xh8hw1z3"
+        "code_01m7srddt2dc4pyp"
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795108843Z"
+      "updated_at": "1795110561Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Isolated Decapod worktree only; preserve WorkspaceCommand::Publish slice for validation_scope.rs; preserve PublishResult/WorkspacePublishResult/ValidationGuidance wire shapes; zero blocked literal wildcard shell commands"
       ],
-      "artifact_hash": "sha256:3e0058802352c52cd182284afa3aa04d5e3a6a73b500bb72264cd7000a36f6ba",
+      "artifact_hash": "sha256:506da0e51ea4ec27eff2c667f9ff5163020ba5b0ae60c8d9c6f44ed729b2a4e0",
       "checks": [
         {
           "name": "cargo_build_locked_v01500",
@@ -793,6 +806,10 @@
         },
         {
           "name": "project_check_0_150_3",
+          "status": "passed"
+        },
+        {
+          "name": "project_check_0_150_4",
           "status": "passed"
         },
         {
@@ -875,10 +892,17 @@
             "intent_id": "intent:run-tmpclean-1798-v01493",
             "kind": "trajectory_step_recorded",
             "sequence": 9
+          },
+          {
+            "detail": "trajectory:run-tmpclean-1798-v01493",
+            "event_id": "event:10",
+            "intent_id": "intent:run-tmpclean-1798-v01493",
+            "kind": "trajectory_step_recorded",
+            "sequence": 10
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 9,
+        "next_sequence": 10,
         "schema_version": "1.0.0",
         "trajectories": {
           "run-tmpclean-1798-v01493": {
@@ -1021,6 +1045,24 @@
                 ],
                 "sequence": 9,
                 "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:10",
+                "observations": [
+                  ".decapod/managed/Dockerfile.decapod",
+                  ".decapod/managed/specs/OPERATIONS.md",
+                  ".decapod/managed/specs/.manifest.json",
+                  ".decapod/managed/specs/.manifest.json"
+                ],
+                "proof_refs": [
+                  "project_check_0_150_4"
+                ],
+                "scope": [
+                  "src/decapod/core/validate.rs,src/decapod/core/validation_runtime.rs,src/decapod/core/workspace.rs,src/decapod/lib.rs,src/decapod/plugins/verify.rs,src/decapod/core/docs_cli.rs,docs/agent/command-contracts.md,docs/agent/state-model.md,tests/tmp_build_cleanup_guidance_1798.rs,tests/unit/plugins/verify_tests.rs,.decapod/managed/specs/INTERFACES.md"
+                ],
+                "sequence": 10,
+                "validation_findings": []
               }
             ]
           }
@@ -1073,7 +1115,7 @@
       "run_id": "run-tmpclean-1798-v01493",
       "schema_version": "1.1.0",
       "shortcut_risk_signals": [],
-      "task_id": "docs_01m7tcv9xh8hw1z3",
+      "task_id": "code_01m7srddt2dc4pyp",
       "tool_calls": [],
       "unresolved_assumptions": []
     }
