@@ -396,6 +396,7 @@ const SAFE_VALIDATION_SCOPES: &[&str] = &[
 // table (never arbitrary child stdout/stderr text, paths, URLs, credentials, or
 // task titles) may be emitted in recovery diagnostics.
 const SAFE_BLOCKER_LABELS: &[&str] = &[
+    "READINESS_GATE_OVERRIDE_UNSUPPORTED",
     "NEEDS_PLAN_APPROVAL",
     "PROOF_HOOK_FAILED",
     "SNAPSHOT_NOT_READY",
@@ -1294,6 +1295,7 @@ fn run_validate_and_hash_detailed(
     repo_root: &Path,
     todo_id: Option<&str>,
 ) -> Result<ValidationRunOutcome, error::DecapodError> {
+    crate::core::validation_runtime::require_full_readiness_environment()?;
     #[cfg(test)]
     VALIDATION_SPAWN_COUNT.with(|count| count.set(count.get() + 1));
     let _verifying = todo_id.map(|id| {
