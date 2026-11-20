@@ -397,6 +397,13 @@ fingerprint, and verifier come from `state::canonical_snapshot`, which is the
 same revision and provenance resolver used by `state.resolve`. The judgment
 does not keep a second definition of that identity.
 
+`plan_governance::instruction_readiness` evaluates recorded instructions from
+the current governance plan. Orientation projects those same blockers and
+remediation, and approval, execution checkpoints, validation, and publication
+enforce them. Its source revision binds the recorded inputs independently of
+approval or phase progress. The existing validation epoch binds proof to the
+applicable plan after a correction.
+
 A task verification row is an index. `judge_stored_verification` re-hashes the
 bound files and checks that the proof digest matches that reconstruction under
 the canonical snapshot. A pass status or a digest written only into SQLite is
@@ -1182,7 +1189,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `a68c663fd675fa14a9b1d972d3bb3ab6f76cb318cb13165f97dc842a48d49fcc`
+- Repository signal fingerprint: `3238b0812c65b63c09b72abf3894697b2745f0ccb3f2eedf5680637024487b5b`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (245 files), `tests/` (258 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
@@ -1751,3 +1758,5 @@ inside a candidate-controlled validation definition.
 `tests/fixtures/interop_strict_json.py` remains an independent, same-host Python decoder with no Decapod import or storage access. It now checks Unicode scalar strings/keys, finite integer overflow and the native 127-container depth limit after unique-key parsing. `tests/fixtures/interop_json_vectors.v1.json` preserves raw parameter strings; the existing unfiltered `tests/interop_conformance.rs` target compares actual native rejection reasons and legitimate projection execution. The existing Bazel target declares both compile-time data inputs explicitly. No production parser, policy engine, proof producer, workflow or required test recipe is replaced.
 
 The encoding profile and independently retained agent-run coverage remain separate. Matching decoder reasons proves only the declared raw-input interpretation scope; it cannot substitute for required run boundaries, tool observations or the actual agent closing event. Missing observer coverage remains unknown even after every encoding vector passes.
+
+The independent JSON encoding vectors remain a bounded parser compatibility check alongside accepted recorded-instruction readiness in `src/decapod/plan_governance.rs`. Agreement on Unicode, finite numbers, duplicate keys and nesting cannot converge unresolved instructions, satisfy spec review, or confer current publication authority.

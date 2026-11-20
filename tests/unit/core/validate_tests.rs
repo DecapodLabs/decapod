@@ -18,6 +18,49 @@ use std::sync::atomic::Ordering;
 use tempfile::tempdir;
 
 #[test]
+fn validation_reports_current_recorded_instruction_for_legacy_approval() {
+    let dir = tempdir().unwrap();
+    let root = dir.path();
+    let store = Store {
+        kind: StoreKind::Repo,
+        root: root.join(".decapod/data"),
+    };
+    let mut plan = plan_governance::init_plan(
+        root,
+        plan_governance::InitPlanInput {
+            title: "Compatibility".into(),
+            intent: "Preserve API v1".into(),
+            todo_ids: vec!["missing-task".into()],
+            proof_hooks: vec![],
+            unknowns: vec![],
+            human_questions: vec![],
+            stop_conditions: vec![],
+            unresolved_contradictions: vec!["Later request removes API v1".into()],
+            deferred_questions: vec![],
+            constraints: ScopeConstraints::default(),
+            phases: vec![],
+        },
+    )
+    .unwrap();
+    plan.state = PlanState::Approved;
+    plan_governance::save_plan(root, &plan).unwrap();
+
+    let context = ValidationContext::new();
+    super::validate_plan_governed_execution_gate(&store, &context, root).unwrap();
+    let failures = context.fails.lock().unwrap();
+    let failure = failures
+        .iter()
+        .find(|failure| failure.contains("NEEDS_HUMAN_INPUT"))
+        .unwrap_or_else(|| panic!("missing recorded contradiction in {failures:?}"));
+    let payload: serde_json::Value =
+        serde_json::from_str(failure.split_once("payload=").unwrap().1).unwrap();
+    assert_eq!(
+        payload["instruction_readiness"],
+        serde_json::to_value(plan_governance::instruction_readiness(&plan)).unwrap()
+    );
+}
+
+#[test]
 fn branch_file_validation_dispatch_uses_working_root() {
     // Check the dispatcher as well as each gate's behavior below: a gate can
     // work correctly in isolation while its caller supplies the host store root.

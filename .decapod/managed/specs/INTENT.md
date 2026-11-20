@@ -549,6 +549,12 @@ project overrides, orientation, and scoped context help the agent identify
 the next useful question or action. Resolved authority and context sources
 remain inspectable.
 
+Agents can draft work while a governing instruction is still unresolved.
+Approval, execution, validation, and publication require a clear recorded plan.
+When a recorded source resolves a question or contradiction, the revised plan
+requires reapproval and affected proof must be run again. Pending spec decisions
+require the explicit review-resolution transition.
+
 ### Bounded, coordinated work
 
 Tasks, claims, sessions, and isolated workspaces establish who owns the work
@@ -711,7 +717,7 @@ These declarations select authoring and proof obligations; they do not attest im
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `a68c663fd675fa14a9b1d972d3bb3ab6f76cb318cb13165f97dc842a48d49fcc`
+- Repository signal fingerprint: `3238b0812c65b63c09b72abf3894697b2745f0ccb3f2eedf5680637024487b5b`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (245 files), `tests/` (258 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
@@ -1201,3 +1207,5 @@ This map now uses accepted master `e9c40e929ee33aa5443c38b57276f96111db0b92` and
 The existing governance interoperability work now includes a narrowly versioned raw-JSON decoding contract at `docs/conformance/json-v1.md`. Its purpose is to make the independent standard-library Python consumer agree with the real native RPC parser on malformed input and legitimate Unicode, finite-number and nesting boundaries. The 22 pinned inputs protect rejection and ordinary read-only operation. This is one encoding-plane correction; it does not complete the independent governance-envelope profile or authenticate imported proof, approval or custody.
 
 The encoding profile and independently retained agent-run coverage remain separate. Matching decoder reasons proves only the declared raw-input interpretation scope; it cannot substitute for required run boundaries, tool observations or the actual agent closing event. Missing observer coverage remains unknown even after every encoding vector passes.
+
+The independent JSON encoding vectors remain a bounded parser compatibility check alongside accepted recorded-instruction readiness in `src/decapod/plan_governance.rs`. Agreement on Unicode, finite numbers, duplicate keys and nesting cannot converge unresolved instructions, satisfy spec review, or confer current publication authority.

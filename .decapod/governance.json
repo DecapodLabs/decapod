@@ -800,6 +800,14 @@
       "proof_refs": [
         "https://github.com/DecapodLabs/decapod/pull/1863"
       ]
+    },
+    {
+      "id": "encoding-accepted-instruction-868f",
+      "summary": "Integrate accepted instruction readiness868f756e; preserve authored specs, native governance and exact proof policy",
+      "input_digest": "sha256:ea10f7467725aee93874c2f78807ff3e164b4e7415889a62ca41795e8301cbf9",
+      "proof_refs": [
+        "https://github.com/DecapodLabs/decapod/pull/1861"
+      ]
     }
   ],
   "intents": {
@@ -843,23 +851,23 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Current accepted observer scopes remain independent from the22-vector raw encoding profile; native-generated merge recovery preserves authored product prose.",
-          "reviewed_code_fingerprint": "a68c663fd675fa14a9b1d972d3bb3ab6f76cb318cb13165f97dc842a48d49fcc",
-          "spec_material_hash": "d346f7af9787ea82b8769be80058a85110ad7959a258ed86e41696708542e723"
+          "reason": "Independent JSON encoding scope remains separate from accepted instruction convergence and publication readiness.",
+          "reviewed_code_fingerprint": "3238b0812c65b63c09b72abf3894697b2745f0ccb3f2eedf5680637024487b5b",
+          "spec_material_hash": "fb7f97965292da4b4f1b2f0d0edaf09b5822490af27680d79278fc31e4ec4e56"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Encoding reasons grant no canonical proof or missing tool/run coverage; generated native headers and manifest reconcile accepted target.",
-          "reviewed_code_fingerprint": "a68c663fd675fa14a9b1d972d3bb3ab6f76cb318cb13165f97dc842a48d49fcc",
-          "spec_material_hash": "77547096f7b5179da5f9b2cfaa6a78b67afed0f6db0a36d83f684ae57dfe27d3"
+          "reason": "Review exact Python and native CLI encoding vector interfaces alongside current shared instruction readiness.",
+          "reviewed_code_fingerprint": "3238b0812c65b63c09b72abf3894697b2745f0ccb3f2eedf5680637024487b5b",
+          "spec_material_hash": "d71b1bc64ad1dc4a24f7d9af9bdb240fcd920a81d54b1ca942f82fd27bda77ea"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Native parser remains strict; positive twins avoid denial of valid reads; incomplete observer coverage remains unknown.",
-          "reviewed_code_fingerprint": "a68c663fd675fa14a9b1d972d3bb3ab6f76cb318cb13165f97dc842a48d49fcc",
-          "spec_material_hash": "e1bc7ebbad47d45428c9d426c0c274bcee7e944d49515753c423beae513294f2"
+          "reason": "Parser agreement cannot waive canonical proof, custody, instruction or spec review gates.",
+          "reviewed_code_fingerprint": "3238b0812c65b63c09b72abf3894697b2745f0ccb3f2eedf5680637024487b5b",
+          "spec_material_hash": "fd2b4563cc0b9ba92e6130c2c472a98423bf63e163fe50b6353e5a9894d050dd"
         }
       ],
       "state": "APPROVED",
@@ -870,7 +878,7 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795168865Z"
+      "updated_at": "1795169391Z"
     },
     "trajectory": {
       "active_boundaries": [
