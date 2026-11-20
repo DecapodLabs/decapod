@@ -781,6 +781,11 @@
       "id": "observer-retained-capture-boundaries",
       "summary": "Checkpoint missing-tail observer regression repair and mandatory coverage controls; preserve historical subjects and source policy.",
       "input_digest": "sha256:6ba89c4b23f250d458f9a4b141f4003908c7bdc52c695824dcc22547e4455c5b"
+    },
+    {
+      "id": "observer-matching-release-projections",
+      "summary": "Refresh final observer source fingerprints and native Docker pin through matching release 0.153.2 after actual hosted drift failure.",
+      "input_digest": "sha256:c1dd06a64aaf1c594832d124fb9007bf39b41c800eddfce3eb7e71d569083305"
     }
   ],
   "intents": {
@@ -819,23 +824,23 @@
       "schema_version": "1.1.0",
       "spec_reviews": [
         {
-          "disposition": "updated",
+          "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Final review binds run identity, canonical event/artifact indexes, host terminal events, declared measured channels and custody. Coverage strings are validated before safe export. Integrated the accepted version-only release cut.",
-          "reviewed_code_fingerprint": "61b8f43215d5cd58079e5ed80132041b1d71a542e17a08cf6e86cc1fe32d0021",
+          "reason": "Matched the projection controller to accepted source version 0.153.2 and refreshed final source fingerprints. Observer semantics, coverage controls and authored architecture are unchanged.",
+          "reviewed_code_fingerprint": "7314745003e2e8805e178155d82371583ac15576d395918a0855101f83437d06",
           "spec_material_hash": "bfb4677d7cf2bbdbdbcaa5d4f7d55e8edca69562f954ed93546645e0b08f1f8b"
         },
         {
-          "disposition": "updated",
+          "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Final review binds run identity, canonical event/artifact indexes, host terminal events, declared measured channels and custody. Coverage strings are validated before safe export. Integrated the accepted version-only release cut.",
+          "reason": "Matched the projection controller to accepted source version 0.153.2 and refreshed final source fingerprints. Observer semantics, coverage controls and authored architecture are unchanged.",
           "reviewed_code_fingerprint": "7314745003e2e8805e178155d82371583ac15576d395918a0855101f83437d06",
           "spec_material_hash": "f881c8267cffd78dd02223d9c2783bab25f34fb76a445a87135ccac61315db87"
         },
         {
-          "disposition": "updated",
+          "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Final review binds run identity, canonical event/artifact indexes, host terminal events, declared measured channels and custody. Coverage strings are validated before safe export. Integrated the accepted version-only release cut.",
+          "reason": "Matched the projection controller to accepted source version 0.153.2 and refreshed final source fingerprints. Observer semantics, coverage controls and authored architecture are unchanged.",
           "reviewed_code_fingerprint": "7314745003e2e8805e178155d82371583ac15576d395918a0855101f83437d06",
           "spec_material_hash": "62300e369dcb24d24ef0c4b25b889d100d69412810d0a4ff2133ff3c9be3a2c5"
         }
@@ -848,7 +853,7 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795161792Z"
+      "updated_at": "1795162396Z"
     },
     "trajectory": {
       "active_boundaries": [
