@@ -2369,6 +2369,131 @@ mod tests {
         }
     }
 
+    #[cfg(any(target_os = "linux", target_os = "macos"))]
+    #[test]
+    fn fresh_ci_checkout_cannot_inherit_another_checkouts_local_policy_approval() {
+        use crate::consumer_readiness_fixture::{Fixture, git};
+        use crate::core::repository_profile;
+        use crate::core::store::{Store, StoreKind};
+        use crate::plugins::policy::{PolicyCli, run_policy_cli_as};
+        use clap::Parser;
+
+        let mut fixture = Fixture::new();
+        let root = &fixture.options.root;
+        let save_config = |fixture: &Fixture| {
+            let mut config = crate::cli::DecapodProjectConfig {
+                proof: fixture.proof.clone(),
+                ..Default::default()
+            };
+            config.repo.base_branch = Some("main".into());
+            std::fs::write(
+                fixture.options.root.join(".decapod/config.toml"),
+                toml::to_string_pretty(&config).unwrap(),
+            )
+            .unwrap();
+        };
+        let inventory = crate::core::validation_runtime::discover_source_inventory(
+            &fixture.options,
+            &crate::core::bounded_process::Cancellation::default(),
+        )
+        .unwrap();
+        let digest = inventory.digest().unwrap();
+        // Model a release whose scanner did not yet inventory this check file.
+        let mut previous_inventory = inventory;
+        assert!(
+            previous_inventory
+                .files
+                .remove("scripts/check_source.py")
+                .is_some()
+        );
+        let previous_digest = previous_inventory.digest().unwrap();
+        fixture
+            .proof
+            .required_profile
+            .as_mut()
+            .unwrap()
+            .reviewed_sources_digest = previous_digest.clone();
+        save_config(&fixture);
+        fixture.commit("accept inventory measured by previous scanner");
+        git(root, &["push", "origin", "HEAD:main"]);
+        let base = git(root, &["rev-parse", "refs/remotes/origin/main"]);
+        let contract = fixture.proof.repository_contract.as_ref().unwrap();
+        let command_digest = contract.reviewed_commands_digest.clone();
+        assert_ne!(digest, previous_digest);
+        fixture
+            .proof
+            .required_profile
+            .as_mut()
+            .unwrap()
+            .reviewed_sources_digest = digest.clone();
+        save_config(&fixture);
+        fixture.commit("review inventory measured by current scanner");
+        let head = git(root, &["rev-parse", "HEAD"]);
+        assert_eq!(
+            git(root, &["diff", "--name-only", &base, &head]),
+            ".decapod/config.toml"
+        );
+        let id = repository_profile::repo_policy_transition_id(
+            &base,
+            &head,
+            &previous_digest,
+            &digest,
+            &command_digest,
+            &command_digest,
+        )
+        .unwrap();
+
+        let mut rules = RuleRegistry::new();
+        let rule = rules
+            .get_rule(&RuleId::new("decapod.policy.accepted_repository_contract"))
+            .unwrap();
+        let mut context = terminal_test_context(None, None);
+        context.repo_root = Some(root.clone());
+        assert_eq!(evaluate_rule(&rule, &context).verdict, RuleVerdict::Fail);
+        let store = Store {
+            kind: StoreKind::Repo,
+            root: root.join(".decapod/data"),
+        };
+        std::fs::create_dir_all(&store.root).unwrap();
+        run_policy_cli_as(
+            &store,
+            PolicyCli::try_parse_from([
+                "policy",
+                "approve",
+                "--id",
+                &id,
+                "--scope",
+                repository_profile::POLICY_TRANSITION_SCOPE,
+            ])
+            .unwrap(),
+            "operator",
+        )
+        .unwrap();
+        assert_eq!(evaluate_rule(&rule, &context).verdict, RuleVerdict::Pass);
+        let approved = fixture.validate(&mut fixture.host());
+        assert!(approved.ready && approved.proof_ready, "{approved:?}");
+
+        git(root, &["push", "origin", "HEAD:consumer-work"]);
+        let ci = fixture._storage.path().join("fresh-ci");
+        git(
+            fixture._storage.path(),
+            &[
+                "clone",
+                "--no-local",
+                "--branch",
+                "consumer-work",
+                fixture.upstream.to_str().unwrap(),
+                ci.to_str().unwrap(),
+            ],
+        );
+        assert_eq!(git(&ci, &["rev-parse", "HEAD"]), head);
+        assert_eq!(git(&ci, &["rev-parse", "refs/remotes/origin/main"]), base);
+        assert!(!crate::plugins::policy::policy_db_path(&ci.join(".decapod/data")).exists());
+        context.repo_root = Some(ci);
+        context.is_ci = true;
+        assert_eq!(evaluate_rule(&rule, &context).verdict, RuleVerdict::Fail);
+    }
+
     #[test]
     fn explicit_project_workunit_obligation_is_never_exempted_as_optional() {
         let mut registry = RuleRegistry::new();

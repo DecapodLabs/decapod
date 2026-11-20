@@ -1539,7 +1539,7 @@ field. Nothing in this operation authorizes a mutation, approval or completion.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `8c2e8e83d239fdb78f75802f5c29758704175df74eaa8eacb75e1d9dfd8ae525`
+- Repository signal fingerprint: `d0c9bc2ac9be6aa1c4d53dff2b848eb5f3898b9d565986210539b610c9dd457c`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (246 files), `tests/` (258 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
@@ -2227,6 +2227,10 @@ cannot self-authorize changed inventoried check scripts, build/dependency
 definitions, or provider inputs. Retain the accepted inventory or obtain a
 `policy.control` transition approval bound to the exact base, head, and source/command
 digests before revalidation; no override or second policy store is added.
+The pre-execution policy rule looks up approval in the canonical local ledger.
+An independent CI checkout has its own ledger, so a maintainer's approval in
+another checkout does not admit a source transition there. Portable approval
+requires independently verifiable authority for the same transition ID.
 
 ## Target-scoped repository proof (#1740)
 
