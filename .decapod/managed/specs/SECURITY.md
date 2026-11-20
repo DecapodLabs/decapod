@@ -797,7 +797,7 @@ execution evidence remains required before publication readiness.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `45d66305ba0298a9350be0b1634a7fb0e539279fe0edc2ca0f4d8a5493d09102`
+- Repository signal fingerprint: `411e4a60fdf683c659e74fce5e3c0e184c82226245d971cfb6a23dc9fe1039c1`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (244 files), `tests/` (256 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
@@ -1303,3 +1303,7 @@ Git merge reconciliation from laundering invalid or partial proof:
 ## Per-platform execution selection boundary (#1736)
 
 `repo.pr-readiness.v1` per-platform execution entries (`RepositoryExecution::platforms` / `PlatformExecution`) preserve fail-closed `#[serde(deny_unknown_fields)]` schema strictness, reject ambient `PATH` resolution, relative paths, mixed top-level/per-platform declarations, and uncanonical or unsupported platform keys, and bind every declared platform alternative into `command_contract_digest` and `preserve_accepted` (`ACCEPTED_REPOSITORY_CONTRACT_CHANGED`). Candidate additions, removals, or edits to any platform table—including non-host platforms—cannot self-approve and remain rejected until independently accepted on the target (tracked separately from policy migration in #1738). At host selection and execution time (`RepositoryExecution::resolve_for_platform`, `repository_host::select_commands_for_platform`, `native_proof::validate_invocation`), only the current host platform's reviewed executable and `toolchain_files` are selected, checked for canonical host binary format, and byte-measured before and after execution; missing or unsupported host platforms fail closed without fallback.
+
+## Compact storage v2 downgrade boundary (#1739)
+
+Compatibility-aware evaluators below `0.144.2` (`0.141.0`, `0.143.2`, `0.144.1`) fail closed with `STORAGE_FORMAT_INCOMPATIBLE` against both newly initialized and restamped v2 datastores, and `core::events` read/write paths enforce `check_read_compatibility` / `check_storage_format_compatibility` before accessing event rows. Already-released `0.141.0..0.144.1` binaries shipped prior to PR #1663 without `meta.storage.*` compatibility checks and share `TODO_SCHEMA_VERSION = 18` and `events` SQLite DDL with `0.144.2..0.148.13`; metadata checks alone cannot force those historical binaries to reject a v2 store without breaking `>= 0.144.2` compatibility. Deterministic offline tests in `tests/datastore_relational_compaction.rs` and `tests/datastore_contract.rs` verify version floors, restamping, and lossless `_ce_v1` reconstruction without network or external binary execution.

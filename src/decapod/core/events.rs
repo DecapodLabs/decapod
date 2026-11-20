@@ -181,6 +181,7 @@ pub fn query(
         return Ok(Vec::new());
     }
     let conn = db::db_connect_for_validate(&path.to_string_lossy())?;
+    crate::core::storage_compaction::check_read_compatibility(&conn)?;
     let table_exists = conn.has_table("events")?;
     if !table_exists {
         return Ok(Vec::new());
@@ -259,6 +260,7 @@ pub fn query_all_on_conn(
             "unknown event stream: {stream}"
         )));
     }
+    crate::core::storage_compaction::check_read_compatibility(conn)?;
     if !conn.has_table("events")? {
         return Ok(Vec::new());
     }
@@ -359,6 +361,7 @@ pub fn query_subject_on_conn(
     {
         return Err(invalid("invalid subject or record bound"));
     }
+    crate::core::storage_compaction::check_read_compatibility(conn)?;
     if !conn.has_table(EVENTS_TABLE)? {
         return Ok(Vec::new());
     }
@@ -455,6 +458,7 @@ pub fn query_subject_event_on_conn(
     {
         return Err(invalid("invalid subject or event identity"));
     }
+    crate::core::storage_compaction::check_read_compatibility(conn)?;
     if !conn.has_table(EVENTS_TABLE)? {
         return Ok(None);
     }
@@ -542,6 +546,7 @@ pub fn check_subject_append_capacity(
     {
         return Err(invalid("invalid append subject or record bound"));
     }
+    crate::core::storage_compaction::check_storage_format_compatibility(conn)?;
     let id = event_id(event);
     if let Some(existing) = load_canonical_event_shape(conn, stream, &id)? {
         if canonical_event_matches(stream, &existing, event)? {
@@ -650,6 +655,7 @@ pub fn query_serialized_lines(root: &Path, stream: &str) -> Result<String, error
 
 /// Ensure the unified events table exists and fold historical stream tables when present.
 pub fn ensure_tables(conn: &Connection) -> Result<(), error::DecapodError> {
+    crate::core::storage_compaction::check_storage_format_compatibility(conn)?;
     conn.execute_batch(schemas::EVENTS_TABLE_SCHEMA_V2)?;
     conn.execute_batch(
         "CREATE TABLE IF NOT EXISTS legacy_event_imports (
@@ -661,6 +667,7 @@ pub fn ensure_tables(conn: &Connection) -> Result<(), error::DecapodError> {
     )?;
     migrate_legacy_stream_tables_into_events(conn)?;
     conn.execute(schemas::EVENTS_TABLE_STREAM_SUBJECT_SEQ_INDEX, [])?;
+    crate::core::storage_compaction::reconcile_v2_storage_format_metadata(conn)?;
     Ok(())
 }
 
@@ -914,6 +921,7 @@ fn append_on_conn_inner(
             "unknown event stream: {stream}"
         )));
     }
+    crate::core::storage_compaction::check_storage_format_compatibility(conn)?;
     let event_id = event_id(event);
     let ts = event
         .get("ts")

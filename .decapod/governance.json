@@ -1,7 +1,7 @@
 {
   "schema_version": "1.0.0",
   "baseline": {
-    "accepted_commit": "352d892958e1cdf692299927f7c2f3c0c36fc639",
+    "accepted_commit": "c5bafce62bf9120b590436e7d18ce61651037206",
     "policy": {
       "change_control": {
         "requires_human_review": true,
@@ -189,11 +189,6 @@
           "PR source diff and pending remote validation"
         ],
         "statement": "No Dagger-specific engine execution or authorization capability remains; generic proof custody is retained",
-        "status": "open"
-      },
-      "claim:duplicate-key-required-semantics": {
-        "falsifier": "Duplicate or escaped-equivalent required_extensions erases the unsupported requirement, nested ambiguous JSON is accepted, or legitimate unique-key negotiation fails after refusal.",
-        "statement": "Both RPC routes reject duplicate decoded JSON keys before startup; later fields cannot erase required extension semantics and unique-key ordinary negotiation can recover.",
         "status": "open"
       },
       "claim:durable-artifact-publication": {
@@ -579,76 +574,127 @@
     }
   },
   "change": {
-    "id": "change_01M7Q97QD8Z4RM9340YANFM396",
-    "base_commit": "352d892958e1cdf692299927f7c2f3c0c36fc639",
+    "id": "change_01M7QKFSRQNZTA7DG143M3HP11",
+    "base_commit": "c5bafce62bf9120b590436e7d18ce61651037206",
     "target_base": "origin/master"
-  },
-  "claims": {
-    "caller-reports-not-observed-proof": {
-      "statement": "A caller-supplied validation report cannot confer proven or publication-ready status through the existing pure report projection; negative and stale diagnostics remain visible and ordinary governed operation remains available.",
-      "falsifier": "Run actual RPC interop.project with fabricated pass/head/receipt and self-matching rule/verifier fields, then legal negotiation and current canonical native proof controls. Any fabricated report yielding proven or publication_ready=true refutes the claim.",
-      "status": "open",
-      "proof_refs": [
-        "/private/tmp/attack-gaps-1726-native11-projection-before.json"
-      ]
-    },
-    "pure-projection-input-provenance": {
-      "statement": "Every interop.project result identifies caller-owned input and refuses to claim canonical state verification; reported approval/denial booleans cannot be described as authenticated policy decisions.",
-      "falsifier": "Execute actual approval projections with caller true/false/absent values and spoofed origin/verified fields. Any output authenticating canonical state or describing caller data as a recorded policy decision refutes this claim.",
-      "status": "open",
-      "proof_refs": [
-        "/private/tmp/attack-gaps-1726-native11-approval-before.json"
-      ]
-    }
   },
   "checkpoints": [
     {
-      "id": "report-projection-canonical-proof-boundary-20261118",
-      "summary": "Refuse false current proof from caller-supplied reports; preserve diagnostics and canonical native owners after measured official11 counterexample",
-      "input_digest": "sha256:76b3a008014c44712d3c4230a9608dac11a995487323c0742b9262d43a74ed3e",
+      "id": "cp-1739-1",
+      "summary": "Align v2 compact storage reader/writer compatibility floor with _ce_v1 codec (0.144.2), safely restamp legacy 0.141.0 v2 metadata on activate/open, enforce format compat on event read/write paths, refresh v0.148.13 projections, and add offline deterministic tests",
+      "input_digest": "sha256:6c7bfb9c3ca8a7581db7e8da77d8b3d7853aff7e19ce537a34a6ff3d2df4dca7",
       "proof_refs": [
-        "/private/tmp/attack-gaps-1726-native11-projection-before.json",
-        "https://github.com/DecapodLabs/decapod/issues/1726",
-        "sha256:3ce5e25ebcdafe6b5dc0229bf70f01a38ac6d7e2fbb1a270898fe4e8fd2484bb"
+        "tests/datastore_contract.rs",
+        "tests/datastore_relational_compaction.rs"
       ]
     },
     {
-      "id": "pure-projection-input-provenance-20261118",
-      "summary": "Make reported operation/approval provenance explicit and prevent caller labels from asserting canonical verification",
-      "input_digest": "sha256:9c436f546c520baf70e4aa620a9681daf37f8e5f6f206a9fee1249ead8099a9f",
+      "id": "cp-1739-2",
+      "summary": "Reconcile reviewed_sources_digest in .decapod/config.toml to v0.148.13 (c5bafce6) inventory_digest sha256:f2c1d189ee0c96f6afb66185229233bd0436015d0ddd21dc56deb4f58709b2b2",
+      "input_digest": "sha256:6c7bfb9c3ca8a7581db7e8da77d8b3d7853aff7e19ce537a34a6ff3d2df4dca7",
       "proof_refs": [
-        "/private/tmp/attack-gaps-1726-native11-approval-before.json",
-        "https://github.com/DecapodLabs/decapod/issues/1726",
-        "sha256:f637728be842e3581181af24cd0740004b9b6d838cb01598ca0150ac13c45667"
+        ".decapod/config.toml"
       ]
     },
     {
-      "id": "reporting-accepted12-integration-20261118",
-      "summary": "Integrate accepted release12 with reviewed report provenance; preserve actual failures and canonical proof boundary",
-      "input_digest": "sha256:9f0ecabb2c008f7f87c5b8a34dedbefbdafefb2e7b8be3fe9c66b4f6dc7b94ba"
+      "id": "cp-1739-3",
+      "summary": "Update .decapod/config.toml reviewed_sources_digest to sha256:f2c1d189ee0c96f6afb66185229233bd0436015d0ddd21dc56deb4f58709b2b2 matching v0.148.13 (c5bafce6)",
+      "input_digest": "sha256:856ba74646ef1f9958704504ac8968b8de0b054d3884f28b23832564737459b4",
+      "proof_refs": [
+        ".decapod/config.toml"
+      ]
     },
     {
-      "id": "reporting-v01510-sync",
-      "summary": "Sync origin/master 11e0cdc76 (v0.151.0), refresh v0.151.0 projections, fix SECURITY.md spec review disposition, and reconcile governance (#1793)",
-      "input_digest": "sha256:fd78bb377ff76c11f744759ff5843c2d92d3c554da7ea5d42f62383d8ef12765"
+      "id": "cp-1739-4",
+      "summary": "Refresh .manifest.json config_input_hash to 3eebcedcab3ab9a0a3b9e246f50e473dbe93d37ed41874918a81fac8bd6354ce after config.toml digest reconciliation",
+      "input_digest": "sha256:f3b057af5b209f41acfe9415038e1fa77ef21747ea727b1e6854be3babaf3cbf",
+      "proof_refs": [
+        ".decapod/managed/specs/.manifest.json"
+      ]
+    },
+    {
+      "id": "cp-1739-5",
+      "summary": "Merge origin/master 2f12638a (v0.148.14), refresh v0.148.14 Dockerfile/manifest/specs, reconcile config.toml reviewed_sources_digest, re-verify fmt/clippy/datastore/core tests",
+      "input_digest": "sha256:18c9d6626417ed31f77c6c23bf6066093bd83269266aaa9c4921165dbb7bb039",
+      "proof_refs": [
+        "tests/datastore_contract.rs",
+        "tests/datastore_relational_compaction.rs"
+      ]
+    },
+    {
+      "id": "cp-1739-6",
+      "summary": "Reconcile origin/master v0.149.0, rebuild 0.149.0 binary, update reviewed_sources_digest, refresh living specs and projections, record spec reviews, and re-verify fmt/clippy/unit and datastore integration suites",
+      "input_digest": "sha256:ac82f5fcb660b03e499e81a87243359fe07c801d2c20e6223953a45c5a759283"
+    },
+    {
+      "id": "cp-1739-7",
+      "summary": "Record updated 0.149.0 spec reviews for INTERFACES.md, ARCHITECTURE.md, and SECURITY.md",
+      "input_digest": "sha256:ae303982dd619d4b14995b99590b24f78390a8006a6ff386d18be073667c7842"
+    },
+    {
+      "id": "cp-1739-8",
+      "summary": "Reconcile origin/master 205d4e8d (v0.149.1), update reviewed_sources_digest, refresh Dockerfile/specs projections, record spec reviews, and verify fmt/clippy/unit and datastore integration suites",
+      "input_digest": "sha256:b1017658ccb8e3f4e3e524f7a8591bd18ed95f6f8dfee85779c71178c3bdf28a"
+    },
+    {
+      "id": "cp-1739-9",
+      "summary": "Merge origin/master 102d6eb22 (v0.149.3, PR #1811-#1814), refresh reviewed_sources_digest, Dockerfile.decapod, specs.refresh (daff7057), review-spec x3, and verify fmt/clippy/targeted tests",
+      "input_digest": "sha256:5703ea447d24da97bc461082285d242e2f4a8372349f6730c24c689584ae992e"
+    },
+    {
+      "id": "cp-1739-10",
+      "summary": "Refresh managed Dockerfile.decapod release pin to v0.149.3-debian / 0.149.3 (#1739)",
+      "input_digest": "sha256:0eac681499bc8646caddba28c81262124f234ceb318a0afafdf6a6586d12581c"
+    },
+    {
+      "id": "cp-1739-11",
+      "summary": "Merge origin/master cfe2565da (PR #1816, v0.149.3), refresh specs (0f411241) and review-spec x3, verify fmt and targeted storage tests (#1739)",
+      "input_digest": "sha256:a55687f1f56e640269602eb345f11babb13e05639e6ce2e29d27c224429d1840"
+    },
+    {
+      "id": "cp-1739-12",
+      "summary": "Merge origin/master 845ff9799 (PR #1818, v0.149.3, test-only), preserve #1469+#1739 ARCHITECTURE.md prose, refresh specs and review-spec x3, verify fmt (#1739)",
+      "input_digest": "sha256:c0865f216c621f61d305ab164b0b5a7f4b9bc437848a54810d41af5374658051"
+    },
+    {
+      "id": "cp-1739-13",
+      "summary": "Merge origin/master 89906b666 (PR #1819, v0.149.3), refresh specs and review-spec x3, verify fmt and datastore_relational_compaction (#1739)",
+      "input_digest": "sha256:31c9748b18d788a0207aee4f168711a80a926cd6d4086772b85992324f8993ac"
+    },
+    {
+      "id": "cp-sync-363d6e3ec",
+      "summary": "Integrate accepted master 363d6e3ec (v0.151.0) and refresh specs for #1739",
+      "input_digest": "sha256:cd3c0e75fb8ca12ea30cb55b884bcb085a6971a99f45a246d285a2febca27304"
+    },
+    {
+      "id": "cp-sync-5cc32689e",
+      "summary": "Sync accepted master 5cc32689e (v0.152.0) and refresh 0.152.0 projections for #1739",
+      "input_digest": "sha256:19a8e78a4ebad85a17ee857e7086a7e4ddbe639ba3afb40d0d6b917f5e4ea7f5"
+    },
+    {
+      "id": "cp-pin-01520",
+      "summary": "Refresh managed Dockerfile pin to Decapod v0.152.0 for #1739",
+      "input_digest": "sha256:ec0ffcacab47b2220fa25333d0f9a1c5f17e174bb9144725a9b1c87d718c9c8b"
     }
   ],
   "intents": {
-    "intent:change_01M7Q97QD8Z4RM9340YANFM396": {
+    "intent:change_01M7QKFSRQNZTA7DG143M3HP11": {
       "acceptance_criteria": [],
       "assumptions": [],
       "boundaries": [
         "Current claimed task and isolated work branch"
       ],
       "constraints": [
-        "issue-1726"
+        "paths:[\"src/decapod\"",
+        "\"tests\"",
+        "\".decapod/managed/specs\"]"
       ],
       "created_sequence": 1,
-      "id": "intent:change_01M7Q97QD8Z4RM9340YANFM396",
+      "id": "intent:change_01M7QKFSRQNZTA7DG143M3HP11",
       "out_of_scope": [],
       "proof_requirements": [],
-      "raw_intent": "fix: keep caller-supplied report projections unproven\n\nContinue Attack the Gaps #1735 in dependency order while current source Actions execute. Read-only audit found project_report_publication can derive Proven/publication_ready from caller-owned status/head/digest JSON; owner38b retains the same code. Audit actual installed11 RPC before changes, closed issues and active PRs, distinguish nonauthoritative display from consequential publication, retain legitimate negative/stale states and current native proof. Correct only the existing projection owner without a new report generator/receipt store or weakening any admission. Actual binary adversarial controls plus normal operation, required Actions, canonical specs/checkpoints. User explicitly selects publication and GitHub Actions while ignoring Buildkite; no native admission, merge or closure is inferred.",
-      "refined_intent": "fix: keep caller-supplied report projections unproven\n\nContinue Attack the Gaps #1735 in dependency order while current source Actions execute. Read-only audit found project_report_publication can derive Proven/publication_ready from caller-owned status/head/digest JSON; owner38b retains the same code. Audit actual installed11 RPC before changes, closed issues and active PRs, distinguish nonauthoritative display from consequential publication, retain legitimate negative/stale states and current native proof. Correct only the existing projection owner without a new report generator/receipt store or weakening any admission. Actual binary adversarial controls plus normal operation, required Actions, canonical specs/checkpoints. User explicitly selects publication and GitHub Actions while ignoring Buildkite; no native admission, merge or closure is inferred.",
+      "raw_intent": "Fix #1739: align v2 storage reader/writer compatibility floor with _ce_v1 codec\n\nAlign v2 compact storage min reader/writer version with _ce_v1 codec floor and safely restamp legacy v2 metadata per #1630",
+      "refined_intent": "Fix #1739: align v2 storage reader/writer compatibility floor with _ce_v1 codec\n\nAlign v2 compact storage min reader/writer version with _ce_v1 codec floor and safely restamp legacy v2 metadata per #1630",
       "status": "refined",
       "updated_sequence": 3
     }
@@ -661,7 +707,7 @@
       },
       "deferred_questions": [],
       "human_questions": [],
-      "intent": "fix: keep caller-supplied report projections unproven\n\nContinue Attack the Gaps #1735 in dependency order while current source Actions execute. Read-only audit found project_report_publication can derive Proven/publication_ready from caller-owned status/head/digest JSON; owner38b retains the same code. Audit actual installed11 RPC before changes, closed issues and active PRs, distinguish nonauthoritative display from consequential publication, retain legitimate negative/stale states and current native proof. Correct only the existing projection owner without a new report generator/receipt store or weakening any admission. Actual binary adversarial controls plus normal operation, required Actions, canonical specs/checkpoints. User explicitly selects publication and GitHub Actions while ignoring Buildkite; no native admission, merge or closure is inferred.",
+      "intent": "Fix #1739: align v2 storage reader/writer compatibility floor with _ce_v1 codec\n\nAlign v2 compact storage min reader/writer version with _ce_v1 codec floor and safely restamp legacy v2 metadata per #1630",
       "phases": [],
       "proof_hooks": [
         "decapod validate"
@@ -671,295 +717,187 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Preserved Pure report projection does not authenticate proof (#1726) in ARCHITECTURE.md alongside v0.151.0 upstream specs.",
-          "reviewed_code_fingerprint": "45d66305ba0298a9350be0b1634a7fb0e539279fe0edc2ca0f4d8a5493d09102",
-          "spec_material_hash": "2900d7eb502d4612e0747975dfa86dd7aabc7819dfd7b91f909e970e034dd73d"
+          "reason": "Synced #1739 compact v2 floor reconciliation with accepted master 5cc32689e (v0.152.0).",
+          "reviewed_code_fingerprint": "411e4a60fdf683c659e74fce5e3c0e184c82226245d971cfb6a23dc9fe1039c1",
+          "spec_material_hash": "87ef8eb06d8d99b08e7f439012d77793d1532e100bdd59bb994d48f1aab0b102"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Preserved Caller-supplied validation report projections (#1726) in INTERFACES.md alongside v0.151.0 upstream specs.",
-          "reviewed_code_fingerprint": "45d66305ba0298a9350be0b1634a7fb0e539279fe0edc2ca0f4d8a5493d09102",
-          "spec_material_hash": "6e5f7809c91b10569b2abaf65cd2f843c0fc959e9a9b67fcd4ce1312f64b9edc"
+          "reason": "Synced #1739 compact v2 compatibility floor contract with accepted master 5cc32689e (v0.152.0).",
+          "reviewed_code_fingerprint": "411e4a60fdf683c659e74fce5e3c0e184c82226245d971cfb6a23dc9fe1039c1",
+          "spec_material_hash": "122396f215ab6d6a5fdce052e1e41a448d01160dac838f67241d960398f49b84"
         },
         {
-          "disposition": "unchanged_with_reason",
+          "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "PR #1793 keeps caller-supplied report projections outside canonical proof authority and documents this in INTENT/ARCHITECTURE/INTERFACES without materially modifying SECURITY.md versus accepted master v0.151.0.",
-          "reviewed_code_fingerprint": "45d66305ba0298a9350be0b1634a7fb0e539279fe0edc2ca0f4d8a5493d09102",
-          "spec_material_hash": "5d5e6d393e35b9d5b1987ca692fbdd18b0b238b96d5e62181e43480d0fea8aee"
+          "reason": "Synced #1739 compact v2 downgrade boundary with accepted master 5cc32689e (v0.152.0).",
+          "reviewed_code_fingerprint": "411e4a60fdf683c659e74fce5e3c0e184c82226245d971cfb6a23dc9fe1039c1",
+          "spec_material_hash": "053d38a9c0a87b78105a9bbd4dcd5991b92ec68254bfc409a0c9848a0702d119"
         }
       ],
       "state": "APPROVED",
       "stop_conditions": [],
-      "title": "fix: keep caller-supplied report projections unproven",
+      "title": "Fix #1739: align v2 storage reader/writer compatibility floor with _ce_v1 codec",
       "todo_ids": [
-        "bugs_01m7q969nypfd86q"
+        "bugs_01m7qk2rfygkhntm"
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795135884Z"
+      "updated_at": "1795140341Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:24004ba4ec6cdfaafdc2241b48ef361d182c993344a89e577e4212a4d3912036",
+      "artifact_hash": "sha256:9354d0e9b3f68cbd25fb9420dd44522de8e3d335fccef96ec0dc725719d326a1",
       "checks": [
         {
-          "name": "cargo_fmt",
+          "name": "clippy",
           "status": "passed"
         },
         {
-          "name": "clippy_all_targets",
+          "name": "core_events_lib",
           "status": "passed"
         },
         {
-          "name": "diff-whitespace",
+          "name": "core_migration_lib",
           "status": "passed"
         },
         {
-          "name": "formatting",
+          "name": "datastore_contract_compat",
           "status": "passed"
         },
         {
-          "name": "installed11-counterfeit-report-rejected",
-          "status": "failed"
-        },
-        {
-          "name": "installed11-legitimate-negotiation",
+          "name": "datastore_relational_compaction",
           "status": "passed"
         },
         {
-          "name": "installed11-negative-stale-controls",
-          "status": "passed"
-        },
-        {
-          "name": "installed11-projected-approval-origin",
-          "status": "failed"
-        },
-        {
-          "name": "local-project-prerequisites",
-          "status": "failed"
-        },
-        {
-          "name": "project-preparation",
-          "status": "failed"
-        },
-        {
-          "name": "released12-counterexamples",
-          "status": "passed"
-        },
-        {
-          "name": "rustfmt",
-          "status": "passed"
-        },
-        {
-          "name": "targeted_tests",
+          "name": "fmt",
           "status": "passed"
         }
       ],
-      "current_phase": "intent",
+      "current_phase": "implementation",
       "custody": {
         "events": [
           {
             "event_id": "event:2",
-            "intent_id": "intent:change_01M7Q97QD8Z4RM9340YANFM396",
+            "intent_id": "intent:change_01M7QKFSRQNZTA7DG143M3HP11",
             "kind": "created",
             "sequence": 2
           },
           {
             "event_id": "event:3",
-            "intent_id": "intent:change_01M7Q97QD8Z4RM9340YANFM396",
+            "intent_id": "intent:change_01M7QKFSRQNZTA7DG143M3HP11",
             "kind": "refined",
             "sequence": 3
           },
           {
-            "detail": "trajectory:branch_01M7Q97QGBQF64V09927P0590A",
+            "detail": "trajectory:branch_01M7QKFSW14YFFE713D33JXR9V",
             "event_id": "event:4",
-            "intent_id": "intent:change_01M7Q97QD8Z4RM9340YANFM396",
+            "intent_id": "intent:change_01M7QKFSRQNZTA7DG143M3HP11",
             "kind": "trajectory_step_recorded",
             "sequence": 4
           },
           {
-            "detail": "trajectory:branch_01M7Q97QGBQF64V09927P0590A",
+            "detail": "trajectory:branch_01M7QKFSW14YFFE713D33JXR9V",
             "event_id": "event:5",
-            "intent_id": "intent:change_01M7Q97QD8Z4RM9340YANFM396",
+            "intent_id": "intent:change_01M7QKFSRQNZTA7DG143M3HP11",
             "kind": "trajectory_step_recorded",
             "sequence": 5
           },
           {
-            "detail": "trajectory:branch_01M7Q97QGBQF64V09927P0590A",
+            "detail": "trajectory:branch_01M7QKFSW14YFFE713D33JXR9V",
             "event_id": "event:6",
-            "intent_id": "intent:change_01M7Q97QD8Z4RM9340YANFM396",
+            "intent_id": "intent:change_01M7QKFSRQNZTA7DG143M3HP11",
             "kind": "trajectory_step_recorded",
             "sequence": 6
-          },
-          {
-            "detail": "trajectory:branch_01M7Q97QGBQF64V09927P0590A",
-            "event_id": "event:7",
-            "intent_id": "intent:change_01M7Q97QD8Z4RM9340YANFM396",
-            "kind": "trajectory_step_recorded",
-            "sequence": 7
-          },
-          {
-            "detail": "trajectory:branch_01M7Q97QGBQF64V09927P0590A",
-            "event_id": "event:8",
-            "intent_id": "intent:change_01M7Q97QD8Z4RM9340YANFM396",
-            "kind": "trajectory_step_recorded",
-            "sequence": 8
-          },
-          {
-            "detail": "trajectory:branch_01M7Q97QGBQF64V09927P0590A",
-            "event_id": "event:9",
-            "intent_id": "intent:change_01M7Q97QD8Z4RM9340YANFM396",
-            "kind": "trajectory_step_recorded",
-            "sequence": 9
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 9,
+        "next_sequence": 6,
         "schema_version": "1.0.0",
         "trajectories": {
-          "branch_01M7Q97QGBQF64V09927P0590A": {
+          "branch_01M7QKFSW14YFFE713D33JXR9V": {
             "evidence_only": true,
-            "id": "branch_01M7Q97QGBQF64V09927P0590A",
-            "intent_id": "intent:change_01M7Q97QD8Z4RM9340YANFM396",
+            "id": "branch_01M7QKFSW14YFFE713D33JXR9V",
+            "intent_id": "intent:change_01M7QKFSRQNZTA7DG143M3HP11",
             "steps": [
               {
-                "action": "trajectory.record",
+                "action": "implementation",
+                "command": "cargo fmt --check",
                 "custody_event_id": "event:4",
                 "observations": [
-                  "src/decapod/core/governed_transition.rs",
-                  "src/decapod/core/projection.rs",
-                  "tests/unit/core/projection_tests.rs",
-                  "tests/interop_conformance.rs"
+                  "src/decapod/core/schemas.rs",
+                  "src/decapod/core/storage_compaction.rs",
+                  "src/decapod/core/events.rs",
+                  "src/decapod/core/migration.rs",
+                  "src/decapod/core/todo.rs",
+                  "tests/datastore_relational_compaction.rs",
+                  "tests/datastore_contract.rs",
+                  "src/decapod/core/schemas.rs",
+                  "src/decapod/core/storage_compaction.rs",
+                  "src/decapod/core/events.rs",
+                  "src/decapod/core/migration.rs",
+                  "tests/datastore_relational_compaction.rs",
+                  "tests/datastore_contract.rs",
+                  ".decapod/managed/specs/INTERFACES.md",
+                  ".decapod/managed/specs/ARCHITECTURE.md",
+                  ".decapod/managed/specs/SECURITY.md",
+                  "cargo fmt --check exit 0; cargo clippy --all-targets --all-features -- -D warnings exit 0; datastore_relational_compaction 16/16 passed; datastore_contract compat test 1/1 passed; core::events 16/16 passed; core::migration 9/9 passed"
                 ],
                 "proof_refs": [
-                  "installed11-counterfeit-report-rejected",
-                  "installed11-negative-stale-controls",
-                  "installed11-legitimate-negotiation"
+                  "fmt",
+                  "clippy",
+                  "datastore_relational_compaction",
+                  "datastore_contract_compat",
+                  "core_events_lib",
+                  "core_migration_lib"
                 ],
                 "scope": [
-                  "issue-1726"
+                  "\".decapod/managed/specs\"]",
+                  "\"tests\"",
+                  "paths:[\"src/decapod\""
                 ],
                 "sequence": 4,
-                "tool": "Official11 SHA6c1b40e1206f6027f9c51294055c975468c4e18e13e3b2b4ba7faa796f49ddea actual interop.project returned proven/publication_ready=true for fabricated pass/head/digest, including full64hex and self-matching verifier/rules. Failure/stale remained false-ready, subsequent receipts negotiation succeeded. Raw evidence SHA2563ce5e25ebcdafe6b5dc0229bf70f01a38ac6d7e2fbb1a270898fe4e8fd2484bb. No actual publication attempted. Existing function only serves pure projection/reflection; canonical typed proof and admission remain separate. Audited owner38b and observer68: neither changes this function; PR search1726 finds only observer1784.",
-                "validation_findings": []
+                "validation_findings": [
+                  "Already-released 0.141.0..0.144.1 binaries predated meta.storage.* checks and share TODO_SCHEMA_VERSION=18 and events DDL with 0.144.2..0.148.13, so SQLite metadata cannot retroactively block those old binaries without breaking >= 0.144.2 compatibility."
+                ]
               },
               {
                 "action": "trajectory.record",
                 "custody_event_id": "event:5",
                 "observations": [
-                  "src/decapod/core/governed_transition.rs",
-                  "src/decapod/core/projection.rs",
-                  "tests/interop_conformance.rs",
-                  "tests/unit/core/projection_tests.rs",
-                  ".decapod/managed/specs/INTENT.md",
+                  "src/decapod/core/events.rs",
                   ".decapod/managed/specs/ARCHITECTURE.md",
-                  ".decapod/managed/specs/INTERFACES.md"
+                  ".decapod/managed/specs/INTERFACES.md",
+                  ".decapod/managed/specs/SECURITY.md",
+                  "Merged origin/master 363d6e3ec (v0.151.0); fmt, clippy --all-targets --all-features, datastore_relational_compaction 16/16, and datastore_contract compatibility boundary test passed"
                 ],
-                "proof_refs": [
-                  "rustfmt",
-                  "diff-whitespace",
-                  "local-project-prerequisites"
-                ],
+                "proof_refs": [],
                 "scope": [
-                  "issue-1726"
+                  "\".decapod/managed/specs\"]",
+                  "\"tests\"",
+                  "paths:[\"src/decapod\""
                 ],
                 "sequence": 5,
-                "tool": "Bounded official11 project-check refreshed current release metadata:201 passed,2 failed,12 skipped; not publication proof. All105 source-CI definitions independently rehashed to2acf with only root release metadata differences from earlier accepted e1a review. Source, profile graph, workflows and toolchain preserved. Required actual-source GitHub Actions not yet executed for this candidate.",
                 "validation_findings": []
               },
               {
                 "action": "trajectory.record",
                 "custody_event_id": "event:6",
                 "observations": [
-                  "src/decapod/core/rpc.rs",
-                  "src/decapod/lib.rs",
-                  "src/decapod/core/projection.rs"
-                ],
-                "proof_refs": [
-                  "installed11-projected-approval-origin"
-                ],
-                "scope": [
-                  "issue-1726"
-                ],
-                "sequence": 6,
-                "tool": "Actual official11 approval projection with approved=true returned remediation Approval recorded through the governed policy path; caller false said Denied by policy. No policy operation or grant ran. Missing decision remained pending. Evidence SHA256f637728be842e3581181af24cd0740004b9b6d838cb01598ca0150ac13c45667. Keep reported statuses as data, add optional source-provenance/no-canonical-verification metadata to existing interop.project result, and remove false policy-observation text; no new authority flow or store.",
-                "validation_findings": []
-              },
-              {
-                "action": "trajectory.record",
-                "custody_event_id": "event:7",
-                "observations": [
-                  "src/decapod/core/rpc.rs",
-                  "src/decapod/lib.rs",
-                  "src/decapod/core/projection.rs",
-                  "tests/interop_conformance.rs",
-                  ".decapod/managed/specs/INTENT.md",
-                  ".decapod/managed/specs/ARCHITECTURE.md",
-                  ".decapod/managed/specs/INTERFACES.md"
-                ],
-                "proof_refs": [
-                  "rustfmt",
-                  "diff-whitespace"
-                ],
-                "scope": [
-                  "issue-1726"
-                ],
-                "sequence": 7,
-                "tool": "Actual official11 caller-approval false policy-observation text is corrected without changing reported statuses or policy authority. Existing RPC result adds optional input_origin/canonical_state_verified, fixed caller_supplied/false. Real CLI controls spoof trusted-origin/verified labels and preserve approval/denial/pending display; genuine existing store mutation projection preserves success/correlation while explicitly not reauthenticating input. Required source Actions pending; graph/inventory unchanged.",
-                "validation_findings": []
-              },
-              {
-                "action": "trajectory.record",
-                "command": "Integrate actual accepted 7bd0a915 release12, retaining both parents and authored strict JSON/reporting contracts. All105 tool inputs remeasured, only Cargo version inputs changed vs accepted prior release. Released12 still falsely projects caller report proof and approval; six duplicate controls reject before startup and legitimate Unicode optional negotiation succeeds. Native preparation208pass5fail9skip, including host container, unrelated done task, precommit ancestry/dirty count and scanner23 findings whose lines all exist verbatim in accepted target. No scanner bypass, manual build, Buildkite waiver in config, admission or merge. User explicitly authorizes publication and Actions focus.",
-                "custody_event_id": "event:8",
-                "observations": [
-                  "src/decapod/lib.rs",
-                  "tests/interop_conformance.rs",
-                  ".decapod/managed/specs/INTENT.md",
-                  "/private/tmp/attack-gaps-release12-rpc-controls.json",
-                  "/private/tmp/attack-gaps-1793-release12-project-check.json",
-                  "/private/tmp/attack-gaps-1793-release12-gatekeeper-review.json",
-                  "/private/tmp/attack-gaps-1793-release12-inventory-review.json"
-                ],
-                "proof_refs": [
-                  "formatting",
-                  "project-preparation",
-                  "released12-counterexamples"
-                ],
-                "scope": [
-                  "issue-1726"
-                ],
-                "sequence": 8,
-                "validation_findings": []
-              },
-              {
-                "action": "trajectory.record",
-                "custody_event_id": "event:9",
-                "observations": [
-                  ".decapod/managed/specs/ARCHITECTURE.md",
-                  ".decapod/managed/specs/INTENT.md",
-                  ".decapod/managed/specs/INTERFACES.md",
-                  ".decapod/managed/specs/SECURITY.md",
                   ".decapod/managed/Dockerfile.decapod",
                   ".decapod/managed/specs/.manifest.json",
-                  ".decapod/managed/specs/ARCHITECTURE.md",
-                  ".decapod/managed/specs/INTENT.md",
-                  ".decapod/managed/specs/INTERFACES.md",
-                  "Merged origin/master 11e0cdc76 (v0.151.0) with 0 code conflicts, reconciled governance via reconcile-merge, refreshed v0.151.0 Dockerfile/manifest, corrected SECURITY.md review disposition to unchanged-with-reason, verified clippy --all-targets --all-features -D warnings, docs build (0 diff), and targeted reporting/interop tests."
+                  "Synced origin/master 5cc32689e (v0.152.0) and refreshed release-bound projections"
                 ],
-                "proof_refs": [
-                  "clippy_all_targets",
-                  "targeted_tests",
-                  "cargo_fmt"
-                ],
+                "proof_refs": [],
                 "scope": [
-                  "issue-1726"
+                  "\".decapod/managed/specs\"]",
+                  "\"tests\"",
+                  "paths:[\"src/decapod\""
                 ],
-                "sequence": 9,
+                "sequence": 6,
                 "validation_findings": []
               }
             ]
@@ -967,59 +905,58 @@
         }
       },
       "declared_commands": [
-        "Integrate actual accepted 7bd0a915 release12, retaining both parents and authored strict JSON/reporting contracts. All105 tool inputs remeasured, only Cargo version inputs changed vs accepted prior release. Released12 still falsely projects caller report proof and approval; six duplicate controls reject before startup and legitimate Unicode optional negotiation succeeds. Native preparation208pass5fail9skip, including host container, unrelated done task, precommit ancestry/dirty count and scanner23 findings whose lines all exist verbatim in accepted target. No scanner bypass, manual build, Buildkite waiver in config, admission or merge. User explicitly authorizes publication and Actions focus."
+        "CLIPPY_CONF_DIR=.config cargo clippy --all-targets --all-features -- -D warnings",
+        "cargo fmt --check",
+        "cargo test --lib core::events",
+        "cargo test --lib core::migration",
+        "cargo test --test datastore_contract events_read_and_write_paths_enforce_storage_format_compatibility_boundaries",
+        "cargo test --test datastore_relational_compaction"
       ],
       "destination": "pull request",
       "evidence": [
-        "/private/tmp/attack-gaps-1793-release12-gatekeeper-review.json",
-        "/private/tmp/attack-gaps-1793-release12-inventory-review.json",
-        "/private/tmp/attack-gaps-1793-release12-project-check.json",
-        "/private/tmp/attack-gaps-release12-rpc-controls.json",
-        "Merged origin/master 11e0cdc76 (v0.151.0) with 0 code conflicts, reconciled governance via reconcile-merge, refreshed v0.151.0 Dockerfile/manifest, corrected SECURITY.md review disposition to unchanged-with-reason, verified clippy --all-targets --all-features -D warnings, docs build (0 diff), and targeted reporting/interop tests."
+        "Merged origin/master 363d6e3ec (v0.151.0); fmt, clippy --all-targets --all-features, datastore_relational_compaction 16/16, and datastore_contract compatibility boundary test passed",
+        "Synced origin/master 5cc32689e (v0.152.0) and refreshed release-bound projections",
+        "cargo fmt --check exit 0; cargo clippy --all-targets --all-features -- -D warnings exit 0; datastore_relational_compaction 16/16 passed; datastore_contract compat test 1/1 passed; core::events 16/16 passed; core::migration 9/9 passed"
       ],
       "inspected_files": [
-        ".decapod/managed/specs/ARCHITECTURE.md",
-        ".decapod/managed/specs/INTENT.md",
-        ".decapod/managed/specs/INTERFACES.md",
-        ".decapod/managed/specs/SECURITY.md",
-        "src/decapod/core/governed_transition.rs",
-        "src/decapod/core/projection.rs",
-        "src/decapod/core/rpc.rs",
-        "src/decapod/lib.rs",
-        "tests/interop_conformance.rs",
-        "tests/unit/core/projection_tests.rs"
+        "src/decapod/core/events.rs",
+        "src/decapod/core/migration.rs",
+        "src/decapod/core/schemas.rs",
+        "src/decapod/core/storage_compaction.rs",
+        "src/decapod/core/todo.rs",
+        "tests/datastore_contract.rs",
+        "tests/datastore_relational_compaction.rs"
       ],
-      "intent_id": "intent:change_01M7Q97QD8Z4RM9340YANFM396",
+      "intent_id": "intent:change_01M7QKFSRQNZTA7DG143M3HP11",
       "modified_files": [
         ".decapod/managed/Dockerfile.decapod",
         ".decapod/managed/specs/.manifest.json",
         ".decapod/managed/specs/ARCHITECTURE.md",
-        ".decapod/managed/specs/INTENT.md",
         ".decapod/managed/specs/INTERFACES.md",
-        "src/decapod/core/governed_transition.rs",
-        "src/decapod/core/projection.rs",
-        "src/decapod/core/rpc.rs",
-        "src/decapod/lib.rs",
-        "tests/interop_conformance.rs",
-        "tests/unit/core/projection_tests.rs"
+        ".decapod/managed/specs/SECURITY.md",
+        "src/decapod/core/events.rs",
+        "src/decapod/core/migration.rs",
+        "src/decapod/core/schemas.rs",
+        "src/decapod/core/storage_compaction.rs",
+        "tests/datastore_contract.rs",
+        "tests/datastore_relational_compaction.rs"
       ],
       "next_transitions": [
         "Refine plan and declare falsifiable checks"
       ],
       "repo_scope": [
-        "issue-1726"
+        "\".decapod/managed/specs\"]",
+        "\"tests\"",
+        "paths:[\"src/decapod\""
       ],
-      "run_id": "branch_01M7Q97QGBQF64V09927P0590A",
+      "run_id": "branch_01M7QKFSW14YFFE713D33JXR9V",
       "schema_version": "1.1.0",
       "shortcut_risk_signals": [],
-      "task_id": "bugs_01m7q969nypfd86q",
-      "tool_calls": [
-        "Actual official11 approval projection with approved=true returned remediation Approval recorded through the governed policy path; caller false said Denied by policy. No policy operation or grant ran. Missing decision remained pending. Evidence SHA256f637728be842e3581181af24cd0740004b9b6d838cb01598ca0150ac13c45667. Keep reported statuses as data, add optional source-provenance/no-canonical-verification metadata to existing interop.project result, and remove false policy-observation text; no new authority flow or store.",
-        "Actual official11 caller-approval false policy-observation text is corrected without changing reported statuses or policy authority. Existing RPC result adds optional input_origin/canonical_state_verified, fixed caller_supplied/false. Real CLI controls spoof trusted-origin/verified labels and preserve approval/denial/pending display; genuine existing store mutation projection preserves success/correlation while explicitly not reauthenticating input. Required source Actions pending; graph/inventory unchanged.",
-        "Bounded official11 project-check refreshed current release metadata:201 passed,2 failed,12 skipped; not publication proof. All105 source-CI definitions independently rehashed to2acf with only root release metadata differences from earlier accepted e1a review. Source, profile graph, workflows and toolchain preserved. Required actual-source GitHub Actions not yet executed for this candidate.",
-        "Official11 SHA6c1b40e1206f6027f9c51294055c975468c4e18e13e3b2b4ba7faa796f49ddea actual interop.project returned proven/publication_ready=true for fabricated pass/head/digest, including full64hex and self-matching verifier/rules. Failure/stale remained false-ready, subsequent receipts negotiation succeeded. Raw evidence SHA2563ce5e25ebcdafe6b5dc0229bf70f01a38ac6d7e2fbb1a270898fe4e8fd2484bb. No actual publication attempted. Existing function only serves pure projection/reflection; canonical typed proof and admission remain separate. Audited owner38b and observer68: neither changes this function; PR search1726 finds only observer1784."
-      ],
-      "unresolved_assumptions": []
+      "task_id": "bugs_01m7qk2rfygkhntm",
+      "tool_calls": [],
+      "unresolved_assumptions": [
+        "Already-released 0.141.0..0.144.1 binaries predated meta.storage.* checks and share TODO_SCHEMA_VERSION=18 and events DDL with 0.144.2..0.148.13, so SQLite metadata cannot retroactively block those old binaries without breaking >= 0.144.2 compatibility."
+      ]
     }
   },
   "legacy_digests": {

@@ -768,9 +768,11 @@ pub const STORAGE_FORMAT_META_NAMESPACE: &str = "storage";
 /// Current physical compact storage format revision.
 pub const STORAGE_FORMAT_VERSION: u32 = 2;
 /// Minimum binary release able to read stores written in compact format v2.
-pub const STORAGE_MIN_READER_VERSION: &str = "0.141.0";
+/// First released with the `_ce_v1` event codec and component journal in v0.144.2 (#1663, #1739).
+pub const STORAGE_MIN_READER_VERSION: &str = "0.144.2";
 /// Minimum binary release able to write stores migrated to compact format v2.
-pub const STORAGE_MIN_WRITER_VERSION: &str = "0.141.0";
+/// First released with the `_ce_v1` event codec and component journal in v0.144.2 (#1663, #1739).
+pub const STORAGE_MIN_WRITER_VERSION: &str = "0.144.2";
 
 /// Domain-separated, codec-versioned, length-and-SHA256-keyed lossless component store.
 /// Keyed by `(component_kind, codec_version, byte_len, content_sha256)` so distinct
