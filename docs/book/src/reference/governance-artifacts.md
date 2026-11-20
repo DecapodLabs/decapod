@@ -108,6 +108,12 @@ claims or replace plan, trajectory, or validation work.
 
 `inventory --claims-note "..."` records a current-PR checkpoint without inventing
 a research claim. `inventory --compact` performs lossless legacy normalization.
+When a Git merge (`MERGE_HEAD` present) leaves `.decapod/governance.json` with a
+merge conflict or `Trajectory artifact hash mismatch`, run
+`decapod govern artifacts reconcile-merge` before committing the merge; it
+reconciles from immutable commit ancestry (`HEAD`, `MERGE_HEAD`,
+`merge-base --all`), rejects conflicting unaccepted PR authority or check-status
+contradictions, and preserves failed or missing proof verbatim.
 Successful validation writes the logical validation section without a
 self-referential hash cycle. Do not use `DECAPOD_VALIDATE_SKIP_GIT_GATES` as an
 agent publication shortcut. Stage and checkpoint the final material before committing.

@@ -20,15 +20,15 @@ use std::time::Duration;
 use tempfile::TempDir;
 use time::{OffsetDateTime, SignedDuration, format_description::well_known::Rfc3339};
 
-const CONFIG: &str = "/functions/v1/propodus-onboarding/config";
-const START: &str = "/functions/v1/propodus-onboarding/start";
-const STATUS: &str = "/functions/v1/propodus-onboarding/status";
-const EXCHANGE: &str = "/functions/v1/propodus-onboarding/exchange";
-const COMPLETE: &str = "/functions/v1/propodus-onboarding/complete";
+const CONFIG: &str = "/functions/v1/decapod-onboarding/config";
+const START: &str = "/functions/v1/decapod-onboarding/start";
+const STATUS: &str = "/functions/v1/decapod-onboarding/status";
+const EXCHANGE: &str = "/functions/v1/decapod-onboarding/exchange";
+const COMPLETE: &str = "/functions/v1/decapod-onboarding/complete";
 const TOKEN: &str = "/auth/v1/token?grant_type=pkce";
 const REFRESH: &str = "/auth/v1/token?grant_type=refresh_token";
-const ACCOUNT_STATUS: &str = "/functions/v1/propodus-onboarding/account-status";
-const ACCOUNT_REGISTER: &str = "/functions/v1/propodus-onboarding/account-register";
+const ACCOUNT_STATUS: &str = "/functions/v1/decapod-onboarding/account-status";
+const ACCOUNT_REGISTER: &str = "/functions/v1/decapod-onboarding/account-register";
 const ACCOUNT: &str = "00000000-0000-0000-0000-000000000404";
 const PROJECT: &str = "workspace-reference/project-reference";
 const QUERY: &str = "/rest/v1/rpc/dactyl_query_v1";
@@ -141,7 +141,7 @@ impl Service {
                 self.repository = request.body["repository"].as_str().unwrap().to_owned();
                 assert_eq!(request.body["pkce_challenge"].as_str().unwrap().len(), 43);
                 assert_eq!(request.body["poll_challenge"].as_str().unwrap().len(), 43);
-                json!({"flow_id":FLOW,"browser_url":format!("{origin}/functions/v1/propodus-onboarding/begin?flow_id={FLOW}&ticket={}", "A".repeat(43)),"expires_at":self.expiry})
+                json!({"flow_id":FLOW,"browser_url":format!("{origin}/functions/v1/decapod-onboarding/begin?flow_id={FLOW}&ticket={}", "A".repeat(43)),"expires_at":self.expiry})
             }
             STATUS => {
                 json!({"status":self.authentication_status,"repository":self.repository,"expires_at":self.expiry})

@@ -1,38 +1,58 @@
 # Mental Model
 
-Decapod is a governance kernel, not a prompt framework, model router, swarm manager, or wrapper. Humans usually express intent through an agent. The agent invokes Decapod through its CLI or structured RPC interface.
+Decapod is an **agent-agnostic, repo-native governance application**. Its metacognitive kernel serves coding agents through on-demand CLI and structured RPC calls.
 
-Each invocation is ephemeral. Decapod deliberately runs without a daemon. The repository is the durable execution surface: `.decapod/` preserves the intent, selected context, workspace custody, boundaries, validation evidence, and publication state that should not live only in a chat transcript. One agent task may span many invocations, processes, models, or harnesses.
+Humans express engineering intent and judgment through the coding agent they already use (Codex, Claude Code, Cursor, Antigravity, or another harness). **The coding agent invokes Decapod** through its CLI or Decapod-specific structured RPC interface (`decapod rpc`) whenever work crosses a custody, decision, boundary, or proof transition.
+
+Each invocation ends without leaving a resident daemon. The repository—specifically `.decapod/` and Git history—preserves governance state. One engineering task can span processes, models, sessions, and harnesses without losing its recorded constraints or unresolved obligations.
 
 ## The Kernel Analogy
 
-In an operating system, the kernel manages hardware resources and provides a stable API for user-space applications. Decapod performs a similar role for the repository:
-
-- **Resources:** Decapod manages git worktrees, containers, and the state of work units (Todos).
-- **API:** Agents call Decapod via a structured CLI or Decapod-specific RPC interface to request resources or validate their state.
-- **Isolation:** Decapod ensures that processes (agents) don't interfere with each other or the system's "main memory" (the root repository branch).
-- **State:** Decapod records the governed trail of the work in the repository so another agent, reviewer, or CI run can resume or audit without depending on the original transcript.
-
-## The governed execution loop
-
-Decapod is not called for every mechanical step (see the [Single-Agent Workflow](workflows/single-agent.md)). Agents invoke it at decision and state-transition boundaries:
-
-1.  **Intent Pressure:** "I know what to do, but I need to formalize the spec." (see [Explicit Intent](concepts/intent.md), `decapod todo add`, `decapod infer orientation`)
-2.  **Boundary Pressure:** "I'm about to touch a sensitive file or move to a new area." (see [Workspace Sandboxing](concepts/workspaces.md), `decapod workspace ensure`, `decapod govern gatekeeper`)
-3.  **Coordination Pressure:** "I need to ensure no one else is working on this." (see [Multi-Agent Workflows](workflows/multi-agent.md), `decapod todo claim`, `decapod workspace status`)
-4.  **Validation Pressure:** "I need to test the work against repository invariants and respond to the result." (see [Proof & Validation](concepts/proof.md), `decapod validate`)
-5.  **Publication Pressure:** "The required gates and evidence pass, so the work may move to a published state." (see `decapod workspace publish`, `decapod todo done`)
-
-The lifecycle is:
-
 ```text
-intent → interpretation → bounded execution → validation
-       → remediation when required → revalidation
-       → publication → proof-backed completion
+Human (goal & approval)
+  │
+  ▼
+Coding Agent (user space: reads code, plans, edits, runs tests, calls Decapod)
+  │  CLI (`decapod ...`) / Structured RPC (`decapod rpc --op ...`)
+  ▼
+Decapod Kernel (ephemeral control plane: custody, orientation, policy, validation)
+  │
+  ▼
+Repository (`.decapod/` + Git: plans, specs, claims, worktrees, checkpoints, proof)
 ```
 
-A validation failure is not completion. When remediation is supported, the agent inspects the result, identifies the violated invariant, performs the sanctioned remediation, updates the relevant artifact, re-runs validation, and continues toward publication. Some failures require human judgment or cannot be recovered automatically; Decapod keeps those blockers visible.
+- **Resources:** Decapod manages task claims and lease generations (`todo`), isolated Git worktrees and optional containers (`workspace`), and normalized governance records (`.decapod/governance.json`).
+- **Interface:** Agents call Decapod through CLI commands or its Decapod-specific structured RPC interface (`decapod rpc --op <op> --params <json>` or `--stdin`) to acquire state, test proposed scopes, and validate candidates.
+- **Isolation:** Each claimed task works on its own worktree branch, keeping the root checkout (`master`/`main`) clean and preventing uncommitted file collisions between parallel agents.
+- **Continuity:** When a second agent resumes the work—or a human inspects a PR—plans, living specifications, trajectory checks, and validation receipts live in repository state rather than a vanished chat transcript.
+
+## The metacognitive decision-time loop
+
+Agents do not call Decapod for every keystroke, nor does Decapod inspect model weights or provide magical self-awareness. Instead, agents invoke Decapod at **decision and state-transition boundaries** to ground inference before acting and verify results before claiming completion:
+
+1. **Prompt Gate & Contract Ingestion:** Before reading repository files or mutating state, the agent evaluates the prompt (`decapod eval --stdin --format json`), ingests current command contracts (`decapod docs ingest`), and acquires a session (`decapod session acquire`).
+2. **Custody & Isolation Pressure:** *"I need exclusive ownership and a clean branch before touching files."* The agent claims or adds a task (`decapod todo claim --id <id> --lease-seconds 3600`), checks fleet overlaps (`decapod todo fleet`), and enters an isolated worktree (`decapod workspace ensure --branch ...`).
+3. **Orientation & Reflection Pressure:** *"Before implementing, what constraints, specs, and risks govern this change?"* The agent calls `decapod infer orientation --task-id <id>` (and optionally `--reflection '<json>'` or `decapod rpc --op mentor.obligations` at consequential decisions) to surface plan constraints, forbidden paths, living specs, and escalation admissibility across a bounded three-round reflection loop. Reference knowledge from the embedded [Constitution](concepts/constitution.md) (`decapod constitution get` / `decapod govern capsule query`) informs decisions inside this step.
+4. **Execution & Trajectory Custody:** As the agent works, it updates `.decapod/managed/specs/*`, records inspected/modified files and checks (`decapod govern trajectory record`), reviews changed contracts (`decapod govern plan review-spec`), and binds staged material with `decapod govern artifacts checkpoint` before committing.
+5. **Validation & Remediation Pressure:** *"Does the exact candidate commit pass all required gates against the accepted target?"* The agent runs `decapod validate`. If validation fails, the kernel returns typed error codes and recovery guidance rather than marking work done. The agent repairs the root cause on the work branch, checkpoints and commits the revision, and re-runs `decapod validate` on the exact new commit.
+6. **Publication Pressure:** Only when required gates and proof pass for the exact candidate does the work move to `decapod workspace publish` and `decapod todo done --id <id> --validated`.
+
+```text
+prompt gate → claim & isolate → orient & reflect → implement & record trajectory
+      → checkpoint & commit → validate exact commit
+      → [if failed: repair → checkpoint & commit → revalidate exact commit]
+      → publish & mark done
+```
 
 ## Epistemic Custody
 
-A central concept in Decapod is **Epistemic Custody**. This is the preserved, auditable chain between the initial human intent, the context provided to the model, the assumptions made during implementation, and the final proof of completion. Decapod keeps that chain in governed repo state, making agent work fully falsifiable and transparent even after the original session has ended (see [Artifact Reference](reference/artifacts.md)).
+A central invariant in Decapod is **Epistemic Custody**: preserving the falsifiable chain between the human's original intent, the context and constraints retrieved before inference, the assumptions and unresolved obligations carried during execution, and the exact-commit proof required for completion (see [Artifact Reference](reference/artifacts.md) and [Governance Artifact Inventory](reference/governance-artifacts.md)).
+
+## What Decapod does not guarantee
+
+Clear boundaries keep governance trustworthy:
+
+- **No always-on daemon or shell interception:** Decapod cannot force an arbitrary harness to call it, nor can it intercept direct `git` or filesystem edits made outside Decapod's CLI/RPC boundaries.
+- **No automatic merge arbitration:** Parallel worktrees isolate uncommitted work, but if two agents edit the same lines in separate branches, standard Git merge conflict resolution, code review, and re-validation still apply.
+- **No self-certifying testimony or stale proof reuse:** Reading the Constitution, writing a living spec, or declaring a check `"passed"` in trajectory input is never validation proof. Editing code or rebasing invalidates prior proof; `decapod validate` must pass on the exact revised commit.
+- **No unverified Cloud authority:** In `backend = "cloud"` mode, `DECAPOD_AGENT_ID` is a cooperative coordination label, not cryptographic authorization; the hosted service independently authorizes repository access on every request.

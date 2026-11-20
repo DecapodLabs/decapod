@@ -39,16 +39,21 @@ fn governed_ok(root: &Path, storage: &Path, args: &[&str]) -> serde_json::Value 
 // Keep shared support free of test cases so API regressions execute once.
 #[cfg(unix)]
 pub fn fresh_governed_docs_cli_admission_then_runtime_executes_first_proof() {
-    governed_docs_proof(false);
+    governed_docs_proof(false, false);
 }
 
 #[cfg(unix)]
 pub fn canonical_local_cli_proves_and_rejects_stale_authority() {
-    governed_docs_proof(true);
+    governed_docs_proof(true, false);
 }
 
 #[cfg(unix)]
-fn governed_docs_proof(local_target: bool) {
+pub fn canonical_local_workunit_rejects_superseded_proof_and_recovers() {
+    governed_docs_proof(true, true);
+}
+
+#[cfg(unix)]
+fn governed_docs_proof(local_target: bool, workunit_currentness: bool) {
     use decapod::core::governance_document;
     let started = std::time::Instant::now();
     let mut fixture = Fixture::new();
@@ -72,6 +77,29 @@ fn governed_docs_proof(local_target: bool) {
             "--no-container-workspaces",
         ],
     );
+    let failure_flag = storage.join("required-check-failure");
+    if workunit_currentness {
+        // Explicitly reviewed external input, outside the captured source/tool
+        // bytes. This creates a real later required-check failure, without
+        // pretending to establish complete external-input observability.
+        fixture
+            .proof
+            .commands
+            .iter_mut()
+            .find(|command| command.name == "inspect-source")
+            .unwrap()
+            .args = vec![
+            "-I".into(),
+            "-S".into(),
+            "-B".into(),
+            "-c".into(),
+            format!(
+                "import os; assert not os.path.exists({:?}), 'observed required failure'; exec(compile(open('scripts/check_source.py').read(), 'scripts/check_source.py', 'exec'))",
+                failure_flag.to_str().unwrap()
+            ),
+        ];
+        fixture.review_commands();
+    }
     // Init preserves product context; the fixture explicitly re-reviews its
     // real repository command/source contract after generated surfaces exist.
     let config = fs::read_to_string(root.join(CONFIG)).unwrap();
@@ -248,6 +276,10 @@ fn governed_docs_proof(local_target: bool) {
         "prepared candidate must be clean: {prepared_status}"
     );
     let head = git(&workspace, &["rev-parse", "HEAD"]);
+    if workunit_currentness {
+        prove_current_workunit(&workspace, &storage, id, &head, &failure_flag);
+        return;
+    }
     // These are genuine admitted CLI invocations with provider flags removed by
     // governed_command. A diagnostic skip cannot authorize any full boundary.
     for (args, name, value) in [
@@ -512,6 +544,200 @@ fn governed_docs_proof(local_target: bool) {
         )
         .as_bytes(),
     );
+}
+
+#[cfg(unix)]
+fn prove_current_workunit(
+    workspace: &Path,
+    storage: &Path,
+    task: &str,
+    head: &str,
+    failure_flag: &Path,
+) {
+    let wu = |args: &[&str]| {
+        let mut command = vec!["govern", "workunit"];
+        command.extend_from_slice(args);
+        command.extend(["--task-id", task]);
+        governed_ok(workspace, storage, &command)
+    };
+    let validate = |success: bool| {
+        let output = governed_command(workspace, storage, &["validate", "--format", "json"])
+            .bounded_output(Duration::from_secs(300))
+            .unwrap();
+        let value: serde_json::Value = serde_json::from_slice(&output.stdout).unwrap();
+        assert_eq!(
+            output.status.success(),
+            success,
+            "{value} {}",
+            String::from_utf8_lossy(&output.stderr)
+        );
+        assert_eq!(value["readiness"]["ready"], success, "{value}");
+        assert_eq!(
+            value["readiness"]["scope"], "repository_local_git_readiness",
+            "{value}"
+        );
+        assert_eq!(value["publication_ready"], false);
+        value
+    };
+    let governance = governed_ok(workspace, storage, &["govern", "artifacts", "status"]);
+    let intent = governance["sections"]["trajectory"]["intent_id"]
+        .as_str()
+        .unwrap();
+    wu(&["init", "--intent-ref", intent]);
+    wu(&["attach-spec", "--ref", ".decapod/managed/specs/INTENT.md"]);
+    governed_ok(
+        workspace,
+        storage,
+        &[
+            "govern",
+            "capsule",
+            "query",
+            "--topic",
+            "canonical current workunit proof",
+            "--scope",
+            "interfaces",
+            "--task-id",
+            task,
+            "--workunit-id",
+            task,
+            "--write",
+        ],
+    );
+    wu(&[
+        "attach-state",
+        "--ref",
+        &format!(".decapod/managed/context/{task}.json"),
+    ]);
+    wu(&["set-proof-plan", "--gate", "validate_passes"]);
+    wu(&["checkpoint", "--operation-id", "before-first-full-proof"]);
+    wu(&["transition", "--to", "executing"]);
+    wu(&["transition", "--to", "claimed"]);
+    validate(true);
+    let verified = wu(&["transition", "--to", "verified"]);
+    assert_eq!(verified["status"], "VERIFIED");
+    let original_reference = verified["validation_record"].clone();
+    assert!(original_reference.is_object());
+    let generation = wu(&["journal-status"])["generation"].as_u64().unwrap();
+
+    fs::write(failure_flag, "operator-owned external failure control\n").unwrap();
+    let failed = validate(false);
+    let evidence = PathBuf::from(failed["readiness"]["evidence_path"].as_str().unwrap());
+    // Captures follow canonical check order, not declaration insertion order.
+    // Bind the failure assertion to its actual check instead of accepting an
+    // unrelated check's result or assuming that inspect-source is native-0.
+    let captures: Vec<_> = (0..2)
+        .filter(|index| {
+            let path = evidence.join(format!("native-{index}.diagnostic.json"));
+            if !path.exists() {
+                return false;
+            }
+            let diagnostic: serde_json::Value =
+                serde_json::from_slice(&fs::read(path).unwrap()).unwrap();
+            diagnostic["schema_version"] == "1.0.0"
+                && diagnostic["check"]["job"] == "inspect-source"
+                && diagnostic["check"]["provider"] == "native"
+                && diagnostic["check"]["workflow"] == ".decapod/config.toml"
+                && diagnostic["check"]["profile"] == "repo.pr-readiness.v1"
+                && diagnostic["check"]["matrix"] == serde_json::json!({})
+        })
+        .collect();
+    assert_eq!(
+        captures.len(),
+        1,
+        "failure control must have one bound capture"
+    );
+    let capture = captures[0];
+    let steps: serde_json::Value = serde_json::from_slice(
+        &fs::read(evidence.join(format!("native-{capture}.steps.json"))).unwrap(),
+    )
+    .unwrap();
+    assert_eq!(steps[0]["exit_code"], 1, "{steps}");
+    assert_eq!(steps[0]["termination"], "Exited", "{steps}");
+    assert!(steps[0]["error"].is_null(), "{steps}");
+    assert!(
+        fs::read_to_string(evidence.join(format!("native-{capture}.stderr")))
+            .unwrap()
+            .contains("observed required failure")
+    );
+    let withdrawn = wu(&["get"]);
+    assert_eq!(withdrawn["status"], "CLAIMED");
+    assert!(withdrawn["validation_record"].is_null());
+    assert!(withdrawn["validation_epoch"].is_null());
+    assert_eq!(withdrawn["proof_results"], serde_json::json!([]));
+    assert_eq!(withdrawn["proof_plan"], verified["proof_plan"]);
+    assert!(wu(&["journal-status"])["generation"].as_u64().unwrap() > generation);
+    let old_promotion = rejected_local_claim(
+        workspace,
+        storage,
+        &[
+            "govern",
+            "workunit",
+            "transition",
+            "--task-id",
+            task,
+            "--to",
+            "verified",
+        ],
+    );
+    assert!(
+        old_promotion.contains("WORKUNIT_PROOF_STALE"),
+        "{old_promotion}"
+    );
+    // Failure narrows current authority without deleting the real prior success.
+    let historical = governed_ok(workspace, storage, &["qa", "verify", "commit", head]);
+    assert_eq!(historical["status"], "passed");
+    assert_eq!(historical["publication_ready"], false);
+    fs::remove_file(failure_flag).unwrap();
+    wu(&["checkpoint", "--operation-id", "after-observed-failure"]);
+    validate(true);
+    let repaired = wu(&["transition", "--to", "verified"]);
+    assert_eq!(repaired["status"], "VERIFIED");
+    assert_ne!(repaired["validation_record"], original_reference);
+
+    governed_ok(
+        workspace,
+        storage,
+        &[
+            "todo",
+            "renew",
+            "--id",
+            task,
+            "--lease-seconds",
+            "86400",
+            "--format",
+            "json",
+        ],
+    );
+    assert_eq!(wu(&["journal-status"])["resumable"], false);
+    rejected_local_claim(
+        workspace,
+        storage,
+        &[
+            "govern",
+            "workunit",
+            "resume",
+            "--task-id",
+            task,
+            "--operation-id",
+            "old-custody-refused",
+        ],
+    );
+    wu(&["transition", "--to", "claimed"]);
+    wu(&["checkpoint", "--operation-id", "renewed-custody"]);
+    validate(true);
+    let renewed = wu(&["transition", "--to", "verified"]);
+    assert_eq!(renewed["status"], "VERIFIED");
+    assert_ne!(renewed["validation_record"], repaired["validation_record"]);
+    assert_eq!(wu(&["journal-status"])["resumable"], true);
+    wu(&["resume", "--operation-id", "current-custody-resume"]);
+    // General historical inspection still refuses ambiguous custody.
+    let ambiguous = rejected_local_claim(workspace, storage, &["qa", "verify", "commit", head]);
+    assert!(
+        ambiguous.contains("different task contracts or custody"),
+        "{ambiguous}"
+    );
+    assert_eq!(git(workspace, &["rev-parse", "HEAD"]), head);
+    assert!(git(workspace, &["status", "--porcelain"]).is_empty());
 }
 
 /// Uses the actual unmodified CLI boundary, with provider environment removed by
