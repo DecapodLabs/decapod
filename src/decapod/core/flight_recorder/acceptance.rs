@@ -15,7 +15,7 @@ const SCHEMA: &str = "decapod.agent-acceptance.v1";
 const FILE_LIMIT: u64 = 64 * 1024 * 1024;
 const EVENT_LIMIT: usize = 10_000;
 
-#[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Eq)]
+#[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Eq, PartialOrd, Ord)]
 #[serde(rename_all = "snake_case")]
 pub enum Source {
     Host,
@@ -63,6 +63,106 @@ pub struct Capture {
     pub kernel_source: String,
     pub artifacts: BTreeMap<String, Artifact>,
     pub events: Vec<EventInput>,
+    /// Retained by the observing host after the process closes. Older captures
+    /// remain readable, with unknown completion coverage.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub coverage: Option<CaptureCoverage>,
+}
+
+#[derive(Clone, Debug, Deserialize, Serialize)]
+#[serde(rename_all = "snake_case")]
+pub enum WitnessCustody {
+    OperatorControlled,
+    SharedWithAgent,
+    Unknown,
+}
+
+#[derive(Clone, Debug, Deserialize, Serialize)]
+#[serde(deny_unknown_fields)]
+pub struct CaptureCoverage {
+    pub run_id: String,
+    pub witness_custody: WitnessCustody,
+    pub observed_channels: BTreeSet<Source>,
+    pub start_elapsed_ms: u64,
+    pub end_elapsed_ms: u64,
+    pub dropped_events: u64,
+    pub retained_events: usize,
+    pub event_index_sha256: String,
+    pub artifact_index_sha256: String,
+    pub terminal_event_sequence: u64,
+}
+
+fn index_digest(value: &impl Serialize) -> io::Result<String> {
+    let value = serde_json::to_value(value).map_err(io::Error::other)?;
+    readiness_evidence::digest(&value).map_err(io::Error::other)
+}
+
+fn coverage_complete(
+    capture: &Capture,
+    documents: &BTreeMap<String, Value>,
+    agent_end_sequence: u64,
+) -> io::Result<bool> {
+    let Some(coverage) = &capture.coverage else {
+        return Ok(false);
+    };
+    let Some(first) = capture.events.first() else {
+        return Ok(false);
+    };
+    let Some(last) = capture.events.last() else {
+        return Ok(false);
+    };
+    let Some(terminal_event) = capture
+        .events
+        .iter()
+        .find(|event| event.sequence == coverage.terminal_event_sequence)
+    else {
+        return Ok(false);
+    };
+    let terminal = capture
+        .artifacts
+        .get(&terminal_event.artifact)
+        .filter(|artifact| artifact.source == Source::Host)
+        .and_then(|_| documents.get(&terminal_event.artifact))
+        .and_then(|document| document.pointer(&terminal_event.pointer));
+    let channels = [Source::Host, Source::Kernel, Source::Git, Source::Github];
+    Ok(
+        matches!(coverage.witness_custody, WitnessCustody::OperatorControlled)
+            && coverage.run_id == capture.run_id
+            && channels
+                .iter()
+                .all(|source| coverage.observed_channels.contains(source))
+            && coverage.start_elapsed_ms <= first.elapsed_ms
+            && coverage.end_elapsed_ms >= last.elapsed_ms
+            && coverage.end_elapsed_ms > coverage.start_elapsed_ms
+            && coverage.dropped_events == 0
+            && coverage.retained_events == capture.events.len()
+            && coverage.event_index_sha256 == index_digest(&capture.events)?
+            && coverage.artifact_index_sha256 == index_digest(&capture.artifacts)?
+            && capture
+                .events
+                .iter()
+                .enumerate()
+                .all(|(index, event)| event.sequence == index as u64 + 1)
+            && agent_end_sequence > 0
+            && agent_end_sequence < terminal_event.sequence
+            && capture
+                .events
+                .iter()
+                .filter(|event| event.sequence > terminal_event.sequence)
+                .all(|event| {
+                    capture
+                        .artifacts
+                        .get(&event.artifact)
+                        .is_some_and(|artifact| {
+                            matches!(artifact.source, Source::Git | Source::Github)
+                        })
+                })
+            && terminal.is_some_and(|value| {
+                value["type"] == "process_exit"
+                    && value["agent_ended"] == true
+                    && value["exit_code"] == 0
+            }),
+    )
 }
 
 fn invalid(message: &str) -> io::Error {
@@ -208,6 +308,13 @@ fn correlate(capture: &Capture, documents: &BTreeMap<String, Value>) -> io::Resu
     {
         return Err(invalid("invalid or unsafe acceptance identity"));
     }
+    if capture.coverage.as_ref().is_some_and(|coverage| {
+        !identifier(&coverage.run_id)
+            || !digest_valid(&coverage.event_index_sha256)
+            || !digest_valid(&coverage.artifact_index_sha256)
+    }) {
+        return Err(invalid("invalid or unsafe capture coverage"));
+    }
     for artifact in capture.artifacts.values() {
         if !digest_valid(&artifact.sha256)
             || artifact.public_uri.as_ref().is_some_and(|uri| {
@@ -246,6 +353,7 @@ fn correlate(capture: &Capture, documents: &BTreeMap<String, Value>) -> io::Resu
     let mut user_messages = 0usize;
     let mut objective_observed = false;
     let mut bypass = false;
+    let mut agent_end_sequence = 0;
     for event in &capture.events {
         if event.sequence <= sequence || event.elapsed_ms < elapsed {
             return Err(invalid("event order is not monotone"));
@@ -368,6 +476,14 @@ fn correlate(capture: &Capture, documents: &BTreeMap<String, Value>) -> io::Resu
                     }
                     kind = "agent_tool_completed";
                     facts = json!({"tool_call_id":id,"tool":name,"is_error":value["isError"].as_bool()});
+                }
+                Some("agent_end") => {
+                    agent_end_sequence = event.sequence;
+                    kind = "agent_run_ended";
+                }
+                Some("process_exit") => {
+                    kind = "host_process_exited";
+                    facts = json!({"exit_code":value["exit_code"].as_i64()});
                 }
                 Some("human_intervention") => {
                     interventions += 1;
@@ -668,7 +784,17 @@ fn correlate(capture: &Capture, documents: &BTreeMap<String, Value>) -> io::Resu
         && interventions == 0
         && !bypass
         && !findings.contains("SCRIPTED_IS_NOT_REAL_AGENT");
+    let complete = coverage_complete(capture, documents, agent_end_sequence)?;
+    if !complete {
+        applicable = false;
+        findings.insert(if capture.coverage.is_some() {
+            "CAPTURE_COVERAGE_INCOMPLETE"
+        } else {
+            "CAPTURE_COVERAGE_NOT_REPORTED"
+        });
+    }
     let autonomous = autonomous
+        && complete
         && !findings.contains("KERNEL_ACTION_NOT_ATTRIBUTED_TO_AGENT")
         && !findings.contains("HOST_TOOL_NOT_MODEL_REQUESTED");
     Ok(json!({
@@ -677,6 +803,8 @@ fn correlate(capture: &Capture, documents: &BTreeMap<String, Value>) -> io::Resu
         "harness":{"name":"pi","version":capture.harness_version,"models_observed":models},
         "kernel":{"version":capture.kernel_version,"binary_sha256":capture.kernel_sha256,"source":capture.kernel_source},
         "observed_autonomous_admission":autonomous,"admission_observed":admitted,"current_admission_applicable":applicable,
+        "capture_coverage":{"state":if complete {"complete"} else if capture.coverage.is_some() {"incomplete"} else {"unknown"},"reported":capture.coverage,
+            "scope":"Declared observed channels during the retained host window. Host custody is an operator assertion; unrestricted OS access can forge it."},
         "publication_ready":false,"merge_authorized":false,"human_interventions":interventions,
         "assurance":"Read-only correlation of trusted-host captures, kernel outputs and independent Git/forge readback. Digests bind bytes; they do not authenticate a producer. Arbitrary uncaptured host activity and semantic correctness remain unproven.",
         "findings":findings,"events":events
