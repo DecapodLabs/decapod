@@ -12,6 +12,14 @@
       "review_policy": "Reviewers must check that every claim remains falsifiable, evidence status is bounded by observed evidence, proof references resolve, and changes preserve schema compatibility or explicitly version it."
     },
     "unresolved": {
+      "claim:accepted-behavior-controls": {
+        "falsifier": "A cross-tenant leak, incompatible clean merge or rewritten accepted oracle earns required readiness without executing the unchanged applicable falsifier.",
+        "proof_refs": [
+          "tests/consumer_readiness.rs"
+        ],
+        "statement": "Accepted tenant and combined-interface negative controls run against the exact integrated artifact; authored positives alone never prove semantic alignment.",
+        "status": "open"
+      },
       "claim:accepted-executor-candidate-build": {
         "falsifier": "A changed carrier, altered accepted executor, missing or mismatched dual-root identity, incomplete required graph, or unauthenticated artifact can establish readiness; or candidate helper changes require a separate manual build despite a supported accepted executor.",
         "proof_refs": [
@@ -88,6 +96,14 @@
         "owner": "Decapod build maintainers",
         "question": "Should a future Bazel release permit the generated module lockfile to move under .config/build, or must it remain root-discovered?",
         "status": "deferred"
+      },
+      "claim:canonical-scope-projection": {
+        "falsifier": "Commas split literal paths, independent constraints are discarded, historical failures are erased or migration grants proof or a filesystem authorization claim.",
+        "proof_refs": [
+          "src/decapod/core/trajectory/scope.rs"
+        ],
+        "statement": "Existing bounded task scope parser preserves JSON paths and only exact archived legacy projection fragments receive deterministic repair with history retained and approval revoked.",
+        "status": "open"
       },
       "claim:claim:container-work-preservation": {
         "falsifier": "A failed or interrupted command, local-only history, dirty tracked or untracked work, or unreadable Git status is deleted automatically; or eligible clean successful work cannot be removed.",
@@ -308,6 +324,14 @@
         "statement": "Only the configured native GitHub-hosted owner identity selects release mutation; sanitized Buildkite imports and missing or unknown runner identity remain false before credential-bearing jobs.",
         "status": "open"
       },
+      "claim:owned-native-path-authority": {
+        "falsifier": "Counterfeit loops or copied JSON, changed source/base/policy, revoked lease or a failed rerun can authorize current publication from an old pass.",
+        "proof_refs": [
+          "src/decapod/core/trajectory/path.rs"
+        ],
+        "statement": "Only current owned native authorization and actual terminal observations satisfy required path policy; full-host coverage remains unknown.",
+        "status": "open"
+      },
       "claim:pr1609-governed-publication": {
         "falsifier": "Any authored commit lacks a staged-material checkpoint, governance artifact, or required generated projection; exact-candidate validation fails",
         "proof_refs": [
@@ -377,6 +401,22 @@
         "statement": "Current Buildkite importer0.102.5 is accepted only through independently reviewed version and executable digests; old mixed and unknown tuples remain rejected",
         "status": "open"
       },
+      "claim:recorded-blocker-parity": {
+        "falsifier": "A required contradiction or spec decision is ignored at one supported boundary or old approval survives material instruction revision.",
+        "proof_refs": [
+          "tests/unit/plan_governance_tests.rs"
+        ],
+        "statement": "Canonical recorded blockers refuse required plan, execution, validation and publication transitions and lawful repair requires renewed acceptance.",
+        "status": "open"
+      },
+      "claim:recorded-instruction-lineage": {
+        "falsifier": "Origin rewrite, spoofed authentication or a new actor drops or widens accepted recorded instructions or reuses stale authority.",
+        "proof_refs": [
+          "tests/infer_precision.rs"
+        ],
+        "statement": "Original recorded instruction and ordered provider or reported revisions remain distinct from derived interpretation and human authorization; cold readers recover the same applicable revision.",
+        "status": "open"
+      },
       "claim:recovery-workspace-artifact-lookup": {
         "falsifier": "A captured file present only in the owning task workspace cannot be found at replay or a mismatched hash is accepted.",
         "statement": "Verification resolves task-bound file evidence using the same task-aware workspace lookup as capture, then enforces its stored hash.",
@@ -433,6 +473,14 @@
           "src/decapod/core/validation_runtime/snapshot/source_import.rs"
         ],
         "statement": "The importer accepts only independently reviewed official0.102.7 compiler/Linux/Darwin executable identities, with unchanged source, producer, recipe and artifact custody checks; older, unknown, mixed and swapped tuples remain invalid.",
+        "status": "open"
+      },
+      "claim:selected-root-and-relation-conservation": {
+        "falsifier": "Omitted R3, duplicate or stale DB mapping, candidate policy repin or the inconsistent accepted triangle earns current readiness.",
+        "proof_refs": [
+          "src/decapod/core/intent_reconcile/selected.rs"
+        ],
+        "statement": "Explicit accepted selected roots map uniquely through existing obligations and supported eq/ne relations are checked globally without asserting implementation correctness.",
         "status": "open"
       },
       "claim:strict-protocol-rollout": {
@@ -931,6 +979,16 @@
         "https://github.com/DecapodLabs/decapod/actions/runs/44829779808/job/136613930841",
         "tests/consumer_readiness.rs"
       ]
+    },
+    {
+      "id": "context-outcomes-accepted-approval-lineage-13",
+      "summary": "Reconcile accepted selected-work approval lineage with the current governed context PR",
+      "input_digest": "sha256:25e44c4885e8f93ca3889aafb2ddc9347cc43207b2af549ed0e42afbb1d3693a",
+      "proof_refs": [
+        "src/decapod/plan_governance.rs",
+        "tests/cli_contract_enforcement.rs",
+        "tests/consumer_readiness.rs"
+      ]
     }
   ],
   "intents": {
@@ -971,24 +1029,24 @@
       "schema_version": "1.1.0",
       "spec_reviews": [
         {
-          "disposition": "unchanged_with_reason",
+          "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "The corrected consumer fixture exercises the existing accepted-target validation runtime and Git state model.",
-          "reviewed_code_fingerprint": "3ada8d4eeeb3879c3e4370871309e296349f939a2e43389ad3aebcb912623b59",
-          "spec_material_hash": "e2d896e3d877cd3dea01906f29818bcac78d0569ddfe110993ec4ef076021465"
+          "reason": "Integrated the accepted selected-work revision binding into the existing plan and readiness architecture.",
+          "reviewed_code_fingerprint": "6f97cf2cb02b619f99c1edd83524033ba54dbb9daf9a9839d285f8c521d8e481",
+          "spec_material_hash": "1d13b0daa10b1829739de0bb1207a378fe2e7a98e31d144ed305658c395e9b59"
         },
         {
-          "disposition": "unchanged_with_reason",
+          "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "The corrected fixture reaches the existing CLI and native adapter contract for repository profile migration.",
-          "reviewed_code_fingerprint": "3ada8d4eeeb3879c3e4370871309e296349f939a2e43389ad3aebcb912623b59",
-          "spec_material_hash": "9f674b51305fcb6387a39f0e3da98b93025ee55d912a5668d29d2c78000d67e1"
+          "reason": "Preserved the accepted revision field and typed plan reapproval diagnostic.",
+          "reviewed_code_fingerprint": "6f97cf2cb02b619f99c1edd83524033ba54dbb9daf9a9839d285f8c521d8e481",
+          "spec_material_hash": "fbc81faf4980cfba973ddd501fdb0287784e9174f3fffbef0ee7aa3505d57789"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Documented the committed accepted and candidate profiles and the approved downgrade negative control before command selection.",
-          "reviewed_code_fingerprint": "3ada8d4eeeb3879c3e4370871309e296349f939a2e43389ad3aebcb912623b59",
+          "reason": "Preserved the strict-profile downgrade fixture and verified its runtime refusal after explicit approval.",
+          "reviewed_code_fingerprint": "6f97cf2cb02b619f99c1edd83524033ba54dbb9daf9a9839d285f8c521d8e481",
           "spec_material_hash": "43b6c979dc3a9a9b5df4b6f2f5c4f38b4dd6408c760af9ee3c41b37b9f12fb0c"
         }
       ],
@@ -1000,13 +1058,13 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795217563Z"
+      "updated_at": "1795218177Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:c4fd32e0e5e136babbb6aebe03984325d67712927255c1c4c06155a22406966d",
+      "artifact_hash": "sha256:13071995f01c2dcf8ed2a61e6002cadbe24e9ffb8e700a3d4685a4d8aee03f2c",
       "checks": [
         {
           "name": "Bazel bounded validate smoke",
@@ -1063,6 +1121,18 @@
         {
           "name": "CLI downgrade control before fixture repair",
           "status": "failed"
+        },
+        {
+          "name": "Existing plan after accepted selected-work revision implementation",
+          "status": "passed"
+        },
+        {
+          "name": "Integrated public plan approval contracts (four cases)",
+          "status": "passed"
+        },
+        {
+          "name": "Integrated strict-profile downgrade regression",
+          "status": "passed"
         },
         {
           "name": "Local full CLI contracts with five macOS PTY failures",
@@ -1237,10 +1307,17 @@
             "intent_id": "intent:change_01M7VZD4BTX53EKY131QYDPS9C",
             "kind": "trajectory_step_recorded",
             "sequence": 17
+          },
+          {
+            "detail": "trajectory:branch_01M7VZD4F86FKX5EED4EQW74V7",
+            "event_id": "event:18",
+            "intent_id": "intent:change_01M7VZD4BTX53EKY131QYDPS9C",
+            "kind": "trajectory_step_recorded",
+            "sequence": 18
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 17,
+        "next_sequence": 18,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M7VZD4F86FKX5EED4EQW74V7": {
@@ -1489,6 +1566,24 @@
                 ],
                 "sequence": 17,
                 "validation_findings": []
+              },
+              {
+                "action": "ci-repair",
+                "custody_event_id": "event:18",
+                "observations": [
+                  "https://github.com/DecapodLabs/decapod/pull/1873",
+                  "Integrated focused test log sha256:7cb2c5c5c3fe453f8caaa811d5a97ca0e7a7d6b9f05cbe5077a647941ef00a49"
+                ],
+                "proof_refs": [
+                  "Integrated strict-profile downgrade regression",
+                  "Integrated public plan approval contracts (four cases)",
+                  "Existing plan after accepted selected-work revision implementation"
+                ],
+                "scope": [
+                  "root"
+                ],
+                "sequence": 18,
+                "validation_findings": []
               }
             ]
           }
@@ -1504,6 +1599,7 @@
         "Both original Actions workflows reached terminal states. The final CLI job repeated the two repaired reflection failures. Four Bazel targets passed on the preceding base, and reflection, plan-gate and event unit regressions passed after accepted instruction readiness. The v0.154.0 smoke passed in 9426ms with the unchanged 20000ms budget. The local project prerequisites refreshed matching projections then reached their 120s limit in validate_stale_workspaces. This records the observed local limit without claiming project prerequisites or full readiness.",
         "Current 0.153.2 source compiled. 67 focused library tests, 36 scaffolding, four claims, seven capsule schema and two activation tests passed. Capsule RPC suite was running at this observation. Candidate project-check refreshed Docker/spec projections, and reported 207 passes plus four failures: host container proof, dirty-file commit threshold, scanner findings, and two unrelated done tasks lacking VERIFIED evidence. This is not full native readiness. GitHub Actions are the requested publication checks.",
         "GitHub Actions run 44701103526 job 136170866608 failed two mentor reflection tests. Reproduced the continuation failure before editing. Restored the named mentor query exception while retaining authenticated sessions and the reflection engine custody checks. All seven infer_precision tests and the bootstrap RPC guard regression passed on the repaired code. Refreshed specs with the evaluating v0.153.2 candidate and reviewed current interfaces, architecture and security. The remaining original GitHub Actions jobs are still in flight. Push waits for their terminal results.",
+        "Integrated focused test log sha256:7cb2c5c5c3fe453f8caaa811d5a97ca0e7a7d6b9f05cbe5077a647941ef00a49",
         "Integrated the immutable v0.155.1 target 2e206d26. Prior candidate GitHub CLI and core suites passed, while checkpoint and push context rejected the advanced target. Retained accepted release-entrypoint integrity and all prior checkpoints. Reviewed 107 source paths, with changes to the two Cargo version declarations and accepted release projection fixture. Current smoke ran in 13580ms within the unchanged 20000ms budget. All 16 release projection policy tests passed. Local project-check generated matching projections but returned a failure on the host with container custody, shared task proof and staged merge findings. No local full readiness is claimed.",
         "Local before log sha256:0437e9da54f92c4e1a293d40d16bca66c52ac297923b629e6069d4beaea72857",
         "Local fixed test log sha256:10e22ff5c4d2dd7584e5a145d6c48f13ab19b831f302e16cc5064304ac8412ac",
@@ -1514,7 +1610,8 @@
         "The maintainer merged release cut #1870 to ba21c8f1 while source checks were running. The accepted delta contained only Cargo package metadata and release notes. Retained unreleased work, current v0.156.0 projections and all ten checkpoints. The unchanged validation bound passed in 10536ms across three runs; 16 release policy cases passed. The host-local project check generated the expected projections then returned VALIDATE_TIMEOUT_OR_LOCK for shared storage contention. No local full readiness claim. GitHub requires independent approval from a collaborator on #1864.",
         "While exact v0.155.1 Actions ran, accepted master advanced to d96bf819 through #1865. Integrated typed instruction lineage, proof boundaries and read-only state RPCs with the existing authenticated mentor and task-bound reflection. Retained both RPC regression tests and all nine authored checkpoints. Ten merged inference, reflection and scope tests passed. Three steady-state validations took 9774ms, under the unchanged 20000ms budget. Prior exact standalone Actions passed on both events and public chronology reproduced byte-for-byte.",
         "https://github.com/DecapodLabs/decapod/actions/runs/44829768980/job/136613811669",
-        "https://github.com/DecapodLabs/decapod/actions/runs/44829779808/job/136613930841"
+        "https://github.com/DecapodLabs/decapod/actions/runs/44829779808/job/136613930841",
+        "https://github.com/DecapodLabs/decapod/pull/1873"
       ],
       "inspected_files": [
         "assets/tools/source_ci/standalone-validation.sh",
@@ -1535,7 +1632,8 @@
       ],
       "next_transitions": [
         "Refine plan and declare falsifiable checks",
-        "publish-ci-repair"
+        "publish-ci-repair",
+        "reconcile-accepted-release"
       ],
       "repo_scope": [
         "root"

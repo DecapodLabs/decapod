@@ -708,6 +708,7 @@ fn seed_publication_bundle(dir: &Path) {
         title: "fixture".to_string(),
         intent: "fixture intent".to_string(),
         state: PlanState::Approved,
+        accepted_selected_work_revision: None,
         todo_ids: vec!["test_01fixture".to_string()],
         proof_hooks: vec![],
         unknowns: vec![],

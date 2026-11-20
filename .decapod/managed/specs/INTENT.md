@@ -559,6 +559,11 @@ When a recorded source resolves a question or contradiction, the revised plan
 requires reapproval and affected proof must be run again. Pending spec decisions
 require the explicit review-resolution transition.
 
+An accepted change to selected-work policy requires a new approval before work
+can continue. The same plan may be approved again after the repaired policy is
+accepted. A decision that genuinely requires human authority still follows the
+existing decision process.
+
 ### Bounded, coordinated work
 
 Tasks, claims, sessions, and isolated workspaces establish who owns the work
@@ -721,7 +726,7 @@ These declarations select authoring and proof obligations; they do not attest im
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `3ada8d4eeeb3879c3e4370871309e296349f939a2e43389ad3aebcb912623b59`
+- Repository signal fingerprint: `6f97cf2cb02b619f99c1edd83524033ba54dbb9daf9a9839d285f8c521d8e481`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (3 files), `src/` (252 files), `tests/` (265 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
