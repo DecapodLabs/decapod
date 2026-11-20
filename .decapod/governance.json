@@ -808,6 +808,14 @@
       "proof_refs": [
         "https://github.com/DecapodLabs/decapod/pull/1861"
       ]
+    },
+    {
+      "id": "encoding-accepted-v154-0f44",
+      "summary": "Integrate accepted0.154.0; regenerate native projections and correct identity probe to documented system version; preserve all22 vectors and required proof graph",
+      "input_digest": "sha256:e763bc75a7d2f55905d8a7751e88666f92dd8dfcfdd8640dfe9b39f06a27b7c6",
+      "proof_refs": [
+        "https://github.com/DecapodLabs/decapod/pull/1867"
+      ]
     }
   ],
   "intents": {
@@ -851,22 +859,22 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Independent JSON encoding scope remains separate from accepted instruction convergence and publication readiness.",
-          "reviewed_code_fingerprint": "3238b0812c65b63c09b72abf3894697b2745f0ccb3f2eedf5680637024487b5b",
-          "spec_material_hash": "fb7f97965292da4b4f1b2f0d0edaf09b5822490af27680d79278fc31e4ec4e56"
+          "reason": "Accepted0.154.0 epoch preserves independent encoding scope, current native projections and source proof policy.",
+          "reviewed_code_fingerprint": "d03d456c4e69124e94146041f8c12a4db8dacd13549f9dc1253b735d771d90e8",
+          "spec_material_hash": "e59bda389ca00102dc0b97364b3ad1bb330af405a1e72d754263c92e20d061e4"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Review exact Python and native CLI encoding vector interfaces alongside current shared instruction readiness.",
-          "reviewed_code_fingerprint": "3238b0812c65b63c09b72abf3894697b2745f0ccb3f2eedf5680637024487b5b",
-          "spec_material_hash": "d71b1bc64ad1dc4a24f7d9af9bdb240fcd920a81d54b1ca942f82fd27bda77ea"
+          "reason": "Harness uses actual supported system version identity interface; all22 raw vectors still execute both independent consumers.",
+          "reviewed_code_fingerprint": "d03d456c4e69124e94146041f8c12a4db8dacd13549f9dc1253b735d771d90e8",
+          "spec_material_hash": "0d0bf6b6f3937b170989715d1b1552b555eedddbda0dd47806c547057afd71bc"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Parser agreement cannot waive canonical proof, custody, instruction or spec review gates.",
-          "reviewed_code_fingerprint": "3238b0812c65b63c09b72abf3894697b2745f0ccb3f2eedf5680637024487b5b",
+          "reason": "Native version identity and parsing agreement cannot grant authority, instruction convergence or publication readiness.",
+          "reviewed_code_fingerprint": "d03d456c4e69124e94146041f8c12a4db8dacd13549f9dc1253b735d771d90e8",
           "spec_material_hash": "fd2b4563cc0b9ba92e6130c2c472a98423bf63e163fe50b6353e5a9894d050dd"
         }
       ],
@@ -878,13 +886,13 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795169391Z"
+      "updated_at": "1795169754Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:4adcbecf31dd0952c3ac4821a8ddde438540542a15df26aba958ee89c028c4a1",
+      "artifact_hash": "sha256:0da86f981033cddb507dbf3abbf1f1d9737297d7bb2b6a55f55582ee7ddacaf9",
       "checks": [
         {
           "name": "accepted-observer-integration",
@@ -901,6 +909,10 @@
         {
           "name": "released-unpaired-surrogate-differential",
           "status": "failed"
+        },
+        {
+          "name": "supported_version_identity",
+          "status": "passed"
         }
       ],
       "current_phase": "intent",
@@ -931,10 +943,17 @@
             "intent_id": "intent:change_01M7W2EJ67Y2RM1R8WAMZW92QR",
             "kind": "trajectory_step_recorded",
             "sequence": 5
+          },
+          {
+            "detail": "trajectory:branch_01M7W2EJ9TMH2SN63B74BWTEDV",
+            "event_id": "event:6",
+            "intent_id": "intent:change_01M7W2EJ67Y2RM1R8WAMZW92QR",
+            "kind": "trajectory_step_recorded",
+            "sequence": 6
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 5,
+        "next_sequence": 6,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M7W2EJ9TMH2SN63B74BWTEDV": {
@@ -993,6 +1012,28 @@
                 "validation_findings": [
                   "All8 authored spec bodies and exact proof config preserved through supported native init recovery; raw decoder scope remains separate from autonomous run coverage."
                 ]
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:6",
+                "observations": [
+                  "src/decapod/cli.rs",
+                  "tests/interop_conformance.rs",
+                  "/private/tmp/attack-gaps-controller154-install.json"
+                ],
+                "proof_refs": [
+                  "supported_version_identity"
+                ],
+                "scope": [
+                  "assets/schemas",
+                  "docs/conformance",
+                  "tests/fixtures",
+                  "tests/interop_conformance.rs"
+                ],
+                "sequence": 6,
+                "validation_findings": [
+                  "Actual official0.154.0 system version succeeds; unsupported --version and top-level version refused. Source test execution remains pending GitHub Actions."
+                ]
               }
             ]
           }
@@ -1001,12 +1042,14 @@
       "declared_commands": [],
       "destination": "pull request",
       "evidence": [
+        "/private/tmp/attack-gaps-controller154-install.json",
         "/private/tmp/attack-gaps-interop-depth-before.json",
         "/private/tmp/attack-gaps-interop-surrogate-before.json",
         "https://github.com/DecapodLabs/decapod/pull/1863"
       ],
       "inspected_files": [
         ".config/build/decapod.BUILD.bzl",
+        "src/decapod/cli.rs",
         "src/decapod/core/json.rs",
         "tests/fixtures/interop_strict_json.py"
       ],
@@ -1034,6 +1077,7 @@
       "task_id": "test_01m7w2bfayzzk8vm",
       "tool_calls": [],
       "unresolved_assumptions": [
+        "Actual official0.154.0 system version succeeds; unsupported --version and top-level version refused. Source test execution remains pending GitHub Actions.",
         "All8 authored spec bodies and exact proof config preserved through supported native init recovery; raw decoder scope remains separate from autonomous run coverage.",
         "Encoding profile is a bounded independent-decoder correction, not complete governance-envelope or authenticated conformance proof. Bazel change only declares actual fixture inputs; required recipes unchanged."
       ]

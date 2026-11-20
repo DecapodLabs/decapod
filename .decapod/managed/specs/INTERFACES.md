@@ -1539,7 +1539,7 @@ field. Nothing in this operation authorizes a mutation, approval or completion.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `3238b0812c65b63c09b72abf3894697b2745f0ccb3f2eedf5680637024487b5b`
+- Repository signal fingerprint: `d03d456c4e69124e94146041f8c12a4db8dacd13549f9dc1253b735d771d90e8`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (245 files), `tests/` (258 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
@@ -2193,3 +2193,5 @@ This map now uses accepted master `e9c40e929ee33aa5443c38b57276f96111db0b92` and
 ## Versioned encoding-plane artifacts
 
 `docs/conformance/json-v1.md` defines encoding profile1.0.0, with a machine-readable vector schema at `assets/schemas/interop-json-vectors.schema.json` and pinned raw inputs at `tests/fixtures/interop_json_vectors.v1.json`. Both consumers receive the same original text, never expected answers or a reserialized input. `accepted` and `invalid_json` describe decoding only. The existing `interop.project` result still labels caller-supplied data and `canonical_state_verified=false`. Numeric decoding does not promise arbitrary precision, canonical numeric hashes or authorization.
+
+The accepted v0.154.0 package epoch (`0f44f780`) is integrated before encoding validation. The conformance harness obtains executable identity through the documented read-only `decapod system version` command; unsupported top-level version flags are not execution evidence. Native regeneration supplies the current release projections, while the independent decoder and all pinned raw inputs remain separate from authorization and full native admission.

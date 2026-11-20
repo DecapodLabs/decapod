@@ -179,7 +179,7 @@ fn portable_encoding_vectors_agree_with_independent_decoder() {
     );
     results.sort_by_key(|result| result["id"].as_str().unwrap().to_owned());
     let version = command(binary.as_os_str())
-        .arg("--version")
+        .args(["system", "version"])
         .bounded_output(Duration::from_secs(30))
         .unwrap();
     assert!(version.status.success());
