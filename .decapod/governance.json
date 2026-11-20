@@ -908,6 +908,11 @@
       "id": "stack-after-1862-accepted",
       "summary": "Carry the completed release-verifier merge into the accepted base while preserving the checked integration tree and both source histories",
       "input_digest": "sha256:24bfbe2419b863c7da0d3909bc581cddb4ff524dd49a12b787dba8a4555d0ea3"
+    },
+    {
+      "id": "stack-fix-release-manifest-bindings",
+      "summary": "Repair test-only merge initializers and verify preserved content and release renderer manifest bindings",
+      "input_digest": "sha256:1c874c1ee200d140a6dd466070bf17aa48ec35f18e92c0cf64ca04571f373115"
     }
   ],
   "intents": {
@@ -956,22 +961,22 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Preserve accepted target-scoped proof and diagnostic architecture alongside selected work and source release projection authority.",
-          "reviewed_code_fingerprint": "95b71cd0613384792b492ae35e8506a8877e0ab563074c6695c36a76247aaee4",
+          "reason": "Retain accepted proof architecture and source release authority while refreshing exact candidate attestation.",
+          "reviewed_code_fingerprint": "8549184e71ccdedd072fcbd12db0354a13794066e0b570c50921e234c615568c",
           "spec_material_hash": "26fa92c2840e79ee87aba17e925bd36df2f414ba92467596a184fe5c71b4ab6e"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Preserve accepted deployment-target and repository policy interfaces alongside observed-path evidence and exact release interpretation.",
-          "reviewed_code_fingerprint": "95b71cd0613384792b492ae35e8506a8877e0ab563074c6695c36a76247aaee4",
-          "spec_material_hash": "39e7a81cef6a0df6d629c190181bcd3d8ccc98df8e708cfca7f6bc276782e206"
+          "reason": "Describe and verify the distinct immutable content hash and evaluator release template fields.",
+          "reviewed_code_fingerprint": "8549184e71ccdedd072fcbd12db0354a13794066e0b570c50921e234c615568c",
+          "spec_material_hash": "696b81ee20708c04db8b5405105acfbd5696ffd7b921f2549f9b948fb4c91907"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Preserve accepted repository contract and diagnostic controls alongside recorded-instruction and source release boundaries.",
-          "reviewed_code_fingerprint": "95b71cd0613384792b492ae35e8506a8877e0ab563074c6695c36a76247aaee4",
+          "reason": "Keep immutable Git lineage scoped entrypoint preservation and the exact projection checks intact.",
+          "reviewed_code_fingerprint": "8549184e71ccdedd072fcbd12db0354a13794066e0b570c50921e234c615568c",
           "spec_material_hash": "9c831867b7ba10361436871740035ad1b7793ffb6d90df7d1c01fa8ec3e585ec"
         }
       ],
@@ -983,7 +988,7 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795207922Z"
+      "updated_at": "1795209505Z"
     },
     "trajectory": {
       "active_boundaries": [
@@ -991,7 +996,7 @@
         "Deliver PRs 1862 and 1865 in one protected merge, preserving fifteen existing signed commits and the original draft.",
         "Preserve draft PR #1766 and its history. Use normal GitHub review and merge directed by the maintainer. Use GitHub Actions for this delivery. Close issues only with exact independent acceptance evidence."
       ],
-      "artifact_hash": "sha256:db22822715dbd71b1e8acd8963f267c2df28e758d2108d7c37b222e8cc9760a8",
+      "artifact_hash": "sha256:1709f08a9445c1e3bfa906a6dc779fd010f40cc5acd89d18d4f87fc645de16ac",
       "checks": [
         {
           "name": "2092274a-macos-compile",
@@ -1004,6 +1009,14 @@
         {
           "name": "format",
           "status": "passed"
+        },
+        {
+          "name": "pr-44816099391-supabase-compilation",
+          "status": "failed"
+        },
+        {
+          "name": "pr-44817241351-release-validation",
+          "status": "failed"
         },
         {
           "name": "previous-stack-clippy",
@@ -1101,10 +1114,17 @@
             "intent_id": "intent:change_01M7PQMA9DG5FG2QMC9WPR3ZCJ",
             "kind": "trajectory_step_recorded",
             "sequence": 10
+          },
+          {
+            "detail": "trajectory:branch_01M7PQMADCS3EAWQSXB0HVXNQP",
+            "event_id": "event:11",
+            "intent_id": "intent:change_01M7PQMA9DG5FG2QMC9WPR3ZCJ",
+            "kind": "trajectory_step_recorded",
+            "sequence": 11
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 10,
+        "next_sequence": 11,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M7PQMADCS3EAWQSXB0HVXNQP": {
@@ -1281,6 +1301,30 @@
                 ],
                 "sequence": 10,
                 "validation_findings": []
+              },
+              {
+                "action": "verifying",
+                "custody_event_id": "event:11",
+                "observations": [
+                  "Actions exposed two test-only struct constructors missing newly merged fields and a release manifest whose historical stored content and compiled template hashes differ. The candidate initializes both fields and independently verifies the two manifest bindings. Repaired candidate awaits Actions."
+                ],
+                "proof_refs": [
+                  "pr-44816099391-supabase-compilation",
+                  "pr-44817241351-release-validation"
+                ],
+                "scope": [
+                  "\".decapod\"",
+                  "\"AGENTS.md\"",
+                  "\"CLAUDE.md\"",
+                  "\"CODEX.md\"",
+                  "\"GEMINI.md\"]",
+                  "\"README.md\"",
+                  "\"docs\"",
+                  "\"tests\"",
+                  "paths:[\"src\""
+                ],
+                "sequence": 11,
+                "validation_findings": []
               }
             ]
           }
@@ -1292,6 +1336,7 @@
       "destination": "pull request",
       "evidence": [
         "Accepted target fff1f478 and the two source histories are represented by the signed integration. Reviewed source inventory has 105 exact inputs and v0.155.0 projection hashes match all 12 files.",
+        "Actions exposed two test-only struct constructors missing newly merged fields and a release manifest whose historical stored content and compiled template hashes differ. The candidate initializes both fields and independently verifies the two manifest bindings. Repaired candidate awaits Actions.",
         "Earlier exact standalone PR validation passed. Clippy job 136220526644 found missing optional fields in a legacy fixture. All remaining explicit test fixtures now set those defaults. Refreshed v0.154.0 hashes and 105 reviewed inputs verified.",
         "Formatting is clean. All 105 reviewed input hashes match release verifier head 42e1becf and all 12 refreshed manifest entries match their files.",
         "GitHub Actions job 136172556557 measured E0063 at 2092274a. Preserve original instruction and history in the upstream reconciler. Regression execution on the repair remains pending.",

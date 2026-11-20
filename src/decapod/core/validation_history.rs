@@ -2794,6 +2794,10 @@ mod tests {
         let report = ValidationReport {
             ready: true,
             proof_ready: true,
+            observed_path: crate::core::trajectory::path::Judgment::unavailable(
+                false,
+                "fixture has no path witness",
+            ),
             laya_readiness: Some(completed.laya.clone()),
             scope: super::super::repository_profile::TARGET_READINESS_SCOPE,
             target: Some("linux".into()),

@@ -83,6 +83,7 @@ fn accepted_global_conflict_has_one_source_backed_blocker_across_all_phases() {
         reviewed_commands_digest: String::new(),
         source_coverage: vec![],
         executions: Default::default(),
+        targets: Default::default(),
     });
     config.proof.selected_work = Some(work.clone());
     fs::write(

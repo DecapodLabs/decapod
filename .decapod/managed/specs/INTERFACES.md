@@ -1539,7 +1539,7 @@ field. Nothing in this operation authorizes a mutation, approval or completion.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `95b71cd0613384792b492ae35e8506a8877e0ab563074c6695c36a76247aaee4`
+- Repository signal fingerprint: `8549184e71ccdedd072fcbd12db0354a13794066e0b570c50921e234c615568c`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (250 files), `tests/` (258 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
@@ -2251,5 +2251,10 @@ to the live publisher for exact validation and readback.
 Cold state readers expose instruction identity and revision. Preparation, approval, execution checkpointing, validation and publication apply the same recorded blocker and remediation. An actual native-call observation binds its terminal result to the current candidate, accepted base and policy, instructions, task custody and measured producer. Retained denial evidence remains available after a legitimate repair. Publication verifies final head and live target independently. Hosted or unobserved effects retain unresolved coverage.
 
 ## Exact release projection interpretation
+
+A source-development manifest binds the immutable entrypoint bytes in
+`content_hash` and the renderer at `decapod_release` in `template_hash`
+and `fingerprint`. The release verifier recomputes both bindings and checks
+the refreshed entrypoint bytes against the classified release head.
 
 The release projection checker remains read-only and returns a failure for any unexpected projection. Under verified source-development policy, entrypoint versions may differ from the package or spec-manifest release while their committed bytes and fingerprints remain canonical. Even another well-formed, correctly fingerprinted header is rejected if it differs from that immutable release head. Foreign origin, altered payload, configuration/source/dependency changes and unknown manifest drift do not obtain an exception. Ordinary consumers continue to require the evaluating binary's exact release templates. No RPC schema, producer authority or required CI recipe is added or relaxed.
