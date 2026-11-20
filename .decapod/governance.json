@@ -482,6 +482,7 @@
       "trajectory:150b60dea853e3ba": "Real native measurements and separate holdout risk/coverage are required; current source CI success is insufficient. Evaluation criteria recorded before model outputs; no readiness fitting or holdout evaluation executed.",
       "trajectory:17139f4701f494a5": "Hosted verification and exact-candidate publication readiness remain pending; no local tests run.",
       "trajectory:17669a7d73b8ecb7": "RPC download403 is runner-specific; same pinned URL succeeded on another fresh runner. Policy fixture exit126 OS detail is unknown because stderr was discarded.",
+      "trajectory:1922e307ad9422d0": "Live hosted Propodus Postgres execution remains externally bounded when hosted credentials and live Propodus endpoints are absent; verified against local SQLite and mock/denial Dactyl HTTP boundaries.",
       "trajectory:19c255ade3d72661": "25unit tests and actualMetal8elementprobe passed; one138tokenCPU inference matches independent scalar subset, memory chunks inactive, same-author/shared-infrastructure limits remain. Metal model reset failed; holdout not executed. New owned-model discard, reuse assertion, real alternate-API fallback diagnostics, nonempty-chunk fixture and independent four-phase collector are authored repairs awaiting fresh validation. No 5percent production calibration claim.",
       "trajectory:22ceeec9cc8afae2": "Validmodeluncertaintyyes0.573/two-labelsetcausedcalibrationpositiveabstainbothbackends; frozenexpectedacceptmismatchpreservednotrelabeled. Workingmeaningfulmodelapprovalsareobservedgate/prompt; alladversecontrolsnonready. We donotknowwhythemodelabstained. Independentcoverageauditdemonstratedmetadatafixtureclaimedorderbutonlyinvalidlength/namechecked; addcanonical+all23permutationchecksandtruthfulobservationacrossfamily. Currentvalidatedworkandactualcheckinventoryexpand; no question/threshold/weight/calibration/labeltuning. Userclarificationonsafeabstentionpending; strictallpositive ruleunchanged. Fullnewcandidatevalidate,donotclaimpreviousfullreportgreen or domainaccuracy. Sameoriginaltaskbranch/custody/noPRmerge release.",
       "trajectory:2318b54d5863154f": "Confirmed pinned CUDA dynamic links can prevent worker startup before its CPU path. Prepare optional separately pinned CPU executable in private local binding; model-free GPU startup before exposing model/state, typed hardware-only fallback, exact immutable pins and same deadline. Negative/abstaining/malformed inference and numerical failures remain non-ready and never trigger a new answer search. No actual Metal/model/reference/holdout evidence exists yet.",
@@ -659,6 +660,11 @@
       "id": "cp-1739-13",
       "summary": "Merge origin/master 89906b666 (PR #1819, v0.149.3), refresh specs and review-spec x3, verify fmt and datastore_relational_compaction (#1739)",
       "input_digest": "sha256:31c9748b18d788a0207aee4f168711a80a926cd6d4086772b85992324f8993ac"
+    },
+    {
+      "id": "cp-sync-363d6e3ec",
+      "summary": "Integrate accepted master 363d6e3ec (v0.151.0) and refresh specs for #1739",
+      "input_digest": "sha256:cd3c0e75fb8ca12ea30cb55b884bcb085a6971a99f45a246d285a2febca27304"
     }
   ],
   "intents": {
@@ -701,23 +707,23 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Reconciled with origin/master 89906b666 (PR #1819, v0.149.3) and #1739 v2 storage compatibility floor specs",
-          "reviewed_code_fingerprint": "53982d8e47d7a6fc4c5f68b66c9fa897a6e13aa4fbf3b90264d33b513aaecd80",
-          "spec_material_hash": "5c51dcb3e94ff93a74c84c5126fa1538e474fc1d76ddf61022d36d11a1316983"
+          "reason": "Reconciled #1739 compact v2 floor reconciliation with accepted master 363d6e3ec (v0.151.0).",
+          "reviewed_code_fingerprint": "48ac24f0a72cd0fa00d78140db414ac2f589169d2f1b766bc0454e14bcc5c44e",
+          "spec_material_hash": "87ef8eb06d8d99b08e7f439012d77793d1532e100bdd59bb994d48f1aab0b102"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Reconciled with origin/master 89906b666 (PR #1819, v0.149.3) and #1739 v2 storage compatibility floor specs",
-          "reviewed_code_fingerprint": "53982d8e47d7a6fc4c5f68b66c9fa897a6e13aa4fbf3b90264d33b513aaecd80",
-          "spec_material_hash": "989baceaed8446ee995868f59caf6ed759bf36a70c7d685b80eae57ea7239f9d"
+          "reason": "Reconciled #1739 compact v2 compatibility floor contract with accepted master 363d6e3ec (v0.151.0).",
+          "reviewed_code_fingerprint": "48ac24f0a72cd0fa00d78140db414ac2f589169d2f1b766bc0454e14bcc5c44e",
+          "spec_material_hash": "122396f215ab6d6a5fdce052e1e41a448d01160dac838f67241d960398f49b84"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Reconciled with origin/master 89906b666 (PR #1819, v0.149.3) and #1739 v2 storage compatibility floor specs",
-          "reviewed_code_fingerprint": "53982d8e47d7a6fc4c5f68b66c9fa897a6e13aa4fbf3b90264d33b513aaecd80",
-          "spec_material_hash": "72faa2a1a5155e2c3be5ae74c6d97c9f0e16104f66d139a5fd9534c1e4e6178b"
+          "reason": "Reconciled #1739 compact v2 downgrade boundary with accepted master 363d6e3ec (v0.151.0).",
+          "reviewed_code_fingerprint": "48ac24f0a72cd0fa00d78140db414ac2f589169d2f1b766bc0454e14bcc5c44e",
+          "spec_material_hash": "053d38a9c0a87b78105a9bbd4dcd5991b92ec68254bfc409a0c9848a0702d119"
         }
       ],
       "state": "APPROVED",
@@ -728,13 +734,13 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795060725Z"
+      "updated_at": "1795138702Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:d53a5285bd188968eebcfa80b6df1052a9203fd7d486cd82c90577087c941d8d",
+      "artifact_hash": "sha256:8651a16f50d07390dc68c861c27a78dad20de4a882f9a5a92ce6cb91f7c60608",
       "checks": [
         {
           "name": "clippy",
@@ -782,10 +788,17 @@
             "intent_id": "intent:change_01M7QKFSRQNZTA7DG143M3HP11",
             "kind": "trajectory_step_recorded",
             "sequence": 4
+          },
+          {
+            "detail": "trajectory:branch_01M7QKFSW14YFFE713D33JXR9V",
+            "event_id": "event:5",
+            "intent_id": "intent:change_01M7QKFSRQNZTA7DG143M3HP11",
+            "kind": "trajectory_step_recorded",
+            "sequence": 5
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 4,
+        "next_sequence": 5,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M7QKFSW14YFFE713D33JXR9V": {
@@ -833,6 +846,25 @@
                 "validation_findings": [
                   "Already-released 0.141.0..0.144.1 binaries predated meta.storage.* checks and share TODO_SCHEMA_VERSION=18 and events DDL with 0.144.2..0.148.13, so SQLite metadata cannot retroactively block those old binaries without breaking >= 0.144.2 compatibility."
                 ]
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:5",
+                "observations": [
+                  "src/decapod/core/events.rs",
+                  ".decapod/managed/specs/ARCHITECTURE.md",
+                  ".decapod/managed/specs/INTERFACES.md",
+                  ".decapod/managed/specs/SECURITY.md",
+                  "Merged origin/master 363d6e3ec (v0.151.0); fmt, clippy --all-targets --all-features, datastore_relational_compaction 16/16, and datastore_contract compatibility boundary test passed"
+                ],
+                "proof_refs": [],
+                "scope": [
+                  "\".decapod/managed/specs\"]",
+                  "\"tests\"",
+                  "paths:[\"src/decapod\""
+                ],
+                "sequence": 5,
+                "validation_findings": []
               }
             ]
           }
@@ -848,6 +880,7 @@
       ],
       "destination": "pull request",
       "evidence": [
+        "Merged origin/master 363d6e3ec (v0.151.0); fmt, clippy --all-targets --all-features, datastore_relational_compaction 16/16, and datastore_contract compatibility boundary test passed",
         "cargo fmt --check exit 0; cargo clippy --all-targets --all-features -- -D warnings exit 0; datastore_relational_compaction 16/16 passed; datastore_contract compat test 1/1 passed; core::events 16/16 passed; core::migration 9/9 passed"
       ],
       "inspected_files": [

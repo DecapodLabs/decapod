@@ -30,8 +30,18 @@ CREATE INDEX IF NOT EXISTS idx_events_subject ON events(subject_kind, subject_id
 pub const EVENTS_TABLE_UNIQUE_STREAM_SEQUENCE_INDEX: &str =
     "CREATE UNIQUE INDEX IF NOT EXISTS idx_events_stream_seq_unique ON events(stream, seq)";
 
+/// Composite partial index for bounded subject-scoped cursor replay and
+/// projection queries (`WHERE stream = ?1 AND subject_kind = ?2 AND subject_id = ?3
+/// AND subject_kind IS NOT NULL AND subject_id IS NOT NULL AND seq > ?4 ORDER BY seq ASC`).
+/// Omits NULL-subject streams from the B-tree and eliminates SQLite temp B-tree sorts (#1734).
+pub const EVENTS_TABLE_STREAM_SUBJECT_SEQ_INDEX: &str = "CREATE INDEX IF NOT EXISTS idx_events_stream_subject_seq ON events(stream, subject_kind, subject_id, seq) WHERE subject_kind IS NOT NULL AND subject_id IS NOT NULL";
+
+/// Shared `meta` namespace for cryptographic event-retention watermarks (#1734).
+pub const EVENT_RETENTION_META_NAMESPACE: &str = "event_retention";
+
 /// Physical event layout revision. Historical DDL above remains a migration
-/// fixture; current initialization avoids the duplicate non-unique sequence tree.
+/// fixture; current initialization avoids the duplicate non-unique sequence tree
+/// and uses the partial composite `(stream, subject_kind, subject_id, seq)` index.
 pub const EVENTS_STORAGE_VERSION: u32 = 2;
 pub const EVENTS_TABLE_SCHEMA_V2: &str = "CREATE TABLE IF NOT EXISTS events (
     event_id TEXT PRIMARY KEY,
@@ -43,7 +53,7 @@ pub const EVENTS_TABLE_SCHEMA_V2: &str = "CREATE TABLE IF NOT EXISTS events (
     event_type TEXT NOT NULL DEFAULT '',
     payload TEXT NOT NULL,
     actor TEXT NOT NULL DEFAULT 'decapod'
-); CREATE INDEX IF NOT EXISTS idx_events_subject ON events(subject_kind, subject_id);";
+); CREATE INDEX IF NOT EXISTS idx_events_stream_subject_seq ON events(stream, subject_kind, subject_id, seq) WHERE subject_kind IS NOT NULL AND subject_id IS NOT NULL;";
 
 /// Back-compat alias: historical per-stream DDL is no longer used for new tables.
 #[deprecated(note = "use EVENTS_TABLE_SCHEMA; streams share one events table")]

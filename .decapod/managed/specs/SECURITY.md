@@ -1,5 +1,32 @@
 # Security
 
+## Device key custody, container signing isolation, and fail-closed cloud boundaries (#1778, #1066, #1590, #1809, #1808)
+
+- **Key custody outside repositories**: `DeviceKeyStore` rejects any key path
+  that resolves inside the repository checkout (including through non-existent
+  path tails on macOS `/var` -> `/private/var`), rejects symlinks, enforces
+  mode `0600` (`O_NOFOLLOW`), and zeroizes PKCS#8 key material on drop. DPoP
+  verifiers reject private JWK parameters (`d`, `p`, `q`, `dp`, `dq`, `qi`,
+  `oth`, `k`) and bind `htm`, canonical `htu`, `iat`, `ath`, `nonce`, and `aud`.
+- **Container isolation**: `filter_container_environment` strips raw tokens,
+  service-role keys, refresh secrets, and `SSH_AUTH_SOCK` before container
+  launch. `HostContainerSignerServer` mounts only a mode-0600 Unix socket and
+  denies wrong repository, mismatched agent ID, foreign origin, non-allowlisted
+  operations (including `device-enroll`, `device-revoke`, billing, and owner
+  tier mutations), cross-capability misuse, expired sessions, and revoked keys.
+- **No silent local fallback or unmerged privilege escalation**: Cloud auth,
+  entitlement (`403`), payload bound (`413`), quota (`429`), or owner-repair
+  denials never create, read, or mutate `.decapod/data/decapod.db`. Unconfigured
+  explicit `neon`/`supabase` datastores fail closed without falling back to the
+  retired legacy preview endpoint. Unmerged worktree config never enables
+  `owner` repair locally or remotely, and `#1776` accepted-cloud enforcement
+  continues to block unaccepted local downgrades.
+- **Public repository hygiene**: All code, tests, fixtures, docs, and specs in
+  this wave use synthetic `example.invalid` / loopback fixtures and public
+  registered wire markers (`OWNER_REPAIR_V1_SQL = "SELECT propodus.owner_repair_v1($1, ..., $11)"`)
+  only — zero live hostnames, merchant identifiers, private repository source
+  filenames, private database schemas/CTE expansions, or raw secrets.
+
 ## Ambiguous RPC JSON
 
 Duplicate decoded keys are invalid at every nesting level, including Unicode
@@ -210,6 +237,15 @@ task lineage. Reassignment, renewed custody, intent edits later reverted,
 missing history and concurrent task mutations cannot inherit an older pass.
 It does not trust commit messages, branch names, a provider badge, or the legacy
 tracked prerequisite receipt as proof of integration and successful execution.
+When unauthenticated public HTTPS branch-tip inspection is rejected for a private
+repository, `src/decapod/core/validation_history.rs::accepted_target_for_repository`
+may fall back to reviewed host-user authenticated read-only transport — first via
+`snapshot_provider::OfficialCli` (`gh api` GET `repos/{owner}/{repo}/git/ref/heads/...`
+authorized through `external_action::authorize_official_github_read`), and then via
+an isolated host-user `git ls-remote` in an empty scratch directory with
+`GIT_TERMINAL_PROMPT=0` and disabled redirects. No credentials or raw transport
+diagnostics are persisted in `.decapod/`, logs, or worktrees, and local no-graft /
+no-alternate ancestry verification (`reject_history_overrides`) remains mandatory.
 Historical authority is limited to completing its original task; new publication
 still requires current full validation. These local records retain Decapod's
 cooperative same-user trust model: hashes detect inconsistent evidence but do
@@ -761,8 +797,8 @@ execution evidence remains required before publication readiness.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `53982d8e47d7a6fc4c5f68b66c9fa897a6e13aa4fbf3b90264d33b513aaecd80`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (237 files), `tests/` (242 files)
+- Repository signal fingerprint: `48ac24f0a72cd0fa00d78140db414ac2f589169d2f1b766bc0454e14bcc5c44e`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (244 files), `tests/` (256 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 
@@ -1241,6 +1277,32 @@ exercise real secrets nor prove actual native cache publication.
 ## Canonical local Git proof (#1069)
 
 Canonical local proof shares the OS user trust domain with source, policy, tools and SQLite; it is not cryptographic authentication or OS isolation. The local authority is accepted on canonical Git rather than supplied by a candidate report, and cannot act as cloud/forge identity. Target reads disable ambient Git redirects, transport and replacement objects. Material/policy/target changes invalidate applicability without rewriting historical success. Supported forge publication rejects local-only authority; unrestricted shell/Git remains outside that enforcement boundary. No keys, credentials or machine-local logs belong in tracked state.
+
+## Merge reconciliation fail-closed proof boundary (#1780)
+
+`core::governance_document::reconcile_merge` enforces three invariants to prevent
+Git merge reconciliation from laundering invalid or partial proof:
+1. **Immutable parent authority**: Inputs come exclusively from `HEAD`,
+   `MERGE_HEAD`, and `merge-base --all` blobs with graft and replace-object
+   protections; corrupted or tampered working-tree `.decapod/governance.json`
+   files outside an active Git merge (`MERGE_HEAD` absent) are rejected with
+   `GOVERNANCE_MERGE_NOT_IN_PROGRESS`.
+2. **Non-promotion of proof**: Merging a branch with failed or missing checks
+   retains every failed check and missing proof hook, forces `proof_status` and
+   `verdicts` recomputation via `TrajectoryArtifact::with_recomputed_hash()`, and
+   strips stale `validation` receipts whenever trajectory or validation state
+   changes. Contradictory statuses for the same named check fail closed with
+   `GOVERNANCE_MERGE_PROOF_CONFLICT`.
+3. **Authority disambiguation**: Unaccepted distinct workstreams (`change.id`
+   mismatch where `MERGE_HEAD` is not an ancestor of the accepted `target_base`
+   ref), conflicting `target_base` or `base_commit` values, or conflicting
+   non-additive edits fail closed with `GOVERNANCE_MERGE_AUTHORITY_CONFLICT`.
+   Full merge-commit checkpoint verification (`verify-checkpoints`) remains
+   independently enforced after committing the merge.
+
+## Per-platform execution selection boundary (#1736)
+
+`repo.pr-readiness.v1` per-platform execution entries (`RepositoryExecution::platforms` / `PlatformExecution`) preserve fail-closed `#[serde(deny_unknown_fields)]` schema strictness, reject ambient `PATH` resolution, relative paths, mixed top-level/per-platform declarations, and uncanonical or unsupported platform keys, and bind every declared platform alternative into `command_contract_digest` and `preserve_accepted` (`ACCEPTED_REPOSITORY_CONTRACT_CHANGED`). Candidate additions, removals, or edits to any platform table—including non-host platforms—cannot self-approve and remain rejected until independently accepted on the target (tracked separately from policy migration in #1738). At host selection and execution time (`RepositoryExecution::resolve_for_platform`, `repository_host::select_commands_for_platform`, `native_proof::validate_invocation`), only the current host platform's reviewed executable and `toolchain_files` are selected, checked for canonical host binary format, and byte-measured before and after execution; missing or unsupported host platforms fail closed without fallback.
 
 ## Compact storage v2 downgrade boundary (#1739)
 

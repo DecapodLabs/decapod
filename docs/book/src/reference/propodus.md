@@ -1,7 +1,9 @@
-# Cloud sign-in and task access
+# Decapod Cloud sign-in and task access
 
-Select `repo.backend = "cloud"` to use the managed cloud connector. The
-boundary is **agent → Decapod → Dactyl → hosted service**. Decapod owns the
+Select `repo.backend = "local"` for **Decapod Local** (the default: free, offline
+local SQLite and Git governance with no account required) or `repo.backend = "cloud"`
+for **Decapod Cloud** (the managed cloud connector). The boundary is
+**agent → Decapod → Dactyl → Decapod Cloud service**. Decapod owns the
 system interface, repository binding, and private session custody. Dactyl
 owns public discovery, the physical connector, sign-in and session transport,
 and subsequent data requests. The service decides who may access a repository.
@@ -144,10 +146,11 @@ audit trail. Publication and merge retain their independent governance gates.
 
 The active orchestration is `core::cloud_client`; `core::cloud_session` owns
 private custody. `DactylBridge` resolves the managed route through
-`dactyl_db::CloudConnector`. Historical explicit adapters and Propodus client
+`dactyl_db::CloudConnector`. Historical explicit adapters and legacy client
 types remain compatibility APIs, not the ordinary cloud setup path. Ambient
-legacy endpoint, physical-selector, and access-token variables do not select
-or authenticate the managed CLI flow.
+legacy endpoint (`DECAPOD_CLOUD_API_URL` / deprecated `DECAPOD_PROPODUS_API_URL`),
+physical-selector, and access-token variables do not select or authenticate the
+managed CLI flow.
 
 `tests/cloud_managed_session.rs` exercises the actual CLI against disposable
 loopback HTTP fixtures: missing and reused sessions, headless continuation,

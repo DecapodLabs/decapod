@@ -368,7 +368,9 @@ pub fn query_subject_on_conn(
     let (count, bytes, largest): (u64, u64, u64) = conn.query_row(
         "SELECT COUNT(*), COALESCE(SUM(length(CAST(payload AS BLOB))), 0),
                 COALESCE(MAX(length(CAST(payload AS BLOB))), 0)
-         FROM events WHERE stream = ?1 AND subject_kind = ?2 AND subject_id = ?3",
+         FROM events
+         WHERE stream = ?1 AND subject_kind = ?2 AND subject_id = ?3
+           AND subject_kind IS NOT NULL AND subject_id IS NOT NULL",
         params![stream, subject_kind, subject_id],
         |row| Ok((row.get(0)?, row.get(1)?, row.get(2)?)),
     )?;
@@ -380,6 +382,7 @@ pub fn query_subject_on_conn(
     let mut statement = conn.prepare(
         "SELECT event_id, ts, seq, event_type, payload, actor FROM events
          WHERE stream = ?1 AND subject_kind = ?2 AND subject_id = ?3
+           AND subject_kind IS NOT NULL AND subject_id IS NOT NULL
          ORDER BY seq ASC, event_id ASC LIMIT ?4",
     )?;
     let rows = statement.query_map(
@@ -465,7 +468,8 @@ pub fn query_subject_event_on_conn(
                     CASE WHEN length(CAST(payload AS BLOB)) <= ?5 THEN payload ELSE NULL END,
                     actor
              FROM events WHERE stream = ?1 AND subject_kind = ?2
-                 AND subject_id = ?3 AND event_id = ?4",
+                 AND subject_id = ?3 AND subject_kind IS NOT NULL AND subject_id IS NOT NULL
+                 AND event_id = ?4",
             params![
                 stream,
                 subject_kind,
@@ -581,7 +585,9 @@ pub fn check_subject_append_capacity(
     let (count, bytes, largest): (u64, u64, u64) = conn.query_row(
         "SELECT COUNT(*), COALESCE(SUM(length(CAST(payload AS BLOB))), 0),
                 COALESCE(MAX(length(CAST(payload AS BLOB))), 0)
-         FROM events WHERE stream = ?1 AND subject_kind = ?2 AND subject_id = ?3",
+         FROM events
+         WHERE stream = ?1 AND subject_kind = ?2 AND subject_id = ?3
+           AND subject_kind IS NOT NULL AND subject_id IS NOT NULL",
         params![stream, subject_kind, subject_id],
         |row| Ok((row.get(0)?, row.get(1)?, row.get(2)?)),
     )?;
@@ -606,12 +612,26 @@ pub fn exists(root: &Path, stream: &str) -> Result<bool, error::DecapodError> {
 }
 
 pub fn actors(root: &Path, stream: &str) -> Result<Vec<String>, error::DecapodError> {
-    let mut actors = query(root, stream, usize::MAX)?
-        .into_iter()
-        .map(|event| event.actor)
-        .collect::<Vec<_>>();
-    actors.sort();
-    actors.dedup();
+    if !is_known_stream(stream) {
+        return Err(error::DecapodError::ValidationError(format!(
+            "unknown event stream: {stream}"
+        )));
+    }
+    let path = canonical_db_path(root);
+    if !path.exists() {
+        return Ok(Vec::new());
+    }
+    let conn = db::db_connect_for_validate(&path.to_string_lossy())?;
+    if !conn.has_table(EVENTS_TABLE)? {
+        return Ok(Vec::new());
+    }
+    let mut stmt =
+        conn.prepare("SELECT DISTINCT actor FROM events WHERE stream = ?1 ORDER BY actor ASC")?;
+    let rows = stmt.query_map([stream], |row| row.get::<_, String>(0))?;
+    let mut actors = Vec::new();
+    for row in rows {
+        actors.push(row?);
+    }
     Ok(actors)
 }
 
@@ -646,6 +666,7 @@ pub fn ensure_tables(conn: &Connection) -> Result<(), error::DecapodError> {
          );",
     )?;
     migrate_legacy_stream_tables_into_events(conn)?;
+    conn.execute(schemas::EVENTS_TABLE_STREAM_SUBJECT_SEQ_INDEX, [])?;
     crate::core::storage_compaction::reconcile_v2_storage_format_metadata(conn)?;
     Ok(())
 }
@@ -959,11 +980,20 @@ fn append_on_conn_inner(
         &payload_value,
     );
 
-    let seq: u64 = conn.query_row(
-        "SELECT COALESCE(MAX(seq), 0) + 1 FROM events WHERE stream = ?1",
+    let max_live_seq: u64 = conn.query_row(
+        "SELECT COALESCE(MAX(seq), 0) FROM events WHERE stream = ?1",
         [stream],
         |row| row.get(0),
     )?;
+    // Zero extra queries on the non-empty hot write path: retained rows always
+    // have seq > retention_floor_seq. Only consult the retention watermark when
+    // the stream currently holds zero live rows (e.g. after full retention prune).
+    let floor_seq = if max_live_seq == 0 {
+        crate::core::projection_budget::retention_floor_seq_on_conn(conn, stream)?
+    } else {
+        0
+    };
+    let seq = max_live_seq.max(floor_seq).saturating_add(1);
     let inserted = conn.execute(
         "INSERT INTO events(event_id, ts, seq, stream, subject_kind, subject_id, event_type, payload, actor)
          VALUES(?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9)

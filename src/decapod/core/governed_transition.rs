@@ -349,6 +349,8 @@ pub fn decide_publication(
     }
 }
 
+/// Interpret a caller-supplied report without authenticating its producer or
+/// current applicability. Only canonical validation/admission can prove those.
 pub fn project_report_publication(report: &Value) -> PublicationDecision {
     if !report.is_object() {
         return decide_publication(ProofJudgment::Unknown, false, None, None);
@@ -387,16 +389,18 @@ pub fn project_report_publication(report: &Value) -> PublicationDecision {
         ProofJudgment::Stale
     } else if status.is_some_and(failure_word) {
         ProofJudgment::Failed
-    } else if !receipt.as_deref().is_some_and(digest_ok) || !status.is_some_and(success_word) {
-        ProofJudgment::NotProven
-    } else if !canonical_known {
+    } else if receipt.as_deref().is_some_and(digest_ok)
+        && status.is_some_and(success_word)
+        && !canonical_known
+    {
         ProofJudgment::Unknown
     } else {
-        ProofJudgment::Proven
+        // Matching labels, a candidate and a digest are still caller data.
+        ProofJudgment::NotProven
     };
     let _declared_ready = report.get("publication_ready").and_then(Value::as_bool);
     let _declared_passes = report.get("passes").and_then(Value::as_bool);
-    decide_publication(
+    let mut decision = decide_publication(
         judgment,
         canonical_known
             || matches!(
@@ -405,7 +409,12 @@ pub fn project_report_publication(report: &Value) -> PublicationDecision {
             ),
         None,
         receipt.as_deref(),
-    )
+    );
+    decision.reason = format!(
+        "Caller-supplied report: {}. This projection cannot authenticate execution or current applicability; obtain canonical validation for the exact candidate and accepted base.",
+        decision.reason
+    );
+    decision
 }
 
 pub fn admit(current: &StateIdentity, request: &AdmissionRequest) -> Admission {
@@ -1457,7 +1466,10 @@ mod tests {
             "head": "aaaaaaaaaaaaaaaa",
             "receipt_hash": "sha256:0123456789abcdef"
         });
-        assert!(project_report_publication(&report).eligible);
+        let projected = project_report_publication(&report);
+        assert!(!projected.eligible);
+        assert_eq!(projected.judgment, ProofJudgment::NotProven);
+        assert!(projected.reason.contains("canonical validation"));
         let stale = serde_json::json!({
             "status": "pass",
             "publication_ready": true,
