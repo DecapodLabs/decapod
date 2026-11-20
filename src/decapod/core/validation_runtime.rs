@@ -25,6 +25,30 @@ use std::time::{Duration, Instant};
 
 pub const READINESS_SCOPE: &str = "source_pr_readiness";
 
+/// Diagnostic gate overrides are not an accepted full verification contract.
+/// Partial prerequisite/CI-local callers retain their existing explicit scope.
+pub(crate) fn require_full_readiness_environment() -> io::Result<()> {
+    let mut active = Vec::new();
+    for name in [
+        "DECAPOD_VALIDATE_SKIP_GIT_GATES",
+        "DECAPOD_VALIDATE_SKIP_TOOLING_GATES",
+    ] {
+        if std::env::var_os(name).is_some() {
+            active.push(name);
+        }
+    }
+    if super::validate::skip_fingerprint_gates() {
+        active.push("DECAPOD_VALIDATE_SKIP_FINGERPRINT_GATES");
+    }
+    if !active.is_empty() {
+        return Err(invalid(format!(
+            "READINESS_GATE_OVERRIDE_UNSUPPORTED: {} disables accepted checks; remove these overrides and revalidate. Partial project-prerequisite and CI-local diagnostics cannot grant publication readiness.",
+            active.join(", ")
+        )));
+    }
+    Ok(())
+}
+
 const CONFIG: &str = ".decapod/config.toml";
 const GOVERNANCE: &str = ".decapod/governance.json";
 use super::readiness_profile::source;
@@ -119,7 +143,7 @@ impl ValidationGuidance {
                 "repair_and_revalidate"
             },
             instruction: if ready {
-                "Review the exact candidate evidence against human intent and delivery constraints. Success establishes only the reported readiness scope; delivery actions remain subject to existing authorization and review requirements."
+                "Review the exact candidate evidence against human intent and delivery constraints. Success establishes only the reported readiness scope; delivery actions remain subject to existing authorization and review requirements. Once PR creation completes, flush ONLY this todo's /tmp build and scratch directories (such as /tmp/decapod_validate/<task-id> and any todo-scoped CARGO_TARGET_DIR under /tmp); never perform wildcard or root-level deletion of /tmp or delete another concurrent agent's /tmp path, shared `/tmp/decapod` controller state, or active sibling directories."
             } else {
                 "Agent: inspect the blockers and evidence, configure or repair the project's actual build, test and CI contract within the governed scope, checkpoint the repaired source, then rerun decapod validate. Preserve required checks and artifact custody; unsupported adapters remain blockers."
             },
@@ -127,7 +151,7 @@ impl ValidationGuidance {
         }
     }
 
-    fn for_readiness_outcome(
+    pub fn for_readiness_outcome(
         proof_ready: bool,
         mode: super::readiness_assessment::Mode,
         decision: super::readiness_assessment::Decision,
@@ -142,7 +166,7 @@ impl ValidationGuidance {
         let (next_action, instruction) = match (mode, decision) {
             (Mode::Required, Decision::Accept) => (
                 "create_authorized_pr",
-                "Required validation passed and Laya accepted post-validation readiness. Agent: create the PR on this validated workspace branch when already authorized, after confirming the candidate and accepted target are still current. Include the validation and Laya evidence. This result does not authorize merge or release; preserve human review and existing delivery authority.",
+                "Required validation passed and Laya accepted post-validation readiness. Agent: create the PR on this validated workspace branch when already authorized, after confirming the candidate and accepted target are still current. Include the validation and Laya evidence. Once PR creation completes, flush ONLY this todo's /tmp build and scratch directories (such as /tmp/decapod_validate/<task-id> and any todo-scoped CARGO_TARGET_DIR under /tmp); never perform wildcard or root-level deletion of /tmp or delete another concurrent agent's /tmp path, shared `/tmp/decapod` controller state, or active sibling directories. This result does not authorize merge or release; preserve human review and existing delivery authority.",
             ),
             (Mode::Required, Decision::Reject) => (
                 "address_readiness_gaps_and_revalidate",
@@ -182,8 +206,17 @@ pub struct ValidationReport {
     pub stage_dispositions: Vec<profile::StageDisposition>,
     pub blockers: Vec<Blocker>,
     pub evidence_path: Option<PathBuf>,
+    /// Owned completion from this invocation; excluded from the stable public
+    /// report. A path on disk alone can never mint durable validation history.
+    #[serde(skip)]
+    pub(crate) completed_evidence: Option<super::validation_history::CompletedReadinessEvidence>,
 }
 impl ValidationReport {
+    /// Local Git proof has no independently established forge-target identity.
+    pub fn publication_ready(&self) -> bool {
+        self.ready && self.scope != super::repository_profile::LOCAL_GIT_READINESS_SCOPE
+    }
+
     pub fn exit_code(&self) -> i32 {
         if self.ready { 0 } else { 1 }
     }
@@ -653,6 +686,37 @@ fn load_project(options: &Options, budget: &mut RuntimeBudget<'_>) -> io::Result
         .required_profile
         .as_ref()
         .is_some_and(|p| p.id == super::repository_profile::REQUIRED_PROFILE);
+    if accepted
+        .required_profile
+        .as_ref()
+        .is_some_and(|p| p.id == super::repository_profile::REQUIRED_PROFILE)
+    {
+        if !repository_local {
+            return Err(invalid(
+                "ACCEPTED_REPOSITORY_CONTRACT_CHANGED: another profile cannot replace accepted repository-local checks",
+            ));
+        }
+        if configuration
+            .required_profile
+            .as_ref()
+            .map(|profile| &profile.reviewed_sources_digest)
+            != accepted
+                .required_profile
+                .as_ref()
+                .map(|profile| &profile.reviewed_sources_digest)
+        {
+            return Err(invalid(
+                "ACCEPTED_REPOSITORY_CONTRACT_CHANGED: source definitions changed; preserve the accepted source digest or establish a separately accepted target-policy transition before revalidation",
+            ));
+        }
+        super::repository_profile::preserve_accepted(
+            &configuration.commands,
+            configuration.repository_contract.as_ref(),
+            &accepted.commands,
+            accepted.repository_contract.as_ref(),
+        )
+        .map_err(io::Error::other)?;
+    }
     let (executor, catalog) = if repository_local {
         if configuration.validation_buildkite_preflights {
             return Err(invalid(
@@ -900,8 +964,10 @@ fn write_native_completion(
     directory: &Path,
     verdict: &[u8],
     receipt: &[u8],
+    budget: &RuntimeBudget<'_>,
     mut writer: impl FnMut(&Path, &[u8]) -> io::Result<()>,
 ) -> io::Result<()> {
+    budget.remaining()?;
     let completed = directory.join("completion");
     if completed.try_exists()? {
         return Err(io::Error::new(
@@ -916,14 +982,45 @@ fn write_native_completion(
         &staging.path().join("native-readiness-receipt.json"),
         receipt,
     )?;
+    budget.remaining()?;
     writer(&staging.path().join("verdict.json"), verdict)?;
+    // Only the atomic publication makes either file usable. Expiry while
+    // staging drops both private files and never exposes a ready bundle.
+    budget.remaining()?;
     fs::rename(staging.path(), completed)
+}
+
+fn within_terminal_budget<T>(
+    budget: &RuntimeBudget<'_>,
+    evaluate: impl FnOnce() -> io::Result<T>,
+) -> io::Result<T> {
+    budget.remaining()?;
+    let result = evaluate()?;
+    budget.remaining()?;
+    Ok(result)
+}
+
+fn write_ready_verdict(
+    directory: &Path,
+    bytes: &[u8],
+    budget: &RuntimeBudget<'_>,
+) -> io::Result<()> {
+    budget.remaining()?;
+    let mut staging = tempfile::NamedTempFile::new_in(directory)?;
+    staging.write_all(bytes)?;
+    staging.as_file().sync_all()?;
+    budget.remaining()?;
+    staging
+        .persist_noclobber(directory.join("verdict.json"))
+        .map_err(|error| error.error)?;
+    Ok(())
 }
 
 /// Public caller must use this report's exit_code, never the partial prerequisite
 /// result. This function cannot open a PR, push a work branch, or mint a receipt.
 pub fn validate(options: &Options, host: &mut dyn Host, cancel: &Cancellation) -> ValidationReport {
     let mut report = ValidationReport {
+        completed_evidence: None,
         ready: false,
         proof_ready: false,
 
@@ -943,6 +1040,7 @@ fn run(
     cancel: &Cancellation,
     report: &mut ValidationReport,
 ) -> io::Result<()> {
+    require_full_readiness_environment()?;
     if options.timeout.is_zero()
         || options.timeout > Duration::from_secs(7200)
         || options.max_input_bytes == 0
@@ -979,7 +1077,16 @@ fn run(
         .as_ref()
         .is_some_and(|p| p.id == super::repository_profile::REQUIRED_PROFILE)
     {
-        report.scope = super::repository_profile::READINESS_SCOPE;
+        report.scope = if project
+            .configuration
+            .repository_contract
+            .as_ref()
+            .is_some_and(|contract| contract.canonical_local_target)
+        {
+            super::repository_profile::LOCAL_GIT_READINESS_SCOPE
+        } else {
+            super::repository_profile::READINESS_SCOPE
+        };
     }
     report.stage_dispositions = project.catalog.stage_dispositions().to_vec();
     if let Some(configuration) = &project.configuration.rust_workers {
@@ -1281,11 +1388,65 @@ fn run(
         decision.mode,
         decision.decision,
     );
+    if report.ready && report.scope == super::repository_profile::LOCAL_GIT_READINESS_SCOPE {
+        report.agent_guidance.next_action = "inspect_local_merge_readiness";
+        report.agent_guidance.instruction = "The reviewed local contract passed for this exact candidate and canonical local target. Inspect its native proof and retain human integration authority. Forge publication remains unsupported until target equivalence and independent publication authority are established.";
+    }
     report.laya_readiness = Some(decision);
     if let Err(error) = final_proof {
         return Err(invalid(format!(
             "STALE_POST_VALIDATION_DECISION: {error:?}"
         )));
+    }
+    if report.ready && report.proof_ready {
+        let completed = super::validation_history::CompletedReadinessEvidence::from_runtime(
+            &invocation,
+            report.scope,
+            &current.identity,
+            &initial_governance,
+            &trajectory_digest,
+            current_profile.plan(),
+            &result.evidence,
+            report
+                .laya_readiness
+                .as_ref()
+                .ok_or_else(|| invalid("successful readiness lacks a Laya disposition"))?,
+            Some(
+                super::validation_history::CurrentEvidenceInputs::capture(
+                    &project.identity_inputs,
+                    &selection,
+                )
+                .map_err(io::Error::other)?,
+            ),
+        )
+        .map_err(io::Error::other)?;
+        let rules = within_terminal_budget(&budget, || {
+            super::validation_rules::evaluate_terminal_rules(
+                &options.root,
+                &completed,
+                &current.identity,
+                &initial_governance,
+                &trajectory_digest,
+                &budget,
+            )
+            .map_err(io::Error::other)
+        })?;
+        write_new(
+            &directory.join("terminal-rules.json"),
+            &serde_json::to_vec_pretty(&rules).map_err(io::Error::other)?,
+        )?;
+        if rules.has_blocking_failures() || rules.has_unverifiable_mandatory() {
+            return Err(invalid(format!(
+                "TERMINAL_VALIDATION_RULES_FAILED: {:?}",
+                rules.results
+            )));
+        }
+        budget.remaining()?;
+        write_new(
+            &directory.join(super::validation_history::PROOF_FILE),
+            &serde_json::to_vec_pretty(&completed).map_err(io::Error::other)?,
+        )?;
+        report.completed_evidence = Some(completed);
     }
     let verdict_bytes = serde_json::to_vec_pretty(report).map_err(io::Error::other)?;
     // A receipt describes completed proof; it is never imported as authority.
@@ -1309,8 +1470,11 @@ fn run(
             &directory,
             &verdict_bytes,
             &serde_json::to_vec_pretty(&receipt).map_err(io::Error::other)?,
+            &budget,
             write_new,
         )?;
+    } else if report.ready {
+        write_ready_verdict(&directory, &verdict_bytes, &budget)?;
     } else {
         write_new(&directory.join("verdict.json"), &verdict_bytes)?;
     }

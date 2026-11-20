@@ -17,10 +17,19 @@ pub enum CloudAuthStatus {
     AuthRequired,
     Missing,
     OnboardingPending,
+    /// The service requires account action; its reason is not inferred locally.
+    ActionRequired,
+    /// A one-time request has an uncertain outcome and cannot be replayed.
+    RestartRequired,
     Expired,
     RefreshFailed,
     Unauthorized,
     Revoked,
+    DeviceRevoked,
+    KeyLost,
+    MfaRequired,
+    PaymentPending,
+    EntitlementDenied,
     UnauthorizedIdentity,
     RepositoryDenied,
     Offline,
@@ -34,6 +43,8 @@ pub struct CloudAuthDiagnostic {
     pub status: CloudAuthStatus,
     pub message: String,
     pub next_action: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub authorization_url: Option<String>,
 }
 
 impl CloudAuthDiagnostic {
@@ -47,7 +58,13 @@ impl CloudAuthDiagnostic {
             status,
             message: message.into(),
             next_action: next_action.into(),
+            authorization_url: None,
         }
+    }
+
+    pub fn with_authorization_url(mut self, url: impl Into<String>) -> Self {
+        self.authorization_url = Some(url.into());
+        self
     }
 }
 
@@ -145,11 +162,17 @@ impl fmt::Display for DecapodError {
             Self::ContextPackError(s) => write!(f, "Context pack error: {s}"),
             Self::SessionError(s) => write!(f, "Session error: {s}"),
             Self::CloudTodo(diagnostic) => write!(f, "{diagnostic}"),
-            Self::CloudAuth(diagnostic) => write!(
-                f,
-                "Cloud authentication {:?}: {}; next action: {}",
-                diagnostic.status, diagnostic.message, diagnostic.next_action
-            ),
+            Self::CloudAuth(diagnostic) => {
+                write!(
+                    f,
+                    "Cloud authentication {:?}: {}",
+                    diagnostic.status, diagnostic.message
+                )?;
+                if let Some(url) = &diagnostic.authorization_url {
+                    write!(f, "; sign in: {url}")?;
+                }
+                write!(f, "; next action: {}", diagnostic.next_action)
+            }
         }
     }
 }

@@ -99,7 +99,7 @@ pub(crate) struct WorkspaceCli {
 pub(crate) enum WorkspaceCommand {
     /// Ensure an isolated workspace exists (create if needed)
     Ensure {
-        /// Branch name. Mandatory: MUST contain the claimed Todo ID (e.g. agent/unknown/feat_01ks...) or hash.
+        /// Branch name. Mandatory: MUST contain the claimed Todo ID (e.g. agent/<agent-id>/feat_01ks...) or hash.
         #[clap(long)]
         branch: Option<String>,
         /// Use a container for the workspace
@@ -276,12 +276,17 @@ pub(crate) struct InitGroupCli {
     /// Both providers execute the full required proof suite; omission preserves existing settings.
     #[clap(long, num_args = 0..=1, default_missing_value = "true", action = clap::ArgAction::Set)]
     pub validation_buildkite_preflights: Option<bool>,
-    /// Init storage backend: 'local' (default) or 'cloud' (experimental, account required).
+    /// Storage backend: 'local' (Decapod Local, default) or 'cloud' (Decapod Cloud, account required).
     ///
-    /// Cloud backend records non-secret Decapod Cloud intent in `.decapod/config.toml`.
-    /// It does not perform login, provisioning, or sync during init.
+    /// Decapod Local stores governed state locally in `.decapod/` with no account required.
+    /// Decapod Cloud records non-secret cloud intent in `.decapod/config.toml`;
+    /// init starts or resumes managed sign-in through Dactyl and reports readiness only after service confirmation.
     #[clap(long, value_enum, default_value_t = BackendType::Local)]
     pub backend: BackendType,
+    /// Explicitly restart an interrupted cloud sign-in or refresh without
+    /// replaying a one-time request whose outcome is unknown.
+    #[clap(long)]
+    pub restart_cloud_signin: bool,
     /// Explicitly request local Git repository initialization (the default unless --no-git is set).
     #[clap(long = "git", action = clap::ArgAction::SetTrue)]
     pub git: bool,
@@ -427,6 +432,9 @@ pub(crate) struct InitWithCli {
     /// Preserve human-authored exceptional grants during init refresh.
     #[clap(skip)]
     pub existing_rbac: GovernanceRbac,
+    /// Preserve project-opted database maintenance policy during init refresh.
+    #[clap(skip)]
+    pub existing_db_maintenance: crate::core::db_maintenance::DbMaintenanceConfig,
     /// Preserve reviewed post-proof Laya configuration during init refresh.
     #[clap(skip)]
     pub existing_laya: crate::core::laya_readiness::Configuration,
@@ -438,12 +446,17 @@ pub(crate) struct InitWithCli {
     /// Both providers execute the full required proof suite; omission preserves existing settings.
     #[clap(long, num_args = 0..=1, default_missing_value = "true", action = clap::ArgAction::Set)]
     pub validation_buildkite_preflights: Option<bool>,
-    /// Init storage backend: 'local' (default) or 'cloud' (experimental, account required).
+    /// Storage backend: 'local' (Decapod Local, default) or 'cloud' (Decapod Cloud, account required).
     ///
-    /// Cloud backend records non-secret Decapod Cloud intent in `.decapod/config.toml`.
-    /// It does not perform login, provisioning, or sync during init.
+    /// Decapod Local stores governed state locally in `.decapod/` with no account required.
+    /// Decapod Cloud records non-secret cloud intent in `.decapod/config.toml`;
+    /// init starts or resumes managed sign-in through Dactyl and reports readiness only after service confirmation.
     #[clap(long, value_enum, default_value_t = BackendType::Local)]
     pub backend: BackendType,
+    /// Explicitly restart an interrupted cloud sign-in or refresh without
+    /// replaying a one-time request whose outcome is unknown.
+    #[clap(long)]
+    pub restart_cloud_signin: bool,
     /// Explicitly request local Git repository initialization (the default unless --no-git is set).
     #[clap(long = "git", action = clap::ArgAction::SetTrue)]
     pub git: bool,
@@ -461,6 +474,7 @@ pub enum InitDiagramStyle {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct DecapodProjectConfig {
+    #[serde(deserialize_with = "deserialize_config_schema_version")]
     pub schema_version: String,
     pub init: InitConfigSection,
     pub repo: RepoContext,
@@ -474,11 +488,44 @@ pub struct DecapodProjectConfig {
     pub tracker: TrackerConfig,
     #[serde(default)]
     pub context: DeclaredContextConfig,
+    #[serde(default, skip_serializing_if = "WorkspaceConfigSection::is_default")]
+    pub workspace: WorkspaceConfigSection,
     #[serde(
         default,
         skip_serializing_if = "crate::core::laya_readiness::Configuration::is_default"
     )]
     pub laya: crate::core::laya_readiness::Configuration,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, Default, PartialEq, Eq)]
+#[serde(deny_unknown_fields)]
+pub struct WorkspaceConfigSection {
+    #[serde(
+        default,
+        skip_serializing_if = "crate::core::container_signer::WorkspaceCredentialsConfig::is_default"
+    )]
+    pub credentials: crate::core::container_signer::WorkspaceCredentialsConfig,
+}
+
+impl WorkspaceConfigSection {
+    pub fn is_default(&self) -> bool {
+        self.credentials.is_default()
+    }
+}
+
+const CONFIG_SCHEMA_VERSION: &str = "1.0.0";
+
+fn deserialize_config_schema_version<'de, D>(deserializer: D) -> Result<String, D::Error>
+where
+    D: serde::Deserializer<'de>,
+{
+    let version = String::deserialize(deserializer)?;
+    if version != CONFIG_SCHEMA_VERSION {
+        return Err(serde::de::Error::custom(format!(
+            "unsupported schema_version {version:?}; expected {CONFIG_SCHEMA_VERSION:?}"
+        )));
+    }
+    Ok(version)
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -534,6 +581,12 @@ pub struct GovernanceConfig {
     /// Human-authored, fail-closed role grants for exceptional operations.
     #[serde(default, skip_serializing_if = "GovernanceRbac::is_default")]
     pub rbac: GovernanceRbac,
+    /// Project-opted, capability-scoped local agent database maintenance (#1568).
+    #[serde(
+        default,
+        skip_serializing_if = "crate::core::db_maintenance::DbMaintenanceConfig::is_default"
+    )]
+    pub db_maintenance: crate::core::db_maintenance::DbMaintenanceConfig,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
@@ -546,6 +599,10 @@ pub struct GovernanceRbac {
     /// Role names allowed to accept reviewed task-journal gaps.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub journal_repair_roles: Vec<String>,
+    /// Explicit roles allowed to retire already-canonical legacy TODO input.
+    /// Journal-gap repair and ordinary maintenance do not imply this grant.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub legacy_todo_reconcile_roles: Vec<String>,
     /// Role names allowed to explicitly decline local validation.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub validation_bypass_roles: Vec<String>,
@@ -555,6 +612,7 @@ impl GovernanceRbac {
     pub fn is_default(&self) -> bool {
         self.actor_roles.is_empty()
             && self.journal_repair_roles.is_empty()
+            && self.legacy_todo_reconcile_roles.is_empty()
             && self.validation_bypass_roles.is_empty()
     }
 
@@ -564,6 +622,7 @@ impl GovernanceRbac {
         }
         let required = match permission {
             "todo.journal.repair" => &self.journal_repair_roles,
+            "todo.legacy.reconcile" => &self.legacy_todo_reconcile_roles,
             "validate.bypass" => &self.validation_bypass_roles,
             _ => return false,
         };
@@ -685,20 +744,88 @@ impl From<CloudRuntimeConfigInput> for CloudRuntimeConfig {
     }
 }
 
-/// Binary-owned production origin for the Propodus Vercel/Neon service.
-/// Explicit environment overrides remain available to controlled test and
-/// development harnesses, but project configuration never stores this route.
-pub const PROPODUS_VERCEL_NEON_ENTRYPOINT: &str = "https://project-oqn7i.vercel.app";
+/// Canonical environment variable for the explicit Decapod Cloud service API URL.
+pub const CLOUD_API_URL_ENV: &str = "DECAPOD_CLOUD_API_URL";
+/// Deprecated legacy alias for `DECAPOD_CLOUD_API_URL`.
+pub const LEGACY_PROPODUS_API_URL_ENV: &str = "DECAPOD_PROPODUS_API_URL";
+/// Canonical environment variable for the explicit Decapod Cloud provider override.
+pub const CLOUD_PROVIDER_ENV: &str = "DECAPOD_CLOUD_PROVIDER";
+/// Canonical environment variable for the explicit Decapod Cloud datastore selector.
+pub const CLOUD_DATASTORE_ENV: &str = "DECAPOD_CLOUD_DATASTORE";
+
+#[derive(Debug, Clone, Serialize, PartialEq, Eq)]
+pub struct CloudEnvDeprecationNotice {
+    pub schema_version: &'static str,
+    pub level: &'static str,
+    pub code: &'static str,
+    pub deprecated: String,
+    pub replacement: String,
+    pub message: String,
+}
+
+pub fn resolve_cloud_env_var_with<F>(
+    canonical: &str,
+    legacy: &str,
+    get_var: F,
+) -> (Option<String>, Option<CloudEnvDeprecationNotice>)
+where
+    F: Fn(&str) -> Option<String>,
+{
+    if let Some(value) = get_var(canonical).filter(|v| !v.trim().is_empty()) {
+        return (Some(value), None);
+    }
+    if let Some(value) = get_var(legacy).filter(|v| !v.trim().is_empty()) {
+        return (
+            Some(value),
+            Some(CloudEnvDeprecationNotice {
+                schema_version: "decapod.deprecation.v1",
+                level: "warn",
+                code: "DEPRECATED_ENV_VAR",
+                deprecated: legacy.to_string(),
+                replacement: canonical.to_string(),
+                message: format!("{legacy} is deprecated; use {canonical} instead"),
+            }),
+        );
+    }
+    (None, None)
+}
+
+fn emit_env_deprecation_once(notice: &CloudEnvDeprecationNotice) {
+    static EMITTED: std::sync::Once = std::sync::Once::new();
+    EMITTED.call_once(|| {
+        if let Ok(line) = serde_json::to_string(notice) {
+            eprintln!("{line}");
+        }
+    });
+}
 
 fn default_cloud_provider() -> String {
-    "vercel".to_string()
+    std::env::var(CLOUD_PROVIDER_ENV)
+        .ok()
+        .filter(|value| !value.trim().is_empty())
+        .unwrap_or_else(|| "vercel".to_string())
 }
 
 fn default_cloud_datastore() -> String {
-    std::env::var("DECAPOD_CLOUD_DATASTORE").unwrap_or_else(|_| "supabase".to_string())
+    std::env::var(CLOUD_DATASTORE_ENV).unwrap_or_else(|_| "supabase".to_string())
 }
 
 impl CloudRuntimeConfig {
+    /// Runtime cloud commands select the logical Dactyl connector. The fields
+    /// retained on this type support explicit historical adapter consumers;
+    /// project policy does not select their physical implementation.
+    pub fn logical_cloud() -> Result<Self, crate::core::error::DecapodError> {
+        #[cfg(feature = "supabase-cloud")]
+        let origin = crate::core::cloud_client::selected_origin()?;
+        #[cfg(not(feature = "supabase-cloud"))]
+        let origin = "cloud-capability-unavailable".to_owned();
+        Ok(Self {
+            provider: "dactyl".into(),
+            api_url: origin,
+            datastore: "managed".into(),
+        })
+    }
+
     /// Fail before onboarding or todo I/O when the selected cloud route is invalid.
     pub fn validate_datastore(
         &self,
@@ -706,11 +833,14 @@ impl CloudRuntimeConfig {
         use crate::core::backend::CloudDatastore;
         let datastore = CloudDatastore::parse(&self.datastore)?;
         datastore.validate_available()?;
-        if datastore == CloudDatastore::Supabase
-            && (self.api_url.trim().is_empty() || self.api_url == PROPODUS_VERCEL_NEON_ENTRYPOINT)
-        {
+        if datastore == CloudDatastore::Supabase && self.api_url.trim().is_empty() {
             return Err(crate::core::error::DecapodError::Config(
-                "Supabase cloud requires an explicit authenticated service endpoint via DECAPOD_PROPODUS_API_URL; select DECAPOD_CLOUD_DATASTORE=neon only for the explicit Neon alternative".to_string(),
+                "Decapod Cloud (supabase datastore) requires an explicit authenticated service endpoint via DECAPOD_CLOUD_API_URL; select DECAPOD_CLOUD_DATASTORE=neon only for an explicit Neon endpoint".to_string(),
+            ));
+        }
+        if datastore == CloudDatastore::Neon && self.api_url.trim().is_empty() {
+            return Err(crate::core::error::DecapodError::Config(
+                "Decapod Cloud (neon datastore) requires an explicit service endpoint via DECAPOD_CLOUD_API_URL; the legacy preview default has been retired".to_string(),
             ));
         }
         #[cfg(feature = "supabase-cloud")]
@@ -723,17 +853,15 @@ impl CloudRuntimeConfig {
     }
 }
 
-fn default_cloud_api_url(datastore: &str) -> String {
-    std::env::var("DECAPOD_PROPODUS_API_URL")
-        .ok()
-        .filter(|value| !value.trim().is_empty())
-        .unwrap_or_else(|| {
-            if datastore == "neon" {
-                PROPODUS_VERCEL_NEON_ENTRYPOINT.to_string()
-            } else {
-                String::new()
-            }
-        })
+fn default_cloud_api_url(_datastore: &str) -> String {
+    let (value, notice) =
+        resolve_cloud_env_var_with(CLOUD_API_URL_ENV, LEGACY_PROPODUS_API_URL_ENV, |key| {
+            std::env::var(key).ok()
+        });
+    if let Some(notice) = notice {
+        emit_env_deprecation_once(&notice);
+    }
+    value.unwrap_or_default()
 }
 
 impl Default for CloudRuntimeConfig {
@@ -822,6 +950,14 @@ fn default_container_workspaces_true() -> bool {
 }
 
 impl DecapodProjectConfig {
+    pub(crate) fn parse(content: &str) -> Result<Self, crate::error::DecapodError> {
+        toml::from_str(content).map_err(|error| {
+            crate::error::DecapodError::Config(format!(
+                "INVALID_CONFIG_SCHEMA: Invalid .decapod/config.toml schema: {error}\nAgent recovery: read `decapod docs show config-schema --source embedded` and `decapod data schema --deterministic`; correct the candidate configuration and retry. Schema validity does not grant policy authority."
+            ))
+        })
+    }
+
     pub fn load(repo_root: &std::path::Path) -> Result<Self, crate::error::DecapodError> {
         let config_path = repo_root.join(".decapod").join("config.toml");
         if !config_path.exists() {
@@ -830,10 +966,7 @@ impl DecapodProjectConfig {
             ));
         }
         let content = std::fs::read_to_string(config_path)?;
-        let config: Self = toml::from_str(&content).map_err(|e| {
-            crate::error::DecapodError::Config(format!("Failed to parse config.toml: {e}"))
-        })?;
-        Ok(config)
+        Self::parse(&content)
     }
 }
 
@@ -858,6 +991,7 @@ impl Default for DecapodProjectConfig {
             custody: CustodyConfig::default(),
             tracker: TrackerConfig::default(),
             context: DeclaredContextConfig::default(),
+            workspace: WorkspaceConfigSection::default(),
             laya: crate::core::laya_readiness::Configuration::default(),
         }
     }
@@ -880,10 +1014,40 @@ pub(crate) struct CloudCli {
 
 #[derive(Subcommand, Debug)]
 pub(crate) enum CloudCommand {
-    /// Deprecated compatibility alias; use `decapod init --backend cloud` for human setup.
-    Login,
-    /// Report whether a local or environment credential is available without printing it.
+    /// Agent-owned sign-in: resume the repository's saved browser flow.
+    Login {
+        /// Start a fresh sign-in after an expired, revoked or uncertain exchange.
+        #[clap(long)]
+        restart: bool,
+    },
+    /// Inspect private managed-session state without network I/O or a live readiness claim.
     Status,
+    /// Clear the local repository-scoped cloud session without exposing tokens.
+    Logout,
+    /// Revoke the enrolled device key and clear local cloud credentials for this repository.
+    Revoke {
+        /// Clear saved sessions across all repositories for this device store.
+        #[clap(long)]
+        all: bool,
+        /// Optional device key thumbprint (`jkt`) or device ID to target.
+        #[clap(long)]
+        device_id: Option<String>,
+    },
+    /// List managed projects by name, with numbered choices saved privately.
+    Projects,
+    /// Explicitly select or create the managed project used by this checkout.
+    Project {
+        #[clap(subcommand)]
+        command: CloudProjectCommand,
+    },
+}
+
+#[derive(Subcommand, Debug)]
+pub(crate) enum CloudProjectCommand {
+    /// Select an exact project name or a number from `cloud projects`.
+    Use { choice: String },
+    /// Idempotently create and select a project; this does not purchase access.
+    Create { name: String },
 }
 
 #[derive(Subcommand, Debug)]
@@ -1056,6 +1220,9 @@ pub(crate) enum ArtifactsCommand {
         #[clap(long)]
         reason: String,
     },
+    /// Reconcile a Git-merged `.decapod/governance.json` journal from immutable commit
+    /// ancestry without turning failed or missing proof into a passing result
+    ReconcileMerge,
     /// Read the governance document without modifying repository state
     Status,
     /// Verify checkpoint coverage of every authored commit in a PR
@@ -1393,6 +1560,15 @@ pub(crate) enum TrajectoryCommand {
         #[clap(long)]
         run_id: String,
     },
+    /// Repair fragmented explicit path scope projections in the current governance document
+    ReconcileScope {
+        /// Optional task ID when not uniquely implied by trajectory or plan metadata
+        #[clap(long)]
+        task_id: Option<String>,
+        /// Optional run ID guard matching the active trajectory
+        #[clap(long)]
+        run_id: Option<String>,
+    },
 }
 
 #[derive(clap::ValueEnum, Clone, Debug)]
@@ -1500,6 +1676,13 @@ pub(crate) enum WorkunitCommand {
         #[clap(long, value_enum)]
         to: WorkunitStatusArg,
     },
+    /// Inspect or converge a split workspace-local workunit datastore onto the canonical atomic store
+    Converge {
+        #[clap(long)]
+        task_id: Option<String>,
+        #[clap(long)]
+        dry_run: bool,
+    },
 }
 
 #[derive(clap::Args, Debug)]
@@ -1581,19 +1764,191 @@ pub(crate) struct DatabaseCli {
 
 #[derive(Subcommand, Debug)]
 pub(crate) enum DatabaseCommand {
+    /// Inventory local storage through Dactyl without initialization or maintenance.
+    Inspect {
+        /// Non-secret repository label for independently attributed reports.
+        #[clap(long, default_value = "repository")]
+        scope: String,
+        /// Output format: json or text.
+        #[clap(long, default_value = "json", value_parser = ["json", "text"])]
+        format: String,
+        #[clap(flatten)]
+        options: crate::core::storage_inventory::InventoryOptions,
+    },
+    /// Discover project-opted agent database maintenance capabilities and reason codes.
+    Capabilities {
+        /// Additional capability names to evaluate (for example, unmodeled operations).
+        #[clap(long = "probe")]
+        probes: Vec<String>,
+        /// Optional asserted actor label (must match authenticated DECAPOD_AGENT_ID).
+        #[clap(long)]
+        actor: Option<String>,
+    },
+    /// Governed lock contention diagnostics, bounded retry, and owned-lease release.
+    Lock(DatabaseLockCli),
+    /// Governed agent database maintenance operations bound to canonical project policy.
+    Maintain(DatabaseMaintainCli),
+    /// Read recent redacted append-only database maintenance audit records.
+    Audit {
+        /// Maximum number of recent audit records to return (1..=500).
+        #[clap(long, default_value_t = 50)]
+        limit: usize,
+    },
     /// Run Dactyl's read-only SQLite integrity check without modifying storage.
-    Verify,
-    /// Create a Dactyl online-backup snapshot at an operator-selected path.
+    Verify {
+        /// Force governed agent policy admission even outside Git worktrees.
+        #[clap(long)]
+        governed: bool,
+        /// Optional idempotency/audit correlation identifier.
+        #[clap(long)]
+        operation_id: Option<String>,
+        /// Optional expected canonical `.decapod/config.toml` SHA-256 digest.
+        #[clap(long)]
+        expected_policy_sha256: Option<String>,
+        /// Optional asserted actor label (must match authenticated DECAPOD_AGENT_ID).
+        #[clap(long)]
+        actor: Option<String>,
+    },
+    /// Create a Dactyl online-backup snapshot at an operator- or policy-scoped path.
     Backup {
         /// Destination database path. It must not already exist.
         #[clap(long)]
         destination: PathBuf,
+        /// Force governed agent policy admission even outside Git worktrees.
+        #[clap(long)]
+        governed: bool,
+        /// Optional idempotency/replay-guard identifier for mutating backups.
+        #[clap(long)]
+        operation_id: Option<String>,
+        /// Optional expected canonical `.decapod/config.toml` SHA-256 digest.
+        #[clap(long)]
+        expected_policy_sha256: Option<String>,
+        /// Optional asserted actor label (must match authenticated DECAPOD_AGENT_ID).
+        #[clap(long)]
+        actor: Option<String>,
     },
     /// Explicitly recover via Dactyl's verified logical dump/reload workflow.
     Recover {
         /// Archive path for the original database and any WAL/SHM sidecars.
         #[clap(long = "preserve-original-at")]
         preserve_original_at: PathBuf,
+        /// Force governed agent policy admission even outside Git worktrees.
+        #[clap(long)]
+        governed: bool,
+        /// Optional idempotency/audit correlation identifier.
+        #[clap(long)]
+        operation_id: Option<String>,
+        /// Optional expected canonical `.decapod/config.toml` SHA-256 digest.
+        #[clap(long)]
+        expected_policy_sha256: Option<String>,
+        /// Optional asserted actor label (must match authenticated DECAPOD_AGENT_ID).
+        #[clap(long)]
+        actor: Option<String>,
+    },
+}
+
+#[derive(clap::Args, Debug)]
+pub(crate) struct DatabaseLockCli {
+    #[clap(subcommand)]
+    pub command: DatabaseLockCommand,
+}
+
+#[derive(Subcommand, Debug)]
+pub(crate) enum DatabaseLockCommand {
+    /// Non-destructively diagnose datastore lock contention, owner scope, and sidecars.
+    Diagnose {
+        /// Bounded lock probe timeout in milliseconds (0..=5000).
+        #[clap(long, default_value_t = 0)]
+        timeout_ms: u64,
+        #[clap(long)]
+        operation_id: Option<String>,
+        #[clap(long)]
+        expected_policy_sha256: Option<String>,
+        #[clap(long)]
+        actor: Option<String>,
+    },
+    /// Retry an authorized safe maintenance operation with bounded backoff and deadline.
+    Retry {
+        /// Authorized safe operation to retry (`inspect`, `verify`, or `backup`).
+        #[clap(long, value_enum)]
+        target: crate::core::db_maintenance::RetryTargetCapability,
+        /// Required when `--target backup`; must reside under `.decapod/backups/`.
+        #[clap(long)]
+        destination: Option<PathBuf>,
+        /// Maximum attempts (1..=10).
+        #[clap(long, default_value_t = 4)]
+        max_attempts: u32,
+        /// Initial backoff in milliseconds (1..=1000).
+        #[clap(long, default_value_t = 50)]
+        initial_backoff_ms: u64,
+        /// Total retry deadline in milliseconds (1..=10000).
+        #[clap(long, default_value_t = 2_000)]
+        deadline_ms: u64,
+        #[clap(long)]
+        operation_id: Option<String>,
+        #[clap(long)]
+        expected_policy_sha256: Option<String>,
+        #[clap(long)]
+        actor: Option<String>,
+    },
+    /// Safely relinquish only an explicitly registered idle current-process lease.
+    ReleaseOwn {
+        #[clap(long)]
+        operation_id: Option<String>,
+        #[clap(long)]
+        expected_policy_sha256: Option<String>,
+        #[clap(long)]
+        actor: Option<String>,
+    },
+}
+
+#[derive(clap::Args, Debug)]
+pub(crate) struct DatabaseMaintainCli {
+    #[clap(subcommand)]
+    pub command: DatabaseMaintainCommand,
+}
+
+#[derive(Subcommand, Debug)]
+pub(crate) enum DatabaseMaintainCommand {
+    /// Governed `db.inspect` (Dactyl inventory + non-destructive lock snapshot).
+    Inspect {
+        #[clap(long)]
+        operation_id: Option<String>,
+        #[clap(long)]
+        expected_policy_sha256: Option<String>,
+        #[clap(long)]
+        actor: Option<String>,
+    },
+    /// Governed `db.verify` (read-only Dactyl SQLite integrity probe).
+    Verify {
+        #[clap(long)]
+        operation_id: Option<String>,
+        #[clap(long)]
+        expected_policy_sha256: Option<String>,
+        #[clap(long)]
+        actor: Option<String>,
+    },
+    /// Governed `db.backup` (bounded Dactyl online backup under `.decapod/backups/`).
+    Backup {
+        #[clap(long)]
+        destination: PathBuf,
+        #[clap(long)]
+        operation_id: Option<String>,
+        #[clap(long)]
+        expected_policy_sha256: Option<String>,
+        #[clap(long)]
+        actor: Option<String>,
+    },
+    /// Governed `db.recover` (denied without repository owner repair authority, #1590).
+    Recover {
+        #[clap(long = "preserve-original-at")]
+        preserve_original_at: PathBuf,
+        #[clap(long)]
+        operation_id: Option<String>,
+        #[clap(long)]
+        expected_policy_sha256: Option<String>,
+        #[clap(long)]
+        actor: Option<String>,
     },
 }
 
@@ -1718,6 +2073,15 @@ pub(crate) enum SystemCommand {
     Doctor(doctor::DoctorCli),
     /// Show Decapod capabilities (for agent discovery)
     Capabilities(CapabilitiesCli),
+    /// Inspect migration notices, applied ledger, catalog, and resolved decapod_root (read-only, non-initializing)
+    Migrations(MigrationsCli),
+}
+
+#[derive(clap::Args, Debug)]
+pub(crate) struct MigrationsCli {
+    /// Output format: 'json' or 'text'
+    #[clap(long, default_value = "json", value_parser = ["json", "text"])]
+    pub format: String,
 }
 
 #[derive(clap::Args, Debug)]
@@ -1762,7 +2126,7 @@ pub(crate) enum Command {
     #[clap(name = "session", visible_alias = "s")]
     Session(SessionCli),
 
-    /// Optional cloud credential and Propodus integration commands
+    /// Optional Decapod Cloud credential and project commands
     #[clap(name = "cloud")]
     Cloud(CloudCli),
 
@@ -1834,13 +2198,70 @@ pub(crate) enum Command {
     #[clap(name = "trace")]
     Trace(TraceCli),
 
-    /// System: capabilities, version, doctor
+    /// System: capabilities, version, doctor, migrations
     #[clap(name = "system")]
     System(SystemCli),
 
     /// Context: infer, lcm, internalize, preflight, impact
     #[clap(name = "context")]
     Context(ContextGroupCli),
+
+    /// Preview, reversibly remove, or restore repository integration without deleting project state
+    #[clap(name = "integration")]
+    Integration(IntegrationCli),
+}
+
+#[derive(clap::Args, Debug)]
+pub(crate) struct IntegrationCli {
+    #[clap(subcommand)]
+    pub command: IntegrationCommand,
+}
+
+#[derive(Subcommand, Debug)]
+pub(crate) enum IntegrationCommand {
+    /// Read-only preview of Decapod repository integration ownership, edits, and active blockers.
+    Preview {
+        /// Repository root directory (defaults to current working directory).
+        #[clap(short, long)]
+        dir: Option<PathBuf>,
+        /// Output format: text or json.
+        #[clap(long, default_value = "text")]
+        format: String,
+    },
+    /// Remove positively owned, unchanged Decapod repository integration while preserving project state.
+    #[clap(alias = "uninstall")]
+    Remove {
+        /// Repository root directory (defaults to current working directory).
+        #[clap(short, long)]
+        dir: Option<PathBuf>,
+        /// Explicitly authorize bounded removal of unchanged generated integration.
+        #[clap(long)]
+        authorize: bool,
+        /// Reject mutations and direct caller to `decapod integration preview`.
+        #[clap(long)]
+        dry_run: bool,
+        /// Output format: text or json.
+        #[clap(long, default_value = "text")]
+        format: String,
+        /// Separate authority boundary flag for permanent state deletion (refused).
+        #[clap(long)]
+        purge_state: bool,
+        /// Separate authority boundary flag for protected governance removal (refused).
+        #[clap(long)]
+        remove_protected_governance: bool,
+    },
+    /// Restore previously removed Decapod repository integration from a restoration manifest.
+    Restore {
+        /// Repository root directory (defaults to current working directory).
+        #[clap(short, long)]
+        dir: Option<PathBuf>,
+        /// Optional path to a restoration manifest JSON file.
+        #[clap(long)]
+        manifest: Option<PathBuf>,
+        /// Output format: text or json.
+        #[clap(long, default_value = "text")]
+        format: String,
+    },
 }
 
 #[derive(clap::Args, Debug)]
@@ -1903,6 +2324,10 @@ pub(crate) enum BrokerCommand {
         /// Append an abandonment acknowledgment (default: read-only preview).
         #[clap(long)]
         apply: bool,
+        /// Explicit human-reviewed confirmation required to `--apply` repair when writer
+        /// liveness is `unknown` (e.g. legacy events lacking provenance or cross-host writes).
+        #[clap(long)]
+        acknowledge_unknown_writer: bool,
     },
 }
 
@@ -2149,6 +2574,9 @@ pub(crate) struct InferOrientationCli {
     /// Optional specific task ID
     #[clap(long)]
     pub task_id: Option<String>,
+    /// Optional bounded reflection request JSON (task, submission, operation, paths).
+    #[clap(long)]
+    pub reflection: Option<String>,
     /// Format output: json | text
     #[clap(long, default_value = "json")]
     pub format: String,

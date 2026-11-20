@@ -63,8 +63,39 @@ control Git commands issued directly by an agent or its harness.
 
 GitHub Issues, Jira, Linear, Beads, or another service may remain the organizational system of record. Decapod governs the accepted task at the repository execution layer.
 
+## Accepted repository-local proof
+
+Accepted local proof requirements constrain candidate configuration through
+`repository_profile::preserve_accepted`. A candidate may add required checks;
+it cannot replace accepted invocations or execution/coverage declarations by
+calculating another review digest. An unsupported replacement remains blocked
+until policy is independently accepted on the target. This uses the accepted Git
+state as the existing policy authority and introduces no separate policy store.
+Repository-local readiness makes only its declared local assurance claim; strict
+source-PR readiness retains its accepted hosted execution requirements.
+
 ## Living specifications
 
 Living specifications are authored interpretations, not semantic content generated independently by Decapod. Refresh operations update supported fingerprints, attestations, overlays, manifests, or projections; they do not replace the agent's responsibility to maintain authored prose.
 
 If a living specification is wrong, Decapod has made the misunderstanding visible before publication. That is a successful governance result. Reviewers can correct visible repository state; they cannot review an assumption that existed only inside transient model context.
+
+## Bounded broker request windows
+
+The daemonless Unix group broker shares one absolute request deadline between
+queueing and execution. `DECAPOD_GROUP_BROKER_REQUEST_BUDGET_MS` selects a workload
+budget from 1 through 300000 milliseconds; the default remains 120000. Invalid
+client values and native peer deadlines beyond the hard ceiling are rejected
+before durable mutation admission. The foreground election stops accepting new
+work when its originating request window expires, capped at 300 seconds.
+In-flight commands retain their request deadline and existing command limits.
+
+Deadline exhaustion or a lost acknowledgement preserves an unproven outcome.
+The existing receipt and same-ID retrieval rules continue to prevent re-execution
+of an unknown request. A workload budget grants time; custody, evidence and
+readiness requirements remain independently enforced.
+
+The twenty-client contention fixture explicitly selects 300000 milliseconds to
+match its existing 300-second outer bound. Both storage modes still require all
+twenty mutations to commit exactly once. The steady-state validation probe keeps
+its separate 10-second per-call and 20-second aggregate limits.

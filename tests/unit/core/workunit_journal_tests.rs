@@ -204,6 +204,7 @@ fn legacy_baseline_is_explicit_and_does_not_reanimate_verified_proof() {
             validation_epoch: None,
         }],
         validation_epoch: None,
+        validation_record: None,
         status: WorkUnitStatus::Verified,
     };
     publish_projection(root.path(), &manifest).unwrap();
@@ -300,6 +301,7 @@ fn checkpoint_cannot_rebind_any_unbound_historical_pass_to_current_source() {
                 validation_epoch: None,
             }],
             validation_epoch: None,
+            validation_record: None,
             status,
         };
         fs::write(root.path().join("proof.txt"), "old proof bytes").unwrap();
@@ -441,7 +443,7 @@ fn oversized_manifest_is_rejected_before_read_or_journal_commit() {
     );
 }
 
-fn accepted_execution_fixture() -> tempfile::TempDir {
+pub(crate) fn accepted_execution_fixture() -> tempfile::TempDir {
     use crate::core::trajectory::{self, TrajectoryInit};
     use crate::plan_governance::{self, InitPlanInput, PlanPatch, PlanState, ScopeConstraints};
     let root = fixture();
@@ -505,7 +507,7 @@ fn accepted_execution_fixture() -> tempfile::TempDir {
     crate::core::todo::initialize_todo_db(&store).unwrap();
     let conn = db::db_connect(&crate::core::todo::todo_db_path(&store).to_string_lossy()).unwrap();
     conn.execute("INSERT INTO tasks(id,hash,title,status,created_at,updated_at,dir_path,scope,assigned_to,lease_expires_at,lease_generation,lease_lifecycle,intent_anchor,revision) VALUES(?1,'fixture','Execution','open','1Z','1Z',?2,'repo',?3,?4,1,'claimed','intent:test',1)",
-        db::params!["task_test", root.path().to_string_lossy().as_ref(), crate::current_agent_id(), format!("{}Z", chrono::Utc::now().timestamp()+3600)]).unwrap();
+        db::params!["task_test", root.path().to_string_lossy().as_ref(), crate::current_agent_id(), format!("{}Z", time::OffsetDateTime::now_utc().unix_timestamp()+3600)]).unwrap();
     drop(conn);
     git(&["add", "."]);
     git(&[
@@ -566,7 +568,7 @@ fn checkpoint_and_resume_retries_preserve_unknown_valid_projection() {
 }
 
 #[test]
-fn fresh_bound_proof_is_resumable_but_modified_artifacts_cannot_be_reanimated() {
+fn bound_declared_artifacts_are_resumable_without_granting_verified_status() {
     let root = accepted_execution_fixture();
     set_proof_plan(root.path(), "task_test", &["gate-a".into()]).unwrap();
     checkpoint_workunit(root.path(), "task_test", "checkpoint", Some(2)).unwrap();
@@ -582,7 +584,7 @@ fn fresh_bound_proof_is_resumable_but_modified_artifacts_cannot_be_reanimated() 
     .unwrap();
     transition_status(root.path(), "task_test", WorkUnitStatus::Executing).unwrap();
     transition_status(root.path(), "task_test", WorkUnitStatus::Claimed).unwrap();
-    transition_status(root.path(), "task_test", WorkUnitStatus::Verified).unwrap();
+    assert!(transition_status(root.path(), "task_test", WorkUnitStatus::Verified).is_err());
     assert!(
         workunit_journal_status(root.path(), "task_test")
             .unwrap()
@@ -601,7 +603,7 @@ fn fresh_bound_proof_is_resumable_but_modified_artifacts_cannot_be_reanimated() 
     assert!(resumed.resumable);
     assert_eq!(
         load_workunit(root.path(), "task_test").unwrap().status,
-        WorkUnitStatus::Verified
+        WorkUnitStatus::Claimed
     );
     fs::write(root.path().join(artifact), "altered proof").unwrap();
     assert!(
@@ -611,13 +613,18 @@ fn fresh_bound_proof_is_resumable_but_modified_artifacts_cannot_be_reanimated() 
             .contains("WORKUNIT_PROOF_CHANGED")
     );
     fs::remove_file(workunit_path(root.path(), "task_test").unwrap()).unwrap();
+    let recovered = recover_workunit(root.path(), "task_test").unwrap();
+    assert!(!recovered.resumable);
     assert!(
-        recover_workunit(root.path(), "task_test")
-            .unwrap_err()
-            .to_string()
+        recovered
+            .resume_blocker
+            .as_deref()
+            .unwrap()
             .contains("WORKUNIT_PROOF_CHANGED")
     );
-    assert!(!workunit_path(root.path(), "task_test").unwrap().exists());
+    let manifest = load_workunit(root.path(), "task_test").unwrap();
+    assert_eq!(manifest.status, WorkUnitStatus::Claimed);
+    assert!(validate_verified_manifest(root.path(), &manifest).is_err());
 }
 
 #[test]
@@ -670,7 +677,7 @@ fn resume_fences_changed_authoritative_task_lease() {
 }
 
 #[test]
-fn newly_failed_proof_downgrades_verified_state() {
+fn newly_failed_declaration_stays_claimed_without_authoritative_proof() {
     let root = accepted_execution_fixture();
     set_proof_plan(root.path(), "task_test", &["gate-a".into()]).unwrap();
     checkpoint_workunit(root.path(), "task_test", "checkpoint", Some(2)).unwrap();
@@ -686,7 +693,7 @@ fn newly_failed_proof_downgrades_verified_state() {
     .unwrap();
     transition_status(root.path(), "task_test", WorkUnitStatus::Executing).unwrap();
     transition_status(root.path(), "task_test", WorkUnitStatus::Claimed).unwrap();
-    transition_status(root.path(), "task_test", WorkUnitStatus::Verified).unwrap();
+    assert!(transition_status(root.path(), "task_test", WorkUnitStatus::Verified).is_err());
     let failed = record_proof_result(root.path(), "task_test", "gate-a", "fail", None).unwrap();
     assert_eq!(failed.status, WorkUnitStatus::Claimed);
     assert!(transition_status(root.path(), "task_test", WorkUnitStatus::Verified).is_err());
@@ -795,4 +802,409 @@ fn bare_or_partial_runtime_is_rejected_before_creating_workunit_state() {
             .unwrap()
             .is_empty()
     );
+}
+
+#[test]
+fn terminal_journal_retains_declared_obligations_without_minting_verified_proof() {
+    let root = accepted_execution_fixture();
+    set_proof_plan(root.path(), "task_test", &["source-check".into()]).unwrap();
+    checkpoint_workunit(root.path(), "task_test", "terminal-checkpoint", Some(2)).unwrap();
+    let artifact = ".decapod/data/terminal-proof.txt";
+    fs::write(root.path().join(artifact), "observed source check output").unwrap();
+    record_proof_result(
+        root.path(),
+        "task_test",
+        "source-check",
+        "pass",
+        Some(artifact.into()),
+    )
+    .unwrap();
+    transition_status(root.path(), "task_test", WorkUnitStatus::Executing).unwrap();
+    transition_status(root.path(), "task_test", WorkUnitStatus::Claimed).unwrap();
+    assert!(transition_status(root.path(), "task_test", WorkUnitStatus::Verified).is_err());
+    let observed = crate::core::validation_rules::load_terminal_workunit(root.path(), "task_test")
+        .unwrap()
+        .unwrap();
+    assert_eq!(observed.status, WorkUnitStatus::Claimed);
+    assert!(
+        observed.validation_epoch.is_none(),
+        "an execution checkpoint alone cannot mint a validation epoch"
+    );
+    assert!(observed.proof_results[0].validation_epoch.is_none());
+    // Current execution and file custody can be resumed; the declaration is
+    // still unproven. Changed bytes cannot be resurrected by recovery.
+    fs::write(root.path().join(artifact), "changed output").unwrap();
+    assert!(
+        crate::core::validation_rules::load_terminal_workunit(root.path(), "task_test").is_err()
+    );
+    fs::remove_file(workunit_path(root.path(), "task_test").unwrap()).unwrap();
+    assert!(
+        crate::core::validation_rules::load_terminal_workunit(root.path(), "task_test").is_err()
+    );
+}
+
+#[test]
+fn linked_git_worktree_uses_initialized_main_repo_runtime_and_rejects_uninitialized_parent() {
+    let parent = tempfile::tempdir().unwrap();
+    let run_git = |cwd: &Path, args: &[&str]| {
+        let out = std::process::Command::new("git")
+            .current_dir(cwd)
+            .args(args)
+            .output()
+            .unwrap();
+        assert!(
+            out.status.success(),
+            "git {args:?} failed: {}",
+            String::from_utf8_lossy(&out.stderr)
+        );
+    };
+    run_git(parent.path(), &["init", "-b", "main"]);
+    run_git(parent.path(), &["config", "user.name", "Test"]);
+    run_git(parent.path(), &["config", "user.email", "test@example.com"]);
+    fs::write(parent.path().join("README.md"), "# test\n").unwrap();
+    run_git(parent.path(), &["add", "README.md"]);
+    run_git(parent.path(), &["commit", "-m", "initial"]);
+
+    let worktree = parent.path().join(".decapod/workspaces/wt-test");
+    fs::create_dir_all(worktree.parent().unwrap()).unwrap();
+    run_git(
+        parent.path(),
+        &[
+            "worktree",
+            "add",
+            "-b",
+            "agent/test/task_wt-branch",
+            worktree.to_str().unwrap(),
+            "main",
+        ],
+    );
+    assert!(worktree.join(".git").is_file());
+
+    // Parent runtime not initialized yet -> worktree mutation must fail closed.
+    let err = init_workunit(&worktree, "task_wt", "intent:wt").unwrap_err();
+    assert!(err.to_string().contains("WORKUNIT_RUNTIME_UNINITIALIZED"));
+    assert!(!worktree.join(".decapod/data/decapod.db").exists());
+
+    // Initialize parent runtime -> worktree mutation must use parent policy/journal DB
+    // while keeping projection under the worktree's ignored .decapod/data/workunits/.
+    crate::core::todo::initialize_todo_db(&parent.path().join(".decapod/data")).unwrap();
+    let initialized = init_workunit(&worktree, "task_wt", "intent:wt").unwrap();
+    assert_eq!(initialized.task_id, "task_wt");
+    set_proof_plan(&worktree, "task_wt", &["docs-proof".to_string()]).unwrap();
+    let status = workunit_journal_status(&worktree, "task_wt").unwrap();
+    assert_eq!(status.generation, Some(2));
+    assert_eq!(status.projection_state, "current");
+    assert!(workunit_path(&worktree, "task_wt").unwrap().is_file());
+    assert!(
+        !worktree.join(".decapod/data/decapod.db").exists(),
+        "linked worktree must not create an events-only local decapod.db"
+    );
+}
+
+#[test]
+#[cfg(any(target_os = "linux", target_os = "macos"))]
+fn verified_append_and_idempotent_replay_fence_changed_task_custody_in_transaction() {
+    let (_temp, root, task) =
+        crate::core::validation_history::workunit_observation_tests::verified_fixture();
+    let before = journal_records(&root, task).unwrap();
+    let previous = before.last().unwrap().clone();
+    let data = root.join(".decapod/data");
+    crate::core::todo::with_task_journal(
+        &crate::core::broker::DbBroker::new(&data),
+        &crate::core::todo::todo_db_path(&data),
+        &crate::current_agent_id(), Some(task), "test.transfer_custody",
+        crate::core::todo::TaskJournalSelection::Ids(vec![task.into()]),
+        |conn| {
+            conn.execute("UPDATE tasks SET lease_generation=lease_generation+1, revision=revision+1 WHERE id=?1", db::params![task])?;
+            Ok(())
+        },
+    ).unwrap();
+    for replay in [false, true] {
+        let error = append_snapshot(
+            &root,
+            &previous.manifest,
+            if replay {
+                &previous.operation_id
+            } else {
+                "after-custody-change"
+            },
+            &previous.kind,
+            if replay {
+                previous.generation - 1
+            } else {
+                previous.generation
+            },
+            previous.binding.clone(),
+            previous.proof_hashes.clone(),
+        )
+        .unwrap_err();
+        assert!(
+            error.to_string().contains("VALIDATION_HISTORY_TASK_STALE"),
+            "{error}"
+        );
+        assert_eq!(journal_records(&root, task).unwrap().len(), before.len());
+    }
+    assert!(validate_verified_manifest(&root, &previous.manifest).is_err());
+}
+
+#[test]
+#[cfg(any(target_os = "linux", target_os = "macos"))]
+fn separately_initialized_workspace_cannot_replay_main_store_verified_authority() {
+    let (temp, root, task) =
+        crate::core::validation_history::workunit_observation_tests::verified_fixture();
+    let previous = journal_records(&root, task).unwrap().pop().unwrap();
+    let workspace = temp.path().join("split-workspace");
+    let output = std::process::Command::new("git")
+        .current_dir(&root)
+        .args(["worktree", "add", "-b", "split-workunit-authority"])
+        .arg(&workspace)
+        .arg("HEAD")
+        .output()
+        .unwrap();
+    assert!(
+        output.status.success(),
+        "{}",
+        String::from_utf8_lossy(&output.stderr)
+    );
+    crate::core::todo::initialize_todo_db(&workspace.join(".decapod/data")).unwrap();
+    // Compatibility import preserves this claimed history; it grants no current
+    // custody or producer authority in the independently initialized runtime.
+    write_workunit(&workspace, &previous.manifest).unwrap();
+    assert!(!workunit_journal_status(&workspace, task).unwrap().resumable);
+    let local = journal_records(&workspace, task).unwrap().pop().unwrap();
+    let error = append_snapshot(
+        &workspace,
+        &previous.manifest,
+        "cross-store-verified",
+        "mutation",
+        local.generation,
+        previous.binding,
+        previous.proof_hashes,
+    )
+    .unwrap_err();
+    assert!(
+        error
+            .to_string()
+            .contains("WORKUNIT_PROOF_ATOMIC_DOMAIN_UNSUPPORTED"),
+        "{error}"
+    );
+    assert_eq!(journal_records(&workspace, task).unwrap().len(), 1);
+    assert!(validate_verified_manifest(&workspace, &previous.manifest).is_err());
+    assert!(error.to_string().contains("claim a fresh task"), "{error}");
+    assert!(error.to_string().contains("does not migrate"), "{error}");
+    let custody =
+        crate::core::todo::capture_validation_binding(&root.join(".decapod/data"), task).unwrap();
+    let subject = WorkUnitValidationSubject {
+        contract_digest: validation_contract_digest(&local.manifest).unwrap(),
+        manifest_digest: local.manifest_hash,
+        generation: local.generation,
+    };
+    let error = invalidate_current_validation(&workspace, &custody, &subject).unwrap_err();
+    assert!(
+        error
+            .to_string()
+            .contains("WORKUNIT_PROOF_ATOMIC_DOMAIN_UNSUPPORTED"),
+        "{error}"
+    );
+    assert_eq!(journal_records(&workspace, task).unwrap().len(), 1);
+}
+
+#[test]
+#[cfg(any(target_os = "linux", target_os = "macos"))]
+fn prepared_snapshot_cannot_retain_verified_authority_across_a_downgrade() {
+    let (_temp, root, task) =
+        crate::core::validation_history::workunit_observation_tests::verified_fixture();
+    let before = workunit_journal_status(&root, task).unwrap();
+    let original = load_workunit(&root, task).unwrap();
+    assert!(original.validation_record.is_some());
+    let mut prepared = original.clone();
+    prepared.status = WorkUnitStatus::Claimed;
+    let error = write_workunit_checked(
+        &root,
+        &prepared,
+        "retain-proof-across-downgrade",
+        before
+            .generation
+            .expect("verified fixture journal generation"),
+    )
+    .expect_err("a prepared status edit must use the owned downgrade operation");
+    assert!(
+        error
+            .to_string()
+            .contains("WORKUNIT_DOMAIN_TRANSITION_REQUIRED"),
+        "{error}"
+    );
+    assert_eq!(workunit_journal_status(&root, task).unwrap(), before);
+    assert_eq!(load_workunit(&root, task).unwrap(), original);
+}
+
+#[test]
+#[cfg(any(target_os = "linux", target_os = "macos"))]
+fn validation_withdrawal_fences_journal_generation_and_task_custody() {
+    let (_temp, root, task) =
+        crate::core::validation_history::workunit_observation_tests::verified_fixture();
+    let data = root.join(".decapod/data");
+    let custody = crate::core::todo::capture_validation_binding(&data, task).unwrap();
+    let original = capture_validation_subject(&root, task).unwrap().unwrap();
+    checkpoint_workunit(&root, task, "advance-before-validator-finishes", None).unwrap();
+    let count = journal_records(&root, task).unwrap().len();
+    let error = invalidate_current_validation(&root, &custody, &original).unwrap_err();
+    assert!(
+        error.to_string().contains("WORKUNIT_GENERATION_CONFLICT"),
+        "{error}"
+    );
+    assert_eq!(journal_records(&root, task).unwrap().len(), count);
+    let current = capture_validation_subject(&root, task).unwrap().unwrap();
+    crate::core::todo::with_task_journal(
+        &crate::core::broker::DbBroker::new(&data),
+        &crate::core::todo::todo_db_path(&data),
+        &crate::current_agent_id(), Some(task), "test.renew-before-validation-withdrawal",
+        crate::core::todo::TaskJournalSelection::Ids(vec![task.into()]),
+        |conn| {
+            conn.execute("UPDATE tasks SET lease_generation=lease_generation+1, revision=revision+1 WHERE id=?1", db::params![task])?;
+            Ok(())
+        },
+    ).unwrap();
+    let error = invalidate_current_validation(&root, &custody, &current).unwrap_err();
+    assert!(
+        error.to_string().contains("VALIDATION_HISTORY_TASK_STALE"),
+        "{error}"
+    );
+    assert_eq!(journal_records(&root, task).unwrap().len(), count);
+    assert_eq!(
+        load_workunit(&root, task).unwrap().status,
+        WorkUnitStatus::Verified
+    );
+}
+
+#[test]
+#[cfg(any(target_os = "linux", target_os = "macos"))]
+fn split_store_inspection_and_explicit_convergence_retain_not_proven_audit_history() {
+    let (temp, root, task) =
+        crate::core::validation_history::workunit_observation_tests::verified_fixture();
+    let previous = journal_records(&root, task).unwrap().pop().unwrap();
+    let workspace = temp.path().join("split-converge-workspace");
+    let output = std::process::Command::new("git")
+        .current_dir(&root)
+        .args(["worktree", "add", "-b", "split-converge-branch"])
+        .arg(&workspace)
+        .arg("HEAD")
+        .output()
+        .unwrap();
+    assert!(
+        output.status.success(),
+        "{}",
+        String::from_utf8_lossy(&output.stderr)
+    );
+    crate::core::todo::initialize_todo_db(&workspace.join(".decapod/data")).unwrap();
+
+    // Local split-store record with self-declared sha256:abc and another locally-claimed VERIFIED projection.
+    let split_task = "bugs_split_local";
+    let mut local_declared = WorkUnitManifest {
+        task_id: split_task.into(),
+        intent_ref: "intent:split-local".into(),
+        spec_refs: vec![".decapod/managed/specs/INTENT.md".into()],
+        state_refs: vec![],
+        proof_plan: vec!["validate_passes".into()],
+        proof_results: vec![WorkUnitProofResult {
+            gate: "validate_passes".into(),
+            status: "pass".into(),
+            artifact_ref: Some("sha256:abc".into()),
+            evaluator_epoch: None,
+            validation_epoch: None,
+        }],
+        validation_epoch: None,
+        validation_record: None,
+        status: WorkUnitStatus::Verified,
+    };
+    write_workunit(&workspace, &local_declared).unwrap();
+    local_declared.status = WorkUnitStatus::Claimed;
+
+    // Also preserve main-store manifest written into split workspace.
+    write_workunit(&workspace, &previous.manifest).unwrap();
+
+    let status = workunit_journal_status(&workspace, split_task).unwrap();
+    assert!(status.split_store);
+    assert!(!status.atomic_domain_supported);
+    assert!(!status.resumable);
+    assert_eq!(status.proof_status, "not_proven");
+    assert!(
+        status
+            .resume_blocker
+            .as_deref()
+            .is_some_and(|b| b.contains("WORKUNIT_PROOF_ATOMIC_DOMAIN_UNSUPPORTED")),
+        "{status:?}"
+    );
+    assert_eq!(status.audit_records.len(), 1);
+    assert_eq!(status.audit_records[0].proof_status, "not_proven");
+    assert_eq!(
+        status.audit_records[0].classification,
+        "WORKUNIT_PROOF_ATOMIC_DOMAIN_UNSUPPORTED"
+    );
+
+    let verify_err = validate_verified_manifest(&workspace, &previous.manifest).unwrap_err();
+    assert!(
+        verify_err
+            .to_string()
+            .contains("WORKUNIT_PROOF_ATOMIC_DOMAIN_UNSUPPORTED"),
+        "{verify_err}"
+    );
+    let transition_err =
+        transition_status(&workspace, split_task, WorkUnitStatus::Verified).unwrap_err();
+    assert!(
+        transition_err
+            .to_string()
+            .contains("WORKUNIT_PROOF_ATOMIC_DOMAIN_UNSUPPORTED"),
+        "{transition_err}"
+    );
+
+    let dry = converge_split_workunit_store(&workspace, None, true).unwrap();
+    assert!(dry.dry_run);
+    assert!(dry.split_store);
+    assert!(!dry.atomic_domain_supported);
+    assert_eq!(dry.proof_status, "not_proven");
+    assert_eq!(dry.audit_records.len(), 2);
+    assert!(workspace.join(".decapod/data/decapod.db").exists());
+
+    let converged = converge_split_workunit_store(&workspace, None, false).unwrap();
+    assert!(!converged.dry_run);
+    assert!(!converged.split_store);
+    assert!(converged.atomic_domain_supported);
+    assert_eq!(converged.proof_status, "not_proven");
+    assert_eq!(converged.audit_records.len(), 2);
+    assert!(
+        converged
+            .archive_dir
+            .as_ref()
+            .unwrap()
+            .join("audit.json")
+            .is_file()
+    );
+    assert!(!workspace.join(".decapod/data/decapod.db").exists());
+
+    // Unattested split_task must not be imported into canonical store or remain as active VERIFIED projection.
+    assert!(load_workunit(&workspace, split_task).is_err());
+    assert!(journal_records(&root, split_task).unwrap().is_empty());
+
+    // Archived historical split-store record remains inspectable as not_proven audit history.
+    let after = workunit_journal_status(&workspace, split_task).unwrap();
+    assert!(!after.split_store);
+    assert!(after.atomic_domain_supported);
+    assert!(!after.resumable);
+    assert_eq!(after.proof_status, "not_proven");
+    assert_eq!(after.projection_state, "split_audit_archived");
+    assert_eq!(after.audit_records.len(), 1);
+    assert_eq!(after.audit_records[0].proof_status, "not_proven");
+
+    // Workspace converged to the canonical store without cross-domain proof inheritance;
+    // canonical task on main store remains valid and proven in its bound workspace.
+    let ws_main = workunit_journal_status(&workspace, task).unwrap();
+    assert!(!ws_main.split_store);
+    assert!(ws_main.atomic_domain_supported);
+    let main_after = workunit_journal_status(&root, task).unwrap();
+    assert!(!main_after.split_store);
+    assert!(main_after.atomic_domain_supported);
+    assert_eq!(main_after.proof_status, "proven");
+    assert!(main_after.resumable);
+    validate_verified_manifest(&root, &previous.manifest).unwrap();
 }

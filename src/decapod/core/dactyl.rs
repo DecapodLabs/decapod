@@ -317,7 +317,7 @@ impl DactylBridge {
         context.validate()?;
         match context.route() {
             BackendRoute::Local { path } => Self::open_local(path, access_mode),
-            BackendRoute::Cloud { uri, .. } => {
+            BackendRoute::Cloud { uri, repository } => {
                 let bearer = context.bearer().ok_or_else(|| {
                     DecapodError::CloudAuth(CloudAuthDiagnostic::new(
                         CloudAuthStatus::Missing,
@@ -326,6 +326,32 @@ impl DactylBridge {
                     ))
                 })?;
                 let route = match context.cloud_datastore() {
+                    CloudDatastore::Managed => {
+                        #[cfg(feature = "supabase-cloud")]
+                        {
+                            // Resolve the physical connector inside Dactyl.
+                            // Discovery is public and never receives this bearer.
+                            let mut connector = dactyl_db::CloudConnector::discover(uri)
+                                .map_err(crate::core::cloud_client::transport_error)?;
+                            if let Ok(cwd) = std::env::current_dir()
+                                && let Some(signer) =
+                                    crate::core::cloud_dpop::active_request_proof_signer(
+                                        connector.origin(),
+                                        &repository.canonical_name,
+                                        &cwd,
+                                    )
+                            {
+                                connector = connector.with_proof_signer(signer);
+                            }
+                            connector.route(Some(bearer.to_owned()))
+                        }
+                        #[cfg(not(feature = "supabase-cloud"))]
+                        {
+                            return Err(DecapodError::Config(
+                                "Cloud requires the supabase-cloud capability; no local fallback is permitted".into(),
+                            ));
+                        }
+                    }
                     CloudDatastore::Neon => {
                         dactyl_db::DatastoreRoute::neon(uri, Some(bearer.to_string()))
                     }
@@ -356,6 +382,16 @@ impl DactylBridge {
 
     pub fn read(&self, sql: &str, params: &[Parameter]) -> Result<Rows, DecapodError> {
         Ok(self.connection.read(sql, params)?)
+    }
+
+    pub fn inspect_snapshot(
+        &self,
+        limits: ::dactyl_db::SnapshotLimits,
+        inspect: &mut dyn FnMut(
+            &mut dyn ::dactyl_db::SnapshotReader,
+        ) -> Result<(), ::dactyl_db::DactylError>,
+    ) -> Result<(), DecapodError> {
+        Ok(self.connection.inspect_snapshot(limits, inspect)?)
     }
 
     pub fn write(&self, sql: &str, params: &[Parameter]) -> Result<WriteResult, DecapodError> {

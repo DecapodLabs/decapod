@@ -182,6 +182,7 @@ fn expired_budget_starts_no_request() {
         deadline: Instant::now(),
         cancel: &cancel,
         max_bytes: 1024,
+        github_quota: Default::default(),
     };
     let mut reader = Reader::default();
     assert_eq!(

@@ -156,16 +156,13 @@ fn db_and_broker_round_trip_and_audit() {
     assert!(result.is_err());
 
     let audit_conn = db::db_connect(&db_path.to_string_lossy()).expect("connect audit db");
-    let mut audit_stmt = audit_conn
-        .prepare("SELECT payload FROM events WHERE stream = 'broker' ORDER BY seq")
-        .expect("prepare audit query");
-    let events: Vec<BrokerEvent> = audit_stmt
-        .query_map([], |row| row.get::<_, String>(0))
-        .expect("read audit rows")
-        .map(|row| {
-            serde_json::from_str(&row.expect("audit payload")).expect("valid broker event json")
-        })
-        .collect();
+    let events: Vec<BrokerEvent> =
+        decapod::core::events::query_all_on_conn(&audit_conn, decapod::core::events::BROKER)
+            .expect("read audit rows")
+            .into_iter()
+            .rev()
+            .map(|ev| serde_json::from_value(ev.payload).expect("valid broker event json"))
+            .collect();
     assert!(events.iter().any(|ev| ev.status == "success"));
     assert!(events.iter().any(|ev| ev.status == "error"));
     assert!(events.iter().all(|ev| ev.schema_version == "1.1.0"

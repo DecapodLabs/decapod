@@ -52,7 +52,7 @@ fn interop_manifest_vector_declares_profile_and_unsupported_transports() {
         .find(|c| c["id"] == "rpc:agent.init")
         .expect("rpc:agent.init entry");
     assert_eq!(rpc_entry["implementation_status"], "implemented");
-    assert_eq!(rpc_entry["evidence"]["state"], "verified");
+    assert_eq!(rpc_entry["evidence"]["state"], "not_run");
     assert_eq!(
         rpc_entry["evidence"]["conformance_test"],
         "interop_conformance::discovery_and_negotiation"

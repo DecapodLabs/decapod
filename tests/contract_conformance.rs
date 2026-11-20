@@ -1,3 +1,4 @@
+use decapod::core::assets;
 use std::fs;
 use std::path::Path;
 
@@ -30,6 +31,75 @@ fn load_contract_map() -> ContractMap {
     let path = Path::new(".decapod/contracts/README_CONTRACTS.json");
     let content = fs::read_to_string(path).expect("Failed to read contract map");
     serde_json::from_str(&content).expect("Failed to parse contract map JSON")
+}
+
+#[test]
+fn agent_document_indexes_match_the_canonical_table_and_embedded_corpus() {
+    fn document_links<'a>(text: &'a str, prefix: &str) -> std::collections::BTreeSet<&'a str> {
+        let mut targets = std::collections::BTreeSet::new();
+        for link in text.split("](").skip(1) {
+            let (target, _) = link.split_once(')').expect("closed Markdown link");
+            if !target.ends_with(".md") {
+                continue;
+            }
+            let filename = target
+                .strip_prefix(prefix)
+                .unwrap_or_else(|| panic!("agent document link has the wrong prefix: {target}"));
+            assert!(
+                !filename.contains(['/', '\\']),
+                "agent document link must name a file in docs/agent: {target}"
+            );
+            assert!(
+                targets.insert(filename),
+                "duplicate agent document: {target}"
+            );
+        }
+        assert!(
+            !targets.is_empty(),
+            "agent document index must not be empty"
+        );
+        targets
+    }
+
+    let index = include_str!("../docs/agent/api-index.md");
+    let index_section = index
+        .split_once("\n## Documentation Index\n")
+        .expect("canonical Documentation Index")
+        .1
+        .split("\n## ")
+        .next()
+        .unwrap();
+    let table = index_section
+        .lines()
+        .filter(|line| line.starts_with('|'))
+        .collect::<Vec<_>>()
+        .join("\n");
+    let canonical = document_links(&table, "");
+
+    let readme = include_str!("../docs/agent/README.md");
+    assert_eq!(
+        document_links(readme, ""),
+        canonical,
+        "README must match the canonical agent document list"
+    );
+
+    let llms = include_str!("../docs/agent/llms.txt");
+    let (agent_index, _) = llms
+        .split_once("\n# Decapod Human Book\n")
+        .expect("human book must retain its separate index");
+    assert_eq!(
+        document_links(agent_index, "docs/agent/"),
+        canonical,
+        "llms.txt agent section must match the canonical agent document list"
+    );
+
+    for filename in canonical {
+        let path = format!("docs/agent/{filename}");
+        assert!(
+            assets::get_embedded_doc(&path).is_some(),
+            "indexed agent document must be embedded: {path}"
+        );
+    }
 }
 
 #[test]

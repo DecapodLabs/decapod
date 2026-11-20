@@ -66,7 +66,7 @@ fn accept(listener: &TcpListener) -> TcpStream {
     }
 }
 fn task() -> Task {
-    let now = chrono::Utc::now();
+    let now = time::OffsetDateTime::now_utc();
     Task {
         id: "todo_wire_resume".into(),
         repo_id: "example/repo".into(),
@@ -253,7 +253,8 @@ fn production_auth_failure_json_and_operation_inspection_do_not_mutate_protected
             .env("DECAPOD_HEADLESS", "1")
             .env("DECAPOD_AGENT_ID", "retry-proof")
             .env("DECAPOD_CLOUD_DATASTORE", "neon")
-            .env("DECAPOD_PROPODUS_API_URL", "http://127.0.0.1:1")
+            .env("DECAPOD_CLOUD_TEST_ORIGIN", "http://127.0.0.1:1")
+            .env("DECAPOD_TEST_MODE", "1")
             .env_remove("DECAPOD_ACCESS_TOKEN")
             .env_remove("DECAPOD_CLOUD_AUTH_MODE")
             .output()

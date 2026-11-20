@@ -137,6 +137,7 @@ fn container_help_schema_and_docs_stay_in_sync() {
         "--pr-base",
         "--pr-title",
         "--pr-body",
+        "--cgroup-parent",
         "--keep-worktree",
         "--inherit-env",
         "--local-only",
@@ -160,6 +161,8 @@ fn container_help_schema_and_docs_stay_in_sync() {
         "\"pr_base\"",
         "\"pr_title\"",
         "\"pr_body\"",
+        "\"cgroup_parent\"",
+        "\"cgroup_parent_env\"",
         "\"keep_worktree\"",
         "\"inherit_env\"",
         "\"local_only\"",
@@ -191,11 +194,394 @@ fn contract_fixture_is_private_at_creation() {
 // and initialization regressions in that required suite rather than relying
 // on Cargo's discovery of otherwise unscheduled standalone test targets.
 mod consumer_readiness;
+
+// Register this acceptance control at the selected CLI target boundary. Changes
+// confined to a shared consumer module are not selected by the accepted recipe.
+#[cfg(any(target_os = "linux", target_os = "macos"))]
+#[test]
+fn accepted_local_check_script_cannot_be_replaced_by_candidate_repinning() {
+    consumer_readiness::candidate_cannot_repin_a_rewritten_accepted_check_script();
+}
+
 mod init_ci_scaffolding;
 mod init_config_behavior;
 
+// The required CLI target must execute these real-terminal setup regressions.
+#[cfg(unix)]
+mod terminal_onboarding {
+    use std::fs::{self, File};
+    use std::io::{self, Read, Write};
+    use std::os::fd::{AsRawFd, FromRawFd};
+    use std::os::unix::process::CommandExt;
+    use std::path::{Path, PathBuf};
+    use std::process::{Child, Command, ExitStatus, Stdio};
+    use std::time::{Duration, Instant};
+
+    fn binary() -> PathBuf {
+        let cargo = PathBuf::from(env!("CARGO_BIN_EXE_decapod"));
+        if let Ok(path) = cargo.canonicalize() {
+            return path;
+        }
+        if let Ok(runfiles) = std::env::var("RUNFILES_DIR") {
+            let path = Path::new(&runfiles).join("_main/decapod");
+            if path.exists() {
+                return path;
+            }
+        }
+        std::env::current_exe()
+            .unwrap()
+            .parent()
+            .unwrap()
+            .join("decapod")
+    }
+
+    fn terminal_pair() -> (File, File) {
+        let (mut master, mut slave) = (-1, -1);
+        let mut size = libc::winsize {
+            ws_row: 30,
+            ws_col: 80,
+            ws_xpixel: 0,
+            ws_ypixel: 0,
+        };
+        assert_eq!(
+            unsafe {
+                libc::openpty(
+                    &mut master,
+                    &mut slave,
+                    std::ptr::null_mut(),
+                    std::ptr::null_mut(),
+                    std::ptr::addr_of_mut!(size),
+                )
+            },
+            0
+        );
+        let master = unsafe { File::from_raw_fd(master) };
+        let slave = unsafe { File::from_raw_fd(slave) };
+        (master, slave)
+    }
+
+    struct SetupTerminal {
+        child: Child,
+        master: File,
+        slave: File,
+        original_flags: libc::tcflag_t,
+        output: String,
+        _home: tempfile::TempDir,
+    }
+
+    impl SetupTerminal {
+        fn start(directory: &Path, args: &[&str]) -> Self {
+            Self::start_with_env(directory, args, &[])
+        }
+
+        fn start_with_env(directory: &Path, args: &[&str], environment: &[(&str, &str)]) -> Self {
+            let (master, slave) = terminal_pair();
+            let mut termios = unsafe { std::mem::zeroed() };
+            assert_eq!(
+                unsafe { libc::tcgetattr(slave.as_raw_fd(), &mut termios) },
+                0
+            );
+            let flags = unsafe { libc::fcntl(master.as_raw_fd(), libc::F_GETFL) };
+            assert_ne!(
+                unsafe { libc::fcntl(master.as_raw_fd(), libc::F_SETFL, flags | libc::O_NONBLOCK) },
+                -1
+            );
+            let home = tempfile::tempdir().unwrap();
+            let mut command = Command::new(binary());
+            command
+                .args(args)
+                .current_dir(directory)
+                .env_clear()
+                .env("PATH", std::env::var_os("PATH").unwrap_or_default())
+                .env("HOME", home.path())
+                .env("TERM", "xterm-256color")
+                .env("NO_COLOR", "1")
+                .envs(environment.iter().copied())
+                .stdin(Stdio::from(slave.try_clone().unwrap()))
+                .stdout(Stdio::from(slave.try_clone().unwrap()))
+                .stderr(Stdio::from(slave.try_clone().unwrap()));
+            unsafe {
+                command.pre_exec(|| {
+                    if libc::setsid() < 0 {
+                        return Err(io::Error::last_os_error());
+                    }
+                    if libc::ioctl(0, libc::TIOCSCTTY as _, 0) < 0 {
+                        return Err(io::Error::last_os_error());
+                    }
+                    Ok(())
+                });
+            }
+            Self {
+                child: command.spawn().unwrap(),
+                master,
+                slave,
+                original_flags: termios.c_lflag,
+                output: String::new(),
+                _home: home,
+            }
+        }
+
+        fn pump(&mut self) {
+            let mut bytes = [0; 16384];
+            loop {
+                match self.master.read(&mut bytes) {
+                    Ok(0) => break,
+                    Ok(count) => self
+                        .output
+                        .push_str(&String::from_utf8_lossy(&bytes[..count])),
+                    Err(error)
+                        if error.kind() == io::ErrorKind::WouldBlock
+                            || error.raw_os_error() == Some(libc::EIO) =>
+                    {
+                        break;
+                    }
+                    Err(error) => panic!("PTY read: {error}"),
+                }
+            }
+        }
+
+        fn expect(&mut self, text: &str) {
+            let start = self.output.len();
+            let deadline = Instant::now() + Duration::from_secs(30);
+            loop {
+                self.pump();
+                if self.output[start..].contains(text) {
+                    return;
+                }
+                assert!(
+                    self.child.try_wait().unwrap().is_none(),
+                    "setup exited waiting for {text:?}: {}",
+                    self.output
+                );
+                assert!(
+                    Instant::now() < deadline,
+                    "setup stalled waiting for {text:?}: {}",
+                    self.output
+                );
+                std::thread::sleep(Duration::from_millis(15));
+            }
+        }
+
+        fn send(&mut self, input: &str) {
+            self.master.write_all(input.as_bytes()).unwrap();
+        }
+
+        fn finish(&mut self) -> ExitStatus {
+            let deadline = Instant::now() + Duration::from_secs(30);
+            loop {
+                self.pump();
+                if let Some(status) = self.child.try_wait().unwrap() {
+                    self.pump();
+                    let mut termios = unsafe { std::mem::zeroed() };
+                    assert_eq!(
+                        unsafe { libc::tcgetattr(self.slave.as_raw_fd(), &mut termios) },
+                        0
+                    );
+                    assert_eq!(
+                        termios.c_lflag & (libc::ICANON | libc::ECHO),
+                        self.original_flags & (libc::ICANON | libc::ECHO),
+                        "terminal mode leaked"
+                    );
+                    return status;
+                }
+                assert!(
+                    Instant::now() < deadline,
+                    "setup failed to terminate: {}",
+                    self.output
+                );
+                std::thread::sleep(Duration::from_millis(15));
+            }
+        }
+
+        fn recommended(&mut self) {
+            self.expect("What are you building?");
+            self.send("A quiet place to plan good work.\n");
+            self.expect("How would you like to set up?");
+            self.send("\r");
+            self.expect("Ready when you are");
+        }
+    }
+
+    impl Drop for SetupTerminal {
+        fn drop(&mut self) {
+            let _ = self.child.kill();
+            let _ = self.child.wait();
+        }
+    }
+
+    #[test]
+    fn recommended_setup_has_three_decisions_and_an_agent_handoff() {
+        let project = tempfile::tempdir().unwrap();
+        let mut terminal = SetupTerminal::start(project.path(), &["init", "--dir", "."]);
+        terminal.recommended();
+        assert!(!terminal.output.contains("Define the user-visible outcome"));
+        assert!(
+            !terminal
+                .output
+                .contains("Architecture is not established by repository shape")
+        );
+        assert!(
+            !project.path().join(".git").exists(),
+            "Git changed before review"
+        );
+        assert!(
+            !project.path().join(".decapod").exists(),
+            "governance changed before review"
+        );
+        terminal.send("\r");
+        assert!(terminal.finish().success(), "{}", terminal.output);
+        assert!(
+            terminal
+                .output
+                .contains("Your project is ready for your agent.")
+        );
+        assert!(
+            terminal.output.contains("Required validation has not run")
+                || terminal.output.contains("does not run validation")
+        );
+        assert!(
+            !terminal.output.contains("\x1b[1;36m"),
+            "NO_COLOR was ignored"
+        );
+        assert!(!terminal.output.contains("DEBUG:"));
+        let config = fs::read_to_string(project.path().join(".decapod/config.toml")).unwrap();
+        assert!(config.contains("A quiet place to plan good work."));
+        assert!(config.contains("backend = \"local\""));
+        assert!(project.path().join("AGENTS.md").exists());
+    }
+
+    #[test]
+    fn edit_then_cancel_leaves_a_new_project_uncreated() {
+        let root = tempfile::tempdir().unwrap();
+        let mut terminal = SetupTerminal::start(root.path(), &["init"]);
+        terminal.expect("Where would you like to begin?");
+        terminal.send("Create a project\r");
+        terminal.expect("Project directory");
+        terminal.send("new-project\n");
+        terminal.recommended();
+        terminal.send("Edit choices\r");
+        terminal.expect("Make it yours");
+        terminal.send("Workspace\r");
+        terminal.expect("Where should agent work run?");
+        terminal.send("Git worktrees\r");
+        terminal.expect("Make it yours");
+        terminal.send("\r");
+        terminal.expect("Ready when you are");
+        terminal.send("Cancel\r");
+        assert!(terminal.finish().success(), "{}", terminal.output);
+        assert!(!root.path().join("new-project").exists());
+        assert!(!root.path().join(".git").exists());
+        assert!(terminal.output.contains("No setup changes were applied."));
+    }
+
+    #[test]
+    fn cloud_review_can_cancel_without_creating_state_or_contacting_the_service() {
+        let project = tempfile::tempdir().unwrap();
+        let service = std::net::TcpListener::bind("127.0.0.1:0").unwrap();
+        service.set_nonblocking(true).unwrap();
+        let origin = format!("http://{}", service.local_addr().unwrap());
+        let mut terminal = SetupTerminal::start_with_env(
+            project.path(),
+            &["init", "--dir", ".", "--backend", "cloud"],
+            &[
+                ("DECAPOD_TEST_MODE", "1"),
+                ("DECAPOD_CLOUD_TEST_ORIGIN", &origin),
+            ],
+        );
+        terminal.recommended();
+        assert!(
+            terminal
+                .output
+                .contains("service confirms repository access")
+        );
+        assert!(!terminal.output.contains("Cloud seats"));
+        assert!(!terminal.output.contains("USD"));
+        terminal.send("Cancel\r");
+        assert!(terminal.finish().success(), "{}", terminal.output);
+        assert!(!project.path().join(".git").exists());
+        assert!(!project.path().join(".decapod").exists());
+        assert!(
+            matches!(service.accept(), Err(error) if error.kind() == io::ErrorKind::WouldBlock)
+        );
+    }
+
+    #[test]
+    fn lone_escape_cancels_without_hanging_or_leaking_raw_mode() {
+        let project = tempfile::tempdir().unwrap();
+        let mut terminal = SetupTerminal::start(project.path(), &["init", "--dir", "."]);
+        terminal.expect("What are you building?");
+        terminal.send("\n");
+        terminal.expect("How would you like to set up?");
+        terminal.send("\x1b");
+        assert!(!terminal.finish().success());
+        assert!(terminal.output.contains("Setup cancelled"));
+        assert!(!project.path().join(".decapod").exists());
+        assert!(!project.path().join(".git").exists());
+    }
+
+    #[test]
+    fn preview_creates_neither_git_nor_governance_state() {
+        let project = tempfile::tempdir().unwrap();
+        let mut terminal =
+            SetupTerminal::start(project.path(), &["init", "--dir", ".", "--dry-run"]);
+        terminal.recommended();
+        terminal.send("\r");
+        assert!(terminal.finish().success(), "{}", terminal.output);
+        assert!(terminal.output.contains("Preview complete."));
+        assert_eq!(
+            fs::read_dir(project.path()).unwrap().count(),
+            0,
+            "preview wrote project state"
+        );
+    }
+
+    #[test]
+    fn redirected_output_never_waits_for_terminal_setup_input() {
+        let project = tempfile::tempdir().unwrap();
+        let home = tempfile::tempdir().unwrap();
+        let (_master, slave) = terminal_pair();
+        let mut child = Command::new(binary())
+            .args(["init", "--dir", ".", "--dry-run"])
+            .current_dir(project.path())
+            .env_clear()
+            .env("PATH", std::env::var_os("PATH").unwrap_or_default())
+            .env("HOME", home.path())
+            .env("TERM", "xterm-256color")
+            .stdin(Stdio::from(slave))
+            .stdout(Stdio::piped())
+            .stderr(Stdio::piped())
+            .spawn()
+            .unwrap();
+        let deadline = Instant::now() + Duration::from_secs(30);
+        while child.try_wait().unwrap().is_none() {
+            if Instant::now() >= deadline {
+                let _ = child.kill();
+                let output = child.wait_with_output().unwrap();
+                panic!(
+                    "redirected output opened an interactive prompt: {}",
+                    String::from_utf8_lossy(&output.stdout)
+                );
+            }
+            std::thread::sleep(Duration::from_millis(15));
+        }
+        let output = child.wait_with_output().unwrap();
+        assert!(
+            output.status.success(),
+            "{}",
+            String::from_utf8_lossy(&output.stderr)
+        );
+        let stdout = String::from_utf8_lossy(&output.stdout);
+        assert!(!stdout.contains("What are you building?"));
+        assert!(!stdout.contains("How would you like to set up?"));
+        assert_eq!(fs::read_dir(project.path()).unwrap().count(), 0);
+    }
+}
+
 #[path = "support/justfile_inventory.rs"]
 mod justfile_inventory;
+
+#[path = "support/storage_inventory.rs"]
+mod storage_inventory;
 
 // Keep every recovery case in the required selective CLI matrix while balancing
 // the two real-process suites within their unchanged 300-second budgets.
@@ -458,9 +844,44 @@ mod claim_boundaries {
             .optional()
             .unwrap();
         assert_eq!(trust.as_deref().unwrap_or("basic"), "basic");
-        let raw: String = db.query_row("SELECT payload FROM events WHERE stream='todo' AND subject_id=?1 AND event_type='policy.basic_shared_claim.used' ORDER BY seq DESC LIMIT 1",
-            [&task], |row| row.get(0)).unwrap();
-        let event: Value = serde_json::from_str(&raw).unwrap();
+        let (event_id, ts, actor, subject_kind, subject_id, raw): (
+            String,
+            String,
+            String,
+            Option<String>,
+            Option<String>,
+            String,
+        ) = db
+            .query_row(
+                "SELECT event_id, ts, actor, subject_kind, subject_id, payload
+                 FROM events
+                 WHERE stream='todo' AND subject_id=?1 AND event_type='policy.basic_shared_claim.used'
+                 ORDER BY seq DESC LIMIT 1",
+                [&task],
+                |row| {
+                    Ok((
+                        row.get(0)?,
+                        row.get(1)?,
+                        row.get(2)?,
+                        row.get(3)?,
+                        row.get(4)?,
+                        row.get(5)?,
+                    ))
+                },
+            )
+            .unwrap();
+        assert!(raw.contains("\"_ce_v1\""));
+        let event = decapod::core::events::reconstruct_stored_payload(
+            "todo",
+            &event_id,
+            &ts,
+            "policy.basic_shared_claim.used",
+            &actor,
+            subject_kind.as_deref(),
+            subject_id.as_deref(),
+            &raw,
+        )
+        .unwrap();
         assert_eq!(event["actor"], "member");
         assert_eq!(event["payload"]["primary_owner_label"], "primary");
         assert_eq!(
@@ -488,3 +909,8 @@ mod claim_boundaries {
         assert_eq!(get(root, root, &task)["item"]["assigned_to"], "primary");
     }
 }
+
+// The required CLI target must execute the real governed maintenance cases.
+// The standalone target remains available for focused reproduction.
+#[path = "sqlite_maintenance.rs"]
+mod sqlite_maintenance;

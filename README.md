@@ -1,4 +1,6 @@
-<p align="center">🦀</p>
+<p align="center">
+  <img src="assets/showcase/mascot.svg" alt="Decapod kawaii crab mascot" width="136" />
+</p>
 
 <h1 align="center">Decapod</h1>
 
@@ -20,6 +22,14 @@
   <a href="https://decapodlabs.github.io/accountable-agentic-execution/"><img alt="Research" src="https://img.shields.io/badge/Research-Accountable%20Agentic%20Execution-blueviolet"></a>
 </p>
 
+<p align="center">
+  <a href="assets/showcase/generated/decapod-showcase.mp4"><img src="assets/showcase/generated/decapod-showcase.gif" alt="Decapod governance kernel: persistent state, enforced boundaries, and commit-bound proof." width="760"></a>
+</p>
+
+<p align="center">
+  <a href="https://decapodlabs.github.io/">Decapod Labs</a> · <a href="https://decapodlabs.github.io/decapod/">Documentation</a>
+</p>
+
 Decapod gives coding agents a persistent way to check their work against the project's intent. Requirements, decisions, task ownership, and validation evidence stay with the repository across agents and sessions.
 
 An agent plans and implements a change. Decapod keeps track of what that change must satisfy and the evidence required to call it complete. Failed checks and unmet requirements remain visible for the next iteration or handoff.
@@ -35,6 +45,17 @@ cargo binstall decapod && decapod init
 ```
 
 Open your preferred coding agent and describe the change you want. Decapod supplies the project guidance and workflow the agent uses to plan, implement, and validate it.
+
+You run `decapod init` once per repository. Your agent handles Decapod after
+that. For cloud projects, it shares the browser sign-in link when needed,
+resumes the connection, and renews the privately stored session across later
+invocations. You keep chatting with your agent as usual.
+
+Your agent carries the request through Decapod: it records intent and scope,
+claims the task, works in the governed workspace, runs Decapod validation,
+repairs failed checks, and returns an inspectable proof artifact. The artifact
+identifies the source and required checks that actually ran. You describe the
+engineering outcome; the agent operates these steps through Decapod.
 
 ## What Decapod governs
 
@@ -94,13 +115,15 @@ State lives with the project:
 
 Validation runs locally by default, with optional remote Buildkite preflight. The configured checks and recorded evidence define what Decapod can recognize as verified completion.
 
-[Governed execution architecture](docs/architecture/governed-execution.md) · [Configuration reference](docs/book/src/reference/config-toml.md)
+[Governed execution architecture](docs/architecture/governed-execution.md) · [BYOA & interoperability](docs/book/src/concepts/interoperability.md) · [Multi-agent concurrency](docs/book/src/workflows/multi-agent.md) · [Configuration reference](docs/book/src/reference/config-toml.md)
 
-## The Constitution
+Both `backend = "local"` (`.decapod/data/decapod.db`) and `backend = "cloud"` (shared live task custody through Dactyl, subject to verified repository access) remain repo-native: specs, plans, claims, worktrees, and Git proof live with the repository.
 
-Decapod includes engineering guidance for architecture, security, testing, and other development decisions. Agents consult it during planning and implementation.
+## The Constitution (Reference Layer)
 
-`.decapod/OVERRIDE.md` adds project-specific instructions. The repository carries the shared rules and local requirements together, giving each agent the same starting point.
+Decapod includes a global, embedded engineering Constitution (architecture, security, testing, research, and software-business golden paths) that agents consult inside the governed loop—not as a per-project instruction blob, and not as a substitute for validation proof. It is community-contributable through pull requests.
+
+`.decapod/OVERRIDE.md` adds project-specific instructions. The repository carries the shared rules and local requirements together, giving every agent the same starting point.
 
 Conflicts that require a decision remain visible so they can be resolved explicitly and preserved for subsequent work.
 

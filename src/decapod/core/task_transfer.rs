@@ -58,6 +58,16 @@ impl HistoricalEvent {
     }
 }
 
+#[derive(Clone, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(deny_unknown_fields)]
+struct TransferredComponent {
+    kind: String,
+    codec_version: u32,
+    byte_len: u64,
+    content_sha256: String,
+    utf8_value: String,
+}
+
 #[derive(Clone, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 struct Bundle {
@@ -74,6 +84,8 @@ struct Bundle {
     sealed_revision: i64,
     projection: TaskProjection,
     history: Vec<HistoricalEvent>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    components: Vec<TransferredComponent>,
 }
 
 fn fail(message: &str) -> DecapodError {
@@ -208,7 +220,43 @@ fn validate(bundle: &Bundle) -> Result<(), DecapodError> {
             }
         }
     }
-    let journal = journal_from_records(checkpoints)?;
+    let mut component_map: BTreeMap<ComponentRef, String> = BTreeMap::new();
+    let mut prev_ref: Option<ComponentRef> = None;
+    for comp in &bundle.components {
+        if !matches!(comp.codec_version, 0 | 1)
+            || comp.utf8_value.len() as u64 != comp.byte_len
+            || sha256_hex(comp.utf8_value.as_bytes()) != comp.content_sha256
+        {
+            return Err(fail(
+                "transferred component codec, byte length or digest mismatch",
+            ));
+        }
+        let cref = ComponentRef {
+            kind: comp.kind.clone(),
+            codec_version: comp.codec_version,
+            byte_len: comp.byte_len,
+            content_sha256: comp.content_sha256.clone(),
+        };
+        if prev_ref.as_ref().is_some_and(|prev| prev >= &cref) {
+            return Err(fail(
+                "transferred components must be canonically sorted and unique",
+            ));
+        }
+        prev_ref = Some(cref.clone());
+        component_map.insert(cref, comp.utf8_value.clone());
+    }
+    let mut used_refs: BTreeSet<ComponentRef> = BTreeSet::new();
+    let journal = journal_from_records_with_resolver(checkpoints, |cref| {
+        let val = component_map
+            .get(cref)
+            .cloned()
+            .ok_or_else(|| fail("missing externalized component in transfer bundle"))?;
+        used_refs.insert(cref.clone());
+        Ok(val)
+    })?;
+    if used_refs.len() != component_map.len() {
+        return Err(fail("transfer bundle carries unreferenced components"));
+    }
     let head = journal
         .heads
         .get(id)
@@ -267,20 +315,39 @@ fn export_bundle(root: &Path, id: &str, to: &str, actor: &str) -> Result<Bundle,
                 .ok_or_else(|| fail("source task does not exist"))?
                 .clone();
             standalone(&projection)?;
-            let incoming = capture(conn)?.values().any(|p| {
-                p.task.id != id
-                    && (p.task.parent_task_id.as_deref() == Some(id)
-                        || p.dependencies.iter().any(|d| d.depends_on_task_id == id)
-                        || [p.task.depends_on.as_deref(), p.task.blocks.as_deref()]
-                            .into_iter()
-                            .flatten()
-                            .any(|s| {
-                                super::super::parse_dependency_ids(s)
-                                    .iter()
-                                    .any(|d| d == id)
-                            }))
-            });
-            if incoming {
+            let has_direct_incoming: bool = conn.query_row(
+                "SELECT EXISTS(SELECT 1 FROM tasks WHERE id != ?1 AND parent_task_id = ?1)
+                     OR EXISTS(SELECT 1 FROM task_dependencies WHERE task_id != ?1 AND depends_on_task_id = ?1)",
+                params![id],
+                |r| r.get(0),
+            )?;
+            let mut has_csv_incoming = false;
+            if !has_direct_incoming {
+                let mut stmt = conn.prepare(
+                    "SELECT depends_on, blocks FROM tasks
+                     WHERE id != ?1
+                       AND ((depends_on IS NOT NULL AND instr(depends_on, ?1) > 0)
+                            OR (blocks IS NOT NULL AND instr(blocks, ?1) > 0))",
+                )?;
+                let mut rows = stmt.query(params![id])?;
+                while let Some(row) = rows.next()? {
+                    let depends_on: Option<String> = row.get(0)?;
+                    let blocks: Option<String> = row.get(1)?;
+                    if [depends_on.as_deref(), blocks.as_deref()]
+                        .into_iter()
+                        .flatten()
+                        .any(|s| {
+                            super::super::parse_dependency_ids(s)
+                                .iter()
+                                .any(|d| d == id)
+                        })
+                    {
+                        has_csv_incoming = true;
+                        break;
+                    }
+                }
+            }
+            if has_direct_incoming || has_csv_incoming {
                 return Err(fail(
                     "task has incoming relationships; transfer closure is unsupported",
                 ));
@@ -294,11 +361,40 @@ fn export_bundle(root: &Path, id: &str, to: &str, actor: &str) -> Result<Bundle,
             if head.projection != projection {
                 return Err(fail("source projection differs from journal"));
             }
-            let history =
+            let history: Vec<HistoricalEvent> =
                 events::query_subject_on_conn(conn, events::TODO, "task", id, MAX_HISTORY)?
                     .into_iter()
                     .map(HistoricalEvent::from)
                     .collect();
+            let mut component_map: BTreeMap<ComponentRef, String> = BTreeMap::new();
+            for event in &history {
+                if event.event_type == EVENT_TYPE {
+                    let checkpoint: Checkpoint = serde_json::from_value(
+                        event
+                            .payload
+                            .get("payload")
+                            .cloned()
+                            .ok_or_else(|| fail("missing checkpoint payload"))?,
+                    )
+                    .map_err(|_| fail("invalid source checkpoint payload"))?;
+                    for cref in checkpoint.component_refs.values() {
+                        if !component_map.contains_key(cref) {
+                            let utf8_value = load_component_text_on_conn(conn, cref)?;
+                            component_map.insert(cref.clone(), utf8_value);
+                        }
+                    }
+                }
+            }
+            let components: Vec<TransferredComponent> = component_map
+                .into_iter()
+                .map(|(cref, utf8_value)| TransferredComponent {
+                    kind: cref.kind,
+                    codec_version: cref.codec_version,
+                    byte_len: cref.byte_len,
+                    content_sha256: cref.content_sha256,
+                    utf8_value,
+                })
+                .collect();
             let bundle = Bundle {
                 schema: SCHEMA.into(),
                 transfer_id: crate::core::ulid::new_ulid(),
@@ -317,6 +413,7 @@ fn export_bundle(root: &Path, id: &str, to: &str, actor: &str) -> Result<Bundle,
                     .ok_or_else(|| fail("revision overflow"))?,
                 projection,
                 history,
+                components,
             };
             validate(&bundle)?;
             let bytes = encode(&bundle)?;
@@ -432,6 +529,22 @@ fn import_bundle(root: &Path, bundle: &Bundle, actor: &str) -> Result<Value, Dec
                 v.updated_at = local.task.updated_at.clone();
             }
             validate_projection(&local)?;
+            for comp in &bundle.components {
+                let cref = ComponentRef {
+                    kind: comp.kind.clone(),
+                    codec_version: comp.codec_version,
+                    byte_len: comp.byte_len,
+                    content_sha256: comp.content_sha256.clone(),
+                };
+                persist_component_utf8_on_conn(
+                    conn,
+                    &cref,
+                    &comp.utf8_value,
+                    "task_transfer_import",
+                    &bundle.transfer_id,
+                    &local.task.updated_at,
+                )?;
+            }
             write_task(conn, &local.task)?;
             write_children(conn, &local)?;
             events::append_on_conn(

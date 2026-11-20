@@ -436,12 +436,23 @@ pub struct RuleEvaluationContext {
     pub policy_fingerprint: String,
     /// Repository whose governed files the evaluators must read.
     pub repo_root: Option<std::path::PathBuf>,
-    /// Include publication-phase rules. Validation omits them.
+    /// Include terminal publication rules, after required proof execution.
     pub include_publication: bool,
     /// Governing identity evidence must be bound to, when freshness is required.
     pub governing_identity: Option<String>,
     /// Evidence name to the state identity it was bound to.
     pub evidence_identity: BTreeMap<String, String>,
+    /// Opaque current-invocation proof. Caller-supplied hashes cannot construct it.
+    pub terminal_evidence: Option<TerminalEvidence>,
+}
+
+/// Full proof is issued only by the live runtime, after complete-suite verification.
+/// Private fields prevent evidence names, marker strings or persisted receipts from
+/// impersonating an executed current invocation.
+#[derive(Debug, Clone)]
+pub struct TerminalEvidence {
+    proof: crate::core::validation_history::CompletedReadinessEvidence,
+    workunit: Option<crate::core::workunit::WorkUnitManifest>,
 }
 
 /// Rule registry for managing validation rules.
@@ -651,11 +662,11 @@ impl RuleRegistry {
                 ],
                 ..Default::default()
             },
-            evaluation_phase: EvaluationPhase::Validation,
+            evaluation_phase: EvaluationPhase::Publication,
             evaluator: "decapod.evidence.validator".to_string(),
             requirements: RuleRequirements {
                 required_evidence: vec![
-                    "validation_receipt".to_string(),
+                    "validation_proof".to_string(),
                     "trajectory_artifact".to_string(),
                 ],
                 required_evaluators: vec!["evidence_validator".to_string()],
@@ -680,7 +691,7 @@ impl RuleRegistry {
                 autonomous_remediation_permitted: true,
                 human_authorization_required: false,
                 evidence_for_revalidation: vec![
-                    "validation_receipt".to_string(),
+                    "validation_proof".to_string(),
                     "trajectory_artifact".to_string(),
                 ],
                 related_rules: vec![RuleId::new("decapod.evidence.proof_backed_completion")],
@@ -701,17 +712,8 @@ impl RuleRegistry {
             description: "Task completion requires passing proof-plan gates with valid evidence"
                 .to_string(),
             authority: RuleAuthority::KernelInvariant,
-            applicability: RuleApplicability {
-                task_types: vec![
-                    "feature".to_string(),
-                    "bugfix".to_string(),
-                    "refactor".to_string(),
-                    "docs".to_string(),
-                    "test".to_string(),
-                ],
-                ..Default::default()
-            },
-            evaluation_phase: EvaluationPhase::Validation,
+            applicability: RuleApplicability::default(),
+            evaluation_phase: EvaluationPhase::Publication,
             evaluator: "decapod.workunit".to_string(),
             requirements: RuleRequirements {
                 required_evidence: vec![
@@ -856,7 +858,7 @@ impl RuleRegistry {
             evaluator: "decapod.publication".to_string(),
             requirements: RuleRequirements {
                 required_evidence: vec![
-                    "validation_receipt".to_string(),
+                    "validation_proof".to_string(),
                     "candidate_head".to_string(),
                 ],
                 ..Default::default()
@@ -876,7 +878,7 @@ impl RuleRegistry {
                 ],
                 autonomous_remediation_permitted: true,
                 human_authorization_required: false,
-                evidence_for_revalidation: vec!["validation_receipt".to_string()],
+                evidence_for_revalidation: vec!["validation_proof".to_string()],
                 related_rules: vec![RuleId::new("decapod.evidence.proof_backed_completion")],
             },
             override_eligibility: OverrideEligibility::NonOverridable,
@@ -897,17 +899,35 @@ impl RuleRegistry {
 
     /// Load project-specific rules from OVERRIDE.md.
     pub fn load_project_rules(&mut self, repo_root: &Path) -> Result<(), error::DecapodError> {
-        let override_path = repo_root.join(".decapod").join("OVERRIDE.md");
-        if !override_path.exists() {
-            return Ok(());
-        }
-
         let override_content =
-            std::fs::read_to_string(&override_path).map_err(error::DecapodError::IoError)?;
+            match crate::core::db_maintenance::resolve_repository_override(repo_root) {
+                Ok(Some(content)) => content,
+                Ok(None) => return Ok(()),
+                Err(("CANONICAL_GIT_BOUNDARY_REQUIRED", _)) => {
+                    let override_path = repo_root.join(".decapod").join("OVERRIDE.md");
+                    if !override_path.exists() {
+                        return Ok(());
+                    }
+                    std::fs::read_to_string(&override_path).map_err(error::DecapodError::IoError)?
+                }
+                Err((code, msg)) => {
+                    return Err(error::DecapodError::ValidationError(format!(
+                        "{code}: {msg}"
+                    )));
+                }
+            };
 
+        self.load_project_rules_from_content(&override_content)
+    }
+
+    /// Parse and register project rule overrides from raw OVERRIDE.md content.
+    pub fn load_project_rules_from_content(
+        &mut self,
+        override_content: &str,
+    ) -> Result<(), error::DecapodError> {
         // Parse validation-rules section from OVERRIDE.md
-        if let Some(rules_section) = self.extract_validation_rules_section(&override_content) {
-            self.parse_project_rules(&rules_section, &override_content)?;
+        if let Some(rules_section) = self.extract_validation_rules_section(override_content) {
+            self.parse_project_rules(&rules_section, override_content)?;
         }
 
         Ok(())
@@ -1018,13 +1038,18 @@ impl RuleRegistry {
                         full_id
                     )));
                 }
-                OverrideEligibility::TightenOnly => {
-                    // Only allow increasing severity
+                OverrideEligibility::TightenOnly | OverrideEligibility::ConfigurableOnly => {
+                    if severity < base_rule.severity {
+                        return Err(error::DecapodError::ValidationError(format!(
+                            "OVERRIDE_NOT_PERMITTED: Rule '{}' severity cannot be lowered below {:?}",
+                            full_id, base_rule.severity
+                        )));
+                    }
                     if severity > base_rule.severity {
                         base_rule.severity = severity;
                     }
                 }
-                _ => {
+                OverrideEligibility::FullyOverridable => {
                     base_rule.severity = severity;
                 }
             }
@@ -1034,9 +1059,12 @@ impl RuleRegistry {
         if let Some(applicability) = override_values.applicability {
             match base_rule.override_eligibility {
                 OverrideEligibility::NonOverridable => {
-                    // Non-overridable rules cannot have applicability changed
+                    return Err(error::DecapodError::ValidationError(format!(
+                        "OVERRIDE_NOT_PERMITTED: Rule '{}' applicability cannot be overridden (kernel invariant)",
+                        full_id
+                    )));
                 }
-                OverrideEligibility::TightenOnly => {
+                OverrideEligibility::TightenOnly | OverrideEligibility::ConfigurableOnly => {
                     // Only allow adding constraints
                     base_rule
                         .applicability
@@ -1050,7 +1078,7 @@ impl RuleRegistry {
                         base_rule.applicability.task_types = applicability.task_types;
                     }
                 }
-                _ => {
+                OverrideEligibility::FullyOverridable => {
                     base_rule.applicability = applicability;
                 }
             }
@@ -1059,24 +1087,26 @@ impl RuleRegistry {
         // Apply requirements override if present
         if let Some(requirements) = override_values.requirements {
             match base_rule.override_eligibility {
-                OverrideEligibility::NonOverridable => {}
-                OverrideEligibility::TightenOnly => {
-                    base_rule
-                        .requirements
-                        .required_evidence
-                        .extend(requirements.required_evidence);
-                    base_rule
-                        .requirements
-                        .required_evaluators
-                        .extend(requirements.required_evaluators);
-                    if requirements.evidence_max_age_seconds
-                        > base_rule.requirements.evidence_max_age_seconds
-                    {
-                        base_rule.requirements.evidence_max_age_seconds =
-                            requirements.evidence_max_age_seconds;
-                    }
+                OverrideEligibility::NonOverridable => {
+                    return Err(error::DecapodError::ValidationError(format!(
+                        "OVERRIDE_NOT_PERMITTED: Rule '{}' requirements cannot be overridden (kernel invariant)",
+                        full_id
+                    )));
                 }
-                _ => {
+                OverrideEligibility::TightenOnly | OverrideEligibility::ConfigurableOnly => {
+                    if requirements.evidence_max_age_seconds > 0
+                        && base_rule.requirements.evidence_max_age_seconds > 0
+                        && requirements.evidence_max_age_seconds
+                            > base_rule.requirements.evidence_max_age_seconds
+                    {
+                        return Err(error::DecapodError::ValidationError(format!(
+                            "OVERRIDE_NOT_PERMITTED: Rule '{}' cannot relax evidence_max_age_seconds beyond {}",
+                            full_id, base_rule.requirements.evidence_max_age_seconds
+                        )));
+                    }
+                    extend_requirements(&mut base_rule.requirements, &requirements);
+                }
+                OverrideEligibility::FullyOverridable => {
                     base_rule.requirements = requirements;
                 }
             }
@@ -1085,15 +1115,20 @@ impl RuleRegistry {
         // Apply remediation override if present
         if let Some(remediation) = override_values.remediation {
             match base_rule.override_eligibility {
-                OverrideEligibility::NonOverridable => {}
-                OverrideEligibility::TightenOnly => {
+                OverrideEligibility::NonOverridable => {
+                    return Err(error::DecapodError::ValidationError(format!(
+                        "OVERRIDE_NOT_PERMITTED: Rule '{}' remediation cannot be overridden (kernel invariant)",
+                        full_id
+                    )));
+                }
+                OverrideEligibility::TightenOnly | OverrideEligibility::ConfigurableOnly => {
                     // Only allow tightening remediation (more specific steps)
                     base_rule
                         .remediation
                         .required_steps
                         .extend(remediation.required_steps);
                 }
-                _ => {
+                OverrideEligibility::FullyOverridable => {
                     base_rule.remediation = remediation;
                 }
             };
@@ -1292,12 +1327,16 @@ impl RuleRegistry {
                         });
                     }
                     OverrideEligibility::ConfigurableOnly => {
-                        existing.effective_severity = project_rule.severity.clone();
-                        existing.rule.severity = project_rule.severity.clone();
-                        existing.rule.requirements = project_rule.requirements.clone();
+                        if project_rule.severity > existing.rule.severity {
+                            existing.effective_severity = project_rule.severity.clone();
+                        }
+                        extend_requirements(
+                            &mut existing.rule.requirements,
+                            &project_rule.requirements,
+                        );
                         existing.override_values = Some(RuleOverrideValues {
-                            severity: Some(project_rule.severity.clone()),
-                            requirements: Some(project_rule.requirements.clone()),
+                            severity: Some(existing.effective_severity.clone()),
+                            requirements: Some(existing.rule.requirements.clone()),
                             ..Default::default()
                         });
                     }
@@ -1379,6 +1418,17 @@ impl RuleRegistry {
                 {
                     return false;
                 }
+                // Ordinary tasks need full validation, but do not implicitly
+                // declare the separate optional workunit completion protocol.
+                if r.rule.id.as_str() == "decapod.evidence.proof_backed_completion"
+                    && r.rule.authority == RuleAuthority::KernelInvariant
+                    && context
+                        .terminal_evidence
+                        .as_ref()
+                        .is_some_and(|proof| proof.workunit.is_none())
+                {
+                    return false;
+                }
                 r.rule.is_applicable(
                     &context.changed_paths,
                     context.task_type.as_deref(),
@@ -1413,7 +1463,10 @@ fn extend_requirements(target: &mut RuleRequirements, extra: &RuleRequirements) 
         .extend(extra.required_evaluators.clone());
     target.required_evaluators.sort();
     target.required_evaluators.dedup();
-    if extra.evidence_max_age_seconds > target.evidence_max_age_seconds {
+    if extra.evidence_max_age_seconds > 0
+        && (target.evidence_max_age_seconds == 0
+            || extra.evidence_max_age_seconds < target.evidence_max_age_seconds)
+    {
         target.evidence_max_age_seconds = extra.evidence_max_age_seconds;
     }
 }
@@ -1548,7 +1601,12 @@ fn evaluate_scope_rule(rule: &ResolvedRule, context: &RuleEvaluationContext) -> 
     }
 }
 
-/// Evaluate gatekeeper rule using actual gatekeeper.
+/// Evaluate gatekeeper rule using path, diff-ceiling, and governed-plan protected-path checks.
+///
+/// Full-file secret and dangerous-pattern scanning runs on staged files in
+/// `validate_gatekeeper_gate`; `decapod.scope.protected_paths` specifically
+/// enforces protected/blocked/forbidden path boundaries and diff size over the
+/// branch's `changed_paths` without failing on pre-existing patterns in touched files.
 fn evaluate_gatekeeper_rule(_rule: &ResolvedRule, context: &RuleEvaluationContext) -> RuleVerdict {
     // Check if we have the required evidence for gatekeeper
     if !context.evidence_artifacts.contains_key("config.toml") {
@@ -1573,19 +1631,58 @@ fn evaluate_gatekeeper_rule(_rule: &ResolvedRule, context: &RuleEvaluationContex
         Err(_) => return RuleVerdict::Unverifiable,
     }
 
-    let paths: Vec<std::path::PathBuf> = context
-        .changed_paths
-        .iter()
-        .map(std::path::PathBuf::from)
-        .collect();
-
     // Calculate diff size using git diff
     let diff_bytes = calculate_diff_size(repo_root).unwrap_or(0);
+    evaluate_gatekeeper_paths_and_diff(repo_root, &context.changed_paths, diff_bytes)
+}
 
-    let config = crate::core::gatekeeper::GatekeeperConfig::from_repo_config(repo_root);
+fn evaluate_gatekeeper_paths_and_diff(
+    repo_root: &std::path::Path,
+    changed_paths: &BTreeSet<String>,
+    diff_bytes: u64,
+) -> RuleVerdict {
+    match crate::plan_governance::load_plan(repo_root) {
+        Ok(Some(plan)) if !plan.constraints.forbidden_paths.is_empty() => {
+            let constraints = crate::plan_governance::ScopeConstraints {
+                forbidden_paths: plan.constraints.forbidden_paths,
+                file_touch_budget: None,
+            };
+            if crate::plan_governance::enforce_scope_paths(&constraints, changed_paths).is_err() {
+                return RuleVerdict::Fail;
+            }
+        }
+        Ok(_) => {}
+        Err(_) => return RuleVerdict::Unverifiable,
+    }
+
+    let paths: Vec<std::path::PathBuf> =
+        changed_paths.iter().map(std::path::PathBuf::from).collect();
+
+    let mut config = crate::core::gatekeeper::GatekeeperConfig::from_repo_config(repo_root);
+    config.scan_secrets = false;
+    config.scan_dangerous_patterns = false;
+
     match crate::core::gatekeeper::run_gatekeeper(repo_root, &paths, diff_bytes, &config) {
-        Ok(result) if result.passed => RuleVerdict::Pass,
-        Ok(_) => RuleVerdict::Fail,
+        Ok(result) => {
+            let has_path_or_diff_violation =
+                result
+                    .violations
+                    .iter()
+                    .any(|violation| match violation.kind {
+                        crate::core::gatekeeper::ViolationKind::DiffTooLarge => true,
+                        crate::core::gatekeeper::ViolationKind::ProtectedPath
+                        | crate::core::gatekeeper::ViolationKind::PathBlocked => {
+                            changed_paths.contains(violation.path.to_string_lossy().as_ref())
+                        }
+                        crate::core::gatekeeper::ViolationKind::SecretDetected
+                        | crate::core::gatekeeper::ViolationKind::DangerousPattern => false,
+                    });
+            if has_path_or_diff_violation {
+                RuleVerdict::Fail
+            } else {
+                RuleVerdict::Pass
+            }
+        }
         Err(_) => RuleVerdict::Unverifiable,
     }
 }
@@ -1653,6 +1750,14 @@ fn evaluate_workspace_rule(_rule: &ResolvedRule, context: &RuleEvaluationContext
 
 /// Evaluate evidence rule using actual evidence validation.
 fn evaluate_evidence_rule(rule: &ResolvedRule, context: &RuleEvaluationContext) -> RuleVerdict {
+    if rule.rule.evaluation_phase == EvaluationPhase::Publication
+        && context
+            .terminal_evidence
+            .as_ref()
+            .is_none_or(|proof| proof.proof.verify().is_err())
+    {
+        return RuleVerdict::Unverifiable;
+    }
     // Check required evidence exists
     let mut missing = Vec::new();
     for evidence in &rule.rule.requirements.required_evidence {
@@ -1666,7 +1771,10 @@ fn evaluate_evidence_rule(rule: &ResolvedRule, context: &RuleEvaluationContext) 
     }
 
     // Check evidence freshness if max_age is set
-    if rule.rule.requirements.evidence_max_age_seconds > 0 {
+    // Runtime-owned proof was produced by this invocation. Source/governance
+    // bindings, rather than the mtime of an older authored trajectory, establish
+    // its freshness. Legacy file evidence retains its bounded-age check.
+    if context.terminal_evidence.is_none() && rule.rule.requirements.evidence_max_age_seconds > 0 {
         let Some(repo_root) = context.repo_root.as_deref() else {
             return RuleVerdict::Unverifiable;
         };
@@ -1746,52 +1854,268 @@ fn evidence_digest_ok(value: &str) -> bool {
 
 /// Evaluate workunit rule using actual workunit validation.
 fn evaluate_workunit_rule(_rule: &ResolvedRule, context: &RuleEvaluationContext) -> RuleVerdict {
-    let Some(gates) = context.evidence_artifacts.get("proof_plan_gates") else {
+    let Some(terminal) = &context.terminal_evidence else {
         return RuleVerdict::Unverifiable;
     };
-    let Some(manifest) = context.evidence_artifacts.get("workunit_manifest") else {
+    let Some(manifest) = &terminal.workunit else {
         return RuleVerdict::Unverifiable;
     };
-    if !evidence_digest_ok(manifest) || !gates.starts_with("proven:") {
+    let Some(root) = context.repo_root.as_deref() else {
+        return RuleVerdict::Unverifiable;
+    };
+    // This is the current complete runtime observation, before its canonical
+    // append. It must not depend on an agent's pass row or an earlier VERIFIED
+    // projection: first proof would otherwise become circular. Durable subject
+    // binding is checked by load_terminal_workunit and again by the producer.
+    if !matches!(
+        manifest.status,
+        crate::core::workunit::WorkUnitStatus::Claimed
+            | crate::core::workunit::WorkUnitStatus::Verified
+    ) || terminal.proof.verify().is_err()
+        || crate::core::validation_history::ensure_full_validation_plan(&manifest.proof_plan)
+            .is_err()
+        || crate::core::todo::ensure_task_full_validation_plan(
+            &crate::core::store::find_governance_root(root).join(".decapod/data"),
+            &manifest.task_id,
+        )
+        .is_err()
+        || crate::core::workunit::ensure_living_specs_bound_for_proof(root, manifest).is_err()
+        || crate::core::workunit::verify_capsule_policy_lineage_for_task(root, manifest).is_err()
+    {
         return RuleVerdict::Unverifiable;
     }
-    let proof = gates.trim_start_matches("proven:");
-    if !evidence_digest_ok(proof) {
-        return RuleVerdict::Unverifiable;
-    }
-    match context.governing_identity.as_deref() {
-        Some(governing) => match context
-            .evidence_identity
-            .get("proof_plan_gates")
-            .map(String::as_str)
-        {
-            Some(bound) if bound == governing => RuleVerdict::Pass,
-            Some(_) => RuleVerdict::Stale,
-            None => RuleVerdict::Unverifiable,
-        },
-        None => RuleVerdict::Unverifiable,
-    }
+    RuleVerdict::Pass
 }
 
 fn evaluate_publication_rule(context: &RuleEvaluationContext) -> RuleVerdict {
-    let receipt = context.evidence_artifacts.get("validation_receipt");
-    let head = context.evidence_artifacts.get("candidate_head");
-    let report = serde_json::json!({
-        "status": context.evidence_artifacts.get("validation_status").map(String::as_str).unwrap_or("unknown"),
-        "head": head,
-        "receipt_hash": receipt,
-        "rules_fingerprint": context.evidence_identity.get("validation_receipt"),
-        "current_rules_fingerprint": context.governing_identity,
-        "verifier": context.evidence_identity.get("verifier"),
-        "current_verifier": context.evidence_artifacts.get("current_verifier"),
-    });
-    match crate::core::governed_transition::project_report_publication(&report).judgment {
-        crate::core::governed_transition::ProofJudgment::Proven => RuleVerdict::Pass,
-        crate::core::governed_transition::ProofJudgment::Stale => RuleVerdict::Stale,
-        crate::core::governed_transition::ProofJudgment::Failed => RuleVerdict::Fail,
-        crate::core::governed_transition::ProofJudgment::NotProven
-        | crate::core::governed_transition::ProofJudgment::Unknown => RuleVerdict::Unverifiable,
+    match &context.terminal_evidence {
+        Some(terminal) if terminal.proof.verify().is_ok() => RuleVerdict::Pass,
+        _ => RuleVerdict::Unverifiable,
     }
+}
+
+#[cfg(test)]
+pub(crate) fn load_terminal_workunit(
+    root: &Path,
+    task_id: &str,
+) -> Result<Option<crate::core::workunit::WorkUnitManifest>, error::DecapodError> {
+    load_terminal_workunit_with_budget(root, task_id, &|| Ok(()))
+}
+
+fn load_terminal_workunit_with_budget(
+    root: &Path,
+    task_id: &str,
+    check_budget: &dyn Fn() -> Result<(), error::DecapodError>,
+) -> Result<Option<crate::core::workunit::WorkUnitManifest>, error::DecapodError> {
+    check_budget()?;
+    // The durable journal distinguishes an undeclared protocol from a deleted
+    // or invalid projection. Lookup errors never become an exemption.
+    let status = crate::core::workunit::workunit_journal_status(root, task_id)?;
+    check_budget()?;
+    if status.projection_state == "absent" {
+        for path in [
+            crate::core::workunit::workunit_path(root, task_id)?,
+            root.join(".decapod/governance/workunits")
+                .join(format!("{task_id}.json")),
+        ] {
+            match std::fs::symlink_metadata(path) {
+                Err(error) if error.kind() == std::io::ErrorKind::NotFound => {}
+                Err(error) => return Err(error::DecapodError::IoError(error)),
+                Ok(_) => {
+                    return Err(error::DecapodError::ValidationError(
+                        "TERMINAL_WORKUNIT_UNPROVEN: unknown manifest projection".into(),
+                    ));
+                }
+            }
+        }
+        return Ok(None);
+    }
+    if !status.resumable {
+        return Err(error::DecapodError::ValidationError(format!(
+            "TERMINAL_WORKUNIT_UNPROVEN: {} ({})",
+            task_id,
+            status
+                .resume_blocker
+                .as_deref()
+                .unwrap_or(&status.projection_state)
+        )));
+    }
+    let manifest = crate::core::workunit::load_workunit(root, task_id)?;
+    check_budget()?;
+    let current = crate::core::workunit::workunit_journal_status(root, task_id)?;
+    check_budget()?;
+    if !current.resumable
+        || current.generation != status.generation
+        || current.checkpoint_hash != status.checkpoint_hash
+    {
+        return Err(error::DecapodError::ValidationError(
+            "TERMINAL_WORKUNIT_STALE: journal changed while collecting proof".into(),
+        ));
+    }
+    Ok(Some(manifest))
+}
+
+/// Normalize a task category or task ID prefix to the canonical validation rule
+/// `task_type` vocabulary (`"feature"`, `"bugfix"`, `"refactor"`, `"docs"`, `"test"`).
+///
+/// Unrecognized or administrative categories (such as `"code"`, `"cicd"`, `"secu"`,
+/// or `"task"`) return `None` so rules restricting `task_types` remain applicable
+/// rather than silently exempted.
+pub(crate) fn normalize_rule_task_type(
+    category: Option<&str>,
+    task_id: Option<&str>,
+) -> Option<String> {
+    let map_token = |raw: &str| match raw.trim().to_ascii_lowercase().as_str() {
+        "feature" | "features" | "feat" => Some("feature".to_string()),
+        "bugfix" | "bug" | "bugs" => Some("bugfix".to_string()),
+        "refactor" | "refa" => Some("refactor".to_string()),
+        "docs" | "doc" | "documentation" => Some("docs".to_string()),
+        "test" | "tests" | "testing" => Some("test".to_string()),
+        _ => None,
+    };
+    category.and_then(map_token).or_else(|| {
+        task_id
+            .and_then(|id| id.trim().split_once('_').map(|(prefix, _)| prefix))
+            .and_then(map_token)
+    })
+}
+
+/// Normalize a branch or full git reference into a canonical `refs/...` string
+/// matching `RuleApplicability::ref_patterns` and `git symbolic-ref HEAD`.
+pub(crate) fn canonical_git_ref(work_branch: &str) -> Option<String> {
+    let trimmed = work_branch.trim();
+    if trimmed.is_empty() || trimmed == "HEAD" {
+        None
+    } else if trimmed.starts_with("refs/") {
+        Some(trimmed.to_string())
+    } else {
+        Some(format!("refs/heads/{trimmed}"))
+    }
+}
+
+/// The terminal production boundary runs before any readiness receipt/history
+/// is issued. It receives the runtime-owned result rather than importing a pass
+/// from a path, a legacy prerequisite receipt, or caller-authored digest strings.
+pub(crate) fn evaluate_terminal_rules(
+    root: &Path,
+    proof: &crate::core::validation_history::CompletedReadinessEvidence,
+    material: &crate::core::readiness_evidence::MaterialIdentity,
+    governance_digest: &str,
+    trajectory_digest: &str,
+    budget: &crate::core::validation_runtime::RuntimeBudget<'_>,
+) -> Result<RulesValidationReport, error::DecapodError> {
+    let check_budget = || {
+        budget
+            .remaining()
+            .map(|_| ())
+            .map_err(error::DecapodError::IoError)
+    };
+    check_budget()?;
+    proof.verify_current(material, governance_digest, trajectory_digest)?;
+    // Re-read the canonical bytes at this terminal boundary, including the
+    // compact stored trajectory. Expanded read projections are not its digest.
+    let input = crate::core::validation_epoch::input::BoundedEpochInput::new(root)?;
+    use std::io::Read;
+    let mut bytes = Vec::new();
+    input
+        .open_regular(&root.join(".decapod/governance.json"))?
+        .take(8 * 1024 * 1024 + 1)
+        .read_to_end(&mut bytes)?;
+    if bytes.len() > 8 * 1024 * 1024 {
+        return Err(error::DecapodError::ValidationError(
+            "terminal governance exceeds byte bound".into(),
+        ));
+    }
+    let document: serde_json::Value = serde_json::from_slice(&bytes)
+        .map_err(|e| error::DecapodError::ValidationError(e.to_string()))?;
+    let current_governance = format!("sha256:{:x}", Sha256::digest(&bytes));
+    let current_trajectory =
+        crate::core::readiness_evidence::digest(&document["sections"]["trajectory"])
+            .map_err(|e| error::DecapodError::ValidationError(e.to_string()))?;
+    proof.verify_current(material, &current_governance, &current_trajectory)?;
+    check_budget()?;
+    let governance = crate::core::governance_document::read_section(root, "trajectory")?;
+    let branch_task_ids =
+        crate::core::workspace::extract_task_ids_from_branch(&material.work_branch);
+    let task_id = governance
+        .as_ref()
+        .and_then(|value| value.get("task_id"))
+        .and_then(|value| value.as_str())
+        .or_else(|| branch_task_ids.first().map(String::as_str));
+    let task_category = task_id.and_then(|id| {
+        let main_root = crate::core::workspace::get_main_repo_root(root).ok()?;
+        let store_root = main_root.join(".decapod").join("data");
+        if store_root.join("decapod.db").is_file() && !store_root.join("todo.db").exists() {
+            crate::core::todo::get_task(&store_root, id)
+                .ok()
+                .flatten()
+                .map(|task| task.category)
+        } else {
+            None
+        }
+    });
+    let workunit = task_id
+        .map(|id| load_terminal_workunit_with_budget(root, id, &check_budget))
+        .transpose()?
+        .flatten();
+    let mut artifacts: BTreeMap<String, String> = BTreeMap::from([
+        (
+            "validation_proof".into(),
+            crate::core::readiness_evidence::digest(proof)
+                .map_err(|e| error::DecapodError::ValidationError(e.to_string()))?,
+        ),
+        ("trajectory_artifact".into(), trajectory_digest.into()),
+        ("candidate_head".into(), material.head_revision.clone()),
+    ]);
+    if let Some(manifest) = &workunit {
+        artifacts.insert(
+            "workunit_manifest".into(),
+            manifest
+                .canonical_hash_hex()
+                .map_err(|e| error::DecapodError::ValidationError(e.to_string()))?,
+        );
+        artifacts.insert(
+            "proof_plan_gates".into(),
+            crate::core::readiness_evidence::digest(&manifest.proof_results)
+                .map_err(|e| error::DecapodError::ValidationError(e.to_string()))?,
+        );
+    }
+    let identities = artifacts
+        .keys()
+        .map(|key| (key.clone(), governance_digest.into()))
+        .collect();
+    check_budget()?;
+    let context = RuleEvaluationContext {
+        changed_paths: proof.changed_paths().clone(),
+        task_type: normalize_rule_task_type(task_category.as_deref(), task_id),
+        git_ref: canonical_git_ref(&material.work_branch),
+        is_ci: std::env::var("GITHUB_ACTIONS").is_ok() || std::env::var("BUILDKITE").is_ok(),
+        evidence_artifacts: artifacts,
+        validation_epoch: crate::core::validation_epoch::active_validation_epoch_bounded(root)?,
+        policy_fingerprint: governance_digest.into(),
+        repo_root: Some(root.into()),
+        include_publication: true,
+        governing_identity: Some(governance_digest.into()),
+        evidence_identity: identities,
+        terminal_evidence: Some(TerminalEvidence {
+            proof: proof.clone(),
+            workunit,
+        }),
+    };
+    let mut registry = RuleRegistry::new();
+    registry.load_project_rules(root)?;
+    registry.load_task_rules(root)?;
+    check_budget()?;
+    let report = RulesValidationReport::from_results(
+        registry
+            .get_applicable_rules(&context)
+            .iter()
+            .filter(|rule| rule.rule.evaluation_phase == EvaluationPhase::Publication)
+            .map(|rule| evaluate_rule(rule, &context))
+            .collect(),
+    );
+    check_budget()?;
+    Ok(report)
 }
 
 /// Evaluate all applicable rules.
@@ -1893,6 +2217,260 @@ mod tests {
             generated_specs_fingerprint: "test-specs-fingerprint".to_string(),
             material_hashes: BTreeMap::new(),
         }
+    }
+
+    fn terminal_test_context(
+        root: Option<&Path>,
+        workunit: Option<crate::core::workunit::WorkUnitManifest>,
+    ) -> RuleEvaluationContext {
+        let governing = root
+            .map(|root| {
+                format!(
+                    "sha256:{:x}",
+                    Sha256::digest(std::fs::read(root.join(".decapod/governance.json")).unwrap())
+                )
+            })
+            .unwrap_or_else(|| format!("sha256:{}", "a".repeat(64)));
+        let mut artifacts: BTreeMap<String, String> = BTreeMap::new();
+        if let Some(manifest) = &workunit {
+            artifacts.insert(
+                "workunit_manifest".into(),
+                manifest.canonical_hash_hex().unwrap(),
+            );
+            artifacts.insert(
+                "proof_plan_gates".into(),
+                crate::core::readiness_evidence::digest(&manifest.proof_results).unwrap(),
+            );
+        }
+        let identities = artifacts
+            .keys()
+            .map(|name: &String| (name.clone(), governing.clone()))
+            .collect();
+        RuleEvaluationContext {
+            changed_paths: BTreeSet::from(["README.md".into()]),
+            task_type: Some("docs".into()),
+            git_ref: None,
+            is_ci: false,
+            evidence_artifacts: artifacts,
+            validation_epoch: root
+                .map(|root| crate::core::validation_epoch::active_validation_epoch(root).unwrap())
+                .unwrap_or_else(test_validation_epoch),
+            policy_fingerprint: governing.clone(),
+            repo_root: root.map(Path::to_path_buf),
+            include_publication: true,
+            governing_identity: Some(governing),
+            evidence_identity: identities,
+            terminal_evidence: Some(TerminalEvidence {
+                proof: crate::core::validation_history::test_fixture::completed(),
+                workunit,
+            }),
+        }
+    }
+
+    #[test]
+    fn explicit_project_workunit_obligation_is_never_exempted_as_optional() {
+        let mut registry = RuleRegistry::new();
+        let mut required = registry
+            .get_rule(&RuleId::new("decapod.evidence.proof_backed_completion"))
+            .unwrap()
+            .rule;
+        required.id = RuleId::new("decapod.project.required_workunit");
+        required.authority = RuleAuthority::ProjectOverride;
+        let id = required.id.clone();
+        registry.project_rules.insert(id.clone(), required);
+        registry.resolved_cache = None;
+        let context = terminal_test_context(None, None);
+        let applicable = registry.get_applicable_rules(&context);
+        assert!(
+            !applicable
+                .iter()
+                .any(|rule| rule.rule.id.as_str() == "decapod.evidence.proof_backed_completion")
+        );
+        let required = applicable
+            .iter()
+            .find(|rule| rule.rule.id == id)
+            .expect("explicit mandatory project rule remains applicable");
+        assert_eq!(
+            evaluate_rule(required, &context).verdict,
+            RuleVerdict::Unverifiable
+        );
+    }
+
+    #[test]
+    fn current_declared_workunit_reaches_terminal_rule_with_real_capsule_lineage() {
+        use crate::core::{capsule_policy, context_capsule, workunit};
+        let root = workunit::journal_tests::accepted_execution_fixture();
+        let root = root.path();
+        let task = "task_test";
+        let spec = ".decapod/managed/specs/INTENT.md";
+        std::fs::create_dir_all(root.join(spec).parent().unwrap()).unwrap();
+        std::fs::write(
+            root.join(spec),
+            "# Workunit fixture\n\nBind declared source proof to reviewed task intent.\n",
+        )
+        .unwrap();
+        let policy =
+            capsule_policy::resolve_capsule_policy(root, "interfaces", None, 1, true).unwrap();
+        let capsule = context_capsule::query_embedded_capsule_governed(
+            root,
+            "source proof",
+            "interfaces",
+            Some(task),
+            Some(task),
+            policy.effective_limit,
+            policy.binding,
+        )
+        .unwrap();
+        let capsule_path = context_capsule::write_context_capsule(root, &capsule).unwrap();
+        let capsule_ref = capsule_path.strip_prefix(root).unwrap().to_string_lossy();
+        workunit::add_state_ref(root, task, &capsule_ref).unwrap();
+        workunit::add_spec_ref(root, task, spec).unwrap();
+        workunit::set_proof_plan(root, task, &["validate_passes".into()]).unwrap();
+        for args in [
+            vec!["add", "."],
+            vec![
+                "-c",
+                "commit.gpgsign=false",
+                "commit",
+                "-m",
+                "bind actual capsule and spec",
+            ],
+        ] {
+            let out = std::process::Command::new("git")
+                .current_dir(root)
+                .args(args)
+                .output()
+                .unwrap();
+            assert!(
+                out.status.success(),
+                "{}",
+                String::from_utf8_lossy(&out.stderr)
+            );
+        }
+        workunit::checkpoint_workunit(root, task, "terminal-current", Some(4)).unwrap();
+        let artifact = ".decapod/data/terminal-source.txt";
+        std::fs::write(root.join(artifact), "unit-fixture source proof bytes").unwrap();
+        workunit::record_proof_result(root, task, "source-check", "pass", Some(artifact.into()))
+            .unwrap();
+        for state in [
+            workunit::WorkUnitStatus::Executing,
+            workunit::WorkUnitStatus::Claimed,
+        ] {
+            workunit::transition_status(root, task, state).unwrap();
+        }
+        let manifest = load_terminal_workunit(root, task).unwrap().unwrap();
+        assert!(manifest.validation_epoch.is_none());
+        let mut context = terminal_test_context(Some(root), Some(manifest));
+        let rule = RuleRegistry::new()
+            .get_rule(&RuleId::new("decapod.evidence.proof_backed_completion"))
+            .unwrap();
+        assert_eq!(evaluate_rule(&rule, &context).verdict, RuleVerdict::Pass);
+        context
+            .terminal_evidence
+            .as_mut()
+            .unwrap()
+            .workunit
+            .as_mut()
+            .unwrap()
+            .validation_epoch = Some(test_validation_epoch());
+        // A stale optional legacy projection is not evidence for or against
+        // this fresh complete observation. Canonical append binds its subject.
+        assert_eq!(evaluate_rule(&rule, &context).verdict, RuleVerdict::Pass);
+        context
+            .terminal_evidence
+            .as_mut()
+            .unwrap()
+            .workunit
+            .as_mut()
+            .unwrap()
+            .validation_epoch = None;
+        std::fs::write(&capsule_path, "corrupt capsule").unwrap();
+        assert_eq!(
+            evaluate_rule(&rule, &context).verdict,
+            RuleVerdict::Unverifiable
+        );
+        assert!(
+            load_terminal_workunit(root, task).is_err(),
+            "changed source/capsule cannot reuse current binding"
+        );
+        std::fs::remove_file(workunit::workunit_path(root, task).unwrap()).unwrap();
+        assert!(load_terminal_workunit(root, task).is_err());
+    }
+
+    #[test]
+    fn output_rules_do_not_gate_first_execution_and_markers_cannot_prove_completion() {
+        let mut registry = RuleRegistry::new();
+        let hash = format!("sha256:{}", "a".repeat(64));
+        let mut context = RuleEvaluationContext {
+            changed_paths: BTreeSet::from(["README.md".into()]),
+            task_type: Some("docs".into()),
+            git_ref: None,
+            is_ci: false,
+            evidence_artifacts: BTreeMap::from([
+                ("validation_proof".into(), hash.clone()),
+                ("validation_receipt".into(), hash.clone()),
+                ("trajectory_artifact".into(), hash.clone()),
+                ("candidate_head".into(), "b".repeat(40)),
+                ("workunit_manifest".into(), hash.clone()),
+                ("proof_plan_gates".into(), format!("proven:{hash}")),
+            ]),
+            validation_epoch: test_validation_epoch(),
+            policy_fingerprint: hash.clone(),
+            repo_root: None,
+            include_publication: false,
+            governing_identity: Some(hash.clone()),
+            evidence_identity: BTreeMap::new(),
+            terminal_evidence: None,
+        };
+        assert!(
+            registry
+                .get_applicable_rules(&context)
+                .iter()
+                .all(|rule| rule.rule.evaluation_phase != EvaluationPhase::Publication)
+        );
+        context.include_publication = true;
+        context.evidence_identity = context
+            .evidence_artifacts
+            .keys()
+            .map(|name| (name.clone(), hash.clone()))
+            .collect();
+        let terminal: Vec<_> = registry
+            .get_applicable_rules(&context)
+            .iter()
+            .filter(|rule| rule.rule.evaluation_phase == EvaluationPhase::Publication)
+            .map(|rule| evaluate_rule(rule, &context))
+            .collect();
+        assert_eq!(terminal.len(), 3);
+        assert!(
+            terminal
+                .iter()
+                .all(|result| result.verdict != RuleVerdict::Pass)
+        );
+    }
+
+    #[test]
+    fn declared_workunit_never_becomes_absent_when_its_projection_is_removed() {
+        let root = tempfile::tempdir().unwrap();
+        crate::core::todo::initialize_todo_db(&root.path().join(".decapod/data")).unwrap();
+        let id = "docs_declared";
+        assert!(load_terminal_workunit(root.path(), id).unwrap().is_none());
+        crate::core::workunit::init_workunit(root.path(), id, "intent:explicit").unwrap();
+        assert!(
+            load_terminal_workunit(root.path(), id).is_err(),
+            "unproven explicit gates remain required"
+        );
+        let path = crate::core::workunit::workunit_path(root.path(), id).unwrap();
+        std::fs::remove_file(&path).unwrap();
+        assert!(
+            load_terminal_workunit(root.path(), id).is_err(),
+            "durable declaration survives projection deletion"
+        );
+        std::fs::write(&path, "invalid manifest").unwrap();
+        assert!(load_terminal_workunit(root.path(), id).is_err());
+        // Failed durable reads are Unknown, never an absent optional contract.
+        let database = crate::core::events::canonical_db_path(&root.path().join(".decapod/data"));
+        std::fs::write(database, b"not a sqlite database").unwrap();
+        assert!(load_terminal_workunit(root.path(), id).is_err());
     }
 
     #[test]
@@ -2190,5 +2768,249 @@ mod tests {
         assert_eq!(remediation.error_code, "TEST_ERROR");
         assert!(remediation.autonomous_remediation_permitted);
         assert!(!remediation.human_authorization_required);
+    }
+
+    #[test]
+    fn test_normalize_rule_task_type_and_canonical_git_ref() {
+        assert_eq!(
+            normalize_rule_task_type(Some("features"), None).as_deref(),
+            Some("feature")
+        );
+        assert_eq!(
+            normalize_rule_task_type(None, Some("feat_01m79knt8h670tjh")).as_deref(),
+            Some("feature")
+        );
+        assert_eq!(
+            normalize_rule_task_type(Some("bugs"), None).as_deref(),
+            Some("bugfix")
+        );
+        assert_eq!(
+            normalize_rule_task_type(Some("code"), Some("bugs_01m79knt8h670tjh")).as_deref(),
+            Some("bugfix")
+        );
+        assert_eq!(
+            normalize_rule_task_type(None, Some("refa_01m79knt8h670tjh")).as_deref(),
+            Some("refactor")
+        );
+        assert_eq!(
+            normalize_rule_task_type(Some("docs"), Some("task_01m79knt8h670tjh")).as_deref(),
+            Some("docs")
+        );
+        assert_eq!(
+            normalize_rule_task_type(Some("tests"), None).as_deref(),
+            Some("test")
+        );
+        assert_eq!(
+            normalize_rule_task_type(Some("cicd"), Some("cicd_01")),
+            None
+        );
+        assert_eq!(normalize_rule_task_type(None, Some("task_01")), None);
+
+        assert_eq!(canonical_git_ref(""), None);
+        assert_eq!(canonical_git_ref("HEAD"), None);
+        assert_eq!(
+            canonical_git_ref("agent/tester/docs_01-guide").as_deref(),
+            Some("refs/heads/agent/tester/docs_01-guide")
+        );
+        assert_eq!(
+            canonical_git_ref("refs/heads/master").as_deref(),
+            Some("refs/heads/master")
+        );
+        assert_eq!(
+            canonical_git_ref("refs/tags/v0.143.0").as_deref(),
+            Some("refs/tags/v0.143.0")
+        );
+    }
+
+    #[test]
+    fn terminal_publication_applicability_filters_task_type_and_git_ref() {
+        let mut registry = RuleRegistry::new();
+        let base_rule = registry
+            .get_rule(&RuleId::new("decapod.evidence.required_and_fresh"))
+            .unwrap()
+            .rule;
+
+        let mut docs_agent = base_rule.clone();
+        docs_agent.id = RuleId::new("decapod.project.docs_agent_branch");
+        docs_agent.authority = RuleAuthority::ProjectOverride;
+        docs_agent.applicability.task_types = vec!["docs".to_string()];
+        docs_agent.applicability.ref_patterns = vec!["refs/heads/agent/*".to_string()];
+
+        let mut feature_only = docs_agent.clone();
+        feature_only.id = RuleId::new("decapod.project.feature_only");
+        feature_only.applicability.task_types = vec!["feature".to_string()];
+
+        let mut release_only = docs_agent.clone();
+        release_only.id = RuleId::new("decapod.project.release_branch_only");
+        release_only.applicability.ref_patterns = vec!["refs/heads/release/*".to_string()];
+
+        for rule in [docs_agent, feature_only, release_only] {
+            registry.project_rules.insert(rule.id.clone(), rule);
+        }
+        registry.resolved_cache = None;
+
+        let mut context = terminal_test_context(None, None);
+        context.changed_paths = BTreeSet::from(["README.md".to_string()]);
+        context.task_type = normalize_rule_task_type(None, Some("docs_01m79knt8h670tjh"));
+        context.git_ref = canonical_git_ref("agent/tester/docs_01m79knt8h670tjh-guide");
+
+        let applicable_ids: BTreeSet<String> = registry
+            .get_applicable_rules(&context)
+            .into_iter()
+            .filter(|r| r.rule.evaluation_phase == EvaluationPhase::Publication)
+            .map(|r| r.rule.id.as_str().to_string())
+            .collect();
+
+        assert!(applicable_ids.contains("decapod.evidence.required_and_fresh"));
+        assert!(applicable_ids.contains("decapod.project.docs_agent_branch"));
+        assert!(!applicable_ids.contains("decapod.project.feature_only"));
+        assert!(!applicable_ids.contains("decapod.project.release_branch_only"));
+    }
+
+    #[test]
+    fn declared_unverified_workunit_blocks_terminal_proof_backed_completion() {
+        use crate::core::workunit;
+        let root = workunit::journal_tests::accepted_execution_fixture();
+        let root = root.path();
+        let task = "task_test";
+        workunit::set_proof_plan(root, task, &["docs-proof".into()]).unwrap();
+        workunit::checkpoint_workunit(root, task, "terminal-unverified", None).unwrap();
+
+        let manifest = load_terminal_workunit(root, task).unwrap().unwrap();
+        assert_eq!(manifest.status, workunit::WorkUnitStatus::Draft);
+        let context = terminal_test_context(Some(root), Some(manifest));
+        let mut registry = RuleRegistry::new();
+        let applicable = registry.get_applicable_rules(&context);
+        let completion_rule = applicable
+            .iter()
+            .find(|r| r.rule.id.as_str() == "decapod.evidence.proof_backed_completion")
+            .expect("declared workunit must enable proof_backed_completion at terminal phase");
+        let evaluation = evaluate_rule(completion_rule, &context);
+        assert_eq!(evaluation.verdict, RuleVerdict::Unverifiable);
+        assert_eq!(
+            evaluation
+                .remediation
+                .as_ref()
+                .map(|r| r.error_code.as_str()),
+            Some("UNVERIFIED_COMPLETION")
+        );
+    }
+
+    #[test]
+    fn protected_paths_rule_ignores_preexisting_file_patterns_and_blocks_protected_or_blocked_paths()
+     {
+        let dir = tempfile::tempdir().unwrap();
+        let root = dir.path();
+        std::fs::create_dir_all(root.join(".decapod")).unwrap();
+        std::fs::create_dir_all(root.join("src")).unwrap();
+        std::fs::create_dir_all(root.join("config")).unwrap();
+        std::fs::create_dir_all(root.join("migrations")).unwrap();
+
+        std::fs::write(
+            root.join(".decapod/config.toml"),
+            "schema_version = \"1.0.0\"\n\n[init]\nspecs = true\nci = true\ndiagram_style = \"mermaid\"\nentrypoints = [\"AGENTS.md\"]\n\n[repo]\nproduct_name = \"test\"\nproduct_summary = \"test\"\narchitecture_direction = \"cli\"\nproduct_type = \"service_or_library\"\ndone_criteria = \"tests pass\"\nprimary_languages = [\"rust\"]\ndetected_surfaces = [\"cargo\"]\n\n[governance]\nprotected_paths = [\"config/production.toml\"]\n",
+        )
+        .unwrap();
+        crate::cli::DecapodProjectConfig::load(root).unwrap();
+        std::fs::write(root.join("config/production.toml"), "mode = \"prod\"\n").unwrap();
+        std::fs::write(root.join(".env.production"), "APP_MODE=prod\n").unwrap();
+        std::fs::write(root.join("migrations/001.sql"), "SELECT 1;\n").unwrap();
+
+        // Construct pre-existing patterns dynamically so this source file stays free of literals.
+        let preexisting_shell = format!("// shell fixture {}{{EXPANSION}}\n", '$');
+        let preexisting_header = format!("// header {} {}\n", "Bea", "rer example_token_value");
+        std::fs::write(
+            root.join("src/legacy.rs"),
+            format!("{preexisting_shell}{preexisting_header}pub fn ok() -> usize {{ 1 }}\n"),
+        )
+        .unwrap();
+        std::fs::write(
+            root.join("src/loader.rs"),
+            "pub const PROD_CFG: &str = include_str!(\"../config/production.toml\");\n",
+        )
+        .unwrap();
+
+        let full_scan = crate::core::gatekeeper::run_gatekeeper(
+            root,
+            &[std::path::PathBuf::from("src/legacy.rs")],
+            0,
+            &crate::core::gatekeeper::GatekeeperConfig::from_repo_config(root),
+        )
+        .unwrap();
+        assert!(
+            !full_scan.passed,
+            "fixture must trigger full-file gatekeeper secret/dangerous-pattern checks"
+        );
+
+        assert_eq!(
+            evaluate_gatekeeper_paths_and_diff(
+                root,
+                &BTreeSet::from(["src/legacy.rs".to_string()]),
+                128
+            ),
+            RuleVerdict::Pass
+        );
+        assert_eq!(
+            evaluate_gatekeeper_paths_and_diff(
+                root,
+                &BTreeSet::from(["src/loader.rs".to_string()]),
+                64
+            ),
+            RuleVerdict::Pass,
+            "unmodified include_str dependency matching protected_paths must not false-fail"
+        );
+        assert_eq!(
+            evaluate_gatekeeper_paths_and_diff(
+                root,
+                &BTreeSet::from(["config/production.toml".to_string()]),
+                64
+            ),
+            RuleVerdict::Fail
+        );
+        assert_eq!(
+            evaluate_gatekeeper_paths_and_diff(
+                root,
+                &BTreeSet::from([".env.production".to_string()]),
+                64
+            ),
+            RuleVerdict::Fail
+        );
+        assert_eq!(
+            evaluate_gatekeeper_paths_and_diff(
+                root,
+                &BTreeSet::from(["src/legacy.rs".to_string()]),
+                20 * 1024 * 1024
+            ),
+            RuleVerdict::Fail
+        );
+
+        let mut plan = crate::plan_governance::init_plan(
+            root,
+            crate::plan_governance::InitPlanInput {
+                title: "Protected path scope test".to_string(),
+                intent: "Verify plan forbidden_paths enforcement".to_string(),
+                todo_ids: Vec::new(),
+                proof_hooks: Vec::new(),
+                unknowns: Vec::new(),
+                human_questions: Vec::new(),
+                stop_conditions: Vec::new(),
+                unresolved_contradictions: Vec::new(),
+                deferred_questions: Vec::new(),
+                constraints: Default::default(),
+                phases: Vec::new(),
+            },
+        )
+        .unwrap();
+        plan.constraints.forbidden_paths = vec!["migrations".to_string()];
+        crate::plan_governance::save_plan(root, &plan).unwrap();
+
+        assert_eq!(
+            evaluate_gatekeeper_paths_and_diff(
+                root,
+                &BTreeSet::from(["migrations/001.sql".to_string()]),
+                32
+            ),
+            RuleVerdict::Fail
+        );
     }
 }

@@ -2287,3 +2287,107 @@ fn nix_cachix_publication_has_native_owner_and_isolated_secret() {
     assert!(publisher.contains("CACHIX_AUTH_TOKEN must be a write-capable token"));
     assert!(!workflow.contains("pull_request:"));
 }
+
+#[test]
+fn publication_regressions_are_always_owned_by_the_full_library_recipe() {
+    let check = find_check("supabase-consumer").unwrap();
+    for path in [
+        "src/decapod/core/workspace_publication.rs",
+        "tests/unit/core/workspace_publication_tests.rs",
+        "src/decapod/core/entrypoint_integrity/history/tests.rs",
+    ] {
+        let changed = paths(&[path]);
+        assert!(selected(check, &changed, false), "{path}");
+        assert!(
+            commands(check, &changed).unwrap().iter().any(|command| {
+                command.program == "cargo"
+                    && command.args.first() == Some(&"test")
+                    && command.args.contains(&"--lib")
+                    && !command.args.contains(&"--")
+            }),
+            "the required lane must execute the full library suite for {path}"
+        );
+        assert!(
+            inventory(&changed, false)
+                .iter()
+                .any(|job| { job.applicable && job.checks.contains(&check.id) }),
+            "library proof must remain in the required plan for {path}"
+        );
+    }
+}
+
+#[test]
+fn required_test_source_changes_retain_the_complete_owning_recipe() {
+    let core = find_check("selective-core").unwrap();
+    let cli = find_check("selective-cli").unwrap();
+    let core_recipe = commands(core, &paths(&["src/decapod/core/todo.rs"])).unwrap();
+    let cli_recipe = commands(cli, &paths(&["src/decapod/lib.rs"])).unwrap();
+    for (check, expected, changed) in [
+        (
+            core,
+            &core_recipe,
+            vec![
+                "tests/todo_enforcement.rs",
+                "tests/validate_termination.rs",
+                "tests/workspace_interlock.rs",
+                "tests/spec_workspace_ownership.rs",
+                "tests/workspace_prune_regression.rs",
+                "tests/hermes_governance_substrate.rs",
+                "tests/group_broker.rs",
+                "tests/group_broker_strict.rs",
+                "tests/workunit_cli.rs",
+                "tests/context_capsule_cli.rs",
+                "tests/interop_conformance.rs",
+                "tests/support/interop_harness.rs",
+            ],
+        ),
+        (
+            cli,
+            &cli_recipe,
+            vec![
+                "tests/cli_contract_enforcement.rs",
+                "tests/entrypoint_correctness.rs",
+                "tests/cli_contracts.rs",
+                "tests/consumer_readiness.rs",
+                "tests/init_ci_scaffolding.rs",
+                "tests/init_config_behavior.rs",
+                "tests/infer_precision.rs",
+                "tests/sqlite_maintenance.rs",
+                "tests/support/fresh_docs_readiness.rs",
+                "tests/support/cli_workunit_recovery.rs",
+                "tests/support/storage_inventory.rs",
+                "tests/support/justfile_inventory.rs",
+                "tests/fixtures/justfile_consumer/src/distance.rs",
+            ],
+        ),
+    ] {
+        for path in changed.into_iter().chain([
+            "tests/common/consumer_readiness_fixture.rs",
+            "BUILD.bazel",
+            ".config/build/decapod.BUILD.bzl",
+        ]) {
+            let changed = paths(&[path]);
+            assert!(
+                selected(check, &changed, false),
+                "missing {} for {path}",
+                check.id
+            );
+            assert_eq!(&commands(check, &changed).unwrap(), expected, "{path}");
+            let required = inventory(&changed, false);
+            assert!(
+                required
+                    .iter()
+                    .any(|job| { job.applicable && job.checks.contains(&check.id) }),
+                "test recipe must be in the required inventory: {path}"
+            );
+            assert!(!selected(check, &changed, true));
+        }
+    }
+    for path in ["docs/agent/README.md", "tests/unrelated_example.rs"] {
+        let changed = paths(&[path]);
+        for check in [core, cli] {
+            assert!(!selected(check, &changed, false), "unrelated input: {path}");
+            assert!(commands(check, &changed).unwrap().is_empty());
+        }
+    }
+}

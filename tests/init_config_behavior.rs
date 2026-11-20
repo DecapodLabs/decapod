@@ -48,6 +48,173 @@ fn run_git(dir: &std::path::Path, args: &[&str]) {
     );
 }
 
+// Exercise the public entrypoints, rather than deserializing TOML in the test.
+// No diagnostic skip flag may make an invalid policy usable for mutation.
+#[test]
+fn invalid_config_denies_mutation_but_preserves_schema_repair_and_retry() {
+    let tmp = tempdir().unwrap();
+    let root = tmp.path().join("repo");
+    fs::create_dir(&root).unwrap();
+    let invoke = |args: &[&str]| {
+        let mut command = Command::new(resolve_decapod_bin());
+        command
+            .current_dir(&root)
+            .args(args)
+            .env("DECAPOD_AGENT_ID", "config-repair-agent")
+            .env("XDG_CONFIG_HOME", tmp.path().join("private-config"))
+            .env("DECAPOD_CLAIM_AUTORUN", "0")
+            .env("DECAPOD_GROUP_BROKER_IDLE_SECS", "1");
+        for key in [
+            "DECAPOD_SESSION_PASSWORD",
+            "GITHUB_ACTIONS",
+            "BUILDKITE",
+            "DECAPOD_VALIDATE_SKIP_GIT_GATES",
+            "DECAPOD_VALIDATE_SKIP_TOOLING_GATES",
+            "DECAPOD_VALIDATE_SKIP_FINGERPRINT_GATES",
+        ] {
+            command.env_remove(key);
+        }
+        command.output().unwrap()
+    };
+    let initialized = invoke(&[
+        "init",
+        "with",
+        "--proof",
+        "--no-container-workspaces",
+        "--isolation-mode",
+        "worktree",
+    ]);
+    assert!(
+        initialized.status.success(),
+        "{}",
+        String::from_utf8_lossy(&initialized.stderr)
+    );
+    let path = root.join(".decapod/config.toml");
+    let accepted = fs::read_to_string(&path).unwrap();
+    let mut invalid: toml::Value = toml::from_str(&accepted).unwrap();
+    invalid["repo"]["backend"] = "unsupported-backend".into();
+    let invalid_enum = toml::to_string(&invalid).unwrap();
+    invalid["repo"]["backend"] = "local".into();
+    invalid["custody"]["isolation"] = true.into();
+    let invalid_type = toml::to_string(&invalid).unwrap();
+    let cases = [
+        (
+            "version",
+            accepted.replace("schema_version = \"1.0.0\"", "schema_version = \"99.0.0\""),
+        ),
+        ("syntax", format!("{accepted}\n[governance\n")),
+        ("type", invalid_type),
+        ("enum", invalid_enum),
+        (
+            "sensitive",
+            format!("{accepted}\n[governance.rbac]\nmain_merge = true\n"),
+        ),
+    ];
+    for (name, broken) in cases {
+        fs::write(&path, &broken).unwrap();
+        for args in [
+            vec!["todo", "add", "must-not-be-created", "--format", "json"],
+            vec!["rpc", "--op", "agent.init"],
+        ] {
+            let output = invoke(&args);
+            let error = String::from_utf8_lossy(&output.stderr);
+            assert!(
+                !output.status.success(),
+                "{name}: mutating {args:?} accepted invalid config: {}",
+                String::from_utf8_lossy(&output.stdout)
+            );
+            assert!(error.contains("INVALID_CONFIG_SCHEMA"), "{name}: {error}");
+            assert!(
+                error.contains("decapod docs show config-schema"),
+                "{name}: missing repair reference: {error}"
+            );
+        }
+        for args in [
+            vec!["docs", "show", "config-schema", "--source", "embedded"],
+            vec!["data", "schema", "--deterministic"],
+            vec![
+                "rpc",
+                "--op",
+                "schema.get",
+                "--params",
+                "{\"entity\":\"todo\"}",
+            ],
+        ] {
+            let output = invoke(&args);
+            assert!(
+                output.status.success(),
+                "{name}: repair {args:?} unavailable: {}",
+                String::from_utf8_lossy(&output.stderr)
+            );
+            assert!(!output.stdout.is_empty());
+        }
+        assert_eq!(
+            fs::read_to_string(&path).unwrap(),
+            broken,
+            "read-only repair references must preserve the proposal"
+        );
+        // Repair is an ordinary config edit. It neither requires manual user
+        // CLI work nor grants an exceptional role.
+        fs::write(&path, &accepted).unwrap();
+        let repaired = invoke(&[
+            "todo",
+            "add",
+            &format!("ordinary-retry-{name}"),
+            "--format",
+            "json",
+        ]);
+        assert!(
+            repaired.status.success(),
+            "{name}: {}",
+            String::from_utf8_lossy(&repaired.stderr)
+        );
+        let bypass = invoke(&[
+            "validate",
+            "--bypass-validation",
+            "--bypass-reason",
+            "a repaired schema is not an authority grant",
+        ]);
+        assert!(!bypass.status.success());
+        assert!(String::from_utf8_lossy(&bypass.stderr).contains("RBAC_PERMISSION_DENIED"));
+    }
+}
+
+#[test]
+fn schema_bootstrap_does_not_initialize_or_repair_a_broken_project() {
+    let tmp = tempdir().unwrap();
+    let control = tmp.path().join(".decapod");
+    fs::create_dir(&control).unwrap();
+    let path = control.join("config.toml");
+    fs::write(&path, "[broken").unwrap();
+    for args in [
+        vec!["data", "schema", "--deterministic"],
+        vec![
+            "rpc",
+            "--op",
+            "schema.get",
+            "--params",
+            "{\"entity\":\"todo\"}",
+        ],
+    ] {
+        let output = run_decapod(tmp.path(), &args);
+        assert!(
+            output.status.success(),
+            "{}",
+            String::from_utf8_lossy(&output.stderr)
+        );
+        assert_eq!(fs::read_to_string(&path).unwrap(), "[broken");
+        let entries: Vec<_> = fs::read_dir(&control)
+            .unwrap()
+            .map(|entry| entry.unwrap().file_name())
+            .collect();
+        assert_eq!(
+            entries,
+            [std::ffi::OsString::from("config.toml")],
+            "schema access must not acquire a session, migrate storage or refresh projections"
+        );
+    }
+}
+
 #[test]
 fn init_persists_remote_default_base_branch() {
     let tmp = tempdir().expect("tempdir");
@@ -98,7 +265,7 @@ fn init_persists_remote_default_base_branch() {
 fn init_with_backend_cloud_saves_to_config() {
     let tmp = tempdir().expect("tempdir");
     let out = Command::new(resolve_decapod_bin())
-        .args(["init", "with", "--backend", "cloud", "--force"])
+        .args(["init", "with", "--backend", "cloud", "--force", "--proof"])
         .current_dir(tmp.path())
         .output()
         .expect("run decapod");
@@ -124,29 +291,14 @@ fn init_with_backend_cloud_saves_to_config() {
         "repo config must not contain credentials or legacy backend secrets: {config}"
     );
 
-    let registration_path = tmp
-        .path()
-        .join(".decapod/managed/cloud/init-registration.json");
-    let registration =
-        fs::read_to_string(registration_path).expect("read cloud init registration payload");
-    let registration: serde_json::Value =
-        serde_json::from_str(&registration).expect("parse cloud init registration");
-    assert_eq!(registration["provider"], "vercel");
-    assert_eq!(
-        registration["route"],
-        "POST /query for task reads/writes; POST /batch for atomic task operations",
-        "registration should target the Dactyl storage contract"
-    );
     assert!(
-        registration["writes"]
-            .as_array()
-            .expect("writes array")
-            .iter()
-            .any(|write| {
-                write["table"] == "tasks" && write["operation"] == "Dactyl query list/add"
-            }),
-        "registration should model repo-scoped todo access"
+        !tmp.path()
+            .join(".decapod/managed/cloud/init-registration.json")
+            .exists()
     );
+    let stdout = String::from_utf8_lossy(&out.stdout);
+    assert!(stdout.contains("sign-in and server readiness were not evaluated"));
+    assert!(!stdout.contains("Cloud setup ready"));
 }
 
 #[test]
@@ -427,7 +579,7 @@ fn init_refresh_requires_an_existing_project() {
 fn init_cloud_opt_in_does_not_store_secret_environment_values() {
     let tmp = tempdir().expect("tempdir");
     let out = Command::new(resolve_decapod_bin())
-        .args(["init", "with", "--backend", "cloud", "--force"])
+        .args(["init", "with", "--backend", "cloud", "--force", "--proof"])
         .current_dir(tmp.path())
         .env("SUPABASE_URL", "https://private.supabase.local")
         .env("SUPABASE_KEY", "super-secret-service-role")
@@ -454,14 +606,20 @@ fn init_cloud_opt_in_does_not_store_secret_environment_values() {
     assert!(!config.contains("supabase_key"));
     assert!(!config.contains("access_token"));
 
-    let registration = fs::read_to_string(
-        tmp.path()
-            .join(".decapod/managed/cloud/init-registration.json"),
-    )
-    .expect("read cloud init registration");
-    assert!(!registration.contains("private.supabase.local"));
-    assert!(!registration.contains("super-secret-service-role"));
-    assert!(!registration.contains("repo-config-must-not-store-this"));
+    assert!(
+        !tmp.path()
+            .join(".decapod/managed/cloud/init-registration.json")
+            .exists()
+    );
+    let output = format!(
+        "{}{}",
+        String::from_utf8_lossy(&out.stdout),
+        String::from_utf8_lossy(&out.stderr)
+    );
+    assert!(!output.contains("private.supabase.local"));
+    assert!(!output.contains("super-secret-service-role"));
+    assert!(!output.contains("repo-config-must-not-store-this"));
+    assert!(!output.contains("Cloud setup ready"));
 }
 
 #[test]
@@ -1253,7 +1411,7 @@ fn init_validation_rejects_traversal_in_guided_paths() {
         "init should preserve noninteractive behavior"
     );
 
-    let validate = run_decapod(tmp.path(), &["validate", "--format", "json"]);
+    let validate = run_decapod(tmp.path(), &["govern", "project-check", "--format", "json"]);
     assert!(
         !validate.status.success(),
         "validate must reject traversal paths: {}",

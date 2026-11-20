@@ -16,7 +16,7 @@ use std::time::Duration;
 /// Bounded, deadlock-free child wait: stdout and stderr are drained on
 /// separate threads (a chatty child must never block on a full pipe while the
 /// parent waits), and the wait never exceeds the conformance bound.
-fn wait_bounded(mut child: Child) -> Output {
+pub(super) fn wait_bounded(mut child: Child) -> Output {
     use std::io::Read;
     let mut stdout = child.stdout.take().expect("stdout");
     let mut stderr = child.stderr.take().expect("stderr");
@@ -167,8 +167,6 @@ impl Harness {
             "decapod init: {}",
             String::from_utf8_lossy(&out.stderr)
         );
-        let out = git(&root, &["checkout", "-b", &format!("feat/{scenario}")]);
-        assert!(out.status.success());
         let out = git(&root, &["add", "-A"]);
         assert!(out.status.success());
         let out = git(&root, &["commit", "-m", "interop fixture baseline"]);
@@ -177,6 +175,10 @@ impl Harness {
             "fixture commit: {}",
             String::from_utf8_lossy(&out.stderr)
         );
+
+        // Accept the fixture policy before running candidate-branch operations.
+        let out = git(&root, &["checkout", "-b", &format!("feat/{scenario}")]);
+        assert!(out.status.success());
 
         // Session acquire (prints "Password: ...").
         let out = h.raw(&["session", "acquire"], &[], false);

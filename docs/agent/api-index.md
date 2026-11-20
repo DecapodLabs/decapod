@@ -6,6 +6,10 @@ This is the primary orientation surface for AI agents. Before performing impleme
 
 ## When to Call Decapod
 
+Decapod supports two logical repository backends in `.decapod/config.toml` (`repo.backend`):
+- **Decapod Local (`local`, default):** Free, offline, local-first SQLite and Git governance runtime with no account required.
+- **Decapod Cloud (`cloud`):** Optional hosted repository-bound task and coordination backend via Dactyl (`decapod init --backend cloud`, `decapod cloud ...`).
+
 Call Decapod at **Inference Pressure Points**. Each call should move transient agent activity into governed project state: intent, context, custody, boundaries, validation, or completion.
 
 One agent task may span many Decapod invocations. Every CLI or RPC process is
@@ -53,6 +57,67 @@ coordination and execution gates are satisfied. Missing state never establishes
 ownership or proves that no collision exists. Real ambiguity, conflicts, and
 unsatisfied execution or publication gates still require resolution.
 
+### Challenge a Proposed Action
+
+**Do What Must Be Done:** exhaust reasonable investigation, inference and
+verification before requesting additional human intelligence. The human supplies
+intent and authority; the agent reasons, decides, executes and verifies; Decapod
+evaluates admissibility. Decapod returns challenges to the agent and never
+interrogates the human.
+
+Before asking a human an unresolved question, submit an escalation proposal in
+the existing `reflection.escalation` input to `infer orientation --task-id <id>`
+or `mentor.obligations`. Identify the canonical plan intent, proposed question,
+specific missing information or authority, source references, concise prior
+investigation, best supported resolution, risks and constraints. These are
+decision justifications and observable facts, never private reasoning transcripts.
+See [the escalation exchange](payload-examples.md#escalation-admissibility).
+
+Follow the typed disposition and `escalation.human_escalation_permitted` together.
+`reflect` requires the cited investigation; `blocked` is a truthful terminal stop,
+not permission to ask the submitted question or execute past a binding gate.
+Rephrasing a question or declaring investigation complete cannot reduce an
+obligation. Source predicates establish only inspected bytes; a quoted test pass
+does not establish test execution. Verification and publication retain their
+native proof owners.
+
+Discoverable information requires inspection; inferable choices require a
+defensible decision; verifiable uncertainty requires inspection, experiments or
+the existing proof hooks. An alleged irreducible requirement must correspond to
+an explicit canonical plan/spec human dependency. A proposed question must match
+that dependency; an unrelated human gate cannot justify a routine question.
+For missing authority or exceptional risk, name the exact operation and target in
+`authority`. Existing policy and live approval state are observed immediately.
+Do not spend reasoning rounds trying to infer approval. Preserve explicit grants
+already present in the user's request through the existing authority surface;
+do not ask for them again merely because a machine receipt is missing.
+
+Architecture keywords and `escalation_required` identify inference
+pressure, not automatic operator intervention. Inference capability gaps now
+identify `escalation_target: agent`. Typed escalation binds canonical intent and
+preserves actual plan/spec and policy human gates; orientation and reflection do not infer human need
+from a task-title keyword.
+
+The three-round lifetime budget, continuation token, source freshness, custody
+and compact journal are shared with ordinary reflection. Follow the challenge
+with material evidence or a narrower admissible action; preserve terminal
+blockers. No new slash command, conversation UI, scheduler or model is involved.
+The contract governs invoked and reported decisions. An arbitrary external
+harness can still ask a question if it never invokes the protocol.
+
+At a consequential decision boundary, optionally pass `--reflection '<request-json>'`
+to `infer orientation --task-id <id>`, or the same request as `reflection` in
+`mentor.obligations`. This composes existing mentor potential conflicts, governed
+plan constraints and task custody into one source-bound question and at most
+three rounds. Ordinary orientation without this input remains stateless.
+
+Follow `reflection.disposition`, `challenge.enforceable`, `execution_blocked`,
+`expected_token` and `remaining_rounds`; `proceed` clears only reflection.
+It never approves a plan, supplies human authority, runs a test or establishes
+publication readiness. Rephrasing an answer cannot establish progress.
+See [the complete exchange](payload-examples.md#bounded-reflection) and
+[the state contract](state-model.md#bounded-reflection-continuity).
+
 ### Reconcile Intent as the Code Evolves
 
 Use `decapod rpc --op intent.reconcile --params '{}'` to inspect the current
@@ -98,8 +163,13 @@ Proceed only when the command exits successfully and returns `"status": "allow"`
 
 ## Documentation Index
 
+This table is the canonical agent document list. The Markdown document links in
+`docs/agent/README.md` and the agent section of `docs/agent/llms.txt` must match it.
+The human book remains a separate index in `llms.txt`.
+
 | Resource | Purpose |
 |---|---|
+| [API Index](api-index.md) | Primary agent entrypoint and canonical document list. |
 | [Command Contracts](command-contracts.md) | **Critical:** Mandatory preconditions and state transitions. |
 | [Payload Examples](payload-examples.md) | Correct JSON shapes for RPC and complex flags. |
 | [Error Recovery](error-recovery.md) | How to respond to Decapod exit codes and messages. |
@@ -107,5 +177,6 @@ Proceed only when the command exits successfully and returns `"status": "allow"`
 | [Config Schema](config-schema.md) | Policy keys that govern your behavior. |
 | [Contribution Conventions](contribution-conventions.md) | Project tooling standard, source layout, and per-PR governance artifact rules. |
 | [MCP Integration](mcp.md) | Using Decapod via Model Context Protocol. |
+| [Repository Readiness](repository-readiness.md) | Repository proof profiles and readiness contracts. |
 
 Do not attempt to bypass Decapod boundaries. If you encounter a block, resolve it through the governed policy path or ask the human operator.

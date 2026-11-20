@@ -62,6 +62,18 @@ fn test_repo_root() -> &'static PathBuf {
             String::from_utf8_lossy(&init.stderr)
         );
 
+        // The RPC fixture later works on an unaccepted feature checkout.
+        // Establish independently accepted policy first, as real workspaces
+        // require; its candidate config must not authorize its own operations.
+        for args in [
+            vec!["add", "."],
+            vec!["-c", "user.name=RPC fixture", "-c", "user.email=fixture@example.invalid",
+                "commit", "-m", "fixture: accept initial repository policy"],
+        ] {
+            let accepted = Command::new("git").current_dir(&dir).args(args).output().unwrap();
+            assert!(accepted.status.success(), "{}", String::from_utf8_lossy(&accepted.stderr));
+        }
+
         dir
     })
 }
@@ -105,7 +117,7 @@ fn bootstrap_session() -> &'static str {
     // This prerequisite result is not full publication-readiness proof.
 
     SESSION_PASSWORD.get_or_init(|| {
-        let agent_id = "unknown";
+        let agent_id = "rpc-suite-agent";
 
         let _ = Command::new("git")
             .current_dir(test_repo_root())
@@ -175,11 +187,12 @@ fn bootstrap_session() -> &'static str {
 
 fn ensure_claimed_task(session_password: &str) -> &'static str {
     CLAIMED_TODO_ID.get_or_init(|| {
+        let agent_id = "rpc-suite-agent";
         let todo_add_out = run_cmd_with_lock_retry(|| {
             run_decapod(
                 &["todo", "add", "ordering gate test task", "--format", "json"],
                 &[
-                    ("DECAPOD_AGENT_ID", "unknown"),
+                    ("DECAPOD_AGENT_ID", agent_id),
                     ("DECAPOD_CLAIM_AUTORUN", "0"),
                     ("DECAPOD_SESSION_PASSWORD", session_password),
                 ],
@@ -198,10 +211,10 @@ fn ensure_claimed_task(session_password: &str) -> &'static str {
         let todo_claim_out = run_cmd_with_lock_retry(|| {
             run_decapod(
                 &[
-                    "todo", "claim", "--id", &todo_id, "--agent", "unknown", "--format", "json",
+                    "todo", "claim", "--id", &todo_id, "--agent", agent_id, "--format", "json",
                 ],
                 &[
-                    ("DECAPOD_AGENT_ID", "unknown"),
+                    ("DECAPOD_AGENT_ID", agent_id),
                     ("DECAPOD_CLAIM_AUTORUN", "0"),
                     ("DECAPOD_SESSION_PASSWORD", session_password),
                 ],
@@ -231,7 +244,7 @@ fn run_rpc(request: serde_json::Value) -> serde_json::Value {
             let mut cmd = Command::new(exe);
             cmd.current_dir(test_repo_root())
                 .args(["rpc", "--stdin"])
-                .env("DECAPOD_AGENT_ID", "unknown")
+                .env("DECAPOD_AGENT_ID", "rpc-suite-agent")
                 .env("DECAPOD_CLAIM_AUTORUN", "0")
                 .env("DECAPOD_SESSION_PASSWORD", session_password)
                 .stdin(Stdio::piped())
@@ -381,15 +394,25 @@ fn test_rpc_context_bindings() {
 fn test_rpc_trace_and_redaction() {
     let secret_id = format!("SECRET_{}", new_ulid());
     let request = serde_json::json!({
-        "op": "schema.get",
+        // Schema bootstrap is deliberately read-only and sessionless. Exercise
+        // redaction on a real traced mutation rather than requiring a repair
+        // reference to initialize or append to operational storage.
+        "op": "store.upsert",
         "params": {
-            "entity": "todo",
+            "entity": "knowledge",
+            "payload": {
+                "id": secret_id,
+                "title": "Trace redaction fixture",
+                "text": "Non-secret tracing regression payload",
+                "provenance": "cmd:cargo-test"
+            },
             "my_password": "supersecretpassword",
             "id": secret_id
         }
     });
 
-    let _res = run_rpc(request);
+    let response = run_rpc(request);
+    assert_eq!(response["success"], true);
 
     let lock = RPC_LOCK.get_or_init(|| Mutex::new(()));
     let _guard = match lock.lock() {

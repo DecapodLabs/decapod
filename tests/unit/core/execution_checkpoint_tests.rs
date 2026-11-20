@@ -87,7 +87,7 @@ fn fixture() -> TempDir {
             crate::core::db::db_connect(&crate::core::todo::todo_db_path(&store).to_string_lossy())
                 .unwrap();
         conn.execute("INSERT INTO tasks(id,hash,title,status,created_at,updated_at,dir_path,scope,assigned_to,lease_expires_at,lease_generation,lease_lifecycle,intent_anchor,revision) VALUES(?1,'fixture','Execution','open','1Z','1Z',?2,'repo',?3,?4,1,'claimed','intent_execution',1)",
-            params!["task_execution", root.to_string_lossy().as_ref(), crate::current_agent_id(), format!("{}Z", chrono::Utc::now().timestamp()+3600)]).unwrap();
+            params!["task_execution", root.to_string_lossy().as_ref(), crate::current_agent_id(), format!("{}Z", time::OffsetDateTime::now_utc().unix_timestamp()+3600)]).unwrap();
     }
     commit(root);
     temp
@@ -266,7 +266,10 @@ fn approval_fixture(root: &Path, operation: &str, scope: &str, expiry: &str) -> 
 fn execution_resume_rejects_revoked_and_wrong_scope_approvals() {
     let temp = fixture();
     let root = temp.path();
-    let future = format!("{}Z", chrono::Utc::now().timestamp() + 3600);
+    let future = format!(
+        "{}Z",
+        time::OffsetDateTime::now_utc().unix_timestamp() + 3600
+    );
     let wrong = approval_fixture(root, "todo.delete", "global", &future);
     assert!(
         checkpoint_execution(root, "run_execution", "wrong", &[wrong])
@@ -303,7 +306,10 @@ fn execution_approval_expiry_and_record_changes_are_not_hash_only() {
     assert!(approval_live(None));
     let temp = fixture();
     let root = temp.path();
-    let future = format!("{}Z", chrono::Utc::now().timestamp() + 3600);
+    let future = format!(
+        "{}Z",
+        time::OffsetDateTime::now_utc().unix_timestamp() + 3600
+    );
     let id = approval_fixture(root, RESUME_OPERATION, "global", &future);
     checkpoint_execution(
         root,
@@ -364,7 +370,10 @@ fn execution_resume_rechecks_task_revision_owner_generation_and_live_expiry() {
 fn execution_checkpoint_cannot_drop_prior_approval_requirements() {
     let temp = fixture();
     let root = temp.path();
-    let future = format!("{}Z", chrono::Utc::now().timestamp() + 3600);
+    let future = format!(
+        "{}Z",
+        time::OffsetDateTime::now_utc().unix_timestamp() + 3600
+    );
     let id = approval_fixture(root, RESUME_OPERATION, "global", &future);
     checkpoint_execution(root, "run_execution", "checkpoint_1", &[id]).unwrap();
     assert!(
@@ -412,7 +421,10 @@ fn execution_checkpoint_rechecks_existing_scope_constraint_gate() {
 fn execution_resume_accepts_applicable_zone_approval_without_widening_action() {
     let temp = fixture();
     let root = temp.path();
-    let future = format!("{}Z", chrono::Utc::now().timestamp() + 3600);
+    let future = format!(
+        "{}Z",
+        time::OffsetDateTime::now_utc().unix_timestamp() + 3600
+    );
     let id = approval_fixture(root, "control.mutate", "global", &future);
     checkpoint_execution(root, "run_execution", "checkpoint_1", &[id]).unwrap();
     verify_execution_resume(root, "run_execution", "checkpoint_1").unwrap();

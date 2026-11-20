@@ -43,12 +43,18 @@ jobs:
             git remote add origin https://github.com/DecapodLabs/decapod.git
             git -c protocol.version=2 fetch --quiet --no-tags --depth=2 origin "$GITHUB_SHA"
             read -r -a parents <<< "$(git rev-list --parents -n 1 FETCH_HEAD)"
-            if [ "${#parents[@]}" -eq 3 ]; then
+            # A squash/rebase release has one parent and carries its own
+            # release subject. Ordinary merges retain the release branch's
+            # subject on parent two. Root/octopus histories stay ineligible.
+            subject=""
+            if [ "${#parents[@]}" -eq 2 ]; then
+              subject="$(git log -1 --format=%s "${parents[0]}")"
+            elif [ "${#parents[@]}" -eq 3 ]; then
               subject="$(git log -1 --format=%s "${parents[2]}")"
-              if [[ "$subject" == chore:\ release\ v* ]]; then
-                publish=true
-                echo "Native release merge detected: $subject"
-              fi
+            fi
+            if [[ "$subject" == chore:\ release\ v* ]]; then
+              publish=true
+              echo "Native release commit detected: $subject"
             fi
           fi
           printf 'publish=%s\n' "$publish" >> "$GITHUB_OUTPUT"
@@ -88,19 +94,18 @@ jobs:
             echo "run=true" >> "$GITHUB_OUTPUT"
             exit 0
           fi
-          parents=( $(git rev-list --parents -n 1 "$GITHUB_SHA") )
-          if [ "${#parents[@]}" -lt 3 ]; then
-            echo "Not a merge commit; skipping Nix packaging proof."
-            echo "run=false" >> "$GITHUB_OUTPUT"
-            exit 0
+          read -r -a parents <<< "$(git rev-list --parents -n 1 "$GITHUB_SHA")"
+          subject=""
+          if [ "${#parents[@]}" -eq 2 ]; then
+            subject="$(git log -1 --format=%s "${parents[0]}")"
+          elif [ "${#parents[@]}" -eq 3 ]; then
+            subject="$(git log -1 --format=%s "${parents[2]}")"
           fi
-          second_parent="${parents[2]}"
-          subject="$(git log -1 --format=%s "$second_parent")"
           if [[ "$subject" == chore:\ release\ v* ]]; then
-            echo "Release merge detected: $subject"
+            echo "Release commit detected: $subject"
             echo "run=true" >> "$GITHUB_OUTPUT"
           else
-            echo "Not a release-plz merge commit: $subject"
+            echo "Not a supported release commit: $subject"
             echo "run=false" >> "$GITHUB_OUTPUT"
           fi
 

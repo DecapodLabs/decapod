@@ -7,6 +7,8 @@ use tempfile::TempDir;
 fn run_decapod(dir: &Path, args: &[&str]) -> std::process::Output {
     Command::new(env!("CARGO_BIN_EXE_decapod"))
         .current_dir(dir)
+        .env("DECAPOD_AGENT_ID", "context-capsule-agent")
+        .env("DECAPOD_CLAIM_AUTORUN", "0")
         .args(args)
         .output()
         .expect("run decapod")

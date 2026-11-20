@@ -158,7 +158,12 @@ are `verification`. `ProofCause::VerifierIntegrity` with an `unknown` judgment
 is `verification`. An `unknown` judgment with no typed cause, and a rejected
 or stale admission with no typed cause, record no blocker class. `inference`
 is available through `capability_gap` for a problem that still needs semantic
-judgment. Its provider class is `frontier` and `escalation_required` is true.
+judgment. Its provider class is `frontier`, `escalation_required` is true, and
+`escalation_target` is explicitly `agent`. This requests additional agent
+reasoning; it does not authorize a question to the human. Before a human
+escalation, use the existing orientation/mentor bounded reflection extension
+described in [bounded-reflection.md](bounded-reflection.md). Observed policy and
+canonical human dependencies remain separate from inference capability gaps.
 Every other class names a runtime capability and does not require escalation.
 
 `admit_operation_surface` maps an operation class to a mutation surface.

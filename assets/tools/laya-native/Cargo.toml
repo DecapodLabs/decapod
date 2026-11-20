@@ -1,0 +1,30 @@
+[package]
+name = "decapod-laya-infer"
+version = "0.1.0"
+edition = "2024"
+rust-version = "1.96.1"
+publish = false
+license = "Apache-2.0"
+
+[workspace]
+
+[features]
+default = []
+cuda = ["candle/cuda", "candle-nn/cuda"]
+
+[dependencies]
+candle = { package = "candle-core", git = "https://github.com/guoqingbao/candle.git", rev = "23a6f38", default-features = false }
+candle-nn = { git = "https://github.com/guoqingbao/candle.git", rev = "23a6f38", default-features = false }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+sha2 = "0.10"
+libc = "0.2"
+laya = { package = "laya-onnx", git = "https://github.com/NandhaKishorM/laya", rev = "7a77439b0923d6efe00052d50a7f787840bfce98", default-features = false }
+
+[dev-dependencies]
+tempfile = "3"
+
+[target.'cfg(all(target_os = "macos", target_arch = "aarch64"))'.dependencies]
+metal = { version = "=0.27.0", features = ["mps"] }
+candle = { package = "candle-core", git = "https://github.com/guoqingbao/candle.git", rev = "23a6f38", default-features = false, features = ["metal"] }
+candle-nn = { git = "https://github.com/guoqingbao/candle.git", rev = "23a6f38", default-features = false, features = ["metal"] }

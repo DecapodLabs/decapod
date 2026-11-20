@@ -1,0 +1,392 @@
+{
+  "schema": "decapod.dogfood-inventory-summary.v1",
+  "source": "decapod data database inspect --scope <repository> --format json",
+  "proof_scope": "read-only bounded native observations; no content/digest-chain verification, migration, packed-size comparison or hosted PostgreSQL execution",
+  "reports": [
+    {
+      "scope": "decapod",
+      "schema": "decapod.storage-inventory.v1",
+      "status": "ok",
+      "application_version": "0.144.4",
+      "application_binary_sha256": "sha256:e7c84f5a3d42c4c0c24b0244037cd55d8008c38bc7d43842d29cced27d73fe6e",
+      "observation_time": "2026-11-14T00:19:23.640398+00:00",
+      "engine": {
+        "application_id": 0,
+        "encoding": "UTF-8",
+        "name": "sqlite",
+        "user_version": 0,
+        "version": "3.54.0"
+      },
+      "observed_application_schema": {
+        "storage": {
+          "format_version": 2,
+          "min_reader_version": "0.141.0",
+          "min_writer_version": "0.141.0",
+          "status": "observed"
+        },
+        "todo": {
+          "status": "observed",
+          "version": 18
+        }
+      },
+      "effective_schema_digest": "sha256:722fd8f04af86e7d20f3f35d2a0bc8ac64622aebe83c19197388be3b2c0a5b20",
+      "options": {
+        "allow_long_read": false,
+        "duration_seconds": 5,
+        "report_bytes": 4194304,
+        "rows_per_table": 10000,
+        "scan_bytes": 67108864
+      },
+      "consistency": "one Dactyl deferred read transaction; filesystem stats observed separately before/after",
+      "coverage": "sampled",
+      "physical": {
+        "freelist_count": 0,
+        "journal_mode": "delete",
+        "page_count": 38291,
+        "page_size": 4096
+      },
+      "files_before": {
+        "lifecycle_lock": {
+          "allocated_bytes": 0,
+          "apparent_bytes": 0,
+          "status": "observed"
+        },
+        "main": {
+          "allocated_bytes": 167817216,
+          "apparent_bytes": 156835840,
+          "status": "observed"
+        },
+        "rollback_journal": {
+          "allocated_bytes": null,
+          "apparent_bytes": null,
+          "status": "absent"
+        },
+        "shm": {
+          "allocated_bytes": null,
+          "apparent_bytes": null,
+          "status": "absent"
+        },
+        "wal": {
+          "allocated_bytes": null,
+          "apparent_bytes": null,
+          "status": "absent"
+        }
+      },
+      "files_after": {
+        "lifecycle_lock": {
+          "allocated_bytes": 0,
+          "apparent_bytes": 0,
+          "status": "observed"
+        },
+        "main": {
+          "allocated_bytes": 167817216,
+          "apparent_bytes": 156839936,
+          "status": "observed"
+        },
+        "rollback_journal": {
+          "allocated_bytes": null,
+          "apparent_bytes": null,
+          "status": "absent"
+        },
+        "shm": {
+          "allocated_bytes": null,
+          "apparent_bytes": null,
+          "status": "absent"
+        },
+        "wal": {
+          "allocated_bytes": null,
+          "apparent_bytes": null,
+          "status": "absent"
+        }
+      },
+      "checkpoint_sampling": {
+        "coverage": "complete",
+        "method": "separate task.journal.checkpoint primary-key prefix; same per-table row ceiling and shared snapshot budgets",
+        "rows": 800,
+        "sample_rows": 800
+      },
+      "sampled_format_observations": {
+        "checkpoint_externalized_declared_bytes_unverified": 19876,
+        "checkpoint_json_unavailable_observations": 0,
+        "checkpoint_sample_observations": 800,
+        "checkpoint_unknown_version_rows": 0,
+        "checkpoint_v2_component_ref_rows": 23,
+        "checkpoint_version_overflow_rows": 0,
+        "checkpoint_versions": {
+          "1": 777,
+          "2": 23
+        },
+        "compact_envelope_escaped_rows": 0,
+        "compact_envelope_v1_rows": 9994,
+        "lcm_declared_decoded_bytes_unverified": 0,
+        "lcm_plain_text_cells": 0,
+        "lcm_unknown_cells": 0,
+        "lcm_v1_header_cells": 0,
+        "legacy_envelope_rows": 6,
+        "storage_component_declared_decoded_bytes_unverified": 14476,
+        "storage_component_plain_rows": 11,
+        "storage_component_unknown_rows": 0,
+        "storage_component_zlib_rows": 1
+      },
+      "format_observation_scope": "Sampled event_type task.journal.checkpoint JSON version fields and summaries text/BLOB headers only; no chain, digest, body or migration validation",
+      "measured_savings_bytes": null,
+      "native_report_sha256": "sha256:dff480de1fd03cb3b94359d6a97199e2c0dec1793fec5150c2df981c6521bca2"
+    },
+    {
+      "scope": "dactyl",
+      "schema": "decapod.storage-inventory.v1",
+      "status": "ok",
+      "application_version": "0.144.4",
+      "application_binary_sha256": "sha256:e7c84f5a3d42c4c0c24b0244037cd55d8008c38bc7d43842d29cced27d73fe6e",
+      "observation_time": "2026-11-14T00:19:23.640408+00:00",
+      "engine": {
+        "application_id": 0,
+        "encoding": "UTF-8",
+        "name": "sqlite",
+        "user_version": 0,
+        "version": "3.54.0"
+      },
+      "observed_application_schema": {
+        "storage": {
+          "format_version": null,
+          "min_reader_version": null,
+          "min_writer_version": null,
+          "status": "unmigrated_v1"
+        },
+        "todo": {
+          "status": "observed",
+          "version": 18
+        }
+      },
+      "effective_schema_digest": "sha256:c3c045607878ae3a8741653dd57f58a52a886d145ad642b9cc4382e590507092",
+      "options": {
+        "allow_long_read": false,
+        "duration_seconds": 5,
+        "report_bytes": 4194304,
+        "rows_per_table": 10000,
+        "scan_bytes": 67108864
+      },
+      "consistency": "one Dactyl deferred read transaction; filesystem stats observed separately before/after",
+      "coverage": "sampled",
+      "physical": {
+        "freelist_count": 0,
+        "journal_mode": "delete",
+        "page_count": 6344,
+        "page_size": 4096
+      },
+      "files_before": {
+        "lifecycle_lock": {
+          "allocated_bytes": 0,
+          "apparent_bytes": 0,
+          "status": "observed"
+        },
+        "main": {
+          "allocated_bytes": 26640384,
+          "apparent_bytes": 25985024,
+          "status": "observed"
+        },
+        "rollback_journal": {
+          "allocated_bytes": null,
+          "apparent_bytes": null,
+          "status": "absent"
+        },
+        "shm": {
+          "allocated_bytes": null,
+          "apparent_bytes": null,
+          "status": "absent"
+        },
+        "wal": {
+          "allocated_bytes": null,
+          "apparent_bytes": null,
+          "status": "absent"
+        }
+      },
+      "files_after": {
+        "lifecycle_lock": {
+          "allocated_bytes": 0,
+          "apparent_bytes": 0,
+          "status": "observed"
+        },
+        "main": {
+          "allocated_bytes": 26640384,
+          "apparent_bytes": 25985024,
+          "status": "observed"
+        },
+        "rollback_journal": {
+          "allocated_bytes": null,
+          "apparent_bytes": null,
+          "status": "absent"
+        },
+        "shm": {
+          "allocated_bytes": null,
+          "apparent_bytes": null,
+          "status": "absent"
+        },
+        "wal": {
+          "allocated_bytes": null,
+          "apparent_bytes": null,
+          "status": "absent"
+        }
+      },
+      "checkpoint_sampling": {
+        "coverage": "complete",
+        "method": "separate task.journal.checkpoint primary-key prefix; same per-table row ceiling and shared snapshot budgets",
+        "rows": 93,
+        "sample_rows": 93
+      },
+      "sampled_format_observations": {
+        "checkpoint_externalized_declared_bytes_unverified": 0,
+        "checkpoint_json_unavailable_observations": 0,
+        "checkpoint_sample_observations": 93,
+        "checkpoint_unknown_version_rows": 0,
+        "checkpoint_v2_component_ref_rows": 0,
+        "checkpoint_version_overflow_rows": 0,
+        "checkpoint_versions": {
+          "1": 93
+        },
+        "compact_envelope_escaped_rows": 0,
+        "compact_envelope_v1_rows": 0,
+        "lcm_declared_decoded_bytes_unverified": 0,
+        "lcm_plain_text_cells": 0,
+        "lcm_unknown_cells": 0,
+        "lcm_v1_header_cells": 0,
+        "legacy_envelope_rows": 10000,
+        "storage_component_declared_decoded_bytes_unverified": 0,
+        "storage_component_plain_rows": 0,
+        "storage_component_unknown_rows": 0,
+        "storage_component_zlib_rows": 0
+      },
+      "format_observation_scope": "Sampled event_type task.journal.checkpoint JSON version fields and summaries text/BLOB headers only; no chain, digest, body or migration validation",
+      "measured_savings_bytes": null,
+      "native_report_sha256": "sha256:b4ff83c20aa147089ad3369ccdfa3b464fd6f203f9ff36c009f8e028e0d9e8c6"
+    },
+    {
+      "scope": "propodus",
+      "schema": "decapod.storage-inventory.v1",
+      "status": "ok",
+      "application_version": "0.144.4",
+      "application_binary_sha256": "sha256:e7c84f5a3d42c4c0c24b0244037cd55d8008c38bc7d43842d29cced27d73fe6e",
+      "observation_time": "2026-11-14T00:19:23.640406+00:00",
+      "engine": {
+        "application_id": 0,
+        "encoding": "UTF-8",
+        "name": "sqlite",
+        "user_version": 0,
+        "version": "3.54.0"
+      },
+      "observed_application_schema": {
+        "storage": {
+          "format_version": null,
+          "min_reader_version": null,
+          "min_writer_version": null,
+          "status": "unmigrated_v1"
+        },
+        "todo": {
+          "status": "observed",
+          "version": 18
+        }
+      },
+      "effective_schema_digest": "sha256:0a6e1cc609ccb27cc2e91b296e25473af46fd8eaa7fa6e2666a6e02c25598cc0",
+      "options": {
+        "allow_long_read": false,
+        "duration_seconds": 5,
+        "report_bytes": 4194304,
+        "rows_per_table": 10000,
+        "scan_bytes": 67108864
+      },
+      "consistency": "one Dactyl deferred read transaction; filesystem stats observed separately before/after",
+      "coverage": "sampled",
+      "physical": {
+        "freelist_count": 0,
+        "journal_mode": "delete",
+        "page_count": 14502,
+        "page_size": 4096
+      },
+      "files_before": {
+        "lifecycle_lock": {
+          "allocated_bytes": 0,
+          "apparent_bytes": 0,
+          "status": "observed"
+        },
+        "main": {
+          "allocated_bytes": 59621376,
+          "apparent_bytes": 59387904,
+          "status": "observed"
+        },
+        "rollback_journal": {
+          "allocated_bytes": null,
+          "apparent_bytes": null,
+          "status": "absent"
+        },
+        "shm": {
+          "allocated_bytes": null,
+          "apparent_bytes": null,
+          "status": "absent"
+        },
+        "wal": {
+          "allocated_bytes": null,
+          "apparent_bytes": null,
+          "status": "absent"
+        }
+      },
+      "files_after": {
+        "lifecycle_lock": {
+          "allocated_bytes": 0,
+          "apparent_bytes": 0,
+          "status": "observed"
+        },
+        "main": {
+          "allocated_bytes": 59621376,
+          "apparent_bytes": 59400192,
+          "status": "observed"
+        },
+        "rollback_journal": {
+          "allocated_bytes": null,
+          "apparent_bytes": null,
+          "status": "absent"
+        },
+        "shm": {
+          "allocated_bytes": null,
+          "apparent_bytes": null,
+          "status": "absent"
+        },
+        "wal": {
+          "allocated_bytes": null,
+          "apparent_bytes": null,
+          "status": "absent"
+        }
+      },
+      "checkpoint_sampling": {
+        "coverage": "complete",
+        "method": "separate task.journal.checkpoint primary-key prefix; same per-table row ceiling and shared snapshot budgets",
+        "rows": 173,
+        "sample_rows": 173
+      },
+      "sampled_format_observations": {
+        "checkpoint_externalized_declared_bytes_unverified": 0,
+        "checkpoint_json_unavailable_observations": 0,
+        "checkpoint_sample_observations": 173,
+        "checkpoint_unknown_version_rows": 0,
+        "checkpoint_v2_component_ref_rows": 0,
+        "checkpoint_version_overflow_rows": 0,
+        "checkpoint_versions": {
+          "1": 173
+        },
+        "compact_envelope_escaped_rows": 0,
+        "compact_envelope_v1_rows": 0,
+        "lcm_declared_decoded_bytes_unverified": 0,
+        "lcm_plain_text_cells": 0,
+        "lcm_unknown_cells": 0,
+        "lcm_v1_header_cells": 0,
+        "legacy_envelope_rows": 10000,
+        "storage_component_declared_decoded_bytes_unverified": 0,
+        "storage_component_plain_rows": 0,
+        "storage_component_unknown_rows": 0,
+        "storage_component_zlib_rows": 0
+      },
+      "format_observation_scope": "Sampled event_type task.journal.checkpoint JSON version fields and summaries text/BLOB headers only; no chain, digest, body or migration validation",
+      "measured_savings_bytes": null,
+      "native_report_sha256": "sha256:9aa9179470a86a0cbe6087fc166d0bc293205ae4a2d47a2a344a67c9f4317cb6"
+    }
+  ]
+}

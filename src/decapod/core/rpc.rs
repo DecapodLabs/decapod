@@ -30,6 +30,8 @@ pub struct OrientationPacket {
     pub known_unknowns: Vec<String>,
     pub decision_gates: Vec<DecisionGate>,
     pub next_action: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub reflection: Option<crate::core::mentor::reflection::Outcome>,
 }
 
 /// The plan context agents must see before selecting an implementation path.
@@ -66,6 +68,15 @@ pub struct DecisionGate {
 pub struct DecisionOption {
     pub label: String,
     pub impact: String,
+}
+
+/// Architectural inference pressure. A keyword never establishes missing human
+/// authority; the existing reflection protocol evaluates real dependencies.
+pub fn architectural_alignment_required(goal: &str) -> bool {
+    let goal = goal.to_lowercase();
+    ["refactor", "architecture", "interface"]
+        .iter()
+        .any(|term| goal.contains(term))
 }
 
 /// Standard RPC request envelope
@@ -327,6 +338,125 @@ pub struct SchemaGetResult {
     pub json_schema: serde_json::Value,
 }
 
+/// Read-only repository-local inventory. Resource limits are semantic policy;
+/// physical snapshot execution remains owned by Dactyl.
+#[derive(Debug, Clone, Deserialize, Serialize)]
+#[serde(default, deny_unknown_fields)]
+pub struct StorageInventoryParams {
+    pub scope: String,
+    pub options: crate::core::storage_inventory::InventoryOptions,
+}
+
+impl Default for StorageInventoryParams {
+    fn default() -> Self {
+        Self {
+            scope: "repository".into(),
+            options: crate::core::storage_inventory::InventoryOptions::default(),
+        }
+    }
+}
+
+/// Governed capability discovery for local agent database maintenance (#1568).
+#[derive(Debug, Clone, Default, Deserialize, Serialize)]
+#[serde(default, deny_unknown_fields)]
+pub struct DatabaseCapabilitiesParams {
+    pub probes: Vec<String>,
+    pub actor: Option<String>,
+}
+
+#[derive(Debug, Clone, Default, Deserialize, Serialize)]
+#[serde(default, deny_unknown_fields)]
+pub struct DatabaseMaintainInspectParams {
+    pub operation_id: Option<String>,
+    pub expected_policy_sha256: Option<String>,
+    pub actor: Option<String>,
+}
+
+#[derive(Debug, Clone, Default, Deserialize, Serialize)]
+#[serde(default, deny_unknown_fields)]
+pub struct DatabaseVerifyParams {
+    pub operation_id: Option<String>,
+    pub expected_policy_sha256: Option<String>,
+    pub actor: Option<String>,
+}
+
+#[derive(Debug, Clone, Deserialize, Serialize)]
+#[serde(deny_unknown_fields)]
+pub struct DatabaseBackupParams {
+    pub destination: std::path::PathBuf,
+    #[serde(default)]
+    pub operation_id: Option<String>,
+    #[serde(default)]
+    pub expected_policy_sha256: Option<String>,
+    #[serde(default)]
+    pub actor: Option<String>,
+}
+
+#[derive(Debug, Clone, Deserialize, Serialize)]
+#[serde(deny_unknown_fields)]
+pub struct DatabaseRecoverParams {
+    pub preserve_original_at: std::path::PathBuf,
+    #[serde(default)]
+    pub operation_id: Option<String>,
+    #[serde(default)]
+    pub expected_policy_sha256: Option<String>,
+    #[serde(default)]
+    pub actor: Option<String>,
+}
+
+#[derive(Debug, Clone, Default, Deserialize, Serialize)]
+#[serde(default, deny_unknown_fields)]
+pub struct DatabaseLockDiagnoseParams {
+    pub timeout_ms: u64,
+    pub operation_id: Option<String>,
+    pub expected_policy_sha256: Option<String>,
+    pub actor: Option<String>,
+}
+
+#[derive(Debug, Clone, Deserialize, Serialize)]
+#[serde(deny_unknown_fields)]
+pub struct DatabaseLockRetryParams {
+    pub target: crate::core::db_maintenance::RetryTargetCapability,
+    #[serde(default)]
+    pub destination: Option<std::path::PathBuf>,
+    #[serde(default = "crate::core::db_maintenance::default_retry_max_attempts")]
+    pub max_attempts: u32,
+    #[serde(default = "crate::core::db_maintenance::default_retry_initial_backoff_ms")]
+    pub initial_backoff_ms: u64,
+    #[serde(default = "crate::core::db_maintenance::default_retry_deadline_ms")]
+    pub deadline_ms: u64,
+    #[serde(default)]
+    pub operation_id: Option<String>,
+    #[serde(default)]
+    pub expected_policy_sha256: Option<String>,
+    #[serde(default)]
+    pub actor: Option<String>,
+}
+
+#[derive(Debug, Clone, Default, Deserialize, Serialize)]
+#[serde(default, deny_unknown_fields)]
+pub struct DatabaseLockReleaseOwnParams {
+    pub operation_id: Option<String>,
+    pub expected_policy_sha256: Option<String>,
+    pub actor: Option<String>,
+}
+
+#[derive(Debug, Clone, Deserialize, Serialize)]
+#[serde(default, deny_unknown_fields)]
+pub struct DatabaseAuditParams {
+    pub limit: usize,
+    pub actor: Option<String>,
+}
+
+impl Default for DatabaseAuditParams {
+    fn default() -> Self {
+        Self {
+            limit: 50,
+            actor: None,
+        }
+    }
+}
+
 // Store Subsystem
 #[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct StoreUpsertParams {
@@ -422,11 +552,14 @@ pub struct MentorObligationsParams {
     pub project_profile_id: Option<String>,
     pub session_id: Option<String>,
     pub high_risk: Option<bool>,
+    pub reflection: Option<crate::core::mentor::reflection::Request>,
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct MentorObligationsResult {
     pub obligations: crate::core::mentor::Obligations,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub reflection: Option<crate::core::mentor::reflection::Outcome>,
 }
 
 // Assurance Subsystem
@@ -491,6 +624,12 @@ pub type InteropProjectParams = crate::core::projection::ProjectRequest;
 #[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct InteropProjectResult {
     pub projection: serde_json::Value,
+    /// Origin of the data being transformed, not the projection's RPC receipt.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub input_origin: Option<String>,
+    /// Pure projection does not authenticate the supplied operation or policy.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub canonical_state_verified: Option<bool>,
 }
 
 // State Subsystem
@@ -660,6 +799,9 @@ pub struct RpcError {
 pub struct CapabilitiesReport {
     /// Decapod version
     pub version: String,
+    /// Supported repository storage backends
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub backends: Vec<BackendCapability>,
     /// Capabilities offered
     pub capabilities: Vec<Capability>,
     /// Subsystems available
@@ -702,6 +844,21 @@ pub(crate) fn compute_is_latest(
     current_version: &str,
 ) -> bool {
     version_check == VersionCheckStatus::Ok && latest_version == Some(current_version)
+}
+
+/// Supported repository storage backend descriptor
+#[derive(Debug, Clone, Deserialize, Serialize, PartialEq, Eq)]
+pub struct BackendCapability {
+    /// Canonical config selector (`local` or `cloud`)
+    pub id: String,
+    /// Product name (`Decapod Local` or `Decapod Cloud`)
+    pub name: String,
+    /// Summary of the backend's operating model
+    pub description: String,
+    /// Whether this backend is the default
+    pub default: bool,
+    /// Whether an authenticated account is required
+    pub account_required: bool,
 }
 
 /// Individual capability
@@ -839,7 +996,35 @@ pub fn generate_capabilities() -> CapabilitiesReport {
 
     CapabilitiesReport {
         version: env!("CARGO_PKG_VERSION").to_string(),
+        backends: vec![
+            BackendCapability {
+                id: "local".to_string(),
+                name: "Decapod Local".to_string(),
+                description: "Local-first SQLite and Git governance runtime with no account required".to_string(),
+                default: true,
+                account_required: false,
+            },
+            BackendCapability {
+                id: "cloud".to_string(),
+                name: "Decapod Cloud".to_string(),
+                description: "Hosted repository-bound task and coordination service via Dactyl".to_string(),
+                default: false,
+                account_required: true,
+            },
+        ],
         capabilities: vec![
+            Capability {
+                name: "backend.local".to_string(),
+                description: "Decapod Local (local): default local-first SQLite and Git runtime with no account required".to_string(),
+                stability: "stable".to_string(),
+                cost: "none".to_string(),
+            },
+            Capability {
+                name: "backend.cloud".to_string(),
+                description: "Decapod Cloud (cloud): optional hosted repository-bound backend via Dactyl (account required)".to_string(),
+                stability: "beta".to_string(),
+                cost: "medium".to_string(),
+            },
             Capability {
                 name: "daemonless".to_string(),
                 description: "Decapod never runs in the background; it is invoked by agents"
@@ -881,6 +1066,66 @@ pub fn generate_capabilities() -> CapabilitiesReport {
                 name: "schema.get".to_string(),
                 description: "Get authoritative JSON schemas for entities".to_string(),
                 stability: "stable".to_string(),
+                cost: "low".to_string(),
+            },
+            Capability {
+                name: "data.database.inspect".to_string(),
+                description: "Bounded read-only local storage inventory without startup migrations or maintenance".to_string(),
+                stability: "beta".to_string(),
+                cost: "bounded_scan".to_string(),
+            },
+            Capability {
+                name: "data.database.capabilities".to_string(),
+                description: "Discover canonical project-opted local database maintenance capabilities and reason codes".to_string(),
+                stability: "beta".to_string(),
+                cost: "low".to_string(),
+            },
+            Capability {
+                name: "data.database.maintain.inspect".to_string(),
+                description: "Governed db.inspect combining Dactyl storage inventory and non-destructive lock diagnosis".to_string(),
+                stability: "beta".to_string(),
+                cost: "bounded_scan".to_string(),
+            },
+            Capability {
+                name: "data.database.verify".to_string(),
+                description: "Governed db.verify read-only Dactyl SQLite integrity check".to_string(),
+                stability: "beta".to_string(),
+                cost: "low".to_string(),
+            },
+            Capability {
+                name: "data.database.backup".to_string(),
+                description: "Governed db.backup online SQLite snapshot under .decapod/backups/".to_string(),
+                stability: "beta".to_string(),
+                cost: "medium".to_string(),
+            },
+            Capability {
+                name: "data.database.recover".to_string(),
+                description: "Governed db.recover logical rebuild (denied without repository owner repair authority)".to_string(),
+                stability: "beta".to_string(),
+                cost: "high".to_string(),
+            },
+            Capability {
+                name: "data.database.lock.diagnose".to_string(),
+                description: "Governed db.lock.diagnose non-destructive sidecar lock contention probe".to_string(),
+                stability: "beta".to_string(),
+                cost: "low".to_string(),
+            },
+            Capability {
+                name: "data.database.lock.retry".to_string(),
+                description: "Governed db.lock.retry bounded backoff/deadline retry over authorized safe database operations".to_string(),
+                stability: "beta".to_string(),
+                cost: "medium".to_string(),
+            },
+            Capability {
+                name: "data.database.lock.release_own".to_string(),
+                description: "Governed db.lock.release_own safe relinquish of an idle current-process lease".to_string(),
+                stability: "beta".to_string(),
+                cost: "low".to_string(),
+            },
+            Capability {
+                name: "data.database.audit".to_string(),
+                description: "Read recent redacted append-only database maintenance audit records".to_string(),
+                stability: "beta".to_string(),
                 cost: "low".to_string(),
             },
             Capability {
@@ -1122,6 +1367,17 @@ pub fn generate_capabilities() -> CapabilitiesReport {
                 name: "state".to_string(),
                 status: "active".to_string(),
                 ops: vec!["resolve".to_string(), "diff".to_string()],
+            },
+            SubsystemInfo {
+                name: "cloud".to_string(),
+                status: "active".to_string(),
+                ops: vec![
+                    "login".to_string(),
+                    "status".to_string(),
+                    "projects".to_string(),
+                    "project.use".to_string(),
+                    "project.create".to_string(),
+                ],
             },
             SubsystemInfo {
                 name: "interop".to_string(),

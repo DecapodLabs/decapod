@@ -419,3 +419,43 @@ pub(super) fn export(directory: &Path) -> Result<()> {
     ));
     Ok(())
 }
+
+#[test]
+fn frozen_corpora_name_executable_and_disjoint_contract_families() -> Result<()> {
+    let mut families = std::collections::BTreeSet::new();
+    for (partition, bytes) in [
+        (
+            "fit",
+            include_bytes!("../fixtures/laya-readiness-fit-corpus.json").as_slice(),
+        ),
+        (
+            "evaluation",
+            include_bytes!("../fixtures/laya-readiness-evaluation-corpus.json").as_slice(),
+        ),
+    ] {
+        let definition: Value = serde_json::from_slice(bytes)?;
+        assert_eq!(definition["schema"], "decapod.laya-affine-corpus.v1");
+        assert_eq!(definition["partition"], partition);
+        let declared = definition["families"].as_array().unwrap();
+        assert_eq!(declared.len(), 4);
+        for family in declared {
+            let family = family.as_str().unwrap();
+            assert!(
+                families.insert(family.to_owned()),
+                "family reused: {family}"
+            );
+            // Execute bounded Rust witnesses only. No model, fitting artifact,
+            // generated inputs or evaluation scores are consumed or produced.
+            assert!(!execute(family)?.checks.is_empty());
+        }
+        if partition == "evaluation" {
+            assert_eq!(definition["frozen_before_fitting"], true);
+            assert_eq!(
+                definition["acceptance"]["false_ready_on_adverse_controls"],
+                0
+            );
+            assert_eq!(definition["acceptance"]["reuse_for_tuning"], false);
+        }
+    }
+    Ok(())
+}

@@ -118,21 +118,48 @@ fn read_all_events(root: &Path) -> Result<Vec<LcmEvent>, error::DecapodError> {
         return Ok(Vec::new());
     }
     let conn = crate::core::db::db_connect_for_validate(&db_path.to_string_lossy())?;
+    if !conn.has_table("events")? {
+        return Ok(Vec::new());
+    }
     let mut stmt = conn
-        .prepare("SELECT payload FROM events WHERE stream = 'lcm' ORDER BY seq ASC")
+        .prepare(
+            "SELECT event_id, ts, event_type, actor, subject_kind, subject_id, payload
+             FROM events WHERE stream = 'lcm' ORDER BY seq ASC, event_id ASC",
+        )
         .map_err(error::DecapodError::StorageError)?;
     let rows = stmt
-        .query_map([], |row| row.get::<_, String>(0))
+        .query_map([], |row| {
+            Ok((
+                row.get::<_, String>(0)?,
+                row.get::<_, String>(1)?,
+                row.get::<_, String>(2)?,
+                row.get::<_, String>(3)?,
+                row.get::<_, Option<String>>(4)?,
+                row.get::<_, Option<String>>(5)?,
+                row.get::<_, String>(6)?,
+            ))
+        })
         .map_err(error::DecapodError::StorageError)?;
-    let mut events = Vec::new();
+    let mut out = Vec::new();
     for row in rows {
-        let payload = row.map_err(error::DecapodError::StorageError)?;
-        events.push(
-            serde_json::from_str(&payload)
+        let (event_id, ts, event_type, actor, subject_kind, subject_id, payload) =
+            row.map_err(error::DecapodError::StorageError)?;
+        let reconstructed = events::reconstruct_stored_payload(
+            events::LCM,
+            &event_id,
+            &ts,
+            &event_type,
+            &actor,
+            subject_kind.as_deref(),
+            subject_id.as_deref(),
+            &payload,
+        )?;
+        out.push(
+            serde_json::from_value(reconstructed)
                 .map_err(|e| error::DecapodError::ValidationError(e.to_string()))?,
         );
     }
-    Ok(events)
+    Ok(out)
 }
 
 /// Rough token estimate: ~4 chars per token.

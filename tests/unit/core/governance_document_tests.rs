@@ -1083,6 +1083,7 @@ fn workunit_initialization_cannot_overwrite_existing_legacy_proof() {
         proof_plan: vec![],
         proof_results: vec![],
         validation_epoch: None,
+        validation_record: None,
         status: WorkUnitStatus::Verified,
     };
     let legacy = root
@@ -2473,4 +2474,262 @@ fn checkpoint_assessment_ignores_git_replace_objects_instead_of_accepting_substi
             .any(|finding| finding.commit == missing)
     );
     assert!(verify_pr_checkpoints(root.path(), &base, &later).is_err());
+}
+
+fn commit_unit_checkpoint(root: &Path, id: &str) -> String {
+    git(root, &["add", "-A"]).unwrap();
+    checkpoint(root, id, id, vec![]).unwrap();
+    git(root, &["add", GOVERNANCE_PATH]).unwrap();
+    commit(root, id);
+    git(root, &["rev-parse", "HEAD"]).unwrap()
+}
+
+fn test_validation_receipt(commit: &str) -> Value {
+    use crate::core::validate::ValidationReceipt;
+    use crate::core::validation_epoch::ValidationEpochMetadata;
+    let receipt = ValidationReceipt {
+        schema_version: "1.0.0".into(),
+        kind: "validation_receipt".into(),
+        decapod_release: env!("CARGO_PKG_VERSION").into(),
+        git_revision: commit.into(),
+        repo_signal_fingerprint: "fp".into(),
+        trajectory_run_id: None,
+        trajectory_artifact_hash: None,
+        validation_epoch: ValidationEpochMetadata {
+            schema_version: "1.0.0".into(),
+            epoch_id: format!("epoch-{commit}"),
+            evaluator_identity: "unit".into(),
+            evaluator_set_hash: "eval".into(),
+            constitution_version: "1.0.0".into(),
+            constitution_hash: "const".into(),
+            validation_profile: "default".into(),
+            validation_profile_hash: "prof".into(),
+            proof_rubric: "default".into(),
+            proof_rubric_hash: "rubric".into(),
+            generated_specs_manifest_hash: "manifest".into(),
+            generated_specs_fingerprint: "specsfp".into(),
+            material_hashes: Default::default(),
+        },
+        status: "ok".into(),
+        pass_count: 1,
+        fail_count: 0,
+        warn_count: 0,
+        elapsed_ms: 1,
+        drift_findings: vec![],
+        temporary_artifacts_cleaned: 0,
+        failures: None,
+        warnings: None,
+        gate_timings: None,
+        parallelism: None,
+        ci_prediction: None,
+        receipt_hash: String::new(),
+    }
+    .with_recomputed_hash()
+    .unwrap();
+    serde_json::to_value(receipt).unwrap()
+}
+
+#[test]
+fn reconcile_merge_recovers_two_branch_ours_merge_and_preserves_custody_and_proof_failures() {
+    use crate::core::trajectory::{
+        TrajectoryCheck, TrajectoryCheckStatus, TrajectoryInit, TrajectoryProofStatus,
+        TrajectoryUpdate, init_trajectory, load_trajectory, record_trajectory,
+    };
+
+    let root = repo();
+    begin_pr(root.path(), "change-unit-1780", "master").unwrap();
+    init_trajectory(
+        root.path(),
+        TrajectoryInit {
+            run_id: "run-unit-1780".into(),
+            task_id: Some("bugs_unit1780".into()),
+            intent_id: Some("intent:unit1780".into()),
+            original_intent: "Test merge reconciliation".into(),
+            derived_intent: "Reconcile merged trajectory".into(),
+            active_boundaries: vec!["src/".into()],
+            repo_scope: vec!["src/".into()],
+            destination: None,
+            current_phase: Some("execution".into()),
+            next_transitions: vec![],
+            blockers: vec![],
+        },
+    )
+    .unwrap();
+    fs::write(root.path().join("base.rs"), "pub fn base() {}\n").unwrap();
+    record_trajectory(
+        root.path(),
+        "run-unit-1780",
+        TrajectoryUpdate {
+            inspected_files: vec!["base.rs".into()],
+            declared_commands: vec!["cargo check".into()],
+            tool_calls: vec!["run_command".into()],
+            checks: vec![TrajectoryCheck {
+                name: "base".into(),
+                status: TrajectoryCheckStatus::Passed,
+            }],
+            evidence: vec!["base:ok".into()],
+            ..Default::default()
+        },
+    )
+    .unwrap();
+    let shared = commit_unit_checkpoint(root.path(), "ckpt-shared");
+
+    // Branch B off shared commit records modified_files/inspected_files + FAILED check
+    // while Branch A below modifies checks/evidence/validation so `-X ours` mixes fields -> hash mismatch
+    git(root.path(), &["checkout", "-q", "-b", "branch-b", &shared]).unwrap();
+    fs::write(root.path().join("b.rs"), "pub fn b() {}\n").unwrap();
+    record_trajectory(
+        root.path(),
+        "run-unit-1780",
+        TrajectoryUpdate {
+            inspected_files: vec!["b.rs".into()],
+            modified_files: vec!["b.rs".into()],
+            checks: vec![TrajectoryCheck {
+                name: "gate_b".into(),
+                status: TrajectoryCheckStatus::Failed,
+            }],
+            ..Default::default()
+        },
+    )
+    .unwrap();
+    let b_sha = commit_unit_checkpoint(root.path(), "ckpt-b");
+
+    // Branch A on master-work continues with evidence + passing check + stale validation receipt
+    git(root.path(), &["checkout", "-q", "master"]).unwrap();
+    fs::write(root.path().join("a.rs"), "pub fn a() {}\n").unwrap();
+    record_trajectory(
+        root.path(),
+        "run-unit-1780",
+        TrajectoryUpdate {
+            evidence: vec!["a:ok".into()],
+            unresolved_assumptions: vec!["a:assumption".into()],
+            checks: vec![TrajectoryCheck {
+                name: "unit_a".into(),
+                status: TrajectoryCheckStatus::Passed,
+            }],
+            ..Default::default()
+        },
+    )
+    .unwrap();
+    let mut doc = load(root.path()).unwrap().unwrap();
+    doc.sections
+        .insert("validation".into(), test_validation_receipt(&shared));
+    save(root.path(), &doc).unwrap();
+    commit_unit_checkpoint(root.path(), "ckpt-a");
+
+    // Merge B into A with `-X ours` -> causes Trajectory artifact hash mismatch
+    git(
+        root.path(),
+        &[
+            "-c",
+            "user.name=Governance Tests",
+            "-c",
+            "user.email=test@example.invalid",
+            "merge",
+            "--no-commit",
+            "-X",
+            "ours",
+            &b_sha,
+        ],
+    )
+    .unwrap();
+    let load_err = load(root.path()).unwrap_err().to_string();
+    assert!(
+        load_err.contains("Trajectory artifact hash mismatch"),
+        "{load_err}"
+    );
+
+    let reconciled = reconcile_merge(root.path()).unwrap();
+    assert!(!reconciled.sections.contains_key("validation"));
+    let ckpts: Vec<&str> = reconciled
+        .checkpoints
+        .iter()
+        .map(|c| c.id.as_str())
+        .collect();
+    assert_eq!(ckpts, vec!["ckpt-shared", "ckpt-a", "ckpt-b"]);
+
+    let traj = load_trajectory(root.path(), "run-unit-1780").unwrap();
+    assert!(traj.modified_files.contains(&"b.rs".to_string()));
+    assert!(traj.evidence.contains(&"a:ok".to_string()));
+    assert_eq!(traj.proof_status, TrajectoryProofStatus::Failed);
+    assert_ne!(format!("{:?}", traj.verdicts.completion_proof), "Proven");
+    // Divergent custody events from both branches are preserved sequentially
+    assert!(traj.custody.events.len() >= 4);
+}
+
+#[test]
+fn reconcile_merge_retains_active_journal_on_accepted_target_and_refuses_conflicts() {
+    let root = repo();
+    let base = git(root.path(), &["rev-parse", "HEAD"]).unwrap();
+
+    // Feature branch forked from base
+    git(root.path(), &["checkout", "-q", "-b", "feature", &base]).unwrap();
+    begin_pr(root.path(), "feature-pr", "master").unwrap();
+    fs::write(root.path().join("feature.rs"), "pub fn f() {}\n").unwrap();
+    let mut feat_doc = load(root.path()).unwrap().unwrap();
+    feat_doc
+        .sections
+        .insert("validation".into(), test_validation_receipt(&base));
+    save(root.path(), &feat_doc).unwrap();
+    commit_unit_checkpoint(root.path(), "ckpt-feature");
+
+    // Accepted master advances with another change.id and new baseline policy
+    git(root.path(), &["checkout", "-q", "master"]).unwrap();
+    begin_pr(root.path(), "accepted-other", "master").unwrap();
+    let mut master_doc = load(root.path()).unwrap().unwrap();
+    master_doc
+        .baseline
+        .policy
+        .insert("accepted_rule".into(), json!("strict"));
+    master_doc
+        .baseline
+        .unresolved
+        .insert("ob_new".into(), json!({"reason": "carried"}));
+    save(root.path(), &master_doc).unwrap();
+    let master_sha = commit_unit_checkpoint(root.path(), "ckpt-master");
+
+    // Merging accepted master into feature keeps feature's active journal + accepted policy
+    git(root.path(), &["checkout", "-q", "feature"]).unwrap();
+    let _ = git(
+        root.path(),
+        &[
+            "-c",
+            "user.name=Governance Tests",
+            "-c",
+            "user.email=test@example.invalid",
+            "merge",
+            "--no-commit",
+            "-X",
+            "ours",
+            &master_sha,
+        ],
+    );
+    git(
+        root.path(),
+        &["rev-parse", "--verify", "MERGE_HEAD^{commit}"],
+    )
+    .unwrap();
+    let reconciled = reconcile_merge(root.path()).unwrap();
+    assert_eq!(
+        reconciled.change.as_ref().map(|c| c.id.as_str()),
+        Some("feature-pr")
+    );
+    assert_eq!(
+        reconciled.baseline.policy.get("accepted_rule"),
+        Some(&json!("strict"))
+    );
+    assert!(reconciled.baseline.unresolved.contains_key("ob_new"));
+    assert!(!reconciled.sections.contains_key("validation"));
+    git(root.path(), &["merge", "--abort"]).unwrap();
+
+    // Non-merge call fails closed even if working tree governance.json is corrupted
+    let original = fs::read(root.path().join(GOVERNANCE_PATH)).unwrap();
+    fs::write(root.path().join(GOVERNANCE_PATH), b"{bad json").unwrap();
+    let err = reconcile_merge(root.path()).unwrap_err().to_string();
+    assert!(err.contains("GOVERNANCE_MERGE_NOT_IN_PROGRESS"), "{err}");
+    assert_eq!(
+        fs::read(root.path().join(GOVERNANCE_PATH)).unwrap(),
+        b"{bad json"
+    );
+    fs::write(root.path().join(GOVERNANCE_PATH), original).unwrap();
 }

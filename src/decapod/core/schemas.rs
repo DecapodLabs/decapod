@@ -30,8 +30,18 @@ CREATE INDEX IF NOT EXISTS idx_events_subject ON events(subject_kind, subject_id
 pub const EVENTS_TABLE_UNIQUE_STREAM_SEQUENCE_INDEX: &str =
     "CREATE UNIQUE INDEX IF NOT EXISTS idx_events_stream_seq_unique ON events(stream, seq)";
 
+/// Composite partial index for bounded subject-scoped cursor replay and
+/// projection queries (`WHERE stream = ?1 AND subject_kind = ?2 AND subject_id = ?3
+/// AND subject_kind IS NOT NULL AND subject_id IS NOT NULL AND seq > ?4 ORDER BY seq ASC`).
+/// Omits NULL-subject streams from the B-tree and eliminates SQLite temp B-tree sorts (#1734).
+pub const EVENTS_TABLE_STREAM_SUBJECT_SEQ_INDEX: &str = "CREATE INDEX IF NOT EXISTS idx_events_stream_subject_seq ON events(stream, subject_kind, subject_id, seq) WHERE subject_kind IS NOT NULL AND subject_id IS NOT NULL";
+
+/// Shared `meta` namespace for cryptographic event-retention watermarks (#1734).
+pub const EVENT_RETENTION_META_NAMESPACE: &str = "event_retention";
+
 /// Physical event layout revision. Historical DDL above remains a migration
-/// fixture; current initialization avoids the duplicate non-unique sequence tree.
+/// fixture; current initialization avoids the duplicate non-unique sequence tree
+/// and uses the partial composite `(stream, subject_kind, subject_id, seq)` index.
 pub const EVENTS_STORAGE_VERSION: u32 = 2;
 pub const EVENTS_TABLE_SCHEMA_V2: &str = "CREATE TABLE IF NOT EXISTS events (
     event_id TEXT PRIMARY KEY,
@@ -43,7 +53,7 @@ pub const EVENTS_TABLE_SCHEMA_V2: &str = "CREATE TABLE IF NOT EXISTS events (
     event_type TEXT NOT NULL DEFAULT '',
     payload TEXT NOT NULL,
     actor TEXT NOT NULL DEFAULT 'decapod'
-); CREATE INDEX IF NOT EXISTS idx_events_subject ON events(subject_kind, subject_id);";
+); CREATE INDEX IF NOT EXISTS idx_events_stream_subject_seq ON events(stream, subject_kind, subject_id, seq) WHERE subject_kind IS NOT NULL AND subject_id IS NOT NULL;";
 
 /// Back-compat alias: historical per-stream DDL is no longer used for new tables.
 #[deprecated(note = "use EVENTS_TABLE_SCHEMA; streams share one events table")]
@@ -750,3 +760,59 @@ pub const LCM_DB_INDEX_SUMMARIES_SCOPE: &str =
 // --- 6. Map Operators ---
 /// Historical basename for migration discovery only — not a runtime write target.
 pub const MAP_EVENTS_NAME: &str = "map.events.jsonl";
+
+// --- 7. Lossless Compact Storage & Migration Manifests (#1630) ---
+
+/// Shared `meta` namespace for physical storage format compatibility markers.
+pub const STORAGE_FORMAT_META_NAMESPACE: &str = "storage";
+/// Current physical compact storage format revision.
+pub const STORAGE_FORMAT_VERSION: u32 = 2;
+/// Minimum binary release able to read stores written in compact format v2.
+/// First released with the `_ce_v1` event codec and component journal in v0.144.2 (#1663, #1739).
+pub const STORAGE_MIN_READER_VERSION: &str = "0.144.2";
+/// Minimum binary release able to write stores migrated to compact format v2.
+/// First released with the `_ce_v1` event codec and component journal in v0.144.2 (#1663, #1739).
+pub const STORAGE_MIN_WRITER_VERSION: &str = "0.144.2";
+
+/// Domain-separated, codec-versioned, length-and-SHA256-keyed lossless component store.
+/// Keyed by `(component_kind, codec_version, byte_len, content_sha256)` so distinct
+/// domains, codecs, or lengths can never collide.
+pub const STORAGE_COMPONENTS_SCHEMA: &str = "CREATE TABLE IF NOT EXISTS storage_components (
+    component_kind TEXT NOT NULL,
+    codec_version INTEGER NOT NULL,
+    byte_len INTEGER NOT NULL CHECK(byte_len >= 0),
+    content_sha256 TEXT NOT NULL,
+    stored_bytes BLOB NOT NULL,
+    created_at TEXT NOT NULL,
+    PRIMARY KEY(component_kind, codec_version, byte_len, content_sha256)
+) WITHOUT ROWID;";
+
+/// Reachability reference index from durable owners (`task_checkpoint`, `task_transfer`, etc.)
+/// to `storage_components`, supporting O(1) reference-aware garbage collection and SQLite FK safety.
+pub const STORAGE_COMPONENT_REFS_SCHEMA: &str =
+    "CREATE TABLE IF NOT EXISTS storage_component_refs (
+    ref_scope TEXT NOT NULL,
+    ref_id TEXT NOT NULL,
+    component_kind TEXT NOT NULL,
+    codec_version INTEGER NOT NULL,
+    byte_len INTEGER NOT NULL,
+    content_sha256 TEXT NOT NULL,
+    PRIMARY KEY(ref_scope, ref_id, component_kind, codec_version, byte_len, content_sha256),
+    FOREIGN KEY(component_kind, codec_version, byte_len, content_sha256)
+        REFERENCES storage_components(component_kind, codec_version, byte_len, content_sha256)
+        ON DELETE RESTRICT
+) WITHOUT ROWID;
+CREATE INDEX IF NOT EXISTS idx_storage_component_refs_target
+    ON storage_component_refs(component_kind, codec_version, byte_len, content_sha256);";
+
+/// Redacted, source-bound pre/post checksum manifests for forward storage compaction migrations.
+pub const STORAGE_MIGRATION_MANIFESTS_SCHEMA: &str =
+    "CREATE TABLE IF NOT EXISTS storage_migration_manifests (
+    migration_id TEXT PRIMARY KEY,
+    schema_version TEXT NOT NULL,
+    applied_at TEXT NOT NULL,
+    binary_version TEXT NOT NULL,
+    pre_digest TEXT NOT NULL,
+    post_digest TEXT NOT NULL,
+    manifest_json TEXT NOT NULL
+) WITHOUT ROWID;";

@@ -7,6 +7,1611 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.153.0](https://github.com/DecapodLabs/decapod/compare/v0.152.0...v0.153.0) - 2026-11-20
+
+### Added
+
+- *(observer)* reauthor evidence correlation with explicit history custody
+
+### Fixed
+
+- *(broker)* establish writer incarnation provenance for orphan recovery ([#1783](https://github.com/DecapodLabs/decapod/pull/1783))
+- *(custody)* reject unknown actor on claim and workspace ensure ([#1737](https://github.com/DecapodLabs/decapod/pull/1737))
+- *(storage)* align v2 storage compatibility floor with _ce_v1 codec
+
+### Other
+
+- *(govern)* sync accepted master 6f2ec99dc (v0.152.0, #1455)
+- *(govern)* sync accepted master c6439c7df (v0.152.0, #1757)
+- *(govern)* sync accepted master bc6475824 (v0.152.0, #1737)
+- *(govern)* sync accepted master 9fff41ffc (v0.152.0, #1783)
+- *(govern)* refresh managed Dockerfile pin to v0.152.0 ([#1739](https://github.com/DecapodLabs/decapod/pull/1739))
+- *(govern)* sync accepted master 5cc32689e (v0.152.0, #1739)
+- *(govern)* sync accepted master 363d6e3ec (v0.151.0, #1739)
+- Merge commit '755bbac6e0af03c5dde4bd555cd749c426ae6472' into agent/wog-issue-1737/code_01m7qxkv3kc826jx-issue-1737
+- Merge commit '84f9673824ba0b60ee0e87449f2cbb23387f5717' into agent/wog-issue-1737/code_01m7qxkv3kc826jx-issue-1737
+- Merge remote-tracking branch 'origin/master' into agent/wog-issue-1737/code_01m7qxkv3kc826jx-issue-1737
+- Merge remote-tracking branch 'origin/master' into agent/wog-issue-1737/code_01m7qxkv3kc826jx-issue-1737
+- *(governance)* integrate origin/master 89906b666 (v0.149.3) ([#1739](https://github.com/DecapodLabs/decapod/pull/1739))
+- *(governance)* integrate origin/master 845ff9799 (v0.149.3) ([#1739](https://github.com/DecapodLabs/decapod/pull/1739))
+- *(merge)* reconcile origin/master 845ff9799 (v0.149.3, PR #1818) and refresh specs for #1783
+- Merge remote-tracking branch 'origin/master' into agent/wog-issue-1737/code_01m7qxkv3kc826jx-issue-1737
+- Merge commit 'cfe2565daab82c3c7829cf9b83d5121e37dd5e8e' into agent/wog-issue-1737/code_01m7qxkv3kc826jx-issue-1737
+- *(merge)* reconcile origin/master cfe2565da (v0.149.3, PR #1816) and refresh specs for #1783
+- *(governance)* integrate origin/master cfe2565da (v0.149.3) ([#1739](https://github.com/DecapodLabs/decapod/pull/1739))
+- *(govern)* refresh v0.149.3 Dockerfile.decapod pin ([#1739](https://github.com/DecapodLabs/decapod/pull/1739))
+- *(governance)* integrate origin/master v0.149.3 ([#1739](https://github.com/DecapodLabs/decapod/pull/1739))
+- Merge commit '102d6eb22046032e7214ee821ab166f06271585c' into agent/wog-issue-1737/code_01m7qxkv3kc826jx-issue-1737
+- *(merge)* reconcile origin/master 102d6eb22 (v0.149.3) and refresh specs for #1783
+- Merge remote-tracking branch 'origin/master' into agent/wog-issue-1783/bugs_01m7r13b7j70bp8x-issue-1783
+- *(merge)* reconcile origin/master 205d4e8d (v0.149.1) and refresh specs for #1739
+- Merge commit '205d4e8dad2e7690100eb401e12ea6d6f8e23665' into agent/wog-issue-1737/code_01m7qxkv3kc826jx-issue-1737
+- Merge remote-tracking branch 'origin/master' into agent/wog-issue-1783/bugs_01m7r13b7j70bp8x-issue-1783
+- Merge remote-tracking branch 'origin/master' into agent/wog-issue-1737/code_01m7qxkv3kc826jx-issue-1737
+- Merge remote-tracking branch 'origin/master' into agent/wog-issue-1737/code_01m7qxkv3kc826jx-issue-1737
+- *(merge)* sync origin/master a5a1edad (v0.149.0) and reconcile proof ([#1783](https://github.com/DecapodLabs/decapod/pull/1783))
+- *(govern)* checkpoint updated v0.149.0 spec reviews for #1739
+- *(merge)* reconcile origin/master v0.149.0 and refresh governance/specs for #1739
+- *(merge)* sync origin/master 2f12638a (v0.148.14) and reconcile proof
+- *(specs)* refresh manifest config_input_hash after config.toml update
+- *(proof)* update reviewed_sources_digest to v0.148.13
+- *(proof)* reconcile reviewed_sources_digest for v0.148.13
+- *(governance)* align release11 pin and release history
+- Merge accepted conformance fixes and release0.148.11
+- *(governance)* refresh native release-bound projections
+- *(validation)* reconcile accepted release source inventory
+- Merge accepted release metadata into observer delivery
+- Merge accepted policy boundaries into observer delivery
+- *(observer)* record current recovery disposition
+- *(governance)* integrate current master for PR1700 with Decapod v0.147.0
+- *(specs)* distinguish v0.147.0 audit baseline from historical proof
+- *(audit)* bind current implementation map to accepted v0.147.0
+- *(governance)* integrate current master for PR1700 with Decapod v0.147.0
+- *(governance)* finalize PR1700 on Decapod v0.146.0 (bdd32e5228a5)
+- *(specs)* preserve scoped proof after bounded recovery acceptance
+- *(audit)* include accepted bounded recovery and exact integration identity
+- *(governance)* finalize PR1700 on Decapod v0.146.0 (e13c656aefa6)
+- *(governance)* finalize PR1700 on Decapod v0.146.0
+- *(specs)* reconcile validation with accepted v0.146.0 scope
+- *(specs)* reconcile interfaces with accepted v0.146.0 scope
+- *(specs)* reconcile architecture with accepted v0.146.0 scope
+- *(specs)* reconcile intent with accepted v0.146.0 scope
+- *(audit)* account for accepted v0.146.0 escalation and exact proof scope
+- rebase PR1700 VALIDATION.md on v0.146.0
+- rebase PR1700 INTERFACES.md on v0.146.0
+- rebase PR1700 ARCHITECTURE.md on v0.146.0
+- rebase PR1700 continuous-governance-implementation-map.md on v0.146.0
+- rebase PR1700 INTENT.md on v0.146.0
+
+## [0.152.0](https://github.com/DecapodLabs/decapod/compare/v0.151.0...v0.152.0) - 2026-11-20
+
+### Fixed
+
+- integrate accepted release12 reporting contract
+- *(reporting)* expose caller provenance for pure projections
+- *(reporting)* keep supplied reports outside canonical proof authority
+
+### Other
+
+- *(govern)* sync accepted master v0.151.0 ([#1793](https://github.com/DecapodLabs/decapod/pull/1793))
+
+## [0.151.0](https://github.com/DecapodLabs/decapod/compare/v0.150.8...v0.151.0) - 2026-11-20
+
+### Added
+
+- *(readiness)* support reviewed per-platform executables for repo.pr-readiness.v1
+
+### Fixed
+
+- *(test)* initialize RepositoryExecution platforms field in upstream integration tests ([#1736](https://github.com/DecapodLabs/decapod/pull/1736))
+
+### Other
+
+- *(govern)* sync accepted master v0.150.8 ([#1736](https://github.com/DecapodLabs/decapod/pull/1736))
+- *(merge)* sync origin/master v0.148.14 and align release projections
+- *(specs)* align config digest, Dockerfile, and manifest with v0.148.13
+
+## [0.150.8](https://github.com/DecapodLabs/decapod/compare/v0.150.7...v0.150.8) - 2026-11-19
+
+### Fixed
+
+- *(test)* use literal include_str path in validate_tests for gatekeeper scanning ([#1782](https://github.com/DecapodLabs/decapod/pull/1782))
+- *(risk)* align risk-map warning paths with supported CLI commands
+
+### Other
+
+- *(govern)* sync accepted master v0.150.7 ([#1782](https://github.com/DecapodLabs/decapod/pull/1782))
+- *(proof)* refresh v0.148.13 projections and complete spec reviews
+- *(merge)* sync origin/master c5bafce6 (v0.148.13) and reconcile proof
+- *(merge)* sync origin/master caeeaba8 ([#1792](https://github.com/DecapodLabs/decapod/pull/1792))
+- *(proof)* reconcile reviewed source inventory for v0.148.12
+- *(merge)* sync origin/master v0.148.12
+
+## [0.150.7](https://github.com/DecapodLabs/decapod/compare/v0.150.6...v0.150.7) - 2026-11-19
+
+### Added
+
+- *(projection)* enforce measured-baseline performance budgets, degraded mode, and retention-stable receipts ([#1734](https://github.com/DecapodLabs/decapod/pull/1734))
+
+### Other
+
+- *(projection)* sync accepted master d0ca8eb36 (v0.150.6) ([#1734](https://github.com/DecapodLabs/decapod/pull/1734))
+- *(projection)* integrate accepted master 1332f4ecd (v0.150.0) ([#1734](https://github.com/DecapodLabs/decapod/pull/1734))
+- *(governance)* record content-bound spec reviews for #1734
+- *(projection)* integrate accepted master 45369197e (v0.149.3) ([#1734](https://github.com/DecapodLabs/decapod/pull/1734))
+
+## [0.150.6](https://github.com/DecapodLabs/decapod/compare/v0.150.5...v0.150.6) - 2026-11-19
+
+### Added
+
+- *(integration)* add reversible repository integration removal ([#1704](https://github.com/DecapodLabs/decapod/pull/1704))
+
+### Other
+
+- *(govern)* sync accepted master v0.150.5 ([#1704](https://github.com/DecapodLabs/decapod/pull/1704))
+- *(govern)* sync accepted master v0.150.4 ([#1704](https://github.com/DecapodLabs/decapod/pull/1704))
+- *(govern)* sync accepted master v0.150.3 ([#1704](https://github.com/DecapodLabs/decapod/pull/1704))
+- *(integration)* integrate accepted master v0.150.0 ([#1704](https://github.com/DecapodLabs/decapod/pull/1704))
+- *(integration)* integrate accepted master v0.149.3 ([#1704](https://github.com/DecapodLabs/decapod/pull/1704))
+
+## [0.150.5](https://github.com/DecapodLabs/decapod/compare/v0.150.4...v0.150.5) - 2026-11-19
+
+### Other
+
+- *(govern)* align living specs and governance continuation ([#1849](https://github.com/DecapodLabs/decapod/pull/1849))
+- remove duplicate Welcome header and give every page breathing room
+
+## [0.150.4](https://github.com/DecapodLabs/decapod/compare/v0.150.3...v0.150.4) - 2026-11-19
+
+### Other
+
+- *(govern)* sync accepted master v0.150.3 and align living specs ([#1847](https://github.com/DecapodLabs/decapod/pull/1847))
+- clarify agent-invoked Decapod application in docs/book/src/mental-model.md
+- clarify agent-invoked Decapod application in docs/book/src/introduction.md
+- clarify Decapod's agent-invoked application model in docs/book/src/index.md
+
+## [0.150.3](https://github.com/DecapodLabs/decapod/compare/v0.150.2...v0.150.3) - 2026-11-19
+
+### Added
+
+- *(lifecycle)* instruct agents to clean todo-scoped /tmp paths on PR creation ([#1798](https://github.com/DecapodLabs/decapod/pull/1798))
+
+### Other
+
+- *(govern)* sync accepted master v0.150.2 ([#1798](https://github.com/DecapodLabs/decapod/pull/1798))
+- *(lifecycle)* integrate accepted master v0.150.0 ([#1798](https://github.com/DecapodLabs/decapod/pull/1798))
+- *(lifecycle)* pre-sync accepted master e63599e3c ([#1798](https://github.com/DecapodLabs/decapod/pull/1798))
+- *(govern)* bind trajectory task id for publication material ([#1798](https://github.com/DecapodLabs/decapod/pull/1798))
+- *(lifecycle)* integrate accepted master v0.149.3 ([#1798](https://github.com/DecapodLabs/decapod/pull/1798))
+
+## [0.150.2](https://github.com/DecapodLabs/decapod/compare/v0.150.1...v0.150.2) - 2026-11-19
+
+### Fixed
+
+- *(govern)* support integrity-preserving merged journal reconciliation ([#1780](https://github.com/DecapodLabs/decapod/pull/1780))
+
+### Other
+
+- *(govern)* sync accepted master v0.150.1 ([#1780](https://github.com/DecapodLabs/decapod/pull/1780))
+- *(govern)* pass explicit git identity in reconcile-merge unit tests ([#1780](https://github.com/DecapodLabs/decapod/pull/1780))
+- *(govern)* sync accepted master v0.150.0 ([#1780](https://github.com/DecapodLabs/decapod/pull/1780))
+- *(govern)* sync accepted master e63599e3c ([#1780](https://github.com/DecapodLabs/decapod/pull/1780))
+- *(govern)* sync accepted master c845ae1d0 ([#1780](https://github.com/DecapodLabs/decapod/pull/1780))
+- *(govern)* sync accepted master 1b3ca1b89 ([#1780](https://github.com/DecapodLabs/decapod/pull/1780))
+- *(govern)* integrate accepted master v0.149.3 ([#1780](https://github.com/DecapodLabs/decapod/pull/1780))
+
+## [0.150.1](https://github.com/DecapodLabs/decapod/compare/v0.150.0...v0.150.1) - 2026-11-19
+
+### Other
+
+- *(docs)* integrate accepted master v0.150.0 ([#1789](https://github.com/DecapodLabs/decapod/pull/1789))
+- *(docs)* refresh v0.149.1 projections ([#1789](https://github.com/DecapodLabs/decapod/pull/1789))
+- *(docs)* integrate accepted master v0.149.1 ([#1052](https://github.com/DecapodLabs/decapod/pull/1052)) ([#1789](https://github.com/DecapodLabs/decapod/pull/1789))
+- *(docs)* refresh v0.149.0 projections ([#1789](https://github.com/DecapodLabs/decapod/pull/1789))
+- *(book)* center BYOA and metacognitive kernel architecture ([#1789](https://github.com/DecapodLabs/decapod/pull/1789))
+
+## [0.150.0](https://github.com/DecapodLabs/decapod/compare/v0.149.3...v0.150.0) - 2026-11-19
+
+### Added
+
+- *(cloud)* adopt dactyl-db 0.18.0, cloud custody ([#1809](https://github.com/DecapodLabs/decapod/pull/1809)), and Local/Cloud branding (#1808, #1769)
+- *(workspace)* prove concurrent isolated authoring and combined candidate admission ([#1469](https://github.com/DecapodLabs/decapod/pull/1469))
+- *(concurrency)* harden and prove shared-state transition semantics ([#1247](https://github.com/DecapodLabs/decapod/pull/1247))
+
+### Fixed
+
+- *(cloud)* align OWNER_REPAIR_V1_SQL wire marker and scrub private references
+- *(cloud)* gate KEYSTORE_SERVICE constant to macOS target
+- *(workunit)* isolate non-verified split-store writes while blocking VERIFIED promotion ([#1660](https://github.com/DecapodLabs/decapod/pull/1660))
+- *(container)* support delegated cgroup parent and cgroup permission diagnostics ([#1820](https://github.com/DecapodLabs/decapod/pull/1820))
+- *(concurrency)* keep Dactyl atomic_mutation event SQL static for sql_context gate ([#1247](https://github.com/DecapodLabs/decapod/pull/1247))
+- *(validate)* make pre-capture lease TTL guard read-only by default ([#1810](https://github.com/DecapodLabs/decapod/pull/1810))
+- *(workunit)* converge split-store audit and prove #1660 VERIFIED transitions
+- *(validation)* private-repo verification, broker decoupling, and ergonomics (#1807, #1810)
+- *(scope)* preserve explicit path scopes across orientation and trajectory ([#1760](https://github.com/DecapodLabs/decapod/pull/1760))
+- *(security)* harden cross-surface accepted-policy resolution ([#1776](https://github.com/DecapodLabs/decapod/pull/1776))
+
+### Other
+
+- *(merge)* integrate origin/master c845ae1d0 (v0.149.3, #1831) into #1820 branch
+- *(merge)* integrate origin/master 1b3ca1b89 (v0.149.3, #1760) into #1820 branch
+- *(validate)* integrate accepted master 1b3ca1b89 (v0.149.3)
+- *(specs)* record Buildkite 13224 transient ETXTBSY flake for fresh retry
+- *(merge)* integrate origin/master 755bbac6e (v0.149.3, #1828) into #1820 branch
+- *(scope)* integrate accepted master 755bbac6 ([#1828](https://github.com/DecapodLabs/decapod/pull/1828)) and refresh v0.149.3 projections ([#1760](https://github.com/DecapodLabs/decapod/pull/1760))
+- *(scope)* integrate accepted master 84f96738 ([#1660](https://github.com/DecapodLabs/decapod/pull/1660)) and refresh v0.149.3 projections ([#1760](https://github.com/DecapodLabs/decapod/pull/1760))
+- *(validate)* integrate accepted master 84f967382 (v0.149.3)
+- *(merge)* integrate origin/master 84f967382 (v0.149.3) into #1820 branch
+- *(specs)* refresh spec reviews after macOS cfg clippy fix
+- *(scope)* integrate accepted master 45369197 ([#1825](https://github.com/DecapodLabs/decapod/pull/1825)) and refresh v0.149.3 projections ([#1760](https://github.com/DecapodLabs/decapod/pull/1760))
+- *(specs)* record unchanged-with-reason reviews against 45369197e ([#1660](https://github.com/DecapodLabs/decapod/pull/1660))
+- reconcile PR #1823 ([#1660](https://github.com/DecapodLabs/decapod/pull/1660)) with origin/master 45369197e ([#1825](https://github.com/DecapodLabs/decapod/pull/1825))
+- *(specs)* refresh spec reviews for split-store isolation fix ([#1660](https://github.com/DecapodLabs/decapod/pull/1660))
+- *(validate)* integrate accepted master 89906b666 (v0.149.3)
+- *(scope)* integrate accepted master 89906b66 (v0.149.3) and refresh projections ([#1760](https://github.com/DecapodLabs/decapod/pull/1760))
+- *(workunit)* integrate accepted master 89906b666 ([#1660](https://github.com/DecapodLabs/decapod/pull/1660))
+- *(cloud)* align supabase batch event SQL assertion with #1247 post-condition guard
+- *(validate)* integrate accepted master 845ff9799 (v0.149.3)
+- *(concurrency)* integrate accepted master 845ff9799 ([#1247](https://github.com/DecapodLabs/decapod/pull/1247))
+- *(concurrency)* integrate accepted master cfe2565da ([#1247](https://github.com/DecapodLabs/decapod/pull/1247))
+- *(workspace)* integrate accepted master cfe2565d ([#1776](https://github.com/DecapodLabs/decapod/pull/1776)) and refresh v0.149.3 projections ([#1469](https://github.com/DecapodLabs/decapod/pull/1469))
+- *(validate)* integrate accepted master cfe2565da (v0.149.3)
+- *(release)* pin managed Dockerfile.decapod to v0.149.3
+- *(release)* commit 0.149.3 Dockerfile and spec header refresh
+- *(validate)* reconcile v0.149.3 reviewed_sources_digest
+- *(security)* integrate accepted master v0.149.3 ([#1776](https://github.com/DecapodLabs/decapod/pull/1776))
+- *(validate)* set exact v0.149.3 reviewed_sources_digest
+- *(validate)* reconcile v0.149.3 Dockerfile pin and reviewed source digest
+- *(release)* refresh managed projections for 0.149.3
+- *(security)* integrate accepted master v0.149.2 ([#1776](https://github.com/DecapodLabs/decapod/pull/1776))
+- *(scope)* record v0.149.1 SECURITY.md spec review ([#1760](https://github.com/DecapodLabs/decapod/pull/1760))
+- Merge remote-tracking branch 'origin/master' into agent/swarm-scope-1760/bugs_01m7r50vhcx7h3pw-explicit-scope
+- *(scope)* reconcile worktree trajectory scope projections ([#1760](https://github.com/DecapodLabs/decapod/pull/1760))
+- *(security)* integrate accepted master 0b6ce0a8 ([#1776](https://github.com/DecapodLabs/decapod/pull/1776))
+- *(policy)* record SECURITY.md spec review ([#1776](https://github.com/DecapodLabs/decapod/pull/1776))
+- *(policy)* integrate accepted release 0.148.13
+
+## [0.149.3](https://github.com/DecapodLabs/decapod/compare/v0.149.2...v0.149.3) - 2026-11-19
+
+### Fixed
+
+- *(readiness)* enforce gate-skip override rejection on publish and qa verify ([#1659](https://github.com/DecapodLabs/decapod/pull/1659))
+
+### Other
+
+- *(validate)* integrate accepted master v0.149.2 ([#1659](https://github.com/DecapodLabs/decapod/pull/1659))
+- *(validate)* integrate accepted master v0.149.1 ([#1659](https://github.com/DecapodLabs/decapod/pull/1659))
+- *(validate)* integrate accepted master 0b6ce0a8 ([#1659](https://github.com/DecapodLabs/decapod/pull/1659))
+- *(specs)* refresh manifest config_input_hash for 0.148.13
+- *(validate)* integrate accepted release 0.148.13
+
+## [0.149.2](https://github.com/DecapodLabs/decapod/compare/v0.149.1...v0.149.2) - 2026-11-18
+
+### Other
+
+- *(governance)* integrate accepted master v0.149.1 ([#1052](https://github.com/DecapodLabs/decapod/pull/1052)) ([#1795](https://github.com/DecapodLabs/decapod/pull/1795))
+- *(governance)* integrate accepted master 0b6ce0a8 ([#1795](https://github.com/DecapodLabs/decapod/pull/1795))
+- *(governance)* prove fault detection across five admission boundaries ([#1795](https://github.com/DecapodLabs/decapod/pull/1795))
+
+## [0.149.1](https://github.com/DecapodLabs/decapod/compare/v0.149.0...v0.149.1) - 2026-11-18
+
+### Other
+
+- *(qa)* refresh v0.149.0 Dockerfile and specs manifest ([#1052](https://github.com/DecapodLabs/decapod/pull/1052))
+- *(qa)* integrate accepted master v0.149.0 ([#1052](https://github.com/DecapodLabs/decapod/pull/1052))
+- *(qa)* record INTERFACES.md unchanged-with-reason review ([#1052](https://github.com/DecapodLabs/decapod/pull/1052))
+- *(qa)* integrate accepted master 0b6ce0a8 ([#1052](https://github.com/DecapodLabs/decapod/pull/1052))
+- *(test)* format exact_candidate_governance_1052 with cargo fmt ([#1052](https://github.com/DecapodLabs/decapod/pull/1052))
+- *(qa)* integrate accepted release 0.148.13
+- *(governance)* add #1052 actual-binary exact-candidate regression suite
+
+## [0.149.0](https://github.com/DecapodLabs/decapod/compare/v0.148.14...v0.149.0) - 2026-11-18
+
+### Added
+
+- *(migration)* expose read-only migration notice inspection and resolved root
+
+### Other
+
+- Merge remote-tracking branch 'origin/master' into agent/wog-issue-1744/bugs_01m7qbm33farx8qs-issue-1744
+- Merge remote-tracking branch 'origin/master' into agent/wog-issue-1744/bugs_01m7qbm33farx8qs-issue-1744
+- *(proof)* refresh v0.148.13 projections and checkpoint
+- Merge remote-tracking branch 'origin/master' into agent/wog-issue-1744/bugs_01m7qbm33farx8qs-issue-1744
+- Merge remote-tracking branch 'origin/master' into agent/wog-issue-1744/bugs_01m7qbm33farx8qs-issue-1744
+
+## [0.148.14](https://github.com/DecapodLabs/decapod/compare/v0.148.13...v0.148.14) - 2026-11-18
+
+### Fixed
+
+- *(verify)* surface safe scoped validation blocker diagnostics ([#1781](https://github.com/DecapodLabs/decapod/pull/1781))
+
+### Other
+
+- *(proof)* refresh v0.148.13 projections and checkpoint
+- *(merge)* sync origin/master c5bafce6 (v0.148.13) and reconcile proof
+- *(merge)* sync origin/master caeeaba8 ([#1792](https://github.com/DecapodLabs/decapod/pull/1792))
+
+## [0.148.13](https://github.com/DecapodLabs/decapod/compare/v0.148.12...v0.148.13) - 2026-11-18
+
+### Fixed
+
+- *(workunit)* integrate accepted strict RPC source for fresh proof
+- *(workunit)* recognize negative validation journal snapshots
+- *(workunit)* preserve recovery disposition and canonical-domain guidance
+- *(workunit)* reauthor currentness correction with governed history
+
+### Other
+
+- *(workunit)* integrate accepted release 0.148.12
+- *(workunit)* bind failing capture to its required check
+
+## [0.148.12](https://github.com/DecapodLabs/decapod/compare/v0.148.11...v0.148.12) - 2026-11-18
+
+### Fixed
+
+- *(interop)* reject duplicate JSON at the RPC boundary
+
+### Other
+
+- *(interop)* preserve strict schema in negotiation controls
+- *(interop)* declare the Python consumer in Bazel compile inputs
+- *(interop)* refresh projections with official controller 0.148.11
+
+## [0.148.11](https://github.com/DecapodLabs/decapod/compare/v0.148.10...v0.148.11) - 2026-11-18
+
+### Fixed
+
+- *(interop)* align session descriptors with entry guards
+- *(rpc)* reject malformed parameters before negotiation
+- *(interop)* qualify startup RPC refusal constructor
+- *(interop)* require advertised RPC registration before dispatch
+- *(interop)* distinguish source coverage from executed conformance
+
+### Other
+
+- *(broker)* measure competing mutation before preparation cleanup
+- *(interop)* replay malformed negotiation after initialization
+- *(interop)* refresh release projections with controller0.148.10
+- *(proof)* reconcile accepted release0.148.10
+- *(interop)* reconcile accepted policy-custody fixes
+- *(proof)* reconcile reviewed release inputs for conformance
+
+## [0.148.10](https://github.com/DecapodLabs/decapod/compare/v0.148.9...v0.148.10) - 2026-11-18
+
+### Fixed
+
+- *(governance)* preserve verified first-adoption recovery
+- *(proof)* reconcile reviewed release version inputs
+- *(governance)* reject invalid config and unaccepted privilege grants
+
+### Other
+
+- *(cloud)* preserve schema recovery and storage boundary coverage
+
+## [0.148.9](https://github.com/DecapodLabs/decapod/compare/v0.148.8...v0.148.9) - 2026-11-17
+
+### Other
+
+- *(constitution)* clarify global engineering canon and local authority
+- *(constitution)* clarify global engineering canon and local authority
+- *(constitution)* clarify global engineering canon and local authority
+- *(constitution)* clarify global engineering canon and local authority
+
+## [0.148.8](https://github.com/DecapodLabs/decapod/compare/v0.148.7...v0.148.8) - 2026-11-17
+
+### Fixed
+
+- *(entrypoints)* honor scoped source version policy in currency
+
+### Other
+
+- *(proof)* reconcile reviewed release inputs for final evidence
+- *(admission)* record accepted integration and renewed proof boundary
+
+## [0.148.7](https://github.com/DecapodLabs/decapod/compare/v0.148.6...v0.148.7) - 2026-11-17
+
+### Fixed
+
+- *(time)* reject out-of-range UTC conversions without panic
+- *(proof)* reconcile reviewed timestamp dependency inputs
+- *(deps)* replace unmaintained chrono with maintained time
+- *(tests)* share proof fixtures and correct live runtime declaration
+- *(proof)* retain mandatory library executor contract
+- *(proof)* reconcile development controller and source checks
+- *(admission)* gate source version policy and real forge proof
+- *(publication)* retain live proof through PR admission
+
+### Other
+
+- *(admission)* record strict live enforcement after dependency repair
+- *(admission)* require source rejection instead of incidental failure
+- *(admission)* publish reproducible real GitHub enforcement evidence
+- *(admission)* read advanced target independently of PR metadata
+- *(admission)* revalidate governed recovery after source mutation
+- incorporate accepted release 0.148.6
+- incorporate current accepted publication target
+
+## [0.148.6](https://github.com/DecapodLabs/decapod/compare/v0.148.5...v0.148.6) - 2026-11-17
+
+### Other
+
+- describe agent-invoked tasks, Constitution and proof on landing
+- position kernel as agent-invoked instead of a command center
+
+## [0.148.5](https://github.com/DecapodLabs/decapod/compare/v0.148.4...v0.148.5) - 2026-11-17
+
+### Other
+
+- *(docs)* fit metacognition hero at mobile and desktop widths
+- align hero and kicker with AI metacognition positioning
+
+## [0.148.4](https://github.com/DecapodLabs/decapod/compare/v0.148.3...v0.148.4) - 2026-11-17
+
+### Other
+
+- *(specs)* commit exact Decapod-generated mdBook shell projections
+- *(spec)* bind Rust-native plush shell, responsive identity and acceptance
+- rebuild mdBook shell with plush Decapod Labs navigation and layout
+
+## [0.148.3](https://github.com/DecapodLabs/decapod/compare/v0.148.2...v0.148.3) - 2026-11-17
+
+### Other
+
+- *(specs)* commit Decapod-generated projections from CI validation
+- *(spec)* define documentation wordmark identity and acceptance
+- use logo-a beside mascot in light sidebar
+- replace landing page text wordmark with logo-c
+- brand shared sidebar with logo-c and mascot
+
+## [0.148.2](https://github.com/DecapodLabs/decapod/compare/v0.148.1...v0.148.2) - 2026-11-16
+
+### Other
+
+- use Decapod mascot as mdBook favicon
+
+## [0.148.1](https://github.com/DecapodLabs/decapod/compare/v0.148.0...v0.148.1) - 2026-11-16
+
+### Added
+
+- *(docs)* adopt Decapod Labs theme and hero video; move media source to website
+- *(showcase)* export circle-safe GitHub organization avatar from mascot SVG
+- *(showcase)* hold Harness AI end card and export mascot PNG
+- *(showcase)* emphasize init-once agent continuity and four governed capabilities
+- *(showcase)* answer the agent problem with a metacognitive kernel and original kawaii mascot
+- *(showcase)* introduce agent governance kernel before brand reveal
+- *(showcase)* foreground metacognition, persistent state, and agent autonomy
+- *(showcase)* show how agents invoke Decapod behind human ideas
+- *(showcase)* 6.6s minimal brand film with original score and automated render
+- *(showcase)* add reproducible 6.58-second animated agent-governance reel renderer
+
+### Fixed
+
+- *(showcase)* render animated GIF with ffmpeg to publish updated assets
+- *(showcase)* provision FFmpeg and DejaVu on GitHub runner
+
+### Other
+
+- *(readme)* center the official Decapod kawaii crab mascot
+- *(showcase)* publish verified 6.900-second film and avatar PNG
+- *(showcase)* publish verified 6.900-second brand film and mascot PNG
+- *(showcase)* check in verified 6.600-second brand film with soundtrack
+- *(showcase)* check in verified 6.600-second brand film with soundtrack
+- *(showcase)* check in verified 6.600-second brand film with soundtrack
+- *(showcase)* check in verified 6.600-second brand film with soundtrack
+- *(showcase)* check in verified 6.600-second brand film with soundtrack
+- *(showcase)* check in verified 6.600-second brand film with soundtrack
+- *(readme)* embed the checked-in six-second Decapod feature reel
+- *(showcase)* check in verified 6.583-second animated media
+- *(showcase)* render 6.58-second reel and commit generated assets to dedicated branch
+- *(showcase)* specify product truth, assets, duration gate and reproducible render
+
+## [0.148.0](https://github.com/DecapodLabs/decapod/compare/v0.147.0...v0.148.0) - 2026-11-15
+
+### Added
+
+- rebase PR1702 lib.rs on v0.146.0
+- rebase PR1702 workspace.rs on v0.146.0
+- rebase PR1702 repository_host.rs on v0.146.0
+- rebase PR1702 validation_runtime.rs on v0.146.0
+- rebase PR1702 validation_history.rs on v0.146.0
+- rebase PR1702 repository_profile.rs on v0.146.0
+- rebase PR1702 docs_cli.rs on v0.146.0
+
+### Other
+
+- *(governance)* integrate current master for PR1702 with Decapod v0.147.0
+- *(governance)* finalize PR1702 on Decapod v0.146.0 (46a26e3a275b)
+- *(governance)* finalize PR1702 on Decapod v0.146.0
+- rebase PR1702 VALIDATION.md on v0.146.0
+- rebase PR1702 SECURITY.md on v0.146.0
+- rebase PR1702 INTERFACES.md on v0.146.0
+- rebase PR1702 ARCHITECTURE.md on v0.146.0
+- rebase PR1702 repository-readiness.md on v0.146.0
+- rebase PR1702 config-schema.md on v0.146.0
+- rebase PR1702 command-contracts.md on v0.146.0
+- rebase PR1702 lib_init_prompt_tests.rs on v0.146.0
+- rebase PR1702 repository_profile_tests.rs on v0.146.0
+- rebase PR1702 fresh_docs_readiness.rs on v0.146.0
+- rebase PR1702 entrypoint_correctness.rs on v0.146.0
+- rebase PR1702 consumer_readiness_fixture.rs on v0.146.0
+- rebase PR1702 INTENT.md on v0.146.0
+
+## [0.147.0](https://github.com/DecapodLabs/decapod/compare/v0.146.0...v0.147.0) - 2026-11-15
+
+### Added
+
+- rebase PR1697 policy.rs on v0.146.0
+- rebase PR1697 lib.rs on v0.146.0
+- rebase PR1697 todo.rs on v0.146.0
+- rebase PR1697 migration.rs on v0.146.0
+- rebase PR1697 legacy_todo_recovery.rs on v0.146.0
+- rebase PR1697 docs_cli.rs on v0.146.0
+- rebase PR1697 cli.rs on v0.146.0
+
+### Other
+
+- *(governance)* finalize PR1697 on Decapod v0.146.0
+- rebase PR1697 VALIDATION.md on v0.146.0
+- rebase PR1697 SECURITY.md on v0.146.0
+- rebase PR1697 INTERFACES.md on v0.146.0
+- rebase PR1697 ARCHITECTURE.md on v0.146.0
+- rebase PR1697 legacy-todo-recovery.md on v0.146.0
+- rebase PR1697 error-recovery.md on v0.146.0
+- rebase PR1697 config-schema.md on v0.146.0
+- rebase PR1697 command-contracts.md on v0.146.0
+- rebase PR1697 cli_tests.rs on v0.146.0
+- rebase PR1697 sqlite_maintenance.rs on v0.146.0
+- rebase PR1697 INTENT.md on v0.146.0
+
+## [0.146.0](https://github.com/DecapodLabs/decapod/compare/v0.145.6...v0.146.0) - 2026-11-15
+
+### Added
+
+- *(convergence)* identify inference escalation as agent-directed
+- *(convergence)* reuse bounded reflection for escalation decisions
+- *(convergence)* define typed escalation admissibility observations
+
+### Fixed
+
+- permit investigated uncertainty reclassification without resetting budget
+- match full canonical human question identity
+- admit investigated source facts through the existing citation guard
+- bind authority scope into reflection freshness context
+- identify admissible human dependency as convergence progress
+- permit monotonic authority refinement during investigation
+- keep unresolved authority explicit in reason codes
+- never infer authority from an absent policy gate
+- *(convergence)* route architecture investigation and terminate finished exchanges
+- *(convergence)* classify architecture words as inference pressure
+- *(convergence)* use canonical dependencies instead of title-based human gates
+- *(convergence)* keep unrelated approvals from resolving information gaps
+- *(convergence)* separate typed escalation from legacy keyword hints
+
+### Other
+
+- integrate master and Decapod v0.145.6 for PR1699
+- bind complete convergence behavior for validation
+- refresh .manifest.json after classification continuity repair
+- refresh VALIDATION.md after classification continuity repair
+- refresh SEMANTICS.md after classification continuity repair
+- refresh SECURITY.md after classification continuity repair
+- refresh README.md after classification continuity repair
+- refresh OPERATIONS.md after classification continuity repair
+- refresh INTERFACES.md after classification continuity repair
+- refresh INTENT.md after classification continuity repair
+- refresh ARCHITECTURE.md after classification continuity repair
+- distinguish uncertainty declarations from governing authority
+- permit investigated classification correction
+- require real progress after uncertainty reclassification
+- bind audited convergence protocol for complete validation
+- refresh .manifest.json after canonical question hardening
+- refresh VALIDATION.md after canonical question hardening
+- refresh SEMANTICS.md after canonical question hardening
+- refresh SECURITY.md after canonical question hardening
+- refresh README.md after canonical question hardening
+- refresh OPERATIONS.md after canonical question hardening
+- refresh INTERFACES.md after canonical question hardening
+- refresh INTENT.md after canonical question hardening
+- refresh ARCHITECTURE.md after canonical question hardening
+- reject human question display-prefix collisions
+- bind complete convergence protocol for full proof
+- refresh .manifest.json after investigation continuity repair
+- refresh VALIDATION.md after investigation continuity repair
+- refresh SEMANTICS.md after investigation continuity repair
+- refresh SECURITY.md after investigation continuity repair
+- refresh README.md after investigation continuity repair
+- refresh OPERATIONS.md after investigation continuity repair
+- refresh INTERFACES.md after investigation continuity repair
+- refresh INTENT.md after investigation continuity repair
+- refresh ARCHITECTURE.md after investigation continuity repair
+- explain investigation beyond the initial source citation
+- cover discovered evidence and governing citation continuity
+- bind scope freshness candidate for complete proof
+- refresh .manifest.json after authority freshness repair
+- refresh VALIDATION.md after authority freshness repair
+- refresh SEMANTICS.md after authority freshness repair
+- refresh SECURITY.md after authority freshness repair
+- refresh README.md after authority freshness repair
+- refresh OPERATIONS.md after authority freshness repair
+- refresh INTERFACES.md after authority freshness repair
+- refresh INTENT.md after authority freshness repair
+- refresh ARCHITECTURE.md after authority freshness repair
+- reject broader authority replay after target refinement
+- record successful fixtures and enforce fresh candidate proof
+- bind final authority continuity candidate
+- refresh .manifest.json after authority refinement
+- refresh VALIDATION.md after authority refinement
+- refresh SEMANTICS.md after authority refinement
+- refresh SECURITY.md after authority refinement
+- refresh README.md after authority refinement
+- refresh OPERATIONS.md after authority refinement
+- refresh INTERFACES.md after authority refinement
+- refresh INTENT.md after authority refinement
+- refresh ARCHITECTURE.md after authority refinement
+- preserve established authority scope during refinement
+- specify authority refinement continuity
+- align reflection architecture with authority discovery
+- explain authority discovery continuations
+- define bounded authority refinement and human dependency progress
+- cover authority discovery and immutable established scope
+- bind recovery fixture repair for complete validation
+- refresh .manifest.json after recovery fixture repair
+- refresh VALIDATION.md after recovery fixture repair
+- refresh SEMANTICS.md after recovery fixture repair
+- refresh SECURITY.md after recovery fixture repair
+- refresh README.md after recovery fixture repair
+- refresh OPERATIONS.md after recovery fixture repair
+- refresh INTERFACES.md after recovery fixture repair
+- refresh INTENT.md after recovery fixture repair
+- refresh ARCHITECTURE.md after recovery fixture repair
+- reconcile recovery fixture build inputs ([#1696](https://github.com/DecapodLabs/decapod/pull/1696))
+- specify shared recovery fixture prerequisites ([#1696](https://github.com/DecapodLabs/decapod/pull/1696))
+- declare shared recovery fixture inputs ([#1696](https://github.com/DecapodLabs/decapod/pull/1696))
+- select supported storage for CLI recovery success fixtures ([#1696](https://github.com/DecapodLabs/decapod/pull/1696))
+- reuse shared recovery probe in filesystem regressions ([#1696](https://github.com/DecapodLabs/decapod/pull/1696))
+- share the existing recovery filesystem probe ([#1696](https://github.com/DecapodLabs/decapod/pull/1696))
+- bind integrated convergence candidate for validation
+- refresh .manifest.json after v0.145.5 integration
+- refresh VALIDATION.md after v0.145.5 integration
+- refresh SEMANTICS.md after v0.145.5 integration
+- refresh SECURITY.md after v0.145.5 integration
+- refresh README.md after v0.145.5 integration
+- refresh OPERATIONS.md after v0.145.5 integration
+- refresh INTERFACES.md after v0.145.5 integration
+- refresh INTENT.md after v0.145.5 integration
+- refresh ARCHITECTURE.md after v0.145.5 integration
+- reconcile accepted v0.145.5 proof inventory
+- integrate accepted v0.145.5 and canonical release projections
+- preserve first execution and fixture repair evidence
+- bind .manifest.json to fixture repairs
+- bind VALIDATION.md to fixture repairs
+- bind SEMANTICS.md to fixture repairs
+- bind SECURITY.md to fixture repairs
+- bind README.md to fixture repairs
+- bind OPERATIONS.md to fixture repairs
+- bind INTERFACES.md to fixture repairs
+- bind INTENT.md to fixture repairs
+- bind ARCHITECTURE.md to fixture repairs
+- assert the public readiness override rejection
+- serialize complete approval-policy fixture configuration
+- record authority repair and validation retry
+- bind .manifest.json to the authority repair
+- bind VALIDATION.md to the authority repair
+- bind SEMANTICS.md to the authority repair
+- bind SECURITY.md to the authority repair
+- bind README.md to the authority repair
+- bind OPERATIONS.md to the authority repair
+- bind INTERFACES.md to the authority repair
+- bind INTENT.md to the authority repair
+- bind ARCHITECTURE.md to the authority repair
+- assert unresolved authorization diagnosis
+- reject inferred authorization for unconfigured operations
+- record convergence candidate and spec reviews
+- refresh .manifest.json source attestation
+- refresh VALIDATION.md source attestation
+- refresh SEMANTICS.md source attestation
+- refresh SECURITY.md source attestation
+- refresh README.md source attestation
+- refresh OPERATIONS.md source attestation
+- refresh INTERFACES.md source attestation
+- refresh INTENT.md source attestation
+- refresh ARCHITECTURE.md source attestation
+- reconcile accepted v0.145.4 proof inventory
+- specify escalation validation boundaries
+- specify escalation security boundaries
+- clarify supported reflection operations
+- observe configured policy in escalation authority fixture
+- simplify escalation input guards
+- integrate accepted v0.145.4 source and canonical projections
+- *(convergence)* document generated integration and keyword-gate repair
+- *(convergence)* state supported source-observation boundaries
+- *(convergence)* align inference guidance with observed authority
+- *(convergence)* measure deterministic fixture decisions and isolation
+- *(convergence)* verify generated agent integration and true human dependencies
+- *(convergence)* specify escalation compatibility and continuation fields
+- *(convergence)* describe the existing-journal escalation architecture
+- *(convergence)* state autonomous convergence intent and authority
+- *(convergence)* distinguish inference escalation from human decisions
+- *(convergence)* record escalation architecture and measured-proof boundaries
+- *(convergence)* define bounded escalation continuity and proof limits
+- *(convergence)* document typed escalation requests and source predicates
+- *(convergence)* require investigation before human escalation
+- *(convergence)* cover architectural choices without routine human interruption
+- *(convergence)* simulate the orientation-to-mentor escalation loop
+- *(convergence)* exercise adversarial convergence and authority fixtures
+
+## [0.145.6](https://github.com/DecapodLabs/decapod/compare/v0.145.5...v0.145.6) - 2026-11-15
+
+### Fixed
+
+- *(proof)* reconcile the reviewed Nix workflow contract without relaxing checks
+- *(bazel)* retain the Nix workflow input for release gate regressions
+- *(nix)* recognize squash and linear release commits in both gates
+
+### Other
+
+- *(governance)* reconcile the reviewed Nix adapter projections
+- *(proof)* retain the independently accepted controller boundary for Nix edits
+- *(governance)* refresh reviewed Nix release gate projections
+- *(proof)* reconcile the Nix gates and retained Bazel test input
+- *(nix)* specify validation release gate boundaries
+- *(nix)* specify security release gate boundaries
+- *(nix)* specify interfaces release gate boundaries
+- *(nix)* specify architecture release gate boundaries
+- *(nix)* model a real squash merge and advertised protected tips
+- *(nix)* execute both release gates against real shallow Git histories
+- *(specs)* scope squash release packaging eligibility
+
+## [0.145.5](https://github.com/DecapodLabs/decapod/compare/v0.145.4...v0.145.5) - 2026-11-14
+
+### Fixed
+
+- *(governance)* regenerate actual 0.144.5 entrypoint templates
+- *(governance)* regenerate actual 0.144.4 entrypoint templates
+
+### Other
+
+- integrate v0.145.4 into public proof collection documentation
+- integrate current accepted master for issue1573
+- *(validation)* delimit steady-state runtime measurement
+- *(runtime)* measure repeated validation with established custody
+- integrate current accepted master for issue1573
+- integrate current accepted master for issue1573
+- *(governance)* refresh official Decapod 0.144.4 release surfaces
+- integrate accepted policy hardening for issue1573
+- *(specs)* preserve independent collector proof and recovery boundaries
+- *(specs)* preserve independent collector proof and recovery boundaries
+- *(specs)* preserve independent collector proof and recovery boundaries
+- *(specs)* preserve independent collector proof and recovery boundaries
+- *(proof)* record bounded public collection and observed complete execution
+- *(specs)* bind independent collector closure intent
+
+## [0.145.4](https://github.com/DecapodLabs/decapod/compare/v0.145.3...v0.145.4) - 2026-11-14
+
+### Fixed
+
+- *(governance)* retain reviewed config.toml on v0.145.3
+- *(governance)* record the unchanged security review honestly
+- *(governance)* regenerate actual 0.144.5 entrypoint templates
+- *(governance)* regenerate actual 0.144.4 entrypoint templates
+- *(ci)* retain core and CLI coverage for test-only changes
+
+### Other
+
+- *(governance)* bind official v0.145.3 delivery reviews
+- *(specs)* refresh VALIDATION.md with v0.145.3
+- *(specs)* refresh SEMANTICS.md with v0.145.3
+- *(specs)* refresh SECURITY.md with v0.145.3
+- *(specs)* refresh README.md with v0.145.3
+- *(specs)* refresh OPERATIONS.md with v0.145.3
+- *(specs)* refresh .manifest.json with v0.145.3
+- *(specs)* retain reviewed INTERFACES.md on v0.145.3
+- *(specs)* retain reviewed ARCHITECTURE.md on v0.145.3
+- *(specs)* retain reviewed coverage intent on v0.145.3
+- integrate v0.145.3 with canonical release entrypoints
+- integrate current accepted master for issue1672
+- *(validation)* delimit steady-state runtime measurement
+- *(runtime)* measure repeated validation with established custody
+- integrate current accepted master for issue1672
+- integrate current accepted master for issue1672
+- *(ci)* format dependency-aware selection helpers
+- *(governance)* record reviewed selector source inventory
+- *(specs)* describe dependency-aware required CI lane selection
+- *(specs)* bind CI test dependencies before shard rollout
+- *(ci)* prove test-only changes keep required recipes selected
+- integrate accepted policy hardening for issue1672
+- *(specs)* preserve core and CLI coverage before CI partition rollout
+
+## [0.145.3](https://github.com/DecapodLabs/decapod/compare/v0.145.2...v0.145.3) - 2026-11-14
+
+### Fixed
+
+- *(governance)* regenerate actual 0.144.5 entrypoint templates
+- *(governance)* regenerate actual 0.144.4 entrypoint templates
+
+### Other
+
+- integrate v0.145.2 into SQLite maintenance regression coverage
+- integrate current accepted master for issue1568
+- *(validation)* delimit steady-state runtime measurement
+- *(runtime)* measure repeated validation with established custody
+- integrate current accepted master for issue1568
+- integrate current accepted master for issue1568
+- *(maintenance)* resolve the real binary before fixture directory changes
+- *(governance)* refresh official Decapod 0.144.4 release surfaces
+- integrate accepted policy hardening for issue1568
+- integrate accepted policy hardening for issue1568
+- *(specs)* require hosted maintenance acceptance outcomes
+- *(proof)* bind required maintenance test source closure
+- *(specs)* bind required maintenance proof scope
+- *(specs)* bind required maintenance proof scope
+- *(specs)* bind required maintenance proof scope
+- *(tests)* include required maintenance module in CLI source closure
+- *(cli)* execute real SQLite maintenance in the required contract suite
+- *(maintenance)* require SQLite and isolate governed fixture context
+- *(specs)* require executable local maintenance acceptance evidence
+
+## [0.145.2](https://github.com/DecapodLabs/decapod/compare/v0.145.1...v0.145.2) - 2026-11-14
+
+### Fixed
+
+- *(container)* avoid runtime probes without a disabled override
+- *(governance)* regenerate actual 0.144.5 entrypoint templates
+- *(storage)* preserve bounded raw component reads under SDK accounting
+- *(storage)* reserve bounded parameter space for compatible row metadata
+- *(storage)* preserve bounded legacy and transfer values across the SDK upgrade
+- *(storage)* box the expanded local SDK connection variant
+- *(governance)* regenerate actual 0.144.4 entrypoint templates
+- *(bazel)* finalize SDK lock under normal generation environment
+
+### Other
+
+- integrate v0.145.1 into the Dactyl SDK upgrade
+- *(container)* scope optional prerequisite recovery on the SDK integration
+- *(container)* require a disabled marker before runtime recovery probes
+- integrate current accepted master for issue1667
+- integrate current accepted master for issue1667
+- *(specs)* record local BLOB accounting and retained component proof
+- *(storage)* reconstruct a full-size retained raw journal component
+- *(storage)* retain aggregate parameter refusal before mutation
+- *(specs)* distinguish cell compatibility from parameter headroom
+- *(storage)* round-trip the full compatible cell with a bound key
+- integrate current accepted master for issue1667
+- *(runtime)* measure repeated validation with established custody
+- *(storage)* cover large-value SDK compatibility and unpersisted quota rejection
+- *(events)* construct oversized stored payload past SDK parameter limits
+- *(governance)* refresh official Decapod 0.144.4 release surfaces
+- integrate accepted policy hardening for issue1667
+- *(specs)* declare exact published SDK compatibility evidence
+- *(proof)* bind published SDK dependency input closure
+- *(specs)* preserve SDK resource and authority boundaries
+- *(specs)* converge current SDK architecture and compatibility
+- *(specs)* converge current SDK architecture and compatibility
+- *(specs)* converge current SDK architecture and compatibility
+- *(cloud)* track published SDK and bounded transport compatibility
+- *(cloud)* track published SDK and bounded transport compatibility
+- *(cloud)* track published SDK and bounded transport compatibility
+- *(storage)* preserve oversized historical reader controls with SDK budgets
+- *(storage)* preserve oversized historical reader controls with SDK budgets
+- *(deps)* bind published SDK version and checksum
+- *(bazel)* retain accepted lockfile indentation
+- *(bazel)* regenerate registry SDK module inputs
+- *(deps)* lock the published Dactyl 0.16.1 artifact
+- *(deps)* adopt published Dactyl 0.16.1
+- *(specs)* bind latest published Dactyl adoption intent
+
+## [0.145.1](https://github.com/DecapodLabs/decapod/compare/v0.145.0...v0.145.1) - 2026-11-14
+
+### Fixed
+
+- *(broker)* preserve durable outcomes before retry deadline checks
+- *(broker)* admit explicit bounded request budgets
+- *(governance)* regenerate actual 0.144.5 entrypoint templates
+- *(governance)* regenerate actual 0.144.4 entrypoint templates
+- *(readiness)* query completion intent through todo boundary
+- *(todo)* expose scoped validated completion admission query
+- *(completion)* admit caller environment before broker handoff
+- *(broker)* preserve caller diagnostic scope across command execution
+- *(completion)* reject overrides before current and historical proof admission
+- *(publication)* reject diagnostic overrides before workspace publication
+- *(readiness)* enforce override boundary in CLI RPC and publication controller
+- *(readiness)* reject diagnostic gate overrides in shared runtime
+
+### Other
+
+- integrate v0.145.0 and canonical workunit proof into PR1677
+- *(broker)* specify durable outcome precedence for retry timing
+- *(broker)* retain unknown and committed outcomes on malformed retries
+- integrate current accepted master for issue1659
+- *(spec)* bind broker budget controls to native regressions
+- *(broker)* define bounded workload windows and unchanged proof gates
+- *(broker)* bind twenty-worker stress to its declared budget
+- *(broker)* reject oversized native deadlines before admission
+- *(validation)* delimit steady-state runtime measurement
+- *(runtime)* measure repeated validation with established custody
+- integrate current accepted master for issue1659
+- integrate current accepted master for issue1659
+- *(validation)* keep contention diagnostics in bounded prerequisite scope
+- *(entrypoints)* exercise tamper checks in prerequisite scope
+- *(broker)* repair diagnostic forwarding probe and scoped control assertion
+- *(broker)* distinguish scoped diagnostic flags from arbitrary controls
+- *(governance)* refresh official Decapod 0.144.4 release surfaces
+- integrate accepted policy hardening for issue1659
+- *(governance)* retain actual override and workspace rejection boundaries
+- *(cli)* separate diagnostic override and full profile admission controls
+- *(specs)* declare real override and broker acceptance controls
+- *(proof)* bind diagnostic override boundary source
+- *(readiness)* explain diagnostic skip recovery and assurance scope
+- *(specs)* deny override-based proof and broker scope confusion
+- *(specs)* define override blocker and diagnostic compatibility
+- *(specs)* centralize diagnostic override admission
+- *(readiness)* format lib override boundary
+- *(broker)* format diagnostic subprocess regression
+- *(broker)* exercise diagnostic scope capture and clearing in children
+- *(cli)* reject skipped full readiness publication and completion
+- *(readiness)* isolate override attacks in real runtime children
+- *(specs)* define diagnostic override readiness boundary
+
+## [0.145.0](https://github.com/DecapodLabs/decapod/compare/v0.144.6...v0.145.0) - 2026-11-14
+
+### Added
+
+- *(validation)* retain read-only inputs from the actual selected execution
+- *(proof)* bind observed workunit contracts to canonical validation history
+
+### Fixed
+
+- *(validate)* avoid runtime recovery when no override exists
+- *(test)* require the verified fixture journal generation
+- *(governance)* regenerate actual 0.144.5 entrypoint templates
+- *(workunit)* reserve verified status changes for owned transitions
+- *(proof)* bind promotion to the original observed workunit generation
+- *(proof)* report unsupported canonical task obligations before receipt lookup
+- *(workunit)* preserve unproven legacy imports and reject split atomic authority
+- *(validation)* keep unsupported task obligations unproven in first full workunit proof
+- *(workunit)* enforce canonical custody before atomic VERIFIED append
+- *(proof)* fence observed task custody in the workunit commit transaction
+- *(proof)* preserve canonical task obligations during workunit acceptance
+- *(governance)* regenerate actual 0.144.4 entrypoint templates
+- *(workunit)* classify absent custody before consulting canonical proof
+- *(proof)* honor canonical workunit hash encoding in subject checks
+- *(proof)* reject contradictory workunit provenance in canonical records
+- *(workunit)* require durable current custody at proof consumption
+- *(publication)* authenticate workunit proof before accepting VERIFIED status
+- *(completion)* require observed current workunit proof in record construction and verification
+- *(validate)* authenticate current VERIFIED workunit manifests
+- *(validation)* judge first workunit proof from current observed checks
+- *(proof)* recheck executable prerequisites during applicability reconstruction
+- *(workunit)* keep claimed status distinct from verified proof
+- *(workunit)* derive VERIFIED only from current canonical observed proof
+
+### Other
+
+- integrate current accepted master for issue1660
+- *(spec)* scope prerequisite runtime recovery to existing overrides
+- *(validate)* observe container recovery side effects in isolated processes
+- *(validation)* delimit steady-state runtime measurement
+- *(runtime)* measure repeated validation with established custody
+- integrate current accepted master for issue1660
+- *(workunit)* document migration to owned verified status transitions
+- *(workunit)* reject prepared status edits with retained real proof
+- *(proof)* explain generation-bound promotion and revalidation
+- *(proof)* reject old observations after workunit generation changes
+- integrate current accepted master for issue1660
+- *(proof)* preserve historical receiver decisions during stale rechecks
+- *(governance)* map acceptance paths and unresolved trust boundaries
+- *(proof)* verify portable import against current receiver custody
+- *(todo)* classify immutable task-plan inspection as a read operation
+- *(proof)* declare completion outputs and preserve source versus task verdicts
+- *(specs)* retain atomic-domain and task-obligation proof limits
+- *(proof)* state the atomic acceptance domain and unresolved split-store migration
+- *(proof)* match observed fixture compilation to supported native platforms
+- *(proof)* match observed fixture compilation to supported native platforms
+- *(proof)* retain independently declared task gates under real execution
+- *(proof)* fence custody races, receipt replay and split-store acceptance
+- *(todo)* expose owned task-plan checks at proof boundaries
+- *(recovery)* retain unproven claimed history without granting resumability
+- *(proof)* initialize the complete canonical admission configuration
+- *(proof)* resolve optional CLI fixture availability explicitly
+- *(specs)* bind validation to observed workunit proof
+- *(specs)* bind security to observed workunit proof
+- *(specs)* bind interfaces to observed workunit proof
+- *(specs)* bind architecture to observed workunit proof
+- *(proof)* define observed workunit authority, migration and assurance limits
+- *(validation)* evaluate first observed proof without self-issued VERIFIED rows
+- *(proof)* keep non-workunit archival fixtures explicitly unbound
+- *(proof)* keep non-workunit archival fixtures explicitly unbound
+- *(publication)* reject synthetic VERIFIED status and retain capsule boundary coverage
+- *(workunit)* separate resumable file custody from proven completion
+- *(completion)* export and replay genuine canonical local proof
+- *(proof)* expose shared observed fixture within the test crate
+- *(proof)* share genuine observed completion and verify declaration downgrades
+- *(proof)* register genuine workunit producer regressions in the required library suite
+- *(proof)* exercise actual local execution through canonical workunit acceptance
+- *(proof)* separate actual CLI admission from library execution fixtures
+- *(proof)* share the real runtime fixture with canonical producer tests
+- *(workunit)* reject legacy CLI pass declarations without observed custody
+- *(workunit)* retain legacy manifest decoding without canonical provenance
+- *(workunit)* retain legacy manifest decoding without canonical provenance
+- *(workunit)* retain legacy manifest decoding without canonical provenance
+- *(workunit)* retain legacy manifest decoding without canonical provenance
+- *(workunit)* retain legacy manifest decoding without canonical provenance
+- *(workunit)* preserve file artifacts with an explicit canonical proof reference
+- *(verify)* share canonical full-validation obligation admission
+- *(proof)* share exact identity reconstruction with read-only tool references
+- integrate accepted policy hardening for issue1660
+- *(specs)* bind observed workunit proof convergence
+
+## [0.144.6](https://github.com/DecapodLabs/decapod/compare/v0.144.5...v0.144.6) - 2026-11-14
+
+### Fixed
+
+- *(governance)* regenerate actual 0.144.5 entrypoint templates
+- *(migration)* refuse mixed journal authority before exclusive maintenance
+- *(migration)* guard uncertain TODO inputs before checkpoint preparation
+- *(governance)* regenerate actual 0.144.4 entrypoint templates
+- *(migration)* preserve inert TODO placeholders without opening or deleting them
+
+### Other
+
+- *(validation)* delimit steady-state runtime measurement
+- *(runtime)* measure repeated validation with established custody
+- integrate current accepted master for issue1657
+- integrate current accepted master for issue1657
+- *(migration)* traverse startup checkpoint and backup guards with real journals
+- *(specs)* bind security to the legacy TODO input boundary
+- *(specs)* bind interfaces to the legacy TODO input boundary
+- *(specs)* bind architecture to the legacy TODO input boundary
+- *(recovery)* define inert placeholders and retain nonempty cutover as unresolved
+- *(intent)* distinguish placeholder recovery from unresolved nonempty reconciliation
+- *(migration)* preserve real canonical journals across inert and uncertain legacy inputs
+- integrate accepted policy hardening for issue1657
+- *(intent)* govern explicit mixed TODO store recovery
+
+## [0.144.5](https://github.com/DecapodLabs/decapod/compare/v0.144.4...v0.144.5) - 2026-11-14
+
+### Fixed
+
+- *(governance)* regenerate actual 0.144.4 entrypoint templates
+
+### Other
+
+- *(storage)* explain real inventory coverage and remaining acceptance
+- *(storage)* record bounded native inventories for all three dogfood stores
+- integrate accepted policy hardening for issue1630
+- *(intent)* bind storage follow-through to current native inspection and evidence
+
+## [0.144.4](https://github.com/DecapodLabs/decapod/compare/v0.144.3...v0.144.4) - 2026-11-13
+
+### Fixed
+
+- *(validation)* reject candidate repinning of accepted check sources
+- *(validation)* enforce accepted local policy before execution
+- *(validation)* retain accepted local check definitions
+
+### Other
+
+- *(specs)* preserve hosted false-green evidence and repair requirements
+- *(readiness)* explain accepted verification-source updates
+- *(specs)* record reproduced source-check false green
+- *(specs)* specify source-definition policy transition
+- *(specs)* preserve accepted validation source definitions
+- *(cli)* register accepted check-script repinning at required boundary
+- *(readiness)* expose shared source-repinning control for required CLI
+- *(specs)* declare hosted accepted-policy adversarial controls
+- *(validation)* expose check-source repinning and accepted evolution
+- *(readiness)* keep fresh CLI adoption distinct from accepted policy
+- *(proof)* bind accepted-policy repair source inventory
+- *(tests)* format repinning regression setup
+- *(validation)* cover accepted program and directory substitution
+- *(governance)* distinguish review digests from policy authority
+- *(specs)* bind local proof authority to accepted target
+- *(specs)* specify accepted contract change recovery
+- *(specs)* describe accepted local proof admission
+- *(readiness)* explain accepted local policy evolution
+- *(validation)* reject repinned accepted proof requirements
+- *(specs)* define accepted local proof preservation
+
+## [0.144.3](https://github.com/DecapodLabs/decapod/compare/v0.144.2...v0.144.3) - 2026-11-13
+
+### Added
+
+- *(runtime)* wire pre-startup governed database CLI/RPC dispatch and config preservation
+- *(interop)* register governed data.database.* operations in RPC manifest
+- *(rpc)* add typed request structs for governed data.database.* operations
+- *(cli)* add governed data database capabilities, lock, maintain, and audit commands
+- *(core)* register db_maintenance module
+- *(governance)* implement canonical-policy-bound agent database maintenance engine
+- *(storage)* add non-destructive lock diagnostics and idle owned-lease release
+
+### Fixed
+
+- *(governance)* preserve PR1662 for current-master integration
+- *(tests)* resolve clippy lints in sqlite_maintenance integration tests
+- *(maintenance)* resolve clippy type_complexity and manual_clamp lints
+
+### Other
+
+- resolve PR1662 conflicts and preserve original history
+- integrate PR1662 with current Decapod master
+- *(agent)* sync generated config-schema.md for #1568
+- *(agent)* sync generated command-contracts.md for #1568
+- *(governance)* initialize reconciled v0.143.1 trajectory run for #1568
+- *(merge)* reconcile accepted master v0.143.1 into #1568
+- *(governance)* record project-check prerequisite receipt for #1568
+- *(governance)* refresh specs manifest and record spec reviews for #1568
+- *(specs)* synchronize VALIDATION.md overlay digest after #1568 update
+- *(specs)* synchronize SEMANTICS.md overlay digest after #1568 update
+- *(specs)* synchronize SECURITY.md overlay digest after #1568 update
+- *(specs)* synchronize specs README.md overlay digest after #1568 update
+- *(specs)* synchronize OPERATIONS.md overlay digest after #1568 update
+- *(specs)* synchronize INTERFACES.md overlay digest after #1568 update
+- *(specs)* synchronize INTENT.md overlay digest after #1568 update
+- *(specs)* synchronize ARCHITECTURE.md overlay digest after #1568 update
+- *(specs)* document SQLite maintenance unit and integration regression coverage ([#1568](https://github.com/DecapodLabs/decapod/pull/1568))
+- *(specs)* document local database maintenance security and custody boundaries ([#1568](https://github.com/DecapodLabs/decapod/pull/1568))
+- *(specs)* document capability-scoped database maintenance CLI and RPC ([#1568](https://github.com/DecapodLabs/decapod/pull/1568))
+- *(specs)* document project-opted agent database maintenance architecture ([#1568](https://github.com/DecapodLabs/decapod/pull/1568))
+- *(specs)* refresh SEMANTICS.md projection for v0.143.0
+- *(specs)* refresh specs README.md projection for v0.143.0
+- *(specs)* refresh OPERATIONS.md projection for v0.143.0
+- *(specs)* refresh INTENT.md projection for v0.143.0
+- *(proof)* update reviewed_sources_digest for accepted v0.143.0 source inventory
+- *(container)* refresh managed Dockerfile pin for Decapod v0.143.0
+- *(entrypoints)* refresh GEMINI.md for Decapod v0.143.0
+- *(entrypoints)* refresh CODEX.md for Decapod v0.143.0
+- *(entrypoints)* refresh CLAUDE.md for Decapod v0.143.0
+- *(entrypoints)* refresh AGENTS.md for Decapod v0.143.0
+- *(maintenance)* add end-to-end RBAC, anti-self-elevation, and concurrent lock custody tests
+- *(agent)* regenerate config-schema.md with governance.db_maintenance section
+- *(agent)* regenerate command-contracts.md with governed database maintenance surface
+- *(generator)* document governed database maintenance contracts and config schema
+- *(storage)* cover lock contention diagnostics and owned-lease release safety
+
+## [0.144.2](https://github.com/DecapodLabs/decapod/compare/v0.144.1...v0.144.2) - 2026-11-13
+
+### Added
+
+- *(verify)* enforce proof-plan and artifact write contracts ([#1630](https://github.com/DecapodLabs/decapod/pull/1630))
+- *(aptitude)* enforce UTF-8 byte, NUL, and tag bounds on aptitude writes ([#1630](https://github.com/DecapodLabs/decapod/pull/1630))
+- *(storage)* report format version and deduplicated component store metrics in inventory ([#1630](https://github.com/DecapodLabs/decapod/pull/1630))
+- *(todo)* enforce write contracts, format version guard, and v2 journal integration ([#1630](https://github.com/DecapodLabs/decapod/pull/1630))
+- *(migration)* register migration 1200 compact lossless storage upgrade ([#1630](https://github.com/DecapodLabs/decapod/pull/1630))
+- *(storage)* implement v2 compaction migration, format guard, reference GC, and explicit vacuum ([#1630](https://github.com/DecapodLabs/decapod/pull/1630))
+- *(transfer)* bundle and verify externalized storage components across task transfers ([#1630](https://github.com/DecapodLabs/decapod/pull/1630))
+- *(journal)* add v2 component deduplication and snapshot-consistent keyset verify ([#1630](https://github.com/DecapodLabs/decapod/pull/1630))
+- *(validate)* reconstruct compact knowledge event envelopes ([#1630](https://github.com/DecapodLabs/decapod/pull/1630))
+- *(trace)* reconstruct compact event envelopes in get_last_traces ([#1630](https://github.com/DecapodLabs/decapod/pull/1630))
+- *(workspace)* reconstruct compact event envelopes in ownership lookup ([#1630](https://github.com/DecapodLabs/decapod/pull/1630))
+- *(lcm)* reconstruct compact event envelopes when reading LCM ledger ([#1630](https://github.com/DecapodLabs/decapod/pull/1630))
+- *(events)* compact non-federation event envelopes with lossless reconstruction ([#1630](https://github.com/DecapodLabs/decapod/pull/1630))
+- *(storage)* add compact component store and migration manifest DDL ([#1630](https://github.com/DecapodLabs/decapod/pull/1630))
+- *(storage)* export storage_contracts module in core ([#1630](https://github.com/DecapodLabs/decapod/pull/1630))
+- *(storage)* add versioned field, collection, and authority contracts ([#1630](https://github.com/DecapodLabs/decapod/pull/1630))
+
+### Fixed
+
+- *(ci)* bound complete todo plugin verification
+- *(storage)* preserve PR1663 for current-master integration
+- *(knowledge)* reconstruct compact promotion event envelopes
+- *(map)* reconstruct compact event envelopes via events::query
+- *(workspace)* factor LifecycleEventRow alias for clippy::type_complexity ([#1630](https://github.com/DecapodLabs/decapod/pull/1630))
+- *(todo)* factor LifecycleEventRow alias for clippy::type_complexity ([#1630](https://github.com/DecapodLabs/decapod/pull/1630))
+- *(journal)* factor ExternalizedProjection alias for clippy::type_complexity ([#1630](https://github.com/DecapodLabs/decapod/pull/1630))
+- *(storage)* allow clippy::too_many_arguments on validate_event_append ([#1630](https://github.com/DecapodLabs/decapod/pull/1630))
+
+### Other
+
+- *(storage)* enforce blank-title admission in Gatling
+- resolve PR1663 conflicts and preserve original history
+- integrate PR1663 with current Decapod master
+- *(governance)* bind v0.143.1 project-check receipt
+- *(merge)* reconcile accepted master ([#1665](https://github.com/DecapodLabs/decapod/pull/1665)) into #1630
+- *(specs)* cover map_ops and knowledge envelope reconstruction
+- *(map)* assert compact map event envelope metadata round-trip
+- *(broker)* read broker audit events via query_all_on_conn
+- *(governance)* record v0.143.1 trajectory and project-check receipt ([#1630](https://github.com/DecapodLabs/decapod/pull/1630))
+- *(specs)* refresh .manifest.json and record v0.143.1 spec reviews ([#1630](https://github.com/DecapodLabs/decapod/pull/1630))
+- *(specs)* refresh README.md attestation for Decapod v0.143.1
+- *(specs)* refresh SEMANTICS.md attestation for Decapod v0.143.1
+- *(specs)* refresh OPERATIONS.md attestation for Decapod v0.143.1
+- *(specs)* refresh VALIDATION.md attestation for Decapod v0.143.1
+- *(specs)* refresh SECURITY.md attestation for Decapod v0.143.1
+- *(specs)* refresh INTERFACES.md attestation for Decapod v0.143.1
+- *(specs)* refresh ARCHITECTURE.md attestation for Decapod v0.143.1
+- *(specs)* refresh INTENT.md attestation for Decapod v0.143.1
+- *(release)* refresh Dockerfile.decapod for Decapod v0.143.1
+- *(release)* refresh GEMINI.md for Decapod v0.143.1
+- *(release)* refresh CODEX.md for Decapod v0.143.1
+- *(release)* refresh CLAUDE.md for Decapod v0.143.1
+- *(release)* refresh AGENTS.md for Decapod v0.143.1
+- *(storage)* factor EventRowToExpand alias for clippy::type_complexity ([#1630](https://github.com/DecapodLabs/decapod/pull/1630))
+- *(storage)* align logical_contract_v1.json release with v0.143.1 ([#1630](https://github.com/DecapodLabs/decapod/pull/1630))
+- *(merge)* reconcile accepted master (#1655, v0.143.1) into #1630
+- *(governance)* record project-check validation receipt ([#1630](https://github.com/DecapodLabs/decapod/pull/1630))
+- *(specs)* refresh .manifest.json and record #1630 spec reviews ([#1630](https://github.com/DecapodLabs/decapod/pull/1630))
+- *(specs)* refresh specs README.md attestation for v0.143.0
+- *(specs)* update SEMANTICS.md for lossless historical reads and authority convergence ([#1630](https://github.com/DecapodLabs/decapod/pull/1630))
+- *(specs)* update OPERATIONS.md for migration 1200, reference GC, and explicit vacuum ([#1630](https://github.com/DecapodLabs/decapod/pull/1630))
+- *(specs)* update VALIDATION.md for #1630 compaction proofs and measured growth ([#1630](https://github.com/DecapodLabs/decapod/pull/1630))
+- *(specs)* update SECURITY.md for fail-closed UTF-8/NUL/JSON admission and tamper checks ([#1630](https://github.com/DecapodLabs/decapod/pull/1630))
+- *(specs)* update INTERFACES.md for write contracts, paged verify, and format v2 ([#1630](https://github.com/DecapodLabs/decapod/pull/1630))
+- *(specs)* update ARCHITECTURE.md for v2 component store and compact envelopes ([#1630](https://github.com/DecapodLabs/decapod/pull/1630))
+- *(specs)* update INTENT.md for bounded lossless compact storage ([#1630](https://github.com/DecapodLabs/decapod/pull/1630))
+- *(transfer)* verify externalized component bundle round-trip and tamper rejection ([#1630](https://github.com/DecapodLabs/decapod/pull/1630))
+- *(journal)* verify v2 component deduplication and >10K keyset paged verify ([#1630](https://github.com/DecapodLabs/decapod/pull/1630))
+- *(todo)* verify fail-closed task write bounds and v2 task journal integration ([#1630](https://github.com/DecapodLabs/decapod/pull/1630))
+- *(cli)* verify storage inventory v2 format and component store attribution ([#1630](https://github.com/DecapodLabs/decapod/pull/1630))
+- *(storage)* update storage inventory test fixtures for JSON path scopes ([#1630](https://github.com/DecapodLabs/decapod/pull/1630))
+- *(storage)* verify migration 1200 SHA-256 parity, downgrade guard, GC, and vacuum ([#1630](https://github.com/DecapodLabs/decapod/pull/1630))
+- *(storage)* verify >=30% lossless v2 compaction savings and benchmark harness ([#1630](https://github.com/DecapodLabs/decapod/pull/1630))
+- *(storage)* verify write-admission bounds, lossless oversized patch, and convergence ([#1630](https://github.com/DecapodLabs/decapod/pull/1630))
+- *(storage)* document format v2 metadata and component store attribution ([#1630](https://github.com/DecapodLabs/decapod/pull/1630))
+- *(storage)* update datastore-v2 measured growth and compaction results ([#1630](https://github.com/DecapodLabs/decapod/pull/1630))
+- *(storage)* record reproducible 1K-100K checkpoint compaction and contention benchmarks ([#1630](https://github.com/DecapodLabs/decapod/pull/1630))
+- *(storage)* publish logical_contract_v1 field, collection, and component contracts ([#1630](https://github.com/DecapodLabs/decapod/pull/1630))
+- *(container)* refresh Dockerfile.decapod pin to v0.143.0
+- *(entrypoints)* refresh GEMINI.md for Decapod v0.143.0
+- *(entrypoints)* refresh CODEX.md for Decapod v0.143.0
+- *(entrypoints)* refresh CLAUDE.md for Decapod v0.143.0
+- *(entrypoints)* refresh AGENTS.md for Decapod v0.143.0
+
+## [0.144.1](https://github.com/DecapodLabs/decapod/compare/v0.144.0...v0.144.1) - 2026-11-13
+
+### Fixed
+
+- *(ci)* bound complete CLI contract execution
+- *(ci)* refresh Decapod 0.144.0 release surfaces
+- integrate PR1666 with accepted Decapod v0.143.2
+- *(snapshot_provider)* preserve shared GitHub quota state on custody budgets
+- *(snapshot_provider)* preserve shared GitHub quota state on archive capture budgets
+- *(snapshot_provider)* pace only anonymous GitHub polls and drop duplicate remote binding check
+- *(snapshot_provider)* wire anonymous GitHub quota tracking into Budget and PublicGithubReads
+- *(snapshot_provider)* add bounded anonymous GitHub quota pacing ([#1573](https://github.com/DecapodLabs/decapod/pull/1573))
+
+### Other
+
+- resolve PR1666 conflicts and preserve original history
+- update PR1666 onto current master
+- *(governance)* bind v0.143.1 validation epoch receipt for #1573
+- *(specs)* refresh v0.143.1 specs manifest for #1573
+- *(specs)* refresh SEMANTICS.md codebase attestation
+- *(specs)* refresh specs README.md codebase attestation
+- *(specs)* refresh INTERFACES.md codebase attestation
+- *(specs)* refresh INTENT.md codebase attestation
+- *(specs)* document anonymous GitHub quota pacing regressions in VALIDATION.md
+- *(specs)* document bounded rate-limit hint parsing invariants in SECURITY.md
+- *(specs)* document public GitHub quota pacing for Buildkite waits in OPERATIONS.md
+- *(specs)* document advisory anonymous GitHub reader pacing in ARCHITECTURE.md
+- *(container)* refresh managed Dockerfile pin to Decapod v0.143.1
+- *(entrypoints)* refresh GEMINI.md for Decapod v0.143.1
+- *(entrypoints)* refresh CODEX.md for Decapod v0.143.1
+- *(entrypoints)* refresh CLAUDE.md for Decapod v0.143.1
+- *(entrypoints)* refresh AGENTS.md for Decapod v0.143.1
+- *(config)* update reviewed_sources_digest for v0.143.1 and github_quota.rs
+- *(snapshot_provider)* initialize github_quota in Buildkite timeout budget fixture
+- *(snapshot_provider)* initialize github_quota in custody budget fixtures
+- *(snapshot_provider)* initialize github_quota in collection budget fixtures
+- *(snapshot_provider)* cover cold discovery quota pacing and 10-GET bound Buildkite wait
+
+## [0.144.0](https://github.com/DecapodLabs/decapod/compare/v0.143.2...v0.144.0) - 2026-11-13
+
+### Fixed
+
+- *(ci)* refresh PR1669 accepted-base event binding
+- integrate PR1669 with accepted custody changes
+- integrate PR1661 with accepted Decapod v0.143.2
+- *(workunit)* resolve main runtime datastore in linked worktrees
+- *(validate)* scope protected_paths rule to path and diff checks
+- *(custody)* retain strict admission with partial non-git diagnostics
+- *(workspace)* preserve non-git init validation outside managed workspaces
+- *(specs)* bind PR1661 manifest to final validation config
+- *(custody)* restore scoped diagnostics on accepted 0.143.1 master
+- *(tests)* remove redundant PathBuf::from in plugins_todo_tests
+- *(release)* gate lineage-sync on resource:release reservation availability
+- *(todo)* enforce unique task binding index and retire bindings across lease transitions
+- *(workspace)* enforce fail-closed status, prune release, and publish resource gate
+- *(authoring)* enforce 1-to-1 checkout bindings, lifecycle retirement, and resource gates
+- *(fleet-coord)* isolate resource:<name> reservations from path overlaps
+- *(policy)* map workspace.authoring actions to dedicated risk zone
+
+### Other
+
+- resolve PR1669 conflicts with current master
+- *(governance)* bind validation receipt for PR #1669 CI fixes
+- *(specs)* refresh VALIDATION.md codebase attestation
+- *(specs)* refresh SEMANTICS.md codebase attestation
+- *(specs)* refresh SECURITY.md codebase attestation
+- *(specs)* refresh README.md codebase attestation
+- *(specs)* refresh OPERATIONS.md codebase attestation
+- *(specs)* refresh INTERFACES.md codebase attestation
+- *(specs)* refresh INTENT.md codebase attestation
+- *(specs)* refresh specs manifest for workunit fix
+- *(specs)* document linked-worktree workunit runtime resolution
+- *(workunit)* verify linked worktree runtime resolution
+- *(validate)* align protected_paths test with InitPlanInput
+- *(governance)* bind todo custody on plan and validation receipt
+- *(governance)* bind v0.143.2 validation receipt
+- *(specs)* refresh v0.143.2 specs manifest
+- *(specs)* refresh SEMANTICS.md codebase attestation
+- *(specs)* refresh specs README.md codebase attestation
+- *(specs)* refresh OPERATIONS.md codebase attestation
+- *(specs)* refresh INTERFACES.md codebase attestation
+- *(specs)* refresh INTENT.md codebase attestation
+- *(specs)* refresh ARCHITECTURE.md codebase attestation
+- *(specs)* document protected_paths regression in VALIDATION.md
+- *(specs)* document protected_paths rule scope in SECURITY.md
+- *(container)* refresh managed Dockerfile pin to v0.143.2
+- *(entrypoints)* refresh GEMINI.md for Decapod v0.143.2
+- *(entrypoints)* refresh CODEX.md for Decapod v0.143.2
+- *(entrypoints)* refresh CLAUDE.md for Decapod v0.143.2
+- *(entrypoints)* refresh AGENTS.md for Decapod v0.143.2
+- *(specs)* refresh spec attestations and manifest for #1469
+- *(merge)* retain concurrent PR1661 update
+- *(merge)* preserve PR1661 history on accepted master
+- *(merge)* reconcile accepted master v0.143.1 into #1469
+- *(specs)* refresh .manifest.json and record spec reviews ([#1469](https://github.com/DecapodLabs/decapod/pull/1469))
+- *(specs)* refresh SEMANTICS.md attestation for v0.143.0
+- *(specs)* refresh specs README.md attestation for v0.143.0
+- *(specs)* refresh OPERATIONS.md attestation for v0.143.0
+- *(specs)* update VALIDATION.md for #1469 concurrency and combined-candidate proofs
+- *(specs)* update SECURITY.md for fail-closed authoring and resource boundaries ([#1469](https://github.com/DecapodLabs/decapod/pull/1469))
+- *(specs)* update INTERFACES.md for authoring bindings and resource:<name> gates ([#1469](https://github.com/DecapodLabs/decapod/pull/1469))
+- *(specs)* update ARCHITECTURE.md for 1-to-1 bindings and resource gates ([#1469](https://github.com/DecapodLabs/decapod/pull/1469))
+- *(specs)* update INTENT.md for concurrent worktree custody ([#1469](https://github.com/DecapodLabs/decapod/pull/1469))
+- *(readiness)* verify combined-candidate validation across concurrent worktrees
+- *(bootstrap)* verify cross-process checkout contention and interrupted ensure recovery
+- *(todo)* verify authoring rollback, 1-to-1 uniqueness, retirement, and resource gates
+- *(fleet-coord)* verify resource:<name> overlap predicates and path isolation
+- *(architecture)* document 1-to-1 worktree custody and resource gates
+- *(contracts)* regenerate command-contracts.md for issue #1469
+- *(cli)* document 1-to-1 worktree bindings and resource:<name> reservation gates
+- *(container)* refresh Dockerfile.decapod pin to v0.143.0
+- *(entrypoints)* refresh GEMINI.md for Decapod v0.143.0
+- *(entrypoints)* refresh CODEX.md for Decapod v0.143.0
+- *(entrypoints)* refresh CLAUDE.md for Decapod v0.143.0
+- *(entrypoints)* refresh AGENTS.md for Decapod v0.143.0
+
+## [0.143.2](https://github.com/DecapodLabs/decapod/compare/v0.143.1...v0.143.2) - 2026-11-13
+
+### Fixed
+
+- *(validation)* normalize workspace task_type for pre-execution rules ([#1629](https://github.com/DecapodLabs/decapod/pull/1629))
+- *(validation)* populate canonical task_type and git_ref in terminal rules ([#1629](https://github.com/DecapodLabs/decapod/pull/1629))
+
+### Other
+
+- *(governance)* bind v0.143.1 validation epoch receipt
+- *(merge)* reconcile accepted master v0.143.1 into #1629
+- *(merge)* reconcile accepted master ([#1655](https://github.com/DecapodLabs/decapod/pull/1655)) into #1629
+- *(specs)* refresh .manifest.json and record publication spec reviews
+- *(specs)* document negative proof-backed completion CLI and unit regressions
+- *(specs)* refresh SEMANTICS.md attestation for v0.143.0
+- *(specs)* document terminal rule context and proof-backed completion custody
+- *(specs)* refresh specs README.md attestation for v0.143.0
+- *(specs)* refresh OPERATIONS.md attestation for v0.143.0
+- *(specs)* refresh INTERFACES.md attestation for v0.143.0
+- *(specs)* refresh INTENT.md attestation for v0.143.0
+- *(specs)* document canonical terminal rule task_type and git_ref lifecycle
+- *(validation)* verify negative proof-backed completion gates on fresh docs task ([#1629](https://github.com/DecapodLabs/decapod/pull/1629))
+- *(config)* update reviewed_sources_digest for v0.143.0 source inventory
+- *(container)* refresh Dockerfile.decapod pin for v0.143.0
+- *(entrypoints)* refresh GEMINI.md for v0.143.0
+- *(entrypoints)* refresh CODEX.md for v0.143.0
+- *(entrypoints)* refresh CLAUDE.md for v0.143.0
+- *(entrypoints)* refresh AGENTS.md for v0.143.0
+
+## [0.143.1](https://github.com/DecapodLabs/decapod/compare/v0.143.0...v0.143.1) - 2026-11-13
+
+### Fixed
+
+- *(build)* recover owned mode-000 scratch permissions on cleanup
+
+### Other
+
+- *(merge)* reconcile accepted master v0.143.0 into #1643
+- *(merge)* reconcile accepted master v0.142.0 into #1643
+- *(specs)* refresh specs manifest and record publication spec reviews
+- *(specs)* document #1643 supervisor regressions and 0.141.0 inventory
+- *(specs)* document build_lifecycle owned scratch cleanup in ARCHITECTURE.md
+- *(specs)* document bounded owned mode-000 scratch permission recovery
+- *(specs)* refresh SEMANTICS.md codebase attestation for 0.141.0
+- *(specs)* refresh specs README.md codebase attestation for 0.141.0
+- *(specs)* refresh OPERATIONS.md codebase attestation for 0.141.0
+- *(specs)* refresh INTERFACES.md codebase attestation for 0.141.0
+- *(specs)* refresh INTENT.md codebase attestation for 0.141.0
+- *(managed)* refresh Dockerfile.decapod image pin to v0.141.0-debian
+- *(entrypoints)* refresh GEMINI.md release pin to 0.141.0
+- *(entrypoints)* refresh CODEX.md release pin to 0.141.0
+- *(entrypoints)* refresh CLAUDE.md release pin to 0.141.0
+- *(entrypoints)* refresh AGENTS.md release pin to 0.141.0
+- *(config)* update reviewed_sources_digest for build_lifecycle inputs
+- *(build)* add Podman mode-000 scratch cleanup and escape regressions
+
+## [0.143.0](https://github.com/DecapodLabs/decapod/compare/v0.142.0...v0.143.0) - 2026-11-13
+
+### Added
+
+- *(cloud)* select service-owned projects before native access
+
+### Fixed
+
+- *(cloud)* preserve operation bindings across client versions
+- *(cloud)* bind task writes and retries to the selected project
+
+### Other
+
+- reconcile v0.142.0 master and PR 1647 cloud sign-in with managed projects
+- reconcile patched registry dependency release
+- reconcile accepted storage inventory release
+- reconcile project routing with accepted 0.140 release
+- reconcile accepted proof lifecycle before project validation
+- reconcile managed project routing with accepted onboarding
+- *(cloud)* cover project association and native consumer phases
+
+## [0.142.0](https://github.com/DecapodLabs/decapod/compare/v0.141.0...v0.142.0) - 2026-11-13
+
+### Added
+
+- *(cloud)* hand persistent connections to the agent
+
+### Fixed
+
+- integrate governed first-proof admission into agent handoff
+- preserve agent lifecycle through Decapod after setup
+- *(cloud)* sanitize task connection recovery guidance
+- *(cloud)* preserve browser links in text handoffs
+
+### Other
+
+- refresh v0.141.0 release-bound entrypoints and Dockerfile pin
+- reconcile v0.141.0 master and Dactyl 0.14.0 into PR 1647
+- reconcile 0.140.1 storage and cloud proof boundaries
+- reconcile accepted 0.140.0 proof surfaces
+- *(cloud)* align generated files with the accepted release
+- *(cloud)* reconcile the accepted release target
+- *(cloud)* reconcile the accepted connector foundation
+
+## [0.141.0](https://github.com/DecapodLabs/decapod/compare/v0.140.3...v0.141.0) - 2026-11-13
+
+### Added
+
+- compose bounded evidence-grounded reflection
+
+### Fixed
+
+- *(ci)* refresh living spec manifest and extend entrypoint correctness timeout
+- reconcile reflection PR with current master
+- accept optional blockers in reflection continuation test
+- preserve reflection across governed phase progress
+- reconcile reflection validation with accepted recovery
+- bind orientation reflection to explicit task intent
+- preserve legacy plan validation fixtures
+- bind reflection to captured sources and path identity
+- reconcile reviewed release source inventory
+
+### Other
+
+- reconcile reflection with storage inventory release
+- preserve exact validation and release authorization blocker
+- reconcile accepted target and reflection continuity
+- preserve validation repair continuity
+
+## [0.140.3](https://github.com/DecapodLabs/decapod/compare/v0.140.2...v0.140.3) - 2026-11-12
+
+### Other
+
+- run terminal onboarding in the required CLI suite
+
+## [0.140.2](https://github.com/DecapodLabs/decapod/compare/v0.140.1...v0.140.2) - 2026-11-12
+
+### Fixed
+
+- *(deps)* reconcile SDK adoption with accepted inventory
+- *(deps)* adopt Dactyl 0.14 and patched Quinn floor
+
+## [0.140.1](https://github.com/DecapodLabs/decapod/compare/v0.140.0...v0.140.1) - 2026-11-12
+
+### Added
+
+- *(storage)* add bounded native storage inventory
+
+## [0.140.0](https://github.com/DecapodLabs/decapod/compare/v0.139.1...v0.140.0) - 2026-11-12
+
+### Fixed
+
+- *(tests)* simplify fail-closed admission count check
+- *(validation)* reconcile accepted target and bound fixture work
+- *(validation)* preserve source when runtime policy cache is absent
+- *(workspace)* retain legacy agent task references
+- *(workspace)* extract managed task bindings from branch topic
+- *(validation)* preserve terminal budget and explicit proof obligations
+- *(validation)* consume current workunit journal epoch authority
+- *(validation)* bind typed terminal evidence to verified source facts
+- *(validation)* defer proof consumption until terminal readiness
+
+### Other
+
+- *(validation)* refresh native release projections
+- *(validation)* reconcile accepted onboarding release
+- *(validation)* place fresh docs proof in entrypoint suite
+- *(validation)* review accepted release source inventory
+- *(validation)* bind real CLI admission to complete runtime proof
+- *(validation)* bound governed fixture lifecycle and diagnostics
+- *(validation)* refresh docs only inside managed task worktree
+- *(validation)* initialize canonical governed consumer fixtures
+- *(validation)* execute governed docs proof in CLI contract target
+- *(validation)* use supported capsule count argument
+- *(governance)* reconcile accepted release proof inventory
+
+## [0.139.1](https://github.com/DecapodLabs/decapod/compare/v0.139.0...v0.139.1) - 2026-11-12
+
+### Added
+
+- refine terminal onboarding and setup review
+
+### Fixed
+
+- reconcile terminal setup with managed cloud onboarding
+
+### Other
+
+- reconcile reviewed build inventory with accepted release
+- verify portable terminal onboarding interactions
+- preserve onboarding recovery evidence
+
+## [0.139.0](https://github.com/DecapodLabs/decapod/compare/v0.138.3...v0.139.0) - 2026-11-12
+
+### Fixed
+
+- *(cloud)* reject unsupported proof before connector discovery
+- *(cloud)* retain pending completion after unavailable responses
+- *(cloud)* align offline RPC fixtures with Dactyl registry contract
+- *(build)* refresh complete Bazel registry metadata
+- *(cloud)* consume the published Dactyl connector API
+- *(cloud)* reconcile current target with Dactyl backend-only flow
+- *(cloud)* preserve observed dependency proof boundary
+- route governed cloud sessions and readiness through Dactyl
+
+### Other
+
+- *(cloud)* share managed scenarios through one private fixture
+- *(cloud)* require managed-session CLI scenarios in source proof
+- *(cloud)* verify service-owned seat and quote readiness states
+- *(governance)* align cloud candidate release projections
+
+## [0.138.3](https://github.com/DecapodLabs/decapod/compare/v0.138.2...v0.138.3) - 2026-11-12
+
+### Added
+
+- *(init)* recover cloud repository purchase approval handoff
+
+### Fixed
+
+- *(billing)* repair measured lint and generated documentation gates
+
+### Other
+
+- *(governance)* preserve native billing preparation receipt
+
+## [0.138.2](https://github.com/DecapodLabs/decapod/compare/v0.138.1...v0.138.2) - 2026-11-11
+
+### Fixed
+
+- *(ci)* rebase docs contracts onto released v0.138.1
+
+## [0.138.1](https://github.com/DecapodLabs/decapod/compare/v0.138.0...v0.138.1) - 2026-11-11
+
+### Fixed
+
+- *(ci)* rebase laya research onto released v0.138.0
+
+## [0.138.0](https://github.com/DecapodLabs/decapod/compare/v0.137.4...v0.138.0) - 2026-11-11
+
+### Fixed
+
+- *(verify)* complete merged tasks from recorded candidate proof
+
 ## [0.137.4](https://github.com/DecapodLabs/decapod/compare/v0.137.3...v0.137.4) - 2026-11-11
 
 ### Fixed

@@ -290,6 +290,36 @@ pub fn add_preference(
     store: &Store,
     input: PreferenceInput,
 ) -> Result<String, error::DecapodError> {
+    crate::core::storage_contracts::validate_utf8_field(
+        "category",
+        &input.category,
+        crate::core::storage_contracts::MAX_CATEGORY_BYTES,
+        true,
+    )?;
+    crate::core::storage_contracts::validate_utf8_field(
+        "key",
+        &input.key,
+        crate::core::storage_contracts::MAX_TITLE_BYTES,
+        true,
+    )?;
+    crate::core::storage_contracts::validate_utf8_field(
+        "value",
+        &input.value,
+        crate::core::storage_contracts::MAX_DESCRIPTION_BYTES,
+        false,
+    )?;
+    crate::core::storage_contracts::validate_optional_utf8_field(
+        "context",
+        input.context.as_deref(),
+        crate::core::storage_contracts::MAX_DESCRIPTION_BYTES,
+        false,
+    )?;
+    crate::core::storage_contracts::validate_utf8_field(
+        "source",
+        &input.source,
+        crate::core::storage_contracts::MAX_PATH_OR_REF_BYTES,
+        true,
+    )?;
     let broker = DbBroker::new(&store.root);
     let db_path = aptitude_db_path(&store.root);
     let id = crate::core::ulid::new_ulid();
@@ -799,22 +829,55 @@ pub fn add_agent_prompt(
     prompt_text: &str,
     priority: Option<i64>,
 ) -> Result<String, error::DecapodError> {
+    crate::core::storage_contracts::validate_utf8_field(
+        "context",
+        context,
+        crate::core::storage_contracts::MAX_SCOPE_BYTES,
+        true,
+    )?;
+    crate::core::storage_contracts::validate_utf8_field(
+        "prompt_text",
+        prompt_text,
+        crate::core::storage_contracts::MAX_DESCRIPTION_BYTES,
+        true,
+    )?;
     let broker = DbBroker::new(&store.root);
     let db_path = aptitude_db_path(&store.root);
-    let id = crate::core::ulid::new_ulid();
+    let candidate_id = crate::core::ulid::new_ulid();
     let now = now_iso();
     let priority = priority.unwrap_or(100);
 
-    broker.with_conn(&db_path, "decapod", None, "aptitude.prompt.add", |conn| {
-        conn.execute(
-            "INSERT INTO agent_prompts(id, context, prompt_text, priority, active, usage_count, created_at)
-             VALUES(?1, ?2, ?3, ?4, 1, 0, ?5)",
-            params![id, context, prompt_text, priority, now],
-        )?;
-        Ok(())
-    })?;
+    let effective_id =
+        broker.with_conn(&db_path, "decapod", None, "aptitude.prompt.add", |conn| {
+            let existing_id: Option<String> = conn
+                .query_row(
+                    "SELECT id FROM agent_prompts
+                     WHERE context = ?1 AND prompt_text = ?2
+                     ORDER BY created_at ASC, id ASC
+                     LIMIT 1",
+                    params![context, prompt_text],
+                    |row| row.get(0),
+                )
+                .ok();
+            if let Some(existing_id) = existing_id {
+                conn.execute(
+                    "UPDATE agent_prompts
+                     SET priority = ?1, active = 1, updated_at = ?2
+                     WHERE id = ?3",
+                    params![priority, now, existing_id],
+                )?;
+                Ok(existing_id)
+            } else {
+                conn.execute(
+                    "INSERT INTO agent_prompts(id, context, prompt_text, priority, active, usage_count, created_at)
+                     VALUES(?1, ?2, ?3, ?4, 1, 0, ?5)",
+                    params![candidate_id, context, prompt_text, priority, now],
+                )?;
+                Ok(candidate_id)
+            }
+        })?;
 
-    Ok(id)
+    Ok(effective_id)
 }
 
 pub fn get_prompts_for_context(

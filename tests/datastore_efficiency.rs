@@ -440,3 +440,462 @@ fn datastore_before_after_evidence() {
     }
     println!("{}", serde_json::to_string(&report).unwrap());
 }
+
+#[test]
+fn v2_checkpoint_and_event_compaction_reduces_bytes_losslessly() {
+    use decapod::core::{storage_compaction, todo};
+
+    let v1_dir = tempfile::tempdir().unwrap();
+    let v2_dir = tempfile::tempdir().unwrap();
+    let v1_data = v1_dir.path().join("data");
+    let v2_data = v2_dir.path().join("data");
+    todo::initialize_todo_db(&v1_data).unwrap();
+    todo::initialize_todo_db(&v2_data).unwrap();
+
+    let large_desc =
+        "Governed task specification and acceptance invariants for storage compaction.\n"
+            .repeat(24);
+    let large_scope = format!(
+        "paths:{}",
+        serde_json::to_string(&vec![
+            "src/decapod/core/task_journal.rs",
+            "src/decapod/core/storage_compaction.rs",
+            "src/decapod/core/events.rs",
+            "src/decapod/core/storage_contracts.rs",
+            "src/decapod/core/storage_inventory.rs",
+            "src/decapod/core/task_transfer.rs",
+        ])
+        .unwrap()
+    );
+
+    // Seed v2 store through actual v2 journal + _ce_v1 compact event path (10 tasks x 12 transitions).
+    for t in 0..10 {
+        let added = todo::add_task(
+            &v2_data,
+            &todo::TodoCommand::Add {
+                title: format!("Compact benchmark task {t}"),
+                description: large_desc.clone(),
+                priority: "high".into(),
+                tags: "storage,v2,compact".into(),
+                owner: String::new(),
+                due: None,
+                r#ref: "issue:1630".into(),
+                scope: large_scope.clone(),
+                dir: Some(v2_dir.path().to_string_lossy().into_owned()),
+                depends_on: String::new(),
+                blocks: String::new(),
+                parent: None,
+                one_shot: 0,
+            },
+        )
+        .unwrap();
+        let id = added["id"].as_str().unwrap().to_owned();
+        for rev in 1..12 {
+            todo::edit_task(
+                &v2_data,
+                &id,
+                Some(&format!("Compact benchmark task {t} rev {rev}")),
+                None,
+                None,
+                None,
+            )
+            .unwrap();
+        }
+    }
+
+    // Construct an exact logical v1 baseline twin of v2_data (identical tasks, broker rows,
+    // and domain events, with verbose envelopes and inline schema_version=1 checkpoints).
+    let v2_conn = Connection::open(v2_data.join(schemas::LOCAL_DB_NAME)).unwrap();
+    v2_conn
+        .execute_batch("PRAGMA wal_checkpoint(TRUNCATE)")
+        .unwrap();
+    fs::create_dir_all(&v1_data).unwrap();
+    fs::copy(
+        v2_data.join(schemas::LOCAL_DB_NAME),
+        v1_data.join(schemas::LOCAL_DB_NAME),
+    )
+    .unwrap();
+    let v1_conn = Connection::open(v1_data.join(schemas::LOCAL_DB_NAME)).unwrap();
+    v1_conn.execute_batch("BEGIN IMMEDIATE").unwrap();
+    type EventRowToExpand = (
+        String,
+        String,
+        String,
+        String,
+        String,
+        Option<String>,
+        Option<String>,
+        String,
+    );
+    let rows_to_expand: Vec<EventRowToExpand> = v1_conn
+        .prepare("SELECT stream,event_id,ts,event_type,actor,subject_kind,subject_id,payload FROM events")
+        .unwrap()
+        .query_map([], |r| {
+            Ok((
+                r.get(0)?,
+                r.get(1)?,
+                r.get(2)?,
+                r.get(3)?,
+                r.get(4)?,
+                r.get(5)?,
+                r.get(6)?,
+                r.get(7)?,
+            ))
+        })
+        .unwrap()
+        .collect::<Result<Vec<_>, _>>()
+        .unwrap();
+    for (stream, eid, ts, etype, actor, sk, sid, raw) in rows_to_expand {
+        let mut verbose = events::reconstruct_stored_payload(
+            &stream,
+            &eid,
+            &ts,
+            &etype,
+            &actor,
+            sk.as_deref(),
+            sid.as_deref(),
+            &raw,
+        )
+        .unwrap();
+        if etype == "task.journal.checkpoint"
+            && let Some(ckpt) = verbose.get_mut("payload").and_then(Value::as_object_mut)
+        {
+            ckpt.insert("schema_version".into(), json!(1));
+            ckpt.remove("component_refs");
+            if let Some(task_obj) = ckpt
+                .get_mut("projection")
+                .and_then(|p| p.get_mut("task"))
+                .and_then(Value::as_object_mut)
+            {
+                task_obj.insert("description".into(), json!(large_desc));
+                task_obj.insert("scope".into(), json!(large_scope));
+            }
+        }
+        v1_conn
+            .execute(
+                "UPDATE events SET payload = ?1 WHERE stream = ?2 AND event_id = ?3",
+                decapod::params![verbose.to_string(), stream, eid],
+            )
+            .unwrap();
+    }
+    v1_conn
+        .execute_batch("DELETE FROM storage_component_refs; DELETE FROM storage_components; COMMIT")
+        .unwrap();
+    storage_compaction::reclaim_pages_explicit(&v1_conn).unwrap();
+    storage_compaction::reclaim_pages_explicit(&v2_conn).unwrap();
+
+    let v1_bytes = fs::metadata(v1_data.join(schemas::LOCAL_DB_NAME))
+        .unwrap()
+        .len();
+    let v2_bytes = fs::metadata(v2_data.join(schemas::LOCAL_DB_NAME))
+        .unwrap()
+        .len();
+    assert!(
+        v2_bytes * 100 < v1_bytes * 70,
+        "expected >=30% SQLite file reduction on identical multi-transition store (v1={v1_bytes}, v2={v2_bytes})"
+    );
+    assert_eq!(todo::task_journal_verify(&v2_data).unwrap()["status"], "ok");
+}
+
+/// Reproducible v2 compact storage benchmark matrix (#1630):
+/// Fresh, 1K, 10K, and 100K event/checkpoint histories + 3/10/15-agent retry bursts.
+#[test]
+#[ignore = "explicit reproducible v2 compact storage measurement (#1630)"]
+fn datastore_v2_compaction_benchmarks() {
+    use decapod::core::{storage_codec, storage_compaction, todo};
+    use std::sync::{Arc, Barrier};
+
+    let mut scale_cases = Vec::new();
+    let desc_template =
+        "Decapod governed task acceptance specification and falsifiable proof criteria.\n"
+            .repeat(14); // ~1,106 bytes
+    let scope_template =
+        "paths:src/decapod/core/task_journal.rs,src/decapod/core/events.rs,src/decapod/core/storage_compaction.rs,"
+            .repeat(3); // ~315 bytes
+
+    // Fresh initialized store baseline vs v2
+    {
+        let root = tempfile::tempdir().unwrap();
+        migration::check_and_migrate(root.path()).unwrap();
+        let data = root.path().join("data");
+        todo::initialize_todo_db(&data).unwrap();
+        decapod::plugins::aptitude::initialize_aptitude_db(&data).unwrap();
+        let path = data.join(schemas::LOCAL_DB_NAME);
+        let conn = Connection::open(&path).unwrap();
+        storage_compaction::reclaim_pages_explicit(&conn).unwrap();
+        scale_cases.push(json!({
+            "case": "fresh_store",
+            "events": scalar(&conn, "SELECT COUNT(*) FROM events"),
+            "packed_bytes": fs::metadata(&path).unwrap().len(),
+            "page_count": scalar(&conn, "PRAGMA page_count"),
+        }));
+    }
+
+    for total_events in [1_000usize, 10_000, 100_000] {
+        let tasks = total_events / 40;
+        let v1_root = tempfile::tempdir().unwrap();
+        let v2_root = tempfile::tempdir().unwrap();
+        let v1_data = v1_root.path().join("data");
+        let v2_data = v2_root.path().join("data");
+        todo::initialize_todo_db(&v1_data).unwrap();
+        todo::initialize_todo_db(&v2_data).unwrap();
+        let v1_path = v1_data.join(schemas::LOCAL_DB_NAME);
+        let v2_path = v2_data.join(schemas::LOCAL_DB_NAME);
+        let v1_conn = Connection::open(&v1_path).unwrap();
+        let v2_conn = Connection::open(&v2_path).unwrap();
+
+        // Seed v1 inline checkpoint + verbose envelope fixture
+        v1_conn.execute_batch("BEGIN IMMEDIATE").unwrap();
+        for t in 0..tasks {
+            let tid = format!("bench-task-{t:06}");
+            let desc = format!("{desc_template} [task={t}]");
+            v1_conn
+                .execute(
+                    "INSERT INTO tasks(id,hash,title,description,tags,created_at,updated_at,dir_path,scope,revision,lease_generation)
+                     VALUES(?1,?2,?3,?4,'bench,storage','2026-11-12T00:00:00Z','2026-11-12T00:00:00Z','/bench/repo',?5,40,4)",
+                    decapod::params![tid, format!("h{t:06}"), format!("Bench task {t}"), desc, scope_template],
+                )
+                .unwrap();
+            for ord in 1..=40u64 {
+                let seq = (t as u64) * 40 + ord;
+                let eid = format!("ev-{seq:09}");
+                let raw = json!({
+                    "event_id": eid,
+                    "ts": "2026-11-12T00:00:00Z",
+                    "event_type": "task.journal.checkpoint",
+                    "actor": "agent-bench",
+                    "subject_kind": "task",
+                    "subject_id": tid,
+                    "payload": {
+                        "schema_version": 1,
+                        "task_id": tid,
+                        "ordinal": ord,
+                        "kind": if ord == 1 { "observed_baseline" } else { "transition" },
+                        "source_watermark": seq - 1,
+                        "operation": "task.edit",
+                        "actor": "agent-bench",
+                        "projection": {
+                            "task": {
+                                "id": tid,
+                                "hash": format!("h{t:06}"),
+                                "title": format!("Bench task {t} ord {ord}"),
+                                "description": desc,
+                                "scope": scope_template,
+                                "revision": ord
+                            }
+                        }
+                    }
+                })
+                .to_string();
+                v1_conn
+                    .execute(
+                        "INSERT INTO events(event_id,ts,seq,stream,subject_kind,subject_id,event_type,payload,actor)
+                         VALUES(?1,'2026-11-12T00:00:00Z',?2,'todo','task',?3,'task.journal.checkpoint',?4,'agent-bench')",
+                        decapod::params![eid, seq, tid, raw],
+                    )
+                    .unwrap();
+            }
+        }
+        v1_conn.execute_batch("COMMIT").unwrap();
+        storage_compaction::reclaim_pages_explicit(&v1_conn).unwrap();
+
+        // Seed v2 deduplicated component + _ce_v1 compact envelope fixture representing identical logical data
+        v2_conn.execute_batch("BEGIN IMMEDIATE").unwrap();
+        let scope_sha = format!("{:x}", Sha256::digest(scope_template.as_bytes()));
+        let scope_blob = match storage_codec::encode(&scope_template).unwrap() {
+            storage_codec::StoredText::Zlib(b) => b,
+            storage_codec::StoredText::Plain(s) => s.into_bytes(),
+        };
+        v2_conn
+            .execute(
+                "INSERT OR IGNORE INTO storage_components(component_kind,codec_version,byte_len,content_sha256,stored_bytes,created_at)
+                 VALUES('task.scope',1,?1,?2,?3,'2026-11-12T00:00:00Z')",
+                decapod::params![scope_template.len() as i64, scope_sha, scope_blob],
+            )
+            .unwrap();
+
+        for t in 0..tasks {
+            let tid = format!("bench-task-{t:06}");
+            let desc = format!("{desc_template} [task={t}]");
+            let desc_sha = format!("{:x}", Sha256::digest(desc.as_bytes()));
+            let desc_blob = match storage_codec::encode(&desc).unwrap() {
+                storage_codec::StoredText::Zlib(b) => b,
+                storage_codec::StoredText::Plain(s) => s.into_bytes(),
+            };
+            v2_conn
+                .execute(
+                    "INSERT INTO tasks(id,hash,title,description,tags,created_at,updated_at,dir_path,scope,revision,lease_generation)
+                     VALUES(?1,?2,?3,?4,'bench,storage','2026-11-12T00:00:00Z','2026-11-12T00:00:00Z','/bench/repo',?5,40,4)",
+                    decapod::params![tid, format!("h{t:06}"), format!("Bench task {t}"), desc, scope_template],
+                )
+                .unwrap();
+            v2_conn
+                .execute(
+                    "INSERT OR IGNORE INTO storage_components(component_kind,codec_version,byte_len,content_sha256,stored_bytes,created_at)
+                     VALUES('task.description',1,?1,?2,?3,'2026-11-12T00:00:00Z')",
+                    decapod::params![desc.len() as i64, desc_sha, desc_blob],
+                )
+                .unwrap();
+            for ord in 1..=40u64 {
+                let seq = (t as u64) * 40 + ord;
+                let eid = format!("ev-{seq:09}");
+                let compact_raw = json!({
+                    "_ce_v1": 63,
+                    "payload": {
+                        "schema_version": 2,
+                        "task_id": tid,
+                        "ordinal": ord,
+                        "kind": if ord == 1 { "observed_baseline" } else { "transition" },
+                        "source_watermark": seq - 1,
+                        "operation": "task.edit",
+                        "actor": "agent-bench",
+                        "component_refs": {
+                            "task.description": {"kind": "task.description", "codec_version": 1, "byte_len": desc.len(), "content_sha256": desc_sha},
+                            "task.scope": {"kind": "task.scope", "codec_version": 1, "byte_len": scope_template.len(), "content_sha256": scope_sha}
+                        },
+                        "projection": {
+                            "task": {
+                                "id": tid,
+                                "hash": format!("h{t:06}"),
+                                "title": format!("Bench task {t} ord {ord}"),
+                                "description": null,
+                                "scope": "",
+                                "revision": ord
+                            }
+                        }
+                    }
+                })
+                .to_string();
+                v2_conn
+                    .execute(
+                        "INSERT INTO events(event_id,ts,seq,stream,subject_kind,subject_id,event_type,payload,actor)
+                         VALUES(?1,'2026-11-12T00:00:00Z',?2,'todo','task',?3,'task.journal.checkpoint',?4,'agent-bench')",
+                        decapod::params![eid, seq, tid, compact_raw],
+                    )
+                    .unwrap();
+                v2_conn
+                    .execute(
+                        "INSERT INTO storage_component_refs(ref_scope,ref_id,component_kind,codec_version,byte_len,content_sha256)
+                         VALUES('task_checkpoint',?1,'task.description',1,?2,?3),
+                               ('task_checkpoint',?1,'task.scope',1,?4,?5)",
+                        decapod::params![eid, desc.len() as i64, desc_sha, scope_template.len() as i64, scope_sha],
+                    )
+                    .unwrap();
+            }
+        }
+        v2_conn.execute_batch("COMMIT").unwrap();
+        storage_compaction::reclaim_pages_explicit(&v2_conn).unwrap();
+
+        let v1_file_bytes = fs::metadata(&v1_path).unwrap().len();
+        let v2_file_bytes = fs::metadata(&v2_path).unwrap().len();
+        let v1_payload_bytes = scalar(
+            &v1_conn,
+            "SELECT SUM(length(CAST(payload AS BLOB))) FROM events",
+        );
+        let v2_payload_bytes = scalar(
+            &v2_conn,
+            "SELECT SUM(length(CAST(payload AS BLOB))) FROM events",
+        );
+        let v2_comp_bytes = scalar(
+            &v2_conn,
+            "SELECT COALESCE(SUM(length(stored_bytes)),0) FROM storage_components",
+        );
+
+        let mut append_ns = Vec::new();
+        for s in 0..128 {
+            let ev = json!({
+                "event_id": format!("AppendSample-{total_events}-{s}"),
+                "ts": "2026-11-12T01:00:00Z",
+                "event_type": "task.comment",
+                "subject_kind": "task",
+                "subject_id": "bench-task-000000",
+                "actor": "agent-bench",
+                "payload": {"comment": "Measured compact envelope append"}
+            });
+            let t0 = Instant::now();
+            events::append_on_conn(&v2_conn, "todo", &ev).unwrap();
+            append_ns.push(t0.elapsed().as_nanos());
+        }
+
+        let reduction_pct =
+            ((v1_file_bytes as f64 - v2_file_bytes as f64) / (v1_file_bytes as f64)) * 100.0;
+        scale_cases.push(json!({
+            "events": total_events,
+            "tasks": tasks,
+            "v1_packed_file_bytes": v1_file_bytes,
+            "v2_packed_file_bytes": v2_file_bytes,
+            "file_bytes_saved": v1_file_bytes.saturating_sub(v2_file_bytes),
+            "file_reduction_pct": (reduction_pct * 100.0).round() / 100.0,
+            "v1_events_payload_bytes": v1_payload_bytes,
+            "v2_events_payload_bytes": v2_payload_bytes,
+            "v2_storage_components_bytes": v2_comp_bytes,
+            "v2_append_latency": distribution(append_ns),
+        }));
+    }
+
+    // Multi-agent retry bursts (3, 10, 15 concurrent agents appending + replaying idempotently)
+    let mut contention_cases = Vec::new();
+    for agents in [3usize, 10, 15] {
+        let root = tempfile::tempdir().unwrap();
+        let data = root.path().join("data");
+        todo::initialize_todo_db(&data).unwrap();
+        let db_path = data.join(schemas::LOCAL_DB_NAME);
+        let barrier = Arc::new(Barrier::new(agents));
+        let mut agent_latencies = Vec::new();
+        std::thread::scope(|scope| {
+            let mut handles = Vec::new();
+            for a in 0..agents {
+                let p = db_path.clone();
+                let b = Arc::clone(&barrier);
+                handles.push(scope.spawn(move || {
+                    let conn = Connection::open(&p).unwrap();
+                    conn.execute_batch("PRAGMA busy_timeout = 10000").unwrap();
+                    b.wait();
+                    let mut samples = Vec::new();
+                    for op in 0..20 {
+                        let ev = json!({
+                            "event_id": format!("burst-{agents}-{a}-{op}"),
+                            "event_type": "task.claim",
+                            "subject_kind": "task",
+                            "subject_id": format!("task-{a}"),
+                            "actor": format!("agent-{a}"),
+                            "payload": {"attempt": op}
+                        });
+                        let t0 = Instant::now();
+                        let seq1 = events::append_on_conn(&conn, "todo", &ev).unwrap();
+                        let seq2 = events::append_on_conn(&conn, "todo", &ev).unwrap();
+                        assert_eq!(seq1, seq2);
+                        samples.push(t0.elapsed().as_nanos());
+                    }
+                    samples
+                }));
+            }
+            for h in handles {
+                agent_latencies.extend(h.join().unwrap());
+            }
+        });
+        let conn = Connection::open(&db_path).unwrap();
+        assert_eq!(
+            scalar(
+                &conn,
+                "SELECT COUNT(*) FROM events WHERE event_id LIKE 'burst-%'"
+            ),
+            (agents * 20) as u64
+        );
+        contention_cases.push(json!({
+            "concurrent_agents": agents,
+            "ops_per_agent": 20,
+            "total_committed_events": agents * 20,
+            "append_plus_idempotent_replay_latency": distribution(agent_latencies),
+            "db_file_bytes": fs::metadata(&db_path).unwrap().len(),
+        }));
+    }
+
+    let summary = json!({
+        "schema": "decapod.datastore-v2-compaction-benchmark.v1",
+        "release": env!("CARGO_PKG_VERSION"),
+        "scale_cases": scale_cases,
+        "multi_agent_burst_cases": contention_cases,
+    });
+    println!("{}", serde_json::to_string_pretty(&summary).unwrap());
+}

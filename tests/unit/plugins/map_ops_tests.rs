@@ -48,6 +48,9 @@ fn test_map_agentic_logs_delegation() {
     let events = read_map_events(&store.root).unwrap();
     assert_eq!(events.len(), 1);
     assert_eq!(events[0].op, "map.agentic");
+    assert!(!events[0].event_id.is_empty());
+    assert!(!events[0].ts.is_empty());
+    assert_eq!(events[0].actor, "agent");
 }
 
 #[test]

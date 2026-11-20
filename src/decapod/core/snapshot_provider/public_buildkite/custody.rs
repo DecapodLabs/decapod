@@ -21,6 +21,7 @@ impl CustodyRead {
             deadline: shared.deadline,
             cancel: shared.cancel,
             max_bytes: self.max_bytes,
+            github_quota: shared.github_quota.clone(),
         }
     }
 }
