@@ -1,4 +1,4 @@
-use decapod::core::broker::DbBroker;
+use decapod::core::broker::{DbBroker, WriterIncarnation};
 use decapod::core::error::DecapodError;
 use decapod::core::events;
 use serde_json::json;
@@ -19,11 +19,60 @@ fn seed_pending(root: &std::path::Path, id: &str, ts: &str) {
     .unwrap();
 }
 
+fn seed_pending_with_incarnation(
+    root: &std::path::Path,
+    id: &str,
+    ts: &str,
+    incarnation: &WriterIncarnation,
+) {
+    if !events::canonical_db_path(root).exists() {
+        decapod::core::todo::initialize_todo_db(root).unwrap();
+    }
+    let mut payload = json!({
+        "event_id": id, "request_id": id, "ts": ts, "actor": "crashed-writer",
+        "op": "todo.init", "db_id": "decapod.db", "status": "pending",
+        "intent_ref": "shared-intent", "correlation_id": "shared-correlation"
+    });
+    if let Some(pid) = incarnation.writer_pid {
+        payload["writer_pid"] = json!(pid);
+    }
+    if let Some(start_id) = &incarnation.writer_start_id {
+        payload["writer_start_id"] = json!(start_id);
+    }
+    if let Some(boot_id) = &incarnation.writer_boot_id {
+        payload["writer_boot_id"] = json!(boot_id);
+    }
+    if let Some(host_id) = &incarnation.writer_host_id {
+        payload["writer_host_id"] = json!(host_id);
+    }
+    if let Some(pid_ns) = &incarnation.writer_pid_ns {
+        payload["writer_pid_ns"] = json!(pid_ns);
+    }
+    events::append(root, events::BROKER, &payload).unwrap();
+}
+
+fn dead_child_incarnation() -> WriterIncarnation {
+    let mut child = std::process::Command::new("true")
+        .spawn()
+        .expect("spawn exited helper process");
+    let pid = child.id();
+    let mut incarnation = WriterIncarnation::current();
+    incarnation.writer_pid = Some(pid);
+    incarnation.writer_start_id = Some("dead-child-start".to_string());
+    let _ = child.wait();
+    incarnation
+}
+
+fn seed_dead_pending(root: &std::path::Path, id: &str, ts: &str) {
+    let incarnation = dead_child_incarnation();
+    seed_pending_with_incarnation(root, id, ts, &incarnation);
+}
+
 #[test]
 fn repair_honors_mutation_policy_and_keeps_committed_data() {
     let tmp = tempfile::tempdir().unwrap();
     let root = tmp.path();
-    seed_pending(root, "orphan", "1Z");
+    seed_dead_pending(root, "orphan", "1Z");
     let conn = decapod::core::db::Connection::open(events::canonical_db_path(root)).unwrap();
     conn.execute_batch("CREATE TABLE committed_data (value TEXT); INSERT INTO committed_data VALUES ('already committed');").unwrap();
     conn.execute("INSERT OR REPLACE INTO risk_zones (id, zone_name, description, requires_approval, required_trust_level, created_at) VALUES ('repair-test', 'control.mutate', 'test gate', 0, 'core', '1Z')", []).unwrap();
@@ -44,33 +93,36 @@ fn repair_honors_mutation_policy_and_keeps_committed_data() {
     assert!(broker.verify_replay().unwrap().divergences.is_empty());
 }
 
-#[test]
-fn broker_repair_cli_previews_applies_and_verifies() {
-    let tmp = tempfile::tempdir().unwrap();
-    assert!(
-        std::process::Command::new("git")
-            .current_dir(tmp.path())
-            .args(["init", "-b", "test-broker-repair"])
+fn setup_cli_workspace(root_dir: &std::path::Path) -> std::path::PathBuf {
+    for args in [
+        vec!["init", "-b", "master"],
+        vec!["config", "user.name", "Test"],
+        vec!["config", "user.email", "test@example.com"],
+    ] {
+        let out = std::process::Command::new("git")
+            .current_dir(root_dir)
+            .args(args)
             .output()
-            .unwrap()
-            .status
-            .success()
-    );
-    let workspace = tmp.path().join(".decapod/workspaces/repair-test");
-    let command = |args: &[&str]| {
+            .unwrap();
+        assert!(
+            out.status.success(),
+            "{}",
+            String::from_utf8_lossy(&out.stderr)
+        );
+    }
+
+    let run_root = |args: &[&str]| {
         std::process::Command::new(env!("CARGO_BIN_EXE_decapod"))
-            .current_dir(if workspace.exists() {
-                workspace.as_path()
-            } else {
-                tmp.path()
-            })
-            .env("XDG_CONFIG_HOME", tmp.path().join("config"))
-            .env("DECAPOD_AGENT_ID", "unknown")
+            .current_dir(root_dir)
+            .env("XDG_CONFIG_HOME", root_dir.join("config"))
+            .env("DECAPOD_AGENT_ID", "operator")
+            .env("DECAPOD_CLAIM_AUTORUN", "0")
             .args(args)
             .output()
             .unwrap()
     };
-    let initialized = command(&["init"]);
+
+    let initialized = run_root(&["init"]);
     assert!(
         initialized.status.success(),
         "{}",
@@ -78,36 +130,63 @@ fn broker_repair_cli_previews_applies_and_verifies() {
     );
     for args in [
         vec!["add", "-A"],
-        vec![
-            "-c",
-            "user.name=Test",
-            "-c",
-            "user.email=test@example.com",
-            "commit",
-            "-m",
-            "test: initialize fixture",
-        ],
-        vec![
-            "worktree",
-            "add",
-            "-b",
-            "agent/test/bugs_01h0000000000000-repair",
-            workspace.to_str().unwrap(),
-        ],
+        vec!["commit", "-m", "test: initialize fixture"],
     ] {
-        let output = std::process::Command::new("git")
-            .current_dir(tmp.path())
+        let out = std::process::Command::new("git")
+            .current_dir(root_dir)
             .args(args)
             .output()
             .unwrap();
         assert!(
-            output.status.success(),
+            out.status.success(),
             "{}",
-            String::from_utf8_lossy(&output.stderr)
+            String::from_utf8_lossy(&out.stderr)
         );
     }
+
+    let added = run_root(&["todo", "add", "broker repair cli test", "--format", "json"]);
+    assert!(
+        added.status.success(),
+        "{}",
+        String::from_utf8_lossy(&added.stderr)
+    );
+    let added_json: serde_json::Value = serde_json::from_slice(&added.stdout).unwrap();
+    let task_id = added_json["id"].as_str().unwrap().to_string();
+
+    let claimed = run_root(&["todo", "claim", "--id", &task_id, "--format", "json"]);
+    assert!(
+        claimed.status.success(),
+        "{}",
+        String::from_utf8_lossy(&claimed.stderr)
+    );
+
+    let branch = format!("agent/operator/{task_id}-repair");
+    let ensured = run_root(&["workspace", "ensure", "--branch", &branch]);
+    assert!(
+        ensured.status.success(),
+        "{}",
+        String::from_utf8_lossy(&ensured.stderr)
+    );
+    let ensured_json: serde_json::Value = serde_json::from_slice(&ensured.stdout).unwrap();
+    std::path::PathBuf::from(ensured_json["worktree_path"].as_str().unwrap())
+}
+
+#[test]
+fn broker_repair_cli_previews_applies_and_verifies() {
+    let tmp = tempfile::tempdir().unwrap();
+    let workspace = setup_cli_workspace(tmp.path());
+    let command = |args: &[&str]| {
+        std::process::Command::new(env!("CARGO_BIN_EXE_decapod"))
+            .current_dir(&workspace)
+            .env("XDG_CONFIG_HOME", tmp.path().join("config"))
+            .env("DECAPOD_AGENT_ID", "operator")
+            .args(args)
+            .output()
+            .unwrap()
+    };
     let root = tmp.path().join(".decapod/data");
-    seed_pending(&root, "orphan", "1Z");
+    // 1. Legacy provenance-free pending event reports unknown + human_review_required and refuses silent --apply
+    seed_pending(&root, "legacy-orphan", "1Z");
     let verify = command(&["data", "broker", "verify"]);
     assert!(!verify.status.success());
     assert!(
@@ -116,6 +195,72 @@ fn broker_repair_cli_previews_applies_and_verifies() {
         String::from_utf8_lossy(&verify.stdout),
         String::from_utf8_lossy(&verify.stderr)
     );
+    let verify_json: serde_json::Value = serde_json::from_slice(&verify.stdout).unwrap();
+    assert_eq!(verify_json["divergences"][0]["writer_liveness"], "unknown");
+    assert_eq!(verify_json["divergences"][0]["human_review_required"], true);
+
+    let legacy_preview = command(&[
+        "data",
+        "broker",
+        "repair",
+        "--event-id",
+        "legacy-orphan",
+        "--reason",
+        "Writer stopped",
+    ]);
+    assert!(legacy_preview.status.success());
+    let legacy_preview_json: serde_json::Value =
+        serde_json::from_slice(&legacy_preview.stdout).unwrap();
+    assert_eq!(legacy_preview_json["status"], "preview");
+    assert_eq!(legacy_preview_json["writer_liveness"], "unknown");
+    assert_eq!(legacy_preview_json["human_review_required"], true);
+    assert_eq!(legacy_preview_json["acknowledgment_required"], true);
+
+    // Silent --apply without --acknowledge-unknown-writer MUST be refused
+    let silent_apply = command(&[
+        "data",
+        "broker",
+        "repair",
+        "--event-id",
+        "legacy-orphan",
+        "--reason",
+        "Writer stopped",
+        "--apply",
+    ]);
+    assert!(!silent_apply.status.success());
+
+    // Explicit human-reviewed confirmation flag succeeds
+    let ack_apply = command(&[
+        "data",
+        "broker",
+        "repair",
+        "--event-id",
+        "legacy-orphan",
+        "--reason",
+        "Writer stopped",
+        "--apply",
+        "--acknowledge-unknown-writer",
+    ]);
+    assert!(
+        ack_apply.status.success(),
+        "{}",
+        String::from_utf8_lossy(&ack_apply.stderr)
+    );
+    let ack_apply_json: serde_json::Value = serde_json::from_slice(&ack_apply.stdout).unwrap();
+    assert_eq!(ack_apply_json["status"], "abandoned");
+    assert_eq!(ack_apply_json["acknowledged_unknown_writer"], true);
+
+    // 2. Verified dead-writer pending event with provenance is repairable without --acknowledge-unknown-writer
+    seed_dead_pending(&root, "orphan", &decapod::core::time::now_epoch_z());
+    let verify = command(&["data", "broker", "verify"]);
+    assert!(!verify.status.success());
+    let verify_json: serde_json::Value = serde_json::from_slice(&verify.stdout).unwrap();
+    assert_eq!(verify_json["divergences"][0]["writer_liveness"], "stopped");
+    assert_eq!(
+        verify_json["divergences"][0]["human_review_required"],
+        false
+    );
+
     for (args, expected) in [
         (
             vec![
@@ -152,6 +297,8 @@ fn broker_repair_cli_previews_applies_and_verifies() {
         let report: serde_json::Value = serde_json::from_slice(&out.stdout).unwrap();
         assert_eq!(report["status"], expected);
         assert_eq!(report["original_outcome"], "unknown");
+        assert_eq!(report["writer_liveness"], "stopped");
+        assert_eq!(report["human_review_required"], false);
     }
     let verify = command(&["data", "broker", "verify"]);
     assert!(
@@ -162,11 +309,111 @@ fn broker_repair_cli_previews_applies_and_verifies() {
 }
 
 #[test]
+fn broker_repair_cli_refuses_active_writer_and_allows_pid_reuse() {
+    let tmp = tempfile::tempdir().unwrap();
+    let workspace = setup_cli_workspace(tmp.path());
+    let command = |args: &[&str]| {
+        std::process::Command::new(env!("CARGO_BIN_EXE_decapod"))
+            .current_dir(&workspace)
+            .env("XDG_CONFIG_HOME", tmp.path().join("config"))
+            .env("DECAPOD_AGENT_ID", "operator")
+            .args(args)
+            .output()
+            .unwrap()
+    };
+
+    let root = tmp.path().join(".decapod/data");
+    // Spawn a real child process via decapod? We can capture the child's incarnation using
+    // our current process's boot/host/ns and a live child `sleep` process, or test via current process!
+    // Actually, we can capture current process incarnation via WriterIncarnation::current() (since
+    // `cargo test` process itself IS alive during the CLI invocation!).
+    let live_incarnation = WriterIncarnation::current();
+    seed_pending_with_incarnation(
+        &root,
+        "live-writer",
+        &decapod::core::time::now_epoch_z(),
+        &live_incarnation,
+    );
+
+    // Same PID as live test runner, but different start_id -> proves PID reuse!
+    let mut reused_incarnation = live_incarnation.clone();
+    reused_incarnation.writer_start_id = Some("prior-process-start-id".to_string());
+    seed_pending_with_incarnation(
+        &root,
+        "pid-reused",
+        &decapod::core::time::now_epoch_z(),
+        &reused_incarnation,
+    );
+
+    let verify = command(&["data", "broker", "verify"]);
+    assert!(!verify.status.success());
+    let verify_json: serde_json::Value = serde_json::from_slice(&verify.stdout).unwrap();
+    let live_div = verify_json["divergences"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .find(|d| d["event_id"] == "live-writer")
+        .unwrap();
+    let reuse_div = verify_json["divergences"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .find(|d| d["event_id"] == "pid-reused")
+        .unwrap();
+    assert_eq!(live_div["writer_liveness"], "active");
+    assert_eq!(live_div["human_review_required"], false);
+    assert_eq!(reuse_div["writer_liveness"], "stopped");
+    assert_eq!(reuse_div["human_review_required"], false);
+
+    // Active live writer MUST be refused even with --acknowledge-unknown-writer
+    for extra in [
+        &[][..],
+        &["--apply"][..],
+        &["--apply", "--acknowledge-unknown-writer"][..],
+    ] {
+        let mut args = vec![
+            "data",
+            "broker",
+            "repair",
+            "--event-id",
+            "live-writer",
+            "--reason",
+            "Incorrect claim",
+        ];
+        args.extend_from_slice(extra);
+        assert!(
+            !command(&args).status.success(),
+            "live writer should be refused for args {args:?}"
+        );
+    }
+
+    // Reused PID (same PID, different start_id) MUST succeed without --acknowledge-unknown-writer
+    let reuse_apply = command(&[
+        "data",
+        "broker",
+        "repair",
+        "--event-id",
+        "pid-reused",
+        "--reason",
+        "PID reused after crash",
+        "--apply",
+    ]);
+    assert!(
+        reuse_apply.status.success(),
+        "{}",
+        String::from_utf8_lossy(&reuse_apply.stderr)
+    );
+    let reuse_json: serde_json::Value = serde_json::from_slice(&reuse_apply.stdout).unwrap();
+    assert_eq!(reuse_json["status"], "abandoned");
+    assert_eq!(reuse_json["writer_liveness"], "stopped");
+}
+
+#[test]
 fn repair_preserves_history_and_only_abandons_the_selected_event() {
     let tmp = tempfile::tempdir().unwrap();
     let root = tmp.path();
-    seed_pending(root, "orphan-one", "1Z");
-    seed_pending(root, "orphan-two", "1Z");
+    seed_dead_pending(root, "orphan-one", "1Z");
+    seed_dead_pending(root, "orphan-two", "1Z");
     let broker = DbBroker::new(root);
     let before = events::query(root, events::BROKER, usize::MAX).unwrap();
     let preview = broker
@@ -254,7 +501,7 @@ fn repair_refuses_recent_completed_unknown_and_reasonless_targets() {
 #[test]
 fn concurrent_repair_appends_one_acknowledgment() {
     let tmp = tempfile::tempdir().unwrap();
-    seed_pending(tmp.path(), "orphan", "1Z");
+    seed_dead_pending(tmp.path(), "orphan", "1Z");
     std::thread::scope(|scope| {
         let handles: Vec<_> = (0..2)
             .map(|_| {
@@ -284,7 +531,7 @@ fn concurrent_repair_appends_one_acknowledgment() {
 #[test]
 fn read_completion_audits_and_repairs_share_consistent_lock_order() {
     let tmp = tempfile::tempdir().unwrap();
-    seed_pending(tmp.path(), "orphan", "1Z");
+    seed_dead_pending(tmp.path(), "orphan", "1Z");
     let barrier = std::sync::Barrier::new(3);
     std::thread::scope(|scope| {
         let reader = scope.spawn(|| {

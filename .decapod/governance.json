@@ -178,6 +178,11 @@
         "statement": "Persisted task pass cannot authorize a different task revision, and stale verification cannot overwrite a changed baseline",
         "status": "open"
       },
+      "claim:current-validation-withdrawal": {
+        "falsifier": "A newer observed required failure leaves old VERIFIED applicable, an old subject promotes after withdrawal, or fresh complete current-custody validation cannot recover after renewal.",
+        "statement": "A newer task-bound full not-ready judgment withdraws current workunit proof, preserves historical success, and fresh current-custody proof restores legitimate VERIFIED operation.",
+        "status": "open"
+      },
       "claim:dagger-removed": {
         "falsifier": "A Dagger engine can execute through the core adapter or generic receipt custody is weakened",
         "proof_refs": [
@@ -477,6 +482,7 @@
       "trajectory:150b60dea853e3ba": "Real native measurements and separate holdout risk/coverage are required; current source CI success is insufficient. Evaluation criteria recorded before model outputs; no readiness fitting or holdout evaluation executed.",
       "trajectory:17139f4701f494a5": "Hosted verification and exact-candidate publication readiness remain pending; no local tests run.",
       "trajectory:17669a7d73b8ecb7": "RPC download403 is runner-specific; same pinned URL succeeded on another fresh runner. Policy fixture exit126 OS detail is unknown because stderr was discarded.",
+      "trajectory:1922e307ad9422d0": "Live hosted Propodus Postgres execution remains externally bounded when hosted credentials and live Propodus endpoints are absent; verified against local SQLite and mock/denial Dactyl HTTP boundaries.",
       "trajectory:19c255ade3d72661": "25unit tests and actualMetal8elementprobe passed; one138tokenCPU inference matches independent scalar subset, memory chunks inactive, same-author/shared-infrastructure limits remain. Metal model reset failed; holdout not executed. New owned-model discard, reuse assertion, real alternate-API fallback diagnostics, nonempty-chunk fixture and independent four-phase collector are authored repairs awaiting fresh validation. No 5percent production calibration claim.",
       "trajectory:22ceeec9cc8afae2": "Validmodeluncertaintyyes0.573/two-labelsetcausedcalibrationpositiveabstainbothbackends; frozenexpectedacceptmismatchpreservednotrelabeled. Workingmeaningfulmodelapprovalsareobservedgate/prompt; alladversecontrolsnonready. We donotknowwhythemodelabstained. Independentcoverageauditdemonstratedmetadatafixtureclaimedorderbutonlyinvalidlength/namechecked; addcanonical+all23permutationchecksandtruthfulobservationacrossfamily. Currentvalidatedworkandactualcheckinventoryexpand; no question/threshold/weight/calibration/labeltuning. Userclarificationonsafeabstentionpending; strictallpositive ruleunchanged. Fullnewcandidatevalidate,donotclaimpreviousfullreportgreen or domainaccuracy. Sameoriginaltaskbranch/custody/noPRmerge release.",
       "trajectory:2318b54d5863154f": "Confirmed pinned CUDA dynamic links can prevent worker startup before its CPU path. Prepare optional separately pinned CPU executable in private local binding; model-free GPU startup before exposing model/state, typed hardware-only fallback, exact immutable pins and same deadline. Negative/abstaining/malformed inference and numerical failures remain non-ready and never trigger a new answer search. No actual Metal/model/reference/holdout evidence exists yet.",
@@ -632,6 +638,11 @@
       "id": "release11-tag-currency-and-native-pin",
       "summary": "Checkpoint native0.148.11 Docker pin after read-only release tag fetch; preserve failed14 and require full15 without any tag publication or proof import",
       "input_digest": "sha256:0f5e8ed8ce937f21d072d630d3690f0d733a1dc6606bdde64948e6999f885eab"
+    },
+    {
+      "id": "cp-sync-c6439c7df",
+      "summary": "Integrate accepted master c6439c7df (v0.152.0) and refresh specs for #1757",
+      "input_digest": "sha256:869e95e2ff68643b26b9ad7afdf40f3ce0b1009ff983c9356dae06fd4679e253"
     }
   ],
   "intents": {
@@ -672,23 +683,23 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Native0.148.11 regenerated current Docker pin; read-only tag fetch repairs release-history currency after validation14 stopped before CI; preserve accepted conformance and observer source, all required graph checks and fresh-evidence boundary",
-          "reviewed_code_fingerprint": "7923ecd8b88929f0423f533f7837ced19bd932a774458551fd20b74cd670c9dc",
-          "spec_material_hash": "3b63516a8cf4a08e90043eae356dfd2a0eca06f8b98e599615ba708c6154119a"
+          "reason": "Synced #1757 read-only acceptance correlation with accepted master c6439c7df (v0.152.0).",
+          "reviewed_code_fingerprint": "d21529e6e236765e361c9cf4aa4e631530a9b4a15d74210365834babaf5918bb",
+          "spec_material_hash": "428920995312cd6dbfeea17606ced8451170aa9656dc6b81e149129c0bac5bf3"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Native0.148.11 regenerated current Docker pin; read-only tag fetch repairs release-history currency after validation14 stopped before CI; preserve accepted conformance and observer source, all required graph checks and fresh-evidence boundary",
-          "reviewed_code_fingerprint": "7923ecd8b88929f0423f533f7837ced19bd932a774458551fd20b74cd670c9dc",
-          "spec_material_hash": "81514c33f3601499867670f91f4d8a8ba8bfc955107a6354b68ff91b9fbe0c69"
+          "reason": "Synced #1757 acceptance observation export contract with accepted master c6439c7df (v0.152.0).",
+          "reviewed_code_fingerprint": "d21529e6e236765e361c9cf4aa4e631530a9b4a15d74210365834babaf5918bb",
+          "spec_material_hash": "4292240db1012bacb3703d25489a6ac0511d294bef81044dc9ef0ada6acb20e7"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Native0.148.11 regenerated current Docker pin; read-only tag fetch repairs release-history currency after validation14 stopped before CI; preserve accepted conformance and observer source, all required graph checks and fresh-evidence boundary",
-          "reviewed_code_fingerprint": "7923ecd8b88929f0423f533f7837ced19bd932a774458551fd20b74cd670c9dc",
-          "spec_material_hash": "e4f5f7980dc0644082f18f5ed99f3829acf1179c4b3e556b13cfd7390ab5cd20"
+          "reason": "Synced #1757 acceptance presentation boundary with accepted master c6439c7df (v0.152.0).",
+          "reviewed_code_fingerprint": "d21529e6e236765e361c9cf4aa4e631530a9b4a15d74210365834babaf5918bb",
+          "spec_material_hash": "3d3861ffd59d9e65966771b5db4107b999a733ec7ad029f02a6c1cb2696ec964"
         }
       ],
       "state": "APPROVED",
@@ -699,13 +710,13 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1794999397Z"
+      "updated_at": "1795151138Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:76dedb8bddd54e15a8a9ee201ad9343508212d19016e09a2230207fe3b2c1858",
+      "artifact_hash": "sha256:2a16724876dd7255af1684f589ac99bc0375dbfa826e2714520dbbacf40bd539",
       "checks": [
         {
           "name": "accepted-target-ancestry",
@@ -797,10 +808,17 @@
             "intent_id": "intent:change_01M7P3W97HA4M2MRGMQ0TYNRBB",
             "kind": "trajectory_step_recorded",
             "sequence": 8
+          },
+          {
+            "detail": "trajectory:branch_01M7P3W9AX80HN9XVHYSAD8B7C",
+            "event_id": "event:9",
+            "intent_id": "intent:change_01M7P3W97HA4M2MRGMQ0TYNRBB",
+            "kind": "trajectory_step_recorded",
+            "sequence": 9
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 8,
+        "next_sequence": 9,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M7P3W9AX80HN9XVHYSAD8B7C": {
@@ -887,6 +905,24 @@
                 ],
                 "sequence": 8,
                 "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:9",
+                "observations": [
+                  ".decapod/managed/specs/ARCHITECTURE.md",
+                  ".decapod/managed/specs/INTENT.md",
+                  ".decapod/managed/specs/INTERFACES.md",
+                  ".decapod/managed/specs/SECURITY.md",
+                  ".decapod/managed/specs/VALIDATION.md",
+                  "Merged origin/master c6439c7df (v0.152.0); fmt, clippy --all-targets --all-features, and acceptance tests 18/18 passed"
+                ],
+                "proof_refs": [],
+                "scope": [
+                  "root"
+                ],
+                "sequence": 9,
+                "validation_findings": []
               }
             ]
           }
@@ -897,13 +933,20 @@
       "evidence": [
         "Build12118 health job01a1ed5b-7d95-433d-9159-eb3eb09b8e2c rejected the0.148.9 Docker/manifest under the source-built0.148.10 binary. Preserved raw failure. Official0.148.10 archive checksum712521a5 verified, inspected and installed; native commands regenerated the two projections. Local prerequisite-only repair reported211 passes/3 failures and is not admission proof. Actual capture export test passed on d4269e35 with manifest4180e2b8 unchanged. Fresh complete exact-candidate CI is still required.",
         "Master advanced from6ab6de31 to c47137ad after native PR1784 admission. That admission remains historical, with no merge authorization. PR moved to draft; accepted policy-boundary changes merged without auto-commit, source/spec conflicts resolved preserving both responsibilities, and this exact integration tree will be checkpointed before commit. Fresh complete native validation is required.",
+        "Merged origin/master c6439c7df (v0.152.0); fmt, clippy --all-targets --all-features, and acceptance tests 18/18 passed",
         "Preserved dad525d4 failed history including uncheckpointed integration c31d039f; native present-time recovery observation recorded. Reauthored five implementation files byte-for-byte; retained fresh identity. Real Pi archive3c6c373 and publication receipt remain historical observations, never imported readiness. Original source-CI deadline expired with SNAPSHOT_NOT_READY; fresh source requires complete validation.",
         "Prior45ae/34f8 full native graph and actual publication passed, then accepted master advanced to352d8929 with conformance fixes and0.148.11. PR1784 returned to draft. Preserve prior successful and failed records. Merge accepted implementation/tests without auto-commit; reconcile authored spec prose while native blocks remain CLI-owned. Official release tag and master trees match; archive5412a6ba verified and installed, original Pi binary unchanged.105 inventory2acf1af7 reviewed with unchanged required graph. This checkpoint precedes merge commit and fresh full proof.",
         "Validation09 failed closed in actual docs-sync CI context after master advanced to34f837d4 release0.148.10. Raw failed job12092 preserved. Only the accepted release metadata is merged here without auto-commit; no observer, check or policy is weakened. Exact merge checkpoint precedes commit and full validation must rerun."
       ],
       "inspected_files": [],
       "intent_id": "intent:change_01M7P3W97HA4M2MRGMQ0TYNRBB",
-      "modified_files": [],
+      "modified_files": [
+        ".decapod/managed/specs/ARCHITECTURE.md",
+        ".decapod/managed/specs/INTENT.md",
+        ".decapod/managed/specs/INTERFACES.md",
+        ".decapod/managed/specs/SECURITY.md",
+        ".decapod/managed/specs/VALIDATION.md"
+      ],
       "next_transitions": [
         "Refine plan and declare falsifiable checks"
       ],

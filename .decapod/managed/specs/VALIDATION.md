@@ -1,5 +1,50 @@
 # Validation
 
+## Cloud control-plane, Dactyl 0.18.0, and Local/Cloud branding verification (#1809, #1808, #1769, #1667, #1777, #1778, #1590, #1377, #1380)
+
+- **Dependency & build locks**: `tests/release_dependency_policy.rs` verifies
+  registry `dactyl-db = "=0.18.0"` (SHA-256
+  `6c26eaf28272a50517d7fe300b56940ac03627477b48579293b231c33de905b4`),
+  `quinn-proto >= 0.11.19`, and preserved `sqlite`/`neon`/`supabase-cloud`
+  features. Bazel `//:cargo_inputs_policy` passes under `--lockfile_mode=error`
+  against the updated `MODULE.bazel.lock`. The reviewed 105-file proof source
+  inventory digest in `.decapod/config.toml` (`[proof.required_profile].reviewed_sources_digest`)
+  is reconciled to `sha256:35d28c6858a245822d6d893e5dc658b5f3bcf47485f2601c4f019d756c82502f`,
+  accounting solely for `Cargo.toml`, `Cargo.lock`, and `MODULE.bazel.lock`
+  with zero workflow, executor, or toolchain changes. Native `nix build` was
+  not executed on this macOS host (`nix` is not installed); Nix CI verifies
+  `flake.nix`.
+- **Unit, branding, docs & integration proofs**: `cloud_dpop` (4/4),
+  `cloud_proof` (2/2), `container_signer` (1/1), `dactyl_todo` (7/7),
+  `db_maintenance` (6/6), `sql_context` (16/16), `backend_tests`,
+  `propodus_tests`, `cloud_supabase_boundary` (41/41), `cloud_wave_parity`
+  (5/5, including `dactyl_018_dpop_signer_and_control_request_wire_contract`
+  verifying canonical `/functions/v1/decapod-onboarding/config`, RFC 9449 `DPoP`
+  headers, `propodus_repository_access_v1`, and `propodus_proof_acceptance_v1`),
+  `cloud_cli_boundary`, `cloud_mixed_worktree` (3/3),
+  `cloud_command_path`, `cloud_dactyl_boundary`, `cli_contract_enforcement`
+  (24/24), `doc_alignment` (5/5), `shared_state_semantics_1247` (10/10),
+  `policy_self_authorization_1776::candidate_worktree_cannot_switch_cloud_backend_to_local`,
+  `decapod docs build` embedded docs sync, `cargo fmt --all -- --check`, and
+  `clippy --all-targets --all-features -- -D warnings`.
+- **Owner repair wire marker & public-repo redaction (#1590, #1809)**:
+  `src/decapod/core/db_maintenance.rs` binds `OWNER_REPAIR_V1_SQL` strictly to
+  the public registered wire marker
+  `SELECT propodus.owner_repair_v1($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)`
+  with unit regression checks verifying exact wire marker equality and zero
+  internal table/CTE expansion, and `src/decapod/core/cloud_proof.rs` /
+  `db_maintenance.rs` omit private repository filenames and migration ranges.
+  (Buildkite build `13224` passed 74+ checks and hit an unrelated transient
+  Linux `ETXTBSY` runner flake in `podman_machine_start_captures_output_without_reading_terminal_input`;
+  retried cleanly with fresh Buildkite validation.)
+- **Local PostgreSQL 17 + PostgREST conformance (#1377, #1369)**: Executed
+  disposable local PG17 + PostgREST conformance harness, passing
+  `supabase_service::local_native_managed_project_contract` and
+  `local_native_managed_project_revocation` (with independent PG17 ledger
+  observation and revocation enforcement) against the `dactyl-db 0.18.0` binary.
+  Managed Auth OAuth issuance and hosted production verification remain separate
+  external acceptance gates (`#1378`, `#1379`).
+
 ## Current report validation scope
 
 The current verification boundary begins at accepted release commit 9d1aed27.
@@ -478,6 +523,26 @@ dependency failures and revision races. Failed attempts must preserve task,
 proof and journal state. Subsequent QA inspection must preserve this historical
 meaning after unrelated work and epoch changes. Publication continues requiring
 fresh complete proof and cannot consume this historical completion permission.
+
+Additional ergonomics and private-repository regressions (#1807, #1810) cover:
+- Authenticated read-only private-repo accepted-target resolution via mock
+  `OfficialCli` `GithubGet` (`validation_history::integration_tests`) and redacted
+  error reporting when unauthenticated and authenticated transports are unavailable;
+- Pre-capture, custody-preserving lease TTL verification before freezing
+  `HistoricalTaskBinding`: default advisory and `strict` modes leave `revision` and
+  `lease_generation` untouched, only explicit `renew` rotates custody
+  (`validation_history::archive_tests::capture_task_binding_with_budget_never_rotates_custody_unless_renew_is_explicit`;
+  end-to-end custody stability across workunit checkpoints is covered by
+  `entrypoint_correctness::canonical_workunit_withdraws_superseded_proof_and_recovers_after_lease_renewal`);
+- Request-bound pre-broker `todo done --validated` handoff validation and cleanup
+  (`plugins::verify::historical_tests::prepared_done_handoff_roundtrips_and_rejects_mismatched_commit_or_request`
+  and `tests/validate_ergonomics_1807_1810.rs::todo_done_validated_decouples_broker_and_cleans_handoff`);
+- Unverified `done` (`CLAIMED`) self-service recovery via `qa verify regen` without
+  self-deadlock (`tests/validate_ergonomics_1807_1810.rs::unverified_done_todo_recovers_via_qa_verify_regen_without_self_deadlock`);
+- Unix `RLIMIT_NOFILE` diagnostics in `system doctor check` and `validate_open_file_limits`
+  plus automatic soft-limit elevation for spawned harnesses
+  (`core::bounded_process::tests`, `plugins::doctor::tests`, and
+  `tests/validate_ergonomics_1807_1810.rs::rlimit_nofile_diagnosed_in_doctor_and_raised_for_validate_harnesses`).
 
 The inline Rust regressions are part of the library unit suite selected by the
 complete source profile. Their presence and source review are not execution
@@ -1393,26 +1458,6 @@ required-profile review declaration is reconciled to that complete inventory;
 the finite workflow graph, adapters, provider selection and proof requirements
 remain unchanged. This review pin is configuration, not execution evidence.
 
-## Accepted release inventory review
-
-Release target34f837d4 changed only the decapod package version from0.148.9 to0.148.10 in Cargo.toml/Cargo.lock and changelog. All105 verification source definitions were compared to the prior reviewed candidate; only those two version lines changed. No required check, workflow, helper, adapter, environment or timeout changes. The candidate source inventory is explicitly reconciled tosha256:e1a242381f7411a8facfe285e2945040dafa93c46dd48c11a86ebd55d9a95b3f; fresh native source-CI validation still decides admission. Validation09 target-ancestry failure and validation10 stale-inventory rejection remain preserved.
-
-## Native0.148.10 projection refresh
-
-The d4269e35 source-built CI health step actually rejected current generated drift: its0.148.10 binary refreshed the managed Docker pin and specs manifest from0.148.9. Official checksum-verified0.148.10 is now installed. Native workspace/agent/spec refresh and the reported project-check repair regenerated those projections; no AGENTS file was manually edited and no source check was weakened. The local prerequisite-only repair reported three failures (first container_workspace_required) while applying two repairs, so it is not claimed as a project or publication pass. Fresh complete Buildkite-owned validation is required for the checkpointed candidate. The actual captured Pi export replay at d4269e35 passed and reproduced4180e2b8... byte-for-byte; no fixture actions occurred.
-
-## Accepted conformance and0.148.11 integration
-
-Full native validation13 and renewed publication passed for45ae1bff/base34f837d4 using complete Buildkite12165 and standalone12167. Both protected app805657 contexts passed; actual library1813pass/8ignored included13 observer cases. Publication independently read back that exact head/base. Master then advanced through accepted interop PR1787 and release0.148.11 to352d892958e1cdf692299927f7c2f3c0c36fc639. That admission is historical and PR1784 returned to draft.
-
-The accepted changes separate source conformance coverage from executed results, reject unregistered RPCs before startup and malformed JSON before negotiation, advertise actual session gates, and tighten the actual competing-mutation timing assertion. Observer source is unchanged and needs no parallel registry or authority. All accepted source/test changes are retained. Authored living specs were merged separately from generated blocks, preserving both the accepted conformance contract and observer/recovery sections. Native commands refresh generated projections.
-
-The105 verification-source definitions were reviewed; only Cargo.toml/Cargo.lock version lines differ in that declared inventory, while the actual accepted Rust/fixture changes are covered by full source/tree binding and required execution. The reconciled inventory issha256:2acf1af72443f49b41967205535a4a0a4eff38a100e3b11ab930a010a3437db0. Official macOS release pipeline44286433522 artifact14419543607 was inspected and checksum-verified (archive5412a6ba1637a188306cf4fce3759d369e8edec78248b7c5a9e1de23ca3ab873); its14e5d8d8 tag and352d8929 master share tree4a9469b32f9c3c9992864b9e5b04995bd48449d0. Installed0.148.11 replaces backed-up0.148.10 without modifying the pinned Pi0.148.8 binary. No new current proof is assumed.
-
-## Release11 tag currency and native pin repair
-
-Validation14 stopped before pushing b413bb64 because the new remote release tag was absent from frozen local release history (SNAPSHOT_UPLOAD_INCOMPLETE); none of its required CI observations is claimed authenticated. Read-only git fetch origin --tags obtained v0.148.11 without publishing or rewriting any tag. Official0.148.11 native govern project-check --refresh-specs then regenerated the managed Docker image/version pin from0.148.10 to0.148.11. Its prerequisite-only result remains partial on the host and is not full readiness. This exact repair is checkpointed before fresh complete validation15. Accepted source,105 inventory2acf1af7 and all required checks remain unchanged.
-
 <!-- decapod:requirement REQ-INTENT-TRACEABILITY -->
 The read-only reconciliation report must detect missing/orphaned/duplicate
 requirement references, missing proof-spec mappings, stale code fingerprints,
@@ -1432,19 +1477,6 @@ without reviewed authored specs remains observable and explicitly unmapped.
 Human-intent questions, requirement markers, stable hashes and changed-source
 inventory are advisory: none may satisfy a proof gate or change
 `semantic_alignment: not_proven`.
-
-## Recovery archive disposition
-The selected-source reauthoring and present-time history observation are committed together at fafe6138db68a0d450cc01513b628c17cc40aa3e. The subsequent recovery disposition references that immutable archive. It does not establish the missing historical checkpoint or replace full current-candidate validation.
-
-## Preserved failed source history
-The prior source branch at dad525d46feb9daf09f498c3d2934cd6560fc87b contains integration merge c31d039f without an exact-material checkpoint. That history remains preserved and unproven. The current workstream records the native present-time recovery observation, reauthors the reviewed source in a fresh claimed workspace, and requires independent full validation of its new commits. No retrospective checkpoint or inherited readiness is asserted.
-
-## Acceptance observer delivery checks
-The mandatory offline core suite exercises actual source attribution, failed-check feedback followed by a new model repair action, receipt subject matching and later source/base invalidation. The ignored live export remains separate from those deterministic tests. A passing code suite does not supersede current-content publication-spec review: CI rejects a stale review even when a final lint-only edit preserves behavior. Refresh the affected reviews and obtain a fresh full exact-candidate validation before publication.
-
-## Current accepted policy integration
-
-Publication at102c638e against6ab6de31 was valid at its observed admission. Master subsequently advanced to c47137ad through accepted policy-boundary work. Preserve those new initializer, operator-consent and recovery boundaries, checkpoint the exact integration merge before committing, and collect fresh whole-profile proof; the earlier green result grants no integration authority for this new context.
 
 <!-- decapod:capability-overlay:background-processing:start -->
 
@@ -1494,8 +1526,8 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `7923ecd8b88929f0423f533f7837ced19bd932a774458551fd20b74cd670c9dc`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (237 files), `tests/` (236 files)
+- Repository signal fingerprint: `d21529e6e236765e361c9cf4aa4e631530a9b4a15d74210365834babaf5918bb`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (245 files), `tests/` (257 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 
@@ -2342,3 +2374,89 @@ The showcase kernel PR must not introduce a new GitHub Actions workflow, shadow
 the website's renderer or suppress the existing living-spec material gate.
 Independent native source validation and complete candidate readiness remain
 necessary before merging.
+
+## Readiness Gate-Skip Override Hardening (#1659)
+
+Diagnostic gate-skip overrides (`DECAPOD_VALIDATE_SKIP_GIT_GATES`,
+`DECAPOD_VALIDATE_SKIP_TOOLING_GATES`, and
+`DECAPOD_VALIDATE_SKIP_FINGERPRINT_GATES`) are strictly non-authoritative and
+must never establish full validation, publication readiness, or validated task
+completion:
+
+- **Full-readiness rejection boundary:** `core::validation_runtime::require_full_readiness_environment()` rejects any presence (`var_os().is_some()`) of `DECAPOD_VALIDATE_SKIP_GIT_GATES` or `DECAPOD_VALIDATE_SKIP_TOOLING_GATES`, and any truthy value of `DECAPOD_VALIDATE_SKIP_FINGERPRINT_GATES` (`core::validate::skip_fingerprint_gates()` matching `1`, `true`, `TRUE`, `yes`, `YES`), failing with `READINESS_GATE_OVERRIDE_UNSUPPORTED` across `decapod validate`, `decapod v`, `decapod rpc --op validate.run`, `decapod workspace publish`, `decapod rpc --op workspace.publish`, and `decapod todo done --validated` (live and `--commit` historical paths).
+- **Pre-side-effect enforcement on `WorkspaceCommand::Publish` (`src/decapod/lib.rs`):** When `proof.validation_buildkite_preflights = false`, `WorkspaceCommand::Publish` enforces `require_full_readiness_environment()?` before calling `run_validation_bounded_with_receipt(..., refresh_specs = true, ...)`, ensuring gate-skip overrides reject immediately with `READINESS_GATE_OVERRIDE_UNSUPPORTED` without mutating `.decapod/managed/specs/` or surfacing masked downstream failures.
+- **Verification and recovery isolation (`src/decapod/plugins/verify.rs`):** `run_validate_and_hash` calls `crate::core::validation_runtime::require_full_readiness_environment()?` prior to spawning child `decapod validate --format json`, and `safe_validation_failure_diagnostic` includes `READINESS_GATE_OVERRIDE_UNSUPPORTED` in `MARKERS`. This closes the bypass where `qa verify`, `qa verify todo`, `qa verify recover`, or `todo done --validated` under `GITHUB_ACTIONS=true` or `BUILDKITE=true` with active skip overrides could otherwise enter `CiLocal` and mark tasks verified.
+- **Partial diagnostics and non-reusable receipts:** `ValidationScope::CiLocal` (`GITHUB_ACTIONS=true` / `BUILDKITE=true`) and `ValidationScope::ProjectPrerequisites` (`decapod govern project-check`) preserve `publication_ready = false` and never record `validation.completed` history (`core::validation_history::finish_archive`) or full native readiness artifacts (`observations.json`, `completion/`, `historical-proof.json`). Removing an override after an overridden or partial `govern project-check` receipt write (`sections.validation` in `.decapod/governance.json`) does not authorize `validate`, `workspace publish`, `qa verify commit`, or `todo done --validated [--commit]`.
+- **Group broker isolation (`src/decapod/core/group_broker.rs`):** `CALLER_ENV_KEYS` clears/replaces all three `DECAPOD_VALIDATE_SKIP_*` variables per caller request so an override-tainted broker leader cannot taint a clean `todo done --validated` client, while override-tainted clients fail in `lib.rs::run()` before mutating todo state.
+- **Regression suite and verification scope:** `tests/gate_skip_override_readiness_1659.rs` exercises all of the above end-to-end against the compiled `decapod` binary in isolated canonical local-Git repositories (`repository_profile::REQUIRED_PROFILE`, `canonical_local_target = true`). Full hosted Buildkite/GitHub source-CI acceptance for this branch remains governed by the repository's configured proof profile and is not substituted by local test execution.
+
+## Split-store convergence and all-6 #1660 VERIFIED workunit falsifiers
+
+`src/decapod/core/workunit.rs` (`converge_split_workunit_store`,
+`workunit_journal_status`, `validate_verified_manifest`, `transition_status`,
+`resume_workunit`, `init_workunit`, `checkpoint_workunit`, `mutate_workunit_with_proof_gate`)
+enforces single-domain canonical custody and kernel-observed proof for all
+`VERIFIED` workunit transitions and publication gates:
+
+- Any separately initialized workspace-local datastore (`<worktree>/.decapod/data/todo.db`
+  or `decapod.db` containing policy tables `agents`/`risk_zones`, `workunit`
+  events, or corrupt/unreadable state, while permitting benign `traces`-only
+  RPC logs) returns `WORKUNIT_PROOF_ATOMIC_DOMAIN_UNSUPPORTED` on `VERIFIED`
+  transitions, `validate_verified_manifest`, `resume_workunit`, partial or
+  uninitialized split-store writes that would otherwise leak into the canonical
+  main store, and `journal-status` (`split_store: true`,
+  `atomic_domain_supported: false`, `proof_status: "not_proven"`), while
+  keeping explicitly initialized non-`VERIFIED` local declarations isolated
+  inside the workspace-local datastore until converged.
+- `decapod govern workunit converge [--task-id <id>] [--dry-run]` inspects or
+  archives workspace-local database files and split-only projections into
+  `.decapod/data/split-store-audit/<archive_id>/audit.json` as `not_proven` audit
+  history (`classification: "WORKUNIT_PROOF_ATOMIC_DOMAIN_UNSUPPORTED"`), never
+  promoting or importing unattested or self-declared `sha256:abc` rows into the
+  canonical store. After convergence, `journal-status` continues retaining
+  `audit_records` as `not_proven` while allowing current tasks in the worktree
+  to execute canonical `decapod validate` and transition atomically to `VERIFIED`.
+- Actual-binary suite `tests/workunit_verified_proof_1660.rs` (zero
+  `DECAPOD_VALIDATE_SKIP_*` gate-skip variables) exercises all 6 `#1660`
+  falsifiers: (1) self-authored `record-proof` pass + `sha256:abc` never mints
+  `VERIFIED` or publication; (2) quick-scope/skipped, failed, or unavailable-tool
+  attempts stay `not_proven`; (3) source mutation, accepted-base movement,
+  changed `proof_plan`, and newer failed validation downgrade/mark receipts
+  `stale`; (4) authentic proof copied across tasks, custody generations (including
+  ABA lease reclaim), or repositories is rejected; (5) split-store records stay
+  `not_proven` audit history with `WORKUNIT_PROOF_ATOMIC_DOMAIN_UNSUPPORTED`;
+  and (6) repaired canonical tasks complete `VERIFIED` atomically and pass
+  `verify_workunit_gate_for_publish`.
+
+## Accepted release inventory review
+
+Release target34f837d4 changed only the decapod package version from0.148.9 to0.148.10 in Cargo.toml/Cargo.lock and changelog. All105 verification source definitions were compared to the prior reviewed candidate; only those two version lines changed. No required check, workflow, helper, adapter, environment or timeout changes. The candidate source inventory is explicitly reconciled tosha256:e1a242381f7411a8facfe285e2945040dafa93c46dd48c11a86ebd55d9a95b3f; fresh native source-CI validation still decides admission. Validation09 target-ancestry failure and validation10 stale-inventory rejection remain preserved.
+
+## Native0.148.10 projection refresh
+
+The d4269e35 source-built CI health step actually rejected current generated drift: its0.148.10 binary refreshed the managed Docker pin and specs manifest from0.148.9. Official checksum-verified0.148.10 is now installed. Native workspace/agent/spec refresh and the reported project-check repair regenerated those projections; no AGENTS file was manually edited and no source check was weakened. The local prerequisite-only repair reported three failures (first container_workspace_required) while applying two repairs, so it is not claimed as a project or publication pass. Fresh complete Buildkite-owned validation is required for the checkpointed candidate. The actual captured Pi export replay at d4269e35 passed and reproduced4180e2b8... byte-for-byte; no fixture actions occurred.
+
+## Accepted conformance and0.148.11 integration
+
+Full native validation13 and renewed publication passed for45ae1bff/base34f837d4 using complete Buildkite12165 and standalone12167. Both protected app805657 contexts passed; actual library1813pass/8ignored included13 observer cases. Publication independently read back that exact head/base. Master then advanced through accepted interop PR1787 and release0.148.11 to352d892958e1cdf692299927f7c2f3c0c36fc639. That admission is historical and PR1784 returned to draft.
+
+The accepted changes separate source conformance coverage from executed results, reject unregistered RPCs before startup and malformed JSON before negotiation, advertise actual session gates, and tighten the actual competing-mutation timing assertion. Observer source is unchanged and needs no parallel registry or authority. All accepted source/test changes are retained. Authored living specs were merged separately from generated blocks, preserving both the accepted conformance contract and observer/recovery sections. Native commands refresh generated projections.
+
+The105 verification-source definitions were reviewed; only Cargo.toml/Cargo.lock version lines differ in that declared inventory, while the actual accepted Rust/fixture changes are covered by full source/tree binding and required execution. The reconciled inventory issha256:2acf1af72443f49b41967205535a4a0a4eff38a100e3b11ab930a010a3437db0. Official macOS release pipeline44286433522 artifact14419543607 was inspected and checksum-verified (archive5412a6ba1637a188306cf4fce3759d369e8edec78248b7c5a9e1de23ca3ab873); its14e5d8d8 tag and352d8929 master share tree4a9469b32f9c3c9992864b9e5b04995bd48449d0. Installed0.148.11 replaces backed-up0.148.10 without modifying the pinned Pi0.148.8 binary. No new current proof is assumed.
+
+## Release11 tag currency and native pin repair
+
+Validation14 stopped before pushing b413bb64 because the new remote release tag was absent from frozen local release history (SNAPSHOT_UPLOAD_INCOMPLETE); none of its required CI observations is claimed authenticated. Read-only git fetch origin --tags obtained v0.148.11 without publishing or rewriting any tag. Official0.148.11 native govern project-check --refresh-specs then regenerated the managed Docker image/version pin from0.148.10 to0.148.11. Its prerequisite-only result remains partial on the host and is not full readiness. This exact repair is checkpointed before fresh complete validation15. Accepted source,105 inventory2acf1af7 and all required checks remain unchanged.
+
+## Recovery archive disposition
+The selected-source reauthoring and present-time history observation are committed together at fafe6138db68a0d450cc01513b628c17cc40aa3e. The subsequent recovery disposition references that immutable archive. It does not establish the missing historical checkpoint or replace full current-candidate validation.
+
+## Preserved failed source history
+The prior source branch at dad525d46feb9daf09f498c3d2934cd6560fc87b contains integration merge c31d039f without an exact-material checkpoint. That history remains preserved and unproven. The current workstream records the native present-time recovery observation, reauthors the reviewed source in a fresh claimed workspace, and requires independent full validation of its new commits. No retrospective checkpoint or inherited readiness is asserted.
+
+## Acceptance observer delivery checks
+The mandatory offline core suite exercises actual source attribution, failed-check feedback followed by a new model repair action, receipt subject matching and later source/base invalidation. The ignored live export remains separate from those deterministic tests. A passing code suite does not supersede current-content publication-spec review: CI rejects a stale review even when a final lint-only edit preserves behavior. Refresh the affected reviews and obtain a fresh full exact-candidate validation before publication.
+
+## Current accepted policy integration
+
+Publication at102c638e against6ab6de31 was valid at its observed admission. Master subsequently advanced to c47137ad through accepted policy-boundary work. Preserve those new initializer, operator-consent and recovery boundaries, checkpoint the exact integration merge before committing, and collect fresh whole-profile proof; the earlier green result grants no integration authority for this new context.

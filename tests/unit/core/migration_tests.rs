@@ -370,3 +370,178 @@ fn legacy_todo_symlink_is_never_classified_as_an_empty_placeholder() {
         schemas::TODO_DB_NAME
     ));
 }
+
+#[test]
+fn migration_report_agent_instruction_reports_cli_and_resolved_decapod_root() {
+    let resolved_root = PathBuf::from("/tmp/main-repo/.decapod");
+    let steady = MigrationReport {
+        decapod_root: resolved_root.clone(),
+        previous_version: Some(DECAPOD_VERSION.to_string()),
+        current_version: DECAPOD_VERSION.to_string(),
+        version_changed: false,
+        applied_migrations: Vec::new(),
+    };
+    assert_eq!(steady.agent_instruction(), None);
+
+    let report = MigrationReport {
+        decapod_root: resolved_root.clone(),
+        previous_version: Some("0.143.2".to_string()),
+        current_version: DECAPOD_VERSION.to_string(),
+        version_changed: true,
+        applied_migrations: vec!["events.compact_sequence_index.v002".to_string()],
+    };
+    let instruction = report.agent_instruction().expect("expected notice");
+    assert!(instruction.contains("Decapod migration notice"));
+    assert!(instruction.contains("0.143.2"));
+    assert!(instruction.contains("events.compact_sequence_index.v002"));
+    assert!(instruction.contains("decapod system migrations --format json"));
+    assert!(instruction.contains(&resolved_root.display().to_string()));
+    assert!(
+        instruction.contains(
+            &resolved_root
+                .join(GENERATED_APPLIED_MIGRATIONS)
+                .display()
+                .to_string()
+        )
+    );
+    assert!(
+        instruction.contains(
+            &resolved_root
+                .join(GENERATED_MIGRATION_CATALOG)
+                .display()
+                .to_string()
+        )
+    );
+}
+
+#[test]
+fn inspect_migration_state_at_reports_pending_notice_and_migrations_without_mutating() {
+    let workspace = tempdir().unwrap();
+    let decapod_root = workspace.path().join(".decapod");
+    check_and_migrate(&decapod_root).unwrap();
+
+    let mut ledger = load_applied_migrations(&decapod_root).unwrap();
+    ledger
+        .entries
+        .retain(|m| m.id != "events.compact_sequence_index.v002");
+    store_applied_migrations(&decapod_root, &ledger).unwrap();
+
+    let counter_path = decapod_root.join(GENERATED_VERSION_COUNTER);
+    let mut counter: serde_json::Value =
+        serde_json::from_slice(&fs::read(&counter_path).unwrap()).unwrap();
+    counter["last_seen_version"] = serde_json::json!("0.143.2");
+    fs::write(&counter_path, serde_json::to_vec_pretty(&counter).unwrap()).unwrap();
+
+    let counter_before = fs::read(&counter_path).unwrap();
+    let applied_before = fs::read(decapod_root.join(GENERATED_APPLIED_MIGRATIONS)).unwrap();
+    let catalog_before = fs::read(decapod_root.join(GENERATED_MIGRATION_CATALOG)).unwrap();
+
+    let report = inspect_migration_state_at(workspace.path(), workspace.path(), &decapod_root)
+        .expect("inspect migration state");
+    assert!(report.action_required);
+    assert!(!report.differs_from_workspace_decapod);
+    assert_eq!(
+        report.version_counter.status,
+        MigrationArtifactStatus::Observed
+    );
+    assert!(report.version_counter.version_changed_from_binary);
+    assert_eq!(
+        report.version_counter.last_seen_version.as_deref(),
+        Some("0.143.2")
+    );
+    assert!(
+        report
+            .reason_codes
+            .contains(&"VERSION_TRANSITION_PENDING".to_string())
+    );
+    assert!(
+        report
+            .reason_codes
+            .contains(&"MIGRATIONS_PENDING".to_string())
+    );
+    assert_eq!(report.pending_migrations.len(), 1);
+    assert_eq!(
+        report.pending_migrations[0].id,
+        "events.compact_sequence_index.v002"
+    );
+    assert!(!report.pending_migrations[0].description.is_empty());
+
+    assert_eq!(fs::read(&counter_path).unwrap(), counter_before);
+    assert_eq!(
+        fs::read(decapod_root.join(GENERATED_APPLIED_MIGRATIONS)).unwrap(),
+        applied_before
+    );
+    assert_eq!(
+        fs::read(decapod_root.join(GENERATED_MIGRATION_CATALOG)).unwrap(),
+        catalog_before
+    );
+}
+
+#[test]
+fn inspect_migration_state_at_is_steady_after_migration_and_flags_worktree_root_difference() {
+    let workspace = tempdir().unwrap();
+    let governance = tempdir().unwrap();
+    let decapod_root = governance.path().join(".decapod");
+    check_and_migrate(&decapod_root).unwrap();
+
+    let report = inspect_migration_state_at(workspace.path(), governance.path(), &decapod_root)
+        .expect("inspect worktree migration state");
+    assert!(!report.action_required);
+    assert!(report.differs_from_workspace_decapod);
+    assert!(report.pending_migrations.is_empty());
+    assert!(report.reason_codes.is_empty());
+    assert_eq!(report.catalog.status, MigrationArtifactStatus::Observed);
+    assert_eq!(report.applied.status, MigrationArtifactStatus::Observed);
+    assert_eq!(report.applied.count, all_migrations().len());
+    assert_eq!(report.catalog.compiled_count, all_migrations().len());
+    assert_eq!(
+        fs::canonicalize(&report.decapod_root).unwrap(),
+        fs::canonicalize(&decapod_root).unwrap()
+    );
+}
+
+#[test]
+fn inspect_migration_state_at_reports_corrupt_and_symlink_artifacts_safely() {
+    let root = tempdir().unwrap();
+    let decapod_root = root.path().join(".decapod");
+    let applied_path = decapod_root.join(GENERATED_APPLIED_MIGRATIONS);
+    fs::create_dir_all(applied_path.parent().unwrap()).unwrap();
+    fs::write(&applied_path, b"{broken json").unwrap();
+
+    #[cfg(unix)]
+    let outside = root.path().join("outside.json");
+    #[cfg(unix)]
+    {
+        fs::write(&outside, br#"{"last_seen_version":"0.1.0"}"#).unwrap();
+        let counter_path = decapod_root.join(GENERATED_VERSION_COUNTER);
+        fs::create_dir_all(counter_path.parent().unwrap()).unwrap();
+        std::os::unix::fs::symlink(&outside, &counter_path).unwrap();
+    }
+
+    let report = inspect_migration_state_at(root.path(), root.path(), &decapod_root)
+        .expect("inspect corrupt state");
+    assert!(report.action_required);
+    assert!(report.has_blocking_or_corrupt_artifact());
+    assert_eq!(report.applied.status, MigrationArtifactStatus::Invalid);
+    assert!(
+        report
+            .reason_codes
+            .contains(&"APPLIED_LEDGER_INVALID".to_string())
+    );
+    #[cfg(unix)]
+    {
+        assert_eq!(
+            report.version_counter.status,
+            MigrationArtifactStatus::Unavailable
+        );
+        assert!(
+            report
+                .reason_codes
+                .contains(&"VERSION_COUNTER_UNAVAILABLE".to_string())
+        );
+        assert_eq!(
+            fs::read(&outside).unwrap(),
+            br#"{"last_seen_version":"0.1.0"}"#
+        );
+    }
+}

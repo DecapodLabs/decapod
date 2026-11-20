@@ -39,6 +39,26 @@ fn isolated_command(root: &std::path::Path, program: &std::ffi::OsStr) -> std::p
     command
 }
 
+// A separate implementation/process checks the focused JSON interpretation.
+// This is same-host differential parsing, not independent executor trust or a
+// second implementation of Decapod's custody/publication policy.
+fn python_json_reason(root: &std::path::Path, value: &str) -> String {
+    use decapod::core::bounded_process::BoundedCommand;
+    let output = isolated_command(root, std::ffi::OsStr::new("python3"))
+        .args([
+            "-I",
+            "-S",
+            "-B",
+            "-c",
+            include_str!("fixtures/interop_strict_json.py"),
+            value,
+        ])
+        .bounded_output(std::time::Duration::from_secs(30))
+        .unwrap();
+    assert!(output.status.success(), "{}", combined(&output));
+    String::from_utf8(output.stdout).unwrap().trim().to_owned()
+}
+
 #[test]
 fn unregistered_rpc_is_rejected_before_project_startup() {
     use decapod::core::bounded_process::BoundedCommand;
@@ -84,7 +104,11 @@ fn malformed_rpc_parameters_cannot_drop_required_negotiation() {
         "{",
         r#"{"required_extensions":["unsupported"],}"#,
         r#"{"required_extensions":[1e400]}"#,
+        r#"{"required_extensions":["unsupported"],"required_extensions":[]}"#,
+        r#"{"required_extensions":["unsupported"],"required_\u0065xtensions":[]}"#,
+        r#"{"optional_metadata":{"grant":"narrow","grant":"wide"}}"#,
     ] {
+        assert_eq!(python_json_reason(fixture.path(), params), "invalid_json");
         let output = command(binary.as_os_str())
             .args(["rpc", "--op", "interop.negotiate", "--params", params])
             .bounded_output(Duration::from_secs(30))
@@ -161,6 +185,207 @@ fn malformed_rpc_parameters_cannot_drop_required_negotiation() {
     let response: Value = serde_json::from_slice(&output.stdout).unwrap();
     assert_eq!(response["success"], false, "{response}");
     assert_eq!(response["error"]["code"], "negotiation_refused");
+
+    // Both transports must preserve the same meaning, including escaped keys
+    // and nested duplicates. Refusal is followed by ordinary operation.
+    for params in [
+        r#"{"required_extensions":["unsupported"],"required_extensions":[]}"#,
+        r#"{"required_extensions":["unsupported"],"required_\u0065xtensions":[]}"#,
+        r#"{"optional_metadata":[{"grant":"narrow","grant":"wide"}]}"#,
+    ] {
+        assert_eq!(python_json_reason(fixture.path(), params), "invalid_json");
+        for stdin in [false, true] {
+            let mut invocation = command(binary.as_os_str());
+            if stdin {
+                use std::io::Write;
+                invocation.args(["rpc", "--stdin"]);
+                invocation.stdin(std::process::Stdio::piped());
+                let mut child = invocation
+                    .stdout(std::process::Stdio::piped())
+                    .stderr(std::process::Stdio::piped())
+                    .spawn()
+                    .unwrap();
+                let request = format!(r#"{{"op":"interop.negotiate","params":{params}}}"#);
+                child
+                    .stdin
+                    .take()
+                    .unwrap()
+                    .write_all(request.as_bytes())
+                    .unwrap();
+                let output = harness::wait_bounded(child);
+                assert!(!output.status.success(), "{}", combined(&output));
+                assert!(
+                    String::from_utf8_lossy(&output.stderr).contains("duplicate JSON key"),
+                    "{}",
+                    combined(&output)
+                );
+            } else {
+                let output = invocation
+                    .args(["rpc", "--op", "interop.negotiate", "--params", params])
+                    .bounded_output(Duration::from_secs(30))
+                    .unwrap();
+                assert!(!output.status.success(), "{}", combined(&output));
+                assert!(
+                    String::from_utf8_lossy(&output.stderr).contains("duplicate JSON key"),
+                    "{}",
+                    combined(&output)
+                );
+            }
+        }
+    }
+    // Legal JSON is still subject to the existing strict negotiation schema.
+    let unknown_field = r#"{"required_extensions":["receipts"],"optional_metadata":{"label":"é","ratio":1.25,"count":4,"enabled":true,"absent":null}}"#;
+    assert_eq!(
+        python_json_reason(fixture.path(), unknown_field),
+        "accepted"
+    );
+    let output = command(binary.as_os_str())
+        .args([
+            "rpc",
+            "--op",
+            "interop.negotiate",
+            "--params",
+            unknown_field,
+        ])
+        .bounded_output(Duration::from_secs(30))
+        .unwrap();
+    let response: Value = serde_json::from_slice(&output.stdout).unwrap();
+    assert_eq!(response["success"], false, "{response}");
+    assert_eq!(response["error"]["code"], "invalid_params");
+
+    let ordinary = r#"{"required_extensions":["receipts"],"optional_ops":["interop.\u03bb"],"optional_extensions":["future"]}"#;
+    assert_eq!(python_json_reason(fixture.path(), ordinary), "accepted");
+    let output = command(binary.as_os_str())
+        .args(["rpc", "--op", "interop.negotiate", "--params", ordinary])
+        .bounded_output(Duration::from_secs(30))
+        .unwrap();
+    assert!(output.status.success(), "{}", combined(&output));
+    let response: Value = serde_json::from_slice(&output.stdout).unwrap();
+    assert_eq!(response["success"], true, "{response}");
+    assert_eq!(response["result"]["outcome"]["negotiated"], true);
+    assert_eq!(
+        response["result"]["outcome"]["omitted_optional_ops"],
+        json!(["interop.λ"])
+    );
+    assert_eq!(
+        response["result"]["outcome"]["omitted_optional_extensions"],
+        json!(["future"])
+    );
+}
+
+#[test]
+fn caller_supplied_reports_cannot_authenticate_current_proof() {
+    use decapod::core::bounded_process::BoundedCommand;
+    use std::{ffi::OsStr, time::Duration};
+
+    let fixture = tempfile::tempdir().unwrap();
+    let binary = harness::resolve_decapod_bin();
+    let command = |program: &OsStr| isolated_command(fixture.path(), program);
+    assert!(
+        command(OsStr::new("git"))
+            .args(["init", "-q"])
+            .bounded_output(Duration::from_secs(30))
+            .unwrap()
+            .status
+            .success()
+    );
+    let initialized = command(binary.as_os_str())
+        .args([
+            "init",
+            "--product-summary",
+            "Isolated report provenance controls",
+        ])
+        .bounded_output(Duration::from_secs(60))
+        .unwrap();
+    assert!(initialized.status.success(), "{}", combined(&initialized));
+
+    for (judgment, report) in [
+        (
+            "not_proven",
+            json!({
+                "status": "pass", "head": "a".repeat(40),
+                "publication_ready": true, "receipt_hash": "sha256:0123456789abcdef"
+            }),
+        ),
+        (
+            "not_proven",
+            json!({
+                "status": "pass", "head": "a".repeat(40),
+                "receipt_hash": format!("sha256:{}", "b".repeat(64)),
+                "rules_fingerprint": "caller-rule", "current_rules_fingerprint": "caller-rule",
+                "verifier": "caller-tool", "current_verifier": "caller-tool"
+            }),
+        ),
+        ("failed", json!({"status": "fail", "head": "a".repeat(40)})),
+        ("stale", json!({"status": "stale", "head": "a".repeat(40)})),
+    ] {
+        let params = json!({"kind": "validation_report", "report": report}).to_string();
+        let output = command(binary.as_os_str())
+            .args(["rpc", "--op", "interop.project", "--params", &params])
+            .bounded_output(Duration::from_secs(30))
+            .unwrap();
+        assert!(output.status.success(), "{}", combined(&output));
+        let response: Value = serde_json::from_slice(&output.stdout).unwrap();
+        assert_eq!(response["success"], true, "{response}");
+        assert_eq!(response["result"]["input_origin"], "caller_supplied");
+        assert_eq!(response["result"]["canonical_state_verified"], false);
+        let projection = &response["result"]["projection"];
+        assert_eq!(projection["proof_judgment"], judgment, "{response}");
+        assert_eq!(projection["publication_ready"], false, "{response}");
+        assert!(
+            projection["proof_reason"]
+                .as_str()
+                .unwrap()
+                .contains("Caller-supplied report"),
+            "{response}"
+        );
+    }
+    for (approved, status) in [
+        (json!(true), "approved"),
+        (json!(false), "denied"),
+        (Value::Null, "pending"),
+    ] {
+        let params = json!({
+            "kind": "approval", "action": "workspace.publish", "scope": "repo",
+            "approved": approved,
+            "input_origin": "independent_executor", "canonical_state_verified": true
+        })
+        .to_string();
+        let output = command(binary.as_os_str())
+            .args(["rpc", "--op", "interop.project", "--params", &params])
+            .bounded_output(Duration::from_secs(30))
+            .unwrap();
+        assert!(output.status.success(), "{}", combined(&output));
+        let response: Value = serde_json::from_slice(&output.stdout).unwrap();
+        assert_eq!(response["success"], true, "{response}");
+        assert_eq!(response["result"]["input_origin"], "caller_supplied");
+        assert_eq!(response["result"]["canonical_state_verified"], false);
+        let projection = &response["result"]["projection"];
+        assert_eq!(projection["status"], status);
+        if status != "pending" {
+            assert!(
+                projection["remediation"]
+                    .as_str()
+                    .unwrap()
+                    .contains("does not authenticate")
+            );
+        }
+    }
+    // Unproven display data does not inhibit ordinary compatible operation.
+    let output = command(binary.as_os_str())
+        .args([
+            "rpc",
+            "--op",
+            "interop.negotiate",
+            "--params",
+            r#"{"required_extensions":["receipts"]}"#,
+        ])
+        .bounded_output(Duration::from_secs(30))
+        .unwrap();
+    assert!(output.status.success(), "{}", combined(&output));
+    let response: Value = serde_json::from_slice(&output.stdout).unwrap();
+    assert_eq!(response["success"], true, "{response}");
+    assert_eq!(response["result"]["outcome"]["negotiated"], true);
 }
 
 /// Read-only ops whose dispatch acceptance is proven against the real binary
@@ -634,9 +859,11 @@ fn authorized_mutation() {
     h.check(
         "projection.of_authorized_mutation",
         "rpc-stdin:interop.project",
-        "status=succeeded, op=store.upsert, correlation id preserved",
+        "reported status=succeeded with correlation id preserved, caller input not canonically verified",
         serde_json::to_string(p).unwrap_or_default(),
         proj["success"] == true
+            && proj["result"]["input_origin"] == "caller_supplied"
+            && proj["result"]["canonical_state_verified"] == false
             && p["status"] == "succeeded"
             && p["op"] == "store.upsert"
             && p["correlation_id"] == upsert["id"]
@@ -971,8 +1198,15 @@ fn session_task_continuity() {
     let mut h = Harness::new("session_task_continuity");
 
     // Process A: create and claim governed work.
+    let primary_acquire = h.raw_as("primary", None, &["session", "acquire"], &[]);
+    let primary_pw = parse_session_password(&primary_acquire);
     let tid = add_todo_cli(&h, "interop continuity probe");
-    let claim = h.raw(&["todo", "claim", "--id", &tid], &[], true);
+    let claim = h.raw_as(
+        "primary",
+        Some(&primary_pw),
+        &["todo", "claim", "--id", &tid],
+        &[],
+    );
     assert!(claim.status.success(), "claim failed: {}", combined(&claim));
 
     // Separate processes observe durable state.
@@ -1012,7 +1246,7 @@ fn session_task_continuity() {
     h.check(
         "continuity.replacement_cannot_claim",
         "cli:todo.claim --mode exclusive as agent 'intruder'",
-        "typed conflict: task already claimed by 'unknown'",
+        "typed conflict: task already claimed by 'primary'",
         combined(&intruder_claim)
             .chars()
             .take(200)
@@ -1033,7 +1267,7 @@ fn session_task_continuity() {
             "--id",
             &tid,
             "--to",
-            "unknown",
+            "primary",
             "--summary",
             "replacement probe",
         ],
@@ -1056,7 +1290,7 @@ fn session_task_continuity() {
     // id is rejected by the session binding.
     let replay = h.rpc_payload_raw(
         "intruder",
-        Some(&h.password),
+        Some(&primary_pw),
         json!({
             "op": "store.upsert",
             "params": {"entity": "knowledge", "payload": {"id": "K_REPLAY", "title": "replay", "text": "replay probe", "provenance": "cmd:interop-conformance-replay"}},
@@ -1064,7 +1298,7 @@ fn session_task_continuity() {
     );
     h.check(
         "continuity.session_replay_rejected",
-        "rpc-stdin:store.upsert as 'intruder' with unknown's password",
+        "rpc-stdin:store.upsert as 'intruder' with primary's password",
         "rejected; replayed session grants no authority",
         format!("success={} exit={}", replay.0["success"], replay.1.status),
         replay.0["success"] != true,
@@ -1087,7 +1321,7 @@ fn session_task_continuity() {
             "item.status={} item.owner={}",
             get_json["item"]["status"], get_json["item"]["owner"]
         ),
-        get_json["item"]["status"] == "open" && get_json["item"]["owner"] == "unknown",
+        get_json["item"]["status"] == "open" && get_json["item"]["owner"] == "primary",
         None,
         vec![],
     );

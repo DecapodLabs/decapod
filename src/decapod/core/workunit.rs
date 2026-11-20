@@ -301,6 +301,61 @@ struct WorkUnitJournalRecord {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+pub struct SplitStoreAuditRecord {
+    pub task_id: String,
+    pub source: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub generation: Option<u64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub operation_id: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub kind: Option<String>,
+    pub original_status: WorkUnitStatus,
+    pub manifest_hash: String,
+    pub proof_status: String,
+    pub classification: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub ts: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub actor: Option<String>,
+    pub manifest: WorkUnitManifest,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+struct SplitStoreAuditBundle {
+    schema_version: String,
+    archive_id: String,
+    archived_at: String,
+    classification: String,
+    proof_status: String,
+    local_data_dir: String,
+    canonical_data_dir: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    local_db_sha256: Option<String>,
+    archived_files: Vec<String>,
+    records: Vec<SplitStoreAuditRecord>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+pub struct SplitStoreConvergenceReport {
+    pub status: String,
+    pub dry_run: bool,
+    pub split_store: bool,
+    pub atomic_domain_supported: bool,
+    pub proof_status: String,
+    pub canonical_data_dir: PathBuf,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub archive_dir: Option<PathBuf>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub archive_id: Option<String>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub archived_files: Vec<String>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub audit_records: Vec<SplitStoreAuditRecord>,
+    pub message: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub struct WorkUnitJournalStatus {
     pub task_id: String,
     pub generation: Option<u64>,
@@ -311,6 +366,13 @@ pub struct WorkUnitJournalStatus {
     /// Resume permission is never inferred from successful file recovery.
     pub resumable: bool,
     pub resume_blocker: Option<String>,
+    pub proof_status: String,
+    pub split_store: bool,
+    pub atomic_domain_supported: bool,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub audit_records: Vec<SplitStoreAuditRecord>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub convergence_hint: Option<String>,
 }
 
 fn journal_error(code: &str, detail: impl std::fmt::Display) -> error::DecapodError {
@@ -374,6 +436,517 @@ fn runtime_data_dir(root: &Path) -> PathBuf {
         }
     }
     local
+}
+
+const SPLIT_STORE_UNSUPPORTED_DETAIL: &str = "workspace-local workunit state and canonical task proof use different databases; no cross-store atomic acceptance or withdrawal is asserted. Preserve both stores and histories. Run `decapod govern workunit converge` to archive workspace-local records as not_proven audit history and converge onto the canonical atomic store, or claim a fresh task from the repository root and obtain fresh full validation in one canonical domain.";
+
+#[derive(Debug, Clone)]
+struct SplitStoreDirs {
+    local_dir: PathBuf,
+    canonical_dir: PathBuf,
+    local_db: PathBuf,
+}
+
+fn split_store_audit_dir(root: &Path) -> PathBuf {
+    root.join(".decapod").join("data").join("split-store-audit")
+}
+
+/// In a split store where `<worktree>/.decapod/data` was explicitly initialized
+/// with its own policy tables (`runtime_data_dir(root) == split.local_dir`),
+/// non-VERIFIED local workunit declarations stay isolated in the workspace-local
+/// datastore and cannot mint VERIFIED or leak into the canonical main store.
+/// When a partial/corrupt split store would route writes to the canonical main
+/// store (`runtime_data_dir(root) != split.local_dir`), fail closed immediately.
+fn ensure_non_verified_split_write_isolated(root: &Path) -> Result<(), error::DecapodError> {
+    if let Some(split) = split_store_dirs(root)?
+        && runtime_data_dir(root) != split.local_dir
+    {
+        return Err(journal_error(
+            "WORKUNIT_PROOF_ATOMIC_DOMAIN_UNSUPPORTED",
+            SPLIT_STORE_UNSUPPORTED_DETAIL,
+        ));
+    }
+    Ok(())
+}
+
+fn split_store_dirs(root: &Path) -> Result<Option<SplitStoreDirs>, error::DecapodError> {
+    if !root.join(".git").is_file() {
+        return Ok(None);
+    }
+    let Ok(main_root) = crate::core::workspace::get_main_repo_root(root) else {
+        return Ok(None);
+    };
+    if main_root == root {
+        return Ok(None);
+    }
+    let decapod_dir = root.join(".decapod");
+    let local_dir = decapod_dir.join("data");
+    for path in [&decapod_dir, &local_dir] {
+        match fs::symlink_metadata(path) {
+            Ok(meta) if meta.file_type().is_symlink() => {
+                return Err(journal_error(
+                    "WORKUNIT_PROOF_ATOMIC_DOMAIN_UNSUPPORTED",
+                    "symlinked workspace .decapod/data path cannot establish an atomic proof domain",
+                ));
+            }
+            Ok(_) | Err(_) => {}
+        }
+    }
+    let local_db = crate::core::events::canonical_db_path(&local_dir);
+    let local_todo_db = local_dir.join("todo.db");
+    for db_path in [&local_db, &local_todo_db] {
+        match fs::symlink_metadata(db_path) {
+            Ok(meta) if meta.file_type().is_symlink() => {
+                return Err(journal_error(
+                    "WORKUNIT_PROOF_ATOMIC_DOMAIN_UNSUPPORTED",
+                    "symlinked workspace database cannot establish an atomic proof domain",
+                ));
+            }
+            Ok(_) | Err(_) => {}
+        }
+    }
+    if !local_db.exists() && !local_todo_db.exists() {
+        return Ok(None);
+    }
+    let canonical_dir = main_root.join(".decapod/data");
+    if local_dir.canonicalize().ok() == canonical_dir.canonicalize().ok() {
+        return Ok(None);
+    }
+    // Linked worktrees may legitimately write `traces`-only RPC events to
+    // `<worktree>/.decapod/data/decapod.db` while `runtime_data_dir` routes
+    // workunits and policy to `<main_repo>/.decapod/data`. Only treat the
+    // worktree as a split workunit/custody store when it actually owns
+    // `todo.db`, policy tables (`agents` + `risk_zones`), `workunit` events,
+    // or an unreadable/corrupt local `decapod.db` (fail closed).
+    let local_has_split_state = if local_todo_db.exists() {
+        true
+    } else if local_db.exists() {
+        match crate::core::db::db_connect_for_validate(&local_db.to_string_lossy()) {
+            Ok(conn) => {
+                let has_policy = conn.has_table("agents").unwrap_or(false)
+                    && conn.has_table("risk_zones").unwrap_or(false);
+                let has_workunit_events = conn.has_table("events").unwrap_or(false)
+                    && conn
+                        .query_row(
+                            "SELECT EXISTS(SELECT 1 FROM events WHERE stream = ?1)",
+                            crate::core::db::params![crate::core::events::WORKUNIT],
+                            |row| row.get::<_, i64>(0),
+                        )
+                        .unwrap_or(0)
+                        != 0;
+                has_policy || has_workunit_events
+            }
+            Err(_) => true,
+        }
+    } else {
+        false
+    };
+    if !local_has_split_state {
+        return Ok(None);
+    }
+    Ok(Some(SplitStoreDirs {
+        local_dir,
+        canonical_dir,
+        local_db,
+    }))
+}
+
+fn load_archived_split_audit_records(
+    root: &Path,
+    task_filter: Option<&str>,
+) -> Result<Vec<SplitStoreAuditRecord>, error::DecapodError> {
+    let audit_root = split_store_audit_dir(root);
+    if !audit_root.exists() {
+        return Ok(Vec::new());
+    }
+    if fs::symlink_metadata(&audit_root)
+        .map_err(error::DecapodError::IoError)?
+        .file_type()
+        .is_symlink()
+    {
+        return Err(journal_error(
+            "WORKUNIT_PROOF_ATOMIC_DOMAIN_UNSUPPORTED",
+            "symlinked split-store audit archive is invalid",
+        ));
+    }
+    let mut bundle_dirs: Vec<PathBuf> = fs::read_dir(&audit_root)?
+        .filter_map(|entry| entry.ok().map(|e| e.path()))
+        .filter(|path| path.is_dir())
+        .collect();
+    bundle_dirs.sort();
+    let mut records = Vec::new();
+    for dir in bundle_dirs {
+        let audit_path = dir.join("audit.json");
+        if !audit_path.is_file() {
+            continue;
+        }
+        let bytes = read_manifest_bytes(&audit_path)?;
+        let bundle: SplitStoreAuditBundle = serde_json::from_slice(&bytes)
+            .map_err(|e| journal_error("WORKUNIT_JOURNAL_INVALID", e))?;
+        for mut record in bundle.records {
+            if task_filter.is_some_and(|tid| record.task_id != tid) {
+                continue;
+            }
+            record.proof_status = "not_proven".into();
+            record.classification = "WORKUNIT_PROOF_ATOMIC_DOMAIN_UNSUPPORTED".into();
+            records.push(record);
+        }
+    }
+    Ok(records)
+}
+
+fn collect_live_split_audit_records(
+    root: &Path,
+    split: &SplitStoreDirs,
+    task_filter: Option<&str>,
+) -> Result<Vec<SplitStoreAuditRecord>, error::DecapodError> {
+    let mut out = Vec::new();
+    let mut seen_hashes = std::collections::BTreeSet::new();
+    if split.local_db.is_file() {
+        let conn = crate::core::db::db_connect_for_validate(&split.local_db.to_string_lossy())?;
+        if conn.has_table("events")? {
+            let mut task_ids = Vec::new();
+            if let Some(tid) = task_filter {
+                validate_task_id(tid)?;
+                task_ids.push(tid.to_string());
+            } else {
+                let mut stmt = conn.prepare(
+                    "SELECT DISTINCT subject_id FROM events
+                     WHERE stream = ?1 AND subject_kind = 'task'
+                     ORDER BY subject_id ASC",
+                )?;
+                let rows = stmt.query_map(
+                    crate::core::db::params![crate::core::events::WORKUNIT],
+                    |row| row.get::<_, String>(0),
+                )?;
+                for row in rows {
+                    task_ids.push(row?);
+                }
+            }
+            for tid in task_ids {
+                if let Ok(records) = journal_records_on_conn(&conn, &tid) {
+                    for record in records {
+                        seen_hashes.insert((record.task_id.clone(), record.manifest_hash.clone()));
+                        out.push(SplitStoreAuditRecord {
+                            task_id: record.task_id,
+                            source: "workspace_local_journal".into(),
+                            generation: Some(record.generation),
+                            operation_id: Some(record.operation_id),
+                            kind: Some(record.kind),
+                            original_status: record.manifest.status.clone(),
+                            manifest_hash: record.manifest_hash,
+                            proof_status: "not_proven".into(),
+                            classification: "WORKUNIT_PROOF_ATOMIC_DOMAIN_UNSUPPORTED".into(),
+                            ts: Some(record.ts),
+                            actor: Some(record.actor),
+                            manifest: record.manifest,
+                        });
+                    }
+                } else if let Ok(events) = crate::core::events::query_subject_on_conn(
+                    &conn,
+                    crate::core::events::WORKUNIT,
+                    "task",
+                    &tid,
+                    10_000,
+                ) {
+                    for event in events {
+                        if let Ok(record) =
+                            serde_json::from_value::<WorkUnitJournalRecord>(event.payload)
+                        {
+                            seen_hashes.insert((tid.clone(), record.manifest_hash.clone()));
+                            out.push(SplitStoreAuditRecord {
+                                task_id: tid.clone(),
+                                source: "workspace_local_journal".into(),
+                                generation: Some(record.generation),
+                                operation_id: Some(record.operation_id),
+                                kind: Some(record.kind),
+                                original_status: record.manifest.status.clone(),
+                                manifest_hash: record.manifest_hash,
+                                proof_status: "not_proven".into(),
+                                classification: "WORKUNIT_PROOF_ATOMIC_DOMAIN_UNSUPPORTED".into(),
+                                ts: Some(event.ts),
+                                actor: Some(event.actor),
+                                manifest: record.manifest,
+                            });
+                        }
+                    }
+                }
+            }
+        }
+    }
+    let workunits = workunits_dir(root);
+    if workunits.is_dir() {
+        let mut files: Vec<PathBuf> = fs::read_dir(&workunits)?
+            .filter_map(|entry| entry.ok().map(|e| e.path()))
+            .filter(|path| path.extension().and_then(|s| s.to_str()) == Some("json"))
+            .collect();
+        files.sort();
+        for path in files {
+            let Some(stem) = path.file_stem().and_then(|s| s.to_str()) else {
+                continue;
+            };
+            if task_filter.is_some_and(|tid| stem != tid) {
+                continue;
+            }
+            if validate_task_id(stem).is_err() {
+                continue;
+            }
+            if let Ok(manifest) = load_workunit_projection(root, stem)
+                && let Ok(hash) = manifest.canonical_hash_hex()
+                && !seen_hashes.contains(&(manifest.task_id.clone(), hash.clone()))
+            {
+                out.push(SplitStoreAuditRecord {
+                    task_id: manifest.task_id.clone(),
+                    source: "workspace_local_projection".into(),
+                    generation: None,
+                    operation_id: None,
+                    kind: None,
+                    original_status: manifest.status.clone(),
+                    manifest_hash: hash,
+                    proof_status: "not_proven".into(),
+                    classification: "WORKUNIT_PROOF_ATOMIC_DOMAIN_UNSUPPORTED".into(),
+                    ts: None,
+                    actor: None,
+                    manifest,
+                });
+            }
+        }
+    }
+    Ok(out)
+}
+
+fn sha256_file_hex(path: &Path) -> Result<String, error::DecapodError> {
+    use std::io::Read;
+    let mut file = fs::File::open(path)?;
+    let mut hasher = Sha256::new();
+    let mut buf = [0_u8; 65536];
+    loop {
+        let n = file.read(&mut buf)?;
+        if n == 0 {
+            break;
+        }
+        hasher.update(&buf[..n]);
+    }
+    Ok(format!("sha256:{:x}", hasher.finalize()))
+}
+
+fn write_atomic_json_file(path: &Path, bytes: &[u8]) -> Result<(), error::DecapodError> {
+    use std::io::Write;
+    let parent = path
+        .parent()
+        .ok_or_else(|| journal_error("WORKUNIT_PROJECTION_INVALID", "missing parent"))?;
+    crate::core::fs_permissions::ensure_storage_dir(parent)?;
+    let temporary = parent.join(format!(
+        ".audit-{}-{}.tmp",
+        std::process::id(),
+        crate::core::ulid::new_ulid()
+    ));
+    let result = (|| {
+        let mut file = crate::core::fs_permissions::open_storage_file(
+            &temporary,
+            fs::OpenOptions::new().create_new(true).write(true),
+        )?;
+        file.write_all(bytes)?;
+        file.sync_all()?;
+        fs::rename(&temporary, path)
+    })();
+    if let Err(e) = result {
+        let _ = fs::remove_file(&temporary);
+        return Err(journal_error("WORKUNIT_PROJECTION_INVALID", e));
+    }
+    crate::core::atomic::sync_parent_directory(parent).map_err(|e| {
+        journal_error(
+            "ARTIFACT_DURABILITY_UNCONFIRMED",
+            format!("audit archive directory sync failed: {e}"),
+        )
+    })
+}
+
+/// Inspect and optionally converge a separately initialized workspace-local
+/// datastore back to the canonical atomic repository store.
+///
+/// Convergence NEVER promotes or imports workspace-local `VERIFIED` or
+/// self-declared `pass` records into current canonical `VERIFIED` authority;
+/// all workspace-local historical records are archived as `not_proven` audit
+/// history with explicit `WORKUNIT_PROOF_ATOMIC_DOMAIN_UNSUPPORTED` lineage.
+pub fn converge_split_workunit_store(
+    root: &Path,
+    task_id: Option<&str>,
+    dry_run: bool,
+) -> Result<SplitStoreConvergenceReport, error::DecapodError> {
+    if let Some(tid) = task_id {
+        validate_task_id(tid)?;
+    }
+    let canonical_dir = crate::core::store::find_governance_root(root).join(".decapod/data");
+    let canonical_db = crate::core::events::canonical_db_path(&canonical_dir);
+    let canonical_initialized = canonical_db.is_file()
+        && crate::core::db::db_connect_for_validate(&canonical_db.to_string_lossy())
+            .ok()
+            .is_some_and(|conn| {
+                conn.has_table("agents").unwrap_or(false)
+                    && conn.has_table("risk_zones").unwrap_or(false)
+            });
+
+    let Some(split) = split_store_dirs(root)? else {
+        let archived = load_archived_split_audit_records(root, task_id)?;
+        return Ok(SplitStoreConvergenceReport {
+            status: "ok".into(),
+            dry_run,
+            split_store: false,
+            atomic_domain_supported: canonical_initialized,
+            proof_status: if archived.is_empty() {
+                "canonical".into()
+            } else {
+                "not_proven".into()
+            },
+            canonical_data_dir: canonical_dir,
+            archive_dir: None,
+            archive_id: None,
+            archived_files: Vec::new(),
+            audit_records: archived,
+            message: "workspace is already converged onto the canonical atomic store".into(),
+        });
+    };
+
+    let all_records = collect_live_split_audit_records(root, &split, None)?;
+    let visible_records: Vec<SplitStoreAuditRecord> = all_records
+        .iter()
+        .filter(|r| task_id.is_none_or(|tid| r.task_id == tid))
+        .cloned()
+        .collect();
+
+    if dry_run {
+        return Ok(SplitStoreConvergenceReport {
+            status: "ok".into(),
+            dry_run: true,
+            split_store: true,
+            atomic_domain_supported: false,
+            proof_status: "not_proven".into(),
+            canonical_data_dir: split.canonical_dir,
+            archive_dir: None,
+            archive_id: None,
+            archived_files: Vec::new(),
+            audit_records: visible_records,
+            message: format!(
+                "WORKUNIT_PROOF_ATOMIC_DOMAIN_UNSUPPORTED: {SPLIT_STORE_UNSUPPORTED_DETAIL}"
+            ),
+        });
+    }
+
+    if !canonical_initialized {
+        return Err(journal_error(
+            "WORKUNIT_RUNTIME_UNINITIALIZED",
+            "canonical repository datastore is not initialized; run `decapod init` at the repository root before converging",
+        ));
+    }
+
+    crate::core::governance_document::with_lock(root, || {
+        let archive_id = crate::core::ulid::new_ulid();
+        let archive_dir = split_store_audit_dir(root).join(&archive_id);
+        crate::core::fs_permissions::ensure_storage_dir(&archive_dir)?;
+
+        let local_db_sha256 = if split.local_db.is_file() {
+            Some(sha256_file_hex(&split.local_db)?)
+        } else {
+            None
+        };
+
+        let mut archived_files = Vec::new();
+        let db_candidates = [
+            "decapod.db",
+            "decapod.db-wal",
+            "decapod.db-shm",
+            "todo.db",
+            "todo.db-wal",
+            "todo.db-shm",
+        ];
+        for name in &db_candidates {
+            let src = split.local_dir.join(name);
+            if src.exists() {
+                archived_files.push((*name).to_string());
+            }
+        }
+
+        let workunits_path = workunits_dir(root);
+        let mut projection_files = Vec::new();
+        if workunits_path.is_dir() {
+            let mut entries: Vec<PathBuf> = fs::read_dir(&workunits_path)?
+                .filter_map(|entry| entry.ok().map(|e| e.path()))
+                .filter(|path| path.extension().and_then(|s| s.to_str()) == Some("json"))
+                .collect();
+            entries.sort();
+            for path in entries {
+                if let Some(name) = path.file_name().and_then(|s| s.to_str()) {
+                    archived_files.push(format!("workunits/{name}"));
+                    projection_files.push(path);
+                }
+            }
+        }
+
+        let bundle = SplitStoreAuditBundle {
+            schema_version: "decapod.workunit-split-audit.v1".into(),
+            archive_id: archive_id.clone(),
+            archived_at: crate::core::time::now_epoch_z(),
+            classification: "WORKUNIT_PROOF_ATOMIC_DOMAIN_UNSUPPORTED".into(),
+            proof_status: "not_proven".into(),
+            local_data_dir: split.local_dir.to_string_lossy().into_owned(),
+            canonical_data_dir: split.canonical_dir.to_string_lossy().into_owned(),
+            local_db_sha256,
+            archived_files: archived_files.clone(),
+            records: all_records,
+        };
+        let bundle_bytes = serde_json::to_vec_pretty(&bundle)
+            .map_err(|e| journal_error("WORKUNIT_JOURNAL_INVALID", e))?;
+        write_atomic_json_file(&archive_dir.join("audit.json"), &bundle_bytes)?;
+
+        if !projection_files.is_empty() {
+            let archive_workunits = archive_dir.join("workunits");
+            crate::core::fs_permissions::ensure_storage_dir(&archive_workunits)?;
+            let canonical_conn =
+                crate::core::db::db_connect_for_validate(&canonical_db.to_string_lossy())?;
+            for path in projection_files {
+                let Some(file_name) = path.file_name().and_then(|s| s.to_str()) else {
+                    continue;
+                };
+                let Some(stem) = path.file_stem().and_then(|s| s.to_str()) else {
+                    continue;
+                };
+                fs::copy(&path, archive_workunits.join(file_name))?;
+                let canonical_latest = validate_task_id(stem)
+                    .ok()
+                    .and_then(|()| journal_records_on_conn(&canonical_conn, stem).ok())
+                    .and_then(|mut records| records.pop());
+                if let Some(record) = canonical_latest {
+                    publish_projection(root, &record.manifest)?;
+                } else {
+                    fs::remove_file(&path)?;
+                }
+            }
+        }
+
+        for name in &db_candidates {
+            let src = split.local_dir.join(name);
+            if src.exists() {
+                fs::rename(&src, archive_dir.join(name))?;
+            }
+        }
+        let _ = crate::core::atomic::sync_parent_directory(&archive_dir);
+        let _ = crate::core::atomic::sync_parent_directory(&split.local_dir);
+
+        Ok(SplitStoreConvergenceReport {
+            status: "ok".into(),
+            dry_run: false,
+            split_store: false,
+            atomic_domain_supported: true,
+            proof_status: "not_proven".into(),
+            canonical_data_dir: split.canonical_dir,
+            archive_dir: Some(archive_dir),
+            archive_id: Some(archive_id),
+            archived_files,
+            audit_records: visible_records,
+            message: "workspace-local split store archived as not_proven audit history; workspace now resolves to the canonical atomic store".into(),
+        })
+    })
 }
 
 /// Workunit mutations require the existing initialized runtime policy owner.
@@ -473,7 +1046,12 @@ fn journal_records_on_conn(
             || record.record_hash != record_hash(&record)?
             || !matches!(
                 record.kind.as_str(),
-                "initialized" | "legacy_baseline" | "mutation" | "checkpoint" | "resumed"
+                "initialized"
+                    | "legacy_baseline"
+                    | "mutation"
+                    | "checkpoint"
+                    | "resumed"
+                    | "validation_not_ready"
             )
         {
             return Err(journal_error(
@@ -823,6 +1401,12 @@ fn verify_resume_record(
         ));
     }
     if record.manifest.status == WorkUnitStatus::Verified {
+        if split_store_dirs(root)?.is_some() {
+            return Err(journal_error(
+                "WORKUNIT_PROOF_ATOMIC_DOMAIN_UNSUPPORTED",
+                SPLIT_STORE_UNSUPPORTED_DETAIL,
+            ));
+        }
         validate_observed_workunit_proof(root, &record.manifest)?;
         ensure_living_specs_bound_for_proof(root, &record.manifest)?;
         if record.legacy_baseline && record.kind == "legacy_baseline" {
@@ -844,6 +1428,35 @@ fn append_snapshot(
     binding: Option<crate::core::trajectory::ExecutionStateBinding>,
     proof_hashes: std::collections::BTreeMap<String, String>,
 ) -> Result<WorkUnitJournalRecord, error::DecapodError> {
+    append_snapshot_with_custody(
+        root,
+        manifest,
+        operation_id,
+        kind,
+        AppendPrecondition {
+            generation: expected_generation,
+            custody: None,
+        },
+        binding,
+        proof_hashes,
+    )
+}
+
+struct AppendPrecondition<'a> {
+    generation: u64,
+    custody: Option<&'a crate::core::todo::HistoricalTaskBinding>,
+}
+
+fn append_snapshot_with_custody(
+    root: &Path,
+    manifest: &WorkUnitManifest,
+    operation_id: &str,
+    kind: &str,
+    precondition: AppendPrecondition<'_>,
+    binding: Option<crate::core::trajectory::ExecutionStateBinding>,
+    proof_hashes: std::collections::BTreeMap<String, String>,
+) -> Result<WorkUnitJournalRecord, error::DecapodError> {
+    let expected_generation = precondition.generation;
     validate_operation_id(operation_id)?;
     validate_task_id(&manifest.task_id)?;
     if serde_json::to_vec_pretty(manifest)
@@ -867,17 +1480,23 @@ fn append_snapshot(
         |conn| {
             let records = journal_records_on_conn(conn, &manifest.task_id)?;
             let latest = records.last();
-            if manifest.status == WorkUnitStatus::Verified
-                && (binding.is_some() || !matches!(kind, "initialized" | "legacy_baseline"))
+            let verified = manifest.status == WorkUnitStatus::Verified
+                && (binding.is_some() || !matches!(kind, "initialized" | "legacy_baseline"));
+            if verified || precondition.custody.is_some()
             {
                 let canonical = crate::core::store::find_governance_root(root).join(".decapod/data");
                 if crate::core::events::canonical_db_path(&data).canonicalize()?
                     != crate::core::events::canonical_db_path(&canonical).canonicalize()?
                 {
                     return Err(journal_error("WORKUNIT_PROOF_ATOMIC_DOMAIN_UNSUPPORTED",
-                        "workspace-local workunit state and canonical task proof use different databases; no cross-store atomic acceptance is asserted"));
+                        "workspace-local workunit state and canonical task proof use different databases; no cross-store atomic acceptance or withdrawal is asserted. Preserve both stores and histories. From the repository root, claim a fresh task and use decapod workspace ensure without separately initializing workspace storage; reauthor its required intent/spec/proof plan and obtain fresh full validation in one canonical domain. This does not migrate or authenticate the prior store."));
                 }
-                crate::core::validation_history::check_workunit_append_on_conn(conn, manifest)?;
+                if verified {
+                    crate::core::validation_history::check_workunit_append_on_conn(conn, manifest)?;
+                }
+                if let Some(custody) = precondition.custody {
+                    crate::core::todo::check_validation_binding_on_conn(conn, custody, false)?;
+                }
             }
             let manifest_hash = manifest
                 .canonical_hash_hex()
@@ -941,6 +1560,57 @@ fn append_snapshot(
             Ok(record)
         },
     )
+}
+
+/// Withdraw current proof after a full validator judgment. This grants no
+/// success and preserves the original observations in the append-only journal.
+pub(crate) fn invalidate_current_validation(
+    root: &Path,
+    custody: &crate::core::todo::HistoricalTaskBinding,
+    subject: &WorkUnitValidationSubject,
+) -> Result<(), error::DecapodError> {
+    with_workunit_lock(root, || {
+        let previous = journal_records(root, &custody.task_id)?
+            .pop()
+            .ok_or_else(|| {
+                journal_error(
+                    "WORKUNIT_GENERATION_CONFLICT",
+                    "observed workunit is missing",
+                )
+            })?;
+        if previous.generation != subject.generation
+            || previous.manifest_hash != subject.manifest_digest
+            || validation_contract_digest(&previous.manifest)? != subject.contract_digest
+        {
+            return Err(journal_error(
+                "WORKUNIT_GENERATION_CONFLICT",
+                "workunit changed during full validation",
+            ));
+        }
+        let mut manifest = previous.manifest;
+        if manifest.status == WorkUnitStatus::Verified {
+            manifest.status = WorkUnitStatus::Claimed;
+        }
+        manifest.proof_results.clear();
+        manifest.validation_epoch = None;
+        manifest.validation_record = None;
+        // Advance even if no proof was promoted: a prior successful record
+        // must not become applicable again after this newer judgment.
+        let record = append_snapshot_with_custody(
+            root,
+            &manifest,
+            &crate::core::ulid::new_ulid(),
+            "validation_not_ready",
+            AppendPrecondition {
+                generation: subject.generation,
+                custody: Some(custody),
+            },
+            previous.binding,
+            Default::default(),
+        )?;
+        publish_projection(root, &record.manifest)?;
+        Ok(())
+    })
 }
 
 fn baseline_if_needed(
@@ -1029,6 +1699,7 @@ fn mutate_workunit_with_proof_gate(
     mutate: impl FnOnce(&mut WorkUnitManifest) -> Result<(), error::DecapodError>,
 ) -> Result<WorkUnitManifest, error::DecapodError> {
     with_workunit_lock(root, || {
+        ensure_non_verified_split_write_isolated(root)?;
         let previous = baseline_if_needed(root, task_id)?;
         if !projection_matches(root, &previous)? {
             return Err(journal_error(
@@ -1061,6 +1732,12 @@ fn mutate_workunit_with_proof_gate(
             )?;
         }
         if manifest.status == WorkUnitStatus::Verified {
+            if split_store_dirs(root)?.is_some() {
+                return Err(journal_error(
+                    "WORKUNIT_PROOF_ATOMIC_DOMAIN_UNSUPPORTED",
+                    SPLIT_STORE_UNSUPPORTED_DETAIL,
+                ));
+            }
             if previous.binding.is_none() {
                 return Err(journal_error(
                     "WORKUNIT_CHECKPOINT_REQUIRED",
@@ -1103,6 +1780,20 @@ pub fn workunit_journal_status(
     root: &Path,
     task_id: &str,
 ) -> Result<WorkUnitJournalStatus, error::DecapodError> {
+    let split = split_store_dirs(root)?;
+    let mut audit_records = Vec::new();
+    if let Some(ref split_dirs) = split {
+        audit_records.extend(collect_live_split_audit_records(
+            root,
+            split_dirs,
+            Some(task_id),
+        )?);
+    }
+    audit_records.extend(load_archived_split_audit_records(root, Some(task_id))?);
+    let convergence_hint = split.as_ref().map(|_| {
+        "Run `decapod govern workunit converge` to archive workspace-local records as not_proven audit history and converge onto the canonical atomic store.".to_string()
+    });
+
     let records = journal_records(root, task_id)?;
     let Some(record) = records.last() else {
         let exists = workunit_path(root, task_id)?.exists()
@@ -1110,20 +1801,42 @@ pub fn workunit_journal_status(
                 .join(".decapod/governance/workunits")
                 .join(format!("{task_id}.json"))
                 .exists();
+        let has_archived_split = !audit_records.is_empty() && split.is_none();
+        let projection_state = if exists {
+            "legacy_unjournaled"
+        } else if has_archived_split {
+            "split_audit_archived"
+        } else {
+            "absent"
+        };
+        let proof_status = if split.is_some() || exists || has_archived_split {
+            "not_proven"
+        } else {
+            "absent"
+        };
+        let resume_blocker = if split.is_some() {
+            Some(format!(
+                "WORKUNIT_PROOF_ATOMIC_DOMAIN_UNSUPPORTED: {SPLIT_STORE_UNSUPPORTED_DETAIL}"
+            ))
+        } else if has_archived_split {
+            Some("WORKUNIT_PROOF_ATOMIC_DOMAIN_UNSUPPORTED: workspace-local historical records were archived as not_proven audit history; obtain fresh canonical proof for a current task".into())
+        } else {
+            Some("WORKUNIT_CHECKPOINT_REQUIRED".into())
+        };
         return Ok(WorkUnitJournalStatus {
             task_id: task_id.into(),
             generation: None,
             checkpoint_id: None,
             checkpoint_hash: None,
-            projection_state: if exists {
-                "legacy_unjournaled"
-            } else {
-                "absent"
-            }
-            .into(),
+            projection_state: projection_state.into(),
             legacy_baseline: exists,
             resumable: false,
-            resume_blocker: Some("WORKUNIT_CHECKPOINT_REQUIRED".into()),
+            resume_blocker,
+            proof_status: proof_status.into(),
+            split_store: split.is_some(),
+            atomic_domain_supported: split.is_none(),
+            audit_records,
+            convergence_hint,
         });
     };
     let projection_state = match load_workunit_projection(root, task_id) {
@@ -1137,9 +1850,47 @@ pub fn workunit_journal_status(
         Err(error::DecapodError::NotFound(_)) => "missing",
         Err(_) => "invalid",
     };
-    let resume_blocker = verify_resume_record(root, record)
-        .err()
-        .map(|e| e.to_string());
+    let (resumable, resume_blocker, proof_status) = if split.is_some() {
+        (
+            false,
+            Some(format!(
+                "WORKUNIT_PROOF_ATOMIC_DOMAIN_UNSUPPORTED: {SPLIT_STORE_UNSUPPORTED_DETAIL}"
+            )),
+            "not_proven".to_string(),
+        )
+    } else {
+        let resume_blocker = verify_resume_record(root, record)
+            .err()
+            .map(|e| e.to_string());
+        let resumable = projection_state == "current" && resume_blocker.is_none();
+        let proof_status = if record.manifest.status == WorkUnitStatus::Verified {
+            match validate_verified_manifest(root, &record.manifest) {
+                Ok(()) => "proven".to_string(),
+                Err(err) => {
+                    let msg = err.to_string();
+                    if record.manifest.validation_record.is_some()
+                        && (msg.contains("WORKUNIT_PROOF_STALE")
+                            || msg.contains("WORKUNIT_PROOF_CHANGED")
+                            || msg.contains("EXECUTION_STATE_CHANGED")
+                            || msg.contains("EXECUTION_CUSTODY_STALE")
+                            || msg.contains("VALIDATION_HISTORY"))
+                    {
+                        "stale".to_string()
+                    } else {
+                        "not_proven".to_string()
+                    }
+                }
+            }
+        } else if records
+            .iter()
+            .any(|prior| prior.manifest.validation_record.is_some())
+        {
+            "stale".to_string()
+        } else {
+            "not_proven".to_string()
+        };
+        (resumable, resume_blocker, proof_status)
+    };
     Ok(WorkUnitJournalStatus {
         task_id: task_id.into(),
         generation: Some(record.generation),
@@ -1147,8 +1898,13 @@ pub fn workunit_journal_status(
         checkpoint_hash: Some(record.record_hash.clone()),
         projection_state: projection_state.into(),
         legacy_baseline: record.legacy_baseline,
-        resumable: projection_state == "current" && resume_blocker.is_none(),
+        resumable,
         resume_blocker,
+        proof_status,
+        split_store: split.is_some(),
+        atomic_domain_supported: split.is_none(),
+        audit_records,
+        convergence_hint,
     })
 }
 
@@ -1161,6 +1917,7 @@ pub fn checkpoint_workunit(
     expected_generation: Option<u64>,
 ) -> Result<WorkUnitJournalStatus, error::DecapodError> {
     with_workunit_lock(root, || {
+        ensure_non_verified_split_write_isolated(root)?;
         let previous = baseline_if_needed(root, task_id)?;
         let records = journal_records(root, task_id)?;
         if let Some(existing) = records
@@ -1272,6 +2029,12 @@ pub fn resume_workunit(
     expected_generation: Option<u64>,
 ) -> Result<WorkUnitJournalStatus, error::DecapodError> {
     with_workunit_lock(root, || {
+        if split_store_dirs(root)?.is_some() {
+            return Err(journal_error(
+                "WORKUNIT_PROOF_ATOMIC_DOMAIN_UNSUPPORTED",
+                SPLIT_STORE_UNSUPPORTED_DETAIL,
+            ));
+        }
         let records = journal_records(root, task_id)?;
         let previous = records.last().ok_or_else(|| {
             journal_error(
@@ -1330,6 +2093,7 @@ pub fn write_workunit_checked(
     expected_generation: u64,
 ) -> Result<PathBuf, error::DecapodError> {
     with_workunit_lock(root, || {
+        ensure_non_verified_split_write_isolated(root)?;
         let previous = baseline_if_needed(root, &manifest.task_id)?;
         if manifest.intent_ref != previous.manifest.intent_ref
             || manifest.proof_plan != previous.manifest.proof_plan
@@ -1399,6 +2163,7 @@ pub fn init_workunit(
     intent_ref: &str,
 ) -> Result<WorkUnitManifest, error::DecapodError> {
     with_workunit_lock(project_root, || {
+        ensure_non_verified_split_write_isolated(project_root)?;
         if workunit_path(project_root, task_id)?.exists()
             || !journal_records(project_root, task_id)?.is_empty()
         {
@@ -1578,6 +2343,12 @@ pub fn transition_status(
     task_id: &str,
     to: WorkUnitStatus,
 ) -> Result<WorkUnitManifest, error::DecapodError> {
+    if to == WorkUnitStatus::Verified && split_store_dirs(root)?.is_some() {
+        return Err(journal_error(
+            "WORKUNIT_PROOF_ATOMIC_DOMAIN_UNSUPPORTED",
+            SPLIT_STORE_UNSUPPORTED_DETAIL,
+        ));
+    }
     let gate = if to == WorkUnitStatus::Verified {
         let manifest = load_workunit(root, task_id)?;
         crate::core::validation_history::ensure_full_validation_plan(&manifest.proof_plan)?;
@@ -1593,6 +2364,12 @@ pub fn transition_status(
             )));
         }
         if to == WorkUnitStatus::Verified {
+            if split_store_dirs(root)?.is_some() {
+                return Err(journal_error(
+                    "WORKUNIT_PROOF_ATOMIC_DOMAIN_UNSUPPORTED",
+                    SPLIT_STORE_UNSUPPORTED_DETAIL,
+                ));
+            }
             if journal_records(root, task_id)?
                 .last()
                 .is_none_or(|record| record.binding.is_none())
@@ -1649,6 +2426,12 @@ pub fn validate_verified_manifest(
     root: &Path,
     manifest: &WorkUnitManifest,
 ) -> Result<(), error::DecapodError> {
+    if split_store_dirs(root)?.is_some() {
+        return Err(journal_error(
+            "WORKUNIT_PROOF_ATOMIC_DOMAIN_UNSUPPORTED",
+            SPLIT_STORE_UNSUPPORTED_DETAIL,
+        ));
+    }
     let records = journal_records(root, &manifest.task_id)?;
     let current = records.last().ok_or_else(|| {
         journal_error(

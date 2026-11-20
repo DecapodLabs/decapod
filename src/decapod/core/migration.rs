@@ -13,7 +13,7 @@ use serde_json::Value;
 use sha2::{Digest, Sha256};
 use std::collections::{HashMap, HashSet};
 use std::fs;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 
 /// Current Decapod version from Cargo.toml
 pub const DECAPOD_VERSION: &str = env!("CARGO_PKG_VERSION");
@@ -189,9 +189,9 @@ pub fn all_migrations() -> Vec<Migration> {
             scope: "global",
             kind: "rust",
             script_path: None,
-            min_version: "0.141.0",
-            target_version: "0.141.0",
-            description: "Compact historical event envelopes, deduplicate agent prompts, initialize externalized component tables, and stamp v2 storage format compatibility (#1630)",
+            min_version: schemas::STORAGE_MIN_WRITER_VERSION,
+            target_version: schemas::STORAGE_MIN_WRITER_VERSION,
+            description: "Compact historical event envelopes, deduplicate agent prompts, initialize externalized component tables, and stamp v2 storage format compatibility (#1630, #1739)",
             up: migrate_compact_lossless_storage_v002,
         },
     ]
@@ -423,25 +423,162 @@ impl AppliedMigrationLedger {
     }
 }
 
-#[derive(Debug, Clone, Serialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 struct MigrationCatalogEntry {
     id: String,
     sequence: u32,
     scope: String,
     kind: String,
+    #[serde(default)]
     script_path: Option<String>,
     min_version: String,
     target_version: String,
     description: String,
 }
 
-#[derive(Debug, Clone, Serialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 struct MigrationCatalog {
     schema_version: String,
+    #[serde(default)]
     generated_at: String,
     latest_sequence: u32,
     count: usize,
     migrations: Vec<MigrationCatalogEntry>,
+}
+
+#[derive(Debug, Clone, Serialize, PartialEq, Eq)]
+#[serde(rename_all = "snake_case")]
+pub enum MigrationArtifactStatus {
+    Observed,
+    Absent,
+    Invalid,
+    Unavailable,
+}
+
+#[derive(Debug, Clone, Serialize)]
+pub struct VersionCounterObservation {
+    pub status: MigrationArtifactStatus,
+    pub path: String,
+    pub schema_version: Option<String>,
+    pub version_count: Option<u64>,
+    pub initialized_with_version: Option<String>,
+    pub last_seen_version: Option<String>,
+    pub updated_at: Option<String>,
+    pub version_changed_from_binary: bool,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub detail: Option<String>,
+}
+
+#[derive(Debug, Clone, Serialize)]
+pub struct AppliedMigrationView {
+    pub id: String,
+    pub sequence: u32,
+    pub scope: String,
+    pub kind: String,
+    pub script_path: Option<String>,
+    pub min_version: String,
+    pub target_version: String,
+    pub applied_at: String,
+    pub applied_by_version: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub description: Option<String>,
+}
+
+#[derive(Debug, Clone, Serialize)]
+pub struct AppliedLedgerObservation {
+    pub status: MigrationArtifactStatus,
+    pub path: String,
+    pub schema_version: Option<String>,
+    pub count: usize,
+    pub entries: Vec<AppliedMigrationView>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub detail: Option<String>,
+}
+
+#[derive(Debug, Clone, Serialize)]
+pub struct CatalogMigrationView {
+    pub id: String,
+    pub sequence: u32,
+    pub scope: String,
+    pub kind: String,
+    pub script_path: Option<String>,
+    pub min_version: String,
+    pub target_version: String,
+    pub description: String,
+    pub applied: bool,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub applied_at: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub applied_by_version: Option<String>,
+}
+
+#[derive(Debug, Clone, Serialize)]
+pub struct CatalogObservation {
+    pub status: MigrationArtifactStatus,
+    pub path: String,
+    pub schema_version: Option<String>,
+    pub generated_at: Option<String>,
+    pub on_disk_latest_sequence: Option<u32>,
+    pub on_disk_count: Option<usize>,
+    pub compiled_latest_sequence: u32,
+    pub compiled_count: usize,
+    pub migrations: Vec<CatalogMigrationView>,
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub on_disk_extra_ids: Vec<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub detail: Option<String>,
+}
+
+#[derive(Debug, Clone, Serialize)]
+pub struct PendingMigrationView {
+    pub id: String,
+    pub sequence: u32,
+    pub scope: String,
+    pub kind: String,
+    pub script_path: Option<String>,
+    pub min_version: String,
+    pub target_version: String,
+    pub description: String,
+}
+
+#[derive(Debug, Clone, Serialize)]
+pub struct MigrationInspectionReport {
+    pub schema_version: String,
+    pub read_only: bool,
+    pub non_initializing: bool,
+    pub current_binary_version: String,
+    pub workspace_root: String,
+    pub governance_root: String,
+    pub decapod_root: String,
+    pub workspace_decapod_root: String,
+    pub differs_from_workspace_decapod: bool,
+    pub action_required: bool,
+    pub status: String,
+    pub reason_codes: Vec<String>,
+    pub version_counter: VersionCounterObservation,
+    pub applied: AppliedLedgerObservation,
+    pub catalog: CatalogObservation,
+    pub pending_migrations: Vec<PendingMigrationView>,
+    pub pending_legacy_databases: Vec<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub pending_legacy_todo_recovery: Option<String>,
+    pub database_present: bool,
+    pub instructions: Vec<String>,
+}
+
+impl MigrationInspectionReport {
+    pub fn has_blocking_or_corrupt_artifact(&self) -> bool {
+        matches!(
+            self.version_counter.status,
+            MigrationArtifactStatus::Invalid | MigrationArtifactStatus::Unavailable
+        ) || matches!(
+            self.applied.status,
+            MigrationArtifactStatus::Invalid | MigrationArtifactStatus::Unavailable
+        ) || matches!(
+            self.catalog.status,
+            MigrationArtifactStatus::Invalid | MigrationArtifactStatus::Unavailable
+        ) || self.pending_legacy_todo_recovery.is_some()
+    }
 }
 
 #[derive(Debug, Clone)]
@@ -459,6 +596,7 @@ pub struct DbSchemaVersionCheck {
 /// instead of silently changing the environment underneath the agent.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct MigrationReport {
+    pub decapod_root: PathBuf,
     pub previous_version: Option<String>,
     pub current_version: String,
     pub version_changed: bool,
@@ -477,11 +615,598 @@ impl MigrationReport {
         } else {
             self.applied_migrations.join(", ")
         };
+        let applied_path = self.decapod_root.join(GENERATED_APPLIED_MIGRATIONS);
+        let catalog_path = self.decapod_root.join(GENERATED_MIGRATION_CATALOG);
         Some(format!(
-            "Decapod migration notice: the environment changed from {previous} to {}. Applied migrations: {applied}. Inspect .decapod/managed/migrations/applied.json and catalog.json, then follow any migration-specific instructions before continuing agent work.",
-            self.current_version
+            "Decapod migration notice: the environment changed from {previous} to {}. Applied migrations: {applied}. Run `decapod system migrations --format json` to inspect migration status and any required instructions (resolved decapod_root: {}; applied.json: {}; catalog.json: {}) before continuing agent work.",
+            self.current_version,
+            self.decapod_root.display(),
+            applied_path.display(),
+            catalog_path.display(),
         ))
     }
+}
+
+const MAX_MIGRATION_ARTIFACT_BYTES: u64 = 4 * 1024 * 1024;
+
+enum ArtifactRead<T> {
+    Observed(T),
+    Absent,
+    Invalid(String),
+    Unavailable(String),
+}
+
+fn read_json_artifact_readonly<T: serde::de::DeserializeOwned>(path: &Path) -> ArtifactRead<T> {
+    let metadata = match fs::symlink_metadata(path) {
+        Ok(meta) => meta,
+        Err(error) if error.kind() == std::io::ErrorKind::NotFound => return ArtifactRead::Absent,
+        Err(error) => {
+            return ArtifactRead::Unavailable(format!("cannot stat {}: {error}", path.display()));
+        }
+    };
+    if metadata.file_type().is_symlink() || !metadata.file_type().is_file() {
+        return ArtifactRead::Unavailable(format!("{} is not a regular file", path.display()));
+    }
+    if metadata.len() > MAX_MIGRATION_ARTIFACT_BYTES {
+        return ArtifactRead::Invalid(format!(
+            "{} exceeds {MAX_MIGRATION_ARTIFACT_BYTES} byte inspection limit",
+            path.display()
+        ));
+    }
+    let raw = match fs::read_to_string(path) {
+        Ok(raw) => raw,
+        Err(error) => {
+            return ArtifactRead::Unavailable(format!("cannot read {}: {error}", path.display()));
+        }
+    };
+    match serde_json::from_str::<T>(&raw) {
+        Ok(parsed) => ArtifactRead::Observed(parsed),
+        Err(error) => ArtifactRead::Invalid(format!("invalid JSON in {}: {error}", path.display())),
+    }
+}
+
+fn normalize_path_for_compare(path: &Path) -> PathBuf {
+    fs::canonicalize(path).unwrap_or_else(|_| path.to_path_buf())
+}
+
+/// Inspect migration ledger, catalog, version counter, and pending migration
+/// state without creating directories, opening SQLite, or advancing state.
+pub fn inspect_migration_state(
+    workspace_root: &Path,
+) -> Result<MigrationInspectionReport, error::DecapodError> {
+    let governance_root = crate::core::store::find_governance_root(workspace_root);
+    let decapod_root = governance_root.join(".decapod");
+    inspect_migration_state_at(workspace_root, &governance_root, &decapod_root)
+}
+
+/// Inspect migration state using an explicit `workspace_root`,
+/// `governance_root`, and `decapod_root` without mutating repository state.
+pub fn inspect_migration_state_at(
+    workspace_root: &Path,
+    governance_root: &Path,
+    decapod_root: &Path,
+) -> Result<MigrationInspectionReport, error::DecapodError> {
+    let mut compiled = all_migrations();
+    compiled.sort_by_key(|m| m.sequence);
+    validate_migration_plan(&compiled)?;
+    let compiled_by_id: HashMap<&str, &Migration> = compiled.iter().map(|m| (m.id, m)).collect();
+    let compiled_latest_sequence = compiled.iter().map(|m| m.sequence).max().unwrap_or(0);
+
+    let workspace_decapod_root = workspace_root.join(".decapod");
+    let differs_from_workspace_decapod = normalize_path_for_compare(decapod_root)
+        != normalize_path_for_compare(&workspace_decapod_root);
+
+    let mut reason_codes: Vec<String> = Vec::new();
+    let mut instructions: Vec<String> = Vec::new();
+    let mut action_required = false;
+
+    let version_counter_path = decapod_root.join(GENERATED_VERSION_COUNTER);
+    let version_counter = match read_json_artifact_readonly::<GeneratedVersionCounter>(
+        &version_counter_path,
+    ) {
+        ArtifactRead::Observed(counter) => {
+            let changed = counter.last_seen_version != DECAPOD_VERSION;
+            if changed {
+                action_required = true;
+                reason_codes.push("VERSION_TRANSITION_PENDING".to_string());
+                instructions.push(format!(
+                    "Environment version transition pending ({} -> {}) at resolved decapod_root {}; run `decapod activate` or the next governed command to record the transition.",
+                    counter.last_seen_version,
+                    DECAPOD_VERSION,
+                    decapod_root.display(),
+                ));
+            }
+            VersionCounterObservation {
+                status: MigrationArtifactStatus::Observed,
+                path: version_counter_path.display().to_string(),
+                schema_version: Some(counter.schema_version),
+                version_count: Some(counter.version_count),
+                initialized_with_version: Some(counter.initialized_with_version),
+                last_seen_version: Some(counter.last_seen_version),
+                updated_at: Some(counter.updated_at),
+                version_changed_from_binary: changed,
+                detail: None,
+            }
+        }
+        ArtifactRead::Absent => {
+            action_required = true;
+            reason_codes.push("VERSION_COUNTER_ABSENT".to_string());
+            VersionCounterObservation {
+                status: MigrationArtifactStatus::Absent,
+                path: version_counter_path.display().to_string(),
+                schema_version: None,
+                version_count: None,
+                initialized_with_version: None,
+                last_seen_version: None,
+                updated_at: None,
+                version_changed_from_binary: false,
+                detail: None,
+            }
+        }
+        ArtifactRead::Invalid(detail) => {
+            action_required = true;
+            reason_codes.push("VERSION_COUNTER_INVALID".to_string());
+            instructions.push(format!("Repair invalid version counter: {detail}"));
+            VersionCounterObservation {
+                status: MigrationArtifactStatus::Invalid,
+                path: version_counter_path.display().to_string(),
+                schema_version: None,
+                version_count: None,
+                initialized_with_version: None,
+                last_seen_version: None,
+                updated_at: None,
+                version_changed_from_binary: false,
+                detail: Some(detail),
+            }
+        }
+        ArtifactRead::Unavailable(detail) => {
+            action_required = true;
+            reason_codes.push("VERSION_COUNTER_UNAVAILABLE".to_string());
+            instructions.push(format!("Inspect unreadable version counter: {detail}"));
+            VersionCounterObservation {
+                status: MigrationArtifactStatus::Unavailable,
+                path: version_counter_path.display().to_string(),
+                schema_version: None,
+                version_count: None,
+                initialized_with_version: None,
+                last_seen_version: None,
+                updated_at: None,
+                version_changed_from_binary: false,
+                detail: Some(detail),
+            }
+        }
+    };
+
+    let applied_path = decapod_root.join(GENERATED_APPLIED_MIGRATIONS);
+    let mut applied_by_id: HashMap<String, AppliedMigrationEntry> = HashMap::new();
+    let (applied_ledger_known, applied) =
+        match read_json_artifact_readonly::<AppliedMigrationLedger>(&applied_path) {
+            ArtifactRead::Observed(ledger) => {
+                let mut entries = Vec::with_capacity(ledger.entries.len());
+                for entry in ledger.entries {
+                    let description = compiled_by_id
+                        .get(entry.id.as_str())
+                        .map(|m| m.description.to_string());
+                    applied_by_id.insert(entry.id.clone(), entry.clone());
+                    entries.push(AppliedMigrationView {
+                        id: entry.id,
+                        sequence: entry.sequence,
+                        scope: entry.scope,
+                        kind: entry.kind,
+                        script_path: entry.script_path,
+                        min_version: entry.min_version,
+                        target_version: entry.target_version,
+                        applied_at: entry.applied_at,
+                        applied_by_version: entry.applied_by_version,
+                        description,
+                    });
+                }
+                (
+                    true,
+                    AppliedLedgerObservation {
+                        status: MigrationArtifactStatus::Observed,
+                        path: applied_path.display().to_string(),
+                        schema_version: Some(ledger.schema_version),
+                        count: entries.len(),
+                        entries,
+                        detail: None,
+                    },
+                )
+            }
+            ArtifactRead::Absent => {
+                action_required = true;
+                reason_codes.push("APPLIED_LEDGER_ABSENT".to_string());
+                (
+                    true,
+                    AppliedLedgerObservation {
+                        status: MigrationArtifactStatus::Absent,
+                        path: applied_path.display().to_string(),
+                        schema_version: None,
+                        count: 0,
+                        entries: Vec::new(),
+                        detail: None,
+                    },
+                )
+            }
+            ArtifactRead::Invalid(detail) => {
+                action_required = true;
+                reason_codes.push("APPLIED_LEDGER_INVALID".to_string());
+                instructions.push(format!("Repair invalid applied migration ledger: {detail}"));
+                (
+                    false,
+                    AppliedLedgerObservation {
+                        status: MigrationArtifactStatus::Invalid,
+                        path: applied_path.display().to_string(),
+                        schema_version: None,
+                        count: 0,
+                        entries: Vec::new(),
+                        detail: Some(detail),
+                    },
+                )
+            }
+            ArtifactRead::Unavailable(detail) => {
+                action_required = true;
+                reason_codes.push("APPLIED_LEDGER_UNAVAILABLE".to_string());
+                instructions.push(format!(
+                    "Inspect unreadable applied migration ledger: {detail}"
+                ));
+                (
+                    false,
+                    AppliedLedgerObservation {
+                        status: MigrationArtifactStatus::Unavailable,
+                        path: applied_path.display().to_string(),
+                        schema_version: None,
+                        count: 0,
+                        entries: Vec::new(),
+                        detail: Some(detail),
+                    },
+                )
+            }
+        };
+
+    let unknown_applied_ids: Vec<String> = applied
+        .entries
+        .iter()
+        .filter(|entry| !compiled_by_id.contains_key(entry.id.as_str()))
+        .map(|entry| entry.id.clone())
+        .collect();
+    if !unknown_applied_ids.is_empty() {
+        action_required = true;
+        reason_codes.push("UNKNOWN_APPLIED_MIGRATIONS".to_string());
+        instructions.push(format!(
+            "Applied ledger contains migration ID(s) unknown to Decapod v{DECAPOD_VERSION}: {}; verify binary compatibility before modifying state.",
+            unknown_applied_ids.join(", ")
+        ));
+    }
+
+    let catalog_path = decapod_root.join(GENERATED_MIGRATION_CATALOG);
+    let catalog_migrations: Vec<CatalogMigrationView> = compiled
+        .iter()
+        .map(|m| {
+            let entry = applied_by_id.get(m.id);
+            CatalogMigrationView {
+                id: m.id.to_string(),
+                sequence: m.sequence,
+                scope: m.scope.to_string(),
+                kind: m.kind.to_string(),
+                script_path: m.script_path.map(str::to_string),
+                min_version: m.min_version.to_string(),
+                target_version: m.target_version.to_string(),
+                description: m.description.to_string(),
+                applied: entry.is_some(),
+                applied_at: entry.map(|e| e.applied_at.clone()),
+                applied_by_version: entry.map(|e| e.applied_by_version.clone()),
+            }
+        })
+        .collect();
+
+    let catalog = match read_json_artifact_readonly::<MigrationCatalog>(&catalog_path) {
+        ArtifactRead::Observed(disk_catalog) => {
+            let extra_ids: Vec<String> = disk_catalog
+                .migrations
+                .iter()
+                .filter(|entry| !compiled_by_id.contains_key(entry.id.as_str()))
+                .map(|entry| entry.id.clone())
+                .collect();
+            if !extra_ids.is_empty() {
+                action_required = true;
+                reason_codes.push("CATALOG_DIVERGES_FROM_BINARY".to_string());
+                instructions.push(format!(
+                    "On-disk catalog contains migration ID(s) unknown to Decapod v{DECAPOD_VERSION}: {}.",
+                    extra_ids.join(", ")
+                ));
+            }
+            CatalogObservation {
+                status: MigrationArtifactStatus::Observed,
+                path: catalog_path.display().to_string(),
+                schema_version: Some(disk_catalog.schema_version),
+                generated_at: if disk_catalog.generated_at.is_empty() {
+                    None
+                } else {
+                    Some(disk_catalog.generated_at)
+                },
+                on_disk_latest_sequence: Some(disk_catalog.latest_sequence),
+                on_disk_count: Some(disk_catalog.count),
+                compiled_latest_sequence,
+                compiled_count: catalog_migrations.len(),
+                migrations: catalog_migrations,
+                on_disk_extra_ids: extra_ids,
+                detail: None,
+            }
+        }
+        ArtifactRead::Absent => {
+            action_required = true;
+            reason_codes.push("CATALOG_ABSENT".to_string());
+            CatalogObservation {
+                status: MigrationArtifactStatus::Absent,
+                path: catalog_path.display().to_string(),
+                schema_version: None,
+                generated_at: None,
+                on_disk_latest_sequence: None,
+                on_disk_count: None,
+                compiled_latest_sequence,
+                compiled_count: catalog_migrations.len(),
+                migrations: catalog_migrations,
+                on_disk_extra_ids: Vec::new(),
+                detail: None,
+            }
+        }
+        ArtifactRead::Invalid(detail) => {
+            action_required = true;
+            reason_codes.push("MIGRATION_CATALOG_INVALID".to_string());
+            instructions.push(format!("Repair invalid migration catalog: {detail}"));
+            CatalogObservation {
+                status: MigrationArtifactStatus::Invalid,
+                path: catalog_path.display().to_string(),
+                schema_version: None,
+                generated_at: None,
+                on_disk_latest_sequence: None,
+                on_disk_count: None,
+                compiled_latest_sequence,
+                compiled_count: catalog_migrations.len(),
+                migrations: catalog_migrations,
+                on_disk_extra_ids: Vec::new(),
+                detail: Some(detail),
+            }
+        }
+        ArtifactRead::Unavailable(detail) => {
+            action_required = true;
+            reason_codes.push("MIGRATION_CATALOG_UNAVAILABLE".to_string());
+            instructions.push(format!("Inspect unreadable migration catalog: {detail}"));
+            CatalogObservation {
+                status: MigrationArtifactStatus::Unavailable,
+                path: catalog_path.display().to_string(),
+                schema_version: None,
+                generated_at: None,
+                on_disk_latest_sequence: None,
+                on_disk_count: None,
+                compiled_latest_sequence,
+                compiled_count: catalog_migrations.len(),
+                migrations: catalog_migrations,
+                on_disk_extra_ids: Vec::new(),
+                detail: Some(detail),
+            }
+        }
+    };
+
+    let pending_migrations = if applied_ledger_known {
+        let applied_ids: HashSet<String> = applied_by_id.keys().cloned().collect();
+        plan_pending_migrations(DECAPOD_VERSION, &compiled, &applied_ids)?
+            .into_iter()
+            .map(|m| PendingMigrationView {
+                id: m.id.to_string(),
+                sequence: m.sequence,
+                scope: m.scope.to_string(),
+                kind: m.kind.to_string(),
+                script_path: m.script_path.map(str::to_string),
+                min_version: m.min_version.to_string(),
+                target_version: m.target_version.to_string(),
+                description: m.description.to_string(),
+            })
+            .collect()
+    } else {
+        Vec::new()
+    };
+
+    if !pending_migrations.is_empty() {
+        action_required = true;
+        reason_codes.push("MIGRATIONS_PENDING".to_string());
+        let ids: Vec<&str> = pending_migrations.iter().map(|m| m.id.as_str()).collect();
+        instructions.push(format!(
+            "Run `decapod activate` (or the next governed command) to apply {} pending migration(s): {}.",
+            pending_migrations.len(),
+            ids.join(", ")
+        ));
+        for m in &pending_migrations {
+            let script_note = m
+                .script_path
+                .as_deref()
+                .map(|s| format!(" [script: {s}]"))
+                .unwrap_or_default();
+            instructions.push(format!(
+                "Pending [seq={} {}] ({}, target {}): {}{}",
+                m.sequence, m.id, m.scope, m.target_version, m.description, script_note
+            ));
+        }
+    }
+
+    let data_root = decapod_root.join("data");
+    let database_present = data_root.join(schemas::LOCAL_DB_NAME).exists();
+    let pending_legacy_databases: Vec<String> = LEGACY_LOCAL_DATABASES
+        .iter()
+        .copied()
+        .filter(|name| legacy_database_artifact_exists(&data_root, name))
+        .map(str::to_string)
+        .collect();
+    if !pending_legacy_databases.is_empty() {
+        action_required = true;
+        reason_codes.push("LEGACY_DATABASES_PRESENT".to_string());
+        instructions.push(format!(
+            "Legacy database artifact(s) detected in {}: {}; run `decapod activate` or the next governed command to consolidate or guard them.",
+            data_root.display(),
+            pending_legacy_databases.join(", ")
+        ));
+    }
+
+    let pending_legacy_todo_recovery =
+        match crate::core::todo::guard_pending_legacy_reconciliation(&data_root) {
+            Ok(()) => None,
+            Err(error) => {
+                action_required = true;
+                reason_codes.push("LEGACY_TODO_RECOVERY_PENDING".to_string());
+                let msg = error.to_string();
+                instructions.push(msg.clone());
+                Some(msg)
+            }
+        };
+
+    if !action_required {
+        instructions.push(format!(
+            "No migration action required: all {} compiled migration(s) for Decapod v{DECAPOD_VERSION} are recorded in {}.",
+            catalog.compiled_count, applied.path
+        ));
+        for entry in &applied.entries {
+            if entry.applied_by_version == DECAPOD_VERSION {
+                let desc = entry.description.as_deref().unwrap_or("Recorded migration");
+                instructions.push(format!(
+                    "Applied under current binary v{DECAPOD_VERSION}: {} (seq={}) — {}",
+                    entry.id, entry.sequence, desc
+                ));
+            }
+        }
+    }
+
+    let status = if action_required {
+        "action_required".to_string()
+    } else {
+        "ok".to_string()
+    };
+
+    Ok(MigrationInspectionReport {
+        schema_version: "1.0.0".to_string(),
+        read_only: true,
+        non_initializing: true,
+        current_binary_version: DECAPOD_VERSION.to_string(),
+        workspace_root: workspace_root.display().to_string(),
+        governance_root: governance_root.display().to_string(),
+        decapod_root: decapod_root.display().to_string(),
+        workspace_decapod_root: workspace_decapod_root.display().to_string(),
+        differs_from_workspace_decapod,
+        action_required,
+        status,
+        reason_codes,
+        version_counter,
+        applied,
+        catalog,
+        pending_migrations,
+        pending_legacy_databases,
+        pending_legacy_todo_recovery,
+        database_present,
+        instructions,
+    })
+}
+
+/// Format a human-readable summary of [`MigrationInspectionReport`].
+pub fn render_migration_inspection_text(report: &MigrationInspectionReport) -> String {
+    let mut lines = Vec::new();
+    lines.push(format!(
+        "Decapod Migrations (binary v{})",
+        report.current_binary_version
+    ));
+    lines.push(format!(
+        "Status: {} (action_required={})",
+        report.status, report.action_required
+    ));
+    if !report.reason_codes.is_empty() {
+        lines.push(format!("Reasons: {}", report.reason_codes.join(", ")));
+    }
+    lines.push(format!("Workspace Root: {}", report.workspace_root));
+    lines.push(format!("Governance Root: {}", report.governance_root));
+    lines.push(format!("Resolved Decapod Root: {}", report.decapod_root));
+    if report.differs_from_workspace_decapod {
+        lines.push(format!(
+            "Workspace Local .decapod (unused for shared migration state): {}",
+            report.workspace_decapod_root
+        ));
+    }
+    lines.push(format!(
+        "Version Counter ({:?}): {} (initialized={}, last_seen={}, count={})",
+        report.version_counter.status,
+        report.version_counter.path,
+        report
+            .version_counter
+            .initialized_with_version
+            .as_deref()
+            .unwrap_or("unavailable"),
+        report
+            .version_counter
+            .last_seen_version
+            .as_deref()
+            .unwrap_or("unavailable"),
+        report
+            .version_counter
+            .version_count
+            .map(|c| c.to_string())
+            .unwrap_or_else(|| "unavailable".to_string()),
+    ));
+    lines.push(format!(
+        "Applied Ledger ({:?}): {} ({} entries)",
+        report.applied.status, report.applied.path, report.applied.count
+    ));
+    for entry in &report.applied.entries {
+        let desc = entry.description.as_deref().unwrap_or("");
+        lines.push(format!(
+            "  - [{}] {} (scope={}, kind={}, applied_by={}, at={}) {}",
+            entry.sequence,
+            entry.id,
+            entry.scope,
+            entry.kind,
+            entry.applied_by_version,
+            entry.applied_at,
+            desc
+        ));
+    }
+    lines.push(format!(
+        "Migration Catalog ({:?}): {} ({} compiled, on_disk={})",
+        report.catalog.status,
+        report.catalog.path,
+        report.catalog.compiled_count,
+        report
+            .catalog
+            .on_disk_count
+            .map(|c| c.to_string())
+            .unwrap_or_else(|| "absent".to_string())
+    ));
+    lines.push(format!(
+        "Pending Migrations: {}",
+        report.pending_migrations.len()
+    ));
+    for pending in &report.pending_migrations {
+        lines.push(format!(
+            "  - [{}] {} (scope={}, kind={}, min={}, target={}): {}",
+            pending.sequence,
+            pending.id,
+            pending.scope,
+            pending.kind,
+            pending.min_version,
+            pending.target_version,
+            pending.description
+        ));
+    }
+    if !report.pending_legacy_databases.is_empty() {
+        lines.push(format!(
+            "Pending Legacy Databases: {}",
+            report.pending_legacy_databases.join(", ")
+        ));
+    }
+    if let Some(recovery) = report.pending_legacy_todo_recovery.as_deref() {
+        lines.push(format!("Pending Legacy TODO Recovery: {recovery}"));
+    }
+    lines.push("Instructions:".to_string());
+    for instruction in &report.instructions {
+        lines.push(format!("  * {instruction}"));
+    }
+    lines.join("\n")
 }
 
 /// Run any pending migrations (idempotent — safe to call every startup)
@@ -617,6 +1342,9 @@ fn schema_upgrade_pending(data_root: &Path) -> Result<bool, error::DecapodError>
     }
     let conn = db::db_connect(&todo_db.to_string_lossy())?;
     crate::core::storage_compaction::check_storage_format_compatibility(&conn)?;
+    if crate::core::storage_compaction::v2_format_metadata_needs_floor_upgrade(&conn)? {
+        return Ok(true);
+    }
     let version_res: Result<String, _> = conn.query_row(
         "SELECT value FROM meta WHERE namespace = ?1 AND key = 'schema_version'",
         [schemas::TODO_META_NAMESPACE],
@@ -868,6 +1596,7 @@ fn run_migrations(decapod_root: &Path) -> Result<MigrationReport, error::Decapod
     }
     reconcile_canonical_event_tables(decapod_root, single_datastore_was_previously_consolidated)?;
     Ok(MigrationReport {
+        decapod_root: decapod_root.to_path_buf(),
         previous_version,
         current_version: DECAPOD_VERSION.to_string(),
         version_changed,
@@ -888,6 +1617,7 @@ fn reconcile_canonical_event_tables(
     }
     let conn = db::db_connect(&db_path.to_string_lossy())?;
     events::ensure_tables(&conn)?;
+    crate::core::storage_compaction::reconcile_v2_storage_format_metadata(&conn)?;
     if single_datastore_was_previously_consolidated {
         events::mark_previously_consolidated_legacy_inputs(
             &data_root,

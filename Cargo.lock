@@ -379,9 +379,9 @@ dependencies = [
 
 [[package]]
 name = "dactyl-db"
-version = "0.16.1"
+version = "0.18.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1b41dde2e8be3fc986f7f5a7eb4e5bfb9af49d4c39dabe98fd74a0ccb4ad7ac6"
+checksum = "6c26eaf28272a50517d7fe300b56940ac03627477b48579293b231c33de905b4"
 dependencies = [
  "base64",
  "getrandom 0.2.17",
@@ -405,7 +405,7 @@ dependencies = [
 
 [[package]]
 name = "decapod"
-version = "0.148.11"
+version = "0.152.0"
 dependencies = [
  "anyhow",
  "async-trait",
@@ -419,6 +419,7 @@ dependencies = [
  "libc",
  "proc-macro2",
  "regex",
+ "ring",
  "serde",
  "serde_json",
  "sha2",

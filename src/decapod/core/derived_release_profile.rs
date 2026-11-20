@@ -715,76 +715,6 @@ pub fn verify_lock_unchanged(release: &GeneratedRelease, observed: &[u8]) -> Res
     )
 }
 
-// serde_json::Value silently overwrites duplicate object keys. Reject them at
-// every nesting level before applying cargo-dist's versioned schema checks.
-struct UniqueJson(Value);
-impl<'de> Deserialize<'de> for UniqueJson {
-    fn deserialize<D: serde::Deserializer<'de>>(d: D) -> std::result::Result<Self, D::Error> {
-        struct Visitor;
-        impl<'de> serde::de::Visitor<'de> for Visitor {
-            type Value = UniqueJson;
-            fn expecting(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-                f.write_str("JSON with unique object keys")
-            }
-            fn visit_bool<E: serde::de::Error>(
-                self,
-                x: bool,
-            ) -> std::result::Result<Self::Value, E> {
-                Ok(UniqueJson(x.into()))
-            }
-            fn visit_i64<E: serde::de::Error>(self, x: i64) -> std::result::Result<Self::Value, E> {
-                Ok(UniqueJson(x.into()))
-            }
-            fn visit_u64<E: serde::de::Error>(self, x: u64) -> std::result::Result<Self::Value, E> {
-                Ok(UniqueJson(x.into()))
-            }
-            fn visit_f64<E: serde::de::Error>(self, x: f64) -> std::result::Result<Self::Value, E> {
-                serde_json::Number::from_f64(x)
-                    .map(|n| UniqueJson(Value::Number(n)))
-                    .ok_or_else(|| E::custom("non-finite JSON number"))
-            }
-            fn visit_str<E: serde::de::Error>(
-                self,
-                x: &str,
-            ) -> std::result::Result<Self::Value, E> {
-                Ok(UniqueJson(x.into()))
-            }
-            fn visit_string<E: serde::de::Error>(
-                self,
-                x: String,
-            ) -> std::result::Result<Self::Value, E> {
-                Ok(UniqueJson(x.into()))
-            }
-            fn visit_unit<E: serde::de::Error>(self) -> std::result::Result<Self::Value, E> {
-                Ok(UniqueJson(Value::Null))
-            }
-            fn visit_seq<A: serde::de::SeqAccess<'de>>(
-                self,
-                mut a: A,
-            ) -> std::result::Result<Self::Value, A::Error> {
-                let mut items = Vec::new();
-                while let Some(UniqueJson(value)) = a.next_element()? {
-                    items.push(value);
-                }
-                Ok(UniqueJson(Value::Array(items)))
-            }
-            fn visit_map<A: serde::de::MapAccess<'de>>(
-                self,
-                mut a: A,
-            ) -> std::result::Result<Self::Value, A::Error> {
-                let mut items = serde_json::Map::new();
-                while let Some((key, UniqueJson(value))) = a.next_entry::<String, UniqueJson>()? {
-                    if items.insert(key, value).is_some() {
-                        return Err(serde::de::Error::custom("duplicate JSON key"));
-                    }
-                }
-                Ok(UniqueJson(Value::Object(items)))
-            }
-        }
-        d.deserialize_any(Visitor)
-    }
-}
-
 fn json_string<'a>(value: &'a Value, key: &str) -> Result<&'a str> {
     value
         .get(key)
@@ -834,8 +764,7 @@ pub fn verify_dist_plan(
     generated: &GeneratedRelease,
     raw: &[u8],
 ) -> Result<DistInventory> {
-    let UniqueJson(plan) =
-        serde_json::from_slice(raw).map_err(|e| format!("invalid dist manifest: {e}"))?;
+    let plan = super::json::unique_value(raw).map_err(|e| format!("invalid dist manifest: {e}"))?;
     require(plan.is_object(), "dist manifest must be one object")?;
     require(
         plan.get("announcement_tag_is_implicit")
@@ -1071,8 +1000,7 @@ pub fn verify_checksum_files(
 }
 
 pub(crate) fn unique_json(raw: &[u8]) -> Result<Value> {
-    let UniqueJson(value) = serde_json::from_slice(raw).map_err(|e| e.to_string())?;
-    Ok(value)
+    super::json::unique_value(raw).map_err(|e| e.to_string())
 }
 
 #[cfg(test)]
