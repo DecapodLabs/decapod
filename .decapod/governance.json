@@ -786,6 +786,11 @@
       "id": "observer-matching-release-projections",
       "summary": "Refresh final observer source fingerprints and native Docker pin through matching release 0.153.2 after actual hosted drift failure.",
       "input_digest": "sha256:c1dd06a64aaf1c594832d124fb9007bf39b41c800eddfce3eb7e71d569083305"
+    },
+    {
+      "id": "observer-managed-release-header",
+      "summary": "Repair managed Docker header through supported workspace ensure and refresh final source projections with 0.153.2.",
+      "input_digest": "sha256:ed40d8f378049cc5cb6126868b832c6839e9ac3f4b981b65fa6cfcae3f8599d7"
     }
   ],
   "intents": {
@@ -826,21 +831,21 @@
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Matched the projection controller to accepted source version 0.153.2 and refreshed final source fingerprints. Observer semantics, coverage controls and authored architecture are unchanged.",
+          "reason": "Supported workspace repair now matches the managed Docker image/version header to evaluator 0.153.2. Observer source and reviewed capture-boundary behavior are unchanged.",
           "reviewed_code_fingerprint": "7314745003e2e8805e178155d82371583ac15576d395918a0855101f83437d06",
           "spec_material_hash": "bfb4677d7cf2bbdbdbcaa5d4f7d55e8edca69562f954ed93546645e0b08f1f8b"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Matched the projection controller to accepted source version 0.153.2 and refreshed final source fingerprints. Observer semantics, coverage controls and authored architecture are unchanged.",
+          "reason": "Supported workspace repair now matches the managed Docker image/version header to evaluator 0.153.2. Observer source and reviewed capture-boundary behavior are unchanged.",
           "reviewed_code_fingerprint": "7314745003e2e8805e178155d82371583ac15576d395918a0855101f83437d06",
           "spec_material_hash": "f881c8267cffd78dd02223d9c2783bab25f34fb76a445a87135ccac61315db87"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Matched the projection controller to accepted source version 0.153.2 and refreshed final source fingerprints. Observer semantics, coverage controls and authored architecture are unchanged.",
+          "reason": "Supported workspace repair now matches the managed Docker image/version header to evaluator 0.153.2. Observer source and reviewed capture-boundary behavior are unchanged.",
           "reviewed_code_fingerprint": "7314745003e2e8805e178155d82371583ac15576d395918a0855101f83437d06",
           "spec_material_hash": "62300e369dcb24d24ef0c4b25b889d100d69412810d0a4ff2133ff3c9be3a2c5"
         }
@@ -853,7 +858,7 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795162396Z"
+      "updated_at": "1795162745Z"
     },
     "trajectory": {
       "active_boundaries": [
