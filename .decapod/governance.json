@@ -847,6 +847,11 @@
       "proof_refs": [
         "https://github.com/DecapodLabs/decapod/pull/1869"
       ]
+    },
+    {
+      "id": "attack-gaps-interop-accepted-d96bf819",
+      "summary": "Merge accepted contract recovery, preserve the release projection correction and all pinned encoding inputs, and refresh reviewed publication material for fresh GitHub Actions verification",
+      "input_digest": "sha256:a07cf7530c588f444c70a05a6ee13ac329b50bd4968974617bff62cc7cc970ba"
     }
   ],
   "intents": {
@@ -890,23 +895,23 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Review the encoding contract against the accepted v0.155.1 release and retain the exact decoder, scope and authority assertions.",
-          "reviewed_code_fingerprint": "437f15da3d6395488c0b2f177e83ac19cc3e5f6b86ff665176e06dc9e2fffc1a",
-          "spec_material_hash": "888bf8792ade1725d9fc5af1b0cc9bdd0b13683b756eca75db59455acb7775b1"
+          "reason": "Preserves the accepted selected-work and scope-repair architecture and the separate raw-input fixture boundary.",
+          "reviewed_code_fingerprint": "c6ea4c0e732a43cf79cf27c8eecd1bdeff508cda262fe15a2cecbe165a6d7f62",
+          "spec_material_hash": "fa61badf2a21db73f52fe548b768ae0d92f6bcbe2fb5f15afd0dc3518d39570c"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Review the encoding contract against the accepted v0.155.1 release and retain the exact decoder, scope and authority assertions.",
-          "reviewed_code_fingerprint": "437f15da3d6395488c0b2f177e83ac19cc3e5f6b86ff665176e06dc9e2fffc1a",
-          "spec_material_hash": "da378ac9a6743d9d6ea2b789809963d7de620d51a1180f332a088cfdb7efbc62"
+          "reason": "Preserves the accepted instruction and requirement contracts together with the versioned encoding vector and projection interfaces.",
+          "reviewed_code_fingerprint": "c6ea4c0e732a43cf79cf27c8eecd1bdeff508cda262fe15a2cecbe165a6d7f62",
+          "spec_material_hash": "2a6640f4c0649408b1f14945ebf967073d00f5bb798d38e9fdf3b3d1eb3c51c7"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Review the encoding contract against the accepted v0.155.1 release and retain the exact decoder, scope and authority assertions.",
-          "reviewed_code_fingerprint": "437f15da3d6395488c0b2f177e83ac19cc3e5f6b86ff665176e06dc9e2fffc1a",
-          "spec_material_hash": "f90be21b8ad9057b7436a5de87f7238eebb03a6e60ca1f0dd00187798025d644"
+          "reason": "Preserves the accepted authority and recovery boundaries and the decoder refusal and valid-input controls.",
+          "reviewed_code_fingerprint": "c6ea4c0e732a43cf79cf27c8eecd1bdeff508cda262fe15a2cecbe165a6d7f62",
+          "spec_material_hash": "6e32c0b41ff1cc2b7f19741f625fc67345e1033a93330504ff366f0e45d9dfa5"
         }
       ],
       "state": "APPROVED",
@@ -917,7 +922,7 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795210005Z"
+      "updated_at": "1795212909Z"
     },
     "trajectory": {
       "active_boundaries": [

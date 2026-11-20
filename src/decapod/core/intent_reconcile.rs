@@ -14,6 +14,8 @@ use std::fs;
 use std::path::Path;
 use std::process::Command;
 
+pub mod selected;
+
 pub const SCHEMA_VERSION: &str = "1.0.0";
 const CHANGE_IMPACT_SCHEMA_VERSION: &str = "1.1.0";
 const MAX_CHANGED_FILES: usize = 256;
@@ -52,6 +54,8 @@ pub struct ReconciliationReport {
     pub intent_hash: Option<String>,
     pub plan_state: Option<String>,
     pub unresolved_questions: Vec<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub instruction_readiness: Option<crate::plan_governance::InstructionReadiness>,
     pub repo_signal_fingerprint: String,
     pub last_refresh_fingerprint: Option<String>,
     pub code_changed_since_refresh: Option<bool>,
@@ -62,6 +66,9 @@ pub struct ReconciliationReport {
     /// Optional immutable, base-to-HEAD observation. Absent for legacy empty params.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub change_impact: Option<ChangeImpactReport>,
+    /// Requested-revision observation; never independent acceptance or proof.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub selected_work: Option<selected::SelectedJudgment>,
     /// Semantic alignment needs external judgment and applicable proof.
     pub semantic_alignment: String,
 }
@@ -508,20 +515,33 @@ pub fn reconcile_with_base(
     let fingerprint = project_specs::repo_signal_fingerprint(project_root)?;
     let manifest = project_specs::read_specs_manifest(project_root)?;
     let plan = plan_governance::load_plan(project_root)?;
+    let instruction_readiness = plan
+        .as_ref()
+        .map(|plan| {
+            plan_governance::instruction_readiness_at(
+                project_root,
+                plan,
+                crate::core::validation_rules::EvaluationPhase::PreExecution,
+            )
+        })
+        .transpose()?;
     let current_spec_input_hash = project_specs::spec_input_hash(project_root)?;
 
     let mut findings = Vec::new();
     let mut unresolved = Vec::new();
     let (intent_source, intent_hash, plan_state) = match plan.as_ref() {
         Some(plan) => {
-            unresolved.extend(plan.unknowns.iter().cloned());
-            unresolved.extend(plan.human_questions.iter().cloned());
-            unresolved.extend(plan.unresolved_contradictions.iter().cloned());
+            unresolved.extend(
+                instruction_readiness
+                    .as_ref()
+                    .map(|report| report.questions.clone())
+                    .unwrap_or_default(),
+            );
             if plan.intent.trim().is_empty() {
                 findings.push(finding(
                     "missing_active_intent",
                     ".decapod/governance.json",
-                    "The governed plan has no human-originated change intent",
+                    "The governed plan has no recorded change intent",
                 ));
             }
             if !unresolved.is_empty() {
@@ -686,9 +706,56 @@ pub fn reconcile_with_base(
     let change_impact = base_commit
         .map(|base| inspect_change_impact(project_root, base))
         .transpose()?;
+    let selected_work = if let Some(impact) = &change_impact {
+        let base = &impact.base_commit;
+        let entries = git_output(
+            project_root,
+            &["ls-tree", "-z", base, "--", ".decapod/config.toml"],
+        )?;
+        if entries.is_empty() {
+            None
+        } else {
+            let bytes = git_output(
+                project_root,
+                &["show", &format!("{base}:.decapod/config.toml")],
+            )?;
+            if bytes.len() > 65536 {
+                return Err(DecapodError::ValidationError(
+                    "Selected config exceeds read bound".into(),
+                ));
+            }
+            let config = selected::configuration(&bytes).map_err(DecapodError::IoError)?;
+            if let Some(work) = config.selected_work {
+                if !entries.starts_with(b"100644 blob ") {
+                    return Err(DecapodError::ValidationError(
+                        "Selected config must be a regular tracked blob".into(),
+                    ));
+                }
+                let store = crate::core::store::Store {
+                    kind: crate::core::store::StoreKind::Repo,
+                    root: crate::core::store::find_governance_root(project_root)
+                        .join(".decapod/data"),
+                };
+                let mut report = selected::evaluate(
+                    &work,
+                    base,
+                    &store,
+                    crate::core::validation_rules::EvaluationPhase::PreExecution,
+                )?;
+                report.source_authority = "requested_immutable_revision".into();
+                Some(report)
+            } else {
+                None
+            }
+        }
+    } else {
+        None
+    };
 
     Ok(ReconciliationReport {
-        schema_version: if change_impact.is_some() {
+        schema_version: if selected_work.is_some() {
+            "1.2.0".into()
+        } else if change_impact.is_some() {
             CHANGE_IMPACT_SCHEMA_VERSION.to_string()
         } else {
             SCHEMA_VERSION.to_string()
@@ -697,6 +764,7 @@ pub fn reconcile_with_base(
         intent_hash,
         plan_state,
         unresolved_questions: unresolved,
+        instruction_readiness,
         repo_signal_fingerprint: fingerprint.clone(),
         last_refresh_fingerprint: manifest.as_ref().map(|m| m.repo_signal_fingerprint.clone()),
         code_changed_since_refresh: manifest
@@ -709,6 +777,7 @@ pub fn reconcile_with_base(
         requirements,
         findings,
         change_impact,
+        selected_work,
         semantic_alignment: "not_proven".to_string(),
     })
 }

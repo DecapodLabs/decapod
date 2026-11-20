@@ -1534,8 +1534,8 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `437f15da3d6395488c0b2f177e83ac19cc3e5f6b86ff665176e06dc9e2fffc1a`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (246 files), `tests/` (258 files)
+- Repository signal fingerprint: `c6ea4c0e732a43cf79cf27c8eecd1bdeff508cda262fe15a2cecbe165a6d7f62`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (250 files), `tests/` (258 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 
@@ -2572,6 +2572,25 @@ committed candidate.
 
 Unit tests in `tests/unit/core/repository_profile_tests.rs` and `src/decapod/core/validation_history.rs` verify `command_contract_digest` compatibility, invalid/cyclic `DeploymentTargetContract` rejection, `resolve_target_closure` dependency and `shared_inputs` expansion, `preserve_accepted` scope-weakening rejection, and `CompletedReadinessEvidence` target-scope isolation. Integration tests in `tests/consumer_readiness.rs` verify selected-target execution without unrelated host executables, shared-input fanout, unknown/cyclic/incompatible-executor fail-closed guards, `verify_native_receipt_scope` rejections for full-repo/mismatched-target/stale-SHA receipts, and candidate target weakening refusal.
 
+## Acceptance of combined instruction contracts
+
+Use actual failing and repaired candidates for origin continuity, contradictory requests, pending spec decisions, selected roots and required behavior. Record plan, instruction, policy, candidate, target and custody identities with current observations. Verify that scope, lease or target movement invalidates the affected evidence. A green test without an accepted criterion leaves semantic alignment unresolved. The archived source and fixture receipts remain tied to their original subjects and must be refreshed for this integration.
+
+## Release and recorded instruction checks
+
+Version-only release verification checks canonical projections against the classified release head. The recorded-instruction readiness predicate continues to govern approval, execution checkpoints, validation, and publication. Each result retains its own measured evidence.
+
+The legacy scope reconciliation test initializes a valid explicit path declaration
+and then seeds the historical comma-split projection in its temporary journal.
+It checks that repair requires a recoverable journal, preserves previous evidence,
+revokes plan acceptance, and refuses independently changed constraints.
+
+The preserved-source release regression uses an older entrypoint version
+and a baseline manifest whose template hash and fingerprint come from
+the manifest's release renderer. Its content hash comes from the committed
+entrypoint. The test verifies the real manifest shape and repeats validation
+after a second projection refresh.
+
 ## Portable encoding execution plan
 
 The current encoding change has an actual released-binary counterexample and a source-level correction in the independent test consumer. Its existing unfiltered interoperability target will execute every pinned negative and positive vector through the real CLI and the independent Python process, retaining exact consumer versions/hashes and raw-input hashes in a versioned diagnostic report. Formatting and native checkpoint history are separate from runtime test execution. GitHub Actions supplies source verification under the maintainer's delivery instruction; pending results must not be called passing native admission or full campaign completion.
@@ -2579,3 +2598,5 @@ The current encoding change has an actual released-binary counterexample and a s
 The accepted v0.154.0 package epoch (`0f44f780`) is integrated before encoding validation. The conformance harness obtains executable identity through the documented read-only `decapod system version` command; unsupported top-level version flags are not execution evidence. Native regeneration supplies the current release projections, while the independent decoder and all pinned raw inputs remain separate from authorization and full native admission.
 
 Run encoding conformance against the v0.155.1 release base. The release metadata merge preserves all 22 raw inputs and corresponding positive controls. Retain the full core suite and the timing assertions.
+
+The previous PR run on `08f76bff` against `2e206d26` passed both broker probes and all eleven core targets in GitHub Actions job 136580615071. The reconciliation with accepted contract recovery at `d96bf819` preserves that run as historical evidence and retains the full test suite for a fresh run. The reviewed source inventory has 105 inputs and differs from the accepted base only in the existing Bazel test data declaration.

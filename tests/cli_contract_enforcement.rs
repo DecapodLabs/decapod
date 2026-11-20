@@ -902,7 +902,7 @@ mod plan_governed_execution {
         let approve = run_decapod(&dir, &["govern", "plan", "approve"]);
         assert!(
             !approve.status.success(),
-            "approval requires resolved questions"
+            "unresolved questions cannot approve"
         );
         assert!(String::from_utf8_lossy(&approve.stderr).contains("NEEDS_HUMAN_INPUT"));
 
@@ -1014,7 +1014,11 @@ mod plan_governed_execution {
                 .find_map(|line| line.split_once("payload=").map(|(_, payload)| payload))
                 .expect("recorded instruction readiness payload");
             let value: serde_json::Value = serde_json::from_str(payload).unwrap();
-            assert_eq!(&value["instruction_readiness"], readiness);
+            let mut expected = (*readiness).clone();
+            if args[2] == "check-execute" {
+                expected["phase"] = "during_execution".into();
+            }
+            assert_eq!(value["instruction_readiness"], expected);
         }
 
         let corrected = run_decapod(

@@ -211,14 +211,10 @@ pub fn verify(repo: &Path, event: &str, base: &str, head: &str) -> Check<()> {
     let preserve_source_versions = entrypoints::preserves_source_entrypoint_versions(repo);
     let mut old_entrypoints = Vec::new();
     for path in entrypoints::ENTRYPOINT_FILES {
-        let old_body = if preserve_source_versions {
-            blob(repo, head, path)?
-        } else {
-            entrypoints::render_entrypoint_for_release(path, &old_release)
-                .ok_or("unknown entrypoint")?
-        };
-        require_equal(path, &blob(repo, head, path)?, &old_body)?;
-        let old_fingerprint = old_body
+        let old_template = entrypoints::render_entrypoint_for_release(path, &old_release)
+            .ok_or("unknown entrypoint")?;
+        let committed_body = blob(repo, head, path)?;
+        let old_fingerprint = old_template
             .lines()
             .nth(1)
             .and_then(|line| line.strip_prefix("<!-- decapod-fingerprint: "))
@@ -226,19 +222,17 @@ pub fn verify(repo: &Path, event: &str, base: &str, head: &str) -> Check<()> {
             .ok_or("malformed canonical entrypoint fingerprint")?;
         old_entrypoints.push(serde_json::json!({
             "path": path,
-            "template_hash": specs::hash_text(&old_body),
-            "content_hash": specs::hash_text(&old_body),
+            "template_hash": specs::hash_text(&old_template),
+            "content_hash": specs::hash_text(&committed_body),
             "fingerprint": old_fingerprint,
         }));
-        require_equal(
-            path,
-            &read_regular(repo, path)?,
-            &if preserve_source_versions {
-                old_body
-            } else {
-                entrypoints::render_entrypoint(path).ok_or("unknown entrypoint")?
-            },
-        )?;
+        let expected_body = if preserve_source_versions {
+            committed_body
+        } else {
+            require_equal(path, &committed_body, &old_template)?;
+            entrypoints::render_entrypoint(path).ok_or("unknown entrypoint")?
+        };
+        require_equal(path, &read_regular(repo, path)?, &expected_body)?;
     }
     if expected["entrypoints"] != Value::Array(old_entrypoints) {
         return Err("baseline entrypoint inventory or template hashes are not canonical".into());
