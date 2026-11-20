@@ -65,7 +65,7 @@ agent documentation. The source architecture is described in
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `dba081c4a82d40f68b8b15619d246a47289fe147cbef8b23b9621b05c31d8734`
+- Repository signal fingerprint: `45d66305ba0298a9350be0b1634a7fb0e539279fe0edc2ca0f4d8a5493d09102`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (244 files), `tests/` (256 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

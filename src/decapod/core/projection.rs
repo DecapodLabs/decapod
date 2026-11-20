@@ -205,7 +205,7 @@ pub struct ApprovalProjection {
     pub source: String,
 }
 
-/// Project an approval decision from real policy inputs.
+/// Display a reported approval decision without authenticating policy custody.
 pub fn project_approval(
     action: &str,
     correlation_id: Option<String>,
@@ -217,12 +217,12 @@ pub fn project_approval(
     let (status, remediation) = match approved {
         Some(true) => (
             ApprovalStatus::Approved,
-            Some("Approval recorded through the governed policy path; scope-limited.".to_string()),
+            Some("Reported approval; this projection does not authenticate a policy decision or principal authority. Consult canonical policy for the action and scope.".to_string()),
         ),
         Some(false) => (
             ApprovalStatus::Denied,
             Some(
-                "Denied by policy; run `decapod govern policy eval` for the approval command."
+                "Reported denial; this projection does not authenticate a policy decision. Run `decapod govern policy eval` for the canonical approval command."
                     .to_string(),
             ),
         ),
@@ -253,9 +253,12 @@ pub struct ValidationProjection {
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub blockers: Vec<String>,
     pub stale: bool,
-    /// Proven, not_proven, failed, stale, or unknown. A boolean is not this field.
+    /// Not_proven, failed, stale or unknown for this unverified input.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub proof_judgment: Option<String>,
+    /// Why the input does not establish current canonical proof.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub proof_reason: Option<String>,
     pub source: String,
 }
 
@@ -312,6 +315,7 @@ pub fn project_validation_report(report: &serde_json::Value) -> ValidationProjec
         blockers,
         stale: stale || decision.judgment == crate::core::governed_transition::ProofJudgment::Stale,
         proof_judgment: Some(decision.judgment.as_str().to_string()),
+        proof_reason: Some(decision.reason),
         source: "validation_report".to_string(),
     }
 }

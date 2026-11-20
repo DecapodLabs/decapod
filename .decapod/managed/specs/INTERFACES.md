@@ -1,5 +1,29 @@
 # Interfaces
 
+## Caller-supplied validation report projections (#1726)
+
+Every `interop.project` result adds optional `input_origin=caller_supplied` and
+`canonical_state_verified=false`. These describe the operation/approval/report
+input, not the receipt proving that the transformation itself ran. Caller input
+cannot override these output fields. The original per-kind `source` remains an
+input-type label, not authenticated producer provenance. Reported approval and
+denial statuses remain display data; their remediation no longer claims that
+the corresponding canonical policy operation occurred. Only the existing
+policy owner can establish a real grant or denial.
+
+`interop.project` with `kind=validation_report` remains a successful read-only
+transformation; outer RPC success does not verify its input. The reported
+`status`, candidate, epoch and identifiers remain visible. `proof_judgment` for
+a well-formed reported PASS is `not_proven` and `publication_ready` is false,
+including plausible receipt digests and caller-matched verifier/rule identities.
+Reported failed, stale and unknown inputs retain their existing classifications.
+The optional additive `proof_reason` explains that these are caller-supplied
+reports and directs the reader to canonical validation for the exact candidate
+and accepted base. A copied genuine report also cannot prove present currency
+through a pure transformation. Current proof must come from the canonical owner.
+Existing actual-binary controls execute counterfeit, negative/stale and ordinary
+negotiation recovery without provider, custody or gate-skip overrides.
+
 ## Reversible repository integration removal (#1704)
 
 `decapod integration {preview, remove, restore}` exposes a repository-level
@@ -1511,7 +1535,7 @@ field. Nothing in this operation authorizes a mutation, approval or completion.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `dba081c4a82d40f68b8b15619d246a47289fe147cbef8b23b9621b05c31d8734`
+- Repository signal fingerprint: `45d66305ba0298a9350be0b1634a7fb0e539279fe0edc2ca0f4d8a5493d09102`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (244 files), `tests/` (256 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

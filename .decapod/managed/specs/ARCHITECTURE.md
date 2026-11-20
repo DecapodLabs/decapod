@@ -1,5 +1,24 @@
 # Architecture
 
+## Pure report projection does not authenticate proof (#1726)
+
+`core::governed_transition::project_report_publication` reads caller-owned JSON.
+Its only production consumer is `core::projection::project_validation_report`;
+it has no canonical producer, current task, candidate/base or authority lookup.
+A digest and mutually matching caller labels therefore cannot produce PROVEN.
+The existing pure helper retains failed/stale/unknown interpretations but leaves
+passing reports not_proven and ineligible. The projection exposes an additive
+optional `proof_reason` explaining the missing authority and current-validation
+remedy. Report identifiers and source remain display data. Actual native
+validation, canonical history/workunit proof and consequential publication retain
+their existing owners and are not redirected through this projection.
+
+The RPC result also labels all projection inputs as caller-supplied and not
+canonically verified. `lib.rs::handle_interop_project` writes those constant
+provenance fields after parsing the request; caller-provided origin/verification
+labels cannot become authority. Approval formatting preserves the reported
+value but does not assert that a policy transition or principal decision ran.
+
 ## Reversible integration lifecycle (`core::integration_removal`)
 
 `src/decapod/core/integration_removal.rs` separates repository integration
@@ -1159,7 +1178,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `dba081c4a82d40f68b8b15619d246a47289fe147cbef8b23b9621b05c31d8734`
+- Repository signal fingerprint: `45d66305ba0298a9350be0b1634a7fb0e539279fe0edc2ca0f4d8a5493d09102`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (244 files), `tests/` (256 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

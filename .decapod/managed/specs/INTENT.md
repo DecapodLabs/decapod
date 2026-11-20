@@ -1,5 +1,23 @@
 # Intent
 
+## Reporting claims and current proof (#1726, #1735)
+
+Decapod remains the repo-native governance kernel; consumers must distinguish
+reported outcomes from its canonical current validation and admission decisions.
+Official0.148.11 reproduced a reporting false accept: `interop.project` returned
+`proven` and publication-ready from fabricated pass/head/digest fields, even when
+the caller supplied its own matching verifier and rule labels. No validation or
+actual publication occurred. Pure report projection must instead retain the
+reported status while refusing current proof, explain the missing canonical
+authority, preserve negative/stale diagnostics, and permit ordinary operation.
+This correction adds no validator, report generator or receipt store.
+
+A second actual control showed approval formatting claiming that policy had
+recorded a caller-supplied boolean despite no policy operation. All pure
+projection inputs must be explicitly caller-owned and not canonically verified.
+Reported approval/operation statuses remain display data; their formatting
+cannot authenticate a principal, grant or observed effect.
+
 ## Single-header docs book layout and viewport page spacing (#1849)
 
 The public documentation book (`docs/book/src/index.md` and `docs/book/src/custom.css`) maintains the shared mdBook navigation bar as the single site header across all pages and viewports:
@@ -693,7 +711,7 @@ These declarations select authoring and proof obligations; they do not attest im
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `dba081c4a82d40f68b8b15619d246a47289fe147cbef8b23b9621b05c31d8734`
+- Repository signal fingerprint: `45d66305ba0298a9350be0b1634a7fb0e539279fe0edc2ca0f4d8a5493d09102`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (244 files), `tests/` (256 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

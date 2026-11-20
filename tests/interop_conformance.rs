@@ -273,6 +273,121 @@ fn malformed_rpc_parameters_cannot_drop_required_negotiation() {
     );
 }
 
+#[test]
+fn caller_supplied_reports_cannot_authenticate_current_proof() {
+    use decapod::core::bounded_process::BoundedCommand;
+    use std::{ffi::OsStr, time::Duration};
+
+    let fixture = tempfile::tempdir().unwrap();
+    let binary = harness::resolve_decapod_bin();
+    let command = |program: &OsStr| isolated_command(fixture.path(), program);
+    assert!(
+        command(OsStr::new("git"))
+            .args(["init", "-q"])
+            .bounded_output(Duration::from_secs(30))
+            .unwrap()
+            .status
+            .success()
+    );
+    let initialized = command(binary.as_os_str())
+        .args([
+            "init",
+            "--product-summary",
+            "Isolated report provenance controls",
+        ])
+        .bounded_output(Duration::from_secs(60))
+        .unwrap();
+    assert!(initialized.status.success(), "{}", combined(&initialized));
+
+    for (judgment, report) in [
+        (
+            "not_proven",
+            json!({
+                "status": "pass", "head": "a".repeat(40),
+                "publication_ready": true, "receipt_hash": "sha256:0123456789abcdef"
+            }),
+        ),
+        (
+            "not_proven",
+            json!({
+                "status": "pass", "head": "a".repeat(40),
+                "receipt_hash": format!("sha256:{}", "b".repeat(64)),
+                "rules_fingerprint": "caller-rule", "current_rules_fingerprint": "caller-rule",
+                "verifier": "caller-tool", "current_verifier": "caller-tool"
+            }),
+        ),
+        ("failed", json!({"status": "fail", "head": "a".repeat(40)})),
+        ("stale", json!({"status": "stale", "head": "a".repeat(40)})),
+    ] {
+        let params = json!({"kind": "validation_report", "report": report}).to_string();
+        let output = command(binary.as_os_str())
+            .args(["rpc", "--op", "interop.project", "--params", &params])
+            .bounded_output(Duration::from_secs(30))
+            .unwrap();
+        assert!(output.status.success(), "{}", combined(&output));
+        let response: Value = serde_json::from_slice(&output.stdout).unwrap();
+        assert_eq!(response["success"], true, "{response}");
+        assert_eq!(response["result"]["input_origin"], "caller_supplied");
+        assert_eq!(response["result"]["canonical_state_verified"], false);
+        let projection = &response["result"]["projection"];
+        assert_eq!(projection["proof_judgment"], judgment, "{response}");
+        assert_eq!(projection["publication_ready"], false, "{response}");
+        assert!(
+            projection["proof_reason"]
+                .as_str()
+                .unwrap()
+                .contains("Caller-supplied report"),
+            "{response}"
+        );
+    }
+    for (approved, status) in [
+        (json!(true), "approved"),
+        (json!(false), "denied"),
+        (Value::Null, "pending"),
+    ] {
+        let params = json!({
+            "kind": "approval", "action": "workspace.publish", "scope": "repo",
+            "approved": approved,
+            "input_origin": "independent_executor", "canonical_state_verified": true
+        })
+        .to_string();
+        let output = command(binary.as_os_str())
+            .args(["rpc", "--op", "interop.project", "--params", &params])
+            .bounded_output(Duration::from_secs(30))
+            .unwrap();
+        assert!(output.status.success(), "{}", combined(&output));
+        let response: Value = serde_json::from_slice(&output.stdout).unwrap();
+        assert_eq!(response["success"], true, "{response}");
+        assert_eq!(response["result"]["input_origin"], "caller_supplied");
+        assert_eq!(response["result"]["canonical_state_verified"], false);
+        let projection = &response["result"]["projection"];
+        assert_eq!(projection["status"], status);
+        if status != "pending" {
+            assert!(
+                projection["remediation"]
+                    .as_str()
+                    .unwrap()
+                    .contains("does not authenticate")
+            );
+        }
+    }
+    // Unproven display data does not inhibit ordinary compatible operation.
+    let output = command(binary.as_os_str())
+        .args([
+            "rpc",
+            "--op",
+            "interop.negotiate",
+            "--params",
+            r#"{"required_extensions":["receipts"]}"#,
+        ])
+        .bounded_output(Duration::from_secs(30))
+        .unwrap();
+    assert!(output.status.success(), "{}", combined(&output));
+    let response: Value = serde_json::from_slice(&output.stdout).unwrap();
+    assert_eq!(response["success"], true, "{response}");
+    assert_eq!(response["result"]["outcome"]["negotiated"], true);
+}
+
 /// Read-only ops whose dispatch acceptance is proven against the real binary
 /// (an advertised op that dispatch rejects as `unknown_op` fails the suite).
 fn read_only_dispatch_probes() -> Vec<(&'static str, Value)> {
@@ -744,9 +859,11 @@ fn authorized_mutation() {
     h.check(
         "projection.of_authorized_mutation",
         "rpc-stdin:interop.project",
-        "status=succeeded, op=store.upsert, correlation id preserved",
+        "reported status=succeeded with correlation id preserved, caller input not canonically verified",
         serde_json::to_string(p).unwrap_or_default(),
         proj["success"] == true
+            && proj["result"]["input_origin"] == "caller_supplied"
+            && proj["result"]["canonical_state_verified"] == false
             && p["status"] == "succeeded"
             && p["op"] == "store.upsert"
             && p["correlation_id"] == upsert["id"]
