@@ -1,7 +1,7 @@
 {
   "schema_version": "1.0.0",
   "baseline": {
-    "accepted_commit": "91b1293cacf7161f6cb0cf54197e2ae97c1c2d5d",
+    "accepted_commit": "34b98ab1fa2d731c5729fa1afbeaed13f8739655",
     "policy": {
       "change_control": {
         "requires_human_review": true,
@@ -119,6 +119,14 @@
           ".decapod/managed/specs/VALIDATION.md"
         ],
         "statement": "The candidate applies only the reviewed repair scope with newly admitted custody and actual checkpoints; historical and unrun proof remain distinct. Reconcile the nine agent document indexes, run their invariant in the existing mandatory contract target, and isolate real libtest executable copying in a waited child process to prevent inherited writable descriptors. Preserve production no-retry failure semantics.",
+        "status": "open"
+      },
+      "claim:claim:recovery-release-proof": {
+        "falsifier": "Changes outside manifest scope, hand-edited generated evidence, missing current checkpoints, or a full-readiness claim based on this CI runner.",
+        "proof_refs": [
+          ".decapod/managed/specs/VALIDATION.md"
+        ],
+        "statement": "The candidate applies only the reviewed repair scope with newly admitted custody and actual checkpoints; historical and unrun proof remain distinct. Retain current accepted dependencies, production release boundaries and collector contracts; preserve the inactive preparation proposal with a regression proving it cannot self-authorize. Four-platform qualification remains open.",
         "status": "open"
       },
       "claim:committed-scope-enforcement": {
@@ -764,59 +772,47 @@
     }
   },
   "change": {
-    "id": "change_01M74ZXHG6GAEPNMZAXMGJYGH8",
-    "base_commit": "91b1293cacf7161f6cb0cf54197e2ae97c1c2d5d",
+    "id": "change_01M7W2EJ67Y2RM1R8WAMZW92QR",
+    "base_commit": "34b98ab1fa2d731c5729fa1afbeaed13f8739655",
     "target_base": "origin/master"
-  },
-  "claims": {
-    "claim:recovery-release-proof": {
-      "statement": "The candidate applies only the reviewed repair scope with newly admitted custody and actual checkpoints; historical and unrun proof remain distinct. Retain current accepted dependencies, production release boundaries and collector contracts; preserve the inactive preparation proposal with a regression proving it cannot self-authorize. Four-platform qualification remains open.",
-      "falsifier": "Changes outside manifest scope, hand-edited generated evidence, missing current checkpoints, or a full-readiness claim based on this CI runner.",
-      "status": "open",
-      "proof_refs": [
-        ".decapod/managed/specs/VALIDATION.md"
-      ]
-    }
   },
   "checkpoints": [
     {
-      "id": "recovery-release-proof",
-      "summary": "Recover reviewed residual source in current admitted custody; preserve original history, regenerate projections and retain full validation as unavailable.",
-      "input_digest": "sha256:0a8a312dcb6a2fb99a4fc6be279f1b7784338a3c8fe6f991da2b2dcc3008a678",
+      "id": "portable-json-encoding-v1",
+      "summary": "Correct independently reproduced Unicode, number overflow and depth decoder disagreements; add22 pinned raw vectors and legitimate native projection controls without changing production refusal or required recipes",
+      "input_digest": "sha256:8a49965a902c5826c0131d7e05ed7bb2ce8a53ef6a7d27e41ef0ecfda0ccd7ac",
       "proof_refs": [
-        ".decapod/managed/specs/VALIDATION.md"
+        "https://github.com/alexhraber/decapod-admission-acceptance-1763-20261118-0100/releases/download/acceptance-1761-1770-a62-20261118-01/portable-json-differentials-before-20261120.tar.gz"
       ]
     },
     {
-      "id": "target-reconcile-release-proof-2f6daf8c4a15",
-      "summary": "Merge the actual accepted target into the same task branch; preserve original identity/checkpoints and reviewed residual material. Earlier readiness remains historical; fresh full proof is required.",
-      "input_digest": "sha256:abcbcd8b5526b1c3d6ac13dff655afd1ff169b87a017ca56375be5b5d1af30c1",
+      "id": "portable-json-encoding-v1-final",
+      "summary": "Exact portable encoding correction and22 raw vectors after removing accidental EOF blank lines; preserve prior checkpoint and actual native differential evidence",
+      "input_digest": "sha256:5197e8d7b731cb1f07436e13909b8a6d8be1f9f697c47466ec499bd6dbc9bc8e",
       "proof_refs": [
-        ".decapod/managed/specs/VALIDATION.md"
+        "https://github.com/alexhraber/decapod-admission-acceptance-1763-20261118-0100/releases/download/acceptance-1761-1770-a62-20261118-01/portable-json-differentials-before-20261120.tar.gz"
       ]
-    },
-    {
-      "id": "cp-sync-45751f54e",
-      "summary": "Integrate accepted master 45751f54e (v0.153.0) and refresh 0.153.0 projections for PR #1621",
-      "input_digest": "sha256:a1dfc366b1ea40b71ea799bedff8eba93ce2b8b08aea0f124f5115805d0abb4a"
     }
   ],
   "intents": {
-    "intent:change_01M74ZXHG6GAEPNMZAXMGJYGH8": {
+    "intent:change_01M7W2EJ67Y2RM1R8WAMZW92QR": {
       "acceptance_criteria": [],
       "assumptions": [],
       "boundaries": [
         "Current claimed task and isolated work branch"
       ],
       "constraints": [
-        "root"
+        "docs/conformance",
+        "assets/schemas",
+        "tests/interop_conformance.rs",
+        "tests/fixtures"
       ],
       "created_sequence": 1,
-      "id": "intent:change_01M74ZXHG6GAEPNMZAXMGJYGH8",
+      "id": "intent:change_01M7W2EJ67Y2RM1R8WAMZW92QR",
       "out_of_scope": [],
       "proof_requirements": [],
-      "raw_intent": "Repair CI for preserved release preparation research\n\nRetain current accepted dependencies, production release boundaries and collector contracts; preserve the inactive preparation proposal with a regression proving it cannot self-authorize. Four-platform qualification remains open.",
-      "refined_intent": "Repair CI for preserved release preparation research\n\nRetain current accepted dependencies, production release boundaries and collector contracts; preserve the inactive preparation proposal with a regression proving it cannot self-authorize. Four-platform qualification remains open.",
+      "raw_intent": "test: finish independent portable read-contract falsifiers #870 #871 #1733\n\nAudit existing public read-only profile, closed corrections and active owners; specify normative independently consumable read semantics before runtime changes; actual adversarial raw-input and import-without-authority controls plus lawful read recovery; no new proof registry or policy interpreter. Delivery uses exact-head GitHub Actions per user; all Buildkite excluded. Retain unsupported domains and whole issue acceptance.",
+      "refined_intent": "test: finish independent portable read-contract falsifiers #870 #871 #1733\n\nAudit existing public read-only profile, closed corrections and active owners; specify normative independently consumable read semantics before runtime changes; actual adversarial raw-input and import-without-authority controls plus lawful read recovery; no new proof registry or policy interpreter. Delivery uses exact-head GitHub Actions per user; all Buildkite excluded. Retain unsupported domains and whole issue acceptance.",
       "status": "refined",
       "updated_sequence": 3
     }
@@ -824,259 +820,169 @@
   "sections": {
     "plan": {
       "constraints": {
-        "file_touch_budget": 25,
+        "file_touch_budget": null,
         "forbidden_paths": []
       },
       "deferred_questions": [],
       "human_questions": [],
-      "intent": "The historical branch behind #1613 failed root dependency denial on an obsolete Tokio lock and diverged from current master. This PR preserves its useful preparation research with the accepted lockfile and release contract. Continue the same task and original checkpoint lineage. Merge accepted target 2f6daf8c4a15223e1c7944e9471b0d2ceb4661cd; preserve historical proof bound to 91b1293cacf7161f6cb0cf54197e2ae97c1c2d5d. Fresh readiness is required for the actual merge commit.",
+      "intent": "Publish a versioned transport-neutral contract over the existing read-only projection meanings, strict raw-byte vectors and one standalone Python consumer independent of Decapod code and storage. Compare decisions and reason classes with actual CLI execution. Imported claims remain caller-supplied and cannot grant proof, approval, custody or mutation. First reproduce any present decoder disagreement, then correct the independent consumer and protect legitimate Unicode/optional semantics. Preserve unsupported domains explicitly; this does not close authenticated observed conformance or the whole campaign. Source verification runs through GitHub Actions as expressly authorized; ignore all Buildkite.",
       "phases": [],
       "proof_hooks": [
-        "decapod govern artifacts verify-checkpoints --base-branch 2f6daf8c4a15223e1c7944e9471b0d2ceb4661cd --head-ref HEAD --target-base master --format json",
-        "decapod workspace publish"
+        "All22 raw vectors execute through actual CLI and independent Python; negative reasons and positive projection responses required"
       ],
       "schema_version": "1.1.0",
       "spec_reviews": [
         {
-          "disposition": "unchanged_with_reason",
+          "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "No architecture changes; release-proof fixture, checklist, and unit test reconciliation only.",
-          "reviewed_code_fingerprint": "e6fce094b04b691972d5b4d6744301b02bf10518a3101bb02cf6663b72b15f0f",
-          "spec_material_hash": "8ae7db31e8d777fdcf57552c8af32c4372c62dc9eb1daa22b53212f774206bd0"
+          "reason": "Current exact22-vector encoding correction; trim only accidental trailing blank lines in new fixture/schema/specification. Required recipes unchanged.",
+          "reviewed_code_fingerprint": "41741e17c8ef1d755fd5562e5102030cc92ace79e337517a0a64639a66e73d46",
+          "spec_material_hash": "30deaaab6d59d74106d055938be3b5aa5f3c890431c48b42fb594cfbbc58035e"
         },
         {
-          "disposition": "unchanged_with_reason",
+          "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "No CLI/RPC interface changes; release-proof fixture and readiness_profile unit test only.",
-          "reviewed_code_fingerprint": "e6fce094b04b691972d5b4d6744301b02bf10518a3101bb02cf6663b72b15f0f",
-          "spec_material_hash": "61ce744344efe73dae2599cc14945073a0374c76e0aae69603f11f39982b6744"
+          "reason": "Versioned raw encoding profile only; imported authority and complete external profile remain unproven.",
+          "reviewed_code_fingerprint": "41741e17c8ef1d755fd5562e5102030cc92ace79e337517a0a64639a66e73d46",
+          "spec_material_hash": "b027da8e764cbca6330eeb92c1052238d636668801f9d84405a41c136b3afade"
         },
         {
-          "disposition": "unchanged_with_reason",
+          "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Preserves release-boundary separation without self-authorization.",
-          "reviewed_code_fingerprint": "e6fce094b04b691972d5b4d6744301b02bf10518a3101bb02cf6663b72b15f0f",
-          "spec_material_hash": "3d3861ffd59d9e65966771b5db4107b999a733ec7ad029f02a6c1cb2696ec964"
+          "reason": "Negative parser reasons and lawful positive twins remain unchanged; native refusal not weakened.",
+          "reviewed_code_fingerprint": "41741e17c8ef1d755fd5562e5102030cc92ace79e337517a0a64639a66e73d46",
+          "spec_material_hash": "bd1088bdb66ac10f3416b8e4c76c707589c714039558fcb66132b90530de988a"
         }
       ],
       "state": "APPROVED",
       "stop_conditions": [],
-      "title": "test(release): reconcile pinned preparation research",
+      "title": "Encoding-plane differential correction and pinned portable vectors #1733",
       "todo_ids": [
-        "cicd_01m74zx5xe5y74b8"
+        "test_01m7w2bfayzzk8vm"
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795157555Z"
+      "updated_at": "1795165906Z"
     },
     "trajectory": {
       "active_boundaries": [
-        "Current claimed task and isolated work branch",
-        "Read-only diagnostics do not waive native authoring or publication gates",
-        "Read-only gatekeeper findings do not establish readiness; actual custody and decision gates remain enforced",
-        "Reviewed residual patch and CLI-generated governance only; draft review, no full-readiness claim",
-        "Same task and journal; accepted target merged without remote history rewrite; full readiness pending"
+        "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:0fcd9c7a4b29acf2199dc23f3c4f69424f01edebeebfd0a5ffa56cb1b93deaa9",
+      "artifact_hash": "sha256:387608b99f4d456ffa05980e94e0eb2f8e915ae628847f77896b94e346fe0ffc",
       "checks": [
         {
-          "name": "full-workbranch-validation",
-          "status": "unavailable"
-        },
-        {
-          "name": "git-diff-whitespace",
+          "name": "released-nesting-boundary",
           "status": "passed"
         },
         {
-          "name": "native-gatekeeper",
+          "name": "released-unpaired-surrogate-differential",
           "status": "failed"
-        },
-        {
-          "name": "reviewed-residual-material",
-          "status": "passed"
         }
       ],
-      "current_phase": "validation",
+      "current_phase": "intent",
       "custody": {
         "events": [
           {
             "event_id": "event:2",
-            "intent_id": "intent:change_01M74ZXHG6GAEPNMZAXMGJYGH8",
+            "intent_id": "intent:change_01M7W2EJ67Y2RM1R8WAMZW92QR",
             "kind": "created",
             "sequence": 2
           },
           {
             "event_id": "event:3",
-            "intent_id": "intent:change_01M74ZXHG6GAEPNMZAXMGJYGH8",
+            "intent_id": "intent:change_01M7W2EJ67Y2RM1R8WAMZW92QR",
             "kind": "refined",
             "sequence": 3
           },
           {
-            "detail": "trajectory:branch_01M74ZXHH2M62G9WT2M8QGG0ZZ",
+            "detail": "trajectory:branch_01M7W2EJ9TMH2SN63B74BWTEDV",
             "event_id": "event:4",
-            "intent_id": "intent:change_01M74ZXHG6GAEPNMZAXMGJYGH8",
+            "intent_id": "intent:change_01M7W2EJ67Y2RM1R8WAMZW92QR",
             "kind": "trajectory_step_recorded",
             "sequence": 4
-          },
-          {
-            "detail": "trajectory:branch_01M74ZXHH2M62G9WT2M8QGG0ZZ",
-            "event_id": "event:5",
-            "intent_id": "intent:change_01M74ZXHG6GAEPNMZAXMGJYGH8",
-            "kind": "trajectory_step_recorded",
-            "sequence": 5
-          },
-          {
-            "detail": "trajectory:branch_01M74ZXHH2M62G9WT2M8QGG0ZZ",
-            "event_id": "event:6",
-            "intent_id": "intent:change_01M74ZXHG6GAEPNMZAXMGJYGH8",
-            "kind": "trajectory_step_recorded",
-            "sequence": 6
-          },
-          {
-            "detail": "trajectory:branch_01M74ZXHH2M62G9WT2M8QGG0ZZ",
-            "event_id": "event:7",
-            "intent_id": "intent:change_01M74ZXHG6GAEPNMZAXMGJYGH8",
-            "kind": "trajectory_step_recorded",
-            "sequence": 7
-          },
-          {
-            "detail": "trajectory:branch_01M74ZXHH2M62G9WT2M8QGG0ZZ",
-            "event_id": "event:8",
-            "intent_id": "intent:change_01M74ZXHG6GAEPNMZAXMGJYGH8",
-            "kind": "trajectory_step_recorded",
-            "sequence": 8
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 8,
+        "next_sequence": 4,
         "schema_version": "1.0.0",
         "trajectories": {
-          "branch_01M74ZXHH2M62G9WT2M8QGG0ZZ": {
+          "branch_01M7W2EJ9TMH2SN63B74BWTEDV": {
             "evidence_only": true,
-            "id": "branch_01M74ZXHH2M62G9WT2M8QGG0ZZ",
-            "intent_id": "intent:change_01M74ZXHG6GAEPNMZAXMGJYGH8",
+            "id": "branch_01M7W2EJ9TMH2SN63B74BWTEDV",
+            "intent_id": "intent:change_01M7W2EJ67Y2RM1R8WAMZW92QR",
             "steps": [
               {
-                "action": "validation",
-                "command": "git apply reviewed patch",
+                "action": "trajectory.record",
                 "custody_event_id": "event:4",
                 "observations": [
-                  ".decapod/managed/specs/VALIDATION.md",
-                  "Actual hosted session, claim and admitted workspace; source history: observed_gap_recorded. No retrospective proof. Source checks remain unrun at this checkpoint; a later CI-local validation cannot establish complete workbranch readiness."
+                  "tests/fixtures/interop_strict_json.py",
+                  "src/decapod/core/json.rs",
+                  ".config/build/decapod.BUILD.bzl",
+                  "tests/interop_conformance.rs",
+                  "tests/fixtures/interop_strict_json.py",
+                  "tests/fixtures/interop_json_vectors.v1.json",
+                  "assets/schemas/interop-json-vectors.schema.json",
+                  "docs/conformance/json-v1.md",
+                  ".config/build/decapod.BUILD.bzl",
+                  "/private/tmp/attack-gaps-interop-surrogate-before.json",
+                  "/private/tmp/attack-gaps-interop-depth-before.json"
                 ],
                 "proof_refs": [
-                  "git-diff-whitespace",
-                  "full-workbranch-validation"
+                  "released-unpaired-surrogate-differential",
+                  "released-nesting-boundary"
                 ],
                 "scope": [
-                  "root"
+                  "assets/schemas",
+                  "docs/conformance",
+                  "tests/fixtures",
+                  "tests/interop_conformance.rs"
                 ],
                 "sequence": 4,
-                "validation_findings": []
-              },
-              {
-                "action": "validation",
-                "custody_event_id": "event:5",
-                "observations": [
-                  "Native staged-candidate gatekeeper exit 1; sanitized actual findings retained in preparation result. User authorized draft workbranch iteration, not merge or full-readiness claims."
-                ],
-                "proof_refs": [
-                  "native-gatekeeper"
-                ],
-                "scope": [
-                  "release-proof",
-                  "root"
-                ],
-                "sequence": 5,
-                "validation_findings": []
-              },
-              {
-                "action": "validation",
-                "command": "git merge --no-commit --no-ff -X ours 2f6daf8c4a15223e1c7944e9471b0d2ceb4661cd",
-                "custody_event_id": "event:6",
-                "observations": [
-                  ".decapod/managed/specs/VALIDATION.md",
-                  "Original checkpoint history remains bound to 91b1293cacf7161f6cb0cf54197e2ae97c1c2d5d; real merge parents will be 71e1139912dcfdd826143e9e889a9282c25d54b8 and 2f6daf8c4a15223e1c7944e9471b0d2ceb4661cd. Authored residual tree 4c083824c46d856d15199d368b1e5ca12e37a638; source-review declaration does not approve controller execution."
-                ],
-                "proof_refs": [
-                  "reviewed-residual-material",
-                  "full-workbranch-validation"
-                ],
-                "scope": [
-                  "release-proof",
-                  "root"
-                ],
-                "sequence": 6,
-                "validation_findings": []
-              },
-              {
-                "action": "validation",
-                "custody_event_id": "event:7",
-                "observations": [
-                  "Actual gatekeeper output retained encrypted; findings remain findings. Fresh full readiness has not yet run."
-                ],
-                "proof_refs": [
-                  "native-gatekeeper"
-                ],
-                "scope": [
-                  "release-proof",
-                  "root"
-                ],
-                "sequence": 7,
-                "validation_findings": []
-              },
-              {
-                "action": "trajectory.record",
-                "custody_event_id": "event:8",
-                "observations": [
-                  ".decapod/managed/specs/VALIDATION.md",
-                  ".decapod/managed/Dockerfile.decapod",
-                  "Merged origin/master 45751f54e (v0.153.0); fmt, clippy --all-targets --all-features, and readiness_profile tests 49/49 passed"
-                ],
-                "proof_refs": [],
-                "scope": [
-                  "release-proof",
-                  "root"
-                ],
-                "sequence": 8,
-                "validation_findings": []
+                "validation_findings": [
+                  "Encoding profile is a bounded independent-decoder correction, not complete governance-envelope or authenticated conformance proof. Bazel change only declares actual fixture inputs; required recipes unchanged."
+                ]
               }
             ]
           }
         }
       },
-      "declared_commands": [
-        "decapod rpc --op specs.refresh",
-        "git apply reviewed patch",
-        "git merge --no-commit --no-ff -X ours 2f6daf8c4a15223e1c7944e9471b0d2ceb4661cd"
-      ],
+      "declared_commands": [],
       "destination": "pull request",
       "evidence": [
-        "Actual gatekeeper output retained encrypted; findings remain findings. Fresh full readiness has not yet run.",
-        "Actual hosted session, claim and admitted workspace; source history: observed_gap_recorded. No retrospective proof. Source checks remain unrun at this checkpoint; a later CI-local validation cannot establish complete workbranch readiness.",
-        "Merged origin/master 45751f54e (v0.153.0); fmt, clippy --all-targets --all-features, and readiness_profile tests 49/49 passed",
-        "Native staged-candidate gatekeeper exit 1; sanitized actual findings retained in preparation result. User authorized draft workbranch iteration, not merge or full-readiness claims.",
-        "Original checkpoint history remains bound to 91b1293cacf7161f6cb0cf54197e2ae97c1c2d5d; real merge parents will be 71e1139912dcfdd826143e9e889a9282c25d54b8 and 2f6daf8c4a15223e1c7944e9471b0d2ceb4661cd. Authored residual tree 4c083824c46d856d15199d368b1e5ca12e37a638; source-review declaration does not approve controller execution."
+        "/private/tmp/attack-gaps-interop-depth-before.json",
+        "/private/tmp/attack-gaps-interop-surrogate-before.json"
       ],
-      "inspected_files": [],
-      "intent_id": "intent:change_01M74ZXHG6GAEPNMZAXMGJYGH8",
+      "inspected_files": [
+        ".config/build/decapod.BUILD.bzl",
+        "src/decapod/core/json.rs",
+        "tests/fixtures/interop_strict_json.py"
+      ],
+      "intent_id": "intent:change_01M7W2EJ67Y2RM1R8WAMZW92QR",
       "modified_files": [
-        ".decapod/managed/Dockerfile.decapod",
-        ".decapod/managed/specs/VALIDATION.md"
+        ".config/build/decapod.BUILD.bzl",
+        "assets/schemas/interop-json-vectors.schema.json",
+        "docs/conformance/json-v1.md",
+        "tests/fixtures/interop_json_vectors.v1.json",
+        "tests/fixtures/interop_strict_json.py",
+        "tests/interop_conformance.rs"
       ],
       "next_transitions": [
         "Refine plan and declare falsifiable checks"
       ],
       "repo_scope": [
-        "release-proof",
-        "root"
+        "assets/schemas",
+        "docs/conformance",
+        "tests/fixtures",
+        "tests/interop_conformance.rs"
       ],
-      "run_id": "branch_01M74ZXHH2M62G9WT2M8QGG0ZZ",
+      "run_id": "branch_01M7W2EJ9TMH2SN63B74BWTEDV",
       "schema_version": "1.1.0",
       "shortcut_risk_signals": [],
-      "task_id": "cicd_01m74zx5xe5y74b8",
+      "task_id": "test_01m7w2bfayzzk8vm",
       "tool_calls": [],
-      "unresolved_assumptions": []
+      "unresolved_assumptions": [
+        "Encoding profile is a bounded independent-decoder correction, not complete governance-envelope or authenticated conformance proof. Bazel change only declares actual fixture inputs; required recipes unchanged."
+      ]
     }
   },
   "legacy_digests": {

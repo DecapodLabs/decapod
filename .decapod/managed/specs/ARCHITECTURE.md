@@ -1178,7 +1178,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `e6fce094b04b691972d5b4d6744301b02bf10518a3101bb02cf6663b72b15f0f`
+- Repository signal fingerprint: `41741e17c8ef1d755fd5562e5102030cc92ace79e337517a0a64639a66e73d46`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (245 files), `tests/` (258 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
@@ -1741,3 +1741,7 @@ authorize a test result. Changed carrier acceptance requires an independently
 released controller, with complete baseline/provider proof still outstanding.
 This infrastructure work preserves PR #1575 and does not reconcile Laya policy
 inside a candidate-controlled validation definition.
+
+## Independent raw-input decoding boundary
+
+`tests/fixtures/interop_strict_json.py` remains an independent, same-host Python decoder with no Decapod import or storage access. It now checks Unicode scalar strings/keys, finite integer overflow and the native 127-container depth limit after unique-key parsing. `tests/fixtures/interop_json_vectors.v1.json` preserves raw parameter strings; the existing unfiltered `tests/interop_conformance.rs` target compares actual native rejection reasons and legitimate projection execution. The existing Bazel target declares both compile-time data inputs explicitly. No production parser, policy engine, proof producer, workflow or required test recipe is replaced.

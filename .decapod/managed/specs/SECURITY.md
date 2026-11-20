@@ -797,7 +797,7 @@ execution evidence remains required before publication readiness.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `e6fce094b04b691972d5b4d6744301b02bf10518a3101bb02cf6663b72b15f0f`
+- Repository signal fingerprint: `41741e17c8ef1d755fd5562e5102030cc92ace79e337517a0a64639a66e73d46`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (245 files), `tests/` (258 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
@@ -1344,3 +1344,7 @@ interventions and created-but-not-admitted PRs cannot become autonomous success.
 
 ## Fail-closed host attribution
 Missing provider-requested tool identities and kernel calls outside an actual in-flight bash interval prevent an autonomous-admission classification. Express these rejection conditions directly, without lint exceptions or weakening missing-input behavior. Source CI must pass both the mandatory core/library regression owner and lint before publication.
+
+## Decoder differential falsifiers and authority limits
+
+Actual official0.153.2 rejected an unpaired surrogate that the prior Python decoder accepted; the prior independent decoder also accepted excessive nesting and overflowing integer tokens. The correction narrows that independent consumer to the existing native boundary. Positive twins preserve valid surrogate pairs, escaped control characters, distinct Unicode keys, finite large numbers and boundary-sized nesting. Malformed vectors must fail before project/session startup, with the specific JSON refusal rather than an unrelated initialization error. Diagnostic conformance reports identify actual consumers and inputs but do not authenticate an independent host, current proof, human consent, replay protection or cross-tenant authority. Those original campaign obligations remain open.

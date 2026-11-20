@@ -60,6 +60,167 @@ fn python_json_reason(root: &std::path::Path, value: &str) -> String {
 }
 
 #[test]
+fn portable_encoding_vectors_agree_with_independent_decoder() {
+    use decapod::core::bounded_process::BoundedCommand;
+    use sha2::{Digest, Sha256};
+    use std::{ffi::OsStr, time::Duration};
+
+    let corpus_bytes = include_bytes!("fixtures/interop_json_vectors.v1.json");
+    let schema_bytes = include_bytes!("../assets/schemas/interop-json-vectors.schema.json");
+    let corpus: Value = serde_json::from_slice(corpus_bytes).unwrap();
+    let schema: Value = serde_json::from_slice(schema_bytes).unwrap();
+    assert_eq!(corpus["profile"], "decapod.interop.encoding");
+    assert_eq!(corpus["profile_version"], "1.0.0");
+    assert_eq!(
+        corpus["schema_version"],
+        schema["properties"]["schema_version"]["const"]
+    );
+    let vectors = corpus["vectors"].as_array().unwrap();
+    let mut ids = std::collections::BTreeSet::new();
+    for vector in vectors {
+        assert!(ids.insert(vector["id"].as_str().unwrap()));
+        let twin = vectors
+            .iter()
+            .find(|candidate| candidate["id"] == vector["positive_twin"])
+            .unwrap();
+        assert_eq!(twin["expected"], "accepted");
+    }
+
+    let fixture = tempfile::tempdir().unwrap();
+    let binary = harness::resolve_decapod_bin();
+    let command = |program: &OsStr| isolated_command(fixture.path(), program);
+    assert!(
+        command(OsStr::new("git"))
+            .args(["init", "-q"])
+            .bounded_output(Duration::from_secs(30))
+            .unwrap()
+            .status
+            .success()
+    );
+
+    // Refusal must precede project/session startup. Do not accept an unrelated
+    // startup failure as proof that malformed input was rejected.
+    let mut results = Vec::new();
+    for vector in vectors
+        .iter()
+        .filter(|vector| vector["expected"] == "invalid_json")
+    {
+        let raw = vector["raw"].as_str().unwrap();
+        let independent = python_json_reason(fixture.path(), raw);
+        assert_eq!(independent, "invalid_json", "{}", vector["id"]);
+        let output = command(binary.as_os_str())
+            .args(["rpc", "--op", "interop.project", "--params", raw])
+            .bounded_output(Duration::from_secs(30))
+            .unwrap();
+        assert!(!output.status.success(), "{}", combined(&output));
+        assert!(
+            String::from_utf8_lossy(&output.stderr).contains("Invalid JSON parameters"),
+            "{}: {}",
+            vector["id"],
+            combined(&output)
+        );
+        assert!(
+            std::fs::read_dir(fixture.path())
+                .unwrap()
+                .all(|entry| entry.unwrap().file_name() == ".git"),
+            "invalid vector {} initialized project/session state",
+            vector["id"]
+        );
+        results.push(json!({
+            "id": vector["id"], "raw_sha256": format!("{:x}", Sha256::digest(raw.as_bytes())),
+            "expected": vector["expected"], "independent_reason": independent,
+            "kernel_reason": "invalid_json", "kernel_exit": output.status.code(),
+            "kernel_stdout": String::from_utf8_lossy(&output.stdout),
+            "kernel_stderr": String::from_utf8_lossy(&output.stderr)
+        }));
+    }
+
+    let initialized = command(binary.as_os_str())
+        .args([
+            "init",
+            "--product-summary",
+            "Portable JSON interpretation controls",
+        ])
+        .bounded_output(Duration::from_secs(60))
+        .unwrap();
+    assert!(initialized.status.success(), "{}", combined(&initialized));
+    for vector in vectors
+        .iter()
+        .filter(|vector| vector["expected"] == "accepted")
+    {
+        let raw = vector["raw"].as_str().unwrap();
+        let independent = python_json_reason(fixture.path(), raw);
+        assert_eq!(independent, "accepted", "{}", vector["id"]);
+        let output = command(binary.as_os_str())
+            .args(["rpc", "--op", "interop.project", "--params", raw])
+            .bounded_output(Duration::from_secs(30))
+            .unwrap();
+        assert!(
+            output.status.success(),
+            "{}: {}",
+            vector["id"],
+            combined(&output)
+        );
+        let response: Value = serde_json::from_slice(&output.stdout).unwrap();
+        assert_eq!(response["success"], true);
+        assert_eq!(response["result"]["canonical_state_verified"], false);
+        results.push(json!({
+            "id": vector["id"], "raw_sha256": format!("{:x}", Sha256::digest(raw.as_bytes())),
+            "expected": vector["expected"], "independent_reason": independent,
+            "kernel_reason": "accepted", "kernel_exit": output.status.code(),
+            "kernel_stdout": String::from_utf8_lossy(&output.stdout),
+            "kernel_stderr": String::from_utf8_lossy(&output.stderr)
+        }));
+    }
+    assert_eq!(
+        results.len(),
+        vectors.len(),
+        "every pinned vector must execute"
+    );
+    results.sort_by_key(|result| result["id"].as_str().unwrap().to_owned());
+    let version = command(binary.as_os_str())
+        .arg("--version")
+        .bounded_output(Duration::from_secs(30))
+        .unwrap();
+    assert!(version.status.success());
+    let python_identity = command(OsStr::new("python3"))
+        .args(["-I", "-S", "-B", "-c",
+            "import hashlib,json,pathlib,sys; print(json.dumps({'version':sys.version,'executable_sha256':hashlib.sha256(pathlib.Path(sys.executable).read_bytes()).hexdigest()}))"])
+        .bounded_output(Duration::from_secs(30))
+        .unwrap();
+    assert!(python_identity.status.success());
+    let python_identity: Value = serde_json::from_slice(&python_identity.stdout).unwrap();
+    let directory = std::env::var_os("INTEROP_CONFORMANCE_REPORT_DIR")
+        .or_else(|| std::env::var_os("TEST_UNDECLARED_OUTPUTS_DIR"))
+        .map(std::path::PathBuf::from)
+        .unwrap_or_else(|| {
+            std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("target/interop-conformance")
+        });
+    let report = json!({
+        "schema": "decapod.interop.encoding-report.v1",
+        "profile": corpus["profile"], "profile_version": corpus["profile_version"],
+        "scope": "same_host_raw_json_decoding_only", "publication_ready": false,
+        "binary_version": String::from_utf8_lossy(&version.stdout).trim(),
+        "binary_sha256": format!("{:x}", Sha256::digest(std::fs::read(&binary).unwrap())),
+        "independent_identity": python_identity,
+        "independent_source_sha256": format!("{:x}", Sha256::digest(include_bytes!("fixtures/interop_strict_json.py"))),
+        "vectors_sha256": format!("{:x}", Sha256::digest(corpus_bytes)),
+        "vector_schema_sha256": format!("{:x}", Sha256::digest(schema_bytes)),
+        "cases": results,
+        "unsupported": ["canonical_numeric_hash", "replay_authority", "cross_tenant_authority", "independent_host", "authenticated_conformance_producer"]
+    });
+    let bytes = serde_json::to_vec_pretty(&report).unwrap();
+    let write_report = |directory: &std::path::Path| {
+        std::fs::create_dir_all(directory)?;
+        std::fs::write(directory.join("portable-encoding-v1.json"), &bytes)
+    };
+    if write_report(&directory).is_err() {
+        // Match the existing harness fallback for read-only Bazel runfiles.
+        write_report(&std::env::temp_dir().join("interop-conformance")).unwrap();
+    }
+}
+
+#[test]
 fn unregistered_rpc_is_rejected_before_project_startup() {
     use decapod::core::bounded_process::BoundedCommand;
     use std::time::Duration;

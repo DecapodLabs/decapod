@@ -1,0 +1,162 @@
+{
+  "schema_version": "1.0.0",
+  "profile": "decapod.interop.encoding",
+  "profile_version": "1.0.0",
+  "scope": "raw_json_decoding_only",
+  "vectors": [
+    {
+      "id": "valid-empty-report",
+      "raw": "{\"kind\":\"validation_report\",\"report\":{\"value\":{}}}",
+      "expected": "accepted",
+      "family": "syntax",
+      "positive_twin": "valid-empty-report"
+    },
+    {
+      "id": "trailing-comma",
+      "raw": "{\"kind\":\"validation_report\",\"report\":{},}",
+      "expected": "invalid_json",
+      "family": "syntax",
+      "positive_twin": "valid-empty-report"
+    },
+    {
+      "id": "duplicate-decoded-key",
+      "raw": "{\"kind\":\"validation_report\",\"report\":{\"grant\":\"narrow\",\"gr\\u0061nt\":\"wide\"}}",
+      "expected": "invalid_json",
+      "family": "duplicate_key",
+      "positive_twin": "valid-distinct-keys"
+    },
+    {
+      "id": "duplicate-in-array",
+      "raw": "{\"kind\":\"validation_report\",\"report\":{\"events\":[{\"grant\":\"narrow\",\"grant\":\"wide\"}]}}",
+      "expected": "invalid_json",
+      "family": "duplicate_key",
+      "positive_twin": "valid-empty-report"
+    },
+    {
+      "id": "valid-distinct-keys",
+      "raw": "{\"kind\":\"validation_report\",\"report\":{\"é\":\"one\",\"e\\u0301\":\"two\"}}",
+      "expected": "accepted",
+      "family": "unicode",
+      "positive_twin": "valid-distinct-keys"
+    },
+    {
+      "id": "valid-bmp",
+      "raw": "{\"kind\":\"validation_report\",\"report\":{\"value\":\"λ\"}}",
+      "expected": "accepted",
+      "family": "unicode",
+      "positive_twin": "valid-bmp"
+    },
+    {
+      "id": "high-surrogate",
+      "raw": "{\"kind\":\"validation_report\",\"report\":{\"value\":\"\\ud800\"}}",
+      "expected": "invalid_json",
+      "family": "unicode",
+      "positive_twin": "valid-surrogate-pair"
+    },
+    {
+      "id": "low-surrogate",
+      "raw": "{\"kind\":\"validation_report\",\"report\":{\"value\":\"\\udfff\"}}",
+      "expected": "invalid_json",
+      "family": "unicode",
+      "positive_twin": "valid-surrogate-pair"
+    },
+    {
+      "id": "surrogate-key",
+      "raw": "{\"kind\":\"validation_report\",\"report\":{\"\\ud800\":\"claim\"}}",
+      "expected": "invalid_json",
+      "family": "unicode",
+      "positive_twin": "valid-bmp"
+    },
+    {
+      "id": "valid-surrogate-pair",
+      "raw": "{\"kind\":\"validation_report\",\"report\":{\"value\":\"\\ud83d\\ude80\"}}",
+      "expected": "accepted",
+      "family": "unicode",
+      "positive_twin": "valid-surrogate-pair"
+    },
+    {
+      "id": "valid-escaped-control",
+      "raw": "{\"kind\":\"validation_report\",\"report\":{\"value\":\"\\u0000\"}}",
+      "expected": "accepted",
+      "family": "unicode",
+      "positive_twin": "valid-escaped-control"
+    },
+    {
+      "id": "literal-control",
+      "raw": "{\"kind\":\"validation_report\",\"report\":{\"value\":\"\u0001\"}}",
+      "expected": "invalid_json",
+      "family": "unicode",
+      "positive_twin": "valid-escaped-control"
+    },
+    {
+      "id": "valid-u64",
+      "raw": "{\"kind\":\"validation_report\",\"report\":{\"value\":18446744073709551615}}",
+      "expected": "accepted",
+      "family": "number",
+      "positive_twin": "valid-u64"
+    },
+    {
+      "id": "valid-finite-large-integer",
+      "raw": "{\"kind\":\"validation_report\",\"report\":{\"value\":18446744073709551616}}",
+      "expected": "accepted",
+      "family": "number",
+      "positive_twin": "valid-finite-large-integer"
+    },
+    {
+      "id": "integer-overflow",
+      "raw": "{\"kind\":\"validation_report\",\"report\":{\"value\":10000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000}}",
+      "expected": "invalid_json",
+      "family": "number",
+      "positive_twin": "valid-finite-large-integer"
+    },
+    {
+      "id": "valid-finite-exponent",
+      "raw": "{\"kind\":\"validation_report\",\"report\":{\"value\":1e300}}",
+      "expected": "accepted",
+      "family": "number",
+      "positive_twin": "valid-finite-exponent"
+    },
+    {
+      "id": "exponent-overflow",
+      "raw": "{\"kind\":\"validation_report\",\"report\":{\"value\":1e400}}",
+      "expected": "invalid_json",
+      "family": "number",
+      "positive_twin": "valid-finite-exponent"
+    },
+    {
+      "id": "non-json-nan",
+      "raw": "{\"kind\":\"validation_report\",\"report\":{\"value\":NaN}}",
+      "expected": "invalid_json",
+      "family": "number",
+      "positive_twin": "valid-finite-exponent"
+    },
+    {
+      "id": "non-json-infinity",
+      "raw": "{\"kind\":\"validation_report\",\"report\":{\"value\":Infinity}}",
+      "expected": "invalid_json",
+      "family": "number",
+      "positive_twin": "valid-finite-exponent"
+    },
+    {
+      "id": "leading-zero",
+      "raw": "{\"kind\":\"validation_report\",\"report\":{\"value\":01}}",
+      "expected": "invalid_json",
+      "family": "number",
+      "positive_twin": "valid-u64"
+    },
+    {
+      "id": "valid-depth-boundary",
+      "raw": "{\"kind\":\"validation_report\",\"report\":{\"value\":[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[0]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]}}",
+      "expected": "accepted",
+      "family": "depth",
+      "positive_twin": "valid-depth-boundary"
+    },
+    {
+      "id": "excessive-depth",
+      "raw": "{\"kind\":\"validation_report\",\"report\":{\"value\":[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[0]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]}}",
+      "expected": "invalid_json",
+      "family": "depth",
+      "positive_twin": "valid-depth-boundary"
+    }
+  ]
+}

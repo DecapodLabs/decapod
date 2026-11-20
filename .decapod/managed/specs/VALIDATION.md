@@ -1526,7 +1526,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `e6fce094b04b691972d5b4d6744301b02bf10518a3101bb02cf6663b72b15f0f`
+- Repository signal fingerprint: `41741e17c8ef1d755fd5562e5102030cc92ace79e337517a0a64639a66e73d46`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (245 files), `tests/` (258 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
@@ -2543,3 +2543,7 @@ preparation, all four configured cargo-dist archives and the complete bound
 execution/collection graph remain separate obligations. No fixture, digest
 update, source-CI subset or generated checkpoint grants release authority or
 converts missing platform evidence into success.
+
+## Portable encoding execution plan
+
+The current encoding change has an actual released-binary counterexample and a source-level correction in the independent test consumer. Its existing unfiltered interoperability target will execute every pinned negative and positive vector through the real CLI and the independent Python process, retaining exact consumer versions/hashes and raw-input hashes in a versioned diagnostic report. Formatting and native checkpoint history are separate from runtime test execution. GitHub Actions supplies source verification under the maintainer's delivery instruction; pending results must not be called passing native admission or full campaign completion.

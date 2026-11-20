@@ -1535,7 +1535,7 @@ field. Nothing in this operation authorizes a mutation, approval or completion.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `e6fce094b04b691972d5b4d6744301b02bf10518a3101bb02cf6663b72b15f0f`
+- Repository signal fingerprint: `41741e17c8ef1d755fd5562e5102030cc92ace79e337517a0a64639a66e73d46`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (245 files), `tests/` (258 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
@@ -2180,3 +2180,7 @@ any required command, provider, custody or current-target requirement.
 ## Accepted v0.146.0 audit reconciliation
 
 This map now uses accepted master `e9c40e929ee33aa5443c38b57276f96111db0b92` and the installed 0.146.0 kernel. The accepted #1699 bounded escalation CLI/RPC reference is implemented and covered by its exact-source execution; it is not complete external runtime adoption, semantic reasoning proof or the ten-worker A–H demonstration. Prior baseline paragraphs remain historical audit context. Pending #1697 physical recovery and #1702 canonical local-target admission are kept separate from accepted enforcement until individually verified and merged. Source-CI diagnostics do not substitute for the unchanged full native provider contract.
+
+## Versioned encoding-plane artifacts
+
+`docs/conformance/json-v1.md` defines encoding profile1.0.0, with a machine-readable vector schema at `assets/schemas/interop-json-vectors.schema.json` and pinned raw inputs at `tests/fixtures/interop_json_vectors.v1.json`. Both consumers receive the same original text, never expected answers or a reserialized input. `accepted` and `invalid_json` describe decoding only. The existing `interop.project` result still labels caller-supplied data and `canonical_state_verified=false`. Numeric decoding does not promise arbitrary precision, canonical numeric hashes or authorization.
