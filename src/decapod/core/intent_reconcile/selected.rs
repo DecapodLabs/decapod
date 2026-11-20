@@ -575,6 +575,36 @@ mod tests {
         assert_eq!(consistency(&repair).unwrap().0, RuleVerdict::Unverifiable);
     }
     #[test]
+    fn four_relations_are_conflicting_only_as_a_complete_set() {
+        let mut work = triangle();
+        work.roots.push(RootRequirement {
+            id: "R4".into(),
+            checks: vec!["accepted-check".into()],
+        });
+        work.relations[2].right = "D".into();
+        work.relations.push(Relation {
+            id: "R4".into(),
+            requirement: "R4".into(),
+            left: "C".into(),
+            right: "D".into(),
+            kind: "eq".into(),
+        });
+
+        for omitted in 0..work.relations.len() {
+            let mut subset = work.clone();
+            subset.relations.remove(omitted);
+            assert_eq!(consistency(&subset).unwrap().0, RuleVerdict::Pass);
+        }
+        let (verdict, witness, unsupported) = consistency(&work).unwrap();
+        assert_eq!(verdict, RuleVerdict::Fail);
+        assert_eq!(witness, ["R1", "R2", "R3", "R4"]);
+        assert!(unsupported.is_empty());
+
+        work.relations[2].kind = "eq".into();
+        assert_eq!(consistency(&work).unwrap().0, RuleVerdict::Pass);
+    }
+
+    #[test]
     fn omitted_root_and_acknowledged_root_are_not_executed_proof() {
         let temp = tempfile::tempdir().unwrap();
         let store = Store {
