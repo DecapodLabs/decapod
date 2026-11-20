@@ -7,6 +7,32 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.156.0](https://github.com/DecapodLabs/decapod/compare/v0.155.1...v0.156.0) - 2026-11-20
+
+### Added
+
+- *(governance)* reauthor finite issue contracts with current custody
+
+### Fixed
+
+- *(release)* verify separate manifest template and content hashes
+- *(ci)* repair legacy scope fixture on v0.155.0
+- *(governance)* refresh the stack for v0.154.0
+- *(governance)* integrate the release verifier and instruction contracts
+- *(governance)* preserve instruction lineage across journal merges
+- *(governance)* reconcile instruction contracts with accepted v0.153.2
+- *(governance)* reconcile instruction contracts with accepted v0.153.1
+- *(contracts)* integrate accepted interoperability and release 0.148.12
+- *(governance)* retain required spec decisions through plan reset
+- *(interop)* integrate accepted discovery with cold state readers
+
+### Other
+
+- *(merge)* sync accepted v0.155.1 release
+- *(merge)* sync accepted release-verifier merge
+- *(governance)* initialize optional platform proof policies
+- *(governance)* retain explicit historical proof disposition
+
 ## [0.155.1](https://github.com/DecapodLabs/decapod/compare/v0.155.0...v0.155.1) - 2026-11-20
 
 ### Fixed

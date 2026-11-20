@@ -1534,7 +1534,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `c6ea4c0e732a43cf79cf27c8eecd1bdeff508cda262fe15a2cecbe165a6d7f62`
+- Repository signal fingerprint: `363c9fe96c031339b8fc17a4b75737b6e1387b29cad2eab9f0eba109b23ce298`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (250 files), `tests/` (258 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
@@ -2600,3 +2600,5 @@ The accepted v0.154.0 package epoch (`0f44f780`) is integrated before encoding v
 Run encoding conformance against the v0.155.1 release base. The release metadata merge preserves all 22 raw inputs and corresponding positive controls. Retain the full core suite and the timing assertions.
 
 The previous PR run on `08f76bff` against `2e206d26` passed both broker probes and all eleven core targets in GitHub Actions job 136580615071. The reconciliation with accepted contract recovery at `d96bf819` preserves that run as historical evidence and retains the full test suite for a fresh run. The reviewed source inventory has 105 inputs and differs from the accepted base only in the existing Bazel test data declaration.
+
+The v0.156.0 cut at `ba21c8f1` changes only release metadata. The combined candidate also repairs the inherited strict-profile downgrade fixture. The constructor already commits the candidate repository profile while preserving the surrounding config. GitHub Actions job 136580080529 failed on a second empty commit before reaching the refusal assertion. The test now uses the committed candidate and still requires `REQUIRED_PROFILE_DOWNGRADE` after transition approval, with zero native execution selections. Keep the existing CLI and core suites, test filters, and deadlines for the fresh run.

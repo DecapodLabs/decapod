@@ -852,6 +852,11 @@
       "id": "attack-gaps-interop-accepted-d96bf819",
       "summary": "Merge accepted contract recovery, preserve the release projection correction and all pinned encoding inputs, and refresh reviewed publication material for fresh GitHub Actions verification",
       "input_digest": "sha256:a07cf7530c588f444c70a05a6ee13ac329b50bd4968974617bff62cc7cc970ba"
+    },
+    {
+      "id": "attack-gaps-interop-accepted-ba21c8f1",
+      "summary": "Merge accepted v0.156.0 metadata and make the strict-profile refusal test exercise the fixture's already committed downgrade, preserving the encoding controls and all CI deadlines",
+      "input_digest": "sha256:94eb63852b5a9320794f285567ede617678b0db6087e9a6942f78320e176e043"
     }
   ],
   "intents": {
@@ -895,22 +900,22 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Preserves the accepted selected-work and scope-repair architecture and the separate raw-input fixture boundary.",
-          "reviewed_code_fingerprint": "c6ea4c0e732a43cf79cf27c8eecd1bdeff508cda262fe15a2cecbe165a6d7f62",
+          "reason": "Keeps the accepted source authority and independent decoding boundary while testing the downgrade with the committed fixture.",
+          "reviewed_code_fingerprint": "363c9fe96c031339b8fc17a4b75737b6e1387b29cad2eab9f0eba109b23ce298",
           "spec_material_hash": "fa61badf2a21db73f52fe548b768ae0d92f6bcbe2fb5f15afd0dc3518d39570c"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Preserves the accepted instruction and requirement contracts together with the versioned encoding vector and projection interfaces.",
-          "reviewed_code_fingerprint": "c6ea4c0e732a43cf79cf27c8eecd1bdeff508cda262fe15a2cecbe165a6d7f62",
+          "reason": "Preserves the existing refusal contract and the decoder profile. The CLI test setup reuses the committed candidate configuration.",
+          "reviewed_code_fingerprint": "363c9fe96c031339b8fc17a4b75737b6e1387b29cad2eab9f0eba109b23ce298",
           "spec_material_hash": "2a6640f4c0649408b1f14945ebf967073d00f5bb798d38e9fdf3b3d1eb3c51c7"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Preserves the accepted authority and recovery boundaries and the decoder refusal and valid-input controls.",
-          "reviewed_code_fingerprint": "c6ea4c0e732a43cf79cf27c8eecd1bdeff508cda262fe15a2cecbe165a6d7f62",
+          "reason": "Retains the strict downgrade refusal after explicit approval and the assertion that native execution is never selected.",
+          "reviewed_code_fingerprint": "363c9fe96c031339b8fc17a4b75737b6e1387b29cad2eab9f0eba109b23ce298",
           "spec_material_hash": "6e32c0b41ff1cc2b7f19741f625fc67345e1033a93330504ff366f0e45d9dfa5"
         }
       ],
@@ -922,16 +927,24 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795212909Z"
+      "updated_at": "1795214085Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:f5a8aeb0871925ba2cde5f0f56243b8e3a0c9a8ad66e353ca1f6058f8b7b3e18",
+      "artifact_hash": "sha256:bb06b694b09821499fb8cbfc6ee6db0e8cb1b9af87c25615e4f45774dde6198c",
       "checks": [
         {
+          "name": "accepted-contract-cli-fixture",
+          "status": "failed"
+        },
+        {
           "name": "accepted-observer-integration",
+          "status": "passed"
+        },
+        {
+          "name": "combined-candidate-formatting",
           "status": "passed"
         },
         {
@@ -993,10 +1006,24 @@
             "intent_id": "intent:change_01M7W2EJ67Y2RM1R8WAMZW92QR",
             "kind": "trajectory_step_recorded",
             "sequence": 7
+          },
+          {
+            "detail": "trajectory:branch_01M7W2EJ9TMH2SN63B74BWTEDV",
+            "event_id": "event:8",
+            "intent_id": "intent:change_01M7W2EJ67Y2RM1R8WAMZW92QR",
+            "kind": "trajectory_step_recorded",
+            "sequence": 8
+          },
+          {
+            "detail": "trajectory:branch_01M7W2EJ9TMH2SN63B74BWTEDV",
+            "event_id": "event:9",
+            "intent_id": "intent:change_01M7W2EJ67Y2RM1R8WAMZW92QR",
+            "kind": "trajectory_step_recorded",
+            "sequence": 9
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 7,
+        "next_sequence": 9,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M7W2EJ9TMH2SN63B74BWTEDV": {
@@ -1095,24 +1122,70 @@
                 ],
                 "sequence": 7,
                 "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:8",
+                "observations": [
+                  "tests/consumer_readiness.rs",
+                  "tests/common/consumer_readiness_fixture.rs",
+                  "https://github.com/DecapodLabs/decapod/actions/runs/44820025180/job/136580080529"
+                ],
+                "proof_refs": [
+                  "accepted-contract-cli-fixture"
+                ],
+                "scope": [
+                  "assets/schemas",
+                  "docs/conformance",
+                  "tests/fixtures",
+                  "tests/interop_conformance.rs"
+                ],
+                "sequence": 8,
+                "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "command": "cargo fmt --all -- --check",
+                "custody_event_id": "event:9",
+                "observations": [
+                  "tests/common/consumer_readiness_fixture.rs",
+                  "tests/consumer_readiness.rs"
+                ],
+                "proof_refs": [
+                  "combined-candidate-formatting"
+                ],
+                "scope": [
+                  "assets/schemas",
+                  "docs/conformance",
+                  "tests/consumer_readiness.rs",
+                  "tests/fixtures",
+                  "tests/interop_conformance.rs"
+                ],
+                "sequence": 9,
+                "validation_findings": []
               }
             ]
           }
         }
       },
-      "declared_commands": [],
+      "declared_commands": [
+        "cargo fmt --all -- --check"
+      ],
       "destination": "pull request",
       "evidence": [
         "/private/tmp/attack-gaps-controller154-install.json",
         "/private/tmp/attack-gaps-interop-depth-before.json",
         "/private/tmp/attack-gaps-interop-surrogate-before.json",
         "Merged origin/master 9b6a33b0e (v0.155.0); passed cargo fmt, clippy --all-targets --all-features -D warnings, and interop_conformance integration tests",
+        "https://github.com/DecapodLabs/decapod/actions/runs/44820025180/job/136580080529",
         "https://github.com/DecapodLabs/decapod/pull/1863"
       ],
       "inspected_files": [
         ".config/build/decapod.BUILD.bzl",
         "src/decapod/cli.rs",
         "src/decapod/core/json.rs",
+        "tests/common/consumer_readiness_fixture.rs",
+        "tests/consumer_readiness.rs",
         "tests/fixtures/interop_strict_json.py"
       ],
       "intent_id": "intent:change_01M7W2EJ67Y2RM1R8WAMZW92QR",
@@ -1122,16 +1195,20 @@
         ".decapod/managed/specs/.manifest.json",
         "assets/schemas/interop-json-vectors.schema.json",
         "docs/conformance/json-v1.md",
+        "tests/consumer_readiness.rs",
         "tests/fixtures/interop_json_vectors.v1.json",
         "tests/fixtures/interop_strict_json.py",
         "tests/interop_conformance.rs"
       ],
       "next_transitions": [
-        "Refine plan and declare falsifiable checks"
+        "Push exact v0.156.0-based candidate for complete GitHub Actions runs and required review",
+        "Refine plan and declare falsifiable checks",
+        "Remove duplicate fixture commit and verify the same downgrade refusal on the combined candidate"
       ],
       "repo_scope": [
         "assets/schemas",
         "docs/conformance",
+        "tests/consumer_readiness.rs",
         "tests/fixtures",
         "tests/interop_conformance.rs"
       ],
