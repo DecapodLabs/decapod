@@ -7,6 +7,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.155.1](https://github.com/DecapodLabs/decapod/compare/v0.155.0...v0.155.1) - 2026-11-20
+
+### Fixed
+
+- *(release)* integrate accepted v0.154.0 projections
+- *(release)* integrate accepted instruction readiness
+- *(release)* reconcile accepted observer proof boundaries
+- *(release)* commit native v0.153.2 workspace image pin
+- *(release)* align standalone verifier and library test boundaries
+- *(release)* integrate accepted v0.153.2 proof context
+- *(release)* preserve canonical source entrypoint versions
+
+### Other
+
+- *(merge)* sync accepted master fff1f478d (v0.155.0, #1862)
+- *(release)* retain canonical package identity in source fixture
+
 ## [0.155.0](https://github.com/DecapodLabs/decapod/compare/v0.154.0...v0.155.0) - 2026-11-20
 
 ### Added
