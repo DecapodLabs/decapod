@@ -240,12 +240,585 @@ fn admitted_cli_source_file_pass_cannot_mint_verified_workunit() {
 }
 
 impl Fixture {
+    /// These consumer cases use real broker/CLI calls; earlier narrow runner
+    /// cases intentionally exercise first adoption with a minimal proof table.
+    fn governed_config(&self) {
+        let mut config: toml::Value = toml::from_str("schema_version = '1.0.0'\n[init]\nspecs = false\nci = false\ndiagram_style = 'ascii'\nentrypoints = []\n[repo]\nbase_branch = 'main'\ncontainer_workspaces = false\nbackend = 'local'\n").unwrap();
+        config
+            .as_table_mut()
+            .unwrap()
+            .insert("proof".into(), toml::Value::try_from(&self.proof).unwrap());
+        fs::write(
+            self.options.root.join(consumer_readiness_fixture::CONFIG),
+            toml::to_string_pretty(&config).unwrap(),
+        )
+        .unwrap();
+    }
+    /// Scripted acceptance in the separate local fixture upstream.
+    fn accept_upstream(&self) {
+        git(&self.options.root, &["push", "origin", "HEAD:main"]);
+        git(&self.options.root, &["fetch", "origin", "main"]);
+    }
     fn with_accepted_profile(id: &str) -> Self {
         Self::with_accepted_config(Some(&format!(
             "[proof.required_profile]\nid = {id:?}\nreviewed_sources_digest = {:?}\n",
             format!("sha256:{}", "0".repeat(64)),
         )))
     }
+}
+
+/// Scripted accepted-policy fixture, with actual native command execution and
+/// actual CLI/RPC readback. Local Git acceptance is not authenticated human input.
+pub fn selected_roots_reject_omission_and_require_executed_repair() {
+    use decapod::core::{
+        intent_reconcile::selected::{RootRequirement, SelectedWork},
+        obligation,
+        store::{Store, StoreKind},
+        trajectory,
+    };
+    let mut fixture = Fixture::new();
+    fixture.governed_config();
+    let root = fixture.options.root.clone();
+    let mut work = SelectedWork {
+        schema_version: "1.0.0".into(),
+        id: "selected-audit".into(),
+        intent_id: "intent:selected-audit".into(),
+        instruction_revision: String::new(),
+        roots: ["R1-API", "R2-UI", "R3-AUDIT"]
+            .into_iter()
+            .map(|id| RootRequirement {
+                id: id.into(),
+                checks: vec!["inspect-source".into()],
+            })
+            .collect(),
+        relations: vec![],
+    };
+    trajectory::init_trajectory(
+        &root,
+        trajectory::TrajectoryInit {
+            run_id: "selected-audit".into(),
+            task_id: None,
+            intent_id: Some(work.intent_id.clone()),
+            original_intent: "Preserve API/UI and audit every privileged write".into(),
+            derived_intent: "Implement all three explicit roots".into(),
+            active_boundaries: vec![],
+            repo_scope: vec![],
+            destination: None,
+            current_phase: None,
+            next_transitions: vec![],
+            blockers: vec![],
+        },
+    )
+    .unwrap();
+    work.instruction_revision = decapod::core::intent_reconcile::selected::instruction_revision(
+        &serde_json::from_slice(&fs::read(root.join(".decapod/governance.json")).unwrap()).unwrap(),
+        &work.intent_id,
+    )
+    .unwrap();
+    let valid = "def write(value, audit):\n    audit.append(value)\n    return value\n";
+    fs::write(root.join("audit_app.py"), valid).unwrap();
+    let check = root.join("scripts/check_source.py");
+    let original = fs::read_to_string(&check).unwrap();
+    fs::write(&check, format!("{original}\nns = {{}}\nexec(compile(open('audit_app.py').read(), 'audit_app.py', 'exec'), ns)\naudit = []\nassert ns['write']('privileged', audit) == 'privileged'\nassert audit == ['privileged'], 'R3-AUDIT: every privileged write needs an audit event'\n")).unwrap();
+    fixture.proof.selected_work = Some(work.clone());
+    fixture
+        .proof
+        .required_profile
+        .as_mut()
+        .unwrap()
+        .reviewed_sources_digest =
+        runtime::discover_source_inventory(&fixture.options, &Cancellation::default())
+            .unwrap()
+            .digest()
+            .unwrap();
+    fixture.save_config();
+    fixture.commit("accept selected roots and independent audit negative before candidate changes");
+    git(&root, &["push", "origin", "HEAD:main"]);
+    git(&root, &["fetch", "origin", "main"]);
+    let base = git(&root, &["rev-parse", "origin/main"]);
+    let accepted_control = fs::read(&check).unwrap();
+    let store = Store {
+        kind: StoreKind::Repo,
+        root: root.join(".decapod/data"),
+    };
+    obligation::initialize_obligation_db(&store.root).unwrap();
+    for requirement in &work.roots[..2] {
+        obligation::add_obligation(
+            &store,
+            &work.obligation_ref(&requirement.id).unwrap(),
+            "medium",
+            "",
+            "inspect-source",
+        )
+        .unwrap();
+    }
+    fs::write(
+        root.join("audit_app.py"),
+        valid.replace("    audit.append(value)\n", ""),
+    )
+    .unwrap();
+    fixture.commit("locally green output while omitting audit behavior and its root mapping");
+    let bad_head = git(&root, &["rev-parse", "HEAD"]);
+    let mut host = fixture.host();
+    let omitted = fixture.validate(&mut host);
+    assert!(!omitted.ready, "{omitted:?}");
+    assert_eq!(host.execution_attempts, 0);
+    assert!(format!("{:?}", omitted.blockers).contains("R3-AUDIT"));
+    // A fresh process reads the same selected set. Caller-supplied historical
+    // base is correctly labelled requested, never independently accepted.
+    let before = fs::read(root.join(".decapod/governance.json")).unwrap();
+    let binary = std::path::Path::new(env!("CARGO_BIN_EXE_decapod"))
+        .canonicalize()
+        .unwrap();
+    let output = std::process::Command::new(binary)
+        .current_dir(&root)
+        .args([
+            "rpc",
+            "--op",
+            "intent.reconcile",
+            "--params",
+            &serde_json::json!({"base_commit":base}).to_string(),
+        ])
+        .env_remove("GITHUB_ACTIONS")
+        .env_remove("BUILDKITE")
+        .bounded_output(std::time::Duration::from_secs(30))
+        .unwrap();
+    assert!(
+        output.status.success(),
+        "{}",
+        String::from_utf8_lossy(&output.stderr)
+    );
+    let readback: serde_json::Value = serde_json::from_slice(&output.stdout).unwrap();
+    let report = &readback["result"]["report"]["selected_work"];
+    assert_eq!(report["coverage"], "fail", "{readback}");
+    assert_eq!(report["source_authority"], "requested_immutable_revision");
+    assert_eq!(report["roots"][2]["requirement"], "R3-AUDIT");
+    assert_eq!(report["roots"][0]["verdict"], "pass");
+    assert_eq!(report["roots"][1]["verdict"], "pass");
+    assert_eq!(report["roots"][2]["verdict"], "fail");
+    assert_eq!(report["source_revision"], work.source_revision().unwrap());
+    assert_eq!(
+        before,
+        fs::read(root.join(".decapod/governance.json")).unwrap()
+    );
+    obligation::add_obligation(
+        &store,
+        &work.obligation_ref("R3-AUDIT").unwrap(),
+        "medium",
+        "",
+        "inspect-source",
+    )
+    .unwrap();
+    let mut host = fixture.host();
+    let acknowledged = fixture.validate(&mut host);
+    assert!(
+        !acknowledged.ready,
+        "mapping cannot prove behavior: {acknowledged:?}"
+    );
+    assert_eq!(host.execution_attempts, 1);
+    let failed_dir = acknowledged.evidence_path.as_ref().unwrap();
+    let stderr = [0, 1]
+        .map(|index| fs::read_to_string(failed_dir.join(format!("native-{index}.stderr"))).unwrap())
+        .join("\n");
+    assert!(stderr.contains("R3-AUDIT"), "{stderr}");
+    // The native receipt/observations independently identify the exact failed
+    // subject even when provider-specific log layout changes.
+    let evidence: SuiteEvidence =
+        serde_json::from_slice(&fs::read(failed_dir.join("observations.json")).unwrap()).unwrap();
+    assert_eq!(evidence.before.head_revision, bad_head);
+    assert_eq!(evidence.before.accepted_base_revision, base);
+    assert!(
+        evidence.results.iter().any(|check| matches!(
+            check.observation,
+            Observation::Executed {
+                conclusion: Conclusion::Failure,
+                ..
+            }
+        )),
+        "{stderr}"
+    );
+    fs::write(root.join("audit_app.py"), valid).unwrap();
+    fixture.commit("repair actual audit behavior without replacing accepted criterion");
+    let mut host = fixture.host();
+    let repaired = fixture.validate(&mut host);
+    assert!(repaired.ready, "{repaired:?}");
+    assert_eq!(host.execution_attempts, 1);
+    assert_eq!(accepted_control, fs::read(&check).unwrap());
+    let receipt: serde_json::Value = serde_json::from_slice(
+        &fs::read(
+            repaired
+                .evidence_path
+                .as_ref()
+                .unwrap()
+                .join("completion/native-readiness-receipt.json"),
+        )
+        .unwrap(),
+    )
+    .unwrap();
+    assert_eq!(
+        receipt["material"]["head_revision"],
+        git(&root, &["rev-parse", "HEAD"])
+    );
+    assert_eq!(receipt["material"]["accepted_base_revision"], base);
+    assert!(failed_dir.exists());
+    // A changed DB join invalidates previously ready source, despite unchanged
+    // application bytes. Duplicate mapping cannot assert a second green proof.
+    obligation::add_obligation(
+        &store,
+        &work.obligation_ref("R3-AUDIT").unwrap(),
+        "medium",
+        "",
+        "inspect-source",
+    )
+    .unwrap();
+    let mut host = fixture.host();
+    let changed_join = fixture.validate(&mut host);
+    assert!(!changed_join.ready);
+    assert_eq!(host.execution_attempts, 0);
+}
+
+pub fn accepted_global_triangle_requires_policy_repair_and_fresh_mapping() {
+    use decapod::core::{
+        intent_reconcile::selected::{Relation, RootRequirement, SelectedWork},
+        obligation,
+        store::{Store, StoreKind},
+        trajectory,
+    };
+    let mut fixture = Fixture::new();
+    fixture.governed_config();
+    let root = fixture.options.root.clone();
+    let mut work = SelectedWork {
+        schema_version: "1.0.0".into(),
+        id: "global-triangle".into(),
+        intent_id: "intent:global-triangle".into(),
+        instruction_revision: String::new(),
+        roots: ["R1", "R2", "R3"]
+            .into_iter()
+            .map(|id| RootRequirement {
+                id: id.into(),
+                checks: vec!["inspect-source".into()],
+            })
+            .collect(),
+        relations: [
+            ("R1", "A", "B", "eq"),
+            ("R2", "B", "C", "eq"),
+            ("R3", "A", "C", "ne"),
+        ]
+        .into_iter()
+        .map(|(id, left, right, kind)| Relation {
+            id: id.into(),
+            requirement: id.into(),
+            left: left.into(),
+            right: right.into(),
+            kind: kind.into(),
+        })
+        .collect(),
+    };
+    trajectory::init_trajectory(
+        &root,
+        trajectory::TrajectoryInit {
+            run_id: "global-triangle".into(),
+            task_id: None,
+            intent_id: Some(work.intent_id.clone()),
+            original_intent: "Reconcile the explicitly accepted joint relation model".into(),
+            derived_intent:
+                "Every standalone and pair relation is satisfiable; check the complete set".into(),
+            active_boundaries: vec![],
+            repo_scope: vec![],
+            destination: None,
+            current_phase: None,
+            next_transitions: vec![],
+            blockers: vec![],
+        },
+    )
+    .unwrap();
+    work.instruction_revision = decapod::core::intent_reconcile::selected::instruction_revision(
+        &serde_json::from_slice(&fs::read(root.join(".decapod/governance.json")).unwrap()).unwrap(),
+        &work.intent_id,
+    )
+    .unwrap();
+    fixture.proof.selected_work = Some(work.clone());
+    fixture.save_config();
+    fixture.commit("freeze the scripted contradictory source policy before candidate work");
+    git(&root, &["push", "origin", "HEAD:main"]);
+    git(&root, &["fetch", "origin", "main"]);
+    let original_base = git(&root, &["rev-parse", "origin/main"]);
+    let store = Store {
+        kind: StoreKind::Repo,
+        root: root.join(".decapod/data"),
+    };
+    obligation::initialize_obligation_db(&store.root).unwrap();
+    for requirement in &work.roots {
+        obligation::add_obligation(
+            &store,
+            &work.obligation_ref(&requirement.id).unwrap(),
+            "medium",
+            "",
+            "inspect-source",
+        )
+        .unwrap();
+    }
+    fs::write(
+        root.join("candidate-note.txt"),
+        "candidate source; no relation is omitted\n",
+    )
+    .unwrap();
+    fixture.commit("candidate with all three mapped roots");
+    let mut host = fixture.host();
+    let conflict = fixture.validate(&mut host);
+    blocked(&conflict, "conflicting_relations");
+    assert!(
+        conflict
+            .blockers
+            .iter()
+            .any(|b| b.detail.contains("\"coverage\":\"pass\"")
+                && b.detail.contains("\"consistency\":\"fail\"")
+                && b.detail
+                    .contains("\"conflicting_relations\":[\"R1\",\"R2\",\"R3\"]")),
+        "{conflict:?}"
+    );
+    assert_eq!(host.execution_attempts, 0);
+    assert!(format!("{:?}", conflict.blockers).contains("R3"));
+    // A candidate cannot remove the conflict merely by rewriting its policy.
+    work.relations[2].kind = "eq".into();
+    fixture.proof.selected_work = Some(work.clone());
+    fixture.save_config();
+    fixture.commit("propose consistent policy without pretending acceptance");
+    let mut host = fixture.host();
+    let proposal = fixture.validate(&mut host);
+    blocked(&proposal, "SELECTED_POLICY_NOT_ACCEPTED");
+    assert_eq!(host.execution_attempts, 0);
+    // This test controller explicitly advances the isolated accepted target;
+    // it models a separate policy acceptance, never a candidate-minted waiver.
+    git(&root, &["push", "origin", "HEAD:main"]);
+    git(&root, &["fetch", "origin", "main"]);
+    let repaired_base = git(&root, &["rev-parse", "origin/main"]);
+    assert_ne!(original_base, repaired_base);
+    fs::write(
+        root.join("candidate-note.txt"),
+        "new candidate after separately accepted relation repair\n",
+    )
+    .unwrap();
+    fixture.commit("fresh candidate after policy acceptance");
+    let mut host = fixture.host();
+    let stale_mapping = fixture.validate(&mut host);
+    blocked(&stale_mapping, "coverage");
+    assert_eq!(host.execution_attempts, 0);
+    for requirement in &work.roots {
+        obligation::add_obligation(
+            &store,
+            &work.obligation_ref(&requirement.id).unwrap(),
+            "medium",
+            "",
+            "inspect-source",
+        )
+        .unwrap();
+    }
+    let mut host = fixture.host();
+    let repaired = fixture.validate(&mut host);
+    assert!(repaired.ready, "{repaired:?}");
+    assert_eq!(host.execution_attempts, 1);
+    let receipt: serde_json::Value = serde_json::from_slice(
+        &fs::read(
+            repaired
+                .evidence_path
+                .as_ref()
+                .unwrap()
+                .join("completion/native-readiness-receipt.json"),
+        )
+        .unwrap(),
+    )
+    .unwrap();
+    assert_eq!(
+        receipt["material"]["head_revision"],
+        git(&root, &["rev-parse", "HEAD"])
+    );
+    assert_eq!(receipt["material"]["accepted_base_revision"], repaired_base);
+    assert!(!conflict.ready && !proposal.ready && !stale_mapping.ready);
+}
+
+pub fn source_history_refuses_counterfeit_origin_then_accepts_restored_fresh_source() {
+    use decapod::core::{governance_document, trajectory};
+    let fixture = Fixture::new();
+    fixture.governed_config();
+    let root = &fixture.options.root;
+    trajectory::init_trajectory(
+        root,
+        trajectory::TrajectoryInit {
+            run_id: "source-history".into(),
+            task_id: None,
+            intent_id: Some("intent:source-history".into()),
+            original_intent: "A: preserve the original recorded request".into(),
+            derived_intent: "B: implement the recorded contract".into(),
+            active_boundaries: vec![],
+            repo_scope: vec![],
+            destination: None,
+            current_phase: None,
+            next_transitions: vec![],
+            blockers: vec![],
+        },
+    )
+    .unwrap();
+    fixture.commit("freeze original recorded source before counterfeit candidate");
+    git(root, &["push", "origin", "HEAD:main"]);
+    git(root, &["fetch", "origin", "main"]);
+    let base = git(root, &["rev-parse", "origin/main"]);
+    let path = root.join(governance_document::GOVERNANCE_PATH);
+    let original = fs::read(&path).unwrap();
+    let original_application = fs::read(root.join("payload.txt")).unwrap();
+    let mut document = governance_document::load(root).unwrap().unwrap();
+    let mut artifact = trajectory::load_trajectory(root, "source-history").unwrap();
+    artifact.original_intent = "counterfeit replacement request".into();
+    artifact
+        .custody
+        .intents
+        .get_mut("intent:source-history")
+        .unwrap()
+        .raw_intent = artifact.original_intent.clone();
+    artifact = artifact.with_recomputed_hash().unwrap();
+    document.intents.insert(
+        "intent:source-history".into(),
+        serde_json::to_value(&artifact.custody.intents["intent:source-history"]).unwrap(),
+    );
+    document.sections.insert(
+        "trajectory".into(),
+        serde_json::to_value(&artifact).unwrap(),
+    );
+    // Deliberate out-of-kernel adversarial write. Rehashing caller-owned bytes
+    // must not make the independently pinned original disappear.
+    fs::write(&path, serde_json::to_vec_pretty(&document).unwrap()).unwrap();
+    fixture.commit("counterfeit same-ID original with structurally consistent hashes");
+    let bad_head = git(root, &["rev-parse", "HEAD"]);
+    let mut host = fixture.host();
+    let refused = fixture.validate(&mut host);
+    blocked(&refused, "INSTRUCTION_HISTORY_CONFLICT");
+    assert_eq!(host.execution_attempts, 0);
+    assert_eq!(
+        original_application,
+        fs::read(root.join("payload.txt")).unwrap()
+    );
+    fs::write(&path, original).unwrap();
+    fixture.commit("restore canonical origin while retaining the rejected Git observation");
+    let repaired_head = git(root, &["rev-parse", "HEAD"]);
+    assert_ne!(bad_head, repaired_head);
+    let mut host = fixture.host();
+    let repaired = fixture.validate(&mut host);
+    assert!(repaired.ready, "{repaired:?}");
+    assert_eq!(host.execution_attempts, 1);
+    assert_eq!(
+        git(root, &["rev-parse", &format!("{bad_head}^{{commit}}")]),
+        bad_head
+    );
+    let receipt: serde_json::Value = serde_json::from_slice(
+        &fs::read(
+            repaired
+                .evidence_path
+                .as_ref()
+                .unwrap()
+                .join("completion/native-readiness-receipt.json"),
+        )
+        .unwrap(),
+    )
+    .unwrap();
+    assert_eq!(receipt["material"]["head_revision"], repaired_head);
+    assert_eq!(receipt["material"]["accepted_base_revision"], base);
+}
+
+/// Scripted accepted-policy fixture, not authenticated human authorship or a
+/// real-model observation. The negative criterion is fixed on the independently
+/// read upstream before the candidate introduces its cross-tenant defect.
+pub fn accepted_tenant_negative_control_rejects_green_positives_and_proves_repair() {
+    let mut fixture = Fixture::new();
+    let root = &fixture.options.root;
+    let valid = "ROWS = {'a': ('tenant-a', 'A'), 'b': ('tenant-b', 'B')}\ndef read_record(tenant, key):\n    owner, value = ROWS[key]\n    return value if owner == tenant else None\nif __name__ == '__main__':\n    assert read_record('tenant-a', 'a') == 'A'\n    assert read_record('tenant-b', 'b') == 'B'\n    print('agent-positive-tests-passed')\n";
+    let vulnerable = valid.replace("return value if owner == tenant else None", "return value");
+    fs::write(root.join("tenant_app.py"), valid).unwrap();
+    let check = root.join("scripts/check_source.py");
+    let ordinary = fs::read_to_string(&check).unwrap();
+    fs::write(&check, format!("{ordinary}\nns = {{'__name__': '__main__'}}\nexec(compile(open('tenant_app.py').read(), 'tenant_app.py', 'exec'), ns)\nassert ns['read_record']('tenant-a', 'b') is None, 'REQ-TENANT-ISOLATION: tenant A read tenant B record'\nprint('accepted-tenant-negative-passed')\n")).unwrap();
+    fixture
+        .proof
+        .required_profile
+        .as_mut()
+        .unwrap()
+        .reviewed_sources_digest =
+        runtime::discover_source_inventory(&fixture.options, &Cancellation::default())
+            .unwrap()
+            .digest()
+            .unwrap();
+    fixture.save_config();
+    fixture.commit("accept tenant isolation negative criterion before candidate work");
+    git(root, &["push", "origin", "HEAD:main"]);
+    git(root, &["fetch", "origin", "main"]);
+    let accepted_base = git(root, &["rev-parse", "origin/main"]);
+    let accepted_control = fs::read(&check).unwrap();
+    let accepted_config = fs::read(root.join(consumer_readiness_fixture::CONFIG)).unwrap();
+
+    fs::write(root.join("tenant_app.py"), vulnerable).unwrap();
+    fixture.commit("cross-tenant vulnerability with green candidate positive tests");
+    let bad_head = git(root, &["rev-parse", "HEAD"]);
+    let mut host = fixture.host();
+    let failed = fixture.validate(&mut host);
+    assert!(!failed.ready, "{failed:?}");
+    assert_eq!(
+        host.execution_attempts, 1,
+        "the accepted control must actually execute"
+    );
+    let failed_dir = failed.evidence_path.as_ref().unwrap();
+    let stdout = [0, 1]
+        .map(|index| fs::read_to_string(failed_dir.join(format!("native-{index}.stdout"))).unwrap())
+        .join("\n");
+    let stderr = [0, 1]
+        .map(|index| fs::read_to_string(failed_dir.join(format!("native-{index}.stderr"))).unwrap())
+        .join("\n");
+    assert!(stdout.contains("agent-positive-tests-passed"), "{stdout}");
+    assert!(stderr.contains("REQ-TENANT-ISOLATION"), "{stderr}");
+    let evidence: SuiteEvidence =
+        serde_json::from_slice(&fs::read(failed_dir.join("observations.json")).unwrap()).unwrap();
+    assert_eq!(evidence.before.head_revision, bad_head);
+    assert_eq!(evidence.before.accepted_base_revision, accepted_base);
+    assert!(evidence.results.iter().any(|result| matches!(
+        result.observation,
+        Observation::Executed {
+            conclusion: Conclusion::Failure,
+            ..
+        }
+    )));
+    assert!(
+        !failed_dir
+            .join("completion/native-readiness-receipt.json")
+            .exists()
+    );
+
+    fs::write(root.join("tenant_app.py"), valid).unwrap();
+    fixture.commit("restore tenant authorization and rerun the same accepted control");
+    let repaired_head = git(root, &["rev-parse", "HEAD"]);
+    let repaired = fixture.validate(&mut fixture.host());
+    assert!(repaired.ready, "{repaired:?}");
+    assert_ne!(bad_head, repaired_head);
+    assert_ne!(failed.evidence_path, repaired.evidence_path);
+    assert_eq!(fs::read(&check).unwrap(), accepted_control);
+    assert_eq!(
+        fs::read(root.join(consumer_readiness_fixture::CONFIG)).unwrap(),
+        accepted_config
+    );
+    let receipt: serde_json::Value = serde_json::from_slice(
+        &fs::read(
+            repaired
+                .evidence_path
+                .as_ref()
+                .unwrap()
+                .join("completion/native-readiness-receipt.json"),
+        )
+        .unwrap(),
+    )
+    .unwrap();
+    assert_eq!(receipt["material"]["head_revision"], repaired_head);
+    assert_eq!(receipt["material"]["accepted_base_revision"], accepted_base);
+    assert!(
+        stderr.contains("REQ-TENANT-ISOLATION"),
+        "the old failure stays observable"
+    );
 }
 
 fn blocked(report: &ValidationReport, expected: &str) {
@@ -997,6 +1570,70 @@ fn proof_authorization_denial_stops_before_native_execution() {
     assert!(!directory.join("native-0.stdout").exists());
 }
 
+/// Scripted real native execution, not a model-selected or whole-host trace.
+/// Green artifact evidence alone cannot mint an owned mediated-path witness.
+pub fn accepted_required_path_rejects_unmediated_green_and_keeps_optional_unknown() {
+    let mut fixture = Fixture::new();
+    let first = fixture.validate(&mut fixture.host());
+    assert!(first.ready, "{first:?}");
+    assert_eq!(
+        first.observed_path.process_conformance,
+        decapod::core::validation_rules::RuleVerdict::Unverifiable
+    );
+    fixture.proof.observed_path = Some(decapod::core::trajectory::path::Policy {
+        schema_version: "1.0.0".into(),
+        scope: "native_proof_calls".into(),
+        required: true,
+    });
+    fixture.save_config();
+    fixture.commit("candidate proposes a required native path policy");
+    blocked(
+        &fixture.validate(&mut fixture.host()),
+        "OBSERVED_PATH_POLICY_NOT_ACCEPTED",
+    );
+    fixture.accept_upstream();
+    let mut host = fixture.host();
+    host.unobserved_execution = true;
+    let missing = fixture.validate(&mut host);
+    assert!(!missing.ready, "{missing:?}");
+    assert!(
+        missing.proof_ready,
+        "actual artifact suite is green: {missing:?}"
+    );
+    assert!(missing.observed_path.required);
+    assert_eq!(
+        missing.observed_path.process_conformance,
+        decapod::core::validation_rules::RuleVerdict::Unverifiable
+    );
+    let directory = missing.evidence_path.unwrap();
+    assert!(directory.join("observations.json").is_file());
+    assert!(
+        !directory
+            .join("completion/native-readiness-receipt.json")
+            .exists()
+    );
+    // Separate scripted acceptance of optional observation; the old required
+    // result remains negative and cannot be reinterpreted as the new decision.
+    fixture.proof.observed_path.as_mut().unwrap().required = false;
+    fixture.save_config();
+    fixture.commit("target proposes optional native observation coverage");
+    blocked(
+        &fixture.validate(&mut fixture.host()),
+        "OBSERVED_PATH_POLICY_NOT_ACCEPTED",
+    );
+    fixture.accept_upstream();
+    let mut host = fixture.host();
+    host.unobserved_execution = true;
+    let optional = fixture.validate(&mut host);
+    assert!(optional.ready, "{optional:?}");
+    assert!(!optional.observed_path.required);
+    assert_eq!(
+        optional.observed_path.process_conformance,
+        decapod::core::validation_rules::RuleVerdict::Unverifiable
+    );
+    assert!(directory.join("observed-path.json").is_file());
+}
+
 #[test]
 fn python_permission_does_not_relax_the_existing_strict_native_capability() {
     let fixture = Fixture::new();
@@ -1087,6 +1724,16 @@ fn two_isolated_worktrees_require_combined_candidate_validation_and_target_fresh
     let mut fixture = Fixture::new();
     let main_repo = fixture.options.root.clone();
 
+    // A second, executable interface invariant shares the same accepted check
+    // and combined-worktree setup: positional-only producer and keyword caller
+    // changes each work with the baseline, but are incompatible together.
+    fs::write(
+        main_repo.join("producer.py"),
+        "def identity(value):\n    return value\n",
+    )
+    .unwrap();
+    fs::write(main_repo.join("consumer.py"), "assert identity(7) == 7\n").unwrap();
+
     // Establish a shared semantic invariant across two regions of `shared_contract.py`:
     // LEFT_DELTA + RIGHT_DELTA <= 1. Each isolated agent edit satisfies the invariant
     // on its own branch, while a clean textual merge violates it until reconciled.
@@ -1097,7 +1744,7 @@ fn two_isolated_worktrees_require_combined_candidate_validation_and_target_fresh
     .unwrap();
     fs::write(
         main_repo.join("scripts/check_source.py"),
-        "import os\nassert not os.path.exists('Cargo.toml')\nassert open('payload.txt').read() == 'ready\\n', 'consumer source is invalid'\nns = {}\nexec(open('shared_contract.py').read(), ns)\nassert ns['LEFT_DELTA'] + ns['RIGHT_DELTA'] <= 1, 'combined concurrency budget exceeded'\nassert not os.path.realpath(os.getcwd()).startswith(os.path.realpath(os.environ['FIXTURE_WORKTREE'])), 'proof used mutable worktree'\nassert os.environ['DECAPOD_NATIVE_PROOF_ACTIVE'] == '1'\nassert os.path.isdir(os.environ['HOME'])\nprint('consumer-source-inspected')\n",
+        "import os\nassert not os.path.exists('Cargo.toml')\nassert open('payload.txt').read() == 'ready\\n', 'consumer source is invalid'\nns = {}\nexec(open('shared_contract.py').read(), ns)\nassert ns['LEFT_DELTA'] + ns['RIGHT_DELTA'] <= 1, 'combined concurrency budget exceeded'\nexec(compile(open('producer.py').read(), 'producer.py', 'exec'), ns)\nexec(compile(open('consumer.py').read(), 'consumer.py', 'exec'), ns)\nassert not os.path.realpath(os.getcwd()).startswith(os.path.realpath(os.environ['FIXTURE_WORKTREE'])), 'proof used mutable worktree'\nassert os.environ['DECAPOD_NATIVE_PROOF_ACTIVE'] == '1'\nassert os.path.isdir(os.environ['HOME'])\nprint('consumer-source-inspected')\n",
     )
     .unwrap();
 
@@ -1144,7 +1791,7 @@ fn two_isolated_worktrees_require_combined_candidate_validation_and_target_fresh
             owner: String::new(),
             due: None,
             r#ref: String::new(),
-            scope: r#"paths:["shared_contract.py"]"#.to_string(),
+            scope: r#"paths:["shared_contract.py","producer.py","consumer.py"]"#.to_string(),
             dir: Some(main_repo.to_string_lossy().to_string()),
             priority: "medium".to_string(),
             depends_on: String::new(),
@@ -1224,7 +1871,12 @@ fn two_isolated_worktrees_require_combined_candidate_validation_and_target_fresh
         "LEFT_DELTA = 1\n\n\nRIGHT_DELTA = 0\n",
     )
     .unwrap();
-    git(&wt_alpha, &["add", "shared_contract.py"]);
+    fs::write(
+        wt_alpha.join("producer.py"),
+        "def identity(value, /):\n    return value\n",
+    )
+    .unwrap();
+    git(&wt_alpha, &["add", "shared_contract.py", "producer.py"]);
     git(&wt_alpha, &["commit", "-m", "alpha isolated change"]);
     let (_, alpha_fixture) = make_wt_options(&wt_alpha, "alpha-1");
     let mut alpha_host = LocalHost::new(&alpha_fixture, false);
@@ -1236,7 +1888,12 @@ fn two_isolated_worktrees_require_combined_candidate_validation_and_target_fresh
         "LEFT_DELTA = 0\n\n\nRIGHT_DELTA = 1\n",
     )
     .unwrap();
-    git(&wt_beta, &["add", "shared_contract.py"]);
+    fs::write(
+        wt_beta.join("consumer.py"),
+        "assert identity(value=7) == 7\n",
+    )
+    .unwrap();
+    git(&wt_beta, &["add", "shared_contract.py", "consumer.py"]);
     git(&wt_beta, &["commit", "-m", "beta isolated change"]);
     let (_, beta_fixture) = make_wt_options(&wt_beta, "beta-1");
     let mut beta_host = LocalHost::new(&beta_fixture, false);
@@ -1261,7 +1918,7 @@ fn two_isolated_worktrees_require_combined_candidate_validation_and_target_fresh
         "failed combined candidate must not emit a readiness receipt"
     );
 
-    // 3. Reconciling the combined candidate restores readiness (`ready == true`).
+    // 3. Repairing the numeric invariant cannot hide the incompatible interface.
     fs::write(
         wt_alpha.join("shared_contract.py"),
         "LEFT_DELTA = 1\n\n\nRIGHT_DELTA = 0\n",
@@ -1271,6 +1928,35 @@ fn two_isolated_worktrees_require_combined_candidate_validation_and_target_fresh
     git(
         &wt_alpha,
         &["commit", "-m", "reconcile combined candidate invariant"],
+    );
+    let (_, incompatible_fixture) = make_wt_options(&wt_alpha, "alpha-interface-mismatch");
+    let incompatible = incompatible_fixture.validate(&mut incompatible_fixture.host());
+    assert!(!incompatible.ready, "{incompatible:?}");
+    let mismatch_dir = incompatible.evidence_path.as_ref().unwrap();
+    let stderr = [0, 1]
+        .map(|index| {
+            fs::read_to_string(mismatch_dir.join(format!("native-{index}.stderr"))).unwrap()
+        })
+        .join("\n");
+    assert!(stderr.contains("positional-only"), "{stderr}");
+    assert!(
+        !mismatch_dir
+            .join("completion/native-readiness-receipt.json")
+            .exists()
+    );
+    fs::write(
+        wt_alpha.join("producer.py"),
+        "def identity(value):\n    return value\n",
+    )
+    .unwrap();
+    git(&wt_alpha, &["add", "producer.py"]);
+    git(
+        &wt_alpha,
+        &[
+            "commit",
+            "-m",
+            "restore accepted producer-consumer compatibility",
+        ],
     );
     let (_, reconciled_fixture) = make_wt_options(&wt_alpha, "alpha-reconciled");
     let mut reconciled_host = LocalHost::new(&reconciled_fixture, false);

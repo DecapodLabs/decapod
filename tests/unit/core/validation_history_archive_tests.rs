@@ -262,6 +262,10 @@ fn native_and_provider_capture_archive_and_lookup_survive_evidence_directory_del
         )
         .unwrap();
         let report = ValidationReport {
+            observed_path: crate::core::trajectory::path::Judgment::unavailable(
+                false,
+                "fixture has no path witness",
+            ),
             ready: true,
             proof_ready: true,
             laya_readiness: Some(completed.laya.clone()),

@@ -94,7 +94,7 @@ fn intent_reconcile_rpc_immutable_base_reports_code_change_as_unproven() {
             "init",
             "--force",
             "--product-summary",
-            "Impact Fixture has immutable human intent and tracked source.",
+            "Human request: preserve API version 1 compatibility across this change.",
             "--no-container-workspaces",
             "--isolation-mode",
             "worktree",
@@ -118,7 +118,34 @@ fn intent_reconcile_rpc_immutable_base_reports_code_change_as_unproven() {
     ]);
     let base = git(&["rev-parse", "HEAD"]);
     fs::create_dir_all(root.join("src")).unwrap();
-    fs::write(root.join("src/intent_impact.rs"), "pub fn changed() {}\n").unwrap();
+    // The agent implements the wrong behavior (version 2) and writes a green
+    // test that agrees with its own interpretation. Green self-authored
+    // checks cannot authenticate the original human requirement (version 1).
+    fs::write(
+        root.join("src/intent_impact.rs"),
+        "pub fn api_version() -> u8 { 2 }\n#[test]\nfn agent_written_check() { assert_eq!(api_version(), 2); }\n",
+    )
+    .unwrap();
+    let probe = root.join(format!(
+        "self_authored_probe{}",
+        std::env::consts::EXE_SUFFIX
+    ));
+    let compile = Command::new("rustc")
+        .current_dir(root)
+        .args(["--test", "src/intent_impact.rs", "-o"])
+        .arg(&probe)
+        .output()
+        .expect("compile self-authored test");
+    assert!(
+        compile.status.success(),
+        "{}",
+        String::from_utf8_lossy(&compile.stderr)
+    );
+    let run = Command::new(&probe)
+        .output()
+        .expect("execute agent-authored test");
+    assert!(run.status.success(), "{:?}", run);
+    fs::remove_file(&probe).unwrap();
     git(&["add", "src/intent_impact.rs"]);
     git(&[
         "-c",

@@ -12,6 +12,18 @@ They move the agent's interpretation out of transient model context and into a d
 
 They record an agent interpretation, not an independent truth invented by Decapod. Validation makes a misunderstanding visible before publication so it can be corrected.
 
+## Can a green validation result prove the agent built what I meant?
+
+Only to the extent that the configured checks express the relevant requirement. Decapod can demonstrate which checks actually ran against the exact source, under which accepted policy. If the agent misunderstood a request and authored tests for the wrong behavior, passing those tests does not establish fidelity to the human's intended meaning. The intent-reconciliation view explicitly reports semantic alignment as `not_proven`. [Closed-loop governance](convergence.md) explains the distinction.
+
+## Does an APPROVED plan prove a human approved it?
+
+No. It is a governed state transition for the recorded plan, and its current CLI contract does not independently authenticate a human identity. A separate human decision or approval must be backed by the relevant trusted authority. Creating a PR does not prove admission or merge.
+
+## Can Decapod physically prevent every agent file write?
+
+No. It rejects unsupported operations through its own interface and can block governed publication. An unrestricted agent may edit files or invoke Git outside that interface. Enforcing all host operations requires controls at the actual host, operating-system, and repository boundaries. The [enforcement map](convergence.md#where-enforcement-actually-lives) identifies the distinction.
+
 ## Why does validation block publication?
 
 Publication is a governed state transition. It remains blocked while required invariants or evidence are unsatisfied.

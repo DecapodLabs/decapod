@@ -56,6 +56,10 @@ use super::readiness_profile::source;
 #[derive(Debug, Clone, Deserialize, Default, PartialEq, Eq)]
 pub struct ProofConfiguration {
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub observed_path: Option<super::trajectory::path::Policy>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub selected_work: Option<super::intent_reconcile::selected::SelectedWork>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
     pub ci_attested: Option<CiAttestedPolicy>,
     #[serde(default)]
     pub validation_buildkite_preflights: bool,
@@ -199,6 +203,7 @@ impl ValidationGuidance {
 
 #[derive(Debug, Serialize)]
 pub struct ValidationReport {
+    pub observed_path: super::trajectory::path::Judgment,
     pub ready: bool,
     pub proof_ready: bool,
     pub laya_readiness: Option<super::laya_readiness::Receipt>,
@@ -342,6 +347,7 @@ pub struct ExecutionSelection {
 }
 /// Produced in this invocation by a real runner. Deliberately not Deserialize.
 pub struct ExecutedSuite {
+    pub observed_path: Option<super::trajectory::path::OwnedObservation>,
     pub evidence: SuiteEvidence,
     pub failure: Option<String>,
 }
@@ -576,6 +582,9 @@ fn load_project(options: &Options, budget: &mut RuntimeBudget<'_>) -> io::Result
     }
     let configuration_bytes = budget.read(&file(&options.root, CONFIG)?)?;
     let configuration = proof_configuration(&configuration_bytes)?;
+    if let Some(policy) = &configuration.observed_path {
+        policy.validate()?;
+    }
     match configuration.required_profile.as_ref() {
         None => {
             return Err(invalid(
@@ -618,10 +627,19 @@ fn load_project(options: &Options, budget: &mut RuntimeBudget<'_>) -> io::Result
     let accepted_entries = git(options, budget, &["ls-tree", "-z", &base, "--", CONFIG])?;
     if !accepted_entries.is_empty() {
         let accepted_bytes = git(options, budget, &["show", &format!("{base}:{CONFIG}")])?;
+        if configuration.observed_path != proof_configuration(&accepted_bytes)?.observed_path {
+            return Err(invalid(
+                "OBSERVED_PATH_POLICY_NOT_ACCEPTED: candidate cannot add, remove or change accepted observation requirements; obtain a separately accepted target policy and revalidate",
+            ));
+        }
         super::laya_readiness::verify_policy_acceptance(
             &super::laya_readiness::configuration_from_bytes(&configuration_bytes)?,
             &super::laya_readiness::configuration_from_bytes(&accepted_bytes)?,
         )?;
+    } else if configuration.observed_path.is_some() {
+        return Err(invalid(
+            "OBSERVED_PATH_POLICY_NOT_ACCEPTED: an observation policy requires a separately accepted target declaration",
+        ));
     }
     let facts = ApplicabilityFacts {
         event: "pull_request".into(),
@@ -651,6 +669,13 @@ fn load_project(options: &Options, budget: &mut RuntimeBudget<'_>) -> io::Result
         crate::plan_governance::enforce_scope_paths(&constraints, &facts.changed_paths)
             .map_err(io::Error::other)?;
     }
+    super::governance_document::verify_instruction_history_with(
+        &base,
+        &head,
+        &governance,
+        &mut |args| git(options, budget, args).map_err(super::error::DecapodError::IoError),
+    )
+    .map_err(io::Error::other)?;
     crate::core::entrypoint_integrity::validate_committed_history_with(
         &options.root,
         &base,
@@ -673,6 +698,15 @@ fn load_project(options: &Options, budget: &mut RuntimeBudget<'_>) -> io::Result
         configuration.rust_workers.as_ref(),
         accepted.rust_workers.as_ref(),
     )?;
+    super::intent_reconcile::selected::admission(
+        &options.root,
+        &base,
+        &configuration,
+        &accepted,
+        &governance,
+        super::validation_rules::EvaluationPhase::Validation,
+    )
+    .map_err(io::Error::other)?;
     if configuration.rust_workers.is_some()
         && configuration
             .required_profile
@@ -1048,6 +1082,10 @@ fn write_ready_verdict(
 /// result. This function cannot open a PR, push a work branch, or mint a receipt.
 pub fn validate(options: &Options, host: &mut dyn Host, cancel: &Cancellation) -> ValidationReport {
     let mut report = ValidationReport {
+        observed_path: super::trajectory::path::Judgment::unavailable(
+            false,
+            "No live native-path witness has been produced in this invocation",
+        ),
         completed_evidence: None,
         ready: false,
         proof_ready: false,
@@ -1092,6 +1130,14 @@ fn run(
         return Err(invalid("PROJECT_PREREQUISITES_FAILED"));
     }
     let project = load_project(options, &mut budget)?;
+    report.observed_path = super::trajectory::path::Judgment::unavailable(
+        project
+            .configuration
+            .observed_path
+            .as_ref()
+            .is_some_and(|p| p.required),
+        "OBSERVED_PATH_NOT_PROVEN: no owned current native-path observation is complete",
+    );
     let laya_config = super::laya_readiness::configuration(&options.root)?;
     // Freeze local custody before deterministic proof without running inference.
     // Missing local setup remains a post-proof abstention, not proof authority.
@@ -1234,6 +1280,55 @@ fn run(
         &directory.join("observations.json"),
         &serde_json::to_vec_pretty(&result.evidence).map_err(io::Error::other)?,
     )?;
+    let required_path = project
+        .configuration
+        .observed_path
+        .as_ref()
+        .is_some_and(|p| p.required);
+    report.observed_path = match &result.observed_path {
+        Some(observed) => observed.judgment().clone(),
+        None => super::trajectory::path::Judgment::unavailable(
+            required_path,
+            "OBSERVED_PATH_NOT_PROVEN: this adapter supplied no owned current native-path witness; agent loops, source hashes and imported captures cannot supply one",
+        ),
+    };
+    report.observed_path.required = required_path;
+    if report
+        .observed_path
+        .binding
+        .as_ref()
+        .is_some_and(|binding| {
+            binding.observation_run_id != invocation
+                || binding.proof_plan_digest != result.evidence.expected_plan_digest
+                || binding.subject != state.identity
+        })
+    {
+        report.observed_path.invalidate("OBSERVED_PATH_STALE: owned observation belongs to another invocation, subject or required proof plan");
+    }
+    if report.observed_path.process_conformance == super::validation_rules::RuleVerdict::Pass
+        && let Err(error) = report
+            .observed_path
+            .verify_retained(&state.identity, &result.evidence)
+    {
+        report.observed_path.invalidate(&format!(
+            "OBSERVED_PATH_STALE: current runner evidence does not support the path: {error}"
+        ));
+    }
+    write_new(
+        &directory.join("observed-path.json"),
+        &serde_json::to_vec_pretty(&report.observed_path).map_err(io::Error::other)?,
+    )?;
+    if !report.observed_path.permits() {
+        report.proof_ready = evidence::verify(
+            compiled.plan(),
+            &state.identity,
+            &result.evidence.facts,
+            &result.evidence,
+        )
+        .verdict
+            == Verdict::Ready;
+        return Err(invalid(report.observed_path.reason.clone()));
+    }
     // Independently discover/recompile again. Do not trust the executed envelope
     // for source coverage, target identity, final material or applicability.
     let mut current_project = load_project(options, &mut budget)?;
@@ -1257,6 +1352,9 @@ fn run(
         branch: options.base_branch.clone(),
         revision: host.accepted_target(&options.repository, &options.base_branch, &budget)?,
     };
+    report
+        .observed_path
+        .recheck_current(&current.identity, &current_target.revision);
     budget.remaining()?;
     let outcome = match result.failure.as_deref() {
         Some(failure) => profile::ProviderOutcome::Failed(failure),
@@ -1369,6 +1467,9 @@ fn run(
             };
             let project = load_project(options, &mut budget)?;
             let state = publication_state(options, &project, &selection, &mut budget)?;
+            report
+                .observed_path
+                .recheck_current(&state.identity, &target.revision);
             let plan = profile::compile_plan(
                 project.catalog,
                 &selection.policy,
@@ -1443,7 +1544,7 @@ fn run(
                 resolved_targets: scope.resolved_targets.clone(),
             }
         });
-        let completed = super::validation_history::CompletedReadinessEvidence::from_runtime(
+        let mut completed = super::validation_history::CompletedReadinessEvidence::from_runtime(
             &invocation,
             report.scope,
             target_proof_scope,
@@ -1465,6 +1566,13 @@ fn run(
             ),
         )
         .map_err(io::Error::other)?;
+        if let Some(path) = &result.observed_path
+            && path.judgment().process_conformance == super::validation_rules::RuleVerdict::Pass
+        {
+            completed = completed
+                .bind_observed_path(path)
+                .map_err(io::Error::other)?;
+        }
         let rules = within_terminal_budget(&budget, || {
             super::validation_rules::evaluate_terminal_rules(
                 &options.root,
@@ -1508,6 +1616,7 @@ fn run(
             "trajectory_digest": trajectory_digest,
             "proof_plan_digest": current_profile.plan().digest().map_err(io::Error::other)?,
             "evidence_digest": evidence::digest(&result.evidence).map_err(io::Error::other)?,
+            "observed_path": report.observed_path,
             "laya_readiness_digest": evidence::digest(&report.laya_readiness).map_err(io::Error::other)?,
         });
         if let Some(target_scope) = &project.target_scope {
@@ -1685,9 +1794,67 @@ pub fn execute_native(
         )?;
     }
     Ok(ExecutedSuite {
+        observed_path: None,
         evidence: run.evidence,
         failure: run.failure,
     })
+}
+
+fn begin_native_path(
+    project: &CurrentProject,
+    identity: &evidence::MaterialIdentity,
+    plan: &evidence::ExpectedPlan,
+    directory: &Path,
+) -> io::Result<Option<super::trajectory::path::ObservedPath>> {
+    let Some(policy) = &project.configuration.observed_path else {
+        return Ok(None);
+    };
+    let run = directory
+        .file_name()
+        .and_then(|name| name.to_str())
+        .ok_or_else(|| invalid("OBSERVED_PATH_NOT_PROVEN: missing runtime evidence identity"))?;
+    match super::trajectory::path::capture(
+        &project.identity_inputs.root,
+        identity,
+        run,
+        &plan.digest().map_err(io::Error::other)?,
+    ) {
+        Ok(binding) => Ok(Some(super::trajectory::path::ObservedPath::new(binding))),
+        Err(_) if !policy.required => Ok(None),
+        Err(error) => Err(invalid(format!(
+            "OBSERVED_PATH_NOT_PROVEN: current native custody is unavailable: {error}"
+        ))),
+    }
+}
+
+fn finish_native_path(
+    project: &CurrentProject,
+    identity: &evidence::MaterialIdentity,
+    plan: &evidence::ExpectedPlan,
+    directory: &Path,
+    path: Option<super::trajectory::path::ObservedPath>,
+    result: &mut ExecutedSuite,
+) -> io::Result<()> {
+    let Some(observed) = path else { return Ok(()) };
+    let required = project
+        .configuration
+        .observed_path
+        .as_ref()
+        .is_some_and(|p| p.required);
+    let run = directory
+        .file_name()
+        .and_then(|name| name.to_str())
+        .ok_or_else(|| invalid("OBSERVED_PATH_NOT_PROVEN: missing runtime evidence identity"))?;
+    result.observed_path = match super::trajectory::path::capture(
+        &project.identity_inputs.root,
+        identity,
+        run,
+        &plan.digest().map_err(io::Error::other)?,
+    ) {
+        Ok(current) => Some(observed.completed(&result.evidence, current, required)?),
+        Err(error) => Some(observed.lost(required, error.to_string())),
+    };
+    Ok(())
 }
 
 /// A finite inventory report for hosts without the complete execution adapters.
@@ -2432,10 +2599,16 @@ impl Host for NativeHost<'_> {
         directory: &Path,
         budget: &RuntimeBudget<'_>,
     ) -> io::Result<ExecutedSuite> {
-        for invocation in selection.native_invocations.values() {
+        let mut path = begin_native_path(project, identity, plan, directory)?;
+        for (key, invocation) in &selection.native_invocations {
             (self.authorize)(NativeAction::SourceCheck { invocation })?;
+            if let Some(observed) = &mut path {
+                observed.authorized(key, &invocation.digest()?)?;
+            }
         }
-        execute_native(project, selection, plan, identity, directory, budget)
+        let mut result = execute_native(project, selection, plan, identity, directory, budget)?;
+        finish_native_path(project, identity, plan, directory, path, &mut result)?;
+        Ok(result)
     }
 }
 
