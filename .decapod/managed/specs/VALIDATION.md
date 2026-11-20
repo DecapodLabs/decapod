@@ -2460,3 +2460,33 @@ The mandatory offline core suite exercises actual source attribution, failed-che
 ## Current accepted policy integration
 
 Publication at102c638e against6ab6de31 was valid at its observed admission. Master subsequently advanced to c47137ad through accepted policy-boundary work. Preserve those new initializer, operator-consent and recovery boundaries, checkpoint the exact integration merge before committing, and collect fresh whole-profile proof; the earlier green result grants no integration authority for this new context.
+
+## Current audit verification scope (#1069)
+
+This candidate changes documentation and release-bound governance projections.
+The implementation map cites actual #1697 source executions at
+`d0b24f6f926583047be0fbe3f51f5686247d1de2` against
+`f5da0e6183bf31cfbef3d5a53c52553ee8b6fbb5`; they are not this document candidate's
+receipt. Native source-CI records retain their incomplete-profile and
+unauthenticated scope fields. Aggregate CLI/core timing and a bounded physical
+receipt assertion do not establish reconstruction microbenchmarks, five-minute
+sharding or complete storage-growth proof.
+
+Fresh hosted checks must judge this candidate's own applicable scope. Conditional
+or not-applicable jobs cannot be counted as executed tests or performance proof.
+No local tests or Buildkite evidence collection is performed. Accepted required
+checks and provider policy remain enabled; full native publication readiness is
+unproven. The complete original mission remains open rather than being closed
+by a documentation update.
+
+## Accepted v0.146.0 audit reconciliation
+
+This map now uses accepted master `e9c40e929ee33aa5443c38b57276f96111db0b92` and the installed 0.146.0 kernel. The accepted #1699 bounded escalation CLI/RPC reference is implemented and covered by its exact-source execution; it is not complete external runtime adoption, semantic reasoning proof or the ten-worker A–H demonstration. Prior baseline paragraphs remain historical audit context. Pending #1697 physical recovery and #1702 canonical local-target admission are kept separate from accepted enforcement until individually verified and merged. Source-CI diagnostics do not substitute for the unchanged full native provider contract.
+
+## Accepted bounded recovery audit update
+
+The current map baseline advances to human merge `7ada4f0755b7d0b63b835c25280dd36f6bbfc525` of #1697. Its exact candidate/base/tree CLI observation is linked and stays scoped to that source; it does not prove this updated map. Bounded physical retirement is implemented, while general row migration, prepared-input supersession and full native publication proof remain unresolved. Earlier baseline paragraphs are historical. This integration preserves both authored spec sets and requires new exact-candidate GitHub verification.
+
+## v0.147.0 map baseline
+
+The current audit baseline is accepted release master `26196764ec1dfa95ce366c08fc3e104b8a5bfec1`, authored under installed v0.147.0. Earlier baseline statements and executed observations are historical. The accepted recovery mechanism, pending canonical-local target proposal and remaining whole-mission requirements stay distinct. The release changes package identity; all 105 discovered verification inputs match this accepted target, and only the stale reviewed inventory pin is reconciled. Strict requirements and provider policy remain enabled; fresh exact-candidate GitHub proof is required. No local project tests or Buildkite collection establish publication readiness here.

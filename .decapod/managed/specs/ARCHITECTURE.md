@@ -1709,3 +1709,24 @@ start after the failed tool's feedback returned; controller work and prewritten
 same-call repair cannot establish autonomous correction. New validation clears
 prior publisher applicability; later source/base movement preserves history
 while requiring new applicable publication evidence. Output grants no authority.
+
+## Source-grounded current enforcement map (#1069)
+
+`docs/architecture/continuous-governance-implementation-map.md` now distinguishes
+the accepted0.145.6 kernel from pending recovery and separately accepted Nix
+source, and binds hosted
+observations to their actual head, accepted base and declared scope. Canonical
+validation, observed workunit proof, request-local diagnostic denial, task custody
+and historical completion remain existing authority owners. The map introduces
+no new engine, store, daemon or authority interpreter.
+
+The complete native runtime integration, ten-worker A-H demonstration,
+independently authenticated exception/cloud authority and compatible split-store
+workunit convergence remain missing. Native GitHub source diagnostics cannot
+replace configured provider proof or authorize a different candidate. Existing
+SQLite semantics remain the foundation; a facade or registry upgrade does not
+satisfy an older no-SQLite-engine proposal by assertion.
+
+## Accepted v0.146.0 audit reconciliation
+
+This map now uses accepted master `e9c40e929ee33aa5443c38b57276f96111db0b92` and the installed 0.146.0 kernel. The accepted #1699 bounded escalation CLI/RPC reference is implemented and covered by its exact-source execution; it is not complete external runtime adoption, semantic reasoning proof or the ten-worker A–H demonstration. Prior baseline paragraphs remain historical audit context. Pending #1697 physical recovery and #1702 canonical local-target admission are kept separate from accepted enforcement until individually verified and merged. Source-CI diagnostics do not substitute for the unchanged full native provider contract.

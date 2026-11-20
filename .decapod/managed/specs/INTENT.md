@@ -1174,3 +1174,24 @@ authenticates arbitrary capture labels or imports publication authority.
 
 ## Real-agent acceptance and release-bound projections
 The issue1758 Pi experiment is actual inference, not a deterministic repair imitation. The read-only observer must preserve its real required-check failure, new model-requested repair after returned feedback, fresh exact-subject native proof and independent GitHub readback. Subsequent source/base controls retain historical admission while clearing current applicability. Operator probes, PR creation, observed admission and merge authorization remain distinct. Source implementation readiness is separately required; a successful fixture export cannot excuse a stale managed container pin or failed source CI. Regenerate release-bound surfaces through native Decapod, checkpoint and rerun full configured validation after release movement.
+
+## Current continuous-governance audit (#1069)
+
+Refresh the existing implementation map against accepted Decapod0.145.6 master
+without changing the kernel, validation policy or publication authority. Separate
+accepted code from pending PRs, and source-bound executed observations from
+unexecuted requirements. Cover exact proof, observed workunit acceptance,
+diagnostic overrides, workspace/custody, local readiness and cloud independence.
+
+Keep missing native runtime integration, complete ten-worker A-H proof,
+independent exception/cloud authority, unsupported workspace-store convergence
+and five-minute sharding explicit. A green source-CI record does not become a
+full native publication receipt. Preserve the existing architecture and SQLite
+foundation; do not implement a competing engine to satisfy an older ticket.
+Documentation-only changes use hosted verification and no local tests or
+Buildkite evidence collection. Previously merged fixes need accurate tracking,
+not duplicate implementation or unsupported issue closure.
+
+## Accepted v0.146.0 audit reconciliation
+
+This map now uses accepted master `e9c40e929ee33aa5443c38b57276f96111db0b92` and the installed 0.146.0 kernel. The accepted #1699 bounded escalation CLI/RPC reference is implemented and covered by its exact-source execution; it is not complete external runtime adoption, semantic reasoning proof or the ten-worker A–H demonstration. Prior baseline paragraphs remain historical audit context. Pending #1697 physical recovery and #1702 canonical local-target admission are kept separate from accepted enforcement until individually verified and merged. Source-CI diagnostics do not substitute for the unchanged full native provider contract.

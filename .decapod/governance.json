@@ -1,7 +1,7 @@
 {
   "schema_version": "1.0.0",
   "baseline": {
-    "accepted_commit": "6ab6de3134286a790d78d370ca3fb43c0d92f834",
+    "accepted_commit": "e9c40e929ee33aa5443c38b57276f96111db0b92",
     "policy": {
       "change_control": {
         "requires_human_review": true,
@@ -574,93 +574,195 @@
     }
   },
   "change": {
-    "id": "change_01M7P3W97HA4M2MRGMQ0TYNRBB",
-    "base_commit": "6ab6de3134286a790d78d370ca3fb43c0d92f834",
+    "id": "pr1700-v1460-rebase",
+    "base_commit": "e9c40e929ee33aa5443c38b57276f96111db0b92",
     "target_base": "origin/master"
   },
   "claims": {
-    "observed-autonomous-admission-export": {
-      "statement": "The read-only observer correlates the actual single Pi failure/repair/fresh-proof/GitHub arc while retaining false publication_ready and merge_authorized and clearing current applicability after source/base changes; trusted-host assertions remain explicit",
-      "falsifier": "An absent executed required failure, absent new agent repair after feedback, mismatched receipt/forge subject, or an export granting current publication or merge authority refutes the corresponding claim",
-      "status": "supported",
+    "pr1700-current-exact-source": {
+      "statement": "Current implementation preserves its stated accepted policy and boundaries on the recorded source/base; new source-CI execution is required before merge.",
+      "falsifier": "A changed source, stale accepted target, missing proof or unsupported authority can be accepted as current success.",
+      "status": "open",
       "proof_refs": [
-        "https://github.com/alexhraber/decapod-admission-acceptance-20261117-1747-06/tree/3c6c373ea703144a2a096e7c3ad6b17c45fcdc38"
-      ]
-    }
-  },
-  "resolutions": {
-    "history-recovery:dad525d46feb9daf09f498c3d2934cd6560fc87b": {
-      "obligation_digest": "sha256:5f54f11c3402049c538ccc9597f567a65886ceb7e9c22101f468e6f9e9107735",
-      "resolution": "Selected source was reviewed and reauthored in this fresh workstream; original failed history remains preserved and unproven. This resolves present recovery custody only; current publication still requires complete fresh validation.",
-      "proof_refs": [
-        "git:fafe6138db68a0d450cc01513b628c17cc40aa3e",
-        "https://github.com/DecapodLabs/decapod/actions/runs/44210899557/job/134496234668"
+        "https://github.com/DecapodLabs/decapod/pull/1700"
       ]
     }
   },
   "checkpoints": [
     {
-      "id": "reauthored-observer-and-history-custody",
-      "summary": "Fresh claimed observer implementation and material specs with native present-time custody of preserved failed source history; no retrospective checkpoint or readiness import",
-      "input_digest": "sha256:681802f9bc964b230f807b147976e2e9bb6b613787aa35e496f5aef4ad67df4e"
+      "id": "pr1700-1460-replay-01",
+      "summary": "docs: rebase PR1700 INTENT.md on v0.146.0; new tree observed during current rebase, GitHub proof pending.",
+      "input_digest": "sha256:7f7d156437272e39ef3feb8260927e44a967ae774b78155d1b439ee572865c21",
+      "proof_refs": [
+        "git:archive/pr1700-before-1460-rebase-46a9750d@46a9750d2684745cc9a9f6aec2a4a3350d654aa4"
+      ]
     },
     {
-      "id": "record-recovery-disposition",
-      "summary": "Reference the committed current recovery archive while retaining the original unproven history and requiring fresh source-CI admission",
-      "input_digest": "sha256:14f9768feee40894a229596770663eb3f09d9898a17f48d6d9e8c569b7730a6f"
+      "id": "pr1700-1460-replay-02",
+      "summary": "docs: rebase PR1700 continuous-governance-implementation-map.md on v0.146.0; new tree observed during current rebase, GitHub proof pending.",
+      "input_digest": "sha256:e7aeb1f0717f988303c831ba5270ce46ebee62948522cc7b41f464be7fe8d52f",
+      "proof_refs": [
+        "git:archive/pr1700-before-1460-rebase-46a9750d@46a9750d2684745cc9a9f6aec2a4a3350d654aa4"
+      ]
     },
     {
-      "id": "accepted-policy-target-integration",
-      "summary": "Preserve accepted policy-boundary implementation and observer source, checkpoint the exact integration merge before commit and invalidate prior target applicability",
-      "input_digest": "sha256:a655e7a7d6d4f5094a90243bdfa8f34a65479019de030f4ac03f0348f67f9557"
+      "id": "pr1700-1460-replay-03",
+      "summary": "docs: rebase PR1700 ARCHITECTURE.md on v0.146.0; new tree observed during current rebase, GitHub proof pending.",
+      "input_digest": "sha256:138a3b6080e014c1823a31206e537e57451098a5a02d9b405cc6f17c6d657be7",
+      "proof_refs": [
+        "git:archive/pr1700-before-1460-rebase-46a9750d@46a9750d2684745cc9a9f6aec2a4a3350d654aa4"
+      ]
     },
     {
-      "id": "accepted-release-target-integration",
-      "summary": "Checkpoint exact release-target integration after genuine target-ancestry rejection; retain all required checks and observer source",
-      "input_digest": "sha256:ae2f3e34937c7001d515d3568ac57acfad5499548975aa0fbb2a7878363ebcb8"
+      "id": "pr1700-1460-replay-04",
+      "summary": "docs: rebase PR1700 INTERFACES.md on v0.146.0; new tree observed during current rebase, GitHub proof pending.",
+      "input_digest": "sha256:7e21af522a2d6da01178c05fa0f4992bd0b67587b8ad2c60342dcfe58dbf5689",
+      "proof_refs": [
+        "git:archive/pr1700-before-1460-rebase-46a9750d@46a9750d2684745cc9a9f6aec2a4a3350d654aa4"
+      ]
     },
     {
-      "id": "review-accepted-release-source-inventory",
-      "summary": "Reconcile105 source inventory after accepted release; only Cargo package version lines differ, no validation command or requirement changes",
-      "input_digest": "sha256:2fa2400448c300487d3de26f9fa18c05bab2e0750543f00e5ec939f5621ab567"
+      "id": "pr1700-1460-replay-05",
+      "summary": "docs: rebase PR1700 VALIDATION.md on v0.146.0; new tree observed during current rebase, GitHub proof pending.",
+      "input_digest": "sha256:4ef2cc9fce93ebcabeb0b1d414d9defcdfa3c3ef1f391645fb50b93693263d43",
+      "proof_refs": [
+        "git:archive/pr1700-before-1460-rebase-46a9750d@46a9750d2684745cc9a9f6aec2a4a3350d654aa4"
+      ]
     },
     {
-      "id": "native-release10-current-projections",
-      "summary": "Checkpoint official native0.148.10 generated Docker/spec projections after genuine CI health rejection; preserve every required check and all failed attempts",
-      "input_digest": "sha256:59a586faf348be4f9001be98cd14380f3e13af0178f3e3941978f0689a88c1f2"
+      "id": "pr1700-1460-replay-06",
+      "summary": "docs(audit): account for accepted v0.146.0 escalation and exact proof scope; new tree observed during current rebase, GitHub proof pending.",
+      "input_digest": "sha256:e93cde5e30a220194e66085605caf64518c024b58df6733b07be249f95f589e1",
+      "proof_refs": [
+        "git:archive/pr1700-before-1460-rebase-46a9750d@46a9750d2684745cc9a9f6aec2a4a3350d654aa4"
+      ]
     },
     {
-      "id": "accepted-conformance-release11-integration",
-      "summary": "Checkpoint accepted conformance/RPC guards and release0.148.11 with unchanged observer; refresh official native projections and source inventory after target invalidated earlier admission; require fresh complete proof",
-      "input_digest": "sha256:1e1fa4f1e4ab8f01b214ab58df58fb6b1975b44e03e6b7b8ba639d63327136b9"
+      "id": "pr1700-1460-replay-07",
+      "summary": "docs(specs): reconcile intent with accepted v0.146.0 scope; new tree observed during current rebase, GitHub proof pending.",
+      "input_digest": "sha256:cd9b7a14c25e6ce33af91a1cadc3499eaa544f01f7a9ed110a0acdc111652da2",
+      "proof_refs": [
+        "git:archive/pr1700-before-1460-rebase-46a9750d@46a9750d2684745cc9a9f6aec2a4a3350d654aa4"
+      ]
     },
     {
-      "id": "release11-tag-currency-and-native-pin",
-      "summary": "Checkpoint native0.148.11 Docker pin after read-only release tag fetch; preserve failed14 and require full15 without any tag publication or proof import",
-      "input_digest": "sha256:0f5e8ed8ce937f21d072d630d3690f0d733a1dc6606bdde64948e6999f885eab"
+      "id": "pr1700-1460-replay-08",
+      "summary": "docs(specs): reconcile architecture with accepted v0.146.0 scope; new tree observed during current rebase, GitHub proof pending.",
+      "input_digest": "sha256:1ca483df488fc49622171333cbc43a5e1191ee2249b1c7ed3431bdbfad950bf8",
+      "proof_refs": [
+        "git:archive/pr1700-before-1460-rebase-46a9750d@46a9750d2684745cc9a9f6aec2a4a3350d654aa4"
+      ]
     },
     {
-      "id": "cp-sync-c6439c7df",
-      "summary": "Integrate accepted master c6439c7df (v0.152.0) and refresh specs for #1757",
-      "input_digest": "sha256:869e95e2ff68643b26b9ad7afdf40f3ce0b1009ff983c9356dae06fd4679e253"
+      "id": "pr1700-1460-replay-09",
+      "summary": "docs(specs): reconcile interfaces with accepted v0.146.0 scope; new tree observed during current rebase, GitHub proof pending.",
+      "input_digest": "sha256:77175e268d0007786cea372ab5654344b0b7229f2edd58857799b740b3c3a170",
+      "proof_refs": [
+        "git:archive/pr1700-before-1460-rebase-46a9750d@46a9750d2684745cc9a9f6aec2a4a3350d654aa4"
+      ]
+    },
+    {
+      "id": "pr1700-1460-replay-10",
+      "summary": "docs(specs): reconcile validation with accepted v0.146.0 scope; new tree observed during current rebase, GitHub proof pending.",
+      "input_digest": "sha256:aefd18b6690962a38c9afed639876d24cbf19855be14eb1e4b7ebb6ec1c93f50",
+      "proof_refs": [
+        "git:archive/pr1700-before-1460-rebase-46a9750d@46a9750d2684745cc9a9f6aec2a4a3350d654aa4"
+      ]
+    },
+    {
+      "id": "pr1700-v1460-final-checkpoint",
+      "summary": "Finalize freshly governed v0.146.0 rebase, source-bound spec reviews and preserved required policy; exact-candidate GitHub proof pending.",
+      "input_digest": "sha256:7d793f0bb672ce435abe0a31e3dfece3d8b8fa098a1886e1ca47b069ef750470",
+      "proof_refs": [
+        "https://github.com/DecapodLabs/decapod/pull/1700"
+      ]
+    },
+    {
+      "id": "pr1700-v1460-final-e13c656aefa6",
+      "summary": "Finalize freshly governed v0.146.0 rebase, source-bound spec reviews and preserved required policy; exact-candidate GitHub proof pending.",
+      "input_digest": "sha256:a708d2f8277293d36daf0c3eddef34ac70f60fdaf88fc99ce1bf9419a510d7f1",
+      "proof_refs": [
+        "https://github.com/DecapodLabs/decapod/pull/1700"
+      ]
+    },
+    {
+      "id": "pr1700-1460-replay-11",
+      "summary": "docs(audit): include accepted bounded recovery and exact integration identity; new tree observed during current rebase, GitHub proof pending.",
+      "input_digest": "sha256:b838b12e5305d914dedd0ad94aa33c010a4751dfcfce1fb4f778ddc043a513dd",
+      "proof_refs": [
+        "git:archive/pr1700-before-1460-rebase-46a9750d@46a9750d2684745cc9a9f6aec2a4a3350d654aa4"
+      ]
+    },
+    {
+      "id": "pr1700-1460-replay-12",
+      "summary": "docs(specs): preserve scoped proof after bounded recovery acceptance; new tree observed during current rebase, GitHub proof pending.",
+      "input_digest": "sha256:d871ce6fea4340c8d89b70b967ffeca314a568f8393832a4ee8c7056eff07be8",
+      "proof_refs": [
+        "git:archive/pr1700-before-1460-rebase-46a9750d@46a9750d2684745cc9a9f6aec2a4a3350d654aa4"
+      ]
+    },
+    {
+      "id": "pr1700-v1460-final-bdd32e5228a5",
+      "summary": "Finalize freshly governed v0.146.0 rebase, source-bound spec reviews and preserved required policy; exact-candidate GitHub proof pending.",
+      "input_digest": "sha256:3435597ebf6b3856c058a4b65956386f583f0d9111dec1729411f8a129695afd",
+      "proof_refs": [
+        "https://github.com/DecapodLabs/decapod/pull/1700"
+      ]
+    },
+    {
+      "id": "pr1700-v1470-final-45fbcbd6d746",
+      "summary": "Finalize governed v0.147.0 accepted-target integration, source-bound spec reviews and preserved required policy; exact-candidate GitHub proof pending.",
+      "input_digest": "sha256:526bca7b366ec2c7dc89a93da4b87fbff8b9763526725316864cb834672782f4",
+      "proof_refs": [
+        "https://github.com/DecapodLabs/decapod/pull/1700"
+      ]
+    },
+    {
+      "id": "pr1700-1460-replay-13",
+      "summary": "docs(audit): bind current implementation map to accepted v0.147.0; new tree observed during current rebase, GitHub proof pending.",
+      "input_digest": "sha256:09ba4a3a9a611ec0453c31747e8c34a8b1a7da1e1deba7804d405a14ee6cfc94",
+      "proof_refs": [
+        "git:archive/pr1700-before-1460-rebase-46a9750d@46a9750d2684745cc9a9f6aec2a4a3350d654aa4"
+      ]
+    },
+    {
+      "id": "pr1700-1460-replay-14",
+      "summary": "docs(specs): distinguish v0.147.0 audit baseline from historical proof; new tree observed during current rebase, GitHub proof pending.",
+      "input_digest": "sha256:587f1eecaa9b00157fa52957056d34d615f533112562b4bb8ab603c03a980a92",
+      "proof_refs": [
+        "git:archive/pr1700-before-1460-rebase-46a9750d@46a9750d2684745cc9a9f6aec2a4a3350d654aa4"
+      ]
+    },
+    {
+      "id": "pr1700-v1470-final-b2110fa1faa0",
+      "summary": "Finalize governed v0.147.0 accepted-target integration, source-bound spec reviews and preserved required policy; exact-candidate GitHub proof pending.",
+      "input_digest": "sha256:ca482aa49de23357cb23b56e882395973de59632593ba3e04263fd9793333ab6",
+      "proof_refs": [
+        "https://github.com/DecapodLabs/decapod/pull/1700"
+      ]
+    },
+    {
+      "id": "cp-sync-6f2ec99dc",
+      "summary": "Integrate accepted master 6f2ec99dc (v0.152.0) and refresh specs for PR #1700",
+      "input_digest": "sha256:70972214d74ae5bb0f8a35eb70c9f6c4e77562e4396d564bade92ca7ee294542"
     }
   ],
   "intents": {
-    "intent:change_01M7P3W97HA4M2MRGMQ0TYNRBB": {
+    "intent:pr1700-v1460-rebase": {
       "acceptance_criteria": [],
       "assumptions": [],
       "boundaries": [
-        "Current claimed task and isolated work branch"
+        "Old branch tips and receipts remain historical; fresh checkpoints bind every newly authored material tree; no local tests/builds or Buildkite collection; preserve required provider and publication gates"
       ],
       "constraints": [
-        "root"
+        "<external-path>"
       ],
       "created_sequence": 1,
-      "id": "intent:change_01M7P3W97HA4M2MRGMQ0TYNRBB",
+      "id": "intent:pr1700-v1460-rebase",
       "out_of_scope": [],
       "proof_requirements": [],
-      "raw_intent": "Recover observer delivery from preserved failed checkpoint history (#1757)\n\nPreserve dad525d4 and its failed c31d039f merge checkpoint. Fresh governed source workstream from accepted master; record native present-time recovery observation, reauthor reviewed final observer source and specs, regenerate projections, validate complete exact candidate and publish. Historical failure is never promoted to proof.",
-      "refined_intent": "Recover observer delivery from preserved failed checkpoint history (#1757)\n\nPreserve dad525d4 and its failed c31d039f merge checkpoint. Fresh governed source workstream from accepted master; record native present-time recovery observation, reauthor reviewed final observer source and specs, regenerate projections, validate complete exact candidate and publish. Historical failure is never promoted to proof.",
+      "raw_intent": "User explicitly requests enhancement, rebase on origin/master v0.146.0, GitHub-only verification and merge of PRs1697/1700/1702",
+      "refined_intent": "Deliver a current evidence-backed governance implementation map on accepted master with implemented, advisory and missing boundaries explicit",
       "status": "refined",
       "updated_sequence": 3
     }
@@ -668,260 +770,581 @@
   "sections": {
     "plan": {
       "constraints": {
-        "file_touch_budget": null,
+        "file_touch_budget": 23,
         "forbidden_paths": []
       },
       "deferred_questions": [],
       "human_questions": [],
-      "intent": "Recover preserved observer source through a fresh governed workstream; read-only Rust correlation of real Pi failure, autonomous repair, fresh receipt-bound admission and current applicability; preserve failed history and original fixture archive; all media remains website-owned",
+      "intent": "Deliver a current evidence-backed governance implementation map on accepted master with implemented, advisory and missing boundaries explicit",
       "phases": [],
       "proof_hooks": [
-        "Full exact-candidate native source-CI graph, mandatory offline core/library observer regressions and independently observed real Pi/GitHub evidence; no historical proof imported"
+        "Exact-candidate required GitHub source-CI checks",
+        "Current source/base/tree/tool/policy and governed task binding"
       ],
       "schema_version": "1.1.0",
       "spec_reviews": [
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Synced #1757 read-only acceptance correlation with accepted master c6439c7df (v0.152.0).",
+          "reason": "Synced #1069/#1455 continuous-governance implementation map with accepted master 6f2ec99dc (v0.152.0).",
           "reviewed_code_fingerprint": "d21529e6e236765e361c9cf4aa4e631530a9b4a15d74210365834babaf5918bb",
-          "spec_material_hash": "428920995312cd6dbfeea17606ced8451170aa9656dc6b81e149129c0bac5bf3"
+          "spec_material_hash": "c1a489ebe3ad394b5e9700cbd3b0c747c6ff6740f26173aefdc853c66d26520c"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Synced #1757 acceptance observation export contract with accepted master c6439c7df (v0.152.0).",
+          "reason": "Synced #1069/#1455 audit evidence and invocation scope with accepted master 6f2ec99dc (v0.152.0).",
           "reviewed_code_fingerprint": "d21529e6e236765e361c9cf4aa4e631530a9b4a15d74210365834babaf5918bb",
-          "spec_material_hash": "4292240db1012bacb3703d25489a6ac0511d294bef81044dc9ef0ada6acb20e7"
+          "spec_material_hash": "61ce744344efe73dae2599cc14945073a0374c76e0aae69603f11f39982b6744"
         },
         {
-          "disposition": "updated",
+          "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Synced #1757 acceptance presentation boundary with accepted master c6439c7df (v0.152.0).",
+          "reason": "Docs-only implementation map audit introduces no new security surface.",
           "reviewed_code_fingerprint": "d21529e6e236765e361c9cf4aa4e631530a9b4a15d74210365834babaf5918bb",
           "spec_material_hash": "3d3861ffd59d9e65966771b5db4107b999a733ec7ad029f02a6c1cb2696ec964"
         }
       ],
       "state": "APPROVED",
       "stop_conditions": [],
-      "title": "Recover observer delivery from preserved failed checkpoint history (#1757)",
+      "title": "PR1700: current-master delivery",
       "todo_ids": [
-        "bend_01m7p3rf73bh99q5"
+        "code_01m7e6518p19mwp8"
       ],
-      "unknowns": [],
+      "unknowns": [
+        "Buildkite collection excluded by user; no full native publication receipt is claimed"
+      ],
       "unresolved_contradictions": [],
-      "updated_at": "1795151138Z"
+      "updated_at": "1795154272Z"
     },
     "trajectory": {
       "active_boundaries": [
-        "Current claimed task and isolated work branch"
+        "Old branch tips and receipts remain historical; fresh checkpoints bind every newly authored material tree; no local tests/builds or Buildkite collection; preserve required provider and publication gates"
       ],
-      "artifact_hash": "sha256:2a16724876dd7255af1684f589ac99bc0375dbfa826e2714520dbbacf40bd539",
+      "artifact_hash": "sha256:8ba48b4e973bbfe6567d00b0233cebb382b81aaca4dbd843bde1b23ab43f77bb",
       "checks": [
         {
-          "name": "accepted-target-ancestry",
-          "status": "failed"
-        },
-        {
-          "name": "actual-capture-replay",
-          "status": "passed"
-        },
-        {
-          "name": "actual-pi-capture",
-          "status": "passed"
-        },
-        {
-          "name": "current-projection-ci-health",
-          "status": "failed"
-        },
-        {
-          "name": "fresh-complete-proof",
-          "status": "unavailable"
-        },
-        {
-          "name": "historical-source-checkpoints",
-          "status": "failed"
-        },
-        {
-          "name": "native-projection-refresh",
+          "name": "accepted-target-integration",
           "status": "partial"
         },
         {
-          "name": "official-release11-install",
-          "status": "passed"
-        },
-        {
-          "name": "previous-admission-current-applicability",
-          "status": "failed"
-        },
-        {
-          "name": "previous-target-applicability",
-          "status": "failed"
+          "name": "fresh-rebase-verification",
+          "status": "partial"
         }
       ],
-      "current_phase": "intent",
+      "current_phase": "validation",
       "custody": {
         "events": [
           {
             "event_id": "event:2",
-            "intent_id": "intent:change_01M7P3W97HA4M2MRGMQ0TYNRBB",
+            "intent_id": "intent:pr1700-v1460-rebase",
             "kind": "created",
             "sequence": 2
           },
           {
             "event_id": "event:3",
-            "intent_id": "intent:change_01M7P3W97HA4M2MRGMQ0TYNRBB",
+            "intent_id": "intent:pr1700-v1460-rebase",
             "kind": "refined",
             "sequence": 3
           },
           {
-            "detail": "trajectory:branch_01M7P3W9AX80HN9XVHYSAD8B7C",
+            "detail": "trajectory:pr1700-v1460-rebase",
             "event_id": "event:4",
-            "intent_id": "intent:change_01M7P3W97HA4M2MRGMQ0TYNRBB",
+            "intent_id": "intent:pr1700-v1460-rebase",
             "kind": "trajectory_step_recorded",
             "sequence": 4
           },
           {
-            "detail": "trajectory:branch_01M7P3W9AX80HN9XVHYSAD8B7C",
+            "detail": "trajectory:pr1700-v1460-rebase",
             "event_id": "event:5",
-            "intent_id": "intent:change_01M7P3W97HA4M2MRGMQ0TYNRBB",
+            "intent_id": "intent:pr1700-v1460-rebase",
             "kind": "trajectory_step_recorded",
             "sequence": 5
           },
           {
-            "detail": "trajectory:branch_01M7P3W9AX80HN9XVHYSAD8B7C",
+            "detail": "trajectory:pr1700-v1460-rebase",
             "event_id": "event:6",
-            "intent_id": "intent:change_01M7P3W97HA4M2MRGMQ0TYNRBB",
+            "intent_id": "intent:pr1700-v1460-rebase",
             "kind": "trajectory_step_recorded",
             "sequence": 6
           },
           {
-            "detail": "trajectory:branch_01M7P3W9AX80HN9XVHYSAD8B7C",
+            "detail": "trajectory:pr1700-v1460-rebase",
             "event_id": "event:7",
-            "intent_id": "intent:change_01M7P3W97HA4M2MRGMQ0TYNRBB",
+            "intent_id": "intent:pr1700-v1460-rebase",
             "kind": "trajectory_step_recorded",
             "sequence": 7
           },
           {
-            "detail": "trajectory:branch_01M7P3W9AX80HN9XVHYSAD8B7C",
+            "detail": "trajectory:pr1700-v1460-rebase",
             "event_id": "event:8",
-            "intent_id": "intent:change_01M7P3W97HA4M2MRGMQ0TYNRBB",
+            "intent_id": "intent:pr1700-v1460-rebase",
             "kind": "trajectory_step_recorded",
             "sequence": 8
           },
           {
-            "detail": "trajectory:branch_01M7P3W9AX80HN9XVHYSAD8B7C",
+            "detail": "trajectory:pr1700-v1460-rebase",
             "event_id": "event:9",
-            "intent_id": "intent:change_01M7P3W97HA4M2MRGMQ0TYNRBB",
+            "intent_id": "intent:pr1700-v1460-rebase",
             "kind": "trajectory_step_recorded",
             "sequence": 9
+          },
+          {
+            "detail": "trajectory:pr1700-v1460-rebase",
+            "event_id": "event:10",
+            "intent_id": "intent:pr1700-v1460-rebase",
+            "kind": "trajectory_step_recorded",
+            "sequence": 10
+          },
+          {
+            "detail": "trajectory:pr1700-v1460-rebase",
+            "event_id": "event:11",
+            "intent_id": "intent:pr1700-v1460-rebase",
+            "kind": "trajectory_step_recorded",
+            "sequence": 11
+          },
+          {
+            "detail": "trajectory:pr1700-v1460-rebase",
+            "event_id": "event:12",
+            "intent_id": "intent:pr1700-v1460-rebase",
+            "kind": "trajectory_step_recorded",
+            "sequence": 12
+          },
+          {
+            "detail": "trajectory:pr1700-v1460-rebase",
+            "event_id": "event:13",
+            "intent_id": "intent:pr1700-v1460-rebase",
+            "kind": "trajectory_step_recorded",
+            "sequence": 13
+          },
+          {
+            "detail": "trajectory:pr1700-v1460-rebase",
+            "event_id": "event:14",
+            "intent_id": "intent:pr1700-v1460-rebase",
+            "kind": "trajectory_step_recorded",
+            "sequence": 14
+          },
+          {
+            "detail": "trajectory:pr1700-v1460-rebase",
+            "event_id": "event:15",
+            "intent_id": "intent:pr1700-v1460-rebase",
+            "kind": "trajectory_step_recorded",
+            "sequence": 15
+          },
+          {
+            "detail": "trajectory:pr1700-v1460-rebase",
+            "event_id": "event:16",
+            "intent_id": "intent:pr1700-v1460-rebase",
+            "kind": "trajectory_step_recorded",
+            "sequence": 16
+          },
+          {
+            "detail": "trajectory:pr1700-v1460-rebase",
+            "event_id": "event:17",
+            "intent_id": "intent:pr1700-v1460-rebase",
+            "kind": "trajectory_step_recorded",
+            "sequence": 17
+          },
+          {
+            "detail": "trajectory:pr1700-v1460-rebase",
+            "event_id": "event:18",
+            "intent_id": "intent:pr1700-v1460-rebase",
+            "kind": "trajectory_step_recorded",
+            "sequence": 18
+          },
+          {
+            "detail": "trajectory:pr1700-v1460-rebase",
+            "event_id": "event:19",
+            "intent_id": "intent:pr1700-v1460-rebase",
+            "kind": "trajectory_step_recorded",
+            "sequence": 19
+          },
+          {
+            "detail": "trajectory:pr1700-v1460-rebase",
+            "event_id": "event:20",
+            "intent_id": "intent:pr1700-v1460-rebase",
+            "kind": "trajectory_step_recorded",
+            "sequence": 20
+          },
+          {
+            "detail": "trajectory:pr1700-v1460-rebase",
+            "event_id": "event:21",
+            "intent_id": "intent:pr1700-v1460-rebase",
+            "kind": "trajectory_step_recorded",
+            "sequence": 21
+          },
+          {
+            "detail": "trajectory:pr1700-v1460-rebase",
+            "event_id": "event:22",
+            "intent_id": "intent:pr1700-v1460-rebase",
+            "kind": "trajectory_step_recorded",
+            "sequence": 22
+          },
+          {
+            "detail": "trajectory:pr1700-v1460-rebase",
+            "event_id": "event:23",
+            "intent_id": "intent:pr1700-v1460-rebase",
+            "kind": "trajectory_step_recorded",
+            "sequence": 23
+          },
+          {
+            "detail": "trajectory:pr1700-v1460-rebase",
+            "event_id": "event:24",
+            "intent_id": "intent:pr1700-v1460-rebase",
+            "kind": "trajectory_step_recorded",
+            "sequence": 24
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 9,
+        "next_sequence": 24,
         "schema_version": "1.0.0",
         "trajectories": {
-          "branch_01M7P3W9AX80HN9XVHYSAD8B7C": {
+          "pr1700-v1460-rebase": {
             "evidence_only": true,
-            "id": "branch_01M7P3W9AX80HN9XVHYSAD8B7C",
-            "intent_id": "intent:change_01M7P3W97HA4M2MRGMQ0TYNRBB",
+            "id": "pr1700-v1460-rebase",
+            "intent_id": "intent:pr1700-v1460-rebase",
             "steps": [
               {
-                "action": "trajectory.record",
+                "action": "implementation",
                 "custody_event_id": "event:4",
                 "observations": [
-                  "Preserved dad525d4 failed history including uncheckpointed integration c31d039f; native present-time recovery observation recorded. Reauthored five implementation files byte-for-byte; retained fresh identity. Real Pi archive3c6c373 and publication receipt remain historical observations, never imported readiness. Original source-CI deadline expired with SNAPSHOT_NOT_READY; fresh source requires complete validation."
+                  ".decapod/managed/specs/INTENT.md",
+                  "https://github.com/DecapodLabs/decapod/pull/1700"
                 ],
-                "proof_refs": [
-                  "historical-source-checkpoints",
-                  "actual-pi-capture"
-                ],
+                "proof_refs": [],
                 "scope": [
-                  "root"
+                  "<external-path>"
                 ],
                 "sequence": 4,
-                "validation_findings": []
+                "validation_findings": [
+                  "Fresh material replay on accepted0.146.0 master; old checkpoint observations remain archived on the old Git tip and do not prove this tree. Required new GitHub execution pending; no local tests/builds or Buildkite collection."
+                ]
               },
               {
-                "action": "trajectory.record",
+                "action": "implementation",
                 "custody_event_id": "event:5",
                 "observations": [
-                  "Master advanced from6ab6de31 to c47137ad after native PR1784 admission. That admission remains historical, with no merge authorization. PR moved to draft; accepted policy-boundary changes merged without auto-commit, source/spec conflicts resolved preserving both responsibilities, and this exact integration tree will be checkpointed before commit. Fresh complete native validation is required."
+                  "docs/architecture/continuous-governance-implementation-map.md",
+                  "https://github.com/DecapodLabs/decapod/pull/1700"
                 ],
-                "proof_refs": [
-                  "previous-target-applicability"
-                ],
+                "proof_refs": [],
                 "scope": [
-                  "root"
+                  "<external-path>"
                 ],
                 "sequence": 5,
-                "validation_findings": []
+                "validation_findings": [
+                  "Fresh material replay on accepted0.146.0 master; old checkpoint observations remain archived on the old Git tip and do not prove this tree. Required new GitHub execution pending; no local tests/builds or Buildkite collection."
+                ]
               },
               {
-                "action": "trajectory.record",
+                "action": "implementation",
                 "custody_event_id": "event:6",
                 "observations": [
-                  "Validation09 failed closed in actual docs-sync CI context after master advanced to34f837d4 release0.148.10. Raw failed job12092 preserved. Only the accepted release metadata is merged here without auto-commit; no observer, check or policy is weakened. Exact merge checkpoint precedes commit and full validation must rerun."
+                  ".decapod/managed/specs/ARCHITECTURE.md",
+                  "https://github.com/DecapodLabs/decapod/pull/1700"
                 ],
-                "proof_refs": [
-                  "accepted-target-ancestry"
-                ],
+                "proof_refs": [],
                 "scope": [
-                  "root"
+                  "<external-path>"
                 ],
                 "sequence": 6,
-                "validation_findings": []
+                "validation_findings": [
+                  "Fresh material replay on accepted0.146.0 master; old checkpoint observations remain archived on the old Git tip and do not prove this tree. Required new GitHub execution pending; no local tests/builds or Buildkite collection."
+                ]
               },
               {
-                "action": "trajectory.record",
+                "action": "implementation",
                 "custody_event_id": "event:7",
                 "observations": [
-                  "Build12118 health job01a1ed5b-7d95-433d-9159-eb3eb09b8e2c rejected the0.148.9 Docker/manifest under the source-built0.148.10 binary. Preserved raw failure. Official0.148.10 archive checksum712521a5 verified, inspected and installed; native commands regenerated the two projections. Local prerequisite-only repair reported211 passes/3 failures and is not admission proof. Actual capture export test passed on d4269e35 with manifest4180e2b8 unchanged. Fresh complete exact-candidate CI is still required."
+                  ".decapod/managed/specs/INTERFACES.md",
+                  "https://github.com/DecapodLabs/decapod/pull/1700"
                 ],
-                "proof_refs": [
-                  "current-projection-ci-health",
-                  "native-projection-refresh",
-                  "actual-capture-replay"
-                ],
+                "proof_refs": [],
                 "scope": [
-                  "root"
+                  "<external-path>"
                 ],
                 "sequence": 7,
-                "validation_findings": []
+                "validation_findings": [
+                  "Fresh material replay on accepted0.146.0 master; old checkpoint observations remain archived on the old Git tip and do not prove this tree. Required new GitHub execution pending; no local tests/builds or Buildkite collection."
+                ]
               },
               {
-                "action": "trajectory.record",
+                "action": "implementation",
                 "custody_event_id": "event:8",
                 "observations": [
-                  "Prior45ae/34f8 full native graph and actual publication passed, then accepted master advanced to352d8929 with conformance fixes and0.148.11. PR1784 returned to draft. Preserve prior successful and failed records. Merge accepted implementation/tests without auto-commit; reconcile authored spec prose while native blocks remain CLI-owned. Official release tag and master trees match; archive5412a6ba verified and installed, original Pi binary unchanged.105 inventory2acf1af7 reviewed with unchanged required graph. This checkpoint precedes merge commit and fresh full proof."
+                  ".decapod/managed/specs/VALIDATION.md",
+                  "https://github.com/DecapodLabs/decapod/pull/1700"
                 ],
-                "proof_refs": [
-                  "previous-admission-current-applicability",
-                  "official-release11-install",
-                  "fresh-complete-proof"
-                ],
+                "proof_refs": [],
                 "scope": [
-                  "root"
+                  "<external-path>"
                 ],
                 "sequence": 8,
-                "validation_findings": []
+                "validation_findings": [
+                  "Fresh material replay on accepted0.146.0 master; old checkpoint observations remain archived on the old Git tip and do not prove this tree. Required new GitHub execution pending; no local tests/builds or Buildkite collection."
+                ]
+              },
+              {
+                "action": "implementation",
+                "custody_event_id": "event:9",
+                "observations": [
+                  "docs/architecture/continuous-governance-implementation-map.md",
+                  "https://github.com/DecapodLabs/decapod/pull/1700"
+                ],
+                "proof_refs": [],
+                "scope": [
+                  "<external-path>"
+                ],
+                "sequence": 9,
+                "validation_findings": [
+                  "Fresh material replay on accepted0.146.0 master; old checkpoint observations remain archived on the old Git tip and do not prove this tree. Required new GitHub execution pending; no local tests/builds or Buildkite collection."
+                ]
+              },
+              {
+                "action": "implementation",
+                "custody_event_id": "event:10",
+                "observations": [
+                  ".decapod/managed/specs/INTENT.md",
+                  "https://github.com/DecapodLabs/decapod/pull/1700"
+                ],
+                "proof_refs": [],
+                "scope": [
+                  "<external-path>"
+                ],
+                "sequence": 10,
+                "validation_findings": [
+                  "Fresh material replay on accepted0.146.0 master; old checkpoint observations remain archived on the old Git tip and do not prove this tree. Required new GitHub execution pending; no local tests/builds or Buildkite collection."
+                ]
+              },
+              {
+                "action": "implementation",
+                "custody_event_id": "event:11",
+                "observations": [
+                  ".decapod/managed/specs/ARCHITECTURE.md",
+                  "https://github.com/DecapodLabs/decapod/pull/1700"
+                ],
+                "proof_refs": [],
+                "scope": [
+                  "<external-path>"
+                ],
+                "sequence": 11,
+                "validation_findings": [
+                  "Fresh material replay on accepted0.146.0 master; old checkpoint observations remain archived on the old Git tip and do not prove this tree. Required new GitHub execution pending; no local tests/builds or Buildkite collection."
+                ]
+              },
+              {
+                "action": "implementation",
+                "custody_event_id": "event:12",
+                "observations": [
+                  ".decapod/managed/specs/INTERFACES.md",
+                  "https://github.com/DecapodLabs/decapod/pull/1700"
+                ],
+                "proof_refs": [],
+                "scope": [
+                  "<external-path>"
+                ],
+                "sequence": 12,
+                "validation_findings": [
+                  "Fresh material replay on accepted0.146.0 master; old checkpoint observations remain archived on the old Git tip and do not prove this tree. Required new GitHub execution pending; no local tests/builds or Buildkite collection."
+                ]
+              },
+              {
+                "action": "implementation",
+                "custody_event_id": "event:13",
+                "observations": [
+                  ".decapod/managed/specs/VALIDATION.md",
+                  "https://github.com/DecapodLabs/decapod/pull/1700"
+                ],
+                "proof_refs": [],
+                "scope": [
+                  "<external-path>"
+                ],
+                "sequence": 13,
+                "validation_findings": [
+                  "Fresh material replay on accepted0.146.0 master; old checkpoint observations remain archived on the old Git tip and do not prove this tree. Required new GitHub execution pending; no local tests/builds or Buildkite collection."
+                ]
+              },
+              {
+                "action": "validation",
+                "custody_event_id": "event:14",
+                "observations": [
+                  "git:archive/pr1700-before-1460-rebase-46a9750d@46a9750d2684745cc9a9f6aec2a4a3350d654aa4"
+                ],
+                "proof_refs": [
+                  "fresh-rebase-verification"
+                ],
+                "scope": [
+                  "<external-path>"
+                ],
+                "sequence": 14,
+                "validation_findings": [
+                  "Old tip archived before authorized rebase; every replayed material tree received a new native checkpoint. Source CI for this exact head/base remains pending. No local tests/builds or Buildkite evidence collection; full native publication proof is not claimed."
+                ]
+              },
+              {
+                "action": "implementation",
+                "custody_event_id": "event:15",
+                "observations": [
+                  "https://github.com/DecapodLabs/decapod/commit/7ada4f0755b7d0b63b835c25280dd36f6bbfc525"
+                ],
+                "proof_refs": [
+                  "accepted-target-integration"
+                ],
+                "scope": [
+                  "<external-path>"
+                ],
+                "sequence": 15,
+                "validation_findings": [
+                  "Accepted target advanced through human merge #1697. Canonical Git merge preserves both reviewed feature sets; previous source evidence remains historical. New exact-source GitHub checks required; no local tests/builds or Buildkite collection."
+                ]
+              },
+              {
+                "action": "validation",
+                "custody_event_id": "event:16",
+                "observations": [
+                  "git:archive/pr1700-before-1460-rebase-46a9750d@46a9750d2684745cc9a9f6aec2a4a3350d654aa4"
+                ],
+                "proof_refs": [
+                  "fresh-rebase-verification"
+                ],
+                "scope": [
+                  "<external-path>"
+                ],
+                "sequence": 16,
+                "validation_findings": [
+                  "Old tip archived before authorized rebase; every replayed material tree received a new native checkpoint. Source CI for this exact head/base remains pending. No local tests/builds or Buildkite evidence collection; full native publication proof is not claimed."
+                ]
+              },
+              {
+                "action": "implementation",
+                "custody_event_id": "event:17",
+                "observations": [
+                  "docs/architecture/continuous-governance-implementation-map.md",
+                  "https://github.com/DecapodLabs/decapod/pull/1700"
+                ],
+                "proof_refs": [],
+                "scope": [
+                  "<external-path>"
+                ],
+                "sequence": 17,
+                "validation_findings": [
+                  "Fresh material replay on accepted0.146.0 master; old checkpoint observations remain archived on the old Git tip and do not prove this tree. Required new GitHub execution pending; no local tests/builds or Buildkite collection."
+                ]
+              },
+              {
+                "action": "implementation",
+                "custody_event_id": "event:18",
+                "observations": [
+                  ".decapod/managed/specs/VALIDATION.md",
+                  "https://github.com/DecapodLabs/decapod/pull/1700"
+                ],
+                "proof_refs": [],
+                "scope": [
+                  "<external-path>"
+                ],
+                "sequence": 18,
+                "validation_findings": [
+                  "Fresh material replay on accepted0.146.0 master; old checkpoint observations remain archived on the old Git tip and do not prove this tree. Required new GitHub execution pending; no local tests/builds or Buildkite collection."
+                ]
+              },
+              {
+                "action": "validation",
+                "custody_event_id": "event:19",
+                "observations": [
+                  "git:archive/pr1700-before-1460-rebase-46a9750d@46a9750d2684745cc9a9f6aec2a4a3350d654aa4"
+                ],
+                "proof_refs": [
+                  "fresh-rebase-verification"
+                ],
+                "scope": [
+                  "<external-path>"
+                ],
+                "sequence": 19,
+                "validation_findings": [
+                  "Old tip archived before authorized rebase; every replayed material tree received a new native checkpoint. Source CI for this exact head/base remains pending. No local tests/builds or Buildkite evidence collection; full native publication proof is not claimed."
+                ]
+              },
+              {
+                "action": "validation",
+                "custody_event_id": "event:20",
+                "observations": [
+                  "git:archive/pr1700-before-1460-rebase-46a9750d@46a9750d2684745cc9a9f6aec2a4a3350d654aa4"
+                ],
+                "proof_refs": [
+                  "fresh-rebase-verification"
+                ],
+                "scope": [
+                  "<external-path>"
+                ],
+                "sequence": 20,
+                "validation_findings": [
+                  "Old tip archived before authorized rebase; every replayed material tree received a new native checkpoint. Source CI for this exact head/base remains pending. No local tests/builds or Buildkite evidence collection; full native publication proof is not claimed."
+                ]
+              },
+              {
+                "action": "implementation",
+                "custody_event_id": "event:21",
+                "observations": [
+                  "docs/architecture/continuous-governance-implementation-map.md",
+                  "https://github.com/DecapodLabs/decapod/pull/1700"
+                ],
+                "proof_refs": [],
+                "scope": [
+                  "<external-path>"
+                ],
+                "sequence": 21,
+                "validation_findings": [
+                  "Fresh material replay on accepted0.146.0 master; old checkpoint observations remain archived on the old Git tip and do not prove this tree. Required new GitHub execution pending; no local tests/builds or Buildkite collection."
+                ]
+              },
+              {
+                "action": "implementation",
+                "custody_event_id": "event:22",
+                "observations": [
+                  ".decapod/managed/specs/VALIDATION.md",
+                  "https://github.com/DecapodLabs/decapod/pull/1700"
+                ],
+                "proof_refs": [],
+                "scope": [
+                  "<external-path>"
+                ],
+                "sequence": 22,
+                "validation_findings": [
+                  "Fresh material replay on accepted0.146.0 master; old checkpoint observations remain archived on the old Git tip and do not prove this tree. Required new GitHub execution pending; no local tests/builds or Buildkite collection."
+                ]
+              },
+              {
+                "action": "validation",
+                "custody_event_id": "event:23",
+                "observations": [
+                  "git:archive/pr1700-before-1460-rebase-46a9750d@46a9750d2684745cc9a9f6aec2a4a3350d654aa4"
+                ],
+                "proof_refs": [
+                  "fresh-rebase-verification"
+                ],
+                "scope": [
+                  "<external-path>"
+                ],
+                "sequence": 23,
+                "validation_findings": [
+                  "Old tip archived before authorized rebase; every replayed material tree received a new native checkpoint. Source CI for this exact head/base remains pending. No local tests/builds or Buildkite evidence collection; full native publication proof is not claimed."
+                ]
               },
               {
                 "action": "trajectory.record",
-                "custody_event_id": "event:9",
+                "custody_event_id": "event:24",
                 "observations": [
                   ".decapod/managed/specs/ARCHITECTURE.md",
                   ".decapod/managed/specs/INTENT.md",
                   ".decapod/managed/specs/INTERFACES.md",
-                  ".decapod/managed/specs/SECURITY.md",
                   ".decapod/managed/specs/VALIDATION.md",
-                  "Merged origin/master c6439c7df (v0.152.0); fmt, clippy --all-targets --all-features, and acceptance tests 18/18 passed"
+                  "Merged origin/master 6f2ec99dc (v0.152.0); removed obsolete .bak files and preserved docs/architecture/continuous-governance-implementation-map.md"
                 ],
                 "proof_refs": [],
                 "scope": [
-                  "root"
+                  "<external-path>"
                 ],
-                "sequence": 9,
+                "sequence": 24,
                 "validation_findings": []
               }
             ]
@@ -929,36 +1352,34 @@
         }
       },
       "declared_commands": [],
-      "destination": "pull request",
       "evidence": [
-        "Build12118 health job01a1ed5b-7d95-433d-9159-eb3eb09b8e2c rejected the0.148.9 Docker/manifest under the source-built0.148.10 binary. Preserved raw failure. Official0.148.10 archive checksum712521a5 verified, inspected and installed; native commands regenerated the two projections. Local prerequisite-only repair reported211 passes/3 failures and is not admission proof. Actual capture export test passed on d4269e35 with manifest4180e2b8 unchanged. Fresh complete exact-candidate CI is still required.",
-        "Master advanced from6ab6de31 to c47137ad after native PR1784 admission. That admission remains historical, with no merge authorization. PR moved to draft; accepted policy-boundary changes merged without auto-commit, source/spec conflicts resolved preserving both responsibilities, and this exact integration tree will be checkpointed before commit. Fresh complete native validation is required.",
-        "Merged origin/master c6439c7df (v0.152.0); fmt, clippy --all-targets --all-features, and acceptance tests 18/18 passed",
-        "Preserved dad525d4 failed history including uncheckpointed integration c31d039f; native present-time recovery observation recorded. Reauthored five implementation files byte-for-byte; retained fresh identity. Real Pi archive3c6c373 and publication receipt remain historical observations, never imported readiness. Original source-CI deadline expired with SNAPSHOT_NOT_READY; fresh source requires complete validation.",
-        "Prior45ae/34f8 full native graph and actual publication passed, then accepted master advanced to352d8929 with conformance fixes and0.148.11. PR1784 returned to draft. Preserve prior successful and failed records. Merge accepted implementation/tests without auto-commit; reconcile authored spec prose while native blocks remain CLI-owned. Official release tag and master trees match; archive5412a6ba verified and installed, original Pi binary unchanged.105 inventory2acf1af7 reviewed with unchanged required graph. This checkpoint precedes merge commit and fresh full proof.",
-        "Validation09 failed closed in actual docs-sync CI context after master advanced to34f837d4 release0.148.10. Raw failed job12092 preserved. Only the accepted release metadata is merged here without auto-commit; no observer, check or policy is weakened. Exact merge checkpoint precedes commit and full validation must rerun."
+        "Merged origin/master 6f2ec99dc (v0.152.0); removed obsolete .bak files and preserved docs/architecture/continuous-governance-implementation-map.md",
+        "git:archive/pr1700-before-1460-rebase-46a9750d@46a9750d2684745cc9a9f6aec2a4a3350d654aa4",
+        "https://github.com/DecapodLabs/decapod/commit/7ada4f0755b7d0b63b835c25280dd36f6bbfc525",
+        "https://github.com/DecapodLabs/decapod/pull/1700"
       ],
       "inspected_files": [],
-      "intent_id": "intent:change_01M7P3W97HA4M2MRGMQ0TYNRBB",
+      "intent_id": "intent:pr1700-v1460-rebase",
       "modified_files": [
         ".decapod/managed/specs/ARCHITECTURE.md",
         ".decapod/managed/specs/INTENT.md",
         ".decapod/managed/specs/INTERFACES.md",
-        ".decapod/managed/specs/SECURITY.md",
-        ".decapod/managed/specs/VALIDATION.md"
-      ],
-      "next_transitions": [
-        "Refine plan and declare falsifiable checks"
+        ".decapod/managed/specs/VALIDATION.md",
+        "docs/architecture/continuous-governance-implementation-map.md"
       ],
       "repo_scope": [
-        "root"
+        "<external-path>"
       ],
-      "run_id": "branch_01M7P3W9AX80HN9XVHYSAD8B7C",
+      "run_id": "pr1700-v1460-rebase",
       "schema_version": "1.1.0",
       "shortcut_risk_signals": [],
-      "task_id": "bend_01m7p3rf73bh99q5",
+      "task_id": "code_01m7e6518p19mwp8",
       "tool_calls": [],
-      "unresolved_assumptions": []
+      "unresolved_assumptions": [
+        "Accepted target advanced through human merge #1697. Canonical Git merge preserves both reviewed feature sets; previous source evidence remains historical. New exact-source GitHub checks required; no local tests/builds or Buildkite collection.",
+        "Fresh material replay on accepted0.146.0 master; old checkpoint observations remain archived on the old Git tip and do not prove this tree. Required new GitHub execution pending; no local tests/builds or Buildkite collection.",
+        "Old tip archived before authorized rebase; every replayed material tree received a new native checkpoint. Source CI for this exact head/base remains pending. No local tests/builds or Buildkite evidence collection; full native publication proof is not claimed."
+      ]
     }
   },
   "legacy_digests": {
