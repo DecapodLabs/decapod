@@ -2,6 +2,75 @@ use super::*;
 use crate::plugins::{federation, federation_ext};
 
 #[test]
+fn recorded_lineage_is_selected_by_identity_without_inheriting_another_task() {
+    let temp = tempfile::tempdir().unwrap();
+    let root = temp.path();
+    let artifact = trajectory::init_trajectory(
+        root,
+        trajectory::TrajectoryInit {
+            run_id: "lineage".into(),
+            task_id: Some("task:selected".into()),
+            intent_id: Some("intent:selected".into()),
+            original_intent: "A".into(),
+            derived_intent: "B".into(),
+            active_boundaries: vec!["selected-only boundary".into()],
+            repo_scope: vec!["src/selected".into()],
+            destination: None,
+            current_phase: None,
+            next_transitions: vec![],
+            blockers: vec!["selected-only recorded conflict".into()],
+        },
+    )
+    .unwrap();
+    let selected = StateIdentity {
+        kind: StateIdentityKind::Intent,
+        id: "intent:selected".into(),
+        intent_ref: artifact.intent_id,
+        task_id: None,
+    };
+    let lineage = resolve_instruction_lineage(root, &selected)
+        .unwrap()
+        .unwrap();
+    assert_eq!(lineage.original_intent, "A");
+    assert_eq!(lineage.refined_intent.as_deref(), Some("B"));
+    assert_eq!(lineage.origin_confidence, "agent_reported");
+    assert_eq!(
+        lineage.independent_authority,
+        crate::core::validation_rules::RuleVerdict::Unverifiable
+    );
+    let unrelated = StateIdentity {
+        kind: StateIdentityKind::Intent,
+        id: "other".into(),
+        intent_ref: Some("other".into()),
+        task_id: None,
+    };
+    assert!(
+        resolve_instruction_lineage(root, &unrelated)
+            .unwrap()
+            .is_none()
+    );
+    assert!(
+        resolve_scope_constraints(root, &unrelated)
+            .unwrap()
+            .0
+            .active_boundaries
+            .is_empty()
+    );
+    assert!(
+        resolve_custody(root, &unrelated)
+            .unwrap()
+            .blockers
+            .is_empty()
+    );
+    assert!(
+        resolve_blockers(root, &unrelated)
+            .unwrap()
+            .iter()
+            .all(|b| !b.description.contains("selected-only"))
+    );
+}
+
+#[test]
 fn lifecycle_precedes_tags_and_inferences_remain_proposals_with_provenance() {
     let temp = tempfile::tempdir().unwrap();
     let store = Store {
@@ -151,4 +220,52 @@ fn lifecycle_precedes_tags_and_inferences_remain_proposals_with_provenance() {
     assert_eq!(provenance.sources, ["file:docs/visibility.md"]);
     assert_eq!(provenance.confidence, "human_confirmed");
     assert_eq!(provenance.actor, "owner");
+}
+
+#[test]
+fn objective_uses_recorded_request_not_the_agents_refinement() {
+    let root = tempfile::tempdir().unwrap();
+    let request = "Preserve version one API compatibility";
+    let interpretation = "Implement a new version two API";
+    let trajectory = crate::core::trajectory::init_trajectory(
+        root.path(),
+        crate::core::trajectory::TrajectoryInit {
+            run_id: "intent_projection".into(),
+            task_id: Some("task-current".into()),
+            intent_id: Some("intent:original".into()),
+            original_intent: request.into(),
+            derived_intent: interpretation.into(),
+            active_boundaries: vec!["src/api/**".into()],
+            repo_scope: vec!["src/api/**".into()],
+            destination: None,
+            current_phase: None,
+            next_transitions: vec![],
+            blockers: vec![],
+        },
+    )
+    .unwrap();
+    let identity = StateIdentity {
+        kind: StateIdentityKind::Intent,
+        id: "intent:original".into(),
+        intent_ref: trajectory.intent_id.clone(),
+        task_id: Some("task-current".into()),
+    };
+    let objective = resolve_objective(root.path(), &identity).unwrap();
+    let custody = resolve_custody(root.path(), &identity).unwrap();
+    assert_eq!(objective.original_intent, request);
+    assert_eq!(objective.derived_intent.as_deref(), Some(interpretation));
+    assert_eq!(custody.raw_intent, request);
+    assert_eq!(custody.refined_intent.as_deref(), Some(interpretation));
+    assert!(objective.acceptance_criteria.is_empty());
+
+    // An unrelated intent cannot inherit the current agent's trajectory.
+    let unrelated = StateIdentity {
+        kind: StateIdentityKind::Intent,
+        id: "intent:unrelated".into(),
+        intent_ref: Some("intent:unrelated".into()),
+        task_id: None,
+    };
+    let unknown = resolve_objective(root.path(), &unrelated).unwrap();
+    assert_eq!(unknown.original_intent, "Not established");
+    assert_eq!(unknown.derived_intent, None);
 }

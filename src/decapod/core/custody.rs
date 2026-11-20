@@ -8,9 +8,11 @@
 mod custody_model;
 
 pub use custody_model::{
-    CUSTODY_SCHEMA_VERSION, Custody, CustodyError, CustodyState, InMemoryCustodyStore, IntentEvent,
+    CUSTODY_SCHEMA_VERSION, Custody, CustodyError, CustodyState, InMemoryCustodyStore,
+    InstructionLineage, InstructionRevision, InstructionRevisionInput, IntentEvent,
     IntentEventKind, IntentRecord, IntentRefinement, IntentStatus, IntentSummary,
-    ProjectKnowledgeCandidate, Trajectory, TrajectoryStep, TrajectoryStepInput,
+    ProjectKnowledgeCandidate, RecordedInstructionKind, ReportedInstructionSource, Trajectory,
+    TrajectoryStep, TrajectoryStepInput,
 };
 
 pub fn bootstrap_intent(

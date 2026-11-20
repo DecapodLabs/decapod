@@ -554,6 +554,7 @@ impl<R: Runner> Host for SnapshotHost<'_, R> {
             &provider_budget,
         )?;
         Ok(ExecutedSuite {
+            observed_path: None,
             evidence: SuiteEvidence {
                 schema_version: evidence::SCHEMA_VERSION.into(),
                 expected_plan_digest: plan.digest().map_err(io::Error::other)?,

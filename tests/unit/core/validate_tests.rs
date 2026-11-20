@@ -56,7 +56,15 @@ fn validation_reports_current_recorded_instruction_for_legacy_approval() {
         serde_json::from_str(failure.split_once("payload=").unwrap().1).unwrap();
     assert_eq!(
         payload["instruction_readiness"],
-        serde_json::to_value(plan_governance::instruction_readiness(&plan)).unwrap()
+        serde_json::to_value(
+            plan_governance::instruction_readiness_at(
+                root,
+                &plan,
+                crate::core::validation_rules::EvaluationPhase::Validation,
+            )
+            .unwrap(),
+        )
+        .unwrap()
     );
 }
 
@@ -402,6 +410,18 @@ fn issue_757_workspace_status_and_validate_agree_on_unbound_worktree() {
     assert!(
         ctx.fail_count.load(Ordering::Relaxed) > 0,
         "workspace validation must agree with authoring custody admission"
+    );
+    let failures = ctx.fails.lock().unwrap();
+    assert!(!status.blockers.is_empty());
+    for blocker in &status.blockers {
+        assert!(failures.iter().any(|failure| {
+            failure.contains(&blocker.message) && failure.contains(&blocker.resolve_hint)
+        }));
+    }
+    assert!(
+        failures
+            .iter()
+            .all(|failure| !failure.contains("workspace_context_mismatch"))
     );
 }
 

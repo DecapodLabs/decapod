@@ -1,6 +1,21 @@
 // Moved from src/decapod/core/fleet_coord.rs
 use super::*;
 
+#[test]
+fn canonical_scope_entries_preserve_json_paths_and_legacy_logical_scopes() {
+    let raw = r#"paths:["src/a,b.rs","tests/x.rs",".decapod/managed/specs"]"#;
+    assert_eq!(
+        parse_scope_entries(raw).unwrap(),
+        declared_paths(raw).unwrap().unwrap()
+    );
+    assert_eq!(
+        parse_scope_entries("repo, component").unwrap(),
+        ["repo", "component"]
+    );
+    assert!(parse_scope_entries(r#"paths:["../outside"]"#).is_err());
+    assert!(parse_scope_entries("paths:[not-json]").is_err());
+}
+
 fn claim(
     task_id: &str,
     agent: &str,

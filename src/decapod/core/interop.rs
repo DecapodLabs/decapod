@@ -415,13 +415,13 @@ rpc_catalog![
     OpMeta {
         op: "state.resolve",
         read_only: true,
-        session_required: true,
+        session_required: false,
         description: "Resolve current governed state and evidence applicability",
     },
     OpMeta {
         op: "state.diff",
         read_only: true,
-        session_required: true,
+        session_required: false,
         description: "Compare governed state projections",
     },
 ];

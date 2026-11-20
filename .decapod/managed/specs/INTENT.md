@@ -717,8 +717,8 @@ These declarations select authoring and proof obligations; they do not attest im
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `2a82d4de2d1517f104d67e8915cf563cbc988d85eeb2b6f74f8d3177491b26fa`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (246 files), `tests/` (258 files)
+- Repository signal fingerprint: `6f9c781eb36699b55498b43577a52d3850cbeb60eb283a21e8cab5ed89e69059`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (250 files), `tests/` (258 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 
@@ -1210,6 +1210,10 @@ worktree proposals separately and continues to explain malformed config
 without bootstrapping or repairing state. Verification and admission stay
 with the existing governed operations.
 
+## Recorded instructions and independently accepted requirements
+
+Keep the original request and ordered clarification history available across a cold handoff. A recorded revision identifies its observed or declared source. A provider account observation supports provenance without authenticating human approval. Pending decisions remain visible after reinitializing the same plan. Resolving a decision requires a fresh plan acceptance before the existing execution evidence can be used.
+
 ## Version-only release proof
 
 Decapod release metadata must remain independently distinguishable from source, policy, dependency and authored-spec changes. Its existing immutable classifier and exact projection verifier own this boundary. A canonical Decapod source checkout may retain version-bound agent entrypoints under its already accepted source-development policy. Release proof must preserve those exact committed bytes when that policy verifies origin, immutable source ancestry, canonical template payload and each version-bound fingerprint. This does not permit a caller-selected header or a source/configuration change to masquerade as release metadata. Required Actions will exercise this correction; implementation and registered test locations alone are not passing evidence.
@@ -1221,7 +1225,3 @@ Actions exposed a standalone-tool integration error in the first current-base ca
 The full Supabase-enabled library execution caught a test-fixture identity omission: the release-version helper must retain the canonical Cargo package repository field when it reuses the existing published-root source fixture. The correction changes fixture construction only; origin, ungrafted ancestry, committed template and immutable entrypoint checks remain strict. Prior failed candidate eee794ba and actual job136182283538 remain preserved.
 
 Release projection integrity and retained observer-run completeness are separate proof surfaces. A successful version-only comparison cannot turn missing run boundaries or incomplete tool observation into an autonomous-admission claim; the existing acceptance observer retains that judgment. Preserving source-entrypoint versions grants no observation coverage.
-
-Release-only structural projection checks remain separate from the accepted shared recorded-instruction readiness predicate in `src/decapod/plan_governance.rs`. Preserving canonical source versions cannot converge an unresolved instruction, waive current-content spec review, or establish publication readiness. Existing orientation, approval, checkpoint and publication consumers retain their own enforcement.
-
-Accepted v0.154.0 (`0f44f780`) advances package metadata without changing the release-only classifier or source-identity authority. The official released controller regenerates entrypoints, Docker pin and spec attestations for that evaluation epoch; the byte-for-byte release-head comparison still distinguishes permitted historical source headers from changed payloads. Retained failure receipts remain historical and are not reused as current readiness.

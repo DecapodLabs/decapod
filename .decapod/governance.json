@@ -811,6 +811,11 @@
       "proof_refs": [
         "Cargo test --locked --lib podman_machine_start: 2 passed on macOS."
       ]
+    },
+    {
+      "id": "accepted-156-merge",
+      "summary": "Integrate the accepted v0.156.0 baseline for the Podman regression fix",
+      "input_digest": "sha256:c98b72f562df432b5fbdf8ab3b655b722d07590597419ff55ab63f677627f989"
     }
   ],
   "intents": {
@@ -847,6 +852,29 @@
         "Podman headless and closed-input regression tests."
       ],
       "schema_version": "1.1.0",
+      "spec_reviews": [
+        {
+          "disposition": "unchanged_with_reason",
+          "path": ".decapod/managed/specs/ARCHITECTURE.md",
+          "reason": "Podman startup retains the accepted execution backend and runtime architecture.",
+          "reviewed_code_fingerprint": "6f9c781eb36699b55498b43577a52d3850cbeb60eb283a21e8cab5ed89e69059",
+          "spec_material_hash": "26fa92c2840e79ee87aba17e925bd36df2f414ba92467596a184fe5c71b4ab6e"
+        },
+        {
+          "disposition": "unchanged_with_reason",
+          "path": ".decapod/managed/specs/INTERFACES.md",
+          "reason": "The production runtime command retains its original arguments, output handling and public interface.",
+          "reviewed_code_fingerprint": "6f9c781eb36699b55498b43577a52d3850cbeb60eb283a21e8cab5ed89e69059",
+          "spec_material_hash": "696b81ee20708c04db8b5405105acfbd5696ffd7b921f2549f9b948fb4c91907"
+        },
+        {
+          "disposition": "unchanged_with_reason",
+          "path": ".decapod/managed/specs/SECURITY.md",
+          "reason": "The test invokes its private script with a fixed interpreter; production stdin remains closed.",
+          "reviewed_code_fingerprint": "6f9c781eb36699b55498b43577a52d3850cbeb60eb283a21e8cab5ed89e69059",
+          "spec_material_hash": "9c831867b7ba10361436871740035ad1b7793ffb6d90df7d1c01fa8ec3e585ec"
+        }
+      ],
       "state": "APPROVED",
       "stop_conditions": [],
       "title": "Remove the Podman machine-start mock executable race",
@@ -855,7 +883,7 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795210704Z"
+      "updated_at": "1795215646Z"
     },
     "trajectory": {
       "active_boundaries": [

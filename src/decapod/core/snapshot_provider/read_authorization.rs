@@ -4,6 +4,7 @@ use super::*;
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum ProviderReadKind {
     GithubObjects,
+    GithubInstructionComment,
     GithubArtifactMetadata,
     GithubArtifactZip,
     GithubCommitChecks,
@@ -92,6 +93,9 @@ impl CommandSpec {
                     "invalid scoped GitHub API path",
                 )?;
                 let kind = match &p[3..] {
+                    ["issues", "comments", id] if number(id, u64::MAX) => {
+                        ProviderReadKind::GithubInstructionComment
+                    }
                     ["actions", "artifacts", id] if number(id, u64::MAX) => {
                         ProviderReadKind::GithubArtifactMetadata
                     }
@@ -265,6 +269,7 @@ impl CommandSpec {
         };
         let expected: Vec<String> = match kind {
             ProviderReadKind::GithubObjects
+            | ProviderReadKind::GithubInstructionComment
             | ProviderReadKind::GithubArtifactMetadata
             | ProviderReadKind::GithubArtifactZip
             | ProviderReadKind::GithubCommitChecks
@@ -360,6 +365,18 @@ mod tests {
         let a = s.authorize_provider_read().unwrap();
         assert_eq!(a.method(), "GET");
         assert!(!a.official_cli_redirects_are_host_pinned());
+        let source = spec("repos/org/repo/issues/comments/42");
+        assert_eq!(
+            source.authorize_provider_read().unwrap().kind(),
+            ProviderReadKind::GithubInstructionComment
+        );
+        for endpoint in [
+            "repos/org/repo/issues/comments/0",
+            "repos/org/repo/issues/comments/42?method=PATCH",
+            "repos/org/repo/issues/comments/42/delete",
+        ] {
+            assert!(spec(endpoint).authorize_provider_read().is_err());
+        }
     }
     #[test]
     fn mismatched_argv_and_unbounded_queries_reject() {
