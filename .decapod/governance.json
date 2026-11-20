@@ -814,6 +814,14 @@
         "cargo test --locked --test consumer_readiness (40 passed)",
         "target_scoped_completed_evidence_cannot_authorize_full_repo_or_other_target (passed)"
       ]
+    },
+    {
+      "id": "issue-1832-sync-v0156",
+      "summary": "Integrate accepted master and its version-only inventory update",
+      "input_digest": "sha256:907aac45ebfedd7b8149a5f07b2166e945e98ac3d922453ff3e61708c4a14eec",
+      "proof_refs": [
+        "Released scanner matches accepted 105-source inventory on this branch"
+      ]
     }
   ],
   "intents": {
@@ -855,23 +863,23 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Document shared platform selection, approval and the history boundary.",
-          "reviewed_code_fingerprint": "9faec6765741b44c8c7fb471286e8268559ee2c9d96eb0258e93b3870e8446ef",
-          "spec_material_hash": "3014a44bc798a35baf2ebb8746782974a6c70490d61c5f861df4b7171be88a76"
+          "reason": "Carry forward the shared platform and target proof integration.",
+          "reviewed_code_fingerprint": "2e608b9736235515781f65d08ae7ad74127ac1097dc35b0d47f22603078eaeaf",
+          "spec_material_hash": "d29105edd262a9ab880ebe8b0198c4b1fd9820d7c1a147a06ffe5d70fb0a1540"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Document exact target transitions and target-only verification diagnostics.",
-          "reviewed_code_fingerprint": "9faec6765741b44c8c7fb471286e8268559ee2c9d96eb0258e93b3870e8446ef",
-          "spec_material_hash": "1ae4ae31b17e61a60881008bcd6b89158979f6794e33ce0db6d7578088ba52bb"
+          "reason": "Carry forward target-only diagnostics and exact transition checks.",
+          "reviewed_code_fingerprint": "2e608b9736235515781f65d08ae7ad74127ac1097dc35b0d47f22603078eaeaf",
+          "spec_material_hash": "d11ee80e0484254cb73b471275eb652b0b6588ffb9c4f3f6b6bc88009a7eb02a"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Record independent approval for every accepted deployment target map change.",
-          "reviewed_code_fingerprint": "9faec6765741b44c8c7fb471286e8268559ee2c9d96eb0258e93b3870e8446ef",
-          "spec_material_hash": "44b1fa70da2898248feb423525f3acb4588a5b24c61523285866dc366630b931"
+          "reason": "Carry forward the approval requirement for accepted target-map changes.",
+          "reviewed_code_fingerprint": "2e608b9736235515781f65d08ae7ad74127ac1097dc35b0d47f22603078eaeaf",
+          "spec_material_hash": "d9ade5825045e5f2e6a38950afb46665f947f1de0ede34c0df99eb82a2afb8cd"
         }
       ],
       "state": "APPROVED",
@@ -882,7 +890,7 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795211489Z"
+      "updated_at": "1795214654Z"
     },
     "trajectory": {
       "active_boundaries": [

@@ -11,6 +11,10 @@ unresolved obligations, and normalized logical sections:
 | Trajectory | `decapod govern trajectory` | Intent custody, scope, actions, assumptions, checks, and evidence |
 | Validation | `decapod validate` | Receipt bound to current repository inputs and trajectory |
 
+The same tracked document also has a canonical top-level `intents` map. It preserves recorded `raw_intent` separately from its agent-authored `refined_intent`, with custody events and trajectory identifiers. A change of recorded origin under an existing intent ID is rejected; an actual new instruction needs separate provenance and an auditable transition. These records are recoverable from Git, which verifies authored history without authenticating the human speaker. The `state.resolve` projection reads original and derived intent separately.
+
+The plan/trajectory/validation surfaces all consume the same unresolved instruction conditions: ambiguity, unknowns, contradictions, and pending spec-review decisions. Plan acceptance cannot silently clear them. The gate taxonomy already distinguishes authority, phase, severity and verdict. See [closed-loop governance](../concepts/convergence.md).
+
 Health Engine claims remain in `.decapod/data/decapod.db`, and runtime workunit
 manifests in `.decapod/data/workunits/`. Neither is a second tracked research ledger.
 See the [governed execution model](../../../architecture/governed-execution.md).
@@ -152,8 +156,11 @@ decapod govern plan resolve-spec-review \
   --reason "The human accepted the documented contract and its stated tradeoff"
 ```
 
-This uses the same declared-approval authority as `govern plan approve`; the
+This uses the same **declared-approval** authority as `govern plan approve`; the
 reference preserves provenance and is not cryptographic human authentication.
+`APPROVED` means that the caller advanced the governed execution-contract state;
+it does not certify the agent correctly interpreted the human request, establish
+independent human identity, or substitute for any separately required approval.
 The original question remains in the review record. A decision about stale code
 or stale spec content is rejected. Never invent a decision reference or infer
 approval. Existing 1.0 plans remain readable; recording reviews writes plan 1.1.

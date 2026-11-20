@@ -19,7 +19,7 @@ publication requirements converge.
 
 | Participant | Responsibility |
 | --- | --- |
-| Human | Expresses intent, provides judgment, and approves meaningful outcomes. |
+| Human | Expresses intent and retains ultimate judgment over meaningful outcomes; human approval is established only where a trusted external authorization mechanism actually records it. |
 | Agent | Interprets the request and repository, decomposes and performs the work, authors living specifications, updates governed state through Decapod, follows validation feedback, and gathers evidence. |
 | Decapod | Makes accepted intent and boundaries explicit, maintains governance state, validates invariants, refreshes supported projections, exposes contradictions, and blocks publication while required conditions are unsatisfied. |
 | Repository | Preserves governed state, custody, history, specifications, evidence, and receipts across processes, models, harnesses, and Decapod invocations. |
@@ -55,6 +55,12 @@ Publication is a governed state transition. An agent's statement that the work i
 | Custody | Decapod updates sessions, claims, workspaces, and recorded history | Authoritative coordination state plus evidence | Identifies who accepted the work and where it may proceed without collision. |
 | Publication state | Decapod updates it through governed completion and workspace publication paths | Authoritative transition state | Prevents incomplete or contradictory work from being represented as published completion. |
 
+### Authority and semantic scope
+
+`govern plan approve` is an explicit **plan-state transition**, callable by the authorized invoker; it is not independent authentication of a human's agreement. Approval-like strings or decision references in an agent-authored artifact cannot grant that authority. Actual deployment, admission and merge are separate transitions subject to their own configured evidence and provider controls. An autonomous run can be useful without human intervention at every step while still recording where human meaning was *not independently verified*.
+
+An agent can write both a flawed specification and tests that pass against it. Decapod's traceability, current check receipts and immutable source bindings make that interpretation reviewable; they do not create an oracle for the human's unexpressed intent. `intent.reconcile` currently reports `semantic_alignment: not_proven`. See [#1761](https://github.com/DecapodLabs/decapod/issues/1761) and [#1762](https://github.com/DecapodLabs/decapod/issues/1762) for independently sourced intent and falsifier contracts.
+
 Workspace promotion uses a normal fast-forward push. Decapod does not force-push
 managed branches. A non-fast-forward rejection remains a publication blocker;
 the agent must inspect the remote divergence, reconcile it in the workspace,
@@ -62,6 +68,19 @@ rerun validation, and retry. Decapod can return that instruction, but it cannot
 control Git commands issued directly by an agent or its harness.
 
 GitHub Issues, Jira, Linear, Beads, or another service may remain the organizational system of record. Decapod governs the accepted task at the repository execution layer.
+
+## Instruction and gate consistency
+
+The existing `governance.json` intent map and custody model retain the agent-recorded original and refined interpretations separately. The read-only `state.resolve` projection must show those independently: an agent-authored refinement cannot be emitted as `original_intent`. Reusing a canonical intent ID with different raw text is a custody conflict and does not overwrite the prior record.
+
+A shared plan instruction predicate covers preparation/acceptance, execution checks, execution checkpointing, validation and publication. Missing intent, unknowns, pending human questions, contradictions and unresolved spec-review decisions block the applicable transition. A known unresolved instruction may be captured in a draft, but that draft cannot become an approved execution contract or pass downstream validation. Later accepted changes must invalidate affected earlier approval and proof.
+
+The existing `validation_rules` model supplies orthogonal governance dimensions:
+`RuleAuthority` (Constitution, project override, task constraints, kernel invariant),
+`EvaluationPhase` (pre-execution, during-execution, validation, publication),
+`RuleSeverity` (advisory, warning, error, critical), and
+`RuleVerdict` (pass, fail, unverifiable, stale).
+Required validation also examines the source and policy closure, worktree, task ownership, real configured checks, and exact evidence applicability. It cannot be reduced to the result of a test runner.
 
 ## Accepted repository-local proof
 

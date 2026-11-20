@@ -494,6 +494,7 @@ pub fn authorize_official_github_read(
         || !matches!(
             request.kind(),
             ProviderReadKind::GithubObjects
+                | ProviderReadKind::GithubInstructionComment
                 | ProviderReadKind::GithubArtifactMetadata
                 | ProviderReadKind::GithubArtifactZip
                 | ProviderReadKind::GithubCommitChecks

@@ -2135,6 +2135,7 @@ pub(crate) fn evaluate_terminal_rules(
         crate::core::readiness_evidence::digest(&document["sections"]["trajectory"])
             .map_err(|e| error::DecapodError::ValidationError(e.to_string()))?;
     proof.verify_current(material, &current_governance, &current_trajectory)?;
+    proof.verify_observed_authority(root)?;
     check_budget()?;
     let governance = crate::core::governance_document::read_section(root, "trajectory")?;
     let branch_task_ids =
