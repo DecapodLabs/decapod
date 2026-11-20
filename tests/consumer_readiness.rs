@@ -2839,13 +2839,12 @@ fn revoked_or_expired_policy_transition_approval_fails_closed() {
 
 #[test]
 fn decapod_strict_profile_downgrade_remains_unconditionally_blocked_even_with_approval() {
+    // The fixture commits the candidate's local contract against the accepted strict profile.
     let fixture = Fixture::with_accepted_config(Some(&format!(
         "schema_version = \"1.0.0\"\n[init]\ndiagram_style = \"ascii\"\nentrypoints = []\n[repo]\nbase_branch = \"main\"\n[proof.required_profile]\nid = {:?}\nreviewed_sources_digest = {:?}\n",
         readiness_profile::REQUIRED_PROFILE,
         format!("sha256:{}", "0".repeat(64)),
     )));
-    save_full_config(&fixture);
-    fixture.commit("attempt candidate downgrade from strict decapod profile");
     let tid = transition_id_for_fixture(&fixture);
     approve_transition_with_caller(&fixture.options.root, &tid, "operator", 900).unwrap();
     let mut host = fixture.host();
