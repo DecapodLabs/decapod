@@ -672,6 +672,11 @@
       "id": "reconcile-accepted-1531-contracts",
       "summary": "Integrate accepted d41056ce with existing instruction, selected work, and observed path contracts. Reuse upstream task-scope parser, retain legacy repair and preserve original history. Official 0.153.1 projections and all living-spec reviews refreshed. GitHub proof will be collected on current candidate and target.",
       "input_digest": "sha256:1360c7dd4c38d0a2f521bbb102ad161596a8c5333e9cdc80c67145c115d2b5d9"
+    },
+    {
+      "id": "reconcile-accepted-1532-contracts",
+      "summary": "Carry accepted v0.153.2 through exact governed source. Preserve canonical entrypoints and refreshed release projections. Formatting and manifest hashes verified. GitHub Actions and external observer evidence remain pending.",
+      "input_digest": "sha256:0d650d2b58b5cca0879c27948df21a1d03ca0e42cce5a2d96925b0f8cb8a9fe5"
     }
   ],
   "intents": {
@@ -720,22 +725,22 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Reconcile current upstream with the preserved contracts, retain accepted authority and regenerate official release projections",
-          "reviewed_code_fingerprint": "246fd854f9983df97ce24dacecc2ebc8036f26282ec7f0333d2cbe4e3aac0ad4",
+          "reason": "Carry the accepted v0.153.2 base through the instruction, obligation and proof architecture.",
+          "reviewed_code_fingerprint": "3a9be33e26d89cdee7d90ddd944e0e2b45d47ce9f45bfee47063031ba2e9e22f",
           "spec_material_hash": "9b73adacbbb6d3c40dfda3b537ad2e72fae9ea0f26a877fc657ed031449dc793"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Reconcile current upstream with the preserved contracts, retain accepted authority and regenerate official release projections",
-          "reviewed_code_fingerprint": "246fd854f9983df97ce24dacecc2ebc8036f26282ec7f0333d2cbe4e3aac0ad4",
+          "reason": "Review the integrated readiness and task scope interfaces against the accepted v0.153.2 base.",
+          "reviewed_code_fingerprint": "3a9be33e26d89cdee7d90ddd944e0e2b45d47ce9f45bfee47063031ba2e9e22f",
           "spec_material_hash": "7abaefd71065b1e88a0fba2df60e586969aff6f1ab7e49997f71a8f3b4a3590a"
         },
         {
-          "disposition": "updated",
+          "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Reconcile current upstream with the preserved contracts, retain accepted authority and regenerate official release projections",
-          "reviewed_code_fingerprint": "246fd854f9983df97ce24dacecc2ebc8036f26282ec7f0333d2cbe4e3aac0ad4",
+          "reason": "Retain accepted security authority and exact-head custody requirements under the v0.153.2 base.",
+          "reviewed_code_fingerprint": "3a9be33e26d89cdee7d90ddd944e0e2b45d47ce9f45bfee47063031ba2e9e22f",
           "spec_material_hash": "3d3861ffd59d9e65966771b5db4107b999a733ec7ad029f02a6c1cb2696ec964"
         }
       ],
@@ -747,15 +752,25 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795161686Z"
+      "updated_at": "1795162569Z"
     },
     "trajectory": {
       "active_boundaries": [
-        "Current claimed task and isolated work branch"
+        "Current claimed task and isolated work branch",
+        "Preserve draft PR #1766 and its history. Use normal GitHub review and merge directed by the maintainer. Use GitHub Actions for this delivery. Close issues only with exact independent acceptance evidence."
       ],
-      "artifact_hash": "sha256:92c41a8b2f56e267cbaf0010b42c1936d71d2b2ca063b50c5b6df6c6192878f3",
-      "checks": [],
-      "current_phase": "intent",
+      "artifact_hash": "sha256:81feb6553358beff057080dfe99039d3aa5e6586a6044e6de3ab3b08b39bbd6d",
+      "checks": [
+        {
+          "name": "format",
+          "status": "passed"
+        },
+        {
+          "name": "projection-hashes",
+          "status": "passed"
+        }
+      ],
+      "current_phase": "verification",
       "custody": {
         "events": [
           {
@@ -769,21 +784,66 @@
             "intent_id": "intent:change_01M7PQMA9DG5FG2QMC9WPR3ZCJ",
             "kind": "refined",
             "sequence": 3
+          },
+          {
+            "detail": "trajectory:branch_01M7PQMADCS3EAWQSXB0HVXNQP",
+            "event_id": "event:4",
+            "intent_id": "intent:change_01M7PQMA9DG5FG2QMC9WPR3ZCJ",
+            "kind": "trajectory_step_recorded",
+            "sequence": 4
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 3,
+        "next_sequence": 4,
         "schema_version": "1.0.0",
-        "trajectories": {}
+        "trajectories": {
+          "branch_01M7PQMADCS3EAWQSXB0HVXNQP": {
+            "evidence_only": true,
+            "id": "branch_01M7PQMADCS3EAWQSXB0HVXNQP",
+            "intent_id": "intent:change_01M7PQMA9DG5FG2QMC9WPR3ZCJ",
+            "steps": [
+              {
+                "action": "verification",
+                "command": "cargo fmt --all -- --check",
+                "custody_event_id": "event:4",
+                "observations": [
+                  "The manifest declares v0.153.2 and commits the actual hashes of all 12 files. The four entrypoints match accepted master 34b98ab1."
+                ],
+                "proof_refs": [
+                  "format",
+                  "projection-hashes"
+                ],
+                "scope": [
+                  "\".decapod\"",
+                  "\"AGENTS.md\"",
+                  "\"CLAUDE.md\"",
+                  "\"CODEX.md\"",
+                  "\"GEMINI.md\"]",
+                  "\"README.md\"",
+                  "\"docs\"",
+                  "\"tests\"",
+                  "paths:[\"src\""
+                ],
+                "sequence": 4,
+                "validation_findings": []
+              }
+            ]
+          }
+        }
       },
-      "declared_commands": [],
+      "declared_commands": [
+        "cargo fmt --all -- --check"
+      ],
       "destination": "pull request",
-      "evidence": [],
+      "evidence": [
+        "The manifest declares v0.153.2 and commits the actual hashes of all 12 files. The four entrypoints match accepted master 34b98ab1."
+      ],
       "inspected_files": [],
       "intent_id": "intent:change_01M7PQMA9DG5FG2QMC9WPR3ZCJ",
       "modified_files": [],
       "next_transitions": [
-        "Refine plan and declare falsifiable checks"
+        "Refine plan and declare falsifiable checks",
+        "Run GitHub Actions for the pushed source and accepted master. Preserve any missing independent external observer evidence."
       ],
       "repo_scope": [
         "\".decapod\"",
