@@ -20,6 +20,125 @@ pub use signal::SignalCancellationGuard;
 pub const CONTROL_TIMEOUT: Duration = Duration::from_secs(15);
 pub const BUILD_TIMEOUT: Duration = Duration::from_secs(600);
 const MAX_OUTPUT_BYTES: usize = 64 * 1024 * 1024;
+pub(crate) const RECOMMENDED_NOFILE_CEILING: u64 = 65_536;
+pub(crate) const LOW_NOFILE_WARNING_THRESHOLD: u64 = 4_096;
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub(crate) struct NofileLimits {
+    pub soft: u64,
+    pub hard: Option<u64>,
+}
+
+impl NofileLimits {
+    pub(crate) fn hard_display(&self) -> String {
+        self.hard
+            .map(|value| value.to_string())
+            .unwrap_or_else(|| "unlimited".to_string())
+    }
+}
+
+pub(crate) fn current_nofile_limits() -> io::Result<NofileLimits> {
+    #[cfg(unix)]
+    {
+        let mut rlim = libc::rlimit {
+            rlim_cur: 0,
+            rlim_max: 0,
+        };
+        if unsafe { libc::getrlimit(libc::RLIMIT_NOFILE, &mut rlim) } != 0 {
+            return Err(io::Error::last_os_error());
+        }
+        #[allow(clippy::unnecessary_cast)]
+        let hard = if rlim.rlim_max == libc::RLIM_INFINITY {
+            None
+        } else {
+            Some(rlim.rlim_max as u64)
+        };
+        #[allow(clippy::unnecessary_cast)]
+        Ok(NofileLimits {
+            soft: rlim.rlim_cur as u64,
+            hard,
+        })
+    }
+    #[cfg(not(unix))]
+    {
+        Err(io::Error::new(
+            io::ErrorKind::Unsupported,
+            "RLIMIT_NOFILE inspection requires a Unix adapter",
+        ))
+    }
+}
+
+#[cfg(unix)]
+pub(crate) fn target_nofile_soft_limit(current: NofileLimits, ceiling: u64) -> Option<u64> {
+    let bounded = match current.hard {
+        Some(hard) => ceiling.min(hard),
+        None => ceiling,
+    };
+    (bounded > current.soft).then_some(bounded)
+}
+
+#[cfg(unix)]
+pub(crate) fn raise_nofile_soft_limit_in_child(ceiling: u64) {
+    let mut rlim = libc::rlimit {
+        rlim_cur: 0,
+        rlim_max: 0,
+    };
+    if unsafe { libc::getrlimit(libc::RLIMIT_NOFILE, &mut rlim) } != 0 {
+        return;
+    }
+    #[allow(clippy::unnecessary_cast)]
+    let hard = if rlim.rlim_max == libc::RLIM_INFINITY {
+        None
+    } else {
+        Some(rlim.rlim_max as u64)
+    };
+    #[allow(clippy::unnecessary_cast)]
+    let current = NofileLimits {
+        soft: rlim.rlim_cur as u64,
+        hard,
+    };
+    let Some(primary) = target_nofile_soft_limit(current, ceiling) else {
+        return;
+    };
+    // Try target first; on macOS with RLIM_INFINITY hard limit and lower
+    // kern.maxfilesperproc/OPEN_MAX caps, fall back gracefully without failing spawn.
+    for candidate in [primary, 10_240, 4_096] {
+        let clamped = match hard {
+            Some(h) => candidate.min(h),
+            None => candidate,
+        };
+        if clamped <= current.soft {
+            continue;
+        }
+        let desired = libc::rlimit {
+            rlim_cur: clamped as libc::rlim_t,
+            rlim_max: rlim.rlim_max,
+        };
+        if unsafe { libc::setrlimit(libc::RLIMIT_NOFILE, &desired) } == 0 {
+            break;
+        }
+    }
+}
+
+/// Configure a child process to raise its soft `RLIMIT_NOFILE` toward
+/// `min(hard_limit, 65536)` on Unix before exec so concurrent test harnesses
+/// do not fail under low default soft limits (e.g., macOS default 256).
+pub(crate) fn configure_child_nofile_limit(command: &mut Command) {
+    #[cfg(unix)]
+    {
+        use std::os::unix::process::CommandExt;
+        unsafe {
+            command.pre_exec(|| {
+                raise_nofile_soft_limit_in_child(RECOMMENDED_NOFILE_CEILING);
+                Ok(())
+            });
+        }
+    }
+    #[cfg(not(unix))]
+    {
+        let _ = command;
+    }
+}
 
 #[derive(Debug, Clone, Default)]
 pub struct Cancellation {
@@ -253,10 +372,12 @@ impl CaptureWithCeiling for Command {
                 .stderr(Stdio::piped())
                 .process_group(0);
             #[cfg(target_os = "linux")]
-            {
-                let parent_pid = std::process::id() as libc::pid_t;
-                unsafe {
-                    self.pre_exec(move || {
+            let parent_pid = std::process::id() as libc::pid_t;
+            unsafe {
+                self.pre_exec(move || {
+                    raise_nofile_soft_limit_in_child(RECOMMENDED_NOFILE_CEILING);
+                    #[cfg(target_os = "linux")]
+                    {
                         if libc::prctl(libc::PR_SET_PDEATHSIG, libc::SIGKILL) != 0 {
                             return Err(io::Error::last_os_error());
                         }
@@ -266,9 +387,9 @@ impl CaptureWithCeiling for Command {
                                 "subprocess parent exited",
                             ));
                         }
-                        Ok(())
-                    });
-                }
+                    }
+                    Ok(())
+                });
             }
             let started = Instant::now();
             let mut child = OwnedChild {

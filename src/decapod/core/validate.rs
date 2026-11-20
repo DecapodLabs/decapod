@@ -588,6 +588,46 @@ fn validation_task_id(workspace_root: &Path) -> String {
     "todo-unassigned".to_string()
 }
 
+/// Return the sanitized task identifier used to scope temporary validation
+/// and build scratch paths for `workspace_root`.
+pub fn resolve_validation_task_id(workspace_root: &Path) -> String {
+    validation_task_id(workspace_root)
+}
+
+/// Return the todo-scoped temporary root directory used by validation for
+/// `workspace_root` (i.e. `<temp_dir>/decapod_validate/<task-id>`).
+pub fn validation_temp_root(workspace_root: &Path) -> PathBuf {
+    std::env::temp_dir()
+        .join("decapod_validate")
+        .join(validation_task_id(workspace_root))
+}
+
+/// Return agent-facing cleanup guidance for a specific task ID and optional
+/// validation temp root path.
+///
+/// Instructs the agent to flush ONLY that todo's `/tmp` build/scratch
+/// directory after validation succeeds / PR creation completes, and never
+/// perform wildcard or root-level deletion of `/tmp` or remove concurrent
+/// agents' paths, shared `/tmp/decapod` controller state, or active sibling
+/// directories.
+pub fn todo_tmp_cleanup_instruction_for_task(task_id: &str, temp_root: Option<&Path>) -> String {
+    let sanitized = sanitize_validation_task_id(task_id);
+    let validation_dir = temp_root
+        .map(|path| path.display().to_string())
+        .unwrap_or_else(|| format!("/tmp/decapod_validate/{sanitized}"));
+    format!(
+        "Todo-scoped /tmp cleanup ({sanitized}): after validation succeeds and PR creation completes, flush ONLY this todo's /tmp build and scratch directories (such as `{validation_dir}` and any todo-scoped CARGO_TARGET_DIR or build scratch under /tmp created for `{sanitized}`). Never perform wildcard or root-level deletion of /tmp, never delete another concurrent agent's or sibling todo's /tmp directory, and never remove shared `/tmp/decapod` controller sockets/state or active sibling directories."
+    )
+}
+
+/// Return agent-facing `/tmp` build and scratch cleanup guidance for the todo
+/// associated with `workspace_root`.
+pub fn todo_tmp_cleanup_instruction(workspace_root: &Path) -> String {
+    let task_id = validation_task_id(workspace_root);
+    let temp_root = validation_temp_root(workspace_root);
+    todo_tmp_cleanup_instruction_for_task(&task_id, Some(&temp_root))
+}
+
 /// Return the task-owned temporary directory for this validation workspace.
 ///
 /// The task ID is part of the path by contract. Legacy unscoped `/tmp`
@@ -596,16 +636,11 @@ pub fn create_validation_temp_path(
     workspace_root: &Path,
     kind: &str,
 ) -> Result<PathBuf, error::DecapodError> {
-    let task_root = std::env::temp_dir()
-        .join("decapod_validate")
-        .join(validation_task_id(workspace_root));
+    let task_root = validation_temp_root(workspace_root);
     fs::create_dir_all(&task_root).map_err(error::DecapodError::IoError)?;
-    register_validation_temp_path(task_root);
+    register_validation_temp_path(task_root.clone());
 
-    let path = std::env::temp_dir()
-        .join("decapod_validate")
-        .join(validation_task_id(workspace_root))
-        .join(format!("{kind}_{}", crate::core::ulid::new_ulid()));
+    let path = task_root.join(format!("{kind}_{}", crate::core::ulid::new_ulid()));
     fs::create_dir_all(&path).map_err(error::DecapodError::IoError)?;
     Ok(path)
 }
@@ -4893,7 +4928,7 @@ fn validate_risk_map(store: &Store, ctx: &ValidationContext) -> Result<(), error
     if map_path.exists() {
         pass("Risk map (blast-radius) is present", ctx);
     } else {
-        warn("Risk map missing (run `decapod riskmap init`)", ctx);
+        warn(&crate::plugins::policy::missing_riskmap_warning(), ctx);
     }
     Ok(())
 }
@@ -6119,11 +6154,14 @@ fn run_migration_validation(
     }
 
     let started = Instant::now();
-    let mut child = std::process::Command::new(&config.command)
+    let mut command = std::process::Command::new(&config.command);
+    command
         .args(&config.args)
         .current_dir(&working_path)
         .stdout(Stdio::piped())
-        .stderr(Stdio::piped())
+        .stderr(Stdio::piped());
+    crate::core::bounded_process::configure_child_nofile_limit(&mut command);
+    let mut child = command
         .spawn()
         .map_err(|err| format!("could not start '{}': {err}", config.command))?;
     let stdout = child.stdout.take().expect("stdout was piped");
@@ -6719,16 +6757,9 @@ fn validate_plan_governed_execution_gate(
             pass("Plan artifact state allows governed execution", ctx);
         }
 
-        if plan.intent.trim().is_empty()
-            || !plan.unknowns.is_empty()
-            || !plan.human_questions.is_empty()
-        {
-            fail(
-                "NEEDS_HUMAN_INPUT: governed plan has unresolved intent/unknowns/questions",
-                ctx,
-            );
-        } else {
-            pass("Plan intent and unknowns are resolved", ctx);
+        match plan_governance::ensure_instruction_ready(&plan, "NEEDS_HUMAN_INPUT") {
+            Ok(()) => pass("Recorded plan instructions are resolved", ctx),
+            Err(error) => fail(&error.to_string(), ctx),
         }
     } else {
         let done_count = plan_governance::count_done_todos(&store.root)?;
@@ -6750,11 +6781,28 @@ fn validate_plan_governed_execution_gate(
     let unverified = plan_governance::collect_unverified_done_todos(&store.root)?;
 
     if !unverified.is_empty() {
+        let historical_hints: Vec<String> = unverified
+            .iter()
+            .filter_map(|id| {
+                crate::core::validation_history::latest_candidate_for_task(store, id)
+                    .map(|sha| format!("`decapod todo done {id} --validated --commit {sha}`"))
+            })
+            .take(2)
+            .collect();
+        let historical_clause = if historical_hints.is_empty() {
+            "If a task was already validated before merge, repair it with `decapod todo done <id> --validated --commit <sha>`.".to_string()
+        } else {
+            format!(
+                "For already-validated merged commits, repair directly with {}.",
+                historical_hints.join(" or ")
+            )
+        };
         fail(
             &format!(
-                "PROOF_HOOK_FAILED: {} done TODO(s) are CLAIMED but not VERIFIED: {}. Agent: replay existing proof with `decapod qa verify` or `decapod qa verify todo <id>`. For stale or missing batch evidence, run `decapod qa verify recover`; if it requests current files, repeat `--artifact TODO_ID=FILE` using each reported task ID and an explicitly selected relevant current file. Recovery preserves completion history and still requires actual passing checks; do not prune or reopen tasks to bypass proof.",
+                "PROOF_HOOK_FAILED: {} done TODO(s) are CLAIMED but not VERIFIED: {}. Agent: {} To verify a single task on the current checkout, run `decapod qa verify regen <id>`; to replay existing proof baselines, run `decapod qa verify` or `decapod qa verify todo <id>`. For stale or missing batch evidence, run `decapod qa verify recover`; if it requests current files, repeat `--artifact TODO_ID=FILE` using each reported task ID and an explicitly selected relevant current file. Recovery preserves completion history and still requires actual passing checks; do not prune or reopen tasks to bypass proof.",
                 unverified.len(),
-                output::preview_messages(&unverified, 4, 80)
+                output::preview_messages(&unverified, 4, 80),
+                historical_clause
             ),
             ctx,
         );
@@ -7205,27 +7253,29 @@ fn validate_tooling_gate(
         let fmt_handle = fmt_available.then(|| {
             let root_fmt = repo_root.to_path_buf();
             std::thread::spawn(move || {
-                std::process::Command::new("cargo")
-                    .args(["fmt", "--all", "--", "--check"])
-                    .current_dir(&root_fmt)
-                    .output()
+                let mut cmd = std::process::Command::new("cargo");
+                cmd.args(["fmt", "--all", "--", "--check"])
+                    .current_dir(&root_fmt);
+                crate::core::bounded_process::configure_child_nofile_limit(&mut cmd);
+                cmd.output()
             })
         });
 
         let clippy_handle = clippy_available.then(|| {
             let root_clippy = repo_root.to_path_buf();
             std::thread::spawn(move || {
-                std::process::Command::new("cargo")
-                    .args([
-                        "clippy",
-                        "--all-targets",
-                        "--all-features",
-                        "--",
-                        "-D",
-                        "warnings",
-                    ])
-                    .current_dir(&root_clippy)
-                    .output()
+                let mut cmd = std::process::Command::new("cargo");
+                cmd.args([
+                    "clippy",
+                    "--all-targets",
+                    "--all-features",
+                    "--",
+                    "-D",
+                    "warnings",
+                ])
+                .current_dir(&root_clippy);
+                crate::core::bounded_process::configure_child_nofile_limit(&mut cmd);
+                cmd.output()
             })
         });
 
@@ -7565,12 +7615,43 @@ fn validate_root_dockerfile_seed_detection(
 }
 
 fn cargo_subcommand_available(subcommand: &str) -> bool {
-    std::process::Command::new("cargo")
-        .arg(subcommand)
-        .arg("--version")
-        .output()
+    let mut cmd = std::process::Command::new("cargo");
+    cmd.arg(subcommand).arg("--version");
+    crate::core::bounded_process::configure_child_nofile_limit(&mut cmd);
+    cmd.output()
         .map(|output| output.status.success())
         .unwrap_or(false)
+}
+
+fn validate_open_file_limits(ctx: &ValidationContext) -> Result<(), error::DecapodError> {
+    match crate::core::bounded_process::current_nofile_limits() {
+        Ok(limits) => {
+            if limits.soft < crate::core::bounded_process::LOW_NOFILE_WARNING_THRESHOLD {
+                advisory(
+                    &format!(
+                        "RLIMIT_NOFILE_LOW: parent soft open-file limit is {} (hard={}); spawned validation test harnesses elevate child soft RLIMIT_NOFILE toward min(hard, {}).",
+                        limits.soft,
+                        limits.hard_display(),
+                        crate::core::bounded_process::RECOMMENDED_NOFILE_CEILING,
+                    ),
+                    ctx,
+                );
+            } else {
+                pass(
+                    &format!(
+                        "Open-file limit is sufficient (soft={}, hard={})",
+                        limits.soft,
+                        limits.hard_display()
+                    ),
+                    ctx,
+                );
+            }
+        }
+        Err(_) => {
+            skip("RLIMIT_NOFILE inspection unavailable on this platform", ctx);
+        }
+    }
+    Ok(())
 }
 
 fn validate_state_commit_gate(
@@ -8378,6 +8459,13 @@ pub fn run_validation(
             ctx,
             "validate_tooling_gate",
             validate_tooling_gate(ctx, working_root)
+        );
+        gate!(
+            s,
+            timings,
+            ctx,
+            "validate_open_file_limits",
+            validate_open_file_limits(ctx)
         );
         gate!(
             s,

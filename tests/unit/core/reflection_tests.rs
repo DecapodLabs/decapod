@@ -1,10 +1,46 @@
 use super::*;
 use crate::core::todo::{ClaimMode, TodoCommand};
 use crate::plan_governance::{InitPlanInput, PlanPatch, PlanState, ScopeConstraints};
+use std::ops::Deref;
 use std::time::Instant;
 
-fn fixture(forbidden: Vec<String>) -> (tempfile::TempDir, Request) {
-    let temp = tempfile::tempdir().unwrap();
+struct TestFixtureDir {
+    dir: tempfile::TempDir,
+    previous_actor: Option<String>,
+}
+
+impl Deref for TestFixtureDir {
+    type Target = tempfile::TempDir;
+
+    fn deref(&self) -> &Self::Target {
+        &self.dir
+    }
+}
+
+impl Drop for TestFixtureDir {
+    fn drop(&mut self) {
+        let prev = self.previous_actor.take();
+        super::TEST_ACTOR_OVERRIDE.with(|cell| {
+            *cell.borrow_mut() = prev;
+        });
+    }
+}
+
+fn test_actor() -> String {
+    std::env::var("DECAPOD_AGENT_ID")
+        .ok()
+        .filter(|v| !v.trim().is_empty() && !v.trim().eq_ignore_ascii_case("unknown"))
+        .unwrap_or_else(|| "reflection-test-agent".into())
+}
+
+fn fixture(forbidden: Vec<String>) -> (TestFixtureDir, Request) {
+    let actor = test_actor();
+    let previous_actor =
+        super::TEST_ACTOR_OVERRIDE.with(|cell| cell.borrow_mut().replace(actor.clone()));
+    let temp = TestFixtureDir {
+        dir: tempfile::tempdir().unwrap(),
+        previous_actor,
+    };
     let root = temp.path();
     let store = root.join(".decapod/data");
     todo::initialize_todo_db(&store).unwrap();
@@ -28,7 +64,6 @@ fn fixture(forbidden: Vec<String>) -> (tempfile::TempDir, Request) {
     )
     .unwrap();
     let task_id = task["id"].as_str().unwrap().to_string();
-    let actor = std::env::var("DECAPOD_AGENT_ID").unwrap_or_else(|_| "unknown".into());
     let claim = todo::claim_task_with_lease(
         &store,
         &task_id,
@@ -477,9 +512,16 @@ fn retries_conflicting_tokens_and_interrupted_invocations_preserve_exact_state()
     let b = next(&request, &first, "writer-b");
     let root_a = temp.path().to_path_buf();
     let root_b = root_a.clone();
+    let actor = test_actor();
     let (a, b) = std::thread::scope(|scope| {
-        let a = scope.spawn(|| submit(&root_a, &a));
-        let b = scope.spawn(|| submit(&root_b, &b));
+        let a = scope.spawn(|| {
+            super::TEST_ACTOR_OVERRIDE.with(|cell| *cell.borrow_mut() = Some(actor.clone()));
+            submit(&root_a, &a)
+        });
+        let b = scope.spawn(|| {
+            super::TEST_ACTOR_OVERRIDE.with(|cell| *cell.borrow_mut() = Some(actor.clone()));
+            submit(&root_b, &b)
+        });
         (a.join().unwrap(), b.join().unwrap())
     });
     assert_ne!(a.is_ok(), b.is_ok());
@@ -500,7 +542,10 @@ fn yielded_lease_invalidates_custody_without_changing_journal() {
     let (temp, request) = fixture(vec![]);
     let first = submit(temp.path(), &request).unwrap();
     let store = temp.path().join(".decapod/data");
-    let actor = std::env::var("DECAPOD_AGENT_ID").unwrap_or_else(|_| "unknown".into());
+    let actor = std::env::var("DECAPOD_AGENT_ID")
+        .ok()
+        .filter(|v| !v.trim().is_empty() && !v.trim().eq_ignore_ascii_case("unknown"))
+        .unwrap_or_else(|| "reflection-test-agent".into());
     let yielded =
         todo::yield_claim_lease(&store, &request.task_id, &actor, "Interrupted work").unwrap();
     assert_eq!(yielded["status"], "ok");
@@ -582,7 +627,7 @@ fn source_capture_and_detector_use_the_same_adr_bytes() {
     );
 }
 
-fn escalation_fixture(kind: escalation::Uncertainty) -> (tempfile::TempDir, Request) {
+fn escalation_fixture(kind: escalation::Uncertainty) -> (TestFixtureDir, Request) {
     let (temp, mut request) = fixture(vec![]);
     fs::write(
         temp.path().join("README.md"),
@@ -1237,9 +1282,16 @@ fn escalation_retry_continuity_and_compact_journal_do_not_retain_agent_transcrip
 fn independent_task_continuations_cannot_exchange_tokens_or_evidence() {
     let (a, request_a) = escalation_fixture(escalation::Uncertainty::InferableDecision);
     let (b, request_b) = escalation_fixture(escalation::Uncertainty::InferableDecision);
+    let actor = test_actor();
     let (first_a, first_b) = std::thread::scope(|scope| {
-        let x = scope.spawn(|| submit(a.path(), &request_a).unwrap());
-        let y = scope.spawn(|| submit(b.path(), &request_b).unwrap());
+        let x = scope.spawn(|| {
+            super::TEST_ACTOR_OVERRIDE.with(|cell| *cell.borrow_mut() = Some(actor.clone()));
+            submit(a.path(), &request_a).unwrap()
+        });
+        let y = scope.spawn(|| {
+            super::TEST_ACTOR_OVERRIDE.with(|cell| *cell.borrow_mut() = Some(actor.clone()));
+            submit(b.path(), &request_b).unwrap()
+        });
         (x.join().unwrap(), y.join().unwrap())
     });
     assert_ne!(first_a.token, first_b.token);

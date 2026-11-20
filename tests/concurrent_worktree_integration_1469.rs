@@ -287,6 +287,7 @@ impl ConsumerRepo {
         let execution = RepositoryExecution {
             program,
             toolchain_files,
+            platforms: BTreeMap::new(),
             environment: BTreeMap::new(),
             directory: ".".into(),
             timeout_seconds: 15,

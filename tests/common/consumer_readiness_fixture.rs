@@ -178,6 +178,7 @@ impl Fixture {
         let execution = RepositoryExecution {
             program,
             toolchain_files,
+            platforms: BTreeMap::new(),
             environment: BTreeMap::from([(
                 "FIXTURE_WORKTREE".into(),
                 options.root.to_string_lossy().into_owned(),

@@ -46,6 +46,9 @@ pub struct WorkspaceStatus {
     /// Dirty source files are retained in place; workspaces use committed Git objects only.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub root_isolation: Option<RootIsolation>,
+    /// Bounded credential capability status for container workspaces (#1066).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub credentials: Option<crate::core::container_signer::WorkspaceCredentialsReport>,
 }
 
 /// Read-only source inventory shared by status and workspace creation.
@@ -331,6 +334,7 @@ pub fn get_workspace_status(repo_root: &Path) -> Result<WorkspaceStatus, Decapod
         .is_main_repo
         .then(|| root_isolation(repo_root))
         .transpose()?;
+    let credentials = resolve_workspace_credentials_report(repo_root);
 
     Ok(WorkspaceStatus {
         can_work,
@@ -339,7 +343,42 @@ pub fn get_workspace_status(repo_root: &Path) -> Result<WorkspaceStatus, Decapod
         blockers,
         required_actions,
         root_isolation,
+        credentials,
     })
+}
+
+fn resolve_workspace_credentials_report(
+    repo_root: &Path,
+) -> Option<crate::core::container_signer::WorkspaceCredentialsReport> {
+    let config = crate::cli::DecapodProjectConfig::load(repo_root).ok()?;
+    let creds = &config.workspace.credentials;
+    if creds.is_default() && !config.repo.effective_backend().is_cloud() {
+        return None;
+    }
+    let origin = crate::core::cloud_client::selected_origin().unwrap_or_default();
+    let repo_id = crate::core::repo_identity::resolve_repository_identity(repo_root)
+        .map(|id| id.canonical_name)
+        .unwrap_or_default();
+    let device_key_store = if !origin.is_empty() && !repo_id.is_empty() {
+        crate::core::cloud_dpop::DeviceKeyStore::for_project(&origin, &repo_id, repo_root).ok()
+    } else {
+        None
+    };
+    let now_secs = std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .map(|d| d.as_secs() as i64)
+        .unwrap_or(0);
+    let policy = crate::core::container_signer::ContainerSignerPolicy {
+        allowed_repository: repo_id,
+        allowed_origin: origin,
+        allowed_agent_id: crate::current_agent_id(),
+        credentials: creds.clone(),
+        session_expires_at: 0,
+        revoked: std::sync::Arc::new(std::sync::atomic::AtomicBool::new(false)),
+        device_key_store,
+        access_token_digest: None,
+    };
+    Some(policy.evaluate_report(now_secs))
 }
 
 fn check_git_status(repo_root: &Path) -> Result<GitStatus, DecapodError> {
@@ -572,7 +611,7 @@ fn claim_branch_scoped_open_tasks(
                 task.id, task.assigned_to
             )));
         }
-        if !task.assigned_to.is_empty() {
+        if !task.assigned_to.is_empty() && !todo::is_missing_or_unknown_actor(&task.assigned_to) {
             return Err(DecapodError::ValidationError(format!(
                 "AUTOREMEDIABLE_VALIDATION_ERROR code=WORKSPACE_BRANCH_TODO_CLAIM_CONFLICT severity=transient auto_remediable=true audience=agent agent_action=\"switch to the agent that owns todo {} or choose a different todo-scoped workspace; Decapod is preventing cross-work while preserving the captured todo\" user_note=\"This branch already belongs to another agent's Decapod todo claim; use the owner or a different todo-scoped workspace.\"\nBranch '{}' is scoped to todo {} but it is already claimed by {}.",
                 task.id, current_branch, task.id, task.assigned_to
@@ -658,9 +697,11 @@ pub(crate) fn initialize_workbranch_governance_at(
     } else {
         scoped
     };
-    let context = (selected.len() == 1).then(|| {
+    let context = if selected.len() == 1 {
         let task = selected[0];
-        crate::core::governance_document::BranchWorkContext {
+        let scope = crate::core::fleet_coord::parse_scope_entries(&task.scope)
+            .map_err(DecapodError::ValidationError)?;
+        Some(crate::core::governance_document::BranchWorkContext {
             title: task.title.clone(),
             intent: if task.description.trim().is_empty() {
                 task.title.clone()
@@ -668,15 +709,11 @@ pub(crate) fn initialize_workbranch_governance_at(
                 format!("{}\n\n{}", task.title, task.description)
             },
             todo_ids: vec![task.id.clone()],
-            scope: task
-                .scope
-                .split(',')
-                .map(str::trim)
-                .filter(|s| !s.is_empty())
-                .map(str::to_string)
-                .collect(),
-        }
-    });
+            scope,
+        })
+    } else {
+        None
+    };
     crate::core::governance_document::initialize_workbranch_at(
         repo_root,
         &base_ref,
@@ -692,6 +729,9 @@ pub fn ensure_workspace(
     config: Option<WorkspaceConfig>,
     agent_id: &str,
 ) -> Result<WorkspaceStatus, DecapodError> {
+    if todo::is_missing_or_unknown_actor(agent_id) {
+        return Err(todo::authoring_actor_required_error());
+    }
     let main_repo = get_main_repo_root(repo_root)?;
     verify_workspace_parent(&main_repo)?;
     let source_inventory = root_isolation(&main_repo)?;
@@ -2305,11 +2345,25 @@ fn canonical_local_readiness_repository(
     {
         return Err(denied());
     }
-    crate::core::repository_profile::preserve_accepted(
-        &candidate.proof.commands,
-        candidate.proof.repository_contract.as_ref(),
+    let accepted_sha = read_canonical_local_git(
+        &root,
+        &git,
+        &["rev-parse", "--verify", &format!("{reference}^{{commit}}")],
+    )
+    .map_err(|_| denied())?;
+    let candidate_sha =
+        read_canonical_local_git(repo_root, &git, &["rev-parse", "--verify", "HEAD^{commit}"])
+            .map_err(|_| denied())?;
+    crate::core::repository_profile::verify_accepted_transition(
+        repo_root,
+        &accepted_sha,
+        &candidate_sha,
+        accepted.proof.required_profile.as_ref(),
+        candidate.proof.required_profile.as_ref(),
         &accepted.proof.commands,
+        &candidate.proof.commands,
         accepted.proof.repository_contract.as_ref(),
+        candidate.proof.repository_contract.as_ref(),
     )
     .map_err(|_| denied())?;
     // A location-bound local identity is intentionally nonportable. Moving the
@@ -2444,6 +2498,14 @@ pub fn publish_workspace(
         description,
         &crate::ReadinessInvocation::default(),
     )
+}
+
+/// Warnings emitted when a workspace PR is created and admitted.
+pub fn pr_admission_warnings(repo_root: &Path) -> Vec<String> {
+    vec![
+        "PR admission applies to the observed head and base only. It does not authorize merge; subsequent head, base or required-context changes require fresh applicable proof and merge checks.".into(),
+        crate::core::validate::todo_tmp_cleanup_instruction(repo_root),
+    ]
 }
 
 pub(crate) fn publish_workspace_with_readiness(
@@ -2618,7 +2680,7 @@ pub(crate) fn publish_workspace_with_readiness(
         .map_err(publication::after_push)?;
         // The publisher's final admission callback rechecks remote and local
         // proof; failures there quarantine the existing PR before returning.
-        (Some(url), vec!["PR admission applies to the observed head and base only. It does not authorize merge; subsequent head, base or required-context changes require fresh applicable proof and merge checks.".into()])
+        (Some(url), pr_admission_warnings(repo_root))
     } else {
         (None, vec!["Branch verified remotely; PR verification is unavailable for this non-GitHub remote. This is not a publish-ready PR.".to_string()])
     };
@@ -2953,9 +3015,7 @@ fn verify_current_governance_ownership(
     {
         return Err(DecapodError::ValidationError("STALE_PUBLICATION_TASK: plan and trajectory must bind the same current todo. Update the governed plan and rerun validation.".into()));
     }
-    if !plan.human_questions.is_empty() || !plan.unresolved_contradictions.is_empty() {
-        return Err(DecapodError::ValidationError("PUBLICATION_DECISION_REQUIRED: resolve the governed plan's human questions and contradictions before publication; do not infer approval.".into()));
-    }
+    plan_governance::ensure_instruction_ready(&plan, "PUBLICATION_DECISION_REQUIRED")?;
     Ok(trajectory)
 }
 

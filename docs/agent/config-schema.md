@@ -16,6 +16,8 @@ pub struct DecapodProjectConfig {
     pub tracker: TrackerConfig,
     #[serde(default)]
     pub context: DeclaredContextConfig,
+    #[serde(default, skip_serializing_if = "WorkspaceConfigSection::is_default")]
+    pub workspace: WorkspaceConfigSection,
     #[serde(
         default,
         skip_serializing_if = "crate::core::laya_readiness::Configuration::is_default"
@@ -61,7 +63,7 @@ worktree may invoke the allowlisted safe capability slice (`db.inspect`,
 `db.backup` under `.decapod/backups/`). Worktree or unmerged-branch config edits
 cannot self-elevate, `db.recover` remains reserved for repository `owner` repair
 authority (`#1590`), `backend = "cloud"` fails closed (`CLOUD_PRINCIPAL_UNVERIFIED`)
-until Propodus `#88` verifies a repository-privileged human principal, raw SQL /
+until Decapod Cloud verifies a repository-privileged human principal, raw SQL /
 `sqlite3` / vacuum / restore remain unmodeled, and every attempt writes a
 redacted NDJSON audit entry (`implies_validation_ready = false`).
 
@@ -97,6 +99,12 @@ a change after that snapshot may not stop an in-flight claim. Turning the flag
 off prevents later uses but does not remove existing secondary owners. This is
 not an audited grant of verified trust or proof of human approval.
 
+
+## Repository Backends: Decapod Local and Decapod Cloud
+
+- **Decapod Local (`repo.backend = "local"`, default):** Local-first SQLite and Git governance runtime stored under `.decapod/`. Works offline with no account or external endpoint required.
+- **Decapod Cloud (`repo.backend = "cloud"`):** Optional hosted repository-bound backend via Dactyl (`decapod init --backend cloud`, `decapod cloud login|status|projects|project`). Cloud mode never falls back to local SQLite.
+- **Explicit cloud adapter environment:** Explicit adapter/test callers configure `DECAPOD_CLOUD_API_URL`, `DECAPOD_CLOUD_DATASTORE`, and `DECAPOD_CLOUD_PROVIDER` (`DECAPOD_PROPODUS_API_URL` remains a deprecated backwards-compatible alias that emits a structured deprecation warning; no obsolete preview URL default is assumed when unconfigured).
 
 ## Required proof and execution provider
 
@@ -145,10 +153,20 @@ nonempty set of unique `proof.commands` with `required = true`, and an explicit
   passed or skipped check. When every discovered workflow is `ci_only`, the
   required local commands still execute normally as the repository's local
   build/test contract.
-- `executions`: a table keyed by each required command name, containing `program`
-  (absolute canonical installed executable), `toolchain_files` (nonempty map of
-  labels to absolute canonical tool/runtime files), `environment` (explicit map),
-  `directory` (repository-relative, default `.`), and `timeout_seconds` (1–7200)
+- `executions`: a table keyed by each required command name, containing either
+  single-platform `program` (absolute canonical installed executable) and
+  `toolchain_files` (nonempty map of labels to absolute canonical tool/runtime
+  files), or a per-platform `platforms` table keyed by explicit canonical
+  platform keys (`linux-x86_64`, `linux-aarch64`, `macos-x86_64`,
+  `macos-aarch64`) where each platform entry provides its own `program` and
+  nonempty `toolchain_files` (mutually exclusive with top-level `program` and
+  `toolchain_files`), together with `environment` (explicit map), `directory`
+  (repository-relative, default `.`), and `timeout_seconds` (1–7200). Every
+  declared platform alternative is pinned by `reviewed_commands_digest` and
+  preserved across accepted targets (`ACCEPTED_REPOSITORY_CONTRACT_CHANGED`); at
+  execution time the host selects and byte-measures only the current host's
+  reviewed platform entry, failing closed if that platform is missing or
+  unsupported.
 
 `proof.required_profile.reviewed_sources_digest` separately pins the full
 workflow/action/helper/build inventory. `init` and `rpc --op agent.init` report
@@ -174,10 +192,11 @@ timeouts and workflow coverage. Additional required checks are allowed. Replacin
 or removing accepted checks, converting their coverage to CI-only, or changing
 profiles returns `ACCEPTED_REPOSITORY_CONTRACT_CHANGED` before execution selection.
 Editing and repinning candidate configuration cannot authorize that transition.
-Replacement policy must first be independently accepted on the target through
-repository-maintainer authority. There is no agent-side waiver or automatic
-policy migration. First adoption still requires explicit operator review; a
-matching digest does not authenticate that reviewer.
+Replacement policy must first be independently accepted on the target or
+authorized through a bounded, `policy.control`-gated transition approval in the
+canonical main repository policy ledger. There is no agent-side waiver or
+automatic policy migration. First adoption still requires explicit operator
+review; a matching digest does not authenticate that reviewer.
 
 `proof.commands[].command` names the declared executable (or uses its absolute
 path); `args` remain separate literal arguments. Runtime resolves no YAML, shell
@@ -324,18 +343,52 @@ rejects before broker handoff. An unknown write outcome still requires inspectio
 never replay it merely because an override was removed. Direct unrestricted Git
 and filesystem access remain outside this local operation boundary.
 
-### Updating an accepted local verification-source inventory
+### Updating an accepted local verification-source inventory or proof policy (#1738)
 
 For an already accepted `repo.pr-readiness.v1` contract, candidate review cannot
-replace the accepted source-definition digest. This includes inventoried check
-scripts and build, dependency and provider definitions. A new candidate digest
-for changed definitions returns `ACCEPTED_REPOSITORY_CONTRACT_CHANGED`; establish
-the intended policy revision on the accepted target before revalidation.
-Additional required commands under the existing inventory remain possible. New
-inventoried check files require the same separate policy transition. First
-adoption remains supported. Normal subject changes still receive fresh checks
-and exact source bindings. Discovery and declared tool closure do not infer the
-semantic or transitive completeness of arbitrary verification commands.
+self-authorize a changed `reviewed_sources_digest` or replacement
+`commands`/`executions`/`source_coverage` declarations. Without independent
+acceptance, `decapod validate` fails closed before execution selection with
+`ACCEPTED_REPOSITORY_CONTRACT_CHANGED`, reporting the old-to-new digests and the
+exact deterministic transition command:
+
+```console
+decapod govern policy approve --id <transition-id> --scope repo.pr-readiness.v1
+```
+
+`<transition-id>` (`repository_profile::repo_policy_transition_id`) is a
+64-hex-character SHA-256 digest bound to the exact
+`(accepted_base_sha, candidate_head_sha, accepted_sources_digest,
+candidate_sources_digest, accepted_commands_digest, candidate_commands_digest)`
+tuple under scope `repo.pr-readiness.v1`.
+
+1. **Structural self-consistency first:** Update the candidate's reviewed
+   digests (`reviewed_sources_digest` via `rpc --op agent.init` and
+   `reviewed_commands_digest` via `command_contract_digest`), stage and commit
+   the candidate, then run `decapod validate`. Unreconciled source inventories or
+   stale command digests still fail with `PROOF_PROFILE_RECONCILIATION_REQUIRED`
+   or `STALE_COMMAND_CONTRACT`.
+2. **Privilege-gated maintainer approval:** `decapod govern policy approve` is
+   gated on `"policy.control"` (core trust) in the canonical main `.decapod/data`
+   policy ledger (`decapod.db`). Ordinary agents and `"unknown"` callers are
+   rejected fail-closed, and candidate `.decapod/config.toml` or `governance.json`
+   plan prose can never authorize a transition.
+3. **Bounded, exact-subject validity:** Approvals carry a bounded lifetime
+   (`--expires-in-seconds`, default 900) and can be revoked at any time via
+   `decapod govern policy revoke --id <approval-id>`. Any change to the accepted
+   base SHA, candidate head SHA, `reviewed_sources_digest`, or
+   `reviewed_commands_digest`, as well as wrong scope, expiration, or revocation,
+   invalidates the approval and fails closed with
+   `ACCEPTED_REPOSITORY_CONTRACT_CHANGED`.
+4. **Full execution through the standard gate:** When a valid active approval
+   matches the exact transition, validation admits the candidate's reviewed
+   `repo.pr-readiness.v1` contract into the normal validation engine so all
+   transitioned required checks run against the exact candidate before
+   `workspace publish`. First adoption remains supported; additive commands under
+   the existing inventory remain possible without transition approval; and
+   downgrading an accepted `decapod.pr-readiness.v1` strict profile to
+   `repo.pr-readiness.v1` remains unconditionally blocked with
+   `REQUIRED_PROFILE_DOWNGRADE`.
 
 ## Offline canonical local Git targets
 

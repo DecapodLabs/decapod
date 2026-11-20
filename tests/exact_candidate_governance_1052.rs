@@ -206,6 +206,7 @@ fn write_consumer_proof_config(repo_root: &Path, canonical_local_target: bool) {
         RepositoryExecution {
             program: test_str,
             toolchain_files,
+            platforms: BTreeMap::new(),
             environment: BTreeMap::new(),
             directory: ".".to_string(),
             timeout_seconds: 30,

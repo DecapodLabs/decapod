@@ -189,9 +189,9 @@ pub fn all_migrations() -> Vec<Migration> {
             scope: "global",
             kind: "rust",
             script_path: None,
-            min_version: "0.141.0",
-            target_version: "0.141.0",
-            description: "Compact historical event envelopes, deduplicate agent prompts, initialize externalized component tables, and stamp v2 storage format compatibility (#1630)",
+            min_version: schemas::STORAGE_MIN_WRITER_VERSION,
+            target_version: schemas::STORAGE_MIN_WRITER_VERSION,
+            description: "Compact historical event envelopes, deduplicate agent prompts, initialize externalized component tables, and stamp v2 storage format compatibility (#1630, #1739)",
             up: migrate_compact_lossless_storage_v002,
         },
     ]
@@ -1342,6 +1342,9 @@ fn schema_upgrade_pending(data_root: &Path) -> Result<bool, error::DecapodError>
     }
     let conn = db::db_connect(&todo_db.to_string_lossy())?;
     crate::core::storage_compaction::check_storage_format_compatibility(&conn)?;
+    if crate::core::storage_compaction::v2_format_metadata_needs_floor_upgrade(&conn)? {
+        return Ok(true);
+    }
     let version_res: Result<String, _> = conn.query_row(
         "SELECT value FROM meta WHERE namespace = ?1 AND key = 'schema_version'",
         [schemas::TODO_META_NAMESPACE],
@@ -1614,6 +1617,7 @@ fn reconcile_canonical_event_tables(
     }
     let conn = db::db_connect(&db_path.to_string_lossy())?;
     events::ensure_tables(&conn)?;
+    crate::core::storage_compaction::reconcile_v2_storage_format_metadata(&conn)?;
     if single_datastore_was_previously_consolidated {
         events::mark_previously_consolidated_legacy_inputs(
             &data_root,

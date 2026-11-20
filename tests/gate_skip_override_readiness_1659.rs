@@ -208,6 +208,7 @@ fn write_canonical_local_config(repo: &Path) {
         RepositoryExecution {
             program: true_bin,
             toolchain_files,
+            platforms: BTreeMap::new(),
             environment: BTreeMap::new(),
             directory: ".".to_string(),
             timeout_seconds: 30,

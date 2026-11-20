@@ -714,3 +714,330 @@ fn reference_aware_component_gc_and_explicit_vacuum_preserve_live_and_historical
     assert_eq!(vac.freelist_after, 0);
     assert!(vac.pages_after < vac.pages_before);
 }
+
+#[test]
+fn v2_storage_compatibility_floor_matches_ce_v1_codec_release_and_blocks_pre_codec_versions() {
+    use decapod::core::{storage_compaction, todo};
+
+    assert_eq!(schemas::STORAGE_MIN_READER_VERSION, "0.144.2");
+    assert_eq!(schemas::STORAGE_MIN_WRITER_VERSION, "0.144.2");
+    let v2_migration = migration::all_migrations()
+        .into_iter()
+        .find(|m| m.id == storage_compaction::V2_COMPACTION_MIGRATION_ID)
+        .expect("v2 compaction migration registered");
+    assert_eq!(v2_migration.min_version, "0.144.2");
+    assert_eq!(v2_migration.target_version, "0.144.2");
+
+    let temp = tempfile::tempdir().unwrap();
+    let data = temp.path().join("data");
+    todo::initialize_todo_db(&data).unwrap();
+    let conn = Connection::open(data.join(schemas::LOCAL_DB_NAME)).unwrap();
+
+    let meta_val = |key: &str| -> String {
+        conn.query_row(
+            "SELECT value FROM meta WHERE namespace = 'storage' AND key = ?1",
+            [key],
+            |r| r.get(0),
+        )
+        .unwrap()
+    };
+    assert_eq!(meta_val("format_version"), "2");
+    assert_eq!(meta_val("min_reader_version"), "0.144.2");
+    assert_eq!(meta_val("min_writer_version"), "0.144.2");
+
+    for pre_codec in ["0.141.0", "0.143.2", "0.144.1"] {
+        for require_write in [false, true] {
+            let err = storage_compaction::check_storage_format_compatibility_for_version(
+                &conn,
+                pre_codec,
+                require_write,
+            )
+            .unwrap_err()
+            .to_string();
+            assert!(
+                err.contains("STORAGE_FORMAT_INCOMPATIBLE") && err.contains("0.144.2"),
+                "expected {pre_codec} (write={require_write}) to be rejected at 0.144.2 floor, got: {err}"
+            );
+        }
+    }
+
+    for supported in ["0.144.2", env!("CARGO_PKG_VERSION")] {
+        for require_write in [false, true] {
+            storage_compaction::check_storage_format_compatibility_for_version(
+                &conn,
+                supported,
+                require_write,
+            )
+            .unwrap_or_else(|e| {
+                panic!("expected {supported} (write={require_write}) to be compatible: {e}")
+            });
+        }
+    }
+}
+
+#[test]
+fn pre_codec_store_migrates_to_v2_floor_and_preserves_lossless_envelope_reconstruction() {
+    use decapod::core::{events, storage_compaction, todo};
+    use serde_json::{Value, json};
+
+    let temp = tempfile::tempdir().unwrap();
+    let data = temp.path().join("data");
+    todo::initialize_todo_db(&data).unwrap();
+
+    let added = todo::add_task(
+        &data,
+        &todo::TodoCommand::Add {
+            title: "Pre-codec compatibility fixture".into(),
+            description: "Historical task created prior to _ce_v1".into(),
+            priority: "high".into(),
+            tags: "compat,v2".into(),
+            owner: String::new(),
+            due: None,
+            r#ref: String::new(),
+            scope: "root".into(),
+            dir: Some(temp.path().to_string_lossy().into_owned()),
+            depends_on: String::new(),
+            blocks: String::new(),
+            parent: None,
+            one_shot: 0,
+        },
+    )
+    .unwrap();
+    let task_id = added["id"].as_str().unwrap().to_owned();
+
+    let conn = Connection::open(data.join(schemas::LOCAL_DB_NAME)).unwrap();
+    // Simulate a pre-codec (0.141.0..0.144.1) unmigrated store: no storage.* meta markers,
+    // no v2 component tables, and verbose uncompacted JSON envelopes in `events`.
+    conn.execute("DELETE FROM meta WHERE namespace = 'storage'", [])
+        .unwrap();
+    conn.execute_batch(
+        "DROP TABLE IF EXISTS storage_component_refs;
+         DROP TABLE IF EXISTS storage_components;
+         DROP TABLE IF EXISTS storage_migration_manifests;",
+    )
+    .unwrap();
+
+    let verbose_comment = json!({
+        "event_id": "pre-codec-comment-1",
+        "ts": "2026-11-10T02:03:04Z",
+        "event_type": "task.comment",
+        "actor": "legacy-0.143.2",
+        "subject_kind": "task",
+        "subject_id": task_id,
+        "task_id": task_id,
+        "status": "success",
+        "payload": {"comment": "Created under pre-codec binary"}
+    });
+    let verbose_comment_str = verbose_comment.to_string();
+    conn.execute(
+        "INSERT INTO events(event_id,ts,seq,stream,subject_kind,subject_id,event_type,payload,actor)
+         VALUES('pre-codec-comment-1','2026-11-10T02:03:04Z',9000,'todo','task',?1,'task.comment',?2,'legacy-0.143.2')",
+        decapod::params![task_id, verbose_comment_str],
+    )
+    .unwrap();
+
+    // Unmigrated v1 stores without storage.* markers remain readable/writable to pre-codec checks.
+    storage_compaction::check_storage_format_compatibility_for_version(&conn, "0.141.0", true)
+        .unwrap();
+    storage_compaction::check_storage_format_compatibility_for_version(&conn, "0.144.1", true)
+        .unwrap();
+    assert!(!storage_compaction::v2_format_metadata_needs_floor_upgrade(&conn).unwrap());
+
+    // Run full governed migration (`activate` path) to compact and stamp v2 metadata.
+    let report = migration::check_and_migrate_with_backup_report(temp.path(), |_| Ok(())).unwrap();
+    assert!(
+        report
+            .applied_migrations
+            .iter()
+            .any(|id| id == storage_compaction::V2_COMPACTION_MIGRATION_ID),
+        "expected v2 migration in {:?}",
+        report.applied_migrations
+    );
+
+    // Pre-codec versions must now be rejected for both read and write, while 0.144.2+ succeed.
+    for pre_codec in ["0.141.0", "0.144.1"] {
+        assert!(
+            storage_compaction::check_storage_format_compatibility_for_version(
+                &conn, pre_codec, false
+            )
+            .unwrap_err()
+            .to_string()
+            .contains("STORAGE_FORMAT_INCOMPATIBLE")
+        );
+        assert!(
+            storage_compaction::check_storage_format_compatibility_for_version(
+                &conn, pre_codec, true
+            )
+            .unwrap_err()
+            .to_string()
+            .contains("STORAGE_FORMAT_INCOMPATIBLE")
+        );
+    }
+    storage_compaction::check_storage_format_compatibility_for_version(&conn, "0.144.2", true)
+        .unwrap();
+    storage_compaction::check_storage_format_compatibility(&conn).unwrap();
+
+    // Verify physical compaction to `_ce_v1` (explaining why naive pre-codec JSON deserializers
+    // without `reconstruct_stored_payload` lose stripped envelope fields) and exact lossless decode.
+    let raw_after: String = conn
+        .query_row(
+            "SELECT payload FROM events WHERE event_id = 'pre-codec-comment-1'",
+            [],
+            |r| r.get(0),
+        )
+        .unwrap();
+    let naive_parsed: Value = serde_json::from_str(&raw_after).unwrap();
+    assert!(naive_parsed.get("_ce_v1").is_some(), "{raw_after}");
+    assert!(
+        naive_parsed.get("event_id").is_none(),
+        "stripped envelope key must not remain inline: {raw_after}"
+    );
+    let reconstructed = events::reconstruct_stored_payload(
+        "todo",
+        "pre-codec-comment-1",
+        "2026-11-10T02:03:04Z",
+        "task.comment",
+        "legacy-0.143.2",
+        Some("task"),
+        Some(&task_id),
+        &raw_after,
+    )
+    .unwrap();
+    assert_eq!(reconstructed, verbose_comment);
+
+    // New writes after migration also compact to `_ce_v1` and reconstruct cleanly via `events::query`.
+    todo::comment_task(&data, &task_id, "Post-migration comment").unwrap();
+    let queried = events::query(&data, "todo", 50).unwrap();
+    assert!(
+        queried
+            .iter()
+            .any(|ev| ev.event_id == "pre-codec-comment-1" && ev.payload == verbose_comment)
+    );
+    assert!(
+        queried
+            .iter()
+            .any(|ev| ev.payload.to_string().contains("Post-migration comment"))
+    );
+    let verified = todo::task_journal_verify(&data).unwrap();
+    assert_eq!(verified["status"], "ok");
+    assert_eq!(verified["journal_valid"], true);
+}
+
+#[test]
+fn legacy_v2_store_stamped_0_141_0_is_safely_restamped_on_activate_and_open_without_data_loss() {
+    use decapod::core::{db::OpenFlags, events, storage_compaction, todo};
+
+    let temp = tempfile::tempdir().unwrap();
+    let data = temp.path().join("data");
+    todo::initialize_todo_db(&data).unwrap();
+
+    let added = todo::add_task(
+        &data,
+        &todo::TodoCommand::Add {
+            title: "Legacy 0.141.0 stamped v2 store".into(),
+            description: "Detailed task description preserved across restamp.\n".repeat(16),
+            priority: "high".into(),
+            tags: "restamp,v2".into(),
+            owner: String::new(),
+            due: None,
+            r#ref: String::new(),
+            scope: "root".into(),
+            dir: Some(temp.path().to_string_lossy().into_owned()),
+            depends_on: String::new(),
+            blocks: String::new(),
+            parent: None,
+            one_shot: 0,
+        },
+    )
+    .unwrap();
+    let task_id = added["id"].as_str().unwrap().to_owned();
+    todo::comment_task(&data, &task_id, "Pre-restamp comment").unwrap();
+
+    // Run full migrations so `applied.json` already records `sqlite.compact_lossless_storage.v002`,
+    // matching real stores migrated by v0.144.2..v0.148.13.
+    migration::check_and_migrate_with_backup_report(temp.path(), |_| Ok(())).unwrap();
+
+    let conn = Connection::open(data.join(schemas::LOCAL_DB_NAME)).unwrap();
+    let events_before = events::query(&data, "todo", usize::MAX).unwrap();
+    let journal_before = todo::task_journal_verify(&data).unwrap();
+    assert_eq!(journal_before["status"], "ok");
+
+    // Simulate legacy v0.144.2..v0.148.13 stamp (`0.141.0`) in `meta`.
+    conn.execute(
+        "UPDATE meta SET value = '0.141.0'
+         WHERE namespace = 'storage' AND key IN ('min_reader_version', 'min_writer_version')",
+        [],
+    )
+    .unwrap();
+    assert!(storage_compaction::v2_format_metadata_needs_floor_upgrade(&conn).unwrap());
+
+    // Read-only connection must pass read compatibility and never attempt writes during reconciliation.
+    let ro_conn = Connection::open_with_flags(
+        data.join(schemas::LOCAL_DB_NAME),
+        OpenFlags::SQLITE_OPEN_READ_ONLY,
+    )
+    .unwrap();
+    storage_compaction::check_read_compatibility(&ro_conn).unwrap();
+    assert!(!storage_compaction::reconcile_v2_storage_format_metadata(&ro_conn).unwrap());
+    drop(ro_conn);
+
+    // `activate` / `check_and_migrate_with_backup_report` must detect and restamp `0.141.0` -> `0.144.2`
+    // even when `sqlite.compact_lossless_storage.v002` is already in `applied.json`.
+    migration::check_and_migrate_with_backup_report(temp.path(), |_| Ok(())).unwrap();
+    assert!(!storage_compaction::v2_format_metadata_needs_floor_upgrade(&conn).unwrap());
+    let reader_ver: String = conn
+        .query_row(
+            "SELECT value FROM meta WHERE namespace = 'storage' AND key = 'min_reader_version'",
+            [],
+            |r| r.get(0),
+        )
+        .unwrap();
+    let writer_ver: String = conn
+        .query_row(
+            "SELECT value FROM meta WHERE namespace = 'storage' AND key = 'min_writer_version'",
+            [],
+            |r| r.get(0),
+        )
+        .unwrap();
+    assert_eq!(reader_ver, "0.144.2");
+    assert_eq!(writer_ver, "0.144.2");
+
+    // Second run is a clean idempotent no-op.
+    let second = migration::check_and_migrate_with_backup_report(temp.path(), |_| Ok(())).unwrap();
+    assert!(second.applied_migrations.is_empty());
+
+    // Write-side open (`events::ensure_tables`) also safely restamps a `0.141.0`-stamped v2 store.
+    conn.execute(
+        "UPDATE meta SET value = '0.141.0'
+         WHERE namespace = 'storage' AND key IN ('min_reader_version', 'min_writer_version')",
+        [],
+    )
+    .unwrap();
+    events::ensure_tables(&conn).unwrap();
+    assert!(!storage_compaction::v2_format_metadata_needs_floor_upgrade(&conn).unwrap());
+
+    // Higher valid floors (e.g. `0.146.0` <= current release) must never be downgraded to `0.144.2`.
+    conn.execute(
+        "UPDATE meta SET value = '0.146.0'
+         WHERE namespace = 'storage' AND key IN ('min_reader_version', 'min_writer_version')",
+        [],
+    )
+    .unwrap();
+    assert!(!storage_compaction::reconcile_v2_storage_format_metadata(&conn).unwrap());
+    storage_compaction::stamp_storage_format_metadata(&conn).unwrap();
+    let preserved_reader: String = conn
+        .query_row(
+            "SELECT value FROM meta WHERE namespace = 'storage' AND key = 'min_reader_version'",
+            [],
+            |r| r.get(0),
+        )
+        .unwrap();
+    assert_eq!(preserved_reader, "0.146.0");
+
+    // Logical history and journal verification remain 100% lossless.
+    let events_after = events::query(&data, "todo", usize::MAX).unwrap();
+    assert_eq!(events_after, events_before);
+    let journal_after = todo::task_journal_verify(&data).unwrap();
+    assert_eq!(journal_after["status"], "ok");
+    assert_eq!(journal_after["journal_valid"], true);
+}

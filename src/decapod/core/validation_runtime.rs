@@ -145,7 +145,7 @@ impl ValidationGuidance {
                 "repair_and_revalidate"
             },
             instruction: if ready {
-                "Review the exact candidate evidence against human intent and delivery constraints. Success establishes only the reported readiness scope; delivery actions remain subject to existing authorization and review requirements."
+                "Review the exact candidate evidence against human intent and delivery constraints. Success establishes only the reported readiness scope; delivery actions remain subject to existing authorization and review requirements. Once PR creation completes, flush ONLY this todo's /tmp build and scratch directories (such as /tmp/decapod_validate/<task-id> and any todo-scoped CARGO_TARGET_DIR under /tmp); never perform wildcard or root-level deletion of /tmp or delete another concurrent agent's /tmp path, shared `/tmp/decapod` controller state, or active sibling directories."
             } else {
                 "Agent: inspect the blockers and evidence, configure or repair the project's actual build, test and CI contract within the governed scope, checkpoint the repaired source, then rerun decapod validate. Preserve required checks and artifact custody; unsupported adapters remain blockers."
             },
@@ -153,7 +153,7 @@ impl ValidationGuidance {
         }
     }
 
-    fn for_readiness_outcome(
+    pub fn for_readiness_outcome(
         proof_ready: bool,
         mode: super::readiness_assessment::Mode,
         decision: super::readiness_assessment::Decision,
@@ -168,7 +168,7 @@ impl ValidationGuidance {
         let (next_action, instruction) = match (mode, decision) {
             (Mode::Required, Decision::Accept) => (
                 "create_authorized_pr",
-                "Required validation passed and Laya accepted post-validation readiness. Agent: create the PR on this validated workspace branch when already authorized, after confirming the candidate and accepted target are still current. Include the validation and Laya evidence. This result does not authorize merge or release; preserve human review and existing delivery authority.",
+                "Required validation passed and Laya accepted post-validation readiness. Agent: create the PR on this validated workspace branch when already authorized, after confirming the candidate and accepted target are still current. Include the validation and Laya evidence. Once PR creation completes, flush ONLY this todo's /tmp build and scratch directories (such as /tmp/decapod_validate/<task-id> and any todo-scoped CARGO_TARGET_DIR under /tmp); never perform wildcard or root-level deletion of /tmp or delete another concurrent agent's /tmp path, shared `/tmp/decapod` controller state, or active sibling directories. This result does not authorize merge or release; preserve human review and existing delivery authority.",
             ),
             (Mode::Required, Decision::Reject) => (
                 "address_readiness_gaps_and_revalidate",
@@ -705,29 +705,25 @@ fn load_project(options: &Options, budget: &mut RuntimeBudget<'_>) -> io::Result
         .as_ref()
         .is_some_and(|p| p.id == super::repository_profile::REQUIRED_PROFILE)
     {
-        if !repository_local {
-            return Err(invalid(
-                "ACCEPTED_REPOSITORY_CONTRACT_CHANGED: another profile cannot replace accepted repository-local checks",
-            ));
-        }
-        if configuration
-            .required_profile
-            .as_ref()
-            .map(|profile| &profile.reviewed_sources_digest)
-            != accepted
-                .required_profile
-                .as_ref()
-                .map(|profile| &profile.reviewed_sources_digest)
+        if repository_local
+            && let Some(declaration) = configuration.required_profile.as_ref()
+            && sources.digest().map_err(io::Error::other)? != declaration.reviewed_sources_digest
         {
-            return Err(invalid(
-                "ACCEPTED_REPOSITORY_CONTRACT_CHANGED: source definitions changed; preserve the accepted source digest or establish a separately accepted target-policy transition before revalidation",
+            return Err(io::Error::new(
+                io::ErrorKind::InvalidData,
+                profile::PlanningFailure::SourceContractChanged,
             ));
         }
-        super::repository_profile::preserve_accepted(
-            &configuration.commands,
-            configuration.repository_contract.as_ref(),
+        super::repository_profile::verify_accepted_transition(
+            &options.root,
+            &base,
+            &head,
+            accepted.required_profile.as_ref(),
+            configuration.required_profile.as_ref(),
             &accepted.commands,
+            &configuration.commands,
             accepted.repository_contract.as_ref(),
+            configuration.repository_contract.as_ref(),
         )
         .map_err(io::Error::other)?;
     }

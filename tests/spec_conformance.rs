@@ -31,6 +31,8 @@ fn resolve_decapod_bin() -> PathBuf {
 fn run_decapod(dir: &Path, args: &[&str]) -> std::process::Output {
     Command::new(resolve_decapod_bin())
         .current_dir(dir)
+        .env("DECAPOD_AGENT_ID", "spec-conformance-agent")
+        .env("DECAPOD_CLAIM_AUTORUN", "0")
         .env("DECAPOD_VALIDATE_SKIP_GIT_GATES", "1")
         .args(args)
         .output()
