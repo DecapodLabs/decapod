@@ -1534,7 +1534,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `b47a99b97840b9e8f46c2af81234d01c1ca7db85277bac9a9825d60741dcab1f`
+- Repository signal fingerprint: `4e62302f6519c21d4e3ab7405a5ad0a49a544ca768fcdd6336d7f37722431cf8`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (250 files), `tests/` (258 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
@@ -2604,3 +2604,5 @@ The previous PR run on `08f76bff` against `2e206d26` passed both broker probes a
 The v0.156.0 cut at `ba21c8f1` changes only release metadata. The combined candidate also repairs the inherited strict-profile downgrade fixture. The constructor already commits the candidate repository profile while preserving the surrounding config. GitHub Actions job 136580080529 failed on a second empty commit before reaching the refusal assertion. The test now uses the committed candidate and still requires `REQUIRED_PROFILE_DOWNGRADE` after transition approval, with zero native execution selections. Keep the existing CLI and core suites, test filters, and deadlines for the fresh run.
 
 On `7b7d83e4`, Actions jobs 136614741062 and 136614841197 both executed and passed the repaired downgrade test. The CLI suites still exceeded their aggregate budgets, and the branch core job passed encoding conformance while failing three adjacent timing gates. Reconcile the accepted approval-verification changes at `033977e2` and rerun the complete GitHub Actions suite for that base.
+
+The v0.156.1 metadata cut at `73026d84` follows the accepted approval-verification changes. It preserves the encoding fixtures and downgrade assertion. Use the v0.156.1 evaluator and execute fresh checks on the new exact base. The inspected source inventory still differs only in the Bazel data declaration.
