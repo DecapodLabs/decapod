@@ -268,6 +268,32 @@ impl Budget<'_> {
     fn git(&mut self, root: &Path, args: &[&str]) -> io::Result<Vec<u8>> {
         self.git_bounded(root, args, None)
     }
+    fn control_bytes(&mut self, path: &Path, limit: u64) -> io::Result<Vec<u8>> {
+        self.remaining()?;
+        let mut options = fs::OpenOptions::new();
+        options.read(true);
+        #[cfg(unix)]
+        {
+            use std::os::unix::fs::OpenOptionsExt;
+            options.custom_flags(libc::O_NOFOLLOW | libc::O_NONBLOCK);
+        }
+        let file = options.open(path)?;
+        if !file.metadata()?.is_file() {
+            return Err(invalid("control input is not a regular file"));
+        }
+        let cap = limit.min(self.remaining_bytes);
+        let mut bytes = Vec::new();
+        file.take(cap.saturating_add(1)).read_to_end(&mut bytes)?;
+        self.remaining_bytes = self
+            .remaining_bytes
+            .checked_sub(bytes.len() as u64)
+            .ok_or_else(|| invalid("control input byte budget exceeded"))?;
+        if bytes.len() as u64 > cap {
+            return Err(invalid("control input exceeds bound"));
+        }
+        self.remaining()?;
+        Ok(bytes)
+    }
     // Preparation writes are only to freshly owned snapshot paths. The file
     // limit is child-local and prevents a bundle/index-pack file from exceeding
     // its allotted disk budget before the caller can inspect it.
@@ -470,6 +496,60 @@ fn capture_identity_with_toolchains(
     )?;
     let toolchain = measure(budget)?;
     let git_identity = budget.hash_file(&inputs.git_program)?;
+    let mut configuration_digest = group_digest(&material, &inputs.configuration)?;
+    // Re-read the selected SQLite projection at EVERY identity capture. Its
+    // source/DB join is not a cross-store transaction; changes invalidate the
+    // before/after identity and receipt applicability instead.
+    let config_path = ".decapod/config.toml";
+    let entries = budget.git(
+        &inputs.root,
+        &["ls-tree", "-z", &accepted_base_revision, "--", config_path],
+    )?;
+    let accepted_bytes = if entries.is_empty() {
+        Vec::new()
+    } else {
+        budget.git(
+            &inputs.root,
+            &["show", &format!("{accepted_base_revision}:{config_path}")],
+        )?
+    };
+    let accepted = crate::core::intent_reconcile::selected::configuration(&accepted_bytes)?;
+    let candidate = if inputs.root.join(config_path).exists() {
+        crate::core::intent_reconcile::selected::configuration(
+            &budget.control_bytes(&inputs.root.join(config_path), 65536)?,
+        )?
+    } else {
+        Default::default()
+    };
+    if accepted.selected_work.is_some() || candidate.selected_work.is_some() {
+        if !entries.starts_with(b"100644 blob ") {
+            return Err(invalid(
+                "accepted selected policy must be a regular tracked config blob",
+            ));
+        }
+        let governance: serde_json::Value = serde_json::from_slice(&budget.control_bytes(
+            &inputs.root.join(".decapod/governance.json"),
+            16 * 1024 * 1024,
+        )?)
+        .map_err(io::Error::other)?;
+        let report = crate::core::intent_reconcile::selected::admission(
+            &inputs.root,
+            &accepted_base_revision,
+            &candidate,
+            &accepted,
+            &governance,
+            crate::core::validation_rules::EvaluationPhase::Validation,
+        )
+        .map_err(io::Error::other)?;
+        configuration_digest = json_digest(&(
+            configuration_digest,
+            report
+                .as_ref()
+                .map(|r| (&r.source_commit, &r.source_revision, &r.roots)),
+            governance.pointer("/sections/plan"),
+            governance.pointer("/sections/trajectory/task_id"),
+        ))?;
+    }
     let identity = MaterialIdentity {
         repository: inputs.repository.clone(),
         work_branch: material.work_branch.clone(),
@@ -482,7 +562,7 @@ fn capture_identity_with_toolchains(
             tag_refs(&inputs.root, budget)?,
         ))?,
         tree_digest: material.content_digest().map_err(io::Error::other)?,
-        configuration_digest: group_digest(&material, &inputs.configuration)?,
+        configuration_digest,
         workflow_digest: group_digest(&material, &inputs.workflows)?,
         toolchain_digest: json_digest(&(git_identity, toolchain.into_iter().collect::<Vec<_>>()))?,
         candidate_digest: group_digest(&material, &inputs.candidate_inputs)?,

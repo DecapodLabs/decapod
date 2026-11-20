@@ -811,6 +811,11 @@
       "proof_refs": [
         "fresh_ci_checkout_cannot_inherit_another_checkouts_local_policy_approval (passed)"
       ]
+    },
+    {
+      "id": "issue-1833-sync-d96bf819",
+      "summary": "Integrate accepted contract changes while preserving the CI baseline test",
+      "input_digest": "sha256:c2d00a09eb47107dbfd3f8492c4692675b16123303b8ccddbe99ca6c2147dee7"
     }
   ],
   "intents": {
@@ -841,10 +846,10 @@
       },
       "deferred_questions": [],
       "human_questions": [],
-      "intent": "Reproduce local-only approval behavior in a fresh CI checkout and identify the authority and exact source bindings needed for a portable carrier.",
+      "intent": "Verify exact approvals in CI from accepted Ed25519 signers and in Cloud from authenticated repository governance decisions. Keep local policy controls and all required executable proof.",
       "phases": [],
       "proof_hooks": [
-        "fresh checkout policy gate regression"
+        "fresh checkout transition and approval carrier regressions"
       ],
       "schema_version": "1.1.0",
       "spec_reviews": [
@@ -870,7 +875,7 @@
           "spec_material_hash": "9e339b89e8e6fee3b7ffb5a302984f70a3d5145e30c617dac94bc1f0b57d8d12"
         }
       ],
-      "state": "APPROVED",
+      "state": "DRAFT",
       "stop_conditions": [],
       "title": "Establish portable repository policy transition proof",
       "todo_ids": [
@@ -878,7 +883,7 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795211581Z"
+      "updated_at": "1795213555Z"
     },
     "trajectory": {
       "active_boundaries": [

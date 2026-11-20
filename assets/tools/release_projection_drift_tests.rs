@@ -70,7 +70,21 @@ impl Fixture {
         manifest["decapod_release"] = OLD.into();
         manifest["entrypoints"] = json!(entrypoints::ENTRYPOINT_FILES.map(|path| {
             let body = fs::read_to_string(repo.join(path)).unwrap();
-            json!({"path": path, "template_hash": specs::hash_text(&body), "content_hash": specs::hash_text(&body), "fingerprint": body.lines().nth(1).unwrap().strip_prefix("<!-- decapod-fingerprint: ").unwrap().strip_suffix(" -->").unwrap()})
+            let template = entrypoints::render_entrypoint_for_release(path, OLD).unwrap();
+            let fingerprint = template
+                .lines()
+                .nth(1)
+                .unwrap()
+                .strip_prefix("<!-- decapod-fingerprint: ")
+                .unwrap()
+                .strip_suffix(" -->")
+                .unwrap();
+            json!({
+                "path": path,
+                "template_hash": specs::hash_text(&template),
+                "content_hash": specs::hash_text(&body),
+                "fingerprint": fingerprint,
+            })
         }));
         fs::write(
             repo.join(specs::LOCAL_PROJECT_SPECS_MANIFEST),

@@ -1534,8 +1534,8 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `d0c9bc2ac9be6aa1c4d53dff2b848eb5f3898b9d565986210539b610c9dd457c`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (246 files), `tests/` (258 files)
+- Repository signal fingerprint: `1b308881bcd400971f98c68e7793b09c6cfc692840bf19dce7dea57425d9bc42`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (250 files), `tests/` (258 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 
@@ -2571,3 +2571,22 @@ committed candidate.
 ## Target-scoped repository proof verification (#1740)
 
 Unit tests in `tests/unit/core/repository_profile_tests.rs` and `src/decapod/core/validation_history.rs` verify `command_contract_digest` compatibility, invalid/cyclic `DeploymentTargetContract` rejection, `resolve_target_closure` dependency and `shared_inputs` expansion, `preserve_accepted` scope-weakening rejection, and `CompletedReadinessEvidence` target-scope isolation. Integration tests in `tests/consumer_readiness.rs` verify selected-target execution without unrelated host executables, shared-input fanout, unknown/cyclic/incompatible-executor fail-closed guards, `verify_native_receipt_scope` rejections for full-repo/mismatched-target/stale-SHA receipts, and candidate target weakening refusal.
+
+## Acceptance of combined instruction contracts
+
+Use actual failing and repaired candidates for origin continuity, contradictory requests, pending spec decisions, selected roots and required behavior. Record plan, instruction, policy, candidate, target and custody identities with current observations. Verify that scope, lease or target movement invalidates the affected evidence. A green test without an accepted criterion leaves semantic alignment unresolved. The archived source and fixture receipts remain tied to their original subjects and must be refreshed for this integration.
+
+## Release and recorded instruction checks
+
+Version-only release verification checks canonical projections against the classified release head. The recorded-instruction readiness predicate continues to govern approval, execution checkpoints, validation, and publication. Each result retains its own measured evidence.
+
+The legacy scope reconciliation test initializes a valid explicit path declaration
+and then seeds the historical comma-split projection in its temporary journal.
+It checks that repair requires a recoverable journal, preserves previous evidence,
+revokes plan acceptance, and refuses independently changed constraints.
+
+The preserved-source release regression uses an older entrypoint version
+and a baseline manifest whose template hash and fingerprint come from
+the manifest's release renderer. Its content hash comes from the committed
+entrypoint. The test verifies the real manifest shape and repeats validation
+after a second projection refresh.

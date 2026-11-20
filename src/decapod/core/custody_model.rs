@@ -9,7 +9,7 @@ use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
 use thiserror::Error;
 
-pub const CUSTODY_SCHEMA_VERSION: &str = "1.0.0";
+pub const CUSTODY_SCHEMA_VERSION: &str = "1.1.0";
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, PartialOrd, Ord)]
 #[serde(rename_all = "snake_case")]
@@ -54,13 +54,86 @@ pub enum IntentEventKind {
     Stale,
     TrajectoryStepRecorded,
     KnowledgeCandidateProposed,
+    InstructionRecorded,
+}
+
+/// Caller-reported provenance only. There is deliberately no caller-settable
+/// authenticated/host-verified flag. A source string or digest grants nothing.
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(deny_unknown_fields)]
+pub struct ReportedInstructionSource {
+    pub source_ref: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub principal_claim: Option<String>,
+}
+
+impl ReportedInstructionSource {
+    pub fn confidence(&self) -> &'static str {
+        "agent_reported"
+    }
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, clap::ValueEnum)]
+#[serde(rename_all = "snake_case")]
+pub enum RecordedInstructionKind {
+    Clarification,
+    Contradiction,
+    Supersession,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(deny_unknown_fields)]
+pub struct InstructionRevisionInput {
+    pub revision_id: String,
+    pub expected_revision: String,
+    pub instruction: String,
+    pub source_claim: ReportedInstructionSource,
+    pub kind: RecordedInstructionKind,
+    #[serde(default)]
+    pub supersedes: Vec<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub derived_intent: Option<String>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(deny_unknown_fields)]
+pub struct InstructionRevision {
+    pub revision_id: String,
+    pub sequence: u64,
+    pub predecessor_revision: String,
+    pub instruction: String,
+    pub source_claim: ReportedInstructionSource,
+    pub kind: RecordedInstructionKind,
+    pub supersedes: Vec<String>,
+    pub preceding_refinement: Option<String>,
+    pub derived_intent: Option<String>,
+    /// Historical provider observation, not a human grant or a current network read.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub source_observation: Option<crate::core::trajectory::instruction_source::SourceObservation>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+pub struct InstructionLineage {
+    pub intent_id: String,
+    pub revision: String,
+    pub original_intent: String,
+    pub origin: Option<ReportedInstructionSource>,
+    pub origin_confidence: String,
+    pub refined_intent: Option<String>,
+    pub revisions: Vec<InstructionRevision>,
+    pub revision_source_confidence: String,
+    pub independent_authority: crate::core::validation_rules::RuleVerdict,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub struct IntentRecord {
     pub id: String,
-    /// The human request, preserved byte-for-byte by the custody layer.
+    /// The original recorded request. Its source claim does not authenticate a human.
     pub raw_intent: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub instruction_origin: Option<ReportedInstructionSource>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub instruction_revisions: Vec<InstructionRevision>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub refined_intent: Option<String>,
     #[serde(default)]
@@ -78,6 +151,85 @@ pub struct IntentRecord {
     pub status: IntentStatus,
     pub created_sequence: u64,
     pub updated_sequence: u64,
+}
+
+impl IntentRecord {
+    pub fn instruction_lineage(&self) -> Result<InstructionLineage, CustodyError> {
+        self.validate_instruction_history()?;
+        Ok(InstructionLineage {
+            intent_id: self.id.clone(),
+            revision: self.instruction_revision()?,
+            original_intent: self.raw_intent.clone(),
+            origin: self.instruction_origin.clone(),
+            origin_confidence: if self.instruction_origin.is_some() {
+                "agent_reported"
+            } else {
+                "unknown"
+            }
+            .into(),
+            refined_intent: self.refined_intent.clone(),
+            revisions: self.instruction_revisions.clone(),
+            revision_source_confidence: if self
+                .instruction_revisions
+                .iter()
+                .any(|r| r.source_observation.is_some())
+            {
+                "per_revision_observed_or_reported"
+            } else {
+                "agent_reported"
+            }
+            .into(),
+            independent_authority: crate::core::validation_rules::RuleVerdict::Unverifiable,
+        })
+    }
+    pub fn instruction_revision(&self) -> Result<String, CustodyError> {
+        crate::core::governance_document::digest(&serde_json::json!([
+            self.id,
+            self.raw_intent,
+            self.instruction_origin,
+            if self.instruction_revisions.is_empty() {
+                None
+            } else {
+                Some(&self.instruction_revisions)
+            }
+        ]))
+        .map_err(|_| CustodyError::InstructionConflict("INSTRUCTION_ENCODING_INVALID".into()))
+    }
+
+    pub fn validate_instruction_history(&self) -> Result<(), CustodyError> {
+        let invalid = || {
+            CustodyError::InstructionConflict("INSTRUCTION_HISTORY_CONFLICT: invalid revision sequence, predecessor or interpretation history".into())
+        };
+        if self.instruction_revisions.len() > 128 {
+            return Err(invalid());
+        }
+        let mut prefix = self.clone();
+        prefix.instruction_revisions.clear();
+        let mut ids = std::collections::BTreeSet::new();
+        let mut refinement = self
+            .instruction_revisions
+            .first()
+            .and_then(|r| r.preceding_refinement.clone());
+        for revision in &self.instruction_revisions {
+            if revision.sequence != prefix.instruction_revisions.len() as u64 + 1
+                || revision.predecessor_revision != prefix.instruction_revision()?
+                || !ids.insert(&revision.revision_id)
+                || revision.preceding_refinement != refinement
+                || revision.instruction.len() > 8192
+                || revision.instruction.trim().is_empty()
+            {
+                return Err(invalid());
+            }
+            if let Some(derived) = &revision.derived_intent {
+                refinement = Some(derived.clone());
+            }
+            prefix.instruction_revisions.push(revision.clone());
+        }
+        if !self.instruction_revisions.is_empty() && refinement != self.refined_intent {
+            return Err(invalid());
+        }
+        Ok(())
+    }
 }
 
 #[derive(Debug, Clone, Default, Serialize, Deserialize, PartialEq, Eq)]
@@ -248,6 +400,8 @@ impl CustodyStore for InMemoryCustodyStore {
 
 #[derive(Debug, Error, PartialEq, Eq)]
 pub enum CustodyError {
+    #[error("{0}")]
+    InstructionConflict(String),
     #[error("{field} cannot be empty")]
     EmptyField { field: &'static str },
     #[error("intent '{0}' already exists")]
@@ -312,6 +466,11 @@ impl<S: CustodyStore> Custody<S> {
             IntentRecord {
                 id: id.to_string(),
                 raw_intent,
+                instruction_origin: Some(ReportedInstructionSource {
+                    source_ref: "caller:unverified".into(),
+                    principal_claim: None,
+                }),
+                instruction_revisions: Vec::new(),
                 refined_intent: None,
                 acceptance_criteria: Vec::new(),
                 constraints: Vec::new(),
@@ -344,6 +503,211 @@ impl<S: CustodyStore> Custody<S> {
                 record.proof_requirements = refinement.proof_requirements.clone();
             },
         )
+    }
+
+    /// Only the host's canonical task-scope reconciler calls this. It repairs
+    /// a proven legacy projection, retains history and revokes derived approval.
+    pub(crate) fn reconcile_scope_projection(
+        &mut self,
+        id: &str,
+        expected: &[String],
+        canonical: &[String],
+        detail: String,
+    ) -> Result<(), CustodyError> {
+        let record = self
+            .state()
+            .intents
+            .get(id)
+            .ok_or_else(|| CustodyError::IntentNotFound(id.into()))?;
+        if record.status.is_terminal() || record.constraints != expected {
+            return Err(CustodyError::InstructionConflict(
+                "SCOPE_RECONCILIATION_AMBIGUOUS: preserve terminal or independently changed constraints".into(),
+            ));
+        }
+        let sequence = self.next_sequence();
+        let record = self
+            .store
+            .state_mut()
+            .intents
+            .get_mut(id)
+            .expect("checked above");
+        record.constraints = canonical.to_vec();
+        record.status = if record.refined_intent.is_some() {
+            IntentStatus::Refined
+        } else {
+            IntentStatus::Raw
+        };
+        record.updated_sequence = sequence;
+        self.event_with_sequence(
+            sequence,
+            id,
+            IntentEventKind::Refined,
+            detail,
+            self.event_id(sequence),
+        );
+        Ok(())
+    }
+
+    pub fn append_instruction(
+        &mut self,
+        id: &str,
+        input: InstructionRevisionInput,
+    ) -> Result<InstructionRevision, CustodyError> {
+        self.append_instruction_from_source(id, input, None)
+    }
+
+    pub(crate) fn append_observed_instruction(
+        &mut self,
+        id: &str,
+        input: InstructionRevisionInput,
+        observed: crate::core::trajectory::instruction_source::ObservedInstruction,
+    ) -> Result<InstructionRevision, CustodyError> {
+        let (instruction, source, observation) = observed.into_parts();
+        let input = InstructionRevisionInput {
+            instruction,
+            source_claim: source,
+            ..input
+        };
+        self.append_instruction_from_source(id, input, Some(observation))
+    }
+
+    fn append_instruction_from_source(
+        &mut self,
+        id: &str,
+        mut input: InstructionRevisionInput,
+        observation: Option<crate::core::trajectory::instruction_source::SourceObservation>,
+    ) -> Result<InstructionRevision, CustodyError> {
+        let conflict = |message: &str| CustodyError::InstructionConflict(message.into());
+        let identifier = |value: &str| {
+            !value.is_empty()
+                && value.len() <= 128
+                && value
+                    .bytes()
+                    .all(|b| b.is_ascii_alphanumeric() || matches!(b, b':' | b'-' | b'_' | b'.'))
+        };
+        if !identifier(&input.revision_id)
+            || input.instruction.trim().is_empty()
+            || input.instruction.len() > 8192
+            || input
+                .derived_intent
+                .as_ref()
+                .is_some_and(|s| s.trim().is_empty() || s.len() > 8192)
+            || input.source_claim.source_ref.is_empty()
+            || input.source_claim.source_ref.len() > 1024
+            || input
+                .source_claim
+                .source_ref
+                .chars()
+                .any(char::is_whitespace)
+            || input.source_claim.source_ref.chars().any(char::is_control)
+            || input.source_claim.source_ref.contains('?')
+            || crate::core::trace::redact_string(&input.source_claim.source_ref)
+                != input.source_claim.source_ref
+            || input
+                .source_claim
+                .source_ref
+                .split("://")
+                .nth(1)
+                .is_some_and(|s| s.split('/').next().unwrap_or_default().contains('@'))
+            || input
+                .source_claim
+                .principal_claim
+                .as_deref()
+                .is_some_and(|s| !identifier(s))
+            || input.supersedes.len() > 128
+            || input.supersedes.iter().any(|s| !identifier(s))
+        {
+            return Err(conflict(
+                "INSTRUCTION_INPUT_INVALID: use bounded redacted content, a credential-free source reference and reported principal label",
+            ));
+        }
+        input.instruction = crate::core::trace::redact_string(&input.instruction);
+        if let Some(derived) = &mut input.derived_intent {
+            *derived = crate::core::trace::redact_string(derived);
+        }
+        let record = self
+            .state()
+            .intents
+            .get(id)
+            .ok_or_else(|| CustodyError::IntentNotFound(id.into()))?;
+        record.validate_instruction_history()?;
+        if let Some(previous) = record
+            .instruction_revisions
+            .iter()
+            .find(|r| r.revision_id == input.revision_id)
+        {
+            if previous.predecessor_revision == input.expected_revision
+                && previous.instruction == input.instruction
+                && previous.source_claim == input.source_claim
+                && previous.kind == input.kind
+                && previous.supersedes == input.supersedes
+                && previous.derived_intent == input.derived_intent
+                && previous.source_observation == observation
+            {
+                return Ok(previous.clone());
+            }
+            return Err(conflict(
+                "INSTRUCTION_REVISION_CONFLICT: existing revision ID has different content; history was not changed",
+            ));
+        }
+        if record.instruction_revision()? != input.expected_revision {
+            return Err(conflict(
+                "INSTRUCTION_REVISION_STALE: inspect the current recorded revision and retry without overwriting concurrent instructions",
+            ));
+        }
+        if record.instruction_revisions.len() >= 128 {
+            return Err(conflict(
+                "INSTRUCTION_REVISION_LIMIT: preserve this lineage and establish a separately accepted successor",
+            ));
+        }
+        if input.supersedes.iter().any(|target| {
+            target != "origin"
+                && !record
+                    .instruction_revisions
+                    .iter()
+                    .any(|r| &r.revision_id == target)
+        }) || (input.kind == RecordedInstructionKind::Supersession
+            && input.supersedes.is_empty())
+        {
+            return Err(conflict(
+                "INSTRUCTION_SUPERSESSION_INVALID: name retained predecessor revisions; a claim does not authenticate authority",
+            ));
+        }
+        let revision = InstructionRevision {
+            revision_id: input.revision_id,
+            sequence: record.instruction_revisions.len() as u64 + 1,
+            predecessor_revision: input.expected_revision,
+            instruction: input.instruction,
+            source_claim: input.source_claim,
+            kind: input.kind,
+            supersedes: input.supersedes,
+            preceding_refinement: record.refined_intent.clone(),
+            derived_intent: input.derived_intent,
+            source_observation: observation,
+        };
+        let sequence = self.next_sequence();
+        let record = self
+            .store
+            .state_mut()
+            .intents
+            .get_mut(id)
+            .expect("checked intent");
+        record.instruction_revisions.push(revision.clone());
+        if let Some(derived) = &revision.derived_intent {
+            record.refined_intent = Some(derived.clone());
+        }
+        record.status = if record.refined_intent.is_some() {
+            IntentStatus::Refined
+        } else {
+            IntentStatus::Raw
+        };
+        record.updated_sequence = sequence;
+        let current = record.instruction_revision()?;
+        self.store.state_mut().schema_version = CUSTODY_SCHEMA_VERSION.into();
+        self.store.state_mut().summaries.remove(id);
+        self.event_with_sequence(sequence, id, IntentEventKind::InstructionRecorded,
+            serde_json::json!({"revision_id":revision.revision_id,"instruction_revision":current,"source_confidence": if revision.source_observation.is_some() { "provider_observed_record" } else { "agent_reported" }}).to_string(), self.event_id(sequence));
+        Ok(revision)
     }
 
     pub fn approve(&mut self, id: &str) -> Result<(), CustodyError> {

@@ -1189,8 +1189,8 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `d0c9bc2ac9be6aa1c4d53dff2b848eb5f3898b9d565986210539b610c9dd457c`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (246 files), `tests/` (258 files)
+- Repository signal fingerprint: `1b308881bcd400971f98c68e7793b09c6cfc692840bf19dce7dea57425d9bc42`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (250 files), `tests/` (258 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 
@@ -1765,6 +1765,12 @@ inventory, historical validation reader, and optional GitHub readback.
 It projects local operation eligibility and proof applicability from those
 owners without introducing another admission authority.
 
+## Selected work and actual behavior
+
+The selected-work model in `core/intent_reconcile/selected.rs` reads explicit accepted Git roots and reconciles them to existing task obligations. Root mapping, the bounded equality and inequality consistency check, and actual required application checks give separate results. Independent checks cover missing audit behavior and incompatibility in a combined source tree. Unrelated backlog remains outside the selected work.
+
+Use the canonical task-scope parser upstream. Legacy scope repair is limited to the known projection and preserves the prior journal before reauthorization.
+
 ## Release projections and source template authority
 
 `core::release_projection_drift::verify` reuses `entrypoint_integrity::preserves_source_entrypoint_versions` for Decapod source development rather than implementing another version exception or template reader. In that mode the expected entrypoint is its immutable release-head blob, and the working entrypoint must equal it byte for byte. The existing predicate independently validates canonical committed source templates, repository origin, ungrafted ancestry, policy opt-in and version-bound fingerprints. Other repositories retain the binary-release rendering path. Immutable release classification, staged/working change inventory, exact Dockerfile/spec/manifest hashes and all other-field comparisons remain required.
@@ -1774,7 +1780,3 @@ The standalone `assets/tools/release_projection_drift.rs` wrapper links the ordi
 The full Supabase-enabled library execution caught a test-fixture identity omission: the release-version helper must retain the canonical Cargo package repository field when it reuses the existing published-root source fixture. The correction changes fixture construction only; origin, ungrafted ancestry, committed template and immutable entrypoint checks remain strict. Prior failed candidate eee794ba and actual job136182283538 remain preserved.
 
 Release projection integrity and retained observer-run completeness are separate proof surfaces. A successful version-only comparison cannot turn missing run boundaries or incomplete tool observation into an autonomous-admission claim; the existing acceptance observer retains that judgment. Preserving source-entrypoint versions grants no observation coverage.
-
-Release-only structural projection checks remain separate from the accepted shared recorded-instruction readiness predicate in `src/decapod/plan_governance.rs`. Preserving canonical source versions cannot converge an unresolved instruction, waive current-content spec review, or establish publication readiness. Existing orientation, approval, checkpoint and publication consumers retain their own enforcement.
-
-Accepted v0.154.0 (`0f44f780`) advances package metadata without changing the release-only classifier or source-identity authority. The official released controller regenerates entrypoints, Docker pin and spec attestations for that evaluation epoch; the byte-for-byte release-head comparison still distinguishes permitted historical source headers from changed payloads. Retained failure receipts remain historical and are not reused as current readiness.

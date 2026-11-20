@@ -1088,11 +1088,34 @@ fn merge_intent_record_3way(
     theirs: &IntentRecord,
     id: &str,
 ) -> Result<IntentRecord, DecapodError> {
-    let raw_intent = merge_scalar_3way(
-        base.map(|x| &x.raw_intent),
-        &ours.raw_intent,
-        &theirs.raw_intent,
-        &format!("custody.intents.{id}.raw_intent"),
+    if ours.raw_intent != theirs.raw_intent
+        || ours.instruction_origin != theirs.instruction_origin
+        || base.is_some_and(|record| {
+            record.raw_intent != ours.raw_intent
+                || record.instruction_origin != ours.instruction_origin
+        })
+    {
+        return Err(invalid(format!(
+            "GOVERNANCE_MERGE_AUTHORITY_CONFLICT: original instruction for '{id}' changed"
+        )));
+    }
+    if base.is_some_and(|record| {
+        !ours
+            .instruction_revisions
+            .starts_with(&record.instruction_revisions)
+            || !theirs
+                .instruction_revisions
+                .starts_with(&record.instruction_revisions)
+    }) {
+        return Err(invalid(format!(
+            "GOVERNANCE_MERGE_AUTHORITY_CONFLICT: instruction history for '{id}' diverged from common base"
+        )));
+    }
+    let instruction_revisions = merge_scalar_3way(
+        base.map(|record| &record.instruction_revisions),
+        &ours.instruction_revisions,
+        &theirs.instruction_revisions,
+        &format!("custody.intents.{id}.instruction_revisions"),
     )?;
     let refined_intent = merge_option_3way(
         base.and_then(|x| x.refined_intent.as_ref()),
@@ -1101,9 +1124,11 @@ fn merge_intent_record_3way(
         &format!("custody.intents.{id}.refined_intent"),
     )?;
     let status = merge_intent_status(base.map(|x| &x.status), &ours.status, &theirs.status, id)?;
-    Ok(IntentRecord {
+    let merged = IntentRecord {
         id: ours.id.clone(),
-        raw_intent,
+        raw_intent: ours.raw_intent.clone(),
+        instruction_origin: ours.instruction_origin.clone(),
+        instruction_revisions,
         refined_intent,
         acceptance_criteria: merge_string_union(
             &ours.acceptance_criteria,
@@ -1120,7 +1145,13 @@ fn merge_intent_record_3way(
         status,
         created_sequence: ours.created_sequence.min(theirs.created_sequence),
         updated_sequence: ours.updated_sequence.max(theirs.updated_sequence),
-    })
+    };
+    merged.validate_instruction_history().map_err(|err| {
+        invalid(format!(
+            "GOVERNANCE_MERGE_AUTHORITY_CONFLICT: invalid merged instructions for '{id}': {err}"
+        ))
+    })?;
+    Ok(merged)
 }
 
 fn merge_intent_status(
@@ -1322,4 +1353,77 @@ fn merge_custody_state(
             .map_err(|e| invalid(format!("GOVERNANCE_MERGE_INVALID_CUSTODY: {e}")))?;
     }
     Ok((custody.into_state(), remap))
+}
+
+#[cfg(test)]
+mod instruction_merge_tests {
+    use super::*;
+    use crate::core::custody::{
+        InstructionRevisionInput, RecordedInstructionKind, ReportedInstructionSource,
+    };
+
+    fn append(base: &CustodyState, revision_id: &str) -> IntentRecord {
+        let mut custody = Custody::from_state(base.clone());
+        custody
+            .append_instruction(
+                "intent",
+                InstructionRevisionInput {
+                    revision_id: revision_id.into(),
+                    expected_revision: base.intents["intent"].instruction_revision().unwrap(),
+                    instruction: "A reported clarification".into(),
+                    source_claim: ReportedInstructionSource {
+                        source_ref: format!("fixture:{revision_id}"),
+                        principal_claim: None,
+                    },
+                    kind: RecordedInstructionKind::Clarification,
+                    supersedes: Vec::new(),
+                    derived_intent: Some("A clarified interpretation".into()),
+                },
+            )
+            .unwrap();
+        custody.into_state().intents.remove("intent").unwrap()
+    }
+
+    #[test]
+    fn retains_an_appended_instruction_from_one_parent() {
+        let mut custody = Custody::in_memory();
+        custody
+            .create_intent("intent", "Original request".into())
+            .unwrap();
+        let base = custody.into_state();
+        let original = &base.intents["intent"];
+        let incoming = append(&base, "incoming");
+        let merged =
+            merge_intent_record_3way(Some(original), original, &incoming, "intent").unwrap();
+        assert_eq!(
+            merged.instruction_lineage().unwrap(),
+            incoming.instruction_lineage().unwrap()
+        );
+    }
+
+    #[test]
+    fn refuses_divergent_rewritten_or_truncated_instruction_history() {
+        let mut custody = Custody::in_memory();
+        custody
+            .create_intent("intent", "Original request".into())
+            .unwrap();
+        let base = custody.into_state();
+        let original = &base.intents["intent"];
+        let left = append(&base, "left");
+        let right = append(&base, "right");
+        let mut rewritten = left.clone();
+        rewritten.instruction_origin = None;
+        for (base, ours, theirs) in [
+            (original, &left, &right),
+            (original, &left, &rewritten),
+            (&left, &left, original),
+        ] {
+            let error = merge_intent_record_3way(Some(base), ours, theirs, "intent").unwrap_err();
+            assert!(
+                error
+                    .to_string()
+                    .contains("GOVERNANCE_MERGE_AUTHORITY_CONFLICT")
+            );
+        }
+    }
 }
