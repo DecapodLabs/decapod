@@ -490,6 +490,8 @@ fn validate_fails_on_verified_workunit_capsule_without_state_ref_binding() {
     fs::create_dir_all(&capsules).expect("create context dir");
 
     let mut capsule = DeterministicContextCapsule {
+        knowledge: None,
+        governed_plan: None,
         schema_version: "1.1.0".to_string(),
         topic: "lineage".to_string(),
         scope: "interfaces".to_string(),
@@ -510,6 +512,7 @@ fn validate_fails_on_verified_workunit_capsule_without_state_ref_binding() {
         repo_signal_fingerprint: "test_fingerprint".to_string(),
         config_input_hash: String::new(),
         spec_input_hash: String::new(),
+        selection: None,
     };
     capsule = capsule
         .with_recomputed_hash()
@@ -563,6 +566,8 @@ fn validate_fails_on_context_capsule_hash_mismatch_if_present() {
     fs::create_dir_all(&capsules).expect("create capsules dir");
 
     let mut capsule = DeterministicContextCapsule {
+        knowledge: None,
+        governed_plan: None,
         schema_version: "1.1.0".to_string(),
         topic: "phase0".to_string(),
         scope: "interfaces".to_string(),
@@ -583,6 +588,7 @@ fn validate_fails_on_context_capsule_hash_mismatch_if_present() {
         repo_signal_fingerprint: "test_fingerprint".to_string(),
         config_input_hash: String::new(),
         spec_input_hash: String::new(),
+        selection: None,
     };
     capsule.capsule_hash = "wrong_hash".to_string();
     fs::write(

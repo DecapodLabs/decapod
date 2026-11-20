@@ -99,7 +99,8 @@ def decapod_targets():
 
     cargo_build_script(
         name = "build_script",
-        srcs = ["assets/build/compress_constitution.rs"],
+        srcs = ["assets/build/compress_constitution.rs", "assets/build/constitution_admission.rs"],
+        crate_root = "assets/build/compress_constitution.rs",
         edition = "2024",
         data = [
             "assets/constitution.json",
@@ -321,9 +322,9 @@ def decapod_targets():
                 "assets/tools/ci_event_context.rs",
                 "assets/tools/integration_shards.rs",
                 "src/decapod/core/release_metadata.rs",
-            ] if path in ["tests/source_ci_profile_policy.rs", "tests/ci_checkout_policy.rs"] else [path, "tests/support/interop_harness.rs"] if path == "tests/interop_conformance.rs" else [path],
+            ] if path in ["tests/source_ci_profile_policy.rs", "tests/ci_checkout_policy.rs"] else [path, "tests/support/interop_harness.rs"] if path == "tests/interop_conformance.rs" else [path, "assets/build/constitution_admission.rs", "assets/tools/constitution_history.rs"] if path == "tests/constitution_scaffolding.rs" else [path],
             crate_root = path,
-            compile_data = native.glob(["assets/tools/source_ci/*.sh"]) + (["src/decapod/lib.rs"] if path in ["tests/consumer_readiness.rs", "tests/cli_contracts.rs"] else [".github/actions/ci-context/action.yml"] if path == "tests/ci_event_context_policy.rs" else [".github/workflows/ci.yml", ".github/workflows/decapod-validate.yml", ".github/workflows/docs.yml", ".github/workflows/docs_sync.yml"] if path == "tests/integration_custody_policy.rs" else ["tests/fixtures/native_proof_fixture.rs"] if path == "tests/native_proof_execution.rs" else ["Cargo.toml", "Cargo.lock"] if path == "tests/release_dependency_policy.rs" else [
+            compile_data = native.glob(["assets/tools/source_ci/*.sh"]) + (["assets/constitution.json"] if path == "tests/constitution_scaffolding.rs" else ["src/decapod/lib.rs"] if path in ["tests/consumer_readiness.rs", "tests/cli_contracts.rs"] else [".github/actions/ci-context/action.yml"] if path == "tests/ci_event_context_policy.rs" else [".github/workflows/ci.yml", ".github/workflows/decapod-validate.yml", ".github/workflows/docs.yml", ".github/workflows/docs_sync.yml"] if path == "tests/integration_custody_policy.rs" else ["tests/fixtures/native_proof_fixture.rs"] if path == "tests/native_proof_execution.rs" else ["Cargo.toml", "Cargo.lock"] if path == "tests/release_dependency_policy.rs" else [
                 ".github/workflows/ci.yml",
                 ".github/workflows/nix-flake.yml",
             ] if path == "tests/release_metadata_policy.rs" else [

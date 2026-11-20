@@ -1,5 +1,13 @@
 # Architecture
 
+## Constitution selection, knowledge, and evidence
+
+`core::docs::resolve_scoped_context` selects applicable operation, path, and tag bindings before unique lexical matches. `core::context_capsule` and the RPC resolver use that selection without filling empty advisory results with unrelated text. The existing knowledge and federation owners retain inactive history and project current applicable advisory entries. Corrections commit the new entry and prior-state event in one broker transaction.
+
+`assets/build/compress_constitution.rs` calls the shared source admission check before compression. The check reserves explicit binding and router identities, checks references, and requires review declarations for binding guidance. `assets/tools/constitution_history.rs` produces a reproducible chronology from immutable accepted source and a dated public release capture.
+
+The native boundary adapter delegates through literal arguments to the current kernel. The flight recorder keeps the merged acceptance observer and adds an opt-in comparison over compact observations. Each operation uses the existing governance and proof owners.
+
 ## Pure report projection does not authenticate proof (#1726)
 
 `core::governed_transition::project_report_publication` reads caller-owned JSON.
@@ -1178,8 +1186,8 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `e6fce094b04b691972d5b4d6744301b02bf10518a3101bb02cf6663b72b15f0f`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (245 files), `tests/` (258 files)
+- Repository signal fingerprint: `ad5f2101bb1a5dd334fdf75dfa447f5fad6bda6dd6113187d31d413bcac7a197`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (3 files), `src/` (247 files), `tests/` (265 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 

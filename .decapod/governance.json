@@ -1,7 +1,7 @@
 {
   "schema_version": "1.0.0",
   "baseline": {
-    "accepted_commit": "91b1293cacf7161f6cb0cf54197e2ae97c1c2d5d",
+    "accepted_commit": "34b98ab1fa2d731c5729fa1afbeaed13f8739655",
     "policy": {
       "change_control": {
         "requires_human_review": true,
@@ -119,6 +119,14 @@
           ".decapod/managed/specs/VALIDATION.md"
         ],
         "statement": "The candidate applies only the reviewed repair scope with newly admitted custody and actual checkpoints; historical and unrun proof remain distinct. Reconcile the nine agent document indexes, run their invariant in the existing mandatory contract target, and isolate real libtest executable copying in a waited child process to prevent inherited writable descriptors. Preserve production no-retry failure semantics.",
+        "status": "open"
+      },
+      "claim:claim:recovery-release-proof": {
+        "falsifier": "Changes outside manifest scope, hand-edited generated evidence, missing current checkpoints, or a full-readiness claim based on this CI runner.",
+        "proof_refs": [
+          ".decapod/managed/specs/VALIDATION.md"
+        ],
+        "statement": "The candidate applies only the reviewed repair scope with newly admitted custody and actual checkpoints; historical and unrun proof remain distinct. Retain current accepted dependencies, production release boundaries and collector contracts; preserve the inactive preparation proposal with a regression proving it cannot self-authorize. Four-platform qualification remains open.",
         "status": "open"
       },
       "claim:committed-scope-enforcement": {
@@ -764,45 +772,56 @@
     }
   },
   "change": {
-    "id": "change_01M74ZXHG6GAEPNMZAXMGJYGH8",
-    "base_commit": "91b1293cacf7161f6cb0cf54197e2ae97c1c2d5d",
+    "id": "change_01M7VZD4BTX53EKY131QYDPS9C",
+    "base_commit": "34b98ab1fa2d731c5729fa1afbeaed13f8739655",
     "target_base": "origin/master"
   },
   "claims": {
-    "claim:recovery-release-proof": {
-      "statement": "The candidate applies only the reviewed repair scope with newly admitted custody and actual checkpoints; historical and unrun proof remain distinct. Retain current accepted dependencies, production release boundaries and collector contracts; preserve the inactive preparation proposal with a regression proving it cannot self-authorize. Four-platform qualification remains open.",
-      "falsifier": "Changes outside manifest scope, hand-edited generated evidence, missing current checkpoints, or a full-readiness claim based on this CI runner.",
+    "bounded-applicable-active-context": {
+      "statement": "Existing context owners prefer explicit applicability, retain binding obligations and project bounded current scoped knowledge with inspectable reasons.",
+      "falsifier": "Repeated irrelevant text outranks a binding, a stale decision becomes operative, or an oversized response reaches the caller.",
       "status": "open",
       "proof_refs": [
-        ".decapod/managed/specs/VALIDATION.md"
+        "tests/context_capsule_rpc.rs",
+        "tests/unit/core/docs_tests.rs",
+        "tests/unit/plugins/knowledge_tests.rs"
+      ]
+    },
+    "constitution-admission-public-evidence": {
+      "statement": "The native compression path rejects metadata-only authority and unsupported enforcement claims while admitting useful advisory research. The chronology separates source evidence and testimony.",
+      "falsifier": "A corpus-only self-promotion works, dangling references build, ordinary advisory research is suppressed, or authorship testimony becomes a public fact.",
+      "status": "open",
+      "proof_refs": [
+        "tests/constitution_claims.rs",
+        "tests/constitution_scaffolding.rs"
+      ]
+    },
+    "cooperative-boundary-outcome-limits": {
+      "statement": "The native adapter delegates fixed operations to existing owners and the flight recorder preserves explicit limits of compact outcome evidence.",
+      "falsifier": "A caller chooses an arbitrary executable, exit success becomes completion authority, or an unobserved outcome qualifies as independently useful work.",
+      "status": "open",
+      "proof_refs": [
+        "tests/unit/core/native_boundary_tests.rs",
+        "tests/unit/core/outcome_comparison_tests.rs"
       ]
     }
   },
   "checkpoints": [
     {
-      "id": "recovery-release-proof",
-      "summary": "Recover reviewed residual source in current admitted custody; preserve original history, regenerate projections and retain full validation as unavailable.",
-      "input_digest": "sha256:0a8a312dcb6a2fb99a4fc6be279f1b7784338a3c8fe6f991da2b2dcc3008a678",
+      "id": "context-outcomes-v1532-integration-01",
+      "summary": "Checkpoint integrated Constitution, context, knowledge, chronology and outcome changes with generated v0.153.2 specs and focused verification evidence",
+      "input_digest": "sha256:93e9dfdf543c03a7a87bfde127771fb2295c5660e38060910169596f51adcce8",
       "proof_refs": [
-        ".decapod/managed/specs/VALIDATION.md"
+        "tests/activation_conformance.rs",
+        "tests/constitution_scaffolding.rs",
+        "tests/unit/core/docs_tests.rs",
+        "tests/unit/core/outcome_comparison_tests.rs",
+        "tests/unit/plugins/knowledge_tests.rs"
       ]
-    },
-    {
-      "id": "target-reconcile-release-proof-2f6daf8c4a15",
-      "summary": "Merge the actual accepted target into the same task branch; preserve original identity/checkpoints and reviewed residual material. Earlier readiness remains historical; fresh full proof is required.",
-      "input_digest": "sha256:abcbcd8b5526b1c3d6ac13dff655afd1ff169b87a017ca56375be5b5d1af30c1",
-      "proof_refs": [
-        ".decapod/managed/specs/VALIDATION.md"
-      ]
-    },
-    {
-      "id": "cp-sync-45751f54e",
-      "summary": "Integrate accepted master 45751f54e (v0.153.0) and refresh 0.153.0 projections for PR #1621",
-      "input_digest": "sha256:a1dfc366b1ea40b71ea799bedff8eba93ce2b8b08aea0f124f5115805d0abb4a"
     }
   ],
   "intents": {
-    "intent:change_01M74ZXHG6GAEPNMZAXMGJYGH8": {
+    "intent:change_01M7VZD4BTX53EKY131QYDPS9C": {
       "acceptance_criteria": [],
       "assumptions": [],
       "boundaries": [
@@ -812,11 +831,11 @@
         "root"
       ],
       "created_sequence": 1,
-      "id": "intent:change_01M74ZXHG6GAEPNMZAXMGJYGH8",
+      "id": "intent:change_01M7VZD4BTX53EKY131QYDPS9C",
       "out_of_scope": [],
       "proof_requirements": [],
-      "raw_intent": "Repair CI for preserved release preparation research\n\nRetain current accepted dependencies, production release boundaries and collector contracts; preserve the inactive preparation proposal with a regression proving it cannot self-authorize. Four-platform qualification remains open.",
-      "refined_intent": "Repair CI for preserved release preparation research\n\nRetain current accepted dependencies, production release boundaries and collector contracts; preserve the inactive preparation proposal with a regression proving it cannot self-authorize. Four-platform qualification remains open.",
+      "raw_intent": "Integrate Constitution context and outcome evidence at current master\n\nResume user-authorized #1772 #1774 #657 #880 #1095 #879 from signed 6199af03. Reauthor remaining source on current accepted master, reconcile the merged observer, preserve strict JSON, prove current behavior and publish through native and forge gates. Keep real-host and human evidence gaps explicit.",
+      "refined_intent": "Integrate Constitution context and outcome evidence at current master\n\nResume user-authorized #1772 #1774 #657 #880 #1095 #879 from signed 6199af03. Reauthor remaining source on current accepted master, reconcile the merged observer, preserve strict JSON, prove current behavior and publish through native and forge gates. Keep real-host and human evidence gaps explicit.",
       "status": "refined",
       "updated_sequence": 3
     }
@@ -824,149 +843,141 @@
   "sections": {
     "plan": {
       "constraints": {
-        "file_touch_budget": 25,
+        "file_touch_budget": null,
         "forbidden_paths": []
       },
       "deferred_questions": [],
       "human_questions": [],
-      "intent": "The historical branch behind #1613 failed root dependency denial on an obsolete Tokio lock and diverged from current master. This PR preserves its useful preparation research with the accepted lockfile and release contract. Continue the same task and original checkpoint lineage. Merge accepted target 2f6daf8c4a15223e1c7944e9471b0d2ceb4661cd; preserve historical proof bound to 91b1293cacf7161f6cb0cf54197e2ae97c1c2d5d. Fresh readiness is required for the actual merge commit.",
+      "intent": "Complete #1772 #1774 #657 #880 #1095 #879 from the preserved source on accepted master. Preserve current RPC custody, policy enforcement and the merged acceptance observer. Run focused regressions and GitHub Actions under the user-directed Buildkite exception. Publish findings and close issues only when their own criteria are verified.",
       "phases": [],
       "proof_hooks": [
-        "decapod govern artifacts verify-checkpoints --base-branch 2f6daf8c4a15223e1c7944e9471b0d2ceb4661cd --head-ref HEAD --target-base master --format json",
-        "decapod workspace publish"
+        "Focused Rust retrieval, admission, correction, capsule, adapter, and outcome regressions",
+        "GitHub Actions results for actual PR head and accepted target",
+        "Historical and actual host evidence retain exact provenance, failed samples, and explicit missing acceptance"
       ],
       "schema_version": "1.1.0",
       "spec_reviews": [
         {
-          "disposition": "unchanged_with_reason",
+          "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "No architecture changes; release-proof fixture, checklist, and unit test reconciliation only.",
-          "reviewed_code_fingerprint": "e6fce094b04b691972d5b4d6744301b02bf10518a3101bb02cf6663b72b15f0f",
-          "spec_material_hash": "8ae7db31e8d777fdcf57552c8af32c4372c62dc9eb1daa22b53212f774206bd0"
+          "reason": "Describe the shared applicability selector, source admission and atomic scoped corrections in their existing owners. Preserve the accepted observer and keep the outcome comparison distinct from acceptance correlation.",
+          "reviewed_code_fingerprint": "ad5f2101bb1a5dd334fdf75dfa447f5fad6bda6dd6113187d31d413bcac7a197",
+          "spec_material_hash": "a26d42217db977c72ae4f7e8413a1ce07290f561cc7a5a0514c5ddb611878d74"
         },
         {
-          "disposition": "unchanged_with_reason",
+          "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "No CLI/RPC interface changes; release-proof fixture and readiness_profile unit test only.",
-          "reviewed_code_fingerprint": "e6fce094b04b691972d5b4d6744301b02bf10518a3101bb02cf6663b72b15f0f",
-          "spec_material_hash": "61ce744344efe73dae2599cc14945073a0374c76e0aae69603f11f39982b6744"
+          "reason": "Document additive capsule fields, legacy hashes, explicit no-match and complete budget, fixed native boundary input and separate flight recorder commands.",
+          "reviewed_code_fingerprint": "ad5f2101bb1a5dd334fdf75dfa447f5fad6bda6dd6113187d31d413bcac7a197",
+          "spec_material_hash": "b0c41dfcf104fef28b808be69598b749b715faf83af9e11f587e0aed370052a4"
         },
         {
-          "disposition": "unchanged_with_reason",
+          "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Preserves release-boundary separation without self-authorization.",
-          "reviewed_code_fingerprint": "e6fce094b04b691972d5b4d6744301b02bf10518a3101bb02cf6663b72b15f0f",
-          "spec_material_hash": "3d3861ffd59d9e65966771b5db4107b999a733ec7ad029f02a6c1cb2696ec964"
+          "reason": "Describe source-authority limits, exclusion of inactive decisions and regular request input bounds. A host label, returned context or exit success carries no independent proof or approval.",
+          "reviewed_code_fingerprint": "ad5f2101bb1a5dd334fdf75dfa447f5fad6bda6dd6113187d31d413bcac7a197",
+          "spec_material_hash": "17c281f9a8745b21937900b8d899047ce8fca8020392294b1fa79dc912135788"
         }
       ],
       "state": "APPROVED",
       "stop_conditions": [],
-      "title": "test(release): reconcile pinned preparation research",
+      "title": "Integrate bounded Constitution context and governed outcome evidence",
       "todo_ids": [
-        "cicd_01m74zx5xe5y74b8"
+        "code_01m7vz6atfd1pfv5"
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795157555Z"
+      "updated_at": "1795161894Z"
     },
     "trajectory": {
       "active_boundaries": [
-        "Current claimed task and isolated work branch",
-        "Read-only diagnostics do not waive native authoring or publication gates",
-        "Read-only gatekeeper findings do not establish readiness; actual custody and decision gates remain enforced",
-        "Reviewed residual patch and CLI-generated governance only; draft review, no full-readiness claim",
-        "Same task and journal; accepted target merged without remote history rewrite; full readiness pending"
+        "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:0fcd9c7a4b29acf2199dc23f3c4f69424f01edebeebfd0a5ffa56cb1b93deaa9",
+      "artifact_hash": "sha256:a5628df158c418ad5a98d127b13c78b28253b74638aa001d252ceb0be46a55bb",
       "checks": [
         {
-          "name": "full-workbranch-validation",
-          "status": "unavailable"
-        },
-        {
-          "name": "git-diff-whitespace",
+          "name": "activation-conformance",
           "status": "passed"
         },
         {
-          "name": "native-gatekeeper",
+          "name": "constitution-and-capsule-schema",
+          "status": "passed"
+        },
+        {
+          "name": "constitution-schema",
+          "status": "passed"
+        },
+        {
+          "name": "focused-library",
+          "status": "passed"
+        },
+        {
+          "name": "formatting",
+          "status": "passed"
+        },
+        {
+          "name": "local-project-prerequisites",
           "status": "failed"
         },
         {
-          "name": "reviewed-residual-material",
+          "name": "whitespace",
           "status": "passed"
         }
       ],
-      "current_phase": "validation",
+      "current_phase": "verification",
       "custody": {
         "events": [
           {
             "event_id": "event:2",
-            "intent_id": "intent:change_01M74ZXHG6GAEPNMZAXMGJYGH8",
+            "intent_id": "intent:change_01M7VZD4BTX53EKY131QYDPS9C",
             "kind": "created",
             "sequence": 2
           },
           {
             "event_id": "event:3",
-            "intent_id": "intent:change_01M74ZXHG6GAEPNMZAXMGJYGH8",
+            "intent_id": "intent:change_01M7VZD4BTX53EKY131QYDPS9C",
             "kind": "refined",
             "sequence": 3
           },
           {
-            "detail": "trajectory:branch_01M74ZXHH2M62G9WT2M8QGG0ZZ",
+            "detail": "trajectory:branch_01M7VZD4F86FKX5EED4EQW74V7",
             "event_id": "event:4",
-            "intent_id": "intent:change_01M74ZXHG6GAEPNMZAXMGJYGH8",
+            "intent_id": "intent:change_01M7VZD4BTX53EKY131QYDPS9C",
             "kind": "trajectory_step_recorded",
             "sequence": 4
           },
           {
-            "detail": "trajectory:branch_01M74ZXHH2M62G9WT2M8QGG0ZZ",
+            "detail": "trajectory:branch_01M7VZD4F86FKX5EED4EQW74V7",
             "event_id": "event:5",
-            "intent_id": "intent:change_01M74ZXHG6GAEPNMZAXMGJYGH8",
+            "intent_id": "intent:change_01M7VZD4BTX53EKY131QYDPS9C",
             "kind": "trajectory_step_recorded",
             "sequence": 5
-          },
-          {
-            "detail": "trajectory:branch_01M74ZXHH2M62G9WT2M8QGG0ZZ",
-            "event_id": "event:6",
-            "intent_id": "intent:change_01M74ZXHG6GAEPNMZAXMGJYGH8",
-            "kind": "trajectory_step_recorded",
-            "sequence": 6
-          },
-          {
-            "detail": "trajectory:branch_01M74ZXHH2M62G9WT2M8QGG0ZZ",
-            "event_id": "event:7",
-            "intent_id": "intent:change_01M74ZXHG6GAEPNMZAXMGJYGH8",
-            "kind": "trajectory_step_recorded",
-            "sequence": 7
-          },
-          {
-            "detail": "trajectory:branch_01M74ZXHH2M62G9WT2M8QGG0ZZ",
-            "event_id": "event:8",
-            "intent_id": "intent:change_01M74ZXHG6GAEPNMZAXMGJYGH8",
-            "kind": "trajectory_step_recorded",
-            "sequence": 8
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 8,
+        "next_sequence": 5,
         "schema_version": "1.0.0",
         "trajectories": {
-          "branch_01M74ZXHH2M62G9WT2M8QGG0ZZ": {
+          "branch_01M7VZD4F86FKX5EED4EQW74V7": {
             "evidence_only": true,
-            "id": "branch_01M74ZXHH2M62G9WT2M8QGG0ZZ",
-            "intent_id": "intent:change_01M74ZXHG6GAEPNMZAXMGJYGH8",
+            "id": "branch_01M7VZD4F86FKX5EED4EQW74V7",
+            "intent_id": "intent:change_01M7VZD4BTX53EKY131QYDPS9C",
             "steps": [
               {
-                "action": "validation",
-                "command": "git apply reviewed patch",
+                "action": "integration",
                 "custody_event_id": "event:4",
                 "observations": [
-                  ".decapod/managed/specs/VALIDATION.md",
-                  "Actual hosted session, claim and admitted workspace; source history: observed_gap_recorded. No retrospective proof. Source checks remain unrun at this checkpoint; a later CI-local validation cannot establish complete workbranch readiness."
+                  "src/decapod/core/flight_recorder/acceptance.rs",
+                  "assets/tools/source_ci/standalone-validation.sh",
+                  "src/decapod/core/docs.rs",
+                  "src/decapod/plugins/knowledge.rs",
+                  "assets/build/constitution_admission.rs",
+                  "Recovered the successor task claim using its original broker request ID. Fresh workspace starts at accepted 34b98ab1 v0.153.2. Reauthored source from signed 6199af03 without importing old governance or custody. Preserved merged acceptance observer and strict JSON owner. Reviewed 107 current verification inputs: 101 identical to accepted target, four changes and two additions for build declarations, constitution admission and history. User directed GitHub Actions and expressly excluded Buildkite. Full native readiness and real-host completion remain unverified."
                 ],
                 "proof_refs": [
-                  "git-diff-whitespace",
-                  "full-workbranch-validation"
+                  "formatting",
+                  "whitespace",
+                  "constitution-schema"
                 ],
                 "scope": [
                   "root"
@@ -975,106 +986,53 @@
                 "validation_findings": []
               },
               {
-                "action": "validation",
+                "action": "verification",
                 "custody_event_id": "event:5",
                 "observations": [
-                  "Native staged-candidate gatekeeper exit 1; sanitized actual findings retained in preparation result. User authorized draft workbranch iteration, not merge or full-readiness claims."
+                  "Current 0.153.2 source compiled. 67 focused library tests, 36 scaffolding, four claims, seven capsule schema and two activation tests passed. Capsule RPC suite was running at this observation. Candidate project-check refreshed Docker/spec projections, and reported 207 passes plus four failures: host container proof, dirty-file commit threshold, scanner findings, and two unrelated done tasks lacking VERIFIED evidence. This is not full native readiness. GitHub Actions are the requested publication checks."
                 ],
                 "proof_refs": [
-                  "native-gatekeeper"
+                  "focused-library",
+                  "constitution-and-capsule-schema",
+                  "activation-conformance",
+                  "local-project-prerequisites"
                 ],
                 "scope": [
-                  "release-proof",
                   "root"
                 ],
                 "sequence": 5,
-                "validation_findings": []
-              },
-              {
-                "action": "validation",
-                "command": "git merge --no-commit --no-ff -X ours 2f6daf8c4a15223e1c7944e9471b0d2ceb4661cd",
-                "custody_event_id": "event:6",
-                "observations": [
-                  ".decapod/managed/specs/VALIDATION.md",
-                  "Original checkpoint history remains bound to 91b1293cacf7161f6cb0cf54197e2ae97c1c2d5d; real merge parents will be 71e1139912dcfdd826143e9e889a9282c25d54b8 and 2f6daf8c4a15223e1c7944e9471b0d2ceb4661cd. Authored residual tree 4c083824c46d856d15199d368b1e5ca12e37a638; source-review declaration does not approve controller execution."
-                ],
-                "proof_refs": [
-                  "reviewed-residual-material",
-                  "full-workbranch-validation"
-                ],
-                "scope": [
-                  "release-proof",
-                  "root"
-                ],
-                "sequence": 6,
-                "validation_findings": []
-              },
-              {
-                "action": "validation",
-                "custody_event_id": "event:7",
-                "observations": [
-                  "Actual gatekeeper output retained encrypted; findings remain findings. Fresh full readiness has not yet run."
-                ],
-                "proof_refs": [
-                  "native-gatekeeper"
-                ],
-                "scope": [
-                  "release-proof",
-                  "root"
-                ],
-                "sequence": 7,
-                "validation_findings": []
-              },
-              {
-                "action": "trajectory.record",
-                "custody_event_id": "event:8",
-                "observations": [
-                  ".decapod/managed/specs/VALIDATION.md",
-                  ".decapod/managed/Dockerfile.decapod",
-                  "Merged origin/master 45751f54e (v0.153.0); fmt, clippy --all-targets --all-features, and readiness_profile tests 49/49 passed"
-                ],
-                "proof_refs": [],
-                "scope": [
-                  "release-proof",
-                  "root"
-                ],
-                "sequence": 8,
                 "validation_findings": []
               }
             ]
           }
         }
       },
-      "declared_commands": [
-        "decapod rpc --op specs.refresh",
-        "git apply reviewed patch",
-        "git merge --no-commit --no-ff -X ours 2f6daf8c4a15223e1c7944e9471b0d2ceb4661cd"
-      ],
+      "declared_commands": [],
       "destination": "pull request",
       "evidence": [
-        "Actual gatekeeper output retained encrypted; findings remain findings. Fresh full readiness has not yet run.",
-        "Actual hosted session, claim and admitted workspace; source history: observed_gap_recorded. No retrospective proof. Source checks remain unrun at this checkpoint; a later CI-local validation cannot establish complete workbranch readiness.",
-        "Merged origin/master 45751f54e (v0.153.0); fmt, clippy --all-targets --all-features, and readiness_profile tests 49/49 passed",
-        "Native staged-candidate gatekeeper exit 1; sanitized actual findings retained in preparation result. User authorized draft workbranch iteration, not merge or full-readiness claims.",
-        "Original checkpoint history remains bound to 91b1293cacf7161f6cb0cf54197e2ae97c1c2d5d; real merge parents will be 71e1139912dcfdd826143e9e889a9282c25d54b8 and 2f6daf8c4a15223e1c7944e9471b0d2ceb4661cd. Authored residual tree 4c083824c46d856d15199d368b1e5ca12e37a638; source-review declaration does not approve controller execution."
+        "Current 0.153.2 source compiled. 67 focused library tests, 36 scaffolding, four claims, seven capsule schema and two activation tests passed. Capsule RPC suite was running at this observation. Candidate project-check refreshed Docker/spec projections, and reported 207 passes plus four failures: host container proof, dirty-file commit threshold, scanner findings, and two unrelated done tasks lacking VERIFIED evidence. This is not full native readiness. GitHub Actions are the requested publication checks.",
+        "Recovered the successor task claim using its original broker request ID. Fresh workspace starts at accepted 34b98ab1 v0.153.2. Reauthored source from signed 6199af03 without importing old governance or custody. Preserved merged acceptance observer and strict JSON owner. Reviewed 107 current verification inputs: 101 identical to accepted target, four changes and two additions for build declarations, constitution admission and history. User directed GitHub Actions and expressly excluded Buildkite. Full native readiness and real-host completion remain unverified."
       ],
-      "inspected_files": [],
-      "intent_id": "intent:change_01M74ZXHG6GAEPNMZAXMGJYGH8",
+      "inspected_files": [
+        "assets/tools/source_ci/standalone-validation.sh",
+        "src/decapod/core/flight_recorder/acceptance.rs"
+      ],
+      "intent_id": "intent:change_01M7VZD4BTX53EKY131QYDPS9C",
       "modified_files": [
-        ".decapod/managed/Dockerfile.decapod",
-        ".decapod/managed/specs/VALIDATION.md"
+        "assets/build/constitution_admission.rs",
+        "src/decapod/core/docs.rs",
+        "src/decapod/plugins/knowledge.rs"
       ],
       "next_transitions": [
         "Refine plan and declare falsifiable checks"
       ],
       "repo_scope": [
-        "release-proof",
         "root"
       ],
-      "run_id": "branch_01M74ZXHH2M62G9WT2M8QGG0ZZ",
+      "run_id": "branch_01M7VZD4F86FKX5EED4EQW74V7",
       "schema_version": "1.1.0",
       "shortcut_risk_signals": [],
-      "task_id": "cicd_01m74zx5xe5y74b8",
+      "task_id": "code_01m7vz6atfd1pfv5",
       "tool_calls": [],
       "unresolved_assumptions": []
     }

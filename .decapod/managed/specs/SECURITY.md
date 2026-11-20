@@ -1,5 +1,11 @@
 # Security
 
+## Admission and observation limits
+
+The Constitution build rejects metadata-only self-promotion and unsupported enforcement assertions. Binding review declarations identify the required review process. They provide no authenticated reviewer identity. Repository overrides and runtime mandates retain their native owners. Superseded, expired, and unrelated knowledge is excluded from operative context and can be inspected through the appropriate audit path.
+
+The cooperative adapter accepts bounded regular files and delegates fixed operation arguments to the current executable. It grants neither host sandbox enforcement nor approval. Compact comparison inputs distinguish reported, captured, and independently checked evidence. Context return, actual model delivery, functional correctness, and current native completion require separate observations.
+
 ## Device key custody, container signing isolation, and fail-closed cloud boundaries (#1778, #1066, #1590, #1809, #1808)
 
 - **Key custody outside repositories**: `DeviceKeyStore` rejects any key path
@@ -797,8 +803,8 @@ execution evidence remains required before publication readiness.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `e6fce094b04b691972d5b4d6744301b02bf10518a3101bb02cf6663b72b15f0f`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (245 files), `tests/` (258 files)
+- Repository signal fingerprint: `ad5f2101bb1a5dd334fdf75dfa447f5fad6bda6dd6113187d31d413bcac7a197`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (3 files), `src/` (247 files), `tests/` (265 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 
