@@ -66,6 +66,7 @@ impl Fixture {
             max_input_bytes: 128 * 1024 * 1024,
             max_files: 10_000,
             max_output_bytes: 1024 * 1024,
+            target: None,
         };
         Self { storage, options }
     }
@@ -1679,6 +1680,8 @@ fn late_verdict_write_failure_revokes_readiness_and_pr_instructions() {
 
         laya_readiness: None,
         scope: READINESS_SCOPE,
+        target: None,
+        resolved_targets: Vec::new(),
         agent_guidance: ValidationGuidance::for_readiness_outcome(
             true,
             Mode::Required,
@@ -2233,6 +2236,8 @@ fn native_completion_write_failures_never_publish_success_artifacts() {
 
                 laya_readiness: None,
                 scope: READINESS_SCOPE,
+                target: None,
+                resolved_targets: Vec::new(),
                 agent_guidance: ValidationGuidance::for_readiness_outcome(
                     true,
                     crate::core::readiness_assessment::Mode::Disabled,

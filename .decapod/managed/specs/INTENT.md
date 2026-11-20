@@ -717,8 +717,8 @@ These declarations select authoring and proof obligations; they do not attest im
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `d03d456c4e69124e94146041f8c12a4db8dacd13549f9dc1253b735d771d90e8`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (245 files), `tests/` (258 files)
+- Repository signal fingerprint: `a2f3f64e4fba8df633d1f1d701d419813efd45dd9851e31cca48bbefc5265abe`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (246 files), `tests/` (258 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 
@@ -1211,3 +1211,11 @@ The encoding profile and independently retained agent-run coverage remain separa
 The independent JSON encoding vectors remain a bounded parser compatibility check alongside accepted recorded-instruction readiness in `src/decapod/plan_governance.rs`. Agreement on Unicode, finite numbers, duplicate keys and nesting cannot converge unresolved instructions, satisfy spec review, or confer current publication authority.
 
 The accepted v0.154.0 package epoch (`0f44f780`) is integrated before encoding validation. The conformance harness obtains executable identity through the documented read-only `decapod system version` command; unsupported top-level version flags are not execution evidence. Native regeneration supplies the current release projections, while the independent decoder and all pinned raw inputs remain separate from authorization and full native admission.
+
+## Read-only workspace diagnosis (#1071)
+
+Operators and agents need one command to identify the next recovery step
+when a workspace is blocked. The diagnostic shows accepted authority and
+worktree proposals separately and continues to explain malformed config
+without bootstrapping or repairing state. Verification and admission stay
+with the existing governed operations.

@@ -216,6 +216,34 @@ fn schema_bootstrap_does_not_initialize_or_repair_a_broken_project() {
 }
 
 #[test]
+fn diagnostic_reports_broken_config_without_initializing_control_state() {
+    let tmp = tempdir().unwrap();
+    let control = tmp.path().join(".decapod");
+    fs::create_dir(&control).unwrap();
+    fs::write(control.join("config.toml"), "[broken").unwrap();
+    let output = run_decapod(
+        tmp.path(),
+        &["workspace", "diagnose", "--json", "--offline"],
+    );
+    assert_eq!(
+        output.status.code(),
+        Some(2),
+        "{}",
+        String::from_utf8_lossy(&output.stderr)
+    );
+    let report: serde_json::Value = serde_json::from_slice(&output.stdout).unwrap();
+    assert_eq!(report["schema_version"], "decapod.workspace-diagnostic.v1");
+    assert_eq!(report["candidate_config"]["status"], "invalid");
+    assert_eq!(report["publication_readiness"]["can_publish"], false);
+    assert_eq!(report["read_only"], true);
+    let entries: Vec<_> = fs::read_dir(&control)
+        .unwrap()
+        .map(|entry| entry.unwrap().file_name())
+        .collect();
+    assert_eq!(entries, [std::ffi::OsString::from("config.toml")]);
+}
+
+#[test]
 fn init_persists_remote_default_base_branch() {
     let tmp = tempdir().expect("tempdir");
     run_git(tmp.path(), &["init", "-q"]);

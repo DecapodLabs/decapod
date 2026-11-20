@@ -111,6 +111,7 @@ fn apply_proof_profile(main_repo: &Path, config: &mut toml::Value) {
             reason: None,
         }],
         executions,
+        targets: BTreeMap::new(),
     };
     contract.reviewed_commands_digest =
         repository_profile::command_contract_digest(&commands, &contract).unwrap();
@@ -126,6 +127,7 @@ fn apply_proof_profile(main_repo: &Path, config: &mut toml::Value) {
             max_input_bytes: 8 * 1024 * 1024 * 1024,
             max_files: 200_000,
             max_output_bytes: 16 * 1024 * 1024,
+            target: None,
         },
         &decapod::core::bounded_process::Cancellation::default(),
     )

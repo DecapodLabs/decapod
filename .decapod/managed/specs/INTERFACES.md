@@ -1539,8 +1539,8 @@ field. Nothing in this operation authorizes a mutation, approval or completion.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `d03d456c4e69124e94146041f8c12a4db8dacd13549f9dc1253b735d771d90e8`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (245 files), `tests/` (258 files)
+- Repository signal fingerprint: `a2f3f64e4fba8df633d1f1d701d419813efd45dd9851e31cca48bbefc5265abe`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (246 files), `tests/` (258 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 
@@ -2195,3 +2195,56 @@ This map now uses accepted master `e9c40e929ee33aa5443c38b57276f96111db0b92` and
 `docs/conformance/json-v1.md` defines encoding profile1.0.0, with a machine-readable vector schema at `assets/schemas/interop-json-vectors.schema.json` and pinned raw inputs at `tests/fixtures/interop_json_vectors.v1.json`. Both consumers receive the same original text, never expected answers or a reserialized input. `accepted` and `invalid_json` describe decoding only. The existing `interop.project` result still labels caller-supplied data and `canonical_state_verified=false`. Numeric decoding does not promise arbitrary precision, canonical numeric hashes or authorization.
 
 The accepted v0.154.0 package epoch (`0f44f780`) is integrated before encoding validation. The conformance harness obtains executable identity through the documented read-only `decapod system version` command; unsupported top-level version flags are not execution evidence. Native regeneration supplies the current release projections, while the independent decoder and all pinned raw inputs remain separate from authorization and full native admission.
+
+## Accepted repository-local contract changes (#1658, #1738)
+
+The existing validation runtime returns the actionable
+`ACCEPTED_REPOSITORY_CONTRACT_CHANGED` blocker when a candidate removes or replaces
+accepted local obligations or updates `reviewed_sources_digest`, even with
+internally consistent new review digests. The check precedes execution-provider
+selection. When a legitimate transition is required, `verify_accepted_transition`
+in `src/decapod/core/repository_profile.rs` computes the deterministic
+64-hex-character `repo_policy_transition_id` bound to
+`(accepted_base_sha, candidate_head_sha, accepted_sources_digest,
+candidate_sources_digest, accepted_commands_digest, candidate_commands_digest)`
+under scope `"repo.pr-readiness.v1"` (`POLICY_TRANSITION_SCOPE`), and checks the
+canonical main `.decapod/data` policy ledger (`policy::policy_db_path`,
+checked read-only via `has_live_scoped_approval_on_conn`) for an active,
+bounded-lifetime, non-revoked approval granted via `PolicyCommand::Approve`
+(`"policy.control"`).
+
+When no matching active approval exists, `ACCEPTED_REPOSITORY_CONTRACT_CHANGED`
+includes the old-to-new digests and the exact
+`decapod govern policy approve --id <transition-id> --scope repo.pr-readiness.v1`
+command. Once approved by a `policy.control`-authorized maintainer,
+`validation_runtime` and `workspace::canonical_local_readiness_repository`
+admit the reviewed `repo.pr-readiness.v1` contract into the standard
+`required_catalog` and execution pipeline so all transitioned required checks
+run against the exact candidate before `workspace publish`. Additional required
+checks under an unchanged source inventory and initial local adoption continue
+without transition approval; `REQUIRED_PROFILE_DOWNGRADE` from
+`decapod.pr-readiness.v1` remains unconditionally blocked.
+
+### Source-definition changes
+
+`ACCEPTED_REPOSITORY_CONTRACT_CHANGED` also identifies unapproved replacement of
+the accepted local source-definition digest. Recomputing a candidate digest
+cannot self-authorize changed inventoried check scripts, build/dependency
+definitions, or provider inputs. Retain the accepted inventory or obtain a
+`policy.control` transition approval bound to the exact base, head, and source/command
+digests before revalidation; no override or second policy store is added.
+
+## Target-scoped repository proof (#1740)
+
+- `ValidateCli` (`src/decapod/cli.rs`) accepts `--target <TARGET>` and `ValidateRunParams` (`src/decapod/core/rpc.rs`) accepts optional `target: Option<String>` for `repo.pr-readiness.v1` (`validation_buildkite_preflights = false`). `--target` is rejected for `govern project-check`, `--bypass-validation`, Buildkite snapshot handoff flags, and `decapod.pr-readiness.v1` (`TARGET_SCOPE_UNSUPPORTED` / `READINESS_INVOCATION_INVALID` / `PROJECT_CHECK_SCOPE`).
+- `RepositoryContract.targets` (`BTreeMap<String, DeploymentTargetContract>` in `src/decapod/core/repository_profile.rs`) declares reviewed `commands`, `depends_on`, `shared_inputs`, and optional `platforms` (`CANONICAL_PLATFORM_KEYS`). Empty `targets` preserves pre-#1740 `command_contract_digest` values byte-for-byte; non-empty `targets` is included in `command_contract_digest`.
+- `ValidationReport` (`src/decapod/core/validation_runtime.rs`) exposes `target: Option<String>` and `resolved_targets: Vec<String>`, emits `scope = "repository_target_readiness"` (or `"repository_local_git_target_readiness"`), and forces `publication_ready() == false` whenever target-scoped. `completion/native-readiness-receipt.json` binds `"scope"`, `"target"`, `"resolved_targets"`, and `material.head_revision` inside `"receipt_hash"`.
+
+## Workspace diagnosis (#1071)
+
+`decapod workspace diagnose --json` returns
+`decapod.workspace-diagnostic.v1` and a deterministic exit status.
+`--operation workspace.authoring` selects a local eligibility check.
+`--offline` reports remote dimensions unavailable without contacting the
+forge. The default publication diagnosis lists blockers and sends agents
+to the live publisher for exact validation and readback.

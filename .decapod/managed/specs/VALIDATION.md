@@ -1534,8 +1534,8 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `d03d456c4e69124e94146041f8c12a4db8dacd13549f9dc1253b735d771d90e8`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (245 files), `tests/` (258 files)
+- Repository signal fingerprint: `a2f3f64e4fba8df633d1f1d701d419813efd45dd9851e31cca48bbefc5265abe`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (246 files), `tests/` (258 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 
@@ -2557,3 +2557,25 @@ converts missing platform evidence into success.
 The current encoding change has an actual released-binary counterexample and a source-level correction in the independent test consumer. Its existing unfiltered interoperability target will execute every pinned negative and positive vector through the real CLI and the independent Python process, retaining exact consumer versions/hashes and raw-input hashes in a versioned diagnostic report. Formatting and native checkpoint history are separate from runtime test execution. GitHub Actions supplies source verification under the maintainer's delivery instruction; pending results must not be called passing native admission or full campaign completion.
 
 The accepted v0.154.0 package epoch (`0f44f780`) is integrated before encoding validation. The conformance harness obtains executable identity through the documented read-only `decapod system version` command; unsupported top-level version flags are not execution evidence. Native regeneration supplies the current release projections, while the independent decoder and all pinned raw inputs remain separate from authorization and full native admission.
+
+## Governed repository proof-policy migration (#1738)
+
+`tests/unit/core/repository_profile_tests.rs` and `tests/consumer_readiness.rs`
+cover the `repo.pr-readiness.v1` transition contract across source-inventory
+updates (`reviewed_sources_digest`) and command/execution upgrades
+(`reviewed_commands_digest` + `executions`), verifying full native execution and
+readiness receipt generation after `policy.control`-authorized approval in the
+canonical main `.decapod/data` ledger as well as fail-closed rejection for
+missing approvals (`ACCEPTED_REPOSITORY_CONTRACT_CHANGED`), unauthorized callers
+(`ordinary-agent`, `"unknown"`, and `--actor unknown`), stale approvals (moved
+base SHA, moved candidate SHA, or changed policy digest), revoked/expired
+approvals, and unconditional `REQUIRED_PROFILE_DOWNGRADE` enforcement. Local
+unit and integration tests exercise real Git targets, SQLite policy ledgers, and
+native execution; full repository readiness requires Buildkite validation on the
+committed candidate.
+
+## Target-scoped repository proof verification (#1740)
+
+Unit tests in `tests/unit/core/repository_profile_tests.rs` and `src/decapod/core/validation_history.rs` verify `command_contract_digest` compatibility, invalid/cyclic `DeploymentTargetContract` rejection, `resolve_target_closure` dependency and `shared_inputs` expansion, `preserve_accepted` scope-weakening rejection, and `CompletedReadinessEvidence` target-scope isolation. Integration tests in `tests/consumer_readiness.rs` verify selected-target execution without unrelated host executables, shared-input fanout, unknown/cyclic/incompatible-executor fail-closed guards, `verify_native_receipt_scope` rejections for full-repo/mismatched-target/stale-SHA receipts, and candidate target weakening refusal.
+
+For the v0.155.0 candidate, run the existing full core suite against current master. The prior v0.154.0 PR runs exercised the encoding vectors and exposed separate validation and broker timing failures. Preserve the original outcomes and retain the full suite and timing assertions on the new base.

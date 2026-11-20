@@ -7,6 +7,38 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.155.0](https://github.com/DecapodLabs/decapod/compare/v0.154.0...v0.155.0) - 2026-11-20
+
+### Added
+
+- *(policy)* governed migration path for accepted repo.pr-readiness.v1 proof policies ([#1738](https://github.com/DecapodLabs/decapod/pull/1738))
+- *(proof)* scope repository-local proof to deployment target ([#1740](https://github.com/DecapodLabs/decapod/pull/1740))
+- *(workspace)* diagnose effective authority and readiness
+
+### Fixed
+
+- *(policy)* preserve zone requires trust 'core' wording for policy.control and sync 89906b666 ([#1738](https://github.com/DecapodLabs/decapod/pull/1738))
+- *(workspace)* reconcile diagnostic documentation and release metadata
+
+### Other
+
+- *(merge)* sync accepted master 495808c0f (v0.154.0, #1071)
+- *(merge)* sync accepted master 4559fb757 (v0.154.0, #1740)
+- *(govern)* sync accepted master 0f44f7801 (v0.154.0, #1738)
+- *(govern)* sync accepted master 868f756e7 (v0.153.2, #1738)
+- *(govern)* sync accepted master 34b98ab1f (v0.153.2, #1738)
+- *(govern)* sync accepted master d41056ce3 (v0.153.1, #1738)
+- *(merge)* reconcile origin/master 45369197e (PR #1825 / #1807, #1810) and refresh specs for #1738
+- *(merge)* reconcile origin/master 845ff9799 (PR #1818 / #1469) and refresh specs for #1738
+- *(merge)* sync origin/master 845ff9799 (v0.149.3, PR #1818 #1469) ([#1740](https://github.com/DecapodLabs/decapod/pull/1740))
+- *(merge)* reconcile origin/master cfe2565da (PR #1816 / #1776) and refresh specs for #1738
+- *(merge)* sync origin/master cfe2565da (v0.149.3, PR #1816 #1776) ([#1740](https://github.com/DecapodLabs/decapod/pull/1740))
+- *(merge)* sync origin/master 102d6eb22 (v0.149.3, PR #1813 + #1814) ([#1740](https://github.com/DecapodLabs/decapod/pull/1740))
+- *(govern)* refresh v0.149.2 Dockerfile.decapod pin ([#1740](https://github.com/DecapodLabs/decapod/pull/1740))
+- *(merge)* sync origin/master e0f6aec81 (v0.149.2) ([#1740](https://github.com/DecapodLabs/decapod/pull/1740))
+- Merge remote-tracking branch 'origin/master' into agent/wog-issue-1740/cicd_01m7r1ranb6b7wfe-issue-1740
+- *(govern)* refresh spec reviews and checkpoint on v0.149.1 ([#1740](https://github.com/DecapodLabs/decapod/pull/1740))
+
 ## [0.154.0](https://github.com/DecapodLabs/decapod/compare/v0.153.2...v0.154.0) - 2026-11-20
 
 ### Fixed

@@ -339,6 +339,7 @@ impl Fixture {
             max_input_bytes: 128 * 1024 * 1024,
             max_files: 10_000,
             max_output_bytes: 1024 * 1024,
+            target: None,
         };
         Self {
             _temp: temp,

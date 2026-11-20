@@ -2668,7 +2668,7 @@ fn validate_operation_id(op_id: &str) -> Result<(), (&'static str, String)> {
     Ok(())
 }
 
-fn read_regular_policy_bytes(path: &Path) -> Result<Vec<u8>, (&'static str, String)> {
+pub(crate) fn read_regular_policy_bytes(path: &Path) -> Result<Vec<u8>, (&'static str, String)> {
     let meta = fs::symlink_metadata(path).map_err(|e| {
         (
             "CANONICAL_POLICY_MISSING",
@@ -2936,6 +2936,7 @@ pub fn redact_secrets(input: &str) -> String {
 
 fn git_stdout(dir: &Path, args: &[&str]) -> Option<String> {
     let out = Command::new("git")
+        .env("GIT_OPTIONAL_LOCKS", "0")
         .arg("-C")
         .arg(dir)
         .args(args)
@@ -2952,6 +2953,7 @@ fn git_stdout(dir: &Path, args: &[&str]) -> Option<String> {
 
 fn git_bytes(dir: &Path, args: &[&str]) -> Option<Vec<u8>> {
     let out = Command::new("git")
+        .env("GIT_OPTIONAL_LOCKS", "0")
         .arg("-C")
         .arg(dir)
         .args(args)

@@ -801,8 +801,8 @@ execution evidence remains required before publication readiness.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `d03d456c4e69124e94146041f8c12a4db8dacd13549f9dc1253b735d771d90e8`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (245 files), `tests/` (258 files)
+- Repository signal fingerprint: `a2f3f64e4fba8df633d1f1d701d419813efd45dd9851e31cca48bbefc5265abe`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (246 files), `tests/` (258 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 
@@ -1356,3 +1356,57 @@ Actual official0.153.2 rejected an unpaired surrogate that the prior Python deco
 The encoding profile and independently retained agent-run coverage remain separate. Matching decoder reasons proves only the declared raw-input interpretation scope; it cannot substitute for required run boundaries, tool observations or the actual agent closing event. Missing observer coverage remains unknown even after every encoding vector passes.
 
 The independent JSON encoding vectors remain a bounded parser compatibility check alongside accepted recorded-instruction readiness in `src/decapod/plan_governance.rs`. Agreement on Unicode, finite numbers, duplicate keys and nesting cannot converge unresolved instructions, satisfy spec review, or confer current publication authority.
+
+## Candidate repinning and governed policy transitions (#1658, #1738)
+
+The accepted target's local proof requirements remain authoritative even when a
+candidate supplies a valid new digest for different commands, execution inputs,
+coverage, or source inventory. `repository_profile::verify_accepted_transition`
+and the built-in `decapod.policy.accepted_repository_contract` kernel rule
+(`RuleAuthority::KernelInvariant`, `EvaluationPhase::PreExecution`,
+`RuleSeverity::Critical`, `autonomous_remediation_permitted = false`) reject
+unapproved replacements before execution selection; required failures cannot
+disappear through candidate review or `governance.json` plan prose.
+
+Legitimate `repo.pr-readiness.v1` transitions reuse Decapod's existing
+`"policy.control"`-gated approval ledger (`src/decapod/plugins/policy.rs`,
+`PolicyCommand::Approve` / `PolicyCommand::Revoke`). `PolicyCommand::Approve`
+unconditionally enforces `core` trust for `"policy.control"` and rejects
+`"unknown"` or empty `--actor` labels and malformed transition IDs. Approvals
+are stored in the canonical main `.decapod/data` datastore (`decapod.db`, never
+a worktree-local copy), carry bounded lifetimes (`expires_at` required), and
+bind to the 64-hex-character `repo_policy_transition_id` covering exact
+`(accepted_base_sha, candidate_head_sha, accepted_sources_digest,
+candidate_sources_digest, accepted_commands_digest, candidate_commands_digest)`
+under scope `"repo.pr-readiness.v1"`. Missing, unauthorized, wrong-scope,
+expired, revoked, or stale approvals fail closed with
+`ACCEPTED_REPOSITORY_CONTRACT_CHANGED`, and downgrading `decapod.pr-readiness.v1`
+remains unconditionally blocked with `REQUIRED_PROFILE_DOWNGRADE`. Local
+cooperative actor labels and host-local SQLite retain their shared-UID trust
+boundary and do not claim cryptographic identity or OS sandboxing.
+
+The regression boundary uses real Git targets and native subprocess checks,
+including a replacement command that only prints claimed success. These tests
+exercise kernel admission; a model refusal or a predetermined provider error
+would not establish the guarantee. Accepted-target observation and the configured
+executor remain trust roots. This repair does not claim OS isolation from an
+unrestricted agent or add authenticated cloud authority.
+
+### Hosted source-check substitution control
+
+Buildkite9472 on candidate059dec1b actually returned local `ready=true` and
+`proof_ready=true` after a candidate corrupted source, replaced its inventoried
+check script with a success-printing script and repinned the source digest.
+Command-only preservation was insufficient. The runtime now also preserves the
+accepted local source-definition digest before selection. The failed observation
+remains historical; fresh hosted execution must establish the repair. This is a
+local-readiness finding, not evidence of bypassing an independent remote merge
+service or of OS isolation from an unrestricted producer.
+
+## Diagnostic trust and redaction (#1071)
+
+Workspace diagnosis treats proposed config and binding overrides as candidate
+material. Only the existing policy resolver supplies accepted authority,
+with its local assurance level visible. Raw parser and transport errors,
+credential values, and task intent text stay out of the diagnostic. Current
+forge checks alone cannot establish Decapod admission.

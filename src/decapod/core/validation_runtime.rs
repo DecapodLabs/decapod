@@ -94,6 +94,8 @@ pub struct Options {
     pub max_input_bytes: u64,
     pub max_files: usize,
     pub max_output_bytes: usize,
+    /// Optional deployment target slice to scope `repo.pr-readiness.v1` proof.
+    pub target: Option<String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -201,6 +203,10 @@ pub struct ValidationReport {
     pub proof_ready: bool,
     pub laya_readiness: Option<super::laya_readiness::Receipt>,
     pub scope: &'static str,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub target: Option<String>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub resolved_targets: Vec<String>,
     pub agent_guidance: ValidationGuidance,
     /// Governs execution intent; mocked dispositions claim no successful run.
     pub stage_dispositions: Vec<profile::StageDisposition>,
@@ -212,9 +218,16 @@ pub struct ValidationReport {
     pub(crate) completed_evidence: Option<super::validation_history::CompletedReadinessEvidence>,
 }
 impl ValidationReport {
-    /// Local Git proof has no independently established forge-target identity.
+    /// Local Git proof and target-scoped proof never authorize full-repo PR publication.
     pub fn publication_ready(&self) -> bool {
-        self.ready && self.scope != super::repository_profile::LOCAL_GIT_READINESS_SCOPE
+        self.ready
+            && self.target.is_none()
+            && !matches!(
+                self.scope,
+                super::repository_profile::LOCAL_GIT_READINESS_SCOPE
+                    | super::repository_profile::TARGET_READINESS_SCOPE
+                    | super::repository_profile::LOCAL_GIT_TARGET_READINESS_SCOPE
+            )
     }
 
     pub fn exit_code(&self) -> i32 {
@@ -314,6 +327,7 @@ pub struct CurrentProject {
     /// Core PR readiness does not load or execute this optional profile.
     pub release: Option<ReleaseProfile>,
     pub catalog: RequiredCatalog,
+    pub target_scope: Option<super::repository_profile::ResolvedTargetScope>,
     pub identity_inputs: IdentityInputs,
 }
 
@@ -691,33 +705,29 @@ fn load_project(options: &Options, budget: &mut RuntimeBudget<'_>) -> io::Result
         .as_ref()
         .is_some_and(|p| p.id == super::repository_profile::REQUIRED_PROFILE)
     {
-        if !repository_local {
-            return Err(invalid(
-                "ACCEPTED_REPOSITORY_CONTRACT_CHANGED: another profile cannot replace accepted repository-local checks",
-            ));
-        }
-        if configuration
-            .required_profile
-            .as_ref()
-            .map(|profile| &profile.reviewed_sources_digest)
-            != accepted
-                .required_profile
-                .as_ref()
-                .map(|profile| &profile.reviewed_sources_digest)
+        if repository_local
+            && let Some(declaration) = configuration.required_profile.as_ref()
+            && sources.digest().map_err(io::Error::other)? != declaration.reviewed_sources_digest
         {
-            return Err(invalid(
-                "ACCEPTED_REPOSITORY_CONTRACT_CHANGED: source definitions changed; preserve the accepted source digest or establish a separately accepted target-policy transition before revalidation",
+            return Err(io::Error::new(
+                io::ErrorKind::InvalidData,
+                profile::PlanningFailure::SourceContractChanged,
             ));
         }
-        super::repository_profile::preserve_accepted(
-            &configuration.commands,
-            configuration.repository_contract.as_ref(),
+        super::repository_profile::verify_accepted_transition(
+            &options.root,
+            &base,
+            &head,
+            accepted.required_profile.as_ref(),
+            configuration.required_profile.as_ref(),
             &accepted.commands,
+            &configuration.commands,
             accepted.repository_contract.as_ref(),
+            configuration.repository_contract.as_ref(),
         )
         .map_err(io::Error::other)?;
     }
-    let (executor, catalog) = if repository_local {
+    let (executor, catalog, target_scope) = if repository_local {
         if configuration.validation_buildkite_preflights {
             return Err(invalid(
                 "REPOSITORY_PROFILE_PROVIDER_UNSUPPORTED: repository-local proof cannot select Buildkite or claim hosted CI execution",
@@ -745,16 +755,33 @@ fn load_project(options: &Options, budget: &mut RuntimeBudget<'_>) -> io::Result
             .expect("profile checked above");
         let contract = configuration.repository_contract.as_ref().ok_or_else(||
             invalid("REPOSITORY_CONTRACT_REQUIRED: review and declare proof.repository_contract before local proof"))?;
-        let catalog = super::repository_profile::required_catalog(
+        let catalog = super::repository_profile::required_catalog_for_target(
             declaration,
             &sources,
             &facts,
             &configuration.commands,
             contract,
+            options.target.as_deref(),
         )
         .map_err(|error| io::Error::new(io::ErrorKind::InvalidData, error))?;
-        (None, catalog)
+        let target_scope = match options.target.as_deref() {
+            Some(target_name) => Some(
+                super::repository_profile::resolve_target_closure(
+                    contract,
+                    target_name,
+                    Some(&facts.changed_paths),
+                )
+                .map_err(|error| io::Error::new(io::ErrorKind::InvalidData, error))?,
+            ),
+            None => None,
+        };
+        (None, catalog, target_scope)
     } else {
+        if options.target.is_some() {
+            return Err(invalid(
+                "TARGET_SCOPE_UNSUPPORTED: --target is only supported for repo.pr-readiness.v1 local proof",
+            ));
+        }
         let executor = executor_contract::capture(
             options,
             budget,
@@ -769,7 +796,7 @@ fn load_project(options: &Options, budget: &mut RuntimeBudget<'_>) -> io::Result
         )
         .map_err(|error| io::Error::new(io::ErrorKind::InvalidData, error))?;
         executor_contract::verify_carrier_modes(options, budget, &head)?;
-        (executor, catalog)
+        (executor, catalog, None)
     };
     let configuration_paths = tracked
         .iter()
@@ -814,6 +841,7 @@ fn load_project(options: &Options, budget: &mut RuntimeBudget<'_>) -> io::Result
         facts,
         release,
         catalog,
+        target_scope,
         identity_inputs,
     })
 }
@@ -1026,6 +1054,8 @@ pub fn validate(options: &Options, host: &mut dyn Host, cancel: &Cancellation) -
 
         laya_readiness: None,
         scope: READINESS_SCOPE,
+        target: options.target.clone(),
+        resolved_targets: Vec::new(),
         agent_guidance: ValidationGuidance::for_outcome(false),
         stage_dispositions: Vec::new(),
         blockers: Vec::new(),
@@ -1077,16 +1107,21 @@ fn run(
         .as_ref()
         .is_some_and(|p| p.id == super::repository_profile::REQUIRED_PROFILE)
     {
-        report.scope = if project
+        let canonical_local = project
             .configuration
             .repository_contract
             .as_ref()
-            .is_some_and(|contract| contract.canonical_local_target)
-        {
-            super::repository_profile::LOCAL_GIT_READINESS_SCOPE
-        } else {
-            super::repository_profile::READINESS_SCOPE
+            .is_some_and(|contract| contract.canonical_local_target);
+        report.scope = match (canonical_local, project.target_scope.is_some()) {
+            (true, true) => super::repository_profile::LOCAL_GIT_TARGET_READINESS_SCOPE,
+            (false, true) => super::repository_profile::TARGET_READINESS_SCOPE,
+            (true, false) => super::repository_profile::LOCAL_GIT_READINESS_SCOPE,
+            (false, false) => super::repository_profile::READINESS_SCOPE,
         };
+    }
+    if let Some(target_scope) = &project.target_scope {
+        report.target = Some(target_scope.target.clone());
+        report.resolved_targets = target_scope.resolved_targets.clone();
     }
     report.stage_dispositions = project.catalog.stage_dispositions().to_vec();
     if let Some(configuration) = &project.configuration.rust_workers {
@@ -1388,7 +1423,10 @@ fn run(
         decision.mode,
         decision.decision,
     );
-    if report.ready && report.scope == super::repository_profile::LOCAL_GIT_READINESS_SCOPE {
+    if report.ready && report.target.is_some() {
+        report.agent_guidance.next_action = "review_target_readiness";
+        report.agent_guidance.instruction = "The reviewed deployment target closure passed for this exact candidate and accepted target. This target-scoped receipt does not authorize full-repository PR publication or satisfy unrelated deployment targets.";
+    } else if report.ready && report.scope == super::repository_profile::LOCAL_GIT_READINESS_SCOPE {
         report.agent_guidance.next_action = "inspect_local_merge_readiness";
         report.agent_guidance.instruction = "The reviewed local contract passed for this exact candidate and canonical local target. Inspect its native proof and retain human integration authority. Forge publication remains unsupported until target equivalence and independent publication authority are established.";
     }
@@ -1399,9 +1437,16 @@ fn run(
         )));
     }
     if report.ready && report.proof_ready {
+        let target_proof_scope = project.target_scope.as_ref().map(|scope| {
+            super::validation_history::TargetProofScope {
+                target: scope.target.clone(),
+                resolved_targets: scope.resolved_targets.clone(),
+            }
+        });
         let completed = super::validation_history::CompletedReadinessEvidence::from_runtime(
             &invocation,
             report.scope,
+            target_proof_scope,
             &current.identity,
             &initial_governance,
             &trajectory_digest,
@@ -1465,6 +1510,11 @@ fn run(
             "evidence_digest": evidence::digest(&result.evidence).map_err(io::Error::other)?,
             "laya_readiness_digest": evidence::digest(&report.laya_readiness).map_err(io::Error::other)?,
         });
+        if let Some(target_scope) = &project.target_scope {
+            receipt["target"] = serde_json::Value::String(target_scope.target.clone());
+            receipt["resolved_targets"] =
+                serde_json::to_value(&target_scope.resolved_targets).map_err(io::Error::other)?;
+        }
         receipt["receipt_hash"] = evidence::digest(&receipt).map_err(io::Error::other)?.into();
         write_native_completion(
             &directory,
@@ -1477,6 +1527,79 @@ fn run(
         write_ready_verdict(&directory, &verdict_bytes, &budget)?;
     } else {
         write_new(&directory.join("verdict.json"), &verdict_bytes)?;
+    }
+    Ok(())
+}
+
+/// Verify that an exported native readiness receipt matches the expected
+/// candidate commit and scope (full-repository vs a specific deployment target).
+/// Target-scoped receipts never satisfy full-repository readiness or another target.
+pub fn verify_native_receipt_scope(
+    receipt: &serde_json::Value,
+    expected_candidate_sha: &str,
+    expected_target: Option<&str>,
+) -> io::Result<()> {
+    let mut object = receipt
+        .as_object()
+        .cloned()
+        .ok_or_else(|| invalid("native receipt must be a JSON object"))?;
+    let recorded_hash = object
+        .remove("receipt_hash")
+        .and_then(|value| value.as_str().map(str::to_owned))
+        .ok_or_else(|| invalid("native receipt hash is missing"))?;
+    let expected_hash =
+        evidence::digest(&serde_json::Value::Object(object)).map_err(io::Error::other)?;
+    if recorded_hash != expected_hash {
+        return Err(invalid("NATIVE_RECEIPT_TAMPERED: receipt_hash mismatch"));
+    }
+    if receipt.get("kind").and_then(|v| v.as_str()) != Some("native_readiness_receipt")
+        || receipt.get("status").and_then(|v| v.as_str()) != Some("ok")
+    {
+        return Err(invalid("NATIVE_RECEIPT_INVALID: non-ok native receipt"));
+    }
+    if receipt
+        .pointer("/material/head_revision")
+        .and_then(|v| v.as_str())
+        != Some(expected_candidate_sha)
+    {
+        return Err(invalid(
+            "NATIVE_RECEIPT_CANDIDATE_MISMATCH: receipt candidate SHA differs",
+        ));
+    }
+    let scope = receipt
+        .get("scope")
+        .and_then(|v| v.as_str())
+        .ok_or_else(|| invalid("NATIVE_RECEIPT_SCOPE_MISSING"))?;
+    let recorded_target = receipt.get("target").and_then(|v| v.as_str());
+    match expected_target {
+        None => {
+            if recorded_target.is_some()
+                || !matches!(
+                    scope,
+                    super::repository_profile::READINESS_SCOPE | READINESS_SCOPE
+                )
+            {
+                return Err(invalid(
+                    "TARGET_RECEIPT_FOR_FULL_REPO: target-scoped or local-git receipt cannot satisfy full-repository PR readiness",
+                ));
+            }
+        }
+        Some(target) => {
+            if !matches!(
+                scope,
+                super::repository_profile::TARGET_READINESS_SCOPE
+                    | super::repository_profile::LOCAL_GIT_TARGET_READINESS_SCOPE
+            ) || recorded_target != Some(target)
+                || !receipt
+                    .get("resolved_targets")
+                    .and_then(|v| v.as_array())
+                    .is_some_and(|items| items.iter().any(|item| item.as_str() == Some(target)))
+            {
+                return Err(invalid(format!(
+                    "TARGET_RECEIPT_MISMATCH: receipt does not cover deployment target {target:?}"
+                )));
+            }
+        }
     }
     Ok(())
 }

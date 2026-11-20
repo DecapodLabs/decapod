@@ -470,6 +470,7 @@ impl TestRepo {
                     timeout_seconds: 15,
                 },
             )]),
+            targets: BTreeMap::new(),
         };
         let profile_id = if require_laya {
             "decapod.pr-readiness.v1"
@@ -496,6 +497,7 @@ impl TestRepo {
             max_input_bytes: 32 * 1024 * 1024,
             max_files: 5000,
             max_output_bytes: 512 * 1024,
+            target: None,
         };
         fs::create_dir_all(&opts.evidence_parent).unwrap();
 
@@ -793,6 +795,7 @@ fn candidate_base_branch_self_selection_cannot_bypass_accepted_gates_or_proof() 
                 timeout_seconds: 15,
             },
         )]),
+        targets: BTreeMap::new(),
     };
     let opts = runtime::Options {
         root: worktree.clone(),
@@ -805,6 +808,7 @@ fn candidate_base_branch_self_selection_cannot_bypass_accepted_gates_or_proof() 
         max_input_bytes: 32 * 1024 * 1024,
         max_files: 5000,
         max_output_bytes: 512 * 1024,
+        target: None,
     };
     let src_digest = runtime::discover_source_inventory(&opts, &Cancellation::default())
         .unwrap()

@@ -186,6 +186,21 @@ This document defines the normative operational contracts for the Decapod CLI.
 - **Publication:** Publication is a governed transition and remains blocked while required validation or evidence is unsatisfied.
 - **Scratch cleanup:** When PR creation succeeds (`workspace publish`), flush ONLY that todo's `/tmp` build and scratch directories (such as `/tmp/decapod_validate/<task-id>` and any todo-scoped `CARGO_TARGET_DIR` under `/tmp`). Never perform wildcard or root-level deletion of `/tmp`, never delete another concurrent agent's or sibling todo's `/tmp` path, and never remove shared `/tmp/decapod` controller sockets/state or active sibling directories.
 
+### Workspace diagnosis
+
+`decapod workspace diagnose [--json] [--offline] [--pr <number>] [--operation <name>]`
+reads checkout and custody state, accepted policy, candidate config and
+override proposals, artifact freshness, dirty-file groups, and historical
+proof. Optional GitHub readback observes the exact PR head and required forge
+checks. `--offline` skips remote reads. Credentials appear as capability
+status. Diagnosis does not acquire sessions or repair files.
+
+JSON uses `decapod.workspace-diagnostic.v1`. Exit 0 means the selected local
+operation has no observed blocker. Exit 1 means blockers remain, 2 means
+candidate config is invalid, and 3 means the default publication diagnosis
+lacks verified remote evidence. Use the ordered next actions to recover.
+Live validation and readback remain owned by `workspace publish`.
+
 ## `decapod rpc`
 - **Intent:** Decapod-specific structured RPC interface for agents
 
