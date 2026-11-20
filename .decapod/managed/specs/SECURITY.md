@@ -265,6 +265,10 @@ cloud authorization or validation gate changes.
 
 ## Advisory intent reconciliation access
 
+## Acceptance observer capture boundaries
+
+The observer never authenticates a producer from an agent declaration or a JSON hash. OperatorControlled witness custody is an explicit host assertion. Shared local OS authority can forge it. Coverage is scoped to its measured channels and retained window. Truncation, missing endpoints and mismatched counts or hashes fail the completion assessment without erasing the admission history.
+
 <!-- decapod:requirement REQ-INTENT-TRACEABILITY -->
 `intent.reconcile` is a sessionless local inspection RPC over the existing
 repository plan, canonical specs and source fingerprints. It bypasses mutation
@@ -797,7 +801,7 @@ execution evidence remains required before publication readiness.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `01e8febe0090f98e8a55f2f0ca10a25713e413cb3462a6e094b0f42c4b85e75c`
+- Repository signal fingerprint: `b464337eb22346eb84a132380a7ec75dff5d3fb292f8eac1b6b9ab7272642672`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (245 files), `tests/` (258 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
@@ -1350,3 +1354,5 @@ Missing provider-requested tool identities and kernel calls outside an actual in
 Preserving canonical source entrypoint metadata is conditional on the existing repository/origin/ancestry/template proof, not a configuration flag or caller-computed digest alone. The release verifier additionally compares the current entrypoint to the immutable classified head. This prevents a valid-looking replacement version from gaining authority during refresh. Existing exact current manifest, Dockerfile, source/configuration inventory and staged-edit checks remain enforced. The regression uses the existing published-root source fixture and includes header replacement, payload tampering and foreign-origin refusals; successful CI execution remains distinct from test registration.
 
 The full Supabase-enabled library execution caught a test-fixture identity omission: the release-version helper must retain the canonical Cargo package repository field when it reuses the existing published-root source fixture. The correction changes fixture construction only; origin, ungrafted ancestry, committed template and immutable entrypoint checks remain strict. Prior failed candidate eee794ba and actual job136182283538 remain preserved.
+
+Release projection integrity and retained observer-run completeness are separate proof surfaces. A successful version-only comparison cannot turn missing run boundaries or incomplete tool observation into an autonomous-admission claim; the existing acceptance observer retains that judgment. Preserving source-entrypoint versions grants no observation coverage.

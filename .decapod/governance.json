@@ -814,6 +814,14 @@
       "proof_refs": [
         "https://github.com/DecapodLabs/decapod/actions/runs/44704732212/job/136182283538"
       ]
+    },
+    {
+      "id": "release-accepted-observer-7225",
+      "summary": "Integrate accepted observer722515f4 via native merge reconciliation and generated manifest recovery; preserve all authored product prose and exact proof policy",
+      "input_digest": "sha256:64584e514fed5b58ab076b50ac91d12a9ec27bdb71d8e90151b65bf38dd6a635",
+      "proof_refs": [
+        "https://github.com/DecapodLabs/decapod/pull/1863"
+      ]
     }
   ],
   "intents": {
@@ -854,23 +862,23 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Actual complete library execution revealed fixture version helper erased canonical Cargo repository. Preserve that metadata for the existing source fixture; production predicate unchanged.",
-          "reviewed_code_fingerprint": "01e8febe0090f98e8a55f2f0ca10a25713e413cb3462a6e094b0f42c4b85e75c",
-          "spec_material_hash": "44756a7c45c50efc5b247b60a023ed70599db9f1209742dae03465a8206c859c"
+          "reason": "Integrate accepted observer run-boundary contract while retaining release-specific source identity and projection checks; authored observer coverage separation added.",
+          "reviewed_code_fingerprint": "b464337eb22346eb84a132380a7ec75dff5d3fb292f8eac1b6b9ab7272642672",
+          "spec_material_hash": "dd54f37f92fd2f60bde9697f54eb7837fb989499be8427f427b3273f23d2616c"
         },
         {
-          "disposition": "unchanged_with_reason",
+          "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Only test source-identity construction changes. Existing read-only predicate and standalone interface remain unchanged.",
-          "reviewed_code_fingerprint": "01e8febe0090f98e8a55f2f0ca10a25713e413cb3462a6e094b0f42c4b85e75c",
-          "spec_material_hash": "ab5445cf5a6f8eebfedb4108d6e048abeabb87fccbc84280fb73be17b4a79def"
+          "reason": "Native-generated headers/manifest recovered from merge conflict; source predicate, exact release classification and observer contract remain separate.",
+          "reviewed_code_fingerprint": "b464337eb22346eb84a132380a7ec75dff5d3fb292f8eac1b6b9ab7272642672",
+          "spec_material_hash": "ca63fe6901da2f0a1961718c99c445517b64b906f8ad82f55cfb1b3f4e115274"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Source predicate remains strict for canonical package repository, origin, published ungrafted ancestry and exact template; negative header/payload/origin cases retained.",
-          "reviewed_code_fingerprint": "01e8febe0090f98e8a55f2f0ca10a25713e413cb3462a6e094b0f42c4b85e75c",
-          "spec_material_hash": "84064e99276cf87213cd1132ac700cea9ade6adcb7d52d9770f6bb53a2b7b83f"
+          "reason": "Canonical source metadata and immutable bytes remain required; release proof never confers missing independent run coverage.",
+          "reviewed_code_fingerprint": "b464337eb22346eb84a132380a7ec75dff5d3fb292f8eac1b6b9ab7272642672",
+          "spec_material_hash": "cb896215a5995942f4c9b617abf055b91af596ab245375ab3582844150477bbb"
         }
       ],
       "state": "APPROVED",
@@ -881,17 +889,21 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795166116Z"
+      "updated_at": "1795168449Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:9a4695324492661f30d52fb675cb0e94b9dec1be18a5aba23410eedd2cd2c2c5",
+      "artifact_hash": "sha256:4bfbd5b773c9d2ae9f751b2e3c6ecf12d5e9896451e7113db6a973681219e814",
       "checks": [
         {
           "name": "7ec-standalone-docker-drift",
           "status": "failed"
+        },
+        {
+          "name": "accepted-observer-integration",
+          "status": "passed"
         },
         {
           "name": "candidate-regression-execution",
@@ -920,6 +932,10 @@
         {
           "name": "host-project-prerequisites",
           "status": "partial"
+        },
+        {
+          "name": "native-merge-generated-manifest-recovery",
+          "status": "passed"
         },
         {
           "name": "release1858-actual-before",
@@ -979,10 +995,17 @@
             "intent_id": "intent:change_01M7VYYH3BHSTVTA25RZ50HRF9",
             "kind": "trajectory_step_recorded",
             "sequence": 8
+          },
+          {
+            "detail": "trajectory:branch_01M7VYYH74AZEP39ERERBKPVWM",
+            "event_id": "event:9",
+            "intent_id": "intent:change_01M7VYYH3BHSTVTA25RZ50HRF9",
+            "kind": "trajectory_step_recorded",
+            "sequence": 9
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 8,
+        "next_sequence": 9,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M7VYYH74AZEP39ERERBKPVWM": {
@@ -1079,6 +1102,24 @@
                 "validation_findings": [
                   "Actual library failure is fixture loss of Cargo repository identity, not permission to weaken the source predicate. Preserve all existing production checks."
                 ]
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:9",
+                "observations": [
+                  "https://github.com/DecapodLabs/decapod/pull/1863"
+                ],
+                "proof_refs": [
+                  "accepted-observer-integration",
+                  "native-merge-generated-manifest-recovery"
+                ],
+                "scope": [
+                  "root"
+                ],
+                "sequence": 9,
+                "validation_findings": [
+                  "Supported native init recovery rebuilt the conflicted generated manifest; all8 authored specs and exact proof configuration were independently checked unchanged; native-created entrypoint backups preserved privately."
+                ]
               }
             ]
           }
@@ -1096,7 +1137,8 @@
         "/private/tmp/attack-gaps-release-current-inventory-review.json",
         "/private/tmp/attack-gaps-release-wrapper-inventory-review.json",
         "/private/tmp/attack-gaps-release1858-validate-failure.log",
-        "https://github.com/DecapodLabs/decapod/actions/runs/44704732212/job/136182283538"
+        "https://github.com/DecapodLabs/decapod/actions/runs/44704732212/job/136182283538",
+        "https://github.com/DecapodLabs/decapod/pull/1863"
       ],
       "inspected_files": [
         "src/decapod/core/entrypoint_integrity.rs",
@@ -1119,7 +1161,8 @@
       "task_id": "bugs_01m7vywgahvgjx7c",
       "tool_calls": [],
       "unresolved_assumptions": [
-        "Actual library failure is fixture loss of Cargo repository identity, not permission to weaken the source predicate. Preserve all existing production checks."
+        "Actual library failure is fixture loss of Cargo repository identity, not permission to weaken the source predicate. Preserve all existing production checks.",
+        "Supported native init recovery rebuilt the conflicted generated manifest; all8 authored specs and exact proof configuration were independently checked unchanged; native-created entrypoint backups preserved privately."
       ]
     }
   },

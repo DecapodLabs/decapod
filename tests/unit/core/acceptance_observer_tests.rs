@@ -150,6 +150,7 @@ fn fixture() -> (Capture, BTreeMap<String, Value>) {
         kernel_source: "a".repeat(40),
         artifacts: BTreeMap::new(),
         events: vec![],
+        coverage: None,
     };
     let mut d = BTreeMap::new();
     let mut add = |name, source, value| named(&mut c, &mut d, name, source, value);
@@ -233,7 +234,59 @@ fn fixture() -> (Capture, BTreeMap<String, Value>) {
         Source::Github,
         json!({"head":"c".repeat(40),"base":"b".repeat(40),"branch":"agent/task-repair","base_branch":"main","url":"https://github.com/owner/fixture/pull/2","merged":false}),
     );
+    named(
+        &mut c,
+        &mut d,
+        "agent-end",
+        Source::Host,
+        json!({"type":"agent_end"}),
+    );
+    named(
+        &mut c,
+        &mut d,
+        "process-exit",
+        Source::Host,
+        json!({"type":"process_exit","exit_code":0,"agent_ended":true}),
+    );
+    seal_coverage(&mut c);
     (c, d)
+}
+
+fn seal_coverage(capture: &mut Capture) {
+    capture.coverage = Some(CaptureCoverage {
+        run_id: capture.run_id.clone(),
+        witness_custody: WitnessCustody::OperatorControlled,
+        observed_channels: [Source::Host, Source::Kernel, Source::Git, Source::Github]
+            .into_iter()
+            .collect(),
+        start_elapsed_ms: 0,
+        end_elapsed_ms: capture.events.last().unwrap().elapsed_ms,
+        dropped_events: 0,
+        retained_events: capture.events.len(),
+        event_index_sha256: index_digest(&capture.events).unwrap(),
+        artifact_index_sha256: index_digest(&capture.artifacts).unwrap(),
+        terminal_event_sequence: capture
+            .events
+            .iter()
+            .find(|event| event.artifact == "process-exit")
+            .unwrap()
+            .sequence,
+    });
+}
+
+fn close_after_observations(capture: &mut Capture) {
+    capture
+        .events
+        .sort_by_key(|event| match event.artifact.as_str() {
+            "agent-end" => 1,
+            "process-exit" => 2,
+            _ => 0,
+        });
+    for (index, event) in capture.events.iter_mut().enumerate() {
+        event.sequence = index as u64 + 1;
+        event.elapsed_ms = event.sequence;
+    }
+    seal_coverage(capture);
 }
 
 #[test]
@@ -244,7 +297,146 @@ fn trusted_capture_correlates_historical_admission_but_never_grants_authority() 
     assert_eq!(result["current_admission_applicable"], true);
     assert_eq!(result["publication_ready"], false);
     assert_eq!(result["merge_authorized"], false);
+    assert_eq!(result["capture_coverage"]["state"], "complete");
     assert_eq!(result, correlate(&c, &d).unwrap());
+}
+
+#[test]
+fn historical_captures_without_coverage_preserve_admission_with_unknown_completion() {
+    let (mut capture, documents) = fixture();
+    capture.coverage = None;
+    let bytes = serde_json::to_vec(&capture).unwrap();
+    assert!(!String::from_utf8_lossy(&bytes).contains("\"coverage\""));
+    let legacy: Capture = serde_json::from_slice(&bytes).unwrap();
+    let result = correlate(&legacy, &documents).unwrap();
+    assert!(result["admission_observed"].is_object());
+    assert_eq!(result["observed_autonomous_admission"], false);
+    assert_eq!(result["current_admission_applicable"], false);
+    assert_eq!(result["capture_coverage"]["state"], "unknown");
+}
+
+#[test]
+fn removal_of_genuine_closing_events_cannot_preserve_complete_capture() {
+    let (mut capture, documents) = fixture();
+    capture.events.truncate(capture.events.len() - 2);
+    let result = correlate(&capture, &documents).unwrap();
+    assert!(result["admission_observed"].is_object());
+    assert_eq!(result["observed_autonomous_admission"], false);
+    assert_eq!(result["current_admission_applicable"], false);
+    assert_eq!(result["capture_coverage"]["state"], "incomplete");
+    assert!(
+        result["findings"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .any(|finding| finding == "CAPTURE_COVERAGE_INCOMPLETE")
+    );
+}
+
+#[test]
+fn capture_coverage_rejects_drops_missing_channels_and_different_retained_indexes() {
+    for control in [
+        "drop",
+        "channel",
+        "count",
+        "events",
+        "artifacts",
+        "start",
+        "end",
+        "terminal",
+        "run",
+    ] {
+        let (mut capture, documents) = fixture();
+        let coverage = capture.coverage.as_mut().unwrap();
+        match control {
+            "run" => coverage.run_id = "a-different-run".into(),
+            "drop" => coverage.dropped_events = 1,
+            "channel" => {
+                coverage.observed_channels.remove(&Source::Kernel);
+            }
+            "count" => coverage.retained_events -= 1,
+            "events" => coverage.event_index_sha256 = digest(b"truncated index"),
+            "artifacts" => coverage.artifact_index_sha256 = digest(b"substituted sources"),
+            "start" => coverage.start_elapsed_ms = 2,
+            "end" => coverage.end_elapsed_ms -= 1,
+            "terminal" => coverage.terminal_event_sequence = 3,
+            _ => unreachable!(),
+        }
+        let result = correlate(&capture, &documents).unwrap();
+        assert_eq!(
+            result["capture_coverage"]["state"], "incomplete",
+            "{control}"
+        );
+        assert_eq!(result["observed_autonomous_admission"], false, "{control}");
+        assert_eq!(result["current_admission_applicable"], false, "{control}");
+        assert!(result["admission_observed"].is_object(), "{control}");
+    }
+}
+
+#[test]
+fn shared_or_unknown_witness_custody_cannot_establish_completion() {
+    for custody in [WitnessCustody::SharedWithAgent, WitnessCustody::Unknown] {
+        let (mut capture, documents) = fixture();
+        capture.coverage.as_mut().unwrap().witness_custody = custody;
+        let result = correlate(&capture, &documents).unwrap();
+        assert_eq!(result["observed_autonomous_admission"], false);
+        assert_eq!(result["capture_coverage"]["state"], "incomplete");
+    }
+}
+
+#[test]
+fn closing_process_record_cannot_substitute_for_observed_agent_end() {
+    let (capture, mut documents) = fixture();
+    documents.get_mut("agent-end").unwrap()["type"] = "agent_declaration".into();
+    let result = correlate(&capture, &documents).unwrap();
+    assert_eq!(result["capture_coverage"]["state"], "incomplete");
+    assert_eq!(result["observed_autonomous_admission"], false);
+}
+
+#[test]
+fn incomplete_or_failed_process_exit_cannot_close_the_capture() {
+    for value in [
+        json!({"type":"process_exit","exit_code":1,"agent_ended":true}),
+        json!({"type":"process_exit","exit_code":0,"agent_ended":false}),
+        json!({"type":"process_exit","exit_code":0}),
+        json!({"type":"agent_end","exit_code":0,"agent_ended":true}),
+    ] {
+        let (capture, mut documents) = fixture();
+        *documents.get_mut("process-exit").unwrap() = value;
+        let result = correlate(&capture, &documents).unwrap();
+        assert_eq!(result["observed_autonomous_admission"], false);
+        assert_eq!(result["capture_coverage"]["state"], "incomplete");
+    }
+}
+
+#[test]
+fn model_activity_after_the_terminal_position_invalidates_capture_completion() {
+    let (mut capture, mut documents) = fixture();
+    push(
+        &mut capture,
+        &mut documents,
+        Source::Host,
+        model_call("after-exit", "bash"),
+    );
+    seal_coverage(&mut capture);
+    let result = correlate(&capture, &documents).unwrap();
+    assert_eq!(result["observed_autonomous_admission"], false);
+    assert_eq!(result["capture_coverage"]["state"], "incomplete");
+}
+
+#[test]
+fn coverage_metadata_never_exports_arbitrary_secret_text() {
+    for field in ["run", "events", "artifacts"] {
+        let (mut capture, documents) = fixture();
+        let coverage = capture.coverage.as_mut().unwrap();
+        match field {
+            "run" => coverage.run_id = "Bearer private-token".into(),
+            "events" => coverage.event_index_sha256 = "Password: private-token".into(),
+            "artifacts" => coverage.artifact_index_sha256 = "/Users/private/capture".into(),
+            _ => unreachable!(),
+        }
+        assert!(correlate(&capture, &documents).is_err(), "{field}");
+    }
 }
 
 #[test]
@@ -362,6 +554,7 @@ fn actual_source_or_target_movement_invalidates_applicability_without_erasing_hi
             _ => state["clean"] = false.into(),
         }
         push(&mut c, &mut d, Source::Git, state);
+        seal_coverage(&mut c);
         let result = correlate(&c, &d).unwrap();
         assert_eq!(result["observed_autonomous_admission"], true);
         assert_eq!(result["current_admission_applicable"], false);
@@ -385,6 +578,7 @@ fn post_objective_input_and_observed_host_bypass_cannot_be_zero_intervention_suc
     ] {
         let (mut c, mut d) = fixture();
         push(&mut c, &mut d, Source::Host, event);
+        close_after_observations(&mut c);
         assert_eq!(
             correlate(&c, &d).unwrap()["observed_autonomous_admission"],
             false
@@ -494,6 +688,7 @@ fn fresh_validation_does_not_reuse_an_old_publisher_response() {
         Source::Github,
         json!({"head":"c".repeat(40),"base":"b".repeat(40),"branch":"agent/task-repair","base_branch":"main","url":"https://github.com/owner/fixture/pull/2","merged":false}),
     );
+    close_after_observations(&mut c);
     let result = correlate(&c, &d).unwrap();
     assert_eq!(result["observed_autonomous_admission"], true);
     assert_eq!(result["current_admission_applicable"], false);

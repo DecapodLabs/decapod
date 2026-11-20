@@ -711,7 +711,7 @@ These declarations select authoring and proof obligations; they do not attest im
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `01e8febe0090f98e8a55f2f0ca10a25713e413cb3462a6e094b0f42c4b85e75c`
+- Repository signal fingerprint: `b464337eb22346eb84a132380a7ec75dff5d3fb292f8eac1b6b9ab7272642672`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (245 files), `tests/` (258 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
@@ -1205,3 +1205,5 @@ The current candidate integrates accepted release0.153.2 at34b98ab1. Its first A
 Actions exposed a standalone-tool integration error in the first current-base candidate: the shared verifier could not call its crate-private source reader. The existing read-only predicate is now exported as an internal documented-hidden helper for that wrapper. Source-lineage regression setup stays in the library-only harness; the standalone wrapper retains its existing complete shared regression suite. No test is removed from the required library execution.
 
 The full Supabase-enabled library execution caught a test-fixture identity omission: the release-version helper must retain the canonical Cargo package repository field when it reuses the existing published-root source fixture. The correction changes fixture construction only; origin, ungrafted ancestry, committed template and immutable entrypoint checks remain strict. Prior failed candidate eee794ba and actual job136182283538 remain preserved.
+
+Release projection integrity and retained observer-run completeness are separate proof surfaces. A successful version-only comparison cannot turn missing run boundaries or incomplete tool observation into an autonomous-admission claim; the existing acceptance observer retains that judgment. Preserving source-entrypoint versions grants no observation coverage.

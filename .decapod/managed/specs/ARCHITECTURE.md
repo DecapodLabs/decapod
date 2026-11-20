@@ -1133,6 +1133,10 @@ or masking permission/protocol failures. Empty runtime directories are reusable.
 
 ## Intent Traceability Read Model
 
+## Acceptance observer capture boundaries
+
+The read-only acceptance observer in src/decapod/core/flight_recorder/acceptance.rs correlates historical admissions and separately assesses retained capture completeness. Optional coverage binds the declared channels, operator custody, elapsed window, counts, indexes, actual agent end and process exit. Missing or incomplete coverage keeps historical observations while preventing a completed autonomous-run claim.
+
 <!-- decapod:requirement REQ-INTENT-TRACEABILITY -->
 `core/intent_reconcile.rs` derives a read-only reconciliation view from
 `plan_governance`, `core/project_specs`, the spec manifest, and current
@@ -1178,7 +1182,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `01e8febe0090f98e8a55f2f0ca10a25713e413cb3462a6e094b0f42c4b85e75c`
+- Repository signal fingerprint: `b464337eb22346eb84a132380a7ec75dff5d3fb292f8eac1b6b9ab7272642672`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (245 files), `tests/` (258 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
@@ -1749,3 +1753,5 @@ inside a candidate-controlled validation definition.
 The standalone `assets/tools/release_projection_drift.rs` wrapper links the ordinary Decapod library while compiling the shared verifier. Its source-version predicate must therefore be available across that crate boundary; it remains a read-only helper, not a grant. The shared projection fixture accepts an existing source root, while library-only lineage tests supply the existing published-root fixture from `entrypoint_integrity/history/tests.rs`.
 
 The full Supabase-enabled library execution caught a test-fixture identity omission: the release-version helper must retain the canonical Cargo package repository field when it reuses the existing published-root source fixture. The correction changes fixture construction only; origin, ungrafted ancestry, committed template and immutable entrypoint checks remain strict. Prior failed candidate eee794ba and actual job136182283538 remain preserved.
+
+Release projection integrity and retained observer-run completeness are separate proof surfaces. A successful version-only comparison cannot turn missing run boundaries or incomplete tool observation into an autonomous-admission claim; the existing acceptance observer retains that judgment. Preserving source-entrypoint versions grants no observation coverage.
