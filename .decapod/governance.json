@@ -621,6 +621,14 @@
       "proof_refs": [
         "https://github.com/DecapodLabs/decapod/commit/d41056ce3aae2be6ceab261beb938313beef9502"
       ]
+    },
+    {
+      "id": "issue-1764-integrate-v01532-target",
+      "summary": "Integrate the current version-only release target and refresh its governed projections",
+      "input_digest": "sha256:af472dfafe2a8587eba509a4abe3f6a5ba234aeb45c4931ce09bbd23349976e6",
+      "proof_refs": [
+        "https://github.com/DecapodLabs/decapod/commit/34b98ab1fa2d731c5729fa1afbeaed13f8739655"
+      ]
     }
   ],
   "intents": {
@@ -666,22 +674,22 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Documents the shared recorded instruction predicate and its proof binding. Current merged call sites retain existing accepted validation and transport behavior.",
-          "reviewed_code_fingerprint": "8911e1a5da2439397cf3e2f7cdae88e9f77c5f560e3bbf447938585e78382fe3",
+          "reason": "The shared recorded-plan readiness architecture remains correct after the version-only release update.",
+          "reviewed_code_fingerprint": "1f7e0b121b3384fcb6e6f903ffd27059973309bdf57cf9e2645046086cfc2df4",
           "spec_material_hash": "2451b254bc81cd49ed11eadde7ffda6f7811755fc27b825a25a4c1c69adc5892"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Documents the additive readiness report and current plan approval, decision recovery and checkpoint behavior.",
-          "reviewed_code_fingerprint": "8911e1a5da2439397cf3e2f7cdae88e9f77c5f560e3bbf447938585e78382fe3",
+          "reason": "The readiness report, plan source pointers and reapproval contract still match the final source.",
+          "reviewed_code_fingerprint": "1f7e0b121b3384fcb6e6f903ffd27059973309bdf57cf9e2645046086cfc2df4",
           "spec_material_hash": "c94d617d325a615cd8d0ffd2d74184820fbfb58a3f8d1e2152c2f8c010735489"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Shared recorded-plan checks preserve current accepted session, custody and human decision authority. They introduce no stronger principal claim.",
-          "reviewed_code_fingerprint": "8911e1a5da2439397cf3e2f7cdae88e9f77c5f560e3bbf447938585e78382fe3",
+          "reason": "The release update changes version declarations. Recorded instruction checks retain accepted custody and human decision boundaries.",
+          "reviewed_code_fingerprint": "1f7e0b121b3384fcb6e6f903ffd27059973309bdf57cf9e2645046086cfc2df4",
           "spec_material_hash": "3d3861ffd59d9e65966771b5db4107b999a733ec7ad029f02a6c1cb2696ec964"
         }
       ],
@@ -693,14 +701,14 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795160804Z"
+      "updated_at": "1795164090Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch",
         "One linked Git worktree. Draft #1766 is the prior multi-issue review path."
       ],
-      "artifact_hash": "sha256:de8b65604700182ec0932409e1aa8e8aebc4c27232cbec8136b9cf6a92a2bb9e",
+      "artifact_hash": "sha256:e6cc18c8cbb63079b7c6f54b6e41a3b384cc05cacd3a54d95454ab7a87ddd1c9",
       "checks": [
         {
           "name": "3fe9682a GitHub library regression",
@@ -713,6 +721,14 @@
         {
           "name": "98351b5d old-base Buildkite",
           "status": "failed"
+        },
+        {
+          "name": "PR1861 first GitHub governance base",
+          "status": "failed"
+        },
+        {
+          "name": "PR1861 first GitHub library tests",
+          "status": "passed"
         },
         {
           "name": "ffbb3375 preflight",
@@ -784,10 +800,17 @@
             "intent_id": "intent:change_01M7Q67PD7JE7XEM5PZFDFM81P",
             "kind": "trajectory_step_recorded",
             "sequence": 8
+          },
+          {
+            "detail": "trajectory:branch_01M7Q67PFZY3BACJDTFC02YGVX",
+            "event_id": "event:9",
+            "intent_id": "intent:change_01M7Q67PD7JE7XEM5PZFDFM81P",
+            "kind": "trajectory_step_recorded",
+            "sequence": 9
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 8,
+        "next_sequence": 9,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M7Q67PFZY3BACJDTFC02YGVX": {
@@ -919,6 +942,31 @@
                 ],
                 "sequence": 8,
                 "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:9",
+                "observations": [
+                  "Maintainer explicitly directed delivery using GitHub Actions and disregarding Buildkite. Created PR1861 under that instruction. Its first GitHub governance job rejected the prior accepted base after master advanced to version-only release34b98ab1. Integrated that target and refreshed managed projections with official0.153.2.",
+                  "The GitHub supabase-consumer job passed1884 library tests and8 existing ignores, including recorded-instruction and pending-decision regressions. Historical run44698762210 is retained."
+                ],
+                "proof_refs": [
+                  "PR1861 first GitHub library tests",
+                  "PR1861 first GitHub governance base"
+                ],
+                "scope": [
+                  "\".decapod/managed/specs\"",
+                  "\"docs\"]",
+                  "\"tests\"",
+                  ".decapod/config.toml",
+                  ".decapod/managed/specs",
+                  "docs",
+                  "paths:[\"src/decapod\"",
+                  "src/decapod",
+                  "tests"
+                ],
+                "sequence": 9,
+                "validation_findings": []
               }
             ]
           }
@@ -932,8 +980,10 @@
         "Historical Buildkite 12503 failed three CI context checks after upstream movement. All five GitHub workflows for f2e59214 eventually passed. Those results remain historical.",
         "Implementation adds cross-phase tests to the required CLI and library test targets.",
         "Integrated accepted target 7bd0a915 (v0.148.12). Kept the workstream journal and re-applied its authored spec changes over accepted spec content. Reviewed 105 source definitions; c46f364d changes the version entries in Cargo.lock and Cargo.toml, and this workstream changes none of those definitions.",
+        "Maintainer explicitly directed delivery using GitHub Actions and disregarding Buildkite. Created PR1861 under that instruction. Its first GitHub governance job rejected the prior accepted base after master advanced to version-only release34b98ab1. Integrated that target and refreshed managed projections with official0.153.2.",
         "PROOF_PROFILE_RECONCILIATION_REQUIRED. Agent init measured 105 source definitions. Their only changes from the pre-release accepted target to v0.148.11 are package-version entries in Cargo.toml and Cargo.lock. ffbb3375 changes none of those definitions. The Buildkite provider and required graph remain configured.",
         "Released v0.148.11 approved a draft that retained a recorded compatibility contradiction in a disposable local CLI fixture.",
+        "The GitHub supabase-consumer job passed1884 library tests and8 existing ignores, including recorded-instruction and pending-decision regressions. Historical run44698762210 is retained.",
         "User authorized completing, publishing and merging this workstream, followed by its release cut. Recovered task custody and integrated accepted d41056ce with official release-workflow v0.153.1 controller. Code merges cleanly. Reviewed 105 proof sources; this candidate changes none of those definitions. Reconciled the accepted source inventory digest."
       ],
       "inspected_files": [
