@@ -205,10 +205,18 @@ pub fn verify(repo: &Path, event: &str, base: &str, head: &str) -> Check<()> {
         .as_str()
         .ok_or("missing manifest release")?
         .to_string();
+    // Decapod's scoped source policy can preserve version-bound entrypoints
+    // across package releases. Reuse its committed-template/origin/ancestry
+    // proof; a configuration flag or matching supplied digest is insufficient.
+    let preserve_source_versions = entrypoints::preserves_source_entrypoint_versions(repo);
     let mut old_entrypoints = Vec::new();
     for path in entrypoints::ENTRYPOINT_FILES {
-        let old_body = entrypoints::render_entrypoint_for_release(path, &old_release)
-            .ok_or("unknown entrypoint")?;
+        let old_body = if preserve_source_versions {
+            blob(repo, head, path)?
+        } else {
+            entrypoints::render_entrypoint_for_release(path, &old_release)
+                .ok_or("unknown entrypoint")?
+        };
         require_equal(path, &blob(repo, head, path)?, &old_body)?;
         let old_fingerprint = old_body
             .lines()
@@ -225,7 +233,11 @@ pub fn verify(repo: &Path, event: &str, base: &str, head: &str) -> Check<()> {
         require_equal(
             path,
             &read_regular(repo, path)?,
-            &entrypoints::render_entrypoint(path).ok_or("unknown entrypoint")?,
+            &if preserve_source_versions {
+                old_body
+            } else {
+                entrypoints::render_entrypoint(path).ok_or("unknown entrypoint")?
+            },
         )?;
     }
     if expected["entrypoints"] != Value::Array(old_entrypoints) {

@@ -1508,6 +1508,10 @@ isolated caller subprocess, with task-specific checks using the actual claimant.
 
 ## Intent Reconciliation RPC
 
+## Acceptance observer capture boundaries
+
+CaptureCoverage is an optional backward-compatible input to the existing decapod.agent-acceptance.v1 capture. Older captures remain readable with capture_coverage.state=unknown. Complete coverage requires the host, kernel, Git and GitHub channels, no dropped events, exact index digests and a retained terminal position. Post-exit independent Git/forge readback is supported. Shared or unknown witness custody is classified incomplete.
+
 <!-- decapod:requirement REQ-INTENT-TRACEABILITY -->
 `decapod rpc --op intent.reconcile --params '{}'` returns an advisory,
 versioned reconciliation report. It exposes the governed-plan intent digest,
@@ -1535,7 +1539,7 @@ field. Nothing in this operation authorizes a mutation, approval or completion.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `1b6c866d84071f9a1cacf0199fdb45d4640dd230981e3111898d82f57936dd9b`
+- Repository signal fingerprint: `8147d0ec0ebb276c811aaa458f38389bc307933c42c881e50de9f98b2016002b`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (249 files), `tests/` (258 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
@@ -1566,14 +1570,19 @@ state with `PLAN_CHANGED_REQUIRES_APPROVAL`, preserving the previous document.
 Final proposed state, rather than the pre-patch phase list, determines whether
 `DONE` is structurally valid. `validate_plan_progress` enforces incomplete-phase
 and unsatisfied-completed-gate rejection for execution and publication as well.
-Spec-review decisions are preserved by these editors and retain their separate
-review and resolution rules. Explicit approval still records declared authority;
-it does not authenticate the approver or independently judge natural language.
+The `governed_plan.instruction_readiness` object in inference orientation
+reports the current plan's source revision, verdict, source pointers and
+remediation. Approval, execution checks and checkpoints, validation, and
+publication enforce the same recorded blockers for missing intent, unknowns,
+questions, contradictions, and pending spec decisions. The report describes
+recorded constraints. Explicit approval records declared authority.
+Plan initialization preserves pending spec decisions. Recording or resolving
+one of those decisions requires new plan approval.
 
 The public plan CLI regressions live in the existing branch-enforced
 `tests/cli_contract_enforcement.rs::plan_governed_execution` module. Their
-standalone predecessor was not selected by the source-PR graph; keeping all
-three cases in this executed target makes CLI routing, reapproval, and phase
+standalone predecessor was not selected by the source-PR graph. This
+executed target makes CLI routing, reapproval, blocker parity, and phase
 replay behavior part of the normal required proof without changing its adapter.
 
 ## Consumer readiness and repeatable initialization
@@ -2187,3 +2196,7 @@ This map now uses accepted master `e9c40e929ee33aa5443c38b57276f96111db0b92` and
 ## Readiness and evidence scope
 
 Cold state readers expose instruction identity and revision. Preparation, approval, execution checkpointing, validation and publication apply the same recorded blocker and remediation. An actual native-call observation binds its terminal result to the current candidate, accepted base and policy, instructions, task custody and measured producer. Retained denial evidence remains available after a legitimate repair. Publication verifies final head and live target independently. Hosted or unobserved effects retain unresolved coverage.
+
+## Exact release projection interpretation
+
+The release projection checker remains read-only and returns a failure for any unexpected projection. Under verified source-development policy, entrypoint versions may differ from the package or spec-manifest release while their committed bytes and fingerprints remain canonical. Even another well-formed, correctly fingerprinted header is rejected if it differs from that immutable release head. Foreign origin, altered payload, configuration/source/dependency changes and unknown manifest drift do not obtain an exception. Ordinary consumers continue to require the evaluating binary's exact release templates. No RPC schema, producer authority or required CI recipe is added or relaxed.

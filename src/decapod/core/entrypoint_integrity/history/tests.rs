@@ -1058,3 +1058,80 @@ pub fn canonical_template(name: &str) -> Option<String> {
 }
 
 "####;
+
+// The standalone CLI also compiles the shared projection fixture against the
+// normal library. Keep lineage-only setup in the library test harness, where
+// its existing published-root fixture is available.
+mod release_projection_source_policy {
+    use super::{command, development_source_fixture};
+    use crate::core::{entrypoint_integrity as entrypoints, release_projection_drift as release};
+    use std::fs;
+
+    #[test]
+    fn accepts_preserved_source_versions_from_committed_development_templates() {
+        let fixture = release::tests::Fixture::with_source_versions(development_source_fixture());
+        let repo = fixture.root.path();
+        assert!(entrypoints::preserves_source_entrypoint_versions(repo));
+        for path in entrypoints::ENTRYPOINT_FILES {
+            let committed =
+                super::super::git(repo, &["show", &format!("{}:{path}", fixture.head)]).unwrap();
+            let current = fs::read_to_string(repo.join(path)).unwrap();
+            assert!(committed.status.success());
+            assert_eq!(current.as_bytes(), committed.stdout.as_slice());
+            assert!(current.starts_with("<!-- decapod-release: 0.0.0 -->"));
+        }
+        let before = command(repo, &["diff", "HEAD"]);
+        release::verify(repo, "push", &fixture.base, &fixture.head).unwrap();
+        assert_eq!(before, command(repo, &["diff", "HEAD"]));
+        fixture.refresh();
+        release::verify(repo, "push", &fixture.base, &fixture.head).unwrap();
+    }
+
+    #[test]
+    fn preserved_source_versions_do_not_authorize_header_payload_or_origin_drift() {
+        for alteration in ["header", "payload", "origin"] {
+            let fixture =
+                release::tests::Fixture::with_source_versions(development_source_fixture());
+            let repo = fixture.root.path();
+            assert!(entrypoints::preserves_source_entrypoint_versions(repo));
+            match alteration {
+                "header" => {
+                    fs::write(
+                        repo.join("AGENTS.md"),
+                        entrypoints::render_entrypoint_for_release("AGENTS.md", "0.0.2").unwrap(),
+                    )
+                    .unwrap();
+                    // Correct fingerprinting does not authorize replacing the
+                    // immutable release head's entrypoint version.
+                    assert!(entrypoints::preserves_source_entrypoint_versions(repo));
+                }
+                "payload" => {
+                    let path = repo.join("AGENTS.md");
+                    fs::write(
+                        &path,
+                        fs::read_to_string(&path)
+                            .unwrap()
+                            .replace("Decapod", "Counterfeit"),
+                    )
+                    .unwrap();
+                }
+                "origin" => {
+                    command(
+                        repo,
+                        &[
+                            "remote",
+                            "set-url",
+                            "origin",
+                            "https://github.com/foreign/consumer",
+                        ],
+                    );
+                }
+                _ => unreachable!(),
+            }
+            assert!(
+                release::verify(repo, "push", &fixture.base, &fixture.head).is_err(),
+                "accepted {alteration} drift"
+            );
+        }
+    }
+}

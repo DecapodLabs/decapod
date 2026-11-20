@@ -549,6 +549,12 @@ project overrides, orientation, and scoped context help the agent identify
 the next useful question or action. Resolved authority and context sources
 remain inspectable.
 
+Agents can draft work while a governing instruction is still unresolved.
+Approval, execution, validation, and publication require a clear recorded plan.
+When a recorded source resolves a question or contradiction, the revised plan
+requires reapproval and affected proof must be run again. Pending spec decisions
+require the explicit review-resolution transition.
+
 ### Bounded, coordinated work
 
 Tasks, claims, sessions, and isolated workspaces establish who owns the work
@@ -711,7 +717,7 @@ These declarations select authoring and proof obligations; they do not attest im
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `1b6c866d84071f9a1cacf0199fdb45d4640dd230981e3111898d82f57936dd9b`
+- Repository signal fingerprint: `8147d0ec0ebb276c811aaa458f38389bc307933c42c881e50de9f98b2016002b`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (249 files), `tests/` (258 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
@@ -1199,3 +1205,15 @@ This map now uses accepted master `e9c40e929ee33aa5443c38b57276f96111db0b92` and
 ## Recorded instructions and independently accepted requirements
 
 Keep the original request and ordered clarification history available across a cold handoff. A recorded revision identifies its observed or declared source. A provider account observation supports provenance without authenticating human approval. Pending decisions remain visible after reinitializing the same plan. Resolving a decision requires a fresh plan acceptance before the existing execution evidence can be used.
+
+## Version-only release proof
+
+Decapod release metadata must remain independently distinguishable from source, policy, dependency and authored-spec changes. Its existing immutable classifier and exact projection verifier own this boundary. A canonical Decapod source checkout may retain version-bound agent entrypoints under its already accepted source-development policy. Release proof must preserve those exact committed bytes when that policy verifies origin, immutable source ancestry, canonical template payload and each version-bound fingerprint. This does not permit a caller-selected header or a source/configuration change to masquerade as release metadata. Required Actions will exercise this correction; implementation and registered test locations alone are not passing evidence.
+
+The current candidate integrates accepted release0.153.2 at34b98ab1. Its first Actions attempt was rejected before execution after the accepted target advanced; that refusal remains historical. Release projections are regenerated through official0.153.2, and the complete105-file source inventory is independently remeasured. The reviewed regression fixture is the only inventory input changed from the accepted base. GitHub Actions for the integrated exact candidate remain required; old passes and source registration do not establish current execution.
+
+Actions exposed a standalone-tool integration error in the first current-base candidate: the shared verifier could not call its crate-private source reader. The existing read-only predicate is now exported as an internal documented-hidden helper for that wrapper. Source-lineage regression setup stays in the library-only harness; the standalone wrapper retains its existing complete shared regression suite. No test is removed from the required library execution.
+
+The full Supabase-enabled library execution caught a test-fixture identity omission: the release-version helper must retain the canonical Cargo package repository field when it reuses the existing published-root source fixture. The correction changes fixture construction only; origin, ungrafted ancestry, committed template and immutable entrypoint checks remain strict. Prior failed candidate eee794ba and actual job136182283538 remain preserved.
+
+Release projection integrity and retained observer-run completeness are separate proof surfaces. A successful version-only comparison cannot turn missing run boundaries or incomplete tool observation into an autonomous-admission claim; the existing acceptance observer retains that judgment. Preserving source-entrypoint versions grants no observation coverage.

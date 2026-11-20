@@ -1209,11 +1209,23 @@ fn current_governance_is_receipt_independent_but_preserves_task_and_decision_gat
         .unresolved_contradictions
         .push("Source and intent disagree".into());
     plan_governance::save_plan(dir.path(), &changed).unwrap();
-    assert!(
-        verify_current_governance_for_publish(dir.path())
-            .unwrap_err()
-            .to_string()
-            .contains("PUBLICATION_DECISION_REQUIRED")
+    let error = verify_current_governance_for_publish(dir.path())
+        .unwrap_err()
+        .to_string();
+    assert!(error.contains("PUBLICATION_DECISION_REQUIRED"), "{error}");
+    let payload: serde_json::Value =
+        serde_json::from_str(error.split_once("payload=").unwrap().1).unwrap();
+    assert_eq!(
+        payload["instruction_readiness"],
+        serde_json::to_value(
+            plan_governance::instruction_readiness_at(
+                dir.path(),
+                &changed,
+                crate::core::validation_rules::EvaluationPhase::Publication,
+            )
+            .unwrap(),
+        )
+        .unwrap()
     );
     changed = original;
     changed.todo_ids = vec!["wrong_task".into()];

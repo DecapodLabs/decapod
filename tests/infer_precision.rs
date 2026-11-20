@@ -289,10 +289,12 @@ fn preparation_reports_pending_spec_decisions_and_empty_intent_without_blocking_
         );
         assert!(output.status.success());
         let plan = extract_json(&output)["governed_plan"].clone();
-        assert_eq!(
-            plan["unresolved_items"],
-            plan["instruction_readiness"]["questions"]
-        );
+        let mut visible = plan["instruction_readiness"]["questions"]
+            .as_array()
+            .unwrap()
+            .clone();
+        visible.push("deferred_question: Unrelated future feature".into());
+        assert_eq!(plan["unresolved_items"], serde_json::Value::Array(visible));
         assert_eq!(
             plan["instruction_readiness"]["rule_id"],
             "recorded_instruction_readiness"
@@ -305,7 +307,10 @@ fn preparation_reports_pending_spec_decisions_and_empty_intent_without_blocking_
         );
         plan
     };
-    assert_eq!(inspect()["unresolved_items"], serde_json::json!([]));
+    assert_eq!(
+        inspect()["instruction_readiness"]["questions"],
+        serde_json::json!([])
+    );
     assert!(
         run_cmd(
             root,
@@ -338,7 +343,13 @@ fn preparation_reports_pending_spec_decisions_and_empty_intent_without_blocking_
             .success()
     );
     let empty = inspect();
-    assert_eq!(empty["unresolved_items"].as_array().unwrap().len(), 2);
+    assert_eq!(
+        empty["instruction_readiness"]["questions"]
+            .as_array()
+            .unwrap()
+            .len(),
+        2
+    );
     assert_ne!(
         empty["instruction_readiness"]["source_revision"],
         pending["instruction_readiness"]["source_revision"]

@@ -617,7 +617,11 @@ pub fn resolve_state(
         for blocker in &readiness.blockers {
             blockers.push(BlockerInfo {
                 id: blocker.id.clone(),
-                kind: if readiness.rule_remediation.human_authorization_required {
+                kind: if readiness
+                    .remediation
+                    .as_ref()
+                    .is_some_and(|remediation| remediation.human_authorization_required)
+                {
                     BlockerKind::HumanDecision
                 } else {
                     BlockerKind::DependencyUnresolved

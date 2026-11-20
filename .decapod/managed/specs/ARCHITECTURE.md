@@ -397,6 +397,13 @@ fingerprint, and verifier come from `state::canonical_snapshot`, which is the
 same revision and provenance resolver used by `state.resolve`. The judgment
 does not keep a second definition of that identity.
 
+`plan_governance::instruction_readiness` evaluates recorded instructions from
+the current governance plan. Orientation projects those same blockers and
+remediation, and approval, execution checkpoints, validation, and publication
+enforce them. Its source revision binds the recorded inputs independently of
+approval or phase progress. The existing validation epoch binds proof to the
+applicable plan after a correction.
+
 A task verification row is an index. `judge_stored_verification` re-hashes the
 bound files and checks that the proof digest matches that reconstruction under
 the canonical snapshot. A pass status or a digest written only into SQLite is
@@ -1133,6 +1140,10 @@ or masking permission/protocol failures. Empty runtime directories are reusable.
 
 ## Intent Traceability Read Model
 
+## Acceptance observer capture boundaries
+
+The read-only acceptance observer in src/decapod/core/flight_recorder/acceptance.rs correlates historical admissions and separately assesses retained capture completeness. Optional coverage binds the declared channels, operator custody, elapsed window, counts, indexes, actual agent end and process exit. Missing or incomplete coverage keeps historical observations while preventing a completed autonomous-run claim.
+
 <!-- decapod:requirement REQ-INTENT-TRACEABILITY -->
 `core/intent_reconcile.rs` derives a read-only reconciliation view from
 `plan_governance`, `core/project_specs`, the spec manifest, and current
@@ -1178,7 +1189,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `1b6c866d84071f9a1cacf0199fdb45d4640dd230981e3111898d82f57936dd9b`
+- Repository signal fingerprint: `8147d0ec0ebb276c811aaa458f38389bc307933c42c881e50de9f98b2016002b`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (249 files), `tests/` (258 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
@@ -1747,3 +1758,13 @@ inside a candidate-controlled validation definition.
 The selected-work model in `core/intent_reconcile/selected.rs` reads explicit accepted Git roots and reconciles them to existing task obligations. Root mapping, the bounded equality and inequality consistency check, and actual required application checks give separate results. Independent checks cover missing audit behavior and incompatibility in a combined source tree. Unrelated backlog remains outside the selected work.
 
 Use the canonical task-scope parser upstream. Legacy scope repair is limited to the known projection and preserves the prior journal before reauthorization.
+
+## Release projections and source template authority
+
+`core::release_projection_drift::verify` reuses `entrypoint_integrity::preserves_source_entrypoint_versions` for Decapod source development rather than implementing another version exception or template reader. In that mode the expected entrypoint is its immutable release-head blob, and the working entrypoint must equal it byte for byte. The existing predicate independently validates canonical committed source templates, repository origin, ungrafted ancestry, policy opt-in and version-bound fingerprints. Other repositories retain the binary-release rendering path. Immutable release classification, staged/working change inventory, exact Dockerfile/spec/manifest hashes and all other-field comparisons remain required.
+
+The standalone `assets/tools/release_projection_drift.rs` wrapper links the ordinary Decapod library while compiling the shared verifier. Its source-version predicate must therefore be available across that crate boundary; it remains a read-only helper, not a grant. The shared projection fixture accepts an existing source root, while library-only lineage tests supply the existing published-root fixture from `entrypoint_integrity/history/tests.rs`.
+
+The full Supabase-enabled library execution caught a test-fixture identity omission: the release-version helper must retain the canonical Cargo package repository field when it reuses the existing published-root source fixture. The correction changes fixture construction only; origin, ungrafted ancestry, committed template and immutable entrypoint checks remain strict. Prior failed candidate eee794ba and actual job136182283538 remain preserved.
+
+Release projection integrity and retained observer-run completeness are separate proof surfaces. A successful version-only comparison cannot turn missing run boundaries or incomplete tool observation into an autonomous-admission claim; the existing acceptance observer retains that judgment. Preserving source-entrypoint versions grants no observation coverage.

@@ -14562,7 +14562,10 @@ fn run_infer_init(cli: InferInitCli, project_root: &Path) -> Result<(), error::D
     let plan_intent = governed_plan.intent.clone();
     let plan_requires_convergence = governed_plan.status == "present"
         && (governed_plan.state.as_deref() != Some("APPROVED")
-            || !governed_plan.unresolved_items.is_empty());
+            || governed_plan
+                .instruction_readiness
+                .as_ref()
+                .is_some_and(|readiness| !readiness.blockers.is_empty()));
     let context_files: Vec<String> = cli
         .context
         .as_ref()
@@ -14898,17 +14901,19 @@ fn governed_plan_context(
             core::validation_rules::EvaluationPhase::PreExecution,
         )?
     } else {
-        plan_governance::instruction_readiness(
-            &plan,
-            core::validation_rules::EvaluationPhase::PreExecution,
-        )
+        plan_governance::instruction_readiness(&plan)
     };
     let instruction_lineage = if selected {
         plan_governance::instruction_lineage_for_plan(project_root, &plan)?
     } else {
         None
     };
-    let unresolved_items = instruction_readiness.questions.clone();
+    let mut unresolved_items = instruction_readiness.questions.clone();
+    unresolved_items.extend(
+        plan.deferred_questions
+            .iter()
+            .map(|item| format!("deferred_question: {item}")),
+    );
 
     let task_binding = match task_id {
         Some(id) if plan.todo_ids.iter().any(|candidate| candidate == id) => "bound",

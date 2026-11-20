@@ -687,6 +687,11 @@
       "id": "reconcile-platform-test-policy-fields",
       "summary": "Keep the legacy platform test fixture compiling with the optional selected-work and observed-path policies disabled. Preserve real measured prior CI failures. Run the refreshed head in GitHub Actions.",
       "input_digest": "sha256:16c556f561d0a64717f9d5d90f77b363c3303b9bf5d25327449ca26f74ac7e18"
+    },
+    {
+      "id": "stack-governance-and-release-on-868f756e",
+      "summary": "Preserve the original signed recovery and release histories under a common delivery. Keep accepted recorded readiness, native decisions and source projection contracts. Hosted checks and review pending.",
+      "input_digest": "sha256:91cecc8ef6acca1d6c21fca5857c73bd9c5612df4b6ad153d14d281e6e8e78ba"
     }
   ],
   "intents": {
@@ -733,25 +738,25 @@
       "schema_version": "1.1.0",
       "spec_reviews": [
         {
-          "disposition": "unchanged_with_reason",
+          "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Allow an existing test fixture to declare the optional policy fields using their established defaults.",
-          "reviewed_code_fingerprint": "1b6c866d84071f9a1cacf0199fdb45d4640dd230981e3111898d82f57936dd9b",
-          "spec_material_hash": "9b73adacbbb6d3c40dfda3b537ad2e72fae9ea0f26a877fc657ed031449dc793"
+          "reason": "Integrate the release verifier and preserve the accepted recorded-readiness contract.",
+          "reviewed_code_fingerprint": "8147d0ec0ebb276c811aaa458f38389bc307933c42c881e50de9f98b2016002b",
+          "spec_material_hash": "75a570588e296fd096b07f174b3844f30ee5b279edae901ac905d30ab8f5e4ad"
         },
         {
-          "disposition": "unchanged_with_reason",
+          "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "The explicit None values preserve the existing platform fixture behavior and public interface.",
-          "reviewed_code_fingerprint": "1b6c866d84071f9a1cacf0199fdb45d4640dd230981e3111898d82f57936dd9b",
-          "spec_material_hash": "3e7b2d92e3366b90b94cf6aef1c522c35ba9cb371a50972ab31c79b6bab5d4d8"
+          "reason": "Retain typed blocker and remediation fields and the versioned projections.",
+          "reviewed_code_fingerprint": "8147d0ec0ebb276c811aaa458f38389bc307933c42c881e50de9f98b2016002b",
+          "spec_material_hash": "bffba7b7bfbecd53f1fb5451210c8cbe84f54da05ac4d209b0f9512a400393d6"
         },
         {
-          "disposition": "unchanged_with_reason",
+          "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Test-only initialization preserves production policy and authority.",
-          "reviewed_code_fingerprint": "1b6c866d84071f9a1cacf0199fdb45d4640dd230981e3111898d82f57936dd9b",
-          "spec_material_hash": "3d3861ffd59d9e65966771b5db4107b999a733ec7ad029f02a6c1cb2696ec964"
+          "reason": "Retain canonical source authority checks and the accepted observer limits.",
+          "reviewed_code_fingerprint": "8147d0ec0ebb276c811aaa458f38389bc307933c42c881e50de9f98b2016002b",
+          "spec_material_hash": "cb896215a5995942f4c9b617abf055b91af596ab245375ab3582844150477bbb"
         }
       ],
       "state": "APPROVED",
@@ -762,14 +767,15 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795166494Z"
+      "updated_at": "1795168915Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch",
+        "Deliver PRs 1862 and 1865 in one protected merge, preserving fifteen existing signed commits and the original draft.",
         "Preserve draft PR #1766 and its history. Use normal GitHub review and merge directed by the maintainer. Use GitHub Actions for this delivery. Close issues only with exact independent acceptance evidence."
       ],
-      "artifact_hash": "sha256:1e15da6208fdb9fc720e3e7dcff34a63d2b1896ae5af3f5c3e9a60bc23639c73",
+      "artifact_hash": "sha256:d90b3796d8ff35a796dcd4d2414b1801c7141acef8c095f5537330607b00ab1d",
       "checks": [
         {
           "name": "2092274a-macos-compile",
@@ -785,6 +791,14 @@
         },
         {
           "name": "projection-hashes",
+          "status": "passed"
+        },
+        {
+          "name": "stack-format",
+          "status": "passed"
+        },
+        {
+          "name": "stack-inventory-and-projections",
           "status": "passed"
         }
       ],
@@ -823,10 +837,17 @@
             "intent_id": "intent:change_01M7PQMA9DG5FG2QMC9WPR3ZCJ",
             "kind": "trajectory_step_recorded",
             "sequence": 6
+          },
+          {
+            "detail": "trajectory:branch_01M7PQMADCS3EAWQSXB0HVXNQP",
+            "event_id": "event:7",
+            "intent_id": "intent:change_01M7PQMA9DG5FG2QMC9WPR3ZCJ",
+            "kind": "trajectory_step_recorded",
+            "sequence": 7
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 6,
+        "next_sequence": 7,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M7PQMADCS3EAWQSXB0HVXNQP": {
@@ -904,6 +925,30 @@
                 ],
                 "sequence": 6,
                 "validation_findings": []
+              },
+              {
+                "action": "verification",
+                "custody_event_id": "event:7",
+                "observations": [
+                  "Formatting is clean. All 105 reviewed input hashes match release verifier head 42e1becf and all 12 refreshed manifest entries match their files."
+                ],
+                "proof_refs": [
+                  "stack-format",
+                  "stack-inventory-and-projections"
+                ],
+                "scope": [
+                  "\".decapod\"",
+                  "\"AGENTS.md\"",
+                  "\"CLAUDE.md\"",
+                  "\"CODEX.md\"",
+                  "\"GEMINI.md\"]",
+                  "\"README.md\"",
+                  "\"docs\"",
+                  "\"tests\"",
+                  "paths:[\"src\""
+                ],
+                "sequence": 7,
+                "validation_findings": []
               }
             ]
           }
@@ -914,6 +959,7 @@
       ],
       "destination": "pull request",
       "evidence": [
+        "Formatting is clean. All 105 reviewed input hashes match release verifier head 42e1becf and all 12 refreshed manifest entries match their files.",
         "GitHub Actions job 136172556557 measured E0063 at 2092274a. Preserve original instruction and history in the upstream reconciler. Regression execution on the repair remains pending.",
         "GitHub Actions jobs 136183707903 and 136190025843 measured E0063 on the same platform-selection fixture. Repair verified by formatting. Fresh hosted execution remains pending.",
         "The manifest declares v0.153.2 and commits the actual hashes of all 12 files. The four entrypoints match accepted master 34b98ab1."
@@ -923,7 +969,8 @@
       "modified_files": [],
       "next_transitions": [
         "Refine plan and declare falsifiable checks",
-        "Run GitHub Actions for the pushed source and accepted master. Preserve any missing independent external observer evidence."
+        "Run GitHub Actions for the pushed source and accepted master. Preserve any missing independent external observer evidence.",
+        "Verify stack checkpoints, run GitHub Actions and merge via protected master when eligible."
       ],
       "repo_scope": [
         "\".decapod\"",

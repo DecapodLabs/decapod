@@ -18,36 +18,54 @@ use std::sync::atomic::Ordering;
 use tempfile::tempdir;
 
 #[test]
-fn validated_intent_readiness_includes_recorded_contradictions() {
+fn validation_reports_current_recorded_instruction_for_legacy_approval() {
     let dir = tempdir().unwrap();
-    let mut plan = GovernedPlan {
-        schema_version: "1.1.0".to_string(),
-        title: "Contradictory prompt fixture".to_string(),
-        intent: "Preserve API compatibility".to_string(),
-        state: PlanState::Approved,
-        todo_ids: vec![],
-        proof_hooks: vec![],
-        unknowns: vec![],
-        human_questions: vec![],
-        stop_conditions: vec![],
-        unresolved_contradictions: vec![],
-        deferred_questions: vec![],
-        constraints: ScopeConstraints::default(),
-        phases: vec![],
-        updated_at: "fixture".to_string(),
-        spec_reviews: vec![],
-        reflection: None,
+    let root = dir.path();
+    let store = Store {
+        kind: StoreKind::Repo,
+        root: root.join(".decapod/data"),
     };
-    assert!(!plan_governance::has_unresolved_intent_requirements(&plan));
-    plan.unresolved_contradictions
-        .push("Later prompt contradicts the earlier accepted requirement".to_string());
-    assert!(plan_governance::has_unresolved_intent_requirements(&plan));
-    plan_governance::save_plan(dir.path(), &plan).unwrap();
-    let reloaded = plan_governance::load_plan(dir.path()).unwrap().unwrap();
-    assert!(plan_governance::has_unresolved_intent_requirements(
-        &reloaded
-    ));
-    assert_eq!(reloaded.state, PlanState::Approved);
+    let mut plan = plan_governance::init_plan(
+        root,
+        plan_governance::InitPlanInput {
+            title: "Compatibility".into(),
+            intent: "Preserve API v1".into(),
+            todo_ids: vec!["missing-task".into()],
+            proof_hooks: vec![],
+            unknowns: vec![],
+            human_questions: vec![],
+            stop_conditions: vec![],
+            unresolved_contradictions: vec!["Later request removes API v1".into()],
+            deferred_questions: vec![],
+            constraints: ScopeConstraints::default(),
+            phases: vec![],
+        },
+    )
+    .unwrap();
+    plan.state = PlanState::Approved;
+    plan_governance::save_plan(root, &plan).unwrap();
+
+    let context = ValidationContext::new();
+    super::validate_plan_governed_execution_gate(&store, &context, root).unwrap();
+    let failures = context.fails.lock().unwrap();
+    let failure = failures
+        .iter()
+        .find(|failure| failure.contains("NEEDS_HUMAN_INPUT"))
+        .unwrap_or_else(|| panic!("missing recorded contradiction in {failures:?}"));
+    let payload: serde_json::Value =
+        serde_json::from_str(failure.split_once("payload=").unwrap().1).unwrap();
+    assert_eq!(
+        payload["instruction_readiness"],
+        serde_json::to_value(
+            plan_governance::instruction_readiness_at(
+                root,
+                &plan,
+                crate::core::validation_rules::EvaluationPhase::Validation,
+            )
+            .unwrap(),
+        )
+        .unwrap()
+    );
 }
 
 #[test]

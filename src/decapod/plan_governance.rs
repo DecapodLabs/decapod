@@ -1,5 +1,8 @@
 use crate::core::db::OptionalExtension;
 use crate::core::error;
+use crate::core::validation_rules::{
+    EvaluationPhase, RuleAuthority, RuleId, RuleRemediation, RuleSeverity, RuleVerdict,
+};
 use serde::{Deserialize, Serialize};
 use serde_json::json;
 use sha2::{Digest, Sha256};
@@ -620,7 +623,7 @@ pub struct InstructionBlocker {
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Eq)]
 pub struct InstructionReadiness {
     pub schema_version: String,
-    pub rule_id: String,
+    pub rule_id: RuleId,
     pub authority: crate::core::validation_rules::RuleAuthority,
     pub severity: crate::core::validation_rules::RuleSeverity,
     pub phase: crate::core::validation_rules::EvaluationPhase,
@@ -632,17 +635,17 @@ pub struct InstructionReadiness {
     pub global_consistency: Option<crate::core::intent_reconcile::selected::ConstraintJudgment>,
     pub blockers: Vec<InstructionBlocker>,
     pub questions: Vec<String>,
-    pub remediation: String,
-    pub rule_remediation: crate::core::validation_rules::RuleRemediation,
+    pub remediation: Option<RuleRemediation>,
 }
 
-pub fn instruction_readiness(
+pub fn instruction_readiness(plan: &GovernedPlan) -> InstructionReadiness {
+    instruction_readiness_for_phase(plan, EvaluationPhase::PreExecution)
+}
+
+fn instruction_readiness_for_phase(
     plan: &GovernedPlan,
-    phase: crate::core::validation_rules::EvaluationPhase,
+    phase: EvaluationPhase,
 ) -> InstructionReadiness {
-    use crate::core::validation_rules::{
-        RuleAuthority, RuleRemediation, RuleSeverity, RuleVerdict,
-    };
     let mut blockers = Vec::new();
     let mut add = |field: &str, question: String| {
         let source = format!("{PLAN_PATH}#/sections/plan/{field}");
@@ -680,8 +683,8 @@ pub fn instruction_readiness(
             add(
                 &format!("spec_reviews/{index}"),
                 format!(
-                    "Resolve pending human spec review before execution: {}",
-                    review.path
+                    "Resolve pending human spec review for {}: {}",
+                    review.path, review.reason
                 ),
             );
         }
@@ -699,6 +702,36 @@ pub fn instruction_readiness(
         .iter()
         .any(|r| r.disposition == SpecReviewDisposition::RequiresDecision);
     let human_required = !plan.human_questions.is_empty() || pending_spec_review;
+    let remediation = (!blockers.is_empty())
+        .then(|| instruction_remediation(&blockers, human_required, pending_spec_review));
+    InstructionReadiness {
+        schema_version: "1.1.0".into(),
+        rule_id: RuleId::new("recorded_instruction_readiness"),
+        authority: RuleAuthority::TaskConstraints,
+        severity: RuleSeverity::Error,
+        phase,
+        verdict: if blockers.is_empty() {
+            RuleVerdict::Pass
+        } else {
+            RuleVerdict::Fail
+        },
+        source_revision: format!("sha256:{:x}", Sha256::digest(source.to_string())),
+        instruction_revision: None,
+        global_consistency: None,
+        questions: blockers
+            .iter()
+            .map(|blocker| blocker.question.clone())
+            .collect(),
+        blockers,
+        remediation,
+    }
+}
+
+fn instruction_remediation(
+    blockers: &[InstructionBlocker],
+    human_required: bool,
+    pending_spec_review: bool,
+) -> RuleRemediation {
     let mut required_steps = vec![
         "Consult the recorded governing sources and resolve their obligations through supported plan/review operations".into(),
     ];
@@ -707,7 +740,7 @@ pub fn instruction_readiness(
     }
     required_steps
         .push("Separately reaccept the revised execution contract and rerun affected proof".into());
-    let rule_remediation = RuleRemediation {
+    RuleRemediation {
         error_code: "NEEDS_HUMAN_INPUT".into(),
         violation_description: "Recorded instructions have unresolved obligations".into(),
         expected_condition: "No current required instruction blocker".into(),
@@ -720,30 +753,11 @@ pub fn instruction_readiness(
             "Current plan/review source revision and fresh applicable proof".into(),
         ],
         related_rules: vec![],
-    };
-    InstructionReadiness {
-        schema_version: "1.1.0".into(),
-        rule_id: "recorded_instruction_readiness".into(),
-        authority: RuleAuthority::TaskConstraints,
-        severity: RuleSeverity::Error,
-        phase,
-        verdict: if blockers.is_empty() { RuleVerdict::Pass } else { RuleVerdict::Fail },
-        source_revision: format!("sha256:{:x}", Sha256::digest(source.to_string())),
-        instruction_revision: None,
-        global_consistency: None,
-        questions: blockers.iter().map(|blocker| blocker.question.clone()).collect(),
-        blockers,
-        remediation: "Resolve recorded obligations and separately reaccept the revised plan; rerun affected proof.".into(),
-        rule_remediation,
     }
 }
 
 pub(crate) fn unresolved_instruction_questions(plan: &GovernedPlan) -> Vec<String> {
-    instruction_readiness(
-        plan,
-        crate::core::validation_rules::EvaluationPhase::PreExecution,
-    )
-    .questions
+    instruction_readiness(plan).questions
 }
 
 pub(crate) fn ensure_instruction_ready(
@@ -751,7 +765,7 @@ pub(crate) fn ensure_instruction_ready(
     phase: crate::core::validation_rules::EvaluationPhase,
     marker: &str,
 ) -> Result<(), error::DecapodError> {
-    let readiness = instruction_readiness(plan, phase);
+    let readiness = instruction_readiness_for_phase(plan, phase);
     ensure_instruction_report_ready(readiness, marker)
 }
 
@@ -786,7 +800,7 @@ pub fn instruction_readiness_at(
     plan: &GovernedPlan,
     phase: crate::core::validation_rules::EvaluationPhase,
 ) -> Result<InstructionReadiness, error::DecapodError> {
-    let mut report = instruction_readiness(plan, phase);
+    let mut report = instruction_readiness_for_phase(plan, phase);
     if let Some(lineage) = instruction_lineage_for_plan(root, plan)? {
         report.schema_version = "1.2.0".into();
         report.source_revision = format!(
@@ -865,13 +879,14 @@ pub fn instruction_readiness_at(
         });
         report.questions.push(question);
         report.verdict = RuleVerdict::Fail;
-        report.rule_remediation.affected_paths.push(source);
-        report.rule_remediation.observed_condition =
-            format!("{} recorded blockers", report.blockers.len());
-        report.rule_remediation.human_authorization_required |= requires_authority;
-        report.rule_remediation.autonomous_remediation_permitted =
-            !report.rule_remediation.human_authorization_required;
-        report.rule_remediation.required_steps.push("Repair the source binding through supported operations. Genuine policy conflicts require the existing authority path; then separately reaccept the plan and obtain fresh proof".into());
+        let remediation = report
+            .remediation
+            .get_or_insert_with(|| instruction_remediation(&[], false, false));
+        remediation.affected_paths.push(source);
+        remediation.observed_condition = format!("{} recorded blockers", report.blockers.len());
+        remediation.human_authorization_required |= requires_authority;
+        remediation.autonomous_remediation_permitted = !remediation.human_authorization_required;
+        remediation.required_steps.push("Repair the source binding through supported operations. Genuine policy conflicts require the existing authority path; then separately reaccept the plan and obtain fresh proof".into());
     }
     Ok(report)
 }
@@ -899,10 +914,7 @@ fn ensure_instruction_report_ready(
         } else {
             "NEEDS_HUMAN_INPUT: recorded instructions require resolution."
         },
-        Some(
-            serde_json::to_value(readiness)
-                .map_err(|e| error::DecapodError::ValidationError(e.to_string()))?,
-        ),
+        Some(json!({ "questions": readiness.questions, "instruction_readiness": readiness })),
     ))
 }
 

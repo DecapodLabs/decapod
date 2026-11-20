@@ -184,15 +184,19 @@ fn accepted_plan(
             "execution checkpoint requires an accepted plan",
         )
     })?;
+    if !plan.todo_ids.iter().any(|id| id == task_id) {
+        return Err(blocked(
+            "NEEDS_PLAN_APPROVAL",
+            "current task must belong to an approved or executing plan",
+        ));
+    }
     plan_governance::ensure_instruction_ready_at(
         root,
         &plan,
         crate::core::validation_rules::EvaluationPhase::DuringExecution,
         "EXECUTION_DECISION_REQUIRED",
     )?;
-    if !matches!(plan.state, PlanState::Approved | PlanState::Executing)
-        || !plan.todo_ids.iter().any(|id| id == task_id)
-    {
+    if !matches!(plan.state, PlanState::Approved | PlanState::Executing) {
         return Err(blocked(
             "NEEDS_PLAN_APPROVAL",
             "current task must belong to an approved or executing plan",

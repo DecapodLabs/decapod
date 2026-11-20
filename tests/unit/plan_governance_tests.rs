@@ -140,7 +140,7 @@ fn accepted_global_conflict_has_one_source_backed_blocker_across_all_phases() {
         let report = instruction_readiness_at(root, &plan, phase.clone()).unwrap();
         assert_eq!(report.source_revision, initial.source_revision);
         assert_eq!(report.blockers, initial.blockers);
-        assert_eq!(report.rule_remediation, initial.rule_remediation);
+        assert_eq!(report.remediation, initial.remediation);
         assert!(ensure_instruction_ready_at(root, &plan, phase, "NEEDS_HUMAN_INPUT").is_err());
     }
     assert!(
@@ -409,6 +409,11 @@ fn actual_intent_ambiguity_still_requires_human_input_before_projection_lookup()
             human_questions: Some(vec!["Which proof is required?".to_string()]),
             ..Default::default()
         },
+        PlanPatch {
+            human_questions: Some(vec![]),
+            unresolved_contradictions: Some(vec!["Preserve and remove API v1".into()]),
+            ..Default::default()
+        },
     ] {
         patch_plan(dir.path(), patch).unwrap();
         let rejected = patch_plan(
@@ -519,7 +524,7 @@ fn instruction_blockers_keep_source_revision_and_remedy_across_phases() {
     let mut plan = load_plan(dir.path()).unwrap().unwrap();
     plan.unresolved_contradictions
         .push("Keep v1; remove v1".into());
-    let expected = instruction_readiness(&plan, EvaluationPhase::PreExecution);
+    let expected = instruction_readiness(&plan);
     assert_eq!(expected.verdict, RuleVerdict::Fail);
     assert_eq!(expected.blockers.len(), 1);
     assert_eq!(
@@ -534,8 +539,10 @@ fn instruction_blockers_keep_source_revision_and_remedy_across_phases() {
         let error = ensure_instruction_ready(&plan, phase.clone(), "NEEDS_HUMAN_INPUT")
             .unwrap_err()
             .to_string();
-        let payload: InstructionReadiness =
+        let payload: serde_json::Value =
             serde_json::from_str(error.split_once("payload=").unwrap().1).unwrap();
+        let payload: InstructionReadiness =
+            serde_json::from_value(payload["instruction_readiness"].clone()).unwrap();
         assert_eq!(payload.phase, phase);
         assert_eq!(payload.blockers, expected.blockers);
         assert_eq!(payload.source_revision, expected.source_revision);
@@ -543,10 +550,10 @@ fn instruction_blockers_keep_source_revision_and_remedy_across_phases() {
     }
     plan.state = PlanState::Draft;
     plan.updated_at = "later".into();
-    let draft = instruction_readiness(&plan, EvaluationPhase::PreExecution);
+    let draft = instruction_readiness(&plan);
     assert_eq!(draft.source_revision, expected.source_revision);
     plan.unresolved_contradictions.clear();
-    let repaired = instruction_readiness(&plan, EvaluationPhase::PreExecution);
+    let repaired = instruction_readiness(&plan);
     assert_eq!(repaired.verdict, RuleVerdict::Pass);
     assert_ne!(repaired.source_revision, expected.source_revision);
     assert!(
