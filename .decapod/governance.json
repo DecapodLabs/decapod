@@ -858,6 +858,11 @@
       "id": "cp-sync-d41056ce3",
       "summary": "Integrate accepted master d41056ce3 (v0.153.1) and refresh 0.153.1 projections for #1738",
       "input_digest": "sha256:2f6a3a64e64857d467828ab80ac90553992a455855afe1c464dd16fd3c594876"
+    },
+    {
+      "id": "cp-sync-34b98ab1f",
+      "summary": "Sync accepted master 34b98ab1f (v0.153.2) and refresh 0.153.2 projections for #1738",
+      "input_digest": "sha256:3471826bc87ab519813f3829fda9ffc200d20cdebfb665fd428eb63cf52a299b"
     }
   ],
   "intents": {
@@ -899,21 +904,21 @@
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
           "reason": "No architecture changes beyond accepted repository-local contract transition rules (#1738).",
-          "reviewed_code_fingerprint": "d678bc17409855c2804d1d34fd0e2616057687825ea2783367a88c9288425640",
+          "reviewed_code_fingerprint": "573bc36eb08d5cd6881d833d55afeae338b3b838108271f13a56dc5717a4bad1",
           "spec_material_hash": "8ae7db31e8d777fdcf57552c8af32c4372c62dc9eb1daa22b53212f774206bd0"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Synced #1658/#1738 accepted repository-local contract changes with accepted master d41056ce3 (v0.153.1).",
-          "reviewed_code_fingerprint": "d678bc17409855c2804d1d34fd0e2616057687825ea2783367a88c9288425640",
+          "reason": "Synced #1658/#1738 accepted repository-local contract changes with accepted master 34b98ab1f (v0.153.2).",
+          "reviewed_code_fingerprint": "573bc36eb08d5cd6881d833d55afeae338b3b838108271f13a56dc5717a4bad1",
           "spec_material_hash": "dee4e3b5c0f3b2091cff0d7930e2a340d4bd52eab521558442eb70ec270538c7"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Synced #1658/#1738 candidate repinning and governed policy transitions with accepted master d41056ce3 (v0.153.1).",
-          "reviewed_code_fingerprint": "d678bc17409855c2804d1d34fd0e2616057687825ea2783367a88c9288425640",
+          "reason": "Synced #1658/#1738 candidate repinning and governed policy transitions with accepted master 34b98ab1f (v0.153.2).",
+          "reviewed_code_fingerprint": "573bc36eb08d5cd6881d833d55afeae338b3b838108271f13a56dc5717a4bad1",
           "spec_material_hash": "2b207943c00e744fd1d8e86ba97273f17b273ef7a8d67798a807e9f5ef9715f7"
         }
       ],
@@ -925,13 +930,13 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795160399Z"
+      "updated_at": "1795162656Z"
     },
     "trajectory": {
       "active_boundaries": [
         "No parallel engine; no candidate self-approval; REQUIRED_PROFILE_DOWNGRADE unconditionally blocked; no root checkout mutations"
       ],
-      "artifact_hash": "sha256:7b284ca089905c9de300e9399cf3fa3c6b9a52d97a4b7b9b7ccee7c49d19b229",
+      "artifact_hash": "sha256:15acd8b24629aa17e98f4f3fed7ae321563cfc2d5f99836cc5c07c205b80fe73",
       "checks": [],
       "custody": {
         "events": [
@@ -953,10 +958,17 @@
             "intent_id": "intent:run-1738-1",
             "kind": "trajectory_step_recorded",
             "sequence": 4
+          },
+          {
+            "detail": "trajectory:run-1738-1",
+            "event_id": "event:5",
+            "intent_id": "intent:run-1738-1",
+            "kind": "trajectory_step_recorded",
+            "sequence": 5
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 4,
+        "next_sequence": 5,
         "schema_version": "1.0.0",
         "trajectories": {
           "run-1738-1": {
@@ -982,6 +994,21 @@
                 ],
                 "sequence": 4,
                 "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:5",
+                "observations": [
+                  ".decapod/managed/Dockerfile.decapod",
+                  ".decapod/managed/specs/.manifest.json",
+                  "Synced origin/master 34b98ab1f (v0.153.2) and refreshed release-bound projections"
+                ],
+                "proof_refs": [],
+                "scope": [
+                  "src/decapod/plugins/policy.rs,src/decapod/core/repository_profile.rs,src/decapod/core/validation_runtime.rs,src/decapod/core/workspace.rs,src/decapod/core/validation_rules.rs,docs/agent/repository-readiness.md,.decapod/managed/specs/,tests/"
+                ],
+                "sequence": 5,
+                "validation_findings": []
               }
             ]
           }
@@ -989,12 +1016,14 @@
       },
       "declared_commands": [],
       "evidence": [
-        "Merged origin/master d41056ce3 (v0.153.1); fmt, clippy --all-targets --all-features, consumer_readiness 33/33, and repository_profile 19/19 passed"
+        "Merged origin/master d41056ce3 (v0.153.1); fmt, clippy --all-targets --all-features, consumer_readiness 33/33, and repository_profile 19/19 passed",
+        "Synced origin/master 34b98ab1f (v0.153.2) and refreshed release-bound projections"
       ],
       "inspected_files": [],
       "intent_id": "intent:run-1738-1",
       "modified_files": [
         ".decapod/managed/Dockerfile.decapod",
+        ".decapod/managed/specs/.manifest.json",
         ".decapod/managed/specs/INTERFACES.md",
         ".decapod/managed/specs/SECURITY.md",
         ".decapod/managed/specs/VALIDATION.md",

@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.153.2](https://github.com/DecapodLabs/decapod/compare/v0.153.1...v0.153.2) - 2026-11-20
+
+### Fixed
+
+- *(ci)* reconcile release-proof with released v0.137.4
+- *(ci)* repair ci for preserved release preparation research
+
+### Other
+
+- *(govern)* sync accepted master 45751f54e (v0.153.0, #1613)
+
 ## [0.153.1](https://github.com/DecapodLabs/decapod/compare/v0.153.0...v0.153.1) - 2026-11-20
 
 ### Other
