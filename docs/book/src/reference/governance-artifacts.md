@@ -158,6 +158,13 @@ The original question remains in the review record. A decision about stale code
 or stale spec content is rejected. Never invent a decision reference or infer
 approval. Existing 1.0 plans remain readable; recording reviews writes plan 1.1.
 
+Inference orientation exposes `governed_plan.instruction_readiness` for the
+current plan. Each recorded blocker names its source in the plan and the
+report gives the supported correction. Draft planning can retain open items.
+Approval, execution checkpoints, validation, and publication require them to
+be resolved. After a correction, approve the revised plan and rerun affected
+proof. Starting a new plan preserves a pending spec decision.
+
 After review, refresh supported projections and run validation. The validation
 epoch binds the plan (including review evidence), claims, authored and generated
 spec content, entrypoints, and managed Dockerfile. It excludes the logical validation section

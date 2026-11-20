@@ -397,6 +397,13 @@ fingerprint, and verifier come from `state::canonical_snapshot`, which is the
 same revision and provenance resolver used by `state.resolve`. The judgment
 does not keep a second definition of that identity.
 
+`plan_governance::instruction_readiness` evaluates recorded instructions from
+the current governance plan. Orientation projects those same blockers and
+remediation, and approval, execution checkpoints, validation, and publication
+enforce them. Its source revision binds the recorded inputs independently of
+approval or phase progress. The existing validation epoch binds proof to the
+applicable plan after a correction.
+
 A task verification row is an index. `judge_stored_verification` re-hashes the
 bound files and checks that the proof digest matches that reconstruction under
 the canonical snapshot. A pass status or a digest written only into SQLite is
@@ -1133,6 +1140,10 @@ or masking permission/protocol failures. Empty runtime directories are reusable.
 
 ## Intent Traceability Read Model
 
+## Acceptance observer capture boundaries
+
+The read-only acceptance observer in src/decapod/core/flight_recorder/acceptance.rs correlates historical admissions and separately assesses retained capture completeness. Optional coverage binds the declared channels, operator custody, elapsed window, counts, indexes, actual agent end and process exit. Missing or incomplete coverage keeps historical observations while preventing a completed autonomous-run claim.
+
 <!-- decapod:requirement REQ-INTENT-TRACEABILITY -->
 `core/intent_reconcile.rs` derives a read-only reconciliation view from
 `plan_governance`, `core/project_specs`, the spec manifest, and current
@@ -1178,7 +1189,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `573bc36eb08d5cd6881d833d55afeae338b3b838108271f13a56dc5717a4bad1`
+- Repository signal fingerprint: `0b97158b90ba83339cd1c59969d0ceb73c0454131105f4917ea276381a9b67c6`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (245 files), `tests/` (258 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

@@ -1508,6 +1508,10 @@ isolated caller subprocess, with task-specific checks using the actual claimant.
 
 ## Intent Reconciliation RPC
 
+## Acceptance observer capture boundaries
+
+CaptureCoverage is an optional backward-compatible input to the existing decapod.agent-acceptance.v1 capture. Older captures remain readable with capture_coverage.state=unknown. Complete coverage requires the host, kernel, Git and GitHub channels, no dropped events, exact index digests and a retained terminal position. Post-exit independent Git/forge readback is supported. Shared or unknown witness custody is classified incomplete.
+
 <!-- decapod:requirement REQ-INTENT-TRACEABILITY -->
 `decapod rpc --op intent.reconcile --params '{}'` returns an advisory,
 versioned reconciliation report. It exposes the governed-plan intent digest,
@@ -1535,7 +1539,7 @@ field. Nothing in this operation authorizes a mutation, approval or completion.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `573bc36eb08d5cd6881d833d55afeae338b3b838108271f13a56dc5717a4bad1`
+- Repository signal fingerprint: `0b97158b90ba83339cd1c59969d0ceb73c0454131105f4917ea276381a9b67c6`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (245 files), `tests/` (258 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
@@ -1566,14 +1570,19 @@ state with `PLAN_CHANGED_REQUIRES_APPROVAL`, preserving the previous document.
 Final proposed state, rather than the pre-patch phase list, determines whether
 `DONE` is structurally valid. `validate_plan_progress` enforces incomplete-phase
 and unsatisfied-completed-gate rejection for execution and publication as well.
-Spec-review decisions are preserved by these editors and retain their separate
-review and resolution rules. Explicit approval still records declared authority;
-it does not authenticate the approver or independently judge natural language.
+The `governed_plan.instruction_readiness` object in inference orientation
+reports the current plan's source revision, verdict, source pointers and
+remediation. Approval, execution checks and checkpoints, validation, and
+publication enforce the same recorded blockers for missing intent, unknowns,
+questions, contradictions, and pending spec decisions. The report describes
+recorded constraints. Explicit approval records declared authority.
+Plan initialization preserves pending spec decisions. Recording or resolving
+one of those decisions requires new plan approval.
 
 The public plan CLI regressions live in the existing branch-enforced
 `tests/cli_contract_enforcement.rs::plan_governed_execution` module. Their
-standalone predecessor was not selected by the source-PR graph; keeping all
-three cases in this executed target makes CLI routing, reapproval, and phase
+standalone predecessor was not selected by the source-PR graph. This
+executed target makes CLI routing, reapproval, blocker parity, and phase
 replay behavior part of the normal required proof without changing its adapter.
 
 ## Consumer readiness and repeatable initialization
