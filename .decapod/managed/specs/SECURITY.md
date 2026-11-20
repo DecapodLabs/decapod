@@ -797,8 +797,8 @@ execution evidence remains required before publication readiness.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `aea5567d3e456d1c7e0f8ae1bdf3293755f2e2ca51c95cba56b75ccc6d07046c`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (244 files), `tests/` (256 files)
+- Repository signal fingerprint: `d21529e6e236765e361c9cf4aa4e631530a9b4a15d74210365834babaf5918bb`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (245 files), `tests/` (257 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 
@@ -1331,3 +1331,16 @@ real `DECAPOD_AGENT_ID` to adopt an `"unknown"` task only when
 `has_other_real_primary_owner` are both false. Tasks bound in `authoring_bindings`
 to a real actor, holding another real primary owner, or actively claimed by a
 real actor fail closed (`status: "conflict"` / `WORKSPACE_BRANCH_TODO_CLAIM_CONFLICT`).
+
+## Acceptance presentation boundary (#1757)
+The read-only flight-recorder acceptance exporter neither executes agent work
+nor modifies kernel verdicts. It rejects sibling-file escapes, symlinks, altered
+digests and unsafe public text. Raw tool arguments, reasoning, local paths,
+credentials and environment stay private. Only reviewed objective text and
+allowlisted facts are emitted. Host source labels are assertions, not producer
+authentication; uncaptured unrestricted shell/forge activity remains unknown.
+Wrong subjects, incomplete checks, missing custody, controller-only repair,
+interventions and created-but-not-admitted PRs cannot become autonomous success.
+
+## Fail-closed host attribution
+Missing provider-requested tool identities and kernel calls outside an actual in-flight bash interval prevent an autonomous-admission classification. Express these rejection conditions directly, without lint exceptions or weakening missing-input behavior. Source CI must pass both the mandatory core/library regression owner and lint before publication.

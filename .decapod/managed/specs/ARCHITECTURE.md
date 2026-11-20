@@ -1178,8 +1178,8 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `aea5567d3e456d1c7e0f8ae1bdf3293755f2e2ca51c95cba56b75ccc6d07046c`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (244 files), `tests/` (256 files)
+- Repository signal fingerprint: `d21529e6e236765e361c9cf4aa4e631530a9b4a15d74210365834babaf5918bb`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (245 files), `tests/` (257 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 
@@ -1694,3 +1694,18 @@ read-only command preservation without `DECAPOD_AGENT_ID`, `"unknown"` / empty
 rejection across `todo claim` and `workspace ensure`, legacy `"unknown"`
 recovery with and without `authoring_bindings`, and cross-owner isolation
 between real actors.
+
+## Read-only acceptance correlation (#1757)
+`core::flight_recorder::acceptance` extends the current flight recorder rather
+than adding a governor or agent runtime. Bounded sibling-file reads verify
+artifact digests and event ordering. Source-specific reducers correlate actual
+Pi calls, native plan/observations/receipt material, task/workspace custody and
+separate Git/GitHub subject snapshots. The existing readiness-evidence verifier
+checks captured suite consistency. Trusted host provenance remains explicit;
+source labels and hashes do not authenticate a producer.
+Essential kernel calls join actual in-flight Pi bash calls, and actual tool IDs
+must match provider tool requests. Repair requires a new model request and tool
+start after the failed tool's feedback returned; controller work and prewritten
+same-call repair cannot establish autonomous correction. New validation clears
+prior publisher applicability; later source/base movement preserves history
+while requiring new applicable publication evidence. Output grants no authority.

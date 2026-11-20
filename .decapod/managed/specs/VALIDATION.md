@@ -1526,8 +1526,8 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `aea5567d3e456d1c7e0f8ae1bdf3293755f2e2ca51c95cba56b75ccc6d07046c`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (244 files), `tests/` (256 files)
+- Repository signal fingerprint: `d21529e6e236765e361c9cf4aa4e631530a9b4a15d74210365834babaf5918bb`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (245 files), `tests/` (257 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 
@@ -2427,3 +2427,36 @@ enforces single-domain canonical custody and kernel-observed proof for all
   `not_proven` audit history with `WORKUNIT_PROOF_ATOMIC_DOMAIN_UNSUPPORTED`;
   and (6) repaired canonical tasks complete `VERIFIED` atomically and pass
   `verify_workunit_gate_for_publish`.
+
+## Accepted release inventory review
+
+Release target34f837d4 changed only the decapod package version from0.148.9 to0.148.10 in Cargo.toml/Cargo.lock and changelog. All105 verification source definitions were compared to the prior reviewed candidate; only those two version lines changed. No required check, workflow, helper, adapter, environment or timeout changes. The candidate source inventory is explicitly reconciled tosha256:e1a242381f7411a8facfe285e2945040dafa93c46dd48c11a86ebd55d9a95b3f; fresh native source-CI validation still decides admission. Validation09 target-ancestry failure and validation10 stale-inventory rejection remain preserved.
+
+## Native0.148.10 projection refresh
+
+The d4269e35 source-built CI health step actually rejected current generated drift: its0.148.10 binary refreshed the managed Docker pin and specs manifest from0.148.9. Official checksum-verified0.148.10 is now installed. Native workspace/agent/spec refresh and the reported project-check repair regenerated those projections; no AGENTS file was manually edited and no source check was weakened. The local prerequisite-only repair reported three failures (first container_workspace_required) while applying two repairs, so it is not claimed as a project or publication pass. Fresh complete Buildkite-owned validation is required for the checkpointed candidate. The actual captured Pi export replay at d4269e35 passed and reproduced4180e2b8... byte-for-byte; no fixture actions occurred.
+
+## Accepted conformance and0.148.11 integration
+
+Full native validation13 and renewed publication passed for45ae1bff/base34f837d4 using complete Buildkite12165 and standalone12167. Both protected app805657 contexts passed; actual library1813pass/8ignored included13 observer cases. Publication independently read back that exact head/base. Master then advanced through accepted interop PR1787 and release0.148.11 to352d892958e1cdf692299927f7c2f3c0c36fc639. That admission is historical and PR1784 returned to draft.
+
+The accepted changes separate source conformance coverage from executed results, reject unregistered RPCs before startup and malformed JSON before negotiation, advertise actual session gates, and tighten the actual competing-mutation timing assertion. Observer source is unchanged and needs no parallel registry or authority. All accepted source/test changes are retained. Authored living specs were merged separately from generated blocks, preserving both the accepted conformance contract and observer/recovery sections. Native commands refresh generated projections.
+
+The105 verification-source definitions were reviewed; only Cargo.toml/Cargo.lock version lines differ in that declared inventory, while the actual accepted Rust/fixture changes are covered by full source/tree binding and required execution. The reconciled inventory issha256:2acf1af72443f49b41967205535a4a0a4eff38a100e3b11ab930a010a3437db0. Official macOS release pipeline44286433522 artifact14419543607 was inspected and checksum-verified (archive5412a6ba1637a188306cf4fce3759d369e8edec78248b7c5a9e1de23ca3ab873); its14e5d8d8 tag and352d8929 master share tree4a9469b32f9c3c9992864b9e5b04995bd48449d0. Installed0.148.11 replaces backed-up0.148.10 without modifying the pinned Pi0.148.8 binary. No new current proof is assumed.
+
+## Release11 tag currency and native pin repair
+
+Validation14 stopped before pushing b413bb64 because the new remote release tag was absent from frozen local release history (SNAPSHOT_UPLOAD_INCOMPLETE); none of its required CI observations is claimed authenticated. Read-only git fetch origin --tags obtained v0.148.11 without publishing or rewriting any tag. Official0.148.11 native govern project-check --refresh-specs then regenerated the managed Docker image/version pin from0.148.10 to0.148.11. Its prerequisite-only result remains partial on the host and is not full readiness. This exact repair is checkpointed before fresh complete validation15. Accepted source,105 inventory2acf1af7 and all required checks remain unchanged.
+
+## Recovery archive disposition
+The selected-source reauthoring and present-time history observation are committed together at fafe6138db68a0d450cc01513b628c17cc40aa3e. The subsequent recovery disposition references that immutable archive. It does not establish the missing historical checkpoint or replace full current-candidate validation.
+
+## Preserved failed source history
+The prior source branch at dad525d46feb9daf09f498c3d2934cd6560fc87b contains integration merge c31d039f without an exact-material checkpoint. That history remains preserved and unproven. The current workstream records the native present-time recovery observation, reauthors the reviewed source in a fresh claimed workspace, and requires independent full validation of its new commits. No retrospective checkpoint or inherited readiness is asserted.
+
+## Acceptance observer delivery checks
+The mandatory offline core suite exercises actual source attribution, failed-check feedback followed by a new model repair action, receipt subject matching and later source/base invalidation. The ignored live export remains separate from those deterministic tests. A passing code suite does not supersede current-content publication-spec review: CI rejects a stale review even when a final lint-only edit preserves behavior. Refresh the affected reviews and obtain a fresh full exact-candidate validation before publication.
+
+## Current accepted policy integration
+
+Publication at102c638e against6ab6de31 was valid at its observed admission. Master subsequently advanced to c47137ad through accepted policy-boundary work. Preserve those new initializer, operator-consent and recovery boundaries, checkpoint the exact integration merge before committing, and collect fresh whole-profile proof; the earlier green result grants no integration authority for this new context.

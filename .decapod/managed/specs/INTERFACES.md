@@ -1535,8 +1535,8 @@ field. Nothing in this operation authorizes a mutation, approval or completion.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `aea5567d3e456d1c7e0f8ae1bdf3293755f2e2ca51c95cba56b75ccc6d07046c`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (244 files), `tests/` (256 files)
+- Repository signal fingerprint: `d21529e6e236765e361c9cf4aa4e631530a9b4a15d74210365834babaf5918bb`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (245 files), `tests/` (257 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 
@@ -2152,3 +2152,13 @@ task via exclusive `todo claim` or `workspace ensure --branch` when
 `authoring_bindings` holds no real-actor checkout custody and `task_owners` holds
 no other real primary owner; adoption emits `task.release` with reason
 `unknown_actor_adopted` and advances `lease_generation` (`lease_lifecycle = "reclaimed"`).
+
+## Acceptance observation export (#1757)
+`decapod trace flight-recorder acceptance --capture <private-index>` reads
+`decapod.agent-acceptance.v1` capture data and prints a redacted, versioned event
+manifest. It reports observed autonomous admission, historical PR identity,
+current applicability, interventions, source classes and unresolved findings.
+Both publication_ready and merge_authorized are always false. Captured original
+objective identity, executable/repository binding and evidence hashes are
+mandatory; agent declarations cannot stand in for tool/kernel observations.
+Consumers must preserve private-capture and cooperative-host assurance limits.

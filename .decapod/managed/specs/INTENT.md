@@ -711,8 +711,8 @@ These declarations select authoring and proof obligations; they do not attest im
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `aea5567d3e456d1c7e0f8ae1bdf3293755f2e2ca51c95cba56b75ccc6d07046c`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (244 files), `tests/` (256 files)
+- Repository signal fingerprint: `d21529e6e236765e361c9cf4aa4e631530a9b4a15d74210365834babaf5918bb`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (245 files), `tests/` (257 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 
@@ -1161,3 +1161,16 @@ with different agents in parallel, and recovering from failed validation on an
 exact revised commit) plus explicit negative cases (conflicting claims, expired
 leases, unregistered/malformed RPC, stale proof, and Cloud denial) are grounded
 in the `0.148.14` binary CLI/RPC help and existing integration tests.
+
+## Independently observed autonomous engineering (#1757, #1758)
+An external coding agent's statement of completion does not prove its actions.
+The existing flight recorder gains a read-only, digest-bound acceptance export
+over actual host, kernel, Git and forge observations. The objective is a real
+unattended failure, kernel rejection, agent diagnosis/correction, fresh required
+proof and exact-subject publication. Scripted coverage, kernel authority,
+cooperative observation and independent GitHub policy remain distinct. Safe
+exports can drive website-owned launch media; the kernel never renders video,
+authenticates arbitrary capture labels or imports publication authority.
+
+## Real-agent acceptance and release-bound projections
+The issue1758 Pi experiment is actual inference, not a deterministic repair imitation. The read-only observer must preserve its real required-check failure, new model-requested repair after returned feedback, fresh exact-subject native proof and independent GitHub readback. Subsequent source/base controls retain historical admission while clearing current applicability. Operator probes, PR creation, observed admission and merge authorization remain distinct. Source implementation readiness is separately required; a successful fixture export cannot excuse a stale managed container pin or failed source CI. Regenerate release-bound surfaces through native Decapod, checkpoint and rerun full configured validation after release movement.
