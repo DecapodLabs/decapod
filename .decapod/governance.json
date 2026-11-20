@@ -816,6 +816,11 @@
       "id": "accepted-156-merge",
       "summary": "Integrate the accepted v0.156.0 baseline for the Podman regression fix",
       "input_digest": "sha256:c98b72f562df432b5fbdf8ab3b655b722d07590597419ff55ab63f677627f989"
+    },
+    {
+      "id": "review-156-source-inventory",
+      "summary": "Refresh the reviewed inventory after the v0.156.0 release bump",
+      "input_digest": "sha256:dadf371df5b7c04d67cefe8c85715702af165f0bcb62a8272c3c15897843e170"
     }
   ],
   "intents": {
@@ -889,7 +894,7 @@
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:5e2af3a7f78529467958aa73e83e9cc2d43ba37ba395adcb22f3832d8d272e08",
+      "artifact_hash": "sha256:35a3aa04e9c958a807ed44719c28547ac59a9031e99f1fee1c19e17a0372f5ba",
       "checks": [
         {
           "name": "podman-machine-start",
@@ -917,10 +922,17 @@
             "intent_id": "intent:change_01M7XDX74RT7Q7GA6WT99KJDTX",
             "kind": "trajectory_step_recorded",
             "sequence": 4
+          },
+          {
+            "detail": "trajectory:branch_01M7XDX77ZEQN008P9XDZDYACM",
+            "event_id": "event:5",
+            "intent_id": "intent:change_01M7XDX74RT7Q7GA6WT99KJDTX",
+            "kind": "trajectory_step_recorded",
+            "sequence": 5
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 4,
+        "next_sequence": 5,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M7XDX77ZEQN008P9XDZDYACM": {
@@ -942,6 +954,20 @@
                 ],
                 "sequence": 4,
                 "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:5",
+                "observations": [
+                  ".decapod/config.toml",
+                  "Reviewed all inventory differences since the accepted declaration. Only Cargo.toml and Cargo.lock changed the package version from 0.155.1 to 0.156.0. Required commands and workflow coverage were identical."
+                ],
+                "proof_refs": [],
+                "scope": [
+                  "root"
+                ],
+                "sequence": 5,
+                "validation_findings": []
               }
             ]
           }
@@ -950,11 +976,14 @@
       "declared_commands": [],
       "destination": "pull request",
       "evidence": [
-        "Cargo test --locked --lib podman_machine_start: 2 passed on macOS."
+        "Cargo test --locked --lib podman_machine_start: 2 passed on macOS.",
+        "Reviewed all inventory differences since the accepted declaration. Only Cargo.toml and Cargo.lock changed the package version from 0.155.1 to 0.156.0. Required commands and workflow coverage were identical."
       ],
       "inspected_files": [],
       "intent_id": "intent:change_01M7XDX74RT7Q7GA6WT99KJDTX",
-      "modified_files": [],
+      "modified_files": [
+        ".decapod/config.toml"
+      ],
       "next_transitions": [
         "Refine plan and declare falsifiable checks"
       ],
