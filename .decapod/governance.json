@@ -682,6 +682,11 @@
       "id": "reconcile-shared-instruction-history",
       "summary": "Repair the current base integration compile failure with immutable origin and append-only lineage in the governance merge reconciler. Add one-parent continuation and conflict regressions. GitHub Actions rerun pending.",
       "input_digest": "sha256:4a1350cfaad557052f3003551cf7bf8d9e42c059fac334f936c7fbb4d3e68f43"
+    },
+    {
+      "id": "reconcile-platform-test-policy-fields",
+      "summary": "Keep the legacy platform test fixture compiling with the optional selected-work and observed-path policies disabled. Preserve real measured prior CI failures. Run the refreshed head in GitHub Actions.",
+      "input_digest": "sha256:16c556f561d0a64717f9d5d90f77b363c3303b9bf5d25327449ca26f74ac7e18"
     }
   ],
   "intents": {
@@ -730,22 +735,22 @@
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Use the existing custody reconciler and reject conflicting instruction history.",
-          "reviewed_code_fingerprint": "5942076ccaf8c1945298b84e80f941620554dca2bdc09b41eed60825aa663304",
+          "reason": "Allow an existing test fixture to declare the optional policy fields using their established defaults.",
+          "reviewed_code_fingerprint": "1b6c866d84071f9a1cacf0199fdb45d4640dd230981e3111898d82f57936dd9b",
           "spec_material_hash": "9b73adacbbb6d3c40dfda3b537ad2e72fae9ea0f26a877fc657ed031449dc793"
         },
         {
-          "disposition": "updated",
+          "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Specify preservation of the original instruction, source provenance and revision history across Git merges.",
-          "reviewed_code_fingerprint": "5942076ccaf8c1945298b84e80f941620554dca2bdc09b41eed60825aa663304",
+          "reason": "The explicit None values preserve the existing platform fixture behavior and public interface.",
+          "reviewed_code_fingerprint": "1b6c866d84071f9a1cacf0199fdb45d4640dd230981e3111898d82f57936dd9b",
           "spec_material_hash": "3e7b2d92e3366b90b94cf6aef1c522c35ba9cb371a50972ab31c79b6bab5d4d8"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Keep established authority boundaries for recorded provenance and require compatible parent histories.",
-          "reviewed_code_fingerprint": "5942076ccaf8c1945298b84e80f941620554dca2bdc09b41eed60825aa663304",
+          "reason": "Test-only initialization preserves production policy and authority.",
+          "reviewed_code_fingerprint": "1b6c866d84071f9a1cacf0199fdb45d4640dd230981e3111898d82f57936dd9b",
           "spec_material_hash": "3d3861ffd59d9e65966771b5db4107b999a733ec7ad029f02a6c1cb2696ec964"
         }
       ],
@@ -757,17 +762,21 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795163549Z"
+      "updated_at": "1795166494Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch",
         "Preserve draft PR #1766 and its history. Use normal GitHub review and merge directed by the maintainer. Use GitHub Actions for this delivery. Close issues only with exact independent acceptance evidence."
       ],
-      "artifact_hash": "sha256:a75fa04a98076111b648c676520d02d02befced8f8b6314d123538bd9f118b56",
+      "artifact_hash": "sha256:1e15da6208fdb9fc720e3e7dcff34a63d2b1896ae5af3f5c3e9a60bc23639c73",
       "checks": [
         {
           "name": "2092274a-macos-compile",
+          "status": "failed"
+        },
+        {
+          "name": "e27a0bd-unit-fixture-compile",
           "status": "failed"
         },
         {
@@ -807,10 +816,17 @@
             "intent_id": "intent:change_01M7PQMA9DG5FG2QMC9WPR3ZCJ",
             "kind": "trajectory_step_recorded",
             "sequence": 5
+          },
+          {
+            "detail": "trajectory:branch_01M7PQMADCS3EAWQSXB0HVXNQP",
+            "event_id": "event:6",
+            "intent_id": "intent:change_01M7PQMA9DG5FG2QMC9WPR3ZCJ",
+            "kind": "trajectory_step_recorded",
+            "sequence": 6
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 5,
+        "next_sequence": 6,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M7PQMADCS3EAWQSXB0HVXNQP": {
@@ -865,6 +881,29 @@
                 ],
                 "sequence": 5,
                 "validation_findings": []
+              },
+              {
+                "action": "verification",
+                "custody_event_id": "event:6",
+                "observations": [
+                  "GitHub Actions jobs 136183707903 and 136190025843 measured E0063 on the same platform-selection fixture. Repair verified by formatting. Fresh hosted execution remains pending."
+                ],
+                "proof_refs": [
+                  "e27a0bd-unit-fixture-compile"
+                ],
+                "scope": [
+                  "\".decapod\"",
+                  "\"AGENTS.md\"",
+                  "\"CLAUDE.md\"",
+                  "\"CODEX.md\"",
+                  "\"GEMINI.md\"]",
+                  "\"README.md\"",
+                  "\"docs\"",
+                  "\"tests\"",
+                  "paths:[\"src\""
+                ],
+                "sequence": 6,
+                "validation_findings": []
               }
             ]
           }
@@ -876,6 +915,7 @@
       "destination": "pull request",
       "evidence": [
         "GitHub Actions job 136172556557 measured E0063 at 2092274a. Preserve original instruction and history in the upstream reconciler. Regression execution on the repair remains pending.",
+        "GitHub Actions jobs 136183707903 and 136190025843 measured E0063 on the same platform-selection fixture. Repair verified by formatting. Fresh hosted execution remains pending.",
         "The manifest declares v0.153.2 and commits the actual hashes of all 12 files. The four entrypoints match accepted master 34b98ab1."
       ],
       "inspected_files": [],

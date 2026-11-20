@@ -1092,6 +1092,8 @@ mod tests {
         .unwrap();
         let project = CurrentProject {
             configuration: ProofConfiguration {
+                observed_path: None,
+                selected_work: None,
                 validation_buildkite_preflights: false,
                 required_profile: Some(declaration),
                 commands,
