@@ -205,7 +205,15 @@ fn production_cli_dispatch_uses_remote_store_and_never_local_sqlite() {
     .expect("cloud show");
     run_todo_cli_with_cloud_factory(
         &decapod_store,
-        parse_todo(&["claim", "--id", "cloud-cli-1", "--format", "json"]),
+        parse_todo(&[
+            "claim",
+            "--id",
+            "cloud-cli-1",
+            "--agent",
+            "cloud-cli-agent",
+            "--format",
+            "json",
+        ]),
         &factory,
     )
     .expect("cloud claim");

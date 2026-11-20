@@ -957,7 +957,7 @@ fn case2_revoked_cloud_session_fails_closed_without_local_fallback() {
         tmp.path(),
         &TodoCommand::Claim {
             id: "todo_revoked".into(),
-            agent: None,
+            agent: Some("cloud-revoked-agent".into()),
             mode: ClaimMode::Exclusive,
             lease_seconds: None,
             intent_anchor: None,
@@ -1635,7 +1635,7 @@ fn case5_cloud_denial_and_unavailability_never_fall_back_to_local_sqlite() {
             tmp.path(),
             &TodoCommand::Claim {
                 id: "todo_cloud_denied".into(),
-                agent: None,
+                agent: Some("cloud-denied-agent".into()),
                 mode: ClaimMode::Exclusive,
                 lease_seconds: None,
                 intent_anchor: None,

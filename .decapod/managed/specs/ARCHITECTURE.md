@@ -1178,7 +1178,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `dbbd0c1707a760e7f2c55cf8e871ee655781155b1a6e7c5d0db20a8cbc498a56`
+- Repository signal fingerprint: `aea5567d3e456d1c7e0f8ae1bdf3293755f2e2ca51c95cba56b75ccc6d07046c`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (244 files), `tests/` (256 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
@@ -1676,3 +1676,21 @@ Read-only source, event, and worktree projections remain strictly decoupled from
 `DbBroker::build_event` (`src/decapod/core/broker.rs`) captures `WriterIncarnation::current()` on `pending` write audit events without adding external crate dependencies. On macOS, `RealIncarnationProbe` reads `libc::proc_pidinfo` (`PROC_PIDTBSDINFO`) process start timestamps (`pbi_start_tvsec`/`pbi_start_tvusec`), `kern.bootsessionuuid` via `libc::sysctlbyname`, and `libc::gethostuuid`. On Linux, it reads `/proc/<pid>/stat` field 22 (`starttime`), `/proc/sys/kernel/random/boot_id`, `/etc/machine-id` (or `/var/lib/dbus/machine-id`), and `/proc/self/ns/pid`, falling back safely to `None` / `ProcessProbe::Unverifiable` when unavailable.
 
 `assess_writer_liveness` establishes `WriterLiveness::Stopped` only when provenance is complete and either (a) the current boot incarnation (plus host ID and PID namespace when applicable) matches and the PID is absent/zombie (`ESRCH` / `SZOMB` / `Z`) or running with a different `writer_start_id` (proving PID reuse), or (b) `writer_host_id` matches the current host and `writer_boot_id` proves a different prior boot incarnation. Neither event age alone nor a bare PID check without start-identity and boot/host correlation ever proves writer termination.
+
+## Claim and workspace actor gating (#1737)
+
+`core::authoring` owns `is_missing_or_unknown_actor`,
+`authoring_actor_required_error`, and `has_real_actor_checkout_custody`, shared
+across `core::todo` and `core::workspace::ensure_workspace` so claim admission,
+branch-scoped workspace creation, and checkout binding enforce one uniform actor
+contract. `core::todo::claim_task_with_lease` routes eligible legacy
+`"unknown"` claims through `force_release_assignment` (`unknown_actor_adopted`)
+inside the existing `with_task_journal` transaction, preserving monotonic lease
+generations and journal checkpoints.
+
+Unit coverage in `tests/unit/core/todo_tests.rs` and black-box CLI coverage in
+`tests/todo_enforcement.rs` exercise `init --proof --no-ci --isolation-mode worktree`,
+read-only command preservation without `DECAPOD_AGENT_ID`, `"unknown"` / empty
+rejection across `todo claim` and `workspace ensure`, legacy `"unknown"`
+recovery with and without `authoring_bindings`, and cross-owner isolation
+between real actors.

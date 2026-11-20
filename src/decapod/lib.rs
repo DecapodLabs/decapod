@@ -4130,6 +4130,10 @@ fn session_token_matches_backend(token: &str, backend: BackendType) -> bool {
 }
 
 fn current_agent_id() -> String {
+    #[cfg(test)]
+    if let Some(override_id) = crate::core::todo::test_current_agent_id_override() {
+        return override_id;
+    }
     std::env::var("DECAPOD_AGENT_ID")
         .ok()
         .map(|v| v.trim().to_string())

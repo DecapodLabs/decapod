@@ -1535,7 +1535,7 @@ field. Nothing in this operation authorizes a mutation, approval or completion.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `dbbd0c1707a760e7f2c55cf8e871ee655781155b1a6e7c5d0db20a8cbc498a56`
+- Repository signal fingerprint: `aea5567d3e456d1c7e0f8ae1bdf3293755f2e2ca51c95cba56b75ccc6d07046c`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (244 files), `tests/` (256 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
@@ -2131,3 +2131,24 @@ Scoped regression coverage in `tests/unit/core/validate_tests.rs::risk_map_warni
 `BrokerEvent` in `src/decapod/core/broker.rs` extends new `pending` audit events with backward-compatible optional fields `writer_pid`, `writer_start_id`, `writer_boot_id`, `writer_host_id`, and `writer_pid_ns` populated by `WriterIncarnation::current()`, while terminal and acknowledgment events omit them when unset. `DbBroker::verify_replay` and `decapod data broker verify` populate each `Divergence` with `writer_liveness` (`active` | `stopped` | `unknown`), `human_review_required`, `liveness_detail`, and any captured `writer_*` provenance fields.
 
 `BrokerCommand::Repair` (`src/decapod/cli.rs`, routed to `DbBroker::repair_with_options` in `src/decapod/lib.rs`) adds `--acknowledge-unknown-writer` and reports `writer_liveness`, `human_review_required`, `liveness_detail`, `acknowledgment_required`, and `acknowledged_unknown_writer` in `RepairReport`. Active writers (`writer_liveness = "active"`) are unconditionally refused in both preview and `--apply`. Proven stopped writers (`writer_liveness = "stopped"`) repair directly with `--apply` without waiting on age thresholds or requiring overrides. Legacy provenance-free, partial, cross-host, or unverifiable pending events report `writer_liveness = "unknown"` and `human_review_required = true` in `verify` and `repair` preview, and refuse silent `--apply` unless `--acknowledge-unknown-writer` is explicitly provided after human review. See `docs/agent/error-recovery.md` and `docs/agent/command-contracts.md`.
+
+## Explicit actor identity on claim and workspace boundaries (#1737)
+
+`todo::claim_task_with_lease` (covering CLI `decapod todo claim`, cloud
+`TodoCommand::Claim`, `todo renew`, `todo yield`, `todo heartbeat --autoclaim`,
+`todo worker-run`, `todo add-owner`, and explicit `--owner` on `todo add` /
+`todo edit`), `workspace::ensure_workspace` (CLI `decapod workspace ensure`
+and RPC `workspace.ensure`), and `core::mentor::reflection::custody` reject
+missing, whitespace-only, or `"unknown"` actors via
+`core::authoring::is_missing_or_unknown_actor` before mutating task custody or
+creating a branch/worktree, failing closed with `AUTHORING_ACTOR_REQUIRED` and
+explicit `DECAPOD_AGENT_ID=<actor>` guidance.
+
+Read-only inspection and intake surfaces (`todo list`, `todo get`, `todo show`,
+`workspace status`, `docs ingest`, `eval`) and ownerless `todo add` remain
+usable when `DECAPOD_AGENT_ID` is unset. For pre-existing tasks whose
+`assigned_to` is `"unknown"`, an explicit non-`"unknown"` actor can adopt the
+task via exclusive `todo claim` or `workspace ensure --branch` when
+`authoring_bindings` holds no real-actor checkout custody and `task_owners` holds
+no other real primary owner; adoption emits `task.release` with reason
+`unknown_actor_adopted` and advances `lease_generation` (`lease_lifecycle = "reclaimed"`).

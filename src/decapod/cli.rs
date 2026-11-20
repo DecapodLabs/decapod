@@ -99,7 +99,7 @@ pub(crate) struct WorkspaceCli {
 pub(crate) enum WorkspaceCommand {
     /// Ensure an isolated workspace exists (create if needed)
     Ensure {
-        /// Branch name. Mandatory: MUST contain the claimed Todo ID (e.g. agent/unknown/feat_01ks...) or hash.
+        /// Branch name. Mandatory: MUST contain the claimed Todo ID (e.g. agent/<agent-id>/feat_01ks...) or hash.
         #[clap(long)]
         branch: Option<String>,
         /// Use a container for the workspace

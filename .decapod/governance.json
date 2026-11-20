@@ -574,81 +574,119 @@
     }
   },
   "change": {
-    "id": "change_01M7R1CWXC45KTFHQQ66YZABEX",
+    "id": "change_01M7QXTS2XBE1SK835T05MEJCV",
     "base_commit": "2f12638aec0d16597526d4f7b116328083b5e95b",
     "target_base": "origin/master"
   },
   "claims": {
-    "claim:broker-writer-incarnation-provenance": {
-      "statement": "Pending broker audit events record optional OS writer incarnation provenance, verify/repair prove termination only via start-identity or same-host prior-boot correlation, and legacy/cross-host/unverifiable entries fail closed as unknown unless --acknowledge-unknown-writer is explicitly passed",
-      "falsifier": "Age alone or bare PID checks repair an active or PID-reused writer, or silent broker repair --apply abandons a provenance-free/unknown event without --acknowledge-unknown-writer",
+    "claim-1737-actor-custody": {
+      "statement": "Exclusive todo claims, lease mutations, mentor reflection custody, and authoring workspace creation fail closed with AUTHORING_ACTOR_REQUIRED when actor identity is missing or unknown, while legacy unknown claims without real-actor custody can be adopted cleanly without weakening real-actor isolation.",
+      "falsifier": "Claiming or branching with DECAPOD_AGENT_ID unset/unknown mutates task custody or creates an agent/unknown workspace, or legacy unknown adoption overrides an active real-actor authoring_bindings/primary-owner lock.",
       "status": "supported",
       "proof_refs": [
-        "tests/crash_consistency.rs",
-        "tests/unit/core/broker_tests.rs"
+        "tests/todo_enforcement.rs::test_issue_1737_unknown_claim_rejected_and_legacy_unknown_recovery_preserves_custody",
+        "tests/unit/core/todo_tests.rs::claim_task_recovers_legacy_unknown_claim_without_real_custody_and_blocks_if_bound",
+        "tests/unit/core/todo_tests.rs::claim_task_rejects_unknown_and_empty_actor_with_guidance"
       ]
     }
   },
   "checkpoints": [
     {
-      "id": "cp-1783-1",
-      "summary": "feat(broker): record verifiable writer incarnation provenance and enforce fail-closed unknown recovery (#1783)",
-      "input_digest": "sha256:b1513845c4323f7d73c31cd3f85272fcfabd38f2fa3ad4aacae3c10879d9d7d6",
+      "id": "cp-1737-1",
+      "summary": "Implement #1737: reject unknown/missing actor on todo claim, lease, mentor custody, and workspace ensure; add narrow recovery for legacy unknown claims without real-actor custody; update specs and regression tests",
+      "input_digest": "sha256:be944f7e4fa77ca21bceccb82eb36e2b5cb09743e4c8ecb02bd36a961b6bb99d",
       "proof_refs": [
-        "tests/crash_consistency.rs",
-        "tests/unit/core/broker_tests.rs"
+        "claim-1737-actor-custody"
       ]
     },
     {
-      "id": "cp-1783-2",
-      "summary": "chore(merge): sync origin/master v0.149.0 and refresh broker provenance specs/proof (#1783)",
-      "input_digest": "sha256:62daee046ee7da8df691d924f05f76758bfb3dd4a81f6def7b229cb80d5f719a",
+      "id": "cp-1737-2",
+      "summary": "Reconcile origin/master a5a1edad (v0.149.0) merge, projections, and updated spec reviews for #1737",
+      "input_digest": "sha256:152394c8a9c8873a0f925a3c982585e9f031f0d86b6514a6d849da6024bdfa80",
       "proof_refs": [
-        "tests/crash_consistency.rs",
-        "tests/unit/core/broker_tests.rs"
+        "claim-1737-actor-custody"
       ]
     },
     {
-      "id": "cp-1783-3",
-      "summary": "chore(merge): sync origin/master baa25a054 (PR #1805) and refresh v0.149.0 spec reviews (#1783)",
-      "input_digest": "sha256:47390d287353c8d31073220db5c5ef9355e35168f81f8e0f7d933fb956dcfc0a",
+      "id": "cp-1737-3",
+      "summary": "Reconcile origin/master baa25a054 (PR #1805) merge and updated spec reviews for #1737",
+      "input_digest": "sha256:6cd2a631460fdcacfb6a3c78a2320f526fc51bea3622da4364fe41b1b6f67e50",
       "proof_refs": [
-        "tests/crash_consistency.rs",
-        "tests/unit/core/broker_tests.rs"
+        "claim-1737-actor-custody"
       ]
     },
     {
-      "id": "cp-1783-5",
-      "summary": "chore(merge): sync origin/master 205d4e8d (v0.149.1) and reconcile proof (#1783)",
-      "input_digest": "sha256:ef97a1758a0860cae641dc29d7d0013267216498412edfa94ba570d37c21b0fa",
+      "id": "cp-1737-4",
+      "summary": "Reconcile origin/master 205d4e8da (v0.149.1) merge, projections, and updated spec reviews for #1737",
+      "input_digest": "sha256:8a8a9f2632e55947c093c9dbc1f74e22ab8dad2997a88d9c71860c7961151c3a",
       "proof_refs": [
-        "tests/crash_consistency.rs",
-        "tests/unit/core/broker_tests.rs"
+        "claim-1737-actor-custody"
       ]
     },
     {
-      "id": "cp-1783-6",
-      "summary": "Reconcile origin/master 102d6eb22 (v0.149.3), refresh specs/Dockerfile/reviewed_sources_digest, and record review-spec x3 for #1783",
-      "input_digest": "sha256:ab8d18d06099a5246e14284a89177b7c38dc7462a71825749bacff31fe52f1eb"
+      "id": "cp-1737-5",
+      "summary": "Fix Bazel docs ingest order in todo_enforcement and cloud claim --agent resolution; reconcile origin/master 102d6eb22 (v0.149.3) (#1737)",
+      "input_digest": "sha256:3c1f26fa2c6d752a10a84e508fb3589b6a817325cc26978020c192c7d38f07b7",
+      "proof_refs": [
+        "claim-1737-actor-custody"
+      ]
     },
     {
-      "id": "cp-1783-7",
-      "summary": "Reconcile origin/master cfe2565da (PR #1816, v0.149.3), refresh specs, and record review-spec x3 for #1783",
-      "input_digest": "sha256:8fec17237e26e40256522e51bf6e8a6df659655d19e10549b72d2a793b919378"
+      "id": "cp-1737-6",
+      "summary": "Reconcile origin/master cfe2565da (PR #1816) merge and updated spec reviews for #1737",
+      "input_digest": "sha256:2adec2e244c537c7647077dbeab7fdae544a6ccb39d378e5753d9eabc068bf3d",
+      "proof_refs": [
+        "claim-1737-actor-custody"
+      ]
     },
     {
-      "id": "cp-1783-8",
-      "summary": "Reconcile origin/master 845ff9799 (PR #1818, v0.149.3), refresh specs, and record review-spec x3 for #1783",
-      "input_digest": "sha256:652f10e791b7da9251ee3608e9f7cc4a604c33c9639fb62832b1bd9be296611b"
+      "id": "cp-1737-7",
+      "summary": "Reconcile origin/master 845ff9799 (PR #1818 #1469) merge and updated spec reviews for #1737",
+      "input_digest": "sha256:aa4d21719aae90aa45d20c327040a0219fd65a2665536a61935ff9ef8619779b",
+      "proof_refs": [
+        "claim-1737-actor-custody"
+      ]
     },
     {
-      "id": "cp-sync-9fff41ffc",
-      "summary": "Integrate accepted master 9fff41ffc (v0.152.0), rebuild docs/agent, and refresh specs for #1783",
-      "input_digest": "sha256:f050f367cd2c2bc0c7e27b0a56bc1d9ac7db10589d0c893741521ac3bac95ce4"
+      "id": "cp-1737-8",
+      "summary": "Reconcile origin/master 89906b666 (PR #1819 #1247) merge, update 2 cloud claim test fixtures, and refresh spec reviews for #1737",
+      "input_digest": "sha256:53a8fbb40c175823eb9a7b1eea37371c0b23f57c44bc133ca36841e720438fb7",
+      "proof_refs": [
+        "claim-1737-actor-custody"
+      ]
+    },
+    {
+      "id": "cp-1737-9",
+      "summary": "Reconcile origin/master 45369197e (PR #1825 #1807/#1810) merge and updated spec reviews for #1737",
+      "input_digest": "sha256:d5825b21ad008fd64cbb27345401294fd443896496319b64c9a74b43de3be6e8",
+      "proof_refs": [
+        "claim-1737-actor-custody"
+      ]
+    },
+    {
+      "id": "cp-1737-10",
+      "summary": "Reconcile origin/master 84f967382 (PR #1823 #1660), guard archive lease test actor, and speed up todo_enforcement for #1737",
+      "input_digest": "sha256:c950939e6a427bc88aede118891763e7ea49b55286627d756af9f246781cd33f",
+      "proof_refs": [
+        "claim-1737-actor-custody"
+      ]
+    },
+    {
+      "id": "cp-1737-11",
+      "summary": "Reconcile origin/master 755bbac6e (PR #1828) and move cfg(test) actor guard to authoring.rs for #1737",
+      "input_digest": "sha256:04ab3a109a7c97eda78507d45cfae4cfe4c35624f4d39f4ac4c44f5bb83ae863",
+      "proof_refs": [
+        "claim-1737-actor-custody"
+      ]
+    },
+    {
+      "id": "cp-sync-bc6475824",
+      "summary": "Integrate accepted master bc6475824 (v0.152.0) and refresh specs for #1737",
+      "input_digest": "sha256:96770553210ea3fee1c2c98c0e47077dbf9dadb6b16659e2512193c490c09dac"
     }
   ],
   "intents": {
-    "intent:change_01M7R1CWXC45KTFHQQ66YZABEX": {
+    "intent:change_01M7QXTS2XBE1SK835T05MEJCV": {
       "acceptance_criteria": [],
       "assumptions": [],
       "boundaries": [
@@ -658,11 +696,11 @@
         "root"
       ],
       "created_sequence": 1,
-      "id": "intent:change_01M7R1CWXC45KTFHQQ66YZABEX",
+      "id": "intent:change_01M7QXTS2XBE1SK835T05MEJCV",
       "out_of_scope": [],
       "proof_requirements": [],
-      "raw_intent": "Fix #1783: verifiable writer incarnation provenance for broker pending events and orphan recovery",
-      "refined_intent": "Fix #1783: verifiable writer incarnation provenance for broker pending events and orphan recovery",
+      "raw_intent": "Solve #1737: reject unknown actor claim and support fail-closed unknown recovery",
+      "refined_intent": "Solve #1737: reject unknown actor claim and support fail-closed unknown recovery",
       "status": "refined",
       "updated_sequence": 3
     }
@@ -675,7 +713,7 @@
       },
       "deferred_questions": [],
       "human_questions": [],
-      "intent": "Fix #1783: verifiable writer incarnation provenance for broker pending events and orphan recovery",
+      "intent": "Solve #1737: reject unknown actor claim and support fail-closed unknown recovery",
       "phases": [],
       "proof_hooks": [
         "decapod validate"
@@ -685,154 +723,240 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Synced #1783 broker writer incarnation provenance with accepted master 9fff41ffc (v0.152.0).",
-          "reviewed_code_fingerprint": "dbbd0c1707a760e7f2c55cf8e871ee655781155b1a6e7c5d0db20a8cbc498a56",
-          "spec_material_hash": "5eff8ad4e212d8373599c234f6748c72ab4f070175f77dd11690813e41f45726"
+          "reason": "Synced #1737 claim and workspace actor gating with accepted master bc6475824 (v0.152.0).",
+          "reviewed_code_fingerprint": "aea5567d3e456d1c7e0f8ae1bdf3293755f2e2ca51c95cba56b75ccc6d07046c",
+          "spec_material_hash": "983dd54174e58074253884fe4deec30d08cdfbc37da61f152a780327e5212256"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Synced #1783 verifiable broker writer incarnation contract with accepted master 9fff41ffc (v0.152.0).",
-          "reviewed_code_fingerprint": "dbbd0c1707a760e7f2c55cf8e871ee655781155b1a6e7c5d0db20a8cbc498a56",
-          "spec_material_hash": "2d8acde3aea49b2c3e1b25440e16ff027a48cc03d14eec54e74b8da9e4acbd63"
+          "reason": "Synced #1737 explicit actor identity boundary contract with accepted master bc6475824 (v0.152.0).",
+          "reviewed_code_fingerprint": "aea5567d3e456d1c7e0f8ae1bdf3293755f2e2ca51c95cba56b75ccc6d07046c",
+          "spec_material_hash": "993970c6e8426cb3cf151af3218c16e867aae6d9e68c7388f196f298561f1226"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Synced #1783 fail-closed broker orphan acknowledgment with accepted master 9fff41ffc (v0.152.0).",
-          "reviewed_code_fingerprint": "dbbd0c1707a760e7f2c55cf8e871ee655781155b1a6e7c5d0db20a8cbc498a56",
-          "spec_material_hash": "8a4b1c8ad5c4138bf24941b192c7206f5f9d8e6d5772cad4f7d50cb1abce1293"
+          "reason": "Synced #1737 actor custody enforcement and unknown-claim recovery with accepted master bc6475824 (v0.152.0).",
+          "reviewed_code_fingerprint": "aea5567d3e456d1c7e0f8ae1bdf3293755f2e2ca51c95cba56b75ccc6d07046c",
+          "spec_material_hash": "0b0571a937c901183e78a8cb0070b8d7de081daebc00bad58c1dbb1c6b636ae6"
         }
       ],
       "state": "APPROVED",
       "stop_conditions": [],
-      "title": "Fix #1783: verifiable writer incarnation provenance for broker pending events and orphan recovery",
+      "title": "Solve #1737: reject unknown actor claim and support fail-closed unknown recovery",
       "todo_ids": [
-        "bugs_01m7r13b7j70bp8x"
+        "code_01m7qxkv3kc826jx"
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795142809Z"
+      "updated_at": "1795145442Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:5f32eb69aa13d61c88009bca4601bdba0e7e1fc53be8d62dfd2b2622c7f567ad",
+      "artifact_hash": "sha256:a13275e35f1a7176941339a95fbea1e6ee8a590b778d17757d26818af9ef9008",
       "checks": [
         {
-          "name": "cargo_clippy",
+          "name": "cargo_clippy_all_targets",
           "status": "passed"
         },
         {
-          "name": "cargo_fmt",
+          "name": "cargo_fmt_check",
           "status": "passed"
         },
         {
-          "name": "cli_contract_enforcement",
+          "name": "cargo_test_cli_contract_enforcement",
           "status": "passed"
         },
         {
-          "name": "core_broker_unit",
+          "name": "cargo_test_cloud_boundaries",
           "status": "passed"
         },
         {
-          "name": "core_tests_broker",
+          "name": "cargo_test_cloud_boundaries_and_parity",
           "status": "passed"
         },
         {
-          "name": "crash_consistency",
+          "name": "cargo_test_cloud_cli_boundary",
           "status": "passed"
         },
         {
-          "name": "doc_alignment",
+          "name": "cargo_test_core_reflection",
           "status": "passed"
         },
         {
-          "name": "single_datastore",
+          "name": "cargo_test_core_todo",
           "status": "passed"
         },
         {
-          "name": "v0_149_0_merge",
+          "name": "cargo_test_core_todo_claim",
+          "status": "passed"
+        },
+        {
+          "name": "cargo_test_doc_alignment",
+          "status": "passed"
+        },
+        {
+          "name": "cargo_test_plugins_todo_tests",
+          "status": "passed"
+        },
+        {
+          "name": "cargo_test_policy_self_authorization_1776",
+          "status": "passed"
+        },
+        {
+          "name": "cargo_test_runtime_credentials",
+          "status": "passed"
+        },
+        {
+          "name": "cargo_test_shared_state_semantics_1247",
+          "status": "passed"
+        },
+        {
+          "name": "cargo_test_todo_enforcement",
+          "status": "passed"
+        },
+        {
+          "name": "cargo_test_validate_ergonomics_1807_1810",
+          "status": "passed"
+        },
+        {
+          "name": "cargo_test_validation_history_archive",
           "status": "passed"
         }
       ],
-      "current_phase": "verification",
+      "current_phase": "intent",
       "custody": {
         "events": [
           {
             "event_id": "event:2",
-            "intent_id": "intent:change_01M7R1CWXC45KTFHQQ66YZABEX",
+            "intent_id": "intent:change_01M7QXTS2XBE1SK835T05MEJCV",
             "kind": "created",
             "sequence": 2
           },
           {
             "event_id": "event:3",
-            "intent_id": "intent:change_01M7R1CWXC45KTFHQQ66YZABEX",
+            "intent_id": "intent:change_01M7QXTS2XBE1SK835T05MEJCV",
             "kind": "refined",
             "sequence": 3
           },
           {
-            "detail": "trajectory:branch_01M7R1CX1G0E1K1F07ZPNJDYTA",
+            "detail": "trajectory:branch_01M7QXTS6XVVV8NKSX2EE61TB7",
             "event_id": "event:4",
-            "intent_id": "intent:change_01M7R1CWXC45KTFHQQ66YZABEX",
+            "intent_id": "intent:change_01M7QXTS2XBE1SK835T05MEJCV",
             "kind": "trajectory_step_recorded",
             "sequence": 4
           },
           {
-            "detail": "trajectory:branch_01M7R1CX1G0E1K1F07ZPNJDYTA",
+            "detail": "trajectory:branch_01M7QXTS6XVVV8NKSX2EE61TB7",
             "event_id": "event:5",
-            "intent_id": "intent:change_01M7R1CWXC45KTFHQQ66YZABEX",
+            "intent_id": "intent:change_01M7QXTS2XBE1SK835T05MEJCV",
             "kind": "trajectory_step_recorded",
             "sequence": 5
           },
           {
-            "detail": "trajectory:branch_01M7R1CX1G0E1K1F07ZPNJDYTA",
+            "detail": "trajectory:branch_01M7QXTS6XVVV8NKSX2EE61TB7",
             "event_id": "event:6",
-            "intent_id": "intent:change_01M7R1CWXC45KTFHQQ66YZABEX",
+            "intent_id": "intent:change_01M7QXTS2XBE1SK835T05MEJCV",
             "kind": "trajectory_step_recorded",
             "sequence": 6
+          },
+          {
+            "detail": "trajectory:branch_01M7QXTS6XVVV8NKSX2EE61TB7",
+            "event_id": "event:7",
+            "intent_id": "intent:change_01M7QXTS2XBE1SK835T05MEJCV",
+            "kind": "trajectory_step_recorded",
+            "sequence": 7
+          },
+          {
+            "detail": "trajectory:branch_01M7QXTS6XVVV8NKSX2EE61TB7",
+            "event_id": "event:8",
+            "intent_id": "intent:change_01M7QXTS2XBE1SK835T05MEJCV",
+            "kind": "trajectory_step_recorded",
+            "sequence": 8
+          },
+          {
+            "detail": "trajectory:branch_01M7QXTS6XVVV8NKSX2EE61TB7",
+            "event_id": "event:9",
+            "intent_id": "intent:change_01M7QXTS2XBE1SK835T05MEJCV",
+            "kind": "trajectory_step_recorded",
+            "sequence": 9
+          },
+          {
+            "detail": "trajectory:branch_01M7QXTS6XVVV8NKSX2EE61TB7",
+            "event_id": "event:10",
+            "intent_id": "intent:change_01M7QXTS2XBE1SK835T05MEJCV",
+            "kind": "trajectory_step_recorded",
+            "sequence": 10
+          },
+          {
+            "detail": "trajectory:branch_01M7QXTS6XVVV8NKSX2EE61TB7",
+            "event_id": "event:11",
+            "intent_id": "intent:change_01M7QXTS2XBE1SK835T05MEJCV",
+            "kind": "trajectory_step_recorded",
+            "sequence": 11
+          },
+          {
+            "detail": "trajectory:branch_01M7QXTS6XVVV8NKSX2EE61TB7",
+            "event_id": "event:12",
+            "intent_id": "intent:change_01M7QXTS2XBE1SK835T05MEJCV",
+            "kind": "trajectory_step_recorded",
+            "sequence": 12
+          },
+          {
+            "detail": "trajectory:branch_01M7QXTS6XVVV8NKSX2EE61TB7",
+            "event_id": "event:13",
+            "intent_id": "intent:change_01M7QXTS2XBE1SK835T05MEJCV",
+            "kind": "trajectory_step_recorded",
+            "sequence": 13
+          },
+          {
+            "detail": "trajectory:branch_01M7QXTS6XVVV8NKSX2EE61TB7",
+            "event_id": "event:14",
+            "intent_id": "intent:change_01M7QXTS2XBE1SK835T05MEJCV",
+            "kind": "trajectory_step_recorded",
+            "sequence": 14
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 6,
+        "next_sequence": 14,
         "schema_version": "1.0.0",
         "trajectories": {
-          "branch_01M7R1CX1G0E1K1F07ZPNJDYTA": {
+          "branch_01M7QXTS6XVVV8NKSX2EE61TB7": {
             "evidence_only": true,
-            "id": "branch_01M7R1CX1G0E1K1F07ZPNJDYTA",
-            "intent_id": "intent:change_01M7R1CWXC45KTFHQQ66YZABEX",
+            "id": "branch_01M7QXTS6XVVV8NKSX2EE61TB7",
+            "intent_id": "intent:change_01M7QXTS2XBE1SK835T05MEJCV",
             "steps": [
               {
-                "action": "verification",
+                "action": "trajectory.record",
                 "custody_event_id": "event:4",
                 "observations": [
-                  "src/decapod/core/broker.rs",
+                  "src/decapod/core/authoring.rs",
+                  "src/decapod/core/todo.rs",
+                  "src/decapod/core/workspace.rs",
+                  "src/decapod/core/mentor/reflection.rs",
                   "src/decapod/cli.rs",
-                  "src/decapod/lib.rs",
-                  "src/decapod/core/docs_cli.rs",
-                  "src/decapod/core/broker.rs",
+                  "src/decapod/core/authoring.rs",
+                  "src/decapod/core/todo.rs",
+                  "src/decapod/core/workspace.rs",
+                  "src/decapod/core/mentor/reflection.rs",
                   "src/decapod/cli.rs",
-                  "src/decapod/lib.rs",
-                  "src/decapod/core/docs_cli.rs",
-                  "docs/agent/command-contracts.md",
-                  "docs/agent/error-recovery.md",
-                  "tests/unit/core/broker_tests.rs",
-                  "tests/crash_consistency.rs",
-                  ".decapod/config.toml",
-                  ".decapod/managed/specs/INTERFACES.md",
-                  ".decapod/managed/specs/ARCHITECTURE.md",
-                  ".decapod/managed/specs/SECURITY.md",
-                  "core::broker::tests 7/7 passed; crash_consistency 8/8 passed; cli_contract_enforcement 22/22 passed; doc_alignment 4/4 passed; single_datastore 9/9 passed; clippy and fmt clean"
+                  "tests/todo_enforcement.rs",
+                  "tests/unit/core/todo_tests.rs",
+                  "tests/unit/core/reflection_tests.rs",
+                  "core::todo::* 94/94, core::mentor::reflection::* 33/33, todo_enforcement 5/5, plugins_todo_tests 40/40 (39/39 + autorun), cli_contract_enforcement 22/22, doc_alignment 4/4, agent_rpc_suite 5/5, context_capsule_rpc 5/5, infer_precision 7/7, spec_conformance 15/15, workspace_interlock 1/1, clippy & fmt clean"
                 ],
                 "proof_refs": [
-                  "cargo_fmt",
-                  "cargo_clippy",
-                  "core_broker_unit",
-                  "crash_consistency",
-                  "cli_contract_enforcement",
-                  "doc_alignment",
-                  "single_datastore"
+                  "cargo_fmt_check",
+                  "cargo_clippy_all_targets",
+                  "cargo_test_core_todo",
+                  "cargo_test_core_reflection",
+                  "cargo_test_todo_enforcement",
+                  "cargo_test_plugins_todo_tests",
+                  "cargo_test_cli_contract_enforcement",
+                  "cargo_test_doc_alignment"
                 ],
                 "scope": [
                   "root"
@@ -841,20 +965,19 @@
                 "validation_findings": []
               },
               {
-                "action": "verification",
+                "action": "trajectory.record",
                 "custody_event_id": "event:5",
                 "observations": [
-                  "Merged origin/master a5a1edad (v0.149.0) cleanly; core::broker::tests 7/7, crash_consistency 8/8, doc_alignment 4/4, single_datastore 9/9, core_tests broker 4/4, fmt, clippy all passed"
+                  "Merged origin/master a5a1edad (v0.149.0): fmt --check ok, clippy --all-targets --all-features -- -D warnings ok, core::todo::tests::claim_task_* 2/2, core::mentor::reflection::* 33/33, todo_enforcement 5/5, cli_contract_enforcement 23/23, doc_alignment 4/4 passed"
                 ],
                 "proof_refs": [
-                  "v0_149_0_merge",
-                  "cargo_fmt",
-                  "cargo_clippy",
-                  "core_broker_unit",
-                  "crash_consistency",
-                  "doc_alignment",
-                  "single_datastore",
-                  "core_tests_broker"
+                  "cargo_fmt_check",
+                  "cargo_clippy_all_targets",
+                  "cargo_test_core_todo_claim",
+                  "cargo_test_core_reflection",
+                  "cargo_test_todo_enforcement",
+                  "cargo_test_cli_contract_enforcement",
+                  "cargo_test_doc_alignment"
                 ],
                 "scope": [
                   "root"
@@ -866,18 +989,172 @@
                 "action": "trajectory.record",
                 "custody_event_id": "event:6",
                 "observations": [
-                  "src/decapod/core/docs_cli.rs",
-                  "docs/agent/command-contracts.md",
+                  "Merged origin/master 205d4e8da (v0.149.1): fmt --check ok, clippy --all-targets --all-features -- -D warnings ok, core::todo::tests::claim_task_* 2/2, todo_enforcement 5/5 passed"
+                ],
+                "proof_refs": [
+                  "cargo_fmt_check",
+                  "cargo_clippy_all_targets",
+                  "cargo_test_core_todo_claim",
+                  "cargo_test_todo_enforcement"
+                ],
+                "scope": [
+                  "root"
+                ],
+                "sequence": 6,
+                "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:7",
+                "observations": [
+                  "tests/cloud_cli_boundary.rs",
+                  "Merged origin/master 102d6eb22 (v0.149.3) and fixed builds/12775 failures (docs ingest after init in tests/todo_enforcement.rs; cloud TodoCommand::Claim --agent handling in src/decapod/core/todo.rs + tests/cloud_cli_boundary.rs): fmt --check ok, clippy --all-targets --all-features -- -D warnings ok, claim_task_* 2/2, todo_enforcement 5/5, cloud_cli_boundary 1/1 passed"
+                ],
+                "proof_refs": [
+                  "cargo_fmt_check",
+                  "cargo_clippy_all_targets",
+                  "cargo_test_core_todo_claim",
+                  "cargo_test_todo_enforcement",
+                  "cargo_test_cloud_cli_boundary"
+                ],
+                "scope": [
+                  "root"
+                ],
+                "sequence": 7,
+                "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:8",
+                "observations": [
+                  "Merged origin/master cfe2565da (PR #1816, v0.149.3): fmt --check ok, clippy --all-targets --all-features -- -D warnings ok, claim_task_* 2/2, todo_enforcement 5/5, cloud_cli_boundary 1/1, policy_self_authorization_1776 passed"
+                ],
+                "proof_refs": [
+                  "cargo_fmt_check",
+                  "cargo_clippy_all_targets",
+                  "cargo_test_core_todo_claim",
+                  "cargo_test_todo_enforcement",
+                  "cargo_test_cloud_cli_boundary",
+                  "cargo_test_policy_self_authorization_1776"
+                ],
+                "scope": [
+                  "root"
+                ],
+                "sequence": 8,
+                "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:9",
+                "observations": [
+                  "Merged origin/master 845ff9799 (PR #1818 #1469 test-only + ARCHITECTURE.md, v0.149.3, zero src/ changes): specs.refresh ok, fmt --check ok, doc_alignment 4/4 passed"
+                ],
+                "proof_refs": [
+                  "cargo_fmt_check",
+                  "cargo_test_doc_alignment"
+                ],
+                "scope": [
+                  "root"
+                ],
+                "sequence": 9,
+                "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:10",
+                "observations": [
+                  "Merged origin/master 89906b666 (PR #1819 #1247, v0.149.3) and updated 2 TodoCommand::Claim fixtures in tests/shared_state_semantics_1247.rs with explicit non-unknown agent: fmt --check ok, clippy --all-targets --all-features -- -D warnings ok, claim_task_* 2/2, cloud_cli_boundary 1/1, shared_state_semantics_1247 10/10, todo_enforcement 5/5 passed"
+                ],
+                "proof_refs": [
+                  "cargo_fmt_check",
+                  "cargo_clippy_all_targets",
+                  "cargo_test_core_todo_claim",
+                  "cargo_test_shared_state_semantics_1247",
+                  "cargo_test_todo_enforcement",
+                  "cargo_test_cloud_cli_boundary"
+                ],
+                "scope": [
+                  "root"
+                ],
+                "sequence": 10,
+                "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:11",
+                "observations": [
+                  "Merged origin/master 45369197e (PR #1825 #1807/#1810, v0.149.3): fmt --check ok, clippy --all-targets --all-features -- -D warnings ok, claim_task_* 2/2, cloud_cli_boundary 1/1, validate_ergonomics_1807_1810 passed, todo_enforcement 5/5 passed"
+                ],
+                "proof_refs": [
+                  "cargo_fmt_check",
+                  "cargo_clippy_all_targets",
+                  "cargo_test_core_todo_claim",
+                  "cargo_test_validate_ergonomics_1807_1810",
+                  "cargo_test_todo_enforcement",
+                  "cargo_test_cloud_cli_boundary"
+                ],
+                "scope": [
+                  "root"
+                ],
+                "sequence": 11,
+                "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:12",
+                "observations": [
+                  "Merged origin/master 84f967382 (PR #1823 #1660, v0.149.3), fixed validation_history_archive_tests::capture_task_binding_with_budget_never_rotates_custody_unless_renew_is_explicit with cfg(test) thread-local actor guard, and sped up test_issue_1737 in tests/todo_enforcement.rs (cloned pre-journal baseline): fmt/clippy/archive_tests/claim_task_*/cloud_*/doc_alignment/todo_enforcement all passed"
+                ],
+                "proof_refs": [
+                  "cargo_fmt_check",
+                  "cargo_clippy_all_targets",
+                  "cargo_test_validation_history_archive",
+                  "cargo_test_core_todo_claim",
+                  "cargo_test_cloud_boundaries",
+                  "cargo_test_doc_alignment",
+                  "cargo_test_todo_enforcement"
+                ],
+                "scope": [
+                  "root"
+                ],
+                "sequence": 12,
+                "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:13",
+                "observations": [
+                  "Merged origin/master 755bbac6e (PR #1828, dactyl-db 0.18.0, v0.149.3) and moved cfg(test) thread-local actor guard from lib.rs to authoring.rs so runtime_credentials AST proof stays green: fmt, clippy, runtime_credentials 1/1, validation_history::archive_tests 2/2, 1829/1830 --features supabase-cloud --lib (sole macOS host-path test unrelated), cloud_cli_boundary, cloud_mixed_worktree, cloud_wave_parity, cloud_dactyl_boundary, cloud_command_path, doc_alignment, and todo_enforcement 5/5 all passed"
+                ],
+                "proof_refs": [
+                  "cargo_fmt_check",
+                  "cargo_clippy_all_targets",
+                  "cargo_test_runtime_credentials",
+                  "cargo_test_validation_history_archive",
+                  "cargo_test_cloud_boundaries_and_parity",
+                  "cargo_test_doc_alignment",
+                  "cargo_test_todo_enforcement"
+                ],
+                "scope": [
+                  "root"
+                ],
+                "sequence": 13,
+                "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:14",
+                "observations": [
                   ".decapod/managed/specs/ARCHITECTURE.md",
                   ".decapod/managed/specs/INTERFACES.md",
                   ".decapod/managed/specs/SECURITY.md",
-                  "Merged origin/master 9fff41ffc (v0.152.0); docs build, fmt, clippy --all-targets --all-features, crash_consistency, and broker_* tests passed"
+                  "Merged origin/master bc6475824 (v0.152.0); fmt, clippy --all-targets --all-features, claim_task_* 2/2, and todo_enforcement 5/5 passed"
                 ],
                 "proof_refs": [],
                 "scope": [
                   "root"
                 ],
-                "sequence": 6,
+                "sequence": 14,
                 "validation_findings": []
               }
             ]
@@ -887,30 +1164,39 @@
       "declared_commands": [],
       "destination": "pull request",
       "evidence": [
-        "Merged origin/master 9fff41ffc (v0.152.0); docs build, fmt, clippy --all-targets --all-features, crash_consistency, and broker_* tests passed",
-        "Merged origin/master a5a1edad (v0.149.0) cleanly; core::broker::tests 7/7, crash_consistency 8/8, doc_alignment 4/4, single_datastore 9/9, core_tests broker 4/4, fmt, clippy all passed",
-        "core::broker::tests 7/7 passed; crash_consistency 8/8 passed; cli_contract_enforcement 22/22 passed; doc_alignment 4/4 passed; single_datastore 9/9 passed; clippy and fmt clean"
+        "Merged origin/master 102d6eb22 (v0.149.3) and fixed builds/12775 failures (docs ingest after init in tests/todo_enforcement.rs; cloud TodoCommand::Claim --agent handling in src/decapod/core/todo.rs + tests/cloud_cli_boundary.rs): fmt --check ok, clippy --all-targets --all-features -- -D warnings ok, claim_task_* 2/2, todo_enforcement 5/5, cloud_cli_boundary 1/1 passed",
+        "Merged origin/master 205d4e8da (v0.149.1): fmt --check ok, clippy --all-targets --all-features -- -D warnings ok, core::todo::tests::claim_task_* 2/2, todo_enforcement 5/5 passed",
+        "Merged origin/master 45369197e (PR #1825 #1807/#1810, v0.149.3): fmt --check ok, clippy --all-targets --all-features -- -D warnings ok, claim_task_* 2/2, cloud_cli_boundary 1/1, validate_ergonomics_1807_1810 passed, todo_enforcement 5/5 passed",
+        "Merged origin/master 755bbac6e (PR #1828, dactyl-db 0.18.0, v0.149.3) and moved cfg(test) thread-local actor guard from lib.rs to authoring.rs so runtime_credentials AST proof stays green: fmt, clippy, runtime_credentials 1/1, validation_history::archive_tests 2/2, 1829/1830 --features supabase-cloud --lib (sole macOS host-path test unrelated), cloud_cli_boundary, cloud_mixed_worktree, cloud_wave_parity, cloud_dactyl_boundary, cloud_command_path, doc_alignment, and todo_enforcement 5/5 all passed",
+        "Merged origin/master 845ff9799 (PR #1818 #1469 test-only + ARCHITECTURE.md, v0.149.3, zero src/ changes): specs.refresh ok, fmt --check ok, doc_alignment 4/4 passed",
+        "Merged origin/master 84f967382 (PR #1823 #1660, v0.149.3), fixed validation_history_archive_tests::capture_task_binding_with_budget_never_rotates_custody_unless_renew_is_explicit with cfg(test) thread-local actor guard, and sped up test_issue_1737 in tests/todo_enforcement.rs (cloned pre-journal baseline): fmt/clippy/archive_tests/claim_task_*/cloud_*/doc_alignment/todo_enforcement all passed",
+        "Merged origin/master 89906b666 (PR #1819 #1247, v0.149.3) and updated 2 TodoCommand::Claim fixtures in tests/shared_state_semantics_1247.rs with explicit non-unknown agent: fmt --check ok, clippy --all-targets --all-features -- -D warnings ok, claim_task_* 2/2, cloud_cli_boundary 1/1, shared_state_semantics_1247 10/10, todo_enforcement 5/5 passed",
+        "Merged origin/master a5a1edad (v0.149.0): fmt --check ok, clippy --all-targets --all-features -- -D warnings ok, core::todo::tests::claim_task_* 2/2, core::mentor::reflection::* 33/33, todo_enforcement 5/5, cli_contract_enforcement 23/23, doc_alignment 4/4 passed",
+        "Merged origin/master bc6475824 (v0.152.0); fmt, clippy --all-targets --all-features, claim_task_* 2/2, and todo_enforcement 5/5 passed",
+        "Merged origin/master cfe2565da (PR #1816, v0.149.3): fmt --check ok, clippy --all-targets --all-features -- -D warnings ok, claim_task_* 2/2, todo_enforcement 5/5, cloud_cli_boundary 1/1, policy_self_authorization_1776 passed",
+        "core::todo::* 94/94, core::mentor::reflection::* 33/33, todo_enforcement 5/5, plugins_todo_tests 40/40 (39/39 + autorun), cli_contract_enforcement 22/22, doc_alignment 4/4, agent_rpc_suite 5/5, context_capsule_rpc 5/5, infer_precision 7/7, spec_conformance 15/15, workspace_interlock 1/1, clippy & fmt clean"
       ],
       "inspected_files": [
         "src/decapod/cli.rs",
-        "src/decapod/core/broker.rs",
-        "src/decapod/core/docs_cli.rs",
-        "src/decapod/lib.rs"
+        "src/decapod/core/authoring.rs",
+        "src/decapod/core/mentor/reflection.rs",
+        "src/decapod/core/todo.rs",
+        "src/decapod/core/workspace.rs"
       ],
-      "intent_id": "intent:change_01M7R1CWXC45KTFHQQ66YZABEX",
+      "intent_id": "intent:change_01M7QXTS2XBE1SK835T05MEJCV",
       "modified_files": [
-        ".decapod/config.toml",
         ".decapod/managed/specs/ARCHITECTURE.md",
         ".decapod/managed/specs/INTERFACES.md",
         ".decapod/managed/specs/SECURITY.md",
-        "docs/agent/command-contracts.md",
-        "docs/agent/error-recovery.md",
         "src/decapod/cli.rs",
-        "src/decapod/core/broker.rs",
-        "src/decapod/core/docs_cli.rs",
-        "src/decapod/lib.rs",
-        "tests/crash_consistency.rs",
-        "tests/unit/core/broker_tests.rs"
+        "src/decapod/core/authoring.rs",
+        "src/decapod/core/mentor/reflection.rs",
+        "src/decapod/core/todo.rs",
+        "src/decapod/core/workspace.rs",
+        "tests/cloud_cli_boundary.rs",
+        "tests/todo_enforcement.rs",
+        "tests/unit/core/reflection_tests.rs",
+        "tests/unit/core/todo_tests.rs"
       ],
       "next_transitions": [
         "Refine plan and declare falsifiable checks"
@@ -918,10 +1204,10 @@
       "repo_scope": [
         "root"
       ],
-      "run_id": "branch_01M7R1CX1G0E1K1F07ZPNJDYTA",
+      "run_id": "branch_01M7QXTS6XVVV8NKSX2EE61TB7",
       "schema_version": "1.1.0",
       "shortcut_risk_signals": [],
-      "task_id": "bugs_01m7r13b7j70bp8x",
+      "task_id": "code_01m7qxkv3kc826jx",
       "tool_calls": [],
       "unresolved_assumptions": []
     }

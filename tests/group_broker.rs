@@ -778,8 +778,11 @@ fn claim_preparation_probe(broker: bool) {
             Err(error) => panic!("AF_UNIX capability probe failed: {error}"),
         }
     }
+    let claim_pw = acquire_session_password_with(&dir, "broker-claim-probe", run_decapod_bounded);
+    let _ = password;
     let envs = [
-        ("DECAPOD_SESSION_PASSWORD", password.as_str()),
+        ("DECAPOD_AGENT_ID", "broker-claim-probe"),
+        ("DECAPOD_SESSION_PASSWORD", claim_pw.as_str()),
         ("DECAPOD_VALIDATE_SKIP_GIT_GATES", "1"),
         ("DECAPOD_GROUP_BROKER_IDLE_SECS", "1"),
         (
