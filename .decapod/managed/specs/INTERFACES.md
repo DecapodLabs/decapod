@@ -1508,6 +1508,10 @@ isolated caller subprocess, with task-specific checks using the actual claimant.
 
 ## Intent Reconciliation RPC
 
+## Acceptance observer capture boundaries
+
+CaptureCoverage is an optional backward-compatible input to the existing decapod.agent-acceptance.v1 capture. Older captures remain readable with capture_coverage.state=unknown. Complete coverage requires the host, kernel, Git and GitHub channels, no dropped events, exact index digests and a retained terminal position. Post-exit independent Git/forge readback is supported. Shared or unknown witness custody is classified incomplete.
+
 <!-- decapod:requirement REQ-INTENT-TRACEABILITY -->
 `decapod rpc --op intent.reconcile --params '{}'` returns an advisory,
 versioned reconciliation report. It exposes the governed-plan intent digest,
@@ -1535,7 +1539,7 @@ field. Nothing in this operation authorizes a mutation, approval or completion.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `e6fce094b04b691972d5b4d6744301b02bf10518a3101bb02cf6663b72b15f0f`
+- Repository signal fingerprint: `7314745003e2e8805e178155d82371583ac15576d395918a0855101f83437d06`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (245 files), `tests/` (258 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
