@@ -822,6 +822,14 @@
       "proof_refs": [
         "https://github.com/DecapodLabs/decapod/pull/1863"
       ]
+    },
+    {
+      "id": "release-accepted-instruction-868f",
+      "summary": "Integrate accepted instruction-readiness868f756e; resolve only reviewed source digest config conflict, preserve authored specs and exact required proof policy",
+      "input_digest": "sha256:e9b7364ec5b9f8d4c051862242aca99ec49e295a431c915fffa3016b38e0284e",
+      "proof_refs": [
+        "https://github.com/DecapodLabs/decapod/pull/1861"
+      ]
     }
   ],
   "intents": {
@@ -862,23 +870,23 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Integrate accepted observer run-boundary contract while retaining release-specific source identity and projection checks; authored observer coverage separation added.",
-          "reviewed_code_fingerprint": "b464337eb22346eb84a132380a7ec75dff5d3fb292f8eac1b6b9ab7272642672",
-          "spec_material_hash": "dd54f37f92fd2f60bde9697f54eb7837fb989499be8427f427b3273f23d2616c"
+          "reason": "Integrate accepted recorded-instruction readiness without allowing release projection checks to substitute for instruction convergence or spec review.",
+          "reviewed_code_fingerprint": "dc5fb273e1811d66815f90f18d2cc90d7b6f155e939964dfd51607895174202c",
+          "spec_material_hash": "041a938fff83134233a98de81f4c2594e0ac97ce70d730b980390ddaed221ad6"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Native-generated headers/manifest recovered from merge conflict; source predicate, exact release classification and observer contract remain separate.",
-          "reviewed_code_fingerprint": "b464337eb22346eb84a132380a7ec75dff5d3fb292f8eac1b6b9ab7272642672",
-          "spec_material_hash": "ca63fe6901da2f0a1961718c99c445517b64b906f8ad82f55cfb1b3f4e115274"
+          "reason": "Current shared readiness and release/source projection interfaces remain independently enforced; native-generated manifest rebuilt after accepted merge.",
+          "reviewed_code_fingerprint": "dc5fb273e1811d66815f90f18d2cc90d7b6f155e939964dfd51607895174202c",
+          "spec_material_hash": "0522cbb729837251f19e436a74bbbd47909471cff206dad7cf38429d23e68e82"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Canonical source metadata and immutable bytes remain required; release proof never confers missing independent run coverage.",
-          "reviewed_code_fingerprint": "b464337eb22346eb84a132380a7ec75dff5d3fb292f8eac1b6b9ab7272642672",
-          "spec_material_hash": "cb896215a5995942f4c9b617abf055b91af596ab245375ab3582844150477bbb"
+          "reason": "Source identity and immutable payload checks remain strict; neither generated metadata nor older headers create approval or current publication authority.",
+          "reviewed_code_fingerprint": "dc5fb273e1811d66815f90f18d2cc90d7b6f155e939964dfd51607895174202c",
+          "spec_material_hash": "c6c1411b792e82814af1ba9e9d18a522d547db2fd69684938b897c1dd846f294"
         }
       ],
       "state": "APPROVED",
@@ -889,7 +897,7 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795168449Z"
+      "updated_at": "1795169070Z"
     },
     "trajectory": {
       "active_boundaries": [

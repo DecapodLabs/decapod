@@ -397,6 +397,13 @@ fingerprint, and verifier come from `state::canonical_snapshot`, which is the
 same revision and provenance resolver used by `state.resolve`. The judgment
 does not keep a second definition of that identity.
 
+`plan_governance::instruction_readiness` evaluates recorded instructions from
+the current governance plan. Orientation projects those same blockers and
+remediation, and approval, execution checkpoints, validation, and publication
+enforce them. Its source revision binds the recorded inputs independently of
+approval or phase progress. The existing validation epoch binds proof to the
+applicable plan after a correction.
+
 A task verification row is an index. `judge_stored_verification` re-hashes the
 bound files and checks that the proof digest matches that reconstruction under
 the canonical snapshot. A pass status or a digest written only into SQLite is
@@ -1182,7 +1189,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `b464337eb22346eb84a132380a7ec75dff5d3fb292f8eac1b6b9ab7272642672`
+- Repository signal fingerprint: `dc5fb273e1811d66815f90f18d2cc90d7b6f155e939964dfd51607895174202c`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (245 files), `tests/` (258 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
@@ -1755,3 +1762,5 @@ The standalone `assets/tools/release_projection_drift.rs` wrapper links the ordi
 The full Supabase-enabled library execution caught a test-fixture identity omission: the release-version helper must retain the canonical Cargo package repository field when it reuses the existing published-root source fixture. The correction changes fixture construction only; origin, ungrafted ancestry, committed template and immutable entrypoint checks remain strict. Prior failed candidate eee794ba and actual job136182283538 remain preserved.
 
 Release projection integrity and retained observer-run completeness are separate proof surfaces. A successful version-only comparison cannot turn missing run boundaries or incomplete tool observation into an autonomous-admission claim; the existing acceptance observer retains that judgment. Preserving source-entrypoint versions grants no observation coverage.
+
+Release-only structural projection checks remain separate from the accepted shared recorded-instruction readiness predicate in `src/decapod/plan_governance.rs`. Preserving canonical source versions cannot converge an unresolved instruction, waive current-content spec review, or establish publication readiness. Existing orientation, approval, checkpoint and publication consumers retain their own enforcement.

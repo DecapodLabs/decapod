@@ -901,10 +901,10 @@ mod plan_governed_execution {
 
         let approve = run_decapod(&dir, &["govern", "plan", "approve"]);
         assert!(
-            approve.status.success(),
-            "plan approve failed: {}",
-            String::from_utf8_lossy(&approve.stderr)
+            !approve.status.success(),
+            "approval requires resolved questions"
         );
+        assert!(String::from_utf8_lossy(&approve.stderr).contains("NEEDS_HUMAN_INPUT"));
 
         let blocked = run_decapod(
             &dir,
@@ -957,6 +957,84 @@ mod plan_governed_execution {
             "check-execute should pass after the revised plan is approved: {}",
             String::from_utf8_lossy(&ok.stderr)
         );
+    }
+
+    #[test]
+    fn recorded_conflict_has_one_blocker_until_correction_and_reapproval() {
+        let (_tmp, dir, todo_id) = setup_repo();
+        let conflict = "The later request removes API v1, which the original preserves";
+        let init = run_decapod(
+            &dir,
+            &[
+                "govern",
+                "plan",
+                "init",
+                "--title",
+                "API compatibility",
+                "--intent",
+                "Preserve API v1",
+                "--todo-id",
+                &todo_id,
+                "--contradiction",
+                conflict,
+            ],
+        );
+        assert!(init.status.success(), "{init:?}");
+
+        let orientation = run_decapod(
+            &dir,
+            &[
+                "infer",
+                "orientation",
+                "--task-id",
+                &todo_id,
+                "--format",
+                "json",
+            ],
+        );
+        assert!(orientation.status.success(), "{orientation:?}");
+        let packet: serde_json::Value = serde_json::from_slice(&orientation.stdout).unwrap();
+        let readiness = &packet["governed_plan"]["instruction_readiness"];
+        assert_eq!(readiness["verdict"], "fail");
+        assert_eq!(
+            readiness["blockers"][0]["source"],
+            ".decapod/governance.json#/sections/plan/unresolved_contradictions/0"
+        );
+
+        for args in [
+            vec!["govern", "plan", "approve"],
+            vec!["govern", "plan", "check-execute", "--todo-id", &todo_id],
+        ] {
+            let output = run_decapod(&dir, &args);
+            let stderr = String::from_utf8_lossy(&output.stderr);
+            assert!(!output.status.success(), "{args:?} unexpectedly succeeded");
+            assert!(stderr.contains("NEEDS_HUMAN_INPUT"), "{stderr}");
+            let payload = stderr
+                .lines()
+                .find_map(|line| line.split_once("payload=").map(|(_, payload)| payload))
+                .expect("recorded instruction readiness payload");
+            let value: serde_json::Value = serde_json::from_str(payload).unwrap();
+            assert_eq!(&value["instruction_readiness"], readiness);
+        }
+
+        let corrected = run_decapod(
+            &dir,
+            &["govern", "plan", "update", "--clear-contradictions"],
+        );
+        assert!(corrected.status.success(), "{corrected:?}");
+        let stale = run_decapod(
+            &dir,
+            &["govern", "plan", "check-execute", "--todo-id", &todo_id],
+        );
+        assert!(!stale.status.success(), "{stale:?}");
+        assert!(String::from_utf8_lossy(&stale.stderr).contains("NEEDS_PLAN_APPROVAL"));
+        let approved = run_decapod(&dir, &["govern", "plan", "approve"]);
+        assert!(approved.status.success(), "{approved:?}");
+        let eligible = run_decapod(
+            &dir,
+            &["govern", "plan", "check-execute", "--todo-id", &todo_id],
+        );
+        assert!(eligible.status.success(), "{eligible:?}");
     }
 
     #[test]
