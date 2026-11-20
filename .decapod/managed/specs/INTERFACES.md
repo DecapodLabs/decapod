@@ -1547,8 +1547,8 @@ field. Nothing in this operation authorizes a mutation, approval or completion.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `7b1a7896765bbf0c58f2429c3f090cd3037ac4fceb24659ce9056ee4b832a3ca`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (246 files), `tests/` (258 files)
+- Repository signal fingerprint: `1870464dbf13f6d60576b3e293dc8c881d9143f26b19b99c8a3a285cb1d5a382`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (250 files), `tests/` (258 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 
@@ -2113,7 +2113,10 @@ Same-workstream merges reconcile additive `trajectory` sets, merge `claims`,
 divergent custody events/steps and remapping `loop.custody_event_id`), clear any
 stale `validation` receipt when trajectory or validation changed, and recompute
 `proof_status`, `verdicts`, and `artifact_hash` via `with_recomputed_hash()` so
-failed or missing proof never becomes passing. Accepted-target merges
+failed or missing proof never becomes passing. For a shared intent, the
+reconciler preserves the original request, its source provenance, and the
+common instruction history. It retains a one-sided append and rejects
+conflicting revisions or a truncated history. Accepted-target merges
 (`origin/<target_base>`) retain the complete active workstream journal while
 carrying forward newly accepted baseline policy and unresolved obligations.
 `tests/merged_governance_journal_1780.rs` exercises the real binary across
@@ -2251,8 +2254,15 @@ digests before revalidation; no override or second policy store is added.
 forge. The default publication diagnosis lists blockers and sends agents
 to the live publisher for exact validation and readback.
 
+## Readiness and evidence scope
+
+Cold state readers expose instruction identity and revision. Preparation, approval, execution checkpointing, validation and publication apply the same recorded blocker and remediation. An actual native-call observation binds its terminal result to the current candidate, accepted base and policy, instructions, task custody and measured producer. Retained denial evidence remains available after a legitimate repair. Publication verifies final head and live target independently. Hosted or unobserved effects retain unresolved coverage.
+
 ## Exact release projection interpretation
 
-The release projection checker remains read-only and returns a failure for any unexpected projection. Under verified source-development policy, entrypoint versions may differ from the package or spec-manifest release while their committed bytes and fingerprints remain canonical. Even another well-formed, correctly fingerprinted header is rejected if it differs from that immutable release head. Foreign origin, altered payload, configuration/source/dependency changes and unknown manifest drift do not obtain an exception. Ordinary consumers continue to require the evaluating binary's exact release templates. No RPC schema, producer authority or required CI recipe is added or relaxed.
+A source-development manifest binds the immutable entrypoint bytes in
+`content_hash` and the renderer at `decapod_release` in `template_hash`
+and `fingerprint`. The release verifier recomputes both bindings and checks
+the refreshed entrypoint bytes against the classified release head.
 
-Accepted v0.154.0 (`0f44f780`) advances package metadata without changing the release-only classifier or source-identity authority. The official released controller regenerates entrypoints, Docker pin and spec attestations for that evaluation epoch; the byte-for-byte release-head comparison still distinguishes permitted historical source headers from changed payloads. Retained failure receipts remain historical and are not reused as current readiness.
+The release projection checker remains read-only and returns a failure for any unexpected projection. Under verified source-development policy, entrypoint versions may differ from the package or spec-manifest release while their committed bytes and fingerprints remain canonical. Even another well-formed, correctly fingerprinted header is rejected if it differs from that immutable release head. Foreign origin, altered payload, configuration/source/dependency changes and unknown manifest drift do not obtain an exception. Ordinary consumers continue to require the evaluating binary's exact release templates. No RPC schema, producer authority or required CI recipe is added or relaxed.

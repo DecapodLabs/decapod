@@ -728,6 +728,13 @@ pub(crate) fn initialize_workbranch_governance_at(
         context.as_ref(),
         created_base,
     )?;
+    if selected.len() == 1 {
+        crate::core::trajectory::reconcile_task_scope_projection(
+            repo_root,
+            &selected[0].id,
+            &selected[0].scope,
+        )?;
+    }
     Ok(())
 }
 
@@ -3023,7 +3030,12 @@ fn verify_current_governance_ownership(
     {
         return Err(DecapodError::ValidationError("STALE_PUBLICATION_TASK: plan and trajectory must bind the same current todo. Update the governed plan and rerun validation.".into()));
     }
-    plan_governance::ensure_instruction_ready(&plan, "PUBLICATION_DECISION_REQUIRED")?;
+    plan_governance::ensure_instruction_ready_at(
+        repo_root,
+        &plan,
+        crate::core::validation_rules::EvaluationPhase::Publication,
+        "PUBLICATION_DECISION_REQUIRED",
+    )?;
     Ok(trajectory)
 }
 

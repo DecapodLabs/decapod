@@ -1309,7 +1309,15 @@ fn current_governance_is_receipt_independent_but_preserves_task_and_decision_gat
         serde_json::from_str(error.split_once("payload=").unwrap().1).unwrap();
     assert_eq!(
         payload["instruction_readiness"],
-        serde_json::to_value(plan_governance::instruction_readiness(&changed)).unwrap()
+        serde_json::to_value(
+            plan_governance::instruction_readiness_at(
+                dir.path(),
+                &changed,
+                crate::core::validation_rules::EvaluationPhase::Publication,
+            )
+            .unwrap(),
+        )
+        .unwrap()
     );
     changed = original;
     changed.todo_ids = vec!["wrong_task".into()];

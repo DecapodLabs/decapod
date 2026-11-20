@@ -811,6 +811,11 @@
       "proof_refs": [
         "cargo test --locked --lib workspace::publication::tests (41 passed)"
       ]
+    },
+    {
+      "id": "issue-1834-sync-d96bf819",
+      "summary": "Sync accepted master and preserve the PR metadata change",
+      "input_digest": "sha256:81c4f321323bc834d55796e12ead391b5b085f632581c81090373aac617796c3"
     }
   ],
   "intents": {
@@ -852,23 +857,23 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Describe exact commit range selection and admission order.",
-          "reviewed_code_fingerprint": "7b1a7896765bbf0c58f2429c3f090cd3037ac4fceb24659ce9056ee4b832a3ca",
-          "spec_material_hash": "86d1ac84a43b0ed6c62db57080761500e39b99ceafebe04b9be11d004824469a"
+          "reason": "Apply the metadata derivation and exact-head admission ordering on the accepted target specs.",
+          "reviewed_code_fingerprint": "1870464dbf13f6d60576b3e293dc8c881d9143f26b19b99c8a3a285cb1d5a382",
+          "spec_material_hash": "a0e9cd6a2a819b54cef571f05086a03b01ffa17dca82ec3ae3acc083c48afd30"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Document omitted PR metadata and ambiguity handling.",
-          "reviewed_code_fingerprint": "7b1a7896765bbf0c58f2429c3f090cd3037ac4fceb24659ce9056ee4b832a3ca",
-          "spec_material_hash": "33794783b0062f8ec48a47b04bf05290422ad78a09f95097500924d6efafbb95"
+          "reason": "Carry the omitted metadata behavior and ambiguity diagnostic forward on the accepted target specs.",
+          "reviewed_code_fingerprint": "1870464dbf13f6d60576b3e293dc8c881d9143f26b19b99c8a3a285cb1d5a382",
+          "spec_material_hash": "9155b3924b976559bf0943e44517c69c1523e506047a24c918af484b9b774163"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "PR metadata is read after publication proof and cannot authorize or change the verified subject.",
-          "reviewed_code_fingerprint": "7b1a7896765bbf0c58f2429c3f090cd3037ac4fceb24659ce9056ee4b832a3ca",
-          "spec_material_hash": "9e339b89e8e6fee3b7ffb5a302984f70a3d5145e30c617dac94bc1f0b57d8d12"
+          "reason": "Accepted security semantics cover admission independently of PR metadata selection.",
+          "reviewed_code_fingerprint": "1870464dbf13f6d60576b3e293dc8c881d9143f26b19b99c8a3a285cb1d5a382",
+          "spec_material_hash": "9c831867b7ba10361436871740035ad1b7793ffb6d90df7d1c01fa8ec3e585ec"
         }
       ],
       "state": "APPROVED",
@@ -879,7 +884,7 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795211486Z"
+      "updated_at": "1795213476Z"
     },
     "trajectory": {
       "active_boundaries": [

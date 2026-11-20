@@ -203,6 +203,37 @@ fn accepted_local_check_script_cannot_be_replaced_by_candidate_repinning() {
     consumer_readiness::candidate_cannot_repin_a_rewritten_accepted_check_script();
 }
 
+#[cfg(any(target_os = "linux", target_os = "macos"))]
+#[test]
+fn accepted_tenant_control_rejects_green_positive_tests_and_requires_fresh_repair_proof() {
+    consumer_readiness::accepted_tenant_negative_control_rejects_green_positives_and_proves_repair(
+    );
+}
+
+#[cfg(any(target_os = "linux", target_os = "macos"))]
+#[test]
+fn selected_roots_require_current_mapping_and_real_combined_behavior() {
+    consumer_readiness::selected_roots_reject_omission_and_require_executed_repair();
+}
+
+#[test]
+fn required_path_cannot_be_supplied_by_unmediated_green_artifact_evidence() {
+    consumer_readiness::accepted_required_path_rejects_unmediated_green_and_keeps_optional_unknown(
+    );
+}
+
+#[cfg(any(target_os = "linux", target_os = "macos"))]
+#[test]
+fn global_triangle_requires_independently_accepted_repair_and_current_proof() {
+    consumer_readiness::accepted_global_triangle_requires_policy_repair_and_fresh_mapping();
+}
+
+#[cfg(any(target_os = "linux", target_os = "macos"))]
+#[test]
+fn counterfeit_origin_hash_cannot_replace_retained_source_and_repair_stays_possible() {
+    consumer_readiness::source_history_refuses_counterfeit_origin_then_accepts_restored_fresh_source();
+}
+
 mod init_ci_scaffolding;
 mod init_config_behavior;
 
