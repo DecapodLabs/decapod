@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.152.0](https://github.com/DecapodLabs/decapod/compare/v0.151.0...v0.152.0) - 2026-11-20
+
+### Fixed
+
+- integrate accepted release12 reporting contract
+- *(reporting)* expose caller provenance for pure projections
+- *(reporting)* keep supplied reports outside canonical proof authority
+
+### Other
+
+- *(govern)* sync accepted master v0.151.0 ([#1793](https://github.com/DecapodLabs/decapod/pull/1793))
+
 ## [0.151.0](https://github.com/DecapodLabs/decapod/compare/v0.150.8...v0.151.0) - 2026-11-20
 
 ### Added

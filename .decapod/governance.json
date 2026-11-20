@@ -665,6 +665,11 @@
       "id": "cp-sync-363d6e3ec",
       "summary": "Integrate accepted master 363d6e3ec (v0.151.0) and refresh specs for #1739",
       "input_digest": "sha256:cd3c0e75fb8ca12ea30cb55b884bcb085a6971a99f45a246d285a2febca27304"
+    },
+    {
+      "id": "cp-sync-5cc32689e",
+      "summary": "Sync accepted master 5cc32689e (v0.152.0) and refresh 0.152.0 projections for #1739",
+      "input_digest": "sha256:19a8e78a4ebad85a17ee857e7086a7e4ddbe639ba3afb40d0d6b917f5e4ea7f5"
     }
   ],
   "intents": {
@@ -707,22 +712,22 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Reconciled #1739 compact v2 floor reconciliation with accepted master 363d6e3ec (v0.151.0).",
-          "reviewed_code_fingerprint": "48ac24f0a72cd0fa00d78140db414ac2f589169d2f1b766bc0454e14bcc5c44e",
+          "reason": "Synced #1739 compact v2 floor reconciliation with accepted master 5cc32689e (v0.152.0).",
+          "reviewed_code_fingerprint": "411e4a60fdf683c659e74fce5e3c0e184c82226245d971cfb6a23dc9fe1039c1",
           "spec_material_hash": "87ef8eb06d8d99b08e7f439012d77793d1532e100bdd59bb994d48f1aab0b102"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Reconciled #1739 compact v2 compatibility floor contract with accepted master 363d6e3ec (v0.151.0).",
-          "reviewed_code_fingerprint": "48ac24f0a72cd0fa00d78140db414ac2f589169d2f1b766bc0454e14bcc5c44e",
+          "reason": "Synced #1739 compact v2 compatibility floor contract with accepted master 5cc32689e (v0.152.0).",
+          "reviewed_code_fingerprint": "411e4a60fdf683c659e74fce5e3c0e184c82226245d971cfb6a23dc9fe1039c1",
           "spec_material_hash": "122396f215ab6d6a5fdce052e1e41a448d01160dac838f67241d960398f49b84"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Reconciled #1739 compact v2 downgrade boundary with accepted master 363d6e3ec (v0.151.0).",
-          "reviewed_code_fingerprint": "48ac24f0a72cd0fa00d78140db414ac2f589169d2f1b766bc0454e14bcc5c44e",
+          "reason": "Synced #1739 compact v2 downgrade boundary with accepted master 5cc32689e (v0.152.0).",
+          "reviewed_code_fingerprint": "411e4a60fdf683c659e74fce5e3c0e184c82226245d971cfb6a23dc9fe1039c1",
           "spec_material_hash": "053d38a9c0a87b78105a9bbd4dcd5991b92ec68254bfc409a0c9848a0702d119"
         }
       ],
@@ -734,13 +739,13 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795138702Z"
+      "updated_at": "1795140341Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:8651a16f50d07390dc68c861c27a78dad20de4a882f9a5a92ce6cb91f7c60608",
+      "artifact_hash": "sha256:9354d0e9b3f68cbd25fb9420dd44522de8e3d335fccef96ec0dc725719d326a1",
       "checks": [
         {
           "name": "clippy",
@@ -795,10 +800,17 @@
             "intent_id": "intent:change_01M7QKFSRQNZTA7DG143M3HP11",
             "kind": "trajectory_step_recorded",
             "sequence": 5
+          },
+          {
+            "detail": "trajectory:branch_01M7QKFSW14YFFE713D33JXR9V",
+            "event_id": "event:6",
+            "intent_id": "intent:change_01M7QKFSRQNZTA7DG143M3HP11",
+            "kind": "trajectory_step_recorded",
+            "sequence": 6
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 5,
+        "next_sequence": 6,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M7QKFSW14YFFE713D33JXR9V": {
@@ -865,6 +877,23 @@
                 ],
                 "sequence": 5,
                 "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:6",
+                "observations": [
+                  ".decapod/managed/Dockerfile.decapod",
+                  ".decapod/managed/specs/.manifest.json",
+                  "Synced origin/master 5cc32689e (v0.152.0) and refreshed release-bound projections"
+                ],
+                "proof_refs": [],
+                "scope": [
+                  "\".decapod/managed/specs\"]",
+                  "\"tests\"",
+                  "paths:[\"src/decapod\""
+                ],
+                "sequence": 6,
+                "validation_findings": []
               }
             ]
           }
@@ -881,6 +910,7 @@
       "destination": "pull request",
       "evidence": [
         "Merged origin/master 363d6e3ec (v0.151.0); fmt, clippy --all-targets --all-features, datastore_relational_compaction 16/16, and datastore_contract compatibility boundary test passed",
+        "Synced origin/master 5cc32689e (v0.152.0) and refreshed release-bound projections",
         "cargo fmt --check exit 0; cargo clippy --all-targets --all-features -- -D warnings exit 0; datastore_relational_compaction 16/16 passed; datastore_contract compat test 1/1 passed; core::events 16/16 passed; core::migration 9/9 passed"
       ],
       "inspected_files": [
@@ -894,6 +924,8 @@
       ],
       "intent_id": "intent:change_01M7QKFSRQNZTA7DG143M3HP11",
       "modified_files": [
+        ".decapod/managed/Dockerfile.decapod",
+        ".decapod/managed/specs/.manifest.json",
         ".decapod/managed/specs/ARCHITECTURE.md",
         ".decapod/managed/specs/INTERFACES.md",
         ".decapod/managed/specs/SECURITY.md",
